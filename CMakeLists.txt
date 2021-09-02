@@ -17,7 +17,7 @@
 cmake_minimum_required(VERSION 2.6.4)
 project(CRYPTO C)
 
-include_directories(fsw/public_inc)
+include_directories(fsw/platform_inc)
 
 # The shared OSAL and cFE include directories should always be used
 # Note that this intentionally does NOT include PSP-specific includes, just the generic
@@ -30,4 +30,4 @@ aux_source_directory(fsw/src LIB_SRC_FILES)
 add_cfe_app(crypto ${LIB_SRC_FILES})
 
 # Add libgcrypt
-target_link_libraries(crypto libgcrypt)
+target_link_libraries(crypto gcrypt)

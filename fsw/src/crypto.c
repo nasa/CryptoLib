@@ -120,8 +120,9 @@ static int32 Crypto_SA_init(void)
 // General security association initialization
 {
     int32 status = OS_SUCCESS;
+    int x;
 
-    for (int x = 0; x < NUM_SA; x++)
+    for (x = 0; x < NUM_SA; x++)
     {
         sa[x].ekid = x;
         sa[x].akid = x;
@@ -153,21 +154,21 @@ static int32 Crypto_SA_init(void)
         tm_frame.tm_header.fhp     = 0;
         // TM Security Header
         tm_frame.tm_sec_header.spi = 0x0000;
-        for ( int x = 0; x < IV_SIZE; x++)
+        for ( x = 0; x < IV_SIZE; x++)
         { 	// Initialization Vector
             tm_frame.tm_sec_header.iv[x] = 0x00;
         }
         // TM Payload Data Unit
-        for ( int x = 0; x < TM_FRAME_DATA_SIZE; x++)
+        for ( x = 0; x < TM_FRAME_DATA_SIZE; x++)
         {	// Zero TM PDU
             tm_frame.tm_pdu[x] = 0x00;
         }
         // TM Security Trailer
-        for ( int x = 0; x < MAC_SIZE; x++)
+        for ( x = 0; x < MAC_SIZE; x++)
         { 	// Zero TM Message Authentication Code
             tm_frame.tm_sec_trailer.mac[x] = 0x00;
         }
-        for ( int x = 0; x < OCF_SIZE; x++)
+        for ( x = 0; x < OCF_SIZE; x++)
         { 	// Zero TM Operational Control Field
             tm_frame.tm_sec_trailer.ocf[x] = 0x00;
         }
@@ -207,6 +208,7 @@ static int32 Crypto_SA_config(void)
 // Only need to initialize non-zero values.
 {   
     int32 status = OS_SUCCESS;
+    int i;
     
     // Master Keys
         // 0 - 000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F -> ACTIVE
@@ -577,7 +579,7 @@ static int32 Crypto_SA_config(void)
         sa[2].iv_len = IV_SIZE;
         sa[2].iv[IV_SIZE-1] = 0;
         sa[2].abm_len = 0x14; // 20
-        for (int i = 0; i < sa[2].abm_len; i++)
+        for (i = 0; i < sa[2].abm_len; i++)
         {	// Zero AAD bit mask
             sa[2].abm[i] = 0x00;
         }
@@ -593,7 +595,7 @@ static int32 Crypto_SA_config(void)
         sa[3].iv_len = IV_SIZE;
         sa[3].iv[IV_SIZE-1] = 0;
         sa[3].abm_len = 0x14; // 20
-        for (int i = 0; i < sa[3].abm_len; i++)
+        for (i = 0; i < sa[3].abm_len; i++)
         {	// Zero AAD bit mask
             sa[3].abm[i] = 0x00;
         }
@@ -609,7 +611,7 @@ static int32 Crypto_SA_config(void)
         sa[4].iv_len = IV_SIZE;
         sa[4].iv[IV_SIZE-1] = 0;
         sa[4].abm_len = 0x14; // 20
-        for (int i = 0; i < sa[4].abm_len; i++)
+        for (i = 0; i < sa[4].abm_len; i++)
         {	// Zero AAD bit mask
             sa[4].abm[i] = 0x00;
         }
@@ -633,7 +635,7 @@ static int32 Crypto_SA_config(void)
         sa[5].iv_len = IV_SIZE;
         sa[5].iv[IV_SIZE-1] = 0;
         sa[5].abm_len = 0x14; // 20
-        for (int i = 0; i < sa[5].abm_len; i++)
+        for (i = 0; i < sa[5].abm_len; i++)
         {	// Zero AAD bit mask
             sa[5].abm[i] = 0x00;
         }
@@ -648,7 +650,7 @@ static int32 Crypto_SA_config(void)
         sa[6].iv_len = IV_SIZE;
         sa[6].iv[IV_SIZE-1] = 0;
         sa[6].abm_len = 0x14; // 20
-        for (int i = 0; i < sa[6].abm_len; i++)
+        for (i = 0; i < sa[6].abm_len; i++)
         {	// Zero AAD bit mask
             sa[6].abm[i] = 0x00;
         }
@@ -721,12 +723,14 @@ static void Crypto_Calc_CRC_Init_Table(void)
     uint16 val;
     uint32 poly = 0xEDB88320;
     uint32 crc;
+    unsigned int i;
+    unsigned int j;
 
     // http://create.stephan-brumme.com/crc32/
-    for (unsigned int i = 0; i <= 0xFF; i++)
+    for (i = 0; i <= 0xFF; i++)
     {
         crc = i;
-        for (unsigned int j = 0; j < 8; j++)
+        for (j = 0; j < 8; j++)
         {
             crc = (crc >> 1) ^ (-(int)(crc & 1) & poly);
         }
@@ -735,7 +739,7 @@ static void Crypto_Calc_CRC_Init_Table(void)
     }
     
     // Code provided by ESA
-    for (int i = 0; i < 256; i++)
+    for (i = 0; i < 256; i++)
     {
         val = 0;
         if ( (i &   1) != 0 )  val ^= 0x1021;
@@ -776,6 +780,7 @@ static void Crypto_TM_updatePDU(char* ingest, int len_ingest)
 // Update the Telemetry Payload Data Unit
 {	// Copy ingest to PDU
     int x = 0;
+    int y = 0;
     int fill_size = 0;
     
     if ((sa[tm_frame.tm_sec_header.spi].est == 1) && (sa[tm_frame.tm_sec_header.spi].ast == 1))
@@ -788,7 +793,7 @@ static void Crypto_TM_updatePDU(char* ingest, int len_ingest)
     }
 
     #ifdef TM_ZERO_FILL
-        for (int x = 0; x < TM_FILL_SIZE; x++)
+        for (x = 0; x < TM_FILL_SIZE; x++)
         {
             if (x < len_ingest)
             {	// Fill
@@ -854,7 +859,7 @@ static void Crypto_TM_updatePDU(char* ingest, int len_ingest)
                     tm_frame.tm_pdu[x++] = 0x00;
                     tm_frame.tm_pdu[x++] = 0x00;
                     tm_frame.tm_pdu[x++] = 0x39;
-                    for (int y = 0; y < 58; y++)
+                    for (y = 0; y < 58; y++)
                     {
                         tm_frame.tm_pdu[x++] = 0x00;
                     }
@@ -890,7 +895,7 @@ static void Crypto_TM_updatePDU(char* ingest, int len_ingest)
                     tm_frame.tm_pdu[x++] = 0x39;
                     tm_offset--;
                 }
-                for (int y = 0; x < fill_size; y++)
+                for (y = 0; x < fill_size; y++)
                 {
                     tm_frame.tm_pdu[x++] = 00;
                     tm_offset--;
@@ -959,14 +964,16 @@ static int32 Crypto_window(uint8 *actual, uint8 *expected, int length, int windo
     int status = OS_ERROR;
     int result = 0;
     uint8 temp[length];
+    int i;
+    int j;
 
     CFE_PSP_MemCpy(temp, expected, length);
 
-    for (int i = 0; i < window; i++)
+    for (i = 0; i < window; i++)
     {   
         result = 0;
         /* go from right (least significant) to left (most signifcant) */
-        for (int j = length - 1; j >= 0; --j)
+        for (j = length - 1; j >= 0; --j)
         {
             if (actual[j] == temp[j])
             {
@@ -986,8 +993,9 @@ static int32 Crypto_window(uint8 *actual, uint8 *expected, int length, int windo
 static int32 Crypto_compare_less_equal(uint8 *actual, uint8 *expected, int length)
 {
     int status = OS_ERROR;
+    int i;
 
-    for(int i = 0; i < length - 1; i++)
+    for(i = 0; i < length - 1; i++)
     {
         if (actual[i] > expected[i])
         {
@@ -1081,10 +1089,12 @@ static uint16 Crypto_Calc_FECF(char* ingest, int len_ingest)
     uint16 poly = 0x1021;	// TODO: This polynomial is (CRC-CCITT) for ESA testing, may not match standard protocol
     uint8 bit;
     uint8 c15;
+    int i;
+    int j;
 
-    for (int i = 0; i <= len_ingest; i++)
+    for (i = 0; i <= len_ingest; i++)
     {	// Byte Logic
-        for (int j = 0; j < 8; j++)
+        for (j = 0; j < 8; j++)
         {	// Bit Logic
             bit = ((ingest[i] >> (7 - j) & 1) == 1); 
             c15 = ((fecf >> 15 & 1) == 1); 
@@ -1105,9 +1115,9 @@ static uint16 Crypto_Calc_FECF(char* ingest, int len_ingest)
     #ifdef FECF_DEBUG
         OS_printf(KCYN "Crypto_Calc_FECF: 0x%02x%02x%02x%02x%02x, len_ingest = %d\n" RESET, ingest[0], ingest[1], ingest[2], ingest[3], ingest[4], len_ingest);
         OS_printf(KCYN "0x" RESET);
-        for (int x = 0; x < len_ingest; x++)
+        for (i = 0; i < len_ingest; i++)
         {
-            OS_printf(KCYN "%02x" RESET, ingest[x]);
+            OS_printf(KCYN "%02x" RESET, ingest[i]);
         }
         OS_printf(KCYN "\n" RESET);
         OS_printf(KCYN "In Crypto_Calc_FECF! fecf = 0x%04x\n" RESET, fecf);
@@ -1148,6 +1158,8 @@ static int32 Crypto_Key_OTAR(void)
     int x = 0;
     int32 status = OS_SUCCESS;
     int pdu_keys = (sdls_frame.pdu.pdu_len - 30) / (2 + KEY_SIZE);
+    int w;
+    int y;
 
     gcry_cipher_hd_t tmp_hd;
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
@@ -1174,14 +1186,14 @@ static int32 Crypto_Key_OTAR(void)
         return status;
     }
 
-    for (int count = 2; count < (2 + IV_SIZE); count++)
+    for (count = 2; count < (2 + IV_SIZE); count++)
     {	// Initialization Vector
         packet.iv[count-2] = sdls_frame.pdu.data[count];
         //OS_printf("packet.iv[%d] = 0x%02x\n", count-2, packet.iv[count-2]);
     }
     
     count = sdls_frame.pdu.pdu_len - MAC_SIZE; 
-    for (int w = 0; w < 16; w++)
+    for (w = 0; w < 16; w++)
     {	// MAC
         packet.mac[w] = sdls_frame.pdu.data[count + w];
         //OS_printf("packet.mac[%d] = 0x%02x\n", w, packet.mac[w]);
@@ -1248,7 +1260,7 @@ static int32 Crypto_Key_OTAR(void)
     gcry_cipher_close(tmp_hd);
     
     // Read in Decrypted Data
-    for (int count = 14; x < pdu_keys; x++)
+    for (count = 14; x < pdu_keys; x++)
     {	// Encrypted Key Blocks
         packet.EKB[x].ekid = (sdls_frame.pdu.data[count] << 8) | (sdls_frame.pdu.data[count+1]);
         if (packet.EKB[x].ekid < 128)
@@ -1272,7 +1284,7 @@ static int32 Crypto_Key_OTAR(void)
         else
         {   
             count = count + 2;
-            for (int y = count; y < (KEY_SIZE + count); y++)
+            for (y = count; y < (KEY_SIZE + count); y++)
             {	// Encrypted Key
                 packet.EKB[x].ek[y-count] = sdls_frame.pdu.data[y];
                 #ifdef SA_DEBUG
@@ -1291,10 +1303,10 @@ static int32 Crypto_Key_OTAR(void)
 
     #ifdef PDU_DEBUG
         OS_printf("Received %d keys via master key %d: \n", pdu_keys, packet.mkid);
-        for (int x = 0; x < pdu_keys; x++)
+        for (x = 0; x < pdu_keys; x++)
         {
             OS_printf("%d) Key ID = %d, 0x", x+1, packet.EKB[x].ekid);
-            for(int y = 0; y < KEY_SIZE; y++)
+            for(y = 0; y < KEY_SIZE; y++)
             {
                 OS_printf("%02x", packet.EKB[x].ek[y]);
             }
@@ -1311,11 +1323,12 @@ static int32 Crypto_Key_update(uint8 state)
     SDLS_KEY_BLK_t packet;
     int count = 0;
     int pdu_keys = sdls_frame.pdu.pdu_len / 2;
+    int x;
     #ifdef PDU_DEBUG
         OS_printf("Keys ");
     #endif
     // Read in PDU
-    for (int x = 0; x < pdu_keys; x++)
+    for (x = 0; x < pdu_keys; x++)
     {
         packet.kblk[x].kid = (sdls_frame.pdu.data[count] << 8) | (sdls_frame.pdu.data[count+1]);
         count = count + 2;
@@ -1355,7 +1368,7 @@ static int32 Crypto_Key_update(uint8 state)
         }
     #endif
     // Update Key State
-    for (int x = 0; x < pdu_keys; x++)
+    for (x = 0; x < pdu_keys; x++)
     {
         if (packet.kblk[x].kid < 128)
         {
@@ -1407,6 +1420,7 @@ static int32 Crypto_Key_inventory(char* ingest)
     SDLS_KEY_INVENTORY_t packet;
     int count = 0;
     uint16_t range = 0;
+    uint16_t x;
 
     // Read in PDU
     packet.kid_first = ((uint8)sdls_frame.pdu.data[count] << 8) | ((uint8)sdls_frame.pdu.data[count+1]);
@@ -1421,7 +1435,7 @@ static int32 Crypto_Key_inventory(char* ingest)
     count = Crypto_Prep_Reply(ingest, 128);
     ingest[count++] = (range & 0xFF00) >> 8;
     ingest[count++] = (range & 0x00FF);
-    for (uint16_t x = packet.kid_first; x < packet.kid_last; x++)
+    for (x = packet.kid_first; x < packet.kid_last; x++)
     {   // Key ID
         ingest[count++] = (x & 0xFF00) >> 8;
         ingest[count++] = (x & 0x00FF);
@@ -1441,6 +1455,8 @@ static int32 Crypto_Key_verify(char* ingest)
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     gcry_cipher_hd_t tmp_hd;
     uint8 iv_loc;
+    int x;
+    int y;
 
     //uint8 tmp_mac[MAC_SIZE];
 
@@ -1449,7 +1465,7 @@ static int32 Crypto_Key_verify(char* ingest)
     #endif
     
     // Read in PDU
-    for (int x = 0; x < pdu_keys; x++)
+    for (x = 0; x < pdu_keys; x++)
     {	
         // Key ID
         packet.blk[x].kid = ((uint8)sdls_frame.pdu.data[count] << 8) | ((uint8)sdls_frame.pdu.data[count+1]);
@@ -1458,7 +1474,7 @@ static int32 Crypto_Key_verify(char* ingest)
             OS_printf("Crypto_Key_verify: Block %d Key ID is %d \n", x, packet.blk[x].kid);
         #endif
         // Key Challenge
-        for (int y = 0; y < CHALLENGE_SIZE; y++)
+        for (y = 0; y < CHALLENGE_SIZE; y++)
         {
             packet.blk[x].challenge[y] = sdls_frame.pdu.data[count++];
         }
@@ -1472,14 +1488,14 @@ static int32 Crypto_Key_verify(char* ingest)
     sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
     count = Crypto_Prep_Reply(ingest, 128);
 
-    for (int x = 0; x < pdu_keys; x++)
+    for (x = 0; x < pdu_keys; x++)
     {   // Key ID
         ingest[count++] = (packet.blk[x].kid & 0xFF00) >> 8;
         ingest[count++] = (packet.blk[x].kid & 0x00FF);
 
         // Initialization Vector
         iv_loc = count;
-        for (int y = 0; y < IV_SIZE; y++)
+        for (y = 0; y < IV_SIZE; y++)
         {   
             ingest[count++] = tc_frame.tc_sec_header.iv[y];
         }
@@ -1539,7 +1555,7 @@ static int32 Crypto_Key_verify(char* ingest)
         count = count + CHALLENGE_MAC_SIZE; // Don't forget to increment count!
 
         // Copy from tmp_mac into ingest
-        //for( int y = 0; y < CHALLENGE_MAC_SIZE; y++)
+        //for( y = 0; y < CHALLENGE_MAC_SIZE; y++)
         //{
         //    ingest[count++] = tmp_mac[y];
         //}
@@ -1563,6 +1579,8 @@ static int32 Crypto_SA_start(void)
     uint8 count = 0;
     uint16 spi = 0x0000;
     crypto_gvcid_t gvcid;
+    int x;
+    int i;
 
     // Read ingest
     spi = ((uint8)sdls_frame.pdu.data[0] << 8) | (uint8)sdls_frame.pdu.data[1];
@@ -1577,7 +1595,7 @@ static int32 Crypto_SA_start(void)
         {
             count = 2;
 
-            for(int x = 0; x <= ((sdls_frame.pdu.pdu_len - 2) / 4); x++)
+            for(x = 0; x <= ((sdls_frame.pdu.pdu_len - 2) / 4); x++)
             {   // Read in GVCID
                 gvcid.tfvn  = (sdls_frame.pdu.data[count] >> 4);
                 gvcid.scid  = (sdls_frame.pdu.data[count] << 12)     |  
@@ -1592,7 +1610,7 @@ static int32 Crypto_SA_start(void)
                 {   // Clear all GVCIDs for provided SPI
                     if (gvcid.mapid == TYPE_TC)
                     {
-                        for (int i = 0; i < NUM_GVCID; i++)
+                        for (i = 0; i < NUM_GVCID; i++)
                         {   // TC
                             sa[spi].gvcid_tc_blk[x].tfvn  = 0;
                             sa[spi].gvcid_tc_blk[x].scid  = 0;
@@ -1617,7 +1635,7 @@ static int32 Crypto_SA_start(void)
                 {   // Clear all GVCIDs for provided SPI
                     if (gvcid.mapid == TYPE_TM)
                     {
-                        for (int i = 0; i < NUM_GVCID; i++)
+                        for (i = 0; i < NUM_GVCID; i++)
                         {   // TM
                             sa[spi].gvcid_tm_blk[x].tfvn  = 0;
                             sa[spi].gvcid_tm_blk[x].scid  = 0;
@@ -1683,6 +1701,7 @@ static int32 Crypto_SA_stop(void)
 {
     // Local variables
     uint16 spi = 0x0000;
+    int x;
 
     // Read ingest
     spi = ((uint8)sdls_frame.pdu.data[0] << 8) | (uint8)sdls_frame.pdu.data[1];
@@ -1697,7 +1716,7 @@ static int32 Crypto_SA_stop(void)
         if (sa[spi].sa_state == SA_OPERATIONAL)
         {
             // Remove all GVC/GMAP IDs
-            for (int x = 0; x < NUM_GVCID; x++)
+            for (x = 0; x < NUM_GVCID; x++)
             {   // TC
                 sa[spi].gvcid_tc_blk[x].tfvn  = 0;
                 sa[spi].gvcid_tc_blk[x].scid  = 0;
@@ -1848,6 +1867,7 @@ static int32 Crypto_SA_create(void)
     // Local variables
     uint8 count = 6;
     uint16 spi = 0x0000;
+    int x;
 
     // Read sdls_frame.pdu.data
     spi = ((uint8)sdls_frame.pdu.data[0] << 8) | (uint8)sdls_frame.pdu.data[1];
@@ -1864,33 +1884,33 @@ static int32 Crypto_SA_create(void)
     sa[spi].shplf_len = ((uint8)sdls_frame.pdu.data[3] & 0x03);
     sa[spi].stmacf_len = ((uint8)sdls_frame.pdu.data[4]);
     sa[spi].ecs_len = ((uint8)sdls_frame.pdu.data[5]);
-    for (int x = 0; x < sa[spi].ecs_len; x++)
+    for (x = 0; x < sa[spi].ecs_len; x++)
     {
         sa[spi].ecs[x] = ((uint8)sdls_frame.pdu.data[count++]);
     }
     sa[spi].iv_len = ((uint8)sdls_frame.pdu.data[count++]);
-    for (int x = 0; x < sa[spi].iv_len; x++)
+    for (x = 0; x < sa[spi].iv_len; x++)
     {
         sa[spi].iv[x] = ((uint8)sdls_frame.pdu.data[count++]);
     }
     sa[spi].acs_len = ((uint8)sdls_frame.pdu.data[count++]);
-    for (int x = 0; x < sa[spi].acs_len; x++)
+    for (x = 0; x < sa[spi].acs_len; x++)
     {
         sa[spi].acs = ((uint8)sdls_frame.pdu.data[count++]);
     }
     sa[spi].abm_len = (uint8)((sdls_frame.pdu.data[count] << 8) | (sdls_frame.pdu.data[count+1]));
     count = count + 2;
-    for (int x = 0; x < sa[spi].abm_len; x++)
+    for (x = 0; x < sa[spi].abm_len; x++)
     {
         sa[spi].abm[x] = ((uint8)sdls_frame.pdu.data[count++]);
     }
     sa[spi].arc_len = ((uint8)sdls_frame.pdu.data[count++]);
-    for (int x = 0; x < sa[spi].arc_len; x++)
+    for (x = 0; x < sa[spi].arc_len; x++)
     {
         sa[spi].arc[x] = ((uint8)sdls_frame.pdu.data[count++]);
     }
     sa[spi].arcw_len = ((uint8)sdls_frame.pdu.data[count++]);
-    for (int x = 0; x < sa[spi].arcw_len; x++)
+    for (x = 0; x < sa[spi].arcw_len; x++)
     {
         sa[spi].arcw[x] = ((uint8)sdls_frame.pdu.data[count++]);
     }
@@ -1948,6 +1968,7 @@ static int32 Crypto_SA_setARSN(void)
 {
     // Local variables
     uint16 spi = 0x0000;
+    int x;
 
     // Read ingest
     spi = ((uint8)sdls_frame.pdu.data[0] << 8) | (uint8)sdls_frame.pdu.data[1];
@@ -1964,7 +1985,7 @@ static int32 Crypto_SA_setARSN(void)
         #endif
         if (sa[spi].iv_len > 0)
         {   // Set IV - authenticated encryption
-            for (int x = 0; x < IV_SIZE; x++)
+            for (x = 0; x < IV_SIZE; x++)
             {
                 sa[spi].iv[x] = (uint8) sdls_frame.pdu.data[x + 2];
                 #ifdef PDU_DEBUG
@@ -1993,6 +2014,7 @@ static int32 Crypto_SA_setARSNW(void)
 {
     // Local variables
     uint16 spi = 0x0000;
+    int x;
 
     // Read ingest
     spi = ((uint8)sdls_frame.pdu.data[0] << 8) | (uint8)sdls_frame.pdu.data[1];
@@ -2009,7 +2031,7 @@ static int32 Crypto_SA_setARSNW(void)
             sa[spi].arcw_len = ARC_SIZE;    
         }
 
-        for(int x = 0; x < sa[spi].arcw_len; x++)
+        for(x = 0; x < sa[spi].arcw_len; x++)
         {
             sa[spi].arcw[x] = (uint8) sdls_frame.pdu.data[x+3];
         }
@@ -2100,6 +2122,8 @@ static int32 Crypto_MC_status(char* ingest)
 static int32 Crypto_MC_dump(char* ingest)
 {
     int count = 0;
+    int x;
+    int y;
     
     // Prepare for Reply
     sdls_frame.pdu.pdu_len = (log_count * 6);  // SDLS_MC_DUMP_RPLY_SIZE
@@ -2107,12 +2131,12 @@ static int32 Crypto_MC_dump(char* ingest)
     count = Crypto_Prep_Reply(ingest, 128);
 
     // PDU
-    for (int x = 0; x < log_count; x++)
+    for (x = 0; x < log_count; x++)
     {
         ingest[count++] = log.blk[x].emt;
         //ingest[count++] = (log.blk[x].em_len & 0xFF00) >> 8;
         ingest[count++] = (log.blk[x].em_len & 0x00FF);
-        for (int y = 0; y < EMV_SIZE; y++)
+        for (y = 0; y < EMV_SIZE; y++)
         {
             ingest[count++] = log.blk[x].emv[y];
         }
@@ -2130,13 +2154,15 @@ static int32 Crypto_MC_dump(char* ingest)
 static int32 Crypto_MC_erase(char* ingest)
 {
     int count = 0;
+    int x;
+    int y;
 
     // Zero Logs
-    for (int x = 0; x < LOG_SIZE; x++)
+    for (x = 0; x < LOG_SIZE; x++)
     {
         log.blk[x].emt = 0;
         log.blk[x].em_len = 0;
-        for (int y = 0; y < EMV_SIZE; y++)
+        for (y = 0; y < EMV_SIZE; y++)
         {
             log.blk[x].emv[y] = 0;
         }
@@ -2182,6 +2208,7 @@ static int32 Crypto_SA_readARSN(char* ingest)
 {
     uint8 count = 0;
     uint16 spi = 0x0000;
+    int x;
 
     // Read ingest
     spi = ((uint8)sdls_frame.pdu.data[0] << 8) | (uint8)sdls_frame.pdu.data[1];
@@ -2197,7 +2224,7 @@ static int32 Crypto_SA_readARSN(char* ingest)
 
     if (sa[spi].iv_len > 0)
     {   // Set IV - authenticated encryption
-        for (int x = 0; x < sa[spi].iv_len - 1; x++)
+        for (x = 0; x < sa[spi].iv_len - 1; x++)
         {
             ingest[count++] = sa[spi].iv[x];
         }
@@ -2222,7 +2249,7 @@ static int32 Crypto_SA_readARSN(char* ingest)
         if (sa[spi].iv_len > 0)
         {
             OS_printf("ARSN = 0x");
-            for (int x = 0; x < sa[spi].iv_len; x++)
+            for (x = 0; x < sa[spi].iv_len; x++)
             {
                 OS_printf("%02x", sa[spi].iv[x]);
             }
@@ -2346,11 +2373,14 @@ static int32 Crypto_User_ModifyActiveTM(void)
 
 static int32 Crypto_User_ModifyVCID(void)
 {
+    int i;
+    int j;
+
     tm_frame.tm_header.vcid = (uint8)sdls_frame.pdu.data[0];
 
-    for (int i = 0; i < NUM_GVCID; i++)
+    for (i = 0; i < NUM_GVCID; i++)
     {
-        for (int j = 0; j < NUM_SA; j++)
+        for (j = 0; j < NUM_SA; j++)
         {
             if (sa[i].gvcid_tm_blk[j].mapid == TYPE_TM)
             {
@@ -2615,8 +2645,9 @@ static int32 Crypto_PDU(char* ingest)
     #ifdef CCSDS_DEBUG
         if (status > 0)
         {
+            int x;
             OS_printf(KMAG "CCSDS message put on software bus: 0x" RESET);
-            for (int x = 0; x < status; x++)
+            for (x = 0; x < status; x++)
             {
                 OS_printf(KMAG "%02x" RESET, x, (uint8) ingest[x]);
             }
@@ -2654,8 +2685,10 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest)
     int32 status = OS_SUCCESS;
     int x = 0;
     int y = 0;
+    int z = 0;
     gcry_cipher_hd_t tmp_hd;
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
+    int i;
 
     #ifdef DEBUG
         OS_printf(KYEL "\n----- Crypto_TC_ProcessSecurity START -----\n" RESET);
@@ -2832,7 +2865,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest)
             } 
             else
             {   // Adjust expected IV to acceptable received value
-                for (int i = 0; i < (IV_SIZE); i++)
+                for (i = 0; i < (IV_SIZE); i++)
                 {
                     sa[tc_frame.tc_sec_header.spi].iv[i] = tc_frame.tc_sec_header.iv[i];
                 }
@@ -2848,8 +2881,9 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest)
         x = x + Crypto_Get_tcPayloadLength();
 
         #ifdef TC_DEBUG
+            int temp;
             OS_printf("TC: \n"); 
-            for (int temp = 0; temp < Crypto_Get_tcPayloadLength(); temp++)
+            for (temp = 0; temp < Crypto_Get_tcPayloadLength(); temp++)
             {	
                 OS_printf("\t ingest[%d] = 0x%02x \n", temp, (uint8)ingest[temp+20]);
             }
@@ -2889,7 +2923,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest)
         }
         #ifdef DEBUG
             OS_printf("Key ID = %d, 0x", sa[tc_frame.tc_sec_header.spi].ekid);
-            for(int y = 0; y < KEY_SIZE; y++)
+            for(y = 0; y < KEY_SIZE; y++)
             {
                 OS_printf("%02x", ek_ring[sa[tc_frame.tc_sec_header.spi].ekid].value[y]);
             }
@@ -2955,7 +2989,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest)
             OS_printf(KRED "ERROR: gcry_cipher_checktag error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
             
             OS_printf("Actual MAC   = 0x");
-            for (int z = 0; z < MAC_SIZE; z++)
+            for (z = 0; z < MAC_SIZE; z++)
             {
                 OS_printf("%02x",tc_frame.tc_sec_trailer.mac[z]);
             }
@@ -2972,7 +3006,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest)
             }
 
             OS_printf("Expected MAC = 0x");
-            for (int z = 0; z < MAC_SIZE; z++)
+            for (z = 0; z < MAC_SIZE; z++)
             {
                 OS_printf("%02x",tc_frame.tc_sec_trailer.mac[z]);
             }

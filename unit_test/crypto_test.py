@@ -2,6 +2,9 @@
 # Connect to cFS via UDP to CI_Lab and TO_Lab to send and receive messages
 # used to verify the SDLS-EP protocol via Interoperability Testing
 #
+# Example usage:
+#   python2 ./crypto_test.py
+#
 
 import binascii
 import os
@@ -35,12 +38,12 @@ pwd = os.getcwd() + "/"
 
 # Setup CI UDP
 UDP_IP_CI = "127.0.0.1"
-UDP_PORT_CI = 1234
+UDP_PORT_CI = 5010
 ci = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 # Setup TO UDP
 UDP_IP_TO = "127.0.0.1"
-UDP_PORT_TO = 1235
+UDP_PORT_TO = 5011
 to = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 to.bind((UDP_IP_TO, UDP_PORT_TO))
 to.settimeout(5.0)
