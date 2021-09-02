@@ -1,0 +1,126 @@
+[Keylen = 128]
+[IVlen = 96]
+[PTlen = 0]
+[AADlen = 0]
+[Taglen = 128]
+
+Count = 0
+Key = cf063a34d4a9a76c2c86787d3f96db71
+IV = 113b9785971864c83b01c787
+CT = 
+AAD = 
+Tag = 72ac8493e3a5228b5d130a69d2510e42
+PT = 
+
+Count = 1
+Key = a49a5e26a2f8cb63d05546c2a62f5343
+IV = 907763b19b9b4ab6bd4f0281
+CT = 
+AAD = 
+Tag = a2be08210d8c470a8df6e8fbd79ec5cf
+FAIL
+
+Count = 2
+Key = 2ad0bf5aeb47a0c1a98da3dfdab4fded
+IV = 25f1b6091ee7040fea4ba854
+CT = 
+AAD = 
+Tag = d7963d240317653e01cf5abe5d0966ae
+PT = 
+
+Count = 3
+Key = d8cd400a0a73d114cd3ecf36537cab3d
+IV = 3c162c9f16a49b8fe6c92a81
+CT = 
+AAD = 
+Tag = 4203aec165f9d397cf9009770a088c16
+FAIL
+
+Count = 4
+Key = a982a7bae2b3eae1b7832f16faf693b4
+IV = 78d2d2fa43850483ce933576
+CT = 
+AAD = 
+Tag = ceabb89ee3179e25ed32d5a225006361
+PT = 
+
+Count = 5
+Key = f9e3992196f7d7a21bd956f4b5a5ffce
+IV = 0794a6bdf5f198c9f193b9ba
+CT = 
+AAD = 
+Tag = f8247fd5dc7bd6d40e96af32aa9c1889
+PT = 
+
+Count = 6
+Key = c91aab7ebe13653a71a4232fd1beb793
+IV = 7799464b6de6383da0daec52
+CT = 
+AAD = 
+Tag = 00c4f7033f3c05e9d531f3ca573dc98d
+FAIL
+
+Count = 7
+Key = e7e4eefd0a3abd4ee1bef270d257eab7
+IV = f548f2a04a50a2f0342b2250
+CT = 
+AAD = 
+Tag = 044159b8a18668167fbd28ac500c20fe
+PT = 
+
+Count = 8
+Key = 1bd49e553457459aee1b5d83e7c216a2
+IV = 2b37cf40ed2685eb2a907cd0
+CT = 
+AAD = 
+Tag = fcb41d17fdb023d4d14f84a387d3ad77
+FAIL
+
+Count = 9
+Key = 4d6486fa68ce5a14b9db7334ab4838cb
+IV = afad3f4190d56a1b8eb08e58
+CT = 
+AAD = 
+Tag = 4bda04755b7ce9da020ce7467a5ced8f
+FAIL
+
+Count = 10
+Key = da5b59d5eb448fd6c08c350df9a82114
+IV = 15fb65d9fe2fa27f226312c0
+CT = 
+AAD = 
+Tag = e407fccbb9f00eeb9cef4a520cff957c
+FAIL
+
+Count = 11
+Key = 07d5a7d405b21c64d74cc0988693b784
+IV = 2eefd7990ea025925e9ca6f9
+CT = 
+AAD = 
+Tag = 1439522d18c9eb129f1f776590027761
+FAIL
+
+Count = 12
+Key = 48760dec952010140ffc4b4078438b56
+IV = 930cc3ff276d7bbb74d187ef
+CT = 
+AAD = 
+Tag = 8673dcb97934d54dc17de0037344737f
+FAIL
+
+Count = 13
+Key = ed7c50762dc0dc4aa5c8be4cf0a56b88
+IV = 50dfb73b5034cffb6709af8f
+CT = 
+AAD = 
+Tag = cb02203ee8eccec446ed1c2cf68fd1c0
+FAIL
+
+Count = 14
+Key = b5d4b3e80a56adbc780ff02c5da6a7ab
+IV = abc5b96c5e872502971dcc55
+CT = 
+AAD = 
+Tag = 4e85677cc16e2b2fb50a2ca9c0ac1b9c
+FAIL
+
