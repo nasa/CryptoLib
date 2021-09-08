@@ -657,7 +657,6 @@ static int32 Crypto_SA_config(void)
         sa[6].arcw_len = 1;   
         sa[6].arcw[0] = 5;
         sa[6].arc_len = (sa[6].arcw[0] * 2) + 1;
-        //itc_gcm128_init(&(sa[6].gcm_ctx), (unsigned char *)&(ek_ring[sa[6].ekid]));
 
     // Initial TM configuration
         tm_frame.tm_sec_header.spi = 1;
@@ -2906,9 +2905,6 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest)
         tc_frame.tc_sec_trailer.fecf = ((uint8)ingest[x] << 8) | ((uint8)ingest[x+1]);
         Crypto_FECF(tc_frame.tc_sec_trailer.fecf, ingest, (tc_frame.tc_header.fl - 2));
 
-        // Initialize the key
-        //itc_gcm128_init(&sa[tc_frame.tc_sec_header.spi].gcm_ctx, (const unsigned char*) &ek_ring[sa[tc_frame.tc_sec_header.spi].ekid]);
-
         gcry_error = gcry_cipher_open(
             &(tmp_hd),
             GCRY_CIPHER_AES256, 
@@ -3123,7 +3119,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest)
 int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
 // Accepts CCSDS message in ingest, and packs into TM before encryption
 {
-    int32 status = ITC_GCM128_SUCCESS;
+    int32 status = CRYPTO_SUCCESS;
     int count = 0;
     int pdu_loc = 0;
     int pdu_len = *len_ingest - TM_MIN_SIZE;

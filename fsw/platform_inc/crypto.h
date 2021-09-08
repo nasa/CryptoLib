@@ -21,8 +21,6 @@ ivv-itc@lists.nasa.gov
 ** Crypto Includes
 */
 #include "cfe.h"
-#include "itc_aes128.h"
-#include "itc_gcm128.h"
 #include "crypto_config.h"
 #include "crypto_events.h"
 #include "crypto_structs.h"
@@ -30,28 +28,36 @@ ivv-itc@lists.nasa.gov
 
 #include <gcrypt.h>
 
+/*
+** Definitions
+*/
 #define CRYPTO_LIB_MAJOR_VERSION    1
 #define CRYPTO_LIB_MINOR_VERSION    2
 #define CRYPTO_LIB_REVISION         0
 #define CRYPTO_LIB_MISSION_REV      0
+
+#define CRYPTO_SUCCESS              0
 
 /*
 ** Prototypes
 */
 // Initialization
 extern int32 crypto_LibInit(void);
+
 // Telecommand (TC)
 extern int32 Crypto_TC_ApplySecurity(char* ingest, int* len_ingest);
 extern int32 Crypto_TC_ProcessSecurity(char* ingest, int*  len_ingest);
+
 // Telemetry (TM)
 extern int32 Crypto_TM_ApplySecurity(char* ingest, int* len_ingest);
 extern int32 Crypto_TM_ProcessSecurity(char* ingest, int* len_ingest);
+
 // Advanced Orbiting Systems (AOS)
 extern int32 Crypto_AOS_ApplySecurity(char* ingest, int* len_ingest);
 extern int32 Crypto_AOS_ProcessSecurity(char* ingest, int* len_ingest);
+
 // Security Functions
 extern int32 Crypto_ApplySecurity(char* ingest, int* len_ingest);
 extern int32 Crypto_ProcessSecurity(char* ingest, int* len_ingest);
-
 
 #endif
