@@ -1,6 +1,6 @@
 Number = 0
-Description = Execute all the Monitoring & Control procedures and their specified PDU formats as well as testing the FSR functionality. Must reboot FSW to run test!
-TC = 
+Description = Execute all the Monitoring & Control procedures and their specified PDU formats as well as testing the FSR functionality. Sending user reinitialization in preparation for test.
+TC = 2003001d00ff000100001880c000000a197f0b004800030096018dc782a5fecf
 TM = 
 
 

@@ -4,6 +4,8 @@
 #
 # Example usage:
 #   python2 ./crypto_test.py
+# Example usage with automated trigger:
+#   python2 ./crypto_test.py 1
 #
 
 import binascii
@@ -12,6 +14,7 @@ import signal
 import socket
 import struct
 import sys
+import time
 
 def signal_term_handler(signale,frame):
     print '\nExiting gracefully...\n'
@@ -59,7 +62,7 @@ print color.BOLD + '\nBegin Testing the Cryptography Library...' + color.END
 for file_name in python_files:
     with open(file_name) as f:
         print file_name + " has been loaded!"
-        print color.YELLOW + "Typically flight software must be rebooted now!\n" + color.END
+        print
         for line in f:	
             # Determine line
             if line.startswith("Number = "):
@@ -75,7 +78,12 @@ for file_name in python_files:
             if line.startswith("TM = "):
                 tm = line[5:]
                 print number.replace("\n","\t") + description
-                raw_input("Press ENTER to proceed...\n")
+
+                if len(sys.argv) == 1:
+                    raw_input("Press ENTER to proceed...\n")
+                else:
+                    time.sleep(0.25)
+
                 if len(tc) > 2:
                     # Send TC to CI_Lab
                     print tc
@@ -100,6 +108,6 @@ for file_name in python_files:
                             print '\t expected TM: ' + tm
                             os.kill(os.getpid(), signal.SIGINT)
 
-print >> sys.stderr, "Out of data, exiting gracefully..."
+print color.GREEN + 'Out of data, exiting gracefully...' + color.END
 ci.close()
 to.close()

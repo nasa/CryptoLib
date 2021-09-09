@@ -1,6 +1,6 @@
 Number = 0
-Description = Exercise the key lifecycle using the SDLS-EP key management procedures and to test the Over The Air Rekeying (OTAR) procedures with the key management service parameters and PDU formats specified for the SDLS-EP. Must reboot FSW to run test!
-TC = 
+Description = Exercise the key lifecycle using the SDLS-EP key management procedures and to test the Over The Air Rekeying (OTAR) procedures with the key management service parameters and PDU formats specified for the SDLS-EP. Sending user reinitialization in preparation for test.
+TC = 2003001d00ff000100001880c000000a197f0b004800030096018dc782a5fecf
 TM = 
 
 

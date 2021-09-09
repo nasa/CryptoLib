@@ -96,19 +96,19 @@ static TC_t tc_frame;
 static CCSDS_t sdls_frame;
 static TM_t tm_frame;
 // OCF
-static uint8 ocf = 0;
+static uint8 ocf;
 static SDLS_FSR_t report;
 static TM_FrameCLCW_t clcw;
 // Flags
 static SDLS_MC_LOG_RPLY_t log_summary;
 static SDLS_MC_DUMP_BLK_RPLY_t log;
-static uint8 log_count = 0;
-static uint16 tm_offset = 0;
+static uint8 log_count;
+static uint16 tm_offset;
 // ESA Testing - 0 = disabled, 1 = enabled
-static uint8 badSPI = 0;
-static uint8 badIV = 0;
-static uint8 badMAC = 0;
-static uint8 badFECF = 0;
+static uint8 badSPI;
+static uint8 badIV;
+static uint8 badMAC;
+static uint8 badFECF;
 //  CRC
 static uint32 crc32Table[256];
 static uint16 crc16Table[256];
@@ -121,6 +121,28 @@ static int32 Crypto_SA_init(void)
 {
     int32 status = OS_SUCCESS;
     int x;
+
+    // Security
+    CFE_PSP_MemSet(&sa, 0, sizeof(SecurityAssociation_t));
+    CFE_PSP_MemSet(&ek_ring, 0, sizeof(crypto_key_t));
+    // Local Frames
+    CFE_PSP_MemSet(&tc_frame, 0, sizeof(TC_t));
+    CFE_PSP_MemSet(&sdls_frame, 0, sizeof(CCSDS_t));
+    CFE_PSP_MemSet(&tm_frame, 0, sizeof(TM_t));
+    // OCF
+    ocf = 0;
+    CFE_PSP_MemSet(&report, 0, sizeof(SDLS_FSR_t));
+    CFE_PSP_MemSet(&clcw, 0, sizeof(TM_FrameCLCW_t));
+    // Flags
+    CFE_PSP_MemSet(&log_summary, 0, sizeof(SDLS_MC_LOG_RPLY_t));
+    CFE_PSP_MemSet(&log, 0, sizeof(SDLS_MC_DUMP_BLK_RPLY_t));
+    log_count = 0;
+    tm_offset = 0;
+    // ESA Testing - 0 = disabled, 1 = enabled
+    badSPI = 0;
+    badIV = 0;
+    badMAC = 0;
+    badFECF = 0;
 
     for (x = 0; x < NUM_SA; x++)
     {
@@ -2626,6 +2648,13 @@ static int32 Crypto_PDU(char* ingest)
                                         OS_printf(KMAG "User Modify VCID\n" RESET);
                                     #endif
                                     status = Crypto_User_ModifyVCID();
+                                    break;
+                                case 8: // Reinitialize
+                                    //#ifdef PDU_DEBUG
+                                        OS_printf(KMAG "User Reinitialize\n" RESET);
+                                    //#endif
+                                    status = Crypto_SA_init();
+                                    status = Crypto_SA_config();
                                     break;
                                 default:
                                     OS_printf(KRED "Error: Crypto_PDU received user defined command! \n" RESET);
