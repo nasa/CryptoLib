@@ -15,8 +15,8 @@
    ivv-itc@lists.nasa.gov
 */
 
-#ifndef AMMOS_CRYPTOLIB_CRYPTO_SEQUENCE_H
-#define AMMOS_CRYPTOLIB_CRYPTO_SEQUENCE_H
+#ifndef CRYPTOLIB_CRYPTO_SEQUENCE_H
+#define CRYPTOLIB_CRYPTO_SEQUENCE_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,4 +31,4 @@ extern "C" {
 }  /* Close scope of 'extern "C"' declaration which encloses file. */
 #endif
 
-#endif //AMMOS_CRYPTOLIB_CRYPTO_SEQUENCE_H
+#endif //CRYPTOLIB_CRYPTO_SEQUENCE_H

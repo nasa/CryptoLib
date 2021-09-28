@@ -15,8 +15,8 @@
    ivv-itc@lists.nasa.gov
 */
 
-#ifndef AMMOS_CRYPTOLIB_SHARED_UTIL_H
-#define AMMOS_CRYPTOLIB_SHARED_UTIL_H
+#ifndef CRYPTOLIB_SHARED_UTIL_H
+#define CRYPTOLIB_SHARED_UTIL_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,4 +40,4 @@ void debug_hexprintf(const char* bin_data,int size_bin_data);
 }  /* Close scope of 'extern "C"' declaration which encloses file. */
 #endif
 
-#endif //AMMOS_CRYPTOLIB_SHARED_UTIL_H
+#endif //CRYPTOLIB_SHARED_UTIL_H
