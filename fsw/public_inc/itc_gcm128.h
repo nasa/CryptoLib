@@ -19,7 +19,11 @@
 #define ITC_GCM128_H
 
 // CFS Includes
+#ifdef NOS3 //NOS3/cFS build is ready
 #include "common_types.h"
+#else //Assume build outside of NOS3/cFS infrastructure
+#include "common_types_minimum.h"
+#endif
 // Standard Includes
 #include "itc_aes128.h"
 

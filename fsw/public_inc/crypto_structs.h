@@ -297,11 +297,13 @@ typedef struct
 } CCSDS_PUS_t;
 #define CCSDS_PUS_SIZE (sizeof(CCSDS_PUS_t))
 
+/* unused?
 typedef struct
 {
   uint8    CmdHeader[CFE_SB_CMD_HDR_SIZE];
 
 } Crypto_NoArgsCmd_t;
+*/
 
 typedef struct
 {

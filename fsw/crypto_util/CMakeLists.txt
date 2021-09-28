@@ -14,38 +14,28 @@
 #   NASA IV&V
 #   ivv-itc@lists.nasa.gov
 
-#cmake_minimum_required(VERSION 2.6.4)
-cmake_minimum_required(VERSION 3.14.0)
-project(CRYPTO C)
+include_directories(include)
+include_directories(../crypto/public_inc)
 
-set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib")
+aux_source_directory(src UTIL_SRC_FILES)
+aux_source_directory(app APP_SRC_FILES)
 
-OPTION(DEBUG "Debug" OFF) # Disabled by default
-IF(DEBUG)
-    ADD_DEFINITIONS(-DDEBUG)
-    add_compile_options(-ggdb)
-ENDIF(DEBUG)
+file( GLOB SOURCE_FILES app/*.c )
+foreach(SOURCE_PATH ${SOURCE_FILES})
 
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-    include(CTest)
-    enable_testing()
-endif()
+    get_filename_component(EXECUTABLE_NAME ${SOURCE_PATH} NAME_WE)
 
-include_directories(fsw/public_inc)
+    add_executable(${EXECUTABLE_NAME} ${SOURCE_PATH})
 
-# The shared OSAL and cFE include directories should always be used
-# Note that this intentionally does NOT include PSP-specific includes, just the generic
-# Only include cFS/NOS3 directories if env var is defined
-if(DEFINED ENV{CFECORE_SOURCE_DIR}) #if ${CFECORE_SOURCE_DIR} is set, expect cFS build infrastructure to be in place.
-    include_directories(${CFECORE_SOURCE_DIR}/src/inc)
-    include_directories(${CFEPSP_SOURCE_DIR}/fsw/inc)
-    ADD_DEFINITIONS(-DNOS3)
-else()
-    #pass
-endif()
+    target_sources(${EXECUTABLE_NAME} PRIVATE src/shared_util.c)
+    target_link_libraries(${EXECUTABLE_NAME} LINK_PUBLIC Crypto)
 
-if(NOT DEFINED ${PROJECT_BINARY_DIR})
-    set(PROJECT_BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build)
-endif()
+    add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${EXECUTABLE_NAME}> ${PROJECT_BINARY_DIR}/bin/${EXECUTABLE_NAME}
+            COMMAND ${CMAKE_COMMAND} -E rm $<TARGET_FILE:${EXECUTABLE_NAME}>
+            COMMENT "Created ${PROJECT_BINARY_DIR}/bin/${EXECUTABLE_NAME}"
+            )
+endforeach(SOURCE_PATH ${SOURCE_FILES})
 
-add_subdirectory(fsw)
+target_include_directories (Crypto PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+

@@ -23,7 +23,7 @@ ivv-itc@lists.nasa.gov
 // Debug Defines
     //#define ARC_DEBUG
     //#define CCSDS_DEBUG
-    #define DEBUG
+    //#define DEBUG //(CMAKE option, not hardcoded)
     //#define FECF_DEBUG
     //#define MAC_DEBUG
     #define OCF_DEBUG
