@@ -22,6 +22,19 @@ ivv-itc@lists.nasa.gov
 */
 #include "crypto.h"
 
+#include "itc_aes128.h"
+#include "itc_gcm128.h"
+
+#include "crypto_structs.h"
+#include "crypto_print.h"
+#include "crypto_config.h"
+#include "crypto_events.h"
+
+
+
+#include <gcrypt.h>
+
+
 /*
 ** Static Library Declaration
 */
@@ -682,13 +695,14 @@ static int32 Crypto_SA_config(void)
     return status;
 }
 
-int32 crypto_Init(void)
+int32 Crypto_Init(void)
 {   
     int32 status = OS_SUCCESS;
 
     // Initialize libgcrypt
     if (!gcry_check_version(GCRYPT_VERSION))
     {
+        fprintf(stderr, "Gcrypt Version: %s",GCRYPT_VERSION);
         OS_printf(KRED "ERROR: gcrypt version mismatch! \n" RESET);
     }
     if (gcry_control(GCRYCTL_SELFTEST) != GPG_ERR_NO_ERROR)
@@ -2627,18 +2641,45 @@ static int32 Crypto_PDU(char* ingest)
     return status;
 }
 
-int32 Crypto_TC_ApplySecurity(char* ingest, int* len_ingest)
+int32 Crypto_TC_ApplySecurity(char** ingest, int* len_ingest)
 {
     // Local Variables
     int32 status = OS_SUCCESS;
+    unsigned char* tc_ingest = *ingest;
 
     #ifdef DEBUG
         OS_printf(KYEL "\n----- Crypto_TC_ApplySecurity START -----\n" RESET);
     #endif
 
     // TODO: This whole function!
-    len_ingest = len_ingest;
-    ingest[0] = ingest[0];
+    //len_ingest = len_ingest;
+    //ingest[0] = ingest[0];
+
+    int security_header_bytes = 18;
+    int security_trailer_bytes = 16;
+    int tc_size = *len_ingest + security_header_bytes + security_trailer_bytes;
+
+    unsigned char * tempTC=NULL;
+    tempTC = (unsigned char *)malloc(tc_size * sizeof (unsigned char));
+    CFE_PSP_MemSet(tempTC, 0, tc_size);
+
+    int count = 0;
+    //Create Security Header
+    for (;count < security_header_bytes;count++){
+        tempTC[count]= 0x55; //put dummy filler bits in security header for now.
+    }
+
+    //Create Frame Body
+    CFE_PSP_MemCpy(&tempTC[security_header_bytes],&tc_ingest[0],*len_ingest);
+    count+=*len_ingest;
+
+    //Create Security Trailer
+    for(;count < tc_size;count++){
+        tempTC[count]=0x55; //put dummy filler bits in security trailer for now.
+    }
+
+    *ingest = tempTC;
+    *len_ingest = tc_size;
 
     #ifdef DEBUG
         OS_printf(KYEL "----- Crypto_TC_ApplySecurity END -----\n" RESET);

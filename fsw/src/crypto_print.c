@@ -21,6 +21,8 @@ ivv-itc@lists.nasa.gov
 ** Includes
 */
 #include "crypto_print.h"
+#include "crypto_structs.h"
+
 
 /*
 ** Print Functions

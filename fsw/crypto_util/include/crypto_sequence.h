@@ -14,25 +14,21 @@
    NASA IV&V
    ivv-itc@lists.nasa.gov
 */
-   
-#ifndef _crypto_print_h_
-#define _crypto_print_h_
 
-/*
-** Includes
-*/
+#ifndef CRYPTOLIB_CRYPTO_SEQUENCE_H
+#define CRYPTOLIB_CRYPTO_SEQUENCE_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 #include "crypto.h"
-#include "crypto_structs.h"
+#include "shared_util.h"
+#include <stdio.h>
 
+#ifdef __cplusplus
+}  /* Close scope of 'extern "C"' declaration which encloses file. */
+#endif
 
-/*
-** Prototypes
-*/
-void Crypto_tcPrint(TC_t* tc_frame);
-void Crypto_tmPrint(TM_t* tm_frame);
-void Crypto_clcwPrint(TM_FrameCLCW_t* clcw);
-void Crypto_fsrPrint(SDLS_FSR_t* report);
-void Crypto_ccsdsPrint(CCSDS_t* sdls_frame);
-void Crypto_saPrint(SecurityAssociation_t* sa);
-
-#endif 
+#endif //CRYPTOLIB_CRYPTO_SEQUENCE_H

@@ -14,38 +14,35 @@
 #   NASA IV&V
 #   ivv-itc@lists.nasa.gov
 
-#cmake_minimum_required(VERSION 2.6.4)
-cmake_minimum_required(VERSION 3.14.0)
-project(CRYPTO C)
+include_directories(public_inc)
 
-set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib")
-
-OPTION(DEBUG "Debug" OFF) # Disabled by default
-IF(DEBUG)
-    ADD_DEFINITIONS(-DDEBUG)
-    add_compile_options(-ggdb)
-ENDIF(DEBUG)
+aux_source_directory(src LIB_SRC_FILES)
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     include(CTest)
     enable_testing()
 endif()
 
-include_directories(fsw/public_inc)
-
-# The shared OSAL and cFE include directories should always be used
-# Note that this intentionally does NOT include PSP-specific includes, just the generic
-# Only include cFS/NOS3 directories if env var is defined
+# Create the app module
 if(DEFINED ENV{CFECORE_SOURCE_DIR}) #if ${CFECORE_SOURCE_DIR} is set, expect cFS build infrastructure to be in place.
-    include_directories(${CFECORE_SOURCE_DIR}/src/inc)
-    include_directories(${CFEPSP_SOURCE_DIR}/fsw/inc)
-    ADD_DEFINITIONS(-DNOS3)
-else()
-    #pass
+    add_cfe_app(Crypto ${LIB_SRC_FILES})
+else() #standalone build
+    add_library(Crypto SHARED ${LIB_SRC_FILES})
 endif()
 
-if(NOT DEFINED ${PROJECT_BINARY_DIR})
-    set(PROJECT_BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build)
-endif()
+# Add libgcrypt
+target_link_libraries(Crypto gcrypt)
 
-add_subdirectory(fsw)
+#Include cmake install module - todo
+#include(GNUInstallDirs)
+
+add_custom_command(TARGET Crypto POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:Crypto> ${PROJECT_BINARY_DIR}/lib/libCrypto.so
+        COMMENT "Created ${PROJECT_BINARY_DIR}/lib/libCrypto.so"
+        )
+
+add_subdirectory(crypto_util)
+
+if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR MYPROJECT_BUILD_TESTING) AND BUILD_TESTING)
+    add_subdirectory(crypto_tests)
+endif()

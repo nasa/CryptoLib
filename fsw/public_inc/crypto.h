@@ -20,15 +20,12 @@ ivv-itc@lists.nasa.gov
 /*
 ** Crypto Includes
 */
-#include "cfe.h"
-#include "itc_aes128.h"
-#include "itc_gcm128.h"
-#include "crypto_config.h"
-#include "crypto_events.h"
-#include "crypto_structs.h"
-#include "crypto_print.h"
 
-#include <gcrypt.h>
+#ifdef NOS3 //NOS3/cFS build is ready
+#include "cfe.h"
+#else //Assume build outside of NOS3/cFS infrastructure
+#include "cfe_minimum.h"
+#endif
 
 #define CRYPTO_LIB_MAJOR_VERSION    1
 #define CRYPTO_LIB_MINOR_VERSION    2
@@ -39,9 +36,9 @@ ivv-itc@lists.nasa.gov
 ** Prototypes
 */
 // Initialization
-extern int32 crypto_LibInit(void);
+extern int32 Crypto_Init(void);
 // Telecommand (TC)
-extern int32 Crypto_TC_ApplySecurity(char* ingest, int* len_ingest);
+extern int32 Crypto_TC_ApplySecurity(char** ingest, int* len_ingest);
 extern int32 Crypto_TC_ProcessSecurity(char* ingest, int*  len_ingest);
 // Telemetry (TM)
 extern int32 Crypto_TM_ApplySecurity(char* ingest, int* len_ingest);
