@@ -27,6 +27,8 @@ ivv-itc@lists.nasa.gov
 #include "cfe_minimum.h"
 #endif
 
+#include "crypto_structs.h"
+
 #define CRYPTO_LIB_MAJOR_VERSION    1
 #define CRYPTO_LIB_MINOR_VERSION    2
 #define CRYPTO_LIB_REVISION         0
@@ -49,6 +51,15 @@ extern int32 Crypto_AOS_ProcessSecurity(char* ingest, int* len_ingest);
 // Security Functions
 extern int32 Crypto_ApplySecurity(char* ingest, int* len_ingest);
 extern int32 Crypto_ProcessSecurity(char* ingest, int* len_ingest);
+
+// Data stores used in multiple components
+extern TC_t tc_frame;
+extern CCSDS_t sdls_frame;
+extern TM_t tm_frame;
+extern crypto_key_t ek_ring[NUM_KEYS];
+// Assisting functions used in multiple components
+extern uint8 Crypto_Prep_Reply(char* ingest, uint8 appID);
+extern int32 Crypto_increment(uint8 *num, int length);
 
 
 #endif
