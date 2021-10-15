@@ -20,14 +20,14 @@ ivv-itc@lists.nasa.gov
 // Build Defines
     //#define BUILD_STATIC
 
-// Debug Defines
+// Debug Defines -- Use CMAKE options
     //#define ARC_DEBUG
     //#define CCSDS_DEBUG
     //#define DEBUG //(CMAKE option, not hardcoded)
     //#define FECF_DEBUG
     //#define MAC_DEBUG
-    #define OCF_DEBUG
-    #define PDU_DEBUG
+    //#define OCF_DEBUG
+    //#define PDU_DEBUG
     //#define SA_DEBUG
     //#define TC_DEBUG
     //#define TM_DEBUG
@@ -98,7 +98,8 @@ ivv-itc@lists.nasa.gov
     #define NUM_KEYS					256
     #define DISABLED					0
     #define ENABLED						1
-    #define IV_SIZE						12
+    #define IV_SIZE						12      /* TM IV size bytes */
+    #define IV_SIZE_TC                  4       /* TC IV size bytes */
     #define OCF_SIZE                    4
     #define MAC_SIZE                    16      /* bytes */
     #define FECF_SIZE                   2
@@ -155,10 +156,18 @@ ivv-itc@lists.nasa.gov
 
 // CCSDS PUS Defines
     #define TLV_DATA_SIZE               494     /* bytes */
+    #define PUS_HDR                     1 //(1=true,0=false)
 
 // TM Defines
     #define TM_FRAME_DATA_SIZE          1740 	/* bytes */
     #define TM_FILL_SIZE                1145    /* bytes */
     #define TM_PAD_SIZE                 2       /* bytes */
+
+// TC Behavior Defines
+    #define TC_PROCESS_SDLS_PDUS        1 //(1=true,0=false)
+    #define TC_SDLS_EP_VCID             4 //VCID which has SDLS PDUs (JPL uses VCIDs to determine TC type, there is no space packet layer with APIDs). Set to -1 if uses SP APIDs.
+    #define VCID_BITMASK                0b111111 //Some JPL missions do not use the entire CCSDS 6 bit field for VCID.
+    #define SEGMENTATION_HDR            1 //(1=true,0=false)
+    #define HAS_FECF                    1 //(1=true,0=false)
 
 #endif

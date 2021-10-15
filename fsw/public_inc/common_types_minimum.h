@@ -42,8 +42,6 @@
 #endif
 
 #include <stdint.h>
-#include <stddef.h>
-#include <stdbool.h>
 
 /*
  * NOTE - NOT DEFINING STRUCT_LOW_BIT_FIRST or STRUCT_HIGH_BIT_FIRST
@@ -59,9 +57,6 @@
   typedef uint32_t                              uint32;
   typedef uint64_t                              uint64;
   typedef intptr_t                              intptr;
-  typedef uintptr_t                             cpuaddr;
-  typedef size_t                                cpusize;
-  typedef ptrdiff_t                             cpudiff;
 
 
 #ifdef __cplusplus

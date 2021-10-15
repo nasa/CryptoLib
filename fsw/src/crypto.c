@@ -49,7 +49,7 @@ ivv-itc@lists.nasa.gov
 static int32 Crypto_SA_init(void);
 static int32 Crypto_SA_config(void);
 // Assisting Functions
-static int32  Crypto_Get_tcPayloadLength(void);
+static int32  Crypto_Get_tcPayloadLength(TC_t* tc_frame);
 static int32  Crypto_Get_tmLength(int len);
 static void   Crypto_TM_updatePDU(char* ingest, int len_ingest);
 static void   Crypto_TM_updateOCF(void);
@@ -58,7 +58,7 @@ static int32  Crypto_increment(uint8* num, int length);
 static int32 Crypto_window(uint8 *actual, uint8 *expected, int length, int window);
 static int32 Crypto_compare_less_equal(uint8 *actual, uint8 *expected, int length);
 static uint8  Crypto_Prep_Reply(char*, uint8);
-static int32  Crypto_FECF(int fecf, char* ingest, int len_ingest);
+static int32  Crypto_FECF(int fecf, char* ingest, int len_ingest,TC_t* tc_frame);
 static uint16 Crypto_Calc_FECF(char* ingest, int len_ingest);
 static void   Crypto_Calc_CRC_Init_Table(void);
 static uint16 Crypto_Calc_CRC16(char* data, int size);
@@ -66,10 +66,10 @@ static uint16 Crypto_Calc_CRC16(char* data, int size);
 static int32 Crypto_Key_OTAR(void);
 static int32 Crypto_Key_update(uint8 state);
 static int32 Crypto_Key_inventory(char*);
-static int32 Crypto_Key_verify(char*);
+static int32 Crypto_Key_verify(char*,TC_t* tc_frame);
 // Security Association Functions
 static int32 Crypto_SA_stop(void);
-static int32 Crypto_SA_start(void);
+static int32 Crypto_SA_start(TC_t* tc_frame);
 static int32 Crypto_SA_expire(void);
 static int32 Crypto_SA_rekey(void);
 static int32 Crypto_SA_status(char*);
@@ -95,7 +95,7 @@ static int32 Crypto_User_ModifyKey(void);
 static int32 Crypto_User_ModifyActiveTM(void);
 static int32 Crypto_User_ModifyVCID(void);
 // Determine Payload Data Unit
-static int32 Crypto_PDU(char* ingest);
+static int32 Crypto_PDU(char* ingest, TC_t* tc_frame);
 
 /*
 ** Global Variables
@@ -105,7 +105,6 @@ static SecurityAssociation_t sa[NUM_SA];
 static crypto_key_t ek_ring[NUM_KEYS];
 //static crypto_key_t ak_ring[NUM_KEYS];
 // Local Frames
-static TC_t tc_frame;
 static CCSDS_t sdls_frame;
 static TM_t tm_frame;
 // OCF
@@ -768,10 +767,17 @@ static void Crypto_Calc_CRC_Init_Table(void)
 /*
 ** Assisting Functions
 */
-static int32 Crypto_Get_tcPayloadLength(void)
+static int32 Crypto_Get_tcPayloadLength(TC_t* tc_frame)
 // Returns the payload length of current tc_frame in BYTES!
 {
-    return (tc_frame.tc_header.fl - (5 + 2 + IV_SIZE ) - (MAC_SIZE + FECF_SIZE) );
+    int seg_hdr = 0;if(SEGMENTATION_HDR){seg_hdr=1;}
+    int fecf = 0;if(HAS_FECF){fecf=FECF_SIZE;}
+    int pus_hdr = 0; if(PUS_HDR){pus_hdr=9;} //Why do we need this? Shouldn't it just be part of the TC data?
+    int tf_hdr = 5;
+
+    return (tc_frame->tc_header.fl - (tf_hdr + seg_hdr + pus_hdr + IV_SIZE_TC ) - (MAC_SIZE + FECF_SIZE) );
+    //return (tc_frame->tc_header.fl - (5 + 2 + IV_SIZE ) - (MAC_SIZE + FECF_SIZE) );
+    //TFHDR=5bytes, SegHdr=1byte,SPI=2bytes,SeqNum=4bytes,MAC=16bytes,FECF=2bytes -- should be 30 bytes max, above calculation seems incorrect.
 }
 
 static int32 Crypto_Get_tmLength(int len)
@@ -1052,7 +1058,7 @@ static uint8 Crypto_Prep_Reply(char* ingest, uint8 appID)
     return count;
 }
 
-static int32 Crypto_FECF(int fecf, char* ingest, int len_ingest)
+static int32 Crypto_FECF(int fecf, char* ingest, int len_ingest,TC_t* tc_frame)
 // Calculate the Frame Error Control Field (FECF), also known as a cyclic redundancy check (CRC)
 {
     int32 result = OS_SUCCESS;
@@ -1079,7 +1085,7 @@ static int32 Crypto_FECF(int fecf, char* ingest, int len_ingest)
                     log.blk[log_count++].em_len = 4;
                 }
                 #ifdef FECF_DEBUG
-                    OS_printf("\t Calculated = 0x%04x \n\t Received   = 0x%04x \n", calc_fecf, tc_frame.tc_sec_trailer.fecf);
+                    OS_printf("\t Calculated = 0x%04x \n\t Received   = 0x%04x \n", calc_fecf, tc_frame->tc_sec_trailer.fecf);
                 #endif
                 result = OS_ERROR;
             }
@@ -1445,7 +1451,7 @@ static int32 Crypto_Key_inventory(char* ingest)
     return count;
 }
 
-static int32 Crypto_Key_verify(char* ingest)
+static int32 Crypto_Key_verify(char* ingest,TC_t* tc_frame)
 {
     // Local variables
     SDLS_KEYV_CMD_t packet;
@@ -1495,7 +1501,7 @@ static int32 Crypto_Key_verify(char* ingest)
         iv_loc = count;
         for (int y = 0; y < IV_SIZE; y++)
         {   
-            ingest[count++] = tc_frame.tc_sec_header.iv[y];
+            ingest[count++] = tc_frame->tc_sec_header.iv[y];
         }
         ingest[count-1] = ingest[count-1] + x + 1;
 
@@ -1571,7 +1577,7 @@ static int32 Crypto_Key_verify(char* ingest)
 /*
 ** Security Association Management Services
 */
-static int32 Crypto_SA_start(void)
+static int32 Crypto_SA_start(TC_t* tc_frame)
 {	
     // Local variables
     uint8 count = 0;
@@ -1602,7 +1608,7 @@ static int32 Crypto_SA_start(void)
                 gvcid.mapid = (sdls_frame.pdu.data[count + 3]);
                 
                 // TC
-                if (gvcid.vcid != tc_frame.tc_header.vcid)
+                if (gvcid.vcid != tc_frame->tc_header.vcid)
                 {   // Clear all GVCIDs for provided SPI
                     if (gvcid.mapid == TYPE_TC)
                     {
@@ -2384,7 +2390,7 @@ static int32 Crypto_User_ModifyVCID(void)
 /*
 ** Procedures Specifications
 */
-static int32 Crypto_PDU(char* ingest)
+static int32 Crypto_PDU(char* ingest,TC_t* tc_frame)
 {
     int32 status = OS_SUCCESS;
     
@@ -2421,7 +2427,7 @@ static int32 Crypto_PDU(char* ingest)
                                     #ifdef PDU_DEBUG
                                         OS_printf(KGRN "Key Verify\n" RESET);
                                     #endif
-                                    status = Crypto_Key_verify(ingest);
+                                    status = Crypto_Key_verify(ingest,tc_frame);
                                     break;
                                 case PID_KEY_DESTRUCTION:
                                     #ifdef PDU_DEBUG
@@ -2483,7 +2489,7 @@ static int32 Crypto_PDU(char* ingest)
                                     #ifdef PDU_DEBUG
                                         OS_printf(KGRN "SA Start\n" RESET); 
                                     #endif
-                                    status = Crypto_SA_start();
+                                    status = Crypto_SA_start(tc_frame);
                                     break;
                                 case PID_STOP_SA:
                                     #ifdef PDU_DEBUG
@@ -2688,8 +2694,8 @@ int32 Crypto_TC_ApplySecurity(char** ingest, int* len_ingest)
     return status;
 }
 
-int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest)
-// Loads the ingest frame into the global tc_frame while performing decrpytion
+int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_processed_frame)
+// Loads the ingest frame into the global tc_frame while performing decryption
 {
     // Local Variables
     int32 status = OS_SUCCESS;
@@ -2702,37 +2708,47 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest)
         OS_printf(KYEL "\n----- Crypto_TC_ProcessSecurity START -----\n" RESET);
     #endif
 
+    int byte_idx = 0;
     // Primary Header
-    tc_frame.tc_header.tfvn   = ((uint8)ingest[0] & 0xC0) >> 6;
-    tc_frame.tc_header.bypass = ((uint8)ingest[0] & 0x20) >> 5;
-    tc_frame.tc_header.cc     = ((uint8)ingest[0] & 0x10) >> 4;
-    tc_frame.tc_header.spare  = ((uint8)ingest[0] & 0x0C) >> 2;
-    tc_frame.tc_header.scid   = ((uint8)ingest[0] & 0x03) << 8;
-    tc_frame.tc_header.scid   = tc_frame.tc_header.scid | (uint8)ingest[1];
-    tc_frame.tc_header.vcid   = ((uint8)ingest[2] & 0xFC) >> 2;
-    tc_frame.tc_header.fl     = ((uint8)ingest[2] & 0x03) << 8;
-    tc_frame.tc_header.fl     = tc_frame.tc_header.fl | (uint8)ingest[3];
-    tc_frame.tc_header.fsn	  = (uint8)ingest[4];
+    tc_sdls_processed_frame->tc_header.tfvn   = ((uint8)ingest[byte_idx] & 0xC0) >> 6;
+    tc_sdls_processed_frame->tc_header.bypass = ((uint8)ingest[byte_idx] & 0x20) >> 5;
+    tc_sdls_processed_frame->tc_header.cc     = ((uint8)ingest[byte_idx] & 0x10) >> 4;
+    tc_sdls_processed_frame->tc_header.spare  = ((uint8)ingest[byte_idx] & 0x0C) >> 2;
+    tc_sdls_processed_frame->tc_header.scid   = ((uint8)ingest[byte_idx] & 0x03) << 8;
+    byte_idx++;
+    tc_sdls_processed_frame->tc_header.scid   = tc_sdls_processed_frame->tc_header.scid | (uint8)ingest[byte_idx];
+    byte_idx++;
+    tc_sdls_processed_frame->tc_header.vcid   = (((uint8)ingest[byte_idx] & 0xFC) >> 2) & VCID_BITMASK;
+    tc_sdls_processed_frame->tc_header.fl     = ((uint8)ingest[byte_idx] & 0x03) << 8;
+    byte_idx++;
+    tc_sdls_processed_frame->tc_header.fl     = tc_sdls_processed_frame->tc_header.fl | (uint8)ingest[byte_idx];
+    byte_idx++;
+    tc_sdls_processed_frame->tc_header.fsn	  = (uint8)ingest[byte_idx];
+    byte_idx++;
 
     // Security Header
-    tc_frame.tc_sec_header.sh  = (uint8)ingest[5]; 
-    tc_frame.tc_sec_header.spi = ((uint8)ingest[6] << 8) | (uint8)ingest[7];
+    if(SEGMENTATION_HDR){
+        tc_sdls_processed_frame->tc_sec_header.sh  = (uint8)ingest[byte_idx];
+        byte_idx++;
+    }
+    tc_sdls_processed_frame->tc_sec_header.spi = ((uint8)ingest[byte_idx] << 8) | (uint8)ingest[byte_idx+1];
+    byte_idx+=2;
     #ifdef TC_DEBUG
-        OS_printf("vcid = %d \n", tc_frame.tc_header.vcid );
-        OS_printf("spi  = %d \n", tc_frame.tc_sec_header.spi);
+        OS_printf("vcid = %d \n", tc_sdls_processed_frame->tc_header.vcid );
+        OS_printf("spi  = %d \n", tc_sdls_processed_frame->tc_sec_header.spi);
     #endif
 
     // Checks
-    if (((uint8)ingest[18] == 0x0B) && ((uint8)ingest[19] == 0x00) && (((uint8)ingest[20] & 0xF0) == 0x40))
+    if (PUS_HDR && ((uint8)ingest[18] == 0x0B) && ((uint8)ingest[19] == 0x00) && (((uint8)ingest[20] & 0xF0) == 0x40))
     {   
         // User packet check only used for ESA Testing!
     }
     else
     {   // Update last spi used
-        report.lspiu = tc_frame.tc_sec_header.spi;
+        report.lspiu = tc_sdls_processed_frame->tc_sec_header.spi;
 
         // Verify 
-        if (tc_frame.tc_header.scid != (SCID & 0x3FF))
+        if (tc_sdls_processed_frame->tc_header.scid != (SCID & 0x3FF))
         {
             OS_printf(KRED "Error: SCID incorrect! \n" RESET);
             status = OS_ERROR;
@@ -2751,6 +2767,8 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest)
                     break;
             }
         }
+
+
         if ((report.lspiu > NUM_SA) && (status == OS_SUCCESS))
         {
             report.ispif = 1;
@@ -2759,7 +2777,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest)
         }
         if (status == OS_SUCCESS)
         {
-            if (sa[report.lspiu].gvcid_tc_blk[tc_frame.tc_header.vcid].mapid != TYPE_TC)
+            if (sa[report.lspiu].gvcid_tc_blk[tc_sdls_processed_frame->tc_header.vcid].mapid != TYPE_TC)
             {	
                 OS_printf(KRED "Error: SA invalid type! \n" RESET);
                 status = OS_ERROR;
@@ -2768,7 +2786,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest)
         // TODO: I don't think this is needed.
         //if (status == OS_SUCCESS)
         //{
-        //    if (sa[report.lspiu].gvcid_tc_blk[tc_frame.tc_header.vcid].vcid != tc_frame.tc_header.vcid)
+        //    if (sa[report.lspiu].gvcid_tc_blk[tc_sdls_processed_frame->tc_header.vcid].vcid != tc_sdls_processed_frame->tc_header.vcid)
         //    {	
         //        OS_printf(KRED "Error: VCID not mapped to provided SPI! \n" RESET);
         //        status = OS_ERROR;
@@ -2802,8 +2820,8 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest)
     }
     
     // Determine mode via SPI
-    if ((sa[tc_frame.tc_sec_header.spi].est == 1) && 
-        (sa[tc_frame.tc_sec_header.spi].ast == 1))
+    if ((sa[tc_sdls_processed_frame->tc_sec_header.spi].est == 1) &&
+        (sa[tc_sdls_processed_frame->tc_sec_header.spi].ast == 1))
     {	// Authenticated Encryption
         #ifdef DEBUG
             OS_printf(KBLU "ENCRYPTED TC Received!\n" RESET);
@@ -2811,23 +2829,24 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest)
         #ifdef TC_DEBUG
             OS_printf("IV: \n");
         #endif
-        for (x = 8; x < (8 + IV_SIZE); x++)
+        for (x = byte_idx; x < (byte_idx + IV_SIZE); x++)
         {
-            tc_frame.tc_sec_header.iv[x-8] = (uint8)ingest[x];
+            tc_sdls_processed_frame->tc_sec_header.iv[x-byte_idx] = (uint8)ingest[x];
             #ifdef TC_DEBUG
-                OS_printf("\t iv[%d] = 0x%02x\n", x-8, tc_frame.tc_sec_header.iv[x-8]);
+                OS_printf("\t iv[%d] = 0x%02x\n", x-byte_idx, tc_sdls_processed_frame->tc_sec_header.iv[x-byte_idx]);
             #endif
         }
-        report.snval = tc_frame.tc_sec_header.iv[IV_SIZE-1];
+        byte_idx += IV_SIZE;
+        report.snval = tc_sdls_processed_frame->tc_sec_header.iv[IV_SIZE-1];
 
         #ifdef DEBUG
-            OS_printf("\t tc_sec_header.iv[%d] = 0x%02x \n", IV_SIZE-1, tc_frame.tc_sec_header.iv[IV_SIZE-1]);
-            OS_printf("\t sa[%d].iv[%d] = 0x%02x \n", tc_frame.tc_sec_header.spi, IV_SIZE-1, sa[tc_frame.tc_sec_header.spi].iv[IV_SIZE-1]);
+            OS_printf("\t tc_sec_header.iv[%d] = 0x%02x \n", IV_SIZE-1, tc_sdls_processed_frame->tc_sec_header.iv[IV_SIZE-1]);
+            OS_printf("\t sa[%d].iv[%d] = 0x%02x \n", tc_sdls_processed_frame->tc_sec_header.spi, IV_SIZE-1, sa[tc_sdls_processed_frame->tc_sec_header.spi].iv[IV_SIZE-1]);
         #endif
 
         // Check IV is in ARCW
-        if ( Crypto_window(tc_frame.tc_sec_header.iv, sa[tc_frame.tc_sec_header.spi].iv, IV_SIZE, 
-            sa[tc_frame.tc_sec_header.spi].arcw[sa[tc_frame.tc_sec_header.spi].arcw_len-1]) != OS_SUCCESS )
+        if ( Crypto_window(tc_sdls_processed_frame->tc_sec_header.iv, sa[tc_sdls_processed_frame->tc_sec_header.spi].iv, IV_SIZE,
+            sa[tc_sdls_processed_frame->tc_sec_header.spi].arcw[sa[tc_sdls_processed_frame->tc_sec_header.spi].arcw_len-1]) != OS_SUCCESS )
         {
             report.af = 1;
             report.bsnf = 1;
@@ -2850,7 +2869,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest)
         }
         else 
         {
-            if ( Crypto_compare_less_equal(tc_frame.tc_sec_header.iv, sa[tc_frame.tc_sec_header.spi].iv, IV_SIZE) == OS_SUCCESS )
+            if ( Crypto_compare_less_equal(tc_sdls_processed_frame->tc_sec_header.iv, sa[tc_sdls_processed_frame->tc_sec_header.spi].iv, IV_SIZE) == OS_SUCCESS )
             {   // Replay - IV value lower than expected
                 report.af = 1;
                 report.bsnf = 1;
@@ -2875,7 +2894,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest)
             {   // Adjust expected IV to acceptable received value
                 for (int i = 0; i < (IV_SIZE); i++)
                 {
-                    sa[tc_frame.tc_sec_header.spi].iv[i] = tc_frame.tc_sec_header.iv[i];
+                    sa[tc_sdls_processed_frame->tc_sec_header.spi].iv[i] = tc_sdls_processed_frame->tc_sec_header.iv[i];
                 }
             }
         }
@@ -2886,11 +2905,13 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest)
             return status;
         }
 
-        x = x + Crypto_Get_tcPayloadLength();
+        tc_sdls_processed_frame->tc_pdu_len = Crypto_Get_tcPayloadLength(tc_sdls_processed_frame);
+
+        x = x + tc_sdls_processed_frame->tc_pdu_len;
 
         #ifdef TC_DEBUG
             OS_printf("TC: \n"); 
-            for (int temp = 0; temp < Crypto_Get_tcPayloadLength(); temp++)
+            for (int temp = 0; temp < tc_sdls_processed_frame->tc_pdu_len; temp++)
             {	
                 OS_printf("\t ingest[%d] = 0x%02x \n", temp, (uint8)ingest[temp+20]);
             }
@@ -2902,19 +2923,19 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest)
         #endif
         for (y = x; y < (x + MAC_SIZE); y++)
         {
-            tc_frame.tc_sec_trailer.mac[y-x]  = (uint8)ingest[y];
+            tc_sdls_processed_frame->tc_sec_trailer.mac[y-x]  = (uint8)ingest[y];
             #ifdef TC_DEBUG
-                OS_printf("\t mac[%d] = 0x%02x\n", y-x, tc_frame.tc_sec_trailer.mac[y-x]);
+                OS_printf("\t mac[%d] = 0x%02x\n", y-x, tc_sdls_processed_frame->tc_sec_trailer.mac[y-x]);
             #endif
         }
         x = x + MAC_SIZE;
 
         // FECF
-        tc_frame.tc_sec_trailer.fecf = ((uint8)ingest[x] << 8) | ((uint8)ingest[x+1]);
-        Crypto_FECF(tc_frame.tc_sec_trailer.fecf, ingest, (tc_frame.tc_header.fl - 2));
+        tc_sdls_processed_frame->tc_sec_trailer.fecf = ((uint8)ingest[x] << 8) | ((uint8)ingest[x+1]);
+        Crypto_FECF(tc_sdls_processed_frame->tc_sec_trailer.fecf, ingest, (tc_sdls_processed_frame->tc_header.fl - 2),tc_sdls_processed_frame);
 
         // Initialize the key
-        //itc_gcm128_init(&sa[tc_frame.tc_sec_header.spi].gcm_ctx, (const unsigned char*) &ek_ring[sa[tc_frame.tc_sec_header.spi].ekid]);
+        //itc_gcm128_init(&sa[tc_sdls_processed_frame->tc_sec_header.spi].gcm_ctx, (const unsigned char*) &ek_ring[sa[tc_sdls_processed_frame->tc_sec_header.spi].ekid]);
 
         gcry_error = gcry_cipher_open(
             &(tmp_hd),
@@ -2929,16 +2950,16 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest)
             return status;
         }
         #ifdef DEBUG
-            OS_printf("Key ID = %d, 0x", sa[tc_frame.tc_sec_header.spi].ekid);
+            OS_printf("Key ID = %d, 0x", sa[tc_sdls_processed_frame->tc_sec_header.spi].ekid);
             for(int y = 0; y < KEY_SIZE; y++)
             {
-                OS_printf("%02x", ek_ring[sa[tc_frame.tc_sec_header.spi].ekid].value[y]);
+                OS_printf("%02x", ek_ring[sa[tc_sdls_processed_frame->tc_sec_header.spi].ekid].value[y]);
             }
             OS_printf("\n");
         #endif
         gcry_error = gcry_cipher_setkey(
             tmp_hd,
-            &(ek_ring[sa[tc_frame.tc_sec_header.spi].ekid].value[0]), 
+            &(ek_ring[sa[tc_sdls_processed_frame->tc_sec_header.spi].ekid].value[0]),
             KEY_SIZE
         );
         if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
@@ -2949,8 +2970,8 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest)
         }
         gcry_error = gcry_cipher_setiv(
             tmp_hd,
-            &(sa[tc_frame.tc_sec_header.spi].iv[0]), 
-            sa[tc_frame.tc_sec_header.spi].iv_len
+            &(sa[tc_sdls_processed_frame->tc_sec_header.spi].iv[0]),
+            sa[tc_sdls_processed_frame->tc_sec_header.spi].iv_len
         );
         if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
         {
@@ -2962,9 +2983,9 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest)
             OS_printf("AAD = 0x");
         #endif
         // Prepare additional authenticated data (AAD)
-        for (y = 0; y < sa[tc_frame.tc_sec_header.spi].abm_len; y++)
+        for (y = 0; y < sa[tc_sdls_processed_frame->tc_sec_header.spi].abm_len; y++)
         {
-            ingest[y] = (uint8) ((uint8)ingest[y] & (uint8)sa[tc_frame.tc_sec_header.spi].abm[y]);
+            ingest[y] = (uint8) ((uint8)ingest[y] & (uint8)sa[tc_sdls_processed_frame->tc_sec_header.spi].abm[y]);
             #ifdef MAC_DEBUG
                 OS_printf("%02x", (uint8) ingest[y]);
             #endif
@@ -2975,10 +2996,10 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest)
 
         gcry_error = gcry_cipher_decrypt(
             tmp_hd, 
-            &(tc_frame.tc_pdu[0]),                          // plaintext output
-            Crypto_Get_tcPayloadLength(),			 		// length of data
+            &(tc_sdls_processed_frame->tc_pdu[0]),                          // plaintext output
+            tc_sdls_processed_frame->tc_pdu_len,			 		// length of data
             &(ingest[20]),                                  // ciphertext input
-            Crypto_Get_tcPayloadLength()                    // in data length
+            tc_sdls_processed_frame->tc_pdu_len                    // in data length
         );
         if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
         {
@@ -2988,7 +3009,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest)
         }
         gcry_error = gcry_cipher_checktag(
             tmp_hd, 
-            &(tc_frame.tc_sec_trailer.mac[0]),              // tag input
+            &(tc_sdls_processed_frame->tc_sec_trailer.mac[0]),              // tag input
             MAC_SIZE                                        // tag size
         );
         if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
@@ -2998,13 +3019,13 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest)
             OS_printf("Actual MAC   = 0x");
             for (int z = 0; z < MAC_SIZE; z++)
             {
-                OS_printf("%02x",tc_frame.tc_sec_trailer.mac[z]);
+                OS_printf("%02x",tc_sdls_processed_frame->tc_sec_trailer.mac[z]);
             }
             OS_printf("\n");
             
             gcry_error = gcry_cipher_gettag(
                 tmp_hd,
-                &(tc_frame.tc_sec_trailer.mac[0]),          // tag output
+                &(tc_sdls_processed_frame->tc_sec_trailer.mac[0]),          // tag output
                 MAC_SIZE                                    // tag size
             );
             if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
@@ -3015,7 +3036,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest)
             OS_printf("Expected MAC = 0x");
             for (int z = 0; z < MAC_SIZE; z++)
             {
-                OS_printf("%02x",tc_frame.tc_sec_trailer.mac[z]);
+                OS_printf("%02x",tc_sdls_processed_frame->tc_sec_trailer.mac[z]);
             }
             OS_printf("\n");
             status = OS_ERROR;
@@ -3029,7 +3050,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest)
         
         // Increment the IV for next time
         #ifdef INCREMENT
-            Crypto_increment(sa[tc_frame.tc_sec_header.spi].iv, IV_SIZE);
+            Crypto_increment(sa[tc_sdls_processed_frame->tc_sec_header.spi].iv, IV_SIZE);
         #endif
     }
     else
@@ -3038,17 +3059,17 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest)
             OS_printf(KBLU "CLEAR TC Received!\n" RESET);
         #endif
 
-        for (y = 10; y <= (tc_frame.tc_header.fl - 2); y++)
+        for (y = 10; y <= (tc_sdls_processed_frame->tc_header.fl - 2); y++) //tfhdr+seghdr+sechdr=5+1+6=12
         {	
-            tc_frame.tc_pdu[y - 10] = (uint8)ingest[y]; 
+            tc_sdls_processed_frame->tc_pdu[y - 10] = (uint8)ingest[y];
         }
         // FECF
-        tc_frame.tc_sec_trailer.fecf = ((uint8)ingest[y] << 8) | ((uint8)ingest[y+1]);
-        Crypto_FECF((int) tc_frame.tc_sec_trailer.fecf, ingest, (tc_frame.tc_header.fl - 2));
+        tc_sdls_processed_frame->tc_sec_trailer.fecf = ((uint8)ingest[y] << 8) | ((uint8)ingest[y+1]);
+        Crypto_FECF((int) tc_sdls_processed_frame->tc_sec_trailer.fecf, ingest, (tc_sdls_processed_frame->tc_header.fl - 2),tc_sdls_processed_frame);
     }
     
     #ifdef TC_DEBUG
-        Crypto_tcPrint(&tc_frame);
+        Crypto_tcPrint(tc_sdls_processed_frame);
     #endif
 
     // Zero ingest
@@ -3056,64 +3077,108 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest)
     {
         ingest[x] = 0;
     }
-    
-    if ((tc_frame.tc_pdu[0] == 0x18) && (tc_frame.tc_pdu[1] == 0x80))	
-    // Crypto Lib Application ID
-    {
-        #ifdef DEBUG
-            OS_printf(KGRN "Received SDLS command: " RESET);
-        #endif
-        // CCSDS Header
-        sdls_frame.hdr.pvn  	  = (tc_frame.tc_pdu[0] & 0xE0) >> 5;
-        sdls_frame.hdr.type 	  = (tc_frame.tc_pdu[0] & 0x10) >> 4;
-        sdls_frame.hdr.shdr 	  = (tc_frame.tc_pdu[0] & 0x08) >> 3;
-        sdls_frame.hdr.appID      = ((tc_frame.tc_pdu[0] & 0x07) << 8) | tc_frame.tc_pdu[1];
-        sdls_frame.hdr.seq  	  = (tc_frame.tc_pdu[2] & 0xC0) >> 6;
-        sdls_frame.hdr.pktid      = ((tc_frame.tc_pdu[2] & 0x3F) << 8) | tc_frame.tc_pdu[3];
-        sdls_frame.hdr.pkt_length = (tc_frame.tc_pdu[4] << 8) | tc_frame.tc_pdu[5];
-        
-        // CCSDS PUS
-        sdls_frame.pus.shf		  = (tc_frame.tc_pdu[6] & 0x80) >> 7;
-        sdls_frame.pus.pusv		  = (tc_frame.tc_pdu[6] & 0x70) >> 4;
-        sdls_frame.pus.ack		  = (tc_frame.tc_pdu[6] & 0x0F);
-        sdls_frame.pus.st		  = tc_frame.tc_pdu[7];
-        sdls_frame.pus.sst		  = tc_frame.tc_pdu[8];
-        sdls_frame.pus.sid		  = (tc_frame.tc_pdu[9] & 0xF0) >> 4;
-        sdls_frame.pus.spare	  = (tc_frame.tc_pdu[9] & 0x0F);
-        
-        // SDLS TLV PDU
-        sdls_frame.pdu.type 	  = (tc_frame.tc_pdu[10] & 0x80) >> 7;
-        sdls_frame.pdu.uf   	  = (tc_frame.tc_pdu[10] & 0x40) >> 6;
-        sdls_frame.pdu.sg   	  = (tc_frame.tc_pdu[10] & 0x30) >> 4;
-        sdls_frame.pdu.pid  	  = (tc_frame.tc_pdu[10] & 0x0F);
-        sdls_frame.pdu.pdu_len 	  = (tc_frame.tc_pdu[11] << 8) | tc_frame.tc_pdu[12];
-        for (x = 13; x < (13 + sdls_frame.hdr.pkt_length); x++)
-        {
-            sdls_frame.pdu.data[x-13] = tc_frame.tc_pdu[x]; 
-        }
-        
-        #ifdef CCSDS_DEBUG
-            Crypto_ccsdsPrint(&sdls_frame); 
-        #endif
 
-        // Determine type of PDU
-        *len_ingest = Crypto_PDU(ingest);
-    }
-    else
-    {	// CCSDS Pass-through
+
+    if(!TC_PROCESS_SDLS_PDUS) //If we don't want to process frame data for SDLS PDUs, only reverse security & return content.
+    {
+        // CCSDS Pass-through
         #ifdef DEBUG
-            OS_printf(KGRN "CCSDS Pass-through \n" RESET);
+        OS_printf(KGRN "CCSDS Pass-through \n" RESET);
         #endif
-        // TODO: Remove PUS Header
-        for (x = 0; x < (tc_frame.tc_header.fl - 11); x++)
-        {
-            ingest[x] = tc_frame.tc_pdu[x];
-            #ifdef CCSDS_DEBUG
-                OS_printf("tc_frame.tc_pdu[%d] = 0x%02x\n", x, tc_frame.tc_pdu[x]);
-            #endif
+        if (PUS_HDR) {
+            for (x = 0; x < (tc_sdls_processed_frame->tc_header.fl - 11); x++) {
+                ingest[x] = tc_sdls_processed_frame->tc_pdu[x];
+                #ifdef CCSDS_DEBUG
+                OS_printf("tc_sdls_processed_frame->tc_pdu[%d] = 0x%02x\n", x, tc_sdls_processed_frame->tc_pdu[x]);
+                #endif
+                *len_ingest = x;
+            }
+        } else {
+            for (x = 0; x < (tc_sdls_processed_frame->tc_header.fl); x++) { //with no PUS header, entire PDU is data
+                ingest[x] = tc_sdls_processed_frame->tc_pdu[x];
+                #ifdef CCSDS_DEBUG
+                OS_printf("tc_sdls_processed_frame->tc_pdu[%d] = 0x%02x\n", x, tc_sdls_processed_frame->tc_pdu[x]);
+                #endif
+                *len_ingest = x;
+            }
         }
-        *len_ingest = x;
     }
+    else //Process SDLS PDU
+    {
+        if (PUS_HDR)
+        {
+            if ((tc_sdls_processed_frame->tc_pdu[0] == 0x18) && (tc_sdls_processed_frame->tc_pdu[1] == 0x80))
+            // Crypto Lib Application ID
+            {
+                #ifdef DEBUG
+                OS_printf(KGRN "Received SDLS command: " RESET);
+                #endif
+                // CCSDS Header
+                sdls_frame.hdr.pvn = (tc_sdls_processed_frame->tc_pdu[0] & 0xE0) >> 5;
+                sdls_frame.hdr.type = (tc_sdls_processed_frame->tc_pdu[0] & 0x10) >> 4;
+                sdls_frame.hdr.shdr = (tc_sdls_processed_frame->tc_pdu[0] & 0x08) >> 3;
+                sdls_frame.hdr.appID =
+                        ((tc_sdls_processed_frame->tc_pdu[0] & 0x07) << 8) | tc_sdls_processed_frame->tc_pdu[1];
+                sdls_frame.hdr.seq = (tc_sdls_processed_frame->tc_pdu[2] & 0xC0) >> 6;
+                sdls_frame.hdr.pktid =
+                        ((tc_sdls_processed_frame->tc_pdu[2] & 0x3F) << 8) | tc_sdls_processed_frame->tc_pdu[3];
+                sdls_frame.hdr.pkt_length = (tc_sdls_processed_frame->tc_pdu[4] << 8) | tc_sdls_processed_frame->tc_pdu[5];
+
+                // CCSDS PUS
+                sdls_frame.pus.shf = (tc_sdls_processed_frame->tc_pdu[6] & 0x80) >> 7;
+                sdls_frame.pus.pusv = (tc_sdls_processed_frame->tc_pdu[6] & 0x70) >> 4;
+                sdls_frame.pus.ack = (tc_sdls_processed_frame->tc_pdu[6] & 0x0F);
+                sdls_frame.pus.st = tc_sdls_processed_frame->tc_pdu[7];
+                sdls_frame.pus.sst = tc_sdls_processed_frame->tc_pdu[8];
+                sdls_frame.pus.sid = (tc_sdls_processed_frame->tc_pdu[9] & 0xF0) >> 4;
+                sdls_frame.pus.spare = (tc_sdls_processed_frame->tc_pdu[9] & 0x0F);
+
+                // SDLS TLV PDU
+                sdls_frame.pdu.type = (tc_sdls_processed_frame->tc_pdu[10] & 0x80) >> 7;
+                sdls_frame.pdu.uf = (tc_sdls_processed_frame->tc_pdu[10] & 0x40) >> 6;
+                sdls_frame.pdu.sg = (tc_sdls_processed_frame->tc_pdu[10] & 0x30) >> 4;
+                sdls_frame.pdu.pid = (tc_sdls_processed_frame->tc_pdu[10] & 0x0F);
+                sdls_frame.pdu.pdu_len = (tc_sdls_processed_frame->tc_pdu[11] << 8) | tc_sdls_processed_frame->tc_pdu[12];
+                for (x = 13; x < (13 + sdls_frame.hdr.pkt_length); x++) {
+                    sdls_frame.pdu.data[x - 13] = tc_sdls_processed_frame->tc_pdu[x];
+                }
+
+                #ifdef CCSDS_DEBUG
+                Crypto_ccsdsPrint(&sdls_frame);
+                #endif
+
+                // Determine type of PDU
+                *len_ingest = Crypto_PDU(ingest, tc_sdls_processed_frame);
+            }
+        }
+        else if (tc_sdls_processed_frame->tc_header.vcid == TC_SDLS_EP_VCID) //TC SDLS PDU with no packet layer
+        {
+            #ifdef DEBUG
+            OS_printf(KGRN "Received SDLS command: " RESET);
+            #endif
+            // No Packet HDR or PUS in these frames
+            // SDLS TLV PDU
+            sdls_frame.pdu.type = (tc_sdls_processed_frame->tc_pdu[0] & 0x80) >> 7;
+            sdls_frame.pdu.uf = (tc_sdls_processed_frame->tc_pdu[0] & 0x40) >> 6;
+            sdls_frame.pdu.sg = (tc_sdls_processed_frame->tc_pdu[0] & 0x30) >> 4;
+            sdls_frame.pdu.pid = (tc_sdls_processed_frame->tc_pdu[0] & 0x0F);
+            sdls_frame.pdu.pdu_len = (tc_sdls_processed_frame->tc_pdu[1] << 8) | tc_sdls_processed_frame->tc_pdu[2];
+            for (x = 3; x < (3 + tc_sdls_processed_frame->tc_header.fl); x++) {
+                //Todo - Consider how this behaves with large OTAR PDUs that are larger than 1 TC in size. Most likely fails. Must consider Uplink Sessions (sequence numbers).
+                sdls_frame.pdu.data[x - 3] = tc_sdls_processed_frame->tc_pdu[x];
+            }
+
+            #ifdef CCSDS_DEBUG
+            Crypto_ccsdsPrint(&sdls_frame);
+            #endif
+
+            // Determine type of PDU
+            *len_ingest = Crypto_PDU(ingest, tc_sdls_processed_frame);
+        }
+        else {
+            //TODO - Process SDLS PDU with Packet Layer without PUS_HDR
+        }
+    }//End Process SDLS PDU
 
     #ifdef OCF_DEBUG
         Crypto_fsrPrint(&report);
@@ -3125,7 +3190,6 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest)
 
     return status;
 }
-
 
 int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
 // Accepts CCSDS message in ingest, and packs into TM before encryption

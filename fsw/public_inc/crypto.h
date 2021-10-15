@@ -27,6 +27,8 @@ ivv-itc@lists.nasa.gov
 #include "cfe_minimum.h"
 #endif
 
+#include "crypto_structs.h"
+
 #define CRYPTO_LIB_MAJOR_VERSION    1
 #define CRYPTO_LIB_MINOR_VERSION    2
 #define CRYPTO_LIB_REVISION         0
@@ -39,7 +41,7 @@ ivv-itc@lists.nasa.gov
 extern int32 Crypto_Init(void);
 // Telecommand (TC)
 extern int32 Crypto_TC_ApplySecurity(char** ingest, int* len_ingest);
-extern int32 Crypto_TC_ProcessSecurity(char* ingest, int*  len_ingest);
+extern int32 Crypto_TC_ProcessSecurity(char* ingest, int*  len_ingest, TC_t* tc_sdls_processed_frame);
 // Telemetry (TM)
 extern int32 Crypto_TM_ApplySecurity(char* ingest, int* len_ingest);
 extern int32 Crypto_TM_ProcessSecurity(char* ingest, int* len_ingest);

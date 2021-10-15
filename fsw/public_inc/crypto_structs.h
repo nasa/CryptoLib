@@ -18,7 +18,12 @@ ivv-itc@lists.nasa.gov
 #define _crypto_structs_h_
 
 #include "crypto_config.h"
-#include <gcrypt.h>
+
+#ifdef NOS3 //NOS3/cFS build is ready
+#include "common_types.h"
+#else //Assume build outside of NOS3/cFS infrastructure
+#include "common_types_minimum.h"
+#endif
 
 /*
 ** Key Definitions
@@ -266,6 +271,7 @@ typedef struct
     TC_FramePrimaryHeader_t		tc_header;
     TC_FrameSecurityHeader_t	tc_sec_header;
     uint8 						tc_pdu[TC_FRAME_DATA_SIZE];
+    uint16                      tc_pdu_len;
     TC_FrameSecurityTrailer_t	tc_sec_trailer;
 } TC_t;
 #define TC_SIZE     (sizeof(TC_t))
