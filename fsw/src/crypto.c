@@ -772,10 +772,10 @@ static int32 Crypto_Get_tcPayloadLength(TC_t* tc_frame)
 {
     int seg_hdr = 0;if(SEGMENTATION_HDR){seg_hdr=1;}
     int fecf = 0;if(HAS_FECF){fecf=FECF_SIZE;}
-    int pus_hdr = 0; if(PUS_HDR){pus_hdr=9;} //Why do we need this? Shouldn't it just be part of the TC data?
+    int iv_size = IV_SIZE_TC; if(PUS_HDR){iv_size=IV_SIZE;} //For some reason, the interoperability tests with PUS header frames work with a 12 byte TC IV, so we'll use that for those.
     int tf_hdr = 5;
 
-    return (tc_frame->tc_header.fl - (tf_hdr + seg_hdr + pus_hdr + IV_SIZE_TC ) - (MAC_SIZE + FECF_SIZE) );
+    return (tc_frame->tc_header.fl - (tf_hdr + seg_hdr + iv_size ) - (MAC_SIZE + FECF_SIZE) );
     //return (tc_frame->tc_header.fl - (5 + 2 + IV_SIZE ) - (MAC_SIZE + FECF_SIZE) );
     //TFHDR=5bytes, SegHdr=1byte,SPI=2bytes,SeqNum=4bytes,MAC=16bytes,FECF=2bytes -- should be 30 bytes max, above calculation seems incorrect.
 }
