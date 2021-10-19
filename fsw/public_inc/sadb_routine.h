@@ -33,7 +33,7 @@ typedef struct {
     int32 (*sadb_get_sa_from_spi)(uint16,SecurityAssociation_t**);
     // Security Association Utility Functions
     int32 (*sadb_sa_stop)(void);
-    int32  (*sadb_sa_start)(void);
+    int32  (*sadb_sa_start)(TC_t* tc_frame);
     int32  (*sadb_sa_expire)(void);
     int32  (*sadb_sa_rekey)(void);
     int32  (*sadb_sa_status)(char*);

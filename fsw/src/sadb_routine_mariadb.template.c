@@ -21,7 +21,7 @@ static int32 sadb_init(void);
 // Security Association Interaction Functions
 static int32 sadb_get_sa_from_spi(uint16,SecurityAssociation_t**);
 // Security Association Utility Functions
-static int32 sadb_sa_start(void);
+static int32 sadb_sa_start(TC_t* tc_frame);
 static int32 sadb_sa_expire(void);
 static int32 sadb_sa_rekey(void);
 static int32 sadb_sa_status(char*);
@@ -62,7 +62,7 @@ int32 sadb_init(void){return 0;}
 // Security Association Interaction Functions
 int32 sadb_get_sa_from_spi(uint16 spi,SecurityAssociation_t** security_association){return 0;}
 // Security Association Utility Functions
-int32 sadb_sa_start(void){return 0;}
+int32 sadb_sa_start(TC_t* tc_frame){return 0;}
 int32 sadb_sa_expire(void){return 0;}
 int32 sadb_sa_rekey(void){return 0;}
 int32 sadb_sa_status(char* ingest){return 0;}

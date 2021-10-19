@@ -23,7 +23,7 @@ static int32 sadb_init(void);
 // Security Association Interaction Functions
 static int32 sadb_get_sa_from_spi(uint16,SecurityAssociation_t**);
 // Security Association Utility Functions
-static int32 sadb_sa_start(void);
+static int32 sadb_sa_start(TC_t* tc_frame);
 static int32 sadb_sa_expire(void);
 static int32 sadb_sa_rekey(void);
 static int32 sadb_sa_status(char*);
@@ -548,7 +548,7 @@ static int32 sadb_get_sa_from_spi(uint16 spi,SecurityAssociation_t** security_as
 /*
 ** Security Association Management Services
 */
-static int32 sadb_sa_start(void)
+static int32 sadb_sa_start(TC_t* tc_frame)
 {
     // Local variables
     uint8 count = 0;
@@ -579,7 +579,7 @@ static int32 sadb_sa_start(void)
                 gvcid.mapid = (sdls_frame.pdu.data[count + 3]);
 
                 // TC
-                if (gvcid.vcid != tc_frame.tc_header.vcid)
+                if (gvcid.vcid != tc_frame->tc_header.vcid)
                 {   // Clear all GVCIDs for provided SPI
                     if (gvcid.mapid == TYPE_TC)
                     {
