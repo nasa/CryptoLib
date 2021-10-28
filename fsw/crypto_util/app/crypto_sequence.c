@@ -62,7 +62,9 @@ int main(int argc, char *argv[]) {
         } else if (strcmp(security_type,"aos_a")==0){
             Crypto_AOS_ApplySecurity(buffer, &buffer_size_i);
         } else if (strcmp(security_type,"tc_p")==0){
-            Crypto_TC_ProcessSecurity(buffer, &buffer_size_i);
+            TC_t* tc_sdls_processed_frame = malloc(sizeof(TC_t));
+            Crypto_TC_ProcessSecurity(buffer, &buffer_size_i,tc_sdls_processed_frame);
+            free(tc_sdls_processed_frame);
         } else if (strcmp(security_type,"tm_p")==0){
             Crypto_TM_ProcessSecurity(buffer, &buffer_size_i);
         } else if (strcmp(security_type,"aos_p")==0){
