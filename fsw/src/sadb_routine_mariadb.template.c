@@ -38,9 +38,6 @@ static int32 sadb_sa_delete(void);
 static SadbRoutineStruct sadb_routine;
 static SecurityAssociation_t sa[NUM_SA];
 
-static crypto_key_t ek_ring[NUM_KEYS];
-
-
 SadbRoutine get_sadb_routine_mariadb(void)
 {
     sadb_routine.sadb_config = sadb_config;
@@ -57,16 +54,19 @@ SadbRoutine get_sadb_routine_mariadb(void)
     return &sadb_routine;
 }
 
-int32 sadb_config(void){return 0;}
-int32 sadb_init(void){return 0;}
+int32 sadb_config(void)
+{
+    return OS_SUCCESS;
+}
+int32 sadb_init(void){return OS_SUCCESS;}
 // Security Association Interaction Functions
-int32 sadb_get_sa_from_spi(uint16 spi,SecurityAssociation_t** security_association){return 0;}
+int32 sadb_get_sa_from_spi(uint16 spi,SecurityAssociation_t** security_association){return OS_SUCCESS;}
 // Security Association Utility Functions
-int32 sadb_sa_start(TC_t* tc_frame){return 0;}
-int32 sadb_sa_expire(void){return 0;}
-int32 sadb_sa_rekey(void){return 0;}
-int32 sadb_sa_status(char* ingest){return 0;}
-int32 sadb_sa_create(void){return 0;}
-int32 sadb_sa_setARSN(void){return 0;}
-int32 sadb_sa_setARSNW(void){return 0;}
-int32 sadb_sa_delete(void){return 0;}
+int32 sadb_sa_start(TC_t* tc_frame){return OS_SUCCESS;}
+int32 sadb_sa_expire(void){return OS_SUCCESS;}
+int32 sadb_sa_rekey(void){return OS_SUCCESS;}
+int32 sadb_sa_status(char* ingest){return OS_SUCCESS;}
+int32 sadb_sa_create(void){return OS_SUCCESS;}
+int32 sadb_sa_setARSN(void){return OS_SUCCESS;}
+int32 sadb_sa_setARSNW(void){return OS_SUCCESS;}
+int32 sadb_sa_delete(void){return OS_SUCCESS;}
