@@ -4,6 +4,7 @@ core
 *.so
 build
 venv
+*.dat
 
 #CMake.gitignore
 CMakeLists.txt.user
