@@ -231,7 +231,7 @@ typedef struct
 /*
 ** Telecommand (TC) Definitions
 */
-typedef struct
+typedef struct __attribute__ ((packed))
 {
     uint8 	tfvn	:2;			// Transfer Frame Version Number
     uint8 	bypass	:1;			// Bypass
