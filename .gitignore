@@ -5,6 +5,7 @@ core
 build
 venv
 *.dat
+.vscode
 
 #CMake.gitignore
 CMakeLists.txt.user
