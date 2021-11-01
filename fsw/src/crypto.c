@@ -2648,40 +2648,39 @@ static int32 Crypto_PDU(char* ingest,TC_t* tc_frame)
 
     return status;
 }
-
-int32 Crypto_TC_ApplySecurity(char** ingest, int* len_ingest)
+int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint32 in_frame_length, \
+    uint8 **enc_frame_test, uint32 *enc_frame_len)
 {
     // Local Variables
     int32 status = OS_SUCCESS;
-    unsigned char* tc_ingest = *ingest;
 
     #ifdef DEBUG
         OS_printf(KYEL "\n----- Crypto_TC_ApplySecurity START -----\n" RESET);
     #endif
 
     #ifdef DEBUG
-        OS_printf("TF Bytes received\n");
+        OS_printf("%d TF Bytes received\n", in_frame_length);
         OS_printf("DEBUG - ");
-        for(int i=0; i <*len_ingest; i++)
+        for(int i=0; i < in_frame_length; i++)
         {
-            OS_printf("%02X", ((uint8 *)&*tc_ingest)[i]);
+            OS_printf("%02X", ((uint8 *)&*in_frame)[i]);
         }
-        OS_printf("\nPrinted %d bytes\n", *len_ingest);
+        OS_printf("\nPrinted %d bytes\n", in_frame_length);
     #endif
 
 
     TC_FramePrimaryHeader_t temp_tc_header;
     // Primary Header
-    temp_tc_header.tfvn   = ((uint8)tc_ingest[0] & 0xC0) >> 6;
-    temp_tc_header.bypass = ((uint8)tc_ingest[0] & 0x20) >> 5;
-    temp_tc_header.cc     = ((uint8)tc_ingest[0] & 0x10) >> 4;
-    temp_tc_header.spare  = ((uint8)tc_ingest[0] & 0x0C) >> 2;
-    temp_tc_header.scid   = ((uint8)tc_ingest[0] & 0x03) << 8;
-    temp_tc_header.scid   = temp_tc_header.scid | (uint8)tc_ingest[1];
-    temp_tc_header.vcid   = ((uint8)tc_ingest[2] & 0xFC) >> 2;
-    temp_tc_header.fl     = ((uint8)tc_ingest[2] & 0x03) << 8;
-    temp_tc_header.fl     = temp_tc_header.fl | (uint8)tc_ingest[3];
-    temp_tc_header.fsn	  = (uint8)tc_ingest[4];
+    temp_tc_header.tfvn   = ((uint8)in_frame[0] & 0xC0) >> 6;
+    temp_tc_header.bypass = ((uint8)in_frame[0] & 0x20) >> 5;
+    temp_tc_header.cc     = ((uint8)in_frame[0] & 0x10) >> 4;
+    temp_tc_header.spare  = ((uint8)in_frame[0] & 0x0C) >> 2;
+    temp_tc_header.scid   = ((uint8)in_frame[0] & 0x03) << 8;
+    temp_tc_header.scid   = temp_tc_header.scid | (uint8)in_frame[1];
+    temp_tc_header.vcid   = ((uint8)in_frame[2] & 0xFC) >> 2;
+    temp_tc_header.fl     = ((uint8)in_frame[2] & 0x03) << 8;
+    temp_tc_header.fl     = temp_tc_header.fl | (uint8)in_frame[3];
+    temp_tc_header.fsn	  = (uint8)in_frame[4];
 
     // Check if command frame flag set
     if (temp_tc_header.cc == 1)
@@ -2782,36 +2781,35 @@ int32 Crypto_TC_ApplySecurity(char** ingest, int* len_ingest)
             // Total length of buffer to be malloced
             // Ingest length + segment header (1) + spi_index (2) + some variable length fields
             // TODO
-            uint16 tc_buf_length = *len_ingest + 1 + 2 + temp_SA.shplf_len;
+            *enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shplf_len;
 
             #ifdef TC_DEBUG
-                OS_printf(KYEL "DEBUG - Total TC Buffer to be malloced is: %d bytes\n" RESET, tc_buf_length);
-                OS_printf(KYEL "\tlen of TF\t = %d\n" RESET, *len_ingest);
+                OS_printf(KYEL "DEBUG - Total TC Buffer to be malloced is: %d bytes\n" RESET, *enc_frame_len);
+                OS_printf(KYEL "\tlen of TF\t = %d\n" RESET, in_frame_length);
                 OS_printf(KYEL "\tsegment hdr\t = 1\n" RESET);
                 OS_printf(KYEL "\tspi len\t\t = 2\n" RESET);
                 OS_printf(KYEL "\tsh pad len\t = %d\n" RESET, temp_SA.shplf_len);
             #endif
 
             // Accio buffer
-            unsigned char * ptc_enc_buf;
-            ptc_enc_buf = (unsigned char *)malloc(tc_buf_length * sizeof (unsigned char));
-            CFE_PSP_MemSet(ptc_enc_buf, 0, tc_buf_length);
+            uint8 *enc_frame = (const uint8 *)malloc(*enc_frame_len * sizeof (unsigned char));
+            CFE_PSP_MemSet(enc_frame, 0, *enc_frame_len);
 
             // Copy original TF header
-            CFE_PSP_MemCpy(ptc_enc_buf, &*tc_ingest, TC_FRAME_PRIMARYHEADER_SIZE);
+            CFE_PSP_MemCpy(enc_frame, in_frame, TC_FRAME_PRIMARYHEADER_SIZE);
             // Set new TF Header length
             // Recall: Length field is one minus total length per spec
-            *(ptc_enc_buf+2) = ((*(ptc_enc_buf+2) & 0xFC) | (((tc_buf_length - 1) & (0x0300)) >> 8));
-            *(ptc_enc_buf+3) = ((tc_buf_length - 1) & (0x00FF));
+            *(enc_frame+2) = ((*(enc_frame+2) & 0xFC) | (((*enc_frame_len - 1) & (0x0300)) >> 8));
+            *(enc_frame+3) = ((*enc_frame_len - 1) & (0x00FF));
 
             #ifdef TC_DEBUG
                 OS_printf(KYEL "Printing updated TF Header:\n\t");
                 for (int i=0; i<TC_FRAME_PRIMARYHEADER_SIZE; i++)
                 {
-                    OS_printf("%02X", *(ptc_enc_buf+i));
+                    OS_printf("%02X", *(enc_frame+i));
                 }
                 // Recall: The buffer length is 1 greater than the field value set in the TCTF
-                OS_printf("\n\tNew length is 0x%02X\n", tc_buf_length-1);
+                OS_printf("\n\tNew length is 0x%02X\n", *enc_frame_len-1);
                 OS_printf(RESET);
             #endif
 
@@ -2821,7 +2819,7 @@ int32 Crypto_TC_ApplySecurity(char** ingest, int* len_ingest)
 
             uint16_t index = TC_FRAME_PRIMARYHEADER_SIZE;
             // Set Secondary Header flags
-            *(ptc_enc_buf + index) = 0xFF;
+            *(enc_frame + index) = 0xFF;
             index++;
 
             /*
@@ -2829,8 +2827,8 @@ int32 Crypto_TC_ApplySecurity(char** ingest, int* len_ingest)
             ** Reference CCSDS SDLP 3550b1 4.1.1.1.3
             */
             // Set SPI
-            *(ptc_enc_buf + index) = ((spi & 0xFF00) >> 8);
-            *(ptc_enc_buf + index + 1) = (spi & 0x00FF);
+            *(enc_frame + index) = ((spi & 0xFF00) >> 8);
+            *(enc_frame + index + 1) = (spi & 0x00FF);
             index += 2;
 
             // Set anti-replay sequence number value
@@ -2845,22 +2843,28 @@ int32 Crypto_TC_ApplySecurity(char** ingest, int* len_ingest)
             {
                 // Temp fill Pad
                 // TODO: What should pad be, set per channel/SA potentially?
-                *(ptc_enc_buf + index) = 0x00;
+                *(enc_frame + index) = 0x00;
                 index++;
             }
 
             // Copy in original TF data
-            // Copy original TF header
-            CFE_PSP_MemCpy(ptc_enc_buf + index, &*(tc_ingest + TC_FRAME_PRIMARYHEADER_SIZE), *len_ingest-TC_FRAME_PRIMARYHEADER_SIZE);
+            CFE_PSP_MemCpy((enc_frame+index), (in_frame+TC_FRAME_PRIMARYHEADER_SIZE), (in_frame_length-TC_FRAME_PRIMARYHEADER_SIZE));
+            // for (int i=TC_FRAME_PRIMARYHEADER_SIZE; i < in_frame_length; i++)
+            // {
+            //     *(enc_frame + index) = *(in_frame + i);
+            //     index++;
+            // }
 
             #ifdef TC_DEBUG
                 OS_printf(KYEL "Printing new TC Frame:\n\t");
-                for(int i=0; i < tc_buf_length; i++)
+                for(int i=0; i < *enc_frame_len; i++)
                 {
-                    OS_printf("%02X", *(ptc_enc_buf + i));
+                    OS_printf("%02X", *(enc_frame + i));
                 }
-                OS_printf("\n" RESET);
+                OS_printf("\n\tThe returned length is: %d\n" RESET, *enc_frame_len);
             #endif
+
+            *enc_frame_test = enc_frame;
         }
 
         // Authentication

@@ -42,6 +42,9 @@ int main(int argc, char *argv[]) {
     Crypto_Init();
 
     int arg_index = 0;
+    uint8 * ptr_enc_frame = NULL;
+    uint32 enc_frame_len; 
+
     while(arg_index != argc-1){
         security_type = argv[++arg_index];
         debug_printf("Security Type: %s\n",security_type);
@@ -54,10 +57,11 @@ int main(int argc, char *argv[]) {
         debug_printf("File content: \n");
         debug_hexprintf(buffer,buffer_size_i);
 
+
         //Call Apply/ProcessSecurity on buffer contents depending on type.
         if (strcmp(security_type,"tc_a")==0){
-            Crypto_TC_ApplySecurity(&buffer, &buffer_size_i);
-        } else if (strcmp(security_type,"tm_a")==0){
+            Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, enc_frame_len);}
+        else if (strcmp(security_type,"tm_a")==0){
             Crypto_TM_ApplySecurity(buffer, &buffer_size_i);
         } else if (strcmp(security_type,"aos_a")==0){
             Crypto_AOS_ApplySecurity(buffer, &buffer_size_i);
