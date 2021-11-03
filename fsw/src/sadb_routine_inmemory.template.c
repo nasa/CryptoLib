@@ -64,20 +64,17 @@ static int32 sadb_config(void)
 
     // Security Associations
     // SA 1 - CLEAR MODE
+    // SA 1 VC0/1 is now SA 1-VC0, SA 8-VC1
     sa[1].sa_state = SA_OPERATIONAL;
     sa[1].est = 0;
     sa[1].ast = 0;
     sa[1].arc_len = 1;
     sa[1].arcw_len = 1;
     sa[1].arcw[0] = 5;
-    sa[1].gvcid_tc_blk[0].tfvn  = 0;
-    sa[1].gvcid_tc_blk[0].scid  = SCID & 0x3FF;
-    sa[1].gvcid_tc_blk[0].vcid  = 0;
-    sa[1].gvcid_tc_blk[0].mapid = TYPE_TC;
-    sa[1].gvcid_tc_blk[1].tfvn  = 0;
-    sa[1].gvcid_tc_blk[1].scid  = SCID & 0x3FF;
-    sa[1].gvcid_tc_blk[1].vcid  = 1;
-    sa[1].gvcid_tc_blk[1].mapid = TYPE_TC;
+    sa[1].gvcid_tc_blk.tfvn  = 0;
+    sa[1].gvcid_tc_blk.scid  = SCID & 0x3FF;
+    sa[1].gvcid_tc_blk.vcid  = 0;
+    sa[1].gvcid_tc_blk.mapid = TYPE_TC;
     // SA 2 - KEYED;  ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 128
     sa[2].ekid = 128;
     sa[2].sa_state = SA_KEYED;
@@ -111,6 +108,7 @@ static int32 sadb_config(void)
     sa[3].arcw[0] = 5;
     sa[3].arc_len = (sa[3].arcw[0] * 2) + 1;
     // SA 4 - KEYED;  ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 130
+    // SA 4 VC0/1 is now 4-VC0, 7-VC1
     sa[4].ekid = 130;
     sa[4].sa_state = SA_KEYED;
     sa[4].est = 1;
@@ -126,14 +124,11 @@ static int32 sadb_config(void)
     sa[4].arcw_len = 1;
     sa[4].arcw[0] = 5;
     sa[4].arc_len = (sa[4].arcw[0] * 2) + 1;
-    sa[4].gvcid_tc_blk[0].tfvn  = 0;
-    sa[4].gvcid_tc_blk[0].scid  = SCID & 0x3FF;
-    sa[4].gvcid_tc_blk[0].vcid  = 0;
-    sa[4].gvcid_tc_blk[0].mapid = TYPE_TC;
-    sa[4].gvcid_tc_blk[1].tfvn  = 0;
-    sa[4].gvcid_tc_blk[1].scid  = SCID & 0x3FF;
-    sa[4].gvcid_tc_blk[1].vcid  = 1;
-    sa[4].gvcid_tc_blk[1].mapid = TYPE_TC;
+    sa[4].gvcid_tc_blk.tfvn  = 0;
+    sa[4].gvcid_tc_blk.scid  = SCID & 0x3FF;
+    sa[4].gvcid_tc_blk.vcid  = 0;
+    sa[4].gvcid_tc_blk.mapid = TYPE_TC;
+
     // SA 5 - KEYED;   ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 131
     sa[5].ekid = 131;
     sa[5].sa_state = SA_KEYED;
@@ -167,7 +162,40 @@ static int32 sadb_config(void)
     sa[6].arc_len = (sa[6].arcw[0] * 2) + 1;
     //itc_gcm128_init(&(sa[6].gcm_ctx), (unsigned char *)&(ek_ring[sa[6].ekid]));
 
+    // SA 7 - KEYED;  ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 130
+    sa[7].ekid = 130;
+    sa[7].sa_state = SA_KEYED;
+    sa[7].est = 1;
+    sa[7].ast = 1;
+    sa[7].shivf_len = 12;
+    sa[7].iv_len = IV_SIZE;
+    sa[7].iv[IV_SIZE-1] = 0;
+    sa[7].abm_len = 0x14; // 20
+    for (int i = 0; i < sa[4].abm_len; i++)
+    {	// Zero AAD bit mask
+        sa[4].abm[i] = 0x00;
+    }
+    sa[7].arcw_len = 1;
+    sa[7].arcw[0] = 5;
+    sa[7].arc_len = (sa[4].arcw[0] * 2) + 1;
+    sa[7].gvcid_tc_blk.tfvn  = 0;
+    sa[7].gvcid_tc_blk.scid  = SCID & 0x3FF;
+    sa[7].gvcid_tc_blk.vcid  = 1;
+    sa[7].gvcid_tc_blk.mapid = TYPE_TC;
     return status;
+
+    // SA 8 - CLEAR MODE
+    sa[8].sa_state = SA_OPERATIONAL;
+    sa[8].est = 0;
+    sa[8].ast = 0;
+    sa[8].arc_len = 1;
+    sa[8].arcw_len = 1;
+    sa[8].arcw[0] = 5;
+    sa[8].gvcid_tc_blk.tfvn  = 0;
+    sa[8].gvcid_tc_blk.scid  = SCID & 0x3FF;
+    sa[8].gvcid_tc_blk.vcid  = 1;
+    sa[8].gvcid_tc_blk.mapid = TYPE_TC;
+
 }
 
 static int32 sadb_init(void)
@@ -241,27 +269,25 @@ static int32 sadb_sa_start(TC_t* tc_frame)
                               (sdls_frame.pdu.data[count + 2] >> 4);
                 gvcid.vcid  = (sdls_frame.pdu.data[count + 2] << 4)  |
                               (sdls_frame.pdu.data[count + 3] && 0x3F);
-                gvcid.mapid = (sdls_frame.pdu.data[count + 3]);
+                if(SEGMENTATION_HDR){gvcid.mapid = (sdls_frame.pdu.data[count + 3]);}
+                else {gvcid.mapid=0;}
 
                 // TC
                 if (gvcid.vcid != tc_frame->tc_header.vcid)
                 {   // Clear all GVCIDs for provided SPI
                     if (gvcid.mapid == TYPE_TC)
                     {
-                        for (int i = 0; i < NUM_GVCID; i++)
-                        {   // TC
-                            sa[spi].gvcid_tc_blk[x].tfvn  = 0;
-                            sa[spi].gvcid_tc_blk[x].scid  = 0;
-                            sa[spi].gvcid_tc_blk[x].vcid  = 0;
-                            sa[spi].gvcid_tc_blk[x].mapid = 0;
-                        }
+                            sa[spi].gvcid_tc_blk.tfvn  = 0;
+                            sa[spi].gvcid_tc_blk.scid  = 0;
+                            sa[spi].gvcid_tc_blk.vcid  = 0;
+                            sa[spi].gvcid_tc_blk.mapid = 0;
                     }
                     // Write channel to SA
                     if (gvcid.mapid != TYPE_MAP)
                     {   // TC
-                        sa[spi].gvcid_tc_blk[gvcid.vcid].tfvn  = gvcid.tfvn;
-                        sa[spi].gvcid_tc_blk[gvcid.vcid].scid  = gvcid.scid;
-                        sa[spi].gvcid_tc_blk[gvcid.vcid].mapid = gvcid.mapid;
+                        sa[spi].gvcid_tc_blk.tfvn  = gvcid.tfvn;
+                        sa[spi].gvcid_tc_blk.scid  = gvcid.scid;
+                        sa[spi].gvcid_tc_blk.mapid = gvcid.mapid;
                     }
                     else
                     {
@@ -353,12 +379,12 @@ static int32 sadb_sa_stop(void)
         if (sa[spi].sa_state == SA_OPERATIONAL)
         {
             // Remove all GVC/GMAP IDs
+            sa[spi].gvcid_tc_blk.tfvn  = 0;
+            sa[spi].gvcid_tc_blk.scid  = 0;
+            sa[spi].gvcid_tc_blk.vcid  = 0;
+            sa[spi].gvcid_tc_blk.mapid = 0;
             for (int x = 0; x < NUM_GVCID; x++)
-            {   // TC
-                sa[spi].gvcid_tc_blk[x].tfvn  = 0;
-                sa[spi].gvcid_tc_blk[x].scid  = 0;
-                sa[spi].gvcid_tc_blk[x].vcid  = 0;
-                sa[spi].gvcid_tc_blk[x].mapid = 0;
+            {
                 // TM
                 sa[spi].gvcid_tm_blk[x].tfvn  = 0;
                 sa[spi].gvcid_tm_blk[x].scid  = 0;

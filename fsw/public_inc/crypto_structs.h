@@ -53,7 +53,7 @@ typedef struct
     uint16 						ekid;    // Encryption Key ID
     uint16                      akid;    // Authentication Key ID
     uint8						sa_state:2;
-    crypto_gvcid_t				gvcid_tc_blk[NUM_GVCID];
+    crypto_gvcid_t				gvcid_tc_blk;
     crypto_gvcid_t				gvcid_tm_blk[NUM_GVCID];
     uint8                       lpid;
 
