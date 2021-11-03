@@ -20,6 +20,7 @@
 // Security Association Initialization Functions
 static int32 sadb_config(void);
 static int32 sadb_init(void);
+static int32 sadb_close(void);
 // Security Association Interaction Functions
 static int32 sadb_get_sa_from_spi(uint16,SecurityAssociation_t**);
 // Security Association Utility Functions
@@ -44,6 +45,7 @@ SadbRoutine get_sadb_routine_inmemory(void)
 {
     sadb_routine.sadb_config = sadb_config;
     sadb_routine.sadb_init = sadb_init;
+    sadb_routine.sadb_close = sadb_close;
     sadb_routine.sadb_get_sa_from_spi = sadb_get_sa_from_spi;
     sadb_routine.sadb_sa_start = sadb_sa_start;
     sadb_routine.sadb_sa_expire = sadb_sa_expire;
@@ -56,7 +58,7 @@ SadbRoutine get_sadb_routine_inmemory(void)
     return &sadb_routine;
 }
 
-int32 sadb_config(void)
+static int32 sadb_config(void)
 {
     int32 status = OS_SUCCESS;
 
@@ -168,7 +170,7 @@ int32 sadb_config(void)
     return status;
 }
 
-int32 sadb_init(void)
+static int32 sadb_init(void)
 {
     int32 status = OS_SUCCESS;
 
@@ -189,6 +191,12 @@ int32 sadb_init(void)
         sa[x].arc[0] = 5;
     }
     return status;
+}
+
+static int32 sadb_close(void)
+{
+    //closing not necessary for inmemory DB.
+    return OS_SUCCESS;
 }
 
 

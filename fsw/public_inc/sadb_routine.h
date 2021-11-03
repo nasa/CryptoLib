@@ -26,9 +26,10 @@
 #include "crypto_structs.h"
 
 typedef struct {
-    // Security Association Initialization Functions
+    // Security Association Initialization & Management Functions
     int32 (*sadb_config)(void);
     int32 (*sadb_init)(void);
+    int32 (*sadb_close)(void);
     // Security Association Interaction Functions
     int32 (*sadb_get_sa_from_spi)(uint16,SecurityAssociation_t**);
     // Security Association Utility Functions

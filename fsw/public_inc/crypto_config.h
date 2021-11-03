@@ -170,4 +170,10 @@ ivv-itc@lists.nasa.gov
     #define SEGMENTATION_HDR            1 //(1=true,0=false)
     #define HAS_FECF                    1 //(1=true,0=false)
 
+// MySQL - MariaDB Defines (will be dynamically loaded properties in the future)
+    #define MYSQL_USER                  "sadb_user"
+    #define MYSQL_PASS                  "sadb_password"
+    #define MYSQL_HOST                  "localhost"
+    #define MYSQL_DB                    "sadb"
+    #define MYSQL_PORT                  0
 #endif

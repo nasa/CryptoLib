@@ -120,7 +120,8 @@ int32 Crypto_Init(void)
 {   
     int32 status = OS_SUCCESS;
 
-    sadb_routine = get_sadb_routine_inmemory();
+    //TODO -- Make the routine that gets called variable based on configuration!
+    sadb_routine = get_sadb_routine_mariadb();
 
     // Initialize libgcrypt
     if (!gcry_check_version(GCRYPT_VERSION))
@@ -2175,7 +2176,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
         // TODO: I don't think this is needed.
         //if (status == OS_SUCCESS)
         //{
-        //    if (sa_ptr->.gvcid_tc_blk[tc_sdls_processed_frame->tc_header.vcid].vcid != tc_sdls_processed_frame->tc_header.vcid)
+        //    if (sa_ptr->gvcid_tc_blk[tc_sdls_processed_frame->tc_header.vcid].vcid != tc_sdls_processed_frame->tc_header.vcid)
         //    {	
         //        OS_printf(KRED "Error: VCID not mapped to provided SPI! \n" RESET);
         //        status = OS_ERROR;

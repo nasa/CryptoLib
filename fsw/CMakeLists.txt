@@ -17,6 +17,11 @@
 include_directories(public_inc)
 
 aux_source_directory(src LIB_SRC_FILES)
+if(MYSQL)
+    aux_source_directory(src_mysql LIB_SRC_MYSQL_FILES)
+    list(APPEND LIB_SRC_FILES ${LIB_SRC_MYSQL_FILES})
+endif()
+
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     include(CTest)
@@ -28,6 +33,16 @@ if(DEFINED ENV{CFECORE_SOURCE_DIR}) #if ${CFECORE_SOURCE_DIR} is set, expect cFS
     add_cfe_app(Crypto ${LIB_SRC_FILES})
 else() #standalone build
     add_library(Crypto SHARED ${LIB_SRC_FILES})
+endif()
+
+if(MYSQL)
+    execute_process(COMMAND mysql_config --cflags
+            OUTPUT_VARIABLE MYSQL_CFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
+    execute_process(COMMAND mysql_config --libs
+            OUTPUT_VARIABLE MYSQL_LIBS OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+    target_compile_options(Crypto PUBLIC ${MYSQL_CFLAGS})
+    target_link_libraries(Crypto ${MYSQL_LIBS})
 endif()
 
 # Add libgcrypt
