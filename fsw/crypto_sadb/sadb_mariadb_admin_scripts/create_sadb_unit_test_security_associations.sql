@@ -30,4 +30,4 @@ VALUES (7,130,2,1,1,12,12,0,20,0,1,5,11,0,3,1,0);
 
 -- SA 8 - CLEAR MODE
 INSERT INTO security_associations (sa_id,sa_state,est,ast,arc_len,arc,arcw_len,arcw,tfvn,scid,vcid,mapid)
-VALUES (1,3,0,0,1,0,1,5,0,3,1,0);
+VALUES (8,3,0,0,1,0,1,5,0,3,1,0);

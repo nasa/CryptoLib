@@ -121,8 +121,8 @@ int32 Crypto_Init(void)
     int32 status = OS_SUCCESS;
 
     //TODO -- Make the routine that gets called variable based on configuration!
-    sadb_routine = get_sadb_routine_inmemory();
-    //sadb_routine = get_sadb_routine_mariadb();
+    //sadb_routine = get_sadb_routine_inmemory();
+    sadb_routine = get_sadb_routine_mariadb();
 
 
     // Initialize libgcrypt
