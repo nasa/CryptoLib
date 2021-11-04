@@ -3032,17 +3032,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint32 in_frame_lengt
             // Set FECF Field
             // TODO: Determine is FECF is even present
             // on this particular channel
-            // TODO: Determine if needs recalculated
-            // TODO: Needs recalculated due to change in length bytes
-            // for (int i=0; i < FECF_SIZE; i++)
-            // {
-            //     // Copy over old FECF
-            //     *(enc_frame + index) = in_frame[in_frame_length - (FECF_SIZE - i)];
-            //     index++;
-            // }
             // Calc new fecf, don't include old fecf in length
-            // Need a cleaner way of doing this:
-            // uint * temp_old_frame = malloc()
             #ifdef FECF_DEBUG
                 OS_printf(KCYN "Calcing FECF over %d bytes\n" RESET, TC_FRAME_PRIMARYHEADER_SIZE + 1 + 2 + sa[spi].shivf_len + sa[spi].shsnf_len + sa[spi].shsnf_len + tf_payload_len);
             #endif
@@ -3051,20 +3041,19 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint32 in_frame_lengt
             *(enc_frame + index + 1) = (uint8) (new_fecf & 0x00FF);
             index += 2;
 
-            //TODO AAD / ABM?
-            #ifdef MAC_DEBUG 
-                OS_printf("Preparing AAD:\n");
-                OS_printf("\tUsing ABM Length of %d\n\t", sa[spi].abm_len);
-            #endif
             // Prepare additional authenticated data
             for (int y = 0; y < sa[spi].abm_len; y++)
             {
                 aad[y] = in_frame[y] & sa[spi].abm[y];
-                #ifdef MAC_DEBUG
-                    OS_printf("%02x", aad[y]);
-                #endif
             }
+            //TODO AAD / ABM?
             #ifdef MAC_DEBUG 
+                OS_printf("Preparing AAD:\n");
+                OS_printf("\tUsing ABM Length of %d\n\t", sa[spi].abm_len);
+                for (int y = 0; y < sa[spi].abm_len; y++)
+                {
+                    OS_printf("%02x", aad[y]);
+                }
                 OS_printf("\n");
             #endif
 
@@ -3132,7 +3121,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint32 in_frame_lengt
             gcry_error = gcry_cipher_authenticate(
                 tmp_hd,
                 &(aad[0]),                                      // additional authenticated data
-                1 //sa[spi].abm_len 		                        // length of AAD
+                sa[spi].abm_len 		                        // length of AAD
             );
 
             if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
@@ -3153,7 +3142,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint32 in_frame_lengt
             gcry_error = gcry_cipher_gettag(
                 tmp_hd,
                 &enc_frame[mac_loc],                             // tag output
-                MAC_SIZE                                            // tag size
+                MAC_SIZE                                         // tag size
             );
             if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
             {
