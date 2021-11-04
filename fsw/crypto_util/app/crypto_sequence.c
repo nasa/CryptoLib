@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
 
         //Call Apply/ProcessSecurity on buffer contents depending on type.
         if (strcmp(security_type,"tc_a")==0){
-            Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, enc_frame_len);}
+            Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);}
         else if (strcmp(security_type,"tm_a")==0){
             Crypto_TM_ApplySecurity(buffer, &buffer_size_i);
         } else if (strcmp(security_type,"aos_a")==0){
