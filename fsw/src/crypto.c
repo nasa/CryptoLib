@@ -2859,14 +2859,20 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint32 in_frame_lengt
             OS_printf(KYEL "\tstmacf_len\t = %d\n" RESET, temp_SA.stmacf_len);
         #endif
 
+        // Accio buffer
+        uint8 *enc_frame = (uint8 *)malloc(*enc_frame_len * sizeof (unsigned char));
+        if(!enc_frame)
+        {
+            OS_printf(KRED "Error: Malloc for encrypted output buffer failed! \n" RESET);
+            status = OS_ERROR;
+            return status;
+        }
+        CFE_PSP_MemSet(enc_frame, 0, *enc_frame_len);
+
         // Determine mode
         // Clear
         if ((temp_SA.est == 0) && (temp_SA.ast == 0))
         {
-            // Accio buffer
-            uint8 *enc_frame = (uint8 *)malloc(*enc_frame_len * sizeof (unsigned char));
-            CFE_PSP_MemSet(enc_frame, 0, *enc_frame_len);
-
             // Copy original TF header
             CFE_PSP_MemCpy(enc_frame, in_frame, TC_FRAME_PRIMARYHEADER_SIZE);
             // Set new TF Header length
@@ -2963,10 +2969,6 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint32 in_frame_lengt
         // Authenticated Encryption
         else if((temp_SA.est == 1) && (temp_SA.ast == 1))
         {   
-            // Accio buffer
-            uint8 *enc_frame = (uint8 *)malloc(*enc_frame_len * sizeof (unsigned char));
-            CFE_PSP_MemSet(enc_frame, 0, *enc_frame_len);
-
             // Copy original TF header
             CFE_PSP_MemCpy(enc_frame, in_frame, TC_FRAME_PRIMARYHEADER_SIZE);
             // Set new TF Header length
