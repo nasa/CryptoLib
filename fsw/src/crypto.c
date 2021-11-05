@@ -2973,24 +2973,41 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint32 in_frame_lengt
             index++;
         }
 
+        /*
+        ** End Security Header Fields
+        */
+
+        // Copy in original TF data - except FECF
+        // Will be over-written if using encryption later
+        // TODO: This will change depending on how we handle segment header and FECF above, 
+        // and if it was present in the original TCTF
+        //if FECF
+        tf_payload_len = in_frame_length - TC_FRAME_PRIMARYHEADER_SIZE - FECF_SIZE;
+        //if no FECF
+        //tf_payload_len = in_frame_length - TC_FRAME_PRIMARYHEADER_SIZE;
+        CFE_PSP_MemCpy((enc_frame+index), (in_frame+TC_FRAME_PRIMARYHEADER_SIZE), tf_payload_len);
+        index += tf_payload_len;
+
+        /*
+        ** Begin Security Trailer Fields
+        */
+
+        // Set MAC Field if present
+        /*
+        ** May be present and unused if switching between clear and authenticated
+        ** CCSDS 3550b1 4.1.2.3
+        */
+        for (int i=0; i < temp_SA.stmacf_len; i++)
+        {
+            // Temp fill MAC
+            *(enc_frame + index) = 0x00;
+            index++;
+        }
+
         // Determine mode
         // Clear
         if ((temp_SA.est == 0) && (temp_SA.ast == 0))
         {
-            // Copy in original TF data
-            CFE_PSP_MemCpy((enc_frame+index), (in_frame+TC_FRAME_PRIMARYHEADER_SIZE), (in_frame_length-TC_FRAME_PRIMARYHEADER_SIZE));
-            index += in_frame_length-TC_FRAME_PRIMARYHEADER_SIZE;
-
-            // MAC may be present and unused in plaintext SA
-            // Reference CCSDS 3550b1 4.1.2.3
-            // TODO:  Likely API call
-            for (int i=0; i < temp_SA.stmacf_len; i++)
-            {
-                // Temp fill Pad
-                // TODO: What should pad be, set per channel/SA potentially?
-                *(enc_frame + index) = 0x00;
-                index++;
-            }
 
             // TODO: Calc FECF if exists for channel
 
@@ -3021,36 +3038,6 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint32 in_frame_lengt
         // Authenticated Encryption
         else if((temp_SA.est == 1) && (temp_SA.ast == 1))
         {
-
-            // Determine if padding is needed
-            // TODO: Likely SA API Call
-            // TODO: Resolve location of TC_PAD_LENGTH -> SA or TC channel setup
-            //for (int i=0; i < TC_PAD_SIZE; i++)
-            for (int i=0; i < temp_SA.shplf_len; i++)
-            {
-                // Temp fill Pad
-                // TODO: What should pad be, set per channel/SA potentially?
-                *(enc_frame + index) = 0x88;
-                index++;
-            }
-
-            // Copy in original TF data - except FECF
-            // TODO: Need to know presence / absence of FECF
-            //if FECF
-            tf_payload_len = in_frame_length - TC_FRAME_PRIMARYHEADER_SIZE - FECF_SIZE;
-            //if no FECF
-            //tf_payload_len = in_frame_length - TC_FRAME_PRIMARYHEADER_SIZE;
-
-            CFE_PSP_MemCpy((enc_frame+index), (in_frame+TC_FRAME_PRIMARYHEADER_SIZE), tf_payload_len);
-            index += tf_payload_len;
-
-            // Set MAC Field
-            for (int i=0; i < temp_SA.stmacf_len; i++)
-            {
-                // Temp fill MAC
-                *(enc_frame + index) = 0x99;
-                index++;
-            }
 
             // Set FECF Field
             // TODO: Determine is FECF is even present
