@@ -91,6 +91,12 @@ ivv-itc@lists.nasa.gov
     #define KEY_DESTROYED               3
     #define KEY_CORRUPTED               4
 
+// SA Service Types
+    #define SA_PLAINTEXT                0
+    #define SA_AUTHENTICATION           1
+    #define SA_ENCRYPTION               2
+    #define SA_AUTHENTICATED_ENCRYPTION 3
+
 // Generic Defines
     #define NUM_SA						64
     #define KEY_SIZE					32

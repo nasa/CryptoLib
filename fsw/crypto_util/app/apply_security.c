@@ -40,27 +40,38 @@ int main(int argc, char *argv[]) {
     }
     buffer = c_read_file(filename,&buffer_size);
     debug_printf("File buffer size:%lu\n",buffer_size);
-    int buffer_size_i = (int) buffer_size;
+    uint32 buffer_size_i = (uint32) buffer_size;
     debug_printf("File buffer size int:%d\n",buffer_size_i);
     debug_printf("File content: \n");
     debug_hexprintf(buffer,buffer_size_i);
 
-
     //Setup & Initialize CryptoLib
     Crypto_Init();
 
+    uint8 * ptr_enc_frame = NULL;
+    uint16 enc_frame_len; 
+
     //Call ApplySecurity on buffer contents depending on type.
     if (strcmp(security_type,"tc")==0){
-        Crypto_TC_ApplySecurity(&buffer, &buffer_size_i);
+        Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
     } else if (strcmp(security_type,"tm")==0){
         Crypto_TM_ApplySecurity(buffer, &buffer_size_i);
     } else if (strcmp(security_type,"aos")==0){
         Crypto_AOS_ApplySecurity(buffer, &buffer_size_i);
     }
 
-    debug_printf("Applied Security buffer size int:%d\n",buffer_size_i);
-    debug_printf("File content: \n");
-    debug_hexprintf(buffer,buffer_size_i);
+    #ifdef TC_DEBUG
+        OS_printf(KYEL "ApplySecurity Output:\n" RESET);
+        OS_printf(KYEL "\tBuffer size int:%d\n" RESET, enc_frame_len);
+        OS_printf(KYEL "\tEncrypted Frame Contents: \n\t" RESET);
+    
+        for(int i=0; i < enc_frame_len; i++)
+            {
+                OS_printf(KYEL "%02X" RESET, *(ptr_enc_frame+i));
+            }
+        OS_printf("\n");
+    #endif
 
     free(buffer);
+    free(ptr_enc_frame);
 }
