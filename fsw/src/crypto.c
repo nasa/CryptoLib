@@ -2661,6 +2661,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint32 in_frame_lengt
     TC_FramePrimaryHeader_t temp_tc_header;
     SecurityAssociation_t temp_SA;
     int16_t spi = -1;
+    uint8 sa_service_type = -1;
     uint16 mac_loc = 0;
     uint16 tf_payload_len = 0x0000;
     uint16 new_fecf = 0x0000;
@@ -2777,6 +2778,32 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint32 in_frame_lengt
         // If a check is invalid so far, can return
         if (status != OS_SUCCESS)
         {
+            return status;
+        }
+
+        // Determine SA Service Type
+        if ((temp_SA.est == 0) && (temp_SA.ast == 0))
+        {
+            sa_service_type = SA_PLAINTEXT;
+        }
+        else if ((temp_SA.est == 0) && (temp_SA.ast == 1))
+        {
+            sa_service_type = SA_AUTHENTICATION;
+        }
+        else if ((temp_SA.est == 1) && (temp_SA.ast == 0))
+        {
+            sa_service_type = SA_ENCRYPTION;
+        }
+        else if ((temp_SA.est == 1) && (temp_SA.ast == 1))
+        {
+            sa_service_type = SA_AUTHENTICATED_ENCRYPTION;
+        }
+        else
+        {
+            // Probably unnecessary check
+            // Leaving for now as it would be cleaner in SA to have an association enum returned I believe
+            OS_printf(KRED "Error: SA Service Type is not defined! \n" RESET);
+            status = OS_ERROR;
             return status;
         }
 
