@@ -566,8 +566,7 @@ static int32 Crypto_SA_config(void)
 
     // Security Associations
         // SA 1 - CLEAR MODE
-        // sa[1].sa_state = SA_OPERATIONAL;
-        sa[1].sa_state = SA_NONE;
+        sa[1].sa_state = SA_OPERATIONAL;
         sa[1].est = 0;
         sa[1].ast = 0;
         sa[1].shplf_len = 2;
@@ -617,8 +616,7 @@ static int32 Crypto_SA_config(void)
         sa[3].arc_len = (sa[3].arcw[0] * 2) + 1;
         // SA 4 - KEYED;  ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 130
         sa[4].ekid = 130;
-        // sa[4].sa_state = SA_KEYED;
-        sa[4].sa_state = SA_OPERATIONAL;
+        sa[4].sa_state = SA_KEYED;
         sa[4].est = 1; 
         sa[4].ast = 1;
         sa[4].shivf_len = 12;
@@ -2814,12 +2812,16 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
             {
                 case SA_PLAINTEXT:
                     OS_printf(KBLU "Creating a TC - CLEAR!\n" RESET);
+                    break;
                 case SA_AUTHENTICATION:
                     OS_printf(KBLU "Creating a TC - AUTHENTICATED!\n" RESET);
+                    break;
                 case SA_ENCRYPTION:
                     OS_printf(KBLU "Creating a TC - ENCRYPTED!\n" RESET);
+                    break;
                 case SA_AUTHENTICATED_ENCRYPTION:
                     OS_printf(KBLU "Creating a TC - AUTHENTICATED ENCRYPTION!\n" RESET);
+                    break;
             }
         #endif
 
