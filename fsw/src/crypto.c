@@ -2825,26 +2825,26 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint32 in_frame_lengt
         // TODO: Determine presence of FECF & TC_PAD_SIZE
         // TODO: Note: Currently assumes ciphertext output length is same as ciphertext input length
         switch(sa_service_type)
-            {
-                case SA_PLAINTEXT:
-                    // Ingest length + segment header (1) + spi_index (2) + some variable length fields
-                     *enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shplf_len;
-                case SA_AUTHENTICATION:
-                    // Ingest length + segment header (1) + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
-                    //   + shplf_len + arc_len + pad_size + stmacf_len
-                    *enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + \
-                    temp_SA.shplf_len + temp_SA.arc_len + TC_PAD_SIZE + temp_SA.stmacf_len;;
-                case SA_ENCRYPTION:
-                    // Ingest length + segment header (1) + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
-                    //   + shplf_len + arc_len + pad_size
-                    *enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + \
-                    temp_SA.shplf_len + temp_SA.arc_len + TC_PAD_SIZE;
-                case SA_AUTHENTICATED_ENCRYPTION:
-                    // Ingest length + segment header (1) + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
-                    //   + shplf_len + arc_len + pad_size + stmacf_len
-                    *enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + \
-                    temp_SA.shplf_len + temp_SA.arc_len + TC_PAD_SIZE + temp_SA.stmacf_len;
-            }
+        {
+            case SA_PLAINTEXT:
+                // Ingest length + segment header (1) + spi_index (2) + some variable length fields
+                    *enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shplf_len;
+            case SA_AUTHENTICATION:
+                // Ingest length + segment header (1) + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
+                //   + shplf_len + arc_len + pad_size + stmacf_len
+                *enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + \
+                temp_SA.shplf_len + temp_SA.arc_len + TC_PAD_SIZE + temp_SA.stmacf_len;;
+            case SA_ENCRYPTION:
+                // Ingest length + segment header (1) + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
+                //   + shplf_len + arc_len + pad_size
+                *enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + \
+                temp_SA.shplf_len + temp_SA.arc_len + TC_PAD_SIZE;
+            case SA_AUTHENTICATED_ENCRYPTION:
+                // Ingest length + segment header (1) + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
+                //   + shplf_len + arc_len + pad_size + stmacf_len
+                *enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + \
+                temp_SA.shplf_len + temp_SA.arc_len + TC_PAD_SIZE + temp_SA.stmacf_len;
+        }
 
         #ifdef TC_DEBUG
             OS_printf(KYEL "DEBUG - Total TC Buffer to be malloced is: %d bytes\n" RESET, *enc_frame_len);
@@ -2869,62 +2869,114 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint32 in_frame_lengt
         }
         CFE_PSP_MemSet(enc_frame, 0, *enc_frame_len);
 
+        // Copy original TF header
+        CFE_PSP_MemCpy(enc_frame, in_frame, TC_FRAME_PRIMARYHEADER_SIZE);
+
+        // Set new TF Header length
+        // Recall: Length field is one minus total length per spec
+        *(enc_frame+2) = ((*(enc_frame+2) & 0xFC) | (((*enc_frame_len - 1) & (0x0300)) >> 8));
+        *(enc_frame+3) = ((*enc_frame_len - 1) & (0x00FF));
+
+        #ifdef TC_DEBUG
+            OS_printf(KYEL "Printing updated TF Header:\n\t");
+            for (int i=0; i<TC_FRAME_PRIMARYHEADER_SIZE; i++)
+            {
+                OS_printf("%02X", *(enc_frame+i));
+            }
+            // Recall: The buffer length is 1 greater than the field value set in the TCTF
+            OS_printf("\n\tLength set to 0x%02X\n" RESET, *enc_frame_len-1);
+        #endif
+
+        /*
+        ** Start variable length fields
+        */
+        uint16_t index = TC_FRAME_PRIMARYHEADER_SIZE;
+        
+        // Set Segment Header flags
+        // TODO: Determine segment header exists
+        *(enc_frame + index) = 0xFF;
+        index++;
+
+        /*
+        ** Begin Security Header Fields
+        ** Reference CCSDS SDLP 3550b1 4.1.1.1.3
+        */
+        // Set SPI
+        *(enc_frame + index) = ((spi & 0xFF00) >> 8);
+        *(enc_frame + index + 1) = (spi & 0x00FF);
+        index += 2;
+
+        // Set initialization vector if specified
+        if ((sa_service_type == SA_AUTHENTICATION) || \
+            (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
+        { 
+            #ifdef SA_DEBUG
+                OS_printf(KYEL "Old IV value was:\n\t");
+                for(int i=0; i<sa[spi].shivf_len; i++) {OS_printf("%02x", sa[spi].iv[i]);}
+                OS_printf("\n" RESET);
+            #endif
+            #ifdef INCREMENT
+                // TODO: API call?
+                Crypto_increment(sa[spi].iv, sa[spi].shivf_len);
+            #endif
+            #ifdef SA_DEBUG
+                OS_printf(KYEL "New IV value is:\n\t");
+                for(int i=0; i<sa[spi].shivf_len; i++) {OS_printf("%02x", sa[spi].iv[i]);}
+                OS_printf("\n" RESET);
+            #endif
+            for (int i=0; i < temp_SA.shivf_len; i++)
+            {
+                // TODO: Likely API call
+                // Copy in IV from SA
+                *(enc_frame + index) = sa[spi].iv[i];
+                index++;
+            }
+        }
+
+        // Set anti-replay sequence number if specified
+        /*
+        ** See also: 4.1.1.4.2
+        ** 4.1.1.4.4 If authentication or authenticated encryption is not selected 
+        ** for an SA, the Sequence Number field shall be zero octets in length.
+        ** Reference CCSDS 3550b1
+        */
+        // Determine if seq num field is needed
+        // TODO: Likely SA API Call
+        if (temp_SA.shsnf_len > 0)
+        {
+            // If using anti-replay counter, increment it
+            // TODO: API call instead?
+            // TODO: Check return code
+            Crypto_increment(sa[spi].arc, sa[spi].shsnf_len);
+            for (int i=0; i < temp_SA.shsnf_len; i++)
+            {
+                *(enc_frame + index) = sa[spi].arc[i];
+                index++;
+            }
+        }
+
+        // Set security header padding if specified
+        /*
+        ** 4.2.3.4 h) if the algorithm and mode selected for the SA require the use of 
+        ** fill padding, place the number of fill bytes used into the Pad Length field 
+        ** of the Security Header - Reference CCSDS 3550b1
+        */
+        // TODO: Revisit this
+        // TODO: Likely SA API Call
+        for (int i=0; i < temp_SA.shplf_len; i++)
+        {
+            /* 4.1.1.5.2 The Pad Length field shall contain the count of fill bytes used in the
+            ** cryptographic process, consisting of an integral number of octets. - CCSDS 3550b1
+            */
+            // TODO: Set this depending on crypto cipher used
+            *(enc_frame + index) = 0x00;
+            index++;
+        }
+
         // Determine mode
         // Clear
         if ((temp_SA.est == 0) && (temp_SA.ast == 0))
         {
-            // Copy original TF header
-            CFE_PSP_MemCpy(enc_frame, in_frame, TC_FRAME_PRIMARYHEADER_SIZE);
-            // Set new TF Header length
-            // Recall: Length field is one minus total length per spec
-            *(enc_frame+2) = ((*(enc_frame+2) & 0xFC) | (((*enc_frame_len - 1) & (0x0300)) >> 8));
-            *(enc_frame+3) = ((*enc_frame_len - 1) & (0x00FF));
-
-            #ifdef TC_DEBUG
-                OS_printf(KYEL "Printing updated TF Header:\n\t");
-                for (int i=0; i<TC_FRAME_PRIMARYHEADER_SIZE; i++)
-                {
-                    OS_printf("%02X", *(enc_frame+i));
-                }
-                // Recall: The buffer length is 1 greater than the field value set in the TCTF
-                OS_printf("\n\tNew length is 0x%02X\n", *enc_frame_len-1);
-                OS_printf(RESET);
-            #endif
-
-            /*
-            ** Start variable length fields
-            */
-
-            uint16_t index = TC_FRAME_PRIMARYHEADER_SIZE;
-            // Set Secondary Header flags
-            *(enc_frame + index) = 0xFF;
-            index++;
-
-            /*
-            ** Begin Security Header Fields
-            ** Reference CCSDS SDLP 3550b1 4.1.1.1.3
-            */
-            // Set SPI
-            *(enc_frame + index) = ((spi & 0xFF00) >> 8);
-            *(enc_frame + index + 1) = (spi & 0x00FF);
-            index += 2;
-
-            // Set anti-replay sequence number value
-            /*
-            ** 4.1.1.4.4 If authentication or authenticated encryption is not selected 
-            ** for an SA, the Sequence Number field shall be zero octets in length.
-            */
-
-            // Determine if padding is needed
-            // TODO: Likely SA API Call
-            for (int i=0; i < temp_SA.shplf_len; i++)
-            {
-                // Temp fill Pad
-                // TODO: What should pad be, set per channel/SA potentially?
-                *(enc_frame + index) = 0x00;
-                index++;
-            }
-
             // Copy in original TF data
             CFE_PSP_MemCpy((enc_frame+index), (in_frame+TC_FRAME_PRIMARYHEADER_SIZE), (in_frame_length-TC_FRAME_PRIMARYHEADER_SIZE));
             index += in_frame_length-TC_FRAME_PRIMARYHEADER_SIZE;
@@ -2968,71 +3020,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint32 in_frame_lengt
 
         // Authenticated Encryption
         else if((temp_SA.est == 1) && (temp_SA.ast == 1))
-        {   
-            // Copy original TF header
-            CFE_PSP_MemCpy(enc_frame, in_frame, TC_FRAME_PRIMARYHEADER_SIZE);
-            // Set new TF Header length
-            // Recall: Length field is one minus total length per spec
-            *(enc_frame+2) = ((*(enc_frame+2) & 0xFC) | (((*enc_frame_len - 1) & (0x0300)) >> 8));
-            *(enc_frame+3) = ((*enc_frame_len - 1) & (0x00FF));
-
-            #ifdef TC_DEBUG
-                OS_printf(KYEL "Printing updated TF Header:\n\t");
-                for (int i=0; i<TC_FRAME_PRIMARYHEADER_SIZE; i++)
-                {
-                    OS_printf("%02X", *(enc_frame+i));
-                }
-                // Recall: The buffer length is 1 greater than the field value set in the TCTF
-                OS_printf("\n\tNew length is 0x%02X\n" RESET, *enc_frame_len-1);
-            #endif
-
-            /*
-            ** Start variable length fields
-            */
-
-            uint16_t index = TC_FRAME_PRIMARYHEADER_SIZE;
-            // Set Secondary Header flags
-            *(enc_frame + index) = 0xFF;
-            index++;
-
-            /*
-            ** Begin Security Header Fields
-            ** Reference CCSDS SDLP 3550b1 4.1.1.1.3
-            */
-            // Set SPI
-            *(enc_frame + index) = ((spi & 0xFF00) >> 8);
-            *(enc_frame + index + 1) = (spi & 0x00FF);
-            index += 2;
-
-            // Set initialization value
-            #ifdef SA_DEBUG
-                OS_printf("Old IV value was:\n\t");
-                for(int i=0; i<sa[spi].shivf_len; i++) {OS_printf("%02x", sa[spi].iv[i]);}
-                OS_printf("\n");
-            #endif
-            #ifdef INCREMENT
-                Crypto_increment(sa[spi].iv, sa[spi].shivf_len);
-            #endif
-            #ifdef SA_DEBUG
-                OS_printf("New IV value is:\n\t");
-                for(int i=0; i<sa[spi].shivf_len; i++) {OS_printf("%02x", sa[spi].iv[i]);}
-                OS_printf("\n");
-            #endif
-            for (int i=0; i < temp_SA.shivf_len; i++)
-            {
-                // TODO: Likely API call
-                // Copy in IV from SA
-                *(enc_frame + index) = sa[spi].iv[i];
-                index++;
-            }
-
-            // Set anti-replay sequence number value
-            for (int i=0; i < temp_SA.shsnf_len; i++)
-            {
-                // Temp fill SN
-                *(enc_frame + index) = 0x77;
-                index++;
-            }
+        {
 
             // Determine if padding is needed
             // TODO: Likely SA API Call
