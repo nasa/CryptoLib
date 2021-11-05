@@ -707,7 +707,7 @@ int32 Crypto_Init(void)
     if (!gcry_check_version(GCRYPT_VERSION))
     {
         fprintf(stderr, "Gcrypt Version: %s",GCRYPT_VERSION);
-        OS_printf(KRED "ERROR: gcrypt version mismatch! \n" RESET);
+        OS_printf(KRED "\tERROR: gcrypt version mismatch! \n" RESET);
     }
     if (gcry_control(GCRYCTL_SELFTEST) != GPG_ERR_NO_ERROR)
     {
@@ -3097,12 +3097,25 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint32 in_frame_lengt
             OS_printf("tf_payload_len is %d\n", tf_payload_len);
             #ifdef TC_DEBUG
                 OS_printf(KYEL "Printing TC Frame prior to encryption:\n\t");
-                for(int i=0; i < output_loc; i++)
+                for(int i=0; i < *enc_frame_len; i++)
                 {
                     OS_printf("%02X", *(enc_frame + i));
                 }
                 OS_printf("\n");
             #endif
+
+            gcry_error = gcry_cipher_authenticate(
+                tmp_hd,
+                &(aad[0]),                                      // additional authenticated data
+                sa[spi].abm_len 		                        // length of AAD
+            );
+            if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+            {
+                OS_printf(KRED "ERROR: gcry_cipher_authenticate error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
+                OS_printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error),gcry_strerror (gcry_error));
+                status = OS_ERROR;
+                return status;
+            }
 
             gcry_error = gcry_cipher_encrypt(
                 tmp_hd,
@@ -3114,20 +3127,6 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint32 in_frame_lengt
             if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
             {
                 OS_printf(KRED "ERROR: gcry_cipher_encrypt error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-                status = OS_ERROR;
-                return status;
-            }
-
-            gcry_error = gcry_cipher_authenticate(
-                tmp_hd,
-                &(aad[0]),                                      // additional authenticated data
-                sa[spi].abm_len 		                        // length of AAD
-            );
-
-            if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-            {
-                OS_printf(KRED "ERROR: gcry_cipher_authenticate error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-                OS_printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error),gcry_strerror (gcry_error));
                 status = OS_ERROR;
                 return status;
             }
@@ -3160,7 +3159,6 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint32 in_frame_lengt
                 OS_printf("\n\tThe returned length is: %d\n" RESET, *enc_frame_len);
             #endif
 
-            
             *enc_frame_test = enc_frame;
         }
     }
