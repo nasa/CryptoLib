@@ -2821,23 +2821,48 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint32 in_frame_lengt
             }
         #endif
 
+        // Determine length of buffer to be malloced
+        // TODO: Determine presence of FECF & TC_PAD_SIZE
+        // TODO: Note: Currently assumes ciphertext output length is same as ciphertext input length
+        switch(sa_service_type)
+            {
+                case SA_PLAINTEXT:
+                    // Ingest length + segment header (1) + spi_index (2) + some variable length fields
+                     *enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shplf_len;
+                case SA_AUTHENTICATION:
+                    // Ingest length + segment header (1) + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
+                    //   + shplf_len + arc_len + pad_size + stmacf_len
+                    *enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + \
+                    temp_SA.shplf_len + temp_SA.arc_len + TC_PAD_SIZE + temp_SA.stmacf_len;;
+                case SA_ENCRYPTION:
+                    // Ingest length + segment header (1) + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
+                    //   + shplf_len + arc_len + pad_size
+                    *enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + \
+                    temp_SA.shplf_len + temp_SA.arc_len + TC_PAD_SIZE;
+                case SA_AUTHENTICATED_ENCRYPTION:
+                    // Ingest length + segment header (1) + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
+                    //   + shplf_len + arc_len + pad_size + stmacf_len
+                    *enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + \
+                    temp_SA.shplf_len + temp_SA.arc_len + TC_PAD_SIZE + temp_SA.stmacf_len;
+            }
+
+        #ifdef TC_DEBUG
+            OS_printf(KYEL "DEBUG - Total TC Buffer to be malloced is: %d bytes\n" RESET, *enc_frame_len);
+            OS_printf(KYEL "\tlen of TF\t = %d\n" RESET, in_frame_length);
+            OS_printf(KYEL "\tsegment hdr\t = 1\n" RESET); // TODO: Determine presence of this so not hard-coded
+            OS_printf(KYEL "\tspi len\t\t = 2\n" RESET);
+            OS_printf(KYEL "\tshivf_len\t = %d\n" RESET, temp_SA.shivf_len);
+            OS_printf(KYEL "\tshsnf_len\t = %d\n" RESET, temp_SA.shsnf_len);
+            OS_printf(KYEL "\tshplf len\t = %d\n" RESET, temp_SA.shplf_len);
+            OS_printf(KYEL "\tarc_len\t\t = %d\n" RESET, temp_SA.arc_len);
+            OS_printf(KYEL "\tpad_size\t = %d\n" RESET, TC_PAD_SIZE);
+            OS_printf(KYEL "\tstmacf_len\t = %d\n" RESET, temp_SA.stmacf_len);
+        #endif
+
         // Determine mode
         // Clear
         if ((temp_SA.est == 0) && (temp_SA.ast == 0))
         {
-            // Total length of buffer to be malloced
-            // Ingest length + segment header (1) + spi_index (2) + some variable length fields
-            // TODO
-            *enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shplf_len;
-
-            #ifdef TC_DEBUG
-                OS_printf(KYEL "DEBUG - Total TC Buffer to be malloced is: %d bytes\n" RESET, *enc_frame_len);
-                OS_printf(KYEL "\tlen of TF\t = %d\n" RESET, in_frame_length);
-                OS_printf(KYEL "\tsegment hdr\t = 1\n" RESET);
-                OS_printf(KYEL "\tspi len\t\t = 2\n" RESET);
-                OS_printf(KYEL "\tsh pad len\t = %d\n" RESET, temp_SA.shplf_len);
-            #endif
-
             // Accio buffer
             uint8 *enc_frame = (uint8 *)malloc(*enc_frame_len * sizeof (unsigned char));
             CFE_PSP_MemSet(enc_frame, 0, *enc_frame_len);
@@ -2938,25 +2963,6 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint32 in_frame_lengt
         // Authenticated Encryption
         else if((temp_SA.est == 1) && (temp_SA.ast == 1))
         {   
-            // Total length of buffer to be malloced
-            // Ingest length + segment header (1) + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
-            // + shplf_len _ arc_len + pad_size + stmacf_len
-            *enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + \
-            temp_SA.shplf_len + temp_SA.arc_len + TC_PAD_SIZE + temp_SA.stmacf_len;
-
-            #ifdef TC_DEBUG
-                OS_printf(KYEL "DEBUG - Total TC Buffer to be malloced is: %d bytes\n" RESET, *enc_frame_len);
-                OS_printf(KYEL "\tlen of TF\t = %d\n" RESET, in_frame_length);
-                OS_printf(KYEL "\tsegment hdr\t = 1\n" RESET);
-                OS_printf(KYEL "\tspi len\t\t = 2\n" RESET);
-                OS_printf(KYEL "\tshivf_len\t = %d\n" RESET, temp_SA.shivf_len);
-                OS_printf(KYEL "\tshsnf_len\t = %d\n" RESET, temp_SA.shsnf_len);
-                OS_printf(KYEL "\tshplf len\t = %d\n" RESET, temp_SA.shplf_len);
-                OS_printf(KYEL "\tarc_len\t\t = %d\n" RESET, temp_SA.arc_len);
-                OS_printf(KYEL "\tpad_size\t = %d\n" RESET, TC_PAD_SIZE);
-                OS_printf(KYEL "\tstmacf_len\t = %d\n" RESET, temp_SA.stmacf_len);
-            #endif
-
             // Accio buffer
             uint8 *enc_frame = (uint8 *)malloc(*enc_frame_len * sizeof (unsigned char));
             CFE_PSP_MemSet(enc_frame, 0, *enc_frame_len);
