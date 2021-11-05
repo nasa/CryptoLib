@@ -2653,13 +2653,14 @@ static int32 Crypto_PDU(char* ingest,TC_t* tc_frame)
 
     return status;
 }
-int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint16 in_frame_length, \
-    uint8 **enc_frame_test, uint16 *enc_frame_len)
+int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_length, \
+    uint8 **pp_in_frame, uint16 *p_enc_frame_len)
 {
     // Local Variables
     int32 status = OS_SUCCESS;
     TC_FramePrimaryHeader_t temp_tc_header;
     SecurityAssociation_t temp_SA;
+    uint8 *p_new_enc_frame = NULL;
     int16_t spi = -1;
     uint8 sa_service_type = -1;
     uint16 mac_loc = 0;
@@ -2678,22 +2679,22 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint16 in_frame_lengt
         OS_printf("DEBUG - ");
         for(int i=0; i < in_frame_length; i++)
         {
-            OS_printf("%02X", ((uint8 *)&*in_frame)[i]);
+            OS_printf("%02X", ((uint8 *)&*p_in_frame)[i]);
         }
         OS_printf("\nPrinted %d bytes\n", in_frame_length);
     #endif
 
     // Primary Header
-    temp_tc_header.tfvn   = ((uint8)in_frame[0] & 0xC0) >> 6;
-    temp_tc_header.bypass = ((uint8)in_frame[0] & 0x20) >> 5;
-    temp_tc_header.cc     = ((uint8)in_frame[0] & 0x10) >> 4;
-    temp_tc_header.spare  = ((uint8)in_frame[0] & 0x0C) >> 2;
-    temp_tc_header.scid   = ((uint8)in_frame[0] & 0x03) << 8;
-    temp_tc_header.scid   = temp_tc_header.scid | (uint8)in_frame[1];
-    temp_tc_header.vcid   = ((uint8)in_frame[2] & 0xFC) >> 2;
-    temp_tc_header.fl     = ((uint8)in_frame[2] & 0x03) << 8;
-    temp_tc_header.fl     = temp_tc_header.fl | (uint8)in_frame[3];
-    temp_tc_header.fsn	  = (uint8)in_frame[4];
+    temp_tc_header.tfvn   = ((uint8)p_in_frame[0] & 0xC0) >> 6;
+    temp_tc_header.bypass = ((uint8)p_in_frame[0] & 0x20) >> 5;
+    temp_tc_header.cc     = ((uint8)p_in_frame[0] & 0x10) >> 4;
+    temp_tc_header.spare  = ((uint8)p_in_frame[0] & 0x0C) >> 2;
+    temp_tc_header.scid   = ((uint8)p_in_frame[0] & 0x03) << 8;
+    temp_tc_header.scid   = temp_tc_header.scid | (uint8)p_in_frame[1];
+    temp_tc_header.vcid   = ((uint8)p_in_frame[2] & 0xFC) >> 2;
+    temp_tc_header.fl     = ((uint8)p_in_frame[2] & 0x03) << 8;
+    temp_tc_header.fl     = temp_tc_header.fl | (uint8)p_in_frame[3];
+    temp_tc_header.fsn	  = (uint8)p_in_frame[4];
 
     // Check if command frame flag set
     if (temp_tc_header.cc == 1)
@@ -2828,26 +2829,26 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint16 in_frame_lengt
         {
             case SA_PLAINTEXT:
                 // Ingest length + segment header (1) + spi_index (2) + some variable length fields
-                    *enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shplf_len;
+                    *p_enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shplf_len;
             case SA_AUTHENTICATION:
                 // Ingest length + segment header (1) + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
                 //   + shplf_len + arc_len + pad_size + stmacf_len
-                *enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + \
+                *p_enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + \
                 temp_SA.shplf_len + temp_SA.arc_len + TC_PAD_SIZE + temp_SA.stmacf_len;;
             case SA_ENCRYPTION:
                 // Ingest length + segment header (1) + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
                 //   + shplf_len + arc_len + pad_size
-                *enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + \
+                *p_enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + \
                 temp_SA.shplf_len + temp_SA.arc_len + TC_PAD_SIZE;
             case SA_AUTHENTICATED_ENCRYPTION:
                 // Ingest length + segment header (1) + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
                 //   + shplf_len + arc_len + pad_size + stmacf_len
-                *enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + \
+                *p_enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + \
                 temp_SA.shplf_len + temp_SA.arc_len + TC_PAD_SIZE + temp_SA.stmacf_len;
         }
 
         #ifdef TC_DEBUG
-            OS_printf(KYEL "DEBUG - Total TC Buffer to be malloced is: %d bytes\n" RESET, *enc_frame_len);
+            OS_printf(KYEL "DEBUG - Total TC Buffer to be malloced is: %d bytes\n" RESET, *p_enc_frame_len);
             OS_printf(KYEL "\tlen of TF\t = %d\n" RESET, in_frame_length);
             OS_printf(KYEL "\tsegment hdr\t = 1\n" RESET); // TODO: Determine presence of this so not hard-coded
             OS_printf(KYEL "\tspi len\t\t = 2\n" RESET);
@@ -2860,31 +2861,31 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint16 in_frame_lengt
         #endif
 
         // Accio buffer
-        uint8 *enc_frame = (uint8 *)malloc(*enc_frame_len * sizeof (unsigned char));
-        if(!enc_frame)
+        p_new_enc_frame = (uint8 *)malloc(*p_enc_frame_len * sizeof (unsigned char));
+        if(!p_new_enc_frame)
         {
             OS_printf(KRED "Error: Malloc for encrypted output buffer failed! \n" RESET);
             status = OS_ERROR;
             return status;
         }
-        CFE_PSP_MemSet(enc_frame, 0, *enc_frame_len);
+        CFE_PSP_MemSet(p_new_enc_frame, 0, *p_enc_frame_len);
 
         // Copy original TF header
-        CFE_PSP_MemCpy(enc_frame, in_frame, TC_FRAME_PRIMARYHEADER_SIZE);
+        CFE_PSP_MemCpy(p_new_enc_frame, p_in_frame, TC_FRAME_PRIMARYHEADER_SIZE);
 
         // Set new TF Header length
         // Recall: Length field is one minus total length per spec
-        *(enc_frame+2) = ((*(enc_frame+2) & 0xFC) | (((*enc_frame_len - 1) & (0x0300)) >> 8));
-        *(enc_frame+3) = ((*enc_frame_len - 1) & (0x00FF));
+        *(p_new_enc_frame+2) = ((*(p_new_enc_frame+2) & 0xFC) | (((*p_enc_frame_len - 1) & (0x0300)) >> 8));
+        *(p_new_enc_frame+3) = ((*p_enc_frame_len - 1) & (0x00FF));
 
         #ifdef TC_DEBUG
             OS_printf(KYEL "Printing updated TF Header:\n\t");
             for (int i=0; i<TC_FRAME_PRIMARYHEADER_SIZE; i++)
             {
-                OS_printf("%02X", *(enc_frame+i));
+                OS_printf("%02X", *(p_new_enc_frame+i));
             }
             // Recall: The buffer length is 1 greater than the field value set in the TCTF
-            OS_printf("\n\tLength set to 0x%02X\n" RESET, *enc_frame_len-1);
+            OS_printf("\n\tLength set to 0x%02X\n" RESET, *p_enc_frame_len-1);
         #endif
 
         /*
@@ -2894,7 +2895,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint16 in_frame_lengt
         
         // Set Segment Header flags
         // TODO: Determine segment header exists
-        *(enc_frame + index) = 0xFF;
+        *(p_new_enc_frame + index) = 0xFF;
         index++;
 
         /*
@@ -2902,8 +2903,8 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint16 in_frame_lengt
         ** Reference CCSDS SDLP 3550b1 4.1.1.1.3
         */
         // Set SPI
-        *(enc_frame + index) = ((spi & 0xFF00) >> 8);
-        *(enc_frame + index + 1) = (spi & 0x00FF);
+        *(p_new_enc_frame + index) = ((spi & 0xFF00) >> 8);
+        *(p_new_enc_frame + index + 1) = (spi & 0x00FF);
         index += 2;
 
         // Set initialization vector if specified
@@ -2928,7 +2929,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint16 in_frame_lengt
             {
                 // TODO: Likely API call
                 // Copy in IV from SA
-                *(enc_frame + index) = sa[spi].iv[i];
+                *(p_new_enc_frame + index) = sa[spi].iv[i];
                 index++;
             }
         }
@@ -2950,7 +2951,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint16 in_frame_lengt
             Crypto_increment(sa[spi].arc, sa[spi].shsnf_len);
             for (int i=0; i < temp_SA.shsnf_len; i++)
             {
-                *(enc_frame + index) = sa[spi].arc[i];
+                *(p_new_enc_frame + index) = sa[spi].arc[i];
                 index++;
             }
         }
@@ -2969,7 +2970,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint16 in_frame_lengt
             ** cryptographic process, consisting of an integral number of octets. - CCSDS 3550b1
             */
             // TODO: Set this depending on crypto cipher used
-            *(enc_frame + index) = 0x00;
+            *(p_new_enc_frame + index) = 0x00;
             index++;
         }
 
@@ -2985,7 +2986,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint16 in_frame_lengt
         tf_payload_len = in_frame_length - TC_FRAME_PRIMARYHEADER_SIZE - FECF_SIZE;
         //if no FECF
         //tf_payload_len = in_frame_length - TC_FRAME_PRIMARYHEADER_SIZE;
-        CFE_PSP_MemCpy((enc_frame+index), (in_frame+TC_FRAME_PRIMARYHEADER_SIZE), tf_payload_len);
+        CFE_PSP_MemCpy((p_new_enc_frame+index), (p_in_frame+TC_FRAME_PRIMARYHEADER_SIZE), tf_payload_len);
         //index += tf_payload_len;
 
         /*
@@ -3001,7 +3002,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint16 in_frame_lengt
         // for (int i=0; i < temp_SA.stmacf_len; i++)
         // {
         //     // Temp fill MAC
-        //     *(enc_frame + index) = 0x00;
+        //     *(p_new_enc_frame + index) = 0x00;
         //     index++;
         // }
 
@@ -3056,7 +3057,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint16 in_frame_lengt
             {
                 for (int y = 0; y < sa[spi].abm_len; y++)
                 {
-                    aad[y] = in_frame[y] & sa[spi].abm[y];
+                    aad[y] = p_in_frame[y] & sa[spi].abm[y];
                 }
                 #ifdef MAC_DEBUG 
                     OS_printf(KYEL "Preparing AAD:\n");
@@ -3091,18 +3092,18 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint16 in_frame_lengt
                     OS_printf("Encrypted bytes output_loc is %d\n", index);
                     OS_printf("tf_payload_len is %d\n", tf_payload_len);
                     OS_printf(KYEL "Printing TC Frame prior to encryption:\n\t");
-                    for(int i=0; i < *enc_frame_len; i++)
+                    for(int i=0; i < *p_enc_frame_len; i++)
                     {
-                        OS_printf("%02X", *(enc_frame + i));
+                        OS_printf("%02X", *(p_new_enc_frame + i));
                     }
                     OS_printf("\n");
                 #endif
 
                 gcry_error = gcry_cipher_encrypt(
                     tmp_hd,
-                    &enc_frame[index],                              // ciphertext output
+                    &p_new_enc_frame[index],                              // ciphertext output
                     tf_payload_len,		 		                    // length of data
-                    (in_frame + TC_FRAME_PRIMARYHEADER_SIZE),       // plaintext input TODO: Determine if Segment header exists, assuming yes (+1) for now
+                    (p_in_frame + TC_FRAME_PRIMARYHEADER_SIZE),       // plaintext input TODO: Determine if Segment header exists, assuming yes (+1) for now
                     tf_payload_len                                  // in data length
                 );
                 if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
@@ -3117,14 +3118,14 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint16 in_frame_lengt
                 (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
             {
                 // TODO - Know if FECF exists
-                mac_loc = *enc_frame_len - sa[spi].stmacf_len - FECF_SIZE;
+                mac_loc = *p_enc_frame_len - sa[spi].stmacf_len - FECF_SIZE;
                 #ifdef MAC_DEBUG
                     OS_printf(KYEL "MAC location is: %d\n" RESET, mac_loc);
                     OS_printf(KYEL "MAC size is: %d\n" RESET, MAC_SIZE);
                 #endif
                 gcry_error = gcry_cipher_gettag(
                     tmp_hd,
-                    &enc_frame[mac_loc],                             // tag output
+                    &p_new_enc_frame[mac_loc],                             // tag output
                     MAC_SIZE                                         // tag size
                 );
                 if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
@@ -3144,23 +3145,23 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint16 in_frame_lengt
         // on this particular channel
         // Calc new fecf, don't include old fecf in length
         #ifdef FECF_DEBUG
-            OS_printf(KCYN "Calcing FECF over %d bytes\n" RESET, *enc_frame_len - 2);
+            OS_printf(KCYN "Calcing FECF over %d bytes\n" RESET, *p_enc_frame_len - 2);
         #endif
-        new_fecf = Crypto_Calc_FECF(enc_frame, *enc_frame_len - 2);
-        *(enc_frame + *enc_frame_len - 2) = (uint8) ((new_fecf & 0xFF00) >> 8);
-        *(enc_frame + *enc_frame_len - 1) = (uint8) (new_fecf & 0x00FF);
+        new_fecf = Crypto_Calc_FECF(p_new_enc_frame, *p_enc_frame_len - 2);
+        *(p_new_enc_frame + *p_enc_frame_len - 2) = (uint8) ((new_fecf & 0xFF00) >> 8);
+        *(p_new_enc_frame + *p_enc_frame_len - 1) = (uint8) (new_fecf & 0x00FF);
         index += 2;
 
         #ifdef TC_DEBUG
             OS_printf(KYEL "Printing new TC Frame:\n\t");
-            for(int i=0; i < *enc_frame_len; i++)
+            for(int i=0; i < *p_enc_frame_len; i++)
             {
-                OS_printf("%02X", *(enc_frame + i));
+                OS_printf("%02X", *(p_new_enc_frame + i));
             }
-            OS_printf("\n\tThe returned length is: %d\n" RESET, *enc_frame_len);
+            OS_printf("\n\tThe returned length is: %d\n" RESET, *p_enc_frame_len);
         #endif
 
-        *enc_frame_test = enc_frame;
+        *pp_in_frame = p_new_enc_frame;
     }
 
     #ifdef DEBUG

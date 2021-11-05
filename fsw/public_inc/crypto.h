@@ -40,8 +40,8 @@ ivv-itc@lists.nasa.gov
 // Initialization
 extern int32 Crypto_Init(void);
 // Telecommand (TC)
-extern int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint16 in_frame_length, \
-                                      uint8 **enc_frame, uint16 *enc_frame_len);
+extern int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_length, \
+                                      uint8 **pp_enc_frame, uint16 *p_enc_frame_len);
 extern int32 Crypto_TC_ProcessSecurity(char* ingest, int*  len_ingest, TC_t* tc_sdls_processed_frame);
 // Telemetry (TM)
 extern int32 Crypto_TM_ApplySecurity(char* ingest, int* len_ingest);
