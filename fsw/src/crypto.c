@@ -2807,14 +2807,24 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint32 in_frame_lengt
             return status;
         }
 
+        #ifdef TC_DEBUG
+            switch(sa_service_type)
+            {
+                case SA_PLAINTEXT:
+                    OS_printf(KBLU "Creating a TC - CLEAR!\n" RESET);
+                case SA_AUTHENTICATION:
+                    OS_printf(KBLU "Creating a TC - AUTHENTICATED!\n" RESET);
+                case SA_ENCRYPTION:
+                    OS_printf(KBLU "Creating a TC - ENCRYPTED!\n" RESET);
+                case SA_AUTHENTICATED_ENCRYPTION:
+                    OS_printf(KBLU "Creating a TC - AUTHENTICATED ENCRYPTION!\n" RESET);
+            }
+        #endif
+
         // Determine mode
         // Clear
         if ((temp_SA.est == 0) && (temp_SA.ast == 0))
         {
-            #ifdef DEBUG
-                OS_printf(KBLU "Creating a TC - CLEAR! \n" RESET);
-            #endif
-
             // Total length of buffer to be malloced
             // Ingest length + segment header (1) + spi_index (2) + some variable length fields
             // TODO
@@ -2916,28 +2926,18 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint32 in_frame_lengt
         // Authentication
         else if ((temp_SA.est == 0) && (temp_SA.ast == 1))
         {
-            #ifdef DEBUG
-                OS_printf(KBLU "Creating a TC - AUTHENTICATED! \n" RESET);
-            #endif
             // TODO
         }
 
         // Encryption
         else if ((temp_SA.est == 1) && (temp_SA.ast == 0))
         {
-            #ifdef DEBUG
-                OS_printf(KBLU "Creating a TC - ENCRYPTED! \n" RESET);
-            #endif
             // TODO
         }
 
         // Authenticated Encryption
         else if((temp_SA.est == 1) && (temp_SA.ast == 1))
-        {
-            #ifdef DEBUG
-                OS_printf(KBLU "Creating a TC - AUTHENTICATED ENCRYPTION! \n" RESET);
-            #endif
-            
+        {   
             // Total length of buffer to be malloced
             // Ingest length + segment header (1) + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
             // + shplf_len _ arc_len + pad_size + stmacf_len
