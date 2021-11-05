@@ -2707,13 +2707,14 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         #ifdef TC_DEBUG
             OS_printf(KYEL "DEBUG - Received Control/Command frame - nothing to do.\n" RESET);
         #endif
+        status = OS_ERROR;
     }
 
     // TODO: If command frame flag not set, need to know SDLS parameters
     // What is the best way to do this - copy in the entire SA for a channel?
     // Expect these calls will return an error is the SA is not usable
     // Will need to know lengths of various parameters from the SA DB
-    else
+    if (status == OS_SUCCESS)
     {
         // Query SA DB for active SA / SDLS paremeters
         // TODO: Likely API call
