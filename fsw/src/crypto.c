@@ -3004,6 +3004,18 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint32 in_frame_lengt
             index++;
         }
 
+        // Set FECF Field if present
+        // TODO: Determine is FECF is even present
+        // on this particular channel
+        // Calc new fecf, don't include old fecf in length
+        #ifdef FECF_DEBUG
+            OS_printf(KCYN "Calcing FECF over %d bytes\n" RESET, *enc_frame_len - 2);
+        #endif
+        new_fecf = Crypto_Calc_FECF(enc_frame, *enc_frame_len - 2);
+        *(enc_frame + index) = (uint8) ((new_fecf & 0xFF00) >> 8);
+        *(enc_frame + index + 1) = (uint8) (new_fecf & 0x00FF);
+        index += 2;
+
         // Determine mode
         // Clear
         if ((temp_SA.est == 0) && (temp_SA.ast == 0))
@@ -3039,17 +3051,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint32 in_frame_lengt
         else if((temp_SA.est == 1) && (temp_SA.ast == 1))
         {
 
-            // Set FECF Field
-            // TODO: Determine is FECF is even present
-            // on this particular channel
-            // Calc new fecf, don't include old fecf in length
-            #ifdef FECF_DEBUG
-                OS_printf(KCYN "Calcing FECF over %d bytes\n" RESET, TC_FRAME_PRIMARYHEADER_SIZE + 1 + 2 + sa[spi].shivf_len + sa[spi].shsnf_len + sa[spi].shsnf_len + tf_payload_len);
-            #endif
-            new_fecf = Crypto_Calc_FECF(enc_frame, TC_FRAME_PRIMARYHEADER_SIZE + 1 + 2 + sa[spi].shivf_len + sa[spi].shsnf_len + sa[spi].shsnf_len + tf_payload_len);
-            *(enc_frame + index) = (uint8) ((new_fecf & 0xFF00) >> 8);
-            *(enc_frame + index + 1) = (uint8) (new_fecf & 0x00FF);
-            index += 2;
+            
 
             // Prepare additional authenticated data
             for (int y = 0; y < sa[spi].abm_len; y++)
