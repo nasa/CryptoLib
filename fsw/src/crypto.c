@@ -2986,7 +2986,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint32 in_frame_lengt
         //if no FECF
         //tf_payload_len = in_frame_length - TC_FRAME_PRIMARYHEADER_SIZE;
         CFE_PSP_MemCpy((enc_frame+index), (in_frame+TC_FRAME_PRIMARYHEADER_SIZE), tf_payload_len);
-        index += tf_payload_len;
+        //index += tf_payload_len;
 
         /*
         ** Begin Security Trailer Fields
@@ -2997,84 +2997,30 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint32 in_frame_lengt
         ** May be present and unused if switching between clear and authenticated
         ** CCSDS 3550b1 4.1.2.3
         */
-        for (int i=0; i < temp_SA.stmacf_len; i++)
+        // By leaving MAC as zeros, can use index for encryption output
+        // for (int i=0; i < temp_SA.stmacf_len; i++)
+        // {
+        //     // Temp fill MAC
+        //     *(enc_frame + index) = 0x00;
+        //     index++;
+        // }
+
+        /*
+        ** End Security Trailer Fields
+        */
+
+        /* 
+        ** Begin Authentication / Encryption
+        */
+
+        if (sa_service_type != SA_PLAINTEXT)
         {
-            // Temp fill MAC
-            *(enc_frame + index) = 0x00;
-            index++;
-        }
-
-        // Set FECF Field if present
-        // TODO: Determine is FECF is even present
-        // on this particular channel
-        // Calc new fecf, don't include old fecf in length
-        #ifdef FECF_DEBUG
-            OS_printf(KCYN "Calcing FECF over %d bytes\n" RESET, *enc_frame_len - 2);
-        #endif
-        new_fecf = Crypto_Calc_FECF(enc_frame, *enc_frame_len - 2);
-        *(enc_frame + index) = (uint8) ((new_fecf & 0xFF00) >> 8);
-        *(enc_frame + index + 1) = (uint8) (new_fecf & 0x00FF);
-        index += 2;
-
-        // Determine mode
-        // Clear
-        if ((temp_SA.est == 0) && (temp_SA.ast == 0))
-        {
-
-            // TODO: Calc FECF if exists for channel
-
-            #ifdef TC_DEBUG
-                OS_printf(KYEL "Printing new TC Frame:\n\t");
-                for(int i=0; i < *enc_frame_len; i++)
-                {
-                    OS_printf("%02X", *(enc_frame + i));
-                }
-                OS_printf("\n\tThe returned length is: %d\n" RESET, *enc_frame_len);
-            #endif
-
-            *enc_frame_test = enc_frame;
-        }
-
-        // Authentication
-        else if ((temp_SA.est == 0) && (temp_SA.ast == 1))
-        {
-            // TODO
-        }
-
-        // Encryption
-        else if ((temp_SA.est == 1) && (temp_SA.ast == 0))
-        {
-            // TODO
-        }
-
-        // Authenticated Encryption
-        else if((temp_SA.est == 1) && (temp_SA.ast == 1))
-        {
-
-            
-
-            // Prepare additional authenticated data
-            for (int y = 0; y < sa[spi].abm_len; y++)
-            {
-                aad[y] = in_frame[y] & sa[spi].abm[y];
-            }
-            //TODO AAD / ABM?
-            #ifdef MAC_DEBUG 
-                OS_printf("Preparing AAD:\n");
-                OS_printf("\tUsing ABM Length of %d\n\t", sa[spi].abm_len);
-                for (int y = 0; y < sa[spi].abm_len; y++)
-                {
-                    OS_printf("%02x", aad[y]);
-                }
-                OS_printf("\n");
-            #endif
-
             gcry_error = gcry_cipher_open(
                 &(tmp_hd), 
                 GCRY_CIPHER_AES256, 
                 GCRY_CIPHER_MODE_GCM, 
                 GCRY_CIPHER_CBC_MAC
-            );
+                );
             if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
             {
                 OS_printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
@@ -3104,75 +3050,117 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint32 in_frame_lengt
                 return status;
             }
 
-            uint16 output_loc = TC_FRAME_PRIMARYHEADER_SIZE + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + temp_SA.shplf_len;
-            OS_printf("Encrypted bytes output_loc is %d\n", output_loc);
-            OS_printf("tf_payload_len is %d\n", tf_payload_len);
-            #ifdef TC_DEBUG
-                OS_printf(KYEL "Printing TC Frame prior to encryption:\n\t");
-                for(int i=0; i < *enc_frame_len; i++)
+            // Prepare additional authenticated data, if needed
+            if ((sa_service_type == SA_AUTHENTICATION) || \
+                (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
+            {
+                for (int y = 0; y < sa[spi].abm_len; y++)
                 {
-                    OS_printf("%02X", *(enc_frame + i));
+                    aad[y] = in_frame[y] & sa[spi].abm[y];
                 }
-                OS_printf("\n");
-            #endif
+                #ifdef MAC_DEBUG 
+                    OS_printf(KYEL "Preparing AAD:\n");
+                    OS_printf("\tUsing ABM Length of %d\n\t", sa[spi].abm_len);
+                    for (int y = 0; y < sa[spi].abm_len; y++)
+                    {
+                        OS_printf("%02x", aad[y]);
+                    }
+                    OS_printf("\n" RESET);
+                #endif
 
-            gcry_error = gcry_cipher_authenticate(
-                tmp_hd,
-                &(aad[0]),                                      // additional authenticated data
-                sa[spi].abm_len 		                        // length of AAD
-            );
-            if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-            {
-                OS_printf(KRED "ERROR: gcry_cipher_authenticate error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-                OS_printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error),gcry_strerror (gcry_error));
-                status = OS_ERROR;
-                return status;
-            }
-
-            gcry_error = gcry_cipher_encrypt(
-                tmp_hd,
-                &enc_frame[output_loc],// ciphertext output
-                tf_payload_len,		 		                    // length of data
-                (in_frame + TC_FRAME_PRIMARYHEADER_SIZE),       // plaintext input TODO: Determine if Segment header exists, assuming yes (+1) for now
-                tf_payload_len                                  // in data length
-            );
-            if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-            {
-                OS_printf(KRED "ERROR: gcry_cipher_encrypt error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-                status = OS_ERROR;
-                return status;
-            }
-            
-            // TODO - Know if FECF exists
-            // TODO - Could start working in if/else here wrt ast/est flags
-            mac_loc = *enc_frame_len - sa[spi].stmacf_len - FECF_SIZE;
-            #ifdef DEBUG
-                OS_printf("MAC location is: %d\n", mac_loc);
-                OS_printf("MAC size is: %d\n", MAC_SIZE);
-            #endif
-            gcry_error = gcry_cipher_gettag(
-                tmp_hd,
-                &enc_frame[mac_loc],                             // tag output
-                MAC_SIZE                                         // tag size
-            );
-            if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-            {
-                OS_printf(KRED "ERROR: gcry_cipher_checktag error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-                status = OS_ERROR;
-                return status;
-            }
-
-            #ifdef TC_DEBUG
-                OS_printf(KYEL "Printing new TC Frame:\n\t");
-                for(int i=0; i < *enc_frame_len; i++)
+                gcry_error = gcry_cipher_authenticate(
+                    tmp_hd,
+                    &(aad[0]),                                      // additional authenticated data
+                    sa[spi].abm_len 		                        // length of AAD
+                );
+                if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
                 {
-                    OS_printf("%02x", *(enc_frame + i));
+                    OS_printf(KRED "ERROR: gcry_cipher_authenticate error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
+                    OS_printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error),gcry_strerror (gcry_error));
+                    status = OS_ERROR;
+                    return status;
                 }
-                OS_printf("\n\tThe returned length is: %d\n" RESET, *enc_frame_len);
-            #endif
+            }
 
-            *enc_frame_test = enc_frame;
+            if ((sa_service_type == SA_ENCRYPTION) || \
+                (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
+            {
+                // TODO: More robust calculation of this location
+                // uint16 output_loc = TC_FRAME_PRIMARYHEADER_SIZE + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + temp_SA.shplf_len;
+                #ifdef TC_DEBUG
+                    OS_printf("Encrypted bytes output_loc is %d\n", index);
+                    OS_printf("tf_payload_len is %d\n", tf_payload_len);
+                    OS_printf(KYEL "Printing TC Frame prior to encryption:\n\t");
+                    for(int i=0; i < *enc_frame_len; i++)
+                    {
+                        OS_printf("%02X", *(enc_frame + i));
+                    }
+                    OS_printf("\n");
+                #endif
+
+                gcry_error = gcry_cipher_encrypt(
+                    tmp_hd,
+                    &enc_frame[index],                              // ciphertext output
+                    tf_payload_len,		 		                    // length of data
+                    (in_frame + TC_FRAME_PRIMARYHEADER_SIZE),       // plaintext input TODO: Determine if Segment header exists, assuming yes (+1) for now
+                    tf_payload_len                                  // in data length
+                );
+                if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+                {
+                    OS_printf(KRED "ERROR: gcry_cipher_encrypt error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
+                    status = OS_ERROR;
+                    return status;
+                }
+            }
+
+            if ((sa_service_type == SA_AUTHENTICATION) || \
+                (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
+            {
+                // TODO - Know if FECF exists
+                mac_loc = *enc_frame_len - sa[spi].stmacf_len - FECF_SIZE;
+                #ifdef MAC_DEBUG
+                    OS_printf(KYEL "MAC location is: %d\n" RESET, mac_loc);
+                    OS_printf(KYEL "MAC size is: %d\n" RESET, MAC_SIZE);
+                #endif
+                gcry_error = gcry_cipher_gettag(
+                    tmp_hd,
+                    &enc_frame[mac_loc],                             // tag output
+                    MAC_SIZE                                         // tag size
+                );
+                if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+                {
+                    OS_printf(KRED "ERROR: gcry_cipher_checktag error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
+                    status = OS_ERROR;
+                    return status;
+                }
+            }
         }
+        /*
+        ** End Authentication / Encryption
+        */
+
+        // Set FECF Field if present
+        // TODO: Determine is FECF is even present
+        // on this particular channel
+        // Calc new fecf, don't include old fecf in length
+        #ifdef FECF_DEBUG
+            OS_printf(KCYN "Calcing FECF over %d bytes\n" RESET, *enc_frame_len - 2);
+        #endif
+        new_fecf = Crypto_Calc_FECF(enc_frame, *enc_frame_len - 2);
+        *(enc_frame + *enc_frame_len - 2) = (uint8) ((new_fecf & 0xFF00) >> 8);
+        *(enc_frame + *enc_frame_len - 1) = (uint8) (new_fecf & 0x00FF);
+        index += 2;
+
+        #ifdef TC_DEBUG
+            OS_printf(KYEL "Printing new TC Frame:\n\t");
+            for(int i=0; i < *enc_frame_len; i++)
+            {
+                OS_printf("%02X", *(enc_frame + i));
+            }
+            OS_printf("\n\tThe returned length is: %d\n" RESET, *enc_frame_len);
+        #endif
+
+        *enc_frame_test = enc_frame;
     }
 
     #ifdef DEBUG
