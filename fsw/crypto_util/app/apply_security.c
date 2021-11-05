@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
     Crypto_Init();
 
     uint8 * ptr_enc_frame = NULL;
-    uint32 enc_frame_len; 
+    uint16 enc_frame_len; 
 
     //Call ApplySecurity on buffer contents depending on type.
     if (strcmp(security_type,"tc")==0){

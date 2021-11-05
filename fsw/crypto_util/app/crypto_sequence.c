@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
 
     int arg_index = 0;
     uint8 * ptr_enc_frame = NULL;
-    uint32 enc_frame_len; 
+    uint16 enc_frame_len; 
 
     while(arg_index != argc-1){
         security_type = argv[++arg_index];

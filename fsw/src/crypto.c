@@ -2653,8 +2653,8 @@ static int32 Crypto_PDU(char* ingest,TC_t* tc_frame)
 
     return status;
 }
-int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint32 in_frame_length, \
-    uint8 **enc_frame_test, uint32 *enc_frame_len)
+int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint16 in_frame_length, \
+    uint8 **enc_frame_test, uint16 *enc_frame_len)
 {
     // Local Variables
     int32 status = OS_SUCCESS;
