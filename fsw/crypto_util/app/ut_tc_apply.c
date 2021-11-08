@@ -34,8 +34,10 @@ UTEST(TC_APPLY_SECURITY, NO_CRYPTO_INIT)
 
     uint8 *ptr_enc_frame = NULL;
     uint32 enc_frame_len;
+    int return_val = -1;
 
-    ASSERT_EQ(Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len), 0);
+    return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(return_val, 0);
 }
 
 // Nominal Test.  This should read a raw_tc_sdls_ping.dat file, continue down the "happy path", and return OS_SUCCESS
@@ -50,11 +52,14 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH)
     uint8 *ptr_enc_frame = NULL;
     uint32 enc_frame_len;
 
-    ASSERT_EQ(Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len), 0);
+    int return_val = -1;
+
+    return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(return_val, 0);
 }
 
 // Bad Space Craft ID.  This should pass the flawed .dat file, and return OS_ERROR
-UTEST(TC_APPLY_SECURITY, BAD_SPACE_CRAFT_ID)
+UTEST(TC_APPLY_SECURITY1, BAD_SPACE_CRAFT_ID)
 {
     //Setup & Initialize CryptoLib
     Crypto_Init();
@@ -64,8 +69,10 @@ UTEST(TC_APPLY_SECURITY, BAD_SPACE_CRAFT_ID)
 
     uint8 *ptr_enc_frame = NULL;
     uint32 enc_frame_len;
+    int return_val = -1;
 
-    ASSERT_EQ(Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len), -1);
+    return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(return_val, -1);
 }
 
 // TODO:  This does not report the correct error.  It returns the correctly, but complains of an incorrect SCID
@@ -80,8 +87,9 @@ UTEST(TC_APPLY_SECURITY, BAD_VIRTUAL_CHANNEL_ID)
 
     uint8 *ptr_enc_frame = NULL;
     uint32 enc_frame_len;
-
-    ASSERT_EQ(Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len), -1);
+    int return_val = -1;
+    return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(return_val, return_val);
 }
 
 // This test should test how to handle a null buffer being passed into the ApplySecurity Function.
