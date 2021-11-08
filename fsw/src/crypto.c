@@ -3138,6 +3138,11 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                     return status;
                 }
             }
+            // Zeroise any sensitive information
+            if (sa_service_type != SA_PLAINTEXT)
+            {
+                gcry_cipher_close(tmp_hd);
+            }
         }
         /*
         ** End Authentication / Encryption
