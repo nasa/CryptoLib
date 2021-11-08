@@ -43,7 +43,9 @@ ivv-itc@lists.nasa.gov
         #define RESET "\033[0m"
     #else
         #define KRED  
-        #define KGRN  
+        #define RED
+        #define KGRN
+        #define GREEN 
         #define KYEL  
         #define KBLU  
         #define KMAG  
