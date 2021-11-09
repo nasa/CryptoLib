@@ -101,8 +101,8 @@ static int32 Crypto_PDU(char* ingest, TC_t* tc_frame);
 ** Global Variables
 */
 // Security
-static SecurityAssociation_t sa[NUM_SA];
-static crypto_key_t ek_ring[NUM_KEYS];
+static SecurityAssociation_t sa[NUM_SA] = {0};
+static crypto_key_t ek_ring[NUM_KEYS] = {0};
 //static crypto_key_t ak_ring[NUM_KEYS];
 // Local Frames
 static CCSDS_t sdls_frame;
@@ -2657,9 +2657,9 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
     // Local Variables
     int32 status = OS_SUCCESS;
     TC_FramePrimaryHeader_t temp_tc_header;
-    SecurityAssociation_t temp_SA;
+    SecurityAssociation_t temp_SA = {0};
     uint8 *p_new_enc_frame = NULL;
-    int16_t spi = -1;
+    int spi = -1;
     uint8 sa_service_type = -1;
     uint16 mac_loc = 0;
     uint16 tf_payload_len = 0x0000;
@@ -2671,6 +2671,13 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
     #ifdef DEBUG
         OS_printf(KYEL "\n----- Crypto_TC_ApplySecurity START -----\n" RESET);
     #endif
+
+   if (p_in_frame == NULL)
+    {
+        status = OS_ERROR;
+        OS_printf(KRED "Error: Input Buffer NULL! \n" RESET);
+        return status;  //Just return here, nothing can be done.
+    }
 
     #ifdef DEBUG
         OS_printf("%d TF Bytes received\n", in_frame_length);
@@ -2695,7 +2702,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
     temp_tc_header.fsn	  = (uint8)p_in_frame[4];
 
     // Check if command frame flag set
-    if (temp_tc_header.cc == 1)
+    if ((temp_tc_header.cc == 1) && (status == OS_SUCCESS))
     {
         /*
         ** CCSDS 232.0-B-3
@@ -2718,7 +2725,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         // TODO: Likely API call
         // TODO: Magic to make sure we're getting the correct SA.. 
         // currently SA DB allows for more than one
-        for (int i=0; i < NUM_SA;i++)
+        for (int i=0; i < NUM_SA; i++)
         {
             if (sa[i].sa_state == SA_OPERATIONAL)
             {
@@ -2741,11 +2748,15 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
             #ifdef TC_DEBUG
                 OS_printf("Operational SA found at index %d.\n", spi);
             #endif
-        }
 
+            #ifdef SA_DEBUG
+                OS_printf(KYEL "DEBUG - Printing local copy of SA Entry for current SPI.\n" RESET);
+                Crypto_saPrint(&temp_SA);
+            #endif  
+        }
         #ifdef SA_DEBUG
             OS_printf(KYEL "DEBUG - Received data frame.\n" RESET);
-            OS_printf("Using SA 0x%04X settings.\n", spi);
+            OS_printf("Using SA %d settings.\n", spi);
         #endif
 
         // Verify SCID 
@@ -2769,7 +2780,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
             status = OS_ERROR;
         }
         // Check if this VCID exists / is mapped to TCs
-        if ((temp_SA.gvcid_tc_blk[temp_tc_header.vcid].mapid != TYPE_TC) && (status = OS_SUCCESS))
+        if ((status == OS_SUCCESS) && (temp_SA.gvcid_tc_blk[temp_tc_header.vcid].mapid != TYPE_TC))
         {	
             OS_printf(KRED "Error: SA does not map this VCID to TC! \n" RESET);
             status = OS_ERROR;

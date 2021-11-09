@@ -991,7 +991,7 @@ int utest_main(int argc, const char *const argv[]) {
   const char *filter = UTEST_NULL;
   utest_uint64_t ran_tests = 0;
 
-  enum colours { U_RESET, GREEN, RED };
+  enum colours { U_RESET, U_GREEN, U_RED };
 
   const int use_colours = UTEST_COLOUR_OUTPUT();
   const char *colours[] = {"\033[0m", "\033[32m", "\033[31m"};
@@ -1045,7 +1045,7 @@ int utest_main(int argc, const char *const argv[]) {
     ran_tests++;
   }
   printf("%s[==========]%s Running %" UTEST_PRIu64 " test cases.\n",
-         colours[GREEN], colours[U_RESET], UTEST_CAST(utest_uint64_t, ran_tests));
+         colours[U_GREEN], colours[U_RESET], UTEST_CAST(utest_uint64_t, ran_tests));
 
   if (utest_state.output) {
     fprintf(utest_state.output, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
@@ -1065,7 +1065,7 @@ int utest_main(int argc, const char *const argv[]) {
       continue;
     }
 
-    printf("%s[ RUN      ]%s %s\n", colours[GREEN], colours[U_RESET],
+    printf("%s[ RUN      ]%s %s\n", colours[U_GREEN], colours[U_RESET],
            utest_state.tests[index].name);
 
     if (utest_state.output) {
@@ -1091,24 +1091,24 @@ int utest_main(int argc, const char *const argv[]) {
         failed_testcases[failed_testcase_index] = index;
       }
       failed++;
-      printf("%s[  FAILED  ]%s %s (%" UTEST_PRId64 "ns)\n", colours[RED],
+      printf("%s[  FAILED  ]%s %s (%" UTEST_PRId64 "ns)\n", colours[U_RED],
              colours[U_RESET], utest_state.tests[index].name, ns);
     } else {
-      printf("%s[       OK ]%s %s (%" UTEST_PRId64 "ns)\n", colours[GREEN],
+      printf("%s[       OK ]%s %s (%" UTEST_PRId64 "ns)\n", colours[U_GREEN],
              colours[U_RESET], utest_state.tests[index].name, ns);
     }
   }
 
-  printf("%s[==========]%s %" UTEST_PRIu64 " test cases ran.\n", colours[GREEN],
+  printf("%s[==========]%s %" UTEST_PRIu64 " test cases ran.\n", colours[U_GREEN],
          colours[U_RESET], ran_tests);
-  printf("%s[  PASSED  ]%s %" UTEST_PRIu64 " tests.\n", colours[GREEN],
+  printf("%s[  PASSED  ]%s %" UTEST_PRIu64 " tests.\n", colours[U_GREEN],
          colours[U_RESET], ran_tests - failed);
 
   if (0 != failed) {
     printf("%s[  FAILED  ]%s %" UTEST_PRIu64 " tests, listed below:\n",
-           colours[RED], colours[U_RESET], failed);
+           colours[U_RED], colours[U_RESET], failed);
     for (index = 0; index < failed_testcases_length; index++) {
-      printf("%s[  FAILED  ]%s %s\n", colours[RED], colours[U_RESET],
+      printf("%s[  FAILED  ]%s %s\n", colours[U_RED], colours[U_RESET],
              utest_state.tests[failed_testcases[index]].name);
     }
   }
