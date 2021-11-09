@@ -600,6 +600,7 @@ static int32 Crypto_SA_config(void)
         // SA 3 - KEYED;   ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 129
         sa[3].ekid = 129;
         sa[3].sa_state = SA_KEYED;
+        // sa[3].sa_state = SA_OPERATIONAL;
         sa[3].est = 1; 
         sa[3].ast = 1;
         sa[3].shivf_len = 12;
@@ -619,6 +620,7 @@ static int32 Crypto_SA_config(void)
         sa[4].est = 1; 
         sa[4].ast = 1;
         sa[4].shivf_len = 12;
+        sa[4].stmacf_len = 16;
         sa[4].iv_len = IV_SIZE;
         sa[4].iv[IV_SIZE-1] = 0;
         sa[4].abm_len = 0x14; // 20
@@ -628,7 +630,7 @@ static int32 Crypto_SA_config(void)
         }
         sa[4].arcw_len = 1;   
         sa[4].arcw[0] = 5;
-        sa[4].arc_len = (sa[4].arcw[0] * 2) + 1;
+        //sa[4].arc_len = (sa[4].arcw[0] * 2) + 1; // TEST
         sa[4].gvcid_tc_blk[0].tfvn  = 0;
         sa[4].gvcid_tc_blk[0].scid  = SCID & 0x3FF;
         sa[4].gvcid_tc_blk[0].vcid  = 0;
@@ -703,7 +705,7 @@ int32 Crypto_Init(void)
     if (!gcry_check_version(GCRYPT_VERSION))
     {
         fprintf(stderr, "Gcrypt Version: %s",GCRYPT_VERSION);
-        OS_printf(KRED "ERROR: gcrypt version mismatch! \n" RESET);
+        OS_printf(KRED "\tERROR: gcrypt version mismatch! \n" RESET);
     }
     if (gcry_control(GCRYCTL_SELFTEST) != GPG_ERR_NO_ERROR)
     {
@@ -958,6 +960,7 @@ static void Crypto_TM_updateOCF(void)
     }
 }
 
+//TODO - Review this. Not sure it quite works how we think
 static int32 Crypto_increment(uint8 *num, int length)
 {
     int i;
@@ -1129,7 +1132,7 @@ static uint16 Crypto_Calc_FECF(char* ingest, int len_ingest)
         OS_printf(KCYN "0x" RESET);
         for (int x = 0; x < len_ingest; x++)
         {
-            OS_printf(KCYN "%02x" RESET, ingest[x]);
+            OS_printf(KCYN "%02x" RESET, (uint8)*(ingest+x));
         }
         OS_printf(KCYN "\n" RESET);
         OS_printf(KCYN "In Crypto_Calc_FECF! fecf = 0x%04x\n" RESET, fecf);
@@ -2640,7 +2643,7 @@ static int32 Crypto_PDU(char* ingest,TC_t* tc_frame)
             OS_printf(KMAG "CCSDS message put on software bus: 0x" RESET);
             for (int x = 0; x < status; x++)
             {
-                OS_printf(KMAG "%02x" RESET, x, (uint8) ingest[x]);
+                OS_printf(KMAG "%02x" RESET, (uint8) ingest[x]);
             }
             OS_printf("\n");
         }
@@ -2648,11 +2651,22 @@ static int32 Crypto_PDU(char* ingest,TC_t* tc_frame)
 
     return status;
 }
-int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint32 in_frame_length, \
-    uint8 **enc_frame_test, uint32 *enc_frame_len)
+int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_length, \
+    uint8 **pp_in_frame, uint16 *p_enc_frame_len)
 {
     // Local Variables
     int32 status = OS_SUCCESS;
+    TC_FramePrimaryHeader_t temp_tc_header;
+    SecurityAssociation_t temp_SA;
+    uint8 *p_new_enc_frame = NULL;
+    int16_t spi = -1;
+    uint8 sa_service_type = -1;
+    uint16 mac_loc = 0;
+    uint16 tf_payload_len = 0x0000;
+    uint16 new_fecf = 0x0000;
+    uint8 aad[20];
+    gcry_cipher_hd_t tmp_hd;
+    gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
 
     #ifdef DEBUG
         OS_printf(KYEL "\n----- Crypto_TC_ApplySecurity START -----\n" RESET);
@@ -2663,24 +2677,22 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint32 in_frame_lengt
         OS_printf("DEBUG - ");
         for(int i=0; i < in_frame_length; i++)
         {
-            OS_printf("%02X", ((uint8 *)&*in_frame)[i]);
+            OS_printf("%02X", ((uint8 *)&*p_in_frame)[i]);
         }
         OS_printf("\nPrinted %d bytes\n", in_frame_length);
     #endif
 
-
-    TC_FramePrimaryHeader_t temp_tc_header;
     // Primary Header
-    temp_tc_header.tfvn   = ((uint8)in_frame[0] & 0xC0) >> 6;
-    temp_tc_header.bypass = ((uint8)in_frame[0] & 0x20) >> 5;
-    temp_tc_header.cc     = ((uint8)in_frame[0] & 0x10) >> 4;
-    temp_tc_header.spare  = ((uint8)in_frame[0] & 0x0C) >> 2;
-    temp_tc_header.scid   = ((uint8)in_frame[0] & 0x03) << 8;
-    temp_tc_header.scid   = temp_tc_header.scid | (uint8)in_frame[1];
-    temp_tc_header.vcid   = ((uint8)in_frame[2] & 0xFC) >> 2;
-    temp_tc_header.fl     = ((uint8)in_frame[2] & 0x03) << 8;
-    temp_tc_header.fl     = temp_tc_header.fl | (uint8)in_frame[3];
-    temp_tc_header.fsn	  = (uint8)in_frame[4];
+    temp_tc_header.tfvn   = ((uint8)p_in_frame[0] & 0xC0) >> 6;
+    temp_tc_header.bypass = ((uint8)p_in_frame[0] & 0x20) >> 5;
+    temp_tc_header.cc     = ((uint8)p_in_frame[0] & 0x10) >> 4;
+    temp_tc_header.spare  = ((uint8)p_in_frame[0] & 0x0C) >> 2;
+    temp_tc_header.scid   = ((uint8)p_in_frame[0] & 0x03) << 8;
+    temp_tc_header.scid   = temp_tc_header.scid | (uint8)p_in_frame[1];
+    temp_tc_header.vcid   = ((uint8)p_in_frame[2] & 0xFC) >> 2;
+    temp_tc_header.fl     = ((uint8)p_in_frame[2] & 0x03) << 8;
+    temp_tc_header.fl     = temp_tc_header.fl | (uint8)p_in_frame[3];
+    temp_tc_header.fsn	  = (uint8)p_in_frame[4];
 
     // Check if command frame flag set
     if (temp_tc_header.cc == 1)
@@ -2693,20 +2705,19 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint32 in_frame_lengt
         #ifdef TC_DEBUG
             OS_printf(KYEL "DEBUG - Received Control/Command frame - nothing to do.\n" RESET);
         #endif
+        status = OS_ERROR;
     }
 
     // TODO: If command frame flag not set, need to know SDLS parameters
     // What is the best way to do this - copy in the entire SA for a channel?
     // Expect these calls will return an error is the SA is not usable
     // Will need to know lengths of various parameters from the SA DB
-    else
+    if (status == OS_SUCCESS)
     {
         // Query SA DB for active SA / SDLS paremeters
         // TODO: Likely API call
         // TODO: Magic to make sure we're getting the correct SA.. 
         // currently SA DB allows for more than one
-        SecurityAssociation_t temp_SA;
-        int16_t spi = -1;
         for (int i=0; i < NUM_SA;i++)
         {
             if (sa[i].sa_state == SA_OPERATIONAL)
@@ -2770,129 +2781,395 @@ int32 Crypto_TC_ApplySecurity(const uint8* in_frame, const uint32 in_frame_lengt
             return status;
         }
 
-        // Determine mode
-        // Clear
+        // Determine SA Service Type
         if ((temp_SA.est == 0) && (temp_SA.ast == 0))
         {
-            #ifdef DEBUG
-                OS_printf(KBLU "Creating a TC - CLEAR! \n" RESET);
-            #endif
-
-            // Total length of buffer to be malloced
-            // Ingest length + segment header (1) + spi_index (2) + some variable length fields
-            // TODO
-            *enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shplf_len;
-
-            #ifdef TC_DEBUG
-                OS_printf(KYEL "DEBUG - Total TC Buffer to be malloced is: %d bytes\n" RESET, *enc_frame_len);
-                OS_printf(KYEL "\tlen of TF\t = %d\n" RESET, in_frame_length);
-                OS_printf(KYEL "\tsegment hdr\t = 1\n" RESET);
-                OS_printf(KYEL "\tspi len\t\t = 2\n" RESET);
-                OS_printf(KYEL "\tsh pad len\t = %d\n" RESET, temp_SA.shplf_len);
-            #endif
-
-            // Accio buffer
-            uint8 *enc_frame = (const uint8 *)malloc(*enc_frame_len * sizeof (unsigned char));
-            CFE_PSP_MemSet(enc_frame, 0, *enc_frame_len);
-
-            // Copy original TF header
-            CFE_PSP_MemCpy(enc_frame, in_frame, TC_FRAME_PRIMARYHEADER_SIZE);
-            // Set new TF Header length
-            // Recall: Length field is one minus total length per spec
-            *(enc_frame+2) = ((*(enc_frame+2) & 0xFC) | (((*enc_frame_len - 1) & (0x0300)) >> 8));
-            *(enc_frame+3) = ((*enc_frame_len - 1) & (0x00FF));
-
-            #ifdef TC_DEBUG
-                OS_printf(KYEL "Printing updated TF Header:\n\t");
-                for (int i=0; i<TC_FRAME_PRIMARYHEADER_SIZE; i++)
-                {
-                    OS_printf("%02X", *(enc_frame+i));
-                }
-                // Recall: The buffer length is 1 greater than the field value set in the TCTF
-                OS_printf("\n\tNew length is 0x%02X\n", *enc_frame_len-1);
-                OS_printf(RESET);
-            #endif
-
-            /*
-            ** Start variable length fields
-            */
-
-            uint16_t index = TC_FRAME_PRIMARYHEADER_SIZE;
-            // Set Secondary Header flags
-            *(enc_frame + index) = 0xFF;
-            index++;
-
-            /*
-            ** Begin Security Header Fields
-            ** Reference CCSDS SDLP 3550b1 4.1.1.1.3
-            */
-            // Set SPI
-            *(enc_frame + index) = ((spi & 0xFF00) >> 8);
-            *(enc_frame + index + 1) = (spi & 0x00FF);
-            index += 2;
-
-            // Set anti-replay sequence number value
-            /*
-            ** 4.1.1.4.4 If authentication or authenticated encryption is not selected 
-            ** for an SA, the Sequence Number field shall be zero octets in length.
-            */
-
-            // Determine if padding is needed
-            // TODO: Likely SA API Call
-            for (int i=0; i < temp_SA.shplf_len; i++)
-            {
-                // Temp fill Pad
-                // TODO: What should pad be, set per channel/SA potentially?
-                *(enc_frame + index) = 0x00;
-                index++;
-            }
-
-            // Copy in original TF data
-            CFE_PSP_MemCpy((enc_frame+index), (in_frame+TC_FRAME_PRIMARYHEADER_SIZE), (in_frame_length-TC_FRAME_PRIMARYHEADER_SIZE));
-            // for (int i=TC_FRAME_PRIMARYHEADER_SIZE; i < in_frame_length; i++)
-            // {
-            //     *(enc_frame + index) = *(in_frame + i);
-            //     index++;
-            // }
-
-            #ifdef TC_DEBUG
-                OS_printf(KYEL "Printing new TC Frame:\n\t");
-                for(int i=0; i < *enc_frame_len; i++)
-                {
-                    OS_printf("%02X", *(enc_frame + i));
-                }
-                OS_printf("\n\tThe returned length is: %d\n" RESET, *enc_frame_len);
-            #endif
-
-            *enc_frame_test = enc_frame;
+            sa_service_type = SA_PLAINTEXT;
         }
-
-        // Authentication
         else if ((temp_SA.est == 0) && (temp_SA.ast == 1))
         {
-            #ifdef DEBUG
-                OS_printf(KBLU "Creating a TC - AUTHENTICATED! \n" RESET);
-            #endif
-            // TODO
+            sa_service_type = SA_AUTHENTICATION;
         }
-
-        // Encryption
         else if ((temp_SA.est == 1) && (temp_SA.ast == 0))
         {
-            #ifdef DEBUG
-                OS_printf(KBLU "Creating a TC - ENCRYPTED! \n" RESET);
-            #endif
-            // TODO
+            sa_service_type = SA_ENCRYPTION;
+        }
+        else if ((temp_SA.est == 1) && (temp_SA.ast == 1))
+        {
+            sa_service_type = SA_AUTHENTICATED_ENCRYPTION;
+        }
+        else
+        {
+            // Probably unnecessary check
+            // Leaving for now as it would be cleaner in SA to have an association enum returned I believe
+            OS_printf(KRED "Error: SA Service Type is not defined! \n" RESET);
+            status = OS_ERROR;
+            return status;
         }
 
-        // Authenticated Encryption
-        else if((temp_SA.est == 1) && (temp_SA.ast == 1))
+        #ifdef TC_DEBUG
+            switch(sa_service_type)
+            {
+                case SA_PLAINTEXT:
+                    OS_printf(KBLU "Creating a TC - CLEAR!\n" RESET);
+                    break;
+                case SA_AUTHENTICATION:
+                    OS_printf(KBLU "Creating a TC - AUTHENTICATED!\n" RESET);
+                    break;
+                case SA_ENCRYPTION:
+                    OS_printf(KBLU "Creating a TC - ENCRYPTED!\n" RESET);
+                    break;
+                case SA_AUTHENTICATED_ENCRYPTION:
+                    OS_printf(KBLU "Creating a TC - AUTHENTICATED ENCRYPTION!\n" RESET);
+                    break;
+            }
+        #endif
+
+        // Determine length of buffer to be malloced
+        // TODO: Determine presence of FECF & TC_PAD_SIZE
+        // TODO: Note: Currently assumes ciphertext output length is same as ciphertext input length
+        switch(sa_service_type)
         {
-            #ifdef DEBUG
-                OS_printf(KBLU "Creating a TC - AUTHENTICATED ENCRYPTION! \n" RESET);
-            #endif
-            // TODO
+            case SA_PLAINTEXT:
+                // Ingest length + segment header (1) + spi_index (2) + some variable length fields
+                    *p_enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shplf_len;
+            case SA_AUTHENTICATION:
+                // Ingest length + segment header (1) + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
+                //   + shplf_len + arc_len + pad_size + stmacf_len
+                *p_enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + \
+                temp_SA.shplf_len + temp_SA.arc_len + TC_PAD_SIZE + temp_SA.stmacf_len;;
+            case SA_ENCRYPTION:
+                // Ingest length + segment header (1) + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
+                //   + shplf_len + arc_len + pad_size
+                *p_enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + \
+                temp_SA.shplf_len + temp_SA.arc_len + TC_PAD_SIZE;
+            case SA_AUTHENTICATED_ENCRYPTION:
+                // Ingest length + segment header (1) + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
+                //   + shplf_len + arc_len + pad_size + stmacf_len
+                *p_enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + \
+                temp_SA.shplf_len + temp_SA.arc_len + TC_PAD_SIZE + temp_SA.stmacf_len;
         }
+
+        #ifdef TC_DEBUG
+            OS_printf(KYEL "DEBUG - Total TC Buffer to be malloced is: %d bytes\n" RESET, *p_enc_frame_len);
+            OS_printf(KYEL "\tlen of TF\t = %d\n" RESET, in_frame_length);
+            OS_printf(KYEL "\tsegment hdr\t = 1\n" RESET); // TODO: Determine presence of this so not hard-coded
+            OS_printf(KYEL "\tspi len\t\t = 2\n" RESET);
+            OS_printf(KYEL "\tshivf_len\t = %d\n" RESET, temp_SA.shivf_len);
+            OS_printf(KYEL "\tshsnf_len\t = %d\n" RESET, temp_SA.shsnf_len);
+            OS_printf(KYEL "\tshplf len\t = %d\n" RESET, temp_SA.shplf_len);
+            OS_printf(KYEL "\tarc_len\t\t = %d\n" RESET, temp_SA.arc_len);
+            OS_printf(KYEL "\tpad_size\t = %d\n" RESET, TC_PAD_SIZE);
+            OS_printf(KYEL "\tstmacf_len\t = %d\n" RESET, temp_SA.stmacf_len);
+        #endif
+
+        // Accio buffer
+        p_new_enc_frame = (uint8 *)malloc(*p_enc_frame_len * sizeof (unsigned char));
+        if(!p_new_enc_frame)
+        {
+            OS_printf(KRED "Error: Malloc for encrypted output buffer failed! \n" RESET);
+            status = OS_ERROR;
+            return status;
+        }
+        CFE_PSP_MemSet(p_new_enc_frame, 0, *p_enc_frame_len);
+
+        // Copy original TF header
+        CFE_PSP_MemCpy(p_new_enc_frame, p_in_frame, TC_FRAME_PRIMARYHEADER_SIZE);
+
+        // Set new TF Header length
+        // Recall: Length field is one minus total length per spec
+        *(p_new_enc_frame+2) = ((*(p_new_enc_frame+2) & 0xFC) | (((*p_enc_frame_len - 1) & (0x0300)) >> 8));
+        *(p_new_enc_frame+3) = ((*p_enc_frame_len - 1) & (0x00FF));
+
+        #ifdef TC_DEBUG
+            OS_printf(KYEL "Printing updated TF Header:\n\t");
+            for (int i=0; i<TC_FRAME_PRIMARYHEADER_SIZE; i++)
+            {
+                OS_printf("%02X", *(p_new_enc_frame+i));
+            }
+            // Recall: The buffer length is 1 greater than the field value set in the TCTF
+            OS_printf("\n\tLength set to 0x%02X\n" RESET, *p_enc_frame_len-1);
+        #endif
+
+        /*
+        ** Start variable length fields
+        */
+        uint16_t index = TC_FRAME_PRIMARYHEADER_SIZE;
+        
+        // Set Segment Header flags
+        // TODO: Determine segment header exists
+        *(p_new_enc_frame + index) = 0xFF;
+        index++;
+
+        /*
+        ** Begin Security Header Fields
+        ** Reference CCSDS SDLP 3550b1 4.1.1.1.3
+        */
+        // Set SPI
+        *(p_new_enc_frame + index) = ((spi & 0xFF00) >> 8);
+        *(p_new_enc_frame + index + 1) = (spi & 0x00FF);
+        index += 2;
+
+        // Set initialization vector if specified
+        if ((sa_service_type == SA_AUTHENTICATION) || \
+            (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
+        { 
+            #ifdef SA_DEBUG
+                OS_printf(KYEL "Old IV value was:\n\t");
+                for(int i=0; i<sa[spi].shivf_len; i++) {OS_printf("%02x", sa[spi].iv[i]);}
+                OS_printf("\n" RESET);
+            #endif
+            #ifdef INCREMENT
+                // TODO: API call?
+                Crypto_increment(sa[spi].iv, sa[spi].shivf_len);
+            #endif
+            #ifdef SA_DEBUG
+                OS_printf(KYEL "New IV value is:\n\t");
+                for(int i=0; i<sa[spi].shivf_len; i++) {OS_printf("%02x", sa[spi].iv[i]);}
+                OS_printf("\n" RESET);
+            #endif
+            for (int i=0; i < temp_SA.shivf_len; i++)
+            {
+                // TODO: Likely API call
+                // Copy in IV from SA
+                *(p_new_enc_frame + index) = sa[spi].iv[i];
+                index++;
+            }
+        }
+
+        // Set anti-replay sequence number if specified
+        /*
+        ** See also: 4.1.1.4.2
+        ** 4.1.1.4.4 If authentication or authenticated encryption is not selected 
+        ** for an SA, the Sequence Number field shall be zero octets in length.
+        ** Reference CCSDS 3550b1
+        */
+        // Determine if seq num field is needed
+        // TODO: Likely SA API Call
+        if (temp_SA.shsnf_len > 0)
+        {
+            // If using anti-replay counter, increment it
+            // TODO: API call instead?
+            // TODO: Check return code
+            Crypto_increment(sa[spi].arc, sa[spi].shsnf_len);
+            for (int i=0; i < temp_SA.shsnf_len; i++)
+            {
+                *(p_new_enc_frame + index) = sa[spi].arc[i];
+                index++;
+            }
+        }
+
+        // Set security header padding if specified
+        /*
+        ** 4.2.3.4 h) if the algorithm and mode selected for the SA require the use of 
+        ** fill padding, place the number of fill bytes used into the Pad Length field 
+        ** of the Security Header - Reference CCSDS 3550b1
+        */
+        // TODO: Revisit this
+        // TODO: Likely SA API Call
+        for (int i=0; i < temp_SA.shplf_len; i++)
+        {
+            /* 4.1.1.5.2 The Pad Length field shall contain the count of fill bytes used in the
+            ** cryptographic process, consisting of an integral number of octets. - CCSDS 3550b1
+            */
+            // TODO: Set this depending on crypto cipher used
+            *(p_new_enc_frame + index) = 0x00;
+            index++;
+        }
+
+        /*
+        ** End Security Header Fields
+        */
+
+        // Copy in original TF data - except FECF
+        // Will be over-written if using encryption later
+        // TODO: This will change depending on how we handle segment header and FECF above, 
+        // and if it was present in the original TCTF
+        //if FECF
+        tf_payload_len = in_frame_length - TC_FRAME_PRIMARYHEADER_SIZE - FECF_SIZE;
+        //if no FECF
+        //tf_payload_len = in_frame_length - TC_FRAME_PRIMARYHEADER_SIZE;
+        CFE_PSP_MemCpy((p_new_enc_frame+index), (p_in_frame+TC_FRAME_PRIMARYHEADER_SIZE), tf_payload_len);
+        //index += tf_payload_len;
+
+        /*
+        ** Begin Security Trailer Fields
+        */
+
+        // Set MAC Field if present
+        /*
+        ** May be present and unused if switching between clear and authenticated
+        ** CCSDS 3550b1 4.1.2.3
+        */
+        // By leaving MAC as zeros, can use index for encryption output
+        // for (int i=0; i < temp_SA.stmacf_len; i++)
+        // {
+        //     // Temp fill MAC
+        //     *(p_new_enc_frame + index) = 0x00;
+        //     index++;
+        // }
+
+        /*
+        ** End Security Trailer Fields
+        */
+
+        /* 
+        ** Begin Authentication / Encryption
+        */
+
+        if (sa_service_type != SA_PLAINTEXT)
+        {
+            gcry_error = gcry_cipher_open(
+                &(tmp_hd), 
+                GCRY_CIPHER_AES256, 
+                GCRY_CIPHER_MODE_GCM, 
+                GCRY_CIPHER_CBC_MAC
+                );
+            if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+            {
+                OS_printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
+                status = OS_ERROR;
+                return status;
+            }
+            gcry_error = gcry_cipher_setkey(
+                tmp_hd, 
+                &(ek_ring[sa[spi].ekid].value[0]), 
+                KEY_SIZE //TODO:  look into this
+            );
+            if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+            {
+                OS_printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
+                status = OS_ERROR;
+                return status;
+            }
+            gcry_error = gcry_cipher_setiv(
+                tmp_hd, 
+                &(sa[spi].iv[0]), 
+                sa[spi].iv_len
+            );
+            if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+            {
+                OS_printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
+                status = OS_ERROR;
+                return status;
+            }
+
+            // Prepare additional authenticated data, if needed
+            if ((sa_service_type == SA_AUTHENTICATION) || \
+                (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
+            {
+                for (int y = 0; y < sa[spi].abm_len; y++)
+                {
+                    aad[y] = p_in_frame[y] & sa[spi].abm[y];
+                }
+                #ifdef MAC_DEBUG 
+                    OS_printf(KYEL "Preparing AAD:\n");
+                    OS_printf("\tUsing ABM Length of %d\n\t", sa[spi].abm_len);
+                    for (int y = 0; y < sa[spi].abm_len; y++)
+                    {
+                        OS_printf("%02x", aad[y]);
+                    }
+                    OS_printf("\n" RESET);
+                #endif
+
+                gcry_error = gcry_cipher_authenticate(
+                    tmp_hd,
+                    &(aad[0]),                                      // additional authenticated data
+                    sa[spi].abm_len 		                        // length of AAD
+                );
+                if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+                {
+                    OS_printf(KRED "ERROR: gcry_cipher_authenticate error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
+                    OS_printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error),gcry_strerror (gcry_error));
+                    status = OS_ERROR;
+                    return status;
+                }
+            }
+
+            if ((sa_service_type == SA_ENCRYPTION) || \
+                (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
+            {
+                // TODO: More robust calculation of this location
+                // uint16 output_loc = TC_FRAME_PRIMARYHEADER_SIZE + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + temp_SA.shplf_len;
+                #ifdef TC_DEBUG
+                    OS_printf("Encrypted bytes output_loc is %d\n", index);
+                    OS_printf("tf_payload_len is %d\n", tf_payload_len);
+                    OS_printf(KYEL "Printing TC Frame prior to encryption:\n\t");
+                    for(int i=0; i < *p_enc_frame_len; i++)
+                    {
+                        OS_printf("%02X", *(p_new_enc_frame + i));
+                    }
+                    OS_printf("\n");
+                #endif
+
+                gcry_error = gcry_cipher_encrypt(
+                    tmp_hd,
+                    &p_new_enc_frame[index],                              // ciphertext output
+                    tf_payload_len,		 		                    // length of data
+                    (p_in_frame + TC_FRAME_PRIMARYHEADER_SIZE),       // plaintext input TODO: Determine if Segment header exists, assuming yes (+1) for now
+                    tf_payload_len                                  // in data length
+                );
+                if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+                {
+                    OS_printf(KRED "ERROR: gcry_cipher_encrypt error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
+                    status = OS_ERROR;
+                    return status;
+                }
+            }
+
+            if ((sa_service_type == SA_AUTHENTICATION) || \
+                (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
+            {
+                // TODO - Know if FECF exists
+                mac_loc = *p_enc_frame_len - sa[spi].stmacf_len - FECF_SIZE;
+                #ifdef MAC_DEBUG
+                    OS_printf(KYEL "MAC location is: %d\n" RESET, mac_loc);
+                    OS_printf(KYEL "MAC size is: %d\n" RESET, MAC_SIZE);
+                #endif
+                gcry_error = gcry_cipher_gettag(
+                    tmp_hd,
+                    &p_new_enc_frame[mac_loc],                             // tag output
+                    MAC_SIZE                                         // tag size
+                );
+                if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+                {
+                    OS_printf(KRED "ERROR: gcry_cipher_checktag error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
+                    status = OS_ERROR;
+                    return status;
+                }
+            }
+            // Zeroise any sensitive information
+            if (sa_service_type != SA_PLAINTEXT)
+            {
+                gcry_cipher_close(tmp_hd);
+            }
+        }
+        /*
+        ** End Authentication / Encryption
+        */
+
+        // Set FECF Field if present
+        // TODO: Determine is FECF is even present
+        // on this particular channel
+        // Calc new fecf, don't include old fecf in length
+        #ifdef FECF_DEBUG
+            OS_printf(KCYN "Calcing FECF over %d bytes\n" RESET, *p_enc_frame_len - 2);
+        #endif
+        new_fecf = Crypto_Calc_FECF(p_new_enc_frame, *p_enc_frame_len - 2);
+        *(p_new_enc_frame + *p_enc_frame_len - 2) = (uint8) ((new_fecf & 0xFF00) >> 8);
+        *(p_new_enc_frame + *p_enc_frame_len - 1) = (uint8) (new_fecf & 0x00FF);
+        index += 2;
+
+        #ifdef TC_DEBUG
+            OS_printf(KYEL "Printing new TC Frame:\n\t");
+            for(int i=0; i < *p_enc_frame_len; i++)
+            {
+                OS_printf("%02X", *(p_new_enc_frame + i));
+            }
+            OS_printf("\n\tThe returned length is: %d\n" RESET, *p_enc_frame_len);
+        #endif
+
+        *pp_in_frame = p_new_enc_frame;
     }
 
     #ifdef DEBUG
