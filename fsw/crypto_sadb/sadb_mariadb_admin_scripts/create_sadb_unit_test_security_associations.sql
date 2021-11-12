@@ -9,8 +9,8 @@ INSERT INTO security_associations (sa_id,ekid,sa_state,est,ast,shivf_len,iv_len,
 VALUES (2,128,2,1,1,12,12,0,20,0,1,5,11);
 
 -- SA 3 - KEYED;   ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 129
-INSERT INTO security_associations (sa_id,ekid,sa_state,est,ast,shivf_len,iv_len,iv,abm_len,abm,arcw_len,arcw,arc_len)
-VALUES (3,129,2,1,1,12,12,0,20,0,1,5,11);
+INSERT INTO security_associations (sa_id,ekid,sa_state,est,ast,shivf_len,stmacf_len,iv_len,iv,abm_len,abm,arcw_len,arcw,arc_len)
+VALUES (3,129,2,1,1,12,16,12,0,20,0,1,5,11);
 
 -- SA 4 - KEYED;  ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 130
 INSERT INTO security_associations (sa_id,ekid,sa_state,est,ast,shivf_len,iv_len,iv,abm_len,abm,arcw_len,arcw,arc_len,tfvn,scid,vcid,mapid)

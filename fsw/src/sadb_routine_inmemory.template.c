@@ -114,6 +114,7 @@ static int32 sadb_config(void)
     sa[4].est = 1;
     sa[4].ast = 1;
     sa[4].shivf_len = 12;
+    sa[4].stmacf_len = 16;
     sa[4].iv_len = IV_SIZE;
     sa[4].iv[IV_SIZE-1] = 0;
     sa[4].abm_len = 0x14; // 20

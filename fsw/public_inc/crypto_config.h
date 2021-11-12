@@ -43,7 +43,9 @@ ivv-itc@lists.nasa.gov
         #define RESET "\033[0m"
     #else
         #define KRED  
-        #define KGRN  
+        #define RED
+        #define KGRN
+        #define GREEN 
         #define KYEL  
         #define KBLU  
         #define KMAG  
@@ -90,6 +92,12 @@ ivv-itc@lists.nasa.gov
     #define KEY_DEACTIVATED             2
     #define KEY_DESTROYED               3
     #define KEY_CORRUPTED               4
+
+// SA Service Types
+    #define SA_PLAINTEXT                0
+    #define SA_AUTHENTICATION           1
+    #define SA_ENCRYPTION               2
+    #define SA_AUTHENTICATED_ENCRYPTION 3
 
 // Generic Defines
     #define NUM_SA						64
