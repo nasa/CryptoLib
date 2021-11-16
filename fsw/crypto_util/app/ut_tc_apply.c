@@ -16,7 +16,7 @@
 */
 
 /*
- *  Simple apply security program that reads a file into memory and calls the Crypto_TC_ApplySecurity function on the data.
+ *  Unit Tests that macke use of TC_ApplySecurity function on the data.
  */
 #include "ut_tc_apply.h"
 #include "utest.h"
@@ -25,19 +25,25 @@
 
 // Inactive SA Database
 // TODO:  Should this return or continue to function as currently written when SA is not initalized?
+// TODO:  I don't believe Crypto Init is cleaned up between each test.  I am fairly certain that the init persists between tests.
+
+// TODO:  Need to cherry-pick Crypto_reInit functionality to use between each of these tests
 UTEST(TC_APPLY_SECURITY, NO_CRYPTO_INIT)
 {
     // No Crypto_Init();
-    long buffer_size;
+    long buffer_size = 0;
     char *buffer = c_read_file("../../fsw/crypto_tests/data/raw_tc_sdls_ping.dat", &buffer_size);
-    uint32 buffer_size_i = (uint32) buffer_size;
+    uint16 buffer_size_i = (uint16) buffer_size;
 
     uint8 *ptr_enc_frame = NULL;
-    uint16 enc_frame_len;
-    int return_val = -1;
+    uint16 enc_frame_len = 0;
+    int32 return_val = -1;
 
     return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
-    ASSERT_EQ(return_val, 0);
+
+    ASSERT_EQ(-1, return_val);
+    free(buffer);
+    free(ptr_enc_frame);
 }
 
 // Nominal Test.  This should read a raw_tc_sdls_ping.dat file, continue down the "happy path", and return OS_SUCCESS
@@ -45,34 +51,40 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH)
 {
     //Setup & Initialize CryptoLib
     Crypto_Init();
-    long buffer_size;
+    long buffer_size =0;
     char *buffer = c_read_file("../../fsw/crypto_tests/data/raw_tc_sdls_ping.dat", &buffer_size);
-    uint32 buffer_size_i = (uint32) buffer_size;
+    uint16 buffer_size_i = (uint16) buffer_size;
 
     uint8 *ptr_enc_frame = NULL;
-    uint16 enc_frame_len;
+    uint16 enc_frame_len = 0;
 
-    int return_val = -1;
+    int32 return_val = -1;
 
     return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
-    ASSERT_EQ(return_val, 0);
+    ASSERT_EQ(0, return_val);
+    free(buffer);
+    free(ptr_enc_frame);
+    //Need Crypto_ReInit()?;
 }
 
 // Bad Space Craft ID.  This should pass the flawed .dat file, and return OS_ERROR
-UTEST(TC_APPLY_SECURITY1, BAD_SPACE_CRAFT_ID)
+UTEST(TC_APPLY_SECURITY, BAD_SPACE_CRAFT_ID)
 {
     //Setup & Initialize CryptoLib
     Crypto_Init();
-    long buffer_size;
+    long buffer_size = 0;
     char *buffer = c_read_file("../../fsw/crypto_tests/data/raw_tc_sdls_ping_bad_scid.dat", &buffer_size);
-    uint32 buffer_size_i = (uint32) buffer_size;
+    uint16 buffer_size_i = (uint16) buffer_size;
 
     uint8 *ptr_enc_frame = NULL;
-    uint16 enc_frame_len;
-    int return_val = -1;
+    uint16 enc_frame_len = 0;
+    int32 return_val = -1;
 
     return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
-    ASSERT_EQ(return_val, -1);
+    ASSERT_EQ(-1, return_val);
+    free(buffer);
+    free(ptr_enc_frame);    
+    //Need Crypto_ReInit();
 }
 
 // TODO:  This does not report the correct error.  It returns the correctly, but complains of an incorrect SCID
@@ -81,16 +93,23 @@ UTEST(TC_APPLY_SECURITY, BAD_VIRTUAL_CHANNEL_ID)
 {
     //Setup & Initialize CryptoLib
     Crypto_Init();
-    long buffer_size;
+    long buffer_size = 0;
     char *buffer = c_read_file("../../fsw/crypto_tests/data/raw_tc_sdls_ping_bad_vcid.dat", &buffer_size);
-    uint32 buffer_size_i = (uint32) buffer_size;
+    uint16 buffer_size_i = (uint16) buffer_size;
 
     uint8 *ptr_enc_frame = NULL;
-    uint16 enc_frame_len;
-    int return_val = -1;
+    uint16 enc_frame_len = 0;
+    int32 return_val = -1;
+
     return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
-    ASSERT_EQ(return_val, return_val);
+    ASSERT_EQ(0, return_val); //TODO:  Having this fail until it is fixed in code.
+    free(buffer);
+    free(ptr_enc_frame);    
+    //Need Crypto_ReInit();
 }
+
+// Encryption Test HERE
+
 
 // This test should test how to handle a null buffer being passed into the ApplySecurity Function.
 // Currently this functionality isn't handled properly, and casues a seg-fault.
@@ -100,19 +119,25 @@ UTEST(TC_APPLY_SECURITY, NULL_BUFFER)
 {
     //Setup & Initialize CryptoLib
     Crypto_Init();
-    long buffer_size;
+    long buffer_size = 0;
     char *buffer = NULL;
-    uint32 buffer_size_i = (uint32) buffer_size;
+    uint16 buffer_size_i = (uint16) buffer_size;
 
     uint8 *ptr_enc_frame = NULL;
-    uint16 enc_frame_len;
+    uint16 enc_frame_len = 0;
+    int32 return_val = -1;
 
-    ASSERT_EQ(Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len), -1);
+    return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
+
+    ASSERT_EQ(-1, return_val);
+    free(buffer);
+    free(ptr_enc_frame);    
+    //Need Crypto_ReInit();
 }
 
 //TODO: 
 /*  What should be returned if something goes wrong with Control Command Flag?
-    Should a NULL pointer be returned....THe original pointer?
+    Should a NULL pointer be returned....The original pointer?
     We need to decide on this functionality and write a test for this
 
     We should probably have more error codes than OS_SUCCESS and OS_ERROR

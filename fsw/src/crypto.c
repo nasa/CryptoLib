@@ -91,7 +91,7 @@ static int32 Crypto_PDU(char* ingest, TC_t* tc_frame);
 ** Global Variables
 */
 // Security
-crypto_key_t ek_ring[NUM_KEYS];
+crypto_key_t ek_ring[NUM_KEYS] = {0};
 //static crypto_key_t ak_ring[NUM_KEYS];
 CCSDS_t sdls_frame;
 TM_t tm_frame;
@@ -2051,6 +2051,13 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         OS_printf(KYEL "\n----- Crypto_TC_ApplySecurity START -----\n" RESET);
     #endif
 
+    if (p_in_frame == NULL)
+    {
+        status = OS_ERROR;
+        OS_printf(KRED "Error: Input Buffer NULL! \n" RESET);
+        return status;  //Just return here, nothing can be done.
+    }
+
     #ifdef DEBUG
         OS_printf("%d TF Bytes received\n", in_frame_length);
         OS_printf("DEBUG - ");
@@ -2079,7 +2086,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
     uint8 map_id = 0;
 
     // Check if command frame flag set
-    if (temp_tc_header.cc == 1)
+    if ((temp_tc_header.cc == 1) && (status == OS_SUCCESS))
     {
         /*
         ** CCSDS 232.0-B-3

@@ -248,6 +248,10 @@ static int32 sadb_get_sa_from_spi(uint16 spi,SecurityAssociation_t** security_as
 {
     int32 status = OS_SUCCESS;
     *security_association = &sa[spi];
+    #ifdef SA_DEBUG
+        OS_printf(KYEL "DEBUG - Printing local copy of SA Entry for current SPI.\n" RESET);
+                    Crypto_saPrint(&temp_SA);
+    #endif
     return status;
 }
 
