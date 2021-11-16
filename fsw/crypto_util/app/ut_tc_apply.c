@@ -53,7 +53,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH)
     Crypto_Init();
     long buffer_size =0;
     char *buffer = c_read_file("../../fsw/crypto_tests/data/raw_tc_sdls_ping.dat", &buffer_size);
-    uint16 buffer_size_i = (uint32) buffer_size;
+    uint16 buffer_size_i = (uint16) buffer_size;
 
     uint8 *ptr_enc_frame = NULL;
     uint16 enc_frame_len = 0;
@@ -74,7 +74,7 @@ UTEST(TC_APPLY_SECURITY, BAD_SPACE_CRAFT_ID)
     Crypto_Init();
     long buffer_size = 0;
     char *buffer = c_read_file("../../fsw/crypto_tests/data/raw_tc_sdls_ping_bad_scid.dat", &buffer_size);
-    uint16 buffer_size_i = (uint32) buffer_size;
+    uint16 buffer_size_i = (uint16) buffer_size;
 
     uint8 *ptr_enc_frame = NULL;
     uint16 enc_frame_len = 0;
@@ -95,7 +95,7 @@ UTEST(TC_APPLY_SECURITY, BAD_VIRTUAL_CHANNEL_ID)
     Crypto_Init();
     long buffer_size = 0;
     char *buffer = c_read_file("../../fsw/crypto_tests/data/raw_tc_sdls_ping_bad_vcid.dat", &buffer_size);
-    uint16 buffer_size_i = (uint32) buffer_size;
+    uint16 buffer_size_i = (uint16) buffer_size;
 
     uint8 *ptr_enc_frame = NULL;
     uint16 enc_frame_len = 0;
@@ -121,7 +121,7 @@ UTEST(TC_APPLY_SECURITY, NULL_BUFFER)
     Crypto_Init();
     long buffer_size = 0;
     char *buffer = NULL;
-    uint16 buffer_size_i = (uint32) buffer_size;
+    uint16 buffer_size_i = (uint16) buffer_size;
 
     uint8 *ptr_enc_frame = NULL;
     uint16 enc_frame_len = 0;

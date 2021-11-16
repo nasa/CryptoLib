@@ -20,7 +20,9 @@ project(CRYPTO C)
 
 set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib")
 
-OPTION(DEBUG "Debug" OFF) # Disabled by default
+OPTION(DEBUG "Debug" OFF) # Disabled by default, enable with: -DDEBUG=ON
+OPTION(MYSQL "Mysql" OFF) # Disabled by default, enable with: -DMYSQL=ON
+
 IF(DEBUG)
     ADD_DEFINITIONS(-DDEBUG -DOCF_DEBUG -DFECF_DEBUG -DSA_DEBUG -DPDU_DEBUG -DCCSDS_DEBUG -DTC_DEBUG -DMAC_DEBUG -DTM_DEBUG)
     add_compile_options(-ggdb)

@@ -21,6 +21,7 @@ ivv-itc@lists.nasa.gov
 ** Includes
 */
 #include "crypto.h"
+#include "sadb_routine.h"
 
 #include "itc_aes128.h"
 #include "itc_gcm128.h"
@@ -42,22 +43,21 @@ ivv-itc@lists.nasa.gov
     CFS_MODULE_DECLARE_LIB(crypto);
 #endif
 
+static SadbRoutine sadb_routine = NULL;
+
 /*
 ** Static Prototypes
 */
-// Initialization Functions
-static int32 Crypto_SA_init(void);
-static int32 Crypto_SA_config(void);
 // Assisting Functions
 static int32  Crypto_Get_tcPayloadLength(TC_t* tc_frame);
 static int32  Crypto_Get_tmLength(int len);
 static void   Crypto_TM_updatePDU(char* ingest, int len_ingest);
 static void   Crypto_TM_updateOCF(void);
+static void   Crypto_Local_Config(void);
+static void   Crypto_Local_Init(void);
 //static int32  Crypto_gcm_err(int gcm_err);
-static int32  Crypto_increment(uint8* num, int length);
 static int32 Crypto_window(uint8 *actual, uint8 *expected, int length, int window);
 static int32 Crypto_compare_less_equal(uint8 *actual, uint8 *expected, int length);
-static uint8  Crypto_Prep_Reply(char*, uint8);
 static int32  Crypto_FECF(int fecf, char* ingest, int len_ingest,TC_t* tc_frame);
 static uint16 Crypto_Calc_FECF(char* ingest, int len_ingest);
 static void   Crypto_Calc_CRC_Init_Table(void);
@@ -67,16 +67,6 @@ static int32 Crypto_Key_OTAR(void);
 static int32 Crypto_Key_update(uint8 state);
 static int32 Crypto_Key_inventory(char*);
 static int32 Crypto_Key_verify(char*,TC_t* tc_frame);
-// Security Association Functions
-static int32 Crypto_SA_stop(void);
-static int32 Crypto_SA_start(TC_t* tc_frame);
-static int32 Crypto_SA_expire(void);
-static int32 Crypto_SA_rekey(void);
-static int32 Crypto_SA_status(char*);
-static int32 Crypto_SA_create(void);
-static int32 Crypto_SA_setARSN(void);
-static int32 Crypto_SA_setARSNW(void);
-static int32 Crypto_SA_delete(void);
 // Security Monitoring & Control Procedure
 static int32 Crypto_MC_ping(char* ingest);
 static int32 Crypto_MC_status(char* ingest);
@@ -101,12 +91,10 @@ static int32 Crypto_PDU(char* ingest, TC_t* tc_frame);
 ** Global Variables
 */
 // Security
-static SecurityAssociation_t sa[NUM_SA] = {0};
-static crypto_key_t ek_ring[NUM_KEYS] = {0};
+crypto_key_t ek_ring[NUM_KEYS] = {0};
 //static crypto_key_t ak_ring[NUM_KEYS];
-// Local Frames
-static CCSDS_t sdls_frame;
-static TM_t tm_frame;
+CCSDS_t sdls_frame;
+TM_t tm_frame;
 // OCF
 static uint8 ocf = 0;
 static SDLS_FSR_t report;
@@ -128,578 +116,14 @@ static uint16 crc16Table[256];
 /*
 ** Initialization Functions
 */
-static int32 Crypto_SA_init(void)
-// General security association initialization
-{
-    int32 status = OS_SUCCESS;
-
-    for (int x = 0; x < NUM_SA; x++)
-    {
-        sa[x].ekid = x;
-        sa[x].akid = x;
-        sa[x].sa_state = SA_NONE;
-        sa[x].ecs_len = 0;
-        sa[x].ecs[0] = 0;
-        sa[x].ecs[1] = 0;
-        sa[x].ecs[2] = 0;
-        sa[x].ecs[3] = 0;
-        sa[x].iv_len = IV_SIZE;
-        sa[x].acs_len = 0;
-        sa[x].acs = 0;
-        sa[x].arc_len = 0;
-        sa[x].arc[0] = 5;
-    }
-
-    // Initialize TM Frame
-        // TM Header
-        tm_frame.tm_header.tfvn    = 0;	    // Shall be 00 for TM-/TC-SDLP
-        tm_frame.tm_header.scid    = SCID & 0x3FF; 
-        tm_frame.tm_header.vcid    = 0; 
-        tm_frame.tm_header.ocff    = 1;
-        tm_frame.tm_header.mcfc    = 1;
-        tm_frame.tm_header.vcfc    = 1;
-        tm_frame.tm_header.tfsh    = 0;
-        tm_frame.tm_header.sf      = 0;
-        tm_frame.tm_header.pof     = 0;	    // Shall be set to 0
-        tm_frame.tm_header.slid    = 3;	    // Shall be set to 11
-        tm_frame.tm_header.fhp     = 0;
-        // TM Security Header
-        tm_frame.tm_sec_header.spi = 0x0000;
-        for ( int x = 0; x < IV_SIZE; x++)
-        { 	// Initialization Vector
-            tm_frame.tm_sec_header.iv[x] = 0x00;
-        }
-        // TM Payload Data Unit
-        for ( int x = 0; x < TM_FRAME_DATA_SIZE; x++)
-        {	// Zero TM PDU
-            tm_frame.tm_pdu[x] = 0x00;
-        }
-        // TM Security Trailer
-        for ( int x = 0; x < MAC_SIZE; x++)
-        { 	// Zero TM Message Authentication Code
-            tm_frame.tm_sec_trailer.mac[x] = 0x00;
-        }
-        for ( int x = 0; x < OCF_SIZE; x++)
-        { 	// Zero TM Operational Control Field
-            tm_frame.tm_sec_trailer.ocf[x] = 0x00;
-        }
-        tm_frame.tm_sec_trailer.fecf = 0xFECF;
-
-    // Initialize CLCW
-        clcw.cwt 	= 0;			// Control Word Type "0"
-        clcw.cvn	= 0;			// CLCW Version Number "00"
-        clcw.sf  	= 0;    		// Status Field
-        clcw.cie 	= 1;			// COP In Effect
-        clcw.vci 	= 0;    		// Virtual Channel Identification
-        clcw.spare0 = 0;			// Reserved Spare
-        clcw.nrfa	= 0;			// No RF Avaliable Flag
-        clcw.nbl	= 0;			// No Bit Lock Flag
-        clcw.lo		= 0;			// Lock-Out Flag
-        clcw.wait	= 0;			// Wait Flag
-        clcw.rt		= 0;			// Retransmit Flag
-        clcw.fbc	= 0;			// FARM-B Counter
-        clcw.spare1 = 0;			// Reserved Spare
-        clcw.rv		= 0;        	// Report Value
-
-    // Initialize Frame Security Report
-        report.cwt   = 1;			// Control Word Type "0b1""
-        report.vnum  = 4;   		// FSR Version "0b100""
-        report.af    = 0;			// Alarm Field
-        report.bsnf  = 0;			// Bad SN Flag
-        report.bmacf = 0;			// Bad MAC Flag
-        report.ispif = 0;			// Invalid SPI Flag
-        report.lspiu = 0;	    	// Last SPI Used
-        report.snval = 0;			// SN Value (LSB)
-
-    return status;
-}
-
-static int32 Crypto_SA_config(void)
-// Initialize the mission specific security associations.
-// Only need to initialize non-zero values.
-{   
-    int32 status = OS_SUCCESS;
-    
-    // Master Keys
-        // 0 - 000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F -> ACTIVE
-        ek_ring[0].value[0]  = 0x00;
-        ek_ring[0].value[1]  = 0x01;
-        ek_ring[0].value[2]  = 0x02;
-        ek_ring[0].value[3]  = 0x03;
-        ek_ring[0].value[4]  = 0x04;
-        ek_ring[0].value[5]  = 0x05;
-        ek_ring[0].value[6]  = 0x06;
-        ek_ring[0].value[7]  = 0x07;
-        ek_ring[0].value[8]  = 0x08;
-        ek_ring[0].value[9]  = 0x09;
-        ek_ring[0].value[10] = 0x0A;
-        ek_ring[0].value[11] = 0x0B;
-        ek_ring[0].value[12] = 0x0C;
-        ek_ring[0].value[13] = 0x0D;
-        ek_ring[0].value[14] = 0x0E;
-        ek_ring[0].value[15] = 0x0F;
-        ek_ring[0].value[16] = 0x00;
-        ek_ring[0].value[17] = 0x01;
-        ek_ring[0].value[18] = 0x02;
-        ek_ring[0].value[19] = 0x03;
-        ek_ring[0].value[20] = 0x04;
-        ek_ring[0].value[21] = 0x05;
-        ek_ring[0].value[22] = 0x06;
-        ek_ring[0].value[23] = 0x07;
-        ek_ring[0].value[24] = 0x08;
-        ek_ring[0].value[25] = 0x09;
-        ek_ring[0].value[26] = 0x0A;
-        ek_ring[0].value[27] = 0x0B;
-        ek_ring[0].value[28] = 0x0C;
-        ek_ring[0].value[29] = 0x0D;
-        ek_ring[0].value[30] = 0x0E;
-        ek_ring[0].value[31] = 0x0F;
-        ek_ring[0].key_state = KEY_ACTIVE;
-        // 1 - 101112131415161718191A1B1C1D1E1F101112131415161718191A1B1C1D1E1F -> ACTIVE
-        ek_ring[1].value[0]  = 0x10;
-        ek_ring[1].value[1]  = 0x11;
-        ek_ring[1].value[2]  = 0x12;
-        ek_ring[1].value[3]  = 0x13;
-        ek_ring[1].value[4]  = 0x14;
-        ek_ring[1].value[5]  = 0x15;
-        ek_ring[1].value[6]  = 0x16;
-        ek_ring[1].value[7]  = 0x17;
-        ek_ring[1].value[8]  = 0x18;
-        ek_ring[1].value[9]  = 0x19;
-        ek_ring[1].value[10] = 0x1A;
-        ek_ring[1].value[11] = 0x1B;
-        ek_ring[1].value[12] = 0x1C;
-        ek_ring[1].value[13] = 0x1D;
-        ek_ring[1].value[14] = 0x1E;
-        ek_ring[1].value[15] = 0x1F;
-        ek_ring[1].value[16] = 0x10;
-        ek_ring[1].value[17] = 0x11;
-        ek_ring[1].value[18] = 0x12;
-        ek_ring[1].value[19] = 0x13;
-        ek_ring[1].value[20] = 0x14;
-        ek_ring[1].value[21] = 0x15;
-        ek_ring[1].value[22] = 0x16;
-        ek_ring[1].value[23] = 0x17;
-        ek_ring[1].value[24] = 0x18;
-        ek_ring[1].value[25] = 0x19;
-        ek_ring[1].value[26] = 0x1A;
-        ek_ring[1].value[27] = 0x1B;
-        ek_ring[1].value[28] = 0x1C;
-        ek_ring[1].value[29] = 0x1D;
-        ek_ring[1].value[30] = 0x1E;
-        ek_ring[1].value[31] = 0x1F;
-        ek_ring[1].key_state = KEY_ACTIVE;
-        // 2 - 202122232425262728292A2B2C2D2E2F202122232425262728292A2B2C2D2E2F -> ACTIVE
-        ek_ring[2].value[0]  = 0x20;
-        ek_ring[2].value[1]  = 0x21;
-        ek_ring[2].value[2]  = 0x22;
-        ek_ring[2].value[3]  = 0x23;
-        ek_ring[2].value[4]  = 0x24;
-        ek_ring[2].value[5]  = 0x25;
-        ek_ring[2].value[6]  = 0x26;
-        ek_ring[2].value[7]  = 0x27;
-        ek_ring[2].value[8]  = 0x28;
-        ek_ring[2].value[9]  = 0x29;
-        ek_ring[2].value[10] = 0x2A;
-        ek_ring[2].value[11] = 0x2B;
-        ek_ring[2].value[12] = 0x2C;
-        ek_ring[2].value[13] = 0x2D;
-        ek_ring[2].value[14] = 0x2E;
-        ek_ring[2].value[15] = 0x2F;
-        ek_ring[2].value[16] = 0x20;
-        ek_ring[2].value[17] = 0x21;
-        ek_ring[2].value[18] = 0x22;
-        ek_ring[2].value[19] = 0x23;
-        ek_ring[2].value[20] = 0x24;
-        ek_ring[2].value[21] = 0x25;
-        ek_ring[2].value[22] = 0x26;
-        ek_ring[2].value[23] = 0x27;
-        ek_ring[2].value[24] = 0x28;
-        ek_ring[2].value[25] = 0x29;
-        ek_ring[2].value[26] = 0x2A;
-        ek_ring[2].value[27] = 0x2B;
-        ek_ring[2].value[28] = 0x2C;
-        ek_ring[2].value[29] = 0x2D;
-        ek_ring[2].value[30] = 0x2E;
-        ek_ring[2].value[31] = 0x2F;
-        ek_ring[2].key_state = KEY_ACTIVE;
-
-    // Session Keys
-        // 128 - 0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF -> ACTIVE
-        ek_ring[128].value[0]  = 0x01;
-        ek_ring[128].value[1]  = 0x23;
-        ek_ring[128].value[2]  = 0x45;
-        ek_ring[128].value[3]  = 0x67;
-        ek_ring[128].value[4]  = 0x89;
-        ek_ring[128].value[5]  = 0xAB;
-        ek_ring[128].value[6]  = 0xCD;
-        ek_ring[128].value[7]  = 0xEF;
-        ek_ring[128].value[8]  = 0x01;
-        ek_ring[128].value[9]  = 0x23;
-        ek_ring[128].value[10] = 0x45;
-        ek_ring[128].value[11] = 0x67;
-        ek_ring[128].value[12] = 0x89;
-        ek_ring[128].value[13] = 0xAB;
-        ek_ring[128].value[14] = 0xCD;
-        ek_ring[128].value[15] = 0xEF;
-        ek_ring[128].value[16] = 0x01;
-        ek_ring[128].value[17] = 0x23;
-        ek_ring[128].value[18] = 0x45;
-        ek_ring[128].value[19] = 0x67;
-        ek_ring[128].value[20] = 0x89;
-        ek_ring[128].value[21] = 0xAB;
-        ek_ring[128].value[22] = 0xCD;
-        ek_ring[128].value[23] = 0xEF;
-        ek_ring[128].value[24] = 0x01;
-        ek_ring[128].value[25] = 0x23;
-        ek_ring[128].value[26] = 0x45;
-        ek_ring[128].value[27] = 0x67;
-        ek_ring[128].value[28] = 0x89;
-        ek_ring[128].value[29] = 0xAB;
-        ek_ring[128].value[30] = 0xCD;
-        ek_ring[128].value[31] = 0xEF;
-        ek_ring[128].key_state = KEY_ACTIVE;
-        // 129 - ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789 -> ACTIVE
-        ek_ring[129].value[0]  = 0xAB;
-        ek_ring[129].value[1]  = 0xCD;
-        ek_ring[129].value[2]  = 0xEF;
-        ek_ring[129].value[3]  = 0x01;
-        ek_ring[129].value[4]  = 0x23;
-        ek_ring[129].value[5]  = 0x45;
-        ek_ring[129].value[6]  = 0x67;
-        ek_ring[129].value[7]  = 0x89;
-        ek_ring[129].value[8]  = 0xAB;
-        ek_ring[129].value[9]  = 0xCD;
-        ek_ring[129].value[10] = 0xEF;
-        ek_ring[129].value[11] = 0x01;
-        ek_ring[129].value[12] = 0x23;
-        ek_ring[129].value[13] = 0x45;
-        ek_ring[129].value[14] = 0x67;
-        ek_ring[129].value[15] = 0x89;
-        ek_ring[129].value[16] = 0xAB;
-        ek_ring[129].value[17] = 0xCD;
-        ek_ring[129].value[18] = 0xEF;
-        ek_ring[129].value[19] = 0x01;
-        ek_ring[129].value[20] = 0x23;
-        ek_ring[129].value[21] = 0x45;
-        ek_ring[129].value[22] = 0x67;
-        ek_ring[129].value[23] = 0x89;
-        ek_ring[129].value[24] = 0xAB;
-        ek_ring[129].value[25] = 0xCD;
-        ek_ring[129].value[26] = 0xEF;
-        ek_ring[129].value[27] = 0x01;
-        ek_ring[129].value[28] = 0x23;
-        ek_ring[129].value[29] = 0x45;
-        ek_ring[129].value[30] = 0x67;
-        ek_ring[129].value[31] = 0x89;
-        ek_ring[129].key_state = KEY_ACTIVE;
-        // 130 - FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210 -> ACTIVE
-        ek_ring[130].value[0]  = 0xFE;
-        ek_ring[130].value[1]  = 0xDC;
-        ek_ring[130].value[2]  = 0xBA;
-        ek_ring[130].value[3]  = 0x98;
-        ek_ring[130].value[4]  = 0x76;
-        ek_ring[130].value[5]  = 0x54;
-        ek_ring[130].value[6]  = 0x32;
-        ek_ring[130].value[7]  = 0x10;
-        ek_ring[130].value[8]  = 0xFE;
-        ek_ring[130].value[9]  = 0xDC;
-        ek_ring[130].value[10] = 0xBA;
-        ek_ring[130].value[11] = 0x98;
-        ek_ring[130].value[12] = 0x76;
-        ek_ring[130].value[13] = 0x54;
-        ek_ring[130].value[14] = 0x32;
-        ek_ring[130].value[15] = 0x10;
-        ek_ring[130].value[16] = 0xFE;
-        ek_ring[130].value[17] = 0xDC;
-        ek_ring[130].value[18] = 0xBA;
-        ek_ring[130].value[19] = 0x98;
-        ek_ring[130].value[20] = 0x76;
-        ek_ring[130].value[21] = 0x54;
-        ek_ring[130].value[22] = 0x32;
-        ek_ring[130].value[23] = 0x10;
-        ek_ring[130].value[24] = 0xFE;
-        ek_ring[130].value[25] = 0xDC;
-        ek_ring[130].value[26] = 0xBA;
-        ek_ring[130].value[27] = 0x98;
-        ek_ring[130].value[28] = 0x76;
-        ek_ring[130].value[29] = 0x54;
-        ek_ring[130].value[30] = 0x32;
-        ek_ring[130].value[31] = 0x10;
-        ek_ring[130].key_state = KEY_ACTIVE;
-        // 131 - 9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA -> ACTIVE
-        ek_ring[131].value[0]  = 0x98;
-        ek_ring[131].value[1]  = 0x76;
-        ek_ring[131].value[2]  = 0x54;
-        ek_ring[131].value[3]  = 0x32;
-        ek_ring[131].value[4]  = 0x10;
-        ek_ring[131].value[5]  = 0xFE;
-        ek_ring[131].value[6]  = 0xDC;
-        ek_ring[131].value[7]  = 0xBA;
-        ek_ring[131].value[8]  = 0x98;
-        ek_ring[131].value[9]  = 0x76;
-        ek_ring[131].value[10] = 0x54;
-        ek_ring[131].value[11] = 0x32;
-        ek_ring[131].value[12] = 0x10;
-        ek_ring[131].value[13] = 0xFE;
-        ek_ring[131].value[14] = 0xDC;
-        ek_ring[131].value[15] = 0xBA;
-        ek_ring[131].value[16] = 0x98;
-        ek_ring[131].value[17] = 0x76;
-        ek_ring[131].value[18] = 0x54;
-        ek_ring[131].value[19] = 0x32;
-        ek_ring[131].value[20] = 0x10;
-        ek_ring[131].value[21] = 0xFE;
-        ek_ring[131].value[22] = 0xDC;
-        ek_ring[131].value[23] = 0xBA;
-        ek_ring[131].value[24] = 0x98;
-        ek_ring[131].value[25] = 0x76;
-        ek_ring[131].value[26] = 0x54;
-        ek_ring[131].value[27] = 0x32;
-        ek_ring[131].value[28] = 0x10;
-        ek_ring[131].value[29] = 0xFE;
-        ek_ring[131].value[30] = 0xDC;
-        ek_ring[131].value[31] = 0xBA;
-        ek_ring[131].key_state = KEY_ACTIVE;
-        // 132 - 0123456789ABCDEFABCDEF01234567890123456789ABCDEFABCDEF0123456789 -> PRE_ACTIVATION
-        ek_ring[132].value[0]  = 0x01;
-        ek_ring[132].value[1]  = 0x23;
-        ek_ring[132].value[2]  = 0x45;
-        ek_ring[132].value[3]  = 0x67;
-        ek_ring[132].value[4]  = 0x89;
-        ek_ring[132].value[5]  = 0xAB;
-        ek_ring[132].value[6]  = 0xCD;
-        ek_ring[132].value[7]  = 0xEF;
-        ek_ring[132].value[8]  = 0xAB;
-        ek_ring[132].value[9]  = 0xCD;
-        ek_ring[132].value[10] = 0xEF;
-        ek_ring[132].value[11] = 0x01;
-        ek_ring[132].value[12] = 0x23;
-        ek_ring[132].value[13] = 0x45;
-        ek_ring[132].value[14] = 0x67;
-        ek_ring[132].value[15] = 0x89;
-        ek_ring[132].value[16] = 0x01;
-        ek_ring[132].value[17] = 0x23;
-        ek_ring[132].value[18] = 0x45;
-        ek_ring[132].value[19] = 0x67;
-        ek_ring[132].value[20] = 0x89;
-        ek_ring[132].value[21] = 0xAB;
-        ek_ring[132].value[22] = 0xCD;
-        ek_ring[132].value[23] = 0xEF;
-        ek_ring[132].value[24] = 0xAB;
-        ek_ring[132].value[25] = 0xCD;
-        ek_ring[132].value[26] = 0xEF;
-        ek_ring[132].value[27] = 0x01;
-        ek_ring[132].value[28] = 0x23;
-        ek_ring[132].value[29] = 0x45;
-        ek_ring[132].value[30] = 0x67;
-        ek_ring[132].value[31] = 0x89;
-        ek_ring[132].key_state = KEY_PREACTIVE;
-        // 133 - ABCDEF01234567890123456789ABCDEFABCDEF01234567890123456789ABCDEF -> ACTIVE
-        ek_ring[133].value[0]  = 0xAB;
-        ek_ring[133].value[1]  = 0xCD;
-        ek_ring[133].value[2]  = 0xEF;
-        ek_ring[133].value[3]  = 0x01;
-        ek_ring[133].value[4]  = 0x23;
-        ek_ring[133].value[5]  = 0x45;
-        ek_ring[133].value[6]  = 0x67;
-        ek_ring[133].value[7]  = 0x89;
-        ek_ring[133].value[8]  = 0x01;
-        ek_ring[133].value[9]  = 0x23;
-        ek_ring[133].value[10] = 0x45;
-        ek_ring[133].value[11] = 0x67;
-        ek_ring[133].value[12] = 0x89;
-        ek_ring[133].value[13] = 0xAB;
-        ek_ring[133].value[14] = 0xCD;
-        ek_ring[133].value[15] = 0xEF;
-        ek_ring[133].value[16] = 0xAB;
-        ek_ring[133].value[17] = 0xCD;
-        ek_ring[133].value[18] = 0xEF;
-        ek_ring[133].value[19] = 0x01;
-        ek_ring[133].value[20] = 0x23;
-        ek_ring[133].value[21] = 0x45;
-        ek_ring[133].value[22] = 0x67;
-        ek_ring[133].value[23] = 0x89;
-        ek_ring[133].value[24] = 0x01;
-        ek_ring[133].value[25] = 0x23;
-        ek_ring[133].value[26] = 0x45;
-        ek_ring[133].value[27] = 0x67;
-        ek_ring[133].value[28] = 0x89;
-        ek_ring[133].value[29] = 0xAB;
-        ek_ring[133].value[30] = 0xCD;
-        ek_ring[133].value[31] = 0xEF;
-        ek_ring[133].key_state = KEY_ACTIVE;
-        // 134 - ABCDEF0123456789FEDCBA9876543210ABCDEF0123456789FEDCBA9876543210 -> DEACTIVE
-        ek_ring[134].value[0]  = 0xAB;
-        ek_ring[134].value[1]  = 0xCD;
-        ek_ring[134].value[2]  = 0xEF;
-        ek_ring[134].value[3]  = 0x01;
-        ek_ring[134].value[4]  = 0x23;
-        ek_ring[134].value[5]  = 0x45;
-        ek_ring[134].value[6]  = 0x67;
-        ek_ring[134].value[7]  = 0x89;
-        ek_ring[134].value[8]  = 0xFE;
-        ek_ring[134].value[9]  = 0xDC;
-        ek_ring[134].value[10] = 0xBA;
-        ek_ring[134].value[11] = 0x98;
-        ek_ring[134].value[12] = 0x76;
-        ek_ring[134].value[13] = 0x54;
-        ek_ring[134].value[14] = 0x32;
-        ek_ring[134].value[15] = 0x10;
-        ek_ring[134].value[16] = 0xAB;
-        ek_ring[134].value[17] = 0xCD;
-        ek_ring[134].value[18] = 0xEF;
-        ek_ring[134].value[19] = 0x01;
-        ek_ring[134].value[20] = 0x23;
-        ek_ring[134].value[21] = 0x45;
-        ek_ring[134].value[22] = 0x67;
-        ek_ring[134].value[23] = 0x89;
-        ek_ring[134].value[24] = 0xFE;
-        ek_ring[134].value[25] = 0xDC;
-        ek_ring[134].value[26] = 0xBA;
-        ek_ring[134].value[27] = 0x98;
-        ek_ring[134].value[28] = 0x76;
-        ek_ring[134].value[29] = 0x54;
-        ek_ring[134].value[30] = 0x32;
-        ek_ring[134].value[31] = 0x10;
-        ek_ring[134].key_state = KEY_DEACTIVATED;
-
-    // Security Associations
-        // SA 1 - CLEAR MODE
-        sa[1].sa_state = SA_OPERATIONAL;
-        sa[1].est = 0;
-        sa[1].ast = 0;
-        sa[1].shplf_len = 2;
-        sa[1].arc_len = 0;
-        sa[1].arcw_len = 1;
-        sa[1].arcw[0] = 5;
-        sa[1].gvcid_tc_blk[0].tfvn  = 0;
-        sa[1].gvcid_tc_blk[0].scid  = SCID & 0x3FF;
-        sa[1].gvcid_tc_blk[0].vcid  = 0;
-        sa[1].gvcid_tc_blk[0].mapid = TYPE_TC;
-        sa[1].gvcid_tc_blk[1].tfvn  = 0;
-        sa[1].gvcid_tc_blk[1].scid  = SCID & 0x3FF;
-        sa[1].gvcid_tc_blk[1].vcid  = 1;
-        sa[1].gvcid_tc_blk[1].mapid = TYPE_TC;
-        // SA 2 - KEYED;  ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 128
-        sa[2].ekid = 128;
-        sa[2].sa_state = SA_KEYED;
-        sa[2].est = 1; 
-        sa[2].ast = 1;
-        sa[2].shivf_len = 12;
-        sa[2].iv_len = IV_SIZE;
-        sa[2].iv[IV_SIZE-1] = 0;
-        sa[2].abm_len = 0x14; // 20
-        for (int i = 0; i < sa[2].abm_len; i++)
-        {	// Zero AAD bit mask
-            sa[2].abm[i] = 0x00;
-        }
-        sa[2].arcw_len = 1;   
-        sa[2].arcw[0] = 5;
-        sa[2].arc_len = (sa[2].arcw[0] * 2) + 1;
-        // SA 3 - KEYED;   ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 129
-        sa[3].ekid = 129;
-        sa[3].sa_state = SA_KEYED;
-        // sa[3].sa_state = SA_OPERATIONAL;
-        sa[3].est = 1; 
-        sa[3].ast = 1;
-        sa[3].shivf_len = 12;
-        sa[3].iv_len = IV_SIZE;
-        sa[3].iv[IV_SIZE-1] = 0;
-        sa[3].abm_len = 0x14; // 20
-        for (int i = 0; i < sa[3].abm_len; i++)
-        {	// Zero AAD bit mask
-            sa[3].abm[i] = 0x00;
-        }
-        sa[3].arcw_len = 1;   
-        sa[3].arcw[0] = 5;
-        sa[3].arc_len = (sa[3].arcw[0] * 2) + 1;
-        // SA 4 - KEYED;  ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 130
-        sa[4].ekid = 130;
-        sa[4].sa_state = SA_KEYED;
-        sa[4].est = 1; 
-        sa[4].ast = 1;
-        sa[4].shivf_len = 12;
-        sa[4].stmacf_len = 16;
-        sa[4].iv_len = IV_SIZE;
-        sa[4].iv[IV_SIZE-1] = 0;
-        sa[4].abm_len = 0x14; // 20
-        for (int i = 0; i < sa[4].abm_len; i++)
-        {	// Zero AAD bit mask
-            sa[4].abm[i] = 0x00;
-        }
-        sa[4].arcw_len = 1;   
-        sa[4].arcw[0] = 5;
-        //sa[4].arc_len = (sa[4].arcw[0] * 2) + 1; // TEST
-        sa[4].gvcid_tc_blk[0].tfvn  = 0;
-        sa[4].gvcid_tc_blk[0].scid  = SCID & 0x3FF;
-        sa[4].gvcid_tc_blk[0].vcid  = 0;
-        sa[4].gvcid_tc_blk[0].mapid = TYPE_TC;
-        sa[4].gvcid_tc_blk[1].tfvn  = 0;
-        sa[4].gvcid_tc_blk[1].scid  = SCID & 0x3FF;
-        sa[4].gvcid_tc_blk[1].vcid  = 1;
-        sa[4].gvcid_tc_blk[1].mapid = TYPE_TC;
-        // SA 5 - KEYED;   ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 131
-        sa[5].ekid = 131;
-        sa[5].sa_state = SA_KEYED;
-        sa[5].est = 1; 
-        sa[5].ast = 1;
-        sa[5].shivf_len = 12;
-        sa[5].iv_len = IV_SIZE;
-        sa[5].iv[IV_SIZE-1] = 0;
-        sa[5].abm_len = 0x14; // 20
-        for (int i = 0; i < sa[5].abm_len; i++)
-        {	// Zero AAD bit mask
-            sa[5].abm[i] = 0x00;
-        }
-        sa[5].arcw_len = 1;   
-        sa[5].arcw[0] = 5;
-        sa[5].arc_len = (sa[5].arcw[0] * 2) + 1;
-        // SA 6 - UNKEYED; ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: -
-        sa[6].sa_state = SA_UNKEYED;
-        sa[6].est = 1; 
-        sa[6].ast = 1;
-        sa[6].shivf_len = 12;
-        sa[6].iv_len = IV_SIZE;
-        sa[6].iv[IV_SIZE-1] = 0;
-        sa[6].abm_len = 0x14; // 20
-        for (int i = 0; i < sa[6].abm_len; i++)
-        {	// Zero AAD bit mask
-            sa[6].abm[i] = 0x00;
-        }
-        sa[6].arcw_len = 1;   
-        sa[6].arcw[0] = 5;
-        sa[6].arc_len = (sa[6].arcw[0] * 2) + 1;
-        //itc_gcm128_init(&(sa[6].gcm_ctx), (unsigned char *)&(ek_ring[sa[6].ekid]));
-
-    // Initial TM configuration
-        tm_frame.tm_sec_header.spi = 1;
-
-    // Initialize Log
-        log_summary.num_se = 2;
-        log_summary.rs = LOG_SIZE;
-        // Add a two messages to the log
-        log_summary.rs--;
-        log.blk[log_count].emt = STARTUP;
-        log.blk[log_count].emv[0] = 0x4E;
-        log.blk[log_count].emv[1] = 0x41;
-        log.blk[log_count].emv[2] = 0x53;
-        log.blk[log_count].emv[3] = 0x41;
-        log.blk[log_count++].em_len = 4;
-        log_summary.rs--;
-        log.blk[log_count].emt = STARTUP;
-        log.blk[log_count].emv[0] = 0x4E;
-        log.blk[log_count].emv[1] = 0x41;
-        log.blk[log_count].emv[2] = 0x53;
-        log.blk[log_count].emv[3] = 0x41;
-        log.blk[log_count++].em_len = 4;
-
-    return status;
-}
-
 int32 Crypto_Init(void)
 {   
     int32 status = OS_SUCCESS;
+
+    //TODO -- Make the routine that gets called variable based on configuration!
+    sadb_routine = get_sadb_routine_inmemory();
+    //sadb_routine = get_sadb_routine_mariadb();
+
 
     // Initialize libgcrypt
     if (!gcry_check_version(GCRYPT_VERSION))
@@ -714,8 +138,11 @@ int32 Crypto_Init(void)
     gcry_control(GCRYCTL_INITIALIZATION_FINISHED, 0);
 
     // Init Security Associations
-    status = Crypto_SA_init();
-    status = Crypto_SA_config();
+    status = sadb_routine->sadb_init();
+    status = sadb_routine->sadb_config();
+
+    Crypto_Local_Init();
+    Crypto_Local_Config();
 
     // TODO - Add error checking
 
@@ -730,6 +157,441 @@ int32 Crypto_Init(void)
                 CRYPTO_LIB_MISSION_REV);
                                 
     return status; 
+}
+
+static void Crypto_Local_Config(void)
+{
+    // Initial TM configuration
+    tm_frame.tm_sec_header.spi = 1;
+
+    // Initialize Log
+    log_summary.num_se = 2;
+    log_summary.rs = LOG_SIZE;
+    // Add a two messages to the log
+    log_summary.rs--;
+    log.blk[log_count].emt = STARTUP;
+    log.blk[log_count].emv[0] = 0x4E;
+    log.blk[log_count].emv[1] = 0x41;
+    log.blk[log_count].emv[2] = 0x53;
+    log.blk[log_count].emv[3] = 0x41;
+    log.blk[log_count++].em_len = 4;
+    log_summary.rs--;
+    log.blk[log_count].emt = STARTUP;
+    log.blk[log_count].emv[0] = 0x4E;
+    log.blk[log_count].emv[1] = 0x41;
+    log.blk[log_count].emv[2] = 0x53;
+    log.blk[log_count].emv[3] = 0x41;
+    log.blk[log_count++].em_len = 4;
+
+    // Master Keys
+    // 0 - 000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F -> ACTIVE
+    ek_ring[0].value[0]  = 0x00;
+    ek_ring[0].value[1]  = 0x01;
+    ek_ring[0].value[2]  = 0x02;
+    ek_ring[0].value[3]  = 0x03;
+    ek_ring[0].value[4]  = 0x04;
+    ek_ring[0].value[5]  = 0x05;
+    ek_ring[0].value[6]  = 0x06;
+    ek_ring[0].value[7]  = 0x07;
+    ek_ring[0].value[8]  = 0x08;
+    ek_ring[0].value[9]  = 0x09;
+    ek_ring[0].value[10] = 0x0A;
+    ek_ring[0].value[11] = 0x0B;
+    ek_ring[0].value[12] = 0x0C;
+    ek_ring[0].value[13] = 0x0D;
+    ek_ring[0].value[14] = 0x0E;
+    ek_ring[0].value[15] = 0x0F;
+    ek_ring[0].value[16] = 0x00;
+    ek_ring[0].value[17] = 0x01;
+    ek_ring[0].value[18] = 0x02;
+    ek_ring[0].value[19] = 0x03;
+    ek_ring[0].value[20] = 0x04;
+    ek_ring[0].value[21] = 0x05;
+    ek_ring[0].value[22] = 0x06;
+    ek_ring[0].value[23] = 0x07;
+    ek_ring[0].value[24] = 0x08;
+    ek_ring[0].value[25] = 0x09;
+    ek_ring[0].value[26] = 0x0A;
+    ek_ring[0].value[27] = 0x0B;
+    ek_ring[0].value[28] = 0x0C;
+    ek_ring[0].value[29] = 0x0D;
+    ek_ring[0].value[30] = 0x0E;
+    ek_ring[0].value[31] = 0x0F;
+    ek_ring[0].key_state = KEY_ACTIVE;
+    // 1 - 101112131415161718191A1B1C1D1E1F101112131415161718191A1B1C1D1E1F -> ACTIVE
+    ek_ring[1].value[0]  = 0x10;
+    ek_ring[1].value[1]  = 0x11;
+    ek_ring[1].value[2]  = 0x12;
+    ek_ring[1].value[3]  = 0x13;
+    ek_ring[1].value[4]  = 0x14;
+    ek_ring[1].value[5]  = 0x15;
+    ek_ring[1].value[6]  = 0x16;
+    ek_ring[1].value[7]  = 0x17;
+    ek_ring[1].value[8]  = 0x18;
+    ek_ring[1].value[9]  = 0x19;
+    ek_ring[1].value[10] = 0x1A;
+    ek_ring[1].value[11] = 0x1B;
+    ek_ring[1].value[12] = 0x1C;
+    ek_ring[1].value[13] = 0x1D;
+    ek_ring[1].value[14] = 0x1E;
+    ek_ring[1].value[15] = 0x1F;
+    ek_ring[1].value[16] = 0x10;
+    ek_ring[1].value[17] = 0x11;
+    ek_ring[1].value[18] = 0x12;
+    ek_ring[1].value[19] = 0x13;
+    ek_ring[1].value[20] = 0x14;
+    ek_ring[1].value[21] = 0x15;
+    ek_ring[1].value[22] = 0x16;
+    ek_ring[1].value[23] = 0x17;
+    ek_ring[1].value[24] = 0x18;
+    ek_ring[1].value[25] = 0x19;
+    ek_ring[1].value[26] = 0x1A;
+    ek_ring[1].value[27] = 0x1B;
+    ek_ring[1].value[28] = 0x1C;
+    ek_ring[1].value[29] = 0x1D;
+    ek_ring[1].value[30] = 0x1E;
+    ek_ring[1].value[31] = 0x1F;
+    ek_ring[1].key_state = KEY_ACTIVE;
+    // 2 - 202122232425262728292A2B2C2D2E2F202122232425262728292A2B2C2D2E2F -> ACTIVE
+    ek_ring[2].value[0]  = 0x20;
+    ek_ring[2].value[1]  = 0x21;
+    ek_ring[2].value[2]  = 0x22;
+    ek_ring[2].value[3]  = 0x23;
+    ek_ring[2].value[4]  = 0x24;
+    ek_ring[2].value[5]  = 0x25;
+    ek_ring[2].value[6]  = 0x26;
+    ek_ring[2].value[7]  = 0x27;
+    ek_ring[2].value[8]  = 0x28;
+    ek_ring[2].value[9]  = 0x29;
+    ek_ring[2].value[10] = 0x2A;
+    ek_ring[2].value[11] = 0x2B;
+    ek_ring[2].value[12] = 0x2C;
+    ek_ring[2].value[13] = 0x2D;
+    ek_ring[2].value[14] = 0x2E;
+    ek_ring[2].value[15] = 0x2F;
+    ek_ring[2].value[16] = 0x20;
+    ek_ring[2].value[17] = 0x21;
+    ek_ring[2].value[18] = 0x22;
+    ek_ring[2].value[19] = 0x23;
+    ek_ring[2].value[20] = 0x24;
+    ek_ring[2].value[21] = 0x25;
+    ek_ring[2].value[22] = 0x26;
+    ek_ring[2].value[23] = 0x27;
+    ek_ring[2].value[24] = 0x28;
+    ek_ring[2].value[25] = 0x29;
+    ek_ring[2].value[26] = 0x2A;
+    ek_ring[2].value[27] = 0x2B;
+    ek_ring[2].value[28] = 0x2C;
+    ek_ring[2].value[29] = 0x2D;
+    ek_ring[2].value[30] = 0x2E;
+    ek_ring[2].value[31] = 0x2F;
+    ek_ring[2].key_state = KEY_ACTIVE;
+
+    // Session Keys
+    // 128 - 0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF -> ACTIVE
+    ek_ring[128].value[0]  = 0x01;
+    ek_ring[128].value[1]  = 0x23;
+    ek_ring[128].value[2]  = 0x45;
+    ek_ring[128].value[3]  = 0x67;
+    ek_ring[128].value[4]  = 0x89;
+    ek_ring[128].value[5]  = 0xAB;
+    ek_ring[128].value[6]  = 0xCD;
+    ek_ring[128].value[7]  = 0xEF;
+    ek_ring[128].value[8]  = 0x01;
+    ek_ring[128].value[9]  = 0x23;
+    ek_ring[128].value[10] = 0x45;
+    ek_ring[128].value[11] = 0x67;
+    ek_ring[128].value[12] = 0x89;
+    ek_ring[128].value[13] = 0xAB;
+    ek_ring[128].value[14] = 0xCD;
+    ek_ring[128].value[15] = 0xEF;
+    ek_ring[128].value[16] = 0x01;
+    ek_ring[128].value[17] = 0x23;
+    ek_ring[128].value[18] = 0x45;
+    ek_ring[128].value[19] = 0x67;
+    ek_ring[128].value[20] = 0x89;
+    ek_ring[128].value[21] = 0xAB;
+    ek_ring[128].value[22] = 0xCD;
+    ek_ring[128].value[23] = 0xEF;
+    ek_ring[128].value[24] = 0x01;
+    ek_ring[128].value[25] = 0x23;
+    ek_ring[128].value[26] = 0x45;
+    ek_ring[128].value[27] = 0x67;
+    ek_ring[128].value[28] = 0x89;
+    ek_ring[128].value[29] = 0xAB;
+    ek_ring[128].value[30] = 0xCD;
+    ek_ring[128].value[31] = 0xEF;
+    ek_ring[128].key_state = KEY_ACTIVE;
+    // 129 - ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789 -> ACTIVE
+    ek_ring[129].value[0]  = 0xAB;
+    ek_ring[129].value[1]  = 0xCD;
+    ek_ring[129].value[2]  = 0xEF;
+    ek_ring[129].value[3]  = 0x01;
+    ek_ring[129].value[4]  = 0x23;
+    ek_ring[129].value[5]  = 0x45;
+    ek_ring[129].value[6]  = 0x67;
+    ek_ring[129].value[7]  = 0x89;
+    ek_ring[129].value[8]  = 0xAB;
+    ek_ring[129].value[9]  = 0xCD;
+    ek_ring[129].value[10] = 0xEF;
+    ek_ring[129].value[11] = 0x01;
+    ek_ring[129].value[12] = 0x23;
+    ek_ring[129].value[13] = 0x45;
+    ek_ring[129].value[14] = 0x67;
+    ek_ring[129].value[15] = 0x89;
+    ek_ring[129].value[16] = 0xAB;
+    ek_ring[129].value[17] = 0xCD;
+    ek_ring[129].value[18] = 0xEF;
+    ek_ring[129].value[19] = 0x01;
+    ek_ring[129].value[20] = 0x23;
+    ek_ring[129].value[21] = 0x45;
+    ek_ring[129].value[22] = 0x67;
+    ek_ring[129].value[23] = 0x89;
+    ek_ring[129].value[24] = 0xAB;
+    ek_ring[129].value[25] = 0xCD;
+    ek_ring[129].value[26] = 0xEF;
+    ek_ring[129].value[27] = 0x01;
+    ek_ring[129].value[28] = 0x23;
+    ek_ring[129].value[29] = 0x45;
+    ek_ring[129].value[30] = 0x67;
+    ek_ring[129].value[31] = 0x89;
+    ek_ring[129].key_state = KEY_ACTIVE;
+    // 130 - FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210 -> ACTIVE
+    ek_ring[130].value[0]  = 0xFE;
+    ek_ring[130].value[1]  = 0xDC;
+    ek_ring[130].value[2]  = 0xBA;
+    ek_ring[130].value[3]  = 0x98;
+    ek_ring[130].value[4]  = 0x76;
+    ek_ring[130].value[5]  = 0x54;
+    ek_ring[130].value[6]  = 0x32;
+    ek_ring[130].value[7]  = 0x10;
+    ek_ring[130].value[8]  = 0xFE;
+    ek_ring[130].value[9]  = 0xDC;
+    ek_ring[130].value[10] = 0xBA;
+    ek_ring[130].value[11] = 0x98;
+    ek_ring[130].value[12] = 0x76;
+    ek_ring[130].value[13] = 0x54;
+    ek_ring[130].value[14] = 0x32;
+    ek_ring[130].value[15] = 0x10;
+    ek_ring[130].value[16] = 0xFE;
+    ek_ring[130].value[17] = 0xDC;
+    ek_ring[130].value[18] = 0xBA;
+    ek_ring[130].value[19] = 0x98;
+    ek_ring[130].value[20] = 0x76;
+    ek_ring[130].value[21] = 0x54;
+    ek_ring[130].value[22] = 0x32;
+    ek_ring[130].value[23] = 0x10;
+    ek_ring[130].value[24] = 0xFE;
+    ek_ring[130].value[25] = 0xDC;
+    ek_ring[130].value[26] = 0xBA;
+    ek_ring[130].value[27] = 0x98;
+    ek_ring[130].value[28] = 0x76;
+    ek_ring[130].value[29] = 0x54;
+    ek_ring[130].value[30] = 0x32;
+    ek_ring[130].value[31] = 0x10;
+    ek_ring[130].key_state = KEY_ACTIVE;
+    // 131 - 9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA -> ACTIVE
+    ek_ring[131].value[0]  = 0x98;
+    ek_ring[131].value[1]  = 0x76;
+    ek_ring[131].value[2]  = 0x54;
+    ek_ring[131].value[3]  = 0x32;
+    ek_ring[131].value[4]  = 0x10;
+    ek_ring[131].value[5]  = 0xFE;
+    ek_ring[131].value[6]  = 0xDC;
+    ek_ring[131].value[7]  = 0xBA;
+    ek_ring[131].value[8]  = 0x98;
+    ek_ring[131].value[9]  = 0x76;
+    ek_ring[131].value[10] = 0x54;
+    ek_ring[131].value[11] = 0x32;
+    ek_ring[131].value[12] = 0x10;
+    ek_ring[131].value[13] = 0xFE;
+    ek_ring[131].value[14] = 0xDC;
+    ek_ring[131].value[15] = 0xBA;
+    ek_ring[131].value[16] = 0x98;
+    ek_ring[131].value[17] = 0x76;
+    ek_ring[131].value[18] = 0x54;
+    ek_ring[131].value[19] = 0x32;
+    ek_ring[131].value[20] = 0x10;
+    ek_ring[131].value[21] = 0xFE;
+    ek_ring[131].value[22] = 0xDC;
+    ek_ring[131].value[23] = 0xBA;
+    ek_ring[131].value[24] = 0x98;
+    ek_ring[131].value[25] = 0x76;
+    ek_ring[131].value[26] = 0x54;
+    ek_ring[131].value[27] = 0x32;
+    ek_ring[131].value[28] = 0x10;
+    ek_ring[131].value[29] = 0xFE;
+    ek_ring[131].value[30] = 0xDC;
+    ek_ring[131].value[31] = 0xBA;
+    ek_ring[131].key_state = KEY_ACTIVE;
+    // 132 - 0123456789ABCDEFABCDEF01234567890123456789ABCDEFABCDEF0123456789 -> PRE_ACTIVATION
+    ek_ring[132].value[0]  = 0x01;
+    ek_ring[132].value[1]  = 0x23;
+    ek_ring[132].value[2]  = 0x45;
+    ek_ring[132].value[3]  = 0x67;
+    ek_ring[132].value[4]  = 0x89;
+    ek_ring[132].value[5]  = 0xAB;
+    ek_ring[132].value[6]  = 0xCD;
+    ek_ring[132].value[7]  = 0xEF;
+    ek_ring[132].value[8]  = 0xAB;
+    ek_ring[132].value[9]  = 0xCD;
+    ek_ring[132].value[10] = 0xEF;
+    ek_ring[132].value[11] = 0x01;
+    ek_ring[132].value[12] = 0x23;
+    ek_ring[132].value[13] = 0x45;
+    ek_ring[132].value[14] = 0x67;
+    ek_ring[132].value[15] = 0x89;
+    ek_ring[132].value[16] = 0x01;
+    ek_ring[132].value[17] = 0x23;
+    ek_ring[132].value[18] = 0x45;
+    ek_ring[132].value[19] = 0x67;
+    ek_ring[132].value[20] = 0x89;
+    ek_ring[132].value[21] = 0xAB;
+    ek_ring[132].value[22] = 0xCD;
+    ek_ring[132].value[23] = 0xEF;
+    ek_ring[132].value[24] = 0xAB;
+    ek_ring[132].value[25] = 0xCD;
+    ek_ring[132].value[26] = 0xEF;
+    ek_ring[132].value[27] = 0x01;
+    ek_ring[132].value[28] = 0x23;
+    ek_ring[132].value[29] = 0x45;
+    ek_ring[132].value[30] = 0x67;
+    ek_ring[132].value[31] = 0x89;
+    ek_ring[132].key_state = KEY_PREACTIVE;
+    // 133 - ABCDEF01234567890123456789ABCDEFABCDEF01234567890123456789ABCDEF -> ACTIVE
+    ek_ring[133].value[0]  = 0xAB;
+    ek_ring[133].value[1]  = 0xCD;
+    ek_ring[133].value[2]  = 0xEF;
+    ek_ring[133].value[3]  = 0x01;
+    ek_ring[133].value[4]  = 0x23;
+    ek_ring[133].value[5]  = 0x45;
+    ek_ring[133].value[6]  = 0x67;
+    ek_ring[133].value[7]  = 0x89;
+    ek_ring[133].value[8]  = 0x01;
+    ek_ring[133].value[9]  = 0x23;
+    ek_ring[133].value[10] = 0x45;
+    ek_ring[133].value[11] = 0x67;
+    ek_ring[133].value[12] = 0x89;
+    ek_ring[133].value[13] = 0xAB;
+    ek_ring[133].value[14] = 0xCD;
+    ek_ring[133].value[15] = 0xEF;
+    ek_ring[133].value[16] = 0xAB;
+    ek_ring[133].value[17] = 0xCD;
+    ek_ring[133].value[18] = 0xEF;
+    ek_ring[133].value[19] = 0x01;
+    ek_ring[133].value[20] = 0x23;
+    ek_ring[133].value[21] = 0x45;
+    ek_ring[133].value[22] = 0x67;
+    ek_ring[133].value[23] = 0x89;
+    ek_ring[133].value[24] = 0x01;
+    ek_ring[133].value[25] = 0x23;
+    ek_ring[133].value[26] = 0x45;
+    ek_ring[133].value[27] = 0x67;
+    ek_ring[133].value[28] = 0x89;
+    ek_ring[133].value[29] = 0xAB;
+    ek_ring[133].value[30] = 0xCD;
+    ek_ring[133].value[31] = 0xEF;
+    ek_ring[133].key_state = KEY_ACTIVE;
+    // 134 - ABCDEF0123456789FEDCBA9876543210ABCDEF0123456789FEDCBA9876543210 -> DEACTIVE
+    ek_ring[134].value[0]  = 0xAB;
+    ek_ring[134].value[1]  = 0xCD;
+    ek_ring[134].value[2]  = 0xEF;
+    ek_ring[134].value[3]  = 0x01;
+    ek_ring[134].value[4]  = 0x23;
+    ek_ring[134].value[5]  = 0x45;
+    ek_ring[134].value[6]  = 0x67;
+    ek_ring[134].value[7]  = 0x89;
+    ek_ring[134].value[8]  = 0xFE;
+    ek_ring[134].value[9]  = 0xDC;
+    ek_ring[134].value[10] = 0xBA;
+    ek_ring[134].value[11] = 0x98;
+    ek_ring[134].value[12] = 0x76;
+    ek_ring[134].value[13] = 0x54;
+    ek_ring[134].value[14] = 0x32;
+    ek_ring[134].value[15] = 0x10;
+    ek_ring[134].value[16] = 0xAB;
+    ek_ring[134].value[17] = 0xCD;
+    ek_ring[134].value[18] = 0xEF;
+    ek_ring[134].value[19] = 0x01;
+    ek_ring[134].value[20] = 0x23;
+    ek_ring[134].value[21] = 0x45;
+    ek_ring[134].value[22] = 0x67;
+    ek_ring[134].value[23] = 0x89;
+    ek_ring[134].value[24] = 0xFE;
+    ek_ring[134].value[25] = 0xDC;
+    ek_ring[134].value[26] = 0xBA;
+    ek_ring[134].value[27] = 0x98;
+    ek_ring[134].value[28] = 0x76;
+    ek_ring[134].value[29] = 0x54;
+    ek_ring[134].value[30] = 0x32;
+    ek_ring[134].value[31] = 0x10;
+    ek_ring[134].key_state = KEY_DEACTIVATED;
+}
+
+static void Crypto_Local_Init(void)
+{
+
+    // Initialize TM Frame
+    // TM Header
+    tm_frame.tm_header.tfvn    = 0;	    // Shall be 00 for TM-/TC-SDLP
+    tm_frame.tm_header.scid    = SCID & 0x3FF;
+    tm_frame.tm_header.vcid    = 0;
+    tm_frame.tm_header.ocff    = 1;
+    tm_frame.tm_header.mcfc    = 1;
+    tm_frame.tm_header.vcfc    = 1;
+    tm_frame.tm_header.tfsh    = 0;
+    tm_frame.tm_header.sf      = 0;
+    tm_frame.tm_header.pof     = 0;	    // Shall be set to 0
+    tm_frame.tm_header.slid    = 3;	    // Shall be set to 11
+    tm_frame.tm_header.fhp     = 0;
+    // TM Security Header
+    tm_frame.tm_sec_header.spi = 0x0000;
+    for ( int x = 0; x < IV_SIZE; x++)
+    { 	// Initialization Vector
+        tm_frame.tm_sec_header.iv[x] = 0x00;
+    }
+    // TM Payload Data Unit
+    for ( int x = 0; x < TM_FRAME_DATA_SIZE; x++)
+    {	// Zero TM PDU
+        tm_frame.tm_pdu[x] = 0x00;
+    }
+    // TM Security Trailer
+    for ( int x = 0; x < MAC_SIZE; x++)
+    { 	// Zero TM Message Authentication Code
+        tm_frame.tm_sec_trailer.mac[x] = 0x00;
+    }
+    for ( int x = 0; x < OCF_SIZE; x++)
+    { 	// Zero TM Operational Control Field
+        tm_frame.tm_sec_trailer.ocf[x] = 0x00;
+    }
+    tm_frame.tm_sec_trailer.fecf = 0xFECF;
+
+    // Initialize CLCW
+    clcw.cwt 	= 0;			// Control Word Type "0"
+    clcw.cvn	= 0;			// CLCW Version Number "00"
+    clcw.sf  	= 0;    		// Status Field
+    clcw.cie 	= 1;			// COP In Effect
+    clcw.vci 	= 0;    		// Virtual Channel Identification
+    clcw.spare0 = 0;			// Reserved Spare
+    clcw.nrfa	= 0;			// No RF Avaliable Flag
+    clcw.nbl	= 0;			// No Bit Lock Flag
+    clcw.lo		= 0;			// Lock-Out Flag
+    clcw.wait	= 0;			// Wait Flag
+    clcw.rt		= 0;			// Retransmit Flag
+    clcw.fbc	= 0;			// FARM-B Counter
+    clcw.spare1 = 0;			// Reserved Spare
+    clcw.rv		= 0;        	// Report Value
+
+    // Initialize Frame Security Report
+    report.cwt   = 1;			// Control Word Type "0b1""
+    report.vnum  = 4;   		// FSR Version "0b100""
+    report.af    = 0;			// Alarm Field
+    report.bsnf  = 0;			// Bad SN Flag
+    report.bmacf = 0;			// Bad MAC Flag
+    report.ispif = 0;			// Invalid SPI Flag
+    report.lspiu = 0;	    	// Last SPI Used
+    report.snval = 0;			// SN Value (LSB)
+
 }
 
 static void Crypto_Calc_CRC_Init_Table(void)
@@ -801,8 +663,14 @@ static void Crypto_TM_updatePDU(char* ingest, int len_ingest)
 {	// Copy ingest to PDU
     int x = 0;
     int fill_size = 0;
-    
-    if ((sa[tm_frame.tm_sec_header.spi].est == 1) && (sa[tm_frame.tm_sec_header.spi].ast == 1))
+    SecurityAssociation_t* sa_ptr;
+
+    if(sadb_routine->sadb_get_sa_from_spi(tm_frame.tm_sec_header.spi,&sa_ptr) != OS_SUCCESS){
+        //TODO - Error handling
+        return; //Error -- unable to get SA from SPI.
+    }
+
+    if ((sa_ptr->est == 1) && (sa_ptr->ast == 1))
     {
         fill_size = 1129 - MAC_SIZE - IV_SIZE + 2; // +2 for padding bytes
     }
@@ -961,7 +829,7 @@ static void Crypto_TM_updateOCF(void)
 }
 
 //TODO - Review this. Not sure it quite works how we think
-static int32 Crypto_increment(uint8 *num, int length)
+int32 Crypto_increment(uint8 *num, int length)
 {
     int i;
     /* go from right (least significant) to left (most signifcant) */
@@ -1028,7 +896,7 @@ static int32 Crypto_compare_less_equal(uint8 *actual, uint8 *expected, int lengt
     return status;
 }
 
-static uint8 Crypto_Prep_Reply(char* ingest, uint8 appID)
+uint8 Crypto_Prep_Reply(char* ingest, uint8 appID)
 // Assumes that both the pkt_length and pdu_len are set properly
 {
     uint8 count = 0;
@@ -1578,509 +1446,7 @@ static int32 Crypto_Key_verify(char* ingest,TC_t* tc_frame)
     return count;
 }
 
-
 /*
-** Security Association Management Services
-*/
-static int32 Crypto_SA_start(TC_t* tc_frame)
-{	
-    // Local variables
-    uint8 count = 0;
-    uint16 spi = 0x0000;
-    crypto_gvcid_t gvcid;
-
-    // Read ingest
-    spi = ((uint8)sdls_frame.pdu.data[0] << 8) | (uint8)sdls_frame.pdu.data[1];
-
-    // Overwrite last PID
-    sa[spi].lpid = (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
-
-    // Check SPI exists and in 'Keyed' state
-    if (spi < NUM_SA)
-    {
-        if (sa[spi].sa_state == SA_KEYED)
-        {
-            count = 2;
-
-            for(int x = 0; x <= ((sdls_frame.pdu.pdu_len - 2) / 4); x++)
-            {   // Read in GVCID
-                gvcid.tfvn  = (sdls_frame.pdu.data[count] >> 4);
-                gvcid.scid  = (sdls_frame.pdu.data[count] << 12)     |  
-                              (sdls_frame.pdu.data[count + 1] << 4)  | 
-                              (sdls_frame.pdu.data[count + 2] >> 4);
-                gvcid.vcid  = (sdls_frame.pdu.data[count + 2] << 4)  |
-                              (sdls_frame.pdu.data[count + 3] && 0x3F);
-                gvcid.mapid = (sdls_frame.pdu.data[count + 3]);
-                
-                // TC
-                if (gvcid.vcid != tc_frame->tc_header.vcid)
-                {   // Clear all GVCIDs for provided SPI
-                    if (gvcid.mapid == TYPE_TC)
-                    {
-                        for (int i = 0; i < NUM_GVCID; i++)
-                        {   // TC
-                            sa[spi].gvcid_tc_blk[x].tfvn  = 0;
-                            sa[spi].gvcid_tc_blk[x].scid  = 0;
-                            sa[spi].gvcid_tc_blk[x].vcid  = 0;
-                            sa[spi].gvcid_tc_blk[x].mapid = 0;
-                        }
-                    }
-                    // Write channel to SA
-                    if (gvcid.mapid != TYPE_MAP)  
-                    {   // TC
-                        sa[spi].gvcid_tc_blk[gvcid.vcid].tfvn  = gvcid.tfvn;
-                        sa[spi].gvcid_tc_blk[gvcid.vcid].scid  = gvcid.scid;
-                        sa[spi].gvcid_tc_blk[gvcid.vcid].mapid = gvcid.mapid;
-                    }
-                    else
-                    {
-                        // TODO: Handle TYPE_MAP
-                    }
-                }
-                // TM
-                if (gvcid.vcid != tm_frame.tm_header.vcid)
-                {   // Clear all GVCIDs for provided SPI
-                    if (gvcid.mapid == TYPE_TM)
-                    {
-                        for (int i = 0; i < NUM_GVCID; i++)
-                        {   // TM
-                            sa[spi].gvcid_tm_blk[x].tfvn  = 0;
-                            sa[spi].gvcid_tm_blk[x].scid  = 0;
-                            sa[spi].gvcid_tm_blk[x].vcid  = 0;
-                            sa[spi].gvcid_tm_blk[x].mapid = 0;
-                        }
-                    }
-                    // Write channel to SA
-                    if (gvcid.mapid != TYPE_MAP)  
-                    {   // TM
-                        sa[spi].gvcid_tm_blk[gvcid.vcid].tfvn  = gvcid.tfvn;
-                        sa[spi].gvcid_tm_blk[gvcid.vcid].scid  = gvcid.scid;
-                        sa[spi].gvcid_tm_blk[gvcid.vcid].vcid  = gvcid.vcid;
-                        sa[spi].gvcid_tm_blk[gvcid.vcid].mapid = gvcid.mapid;
-                    }
-                    else
-                    {
-                        // TODO: Handle TYPE_MAP
-                    }
-                }                
-
-                #ifdef PDU_DEBUG
-                    OS_printf("SPI %d changed to OPERATIONAL state. \n", spi);
-                    switch (gvcid.mapid)
-                    {
-                        case TYPE_TC:
-                            OS_printf("Type TC, ");
-                            break;
-                        case TYPE_MAP:
-                            OS_printf("Type MAP, ");
-                            break;
-                        case TYPE_TM:
-                            OS_printf("Type TM, ");
-                            break;
-                        default:
-                            OS_printf("Type Unknown, ");
-                            break;
-                    }
-                #endif
-            
-                // Change to operational state
-                sa[spi].sa_state = SA_OPERATIONAL;
-            }
-        }
-        else
-        {
-            OS_printf(KRED "ERROR: SPI %d is not in the KEYED state.\n" RESET, spi);
-        }
-    }
-    else
-    {
-        OS_printf(KRED "ERROR: SPI %d does not exist.\n" RESET, spi);
-    }
-
-    #ifdef DEBUG
-        OS_printf("\t spi = %d \n", spi);
-    #endif
-    
-    return OS_SUCCESS; 
-}
-
-static int32 Crypto_SA_stop(void)
-{
-    // Local variables
-    uint16 spi = 0x0000;
-
-    // Read ingest
-    spi = ((uint8)sdls_frame.pdu.data[0] << 8) | (uint8)sdls_frame.pdu.data[1];
-    OS_printf("spi = %d \n", spi);
-
-    // Overwrite last PID
-    sa[spi].lpid = (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
-
-    // Check SPI exists and in 'Active' state
-    if (spi < NUM_SA)
-    {
-        if (sa[spi].sa_state == SA_OPERATIONAL)
-        {
-            // Remove all GVC/GMAP IDs
-            for (int x = 0; x < NUM_GVCID; x++)
-            {   // TC
-                sa[spi].gvcid_tc_blk[x].tfvn  = 0;
-                sa[spi].gvcid_tc_blk[x].scid  = 0;
-                sa[spi].gvcid_tc_blk[x].vcid  = 0;
-                sa[spi].gvcid_tc_blk[x].mapid = 0;
-                // TM
-                sa[spi].gvcid_tm_blk[x].tfvn  = 0;
-                sa[spi].gvcid_tm_blk[x].scid  = 0;
-                sa[spi].gvcid_tm_blk[x].vcid  = 0;
-                sa[spi].gvcid_tm_blk[x].mapid = 0;
-            }
-            
-            // Change to operational state
-            sa[spi].sa_state = SA_KEYED;
-            #ifdef PDU_DEBUG
-                OS_printf("SPI %d changed to KEYED state. \n", spi);
-            #endif
-        }
-        else
-        {
-            OS_printf(KRED "ERROR: SPI %d is not in the OPERATIONAL state.\n" RESET, spi);
-        }
-    }
-    else
-    {
-        OS_printf(KRED "ERROR: SPI %d does not exist.\n" RESET, spi);
-    }
-
-    #ifdef DEBUG
-        OS_printf("\t spi = %d \n", spi);
-    #endif
-
-    return OS_SUCCESS; 
-}
-
-static int32 Crypto_SA_rekey(void)
-{
-    // Local variables
-    uint16 spi = 0x0000;
-    int count = 0;  
-    int x = 0;  
-
-    // Read ingest
-    spi = ((uint8)sdls_frame.pdu.data[count] << 8) | (uint8)sdls_frame.pdu.data[count+1];
-    count = count + 2;
-
-    // Overwrite last PID
-    sa[spi].lpid = (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
-
-    // Check SPI exists and in 'Unkeyed' state
-    if (spi < NUM_SA)
-    {
-        if (sa[spi].sa_state == SA_UNKEYED)
-        {	// Encryption Key
-            sa[spi].ekid = ((uint8)sdls_frame.pdu.data[count] << 8) | (uint8)sdls_frame.pdu.data[count+1];
-            count = count + 2;
-
-            // Authentication Key
-            //sa[spi].akid = ((uint8)sdls_frame.pdu.data[count] << 8) | (uint8)sdls_frame.pdu.data[count+1];
-            //count = count + 2;
-
-            // Anti-Replay Counter
-            #ifdef PDU_DEBUG
-                OS_printf("SPI %d IV updated to: 0x", spi);
-            #endif
-            if (sa[spi].iv_len > 0)
-            {   // Set IV - authenticated encryption
-                for (x = count; x < (sa[spi].iv_len + count); x++)
-                {
-                    // TODO: Uncomment once fixed in ESA implementation
-                    // TODO: Assuming this was fixed...
-                    sa[spi].iv[x - count] = (uint8) sdls_frame.pdu.data[x];
-                    #ifdef PDU_DEBUG
-                        OS_printf("%02x", sdls_frame.pdu.data[x]);
-                    #endif
-                }
-            }
-            else
-            {   // Set SN
-                // TODO
-            }
-            #ifdef PDU_DEBUG
-                OS_printf("\n");
-            #endif
-
-            // Change to keyed state
-            sa[spi].sa_state = SA_KEYED;
-            #ifdef PDU_DEBUG
-                OS_printf("SPI %d changed to KEYED state with encrypted Key ID %d. \n", spi, sa[spi].ekid);
-            #endif
-        }
-        else
-        {
-            OS_printf(KRED "ERROR: SPI %d is not in the UNKEYED state.\n" RESET, spi);
-        }
-    }
-    else
-    {
-        OS_printf(KRED "ERROR: SPI %d does not exist.\n" RESET, spi);
-    }
-
-    #ifdef DEBUG
-        OS_printf("\t spi  = %d \n", spi);
-        OS_printf("\t ekid = %d \n", sa[spi].ekid);
-        //OS_printf("\t akid = %d \n", sa[spi].akid);
-    #endif
-
-    return OS_SUCCESS; 
-}
-
-static int32 Crypto_SA_expire(void)
-{
-    // Local variables
-    uint16 spi = 0x0000;
-
-    // Read ingest
-    spi = ((uint8)sdls_frame.pdu.data[0] << 8) | (uint8)sdls_frame.pdu.data[1];
-    OS_printf("spi = %d \n", spi);
-
-    // Overwrite last PID
-    sa[spi].lpid = (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
-
-    // Check SPI exists and in 'Keyed' state
-    if (spi < NUM_SA)
-    {
-        if (sa[spi].sa_state == SA_KEYED)
-        {	// Change to 'Unkeyed' state
-            sa[spi].sa_state = SA_UNKEYED;
-            #ifdef PDU_DEBUG
-                OS_printf("SPI %d changed to UNKEYED state. \n", spi);
-            #endif
-        }
-        else
-        {
-            OS_printf(KRED "ERROR: SPI %d is not in the KEYED state.\n" RESET, spi);
-        }
-    }
-    else
-    {
-        OS_printf(KRED "ERROR: SPI %d does not exist.\n" RESET, spi);
-    }
-
-    return OS_SUCCESS; 
-}
-
-static int32 Crypto_SA_create(void)
-{
-    // Local variables
-    uint8 count = 6;
-    uint16 spi = 0x0000;
-
-    // Read sdls_frame.pdu.data
-    spi = ((uint8)sdls_frame.pdu.data[0] << 8) | (uint8)sdls_frame.pdu.data[1];
-    OS_printf("spi = %d \n", spi);
-
-    // Overwrite last PID
-    sa[spi].lpid = (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
-
-    // Write SA Configuration
-    sa[spi].est = ((uint8)sdls_frame.pdu.data[2] & 0x80) >> 7;
-    sa[spi].ast = ((uint8)sdls_frame.pdu.data[2] & 0x40) >> 6;
-    sa[spi].shivf_len = ((uint8)sdls_frame.pdu.data[2] & 0x3F);
-    sa[spi].shsnf_len = ((uint8)sdls_frame.pdu.data[3] & 0xFC) >> 2;
-    sa[spi].shplf_len = ((uint8)sdls_frame.pdu.data[3] & 0x03);
-    sa[spi].stmacf_len = ((uint8)sdls_frame.pdu.data[4]);
-    sa[spi].ecs_len = ((uint8)sdls_frame.pdu.data[5]);
-    for (int x = 0; x < sa[spi].ecs_len; x++)
-    {
-        sa[spi].ecs[x] = ((uint8)sdls_frame.pdu.data[count++]);
-    }
-    sa[spi].iv_len = ((uint8)sdls_frame.pdu.data[count++]);
-    for (int x = 0; x < sa[spi].iv_len; x++)
-    {
-        sa[spi].iv[x] = ((uint8)sdls_frame.pdu.data[count++]);
-    }
-    sa[spi].acs_len = ((uint8)sdls_frame.pdu.data[count++]);
-    for (int x = 0; x < sa[spi].acs_len; x++)
-    {
-        sa[spi].acs = ((uint8)sdls_frame.pdu.data[count++]);
-    }
-    sa[spi].abm_len = (uint8)((sdls_frame.pdu.data[count] << 8) | (sdls_frame.pdu.data[count+1]));
-    count = count + 2;
-    for (int x = 0; x < sa[spi].abm_len; x++)
-    {
-        sa[spi].abm[x] = ((uint8)sdls_frame.pdu.data[count++]);
-    }
-    sa[spi].arc_len = ((uint8)sdls_frame.pdu.data[count++]);
-    for (int x = 0; x < sa[spi].arc_len; x++)
-    {
-        sa[spi].arc[x] = ((uint8)sdls_frame.pdu.data[count++]);
-    }
-    sa[spi].arcw_len = ((uint8)sdls_frame.pdu.data[count++]);
-    for (int x = 0; x < sa[spi].arcw_len; x++)
-    {
-        sa[spi].arcw[x] = ((uint8)sdls_frame.pdu.data[count++]);
-    }
-
-    // TODO: Checks for valid data
-
-    // Set state to unkeyed
-    sa[spi].sa_state = SA_UNKEYED;
-
-    #ifdef PDU_DEBUG
-        Crypto_saPrint(&sa[spi]);
-    #endif
-
-    return OS_SUCCESS; 
-}
-
-static int32 Crypto_SA_delete(void)
-{
-    // Local variables
-    uint16 spi = 0x0000;
-
-    // Read ingest
-    spi = ((uint8)sdls_frame.pdu.data[0] << 8) | (uint8)sdls_frame.pdu.data[1];
-    OS_printf("spi = %d \n", spi);
-
-    // Overwrite last PID
-    sa[spi].lpid = (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
-
-    // Check SPI exists and in 'Unkeyed' state
-    if (spi < NUM_SA)
-    {
-        if (sa[spi].sa_state == SA_UNKEYED)
-        {	// Change to 'None' state
-            sa[spi].sa_state = SA_NONE;
-            #ifdef PDU_DEBUG
-                OS_printf("SPI %d changed to NONE state. \n", spi);
-            #endif
-
-            // TODO: Zero entire SA
-        }
-        else
-        {
-            OS_printf(KRED "ERROR: SPI %d is not in the UNKEYED state.\n" RESET, spi);
-        }
-    }
-    else
-    {
-        OS_printf(KRED "ERROR: SPI %d does not exist.\n" RESET, spi);
-    }
-
-    return OS_SUCCESS; 
-}
-
-static int32 Crypto_SA_setARSN(void)
-{
-    // Local variables
-    uint16 spi = 0x0000;
-
-    // Read ingest
-    spi = ((uint8)sdls_frame.pdu.data[0] << 8) | (uint8)sdls_frame.pdu.data[1];
-    OS_printf("spi = %d \n", spi);
-
-    // TODO: Check SA type (authenticated, encrypted, both) and set appropriately
-    // TODO: Add more checks on bounds
-
-    // Check SPI exists
-    if (spi < NUM_SA)
-    {
-        #ifdef PDU_DEBUG
-            OS_printf("SPI %d IV updated to: 0x", spi);
-        #endif
-        if (sa[spi].iv_len > 0)
-        {   // Set IV - authenticated encryption
-            for (int x = 0; x < IV_SIZE; x++)
-            {
-                sa[spi].iv[x] = (uint8) sdls_frame.pdu.data[x + 2];
-                #ifdef PDU_DEBUG
-                    OS_printf("%02x", sa[spi].iv[x]);
-                #endif
-            }
-            Crypto_increment((uint8*)sa[spi].iv, IV_SIZE);
-        }
-        else
-        {   // Set SN
-            // TODO
-        }
-        #ifdef PDU_DEBUG
-            OS_printf("\n");
-        #endif
-    }
-    else
-    {
-        OS_printf("Crypto_SA_setARSN ERROR: SPI %d does not exist.\n", spi);
-    }
-
-    return OS_SUCCESS; 
-}
-
-static int32 Crypto_SA_setARSNW(void)
-{
-    // Local variables
-    uint16 spi = 0x0000;
-
-    // Read ingest
-    spi = ((uint8)sdls_frame.pdu.data[0] << 8) | (uint8)sdls_frame.pdu.data[1];
-    OS_printf("spi = %d \n", spi);
-
-    // Check SPI exists
-    if (spi < NUM_SA)
-    {
-        sa[spi].arcw_len = (uint8) sdls_frame.pdu.data[2];
-        
-        // Check for out of bounds
-        if (sa[spi].arcw_len > (ARC_SIZE))
-        {
-            sa[spi].arcw_len = ARC_SIZE;    
-        }
-
-        for(int x = 0; x < sa[spi].arcw_len; x++)
-        {
-            sa[spi].arcw[x] = (uint8) sdls_frame.pdu.data[x+3];
-        }
-    }
-    else
-    {
-        OS_printf("Crypto_SA_setARSNW ERROR: SPI %d does not exist.\n", spi);
-    }
-
-    return OS_SUCCESS; 
-}
-
-static int32 Crypto_SA_status(char* ingest)
-{
-    // Local variables
-    int count = 0;
-    uint16 spi = 0x0000;
-
-    // Read ingest
-    spi = ((uint8)sdls_frame.pdu.data[0] << 8) | (uint8)sdls_frame.pdu.data[1];
-    OS_printf("spi = %d \n", spi);
-
-    // Check SPI exists
-    if (spi < NUM_SA)
-    {
-        // Prepare for Reply
-        sdls_frame.pdu.pdu_len = 3;
-        sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
-        count = Crypto_Prep_Reply(ingest, 128);
-        // PDU
-        ingest[count++] = (spi & 0xFF00) >> 8;
-        ingest[count++] = (spi & 0x00FF);
-        ingest[count++] = sa[spi].lpid;
-    }
-    else
-    {
-        OS_printf("Crypto_SA_status ERROR: SPI %d does not exist.\n", spi);
-    }
-
-    #ifdef SA_DEBUG
-        Crypto_saPrint(&sa[spi]);
-    #endif
-
-    return count; 
-}
-
 
 /*
 ** Security Association Monitoring and Control
@@ -2207,6 +1573,7 @@ static int32 Crypto_SA_readARSN(char* ingest)
 {
     uint8 count = 0;
     uint16 spi = 0x0000;
+    SecurityAssociation_t* sa_ptr;
 
     // Read ingest
     spi = ((uint8)sdls_frame.pdu.data[0] << 8) | (uint8)sdls_frame.pdu.data[1];
@@ -2220,21 +1587,28 @@ static int32 Crypto_SA_readARSN(char* ingest)
     ingest[count++] = (spi & 0xFF00) >> 8;
     ingest[count++] = (spi & 0x00FF);
 
-    if (sa[spi].iv_len > 0)
+
+    if(sadb_routine->sadb_get_sa_from_spi(spi,&sa_ptr) != OS_SUCCESS){
+        //TODO - Error handling
+        return OS_ERROR; //Error -- unable to get SA from SPI.
+    }
+
+
+    if (sa_ptr->iv_len > 0)
     {   // Set IV - authenticated encryption
-        for (int x = 0; x < sa[spi].iv_len - 1; x++)
+        for (int x = 0; x < sa_ptr->iv_len - 1; x++)
         {
-            ingest[count++] = sa[spi].iv[x];
+            ingest[count++] = sa_ptr->iv[x];
         }
         
         // TODO: Do we need this?
-        if (sa[spi].iv[IV_SIZE - 1] > 0)
+        if (sa_ptr->iv[IV_SIZE - 1] > 0)
         {   // Adjust to report last received, not expected
-            ingest[count++] = sa[spi].iv[IV_SIZE - 1] - 1;
+            ingest[count++] = sa_ptr->iv[IV_SIZE - 1] - 1;
         }
         else
         {   
-            ingest[count++] = sa[spi].iv[IV_SIZE - 1];
+            ingest[count++] = sa_ptr->iv[IV_SIZE - 1];
         }
     }
     else
@@ -2244,12 +1618,12 @@ static int32 Crypto_SA_readARSN(char* ingest)
 
     #ifdef PDU_DEBUG
         OS_printf("spi = %d \n", spi);
-        if (sa[spi].iv_len > 0)
+        if (sa_ptr->iv_len > 0)
         {
             OS_printf("ARSN = 0x");
-            for (int x = 0; x < sa[spi].iv_len; x++)
+            for (int x = 0; x < sa_ptr->iv_len; x++)
             {
-                OS_printf("%02x", sa[spi].iv[x]);
+                OS_printf("%02x", sa_ptr->iv[x]);
             }
             OS_printf("\n");
         }
@@ -2372,14 +1746,20 @@ static int32 Crypto_User_ModifyActiveTM(void)
 static int32 Crypto_User_ModifyVCID(void)
 {
     tm_frame.tm_header.vcid = (uint8)sdls_frame.pdu.data[0];
+    SecurityAssociation_t* sa_ptr;
 
     for (int i = 0; i < NUM_GVCID; i++)
     {
+        if(sadb_routine->sadb_get_sa_from_spi(i,&sa_ptr) != OS_SUCCESS){
+            //TODO - Error handling
+            return OS_ERROR; //Error -- unable to get SA from SPI.
+        }
         for (int j = 0; j < NUM_SA; j++)
         {
-            if (sa[i].gvcid_tm_blk[j].mapid == TYPE_TM)
+
+            if (sa_ptr->gvcid_tm_blk[j].mapid == TYPE_TM)
             {
-                if (sa[i].gvcid_tm_blk[j].vcid == tm_frame.tm_header.vcid)
+                if (sa_ptr->gvcid_tm_blk[j].vcid == tm_frame.tm_header.vcid)
                 {
                     tm_frame.tm_sec_header.spi = i;
                     OS_printf("TM Frame SPI changed to %d \n",i);
@@ -2458,49 +1838,49 @@ static int32 Crypto_PDU(char* ingest,TC_t* tc_frame)
                                     #ifdef PDU_DEBUG
                                         OS_printf(KGRN "SA Create\n" RESET); 
                                     #endif
-                                    status = Crypto_SA_create();
+                                    status = sadb_routine->sadb_sa_create();
                                     break;
                                 case PID_DELETE_SA:
                                     #ifdef PDU_DEBUG
                                         OS_printf(KGRN "SA Delete\n" RESET);
                                     #endif
-                                    status = Crypto_SA_delete();
+                                    status = sadb_routine->sadb_sa_delete();
                                     break;
                                 case PID_SET_ARSNW:
                                     #ifdef PDU_DEBUG
                                         OS_printf(KGRN "SA setARSNW\n" RESET);
                                     #endif
-                                    status = Crypto_SA_setARSNW();
+                                    status = sadb_routine->sadb_sa_setARSNW();
                                     break;
                                 case PID_REKEY_SA:
                                     #ifdef PDU_DEBUG
                                         OS_printf(KGRN "SA Rekey\n" RESET); 
                                     #endif
-                                    status = Crypto_SA_rekey();
+                                    status = sadb_routine->sadb_sa_rekey();
                                     break;
                                 case PID_EXPIRE_SA:
                                     #ifdef PDU_DEBUG
                                         OS_printf(KGRN "SA Expire\n" RESET);
                                     #endif
-                                    status = Crypto_SA_expire();
+                                    status = sadb_routine->sadb_sa_expire();
                                     break;
                                 case PID_SET_ARSN:
                                     #ifdef PDU_DEBUG
                                         OS_printf(KGRN "SA SetARSN\n" RESET);
                                     #endif
-                                    status = Crypto_SA_setARSN();
+                                    status = sadb_routine->sadb_sa_setARSN();
                                     break;
                                 case PID_START_SA:
                                     #ifdef PDU_DEBUG
                                         OS_printf(KGRN "SA Start\n" RESET); 
                                     #endif
-                                    status = Crypto_SA_start(tc_frame);
+                                    status = sadb_routine->sadb_sa_start(tc_frame);
                                     break;
                                 case PID_STOP_SA:
                                     #ifdef PDU_DEBUG
                                         OS_printf(KGRN "SA Stop\n" RESET);
                                     #endif
-                                    status = Crypto_SA_stop();
+                                    status = sadb_routine->sadb_sa_stop();
                                     break;
                                 case PID_READ_ARSN:
                                     #ifdef PDU_DEBUG
@@ -2512,7 +1892,7 @@ static int32 Crypto_PDU(char* ingest,TC_t* tc_frame)
                                     #ifdef PDU_DEBUG
                                         OS_printf(KGRN "SA Status\n" RESET);
                                     #endif
-                                    status = Crypto_SA_status(ingest);
+                                    status = sadb_routine->sadb_sa_status(ingest);
                                     break;
                                 default:
                                     OS_printf(KRED "Error: Crypto_PDU failed interpreting SA Procedure Identification Field! \n" RESET);
@@ -2657,9 +2037,8 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
     // Local Variables
     int32 status = OS_SUCCESS;
     TC_FramePrimaryHeader_t temp_tc_header;
-    SecurityAssociation_t temp_SA = {0};
+    SecurityAssociation_t* sa_ptr = NULL;
     uint8 *p_new_enc_frame = NULL;
-    int spi = -1;
     uint8 sa_service_type = -1;
     uint16 mac_loc = 0;
     uint16 tf_payload_len = 0x0000;
@@ -2672,7 +2051,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         OS_printf(KYEL "\n----- Crypto_TC_ApplySecurity START -----\n" RESET);
     #endif
 
-   if (p_in_frame == NULL)
+    if (p_in_frame == NULL)
     {
         status = OS_ERROR;
         OS_printf(KRED "Error: Input Buffer NULL! \n" RESET);
@@ -2696,10 +2075,15 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
     temp_tc_header.spare  = ((uint8)p_in_frame[0] & 0x0C) >> 2;
     temp_tc_header.scid   = ((uint8)p_in_frame[0] & 0x03) << 8;
     temp_tc_header.scid   = temp_tc_header.scid | (uint8)p_in_frame[1];
-    temp_tc_header.vcid   = ((uint8)p_in_frame[2] & 0xFC) >> 2;
+    temp_tc_header.vcid   = ((uint8)p_in_frame[2] & 0xFC) >> 2 & VCID_BITMASK;
     temp_tc_header.fl     = ((uint8)p_in_frame[2] & 0x03) << 8;
     temp_tc_header.fl     = temp_tc_header.fl | (uint8)p_in_frame[3];
     temp_tc_header.fsn	  = (uint8)p_in_frame[4];
+
+    //TODO -- Handle segmentation header logic (this is a per-VCID managed parameter!)
+    //If segmentation header for VCID, parse out MAP_ID
+    // probably need to augment crypto_structs.h to handle segmentation headers.
+    uint8 map_id = 0;
 
     // Check if command frame flag set
     if ((temp_tc_header.cc == 1) && (status == OS_SUCCESS))
@@ -2721,91 +2105,34 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
     // Will need to know lengths of various parameters from the SA DB
     if (status == OS_SUCCESS)
     {
-        // Query SA DB for active SA / SDLS paremeters
-        // TODO: Likely API call
-        // TODO: Magic to make sure we're getting the correct SA.. 
-        // currently SA DB allows for more than one
-        for (int i=0; i < NUM_SA; i++)
-        {
-            if (sa[i].sa_state == SA_OPERATIONAL)
-            {
-                spi = i;
-                //break; // Needs modified to ACTUALLY get the correct SA
-                         // TODO: Likely API discussion
-            }
-        }
+        // Query SA DB for active SA / SDLS parameters
+        status = sadb_routine->sadb_get_operational_sa_from_gvcid(temp_tc_header.tfvn, temp_tc_header.scid, temp_tc_header.vcid, map_id,&sa_ptr);
 
-        // If no active SA found
-        if (spi == -1)
-        {
-            OS_printf(KRED "Error: No operational SA found! \n" RESET);
-            status = OS_ERROR;
-        }
-        // Found an active SA
-        else
-        {
-            CFE_PSP_MemCpy(&temp_SA, &(sa[spi]), SA_SIZE);
-            #ifdef TC_DEBUG
-                OS_printf("Operational SA found at index %d.\n", spi);
-            #endif
-
-            #ifdef SA_DEBUG
-                OS_printf(KYEL "DEBUG - Printing local copy of SA Entry for current SPI.\n" RESET);
-                Crypto_saPrint(&temp_SA);
-            #endif  
-        }
-        #ifdef SA_DEBUG
-            OS_printf(KYEL "DEBUG - Received data frame.\n" RESET);
-            OS_printf("Using SA %d settings.\n", spi);
-        #endif
-
-        // Verify SCID 
-        if ((temp_tc_header.scid != temp_SA.gvcid_tc_blk[temp_tc_header.vcid].scid) \
-            && (status == OS_SUCCESS))
-        {
-            OS_printf(KRED "Error: SCID incorrect! \n" RESET);
-            status = OS_ERROR;
-        }
-
-        #ifdef SA_DEBUG
-            OS_printf(KYEL "DEBUG - Printing local copy of SA Entry for current SPI.\n" RESET);
-            Crypto_saPrint(&temp_SA);
-        #endif
-
-        // Verify SA SPI configurations
-        // Check if SA is operational
-        if ((temp_SA.sa_state != SA_OPERATIONAL) && (status == OS_SUCCESS))
-        {
-            OS_printf(KRED "Error: SA is not operational! \n" RESET);
-            status = OS_ERROR;
-        }
-        // Check if this VCID exists / is mapped to TCs
-        if ((status == OS_SUCCESS) && (temp_SA.gvcid_tc_blk[temp_tc_header.vcid].mapid != TYPE_TC))
-        {	
-            OS_printf(KRED "Error: SA does not map this VCID to TC! \n" RESET);
-            status = OS_ERROR;
-        }
-
-        // If a check is invalid so far, can return
+        // If unable to get operational SA, can return
         if (status != OS_SUCCESS)
         {
             return status;
         }
 
+        #ifdef SA_DEBUG
+            OS_printf(KYEL "DEBUG - Printing SA Entry for current frame.\n" RESET);
+            Crypto_saPrint(sa_ptr);
+        #endif
+
         // Determine SA Service Type
-        if ((temp_SA.est == 0) && (temp_SA.ast == 0))
+        if ((sa_ptr->est == 0) && (sa_ptr->ast == 0))
         {
             sa_service_type = SA_PLAINTEXT;
         }
-        else if ((temp_SA.est == 0) && (temp_SA.ast == 1))
+        else if ((sa_ptr->est == 0) && (sa_ptr->ast == 1))
         {
             sa_service_type = SA_AUTHENTICATION;
         }
-        else if ((temp_SA.est == 1) && (temp_SA.ast == 0))
+        else if ((sa_ptr->est == 1) && (sa_ptr->ast == 0))
         {
             sa_service_type = SA_ENCRYPTION;
         }
-        else if ((temp_SA.est == 1) && (temp_SA.ast == 1))
+        else if ((sa_ptr->est == 1) && (sa_ptr->ast == 1))
         {
             sa_service_type = SA_AUTHENTICATED_ENCRYPTION;
         }
@@ -2843,22 +2170,22 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         {
             case SA_PLAINTEXT:
                 // Ingest length + segment header (1) + spi_index (2) + some variable length fields
-                    *p_enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shplf_len;
+                    *p_enc_frame_len = in_frame_length + 1 + 2 + sa_ptr->shplf_len;
             case SA_AUTHENTICATION:
                 // Ingest length + segment header (1) + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
                 //   + shplf_len + arc_len + pad_size + stmacf_len
-                *p_enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + \
-                temp_SA.shplf_len + temp_SA.arc_len + TC_PAD_SIZE + temp_SA.stmacf_len;;
+                *p_enc_frame_len = in_frame_length + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + \
+                sa_ptr->shplf_len + sa_ptr->arc_len + TC_PAD_SIZE + sa_ptr->stmacf_len;;
             case SA_ENCRYPTION:
                 // Ingest length + segment header (1) + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
                 //   + shplf_len + arc_len + pad_size
-                *p_enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + \
-                temp_SA.shplf_len + temp_SA.arc_len + TC_PAD_SIZE;
+                *p_enc_frame_len = in_frame_length + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + \
+                sa_ptr->shplf_len + sa_ptr->arc_len + TC_PAD_SIZE;
             case SA_AUTHENTICATED_ENCRYPTION:
                 // Ingest length + segment header (1) + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
                 //   + shplf_len + arc_len + pad_size + stmacf_len
-                *p_enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + \
-                temp_SA.shplf_len + temp_SA.arc_len + TC_PAD_SIZE + temp_SA.stmacf_len;
+                *p_enc_frame_len = in_frame_length + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + \
+                sa_ptr->shplf_len + sa_ptr->arc_len + TC_PAD_SIZE + sa_ptr->stmacf_len;
         }
 
         #ifdef TC_DEBUG
@@ -2866,12 +2193,12 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
             OS_printf(KYEL "\tlen of TF\t = %d\n" RESET, in_frame_length);
             OS_printf(KYEL "\tsegment hdr\t = 1\n" RESET); // TODO: Determine presence of this so not hard-coded
             OS_printf(KYEL "\tspi len\t\t = 2\n" RESET);
-            OS_printf(KYEL "\tshivf_len\t = %d\n" RESET, temp_SA.shivf_len);
-            OS_printf(KYEL "\tshsnf_len\t = %d\n" RESET, temp_SA.shsnf_len);
-            OS_printf(KYEL "\tshplf len\t = %d\n" RESET, temp_SA.shplf_len);
-            OS_printf(KYEL "\tarc_len\t\t = %d\n" RESET, temp_SA.arc_len);
+            OS_printf(KYEL "\tshivf_len\t = %d\n" RESET, sa_ptr->shivf_len);
+            OS_printf(KYEL "\tshsnf_len\t = %d\n" RESET, sa_ptr->shsnf_len);
+            OS_printf(KYEL "\tshplf len\t = %d\n" RESET, sa_ptr->shplf_len);
+            OS_printf(KYEL "\tarc_len\t\t = %d\n" RESET, sa_ptr->arc_len);
             OS_printf(KYEL "\tpad_size\t = %d\n" RESET, TC_PAD_SIZE);
-            OS_printf(KYEL "\tstmacf_len\t = %d\n" RESET, temp_SA.stmacf_len);
+            OS_printf(KYEL "\tstmacf_len\t = %d\n" RESET, sa_ptr->stmacf_len);
         #endif
 
         // Accio buffer
@@ -2917,33 +2244,33 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         ** Reference CCSDS SDLP 3550b1 4.1.1.1.3
         */
         // Set SPI
-        *(p_new_enc_frame + index) = ((spi & 0xFF00) >> 8);
-        *(p_new_enc_frame + index + 1) = (spi & 0x00FF);
+        *(p_new_enc_frame + index) = ((sa_ptr->spi & 0xFF00) >> 8);
+        *(p_new_enc_frame + index + 1) = (sa_ptr->spi & 0x00FF);
         index += 2;
 
         // Set initialization vector if specified
         if ((sa_service_type == SA_AUTHENTICATION) || \
             (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
-        { 
+        {
             #ifdef SA_DEBUG
                 OS_printf(KYEL "Old IV value was:\n\t");
-                for(int i=0; i<sa[spi].shivf_len; i++) {OS_printf("%02x", sa[spi].iv[i]);}
+                for(int i=0; i<sa_ptr->shivf_len; i++) {OS_printf("%02x", sa_ptr->iv[i]);}
                 OS_printf("\n" RESET);
             #endif
             #ifdef INCREMENT
-                // TODO: API call?
-                Crypto_increment(sa[spi].iv, sa[spi].shivf_len);
+                Crypto_increment(sa_ptr->iv, sa_ptr->shivf_len);
             #endif
             #ifdef SA_DEBUG
                 OS_printf(KYEL "New IV value is:\n\t");
-                for(int i=0; i<sa[spi].shivf_len; i++) {OS_printf("%02x", sa[spi].iv[i]);}
+                for(int i=0; i<sa_ptr->shivf_len; i++) {OS_printf("%02x", sa_ptr->iv[i]);}
                 OS_printf("\n" RESET);
             #endif
-            for (int i=0; i < temp_SA.shivf_len; i++)
+
+            for (int i=0; i < sa_ptr->shivf_len; i++)
             {
                 // TODO: Likely API call
                 // Copy in IV from SA
-                *(p_new_enc_frame + index) = sa[spi].iv[i];
+                *(p_new_enc_frame + index) = sa_ptr->iv[i];
                 index++;
             }
         }
@@ -2957,15 +2284,15 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         */
         // Determine if seq num field is needed
         // TODO: Likely SA API Call
-        if (temp_SA.shsnf_len > 0)
+        if (sa_ptr->shsnf_len > 0)
         {
             // If using anti-replay counter, increment it
             // TODO: API call instead?
             // TODO: Check return code
-            Crypto_increment(sa[spi].arc, sa[spi].shsnf_len);
-            for (int i=0; i < temp_SA.shsnf_len; i++)
+            Crypto_increment(sa_ptr->arc, sa_ptr->shsnf_len);
+            for (int i=0; i < sa_ptr->shsnf_len; i++)
             {
-                *(p_new_enc_frame + index) = sa[spi].arc[i];
+                *(p_new_enc_frame + index) = sa_ptr->arc[i];
                 index++;
             }
         }
@@ -2978,7 +2305,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         */
         // TODO: Revisit this
         // TODO: Likely SA API Call
-        for (int i=0; i < temp_SA.shplf_len; i++)
+        for (int i=0; i < sa_ptr->shplf_len; i++)
         {
             /* 4.1.1.5.2 The Pad Length field shall contain the count of fill bytes used in the
             ** cryptographic process, consisting of an integral number of octets. - CCSDS 3550b1
@@ -3044,7 +2371,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
             }
             gcry_error = gcry_cipher_setkey(
                 tmp_hd, 
-                &(ek_ring[sa[spi].ekid].value[0]), 
+                &(ek_ring[sa_ptr->ekid].value[0]),
                 KEY_SIZE //TODO:  look into this
             );
             if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
@@ -3055,8 +2382,8 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
             }
             gcry_error = gcry_cipher_setiv(
                 tmp_hd, 
-                &(sa[spi].iv[0]), 
-                sa[spi].iv_len
+                &(sa_ptr->iv[0]),
+                sa_ptr->iv_len
             );
             if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
             {
@@ -3069,14 +2396,14 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
             if ((sa_service_type == SA_AUTHENTICATION) || \
                 (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
             {
-                for (int y = 0; y < sa[spi].abm_len; y++)
+                for (int y = 0; y < sa_ptr->abm_len; y++)
                 {
-                    aad[y] = p_in_frame[y] & sa[spi].abm[y];
+                    aad[y] = p_in_frame[y] & sa_ptr->abm[y];
                 }
                 #ifdef MAC_DEBUG 
                     OS_printf(KYEL "Preparing AAD:\n");
-                    OS_printf("\tUsing ABM Length of %d\n\t", sa[spi].abm_len);
-                    for (int y = 0; y < sa[spi].abm_len; y++)
+                    OS_printf("\tUsing ABM Length of %d\n\t", sa_ptr->abm_len);
+                    for (int y = 0; y < sa_ptr->abm_len; y++)
                     {
                         OS_printf("%02x", aad[y]);
                     }
@@ -3086,7 +2413,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                 gcry_error = gcry_cipher_authenticate(
                     tmp_hd,
                     &(aad[0]),                                      // additional authenticated data
-                    sa[spi].abm_len 		                        // length of AAD
+                    sa_ptr->abm_len 		                        // length of AAD
                 );
                 if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
                 {
@@ -3132,7 +2459,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                 (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
             {
                 // TODO - Know if FECF exists
-                mac_loc = *p_enc_frame_len - sa[spi].stmacf_len - FECF_SIZE;
+                mac_loc = *p_enc_frame_len - sa_ptr->stmacf_len - FECF_SIZE;
                 #ifdef MAC_DEBUG
                     OS_printf(KYEL "MAC location is: %d\n" RESET, mac_loc);
                     OS_printf(KYEL "MAC size is: %d\n" RESET, MAC_SIZE);
@@ -3183,6 +2510,8 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         *pp_in_frame = p_new_enc_frame;
     }
 
+    status = sadb_routine->sadb_save_sa(sa_ptr);
+
     #ifdef DEBUG
         OS_printf(KYEL "----- Crypto_TC_ApplySecurity END -----\n" RESET);
     #endif
@@ -3199,6 +2528,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
     int y = 0;
     gcry_cipher_hd_t tmp_hd;
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
+    SecurityAssociation_t* sa_ptr = NULL;
 
     #ifdef DEBUG
         OS_printf(KYEL "\n----- Crypto_TC_ProcessSecurity START -----\n" RESET);
@@ -3273,7 +2603,14 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
         }
         if (status == OS_SUCCESS)
         {
-            if (sa[report.lspiu].gvcid_tc_blk[tc_sdls_processed_frame->tc_header.vcid].mapid != TYPE_TC)
+            if(sadb_routine->sadb_get_sa_from_spi(report.lspiu,&sa_ptr) != OS_SUCCESS){
+                //TODO - Error handling
+                status = OS_ERROR; //Error -- unable to get SA from SPI.
+            }
+        }
+        if (status == OS_SUCCESS)
+        {
+            if (sa_ptr->gvcid_tc_blk.mapid != TYPE_TC)
             {	
                 OS_printf(KRED "Error: SA invalid type! \n" RESET);
                 status = OS_ERROR;
@@ -3282,7 +2619,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
         // TODO: I don't think this is needed.
         //if (status == OS_SUCCESS)
         //{
-        //    if (sa[report.lspiu].gvcid_tc_blk[tc_sdls_processed_frame->tc_header.vcid].vcid != tc_sdls_processed_frame->tc_header.vcid)
+        //    if (sa_ptr->gvcid_tc_blk.vcid != tc_sdls_processed_frame->tc_header.vcid)
         //    {	
         //        OS_printf(KRED "Error: VCID not mapped to provided SPI! \n" RESET);
         //        status = OS_ERROR;
@@ -3290,8 +2627,8 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
         //}
         if (status == OS_SUCCESS)
         {
-            if (sa[report.lspiu].sa_state != SA_OPERATIONAL)
-            {	
+            if (sa_ptr->sa_state != SA_OPERATIONAL)
+            {
                 OS_printf(KRED "Error: SA state not operational! \n" RESET);
                 status = OS_ERROR;
             }
@@ -3314,10 +2651,14 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
             return status;
         }
     }
-    
+    if(sadb_routine->sadb_get_sa_from_spi(tc_sdls_processed_frame->tc_sec_header.spi,&sa_ptr) != OS_SUCCESS){
+        //TODO - Error handling
+        status = OS_ERROR; //Error -- unable to get SA from SPI.
+        return status;
+    }
     // Determine mode via SPI
-    if ((sa[tc_sdls_processed_frame->tc_sec_header.spi].est == 1) &&
-        (sa[tc_sdls_processed_frame->tc_sec_header.spi].ast == 1))
+    if ((sa_ptr->est == 1) &&
+        (sa_ptr->ast == 1))
     {	// Authenticated Encryption
         #ifdef DEBUG
             OS_printf(KBLU "ENCRYPTED TC Received!\n" RESET);
@@ -3337,12 +2678,12 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
 
         #ifdef DEBUG
             OS_printf("\t tc_sec_header.iv[%d] = 0x%02x \n", IV_SIZE-1, tc_sdls_processed_frame->tc_sec_header.iv[IV_SIZE-1]);
-            OS_printf("\t sa[%d].iv[%d] = 0x%02x \n", tc_sdls_processed_frame->tc_sec_header.spi, IV_SIZE-1, sa[tc_sdls_processed_frame->tc_sec_header.spi].iv[IV_SIZE-1]);
+            OS_printf("\t sa[%d].iv[%d] = 0x%02x \n", tc_sdls_processed_frame->tc_sec_header.spi, IV_SIZE-1, sa_ptr->iv[IV_SIZE-1]);
         #endif
 
         // Check IV is in ARCW
-        if ( Crypto_window(tc_sdls_processed_frame->tc_sec_header.iv, sa[tc_sdls_processed_frame->tc_sec_header.spi].iv, IV_SIZE,
-            sa[tc_sdls_processed_frame->tc_sec_header.spi].arcw[sa[tc_sdls_processed_frame->tc_sec_header.spi].arcw_len-1]) != OS_SUCCESS )
+        if ( Crypto_window(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, IV_SIZE,
+            sa_ptr->arcw[sa_ptr->arcw_len-1]) != OS_SUCCESS )
         {
             report.af = 1;
             report.bsnf = 1;
@@ -3365,7 +2706,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
         }
         else 
         {
-            if ( Crypto_compare_less_equal(tc_sdls_processed_frame->tc_sec_header.iv, sa[tc_sdls_processed_frame->tc_sec_header.spi].iv, IV_SIZE) == OS_SUCCESS )
+            if ( Crypto_compare_less_equal(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, IV_SIZE) == OS_SUCCESS )
             {   // Replay - IV value lower than expected
                 report.af = 1;
                 report.bsnf = 1;
@@ -3390,7 +2731,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
             {   // Adjust expected IV to acceptable received value
                 for (int i = 0; i < (IV_SIZE); i++)
                 {
-                    sa[tc_sdls_processed_frame->tc_sec_header.spi].iv[i] = tc_sdls_processed_frame->tc_sec_header.iv[i];
+                    sa_ptr->iv[i] = tc_sdls_processed_frame->tc_sec_header.iv[i];
                 }
             }
         }
@@ -3431,7 +2772,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
         Crypto_FECF(tc_sdls_processed_frame->tc_sec_trailer.fecf, ingest, (tc_sdls_processed_frame->tc_header.fl - 2),tc_sdls_processed_frame);
 
         // Initialize the key
-        //itc_gcm128_init(&sa[tc_sdls_processed_frame->tc_sec_header.spi].gcm_ctx, (const unsigned char*) &ek_ring[sa[tc_sdls_processed_frame->tc_sec_header.spi].ekid]);
+        //itc_gcm128_init(&sa[tc_sdls_processed_frame->tc_sec_header.spi].gcm_ctx, (const unsigned char*) &ek_ring[sa[sa_ptr->ekid]);
 
         gcry_error = gcry_cipher_open(
             &(tmp_hd),
@@ -3446,16 +2787,16 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
             return status;
         }
         #ifdef DEBUG
-            OS_printf("Key ID = %d, 0x", sa[tc_sdls_processed_frame->tc_sec_header.spi].ekid);
+            OS_printf("Key ID = %d, 0x", sa_ptr->ekid);
             for(int y = 0; y < KEY_SIZE; y++)
             {
-                OS_printf("%02x", ek_ring[sa[tc_sdls_processed_frame->tc_sec_header.spi].ekid].value[y]);
+                OS_printf("%02x", ek_ring[sa_ptr->ekid].value[y]);
             }
             OS_printf("\n");
         #endif
         gcry_error = gcry_cipher_setkey(
             tmp_hd,
-            &(ek_ring[sa[tc_sdls_processed_frame->tc_sec_header.spi].ekid].value[0]),
+            &(ek_ring[sa_ptr->ekid].value[0]),
             KEY_SIZE
         );
         if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
@@ -3466,8 +2807,8 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
         }
         gcry_error = gcry_cipher_setiv(
             tmp_hd,
-            &(sa[tc_sdls_processed_frame->tc_sec_header.spi].iv[0]),
-            sa[tc_sdls_processed_frame->tc_sec_header.spi].iv_len
+            &(sa_ptr->iv[0]),
+            sa_ptr->iv_len
         );
         if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
         {
@@ -3479,9 +2820,9 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
             OS_printf("AAD = 0x");
         #endif
         // Prepare additional authenticated data (AAD)
-        for (y = 0; y < sa[tc_sdls_processed_frame->tc_sec_header.spi].abm_len; y++)
+        for (y = 0; y < sa_ptr->abm_len; y++)
         {
-            ingest[y] = (uint8) ((uint8)ingest[y] & (uint8)sa[tc_sdls_processed_frame->tc_sec_header.spi].abm[y]);
+            ingest[y] = (uint8) ((uint8)ingest[y] & (uint8)sa_ptr->abm[y]);
             #ifdef MAC_DEBUG
                 OS_printf("%02x", (uint8) ingest[y]);
             #endif
@@ -3546,7 +2887,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
         
         // Increment the IV for next time
         #ifdef INCREMENT
-            Crypto_increment(sa[tc_sdls_processed_frame->tc_sec_header.spi].iv, IV_SIZE);
+            Crypto_increment(sa_ptr->iv, IV_SIZE);
         #endif
     }
     else
@@ -3703,6 +3044,8 @@ int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
     uint8 aad[20];
     uint16 spi = tm_frame.tm_sec_header.spi;
     uint16 spp_crc = 0x0000;
+    SecurityAssociation_t* sa_ptr;
+    SecurityAssociation_t sa;
 
     gcry_cipher_hd_t tmp_hd;
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
@@ -3752,6 +3095,12 @@ int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
         // Payload Data Unit
         Crypto_TM_updatePDU(ingest, *len_ingest);
 
+        if(sadb_routine->sadb_get_sa_from_spi(spi,&sa_ptr) != OS_SUCCESS){
+            //TODO - Error handling
+            return OS_ERROR; //Error -- unable to get SA from SPI.
+        }
+
+
     // Check test flags
         if (badSPI == 1)
         {
@@ -3759,7 +3108,7 @@ int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
         }
         if (badIV == 1)
         {
-            sa[tm_frame.tm_sec_header.spi].iv[IV_SIZE-1]++;
+            sa_ptr->iv[IV_SIZE-1]++;
         }
         if (badMAC == 1)
         {
@@ -3778,22 +3127,22 @@ int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
         // Security Header
         tempTM[count++] = (uint8) ((spi & 0xFF00) >> 8);
         tempTM[count++] = (uint8) ((spi & 0x00FF));
-        CFE_PSP_MemCpy(tm_frame.tm_sec_header.iv, sa[spi].iv, IV_SIZE);
+        CFE_PSP_MemCpy(tm_frame.tm_sec_header.iv, sa_ptr->iv, IV_SIZE);
 
         // Padding Length
             pad_len = Crypto_Get_tmLength(*len_ingest) - TM_MIN_SIZE + IV_SIZE + TM_PAD_SIZE - *len_ingest;
         
         // Only add IV for authenticated encryption 
-        if ((sa[spi].est == 1) && 
-            (sa[spi].ast == 1))		
+        if ((sa_ptr->est == 1) &&
+            (sa_ptr->ast == 1))
         {	// Initialization Vector
             #ifdef INCREMENT
-                Crypto_increment(sa[tm_frame.tm_sec_header.spi].iv, IV_SIZE);
+                Crypto_increment(sa_ptr->iv, IV_SIZE);
             #endif
-            if ((sa[spi].est == 1) || (sa[spi].ast == 1))
+            if ((sa_ptr->est == 1) || (sa_ptr->ast == 1))
             {	for (x = 0; x < IV_SIZE; x++)
                 {
-                    tempTM[count++] = sa[tm_frame.tm_sec_header.spi].iv[x];
+                    tempTM[count++] = sa_ptr->iv[x];
                 }
             }
             pdu_loc = count;
@@ -3832,8 +3181,8 @@ int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
 
     // Determine Mode
         // Clear
-        if ((sa[spi].est == 0) && 
-            (sa[spi].ast == 0))
+        if ((sa_ptr->est == 0) &&
+            (sa_ptr->ast == 0))
         {
             #ifdef DEBUG
                 OS_printf(KBLU "Creating a TM - CLEAR! \n" RESET);
@@ -3842,8 +3191,8 @@ int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
             CFE_PSP_MemCpy(ingest, tempTM, count);
         }
         // Authenticated Encryption
-        else if ((sa[spi].est == 1) && 
-                 (sa[spi].ast == 1))
+        else if ((sa_ptr->est == 1) &&
+                 (sa_ptr->ast == 1))
         {
             #ifdef DEBUG
                 OS_printf(KBLU "Creating a TM - AUTHENTICATED ENCRYPTION! \n" RESET);
@@ -3856,9 +3205,9 @@ int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
                 OS_printf("AAD = 0x");
             #endif
             // Prepare additional authenticated data
-            for (y = 0; y < sa[spi].abm_len; y++)
+            for (y = 0; y < sa_ptr->abm_len; y++)
             {
-                aad[y] = ingest[y] & sa[spi].abm[y];
+                aad[y] = ingest[y] & sa_ptr->abm[y];
                 #ifdef MAC_DEBUG
                     OS_printf("%02x", aad[y]);
                 #endif
@@ -3881,7 +3230,7 @@ int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
             }
             gcry_error = gcry_cipher_setkey(
                 tmp_hd, 
-                &(ek_ring[sa[spi].ekid].value[0]), 
+                &(ek_ring[sa_ptr->ekid].value[0]),
                 KEY_SIZE
             );
             if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
@@ -3892,8 +3241,8 @@ int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
             }
             gcry_error = gcry_cipher_setiv(
                 tmp_hd, 
-                &(sa[tm_frame.tm_sec_header.spi].iv[0]), 
-                sa[tm_frame.tm_sec_header.spi].iv_len
+                &(sa_ptr->iv[0]),
+                sa_ptr->iv_len
             );
             if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
             {
@@ -3917,7 +3266,7 @@ int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
             gcry_error = gcry_cipher_authenticate(
                 tmp_hd,
                 &(aad[0]),                                      // additional authenticated data
-                sa[spi].abm_len 		                        // length of AAD
+                sa_ptr->abm_len       		                        // length of AAD
             );
             if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
             {
@@ -3959,8 +3308,8 @@ int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
             ingest[fecf_loc + 1] = (uint8) (tm_frame.tm_sec_trailer.fecf & 0x00FF); 
         }
         // Authentication
-        else if ((sa[spi].est == 0) && 
-                 (sa[spi].ast == 1))
+        else if ((sa_ptr->est == 0) &&
+                 (sa_ptr->ast == 1))
         {
             #ifdef DEBUG
                 OS_printf(KBLU "Creating a TM - AUTHENTICATED! \n" RESET);
@@ -3969,8 +3318,8 @@ int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
             CFE_PSP_MemCpy(ingest, tempTM, count);
         }
         // Encryption
-        else if ((sa[spi].est == 1) && 
-                 (sa[spi].ast == 0))
+        else if ((sa_ptr->est == 1) &&
+                 (sa_ptr->ast == 0))
         {
             #ifdef DEBUG
                 OS_printf(KBLU "Creating a TM - ENCRYPTED! \n" RESET);

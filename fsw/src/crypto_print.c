@@ -161,6 +161,7 @@ void Crypto_saPrint(SecurityAssociation_t* sa)
 // Prints the Security Association in memory
 {
     OS_printf("SA status: \n");
+    OS_printf("\t spi   = 0x%01x \n", sa->spi);
     OS_printf("\t sa_state   = 0x%01x \n", sa->sa_state);
     //OS_printf("\t gvcid[0]   = 0x%02x \n", sa->gvcid_blk[spi].gvcid[0]);
     //OS_printf("\t gvcid[1]   = 0x%02x \n", sa->gvcid_blk[spi].gvcid[1]);
@@ -200,6 +201,34 @@ void Crypto_saPrint(SecurityAssociation_t* sa)
     OS_printf("\t arc[1]     = 0x%02x \n", sa->arc[1]);
     OS_printf("\t arcw_len   = 0x%02x \n", sa->arcw_len);
     OS_printf("\t arcw[0]    = 0x%02x \n", sa->arcw[0]);
+}
+
+//Hex Print:
+void Crypto_hexprint(void *c, size_t n)
+{
+    unsigned char *t = c;
+    if (c == NULL)
+        return;
+    while (n > 0) {
+        --n;
+        printf("%02x", t[n]);
+    }
+    printf("\n");
+}
+
+//Binary Print
+void Crypto_binprint(void *c, size_t n)
+{
+    unsigned char *t = c;
+    if (c == NULL)
+        return;
+    while (n > 0) {
+        int q;
+        --n;
+        for(q = 0x80; q; q >>= 1)
+            printf("%x", !!(t[n] & q));
+    }
+    printf("\n");
 }
 
 #endif
