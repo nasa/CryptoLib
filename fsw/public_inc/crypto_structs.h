@@ -50,6 +50,7 @@ typedef struct
 typedef struct
 {
     // Status
+    uint16                      spi;     //Security Parameter Index
     uint16 						ekid;    // Encryption Key ID
     uint16                      akid;    // Authentication Key ID
     uint8						sa_state:2;

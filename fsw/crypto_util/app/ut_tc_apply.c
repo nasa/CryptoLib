@@ -33,7 +33,7 @@ UTEST(TC_APPLY_SECURITY, NO_CRYPTO_INIT)
     uint32 buffer_size_i = (uint32) buffer_size;
 
     uint8 *ptr_enc_frame = NULL;
-    uint32 enc_frame_len;
+    uint16 enc_frame_len;
     int return_val = -1;
 
     return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
@@ -50,7 +50,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH)
     uint32 buffer_size_i = (uint32) buffer_size;
 
     uint8 *ptr_enc_frame = NULL;
-    uint32 enc_frame_len;
+    uint16 enc_frame_len;
 
     int return_val = -1;
 
@@ -68,7 +68,7 @@ UTEST(TC_APPLY_SECURITY1, BAD_SPACE_CRAFT_ID)
     uint32 buffer_size_i = (uint32) buffer_size;
 
     uint8 *ptr_enc_frame = NULL;
-    uint32 enc_frame_len;
+    uint16 enc_frame_len;
     int return_val = -1;
 
     return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
@@ -86,7 +86,7 @@ UTEST(TC_APPLY_SECURITY, BAD_VIRTUAL_CHANNEL_ID)
     uint32 buffer_size_i = (uint32) buffer_size;
 
     uint8 *ptr_enc_frame = NULL;
-    uint32 enc_frame_len;
+    uint16 enc_frame_len;
     int return_val = -1;
     return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(return_val, return_val);
@@ -105,7 +105,7 @@ UTEST(TC_APPLY_SECURITY, NULL_BUFFER)
     uint32 buffer_size_i = (uint32) buffer_size;
 
     uint8 *ptr_enc_frame = NULL;
-    uint32 enc_frame_len;
+    uint16 enc_frame_len;
 
     ASSERT_EQ(Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len), -1);
 }

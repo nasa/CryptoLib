@@ -23,6 +23,8 @@ static int32 sadb_init(void);
 static int32 sadb_close(void);
 // Security Association Interaction Functions
 static int32 sadb_get_sa_from_spi(uint16,SecurityAssociation_t**);
+static int32 sadb_get_operational_sa_from_gvcid(uint8,uint16,uint16,uint8,SecurityAssociation_t**);
+static int32 sadb_save_sa(SecurityAssociation_t* sa);
 // Security Association Utility Functions
 static int32 sadb_sa_start(TC_t* tc_frame);
 static int32 sadb_sa_expire(void);
@@ -47,6 +49,8 @@ SadbRoutine get_sadb_routine_inmemory(void)
     sadb_routine.sadb_init = sadb_init;
     sadb_routine.sadb_close = sadb_close;
     sadb_routine.sadb_get_sa_from_spi = sadb_get_sa_from_spi;
+    sadb_routine.sadb_get_operational_sa_from_gvcid = sadb_get_operational_sa_from_gvcid;
+    sadb_routine.sadb_save_sa = sadb_save_sa;
     sadb_routine.sadb_sa_start = sadb_sa_start;
     sadb_routine.sadb_sa_expire = sadb_sa_expire;
     sadb_routine.sadb_sa_rekey = sadb_sa_rekey;
@@ -65,6 +69,7 @@ static int32 sadb_config(void)
     // Security Associations
     // SA 1 - CLEAR MODE
     // SA 1 VC0/1 is now SA 1-VC0, SA 8-VC1
+    sa[1].spi = 1;
     sa[1].sa_state = SA_OPERATIONAL;
     sa[1].est = 0;
     sa[1].ast = 0;
@@ -76,6 +81,7 @@ static int32 sadb_config(void)
     sa[1].gvcid_tc_blk.vcid  = 0;
     sa[1].gvcid_tc_blk.mapid = TYPE_TC;
     // SA 2 - KEYED;  ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 128
+    sa[2].spi = 2;
     sa[2].ekid = 128;
     sa[2].sa_state = SA_KEYED;
     sa[2].est = 1;
@@ -92,6 +98,7 @@ static int32 sadb_config(void)
     sa[2].arcw[0] = 5;
     sa[2].arc_len = (sa[2].arcw[0] * 2) + 1;
     // SA 3 - KEYED;   ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 129
+    sa[3].spi = 3;
     sa[3].ekid = 129;
     sa[3].sa_state = SA_KEYED;
     sa[3].est = 1;
@@ -109,6 +116,7 @@ static int32 sadb_config(void)
     sa[3].arc_len = (sa[3].arcw[0] * 2) + 1;
     // SA 4 - KEYED;  ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 130
     // SA 4 VC0/1 is now 4-VC0, 7-VC1
+    sa[4].spi = 4;
     sa[4].ekid = 130;
     sa[4].sa_state = SA_KEYED;
     sa[4].est = 1;
@@ -131,6 +139,7 @@ static int32 sadb_config(void)
     sa[4].gvcid_tc_blk.mapid = TYPE_TC;
 
     // SA 5 - KEYED;   ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 131
+    sa[5].spi = 5;
     sa[5].ekid = 131;
     sa[5].sa_state = SA_KEYED;
     sa[5].est = 1;
@@ -147,6 +156,7 @@ static int32 sadb_config(void)
     sa[5].arcw[0] = 5;
     sa[5].arc_len = (sa[5].arcw[0] * 2) + 1;
     // SA 6 - UNKEYED; ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: -
+    sa[6].spi = 6;
     sa[6].sa_state = SA_UNKEYED;
     sa[6].est = 1;
     sa[6].ast = 1;
@@ -164,6 +174,7 @@ static int32 sadb_config(void)
     //itc_gcm128_init(&(sa[6].gcm_ctx), (unsigned char *)&(ek_ring[sa[6].ekid]));
 
     // SA 7 - KEYED;  ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 130
+    sa[7].spi = 7;
     sa[7].ekid = 130;
     sa[7].sa_state = SA_KEYED;
     sa[7].est = 1;
@@ -186,6 +197,7 @@ static int32 sadb_config(void)
     return status;
 
     // SA 8 - CLEAR MODE
+    sa[8].spi = 8;
     sa[8].sa_state = SA_OPERATIONAL;
     sa[8].est = 0;
     sa[8].ast = 0;
@@ -236,6 +248,39 @@ static int32 sadb_get_sa_from_spi(uint16 spi,SecurityAssociation_t** security_as
 {
     int32 status = OS_SUCCESS;
     *security_association = &sa[spi];
+    return status;
+}
+
+static int32 sadb_get_operational_sa_from_gvcid(uint8 tfvn,uint16 scid,uint16 vcid,uint8 mapid,SecurityAssociation_t** security_association)
+{
+    int32 status = OS_SUCCESS;
+
+    for (int i=0; i < NUM_SA;i++)
+    {
+        if (sa[i].gvcid_tc_blk.tfvn == tfvn && sa[i].gvcid_tc_blk.scid == scid && sa[i].gvcid_tc_blk.vcid == vcid && sa[i].gvcid_tc_blk.mapid == mapid //gvcid
+            && sa[i].sa_state == SA_OPERATIONAL)
+        {
+            *security_association = &sa[i];
+
+            #ifdef TC_DEBUG
+                OS_printf("Operational SA found at index %d.\n", i);
+            #endif
+
+            return status;
+        }
+    }
+
+    // We only get here if no operational SA found
+    OS_printf(KRED "Error: No operational SA found! \n" RESET);
+    status = OS_ERROR;
+
+    return status;
+}
+static int32 sadb_save_sa(SecurityAssociation_t* sa)
+{
+    int32 status = OS_SUCCESS;
+    //We could do a memory copy of the SA into the sa[NUM_SA] array at the given SPI, however, the inmemory code currently updates in place so no need for that.
+    // If we change the in-place update logic, we should update this function to actually update the SA.
     return status;
 }
 

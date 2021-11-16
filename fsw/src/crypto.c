@@ -2037,9 +2037,8 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
     // Local Variables
     int32 status = OS_SUCCESS;
     TC_FramePrimaryHeader_t temp_tc_header;
-    SecurityAssociation_t temp_SA;
+    SecurityAssociation_t* sa_ptr = NULL;
     uint8 *p_new_enc_frame = NULL;
-    int16_t spi = -1;
     uint8 sa_service_type = -1;
     uint16 mac_loc = 0;
     uint16 tf_payload_len = 0x0000;
@@ -2069,10 +2068,15 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
     temp_tc_header.spare  = ((uint8)p_in_frame[0] & 0x0C) >> 2;
     temp_tc_header.scid   = ((uint8)p_in_frame[0] & 0x03) << 8;
     temp_tc_header.scid   = temp_tc_header.scid | (uint8)p_in_frame[1];
-    temp_tc_header.vcid   = ((uint8)p_in_frame[2] & 0xFC) >> 2;
+    temp_tc_header.vcid   = ((uint8)p_in_frame[2] & 0xFC) >> 2 & VCID_BITMASK;
     temp_tc_header.fl     = ((uint8)p_in_frame[2] & 0x03) << 8;
     temp_tc_header.fl     = temp_tc_header.fl | (uint8)p_in_frame[3];
     temp_tc_header.fsn	  = (uint8)p_in_frame[4];
+
+    //TODO -- Handle segmentation header logic (this is a per-VCID managed parameter!)
+    //If segmentation header for VCID, parse out MAP_ID
+    // probably need to augment crypto_structs.h to handle segmentation headers.
+    uint8 map_id = 0;
 
     // Check if command frame flag set
     if (temp_tc_header.cc == 1)
@@ -2094,87 +2098,34 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
     // Will need to know lengths of various parameters from the SA DB
     if (status == OS_SUCCESS)
     {
-        // Query SA DB for active SA / SDLS paremeters
-        // TODO: Likely API call
-        // TODO: Magic to make sure we're getting the correct SA.. 
-        // currently SA DB allows for more than one
-        for (int i=0; i < NUM_SA;i++)
-        {
-            if (sa[i].sa_state == SA_OPERATIONAL)
-            {
-                spi = i;
-                //break; // Needs modified to ACTUALLY get the correct SA
-                         // TODO: Likely API discussion
-            }
-        }
+        // Query SA DB for active SA / SDLS parameters
+        status = sadb_routine->sadb_get_operational_sa_from_gvcid(temp_tc_header.tfvn, temp_tc_header.scid, temp_tc_header.vcid, map_id,&sa_ptr);
 
-        // If no active SA found
-        if (spi == -1)
-        {
-            OS_printf(KRED "Error: No operational SA found! \n" RESET);
-            status = OS_ERROR;
-        }
-        // Found an active SA
-        else
-        {
-            CFE_PSP_MemCpy(&temp_SA, &(sa[spi]), SA_SIZE);
-            #ifdef TC_DEBUG
-                OS_printf("Operational SA found at index %d.\n", spi);
-            #endif
-        }
-
-        #ifdef SA_DEBUG
-            OS_printf(KYEL "DEBUG - Received data frame.\n" RESET);
-            OS_printf("Using SA 0x%04X settings.\n", spi);
-        #endif
-
-        // Verify SCID 
-        if ((temp_tc_header.scid != temp_SA.gvcid_tc_blk[temp_tc_header.vcid].scid) \
-            && (status == OS_SUCCESS))
-        {
-            OS_printf(KRED "Error: SCID incorrect! \n" RESET);
-            status = OS_ERROR;
-        }
-
-        #ifdef SA_DEBUG
-            OS_printf(KYEL "DEBUG - Printing local copy of SA Entry for current SPI.\n" RESET);
-            Crypto_saPrint(&temp_SA);
-        #endif
-
-        // Verify SA SPI configurations
-        // Check if SA is operational
-        if ((temp_SA.sa_state != SA_OPERATIONAL) && (status == OS_SUCCESS))
-        {
-            OS_printf(KRED "Error: SA is not operational! \n" RESET);
-            status = OS_ERROR;
-        }
-        // Check if this VCID exists / is mapped to TCs
-        if ((temp_SA.gvcid_tc_blk[temp_tc_header.vcid].mapid != TYPE_TC) && (status = OS_SUCCESS))
-        {	
-            OS_printf(KRED "Error: SA does not map this VCID to TC! \n" RESET);
-            status = OS_ERROR;
-        }
-
-        // If a check is invalid so far, can return
+        // If unable to get operational SA, can return
         if (status != OS_SUCCESS)
         {
             return status;
         }
 
+        #ifdef SA_DEBUG
+            OS_printf(KYEL "DEBUG - Printing SA Entry for current frame.\n" RESET);
+            Crypto_saPrint(sa_ptr);
+        #endif
+
         // Determine SA Service Type
-        if ((temp_SA.est == 0) && (temp_SA.ast == 0))
+        if ((sa_ptr->est == 0) && (sa_ptr->ast == 0))
         {
             sa_service_type = SA_PLAINTEXT;
         }
-        else if ((temp_SA.est == 0) && (temp_SA.ast == 1))
+        else if ((sa_ptr->est == 0) && (sa_ptr->ast == 1))
         {
             sa_service_type = SA_AUTHENTICATION;
         }
-        else if ((temp_SA.est == 1) && (temp_SA.ast == 0))
+        else if ((sa_ptr->est == 1) && (sa_ptr->ast == 0))
         {
             sa_service_type = SA_ENCRYPTION;
         }
-        else if ((temp_SA.est == 1) && (temp_SA.ast == 1))
+        else if ((sa_ptr->est == 1) && (sa_ptr->ast == 1))
         {
             sa_service_type = SA_AUTHENTICATED_ENCRYPTION;
         }
@@ -2212,22 +2163,22 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         {
             case SA_PLAINTEXT:
                 // Ingest length + segment header (1) + spi_index (2) + some variable length fields
-                    *p_enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shplf_len;
+                    *p_enc_frame_len = in_frame_length + 1 + 2 + sa_ptr->shplf_len;
             case SA_AUTHENTICATION:
                 // Ingest length + segment header (1) + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
                 //   + shplf_len + arc_len + pad_size + stmacf_len
-                *p_enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + \
-                temp_SA.shplf_len + temp_SA.arc_len + TC_PAD_SIZE + temp_SA.stmacf_len;;
+                *p_enc_frame_len = in_frame_length + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + \
+                sa_ptr->shplf_len + sa_ptr->arc_len + TC_PAD_SIZE + sa_ptr->stmacf_len;;
             case SA_ENCRYPTION:
                 // Ingest length + segment header (1) + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
                 //   + shplf_len + arc_len + pad_size
-                *p_enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + \
-                temp_SA.shplf_len + temp_SA.arc_len + TC_PAD_SIZE;
+                *p_enc_frame_len = in_frame_length + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + \
+                sa_ptr->shplf_len + sa_ptr->arc_len + TC_PAD_SIZE;
             case SA_AUTHENTICATED_ENCRYPTION:
                 // Ingest length + segment header (1) + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
                 //   + shplf_len + arc_len + pad_size + stmacf_len
-                *p_enc_frame_len = in_frame_length + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + \
-                temp_SA.shplf_len + temp_SA.arc_len + TC_PAD_SIZE + temp_SA.stmacf_len;
+                *p_enc_frame_len = in_frame_length + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + \
+                sa_ptr->shplf_len + sa_ptr->arc_len + TC_PAD_SIZE + sa_ptr->stmacf_len;
         }
 
         #ifdef TC_DEBUG
@@ -2235,12 +2186,12 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
             OS_printf(KYEL "\tlen of TF\t = %d\n" RESET, in_frame_length);
             OS_printf(KYEL "\tsegment hdr\t = 1\n" RESET); // TODO: Determine presence of this so not hard-coded
             OS_printf(KYEL "\tspi len\t\t = 2\n" RESET);
-            OS_printf(KYEL "\tshivf_len\t = %d\n" RESET, temp_SA.shivf_len);
-            OS_printf(KYEL "\tshsnf_len\t = %d\n" RESET, temp_SA.shsnf_len);
-            OS_printf(KYEL "\tshplf len\t = %d\n" RESET, temp_SA.shplf_len);
-            OS_printf(KYEL "\tarc_len\t\t = %d\n" RESET, temp_SA.arc_len);
+            OS_printf(KYEL "\tshivf_len\t = %d\n" RESET, sa_ptr->shivf_len);
+            OS_printf(KYEL "\tshsnf_len\t = %d\n" RESET, sa_ptr->shsnf_len);
+            OS_printf(KYEL "\tshplf len\t = %d\n" RESET, sa_ptr->shplf_len);
+            OS_printf(KYEL "\tarc_len\t\t = %d\n" RESET, sa_ptr->arc_len);
             OS_printf(KYEL "\tpad_size\t = %d\n" RESET, TC_PAD_SIZE);
-            OS_printf(KYEL "\tstmacf_len\t = %d\n" RESET, temp_SA.stmacf_len);
+            OS_printf(KYEL "\tstmacf_len\t = %d\n" RESET, sa_ptr->stmacf_len);
         #endif
 
         // Accio buffer
@@ -2286,33 +2237,33 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         ** Reference CCSDS SDLP 3550b1 4.1.1.1.3
         */
         // Set SPI
-        *(p_new_enc_frame + index) = ((spi & 0xFF00) >> 8);
-        *(p_new_enc_frame + index + 1) = (spi & 0x00FF);
+        *(p_new_enc_frame + index) = ((sa_ptr->spi & 0xFF00) >> 8);
+        *(p_new_enc_frame + index + 1) = (sa_ptr->spi & 0x00FF);
         index += 2;
 
         // Set initialization vector if specified
         if ((sa_service_type == SA_AUTHENTICATION) || \
             (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
-        { 
+        {
             #ifdef SA_DEBUG
                 OS_printf(KYEL "Old IV value was:\n\t");
-                for(int i=0; i<sa[spi].shivf_len; i++) {OS_printf("%02x", sa[spi].iv[i]);}
+                for(int i=0; i<sa_ptr->shivf_len; i++) {OS_printf("%02x", sa_ptr->iv[i]);}
                 OS_printf("\n" RESET);
             #endif
             #ifdef INCREMENT
-                // TODO: API call?
-                Crypto_increment(sa[spi].iv, sa[spi].shivf_len);
+                Crypto_increment(sa_ptr->iv, sa_ptr->shivf_len);
             #endif
             #ifdef SA_DEBUG
                 OS_printf(KYEL "New IV value is:\n\t");
-                for(int i=0; i<sa[spi].shivf_len; i++) {OS_printf("%02x", sa[spi].iv[i]);}
+                for(int i=0; i<sa_ptr->shivf_len; i++) {OS_printf("%02x", sa_ptr->iv[i]);}
                 OS_printf("\n" RESET);
             #endif
-            for (int i=0; i < temp_SA.shivf_len; i++)
+
+            for (int i=0; i < sa_ptr->shivf_len; i++)
             {
                 // TODO: Likely API call
                 // Copy in IV from SA
-                *(p_new_enc_frame + index) = sa[spi].iv[i];
+                *(p_new_enc_frame + index) = sa_ptr->iv[i];
                 index++;
             }
         }
@@ -2326,15 +2277,15 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         */
         // Determine if seq num field is needed
         // TODO: Likely SA API Call
-        if (temp_SA.shsnf_len > 0)
+        if (sa_ptr->shsnf_len > 0)
         {
             // If using anti-replay counter, increment it
             // TODO: API call instead?
             // TODO: Check return code
-            Crypto_increment(sa[spi].arc, sa[spi].shsnf_len);
-            for (int i=0; i < temp_SA.shsnf_len; i++)
+            Crypto_increment(sa_ptr->arc, sa_ptr->shsnf_len);
+            for (int i=0; i < sa_ptr->shsnf_len; i++)
             {
-                *(p_new_enc_frame + index) = sa[spi].arc[i];
+                *(p_new_enc_frame + index) = sa_ptr->arc[i];
                 index++;
             }
         }
@@ -2347,7 +2298,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         */
         // TODO: Revisit this
         // TODO: Likely SA API Call
-        for (int i=0; i < temp_SA.shplf_len; i++)
+        for (int i=0; i < sa_ptr->shplf_len; i++)
         {
             /* 4.1.1.5.2 The Pad Length field shall contain the count of fill bytes used in the
             ** cryptographic process, consisting of an integral number of octets. - CCSDS 3550b1
@@ -2413,7 +2364,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
             }
             gcry_error = gcry_cipher_setkey(
                 tmp_hd, 
-                &(ek_ring[sa[spi].ekid].value[0]), 
+                &(ek_ring[sa_ptr->ekid].value[0]),
                 KEY_SIZE //TODO:  look into this
             );
             if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
@@ -2424,8 +2375,8 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
             }
             gcry_error = gcry_cipher_setiv(
                 tmp_hd, 
-                &(sa[spi].iv[0]), 
-                sa[spi].iv_len
+                &(sa_ptr->iv[0]),
+                sa_ptr->iv_len
             );
             if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
             {
@@ -2438,14 +2389,14 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
             if ((sa_service_type == SA_AUTHENTICATION) || \
                 (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
             {
-                for (int y = 0; y < sa[spi].abm_len; y++)
+                for (int y = 0; y < sa_ptr->abm_len; y++)
                 {
-                    aad[y] = p_in_frame[y] & sa[spi].abm[y];
+                    aad[y] = p_in_frame[y] & sa_ptr->abm[y];
                 }
                 #ifdef MAC_DEBUG 
                     OS_printf(KYEL "Preparing AAD:\n");
-                    OS_printf("\tUsing ABM Length of %d\n\t", sa[spi].abm_len);
-                    for (int y = 0; y < sa[spi].abm_len; y++)
+                    OS_printf("\tUsing ABM Length of %d\n\t", sa_ptr->abm_len);
+                    for (int y = 0; y < sa_ptr->abm_len; y++)
                     {
                         OS_printf("%02x", aad[y]);
                     }
@@ -2455,7 +2406,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                 gcry_error = gcry_cipher_authenticate(
                     tmp_hd,
                     &(aad[0]),                                      // additional authenticated data
-                    sa[spi].abm_len 		                        // length of AAD
+                    sa_ptr->abm_len 		                        // length of AAD
                 );
                 if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
                 {
@@ -2501,7 +2452,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                 (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
             {
                 // TODO - Know if FECF exists
-                mac_loc = *p_enc_frame_len - sa[spi].stmacf_len - FECF_SIZE;
+                mac_loc = *p_enc_frame_len - sa_ptr->stmacf_len - FECF_SIZE;
                 #ifdef MAC_DEBUG
                     OS_printf(KYEL "MAC location is: %d\n" RESET, mac_loc);
                     OS_printf(KYEL "MAC size is: %d\n" RESET, MAC_SIZE);
@@ -2551,6 +2502,8 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
 
         *pp_in_frame = p_new_enc_frame;
     }
+
+    status = sadb_routine->sadb_save_sa(sa_ptr);
 
     #ifdef DEBUG
         OS_printf(KYEL "----- Crypto_TC_ApplySecurity END -----\n" RESET);
