@@ -184,12 +184,24 @@ UTEST(TC_APPLY_SECURITY, ENCRYPTION_TEST)
     uint16 enc_frame_len = 0;
     int32 return_val = -1;
     TC_t *tc_sdls_processed_frame;
-
+    
     Crypto_TC_ProcessSecurity(buffer2, &buffer2_size_i, tc_sdls_processed_frame);
+    
     return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
-
+    
     python_encryption("1880d2ca0008197f0b0031000039c5", "FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210", "000000000000000000000001", &expected, &expected_length);
     
+    printf("\nGot: \n");
+    for (int i = 0; i < expected_length; i++)
+    {
+        printf("0x%02x ", ptr_enc_frame[i]);
+    }
+    printf("\n");
+    for( int i = 0; i < expected_length; i++)
+    {
+        printf("EXPECTED: 0x%02x, GOT: 0x%02x\n", expected[i], ptr_enc_frame[i]);
+        ASSERT_EQ(expected[i], ptr_enc_frame[i]);
+    }
     for( int i = 0; i < expected_length; i++)
     {
         //printf("EXPECTED: 0x%02x, GOT: 0x%02x\n", expected[i], ptr_enc_frame[i]);
