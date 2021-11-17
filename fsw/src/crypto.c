@@ -2106,7 +2106,16 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
     if (status == OS_SUCCESS)
     {
         // Query SA DB for active SA / SDLS parameters
-        status = sadb_routine->sadb_get_operational_sa_from_gvcid(temp_tc_header.tfvn, temp_tc_header.scid, temp_tc_header.vcid, map_id,&sa_ptr);
+        if(sadb_routine == NULL) //This should not happen, but tested here for safety
+        {
+            OS_printf(KRED "ERROR: SA DB Not initalized! -- OS_ERROR, Will Exit\n" RESET);
+            status = OS_ERROR;
+        }
+        else
+        {
+            status = sadb_routine->sadb_get_operational_sa_from_gvcid(temp_tc_header.tfvn, temp_tc_header.scid, temp_tc_header.vcid, map_id,&sa_ptr);
+        }
+        
 
         // If unable to get operational SA, can return
         if (status != OS_SUCCESS)

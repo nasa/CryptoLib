@@ -14,28 +14,32 @@
 #   NASA IV&V
 #   ivv-itc@lists.nasa.gov
 
+ 
+
 include_directories(include)
-include_directories(../crypto/public_inc)
+include_directories(../crypto/public_inc) 
+
+find_package (Python3 REQUIRED COMPONENTS Interpreter Development)
 
 aux_source_directory(src UTIL_SRC_FILES)
-aux_source_directory(app APP_SRC_FILES)
+aux_source_directory(app APP_SRC_FILES) 
 
 file( GLOB SOURCE_FILES app/*.c )
 foreach(SOURCE_PATH ${SOURCE_FILES})
-
     get_filename_component(EXECUTABLE_NAME ${SOURCE_PATH} NAME_WE)
-
-    add_executable(${EXECUTABLE_NAME} ${SOURCE_PATH})
+    add_executable(${EXECUTABLE_NAME} ${SOURCE_PATH}) 
 
     target_sources(${EXECUTABLE_NAME} PRIVATE src/shared_util.c)
     target_link_libraries(${EXECUTABLE_NAME} LINK_PUBLIC Crypto)
+    target_link_libraries(${EXECUTABLE_NAME} PUBLIC ${Python3_LIBRARIES}) 
+
+    target_include_directories(${EXECUTABLE_NAME} PUBLIC ${Python3_INCLUDE_DIRS}) 
 
     add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${EXECUTABLE_NAME}> ${PROJECT_BINARY_DIR}/bin/${EXECUTABLE_NAME}
             COMMAND ${CMAKE_COMMAND} -E remove $<TARGET_FILE:${EXECUTABLE_NAME}>
             COMMENT "Created ${PROJECT_BINARY_DIR}/bin/${EXECUTABLE_NAME}"
             )
-endforeach(SOURCE_PATH ${SOURCE_FILES})
+endforeach(SOURCE_PATH ${SOURCE_FILES}) 
 
 target_include_directories (Crypto PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-
