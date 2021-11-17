@@ -1,0 +1,9 @@
+#this is a comment in a simple example props file
+#the props are presented in formate key=value
+//another comment
+key_a=aaa
+key_b=bbb
+key_c=ccc
+some_other_key=some_other_value
+some_other_key1=12345
+some_other_key1=/root/some_path/some_file.json
