@@ -43,15 +43,18 @@ static int32 sadb_sa_delete(void);
 //MySQL local functions
 static int32 finish_with_error(MYSQL *con,int err);
 //MySQL Queries
-const static char* SQL_SADB_GET_SA_BY_SPI = "SELECT * FROM security_associations WHERE spi='%d';";
-const static char* SQL_SADB_GET_SA_BY_GVCID = "SELECT * FROM security_associations WHERE tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d';";
-const static char* SQL_SADB_UPDATE_IV_ARC_BY_SPI = "UPDATE security_associations "\
-                                                        "SET iv='%d', arc='%d' "  \
-                                                        "WHERE spi='%d'AND tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d';";
+const static char* SQL_SADB_GET_SA_BY_SPI = "SELECT spi,ekid,akid,sa_state,tfvn,scid,vcid,mapid,lpid,est,ast,shivf_len,shsnf_len,shplf_len,stmacf_len,ecs_len,HEX(ecs),iv_len,HEX(iv),acs_len,acs,abm_len,HEX(abm),arc_len,HEX(arc),arcw_len,HEX(arcw)"
+                                            " FROM security_associations WHERE spi='%d'";
+const static char* SQL_SADB_GET_SA_BY_GVCID = "SELECT spi,ekid,akid,sa_state,tfvn,scid,vcid,mapid,lpid,est,ast,shivf_len,shsnf_len,shplf_len,stmacf_len,ecs_len,HEX(ecs),iv_len,HEX(iv),acs_len,acs,abm_len,HEX(abm),arc_len,HEX(arc),arcw_len,HEX(arcw)"
+                                              " FROM security_associations WHERE tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d' AND sa_state='%d'";
+const static char* SQL_SADB_UPDATE_IV_ARC_BY_SPI = "UPDATE security_associations"
+                                                        " SET iv=X'%s', arc=X'%s'"
+                                                        " WHERE spi='%d'AND tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d'";
 
 // sadb_routine mariaDB private helper functions
 static int32 parse_sa_from_mysql_query(char* query, SecurityAssociation_t** security_association);
-
+static int32 convert_hexstring_to_byte_array(char* hexstr, uint8* byte_array);
+static char* convert_byte_array_to_hexstring(void* src_buffer, size_t buffer_length);
 
 /*
 ** Global Variables
@@ -122,7 +125,7 @@ static int32 sadb_get_operational_sa_from_gvcid(uint8 tfvn,uint16 scid,uint16 vc
     int32 status = OS_SUCCESS;
 
     char gvcid_query[2048];
-    snprintf(gvcid_query, sizeof(gvcid_query),SQL_SADB_GET_SA_BY_GVCID,tfvn,scid,vcid,mapid);
+    snprintf(gvcid_query, sizeof(gvcid_query),SQL_SADB_GET_SA_BY_GVCID,tfvn,scid,vcid,mapid,SA_OPERATIONAL);
 
     status = parse_sa_from_mysql_query(&gvcid_query[0],security_association);
 
@@ -132,11 +135,15 @@ static int32 sadb_save_sa(SecurityAssociation_t* sa)
 {
     int32 status = OS_SUCCESS;
 
-    char gvcid_query[2048];
-    snprintf(gvcid_query, sizeof(gvcid_query),SQL_SADB_UPDATE_IV_ARC_BY_SPI,sa->iv,sa->arc,sa->spi,sa->gvcid_tc_blk.tfvn,sa->gvcid_tc_blk.scid,sa->gvcid_tc_blk.vcid,sa->gvcid_tc_blk.mapid);
+    char update_sa_query[2048];
+    snprintf(update_sa_query, sizeof(update_sa_query),SQL_SADB_UPDATE_IV_ARC_BY_SPI,convert_byte_array_to_hexstring(sa->iv,sa->shivf_len),convert_byte_array_to_hexstring(sa->arc,sa->shsnf_len),sa->spi,sa->gvcid_tc_blk.tfvn,sa->gvcid_tc_blk.scid,sa->gvcid_tc_blk.vcid,sa->gvcid_tc_blk.mapid);
 
-    Crypto_saPrint(sa);
-    if(mysql_query(con,gvcid_query)) {
+    #ifdef SA_DEBUG
+    fprintf(stderr,"MySQL Insert SA Query: %s \n", update_sa_query);
+    #endif
+
+    //Crypto_saPrint(sa);
+    if(mysql_query(con,update_sa_query)) {
         status = finish_with_error(con,SADB_QUERY_FAILED); return status;
     }
     // todo - if query fails, need to push failure message to error stack instead of just return code.
@@ -161,7 +168,11 @@ static int32 parse_sa_from_mysql_query(char* query, SecurityAssociation_t** secu
     int32 status = OS_SUCCESS;
     SecurityAssociation_t* sa = malloc(sizeof(SecurityAssociation_t));
 
-    if(mysql_query(con,query)) {
+    #ifdef SA_DEBUG
+    fprintf(stderr,"MySQL Query: %s \n", query);
+    #endif
+
+    if(mysql_real_query(con,query,strlen(query))) { //query should be NUL terminated!
         status = finish_with_error(con,SADB_QUERY_FAILED); return status;
     }
     // todo - if query fails, need to push failure message to error stack instead of just return code.
@@ -210,17 +221,18 @@ static int32 parse_sa_from_mysql_query(char* query, SecurityAssociation_t** secu
             if(strcmp(field_names[i],"shplf_len")==0){sa->shplf_len=atoi(row[i]);continue;}
             if(strcmp(field_names[i],"stmacf_len")==0){sa->stmacf_len=atoi(row[i]);continue;}
             if(strcmp(field_names[i],"ecs_len")==0){sa->ecs_len=atoi(row[i]);continue;}
-            if(strcmp(field_names[i],"ecs")==0){tmp_uint8 = (uint8)atoi(row[i]); memcpy(&(sa->ecs),&tmp_uint8,sizeof(tmp_uint8));continue;}
+            if(strcmp(field_names[i],"HEX(ecs)")==0){convert_hexstring_to_byte_array(row[i],sa->ecs);continue;}
             if(strcmp(field_names[i],"iv_len")==0){sa->iv_len=atoi(row[i]);continue;}
-            if(strcmp(field_names[i],"iv")==0){memcpy(&(sa->iv),&row[i],sizeof(row[i]));continue;}
+            //if(strcmp(field_names[i],"HEX(iv)")==0){memcpy(&(sa->iv),&row[i],IV_SIZE);continue;}
+            if(strcmp(field_names[i],"HEX(iv)")==0){convert_hexstring_to_byte_array(row[i],sa->iv);continue;}
             if(strcmp(field_names[i],"acs_len")==0){sa->acs_len=atoi(row[i]);continue;}
             if(strcmp(field_names[i],"acs")==0){sa->acs=atoi(row[i]);continue;}
             if(strcmp(field_names[i],"abm_len")==0){sa->abm_len=atoi(row[i]);continue;}
-            if(strcmp(field_names[i],"abm")==0){tmp_uint8 = (uint8)atoi(row[i]);memcpy(&(sa->abm),&tmp_uint8,sizeof(tmp_uint8));continue;}
+            if(strcmp(field_names[i],"HEX(abm)")==0){convert_hexstring_to_byte_array(row[i],sa->abm);continue;}
             if(strcmp(field_names[i],"arc_len")==0){sa->arc_len=atoi(row[i]);continue;}
-            if(strcmp(field_names[i],"arc")==0){memcpy(&(sa->arc),&row[i],sizeof(row[i]));continue;}
+            if(strcmp(field_names[i],"HEX(arc)")==0){convert_hexstring_to_byte_array(row[i],sa->arc);continue;}
             if(strcmp(field_names[i],"arcw_len")==0){sa->arcw_len=atoi(row[i]);continue;}
-            if(strcmp(field_names[i],"arcw")==0){tmp_uint8 = (uint8)atoi(row[i]);memcpy(&(sa->arcw),&tmp_uint8,sizeof(tmp_uint8));continue;}
+            if(strcmp(field_names[i],"HEX(arcw)")==0){convert_hexstring_to_byte_array(row[i],sa->arcw);continue;}
             //printf("%s:%s ",field_names[i], row[i] ? row[i] : "NULL");
         }
         //printf("\n");
@@ -231,10 +243,45 @@ static int32 parse_sa_from_mysql_query(char* query, SecurityAssociation_t** secu
 
     return status;
 }
+static int32 convert_hexstring_to_byte_array(char* source_str, uint8* dest_buffer)
+{ // https://stackoverflow.com/questions/3408706/hexadecimal-string-to-byte-array-in-c/56247335#56247335
+    char *line = source_str;
+    char *data = line;
+    int offset;
+    uint8 read_byte;
+    uint8 data_len = 0;
+
+    while (sscanf(data, " %02x%n", &read_byte, &offset) == 1) {
+        dest_buffer[data_len++] = read_byte;
+        data += offset;
+    }
+    return data_len;
+}
+
+static char* convert_byte_array_to_hexstring(void* src_buffer, size_t buffer_length)
+{
+    if(buffer_length==0){ //Return empty string (with null char!) if buffer is empty
+        return "";
+    }
+
+    unsigned char* bytes = src_buffer;
+    unsigned char* hexstr = malloc(buffer_length*2+1);
+
+    if(src_buffer == NULL) return NULL;
+
+    for(size_t i = 0; i < buffer_length; i++){
+        uint8 nib1 = (bytes[i] >> 4) & 0x0F;
+        uint8 nib2 = (bytes[i]) & 0x0F;
+        hexstr[i*2+0] = nib1  < 0xA ? '0' + nib1  : 'A' + nib1  - 0xA;
+        hexstr[i*2+1] = nib2  < 0xA ? '0' + nib2  : 'A' + nib2  - 0xA;
+    }
+    return hexstr;
+}
+
 
 static int32 finish_with_error(MYSQL *con, int err)
 {
-    fprintf(stderr, "%s\n", mysql_error(con));
+    fprintf(stderr, "%s%s%s\n", KRED,mysql_error(con),RESET); // todo - if query fails, need to push failure message to error stack
     mysql_close(con);
     return err;
 }
