@@ -144,7 +144,7 @@ UTEST(ET_VALIDATION, VALIDATION_TEST)
     uint16 enc_frame_len = 0;
     int32 return_val = -1;
     TC_t *tc_sdls_processed_frame;
-    //Crypto_TC_ProcessSecurity(buffer2, &buffer2_size_i, tc_sdls_processed_frame);
+    Crypto_TC_ProcessSecurity(buffer2, &buffer2_size_i, tc_sdls_processed_frame);
     return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
     python_encryption("", "FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210", "000000000000000000000001", &expected, &expected_length);
 
