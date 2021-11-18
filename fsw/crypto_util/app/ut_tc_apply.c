@@ -21,61 +21,6 @@
 #include "ut_tc_apply.h"
 #include "utest.h"
 #include "crypto.h"
-#include <python3.8/Python.h>
-
-
-// Setup for some Unit Tests using a Python Script to Verify validiy of frames
-PyObject *pName, *pModule, *pDict, *pFunc, *pValue, *pArgs, *pClass, *pInstance;
-int EndPython()
-{
-    Py_XDECREF(pInstance);
-    Py_XDECREF(pValue);
-    Py_XDECREF(pModule);
-    Py_XDECREF(pName);
-    Py_Finalize();
-}
-
-void python_encryption(char* data, char* key, char* iv, uint8** expected, long* expected_length)
-{
-    Py_Initialize();
-    PyObject *pName = NULL, *pModule = NULL, *pDict = NULL, *pFunc = NULL, *pValue = NULL, *pArgs = NULL, *pClass = NULL, *pInstance = NULL;
-    PyRun_SimpleString("import sys\nsys.path.append('../../python')");
-
-    pName = PyUnicode_FromString("encryption_test");
-    pModule = PyImport_Import(pName);
-    if(pModule == NULL)
-    {
-        printf("ERROR, NO MODULE FOUND\n");
-        EndPython();
-        return;
-    }
-
-    pDict = PyModule_GetDict(pModule);
-    pClass = PyDict_GetItemString(pDict, "Encryption");
-
-    if (PyCallable_Check(pClass))
-    {
-        pInstance = PyObject_CallObject(pClass, NULL);
-    }
-    else
-    {
-        printf("ERROR, NO CLASS INSTANCE FOUND\n");
-        EndPython();
-        return;
-    }
-
-    pValue = PyObject_CallMethod(pInstance, "encrypt", "sss", data, key, iv);
-
-    pValue = PyObject_CallMethod(pInstance, "get_len", NULL);
-    long temp_length = PyLong_AsLong(pValue);
-    *expected_length = temp_length;
-    
-    pValue = PyObject_CallMethod(pInstance, "get_results", NULL);
-    char* temp_expected = PyBytes_AsString(pValue);
-    *expected= (uint8*)malloc(sizeof(uint8) * (long)*expected_length);
-    memcpy(*expected, temp_expected, (long)*expected_length);
-    return;
-}
 
 // TODO:  Should this be set up with a set of tests, or continue to Crypto_Init() each time.  For now I think the current setup is the best path.
 
@@ -97,8 +42,6 @@ UTEST(TC_APPLY_SECURITY, NO_CRYPTO_INIT)
 
     return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(-1, return_val);
-    free(buffer);
-    free(ptr_enc_frame);
 }
 
 // Nominal Test.  This should read a raw_tc_sdls_ping.dat file, continue down the "happy path", and return OS_SUCCESS
@@ -119,7 +62,6 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH)
     ASSERT_EQ(0, return_val);
     free(buffer);
     free(ptr_enc_frame);
-    //Need Crypto_ReInit()?;
 }
 
 // Bad Space Craft ID.  This should pass the flawed .dat file, and return OS_ERROR
@@ -138,8 +80,7 @@ UTEST(TC_APPLY_SECURITY, BAD_SPACE_CRAFT_ID)
     return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(-1, return_val);
     free(buffer);
-    free(ptr_enc_frame);    
-    //Need Crypto_ReInit();
+    free(ptr_enc_frame);
 }
 
 // TODO:  This does not report the correct error.  It returns the correctly, but complains of an incorrect SCID
@@ -157,119 +98,10 @@ UTEST(TC_APPLY_SECURITY, BAD_VIRTUAL_CHANNEL_ID)
     int32 return_val = -1;
 
     return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
-    ASSERT_EQ(-1, return_val); //TODO:  Having this fail until it is fixed in code.
+    ASSERT_EQ(-1, return_val); 
     free(buffer);
-    free(ptr_enc_frame);    
-    //Need Crypto_ReInit();
+    free(ptr_enc_frame);
 }
-
-// Encryption Test HERE
-UTEST(TC_APPLY_SECURITY, ENCRYPTION_TEST)
-{
-    //Setup & Initialize CryptoLib
-    Crypto_Init();
-
-    uint8* expected = NULL;
-    long expected_length = 0;
-    long buffer_size = 0;
-    long buffer2_size = 0;
-
-    char *buffer = c_read_file("../../fsw/crypto_tests/data/encryption_test_ping.dat", &buffer_size);
-    char *buffer2 = c_read_file("../../fsw/crypto_tests/data/activate_sa4.dat", &buffer2_size);
-
-    uint16 buffer_size_i = (uint16) buffer_size;
-    int buffer2_size_i = (int) buffer2_size;
-
-    uint8 *ptr_enc_frame = NULL;
-    uint16 enc_frame_len = 0;
-    int32 return_val = -1;
-    TC_t *tc_sdls_processed_frame;
-    
-    Crypto_TC_ProcessSecurity(buffer2, &buffer2_size_i, tc_sdls_processed_frame);
-    
-    return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
-    
-    python_encryption("1880d2ca0008197f0b0031000039c5", "FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210", "000000000000000000000001", &expected, &expected_length);
-    
-    printf("\nGot: \n");
-    for (int i = 0; i < expected_length; i++)
-    {
-        printf("0x%02x ", ptr_enc_frame[i]);
-    }
-    printf("\n");
-    for( int i = 0; i < expected_length; i++)
-    {
-        printf("EXPECTED: 0x%02x, GOT: 0x%02x\n", expected[i], ptr_enc_frame[i]);
-        ASSERT_EQ(expected[i], ptr_enc_frame[i]);
-    }
-    for( int i = 0; i < expected_length; i++)
-    {
-        //printf("EXPECTED: 0x%02x, GOT: 0x%02x\n", expected[i], ptr_enc_frame[i]);
-        ASSERT_EQ(expected[i], ptr_enc_frame[i]);
-    }
-    
-    free(buffer);
-    free(ptr_enc_frame); 
-    free(expected);
-    //Need Crypto_ReInit();
-}
-
-UTEST(TC_APPLY_SECURITY, VALIDATION_TEST)
-{
-    //Setup & Initialize CryptoLib
-    Crypto_Init();  
-
-    uint8* expected = NULL;
-    long expected_length = 0;
-    long buffer_size = 0;
-    long buffer2_size = 0;    
-
-    char *buffer = c_read_file("../../fsw/crypto_tests/data/validation1.dat", &buffer_size);
-    char *buffer2 = c_read_file("../../fsw/crypto_tests/data/activate_sa4.dat", &buffer2_size);
-    uint16 buffer_size_i = (uint16) buffer_size;
-    int buffer2_size_i = (int) buffer2_size;
-    uint8 *ptr_enc_frame = NULL;
-    uint16 enc_frame_len = 0;
-    int32 return_val = -1;
-    TC_t *tc_sdls_processed_frame;
-    Crypto_TC_ProcessSecurity(buffer2, &buffer2_size_i, tc_sdls_processed_frame);
-    return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
-   
-    python_encryption("", "0000000000000000000000000000000000000000000000000000000000000000", "000000000000000000000000", &expected, &expected_length);
-
-    printf("\nExpected: %d\n", (int)expected_length);
-    for (int i = 20; i < expected_length-4; i++)
-    {        
-        printf("0x%02x ", expected[i]);
-    }
-    printf("\n");
-
-    printf("TC_APPLY: \n");
-    for (int i = 0; i < expected_length; i++)
-    {        
-        printf("0x%02x ", ptr_enc_frame[i]);
-    }
-    printf("\n");
-
-    // printf("\nGot: \n");
-    // for (int i = 0; i < expected_length; i++)
-    // {
-    //     printf("0x%02x ", ptr_enc_frame[i]);
-    // }
-    // printf("\n");
-    // for( int i = 0; i < expected_length; i++)
-    // {
-    //     printf("EXPECTED: 0x%02x, GOT: 0x%02x\n", expected[i], ptr_enc_frame[i]);
-    //     ASSERT_EQ(expected[i], ptr_enc_frame[i]);
-    // }
-    
-    free(buffer);
-    free(ptr_enc_frame); 
-    free(expected);
-    EndPython();
-    //Need Crypto_ReInit();
-}
-
 
 // This test should test how to handle a null buffer being passed into the ApplySecurity Function.
 // Currently this functionality isn't handled properly, and casues a seg-fault.
@@ -290,9 +122,6 @@ UTEST(TC_APPLY_SECURITY, NULL_BUFFER)
     return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
 
     ASSERT_EQ(-1, return_val);
-    free(buffer);
-    free(ptr_enc_frame);    
-    //Need Crypto_ReInit();
 }
 
 //TODO: 
@@ -313,7 +142,5 @@ UTEST(TC_APPLY_SECURITY, NULL_BUFFER)
     Authenticated Encryption Tests
         When Ready / Complete
 */
-
-
 
 UTEST_MAIN();
