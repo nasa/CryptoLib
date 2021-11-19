@@ -15,9 +15,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-    
 #include <stdlib.h>
-
+#define DEFAULT_MAX_KEY_SIZE_IN_BYTES       256
+#define DEFAULT_MAX_VALUE_SIZE_IN_BYTES     4096
+    
 /*represents a single linked list node with (key,value) pair*/
 typedef struct crypto_config_node
 {
@@ -41,13 +42,20 @@ extern crypto_config_list* p_self;
 /*===========================================================================
 Function:           crypto_config_alloc      
 Description:        allocates heap memory for the wrapper crypto_config_list 
- *                  that contains the head node. Also sets max key size in bytes 
- *                  & value size in bytes. 
-Inputs:             max_key_size in bytes
- *                  max_value_size in bytes
+ *                  that contains the head node.
+Inputs:             max_key_size in bytes. 
+ *                  Input of 0 or greater than 4096 will default to 256 bytes 
+ *                  length for the key size. 
+ * 
+ *                  max_value_size in bytes. 
+ *                  Input of 0 or greater than 4096 will default to 4096 bytes 
+ *                  length for the value size. 
 Outputs:            pointer to crypto_config_list
 References:
-Example call:       crypto_config_list* props = crypto_config_alloc(256,4096)
+Example call:       crypto_config_list* props = crypto_config_alloc(0,0)
+Note:               Passing in max_key_size=0 and/or max_value_size=0 will print 
+ *                  a warning just letting you know that defaults values of 
+ *                  max_key_size=256 and max_value_size=4096 were used instead. 
 ==========================================================*/
 crypto_config_list* crypto_config_alloc(int max_key_size, int max_value_size);
 
@@ -65,7 +73,8 @@ void crypto_config_free(crypto_config_list** pp_self);
 /*===========================================================================
 Function:           crypto_config_props_add_property      
 Description:        adds a new key & value node to the end of the linkedlist.      
-Inputs:             char* key - some string 
+Inputs:             char* key - some string. keys are case sensitive.
+ *                  Therefore key_a is different than key_A. 
  *                  char* value- some string          
 Outputs:            1 - success 
  *                  0 - fail       
@@ -92,7 +101,8 @@ char* crypto_config_get_property_value(char* key);
 Function:           crypto_config_set_property_value      
 Description:        If a node with the input key exists its value will be
  *                  overwritten with input parameter char* value; 
-Inputs:             char* key- some string value         
+Inputs:             char* key- some string. keys are case sensitive.   
+ *                  Therefore key_a is different than key_A.        
 Outputs:            1 - success 
  *                  0 - fail       
 References: 
@@ -111,10 +121,11 @@ Description:        This function will parse files with the format:
  *                  //Comment 
                     Key=value,key=value,key=value
 /*Inputs:           char* file_path - path of the file on the filesystem
-Outputs:            1 - success 
+Outputs:            1 or greater - success. Meaning read & added 1 or more data 
+ *                  lines successfully. 
  *                  0 - fail  
 References:
-Example call:      crypto_config_load_properties("/root/Desktop/config_props.txt")
+Example call:      crypto_config_load_properties("/<your_path>/docs/config_props.txt")
 ==========================================================*/
 int crypto_config_load_properties(char* file_path);
 
