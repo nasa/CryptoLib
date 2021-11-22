@@ -23,6 +23,8 @@
 #include "utest.h"
 #include <python3.8/Python.h>
 
+#include "sadb_routine.h"
+
 
 // Setup for some Unit Tests using a Python Script to Verify validiy of frames
 PyObject *pName, *pModule, *pDict, *pFunc, *pValue, *pArgs, *pClass, *pInstance;
@@ -35,7 +37,7 @@ int EndPython()
     Py_Finalize();
 }
 
-void python_encryption(char* data, char* key, char* iv, uint8** expected, long* expected_length)
+void python_auth_encryption(char* data, char* key, char* iv, char* header, char* bitmask, uint8** expected, long* expected_length)
 {
     Py_Initialize();
     PyRun_SimpleString("import sys\nsys.path.append('../../python')");
@@ -63,7 +65,7 @@ void python_encryption(char* data, char* key, char* iv, uint8** expected, long* 
         return;
     }
 
-    pValue = PyObject_CallMethod(pInstance, "encrypt", "sss", data, key, iv);
+    pValue = PyObject_CallMethod(pInstance, "encrypt", "sssss", data, key, iv, header, bitmask);
 
     pValue = PyObject_CallMethod(pInstance, "get_len", NULL);
     long temp_length = PyLong_AsLong(pValue);
@@ -75,7 +77,6 @@ void python_encryption(char* data, char* key, char* iv, uint8** expected, long* 
     return;
 }
 
-//Encryption Test HERE
 UTEST(ET_VALIDATION, ENCRYPTION_TEST)
 {
     //Setup & Initialize CryptoLib
@@ -86,9 +87,13 @@ UTEST(ET_VALIDATION, ENCRYPTION_TEST)
     long expected_length = 0;
     long buffer_size = 0;
     long buffer2_size = 0;
+    long buffer3_size = 0;
 
     char *buffer = c_read_file("../../fsw/crypto_tests/data/encryption_test_ping.dat", &buffer_size);
     char *buffer2 = c_read_file("../../fsw/crypto_tests/data/activate_sa4.dat", &buffer2_size);
+
+    SecurityAssociation_t* test_association = NULL;
+    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(unsigned char));
 
     uint16 buffer_size_i = (uint16) buffer_size;
     int buffer2_size_i = (int) buffer2_size;
@@ -97,18 +102,35 @@ UTEST(ET_VALIDATION, ENCRYPTION_TEST)
     uint16 enc_frame_len = 0;
     int32 return_val = -1;
     TC_t *tc_sdls_processed_frame;
+
+    tc_sdls_processed_frame = malloc(sizeof(uint8) * TC_SIZE);
     
-    //Crypto_TC_ProcessSecurity(buffer2, &buffer2_size_i, tc_sdls_processed_frame);
+    Crypto_TC_ProcessSecurity(buffer2, &buffer2_size_i, tc_sdls_processed_frame);
+    
+    expose_sadb_get_sa_from_spi(1,&test_association);
+
+    test_association->sa_state = SA_NONE;
+
+    expose_sadb_get_sa_from_spi(4, &test_association);
+    test_association->arc_len = 0;
+    test_association->gvcid_tc_blk.vcid=1;
     
     return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
-    
-    python_encryption("1880d2ca0008197f0b0031000039c5", "FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210", "000000000000000000000001", &expected, &expected_length);
-    
+
+    printf("HERE\n");
+    python_auth_encryption("1880d2ca0008197f0b0031000039c5", "FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210", "000000000000000000000001", "2003043400FF0004", "00", &expected, &expected_length);
+                            
     printf("\nGot: \n");
     for (int i = 0; i < expected_length; i++)
     {
         printf("0x%02x ", ptr_enc_frame[i]);
     }
+    printf("\n");
+    printf("\nExpected:\n");
+    for (int i = 0; i < expected_length; i++)
+    {
+        printf("0x%02x ", expected[i]);
+    }    
     printf("\n");
     for( int i = 0; i < expected_length; i++)
     {
@@ -124,6 +146,8 @@ UTEST(ET_VALIDATION, ENCRYPTION_TEST)
     free(buffer);
     free(ptr_enc_frame); 
     free(expected);
+    free(tc_sdls_processed_frame);
+    //free(tc_sdls_processed_frame2);
     EndPython();
 }
 
@@ -134,7 +158,7 @@ UTEST(ET_VALIDATION, VALIDATION_TEST)
     uint8* expected = NULL;
     long expected_length = 0;
     long buffer_size = 0;
-    long buffer2_size = 0;    
+    long buffer2_size = 0;  
 
     char *buffer = c_read_file("../../fsw/crypto_tests/data/validation1.dat", &buffer_size);
     char *buffer2 = c_read_file("../../fsw/crypto_tests/data/activate_sa4.dat", &buffer2_size);
@@ -143,10 +167,13 @@ UTEST(ET_VALIDATION, VALIDATION_TEST)
     uint8 *ptr_enc_frame = NULL;
     uint16 enc_frame_len = 0;
     int32 return_val = -1;
-    TC_t *tc_sdls_processed_frame;
+    TC_t *tc_sdls_processed_frame = NULL;
+
+    tc_sdls_processed_frame = malloc(sizeof(uint8) * TC_SIZE);
+    
     Crypto_TC_ProcessSecurity(buffer2, &buffer2_size_i, tc_sdls_processed_frame);
     return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
-    python_encryption("", "FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210", "000000000000000000000001", &expected, &expected_length);
+    python_auth_encryption("", "FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210", "000000000000000000000001", "2003043400ff0004", "00", &expected, &expected_length);
 
     printf("\nExpected: %d\n", (int)expected_length);
     for (int i = 0; i < expected_length; i++)
@@ -176,6 +203,7 @@ UTEST(ET_VALIDATION, VALIDATION_TEST)
     free(buffer);
     free(buffer2);
     free(ptr_enc_frame);
+    free(tc_sdls_processed_frame);
     EndPython();
 }
 

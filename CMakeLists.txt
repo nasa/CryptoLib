@@ -29,6 +29,10 @@ IF(DEBUG)
     add_compile_options(-ggdb)
 ENDIF(DEBUG)
 
+IF(ENCTEST)
+    ADD_DEFINITIONS(-DENCTEST)
+ENDIF(ENCTEST)
+
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     include(CTest)
     enable_testing()

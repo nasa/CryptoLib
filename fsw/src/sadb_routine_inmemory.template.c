@@ -240,6 +240,12 @@ static int32 sadb_close(void)
     return OS_SUCCESS;
 }
 
+#ifdef ENCTEST
+int32 expose_sadb_get_sa_from_spi(uint16 spi, SecurityAssociation_t** security_association)
+{
+    sadb_get_sa_from_spi(spi, security_association);
+}
+#endif 
 
 /*
 ** Security Association Interaction Functions

@@ -975,7 +975,7 @@ static uint16 Crypto_Calc_FECF(char* ingest, int len_ingest)
     uint8 bit;
     uint8 c15;
 
-    for (int i = 0; i <= len_ingest; i++)
+    for (int i = 0; i < len_ingest; i++)
     {	// Byte Logic
         for (int j = 0; j < 8; j++)
         {	// Bit Logic

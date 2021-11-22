@@ -20,17 +20,33 @@ class Encryption:
     def __init__(self):
         self.results = 0x00
         self.length = 0.0
-    def encrypt(self, data, key, iv):
-        hex_header = '2003043400ff0004' #This might need to be passed in as well
-        hex_header += iv
+    def encrypt(self, data, key, iv, header, bitmask):
+        hex_header = header + iv
+        bitmask_b = bytes.fromhex(bitmask)
         header_b = bytes.fromhex(hex_header)
         key_b = bytes.fromhex(key)
         iv_b = bytes.fromhex(iv)
         data_b = bytes.fromhex(data)
 
         cipher = AES.new(key_b, AES.MODE_GCM, nonce=iv_b)
-        ciphertext, tag = cipher.encrypt_and_digest(data_b)
 
+        if len(bitmask) > 1:
+            print("IN HERE")
+            zeroed_header = ''
+            zeroed_header_b = bytes.fromhex(zeroed_header)            
+
+            L = [header_b[i:i+1] for i in range (len(header_b))]
+
+            for pieces in L:
+                value_i = int.from_bytes(pieces, byteorder="big") & int.from_bytes(bitmask_b, byteorder="big")
+                value_b = value_i.to_bytes(max(len(pieces), len(bitmask_b)), byteorder="big")
+                zeroed_header_b += value_b
+
+            cipher.update(zeroed_header_b)
+        ciphertext, tag = cipher.encrypt_and_digest(data_b)
+        #print("Cipher:", ciphertext.hex())
+        #print("Tag", tag.hex())
+        
         final_val = header_b + ciphertext + tag
 
         check_sum = crc16(bytearray(final_val), 0, len(final_val))
@@ -52,10 +68,10 @@ class Encryption:
         #print(self.results.hex())
         return self.results
 
-#if __name__ == '__main__':
-#    something=Encryption()
-#    something.encrypt("1880d2ca0008197f0b0031000039c5", "FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210", "000000000000000000000001")
-#    something.get_len()
-#    something.get_results()
+if __name__ == '__main__':
+    something=Encryption()
+    something.encrypt("1880d2ca0008197f0b0031000039c5", "FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210", "000000000000000000000001", "2003043400FF0004", "00")
+    something.get_len()
+    something.get_results()
 
 
