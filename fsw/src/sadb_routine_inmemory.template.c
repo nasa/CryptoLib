@@ -183,22 +183,21 @@ static int32 sadb_config(void)
     sa[7].iv_len = IV_SIZE;
     sa[7].iv[IV_SIZE-1] = 0;
     sa[7].abm_len = 0x14; // 20
-    for (int i = 0; i < sa[4].abm_len; i++)
+    for (int i = 0; i < sa[7].abm_len; i++)
     {	// Zero AAD bit mask
-        sa[4].abm[i] = 0x00;
+        sa[7].abm[i] = 0x00;
     }
     sa[7].arcw_len = 1;
     sa[7].arcw[0] = 5;
-    sa[7].arc_len = (sa[4].arcw[0] * 2) + 1;
+    sa[7].arc_len = (sa[7].arcw[0] * 2) + 1;
     sa[7].gvcid_tc_blk.tfvn  = 0;
     sa[7].gvcid_tc_blk.scid  = SCID & 0x3FF;
     sa[7].gvcid_tc_blk.vcid  = 1;
     sa[7].gvcid_tc_blk.mapid = TYPE_TC;
-    return status;
 
     // SA 8 - CLEAR MODE
     sa[8].spi = 8;
-    sa[8].sa_state = SA_OPERATIONAL;
+    sa[8].sa_state = SA_NONE;
     sa[8].est = 0;
     sa[8].ast = 0;
     sa[8].arc_len = 1;
@@ -209,6 +208,29 @@ static int32 sadb_config(void)
     sa[8].gvcid_tc_blk.vcid  = 1;
     sa[8].gvcid_tc_blk.mapid = TYPE_TC;
 
+    // SA 9 - Validation Tests
+    sa[9].spi = 9;
+    sa[9].ekid = 135;
+    sa[9].sa_state = SA_KEYED;
+    sa[9].est = 1;
+    sa[9].ast = 0;
+    sa[9].shivf_len = 16;
+    sa[9].iv_len = 16;
+    sa[9].iv[15] = 0;
+    sa[9].abm_len = 0x14; // 20
+    for (int i = 0; i < sa[9].abm_len; i++)
+    {	// Zero AAD bit mask
+        sa[9].abm[i] = 0x00;
+    }
+    sa[9].arcw_len = 1;
+    sa[9].arcw[0] = 5;
+    sa[9].arc_len = (sa[9].arcw[0] * 2) + 1;
+    sa[9].gvcid_tc_blk.tfvn  = 0;
+    sa[9].gvcid_tc_blk.scid  = SCID & 0x3FF;
+    sa[9].gvcid_tc_blk.vcid  = 0;
+    sa[9].gvcid_tc_blk.mapid = TYPE_TC;
+
+    return status;
 }
 
 static int32 sadb_init(void)
@@ -265,11 +287,35 @@ static int32 sadb_get_operational_sa_from_gvcid(uint8 tfvn,uint16 scid,uint16 vc
 {
     int32 status = OS_SUCCESS;
 
-    for (int i=0; i < NUM_SA;i++)
+    for (int i=0; i < 10;i++)
     {
-        if (sa[i].gvcid_tc_blk.tfvn == tfvn && sa[i].gvcid_tc_blk.scid == scid && sa[i].gvcid_tc_blk.vcid == vcid && sa[i].gvcid_tc_blk.mapid == mapid //gvcid
-            && sa[i].sa_state == SA_OPERATIONAL)
+        printf("I: %d\n", i);
+        printf("gvcid_ttfvn: %d, tfvn: %d\n", sa[i].gvcid_tc_blk.tfvn, tfvn);
+        printf("gvcid_scid:  %d, scid: %d\n", sa[i].gvcid_tc_blk.scid, scid);
+        printf("gvcid_vcid:  %d, vcid: %d\n", sa[i].gvcid_tc_blk.vcid, vcid);
+        printf("gvcid_mapid: %d, mapid: %d\n", sa[i].gvcid_tc_blk.mapid, mapid);
+        printf("STATE: %d\n", sa[i].sa_state);
+
+        if ((sa[i].gvcid_tc_blk.tfvn == tfvn))
         {
+            printf("YES1\n");
+        }
+        if ((sa[i].gvcid_tc_blk.scid == scid))
+        {
+            printf("YES2\n");
+        }
+        if ((sa[i].gvcid_tc_blk.vcid == vcid))
+        {
+            printf("YES3\n");
+        }
+        if ((sa[i].gvcid_tc_blk.mapid == mapid))
+        {
+            printf("YES4\n");
+        }
+
+        if ((sa[i].gvcid_tc_blk.tfvn == tfvn) && (sa[i].gvcid_tc_blk.scid == scid) && (sa[i].gvcid_tc_blk.vcid == vcid) && (sa[i].gvcid_tc_blk.mapid == mapid && sa[i].sa_state == SA_OPERATIONAL))
+        {
+            printf("WE MADE IT IN HERE!\n");
             *security_association = &sa[i];
 
             #ifdef TC_DEBUG

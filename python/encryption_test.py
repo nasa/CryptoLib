@@ -31,7 +31,6 @@ class Encryption:
         cipher = AES.new(key_b, AES.MODE_GCM, nonce=iv_b)
 
         if len(bitmask) > 1:
-            print("IN HERE")
             zeroed_header = ''
             zeroed_header_b = bytes.fromhex(zeroed_header)            
 

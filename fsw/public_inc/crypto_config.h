@@ -106,7 +106,7 @@ ivv-itc@lists.nasa.gov
     #define NUM_KEYS					256
     #define DISABLED					0
     #define ENABLED						1
-    #define IV_SIZE						12      /* TM IV size bytes */
+    #define IV_SIZE						16      /* TM IV size bytes */
     #define IV_SIZE_TC                  4       /* TC IV size bytes */
     #define OCF_SIZE                    4
     #define MAC_SIZE                    16      /* bytes */

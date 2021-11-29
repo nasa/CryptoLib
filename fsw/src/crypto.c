@@ -526,6 +526,41 @@ static void Crypto_Local_Config(void)
     ek_ring[134].value[30] = 0x32;
     ek_ring[134].value[31] = 0x10;
     ek_ring[134].key_state = KEY_DEACTIVATED;
+
+    // 135 - ABCDEF0123456789FEDCBA9876543210ABCDEF0123456789FEDCBA9876543210 -> DEACTIVE
+    ek_ring[135].value[0]  = 0x00;
+    ek_ring[135].value[1]  = 0x00;
+    ek_ring[135].value[2]  = 0x00;
+    ek_ring[135].value[3]  = 0x00;
+    ek_ring[135].value[4]  = 0x00;
+    ek_ring[135].value[5]  = 0x00;
+    ek_ring[135].value[6]  = 0x00;
+    ek_ring[135].value[7]  = 0x00;
+    ek_ring[135].value[8]  = 0x00;
+    ek_ring[135].value[9]  = 0x00;
+    ek_ring[135].value[10] = 0x00;
+    ek_ring[135].value[11] = 0x00;
+    ek_ring[135].value[12] = 0x00;
+    ek_ring[135].value[13] = 0x00;
+    ek_ring[135].value[14] = 0x00;
+    ek_ring[135].value[15] = 0x00;
+    ek_ring[135].value[16] = 0x00;
+    ek_ring[135].value[17] = 0x00;
+    ek_ring[135].value[18] = 0x00;
+    ek_ring[135].value[19] = 0x00;
+    ek_ring[135].value[20] = 0x00;
+    ek_ring[135].value[21] = 0x00;
+    ek_ring[135].value[22] = 0x00;
+    ek_ring[135].value[23] = 0x00;
+    ek_ring[135].value[24] = 0x00;
+    ek_ring[135].value[25] = 0x00;
+    ek_ring[135].value[26] = 0x00;
+    ek_ring[135].value[27] = 0x00;
+    ek_ring[135].value[28] = 0x00;
+    ek_ring[135].value[29] = 0x00;
+    ek_ring[135].value[30] = 0x00;
+    ek_ring[135].value[31] = 0x00;
+    ek_ring[135].key_state = KEY_DEACTIVATED;
 }
 
 static void Crypto_Local_Init(void)
@@ -988,6 +1023,8 @@ static uint16 Crypto_Calc_FECF(char* ingest, int len_ingest)
             }
         }
     }
+    
+
 
     // Check if Testing
     if (badFECF == 1)
@@ -2259,7 +2296,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
 
         // Set initialization vector if specified
         if ((sa_service_type == SA_AUTHENTICATION) || \
-            (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
+            (sa_service_type == SA_AUTHENTICATED_ENCRYPTION) || (sa_service_type == SA_ENCRYPTION))
         {
             #ifdef SA_DEBUG
                 OS_printf(KYEL "Old IV value was:\n\t");
@@ -2267,7 +2304,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                 OS_printf("\n" RESET);
             #endif
             #ifdef INCREMENT
-                Crypto_increment(sa_ptr->iv, sa_ptr->shivf_len);
+                //Crypto_increment(sa_ptr->iv, sa_ptr->shivf_len);
             #endif
             #ifdef SA_DEBUG
                 OS_printf(KYEL "New IV value is:\n\t");
