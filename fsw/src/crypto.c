@@ -2336,15 +2336,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
             (sa_service_type == SA_AUTHENTICATED_ENCRYPTION) || (sa_service_type == SA_ENCRYPTION))
         {
             #ifdef SA_DEBUG
-                OS_printf(KYEL "Old IV value was:\n\t");
-                for(int i=0; i<sa_ptr->shivf_len; i++) {OS_printf("%02x", sa_ptr->iv[i]);}
-                OS_printf("\n" RESET);
-            #endif
-            #ifdef INCREMENT
-                //Crypto_increment(sa_ptr->iv, sa_ptr->shivf_len);
-            #endif
-            #ifdef SA_DEBUG
-                OS_printf(KYEL "New IV value is:\n\t");
+                OS_printf(KYEL "Using IV value was:\n\t");
                 for(int i=0; i<sa_ptr->shivf_len; i++) {OS_printf("%02x", sa_ptr->iv[i]);}
                 OS_printf("\n" RESET);
             #endif
@@ -2549,7 +2541,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                 #endif
                 gcry_error = gcry_cipher_gettag(
                     tmp_hd,
-                    &p_new_enc_frame[mac_loc],                             // tag output
+                    &p_new_enc_frame[mac_loc],                       // tag output
                     MAC_SIZE                                         // tag size
                 );
                 if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
@@ -2564,6 +2556,16 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
             {
                 gcry_cipher_close(tmp_hd);
             }
+
+            #ifdef INCREMENT
+                Crypto_increment(sa_ptr->iv, sa_ptr->shivf_len);
+                #ifdef SA_DEBUG
+                    OS_printf(KYEL "Next IV value is:\n\t");
+                    for(int i=0; i<sa_ptr->shivf_len; i++) {OS_printf("%02x", sa_ptr->iv[i]);}
+                    OS_printf("\n" RESET);
+                #endif
+            #endif
+
         }
         /*
         ** End Authentication / Encryption

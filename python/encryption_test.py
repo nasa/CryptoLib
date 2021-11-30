@@ -4,7 +4,7 @@ import sys
 
 
 def crc16(data : bytearray, offset , length):
-    if data is None or offset < 0 or offset > len(data)- 1 and offset+length > len(data):
+    if data is None or offset < 0 or offset > len(data) - 1 and offset+length > len(data):
         return 0
     crc = 0xFFFF
     for i in range(0, length):
@@ -64,12 +64,12 @@ class Encryption:
         return self.length
     
     def get_results(self):
-        #print(self.results.hex())
+        print(self.results.hex())
         return self.results
 
 if __name__ == '__main__':
     something=Encryption()
-    something.encrypt("1880d2ca0008197f0b0031000039c5", "FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210", "000000000000000000000001", "2003043400FF0004", "00")
+    something.encrypt("1880d2ca0008197f0b0031000039c5", "FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210", "000000000000000000000000", "2003043400FF0004", "00")
     something.get_len()
     something.get_results()
 

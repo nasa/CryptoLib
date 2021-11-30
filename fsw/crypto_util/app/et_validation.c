@@ -40,9 +40,10 @@ int EndPython()
 
 void python_auth_encryption(char* data, char* key, char* iv, char* header, char* bitmask, uint8** expected, long* expected_length)
 {
+    printf("IN PYTHON\n");
     Py_Initialize();
     PyRun_SimpleString("import sys\nsys.path.append('../../python')");
-
+    printf("\tLine %d\n", __LINE__);
     pName = PyUnicode_FromString("encryption_test");
     pModule = PyImport_Import(pName);
     if(pModule == NULL)
@@ -51,7 +52,7 @@ void python_auth_encryption(char* data, char* key, char* iv, char* header, char*
         EndPython();
         return;
     }
-
+    printf("\tLine %d\n", __LINE__);
     pDict = PyModule_GetDict(pModule);
     pClass = PyDict_GetItemString(pDict, "Encryption");
 
@@ -65,91 +66,98 @@ void python_auth_encryption(char* data, char* key, char* iv, char* header, char*
         EndPython();
         return;
     }
-
+    printf("\tLine %d\n", __LINE__);
     pValue = PyObject_CallMethod(pInstance, "encrypt", "sssss", data, key, iv, header, bitmask);
-
+    printf("\tLine %d\n", __LINE__);
     pValue = PyObject_CallMethod(pInstance, "get_len", NULL);
+    printf("\tLine %d\n", __LINE__);
     long temp_length = PyLong_AsLong(pValue);
+    printf("\tLine %d\n", __LINE__);
     *expected_length = temp_length;
+    printf("\tLine %d\n", __LINE__);
     pValue = PyObject_CallMethod(pInstance, "get_results", NULL);
+    printf("\tLine %d\n", __LINE__);
     char* temp_expected = PyBytes_AsString(pValue);
+    printf("\tLine %d\n", __LINE__);
     *expected= (uint8*)malloc(sizeof(uint8) * (int)*expected_length);
+    printf("\tLine %d\n", __LINE__);
     memcpy(*expected, temp_expected, (int)*expected_length);
+    printf("\tLine %d\n", __LINE__);
     return;
 }
 
-// UTEST(ET_VALIDATION, ENCRYPTION_TEST)
-// {
-//     //Setup & Initialize CryptoLib
-//     Crypto_Init();
-//     Py_Initialize();
+UTEST(ET_VALIDATION, ENCRYPTION_TEST)
+{
+    //Setup & Initialize CryptoLib
+    Crypto_Init();
+    Py_Initialize();
 
-//     uint8* expected = NULL;
-//     long expected_length = 0;
-//     long buffer_size = 0;
-//     long buffer2_size = 0;
-//     long buffer3_size = 0;
+    uint8* expected = NULL;
+    long expected_length = 0;
+    long buffer_size = 0;
+    long buffer2_size = 0;
+    long buffer3_size = 0;
 
-//     char *buffer = c_read_file("../../fsw/crypto_tests/data/encryption_test_ping.dat", &buffer_size);
-//     char *buffer2 = c_read_file("../../fsw/crypto_tests/data/activate_sa4.dat", &buffer2_size);
+    char *buffer = c_read_file("../../fsw/crypto_tests/data/encryption_test_ping.dat", &buffer_size);
+    char *buffer2 = c_read_file("../../fsw/crypto_tests/data/activate_sa4.dat", &buffer2_size);
 
-//     SecurityAssociation_t* test_association = NULL;
-//     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(unsigned char));
+    SecurityAssociation_t* test_association = NULL;
+    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(unsigned char));
 
-//     uint16 buffer_size_i = (uint16) buffer_size;
-//     int buffer2_size_i = (int) buffer2_size;
+    uint16 buffer_size_i = (uint16) buffer_size;
+    int buffer2_size_i = (int) buffer2_size;
 
-//     uint8 *ptr_enc_frame = NULL;
-//     uint16 enc_frame_len = 0;
-//     int32 return_val = -1;
-//     TC_t *tc_sdls_processed_frame;
+    uint8 *ptr_enc_frame = NULL;
+    uint16 enc_frame_len = 0;
+    int32 return_val = -1;
+    TC_t *tc_sdls_processed_frame;
 
-//     tc_sdls_processed_frame = malloc(sizeof(uint8) * TC_SIZE);
+    tc_sdls_processed_frame = malloc(sizeof(uint8) * TC_SIZE);
     
-//     Crypto_TC_ProcessSecurity(buffer2, &buffer2_size_i, tc_sdls_processed_frame);
+    Crypto_TC_ProcessSecurity(buffer2, &buffer2_size_i, tc_sdls_processed_frame);
     
-//     expose_sadb_get_sa_from_spi(1,&test_association);
+    expose_sadb_get_sa_from_spi(1,&test_association);
 
-//     test_association->sa_state = SA_NONE;
+    test_association->sa_state = SA_NONE;
 
-//     expose_sadb_get_sa_from_spi(4, &test_association);
-//     test_association->arc_len = 0;
-//     test_association->gvcid_tc_blk.vcid=1;
+    expose_sadb_get_sa_from_spi(4, &test_association);
+    test_association->arc_len = 0;
+    test_association->gvcid_tc_blk.vcid=1;
     
-//     return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
+    return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
 
-//     python_auth_encryption("1880d2ca0008197f0b0031000039c5", "FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210", "000000000000000000000001", "2003043400FF0004", "00", &expected, &expected_length);
+    python_auth_encryption("1880d2ca0008197f0b0031000039c5", "FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210", "00000000000000000000000", "2003043400FF0004", "00", &expected, &expected_length);
                             
-//     printf("\nGot: \n");
-//     for (int i = 0; i < expected_length; i++)
-//     {
-//         printf("0x%02x ", ptr_enc_frame[i]);
-//     }
-//     printf("\n");
-//     printf("\nExpected:\n");
-//     for (int i = 0; i < expected_length; i++)
-//     {
-//         printf("0x%02x ", expected[i]);
-//     }    
-//     printf("\n");
-//     for( int i = 0; i < expected_length; i++)
-//     {
-//         printf("EXPECTED: 0x%02x, GOT: 0x%02x\n", expected[i], ptr_enc_frame[i]);
-//         ASSERT_EQ(expected[i], ptr_enc_frame[i]);
-//     }
-//     for( int i = 0; i < expected_length; i++)
-//     {
-//         //printf("EXPECTED: 0x%02x, GOT: 0x%02x\n", expected[i], ptr_enc_frame[i]);
-//         ASSERT_EQ(expected[i], ptr_enc_frame[i]);
-//     }
+    printf("\nGot: \n");
+    for (int i = 0; i < expected_length; i++)
+    {
+        printf("0x%02x ", ptr_enc_frame[i]);
+    }
+    printf("\n");
+    printf("\nExpected:\n");
+    for (int i = 0; i < expected_length; i++)
+    {
+        printf("0x%02x ", expected[i]);
+    }    
+    printf("\n");
+    for( int i = 0; i < expected_length; i++)
+    {
+        printf("EXPECTED: 0x%02x, GOT: 0x%02x\n", expected[i], ptr_enc_frame[i]);
+        ASSERT_EQ(expected[i], ptr_enc_frame[i]);
+    }
+    for( int i = 0; i < expected_length; i++)
+    {
+        //printf("EXPECTED: 0x%02x, GOT: 0x%02x\n", expected[i], ptr_enc_frame[i]);
+        ASSERT_EQ(expected[i], ptr_enc_frame[i]);
+    }
     
-//     free(buffer);
-//     free(ptr_enc_frame); 
-//     free(expected);
-//     free(tc_sdls_processed_frame);
-//     //free(tc_sdls_processed_frame2);
-//     EndPython();
-// }
+    free(buffer);
+    free(ptr_enc_frame); 
+    free(expected);
+    free(tc_sdls_processed_frame);
+    //free(tc_sdls_processed_frame2);
+    EndPython();
+}
 
 int convert_hexstring_to_byte_array(char* source_str, uint8* dest_buffer)
 {
@@ -177,6 +185,7 @@ UTEST(ET_VALIDATION, VALIDATION_TEST)
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to this
+    char *buffer_nist_key_h = "ef9f9284cf599eac3b119905a7d18851e7e374cf63aea04358586b0f757670f8";
     char *buffer_nist_pt_h = "2003001100722ee47da4b77424733546c2d400c4e51069";
     char *buffer_nist_iv_h = "b6ac8e4963f49207ffd6374c";
     char *buffer_nist_ct_h = "1224dfefb72a20d49e09256908874979";
@@ -187,9 +196,15 @@ UTEST(ET_VALIDATION, VALIDATION_TEST)
     // Deactivate SA 1
     expose_sadb_get_sa_from_spi(1,&test_association);
     test_association->sa_state = SA_NONE;
-    // Activate SA 9
+    // Get SA 9
     expose_sadb_get_sa_from_spi(9, &test_association);
+    // Set supplied key
+    // uint8 *buffer_nist_key_b = malloc((sizeof(buffer_nist_key_h) / 2) * sizeof(uint8));
+    // printf('TEST %d\n', *buffer_nist_key_b);
+    // int buffer_nist_key_b_length = convert_hexstring_to_byte_array(buffer_nist_key_h, buffer_nist_key_b);
+    // memcpy(&ek_ring[test_association->ekid].value[0], buffer_nist_key_b, buffer_nist_key_b_length);
     test_association->arc_len = 0;
+    // Activate SA 9
     test_association->sa_state = SA_OPERATIONAL;
     expose_sadb_get_sa_from_spi(9, &test_association);
 
@@ -218,11 +233,12 @@ UTEST(ET_VALIDATION, VALIDATION_TEST)
     // Calc payload index: total length - pt length
     uint16 enc_data_idx = enc_frame_len - buffer_nist_ct_b_length - 2;
     #ifdef DEBUG
-        printf("\tenc_frame_len: %d,  -2 for fecf\n", enc_frame_len, buffer_nist_pt_b_length );
+        printf("\t enc_frame_len: %d,  -2 for fecf\n", enc_frame_len, buffer_nist_pt_b_length );
         printf("\t buffer_nist_pt_b_length: %d\n", buffer_nist_pt_b_length);
         printf("\t buffer_nist_iv_b_length: %d\n", buffer_nist_iv_b_length);
         printf("\t buffer_nist_ct_b_length: %d\n", buffer_nist_ct_b_length);
     #endif
+    // Account for our headers and FECF
     for (int i=0; i<buffer_nist_pt_b_length-7; i++)
     {
         if (*(ptr_enc_frame+enc_data_idx) != buffer_nist_ct_b[i])
