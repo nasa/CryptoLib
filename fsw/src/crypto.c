@@ -23,13 +23,14 @@ ivv-itc@lists.nasa.gov
 #include "crypto.h"
 #include "sadb_routine.h"
 
-#include "itc_aes128.h"
-#include "itc_gcm128.h"
+// #include "itc_aes128.h"
+// #include "itc_gcm128.h"
 
 #include "crypto_structs.h"
 #include "crypto_print.h"
 #include "crypto_config.h"
 #include "crypto_events.h"
+#include "crypto_error.h"
 
 
 
@@ -2090,9 +2091,9 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
 
     if (p_in_frame == NULL)
     {
-        status = OS_ERROR;
+        status = CRYPTO_LIB_ERR_NULL_BUFFER;
         OS_printf(KRED "Error: Input Buffer NULL! \n" RESET);
-        return status;  //Just return here, nothing can be done.
+        return status;  // Just return here, nothing can be done.
     }
 
     #ifdef DEBUG
@@ -2133,7 +2134,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         #ifdef TC_DEBUG
             OS_printf(KYEL "DEBUG - Received Control/Command frame - nothing to do.\n" RESET);
         #endif
-        status = OS_ERROR;
+        status = CRYPTO_LIB_ERR_INVALID_CC_FLAG;
     }
 
     // TODO: If command frame flag not set, need to know SDLS parameters
@@ -2145,8 +2146,8 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         // Query SA DB for active SA / SDLS parameters
         if(sadb_routine == NULL) //This should not happen, but tested here for safety
         {
-            OS_printf(KRED "ERROR: SA DB Not initalized! -- OS_ERROR, Will Exit\n" RESET);
-            status = OS_ERROR;
+            OS_printf(KRED "ERROR: SA DB Not initalized! -- CRYPTO_LIB_ERR_NO_INIT, Will Exit\n" RESET);
+            status = CRYPTO_LIB_ERR_NO_INIT;
         }
         else
         {
@@ -3077,7 +3078,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
 int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
 // Accepts CCSDS message in ingest, and packs into TM before encryption
 {
-    int32 status = ITC_GCM128_SUCCESS;
+    int32 status = CRYPTO_LIB_SUCCESS;
     int count = 0;
     int pdu_loc = 0;
     int pdu_len = *len_ingest - TM_MIN_SIZE;

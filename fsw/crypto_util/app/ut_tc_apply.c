@@ -21,6 +21,7 @@
 #include "ut_tc_apply.h"
 #include "utest.h"
 #include "crypto.h"
+#include "crypto_error.h"
 
 // TODO:  Should this be set up with a set of tests, or continue to Crypto_Init() each time.  For now I think the current setup is the best path.
 
@@ -41,10 +42,10 @@ UTEST(TC_APPLY_SECURITY, NO_CRYPTO_INIT)
     int32 return_val = -1;
 
     return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
-    ASSERT_EQ(-1, return_val);
+    ASSERT_EQ(CRYPTO_LIB_ERR_NO_INIT, return_val);
 }
 
-// Nominal Test.  This should read a raw_tc_sdls_ping.dat file, continue down the "happy path", and return OS_SUCCESS
+// Nominal Test.  This should read a raw_tc_sdls_ping.dat file, continue down the "happy path", and return CRYPTO_LIB_SUCCESS
 UTEST(TC_APPLY_SECURITY, HAPPY_PATH)
 {
     //Setup & Initialize CryptoLib
@@ -59,12 +60,12 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH)
     int32 return_val = -1;
 
     return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
-    ASSERT_EQ(0, return_val);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
     free(buffer);
     free(ptr_enc_frame);
 }
 
-// Bad Space Craft ID.  This should pass the flawed .dat file, and return OS_ERROR
+// Bad Space Craft ID.  This should pass the flawed .dat file, and return CRYPTO_LIB_ERR_INVALID_SCID
 UTEST(TC_APPLY_SECURITY, BAD_SPACE_CRAFT_ID)
 {
     //Setup & Initialize CryptoLib
@@ -78,13 +79,13 @@ UTEST(TC_APPLY_SECURITY, BAD_SPACE_CRAFT_ID)
     int32 return_val = -1;
 
     return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
-    ASSERT_EQ(-1, return_val);
+    ASSERT_EQ(CRYPTO_LIB_ERR_INVALID_SCID, return_val);
     free(buffer);
     free(ptr_enc_frame);
 }
 
 // TODO:  This does not report the correct error.  It returns the correctly, but complains of an incorrect SCID
-//        This should return OS_ERROR
+//        This should return CRYPTO_LIB_ERR_INVALID_VCID
 UTEST(TC_APPLY_SECURITY, BAD_VIRTUAL_CHANNEL_ID)
 {
     //Setup & Initialize CryptoLib
@@ -98,7 +99,7 @@ UTEST(TC_APPLY_SECURITY, BAD_VIRTUAL_CHANNEL_ID)
     int32 return_val = -1;
 
     return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
-    ASSERT_EQ(-1, return_val); 
+    ASSERT_EQ(CRYPTO_LIB_ERR_INVALID_VCID, return_val); 
     free(buffer);
     free(ptr_enc_frame);
 }
@@ -121,7 +122,7 @@ UTEST(TC_APPLY_SECURITY, NULL_BUFFER)
 
     return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
 
-    ASSERT_EQ(-1, return_val);
+    ASSERT_EQ(CRYPTO_LIB_ERR_NULL_BUFFER, return_val);
 }
 
 //TODO: 

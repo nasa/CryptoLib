@@ -19,5 +19,15 @@ ivv-itc@lists.nasa.gov
 
 #include "sadb_mariadb_error.h"
 
+#define CRYPTO_LIB_SUCCESS                  (0)
+#define CRYPTO_LIB_ERROR                    (-1)
+#define CRYPTO_LIB_ERR_NO_INIT              (-2)
+#define CRYPTO_LIB_ERR_INVALID_TFVN         (-3)
+#define CRYPTO_LIB_ERR_INVALID_SCID         (-4)
+#define CRYPTO_LIB_ERR_INVALID_VCID         (-5)
+#define CRYPTO_LIB_ERR_INVALID_MAPID        (-6)
+#define CRYPTO_LIB_ERR_INVALID_CC_FLAG      (-7)
+#define CRYPTO_LIB_ERR_NO_OPERATIONAL_SA    (-8)
+#define CRYPTO_LIB_ERR_NULL_BUFFER          (-9)
 
 #endif //_crypto_error_h_
