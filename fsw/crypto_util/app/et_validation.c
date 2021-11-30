@@ -149,21 +149,34 @@ int convert_hexstring_to_byte_array(char* source_str, uint8* dest_buffer)
     return data_len;
 }
 
+void hex_conversion(char *buffer_h, uint8 **buffer_b, int *buffer_b_length)
+{
+    // Convert input plaintext
+    *buffer_b = (uint8*)malloc((sizeof(buffer_h) / 2) * sizeof(uint8));
+    *buffer_b_length = convert_hexstring_to_byte_array(buffer_h, *buffer_b);
+}
+
 // AES-GCM 256 Test Vectors
 // Reference: https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/mac/gcmtestvectors.zip
 UTEST(ET_VALIDATION, VALIDATION_TEST)
 {
     int32 status = CRYPTO_LIB_SUCCESS;
+    uint8 *ptr_enc_frame = NULL;
+    uint16 enc_frame_len = 0;
     // Setup & Initialize CryptoLib
     Crypto_Init();  
 
     // NIST supplied vectors
-    // NOTE: Added Transfer Frame header to this
+    // NOTE: Added Transfer Frame header to the plaintext
+    char *buffer_nist_key_h= "ef9f9284cf599eac3b119905a7d18851e7e374cf63aea04358586b0f757670f8";
     char *buffer_nist_pt_h = "2003001100722ee47da4b77424733546c2d400c4e51069";
     char *buffer_nist_iv_h = "b6ac8e4963f49207ffd6374c";
     char *buffer_nist_ct_h = "1224dfefb72a20d49e09256908874979";
 
-    // Setup SAs
+    uint8 *buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_ct_b, *buffer_nist_key_b = NULL;
+    int buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_ct_len, buffer_nist_key_len = 0;
+
+    // Expose/setup SAs for testing
     SecurityAssociation_t* test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(unsigned char));
     // Deactivate SA 1
@@ -174,37 +187,23 @@ UTEST(ET_VALIDATION, VALIDATION_TEST)
     test_association->arc_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
     expose_sadb_get_sa_from_spi(9, &test_association);
+    memcpy(ek_ring[test_association->ekid], buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
-    uint8 *buffer_nist_pt_b = malloc((sizeof(buffer_nist_pt_h) / 2) * sizeof(uint8));
     // TODO: Account for length of header and FECF (5+2)
-    int buffer_nist_pt_b_length = convert_hexstring_to_byte_array(buffer_nist_pt_h, buffer_nist_pt_b);
-
+    hex_conversion(buffer_nist_pt_h, &buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
-    uint8 *buffer_nist_iv_b = malloc((sizeof(buffer_nist_iv_h) / 2) * sizeof(uint8));
-    int buffer_nist_iv_b_length = convert_hexstring_to_byte_array(buffer_nist_iv_h, buffer_nist_iv_b);
-    memcpy(&test_association->iv[0], buffer_nist_iv_b, buffer_nist_iv_b_length);
+    hex_conversion(buffer_nist_iv_h, &buffer_nist_iv_b, &buffer_nist_iv_len);
+    memcpy(&test_association->iv[0], buffer_nist_iv_b, buffer_nist_iv_len);
+    // Convert input ciphertext
+    hex_conversion(buffer_nist_ct_h, &buffer_nist_ct_b, &buffer_nist_ct_len);
 
-    //Convert input ciphertext
-    uint8 *buffer_nist_ct_b = malloc((sizeof(buffer_nist_ct_h) / 2) * sizeof(uint8));
-    int buffer_nist_ct_b_length = convert_hexstring_to_byte_array(buffer_nist_ct_h, buffer_nist_ct_b);
-
-
-    uint8 *ptr_enc_frame = NULL;
-    uint16 enc_frame_len = 0;
-    int32 return_val = -1;  
-    return_val = Crypto_TC_ApplySecurity(buffer_nist_pt_b, buffer_nist_pt_b_length, &ptr_enc_frame, &enc_frame_len);
+    Crypto_TC_ApplySecurity(buffer_nist_pt_b, buffer_nist_pt_len, &ptr_enc_frame, &enc_frame_len);
 
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
     // Calc payload index: total length - pt length
-    uint16 enc_data_idx = enc_frame_len - buffer_nist_ct_b_length - 2;
-    #ifdef DEBUG
-        printf("\tenc_frame_len: %d,  -2 for fecf\n", enc_frame_len);
-        printf("\t buffer_nist_pt_b_length: %d\n", buffer_nist_pt_b_length);
-        printf("\t buffer_nist_iv_b_length: %d\n", buffer_nist_iv_b_length);
-        printf("\t buffer_nist_ct_b_length: %d\n", buffer_nist_ct_b_length);
-    #endif
-    for (int i=0; i<buffer_nist_pt_b_length-7; i++)
+    uint16 enc_data_idx = enc_frame_len - buffer_nist_ct_len - 2;
+    for (int i=0; i<buffer_nist_pt_len-7; i++)
     {
         ASSERT_EQ(*(ptr_enc_frame+enc_data_idx), buffer_nist_ct_b[i]);
 
@@ -214,10 +213,12 @@ UTEST(ET_VALIDATION, VALIDATION_TEST)
         }
         enc_data_idx++;
     }
-    
-    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
     free(ptr_enc_frame);
+    free(buffer_nist_pt_b);
+    free(buffer_nist_iv_b);
+    free(buffer_nist_ct_b);
+    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 }
 
 UTEST_MAIN();
