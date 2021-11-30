@@ -1,0 +1,26 @@
+#start - this is a comment in a simple example props file
+#the props are presented in formate key=value.
+//another comment
+#comments & values cannot be on the same line
+#10 valid key=value, and comments are listed below:
+key_a=aaa
+key_b=bbb
+key_c=ccc
+key_d=
+key_e=<some_place_holder>/<some_place_holder_1>
+#below is an key with non-alphanumeric char
+key_f=www.yahoo.com 
+allowed_symmetric_encryption_algorithms=AES-128:AES-256:DESede-168
+some_other_key=/root/some_path/some_file.json
+#note we can have duplicate keys however the last key's value will override previous values
+some_other_key1=12345
+some_other_key1=678910
+ip_address_1_v4=128.0.0.1
+ip_address_2_v6=2001:0db8:0000:0000:0000:8a2e:0370:7334
+#below is a line with only 1 char it should NOT crash the parser
+#
+#below is a line with only 1 char it should NOT crash the parser
+/
+#below is a line with only 1 char it should NOT crash the parser
+a
+#end - of sample props
