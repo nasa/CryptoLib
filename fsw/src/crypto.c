@@ -562,6 +562,42 @@ static void Crypto_Local_Config(void)
     ek_ring[135].value[30] = 0x00;
     ek_ring[135].value[31] = 0x00;
     ek_ring[135].key_state = KEY_DEACTIVATED;
+
+    // 136 - ef9f9284cf599eac3b119905a7d18851e7e374cf63aea04358586b0f757670f8
+    // Reference: https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/mac/gcmtestvectors.zip
+    ek_ring[136].value[0]  = 0xef;
+    ek_ring[136].value[1]  = 0x9f;
+    ek_ring[136].value[2]  = 0x92;
+    ek_ring[136].value[3]  = 0x84;
+    ek_ring[136].value[4]  = 0xcf;
+    ek_ring[136].value[5]  = 0x59;
+    ek_ring[136].value[6]  = 0x9e;
+    ek_ring[136].value[7]  = 0xac;
+    ek_ring[136].value[8]  = 0x3b;
+    ek_ring[136].value[9]  = 0x11;
+    ek_ring[136].value[10] = 0x99;
+    ek_ring[136].value[11] = 0x05;
+    ek_ring[136].value[12] = 0xa7;
+    ek_ring[136].value[13] = 0xd1;
+    ek_ring[136].value[14] = 0x88;
+    ek_ring[136].value[15] = 0x51;
+    ek_ring[136].value[16] = 0xe7;
+    ek_ring[136].value[17] = 0xe3;
+    ek_ring[136].value[18] = 0x74;
+    ek_ring[136].value[19] = 0xcf;
+    ek_ring[136].value[20] = 0x63;
+    ek_ring[136].value[21] = 0xae;
+    ek_ring[136].value[22] = 0xa0;
+    ek_ring[136].value[23] = 0x43;
+    ek_ring[136].value[24] = 0x58;
+    ek_ring[136].value[25] = 0x58;
+    ek_ring[136].value[26] = 0x6b;
+    ek_ring[136].value[27] = 0x0f;
+    ek_ring[136].value[28] = 0x75;
+    ek_ring[136].value[29] = 0x76;
+    ek_ring[136].value[30] = 0x70;
+    ek_ring[136].value[31] = 0xf8;
+    ek_ring[135].key_state = KEY_DEACTIVATED;
 }
 
 static void Crypto_Local_Init(void)

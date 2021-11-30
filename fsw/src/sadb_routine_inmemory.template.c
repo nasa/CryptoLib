@@ -211,13 +211,13 @@ static int32 sadb_config(void)
 
     // SA 9 - Validation Tests
     sa[9].spi = 9;
-    sa[9].ekid = 135;
+    sa[9].ekid = 136;
     sa[9].sa_state = SA_KEYED;
     sa[9].est = 1;
     sa[9].ast = 0;
-    sa[9].shivf_len = 16;
-    sa[9].iv_len = 16;
-    sa[9].iv[15] = 0;
+    sa[9].shivf_len = 12;
+    sa[9].iv_len = 12;
+    sa[9].iv[12] = 0;
     sa[9].abm_len = 0x14; // 20
     for (int i = 0; i < sa[9].abm_len; i++)
     {	// Zero AAD bit mask
