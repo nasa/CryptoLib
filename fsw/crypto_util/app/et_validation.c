@@ -24,6 +24,7 @@
 #include <python3.8/Python.h>
 
 #include "sadb_routine.h"
+#include "crypto_error.h"
 
 
 // Setup for some Unit Tests using a Python Script to Verify validiy of frames
@@ -166,58 +167,77 @@ int convert_hexstring_to_byte_array(char* source_str, uint8* dest_buffer)
     return data_len;
 }
 
+// AES-GCM 256 Test Vectors
+// Reference: https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/mac/gcmtestvectors.zip
 UTEST(ET_VALIDATION, VALIDATION_TEST)
 {
-    //Setup & Initialize CryptoLib
+    int32 status = CRYPTO_LIB_SUCCESS;
+    // Setup & Initialize CryptoLib
     Crypto_Init();  
 
-    //char *buffer = "2003002000ff000100001880d2c9000e197f0b001b0004000900003040713830095555"; //Activate SA-9
-    // char *buffer_nist_h = "2003001100014730f80ac625fe84f026c60bfd547d1069";
-    char *buffer_nist_h    = "2003001100722ee47da4b77424733546c2d400c4e51069";
-    //uint8 *buffer_b = NULL;
-    //int32 buffer_b_length = convert_hexstring_to_byte_array(buffer, buffer_b);
-    uint8 *buffer_nist_b = malloc((sizeof(buffer_nist_h) / 2) * sizeof(uint8));
-    int buffer_nist_b_length = convert_hexstring_to_byte_array(buffer_nist_h, buffer_nist_b);
+    // NIST supplied vectors
+    // NOTE: Added Transfer Frame header to this
+    char *buffer_nist_pt_h = "2003001100722ee47da4b77424733546c2d400c4e51069";
+    char *buffer_nist_iv_h = "b6ac8e4963f49207ffd6374c";
+    char *buffer_nist_ct_h = "1224dfefb72a20d49e09256908874979";
 
+    // Setup SAs
     SecurityAssociation_t* test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(unsigned char));
-
     // Deactivate SA 1
     expose_sadb_get_sa_from_spi(1,&test_association);
     test_association->sa_state = SA_NONE;
-
-    printf("STATE: %0d\n", test_association->sa_state);
-
     // Activate SA 9
     expose_sadb_get_sa_from_spi(9, &test_association);
     test_association->arc_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
-    printf("STATE: %0d\n", test_association->sa_state);
     expose_sadb_get_sa_from_spi(9, &test_association);
 
-    // Set IV manually for this test
-    test_association->iv[0] = 0xb6;
-    test_association->iv[1] = 0xac;
-    test_association->iv[2] = 0x8e;
-    test_association->iv[3] = 0x49;
-    test_association->iv[4] = 0x63;
-    test_association->iv[5] = 0xf4;
-    test_association->iv[6] = 0x92;
-    test_association->iv[7] = 0x07;
-    test_association->iv[8] = 0xff;
-    test_association->iv[9] = 0xd6;
-    test_association->iv[10] = 0x37;
-    test_association->iv[11] = 0x4c;
+    // Convert input plaintext
+    uint8 *buffer_nist_pt_b = malloc((sizeof(buffer_nist_pt_h) / 2) * sizeof(uint8));
+    // TODO: Account for length of header and FECF (5+2)
+    int buffer_nist_pt_b_length = convert_hexstring_to_byte_array(buffer_nist_pt_h, buffer_nist_pt_b);
+
+    // Convert/Set input IV
+    uint8 *buffer_nist_iv_b = malloc((sizeof(buffer_nist_iv_h) / 2) * sizeof(uint8));
+    int buffer_nist_iv_b_length = convert_hexstring_to_byte_array(buffer_nist_iv_h, buffer_nist_iv_b);
+    memcpy(&test_association->iv[0], buffer_nist_iv_b, buffer_nist_iv_b_length);
+
+    //Convert input ciphertext
+    uint8 *buffer_nist_ct_b = malloc((sizeof(buffer_nist_ct_h) / 2) * sizeof(uint8));
+    int buffer_nist_ct_b_length = convert_hexstring_to_byte_array(buffer_nist_ct_h, buffer_nist_ct_b);
+
 
     uint8 *ptr_enc_frame = NULL;
     uint16 enc_frame_len = 0;
     int32 return_val = -1;  
     #undef INCREMENT
-    return_val = Crypto_TC_ApplySecurity(buffer_nist_b, buffer_nist_b_length, &ptr_enc_frame, &enc_frame_len);
+    return_val = Crypto_TC_ApplySecurity(buffer_nist_pt_b, buffer_nist_pt_b_length, &ptr_enc_frame, &enc_frame_len);
     #define INCREMENT
-    //Convert back to hex string
-    //compare output to: 5c9d844ed46f9885085e5d6a4f94c7d7
-    printf("RET VALUE = %d\n", return_val);
+    // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
+    // Calc payload index: total length - pt length
+    uint16 enc_data_idx = enc_frame_len - buffer_nist_ct_b_length - 2;
+    #ifdef DEBUG
+        printf("\tenc_frame_len: %d,  -2 for fecf\n", enc_frame_len, buffer_nist_pt_b_length );
+        printf("\t buffer_nist_pt_b_length: %d\n", buffer_nist_pt_b_length);
+        printf("\t buffer_nist_iv_b_length: %d\n", buffer_nist_iv_b_length);
+        printf("\t buffer_nist_ct_b_length: %d\n", buffer_nist_ct_b_length);
+    #endif
+    for (int i=0; i<buffer_nist_pt_b_length-7; i++)
+    {
+        if (*(ptr_enc_frame+enc_data_idx) != buffer_nist_ct_b[i])
+        {
+            status = CRYPTO_LIB_ERR_UT_BYTE_MISMATCH;
+        }
+
+        #ifdef DEBUG
+            printf("\tidx: %d, EXPECTED: 0x%02x, GOT: 0x%02x\n", enc_data_idx, buffer_nist_ct_b[i], ptr_enc_frame[enc_data_idx] );
+        #endif
+
+        enc_data_idx++;
+    }
+    
+    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
     free(ptr_enc_frame);
 }
