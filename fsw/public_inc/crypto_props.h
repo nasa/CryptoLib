@@ -120,7 +120,7 @@ Description:        This function will parse files with the format:
                     #Comment
  *                  //Comment 
                     Key=value,key=value,key=value
-/*Inputs:           char* file_path - path of the file on the filesystem
+Inputs:           char* file_path - path of the file on the filesystem
 Outputs:            1 or greater - success. Meaning read & added 1 or more data 
  *                  lines successfully. 
  *                  0 - fail  
