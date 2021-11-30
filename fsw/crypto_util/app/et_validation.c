@@ -78,78 +78,60 @@ void python_auth_encryption(char* data, char* key, char* iv, char* header, char*
     return;
 }
 
-// UTEST(ET_VALIDATION, ENCRYPTION_TEST)
-// {
-//     //Setup & Initialize CryptoLib
-//     Crypto_Init();
-//     Py_Initialize();
+UTEST(ET_VALIDATION, ENCRYPTION_TEST)
+{
+    //Setup & Initialize CryptoLib
+    Crypto_Init();
+    Py_Initialize();
 
-//     uint8* expected = NULL;
-//     long expected_length = 0;
-//     long buffer_size = 0;
-//     long buffer2_size = 0;
-//     long buffer3_size = 0;
+    uint8* expected = NULL;
+    long expected_length = 0;
+    long buffer_size = 0;
+    long buffer2_size = 0;
+    long buffer3_size = 0;
 
-//     char *buffer = c_read_file("../../fsw/crypto_tests/data/encryption_test_ping.dat", &buffer_size);
-//     char *buffer2 = c_read_file("../../fsw/crypto_tests/data/activate_sa4.dat", &buffer2_size);
+    char *buffer = c_read_file("../../fsw/crypto_tests/data/encryption_test_ping.dat", &buffer_size);
+    char *buffer2 = c_read_file("../../fsw/crypto_tests/data/activate_sa4.dat", &buffer2_size);
 
-//     SecurityAssociation_t* test_association = NULL;
-//     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(unsigned char));
+    SecurityAssociation_t* test_association = NULL;
+    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(unsigned char));
 
-//     uint16 buffer_size_i = (uint16) buffer_size;
-//     int buffer2_size_i = (int) buffer2_size;
+    uint16 buffer_size_i = (uint16) buffer_size;
+    int buffer2_size_i = (int) buffer2_size;
 
-//     uint8 *ptr_enc_frame = NULL;
-//     uint16 enc_frame_len = 0;
-//     int32 return_val = -1;
-//     TC_t *tc_sdls_processed_frame;
+    uint8 *ptr_enc_frame = NULL;
+    uint16 enc_frame_len = 0;
+    int32 return_val = -1;
+    TC_t *tc_sdls_processed_frame;
 
-//     tc_sdls_processed_frame = malloc(sizeof(uint8) * TC_SIZE);
+    tc_sdls_processed_frame = malloc(sizeof(uint8) * TC_SIZE);
     
-//     Crypto_TC_ProcessSecurity(buffer2, &buffer2_size_i, tc_sdls_processed_frame);
+    Crypto_TC_ProcessSecurity(buffer2, &buffer2_size_i, tc_sdls_processed_frame);
     
-//     expose_sadb_get_sa_from_spi(1,&test_association);
+    expose_sadb_get_sa_from_spi(1,&test_association);
 
-//     test_association->sa_state = SA_NONE;
+    test_association->sa_state = SA_NONE;
 
-//     expose_sadb_get_sa_from_spi(4, &test_association);
-//     test_association->arc_len = 0;
-//     test_association->gvcid_tc_blk.vcid=1;
+    expose_sadb_get_sa_from_spi(4, &test_association);
+    test_association->arc_len = 0;
+    test_association->gvcid_tc_blk.vcid=1;
+    test_association->iv[11] = 1;
     
-//     return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
+    return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
 
-//     python_auth_encryption("1880d2ca0008197f0b0031000039c5", "FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210", "000000000000000000000001", "2003043400FF0004", "00", &expected, &expected_length);
-                            
-//     printf("\nGot: \n");
-//     for (int i = 0; i < expected_length; i++)
-//     {
-//         printf("0x%02x ", ptr_enc_frame[i]);
-//     }
-//     printf("\n");
-//     printf("\nExpected:\n");
-//     for (int i = 0; i < expected_length; i++)
-//     {
-//         printf("0x%02x ", expected[i]);
-//     }    
-//     printf("\n");
-//     for( int i = 0; i < expected_length; i++)
-//     {
-//         printf("EXPECTED: 0x%02x, GOT: 0x%02x\n", expected[i], ptr_enc_frame[i]);
-//         ASSERT_EQ(expected[i], ptr_enc_frame[i]);
-//     }
-//     for( int i = 0; i < expected_length; i++)
-//     {
-//         //printf("EXPECTED: 0x%02x, GOT: 0x%02x\n", expected[i], ptr_enc_frame[i]);
-//         ASSERT_EQ(expected[i], ptr_enc_frame[i]);
-//     }
+    python_auth_encryption("1880d2ca0008197f0b0031000039c5", "FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210", "000000000000000000000001", "2003043400FF0004", "00", &expected, &expected_length);
+
+    for(int i = 0; i < expected_length; i++)
+    {
+        ASSERT_EQ(expected[i], ptr_enc_frame[i]);
+    }
     
-//     free(buffer);
-//     free(ptr_enc_frame); 
-//     free(expected);
-//     free(tc_sdls_processed_frame);
-//     //free(tc_sdls_processed_frame2);
-//     EndPython();
-// }
+    free(buffer);
+    free(ptr_enc_frame); 
+    free(expected);
+    free(tc_sdls_processed_frame);
+    EndPython();
+}
 
 int convert_hexstring_to_byte_array(char* source_str, uint8* dest_buffer)
 {
@@ -211,29 +193,25 @@ UTEST(ET_VALIDATION, VALIDATION_TEST)
     uint8 *ptr_enc_frame = NULL;
     uint16 enc_frame_len = 0;
     int32 return_val = -1;  
-    #undef INCREMENT
     return_val = Crypto_TC_ApplySecurity(buffer_nist_pt_b, buffer_nist_pt_b_length, &ptr_enc_frame, &enc_frame_len);
-    #define INCREMENT
+
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
     // Calc payload index: total length - pt length
     uint16 enc_data_idx = enc_frame_len - buffer_nist_ct_b_length - 2;
     #ifdef DEBUG
-        printf("\tenc_frame_len: %d,  -2 for fecf\n", enc_frame_len, buffer_nist_pt_b_length );
+        printf("\tenc_frame_len: %d,  -2 for fecf\n", enc_frame_len);
         printf("\t buffer_nist_pt_b_length: %d\n", buffer_nist_pt_b_length);
         printf("\t buffer_nist_iv_b_length: %d\n", buffer_nist_iv_b_length);
         printf("\t buffer_nist_ct_b_length: %d\n", buffer_nist_ct_b_length);
     #endif
     for (int i=0; i<buffer_nist_pt_b_length-7; i++)
     {
+        ASSERT_EQ(*(ptr_enc_frame+enc_data_idx), buffer_nist_ct_b[i]);
+
         if (*(ptr_enc_frame+enc_data_idx) != buffer_nist_ct_b[i])
         {
             status = CRYPTO_LIB_ERR_UT_BYTE_MISMATCH;
         }
-
-        #ifdef DEBUG
-            printf("\tidx: %d, EXPECTED: 0x%02x, GOT: 0x%02x\n", enc_data_idx, buffer_nist_ct_b[i], ptr_enc_frame[enc_data_idx] );
-        #endif
-
         enc_data_idx++;
     }
     
