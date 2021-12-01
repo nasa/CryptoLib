@@ -131,17 +131,21 @@ UTEST(ET_VALIDATION, ENCRYPTION_TEST)
     
     Crypto_TC_ProcessSecurity(buffer2, &buffer2_size_i, tc_sdls_processed_frame);
     
+    // Expose SA 1 for testing
     expose_sadb_get_sa_from_spi(1,&test_association);
 
+    // Deactive SA 1
     test_association->sa_state = SA_NONE;
 
+    // Expose SA 4 for testing
     expose_sadb_get_sa_from_spi(4, &test_association);
     test_association->arc_len = 0;
     test_association->gvcid_tc_blk.vcid=1;
     test_association->iv[11] = 1;
     
-    return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
+    Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
 
+    // Get Truth Baseline
     python_auth_encryption("1880d2ca0008197f0b0031000039c5", "FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210", "000000000000000000000001", "2003043400FF0004", "00", &expected, &expected_length);
 
     for(int i = 0; i < expected_length; i++)
