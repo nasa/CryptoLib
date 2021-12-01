@@ -139,7 +139,7 @@ UTEST(ET_VALIDATION, ENCRYPTION_TEST)
 
 // AES-GCM 256 Test Vectors
 // Reference: https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/mac/gcmtestvectors.zip
-UTEST(NIST_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
+UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 {
     int32 status = CRYPTO_LIB_SUCCESS;
     uint8 *ptr_enc_frame = NULL;
@@ -201,7 +201,7 @@ UTEST(NIST_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 }
 
-UTEST(NIST_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
+UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
 {
     int32 status = CRYPTO_LIB_SUCCESS;
     uint8 *ptr_enc_frame = NULL;
@@ -263,7 +263,7 @@ UTEST(NIST_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 }
 
-UTEST(NIST_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
+UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
 {
     int32 status = CRYPTO_LIB_SUCCESS;
     uint8 *ptr_enc_frame = NULL;
@@ -325,7 +325,7 @@ UTEST(NIST_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 }
 
-UTEST(NIST_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
+UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
 {
     int32 status = CRYPTO_LIB_SUCCESS;
     uint8 *ptr_enc_frame = NULL;
@@ -387,7 +387,7 @@ UTEST(NIST_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 }
 
-UTEST(NIST_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
+UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
 {
     int32 status = CRYPTO_LIB_SUCCESS;
     uint8 *ptr_enc_frame = NULL;
@@ -446,6 +446,76 @@ UTEST(NIST_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
     free(buffer_nist_iv_b);
     free(buffer_nist_ct_b);
     free(buffer_nist_key_b);
+    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+}
+
+// Spot check of MAC tags assuming no AAD
+UTEST(NIST_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
+{
+    int32 status = CRYPTO_LIB_SUCCESS;
+    uint8 *ptr_enc_frame = NULL;
+    uint16 enc_frame_len = 0;
+    // Setup & Initialize CryptoLib
+    Crypto_Init();  
+    // NIST supplied vectors
+    // NOTE: Added Transfer Frame header to the plaintext
+    char *buffer_nist_key_h = "ef9f9284cf599eac3b119905a7d18851e7e374cf63aea04358586b0f757670f8";
+    char *buffer_nist_pt_h  = "2003001100722ee47da4b77424733546c2d400c4e51069";
+    char *buffer_nist_iv_h  = "b6ac8e4963f49207ffd6374c";
+    char *buffer_nist_ct_h  = "1224dfefb72a20d49e09256908874979";
+    char *buffer_nist_mac_h = "882eafea22adf8dbed06a2265f907b";
+    uint8 *buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_ct_b, *buffer_nist_key_b, *buffer_nist_mac_b = NULL;
+    int buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_ct_len, buffer_nist_key_len, buffer_nist_mac_len = 0;
+
+    // Expose/setup SAs for testing
+    SecurityAssociation_t* test_association = NULL;
+    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(unsigned char));
+    // Deactivate SA 1
+    expose_sadb_get_sa_from_spi(1,&test_association);
+    test_association->sa_state = SA_NONE;
+    // Activate SA 9
+    expose_sadb_get_sa_from_spi(9, &test_association);
+    test_association->ast = 1;
+    test_association->arc_len = 0;
+    test_association->abm_len = 0;
+    test_association->stmacf_len = 15;
+    test_association->sa_state = SA_OPERATIONAL;
+    expose_sadb_get_sa_from_spi(9, &test_association);
+
+    // Insert key into keyring of SA 9
+    hex_conversion(buffer_nist_key_h, &buffer_nist_key_b, &buffer_nist_key_len);
+    memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
+
+    // Convert input plaintext
+    // TODO: Account for length of header and FECF (5+2)
+    hex_conversion(buffer_nist_pt_h, &buffer_nist_pt_b, &buffer_nist_pt_len);
+    // Convert/Set input IV
+    hex_conversion(buffer_nist_iv_h, &buffer_nist_iv_b, &buffer_nist_iv_len);
+    memcpy(&test_association->iv[0], buffer_nist_iv_b, buffer_nist_iv_len);
+    // Convert input ciphertext
+    hex_conversion(buffer_nist_ct_h, &buffer_nist_ct_b, &buffer_nist_ct_len);
+    // Convert input mac
+    hex_conversion(buffer_nist_mac_h, &buffer_nist_mac_b, &buffer_nist_mac_len);
+
+    Crypto_TC_ApplySecurity(buffer_nist_pt_b, buffer_nist_pt_len, &ptr_enc_frame, &enc_frame_len);
+    // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
+    // Calc payload index: total length - pt length
+    uint16 enc_data_idx = enc_frame_len - buffer_nist_mac_len - 2;
+    for (int i=0; i<buffer_nist_mac_len; i++)
+    {
+        ASSERT_EQ(*(ptr_enc_frame+enc_data_idx), buffer_nist_mac_b[i]);
+        if (*(ptr_enc_frame+enc_data_idx) != buffer_nist_mac_b[i])
+        {
+            status = CRYPTO_LIB_ERR_UT_BYTE_MISMATCH;
+        }
+        enc_data_idx++;
+    }
+    free(ptr_enc_frame);
+    free(buffer_nist_pt_b);
+    free(buffer_nist_iv_b);
+    free(buffer_nist_ct_b);
+    free(buffer_nist_key_b);
+    free(buffer_nist_mac_b);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 }
 
