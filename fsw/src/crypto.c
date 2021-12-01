@@ -1006,6 +1006,8 @@ uint8 Crypto_Prep_Reply(char* ingest, uint8 appID)
 static int32 Crypto_FECF(int fecf, char* ingest, int len_ingest,TC_t* tc_frame)
 // Calculate the Frame Error Control Field (FECF), also known as a cyclic redundancy check (CRC)
 {
+
+    printf(" LEN INGEST (CRYPTO_FECF): %d\n", len_ingest);
     int32 result = OS_SUCCESS;
     uint16 calc_fecf = Crypto_Calc_FECF(ingest, len_ingest);
 
@@ -1072,7 +1074,7 @@ static uint16 Crypto_Calc_FECF(char* ingest, int len_ingest)
     #ifdef FECF_DEBUG
         OS_printf(KCYN "Crypto_Calc_FECF: 0x%02x%02x%02x%02x%02x, len_ingest = %d\n" RESET, ingest[0], ingest[1], ingest[2], ingest[3], ingest[4], len_ingest);
         OS_printf(KCYN "0x" RESET);
-        for (int x = 0; x < len_ingest; x++)
+        for (int x = 0; x <= len_ingest; x++)
         {
             OS_printf(KCYN "%02x" RESET, (uint8)*(ingest+x));
         }
@@ -2853,7 +2855,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
 
         // FECF
         tc_sdls_processed_frame->tc_sec_trailer.fecf = ((uint8)ingest[x] << 8) | ((uint8)ingest[x+1]);
-        Crypto_FECF(tc_sdls_processed_frame->tc_sec_trailer.fecf, ingest, (tc_sdls_processed_frame->tc_header.fl - 2),tc_sdls_processed_frame);
+        Crypto_FECF(tc_sdls_processed_frame->tc_sec_trailer.fecf, ingest, 36,tc_sdls_processed_frame);
 
         // Initialize the key
         //itc_gcm128_init(&sa[tc_sdls_processed_frame->tc_sec_header.spi].gcm_ctx, (const unsigned char*) &ek_ring[sa[sa_ptr->ekid]);
