@@ -50,7 +50,7 @@ static SadbRoutine sadb_routine = NULL;
 ** Static Prototypes
 */
 // Assisting Functions
-static int32  Crypto_Get_tcPayloadLength(TC_t* tc_frame);
+static int32  Crypto_Get_tcPayloadLength(TC_t* tc_frame, SecurityAssociation_t *sa_ptr);
 static int32  Crypto_Get_tmLength(int len);
 static void   Crypto_TM_updatePDU(char* ingest, int len_ingest);
 static void   Crypto_TM_updateOCF(void);
@@ -704,16 +704,17 @@ static void Crypto_Calc_CRC_Init_Table(void)
 /*
 ** Assisting Functions
 */
-static int32 Crypto_Get_tcPayloadLength(TC_t* tc_frame)
+static int32 Crypto_Get_tcPayloadLength(TC_t* tc_frame, SecurityAssociation_t *sa_ptr)
 // Returns the payload length of current tc_frame in BYTES!
 {
     int seg_hdr = 0;if(SEGMENTATION_HDR){seg_hdr=1;}
     int fecf = 0;if(HAS_FECF){fecf=FECF_SIZE;}
     int spi = 2;
-    int iv_size = IV_SIZE_TC; if(PUS_HDR){iv_size=IV_SIZE - 1;} //For some reason, the interoperability tests with PUS header frames work with a 12 byte TC IV, so we'll use that for those.
+    int iv_size = sa_ptr->shivf_len; if(PUS_HDR){iv_size=sa_ptr->shivf_len - 1;} //For some reason, the interoperability tests with PUS header frames work with a 12 byte TC IV, so we'll use that for those.
     int tf_hdr = 5;
+    int mac_size = sa_ptr->stmacf_len;
 
-    return (tc_frame->tc_header.fl - (tf_hdr + seg_hdr + spi + iv_size ) - (MAC_SIZE + FECF_SIZE) );
+    return (tc_frame->tc_header.fl - (tf_hdr + seg_hdr + spi + iv_size ) - (mac_size + FECF_SIZE) );
     //return (tc_frame->tc_header.fl - (5 + 2 + IV_SIZE ) - (MAC_SIZE + FECF_SIZE) );
     //TFHDR=5bytes, SegHdr=1byte,SPI=2bytes,SeqNum=4bytes,MAC=16bytes,FECF=2bytes -- should be 30 bytes max, above calculation seems incorrect.
 }
@@ -1074,7 +1075,7 @@ static uint16 Crypto_Calc_FECF(char* ingest, int len_ingest)
     #ifdef FECF_DEBUG
         OS_printf(KCYN "Crypto_Calc_FECF: 0x%02x%02x%02x%02x%02x, len_ingest = %d\n" RESET, ingest[0], ingest[1], ingest[2], ingest[3], ingest[4], len_ingest);
         OS_printf(KCYN "0x" RESET);
-        for (int x = 0; x <= len_ingest; x++)
+        for (int x = 0; x < len_ingest; x++)
         {
             OS_printf(KCYN "%02x" RESET, (uint8)*(ingest+x));
         }
@@ -2742,12 +2743,180 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
         status = OS_ERROR; //Error -- unable to get SA from SPI.
         return status;
     }
-    // Determine mode via SPI
-    if ((sa_ptr->est == 1) &&
-        (sa_ptr->ast == 1))
-    {	// Authenticated Encryption
+    if((sa_ptr->est == 1) && (sa_ptr->ast == 0))
+    {
+        // Encryption Only
         #ifdef DEBUG
             OS_printf(KBLU "ENCRYPTED TC Received!\n" RESET);
+        #endif
+
+        #ifdef TC_DEBUG
+            OS_printf("IV: \n");
+        #endif
+        for (x = byte_idx; x < (byte_idx + sa_ptr->shivf_len); x++)
+        {
+            tc_sdls_processed_frame->tc_sec_header.iv[x-byte_idx] = (uint8)ingest[x];
+            #ifdef TC_DEBUG
+                OS_printf("\t iv[%d] = 0x%02x\n", x-byte_idx, tc_sdls_processed_frame->tc_sec_header.iv[x-byte_idx]);
+            #endif
+        }
+        byte_idx += IV_SIZE;
+        report.snval = tc_sdls_processed_frame->tc_sec_header.iv[sa_ptr->shivf_len-1];
+
+        #ifdef DEBUG
+            OS_printf("\t tc_sec_header.iv[%d] = 0x%02x \n", sa_ptr->shivf_len-1, tc_sdls_processed_frame->tc_sec_header.iv[sa_ptr->shivf_len-1]);
+            OS_printf("\t sa[%d].iv[%d] = 0x%02x \n", tc_sdls_processed_frame->tc_sec_header.spi, sa_ptr->shivf_len-1, sa_ptr->iv[sa_ptr->shivf_len-1]);
+        #endif
+
+        // Check IV is in ARCW
+        if ( Crypto_window(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len,
+            sa_ptr->arcw[sa_ptr->arcw_len-1]) != CRYPTO_LIB_SUCCESS )
+        {
+            report.af = 1;
+            report.bsnf = 1;
+            if (log_summary.rs > 0)
+            {
+                Crypto_increment((uint8*)&log_summary.num_se, 4);
+                log_summary.rs--;
+                log.blk[log_count].emt = IV_WINDOW_ERR_EID;
+                log.blk[log_count].emv[0] = 0x4E;
+                log.blk[log_count].emv[1] = 0x41;
+                log.blk[log_count].emv[2] = 0x53;
+                log.blk[log_count].emv[3] = 0x41;
+                log.blk[log_count++].em_len = 4;
+            }
+            OS_printf(KRED "Error: IV not in window! \n" RESET);
+            #ifdef OCF_DEBUG
+                Crypto_fsrPrint(&report);
+            #endif
+            status = OS_ERROR;
+        }
+        else 
+        {
+            if ( Crypto_compare_less_equal(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len) == CRYPTO_LIB_SUCCESS )
+            {   // Replay - IV value lower than expected
+                report.af = 1;
+                report.bsnf = 1;
+                if (log_summary.rs > 0)
+                {
+                    Crypto_increment((uint8*)&log_summary.num_se, 4);
+                    log_summary.rs--;
+                    log.blk[log_count].emt = IV_REPLAY_ERR_EID;
+                    log.blk[log_count].emv[0] = 0x4E;
+                    log.blk[log_count].emv[1] = 0x41;
+                    log.blk[log_count].emv[2] = 0x53;
+                    log.blk[log_count].emv[3] = 0x41;
+                    log.blk[log_count++].em_len = 4;
+                }
+                OS_printf(KRED "Error: IV replay! Value lower than expected! \n" RESET);
+                #ifdef OCF_DEBUG
+                    Crypto_fsrPrint(&report);
+                #endif
+                status = OS_ERROR;
+            } 
+            else
+            {   // Adjust expected IV to acceptable received value
+                for (int i = 0; i < (sa_ptr->shivf_len); i++)
+                {
+                    sa_ptr->iv[i] = tc_sdls_processed_frame->tc_sec_header.iv[i];
+                }
+            }
+        }
+
+        if ( status != CRYPTO_LIB_SUCCESS )
+        {   // Exit
+            *len_ingest = 0;
+            return status;
+        }
+
+        tc_sdls_processed_frame->tc_pdu_len = Crypto_Get_tcPayloadLength(tc_sdls_processed_frame, sa_ptr);
+        printf("PDU LENGTH: %d\n", tc_sdls_processed_frame->tc_pdu_len);
+        x = x + tc_sdls_processed_frame->tc_pdu_len;
+
+        #ifdef TC_DEBUG
+            OS_printf("TC: \n"); 
+            for (int temp = 0; temp < tc_sdls_processed_frame->tc_pdu_len; temp++)
+            {	
+                OS_printf("\t ingest[%d] = 0x%02x \n", temp, (uint8)ingest[temp+20]);
+            }
+        #endif
+
+        // FECF
+        tc_sdls_processed_frame->tc_sec_trailer.fecf = ((uint8)ingest[x] << 8) | ((uint8)ingest[x+1]);
+        Crypto_FECF(tc_sdls_processed_frame->tc_sec_trailer.fecf, ingest, (tc_sdls_processed_frame->tc_header.fl - 1),tc_sdls_processed_frame);
+
+        // Initialize the key
+        //itc_gcm128_init(&sa[tc_sdls_processed_frame->tc_sec_header.spi].gcm_ctx, (const unsigned char*) &ek_ring[sa[sa_ptr->ekid]);
+
+        gcry_error = gcry_cipher_open(
+            &(tmp_hd),
+            GCRY_CIPHER_AES256, 
+            GCRY_CIPHER_MODE_GCM, 
+            GCRY_CIPHER_CBC_MAC
+        );
+        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+        {
+            OS_printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
+            status = OS_ERROR;
+            return status;
+        }
+        #ifdef DEBUG
+            OS_printf("Key ID = %d, 0x", sa_ptr->ekid);
+            for(int y = 0; y < KEY_SIZE; y++)
+            {
+                OS_printf("%02x", ek_ring[sa_ptr->ekid].value[y]);
+            }
+            OS_printf("\n");
+        #endif
+        gcry_error = gcry_cipher_setkey(
+            tmp_hd,
+            &(ek_ring[sa_ptr->ekid].value[0]),
+            KEY_SIZE
+        );
+        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+        {
+            OS_printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
+            status = OS_ERROR;
+            return status;
+        }
+        gcry_error = gcry_cipher_setiv(
+            tmp_hd,
+            &(sa_ptr->iv[0]),
+            sa_ptr->iv_len
+        );
+        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+        {
+            OS_printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
+            status = OS_ERROR;
+            return status;
+        }
+
+        gcry_error = gcry_cipher_decrypt(
+            tmp_hd, 
+            &(tc_sdls_processed_frame->tc_pdu[0]),                          // plaintext output
+            tc_sdls_processed_frame->tc_pdu_len,			 		// length of data
+            &(ingest[20]),                                  // ciphertext input
+            tc_sdls_processed_frame->tc_pdu_len                    // in data length
+        );
+        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+        {
+            OS_printf(KRED "ERROR: gcry_cipher_decrypt error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
+            status = OS_ERROR;
+            return status;
+        }
+        gcry_cipher_close(tmp_hd);
+        
+        // Increment the IV for next time
+        #ifdef INCREMENT
+            Crypto_increment(sa_ptr->iv, sa_ptr->shivf_len);
+        #endif
+    }
+    // Determine mode via SPI
+    else if ((sa_ptr->est == 1) &&
+        (sa_ptr->ast == 1))
+    {	// Authenticated/Encrypted
+        #ifdef DEBUG
+            OS_printf(KBLU "Authenticated/Encrypted TC Received!\n" RESET);
         #endif
         #ifdef TC_DEBUG
             OS_printf("IV: \n");
@@ -2828,7 +2997,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
             return status;
         }
 
-        tc_sdls_processed_frame->tc_pdu_len = Crypto_Get_tcPayloadLength(tc_sdls_processed_frame);
+        tc_sdls_processed_frame->tc_pdu_len = Crypto_Get_tcPayloadLength(tc_sdls_processed_frame, sa_ptr);
 
         x = x + tc_sdls_processed_frame->tc_pdu_len;
 
@@ -2855,7 +3024,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
 
         // FECF
         tc_sdls_processed_frame->tc_sec_trailer.fecf = ((uint8)ingest[x] << 8) | ((uint8)ingest[x+1]);
-        Crypto_FECF(tc_sdls_processed_frame->tc_sec_trailer.fecf, ingest, 36,tc_sdls_processed_frame);
+        Crypto_FECF(tc_sdls_processed_frame->tc_sec_trailer.fecf, ingest, (tc_sdls_processed_frame->tc_header.fl - 2),tc_sdls_processed_frame);
 
         // Initialize the key
         //itc_gcm128_init(&sa[tc_sdls_processed_frame->tc_sec_header.spi].gcm_ctx, (const unsigned char*) &ek_ring[sa[sa_ptr->ekid]);
@@ -2974,6 +3143,13 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
         // Increment the IV for next time
         #ifdef INCREMENT
             Crypto_increment(sa_ptr->iv, IV_SIZE);
+        #endif
+    }
+    else if((sa_ptr->ast == 1) && (sa_ptr->est == 0))
+    {
+        status = CRYPTO_LIB_ERROR;
+        #ifdef DEBUG
+            OS_printf(KBLU "Authenticated TC Received!\n" RESET);
         #endif
     }
     else
