@@ -28,6 +28,7 @@ ivv-itc@lists.nasa.gov
 #endif
 
 #include "crypto_structs.h"
+#include "crypto_config_structs.h"
 
 #define CRYPTO_LIB_MAJOR_VERSION    1
 #define CRYPTO_LIB_MINOR_VERSION    2
@@ -38,7 +39,9 @@ ivv-itc@lists.nasa.gov
 ** Prototypes
 */
 // Initialization
-extern int32 Crypto_Init(void);
+extern int32 Crypto_Init(void); //Initialize CryptoLib with defaults
+extern int32 Crypto_Init_Main(CryptoConfig_t* config,SadbMariaDBConfig_t* sadb_mariadb_config); //Initialize CryptoLib with application specified defaults
+extern int32 Crypto_Init_With_Props(char** configs,int32 num_configs); //Initialize CryptoLib with string properties per SIS
 // Telecommand (TC)
 extern int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_length, \
                                       uint8 **pp_enc_frame, uint16 *p_enc_frame_len);
@@ -61,5 +64,10 @@ extern crypto_key_t ek_ring[NUM_KEYS];
 extern uint8 Crypto_Prep_Reply(char* ingest, uint8 appID);
 extern int32 Crypto_increment(uint8 *num, int length);
 
+//Global configuration structs
+extern CryptoConfig_t* crypto_config;
+extern SadbMariaDBConfig_t* sadb_mariadb_config;
+extern GvcidManagedParameters_t* gvcid_managed_parameters;
+extern GvcidManagedParameters_t* current_managed_parameters;
 
 #endif

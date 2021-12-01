@@ -94,7 +94,9 @@ static int32 sadb_init(void)
 
     //TODO - add mysql_options/mysql_get_ssl_cipher logic for mTLS connections.
 
-    if (mysql_real_connect(con, MYSQL_HOST, MYSQL_USER, MYSQL_PASS, MYSQL_DB, MYSQL_PORT, NULL, 0) == NULL)
+    if (mysql_real_connect(con, sadb_mariadb_config->mysql_hostname, sadb_mariadb_config->mysql_username,
+                           sadb_mariadb_config->mysql_password, sadb_mariadb_config->mysql_database,
+                           sadb_mariadb_config->mysql_port, NULL, 0) == NULL)
     { //0,NULL,0 are port number, unix socket, client flag
         status = finish_with_error(con,SADB_MARIADB_CONNECTION_FAILED);
     }

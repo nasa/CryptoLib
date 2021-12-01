@@ -19,5 +19,8 @@ ivv-itc@lists.nasa.gov
 
 #include "sadb_mariadb_error.h"
 
+#define SADB_INVALID_SADB_TYPE                      201
+#define MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND      101
+
 
 #endif //_crypto_error_h_
