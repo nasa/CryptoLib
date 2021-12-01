@@ -27,7 +27,6 @@ extern "C" {
 #include <stddef.h>
 #include <string.h>
 
-
 #include "osapi_minimum.h"
 
 char * c_read_file(const char * f_name, long * f_size);
@@ -35,6 +34,8 @@ char * c_read_file(const char * f_name, long * f_size);
 void debug_printf(const char* format, ...);
 void debug_hexprintf(const char* bin_data,int size_bin_data);
 
+void hex_conversion(char *buffer_h, uint8 **buffer_b, int *buffer_b_length);
+int convert_hexstring_to_byte_array(char* source_str, uint8* dest_buffer);
 
 #ifdef __cplusplus
 }  /* Close scope of 'extern "C"' declaration which encloses file. */

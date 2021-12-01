@@ -565,7 +565,7 @@ static void Crypto_Local_Config(void)
 
     // 136 - ef9f9284cf599eac3b119905a7d18851e7e374cf63aea04358586b0f757670f8
     // Reference: https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/mac/gcmtestvectors.zip
-    ek_ring[136].value[0]  = 0xef;
+    ek_ring[136].value[0]  = 0xff;
     ek_ring[136].value[1]  = 0x9f;
     ek_ring[136].value[2]  = 0x92;
     ek_ring[136].value[3]  = 0x84;
@@ -596,7 +596,7 @@ static void Crypto_Local_Config(void)
     ek_ring[136].value[28] = 0x75;
     ek_ring[136].value[29] = 0x76;
     ek_ring[136].value[30] = 0x70;
-    ek_ring[136].value[31] = 0xf8;
+    ek_ring[136].value[31] = 0xf9;
     ek_ring[135].key_state = KEY_DEACTIVATED;
 }
 

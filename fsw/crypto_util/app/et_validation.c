@@ -38,6 +38,29 @@ int EndPython()
     Py_Finalize();
 }
 
+int convert_hexstring_to_byte_array(char* source_str, uint8* dest_buffer)
+{
+    char *line = source_str;
+    char *data = line;
+    int offset;
+    int read_byte;
+    int data_len = 0;
+
+    while (sscanf(data, " %02x%n", &read_byte, &offset) == 1) 
+    {
+        dest_buffer[data_len++] = read_byte;
+        data += offset;
+    }
+    return data_len;
+}
+
+void hex_conversion(char *buffer_h, uint8 **buffer_b, int *buffer_b_length)
+{
+    // Convert input plaintext
+    *buffer_b = (uint8*)malloc((strlen(buffer_h) / 2) * sizeof(uint8));
+    *buffer_b_length = convert_hexstring_to_byte_array(buffer_h, *buffer_b);
+}
+
 void python_auth_encryption(char* data, char* key, char* iv, char* header, char* bitmask, uint8** expected, long* expected_length)
 {
     Py_Initialize();
@@ -133,29 +156,6 @@ UTEST(ET_VALIDATION, ENCRYPTION_TEST)
     EndPython();
 }
 
-int convert_hexstring_to_byte_array(char* source_str, uint8* dest_buffer)
-{
-    char *line = source_str;
-    char *data = line;
-    int offset;
-    int read_byte;
-    int data_len = 0;
-
-    while (sscanf(data, " %02x%n", &read_byte, &offset) == 1) 
-    {
-        dest_buffer[data_len++] = read_byte;
-        data += offset;
-    }
-    return data_len;
-}
-
-void hex_conversion(char *buffer_h, uint8 **buffer_b, int *buffer_b_length)
-{
-    // Convert input plaintext
-    *buffer_b = (uint8*)malloc((sizeof(buffer_h) / 2) * sizeof(uint8));
-    *buffer_b_length = convert_hexstring_to_byte_array(buffer_h, *buffer_b);
-}
-
 // AES-GCM 256 Test Vectors
 // Reference: https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/mac/gcmtestvectors.zip
 UTEST(ET_VALIDATION, VALIDATION_TEST)
@@ -168,10 +168,10 @@ UTEST(ET_VALIDATION, VALIDATION_TEST)
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_nist_key_h= "ef9f9284cf599eac3b119905a7d18851e7e374cf63aea04358586b0f757670f8";
-    char *buffer_nist_pt_h = "2003001100722ee47da4b77424733546c2d400c4e51069";
-    char *buffer_nist_iv_h = "b6ac8e4963f49207ffd6374c";
-    char *buffer_nist_ct_h = "1224dfefb72a20d49e09256908874979";
+    char *buffer_nist_key_h = "ef9f9284cf599eac3b119905a7d18851e7e374cf63aea04358586b0f757670f8";
+    char *buffer_nist_pt_h  = "2003001100722ee47da4b77424733546c2d400c4e51069";
+    char *buffer_nist_iv_h  = "b6ac8e4963f49207ffd6374c";
+    char *buffer_nist_ct_h  = "1224dfefb72a20d49e09256908874979";
 
     uint8 *buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_ct_b, *buffer_nist_key_b = NULL;
     int buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_ct_len, buffer_nist_key_len = 0;
@@ -187,7 +187,10 @@ UTEST(ET_VALIDATION, VALIDATION_TEST)
     test_association->arc_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
     expose_sadb_get_sa_from_spi(9, &test_association);
-    memcpy(ek_ring[test_association->ekid], buffer_nist_key_b, buffer_nist_key_len);
+
+    // Insert key into keyring of SA 9
+    hex_conversion(buffer_nist_key_h, &buffer_nist_key_b, &buffer_nist_key_len);
+    memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
@@ -218,6 +221,7 @@ UTEST(ET_VALIDATION, VALIDATION_TEST)
     free(buffer_nist_pt_b);
     free(buffer_nist_iv_b);
     free(buffer_nist_ct_b);
+    free(buffer_nist_key_b);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 }
 
