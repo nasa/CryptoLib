@@ -91,6 +91,7 @@ static int32 Crypto_PDU(char* ingest, TC_t* tc_frame);
 // Managed Parameter Functions
 static int32 Crypto_Get_Managed_Parameters_For_Gvcid(uint8 tfvn,uint16 scid,uint8 vcid,GvcidManagedParameters_t* managed_parameters_in,
                                                       GvcidManagedParameters_t** managed_parameters_out);
+static void Crypto_Free_Managed_Parameters(GvcidManagedParameters_t* managed_parameters);
 
 /*
 ** Global Variables
@@ -2090,25 +2091,27 @@ static int32 Crypto_PDU(char* ingest,TC_t* tc_frame)
 static int32 Crypto_Get_Managed_Parameters_For_Gvcid(uint8 tfvn,uint16 scid,uint8 vcid,GvcidManagedParameters_t* managed_parameters_in,
                                                       GvcidManagedParameters_t** managed_parameters_out)
 {
-    int32 status = OS_SUCCESS;
+    int32 status = MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND;
 
-    if (managed_parameters_in == NULL) { return MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND; }
-
-    if(managed_parameters_in->tfvn==tfvn && managed_parameters_in->scid==scid && managed_parameters_in->vcid==vcid){
-        *managed_parameters_out = managed_parameters_in;//Found the managed parameters for that gvcid!
-    } else { status = MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND; }
-
-    //Go through list of ManagedParameters until you find correct params for gvcid.
-    while(managed_parameters_in->next != NULL){
-        managed_parameters_in = managed_parameters_in->next;
+    while(managed_parameters_in != NULL){
         if(managed_parameters_in->tfvn==tfvn && managed_parameters_in->scid==scid && managed_parameters_in->vcid==vcid){
             *managed_parameters_out = managed_parameters_in; //Found the managed parameters for that gvcid!
             status = OS_SUCCESS;
             break;
+        } else{ //Managed parameters for gvcid not found, set pointer to next managed parameter.
+            managed_parameters_in = managed_parameters_in->next;
         }
     }
-
     return status;
+}
+//Managed parameters are expected to live the duration of the program, this may not be necessary.
+//TODO - If this function is useful, we need to add a Crypto Shutdown method that invokes this internal free.
+static void Crypto_Free_Managed_Parameters(GvcidManagedParameters_t* managed_parameters)
+{
+    if(managed_parameters->next != NULL){
+        Crypto_Free_Managed_Parameters(managed_parameters->next);
+    }
+    free(managed_parameters);
 }
 
 
