@@ -9,17 +9,18 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
-#include "crypto_props.h"
+#include "../../fsw/public_inc/crypto_props.h"
 #include <assert.h>
 #include <string.h>
 
 void test()
 {
-
-    crypto_config_list* props = crypto_config_alloc(0,0); //defaults to max_key_size=256,max_value_size=4096
+    //crypto_config_alloc(0,0) input defaults to max_key_size=256,max_value_size=4096
+    crypto_config_list* props = crypto_config_alloc(256,4096); 
     assert(props);
     //load sample key,values from the file system
-    int status = crypto_config_load_properties("/unit_test/config_props/crypto_props.txt");
+    int status = 0; 
+    status = crypto_config_load_properties("/unit_test/config_props/crypto_props.txt");
     assert(status>0);
     //print all values for testing
     crypto_config_print_all_props(props); 
@@ -38,11 +39,10 @@ void test()
     status=crypto_config_set_property_value("key_b","BBB");
     assert(status>0);
     //test non-existing key 
-    status=crypto_config_set_property_value("key_d","DDD");
-    assert(status>0);
+    status=crypto_config_set_property_value("key_x","DDD");
+    assert(status<=0);
     //print all values for visual validation 
-    crypto_config_print_all_props(props);
-    
+    crypto_config_print_all_props(props);    
     //get values based on key 
     char* val = crypto_config_get_property_value("key_a"); 
     assert(NULL!=val);
@@ -65,8 +65,11 @@ void test()
    
     //print all values for visual validation 
     crypto_config_print_all_props(props); 
+    
     //finally free all memory 
     crypto_config_free(&props);
     assert(NULL==props);
+    
     printf("free\n");
 }
+ 

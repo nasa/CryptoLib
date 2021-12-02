@@ -6,7 +6,7 @@
 key_a=aaa
 key_b=bbb
 key_c=ccc
-key_d=
+key_d=ddd
 key_e=<some_place_holder>/<some_place_holder_1>
 #below is an key with non-alphanumeric char
 key_f=www.yahoo.com 

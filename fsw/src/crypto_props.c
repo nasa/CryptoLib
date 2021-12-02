@@ -36,8 +36,9 @@ crypto_config_list* crypto_config_alloc(int max_key_size, int max_value_size) {
 
 crypto_config_list* crypto_config_alloc_helper(int max_key_size, int max_value_size, crypto_config_list** props)
 {
-     if (NULL == p_self) {
-        p_self = (crypto_config_list*) calloc(1, sizeof(crypto_config_list));
+     if (NULL == *props) {
+        *props = (crypto_config_list*) calloc(1, sizeof(crypto_config_list));
+        (*props)->p_head=NULL; 
         //set max key size
         if (max_key_size > 0 && max_key_size<=4096) {
             (*props)->KEY_SIZE_IN_BYTES = max_key_size;
@@ -59,7 +60,7 @@ crypto_config_list* crypto_config_alloc_helper(int max_key_size, int max_value_s
                      "default 4096.\n");
         }
     }
-    return p_self;
+    return *props;
 }
 
 void crypto_config_free(crypto_config_list** pp_self)
@@ -73,16 +74,28 @@ void crypto_config_free(crypto_config_list** pp_self)
         {
             p_next = p_current->p_next;
             //free child attributes 
-            free(p_current->key);
-            free(p_current->value);
+            if (NULL!=p_current->key)
+            {
+                free(p_current->key);
+                p_current->key = NULL; 
+            }
+            if (NULL!=p_current->value)
+            {
+                free(p_current->value);
+                p_current->value = NULL; 
+            }
             //free the node 
             free(p_current);
             p_current = p_next; 
            
         }
-        //free the super structure 
-        free (*pp_self);
-        *pp_self = NULL; 
+        //free the super structure
+        if (NULL!=*pp_self)
+        {
+            free (*pp_self);
+            *pp_self = NULL; 
+        }
+
     }
 }
 
@@ -105,33 +118,41 @@ int crypto_config_props_add_property(char* key, char* value)
 
 int crypto_config_props_add_property_helper(char* key, char* value, crypto_config_list** pp_self) {
     int status = false;
-    if (NULL != key && strlen(key) > 0 && NULL != value && NULL != pp_self && NULL != (*pp_self)) {
+    int dest_buffer_size_key = 0;
+    int dest_buffer_size_value = 0;
+    if (NULL != key && strlen(key) > 0 && NULL != value && strlen(value) > 0 && NULL != pp_self && NULL != (*pp_self)) {
 
+        dest_buffer_size_key = strlen(key);
+        dest_buffer_size_value = strlen(value);
         //is the head NULL?  
         if (NULL == (*pp_self)->p_head) {
 
+            //if head is NULL then pre-allocate memory for it 
+            (*pp_self)->p_head = calloc(1, sizeof (crypto_config_node));
+            (*pp_self)->p_head->key = calloc(dest_buffer_size_key, sizeof (char));
+            (*pp_self)->p_head->value = calloc(dest_buffer_size_value, sizeof (char));
 
-            if (safe_copy((*pp_self)->KEY_SIZE_IN_BYTES, key)
-                    && safe_copy((*pp_self)->VALUE_SIZE_IN_BYTES, value)) {
-                //if head is NULL then allocate memory for it 
-                (*pp_self)->p_head = calloc(1, sizeof (crypto_config_node));
-                (*pp_self)->p_head->key = calloc((*pp_self)->KEY_SIZE_IN_BYTES, sizeof (char));
-                (*pp_self)->p_head->value = calloc((*pp_self)->VALUE_SIZE_IN_BYTES, sizeof (char));
+            if (safe_copy(dest_buffer_size_key, key)
+                    && safe_copy(dest_buffer_size_value, value)) {
                 //set key & value
                 strcpy((*pp_self)->p_head->key, key);
                 strcpy((*pp_self)->p_head->value, value);
                 status = true;
             } else {
-                fprintf(stderr,"ERROR crypto_config,crypto_config_props_add_property_helper(), "
+                //since this was NOT a safe operation free preallocated memory 
+                free((*pp_self)->p_head->key);
+                free((*pp_self)->p_head->value);
+                free((*pp_self)->p_head);
+                fprintf(stderr, "ERROR crypto_config,crypto_config_props_add_property_helper(), "
                         "prevented unsafe copy.\n");
-                fprintf(stderr,"source key size=%lu, destination key size=%d,source value size=%lu, "
-                        "destination value size=%d.\n",
+                fprintf(stderr, "source key size=%zu, destination key size=%zu,source value size=%zu, "
+                        "destination value size=%zu.\n",
                         strlen(key),
-                        (*pp_self)->KEY_SIZE_IN_BYTES,
+                        strlen((*pp_self)->p_head->key),
                         strlen(value),
-                        (*pp_self)->VALUE_SIZE_IN_BYTES);
+                        strlen((*pp_self)->p_head->value));
             }
-        }            //head is NOT NULL 
+        }//head is NOT NULL 
         else {
             crypto_config_node* p_current = (*pp_self)->p_head;
             crypto_config_node* p_previous = NULL;
@@ -141,31 +162,38 @@ int crypto_config_props_add_property_helper(char* key, char* value, crypto_confi
 
             }//end while 
 
+            //preallocate  memory for the new node 
+            p_previous->p_next = calloc(1, sizeof (crypto_config_node));
+            p_previous->p_next->key = calloc(dest_buffer_size_key, sizeof (char));
+            p_previous->p_next->value = calloc(dest_buffer_size_value, sizeof (char));
+
             //set key & value
-            if (safe_copy((*pp_self)->KEY_SIZE_IN_BYTES, key)
-                    && safe_copy((*pp_self)->VALUE_SIZE_IN_BYTES, value)) {
-                //add a new node to the end 
-                p_previous->p_next = calloc(1, sizeof (crypto_config_node));
-                p_previous->p_next->key = calloc((*pp_self)->KEY_SIZE_IN_BYTES, sizeof (char));
-                p_previous->p_next->value = calloc((*pp_self)->VALUE_SIZE_IN_BYTES, sizeof (char));
+            if (safe_copy(dest_buffer_size_key, key)
+                    && safe_copy(dest_buffer_size_value, value)) {
+
                 //set values 
                 strcpy(p_previous->p_next->key, key);
                 strcpy(p_previous->p_next->value, value);
                 status = true;
             } else {
-                fprintf(stderr,"ERROR crypto_config,crypto_"
+                //since this was NOT a safe operation free preallocated memory 
+                free(p_previous->p_next->value);
+                free(p_previous->p_next->key);
+                free(p_previous->p_next);
+
+                fprintf(stderr, "ERROR crypto_config,crypto_"
                         "config_props_add_property_helper(), prevented unsafe "
                         "copy.\n");
-                fprintf(stderr,"source key size=%lu, destination key size=%d,source value size=%lu, "
-                        "destination value size=%d.\n", strlen(key),
-                        (*pp_self)->KEY_SIZE_IN_BYTES,
+                fprintf(stderr, "source key size=%zu, destination key size=%zu,source value size=%zu, "
+                        "destination value size=%zu.\n", strlen(key),
+                        strlen(p_previous->p_next->key),
                         strlen(value),
-                        (*pp_self)->VALUE_SIZE_IN_BYTES);
+                        strlen(p_previous->p_next->value));
             }
 
         }
     } else {
-        fprintf(stderr,"ERROR, crypto_config_props_add_property_helper() inputs are empty or null.\n");
+        fprintf(stderr, "ERROR, crypto_config_props_add_property_helper() inputs are empty or null.\n");
     }
 
     return status;
@@ -179,9 +207,11 @@ int crypto_config_set_property_value(char* key, char* value)
 int crypto_config_props_set_property_value_helper(char* key, char* value, crypto_config_list** pp_self)
 {
     int status = false; 
+    int dest_buffer_size_value = 0;
     //iterate through the link list until you reach the right node
-    if (NULL!=key && strlen(key)> 0 && NULL!=value && NULL!=pp_self && NULL!=(*pp_self))
+    if (NULL!=key && strlen(key)> 0 && NULL!=value && strlen(key)> 0 && NULL!=pp_self && NULL!=(*pp_self))
     {
+        dest_buffer_size_value = strlen(value);
         crypto_config_node* p_current = (*pp_self)->p_head; 
         while (p_current!=NULL)
         {
@@ -192,22 +222,34 @@ int crypto_config_props_set_property_value_helper(char* key, char* value, crypto
             }
             else
             {
-                if (safe_copy((*pp_self)->KEY_SIZE_IN_BYTES,value))
-                {   
-                    //reset old values to empty 
-                    memset(p_current->value, 0,(*pp_self)->VALUE_SIZE_IN_BYTES);
-                    //replace old value with the new 
-                    strcpy(p_current->value,value);  
-                    status = true; 
-                }
-                else
-                {
-                    //TODO: print error 
-                    fprintf(stderr,"ERROR crypto_config_props_set_property_value_helper(),"
-                            "unsafe copy source value size=%lu is larger than destination "
-                            "size=%lu.\n",strlen(value),strlen(p_current->value));
+                //since the new values length can be larger than older values length then we must free the older buffer & create a new buffer 
+                if (NULL!=p_current && NULL!=p_current->value)
+                    {
+                    free(p_current->value);
+                    p_current->value = NULL; 
+                    //new size based on new value
+                    p_current->value = calloc(dest_buffer_size_value,sizeof (char));
+                    if (safe_copy(dest_buffer_size_value,value))
+                    {   
+                        //replace old value with the new 
+                        strcpy(p_current->value,value);  
+                        status = true; 
+                    }
+                    else
+                    {
+                        //prevented unsafe copy , therefore free that memory
+                        if (NULL!=p_current->value)
+                        {
+                            free(p_current->value);
+                        }
+                        //TODO: print error 
+                        fprintf(stderr,"ERROR crypto_config_props_set_property_value_helper(),"
+                                "unsafe copy source value size=%lu is larger than destination "
+                                "size=%lu.\n",strlen(value),strlen(p_current->value));
+                    }
                 }
                 break; 
+                
                 
             }
             
@@ -377,4 +419,3 @@ int safe_copy(int destination_size,char* src) {
     }
     return flag;
 }
-

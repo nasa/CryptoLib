@@ -146,4 +146,3 @@ void crypto_config_print_all_props(crypto_config_list* p_self);
 #endif
 
 #endif /* CRYPTO_PROPS_H */
-
