@@ -2525,12 +2525,24 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                     (p_in_frame + TC_FRAME_PRIMARYHEADER_SIZE),       // plaintext input TODO: Determine if Segment header exists, assuming yes (+1) for now
                     tf_payload_len                                  // in data length
                 );
+
                 if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
                 {
                     OS_printf(KRED "ERROR: gcry_cipher_encrypt error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
                     status = OS_ERROR;
                     return status;
                 }
+
+                #ifdef TC_DEBUG
+                    OS_printf("Encrypted bytes output_loc is %d\n", index);
+                    OS_printf("tf_payload_len is %d\n", tf_payload_len);
+                    OS_printf(KYEL "Printing TC Frame after encryption:\n\t");
+                    for(int i=0; i < *p_enc_frame_len; i++)
+                    {
+                        OS_printf("%02X", *(p_new_enc_frame + i));
+                    }
+                    OS_printf("\n");
+                #endif
             }
 
             if ((sa_service_type == SA_AUTHENTICATION) || \
@@ -2760,7 +2772,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
                 OS_printf("\t iv[%d] = 0x%02x\n", x-byte_idx, tc_sdls_processed_frame->tc_sec_header.iv[x-byte_idx]);
             #endif
         }
-        byte_idx += IV_SIZE;
+        byte_idx += sa_ptr->shivf_len;
         report.snval = tc_sdls_processed_frame->tc_sec_header.iv[sa_ptr->shivf_len-1];
 
         #ifdef DEBUG
@@ -2921,23 +2933,23 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
         #ifdef TC_DEBUG
             OS_printf("IV: \n");
         #endif
-        for (x = byte_idx; x < (byte_idx + IV_SIZE); x++)
+        for (x = byte_idx; x < (byte_idx + sa_ptr->shivf_len); x++)
         {
             tc_sdls_processed_frame->tc_sec_header.iv[x-byte_idx] = (uint8)ingest[x];
             #ifdef TC_DEBUG
                 OS_printf("\t iv[%d] = 0x%02x\n", x-byte_idx, tc_sdls_processed_frame->tc_sec_header.iv[x-byte_idx]);
             #endif
         }
-        byte_idx += IV_SIZE;
-        report.snval = tc_sdls_processed_frame->tc_sec_header.iv[IV_SIZE-1];
+        byte_idx += sa_ptr->shivf_len;
+        report.snval = tc_sdls_processed_frame->tc_sec_header.iv[sa_ptr->shivf_len-1];
 
         #ifdef DEBUG
-            OS_printf("\t tc_sec_header.iv[%d] = 0x%02x \n", IV_SIZE-1, tc_sdls_processed_frame->tc_sec_header.iv[IV_SIZE-1]);
-            OS_printf("\t sa[%d].iv[%d] = 0x%02x \n", tc_sdls_processed_frame->tc_sec_header.spi, IV_SIZE-1, sa_ptr->iv[IV_SIZE-1]);
+            OS_printf("\t tc_sec_header.iv[%d] = 0x%02x \n", sa_ptr->shivf_len-1, tc_sdls_processed_frame->tc_sec_header.iv[sa_ptr->shivf_len-1]);
+            OS_printf("\t sa[%d].iv[%d] = 0x%02x \n", tc_sdls_processed_frame->tc_sec_header.spi, sa_ptr->shivf_len-1, sa_ptr->iv[sa_ptr->shivf_len-1]);
         #endif
 
         // Check IV is in ARCW
-        if ( Crypto_window(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, IV_SIZE,
+        if ( Crypto_window(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len,
             sa_ptr->arcw[sa_ptr->arcw_len-1]) != OS_SUCCESS )
         {
             report.af = 1;
@@ -2961,7 +2973,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
         }
         else 
         {
-            if ( Crypto_compare_less_equal(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, IV_SIZE) == OS_SUCCESS )
+            if ( Crypto_compare_less_equal(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len) == OS_SUCCESS )
             {   // Replay - IV value lower than expected
                 report.af = 1;
                 report.bsnf = 1;
@@ -2984,7 +2996,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
             } 
             else
             {   // Adjust expected IV to acceptable received value
-                for (int i = 0; i < (IV_SIZE); i++)
+                for (int i = 0; i < (sa_ptr->shivf_len); i++)
                 {
                     sa_ptr->iv[i] = tc_sdls_processed_frame->tc_sec_header.iv[i];
                 }
@@ -3142,7 +3154,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
         
         // Increment the IV for next time
         #ifdef INCREMENT
-            Crypto_increment(sa_ptr->iv, IV_SIZE);
+            Crypto_increment(sa_ptr->iv, sa_ptr->shivf_len);
         #endif
     }
     else if((sa_ptr->ast == 1) && (sa_ptr->est == 0))

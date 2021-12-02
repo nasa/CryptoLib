@@ -43,16 +43,17 @@ class Encryption:
 
             cipher.update(zeroed_header_b)
         ciphertext, tag = cipher.encrypt_and_digest(data_b)
-        #print("Cipher:", ciphertext.hex())
-        #print("Tag", tag.hex())
+        print("Cipher: ", ciphertext.hex())
+        print("Tag: ", tag.hex())
         
         final_val = header_b + ciphertext + tag
 
         check_sum = crc16(bytearray(final_val), 0, len(final_val))
         final_val += check_sum.to_bytes(2, byteorder = "big")
 
-        while (len(final_val.hex()) %8) != 0:
-            final_val += bytes.fromhex("00")
+        # Padding for Later
+        # while (len(final_val.hex()) %8) != 0:
+        #     final_val += bytes.fromhex("00")
 
         final_val_len = (len(final_val.hex()) / 2)
         self.results = final_val

@@ -24,7 +24,7 @@ add_test(NAME UT_TC_APPLY
          WORKING_DIRECTORY ${PROJECT_TEST_DIR})
 
 if(${ENCTEST})
-    add_test(NAME ET_VALIDATION
-             COMMAND ${PROJECT_BINARY_DIR}/bin/et_validation 
+    add_test(NAME ET_DT_VALIDATION
+             COMMAND ${PROJECT_BINARY_DIR}/bin/et_dt_validation 
              WORKING_DIRECTORY ${PROJECT_TEST_DIR})
 endif()
