@@ -86,7 +86,7 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
     uint8* expected = NULL;
     long expected_length = 0;
 
-    char *activate_sa4_h  = "2003002000ff000100001880d2c9000e197f0b001b0004000400003040d95ea61a5555";
+    char *activate_sa4_h  = "2003002000ff000100001880d2c9000e197f0b001b0004000400003040d95ea61a";
     char *enc_test_ping_h = "20030415001880d2ca0008197f0b0031000039c5a111";               
 
     uint8 *activate_sa4_b, *enc_test_ping_b = NULL;
@@ -120,6 +120,8 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
     test_association->arc_len = 0;
     test_association->gvcid_tc_blk.vcid=1;
     test_association->iv[11] = 1;
+    test_association->ast = 1;
+    test_association->est = 1;
     Crypto_TC_ApplySecurity(enc_test_ping_b, enc_test_ping_len, &ptr_enc_frame, &enc_frame_len);
 
     // Get Truth Baseline
@@ -127,14 +129,83 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
 
     for(int i = 0; i < expected_length; i++)
     {
-        printf("[%d]: %02x -> %02x \n", i, expected[i], ptr_enc_frame[i]);
-        //ASSERT_EQ(expected[i], ptr_enc_frame[i]);
+        //printf("[%d]: %02x -> %02x \n", i, expected[i], ptr_enc_frame[i]);
+        ASSERT_EQ(expected[i], ptr_enc_frame[i]);
     }
 
     free(activate_sa4_b);
     free(enc_test_ping_b);
     free(ptr_enc_frame); 
     free(expected);
+    free(tc_sdls_processed_frame);
+    EndPython();
+}
+
+UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
+{
+    //Setup & Initialize CryptoLib
+    Crypto_Init();
+
+    char *activate_sa4_h  = "2003002000ff000100001880d2c9000e197f0b001b0004000400003040d95ea61a";
+    //char *dec_test_ping_h = "2003043400ff0004000000000000000000000002b3105fd60b1fdb72496c8ce203ce9b2eabb8bfc4527c479319b7cad9899d153a35"; 
+    char *dec_test_ping_h = "2003043400FF00040000000000000000000000017E1D8EEA8D45CEBA17888E0CDCD747DC78E5F372F997F2A63AA5DFC168395DC987"; 
+    char *enc_test_ping_h = "1880d2ca0008197f0b0031000039c5";              
+
+    // Cody nitpicks things that don't matter in the grand scheme of the current problem =P
+
+    uint8 *activate_sa4_b, *dec_test_ping_b, *enc_test_ping_b = NULL;
+    int activate_sa4_len, dec_test_ping_len, enc_test_ping_len = 0;
+
+    hex_conversion(activate_sa4_h, &activate_sa4_b, &activate_sa4_len);
+    hex_conversion(dec_test_ping_h, &dec_test_ping_b, &dec_test_ping_len);
+    hex_conversion(enc_test_ping_h, &enc_test_ping_b, &enc_test_ping_len);
+
+    SecurityAssociation_t* test_association = NULL;
+    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(unsigned char));
+
+    int32 return_val = -1;
+
+    TC_t *tc_sdls_processed_frame;
+    tc_sdls_processed_frame = malloc(sizeof(uint8) * TC_SIZE);
+    memset(tc_sdls_processed_frame, 0, (sizeof(uint8) * TC_SIZE));
+
+    // Ensure that Process Security can activate SA4
+    Crypto_TC_ProcessSecurity(activate_sa4_b, &activate_sa4_len, tc_sdls_processed_frame);
+    
+    // Expose SA 1 for testing
+    expose_sadb_get_sa_from_spi(1,&test_association);
+
+    // Deactive SA 1
+    test_association->sa_state = SA_NONE;
+
+    // Expose SA 4 for testing
+    expose_sadb_get_sa_from_spi(4, &test_association);
+    test_association->arc_len = 0;
+    test_association->gvcid_tc_blk.vcid=1;
+    test_association->iv[11] = 1;
+    test_association->ast = 1;
+    test_association->est = 1;
+
+    Crypto_TC_ProcessSecurity(dec_test_ping_b, &dec_test_ping_len, tc_sdls_processed_frame);
+
+    for(int i = 0; i < tc_sdls_processed_frame->tc_pdu_len; i++)
+    {
+        printf("%02x", tc_sdls_processed_frame->tc_pdu[i]);
+    }
+    printf("\n");
+    for(int i = 0; i < tc_sdls_processed_frame->tc_pdu_len; i++)
+    {
+        printf("%02x", enc_test_ping_b[i]);
+    }
+    printf("\n");
+    for(int i = 0; i < tc_sdls_processed_frame->tc_pdu_len; i++)
+    {
+        printf("%02x %02x\n", enc_test_ping_b[i], tc_sdls_processed_frame->tc_pdu[i]);
+        ASSERT_EQ(enc_test_ping_b[i], tc_sdls_processed_frame->tc_pdu[i]);
+    }
+
+    free(activate_sa4_b);
+    free(dec_test_ping_b);
     free(tc_sdls_processed_frame);
     EndPython();
 }

@@ -42,10 +42,11 @@ UTEST(TC_APPLY_SECURITY, NO_CRYPTO_INIT)
 
     uint8 *ptr_enc_frame = NULL;
     uint16 enc_frame_len = 0;
-    int32 return_val = -1;
+    int32 return_val = CRYPTO_LIB_ERROR;
 
     return_val = Crypto_TC_ApplySecurity(raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(CRYPTO_LIB_ERR_NO_INIT, return_val);
+    free(raw_tc_sdls_ping_b);
 }
 
 // Nominal Test.  This should read a raw_tc_sdls_ping.dat file, continue down the "happy path", and return CRYPTO_LIB_SUCCESS
@@ -53,20 +54,20 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH)
 {
     //Setup & Initialize CryptoLib
     Crypto_Init();
-    long buffer_size =0;
-    char *buffer = c_read_file("../../fsw/crypto_tests/data/raw_tc_sdls_ping.dat", &buffer_size);
     char *raw_tc_sdls_ping_h = "20030015001880d2c70008197f0b00310000b1fe3128";
+    uint8 *raw_tc_sdls_ping_b = NULL;
+    int raw_tc_sdls_ping_len = 0;
 
-    uint16 buffer_size_i = (uint16) buffer_size;
+    hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
     uint8 *ptr_enc_frame = NULL;
     uint16 enc_frame_len = 0;
 
-    int32 return_val = -1;
+    int32 return_val = CRYPTO_LIB_ERROR;
 
-    return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
+    return_val = Crypto_TC_ApplySecurity(raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
-    free(buffer);
+    free(raw_tc_sdls_ping_b);
     free(ptr_enc_frame);
 }
 
@@ -75,39 +76,38 @@ UTEST(TC_APPLY_SECURITY, BAD_SPACE_CRAFT_ID)
 {
     //Setup & Initialize CryptoLib
     Crypto_Init();
-    long buffer_size = 0;
-    char *buffer = c_read_file("../../fsw/crypto_tests/data/raw_tc_sdls_ping_bad_scid.dat", &buffer_size);
-    char * raw_tc_sdls_ping_bad_scid_h = "20010015001880d2c70008197f0b00310000b1fe3128";
-    uint16 buffer_size_i = (uint16) buffer_size;
+    char *raw_tc_sdls_ping_bad_scid_h = "20010015001880d2c70008197f0b00310000b1fe3128";
+    uint8 *raw_tc_sdls_ping_bad_scid_b = NULL;
+    int raw_tc_sdls_ping_bad_scid_len = 0;
+
+    hex_conversion(raw_tc_sdls_ping_bad_scid_h, &raw_tc_sdls_ping_bad_scid_b, &raw_tc_sdls_ping_bad_scid_len);
 
     uint8 *ptr_enc_frame = NULL;
-    uint16 enc_frame_len = 0;
-    int32 return_val = -1;
+    uint16 enc_frame_len = 0;    
 
-    return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
+    uint32 return_val = Crypto_TC_ApplySecurity(raw_tc_sdls_ping_bad_scid_b, raw_tc_sdls_ping_bad_scid_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(CRYPTO_LIB_ERR_INVALID_SCID, return_val);
-    free(buffer);
+    free(raw_tc_sdls_ping_bad_scid_b);
     free(ptr_enc_frame);
 }
 
-// TODO:  This does not report the correct error.  It returns the correctly, but complains of an incorrect SCID
-//        This should return CRYPTO_LIB_ERR_INVALID_VCID
 UTEST(TC_APPLY_SECURITY, BAD_VIRTUAL_CHANNEL_ID)
 {
     //Setup & Initialize CryptoLib
     Crypto_Init();
-    long buffer_size = 0;
-    char *buffer = c_read_file("../../fsw/crypto_tests/data/raw_tc_sdls_ping_bad_vcid.dat", &buffer_size);
     char *raw_tc_sdls_ping_bad_vcid_h = "20032015001880d2c70008197f0b00310000b1fe3128";
-    uint16 buffer_size_i = (uint16) buffer_size;
+    uint8 *raw_tc_sdls_ping_bad_vcid_b = NULL;
+    int raw_tc_sdls_ping_bad_vcid_len = 0;
+
+    hex_conversion(raw_tc_sdls_ping_bad_vcid_h, &raw_tc_sdls_ping_bad_vcid_b, &raw_tc_sdls_ping_bad_vcid_len);
 
     uint8 *ptr_enc_frame = NULL;
     uint16 enc_frame_len = 0;
-    int32 return_val = -1;
+    int32 return_val = CRYPTO_LIB_ERROR;
 
-    return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
+    return_val = Crypto_TC_ApplySecurity(raw_tc_sdls_ping_bad_vcid_b, raw_tc_sdls_ping_bad_vcid_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(CRYPTO_LIB_ERR_INVALID_VCID, return_val); 
-    free(buffer);
+    free(raw_tc_sdls_ping_bad_vcid_b);
     free(ptr_enc_frame);
 }
 

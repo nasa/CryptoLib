@@ -1007,8 +1007,6 @@ uint8 Crypto_Prep_Reply(char* ingest, uint8 appID)
 static int32 Crypto_FECF(int fecf, char* ingest, int len_ingest,TC_t* tc_frame)
 // Calculate the Frame Error Control Field (FECF), also known as a cyclic redundancy check (CRC)
 {
-
-    printf(" LEN INGEST (CRYPTO_FECF): %d\n", len_ingest);
     int32 result = OS_SUCCESS;
     uint16 calc_fecf = Crypto_Calc_FECF(ingest, len_ingest);
 
@@ -2909,7 +2907,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
             tc_sdls_processed_frame->tc_pdu_len,			 		// length of data
             &(ingest[20]),                                  // ciphertext input
             tc_sdls_processed_frame->tc_pdu_len                    // in data length
-        );
+        ); 
         if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
         {
             OS_printf(KRED "ERROR: gcry_cipher_decrypt error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
@@ -3036,7 +3034,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
 
         // FECF
         tc_sdls_processed_frame->tc_sec_trailer.fecf = ((uint8)ingest[x] << 8) | ((uint8)ingest[x+1]);
-        Crypto_FECF(tc_sdls_processed_frame->tc_sec_trailer.fecf, ingest, (tc_sdls_processed_frame->tc_header.fl - 2),tc_sdls_processed_frame);
+        Crypto_FECF(tc_sdls_processed_frame->tc_sec_trailer.fecf, ingest, (tc_sdls_processed_frame->tc_header.fl - 1),tc_sdls_processed_frame);
 
         // Initialize the key
         //itc_gcm128_init(&sa[tc_sdls_processed_frame->tc_sec_header.spi].gcm_ctx, (const unsigned char*) &ek_ring[sa[sa_ptr->ekid]);
@@ -3063,7 +3061,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
         #endif
         gcry_error = gcry_cipher_setkey(
             tmp_hd,
-            &(ek_ring[sa_ptr->ekid].value[0]),
+            ek_ring[sa_ptr->ekid].value,
             KEY_SIZE
         );
         if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
@@ -3074,7 +3072,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
         }
         gcry_error = gcry_cipher_setiv(
             tmp_hd,
-            &(sa_ptr->iv[0]),
+            sa_ptr->iv,
             sa_ptr->iv_len
         );
         if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
@@ -3098,12 +3096,29 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
             OS_printf("\n");
         #endif
 
+        printf("ABM_LEN: %d\n", sa_ptr->abm_len);
+        gcry_error = gcry_cipher_authenticate(
+            tmp_hd,
+            ingest,                                      // additional authenticated data
+            sa_ptr->abm_len 		                        // length of AAD
+        );
+
+        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+        {
+            OS_printf(KRED "ERROR: gcry_cipher_authenticate error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
+            OS_printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error),gcry_strerror (gcry_error));
+            status = OS_ERROR;
+            return status;
+        }
+
+        printf("PLAIN TEXT LEN %d\n", tc_sdls_processed_frame->tc_pdu_len);
+        printf("CIPHER END LEN: %d\n", (tc_sdls_processed_frame->tc_pdu_len));
         gcry_error = gcry_cipher_decrypt(
             tmp_hd, 
-            &(tc_sdls_processed_frame->tc_pdu[0]),                          // plaintext output
-            tc_sdls_processed_frame->tc_pdu_len,			 		// length of data
-            &(ingest[20]),                                  // ciphertext input
-            tc_sdls_processed_frame->tc_pdu_len                    // in data length
+            tc_sdls_processed_frame->tc_pdu,          // plaintext output
+            tc_sdls_processed_frame->tc_pdu_len + sa_ptr->abm_len,            // length of data
+            ingest,                                  // ciphertext input
+            (tc_sdls_processed_frame->tc_pdu_len + sa_ptr->abm_len)           // in data length
         );
         if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
         {
@@ -3113,9 +3128,10 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
         }
         gcry_error = gcry_cipher_checktag(
             tmp_hd, 
-            &(tc_sdls_processed_frame->tc_sec_trailer.mac[0]),              // tag input
-            MAC_SIZE                                        // tag size
+            tc_sdls_processed_frame->tc_sec_trailer.mac,              // tag input
+            sa_ptr->stmacf_len                                        // tag size
         );
+
         if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
         {
             OS_printf(KRED "ERROR: gcry_cipher_checktag error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
@@ -3170,13 +3186,13 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
             OS_printf(KBLU "CLEAR TC Received!\n" RESET);
         #endif
 
-        for (y = 10; y <= (tc_sdls_processed_frame->tc_header.fl - 2); y++) //tfhdr+seghdr+sechdr=5+1+6=12
+        for (y = 10; y <= (tc_sdls_processed_frame->tc_header.fl -1); y++) //tfhdr+seghdr+sechdr=5+1+6=12
         {	
             tc_sdls_processed_frame->tc_pdu[y - 10] = (uint8)ingest[y];
         }
         // FECF
         tc_sdls_processed_frame->tc_sec_trailer.fecf = ((uint8)ingest[y] << 8) | ((uint8)ingest[y+1]);
-        Crypto_FECF((int) tc_sdls_processed_frame->tc_sec_trailer.fecf, ingest, (tc_sdls_processed_frame->tc_header.fl - 2),tc_sdls_processed_frame);
+        Crypto_FECF((int) tc_sdls_processed_frame->tc_sec_trailer.fecf, ingest, (tc_sdls_processed_frame->tc_header.fl),tc_sdls_processed_frame);
     }
     
     #ifdef TC_DEBUG
