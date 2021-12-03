@@ -40,7 +40,6 @@ class Encryption:
                 value_i = int.from_bytes(pieces, byteorder="big") & int.from_bytes(bitmask_b, byteorder="big")
                 value_b = value_i.to_bytes(max(len(pieces), len(bitmask_b)), byteorder="big")
                 zeroed_header_b += value_b
-            print("ZHEADER: ", zeroed_header_b)
             cipher.update(zeroed_header_b)
             #cipher.update(header_b)
         ciphertext, tag = cipher.encrypt_and_digest(data_b)
