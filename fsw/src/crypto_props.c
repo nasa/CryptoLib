@@ -16,22 +16,18 @@
 #include <string.h>
 #include "crypto_props.h"
 
-crypto_config_list* p_self = NULL; 
 /*=============================================================================
 Private Declarations
 ==============================================================================*/
 crypto_config_list* crypto_config_alloc_helper(int max_key_size, int max_value_size, crypto_config_list** props);
-int crypto_config_props_set_property_value_helper(char* key, char* value, crypto_config_list** props);
-char* crypto_config_props_get_property_value_helper(char* key, crypto_config_list** props);
-int crypto_config_props_add_property_helper(char* key, char* value,crypto_config_list** pp_self); 
 int crypto_config_props_remove_property_helper(char* key,crypto_config_list** pp_self); 
 int safe_copy(int destination_size,char* src);
 
 /*=============================================================================
  * Implementations
 ==============================================================================*/
-crypto_config_list* crypto_config_alloc(int max_key_size, int max_value_size) {
-   return crypto_config_alloc_helper(max_key_size, max_value_size,&p_self);
+crypto_config_list* crypto_config_alloc(int max_key_size, int max_value_size, crypto_config_list** props ) {
+   return crypto_config_alloc_helper(max_key_size, max_value_size, props );
 }
 
 crypto_config_list* crypto_config_alloc_helper(int max_key_size, int max_value_size, crypto_config_list** props)
@@ -63,11 +59,11 @@ crypto_config_list* crypto_config_alloc_helper(int max_key_size, int max_value_s
     return *props;
 }
 
-void crypto_config_free(crypto_config_list** pp_self)
+void crypto_config_free(crypto_config_list** props)
 {
-    if (NULL!=pp_self && NULL!=(*pp_self))
+    if (NULL!=props  && NULL!=*props)
     {
-        crypto_config_node* p_current = (*pp_self)->p_head; 
+        crypto_config_node* p_current = (*props)->p_head; 
         crypto_config_node* p_next = NULL; 
         //iterate and free the nodes 
         while (NULL!=p_current)
@@ -90,33 +86,17 @@ void crypto_config_free(crypto_config_list** pp_self)
            
         }
         //free the super structure
-        if (NULL!=*pp_self)
+        if (NULL!=*props)
         {
-            free (*pp_self);
-            *pp_self = NULL; 
+            free (*props);
+            *props  = NULL;
         }
 
     }
 }
 
-int crypto_config_props_add_property(char* key, char* value)
-{
-    int status = false; 
-    //Note: since this is a linked list there is no efficient way to guard against
-    //adding duplicate keys therefore if the key exists just update it using
-    //crypto_config_props_set_property_value_helper else add in a new key,value.
-    status = crypto_config_props_set_property_value_helper(key,value,&p_self);
-    if (status)
-    {
-        return status; 
-    }
-    else
-    {
-        return crypto_config_props_add_property_helper(key,value,&p_self);
-    }
-}
 
-int crypto_config_props_add_property_helper(char* key, char* value, crypto_config_list** pp_self) {
+int crypto_config_props_add_property(char* key, char* value, crypto_config_list** pp_self) {
     int status = false;
     int dest_buffer_size_key = 0;
     int dest_buffer_size_value = 0;
@@ -199,20 +179,15 @@ int crypto_config_props_add_property_helper(char* key, char* value, crypto_confi
     return status;
 }
 
-int crypto_config_set_property_value(char* key, char* value)
-{
-    return crypto_config_props_set_property_value_helper(key,value,&p_self);
-}
-
-int crypto_config_props_set_property_value_helper(char* key, char* value, crypto_config_list** pp_self)
+int crypto_config_set_property_value(char* key, char* value, crypto_config_list** pp_props)
 {
     int status = false; 
     int dest_buffer_size_value = 0;
     //iterate through the link list until you reach the right node
-    if (NULL!=key && strlen(key)> 0 && NULL!=value && strlen(key)> 0 && NULL!=pp_self && NULL!=(*pp_self))
+    if (NULL!=key && strlen(key)> 0 && NULL!=value && strlen(key)> 0 && NULL!=pp_props && NULL!=(*pp_props))
     {
         dest_buffer_size_value = strlen(value);
-        crypto_config_node* p_current = (*pp_self)->p_head; 
+        crypto_config_node* p_current = (*pp_props)->p_head; 
         while (p_current!=NULL)
         {
             //returns 0 if NOT equal 
@@ -262,17 +237,12 @@ int crypto_config_props_set_property_value_helper(char* key, char* value, crypto
     return status; 
 }
 
-char* crypto_config_get_property_value(char* key)
-{
-    return crypto_config_props_get_property_value_helper(key,&p_self);
-}
-
-char* crypto_config_props_get_property_value_helper(char* key, crypto_config_list** pp_self)
+char* crypto_config_get_property_value(char* key,crypto_config_list** pp_props)
 {
     //iterate through the link list until you reach the right node
-    if (NULL!=key && strlen(key)> 0 && NULL!=(*pp_self))
+    if (NULL!=key && strlen(key)> 0 && NULL!=(*pp_props))
     {
-        crypto_config_node* p_current = (*pp_self)->p_head; 
+        crypto_config_node* p_current = (*pp_props)->p_head; 
         while (p_current!=NULL)
         {
             //returns 0 if NOT equal 
@@ -293,94 +263,102 @@ char* crypto_config_props_get_property_value_helper(char* key, crypto_config_lis
     return "\0"; 
 }
 
-int crypto_config_load_properties(char* file_path)
+
+int crypto_config_load_properties(char* file_path, crypto_config_list** pp_props)
 {
     int status = false; 
-    if (NULL!=file_path)
+    if (NULL!=*pp_props)
     {
-        //open file
-        FILE* p_file=NULL;
-        p_file=fopen(file_path,"r");
-        //counter to keep track of the number of parsed key=values that were added successfully 
-        int read_added_props_counter = 0; 
-        if (NULL!=p_file)
+        if (NULL!=file_path)
         {
-            char key[p_self->KEY_SIZE_IN_BYTES];
-            char val[p_self->VALUE_SIZE_IN_BYTES];
-            char current_line[p_self->VALUE_SIZE_IN_BYTES]; 
-            const char* line_delimiter = "="; 
-            int index =-1;
-            int add_status = false; 
-            //while loop to parse the file 
-            while(fgets(current_line, p_self->VALUE_SIZE_IN_BYTES-1,p_file))
-            {
-                // Remove trailing newline
-                current_line[strcspn(current_line, "\n")] = 0;
-                //split the line based on the index of the delimeter "="
-                index=strcspn(current_line,line_delimiter);
-                if (index>=0)
-                {
-                    //validate this line valid key=value data line rather than comment or empty line
-                    if (strcmp(current_line,"\n") !=0 /*not empty line*/
-                            && strcmp(current_line,"\r\n")!=0 /*not empty line*/
-                            && strlen(current_line)>=2 /*length must be >=2*/
-                            && current_line[0]!='#' /*1st char cannot be #*/
-                            &&  (current_line[1]!='/' && current_line[0]!='/') /*1st & 2nd char cannot be '/' */)
-                    {
-                        //printf("DEBUG current_line DATA=%s\n",current_line);
-                        //1) pass the key 
-                        int i=0; 
-                        while (i<index)
-                        {
-                            key[i]=current_line[i];
-                            i++; 
-                        }
-                        key[i] = '\0';
-                        //2) parse the value 
-                        i=index+1;
-                        int j=0;
-                        while (current_line[i]!='\0' && j<p_self->VALUE_SIZE_IN_BYTES)
-                        {
-                            val[j]=current_line[i];
-                            i++;
-                            j++;
-                        }
-                        val[j] = '\0'; 
-                        //printf("DEBUG key=%s,value=%s\n",key,val);
-                        //3) add the key,value to the properties linkedlist
-                        add_status = crypto_config_props_add_property(key,val);
-                        if (add_status>0)
-                        {
-                            read_added_props_counter = read_added_props_counter + 1; 
-                        }
-                        
-                    }
-                    else
-                    {   //delimiter was detected but this starts with a comment character therefore it will NOT be parsed
-                        //printf("COMMENT=%s\n",current_line);
-                    }
-                }
-                else
-                {
-                    //do nothing there was no "=" delimiter detected 
-                }
-                
-            }//end while loop thats parses the file 
-            status = read_added_props_counter; 
+            //open file
+            FILE* p_file=NULL;
+            p_file=fopen(file_path,"r");
+            //counter to keep track of the number of parsed key=values that were added successfully 
+            int read_added_props_counter = 0; 
             if (NULL!=p_file)
             {
-                 fclose(p_file);
+                char key[(*pp_props)->KEY_SIZE_IN_BYTES];
+                char val[(*pp_props)->VALUE_SIZE_IN_BYTES];
+                char current_line[(*pp_props)->VALUE_SIZE_IN_BYTES]; 
+                const char* line_delimiter = "="; 
+                int index =-1;
+                int add_status = false; 
+                //while loop to parse the file 
+                while(fgets(current_line, (*pp_props)->VALUE_SIZE_IN_BYTES-1,p_file))
+                {
+                    // Remove trailing newline
+                    current_line[strcspn(current_line, "\n")] = 0;
+                    //split the line based on the index of the delimeter "="
+                    index=strcspn(current_line,line_delimiter);
+                    if (index>=0)
+                    {
+                        //validate this line valid key=value data line rather than comment or empty line
+                        if (strcmp(current_line,"\n") !=0 /*not empty line*/
+                                && strcmp(current_line,"\r\n")!=0 /*not empty line*/
+                                && strlen(current_line)>=2 /*length must be >=2*/
+                                && current_line[0]!='#' /*1st char cannot be #*/
+                                &&  (current_line[1]!='/' && current_line[0]!='/') /*1st & 2nd char cannot be '/' */)
+                        {
+                            //printf("DEBUG current_line DATA=%s\n",current_line);
+                            //1) pass the key 
+                            int i=0; 
+                            while (i<index)
+                            {
+                                key[i]=current_line[i];
+                                i++; 
+                            }
+                            key[i] = '\0';
+                            //2) parse the value 
+                            i=index+1;
+                            int j=0;
+                            while (current_line[i]!='\0' && j<(*pp_props)->VALUE_SIZE_IN_BYTES)
+                            {
+                                val[j]=current_line[i];
+                                i++;
+                                j++;
+                            }
+                            val[j] = '\0'; 
+                            //printf("DEBUG key=%s,value=%s\n",key,val);
+                            //3) add the key,value to the properties linkedlist
+                            add_status = crypto_config_props_add_property(key,val,pp_props);
+                            if (add_status>0)
+                            {
+                                read_added_props_counter = read_added_props_counter + 1; 
+                            }
+
+                        }
+                        else
+                        {   //delimiter was detected but this starts with a comment character therefore it will NOT be parsed
+                            //printf("COMMENT=%s\n",current_line);
+                        }
+                    }
+                    else
+                    {
+                        //do nothing there was no "=" delimiter detected 
+                    }
+
+                }//end while loop thats parses the file 
+                status = read_added_props_counter; 
+                if (NULL!=p_file)
+                {
+                     fclose(p_file);
+                }
+            }//end if file pointer is not NULL
+            else
+            {
+                fprintf(stderr,"ERROR, crypto_config_load_properties() error opening file!.\n");
             }
-        }//end if file pointer is not NULL
+
+        }//end if file path is not NULL
         else
         {
-            fprintf(stderr,"ERROR, crypto_config_load_properties() error opening file!.\n");
+            fprintf(stderr,"ERROR, crypto_config_load_properties() file path is NULL.\n");
         }
-
-    }//end if file path is not NULL
+    }
     else
     {
-        fprintf(stderr,"ERROR, crypto_config_load_properties() file path is NULL.\n");
+        fprintf(stderr,"ERROR, crypto_config_load_properties() input props is NULL.\n");
     }
     return status; 
 }
@@ -398,6 +376,7 @@ void crypto_config_print_all_props(crypto_config_list* p_self)
          }
     }
 }
+
 /*===========================================================================
 Function:           safe_copy
 Description:        safe_copy is a helper function to guard against unsafe copies.

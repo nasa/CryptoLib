@@ -37,8 +37,6 @@ typedef struct crypto_config_list
     
 } crypto_config_list;
 
-/*declare variables*/
-extern crypto_config_list* p_self;
 /*===========================================================================
 Function:           crypto_config_alloc      
 Description:        allocates heap memory for the wrapper crypto_config_list 
@@ -57,8 +55,7 @@ Note:               Passing in max_key_size=0 and/or max_value_size=0 will print
  *                  a warning just letting you know that defaults values of 
  *                  max_key_size=256 and max_value_size=4096 were used instead. 
 ==========================================================*/
-crypto_config_list* crypto_config_alloc(int max_key_size, int max_value_size);
-
+crypto_config_list* crypto_config_alloc(int max_key_size, int max_value_size, crypto_config_list** props );
 /*===========================================================================
 Function:           crypto_config_free
 Description:        Frees heap memory allocated to crypto_config_list & the
@@ -68,8 +65,7 @@ Outputs:            void
 References: 
 Example call:       crypto_config_free(&props); 
 ==========================================================*/
-void crypto_config_free(crypto_config_list** pp_self);
-
+void crypto_config_free(crypto_config_list** props );
 /*===========================================================================
 Function:           crypto_config_props_add_property      
 Description:        adds a new key & value node to the end of the linkedlist.      
@@ -83,9 +79,8 @@ Example call:       crypto_config_props_add_property("key_a","some value");
 Note:               since this is a linked list there is no efficient way to guard against
                     adding the duplicate keys therefore if the key exists just update it using
                     crypto_config_props_set_property_value_helper else add in a new key,value. 
-==========================================================*/
-int crypto_config_props_add_property(char* key, char* value);
-
+//==========================================================*/
+int crypto_config_props_add_property(char* key, char* value, crypto_config_list** props );
 /*===========================================================================
 Function:           crypto_config_get_property_value      
 Description:        if a node exists with that key then the string value is 
@@ -95,8 +90,7 @@ Outputs:            string or "/0"
 References:
 Example call:       crypto_config_get_property_value("key_a")
 ==========================================================*/
-char* crypto_config_get_property_value(char* key); 
-
+char* crypto_config_get_property_value(char* key,crypto_config_list** pp_props);
 /*===========================================================================
 Function:           crypto_config_set_property_value      
 Description:        If a node with the input key exists its value will be
@@ -108,8 +102,7 @@ Outputs:            1 - success
 References: 
 Example call:      crypto_config_set_property_value("key_a","AAA")
 ==========================================================*/
-int crypto_config_set_property_value(char* key, char* value);
-
+int crypto_config_set_property_value(char* key, char* value, crypto_config_list** pp_props);
 /*===========================================================================
 Function:      
 Description:        This function will parse files with the format:
@@ -127,8 +120,7 @@ Outputs:            1 or greater - success. Meaning read & added 1 or more data
 References:
 Example call:      crypto_config_load_properties("/<your_path>/docs/config_props.txt")
 ==========================================================*/
-int crypto_config_load_properties(char* file_path);
-
+int crypto_config_load_properties(char* file_path, crypto_config_list** pp_props);
 /*===========================================================================
 Function:           crypto_config_print_all_props                 
 Description:        Iterates through linkedlist and prints all key & values to 
@@ -139,10 +131,7 @@ References:
 Example call:       crypto_config_print_all_props(props)
 ==========================================================*/
 void crypto_config_print_all_props(crypto_config_list* p_self);
-
-
 #ifdef __cplusplus
 }
 #endif
-
 #endif /* CRYPTO_PROPS_H */
