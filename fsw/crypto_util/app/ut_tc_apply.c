@@ -20,6 +20,8 @@
  */
 #include "ut_tc_apply.h"
 #include "utest.h"
+#include "crypto.h"
+#include "crypto_error.h"
 
 // TODO:  Should this be set up with a set of tests, or continue to Crypto_Init() each time.  For now I think the current setup is the best path.
 
@@ -32,84 +34,82 @@ UTEST(TC_APPLY_SECURITY, NO_CRYPTO_INIT)
 {
     // No Crypto_Init();
     long buffer_size = 0;
-    char *buffer = c_read_file("../../fsw/crypto_tests/data/raw_tc_sdls_ping.dat", &buffer_size);
-    uint16 buffer_size_i = (uint16) buffer_size;
+    char *raw_tc_sdls_ping_h = "20030015001880d2c70008197f0b00310000b1fe3128";
+    uint8 *raw_tc_sdls_ping_b = NULL;
+    int raw_tc_sdls_ping_len = 0;
+
+    hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
     uint8 *ptr_enc_frame = NULL;
     uint16 enc_frame_len = 0;
-    int32 return_val = -1;
+    int32 return_val = CRYPTO_LIB_ERROR;
 
-    return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
-
-    ASSERT_EQ(-1, return_val);
-    free(buffer);
-    free(ptr_enc_frame);
+    return_val = Crypto_TC_ApplySecurity(raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_ERR_NO_INIT, return_val);
+    free(raw_tc_sdls_ping_b);
 }
 
-// Nominal Test.  This should read a raw_tc_sdls_ping.dat file, continue down the "happy path", and return OS_SUCCESS
+// Nominal Test.  This should read a raw_tc_sdls_ping.dat file, continue down the "happy path", and return CRYPTO_LIB_SUCCESS
 UTEST(TC_APPLY_SECURITY, HAPPY_PATH)
 {
     //Setup & Initialize CryptoLib
     Crypto_Init();
-    long buffer_size =0;
-    char *buffer = c_read_file("../../fsw/crypto_tests/data/raw_tc_sdls_ping.dat", &buffer_size);
-    uint16 buffer_size_i = (uint16) buffer_size;
+    char *raw_tc_sdls_ping_h = "20030015001880d2c70008197f0b00310000b1fe3128";
+    uint8 *raw_tc_sdls_ping_b = NULL;
+    int raw_tc_sdls_ping_len = 0;
+
+    hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
     uint8 *ptr_enc_frame = NULL;
     uint16 enc_frame_len = 0;
 
-    int32 return_val = -1;
+    int32 return_val = CRYPTO_LIB_ERROR;
 
-    return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
-    ASSERT_EQ(0, return_val);
-    free(buffer);
+    return_val = Crypto_TC_ApplySecurity(raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+    free(raw_tc_sdls_ping_b);
     free(ptr_enc_frame);
-    //Need Crypto_ReInit()?;
 }
 
-// Bad Space Craft ID.  This should pass the flawed .dat file, and return OS_ERROR
+// Bad Space Craft ID.  This should pass the flawed .dat file, and return CRYPTO_LIB_ERR_INVALID_SCID
 UTEST(TC_APPLY_SECURITY, BAD_SPACE_CRAFT_ID)
 {
     //Setup & Initialize CryptoLib
     Crypto_Init();
-    long buffer_size = 0;
-    char *buffer = c_read_file("../../fsw/crypto_tests/data/raw_tc_sdls_ping_bad_scid.dat", &buffer_size);
-    uint16 buffer_size_i = (uint16) buffer_size;
+    char *raw_tc_sdls_ping_bad_scid_h = "20010015001880d2c70008197f0b00310000b1fe3128";
+    uint8 *raw_tc_sdls_ping_bad_scid_b = NULL;
+    int raw_tc_sdls_ping_bad_scid_len = 0;
+
+    hex_conversion(raw_tc_sdls_ping_bad_scid_h, &raw_tc_sdls_ping_bad_scid_b, &raw_tc_sdls_ping_bad_scid_len);
 
     uint8 *ptr_enc_frame = NULL;
-    uint16 enc_frame_len = 0;
-    int32 return_val = -1;
+    uint16 enc_frame_len = 0;    
 
-    return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
-    ASSERT_EQ(-1, return_val);
-    free(buffer);
-    free(ptr_enc_frame);    
-    //Need Crypto_ReInit();
+    uint32 return_val = Crypto_TC_ApplySecurity(raw_tc_sdls_ping_bad_scid_b, raw_tc_sdls_ping_bad_scid_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_ERR_INVALID_SCID, return_val);
+    free(raw_tc_sdls_ping_bad_scid_b);
+    free(ptr_enc_frame);
 }
 
-// TODO:  This does not report the correct error.  It returns the correctly, but complains of an incorrect SCID
-//        This should return OS_ERROR
 UTEST(TC_APPLY_SECURITY, BAD_VIRTUAL_CHANNEL_ID)
 {
     //Setup & Initialize CryptoLib
     Crypto_Init();
-    long buffer_size = 0;
-    char *buffer = c_read_file("../../fsw/crypto_tests/data/raw_tc_sdls_ping_bad_vcid.dat", &buffer_size);
-    uint16 buffer_size_i = (uint16) buffer_size;
+    char *raw_tc_sdls_ping_bad_vcid_h = "20032015001880d2c70008197f0b00310000b1fe3128";
+    uint8 *raw_tc_sdls_ping_bad_vcid_b = NULL;
+    int raw_tc_sdls_ping_bad_vcid_len = 0;
+
+    hex_conversion(raw_tc_sdls_ping_bad_vcid_h, &raw_tc_sdls_ping_bad_vcid_b, &raw_tc_sdls_ping_bad_vcid_len);
 
     uint8 *ptr_enc_frame = NULL;
     uint16 enc_frame_len = 0;
-    int32 return_val = -1;
+    int32 return_val = CRYPTO_LIB_ERROR;
 
-    return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
-    ASSERT_EQ(0, return_val); //TODO:  Having this fail until it is fixed in code.
-    free(buffer);
-    free(ptr_enc_frame);    
-    //Need Crypto_ReInit();
+    return_val = Crypto_TC_ApplySecurity(raw_tc_sdls_ping_bad_vcid_b, raw_tc_sdls_ping_bad_vcid_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_ERR_INVALID_VCID, return_val); 
+    free(raw_tc_sdls_ping_bad_vcid_b);
+    free(ptr_enc_frame);
 }
-
-// Encryption Test HERE
-
 
 // This test should test how to handle a null buffer being passed into the ApplySecurity Function.
 // Currently this functionality isn't handled properly, and casues a seg-fault.
@@ -129,31 +129,13 @@ UTEST(TC_APPLY_SECURITY, NULL_BUFFER)
 
     return_val = Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);
 
-    ASSERT_EQ(-1, return_val);
-    free(buffer);
-    free(ptr_enc_frame);    
-    //Need Crypto_ReInit();
+    ASSERT_EQ(CRYPTO_LIB_ERR_NULL_BUFFER, return_val);
 }
 
 //TODO: 
 /*  What should be returned if something goes wrong with Control Command Flag?
     Should a NULL pointer be returned....The original pointer?
     We need to decide on this functionality and write a test for this
-
-    We should probably have more error codes than OS_SUCCESS and OS_ERROR
-
-    Some way to modify and test the SA?
-
-    Authentication Tests
-        When Ready / Complete?
-
-    Encryption Tests
-        When Ready / Complete?
-    
-    Authenticated Encryption Tests
-        When Ready / Complete
 */
-
-
 
 UTEST_MAIN();

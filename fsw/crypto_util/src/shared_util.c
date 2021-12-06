@@ -57,6 +57,29 @@ char * c_read_file(const char * f_name, long * f_size) {
 
 }
 
+int convert_hexstring_to_byte_array(char* source_str, uint8* dest_buffer)
+{
+    char *line = source_str;
+    char *data = line;
+    int offset;
+    int read_byte;
+    int data_len = 0;
+
+    while (sscanf(data, " %02x%n", &read_byte, &offset) == 1) 
+    {
+        dest_buffer[data_len++] = read_byte;
+        data += offset;
+    }
+    return data_len;
+}
+
+void hex_conversion(char *buffer_h, uint8 **buffer_b, int *buffer_b_length)
+{
+    // Convert input plaintext
+    *buffer_b = (uint8*)malloc((strlen(buffer_h) / 2) * sizeof(uint8));
+    *buffer_b_length = convert_hexstring_to_byte_array(buffer_h, *buffer_b);
+}
+
 #ifdef DEBUG
 void debug_printf(const char *format, ...)
 {

@@ -14,28 +14,40 @@
 #   NASA IV&V
 #   jstar-development-team@mail.nasa.gov
 
+ 
+
 include_directories(include)
-include_directories(../crypto/public_inc)
+include_directories(../crypto/public_inc) 
+
+if(ENCTEST)
+    find_package (Python3 REQUIRED COMPONENTS Interpreter Development)
+endif(ENCTEST)
 
 aux_source_directory(src UTIL_SRC_FILES)
-aux_source_directory(app APP_SRC_FILES)
+aux_source_directory(app APP_SRC_FILES) 
 
 file( GLOB SOURCE_FILES app/*.c )
 foreach(SOURCE_PATH ${SOURCE_FILES})
-
     get_filename_component(EXECUTABLE_NAME ${SOURCE_PATH} NAME_WE)
 
-    add_executable(${EXECUTABLE_NAME} ${SOURCE_PATH})
+    if((NOT ${ENCTEST}) AND ${EXECUTABLE_NAME} STREQUAL et_dt_validation)
+        continue()
+    else()
+        add_executable(${EXECUTABLE_NAME} ${SOURCE_PATH}) 
+        target_sources(${EXECUTABLE_NAME} PRIVATE src/shared_util.c)
+        target_link_libraries(${EXECUTABLE_NAME} LINK_PUBLIC Crypto)
+    endif()
 
-    target_sources(${EXECUTABLE_NAME} PRIVATE src/shared_util.c)
-    target_link_libraries(${EXECUTABLE_NAME} LINK_PUBLIC Crypto)
+    if(${ENCTEST} AND ${EXECUTABLE_NAME} STREQUAL et_dt_validation)
+        target_link_libraries(${EXECUTABLE_NAME} PUBLIC ${Python3_LIBRARIES}) 
+        target_include_directories(${EXECUTABLE_NAME} PUBLIC ${Python3_INCLUDE_DIRS}) 
+    endif()
 
     add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${EXECUTABLE_NAME}> ${PROJECT_BINARY_DIR}/bin/${EXECUTABLE_NAME}
             COMMAND ${CMAKE_COMMAND} -E remove $<TARGET_FILE:${EXECUTABLE_NAME}>
             COMMENT "Created ${PROJECT_BINARY_DIR}/bin/${EXECUTABLE_NAME}"
             )
-endforeach(SOURCE_PATH ${SOURCE_FILES})
+endforeach(SOURCE_PATH ${SOURCE_FILES}) 
 
 target_include_directories (Crypto PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-

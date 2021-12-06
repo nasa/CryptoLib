@@ -106,13 +106,13 @@
     #define NUM_KEYS					256
     #define DISABLED					0
     #define ENABLED						1
-    #define IV_SIZE						12      /* TM IV size bytes */
+    #define IV_SIZE						16      /* TM IV size bytes */
     #define IV_SIZE_TC                  4       /* TC IV size bytes */
     #define OCF_SIZE                    4
     #define MAC_SIZE                    16      /* bytes */
     #define FECF_SIZE                   2
     #define ECS_SIZE                    4       /* bytes */
-    #define ABM_SIZE                    20      /* bytes */
+    #define ABM_SIZE                    1024 //20      /* bytes */
     #define ARC_SIZE                    20      /* total messages */
     #define ARCW_SIZE                   1       /* bytes */
     #define SN_SIZE                     0
