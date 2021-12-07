@@ -894,7 +894,7 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     uint16 enc_data_idx = enc_frame_len - buffer_cyber_chef_mac_len - 2;
     for (int i=0; i<buffer_cyber_chef_mac_len; i++)
     {
-        printf("[%d] Truth: %02x, Actual: %02x\n", enc_data_idx, buffer_cyber_chef_mac_b[i], *(ptr_enc_frame+enc_data_idx));
+        //printf("[%d] Truth: %02x, Actual: %02x\n", enc_data_idx, buffer_cyber_chef_mac_b[i], *(ptr_enc_frame+enc_data_idx));
         ASSERT_EQ(*(ptr_enc_frame+enc_data_idx), buffer_cyber_chef_mac_b[i]);
         enc_data_idx++;
     }
