@@ -2,7 +2,7 @@ name: Build
 
 on:
   push:
-    branches: [ collab_main ]
+    branches: [ ut_tc_apply-enctests ]
   #pull_request:
   #  branches: [ main ]
 
@@ -21,10 +21,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Install Dependencies
-      run: sudo apt-get install -y libgpg-error-dev libgcrypt20-dev python3
-
-    - name: Install Python Libraries
-      run: sudo pip install pycryptodome
+      run: sudo apt-get install -y libgpg-error-dev libgcrypt20-dev 
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
