@@ -1,4 +1,4 @@
-![Build](https://github.com/nasa/CryptoLib/actions/workflows/build.yml/badge.svg) ![Unit Tests](https://github.com/nasa/CryptoLib/actions/workflows/validations.yml/badge.svg) ![Validation Tests](https://github.com/nasa/CryptoLib/actions/workflows/validation.yml/badge.svg)
+![Build](https://github.com/nasa/CryptoLib/actions/workflows/build.yml/badge.svg) ![Unit Tests](https://github.com/nasa/CryptoLib/actions/workflows/utest.yml/badge.svg) ![Validation Tests](https://github.com/nasa/CryptoLib/actions/workflows/validation.yml/badge.svg)
 
 # CryptoLib
 
