@@ -68,7 +68,7 @@ typedef struct
     uint8		ecs_len	:8;			// Encryption Cipher Suite Length
     uint8		ecs[ECS_SIZE];		// Encryption Cipher Suite (algorithm / mode ID)
     uint8		iv_len	:8;			// Initialization Vector Length
-    uint8		iv[16];		        // Initialization Vector
+    uint8		iv[IV_SIZE];		        // Initialization Vector
     uint8		acs_len	:8;			// Authentication Cipher Suite Length
     uint8		acs		:8;			// Authentication Cipher Suite (algorithm / mode ID)
     uint16		abm_len	:16;		// Authentication Bit Mask Length

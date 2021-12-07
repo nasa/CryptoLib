@@ -149,14 +149,17 @@ UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
 
     char *activate_sa4_h  = "2003002000ff000100001880d2c9000e197f0b001b0004000400003040d95ea61a"; 
     char *dec_test_ping_h = "2003043400FF00040000000000000000000000017E1D8EEA8D45CEBA17888E0CDCD747DC78E5F372F997F2A63AA5DFC168395DC987"; 
-    char *enc_test_ping_h = "1880d2ca0008197f0b0031000039c5";              
+    char *enc_test_ping_h = "1880d2ca0008197f0b0031000039c5";      
+    char *mac_verify_h    = "dc78e5f372f997f2a63aa5dfc168395d";
+        
 
-    uint8 *activate_sa4_b, *dec_test_ping_b, *enc_test_ping_b = NULL;
-    int activate_sa4_len, dec_test_ping_len, enc_test_ping_len = 0;
+    uint8 *activate_sa4_b, *dec_test_ping_b, *enc_test_ping_b, *mac_verify_b = NULL;
+    int activate_sa4_len, dec_test_ping_len, enc_test_ping_len, mac_verify_len = 0;
 
     hex_conversion(activate_sa4_h, &activate_sa4_b, &activate_sa4_len);
     hex_conversion(dec_test_ping_h, &dec_test_ping_b, &dec_test_ping_len);
     hex_conversion(enc_test_ping_h, &enc_test_ping_b, &enc_test_ping_len);
+    hex_conversion(mac_verify_h, &mac_verify_b, &mac_verify_len);
 
     SecurityAssociation_t* test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(unsigned char));
@@ -189,6 +192,11 @@ UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
     for(int i = 0; i < tc_sdls_processed_frame->tc_pdu_len; i++)
     {
         ASSERT_EQ(enc_test_ping_b[i], tc_sdls_processed_frame->tc_pdu[i]);
+    }
+
+    for(int i = 0; i < test_association->stmacf_len; i++)
+    {
+        ASSERT_EQ(tc_sdls_processed_frame->tc_sec_trailer.mac[i], mac_verify_b[i]);
     }
 
     free(activate_sa4_b);
@@ -305,6 +313,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     {
         ASSERT_EQ(buffer_nist_pt_b[i+5], tc_nist_processed_frame->tc_pdu[i]);
     }
+ 
 
     free(ptr_enc_frame);
     free(buffer_nist_pt_b);
@@ -967,7 +976,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     // Calc payload index: total length - pt length
     #ifdef DEBUG
         printf("Expected MAC: ");
-        for (int i=0; i<tc_nist_processed_frame->tc_pdu_len; i++)
+        for (int i=0; i<test_association->stmacf_len; i++)
         {
             printf("%02x ", buffer_cyber_chef_mac_b[i]);
         }
@@ -980,7 +989,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     #endif
 
     // Verify the MAC
-    for (int i=0; i < tc_nist_processed_frame->tc_pdu_len; i++)
+    for (int i=0; i < test_association->stmacf_len; i++)
     {
        ASSERT_EQ(tc_nist_processed_frame->tc_sec_trailer.mac[i], buffer_cyber_chef_mac_b[i]);
     }
