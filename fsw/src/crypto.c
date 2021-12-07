@@ -101,10 +101,10 @@ crypto_key_t ek_ring[NUM_KEYS] = {0};
 //static crypto_key_t ak_ring[NUM_KEYS];
 CCSDS_t sdls_frame;
 TM_t tm_frame;
-CryptoConfig_t* crypto_config;
-SadbMariaDBConfig_t* sadb_mariadb_config;
-GvcidManagedParameters_t* gvcid_managed_parameters;
-GvcidManagedParameters_t* current_managed_parameters;
+CryptoConfig_t* crypto_config = NULL;
+SadbMariaDBConfig_t* sadb_mariadb_config = NULL;
+GvcidManagedParameters_t* gvcid_managed_parameters = NULL;
+GvcidManagedParameters_t* current_managed_parameters = NULL;
 // OCF
 static uint8 ocf = 0;
 static SDLS_FSR_t report;
@@ -125,60 +125,50 @@ static uint16 crc16Table[256];
 /*
 ** Initialization Functions
 */
+int32 Crypto_Init_Unit_Test(void)
+{
+    int32 status = OS_SUCCESS;
+    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY,CRYPTO_TC_CREATE_FECF_TRUE,TC_PROCESS_SDLS_PDUS_TRUE,TC_HAS_PUS_HDR,TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE,0x3F);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,0,TC_HAS_FECF,TC_HAS_SEGMENT_HDRS);
+    status = Crypto_Init();
+    return status;
+}
+int32 Crypto_Init_With_Configs(CryptoConfig_t* crypto_config_p,GvcidManagedParameters_t* gvcid_managed_parameters_p,SadbMariaDBConfig_t* sadb_mariadb_config_p)
+{
+    int32 status = OS_SUCCESS;
+    crypto_config = crypto_config_p;
+    gvcid_managed_parameters = gvcid_managed_parameters_p;
+    sadb_mariadb_config = sadb_mariadb_config_p;
+    status = Crypto_Init();
+    return status;
+}
+
 int32 Crypto_Init(void)
 {
     int32 status = OS_SUCCESS;
-    CryptoConfig_t* config_local = (CryptoConfig_t*) calloc(1, CRYPTO_CONFIG_SIZE);
-    config_local->sadb_type=SADB_TYPE_INMEMORY;
-    config_local->crypto_create_fecf=CRYPTO_TC_CREATE_FECF_TRUE;
-    config_local->process_sdls_pdus=TC_PROCESS_SDLS_PDUS_TRUE;
-    config_local->has_pus_hdr=TC_HAS_PUS_HDR;
-    config_local->vcid_bitmask=0x3F;
-    gvcid_managed_parameters = (GvcidManagedParameters_t*) calloc(1,GVCID_MANAGED_PARAMETERS_SIZE);
 
-    //initialize managed parameters as expected for unit tests
-    gvcid_managed_parameters->tfvn=0;
-    gvcid_managed_parameters->scid=0x0003;
-    gvcid_managed_parameters->vcid=0;
-    gvcid_managed_parameters->has_fecf=TC_HAS_FECF;
-    gvcid_managed_parameters->has_segmentation_hdr=TC_HAS_SEGMENT_HDRS;
-    gvcid_managed_parameters->next=NULL;
-    current_managed_parameters = gvcid_managed_parameters;
+    if(crypto_config==NULL){
+        status = CRYPTO_CONFIGURATION_NOT_COMPLETE;
+        OS_printf(KRED "ERROR: CryptoLib must be configured before intializing!\n" RESET);
+        return status; //No configuration set -- return!
+    }
+    if(gvcid_managed_parameters==NULL){
+        status = CRYPTO_MANAGED_PARAM_CONFIGURATION_NOT_COMPLETE;
+        OS_printf(KRED "ERROR: CryptoLib  Managed Parameters must be configured before intializing!\n" RESET);
+        return status; //No Managed Parameter configuration set -- return!
+    }
 
-    SadbMariaDBConfig_t* sadb_mariadb_config_local = (SadbMariaDBConfig_t*)calloc(1, SADB_MARIADB_CONFIG_SIZE);
-    sadb_mariadb_config_local->mysql_username="sadb_user";
-    sadb_mariadb_config_local->mysql_password="sadb_password";
-    sadb_mariadb_config_local->mysql_hostname="localhost";
-    sadb_mariadb_config_local->mysql_database="sadb";
-    sadb_mariadb_config_local->mysql_port=0;
-
-    //config->sadb_type=SADB_MARIADB_TYPE;
-
-    status = Crypto_Init_Main(config_local,sadb_mariadb_config_local);
-    return status;
-}
-int32 Crypto_Init_With_Props(char** configs, int32 num_configs)
-{
-    int32 status = OS_SUCCESS;
-    CryptoConfig_t* config_local = (CryptoConfig_t*) calloc(1, CRYPTO_CONFIG_SIZE);
-    SadbMariaDBConfig_t* sadb_mariadb_config_local = (SadbMariaDBConfig_t*) calloc(1, SADB_MARIADB_CONFIG_SIZE);
-
-    //Todo - Parse Gvcid Managed Parameters and CryptoLib config from input properties!
-
-    status = Crypto_Init_Main(config_local,sadb_mariadb_config_local);
-    return status;
-}
-int32 Crypto_Init_Main(CryptoConfig_t* config_p,SadbMariaDBConfig_t* sadb_mariadb_config_p)
-{
-    int32 status = OS_SUCCESS;
-
-    //Set global vars to passed in config objects.
-    crypto_config = config_p;
-    sadb_mariadb_config = sadb_mariadb_config_p;
 
     //Prepare SADB type from config
     if (crypto_config->sadb_type == SADB_TYPE_INMEMORY){ sadb_routine = get_sadb_routine_inmemory(); }
-    else if (crypto_config->sadb_type == SADB_TYPE_MARIADB){ sadb_routine = get_sadb_routine_mariadb(); }
+    else if (crypto_config->sadb_type == SADB_TYPE_MARIADB){
+        if(sadb_mariadb_config == NULL){
+            status = CRYPTO_MARIADB_CONFIGURATION_NOT_COMPLETE;
+            OS_printf(KRED "ERROR: CryptoLib MariaDB must be configured before intializing!\n" RESET);
+            return status; //MariaDB connection specified but no configuration exists, return!
+        }
+        sadb_routine = get_sadb_routine_mariadb();
+    }
     else { status = SADB_INVALID_SADB_TYPE; return status; }  //TODO: Error stack
 
     // Initialize libgcrypt
@@ -213,6 +203,52 @@ int32 Crypto_Init_Main(CryptoConfig_t* config_p,SadbMariaDBConfig_t* sadb_mariad
                 CRYPTO_LIB_MISSION_REV);
                                 
     return status; 
+}
+
+int32 Crypto_Config_CryptoLib(uint8 sadb_type, uint8 crypto_create_fecf, uint8 process_sdls_pdus, uint8 has_pus_hdr, uint8 ignore_sa_state, uint8 ignore_anti_replay, uint8 vcid_bitmask)
+{
+    int32 status = OS_SUCCESS;
+    crypto_config = (CryptoConfig_t*) calloc(1, CRYPTO_CONFIG_SIZE);
+    crypto_config->sadb_type=sadb_type;
+    crypto_config->crypto_create_fecf=crypto_create_fecf;
+    crypto_config->process_sdls_pdus=process_sdls_pdus;
+    crypto_config->has_pus_hdr=has_pus_hdr;
+    crypto_config->ignore_sa_state=ignore_sa_state;
+    crypto_config->ignore_anti_replay=ignore_anti_replay;
+    crypto_config->vcid_bitmask=vcid_bitmask;
+    return status;
+}
+int32 Crypto_Config_MariaDB(char* mysql_username, char* mysql_password, char* mysql_hostname, char* mysql_database, uint16 mysql_port)
+{
+    int32 status = OS_SUCCESS;
+    sadb_mariadb_config = (SadbMariaDBConfig_t*)calloc(1, SADB_MARIADB_CONFIG_SIZE);
+    sadb_mariadb_config->mysql_username=mysql_username;
+    sadb_mariadb_config->mysql_password=mysql_password;
+    sadb_mariadb_config->mysql_hostname=mysql_hostname;
+    sadb_mariadb_config->mysql_database=mysql_database;
+    sadb_mariadb_config->mysql_port=mysql_port;
+    return status;
+}
+int32 Crypto_Config_Add_Gvcid_Managed_Parameter(uint8 tfvn, uint16 scid, uint8 vcid, uint8 has_fecf, uint8 has_segmentation_hdr)
+{
+    int32 status = OS_SUCCESS;
+    GvcidManagedParameters_t* gvcid_managed_parameters_local = gvcid_managed_parameters;
+
+    while(gvcid_managed_parameters_local != NULL){
+        gvcid_managed_parameters_local = gvcid_managed_parameters_local->next;
+    }
+    gvcid_managed_parameters_local = (GvcidManagedParameters_t*) calloc(1,GVCID_MANAGED_PARAMETERS_SIZE);
+    gvcid_managed_parameters_local->tfvn=tfvn;
+    gvcid_managed_parameters_local->scid=scid;
+    gvcid_managed_parameters_local->vcid=vcid;
+    gvcid_managed_parameters_local->has_fecf=has_fecf;
+    gvcid_managed_parameters_local->has_segmentation_hdr=has_segmentation_hdr;
+    gvcid_managed_parameters_local->next=NULL;
+
+    if(gvcid_managed_parameters==NULL)
+        gvcid_managed_parameters = gvcid_managed_parameters_local;
+
+    return status;
 }
 
 static void Crypto_Local_Config(void)
