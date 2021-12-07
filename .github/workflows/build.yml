@@ -2,7 +2,7 @@ name: Build
 
 on:
   push:
-    branches: [ ut_tc_apply-enctests ]
+    branches: [ collab_main ]
   #pull_request:
   #  branches: [ main ]
 
