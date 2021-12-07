@@ -1,4 +1,4 @@
-![Unit Tests & Validation Tests](https://github.com/nasa/CryptoLib/actions/workflows/citests.yml/badge.svg)
+![Build](https://github.com/nasa/CryptoLib/actions/workflows/build.yml/badge.svg) ![Unit Tests](https://github.com/nasa/CryptoLib/actions/workflows/utest.yml/badge.svg) ![Validation Tests](https://github.com/nasa/CryptoLib/actions/workflows/validation.yml/badge.svg)
 
 # CryptoLib
 
@@ -6,3 +6,7 @@ Provide a software-only solution using the CCSDS Space Data Link Security Protoc
 
 In order to build crypto the following must be installed assuming Ubuntu 18.04 LTS:
 * `sudo apt install libgpg-error-dev:i386 libgcrypt20-dev:i386`
+
+
+More information about building and usage of CryptoLib can be found within the repository Wiki:
+https://github.com/nasa/CryptoLib/wiki
