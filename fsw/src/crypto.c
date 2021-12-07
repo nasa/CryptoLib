@@ -2847,7 +2847,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
         }
 
         tc_sdls_processed_frame->tc_pdu_len = Crypto_Get_tcPayloadLength(tc_sdls_processed_frame, sa_ptr);
-        printf("PDU LENGTH: %d\n", tc_sdls_processed_frame->tc_pdu_len);
+        
         x = x + tc_sdls_processed_frame->tc_pdu_len;
 
         #ifdef TC_DEBUG
