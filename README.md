@@ -1,4 +1,4 @@
-![example workflow](https://github.com/github/docs/actions/workflows/citests.yml/badge.svg)
+![Unit Tests & Validation Tests](https://github.com/nasa/CryptoLib/actions/workflows/citests.yml/badge.svg)
 
 # CryptoLib
 
