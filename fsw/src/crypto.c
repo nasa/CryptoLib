@@ -91,6 +91,7 @@ static int32 Crypto_PDU(char* ingest, TC_t* tc_frame);
 // Managed Parameter Functions
 static int32 Crypto_Get_Managed_Parameters_For_Gvcid(uint8 tfvn,uint16 scid,uint8 vcid,GvcidManagedParameters_t* managed_parameters_in,
                                                       GvcidManagedParameters_t** managed_parameters_out);
+static int32 crypto_config_add_gvcid_managed_parameter_recursion(uint8 tfvn, uint16 scid, uint8 vcid, uint8 has_fecf, uint8 has_segmentation_hdr,GvcidManagedParameters_t* managed_parameter);
 static void Crypto_Free_Managed_Parameters(GvcidManagedParameters_t* managed_parameters);
 
 /*
@@ -158,6 +159,9 @@ int32 Crypto_Init(void)
         return status; //No Managed Parameter configuration set -- return!
     }
 
+    #ifdef TC_DEBUG
+    Crypto_mpPrint(gvcid_managed_parameters);
+    #endif
 
     //Prepare SADB type from config
     if (crypto_config->sadb_type == SADB_TYPE_INMEMORY){ sadb_routine = get_sadb_routine_inmemory(); }
@@ -232,23 +236,36 @@ int32 Crypto_Config_MariaDB(char* mysql_username, char* mysql_password, char* my
 int32 Crypto_Config_Add_Gvcid_Managed_Parameter(uint8 tfvn, uint16 scid, uint8 vcid, uint8 has_fecf, uint8 has_segmentation_hdr)
 {
     int32 status = OS_SUCCESS;
-    GvcidManagedParameters_t* gvcid_managed_parameters_local = gvcid_managed_parameters;
 
-    while(gvcid_managed_parameters_local != NULL){
-        gvcid_managed_parameters_local = gvcid_managed_parameters_local->next;
+    if(gvcid_managed_parameters==NULL){//case: Global Root Node not Set
+        gvcid_managed_parameters = (GvcidManagedParameters_t*) calloc(1,GVCID_MANAGED_PARAMETERS_SIZE);
+        gvcid_managed_parameters->tfvn=tfvn;
+        gvcid_managed_parameters->scid=scid;
+        gvcid_managed_parameters->vcid=vcid;
+        gvcid_managed_parameters->has_fecf=has_fecf;
+        gvcid_managed_parameters->has_segmentation_hdr=has_segmentation_hdr;
+        gvcid_managed_parameters->next=NULL;
+        return status;
+    } else { //Recurse through nodes and add at end
+        return crypto_config_add_gvcid_managed_parameter_recursion(tfvn, scid, vcid, has_fecf, has_segmentation_hdr,gvcid_managed_parameters);
     }
-    gvcid_managed_parameters_local = (GvcidManagedParameters_t*) calloc(1,GVCID_MANAGED_PARAMETERS_SIZE);
-    gvcid_managed_parameters_local->tfvn=tfvn;
-    gvcid_managed_parameters_local->scid=scid;
-    gvcid_managed_parameters_local->vcid=vcid;
-    gvcid_managed_parameters_local->has_fecf=has_fecf;
-    gvcid_managed_parameters_local->has_segmentation_hdr=has_segmentation_hdr;
-    gvcid_managed_parameters_local->next=NULL;
 
-    if(gvcid_managed_parameters==NULL)
-        gvcid_managed_parameters = gvcid_managed_parameters_local;
+}
 
-    return status;
+static int32 crypto_config_add_gvcid_managed_parameter_recursion(uint8 tfvn, uint16 scid, uint8 vcid, uint8 has_fecf, uint8 has_segmentation_hdr,GvcidManagedParameters_t* managed_parameter)
+{
+    if(managed_parameter->next!=NULL){
+        return crypto_config_add_gvcid_managed_parameter_recursion(tfvn, scid, vcid, has_fecf, has_segmentation_hdr,managed_parameter->next);
+    } else {
+        managed_parameter->next = (GvcidManagedParameters_t*) calloc(1,GVCID_MANAGED_PARAMETERS_SIZE);
+        managed_parameter->next->tfvn = tfvn;
+        managed_parameter->next->scid = scid;
+        managed_parameter->next->vcid = vcid;
+        managed_parameter->next->has_fecf = has_fecf;
+        managed_parameter->next->has_segmentation_hdr = has_segmentation_hdr;
+        managed_parameter->next->next = NULL;
+        return OS_SUCCESS;
+    }
 }
 
 static void Crypto_Local_Config(void)
