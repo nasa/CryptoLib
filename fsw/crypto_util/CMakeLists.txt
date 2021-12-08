@@ -21,6 +21,10 @@ include_directories(../crypto/public_inc)
 
 if(ENCTEST)
     find_package (Python3 REQUIRED COMPONENTS Interpreter Development)
+    execute_process(COMMAND pip show pycryptodome RESULT_VARIABLE EXIT_CODE OUTPUT_QUIET)
+    if(NOT ${EXIT_CODE} EQUAL 0)
+        message(FATAL_ERROR "The \"pycryptodome\" Python3 package is not installed, and is required for ENCTEST.")
+    endif()
 endif(ENCTEST)
 
 aux_source_directory(src UTIL_SRC_FILES)
@@ -41,6 +45,8 @@ foreach(SOURCE_PATH ${SOURCE_FILES})
     if(${ENCTEST} AND ${EXECUTABLE_NAME} STREQUAL et_dt_validation)
         target_link_libraries(${EXECUTABLE_NAME} PUBLIC ${Python3_LIBRARIES}) 
         target_include_directories(${EXECUTABLE_NAME} PUBLIC ${Python3_INCLUDE_DIRS}) 
+        find_library(${Python3_LIBRARIES} pycryptodome)
+        
     endif()
 
     add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
