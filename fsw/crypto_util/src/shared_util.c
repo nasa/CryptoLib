@@ -1,18 +1,18 @@
-/* Copyright (C) 2009 - 2017 National Aeronautics and Space Administration. All Foreign Rights are Reserved to the U.S. Government.
+/* Copyright (C) 2009 - 2022 National Aeronautics and Space Administration. All Foreign Rights are Reserved to the U.S. Government.
 
-   This software is provided "as is" without any warranty of any, kind either express, implied, or statutory, including, but not
-   limited to, any warranty that the software will conform to, specifications any implied warranties of merchantability, fitness
+   This software is provided "as is" without any warranty of any kind, either expressed, implied, or statutory, including, but not
+   limited to, any warranty that the software will conform to specifications, any implied warranties of merchantability, fitness
    for a particular purpose, and freedom from infringement, and any warranty that the documentation will conform to the program, or
    any warranty that the software will be error free.
 
    In no event shall NASA be liable for any damages, including, but not limited to direct, indirect, special or consequential damages,
-   arising out of, resulting from, or in any way connected with the software or its documentation.  Whether or not based upon warranty,
+   arising out of, resulting from, or in any way connected with the software or its documentation, whether or not based upon warranty,
    contract, tort or otherwise, and whether or not loss was sustained from, or arose out of the results of, or use of, the software,
-   documentation or services provided hereunder
+   documentation or services provided hereunder.
 
    ITC Team
    NASA IV&V
-   ivv-itc@lists.nasa.gov
+   jstar-development-team@mail.nasa.gov
 */
 
 #include "shared_util.h"
@@ -55,6 +55,29 @@ char * c_read_file(const char * f_name, long * f_size) {
         return NULL;
     }
 
+}
+
+int convert_hexstring_to_byte_array(char* source_str, uint8* dest_buffer)
+{
+    char *line = source_str;
+    char *data = line;
+    int offset;
+    int read_byte;
+    int data_len = 0;
+
+    while (sscanf(data, " %02x%n", &read_byte, &offset) == 1) 
+    {
+        dest_buffer[data_len++] = read_byte;
+        data += offset;
+    }
+    return data_len;
+}
+
+void hex_conversion(char *buffer_h, uint8 **buffer_b, int *buffer_b_length)
+{
+    // Convert input plaintext
+    *buffer_b = (uint8*)malloc((strlen(buffer_h) / 2) * sizeof(uint8));
+    *buffer_b_length = convert_hexstring_to_byte_array(buffer_h, *buffer_b);
 }
 
 #ifdef DEBUG

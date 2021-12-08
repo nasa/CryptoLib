@@ -6,6 +6,7 @@ build
 venv
 *.dat
 .vscode
+__pycache__
 
 #CMake.gitignore
 CMakeLists.txt.user

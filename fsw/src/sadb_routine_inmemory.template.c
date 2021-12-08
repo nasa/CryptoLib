@@ -16,6 +16,7 @@
 #include "crypto_structs.h"
 #include "crypto_print.h"
 #include "crypto.h"
+#include "crypto_error.h"
 
 // Security Association Initialization Functions
 static int32 sadb_config(void);
@@ -123,8 +124,8 @@ static int32 sadb_config(void)
     sa[4].ast = 1;
     sa[4].shivf_len = 12;
     sa[4].stmacf_len = 16;
-    sa[4].iv_len = IV_SIZE;
-    sa[4].iv[IV_SIZE-1] = 0;
+    sa[4].iv_len = 12;
+    sa[4].iv[11] = 0;
     sa[4].abm_len = 0x14; // 20
     for (int i = 0; i < sa[4].abm_len; i++)
     {	// Zero AAD bit mask
@@ -183,22 +184,21 @@ static int32 sadb_config(void)
     sa[7].iv_len = IV_SIZE;
     sa[7].iv[IV_SIZE-1] = 0;
     sa[7].abm_len = 0x14; // 20
-    for (int i = 0; i < sa[4].abm_len; i++)
+    for (int i = 0; i < sa[7].abm_len; i++)
     {	// Zero AAD bit mask
-        sa[4].abm[i] = 0x00;
+        sa[7].abm[i] = 0x00;
     }
     sa[7].arcw_len = 1;
     sa[7].arcw[0] = 5;
-    sa[7].arc_len = (sa[4].arcw[0] * 2) + 1;
+    sa[7].arc_len = (sa[7].arcw[0] * 2) + 1;
     sa[7].gvcid_tc_blk.tfvn  = 0;
     sa[7].gvcid_tc_blk.scid  = SCID & 0x3FF;
     sa[7].gvcid_tc_blk.vcid  = 1;
     sa[7].gvcid_tc_blk.mapid = TYPE_TC;
-    return status;
 
     // SA 8 - CLEAR MODE
     sa[8].spi = 8;
-    sa[8].sa_state = SA_OPERATIONAL;
+    sa[8].sa_state = SA_NONE;
     sa[8].est = 0;
     sa[8].ast = 0;
     sa[8].arc_len = 1;
@@ -209,6 +209,29 @@ static int32 sadb_config(void)
     sa[8].gvcid_tc_blk.vcid  = 1;
     sa[8].gvcid_tc_blk.mapid = TYPE_TC;
 
+    // SA 9 - Validation Tests
+    sa[9].spi = 9;
+    sa[9].ekid = 136;
+    sa[9].sa_state = SA_KEYED;
+    sa[9].est = 1;
+    sa[9].ast = 0;
+    sa[9].shivf_len = 12;
+    sa[9].iv_len = 12;
+    sa[9].iv[12] = 0;
+    sa[9].abm_len = 0x14; // 20
+    for (int i = 0; i < sa[9].abm_len; i++)
+    {	// Zero AAD bit mask
+        sa[9].abm[i] = 0x00;
+    }
+    sa[9].arcw_len = 1;
+    sa[9].arcw[0] = 5;
+    sa[9].arc_len = (sa[9].arcw[0] * 2) + 1;
+    sa[9].gvcid_tc_blk.tfvn  = 0;
+    sa[9].gvcid_tc_blk.scid  = SCID & 0x3FF;
+    sa[9].gvcid_tc_blk.vcid  = 0;
+    sa[9].gvcid_tc_blk.mapid = TYPE_TC;
+
+    return status;
 }
 
 static int32 sadb_init(void)
@@ -240,6 +263,12 @@ static int32 sadb_close(void)
     return OS_SUCCESS;
 }
 
+#ifdef ENCTEST
+int32 expose_sadb_get_sa_from_spi(uint16 spi, SecurityAssociation_t** security_association)
+{
+    sadb_get_sa_from_spi(spi, security_association);
+}
+#endif 
 
 /*
 ** Security Association Interaction Functions
@@ -257,29 +286,81 @@ static int32 sadb_get_sa_from_spi(uint16 spi,SecurityAssociation_t** security_as
 
 static int32 sadb_get_operational_sa_from_gvcid(uint8 tfvn,uint16 scid,uint16 vcid,uint8 mapid,SecurityAssociation_t** security_association)
 {
-    int32 status = OS_SUCCESS;
+    int32 status = CRYPTO_LIB_ERROR;
 
-    for (int i=0; i < NUM_SA;i++)
+    for (int i=0; i<10; i++)
     {
-        if (sa[i].gvcid_tc_blk.tfvn == tfvn && sa[i].gvcid_tc_blk.scid == scid && sa[i].gvcid_tc_blk.vcid == vcid && sa[i].gvcid_tc_blk.mapid == mapid //gvcid
-            && sa[i].sa_state == SA_OPERATIONAL)
+        if ((sa[i].gvcid_tc_blk.tfvn == tfvn) && (sa[i].gvcid_tc_blk.scid == scid) && (sa[i].gvcid_tc_blk.vcid == vcid) && (sa[i].gvcid_tc_blk.mapid == mapid && sa[i].sa_state == SA_OPERATIONAL))
         {
             *security_association = &sa[i];
 
-            #ifdef TC_DEBUG
-                OS_printf("Operational SA found at index %d.\n", i);
+            #ifdef SA_DEBUG
+                OS_printf("Valid operational SA found at index %d.\n", i);
             #endif
 
-            return status;
+            status = CRYPTO_LIB_SUCCESS;
+            break;
         }
     }
 
-    // We only get here if no operational SA found
-    OS_printf(KRED "Error: No operational SA found! \n" RESET);
-    status = OS_ERROR;
+    // If not a success, attempt to generate a meaningful error code
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        #ifdef SA_DEBUG
+            OS_printf(KRED "Error - Making best attempt at a useful error code:\n\t" RESET);
+        #endif
+
+        for (int i=0; i<NUM_SA; i++)
+        {
+            // Could possibly have more than one field mismatched,
+            // ordering so the 'most accurate' SA's error is returned
+            // (determined by matching header fields L to R)
+            if ((sa[i].gvcid_tc_blk.tfvn != tfvn) && (sa[i].gvcid_tc_blk.scid == scid) && (sa[i].gvcid_tc_blk.vcid == vcid) && \
+                (sa[i].gvcid_tc_blk.mapid == mapid && sa[i].sa_state == SA_OPERATIONAL))
+            {
+                #ifdef SA_DEBUG
+                    OS_printf(KRED "An operational SA was found - but mismatched tfvn.\n" RESET);
+                #endif
+                status = CRYPTO_LIB_ERR_INVALID_TFVN;
+            }
+            if ((sa[i].gvcid_tc_blk.tfvn == tfvn) && (sa[i].gvcid_tc_blk.scid != scid) && (sa[i].gvcid_tc_blk.vcid == vcid) && \
+                (sa[i].gvcid_tc_blk.mapid == mapid && sa[i].sa_state == SA_OPERATIONAL))
+            {
+                #ifdef SA_DEBUG
+                    OS_printf(KRED "An operational SA was found - but mismatched scid.\n" RESET);
+                #endif
+                status = CRYPTO_LIB_ERR_INVALID_SCID;
+            }
+            if ((sa[i].gvcid_tc_blk.tfvn == tfvn) && (sa[i].gvcid_tc_blk.scid == scid) && (sa[i].gvcid_tc_blk.vcid != vcid) && \
+                (sa[i].gvcid_tc_blk.mapid == mapid && sa[i].sa_state == SA_OPERATIONAL))
+            {
+                #ifdef SA_DEBUG
+                    OS_printf(KRED "An operational SA was found - but mismatched vcid.\n" RESET);
+                #endif
+                status = CRYPTO_LIB_ERR_INVALID_VCID;
+            }
+            if ((sa[i].gvcid_tc_blk.tfvn == tfvn) && (sa[i].gvcid_tc_blk.scid == scid) && (sa[i].gvcid_tc_blk.vcid == vcid) && \
+                (sa[i].gvcid_tc_blk.mapid != mapid && sa[i].sa_state == SA_OPERATIONAL))
+            {
+                #ifdef SA_DEBUG
+                    OS_printf(KRED "An operational SA was found - but mismatched mapid.\n" RESET);
+                #endif
+                status = CRYPTO_LIB_ERR_INVALID_MAPID;
+            }
+            if ((sa[i].gvcid_tc_blk.tfvn == tfvn) && (sa[i].gvcid_tc_blk.scid == scid) && (sa[i].gvcid_tc_blk.vcid == vcid) && \
+                (sa[i].gvcid_tc_blk.mapid == mapid && sa[i].sa_state != SA_OPERATIONAL))
+            {
+                #ifdef SA_DEBUG
+                    OS_printf(KRED "A valid but non-operational SA was found.\n" RESET);
+                #endif
+                status = CRYPTO_LIB_ERR_NO_OPERATIONAL_SA;
+            }
+        }
+    }
 
     return status;
 }
+
 static int32 sadb_save_sa(SecurityAssociation_t* sa)
 {
     int32 status = OS_SUCCESS;

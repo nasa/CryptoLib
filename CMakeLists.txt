@@ -1,18 +1,19 @@
-#  Copyright (C) 2009 - 2017 National Aeronautics and Space Administration. All Foreign Rights are Reserved to the U.S. Government.
+#   Copyright (C) 2009 - 2022 National Aeronautics and Space Administration. All Foreign Rights are Reserved to the U.S. Government.
 #
-#   This software is provided "as is" without any warranty of any, kind either express, implied, or statutory, including, but not
-#   limited to, any warranty that the software will conform to, specifications any implied warranties of merchantability, fitness
+#   This software is provided "as is" without any warranty of any kind, either expressed, implied, or statutory, including, but not
+#   limited to, any warranty that the software will conform to specifications, any implied warranties of merchantability, fitness
 #   for a particular purpose, and freedom from infringement, and any warranty that the documentation will conform to the program, or
 #   any warranty that the software will be error free.
 #
 #   In no event shall NASA be liable for any damages, including, but not limited to direct, indirect, special or consequential damages,
-#   arising out of, resulting from, or in any way connected with the software or its documentation.  Whether or not based upon warranty,
+#   arising out of, resulting from, or in any way connected with the software or its documentation, whether or not based upon warranty,
 #   contract, tort or otherwise, and whether or not loss was sustained from, or arose out of the results of, or use of, the software,
-#   documentation or services provided hereunder
+#   documentation or services provided hereunder.
 #
 #   ITC Team
 #   NASA IV&V
-#   ivv-itc@lists.nasa.gov
+#   jstar-development-team@mail.nasa.gov
+
 
 #cmake_minimum_required(VERSION 2.6.4)
 cmake_minimum_required(VERSION 3.14.0)
@@ -22,11 +23,16 @@ set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib")
 
 OPTION(DEBUG "Debug" OFF) # Disabled by default, enable with: -DDEBUG=ON
 OPTION(MYSQL "Mysql" OFF) # Disabled by default, enable with: -DMYSQL=ON
+OPTION(ENCTEST "Encryption-Tests" OFF) # Disabled by default, enable with: -DENCTEST=ON
 
 IF(DEBUG)
     ADD_DEFINITIONS(-DDEBUG -DOCF_DEBUG -DFECF_DEBUG -DSA_DEBUG -DPDU_DEBUG -DCCSDS_DEBUG -DTC_DEBUG -DMAC_DEBUG -DTM_DEBUG)
     add_compile_options(-ggdb)
 ENDIF(DEBUG)
+
+IF(ENCTEST)
+    ADD_DEFINITIONS(-DENCTEST)
+ENDIF(ENCTEST)
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     include(CTest)

@@ -1,18 +1,18 @@
-/* Copyright (C) 2009 - 2017 National Aeronautics and Space Administration. All Foreign Rights are Reserved to the U.S. Government.
+/* Copyright (C) 2009 - 2022 National Aeronautics and Space Administration. All Foreign Rights are Reserved to the U.S. Government.
 
-This software is provided "as is" without any warranty of any, kind either express, implied, or statutory, including, but not
-limited to, any warranty that the software will conform to, specifications any implied warranties of merchantability, fitness
-for a particular purpose, and freedom from infringement, and any warranty that the documentation will conform to the program, or
-any warranty that the software will be error free.
+   This software is provided "as is" without any warranty of any kind, either expressed, implied, or statutory, including, but not
+   limited to, any warranty that the software will conform to specifications, any implied warranties of merchantability, fitness
+   for a particular purpose, and freedom from infringement, and any warranty that the documentation will conform to the program, or
+   any warranty that the software will be error free.
 
-In no event shall NASA be liable for any damages, including, but not limited to direct, indirect, special or consequential damages,
-arising out of, resulting from, or in any way connected with the software or its documentation.  Whether or not based upon warranty,
-contract, tort or otherwise, and whether or not loss was sustained from, or arose out of the results of, or use of, the software,
-documentation or services provided hereunder
+   In no event shall NASA be liable for any damages, including, but not limited to direct, indirect, special or consequential damages,
+   arising out of, resulting from, or in any way connected with the software or its documentation, whether or not based upon warranty,
+   contract, tort or otherwise, and whether or not loss was sustained from, or arose out of the results of, or use of, the software,
+   documentation or services provided hereunder.
 
-ITC Team
-NASA IV&V
-ivv-itc@lists.nasa.gov
+   ITC Team
+   NASA IV&V
+   jstar-development-team@mail.nasa.gov
 */
 #ifndef _crypto_config_h_
 #define _crypto_config_h_
@@ -106,14 +106,14 @@ ivv-itc@lists.nasa.gov
     #define NUM_KEYS					256
     #define DISABLED					0
     #define ENABLED						1
-    #define IV_SIZE						12      /* TM IV size bytes */
+    #define IV_SIZE						16      /* TM IV size bytes */
     #define IV_SIZE_TC                  4       /* TC IV size bytes */
     #define OCF_SIZE                    4
     #define MAC_SIZE                    16      /* bytes */
     #define FECF_SIZE                   2
     #define SEGMENT_HDR_SIZE            1
     #define ECS_SIZE                    4       /* bytes */
-    #define ABM_SIZE                    20      /* bytes */
+    #define ABM_SIZE                    1024 //20      /* bytes */
     #define ARC_SIZE                    20      /* total messages */
     #define ARCW_SIZE                   1       /* bytes */
     #define SN_SIZE                     0
