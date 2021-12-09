@@ -21,7 +21,7 @@
 
 #include "et_dt_validation.h"
 #include "utest.h"
-#include <python3.8/Python.h>
+#include <Python.h>
 
 #include "sadb_routine.h"
 #include "crypto_error.h"
@@ -82,7 +82,7 @@ void python_auth_encryption(char* data, char* key, char* iv, char* header, char*
 UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
 {
     //Setup & Initialize CryptoLib
-    Crypto_Init();
+    Crypto_Init_Unit_Test();
 
     uint8* expected = NULL;
     long expected_length = 0;
@@ -95,7 +95,6 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
 
     hex_conversion(activate_sa4_h, &activate_sa4_b, &activate_sa4_len);
     hex_conversion(enc_test_ping_h, &enc_test_ping_b, &enc_test_ping_len);
-
     SecurityAssociation_t* test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(unsigned char));
 
@@ -106,16 +105,12 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
     TC_t *tc_sdls_processed_frame;
     tc_sdls_processed_frame = malloc(sizeof(uint8) * TC_SIZE);
     memset(tc_sdls_processed_frame, 0, (sizeof(uint8) * TC_SIZE));
-
     // Ensure that Process Security can activate SA 4
     Crypto_TC_ProcessSecurity(activate_sa4_b, &activate_sa4_len, tc_sdls_processed_frame);
-    
     // Expose SA 1 for testing
     expose_sadb_get_sa_from_spi(1,&test_association);
-
     // Deactive SA 1
     test_association->sa_state = SA_NONE;
-
     // Expose SA 4 for testing
     expose_sadb_get_sa_from_spi(4, &test_association);
     test_association->arc_len = 0;
@@ -123,17 +118,15 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
     test_association->iv[11] = 1;
     test_association->ast = 1;
     test_association->est = 1;
-    Crypto_TC_ApplySecurity(enc_test_ping_b, enc_test_ping_len, &ptr_enc_frame, &enc_frame_len);
-
+    int32 ret_status = Crypto_TC_ApplySecurity(enc_test_ping_b, enc_test_ping_len, &ptr_enc_frame, &enc_frame_len);
     // Get Truth Baseline
     python_auth_encryption("1880d2ca0008197f0b0031000039c5", "FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210", "000000000000000000000001", "2003043400FF0004", "00", &expected, &expected_length);
 
     for(int i = 0; i < expected_length; i++)
     {
-        //printf("[%d]: %02x -> %02x \n", i, expected[i], ptr_enc_frame[i]);
+        printf("[%d]: %02x -> %02x \n", i, expected[i], ptr_enc_frame[i]);
         ASSERT_EQ(expected[i], ptr_enc_frame[i]);
     }
-
     free(activate_sa4_b);
     free(enc_test_ping_b);
     free(ptr_enc_frame); 
@@ -141,11 +134,11 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
     free(tc_sdls_processed_frame);
     EndPython();
 }
-
+/*
 UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
 {
     //Setup & Initialize CryptoLib
-    Crypto_Init();
+    Crypto_Init_Unit_Test();
 
     char *activate_sa4_h  = "2003002000ff000100001880d2c9000e197f0b001b0004000400003040d95ea61a"; 
     char *dec_test_ping_h = "2003043400FF00040000000000000000000000017E1D8EEA8D45CEBA17888E0CDCD747DC78E5F372F997F2A63AA5DFC168395DC987"; 
@@ -186,6 +179,7 @@ UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
 
     Crypto_TC_ProcessSecurity(dec_test_ping_b, &dec_test_ping_len, tc_sdls_processed_frame);
 
+    Crypto_Shutdown();
     for(int i = 0; i < tc_sdls_processed_frame->tc_pdu_len; i++)
     {
         ASSERT_EQ(enc_test_ping_b[i], tc_sdls_processed_frame->tc_pdu[i]);
@@ -204,7 +198,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     uint8 *ptr_enc_frame = NULL;
     uint16 enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Init();  
+    Crypto_Init_Unit_Test();
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "ef9f9284cf599eac3b119905a7d18851e7e374cf63aea04358586b0f757670f8";
@@ -242,6 +236,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
     // Calc payload index: total length - pt length
     uint16 enc_data_idx = enc_frame_len - buffer_nist_ct_len - 2;
+    Crypto_Shutdown();
     for (int i=0; i<buffer_nist_pt_len-7; i++)
     {
         ASSERT_EQ(*(ptr_enc_frame+enc_data_idx), buffer_nist_ct_b[i]);
@@ -261,7 +256,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     uint8 *ptr_enc_frame = NULL;
     uint16 enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Init();  
+    Crypto_Init_Unit_Test();
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "ef9f9284cf599eac3b119905a7d18851e7e374cf63aea04358586b0f757670f8";
@@ -301,6 +296,8 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 
     Crypto_TC_ProcessSecurity(buffer_nist_et_b, &buffer_nist_et_len, tc_nist_processed_frame);
 
+    Crypto_Shutdown();
+
     for(int i = 0; i < tc_nist_processed_frame->tc_pdu_len; i++)
     {
         ASSERT_EQ(buffer_nist_pt_b[i+5], tc_nist_processed_frame->tc_pdu[i]);
@@ -318,7 +315,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     uint8 *ptr_enc_frame = NULL;
     uint16 enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Init();  
+    Crypto_Init_Unit_Test();
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "e9ccd6eef27f740d1d5c70b187734e11e76a8ac0ad1702ff02180c5c1c9e5399";
@@ -356,6 +353,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
     // Calc payload index: total length - pt length
     uint16 enc_data_idx = enc_frame_len - buffer_nist_ct_len - 2;
+    Crypto_Shutdown();
     for (int i=0; i<buffer_nist_pt_len-7; i++)
     {
         ASSERT_EQ(*(ptr_enc_frame+enc_data_idx), buffer_nist_ct_b[i]);
@@ -373,7 +371,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     uint8 *ptr_enc_frame = NULL;
     uint16 enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Init();  
+    Crypto_Init_Unit_Test();
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "e9ccd6eef27f740d1d5c70b187734e11e76a8ac0ad1702ff02180c5c1c9e5399";
@@ -413,6 +411,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
 
     Crypto_TC_ProcessSecurity(buffer_nist_et_b, &buffer_nist_et_len, tc_nist_processed_frame);
 
+    Crypto_Shutdown();
     for(int i = 0; i < tc_nist_processed_frame->tc_pdu_len; i++)
     {
         ASSERT_EQ(buffer_nist_pt_b[i+5], tc_nist_processed_frame->tc_pdu[i]);
@@ -430,7 +429,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
     uint8 *ptr_enc_frame = NULL;
     uint16 enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Init();  
+    Crypto_Init_Unit_Test();
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "7ecc9dcb3d5b413cadc3af7b7812758bd869295f8aaf611ba9935de76bd87013";
@@ -468,6 +467,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
     // Calc payload index: total length - pt length
     uint16 enc_data_idx = enc_frame_len - buffer_nist_ct_len - 2;
+    Crypto_Shutdown();
     for (int i=0; i<buffer_nist_pt_len-7; i++)
     {
         ASSERT_EQ(*(ptr_enc_frame+enc_data_idx), buffer_nist_ct_b[i]);
@@ -485,7 +485,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
     uint8 *ptr_enc_frame = NULL;
     uint16 enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Init();  
+    Crypto_Init_Unit_Test();
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "7ecc9dcb3d5b413cadc3af7b7812758bd869295f8aaf611ba9935de76bd87013";
@@ -525,6 +525,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
 
     Crypto_TC_ProcessSecurity(buffer_nist_et_b, &buffer_nist_et_len, tc_nist_processed_frame);
 
+    Crypto_Shutdown();
     for(int i = 0; i < tc_nist_processed_frame->tc_pdu_len; i++)
     {
         ASSERT_EQ(buffer_nist_pt_b[i+5], tc_nist_processed_frame->tc_pdu[i]);
@@ -542,7 +543,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
     uint8 *ptr_enc_frame = NULL;
     uint16 enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Init();  
+    Crypto_Init_Unit_Test();
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "a881373e248615e3d6576f5a5fb68883515ae72d6a2938e3a6f0b8dcb639c9c0";
@@ -580,6 +581,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
     // Calc payload index: total length - pt length
     uint16 enc_data_idx = enc_frame_len - buffer_nist_ct_len - 2;
+    Crypto_Shutdown();
     for (int i=0; i<buffer_nist_pt_len-7; i++)
     {
         ASSERT_EQ(*(ptr_enc_frame+enc_data_idx), buffer_nist_ct_b[i]);
@@ -597,7 +599,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
     uint8 *ptr_enc_frame = NULL;
     uint16 enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Init();  
+    Crypto_Init_Unit_Test();
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "a881373e248615e3d6576f5a5fb68883515ae72d6a2938e3a6f0b8dcb639c9c0";
@@ -637,6 +639,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
 
     Crypto_TC_ProcessSecurity(buffer_nist_et_b, &buffer_nist_et_len, tc_nist_processed_frame);
 
+    Crypto_Shutdown();
     for(int i = 0; i < tc_nist_processed_frame->tc_pdu_len; i++)
     {
         ASSERT_EQ(buffer_nist_pt_b[i+5], tc_nist_processed_frame->tc_pdu[i]);
@@ -654,7 +657,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
     uint8 *ptr_enc_frame = NULL;
     uint16 enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Init();  
+    Crypto_Init_Unit_Test();
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "84c90349539c2a7989cb24dfae5e4182382ae94ba717d385977017f74f0d87d6";
@@ -692,6 +695,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
     // Calc payload index: total length - pt length
     uint16 enc_data_idx = enc_frame_len - buffer_nist_ct_len - 2;
+    Crypto_Shutdown();
     for (int i=0; i<buffer_nist_pt_len-7; i++)
     {
         ASSERT_EQ(*(ptr_enc_frame+enc_data_idx), buffer_nist_ct_b[i]);
@@ -709,7 +713,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
     uint8 *ptr_enc_frame = NULL;
     uint16 enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Init();  
+    Crypto_Init_Unit_Test();
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "84c90349539c2a7989cb24dfae5e4182382ae94ba717d385977017f74f0d87d6";
@@ -749,6 +753,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
 
     Crypto_TC_ProcessSecurity(buffer_nist_et_b, &buffer_nist_et_len, tc_nist_processed_frame);
 
+    Crypto_Shutdown();
     for(int i = 0; i < tc_nist_processed_frame->tc_pdu_len; i++)
     {
         ASSERT_EQ(buffer_nist_pt_b[i+5], tc_nist_processed_frame->tc_pdu[i]);
@@ -778,7 +783,7 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     uint8 *ptr_enc_frame = NULL;
     uint16 enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Init();  
+    Crypto_Init_Unit_Test();
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
@@ -824,6 +829,7 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
     // Calc payload index: total length - pt length
     uint16 enc_data_idx = enc_frame_len - buffer_cyber_chef_mac_len - 2;
+    Crypto_Shutdown();
     for (int i=0; i<buffer_cyber_chef_mac_len; i++)
     {
         // printf("[%d] Truth: %02x, Actual: %02x\n", enc_data_idx, buffer_cyber_chef_mac_b[i], *(ptr_enc_frame+enc_data_idx));
@@ -847,7 +853,7 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     uint8 *ptr_enc_frame = NULL;
     uint16 enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Init();  
+    Crypto_Init_Unit_Test();
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
@@ -892,6 +898,7 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     // Note: For comparison, primarily interested in the MAC
     // Calc payload index: total length - pt length
     uint16 enc_data_idx = enc_frame_len - buffer_cyber_chef_mac_len - 2;
+    Crypto_Shutdown();
     for (int i=0; i<buffer_cyber_chef_mac_len; i++)
     {
         //printf("[%d] Truth: %02x, Actual: %02x\n", enc_data_idx, buffer_cyber_chef_mac_b[i], *(ptr_enc_frame+enc_data_idx));
@@ -911,7 +918,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 {
     // Setup & Initialize CryptoLib
     uint16 enc_frame_len = 0;
-    Crypto_Init();  
+    Crypto_Init_Unit_Test();
     // NIST supplied vectors
     char *buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
     char *buffer_nist_iv_h  = "d79cf22d504cc793c3fb6c8a";
@@ -979,6 +986,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
         printf("\n");
     #endif
 
+    Crypto_Shutdown();
     // Verify the MAC
     for (int i=0; i < tc_nist_processed_frame->tc_pdu_len; i++)
     {
@@ -995,5 +1003,5 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     free(buffer_nist_mac_frame_b);
     free(buffer_nist_cp_b);
 }
-
+*/
 UTEST_MAIN();

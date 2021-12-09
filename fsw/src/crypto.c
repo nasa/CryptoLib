@@ -129,8 +129,9 @@ static uint16 crc16Table[256];
 int32 Crypto_Init_Unit_Test(void)
 {
     int32 status = OS_SUCCESS;
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY,CRYPTO_TC_CREATE_FECF_TRUE,TC_PROCESS_SDLS_PDUS_TRUE,TC_HAS_PUS_HDR,TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE,0x3F);
+    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY,CRYPTO_TC_CREATE_FECF_TRUE,TC_PROCESS_SDLS_PDUS_TRUE,TC_HAS_PUS_HDR,TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, 0x3F);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,0,TC_HAS_FECF,TC_HAS_SEGMENT_HDRS);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,1,TC_HAS_FECF,TC_HAS_SEGMENT_HDRS);
     status = Crypto_Init();
     return status;
 }
@@ -233,7 +234,7 @@ int32 Crypto_Shutdown(void)
 }
 
 
-int32 Crypto_Config_CryptoLib(uint8 sadb_type, uint8 crypto_create_fecf, uint8 process_sdls_pdus, uint8 has_pus_hdr, uint8 ignore_sa_state, uint8 ignore_anti_replay, uint8 vcid_bitmask)
+int32 Crypto_Config_CryptoLib(uint8 sadb_type, uint8 crypto_create_fecf, uint8 process_sdls_pdus, uint8 has_pus_hdr, uint8 ignore_sa_state, uint8 ignore_anti_replay, uint8 unique_sa_per_mapid, uint8 vcid_bitmask)
 {
     int32 status = OS_SUCCESS;
     crypto_config = (CryptoConfig_t*) calloc(1, CRYPTO_CONFIG_SIZE);
@@ -243,6 +244,7 @@ int32 Crypto_Config_CryptoLib(uint8 sadb_type, uint8 crypto_create_fecf, uint8 p
     crypto_config->has_pus_hdr=has_pus_hdr;
     crypto_config->ignore_sa_state=ignore_sa_state;
     crypto_config->ignore_anti_replay=ignore_anti_replay;
+    crypto_config->unique_sa_per_mapid = unique_sa_per_mapid;
     crypto_config->vcid_bitmask=vcid_bitmask;
     return status;
 }
@@ -843,7 +845,7 @@ static int32 Crypto_Get_tcPayloadLength(TC_t* tc_frame, SecurityAssociation_t *s
     int seg_hdr = 0;if(current_managed_parameters->has_segmentation_hdr==TC_HAS_SEGMENT_HDRS){seg_hdr=1;}
     int fecf = 0;if(current_managed_parameters->has_fecf==TC_HAS_FECF){fecf=FECF_SIZE;}
     int spi = 2;
-    int iv_size = sa_ptr->shivf_len; if(crypto_config->has_pus_hdr==TC_HAS_PUS_HDR){iv_size=sa_ptr->shivf_len - 1;} //For some reason, the interoperability tests with PUS header frames work with a 12 byte TC IV, so we'll use that for those.
+    int iv_size = sa_ptr->shivf_len;
     int mac_size = sa_ptr->stmacf_len;
 
     #ifdef TC_DEBUG
@@ -2263,6 +2265,7 @@ static int32 Crypto_Get_Managed_Parameters_For_Gvcid(uint8 tfvn,uint16 scid,uint
     }
     else
     {
+        OS_printf(KRED "Error: Managed Parameters for GVCID(TFVN: %d, SCID: %d, VCID: %d) not found. \n" RESET,tfvn,scid,vcid);
         return status;
     }
 }
@@ -2433,6 +2436,8 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         // Determine length of buffer to be malloced
         // TODO: Determine TC_PAD_SIZE
         // TODO: Note: Currently assumes ciphertext output length is same as ciphertext input length
+        //int seg_hdr = 0;//if(current_managed_parameters->has_segmentation_hdr==TC_HAS_SEGMENT_HDRS){seg_hdr=1;}
+        // TODO - why isn't seg_hdr included in in_frame_length -- shouldn't need to explicitly add it here.
         switch(sa_service_type)
         {
             case SA_PLAINTEXT:
@@ -2815,6 +2820,13 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
     gcry_cipher_hd_t tmp_hd;
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     SecurityAssociation_t* sa_ptr = NULL;
+
+    if(crypto_config == NULL)
+    {
+        OS_printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
+        status = CRYPTO_LIB_ERR_NO_CONFIG;
+        return status;
+    }
 
     #ifdef DEBUG
         OS_printf(KYEL "\n----- Crypto_TC_ProcessSecurity START -----\n" RESET);

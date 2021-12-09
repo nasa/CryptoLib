@@ -290,7 +290,8 @@ static int32 sadb_get_operational_sa_from_gvcid(uint8 tfvn,uint16 scid,uint16 vc
 
     for (int i=0; i<10; i++)
     {
-        if ((sa[i].gvcid_tc_blk.tfvn == tfvn) && (sa[i].gvcid_tc_blk.scid == scid) && (sa[i].gvcid_tc_blk.vcid == vcid) && (sa[i].gvcid_tc_blk.mapid == mapid && sa[i].sa_state == SA_OPERATIONAL))
+        if ((sa[i].gvcid_tc_blk.tfvn == tfvn) && (sa[i].gvcid_tc_blk.scid == scid) && (sa[i].gvcid_tc_blk.vcid == vcid) && (sa[i].sa_state == SA_OPERATIONAL) &&
+                (crypto_config->unique_sa_per_mapid==TC_UNIQUE_SA_PER_MAP_ID_FALSE || sa[i].gvcid_tc_blk.mapid == mapid)) //only require MapID match is unique SA per MapID set (only relevant when using segmentation hdrs)
         {
             *security_association = &sa[i];
 
