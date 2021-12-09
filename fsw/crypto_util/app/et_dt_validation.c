@@ -120,7 +120,13 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
     test_association->est = 1;
     int32 ret_status = Crypto_TC_ApplySecurity(enc_test_ping_b, enc_test_ping_len, &ptr_enc_frame, &enc_frame_len);
     // Get Truth Baseline
-    python_auth_encryption("1880d2ca0008197f0b0031000039c5", "FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210", "000000000000000000000001", "2003043400FF0004", "00", &expected, &expected_length);
+    python_auth_encryption("80d2ca0008197f0b0031000039c5", "FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210", "000000000000000000000001", "2003043400180004", "00", &expected, &expected_length);
+
+    for(int i = 0; i < enc_frame_len; i++)
+    {
+        printf("[%d]: %02x", i, ptr_enc_frame[i]);
+    }
+    printf("\n");
 
     for(int i = 0; i < expected_length; i++)
     {

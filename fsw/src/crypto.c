@@ -2488,8 +2488,8 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
 
         // Set new TF Header length
         // Recall: Length field is one minus total length per spec
-        *(p_new_enc_frame+2) = ((*(p_new_enc_frame+2) & 0xFC) | (((*p_enc_frame_len - 1) & (0x0300)) >> 8));
-        *(p_new_enc_frame+3) = ((*p_enc_frame_len - 1) & (0x00FF));
+        *(p_new_enc_frame+2) = ((*(p_new_enc_frame+2) & 0xFC) | (((*p_enc_frame_len) & (0x0300)) >> 8));
+        *(p_new_enc_frame+3) = ((*p_enc_frame_len) & (0x00FF));
 
         #ifdef TC_DEBUG
             OS_printf(KYEL "Printing updated TF Header:\n\t");
@@ -2504,7 +2504,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         /*
         ** Start variable length fields
         */
-        uint16_t index = TC_FRAME_PRIMARYHEADER_SIZE;
+        uint16_t index = 5; //Frame header is 5 bytes
 
         if(current_managed_parameters->has_segmentation_hdr==TC_HAS_SEGMENT_HDRS){
             index++; //Add 1 byte to index because segmentation header used for this gvcid.
