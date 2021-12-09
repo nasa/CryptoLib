@@ -2484,7 +2484,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         CFE_PSP_MemSet(p_new_enc_frame, 0, *p_enc_frame_len);
 
         // Copy original TF header
-        CFE_PSP_MemCpy(p_new_enc_frame, p_in_frame, TC_FRAME_PRIMARYHEADER_SIZE);
+        CFE_PSP_MemCpy(p_new_enc_frame, p_in_frame, TC_FRAME_PRIMARYHEADER_STRUCT_SIZE);
 
         // Set new TF Header length
         // Recall: Length field is one minus total length per spec
@@ -2493,7 +2493,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
 
         #ifdef TC_DEBUG
             OS_printf(KYEL "Printing updated TF Header:\n\t");
-            for (int i=0; i<TC_FRAME_PRIMARYHEADER_SIZE; i++)
+            for (int i=0; i<TC_FRAME_PRIMARYHEADER_STRUCT_SIZE; i++)
             {
                 OS_printf("%02X", *(p_new_enc_frame+i));
             }
@@ -2504,7 +2504,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         /*
         ** Start variable length fields
         */
-        uint16_t index = 5; //Frame header is 5 bytes
+        uint16_t index = TC_FRAME_HEADER_SIZE; //Frame header is 5 bytes
 
         if(current_managed_parameters->has_segmentation_hdr==TC_HAS_SEGMENT_HDRS){
             index++; //Add 1 byte to index because segmentation header used for this gvcid.
@@ -2591,10 +2591,10 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         // and if it was present in the original TCTF
         //if FECF
         // Even though FECF is not part of apply_security payload, we still have to subtract the length from the in_frame_length since that includes FECF length & segment header length.
-        tf_payload_len = in_frame_length - TC_FRAME_PRIMARYHEADER_SIZE - segment_hdr_len - fecf_len;
+        tf_payload_len = in_frame_length - TC_FRAME_HEADER_SIZE - segment_hdr_len - fecf_len;
         //if no FECF
-        //tf_payload_len = in_frame_length - TC_FRAME_PRIMARYHEADER_SIZE;
-        CFE_PSP_MemCpy((p_new_enc_frame+index), (p_in_frame+TC_FRAME_PRIMARYHEADER_SIZE), tf_payload_len);
+        //tf_payload_len = in_frame_length - TC_FRAME_PRIMARYHEADER_STRUCT_SIZE;
+        CFE_PSP_MemCpy((p_new_enc_frame+index), (p_in_frame+TC_FRAME_PRIMARYHEADER_STRUCT_SIZE), tf_payload_len);
         //index += tf_payload_len;
 
         /*
@@ -2696,7 +2696,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                 (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
             {
                 // TODO: More robust calculation of this location
-                // uint16 output_loc = TC_FRAME_PRIMARYHEADER_SIZE + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + temp_SA.shplf_len;
+                // uint16 output_loc = TC_FRAME_PRIMARYHEADER_STRUCT_SIZE + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + temp_SA.shplf_len;
                 #ifdef TC_DEBUG
                     OS_printf("Encrypted bytes output_loc is %d\n", index);
                     OS_printf("tf_payload_len is %d\n", tf_payload_len);
@@ -2712,7 +2712,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                     tmp_hd,
                     &p_new_enc_frame[index],                              // ciphertext output
                     tf_payload_len,		 		                    // length of data
-                    (p_in_frame + TC_FRAME_PRIMARYHEADER_SIZE + segment_hdr_len),       // plaintext input
+                    (p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len),       // plaintext input
                     tf_payload_len                                  // in data length
                 );
 

@@ -250,7 +250,8 @@ typedef struct
     uint16	fl		:10;		// The whole transfer frame length (max 1024)
     uint8	fsn		:8;			// Frame sequence number, also N(S), zeroed on Type-B frames
 } TC_FramePrimaryHeader_t;
-#define TC_FRAME_PRIMARYHEADER_SIZE     (sizeof(TC_FramePrimaryHeader_t))
+#define TC_FRAME_PRIMARYHEADER_STRUCT_SIZE     (sizeof(TC_FramePrimaryHeader_t))
+#define TC_FRAME_HEADER_SIZE    5
 
 typedef struct
 {

@@ -122,12 +122,6 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
     // Get Truth Baseline
     python_auth_encryption("80d2ca0008197f0b0031000039c5", "FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210", "000000000000000000000001", "2003043400180004", "00", &expected, &expected_length);
 
-    for(int i = 0; i < enc_frame_len; i++)
-    {
-        printf("[%d]: %02x", i, ptr_enc_frame[i]);
-    }
-    printf("\n");
-
     for(int i = 0; i < expected_length; i++)
     {
         printf("[%d]: %02x -> %02x \n", i, expected[i], ptr_enc_frame[i]);
@@ -140,15 +134,16 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
     free(tc_sdls_processed_frame);
     EndPython();
 }
-/*
+
 UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
 {
     //Setup & Initialize CryptoLib
     Crypto_Init_Unit_Test();
 
     char *activate_sa4_h  = "2003002000ff000100001880d2c9000e197f0b001b0004000400003040d95ea61a"; 
-    char *dec_test_ping_h = "2003043400FF00040000000000000000000000017E1D8EEA8D45CEBA17888E0CDCD747DC78E5F372F997F2A63AA5DFC168395DC987"; 
-    char *enc_test_ping_h = "1880d2ca0008197f0b0031000039c5";              
+    //char *dec_test_ping_h = "2003043400FF00040000000000000000000000017E1D8EEA8D45CEBA17888E0CDCD747DC78E5F372F997F2A63AA5DFC168395DC987";
+    char *dec_test_ping_h = "2003043400180004000000000000000000000001E64F96208554A8CE1CB9BF0CE52B60B757F70BC4328CB667618DDEA4BBBCE7B0";
+    char *enc_test_ping_h = "80d2ca0008197f0b0031000039c5";
 
     uint8 *activate_sa4_b, *dec_test_ping_b, *enc_test_ping_b = NULL;
     int activate_sa4_len, dec_test_ping_len, enc_test_ping_len = 0;
@@ -254,7 +249,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     free(buffer_nist_ct_b);
     free(buffer_nist_key_b);
 }
-
+/*
 // AES-GCM 256 Test Vectors
 // Reference: https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/mac/gcmtestvectors.zip
 UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
@@ -1009,5 +1004,5 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     free(buffer_nist_mac_frame_b);
     free(buffer_nist_cp_b);
 }
-*/
+ */
 UTEST_MAIN();
