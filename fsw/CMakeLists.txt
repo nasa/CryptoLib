@@ -20,6 +20,9 @@ aux_source_directory(src LIB_SRC_FILES)
 if(MYSQL)
     aux_source_directory(src_mysql LIB_SRC_MYSQL_FILES)
     list(APPEND LIB_SRC_FILES ${LIB_SRC_MYSQL_FILES})
+else()
+    aux_source_directory(src_feature_stubs/mysql_stub LIB_SRC_MYSQL_FILES)
+    list(APPEND LIB_SRC_FILES ${LIB_SRC_MYSQL_FILES})
 endif()
 
 
