@@ -46,9 +46,13 @@ extern int32 Crypto_Config_MariaDB(char* mysql_username, char* mysql_password, c
 extern int32 Crypto_Config_Add_Gvcid_Managed_Parameter(uint8 tfvn, uint16 scid, uint8 vcid, uint8 has_fecf, uint8 has_segmentation_hdr);
 
 // Initialization
-extern int32 Crypto_Init(void); //Initialize CryptoLib After Configuration Calls
-extern int32 Crypto_Init_With_Configs(CryptoConfig_t* crypto_config_p,GvcidManagedParameters_t* gvcid_managed_parameters_p,SadbMariaDBConfig_t* sadb_mariadb_config_p); //Initialize CryptoLib With Application Defined Configuration
-extern int32 Crypto_Init_Unit_Test(void); //Initialize CryptoLib with unit test default Configurations
+extern int32 Crypto_Init(void); // Initialize CryptoLib After Configuration Calls
+extern int32 Crypto_Init_With_Configs(CryptoConfig_t* crypto_config_p,GvcidManagedParameters_t* gvcid_managed_parameters_p,SadbMariaDBConfig_t* sadb_mariadb_config_p); // Initialize CryptoLib With Application Defined Configuration
+extern int32 Crypto_Init_Unit_Test(void); // Initialize CryptoLib with unit test default Configurations
+
+// Cleanup
+extern int32 Crypto_Shutdown(void); // Free all allocated memory
+
 // Telecommand (TC)
 extern int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_length, \
                                       uint8 **pp_enc_frame, uint16 *p_enc_frame_len);

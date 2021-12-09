@@ -160,7 +160,7 @@ int32 Crypto_Init(void)
     }
 
     #ifdef TC_DEBUG
-    Crypto_mpPrint(gvcid_managed_parameters);
+    Crypto_mpPrint(gvcid_managed_parameters,1);
     #endif
 
     //Prepare SADB type from config
@@ -208,6 +208,30 @@ int32 Crypto_Init(void)
                                 
     return status; 
 }
+
+//Free memory objects & restore pointers to NULL for re-initialization
+int32 Crypto_Shutdown(void)
+{
+    int32 status = OS_SUCCESS;
+
+    if(crypto_config!=NULL){
+        free(crypto_config);
+        crypto_config=NULL;
+    }
+    if(sadb_mariadb_config!=NULL){
+        free(sadb_mariadb_config);
+        sadb_mariadb_config=NULL;
+    }
+    current_managed_parameters=NULL;
+
+    if(gvcid_managed_parameters!=NULL){
+        Crypto_Free_Managed_Parameters(gvcid_managed_parameters);
+        gvcid_managed_parameters=NULL;
+    }
+
+    return status;
+}
+
 
 int32 Crypto_Config_CryptoLib(uint8 sadb_type, uint8 crypto_create_fecf, uint8 process_sdls_pdus, uint8 has_pus_hdr, uint8 ignore_sa_state, uint8 ignore_anti_replay, uint8 vcid_bitmask)
 {
@@ -2227,21 +2251,27 @@ static int32 Crypto_Get_Managed_Parameters_For_Gvcid(uint8 tfvn,uint16 scid,uint
 {
     int32 status = MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND;
 
-    while(managed_parameters_in != NULL){
-        if(managed_parameters_in->tfvn==tfvn && managed_parameters_in->scid==scid && managed_parameters_in->vcid==vcid){
-            *managed_parameters_out = managed_parameters_in; //Found the managed parameters for that gvcid!
+    if(managed_parameters_in != NULL)
+    {
+        if(managed_parameters_in->tfvn==tfvn && managed_parameters_in->scid==scid && managed_parameters_in->vcid==vcid) {
+            *managed_parameters_out = managed_parameters_in;
             status = OS_SUCCESS;
-            break;
-        } else{ //Managed parameters for gvcid not found, set pointer to next managed parameter.
-            managed_parameters_in = managed_parameters_in->next;
+            return status;
+        }else {
+            return Crypto_Get_Managed_Parameters_For_Gvcid(tfvn,scid,vcid,managed_parameters_in->next,managed_parameters_out);
         }
     }
-    return status;
+    else
+    {
+        return status;
+    }
 }
 //Managed parameters are expected to live the duration of the program, this may not be necessary.
-//TODO - If this function is useful, we need to add a Crypto Shutdown method that invokes this internal free.
 static void Crypto_Free_Managed_Parameters(GvcidManagedParameters_t* managed_parameters)
 {
+    if(managed_parameters==NULL){
+        return; //Nothing to free, just return!
+    }
     if(managed_parameters->next != NULL){
         Crypto_Free_Managed_Parameters(managed_parameters->next);
     }
@@ -2285,6 +2315,12 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         }
         OS_printf("\nPrinted %d bytes\n", in_frame_length);
     #endif
+
+    if(crypto_config == NULL)
+    {
+        OS_printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
+        status = CRYPTO_LIB_ERR_NO_CONFIG;
+    }
 
     // Primary Header
     temp_tc_header.tfvn   = ((uint8)p_in_frame[0] & 0xC0) >> 6;

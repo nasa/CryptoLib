@@ -37,5 +37,6 @@
 #define CRYPTO_LIB_ERR_NO_OPERATIONAL_SA    (-8)
 #define CRYPTO_LIB_ERR_NULL_BUFFER          (-9)
 #define CRYPTO_LIB_ERR_UT_BYTE_MISMATCH     (-10)
+#define CRYPTO_LIB_ERR_NO_CONFIG            (-11)
 
 #endif //_crypto_error_h_
