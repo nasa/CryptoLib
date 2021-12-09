@@ -29,6 +29,7 @@
 #endif
 
 #include "crypto_structs.h"
+#include "crypto_config_structs.h"
 
 #define CRYPTO_LIB_MAJOR_VERSION    1
 #define CRYPTO_LIB_MINOR_VERSION    2
@@ -38,8 +39,20 @@
 /*
 ** Prototypes
 */
+
+// Crypto Library Configuration functions
+extern int32 Crypto_Config_CryptoLib(uint8 sadb_type, uint8 crypto_create_fecf, uint8 process_sdls_pdus, uint8 has_pus_hdr, uint8 ignore_sa_state, uint8 ignore_anti_replay, uint8 vcid_bitmask);
+extern int32 Crypto_Config_MariaDB(char* mysql_username, char* mysql_password, char* mysql_hostname, char* mysql_database, uint16 mysql_port);
+extern int32 Crypto_Config_Add_Gvcid_Managed_Parameter(uint8 tfvn, uint16 scid, uint8 vcid, uint8 has_fecf, uint8 has_segmentation_hdr);
+
 // Initialization
-extern int32 Crypto_Init(void);
+extern int32 Crypto_Init(void); // Initialize CryptoLib After Configuration Calls
+extern int32 Crypto_Init_With_Configs(CryptoConfig_t* crypto_config_p,GvcidManagedParameters_t* gvcid_managed_parameters_p,SadbMariaDBConfig_t* sadb_mariadb_config_p); // Initialize CryptoLib With Application Defined Configuration
+extern int32 Crypto_Init_Unit_Test(void); // Initialize CryptoLib with unit test default Configurations
+
+// Cleanup
+extern int32 Crypto_Shutdown(void); // Free all allocated memory
+
 // Telecommand (TC)
 extern int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_length, \
                                       uint8 **pp_enc_frame, uint16 *p_enc_frame_len);
@@ -62,5 +75,10 @@ extern crypto_key_t ek_ring[NUM_KEYS];
 extern uint8 Crypto_Prep_Reply(char* ingest, uint8 appID);
 extern int32 Crypto_increment(uint8 *num, int length);
 
+//Global configuration structs
+extern CryptoConfig_t* crypto_config;
+extern SadbMariaDBConfig_t* sadb_mariadb_config;
+extern GvcidManagedParameters_t* gvcid_managed_parameters;
+extern GvcidManagedParameters_t* current_managed_parameters;
 
 #endif

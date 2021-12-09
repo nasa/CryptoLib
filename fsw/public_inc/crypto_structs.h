@@ -233,7 +233,8 @@ typedef struct
 /*
 ** Telecommand (TC) Definitions
 */
-typedef struct __attribute__ ((packed))
+//typedef struct __attribute__ ((packed)) //__attribute__ ((packed)) is not easily supported in CFFI python. Only add when CFFI properly supports packed & nonpacked structs.
+typedef struct
 {
     uint8 	tfvn	:2;			// Transfer Frame Version Number
     uint8 	bypass	:1;			// Bypass

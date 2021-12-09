@@ -36,4 +36,5 @@ void Crypto_ccsdsPrint(CCSDS_t* sdls_frame);
 void Crypto_saPrint(SecurityAssociation_t* sa);
 void Crypto_hexprint(void *c, size_t n);
 void Crypto_binprint(void *c, size_t n);
+void Crypto_mpPrint(GvcidManagedParameters_t* managed_parameters,uint8 print_children);
 #endif 

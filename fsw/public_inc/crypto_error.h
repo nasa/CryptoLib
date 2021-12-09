@@ -19,6 +19,13 @@
 
 #include "sadb_mariadb_error.h"
 
+#define SADB_INVALID_SADB_TYPE                                    201
+#define CRYPTO_CONFIGURATION_NOT_COMPLETE                         101
+#define CRYPTO_MANAGED_PARAM_CONFIGURATION_NOT_COMPLETE           102
+#define CRYPTO_MARIADB_CONFIGURATION_NOT_COMPLETE                 103
+#define MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND                    104
+
+
 #define CRYPTO_LIB_SUCCESS                  (0)
 #define CRYPTO_LIB_ERROR                    (-1)
 #define CRYPTO_LIB_ERR_NO_INIT              (-2)
@@ -30,5 +37,6 @@
 #define CRYPTO_LIB_ERR_NO_OPERATIONAL_SA    (-8)
 #define CRYPTO_LIB_ERR_NULL_BUFFER          (-9)
 #define CRYPTO_LIB_ERR_UT_BYTE_MISMATCH     (-10)
+#define CRYPTO_LIB_ERR_NO_CONFIG            (-11)
 
 #endif //_crypto_error_h_

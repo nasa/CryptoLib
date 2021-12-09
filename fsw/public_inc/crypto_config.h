@@ -111,6 +111,7 @@
     #define OCF_SIZE                    4
     #define MAC_SIZE                    16      /* bytes */
     #define FECF_SIZE                   2
+    #define SEGMENT_HDR_SIZE            1
     #define ECS_SIZE                    4       /* bytes */
     #define ABM_SIZE                    1024 //20      /* bytes */
     #define ARC_SIZE                    20      /* total messages */
@@ -164,7 +165,6 @@
 
 // CCSDS PUS Defines
     #define TLV_DATA_SIZE               494     /* bytes */
-    #define PUS_HDR                     1 //(1=true,0=false)
 
 // TM Defines
     #define TM_FRAME_DATA_SIZE          1740 	/* bytes */
@@ -172,16 +172,6 @@
     #define TM_PAD_SIZE                 2       /* bytes */
 
 // TC Behavior Defines
-    #define TC_PROCESS_SDLS_PDUS        1 //(1=true,0=false)
     #define TC_SDLS_EP_VCID             4 //VCID which has SDLS PDUs (JPL uses VCIDs to determine TC type, there is no space packet layer with APIDs). Set to -1 if uses SP APIDs.
-    #define VCID_BITMASK                0b111111 //Some JPL missions do not use the entire CCSDS 6 bit field for VCID.
-    #define SEGMENTATION_HDR            1 //(1=true,0=false)
-    #define HAS_FECF                    1 //(1=true,0=false)
 
-// MySQL - MariaDB Defines (will be dynamically loaded properties in the future)
-    #define MYSQL_USER                  "sadb_user"
-    #define MYSQL_PASS                  "sadb_password"
-    #define MYSQL_HOST                  "localhost"
-    #define MYSQL_DB                    "sadb"
-    #define MYSQL_PORT                  0
 #endif
