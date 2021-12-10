@@ -2,7 +2,13 @@ from Crypto.Cipher import AES
 import codecs
 import sys
 
-
+"""
+Function: crc16
+Calculates the CRC16 for a set of byte data
+@param data: byte array
+@param offset: int
+@param length: int
+"""
 def crc16(data : bytearray, offset , length):
     if data is None or offset < 0 or offset > len(data)- 1 and offset+length > len(data):
         return 0
@@ -16,6 +22,11 @@ def crc16(data : bytearray, offset , length):
                 crc = crc << 1
     return crc & 0xFFFF
 
+"""
+Class: Encryption
+This class is used to perform AES, GCM encryption in order to provide a truth baseline.
+The baseline is compared against output created by gcrypt within TC_ApplySecurity
+"""
 class Encryption:
     def __init__(self):
         self.results = 0x00
@@ -51,6 +62,7 @@ class Encryption:
         check_sum = crc16(bytearray(final_val), 0, len(final_val))
         final_val += check_sum.to_bytes(2, byteorder = "big")
 
+        print(final_val.hex())
         # Padding for Later
         # while (len(final_val.hex()) %8) != 0:
         #     final_val += bytes.fromhex("00")
