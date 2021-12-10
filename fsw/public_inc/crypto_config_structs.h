@@ -35,6 +35,7 @@ typedef enum { TC_PROCESS_SDLS_PDUS_FALSE, TC_PROCESS_SDLS_PDUS_TRUE } TcProcess
 typedef enum { TC_NO_PUS_HDR, TC_HAS_PUS_HDR } TcPusHdrPresent;
 typedef enum { TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_SA_STATE_TRUE } TcIgnoreSaState;
 typedef enum { TC_IGNORE_ANTI_REPLAY_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE } TcIgnoreAntiReplay;
+typedef enum { TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE } TcUniqueSaPerMapId;
 
 /*
 ** Main Crypto Configuration Block
@@ -47,6 +48,7 @@ typedef struct
     TcPusHdrPresent has_pus_hdr;
     TcIgnoreSaState ignore_sa_state; //TODO - add logic that uses this configuration
     TcIgnoreAntiReplay ignore_anti_replay; //TODO - add logic that uses this configuration
+    TcUniqueSaPerMapId unique_sa_per_mapid;
     uint8 vcid_bitmask;
 } CryptoConfig_t;
 #define CRYPTO_CONFIG_SIZE (sizeof(CryptoConfig_t))
