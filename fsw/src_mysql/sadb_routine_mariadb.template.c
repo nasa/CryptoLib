@@ -283,7 +283,7 @@ static char* convert_byte_array_to_hexstring(void* src_buffer, size_t buffer_len
 
 static int32 finish_with_error(MYSQL *con, int err)
 {
-    fprintf(stderr, "%s%s%s\n", KRED,mysql_error(con),RESET); // todo - if query fails, need to push failure message to error stack
+    fprintf(stderr, "%s\n", mysql_error(con)); // todo - if query fails, need to push failure message to error stack
     mysql_close(con);
     return err;
 }

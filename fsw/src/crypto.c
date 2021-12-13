@@ -2704,7 +2704,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                     OS_printf("Encrypted bytes output_loc is %d\n", index);
                     OS_printf("tf_payload_len is %d\n", tf_payload_len);
                     OS_printf(KYEL "Printing TC Frame prior to encryption:\n\t");
-                    for(int i=0; i < new_enc_frame_header_field_length; i++)
+                    for(int i=0; i < *p_enc_frame_len; i++)
                     {
                         OS_printf("%02X", *(p_new_enc_frame + i));
                     }
@@ -2730,7 +2730,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                     OS_printf("Encrypted bytes output_loc is %d\n", index);
                     OS_printf("tf_payload_len is %d\n", tf_payload_len);
                     OS_printf(KYEL "Printing TC Frame after encryption:\n\t");
-                    for(int i=0; i < new_enc_frame_header_field_length; i++)
+                    for(int i=0; i < *p_enc_frame_len; i++)
                     {
                         OS_printf("%02X", *(p_new_enc_frame + i));
                     }
@@ -2742,7 +2742,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                 (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
             {
                 // TODO - Know if FECF exists
-                mac_loc = TC_FRAME_HEADER_SIZE + segment_hdr_len + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len + tf_payload_len;
+                mac_loc = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len + tf_payload_len;
                 #ifdef MAC_DEBUG
                     OS_printf(KYEL "MAC location is: %d\n" RESET, mac_loc);
                     OS_printf(KYEL "MAC size is: %d\n" RESET, MAC_SIZE);
@@ -2750,7 +2750,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                 gcry_error = gcry_cipher_gettag(
                     tmp_hd,
                     &p_new_enc_frame[mac_loc],                             // tag output
-                    MAC_SIZE                                         // tag size
+                    MAC_SIZE                                         // tag size // TODO - use sa_ptr->abm_len instead of hardcoded mac size?
                 );
                 if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
                 {
@@ -2779,16 +2779,24 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         */
 
         //Only calculate & insert FECF if CryptoLib is configured to do so & gvcid includes FECF.
-        if( crypto_config->crypto_create_fecf==CRYPTO_TC_CREATE_FECF_TRUE &&
-                current_managed_parameters->has_fecf==TC_HAS_FECF)
+        if( current_managed_parameters->has_fecf==TC_HAS_FECF )
         {
             // Set FECF Field if present
             #ifdef FECF_DEBUG
             OS_printf(KCYN "Calcing FECF over %d bytes\n" RESET, new_enc_frame_header_field_length - 1);
             #endif
-            new_fecf = Crypto_Calc_FECF(p_new_enc_frame, new_enc_frame_header_field_length - 1);
-            *(p_new_enc_frame + new_enc_frame_header_field_length - 1) = (uint8) ((new_fecf & 0xFF00) >> 8);
-            *(p_new_enc_frame + new_enc_frame_header_field_length ) = (uint8) (new_fecf & 0x00FF);
+            if ( crypto_config->crypto_create_fecf==CRYPTO_TC_CREATE_FECF_TRUE )
+            {
+                new_fecf = Crypto_Calc_FECF(p_new_enc_frame, new_enc_frame_header_field_length - 1);
+                *(p_new_enc_frame + new_enc_frame_header_field_length - 1) = (uint8) ((new_fecf & 0xFF00) >> 8);
+                *(p_new_enc_frame + new_enc_frame_header_field_length ) = (uint8) (new_fecf & 0x00FF);
+            }
+            else // CRYPTO_TC_CREATE_FECF_FALSE
+            {
+                *(p_new_enc_frame + new_enc_frame_header_field_length - 1) = (uint8) 0x00;
+                *(p_new_enc_frame + new_enc_frame_header_field_length ) = (uint8) 0x00;
+            }
+
             index += 2;
         }
 
@@ -2881,7 +2889,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
         report.lspiu = tc_sdls_processed_frame->tc_sec_header.spi;
 
         // Verify 
-        if (tc_sdls_processed_frame->tc_header.scid != (SCID & 0x3FF))
+        if (tc_sdls_processed_frame->tc_header.scid != current_managed_parameters->scid)
         {
             OS_printf(KRED "Error: SCID incorrect! \n" RESET);
             status = OS_ERROR;
@@ -2988,58 +2996,64 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
         #endif
 
         // Check IV is in ARCW
-        if ( Crypto_window(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len,
-            sa_ptr->arcw[sa_ptr->arcw_len-1]) != CRYPTO_LIB_SUCCESS )
+        if ( crypto_config->ignore_anti_replay==TC_IGNORE_ANTI_REPLAY_FALSE )
         {
-            report.af = 1;
-            report.bsnf = 1;
-            if (log_summary.rs > 0)
+
+            if ( Crypto_window(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len,
+                               sa_ptr->arcw[sa_ptr->arcw_len-1]) != CRYPTO_LIB_SUCCESS )
             {
-                Crypto_increment((uint8*)&log_summary.num_se, 4);
-                log_summary.rs--;
-                log.blk[log_count].emt = IV_WINDOW_ERR_EID;
-                log.blk[log_count].emv[0] = 0x4E;
-                log.blk[log_count].emv[1] = 0x41;
-                log.blk[log_count].emv[2] = 0x53;
-                log.blk[log_count].emv[3] = 0x41;
-                log.blk[log_count++].em_len = 4;
-            }
-            OS_printf(KRED "Error: IV not in window! \n" RESET);
-            #ifdef OCF_DEBUG
-                Crypto_fsrPrint(&report);
-            #endif
-            status = OS_ERROR;
-        }
-        else 
-        {
-            if ( Crypto_compare_less_equal(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len) == CRYPTO_LIB_SUCCESS )
-            {   // Replay - IV value lower than expected
                 report.af = 1;
                 report.bsnf = 1;
                 if (log_summary.rs > 0)
                 {
                     Crypto_increment((uint8*)&log_summary.num_se, 4);
                     log_summary.rs--;
-                    log.blk[log_count].emt = IV_REPLAY_ERR_EID;
+                    log.blk[log_count].emt = IV_WINDOW_ERR_EID;
                     log.blk[log_count].emv[0] = 0x4E;
                     log.blk[log_count].emv[1] = 0x41;
                     log.blk[log_count].emv[2] = 0x53;
                     log.blk[log_count].emv[3] = 0x41;
                     log.blk[log_count++].em_len = 4;
                 }
-                OS_printf(KRED "Error: IV replay! Value lower than expected! \n" RESET);
+                OS_printf(KRED "Error: IV not in window! \n" RESET);
                 #ifdef OCF_DEBUG
-                    Crypto_fsrPrint(&report);
+                Crypto_fsrPrint(&report);
                 #endif
                 status = OS_ERROR;
-            } 
+            }
             else
-            {   // Adjust expected IV to acceptable received value
-                for (int i = 0; i < (sa_ptr->shivf_len); i++)
-                {
-                    sa_ptr->iv[i] = tc_sdls_processed_frame->tc_sec_header.iv[i];
+            {
+                if ( Crypto_compare_less_equal(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len) == CRYPTO_LIB_SUCCESS )
+                {   // Replay - IV value lower than expected
+                    report.af = 1;
+                    report.bsnf = 1;
+                    if (log_summary.rs > 0)
+                    {
+                        Crypto_increment((uint8*)&log_summary.num_se, 4);
+                        log_summary.rs--;
+                        log.blk[log_count].emt = IV_REPLAY_ERR_EID;
+                        log.blk[log_count].emv[0] = 0x4E;
+                        log.blk[log_count].emv[1] = 0x41;
+                        log.blk[log_count].emv[2] = 0x53;
+                        log.blk[log_count].emv[3] = 0x41;
+                        log.blk[log_count++].em_len = 4;
+                    }
+                    OS_printf(KRED "Error: IV replay! Value lower than expected! \n" RESET);
+                    #ifdef OCF_DEBUG
+                    Crypto_fsrPrint(&report);
+                    #endif
+                    status = OS_ERROR;
+                }
+                else
+                {   // Adjust expected IV to acceptable received value // TODO - separate ground processing from fsw processing
+                    for (int i = 0; i < (sa_ptr->shivf_len); i++)
+                    {
+                        sa_ptr->iv[i] = tc_sdls_processed_frame->tc_sec_header.iv[i];
+                    }
                 }
             }
+
+
         }
 
         if ( status != CRYPTO_LIB_SUCCESS )
@@ -3155,61 +3169,64 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
             OS_printf("\t sa[%d].iv[%d] = 0x%02x \n", tc_sdls_processed_frame->tc_sec_header.spi, sa_ptr->shivf_len-1, sa_ptr->iv[sa_ptr->shivf_len-1]);
         #endif
 
-        // Check IV is in ARCW
-        if ( Crypto_window(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len,
-            sa_ptr->arcw[sa_ptr->arcw_len-1]) != OS_SUCCESS )
+        if ( crypto_config->ignore_anti_replay==TC_IGNORE_ANTI_REPLAY_FALSE )
         {
-            report.af = 1;
-            report.bsnf = 1;
-            if (log_summary.rs > 0)
+            // Check IV is in ARCW
+            if ( Crypto_window(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len,
+                               sa_ptr->arcw[sa_ptr->arcw_len-1]) != OS_SUCCESS )
             {
-                Crypto_increment((uint8*)&log_summary.num_se, 4);
-                log_summary.rs--;
-                log.blk[log_count].emt = IV_WINDOW_ERR_EID;
-                log.blk[log_count].emv[0] = 0x4E;
-                log.blk[log_count].emv[1] = 0x41;
-                log.blk[log_count].emv[2] = 0x53;
-                log.blk[log_count].emv[3] = 0x41;
-                log.blk[log_count++].em_len = 4;
-            }
-            OS_printf(KRED "Error: IV not in window! \n" RESET);
-            #ifdef OCF_DEBUG
-                Crypto_fsrPrint(&report);
-            #endif
-            status = OS_ERROR;
-        }
-        else 
-        {
-            if ( Crypto_compare_less_equal(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len) == OS_SUCCESS )
-            {   // Replay - IV value lower than expected
                 report.af = 1;
                 report.bsnf = 1;
                 if (log_summary.rs > 0)
                 {
                     Crypto_increment((uint8*)&log_summary.num_se, 4);
                     log_summary.rs--;
-                    log.blk[log_count].emt = IV_REPLAY_ERR_EID;
+                    log.blk[log_count].emt = IV_WINDOW_ERR_EID;
                     log.blk[log_count].emv[0] = 0x4E;
                     log.blk[log_count].emv[1] = 0x41;
                     log.blk[log_count].emv[2] = 0x53;
                     log.blk[log_count].emv[3] = 0x41;
                     log.blk[log_count++].em_len = 4;
                 }
-                OS_printf(KRED "Error: IV replay! Value lower than expected! \n" RESET);
+                OS_printf(KRED "Error: IV not in window! \n" RESET);
                 #ifdef OCF_DEBUG
-                    Crypto_fsrPrint(&report);
+                Crypto_fsrPrint(&report);
                 #endif
                 status = OS_ERROR;
-            } 
+            }
             else
-            {   // Adjust expected IV to acceptable received value
-                for (int i = 0; i < (sa_ptr->shivf_len); i++)
-                {
-                    sa_ptr->iv[i] = tc_sdls_processed_frame->tc_sec_header.iv[i];
+            {
+                if ( Crypto_compare_less_equal(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len) == OS_SUCCESS )
+                {   // Replay - IV value lower than expected
+                    report.af = 1;
+                    report.bsnf = 1;
+                    if (log_summary.rs > 0)
+                    {
+                        Crypto_increment((uint8*)&log_summary.num_se, 4);
+                        log_summary.rs--;
+                        log.blk[log_count].emt = IV_REPLAY_ERR_EID;
+                        log.blk[log_count].emv[0] = 0x4E;
+                        log.blk[log_count].emv[1] = 0x41;
+                        log.blk[log_count].emv[2] = 0x53;
+                        log.blk[log_count].emv[3] = 0x41;
+                        log.blk[log_count++].em_len = 4;
+                    }
+                    OS_printf(KRED "Error: IV replay! Value lower than expected! \n" RESET);
+                    #ifdef OCF_DEBUG
+                    Crypto_fsrPrint(&report);
+                    #endif
+                    status = OS_ERROR;
+                }
+                else
+                {   // Adjust expected IV to acceptable received value
+                    for (int i = 0; i < (sa_ptr->shivf_len); i++)
+                    {
+                        sa_ptr->iv[i] = tc_sdls_processed_frame->tc_sec_header.iv[i];
+                    }
                 }
             }
         }
-        
+
         if ( status == OS_ERROR )
         {   // Exit
             *len_ingest = 0;
@@ -3410,57 +3427,60 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
             OS_printf("\tsa[%d].iv[%d] = 0x%02x \n", tc_sdls_processed_frame->tc_sec_header.spi, sa_ptr->shivf_len-1, sa_ptr->iv[sa_ptr->shivf_len-1]);
         #endif
 
-        // Check IV is in ARCW
-        if (Crypto_window(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len,
-            sa_ptr->arcw[sa_ptr->arcw_len-1]) != OS_SUCCESS )
+        if ( crypto_config->ignore_anti_replay==TC_IGNORE_ANTI_REPLAY_FALSE )
         {
-            report.af = 1;
-            report.bsnf = 1;
-            if (log_summary.rs > 0)
+            // Check IV is in ARCW
+            if (Crypto_window(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len,
+                              sa_ptr->arcw[sa_ptr->arcw_len-1]) != OS_SUCCESS )
             {
-                Crypto_increment((uint8*)&log_summary.num_se, 4);
-                log_summary.rs--;
-                log.blk[log_count].emt = IV_WINDOW_ERR_EID;
-                log.blk[log_count].emv[0] = 0x4E;
-                log.blk[log_count].emv[1] = 0x41;
-                log.blk[log_count].emv[2] = 0x53;
-                log.blk[log_count].emv[3] = 0x41;
-                log.blk[log_count++].em_len = 4;
-            }
-            OS_printf(KRED "Error: IV not in window! \n" RESET);
-            #ifdef OCF_DEBUG
-                Crypto_fsrPrint(&report);
-            #endif
-            status = OS_ERROR;
-        }
-        else 
-        {
-            if (Crypto_compare_less_equal(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len) == OS_SUCCESS )
-            {   // Replay - IV value lower than expected
                 report.af = 1;
                 report.bsnf = 1;
                 if (log_summary.rs > 0)
                 {
                     Crypto_increment((uint8*)&log_summary.num_se, 4);
                     log_summary.rs--;
-                    log.blk[log_count].emt = IV_REPLAY_ERR_EID;
+                    log.blk[log_count].emt = IV_WINDOW_ERR_EID;
                     log.blk[log_count].emv[0] = 0x4E;
                     log.blk[log_count].emv[1] = 0x41;
                     log.blk[log_count].emv[2] = 0x53;
                     log.blk[log_count].emv[3] = 0x41;
                     log.blk[log_count++].em_len = 4;
                 }
-                OS_printf(KRED "Error: IV replay! Value lower than expected! \n" RESET);
+                OS_printf(KRED "Error: IV not in window! \n" RESET);
                 #ifdef OCF_DEBUG
-                    Crypto_fsrPrint(&report);
+                Crypto_fsrPrint(&report);
                 #endif
                 status = OS_ERROR;
-            } 
+            }
             else
-            {   // Adjust expected IV to acceptable received value
-                for (int i = 0; i < (sa_ptr->shivf_len); i++)
-                {
-                    sa_ptr->iv[i] = tc_sdls_processed_frame->tc_sec_header.iv[i];
+            {
+                if (Crypto_compare_less_equal(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len) == OS_SUCCESS )
+                {   // Replay - IV value lower than expected
+                    report.af = 1;
+                    report.bsnf = 1;
+                    if (log_summary.rs > 0)
+                    {
+                        Crypto_increment((uint8*)&log_summary.num_se, 4);
+                        log_summary.rs--;
+                        log.blk[log_count].emt = IV_REPLAY_ERR_EID;
+                        log.blk[log_count].emv[0] = 0x4E;
+                        log.blk[log_count].emv[1] = 0x41;
+                        log.blk[log_count].emv[2] = 0x53;
+                        log.blk[log_count].emv[3] = 0x41;
+                        log.blk[log_count++].em_len = 4;
+                    }
+                    OS_printf(KRED "Error: IV replay! Value lower than expected! \n" RESET);
+                    #ifdef OCF_DEBUG
+                    Crypto_fsrPrint(&report);
+                    #endif
+                    status = OS_ERROR;
+                }
+                else
+                {   // Adjust expected IV to acceptable received value
+                    for (int i = 0; i < (sa_ptr->shivf_len); i++)
+                    {
+                        sa_ptr->iv[i] = tc_sdls_processed_frame->tc_sec_header.iv[i];
+                    }
                 }
             }
         }
@@ -3703,10 +3723,10 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
     {
         // CCSDS Pass-through
         #ifdef DEBUG
-        OS_printf(KGRN "CCSDS Pass-through \n" RESET);
+        OS_printf(KGRN "CCSDS Pass-through (No Extended Procedure PDU Processing) \n" RESET);
         #endif
         if (crypto_config->has_pus_hdr==TC_HAS_PUS_HDR) {
-            for (x = 0; x < (tc_sdls_processed_frame->tc_header.fl - 11); x++) {
+            for (x = 0; x < (tc_sdls_processed_frame->tc_header.fl - 11); x++) { //TODO - Need to account for security header!
                 ingest[x] = tc_sdls_processed_frame->tc_pdu[x];
                 #ifdef CCSDS_DEBUG
                 OS_printf("tc_sdls_processed_frame->tc_pdu[%d] = 0x%02x\n", x, tc_sdls_processed_frame->tc_pdu[x]);

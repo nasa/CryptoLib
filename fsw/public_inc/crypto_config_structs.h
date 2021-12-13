@@ -47,7 +47,7 @@ typedef struct
     TcProcessSdlsPdus process_sdls_pdus; //Config to process SDLS extended procedure PDUs in CryptoLib
     TcPusHdrPresent has_pus_hdr;
     TcIgnoreSaState ignore_sa_state; //TODO - add logic that uses this configuration
-    TcIgnoreAntiReplay ignore_anti_replay; //TODO - add logic that uses this configuration
+    TcIgnoreAntiReplay ignore_anti_replay;
     TcUniqueSaPerMapId unique_sa_per_mapid;
     uint8 vcid_bitmask;
 } CryptoConfig_t;
