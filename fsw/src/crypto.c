@@ -2832,6 +2832,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     SecurityAssociation_t* sa_ptr = NULL;
     uint8 sa_service_type = -1;
+    uint8* aad;
 
     if(crypto_config == NULL)
     {
@@ -2943,9 +2944,9 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
     {
         if(crypto_config->crypto_check_fecf == TC_CHECK_FECF_TRUE)
         {
-            uint16 received_fecf = (tc_sdls_processed_frame->tc_header.fl-1 & 0xFF00) || (tc_sdls_processed_frame->tc_header.fl & 0x00FF); 
+            uint16 received_fecf = (tc_sdls_processed_frame->tc_header.fl-1 & 0xFF00) | (tc_sdls_processed_frame->tc_header.fl & 0x00FF); 
             // Calculate our own
-            uint16 calculated_fecf = Crypto_Calc_FECF(ingest, len_ingest-2);
+            uint16 calculated_fecf = Crypto_Calc_FECF(ingest, *len_ingest-2);
             // Compare
             if (received_fecf != calculated_fecf)
             {
@@ -2956,21 +2957,24 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
     }
 
     // Parse the security header
-    tc_sdls_processed_frame->tc_sec_header.spi = (uint16)ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len];
+    tc_sdls_processed_frame->tc_sec_header.spi = (uint16)((uint8)ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len] | (uint8)ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + 1]);
     // Get SA via SPI
     status = sadb_routine->sadb_get_sa_from_spi(tc_sdls_processed_frame->tc_sec_header.spi, &sa_ptr);
     if(status != CRYPTO_LIB_SUCCESS){ return status; }
     // Parse IV
-    memcpy(&(tc_sdls_processed_frame->tc_sec_header.iv)+(IV_SIZE-sa_ptr->shivf_len), ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN], sa_ptr->shivf_len);
+    memcpy((tc_sdls_processed_frame->tc_sec_header.iv)+(IV_SIZE-sa_ptr->shivf_len), &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN]), sa_ptr->shivf_len);
     // Parse Sequence Number
-    memcpy(&(tc_sdls_processed_frame->tc_sec_header.sn)+(TC_SN_SIZE-sa_ptr->shsnf_len), ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len], sa_ptr->shsnf_len);
+    memcpy((tc_sdls_processed_frame->tc_sec_header.sn)+(TC_SN_SIZE-sa_ptr->shsnf_len), &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len]), sa_ptr->shsnf_len);
     // Parse pad length
-    memcpy(&(tc_sdls_processed_frame->tc_sec_header.pad)+(TC_PAD_SIZE-sa_ptr->shplf_len), ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len] , sa_ptr->shplf_len);
+    memcpy((tc_sdls_processed_frame->tc_sec_header.pad)+(TC_PAD_SIZE-sa_ptr->shplf_len), &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len]) , sa_ptr->shplf_len);
 
     // Check MAC, if applicable
     if((sa_service_type == SA_AUTHENTICATION) || 
         (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
     {
+        uint16 tc_mac_start_index = tc_sdls_processed_frame->tc_header.fl + 1 - fecf_len - sa_ptr->stmacf_len;
+        // Parse the received MAC
+        memcpy((tc_sdls_processed_frame->tc_sec_trailer.mac)+(MAC_SIZE-sa_ptr->stmacf_len), &(ingest[tc_mac_start_index]) , sa_ptr->stmacf_len);
         if (crypto_config->ignore_anti_replay==TC_IGNORE_ANTI_REPLAY_FALSE )
         {
             // If sequence number field is greater than zero, use as arsn
@@ -2985,883 +2989,132 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
             else
             {
                 // Check IV is in ARCW
-                status = Crypto_window(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len,
+                status = Crypto_window(tc_sdls_processed_frame->tc_sec_header.iv+(IV_SIZE-sa_ptr->shivf_len), sa_ptr->iv, sa_ptr->shivf_len,
                                 sa_ptr->arcw[sa_ptr->arcw_len-1]);
+                printf("Received IV is\n\t");
+                for(int i=IV_SIZE-sa_ptr->shivf_len; i<sa_ptr->shivf_len+(IV_SIZE-sa_ptr->shivf_len); i++)
+                // for(int i=0; i<IV_SIZE; i++)
+                {
+                    printf("%02x", tc_sdls_processed_frame->tc_sec_header.iv[i]);
+                }
+                printf("\nSA IV is\n\t");
+                for(int i=0; i<sa_ptr->shivf_len; i++)
+                {
+                    printf("%02x", sa_ptr->iv[i]);
+                }
+                printf("\nARCW is: %02x\n", sa_ptr->arcw[0]);
                 if (status != CRYPTO_LIB_SUCCESS) { return status; }
                 // TODO: Update SA IV through SADB_Routine function call
             }
             
+        }
+
+        gcry_error = gcry_cipher_open(
+            &(tmp_hd),
+            GCRY_CIPHER_AES256, 
+            GCRY_CIPHER_MODE_GCM, 
+            GCRY_CIPHER_CBC_MAC
+        );
+        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+        {
+            OS_printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+            status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
+            return status;
+        }
+        gcry_error = gcry_cipher_setkey(
+            tmp_hd,
+            ek_ring[sa_ptr->ekid].value,
+            KEY_SIZE
+        );
+        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+        {
+            OS_printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
+            status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
+            return status;
+        }
+        gcry_error = gcry_cipher_setiv(
+            tmp_hd,
+            tc_sdls_processed_frame->tc_sec_header.iv,
+            sa_ptr->shivf_len
+        );
+        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+        {
+            OS_printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
+            status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
+            return status;
+        }
+
+        aad = (uint8*)malloc(tc_mac_start_index * sizeof(uint8));
+        // Prepare additional authenticated data (AAD)
+        for (y = 0; y < tc_mac_start_index; y++)
+        {
+            aad[y] = (uint8) ((uint8)ingest[y] & (uint8)sa_ptr->abm[y]);
+        }
+
+        gcry_error = gcry_cipher_authenticate(
+            tmp_hd,
+            aad,                                      // additional authenticated data
+            tc_mac_start_index  		                 // length of AAD
+        );
+        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+        {
+            OS_printf(KRED "ERROR: gcry_cipher_authenticate error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
+            OS_printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error),gcry_strerror (gcry_error));
+            status = CRYPTO_LIB_ERR_AUTHENTICATION_ERROR;
+            return status;
+        }
+
+        // TODO Better without copies / CMAC updates
+        // char *garbage_buff = malloc(tc_mac_start_index * sizeof(uint8));
+        // gcry_error = gcry_cipher_encrypt(
+        //     tmp_hd,                // plaintext output
+        //     garbage_buff,          // plaintext garbage out
+        //     tc_mac_start_index,    // length of data
+        //     aad,                   // ciphertext input
+        //     tc_mac_start_index     // in data length
+        // );
+        // if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+        // {
+        //     OS_printf(KRED "ERROR: gcry_cipher_authentication error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
+        //     OS_printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error),gcry_strerror (gcry_error));
+        //     status = CRYPTO_LIB_ERR_AUTHENTICATION_ERROR;
+        //     return status;
+        // }
+        // free(garbage_buff);
+
+        // 
+        // gcry_error = gcry_cipher_checktag(
+        //     tmp_hd,
+        //     tc_sdls_processed_frame->tc_sec_trailer.mac,    // tag input
+        //     sa_ptr->stmacf_len                              // tag size
+        //     );
+        uint8* calculated_mac = malloc(sa_ptr->stmacf_len * sizeof(uint8));
+        gcry_error = gcry_cipher_gettag(
+            tmp_hd,
+            calculated_mac,    // tag output
+            sa_ptr->stmacf_len // tag size
+            );
+        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+        {
+            OS_printf(KRED "ERROR: gcry_cipher_checktag error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
+            status = CRYPTO_LIB_ERR_AUTHENTICATION_ERROR;
+            return status;
+        }
+
+        for(int i=0; i<sa_ptr->stmacf_len; i++)
+        {
+            if (calculated_mac[i] != tc_sdls_processed_frame->tc_sec_trailer.mac[i])
+            {
+                status = CRYPTO_LIB_ERR_AUTHENTICATION_ERROR;
+                OS_printf(KRED "ERROR: MAC Validation Error.\n" RESET);
+                return status;
+            }
         }
     }
 
     // Decrypt, if applicable
 
     // Extended PDU processing, if applicable
-
-    if((sa_ptr->est == 1) && (sa_ptr->ast == 0))
-    {
-        // Encryption Only
-        #ifdef DEBUG
-            OS_printf(KBLU "ENCRYPTED TC Received!\n" RESET);
-        #endif
-
-        #ifdef TC_DEBUG
-            OS_printf("IV: \n");
-        #endif
-        for (x = byte_idx; x < (byte_idx + sa_ptr->shivf_len); x++)
-        {
-            tc_sdls_processed_frame->tc_sec_header.iv[x-byte_idx] = (uint8)ingest[x];
-            #ifdef TC_DEBUG
-                OS_printf("\t iv[%d] = 0x%02x\n", x-byte_idx, tc_sdls_processed_frame->tc_sec_header.iv[x-byte_idx]);
-            #endif
-        }
-        byte_idx += sa_ptr->shivf_len;
-        report.snval = tc_sdls_processed_frame->tc_sec_header.iv[sa_ptr->shivf_len-1];
-
-        #ifdef DEBUG
-            OS_printf("\t tc_sec_header.iv[%d] = 0x%02x \n", sa_ptr->shivf_len-1, tc_sdls_processed_frame->tc_sec_header.iv[sa_ptr->shivf_len-1]);
-            OS_printf("\t sa[%d].iv[%d] = 0x%02x \n", tc_sdls_processed_frame->tc_sec_header.spi, sa_ptr->shivf_len-1, sa_ptr->iv[sa_ptr->shivf_len-1]);
-        #endif
-
-        // Check IV is in ARCW
-        if ( crypto_config->ignore_anti_replay==TC_IGNORE_ANTI_REPLAY_FALSE )
-        {
-
-            if ( Crypto_window(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len,
-                               sa_ptr->arcw[sa_ptr->arcw_len-1]) != CRYPTO_LIB_SUCCESS )
-            {
-                report.af = 1;
-                report.bsnf = 1;
-                if (log_summary.rs > 0)
-                {
-                    Crypto_increment((uint8*)&log_summary.num_se, 4);
-                    log_summary.rs--;
-                    log.blk[log_count].emt = IV_WINDOW_ERR_EID;
-                    log.blk[log_count].emv[0] = 0x4E;
-                    log.blk[log_count].emv[1] = 0x41;
-                    log.blk[log_count].emv[2] = 0x53;
-                    log.blk[log_count].emv[3] = 0x41;
-                    log.blk[log_count++].em_len = 4;
-                }
-                OS_printf(KRED "Error: IV not in window! \n" RESET);
-                #ifdef OCF_DEBUG
-                Crypto_fsrPrint(&report);
-                #endif
-                status = OS_ERROR;
-            }
-            else
-            {
-                if ( Crypto_compare_less_equal(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len) == CRYPTO_LIB_SUCCESS )
-                {   // Replay - IV value lower than expected
-                    report.af = 1;
-                    report.bsnf = 1;
-                    if (log_summary.rs > 0)
-                    {
-                        Crypto_increment((uint8*)&log_summary.num_se, 4);
-                        log_summary.rs--;
-                        log.blk[log_count].emt = IV_REPLAY_ERR_EID;
-                        log.blk[log_count].emv[0] = 0x4E;
-                        log.blk[log_count].emv[1] = 0x41;
-                        log.blk[log_count].emv[2] = 0x53;
-                        log.blk[log_count].emv[3] = 0x41;
-                        log.blk[log_count++].em_len = 4;
-                    }
-                    OS_printf(KRED "Error: IV replay! Value lower than expected! \n" RESET);
-                    #ifdef OCF_DEBUG
-                    Crypto_fsrPrint(&report);
-                    #endif
-                    status = OS_ERROR;
-                }
-                else
-                {   // Adjust expected IV to acceptable received value // TODO - separate ground processing from fsw processing
-                    for (int i = 0; i < (sa_ptr->shivf_len); i++)
-                    {
-                        sa_ptr->iv[i] = tc_sdls_processed_frame->tc_sec_header.iv[i];
-                    }
-                }
-            }
-
-
-        }
-
-        if ( status != CRYPTO_LIB_SUCCESS )
-        {   // Exit
-            *len_ingest = 0;
-            return status;
-        }
-
-        tc_sdls_processed_frame->tc_pdu_len = Crypto_Get_tcPayloadLength(tc_sdls_processed_frame, sa_ptr);
-        
-        x = x + tc_sdls_processed_frame->tc_pdu_len;
-
-        #ifdef TC_DEBUG
-            OS_printf("TC: \n"); 
-            for (int temp = 0; temp < tc_sdls_processed_frame->tc_pdu_len; temp++)
-            {	
-                OS_printf("\t ingest[%d] = 0x%02x \n", temp, (uint8)ingest[temp+20]);
-            }
-        #endif
-
-        // FECF
-        tc_sdls_processed_frame->tc_sec_trailer.fecf = ((uint8)ingest[x] << 8) | ((uint8)ingest[x+1]);
-        Crypto_FECF(tc_sdls_processed_frame->tc_sec_trailer.fecf, ingest, (tc_sdls_processed_frame->tc_header.fl - 1),tc_sdls_processed_frame);
-
-        // Initialize the key
-        //itc_gcm128_init(&sa[tc_sdls_processed_frame->tc_sec_header.spi].gcm_ctx, (const unsigned char*) &ek_ring[sa[sa_ptr->ekid]);
-
-        gcry_error = gcry_cipher_open(
-            &(tmp_hd),
-            GCRY_CIPHER_AES256, 
-            GCRY_CIPHER_MODE_GCM, 
-            GCRY_CIPHER_CBC_MAC
-        );
-        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            OS_printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-            status = OS_ERROR;
-            return status;
-        }
-        #ifdef DEBUG
-            OS_printf("Key ID = %d, 0x", sa_ptr->ekid);
-            for(int y = 0; y < KEY_SIZE; y++)
-            {
-                OS_printf("%02x", ek_ring[sa_ptr->ekid].value[y]);
-            }
-            OS_printf("\n");
-        #endif
-        gcry_error = gcry_cipher_setkey(
-            tmp_hd,
-            &(ek_ring[sa_ptr->ekid].value[0]),
-            KEY_SIZE
-        );
-        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            OS_printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-            status = OS_ERROR;
-            return status;
-        }
-        gcry_error = gcry_cipher_setiv(
-            tmp_hd,
-            &(sa_ptr->iv[0]),
-            sa_ptr->iv_len
-        );
-        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            OS_printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-            status = OS_ERROR;
-            return status;
-        }
-
-        gcry_error = gcry_cipher_decrypt(
-            tmp_hd, 
-            &(tc_sdls_processed_frame->tc_pdu[0]),          // plaintext output
-            tc_sdls_processed_frame->tc_pdu_len,	 		// length of data
-            &(ingest[20]),                                  // ciphertext input
-            tc_sdls_processed_frame->tc_pdu_len             // in data length
-        ); 
-        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            OS_printf(KRED "ERROR: gcry_cipher_decrypt error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-            status = OS_ERROR;
-            return status;
-        }
-        gcry_cipher_close(tmp_hd);
-        
-        // Increment the IV for next time
-        #ifdef INCREMENT
-            Crypto_increment(sa_ptr->iv, sa_ptr->shivf_len);
-        #endif
-    }
-    // Determine mode via SPI
-    else if ((sa_ptr->est == 1) &&
-        (sa_ptr->ast == 1))
-    {	// Authenticated/Encrypted
-        #ifdef DEBUG
-            OS_printf(KBLU "Authenticated/Encrypted TC Received!\n" RESET);
-        #endif
-        #ifdef TC_DEBUG
-            OS_printf("IV: \n");
-        #endif
-        for (x = byte_idx; x < (byte_idx + sa_ptr->shivf_len); x++)
-        {
-            tc_sdls_processed_frame->tc_sec_header.iv[x-byte_idx] = (uint8)ingest[x];
-            #ifdef TC_DEBUG
-                OS_printf("\t iv[%d] = 0x%02x\n", x-byte_idx, tc_sdls_processed_frame->tc_sec_header.iv[x-byte_idx]);
-            #endif
-        }
-        byte_idx += sa_ptr->shivf_len;
-        report.snval = tc_sdls_processed_frame->tc_sec_header.iv[sa_ptr->shivf_len-1];
-
-        #ifdef DEBUG
-            OS_printf("\t tc_sec_header.iv[%d] = 0x%02x \n", sa_ptr->shivf_len-1, tc_sdls_processed_frame->tc_sec_header.iv[sa_ptr->shivf_len-1]);
-            OS_printf("\t sa[%d].iv[%d] = 0x%02x \n", tc_sdls_processed_frame->tc_sec_header.spi, sa_ptr->shivf_len-1, sa_ptr->iv[sa_ptr->shivf_len-1]);
-        #endif
-
-        if ( crypto_config->ignore_anti_replay==TC_IGNORE_ANTI_REPLAY_FALSE )
-        {
-            // Check IV is in ARCW
-            if ( Crypto_window(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len,
-                               sa_ptr->arcw[sa_ptr->arcw_len-1]) != OS_SUCCESS )
-            {
-                report.af = 1;
-                report.bsnf = 1;
-                if (log_summary.rs > 0)
-                {
-                    Crypto_increment((uint8*)&log_summary.num_se, 4);
-                    log_summary.rs--;
-                    log.blk[log_count].emt = IV_WINDOW_ERR_EID;
-                    log.blk[log_count].emv[0] = 0x4E;
-                    log.blk[log_count].emv[1] = 0x41;
-                    log.blk[log_count].emv[2] = 0x53;
-                    log.blk[log_count].emv[3] = 0x41;
-                    log.blk[log_count++].em_len = 4;
-                }
-                OS_printf(KRED "Error: IV not in window! \n" RESET);
-                #ifdef OCF_DEBUG
-                Crypto_fsrPrint(&report);
-                #endif
-                status = OS_ERROR;
-            }
-            else
-            {
-                if ( Crypto_compare_less_equal(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len) == OS_SUCCESS )
-                {   // Replay - IV value lower than expected
-                    report.af = 1;
-                    report.bsnf = 1;
-                    if (log_summary.rs > 0)
-                    {
-                        Crypto_increment((uint8*)&log_summary.num_se, 4);
-                        log_summary.rs--;
-                        log.blk[log_count].emt = IV_REPLAY_ERR_EID;
-                        log.blk[log_count].emv[0] = 0x4E;
-                        log.blk[log_count].emv[1] = 0x41;
-                        log.blk[log_count].emv[2] = 0x53;
-                        log.blk[log_count].emv[3] = 0x41;
-                        log.blk[log_count++].em_len = 4;
-                    }
-                    OS_printf(KRED "Error: IV replay! Value lower than expected! \n" RESET);
-                    #ifdef OCF_DEBUG
-                    Crypto_fsrPrint(&report);
-                    #endif
-                    status = OS_ERROR;
-                }
-                else
-                {   // Adjust expected IV to acceptable received value
-                    for (int i = 0; i < (sa_ptr->shivf_len); i++)
-                    {
-                        sa_ptr->iv[i] = tc_sdls_processed_frame->tc_sec_header.iv[i];
-                    }
-                }
-            }
-        }
-
-        if ( status == OS_ERROR )
-        {   // Exit
-            *len_ingest = 0;
-            return status;
-        }
-
-        tc_sdls_processed_frame->tc_pdu_len = Crypto_Get_tcPayloadLength(tc_sdls_processed_frame, sa_ptr);
-        
-        x = x + tc_sdls_processed_frame->tc_pdu_len;
-
-        #ifdef TC_DEBUG
-            OS_printf("TC: \n"); 
-            for (int temp = 0; temp < tc_sdls_processed_frame->tc_pdu_len; temp++)
-            {	
-                OS_printf("\t ingest[%d] = 0x%02x \n", temp, (uint8)ingest[temp+20]);
-            }
-        #endif
-
-        // Security Trailer
-        #ifdef TC_DEBUG
-            OS_printf("MAC: \n");
-        #endif
-        for (y = x; y < (x + MAC_SIZE); y++)
-        {
-            tc_sdls_processed_frame->tc_sec_trailer.mac[y-x]  = (uint8)ingest[y];
-            #ifdef TC_DEBUG
-                OS_printf("\t mac[%d] = 0x%02x\n", y-x, tc_sdls_processed_frame->tc_sec_trailer.mac[y-x]);
-            #endif
-        }
-        x = x + sa_ptr->stmacf_len;
-
-        // FECF
-        tc_sdls_processed_frame->tc_sec_trailer.fecf = ((uint8)ingest[x] << 8) | ((uint8)ingest[x+1]);
-        Crypto_FECF(tc_sdls_processed_frame->tc_sec_trailer.fecf, ingest, (tc_sdls_processed_frame->tc_header.fl - 1),tc_sdls_processed_frame);
-
-        // Initialize the key
-        //itc_gcm128_init(&sa[tc_sdls_processed_frame->tc_sec_header.spi].gcm_ctx, (const unsigned char*) &ek_ring[sa[sa_ptr->ekid]);
-
-        gcry_error = gcry_cipher_open(
-            &(tmp_hd),
-            GCRY_CIPHER_AES256, 
-            GCRY_CIPHER_MODE_GCM, 
-            GCRY_CIPHER_CBC_MAC
-        );
-        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            OS_printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-            status = OS_ERROR;
-            return status;
-        }
-        #ifdef DEBUG
-            OS_printf("Key ID = %d, 0x", sa_ptr->ekid);
-            for(int y = 0; y < KEY_SIZE; y++)
-            {
-                OS_printf("%02x", ek_ring[sa_ptr->ekid].value[y]);
-            }
-            OS_printf("\n");
-        #endif
-        gcry_error = gcry_cipher_setkey(
-            tmp_hd,
-            ek_ring[sa_ptr->ekid].value,
-            KEY_SIZE
-        );
-        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            OS_printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-            status = OS_ERROR;
-            return status;
-        }
-        gcry_error = gcry_cipher_setiv(
-            tmp_hd,
-            sa_ptr->iv,
-            sa_ptr->iv_len
-        );
-        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            OS_printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-            status = OS_ERROR;
-            return status;
-        }
-        #ifdef MAC_DEBUG
-            OS_printf("AAD = 0x");
-        #endif
-        // Prepare additional authenticated data (AAD)
-
-        uint8 aad[sa_ptr->abm_len];
-        for (y = 0; y < sa_ptr->abm_len; y++)
-        {
-            aad[y] = (uint8) ((uint8)ingest[y] & (uint8)sa_ptr->abm[y]);
-            #ifdef MAC_DEBUG
-                OS_printf("%02x", (uint8) ingest[y]);
-            #endif
-        }
-        #ifdef MAC_DEBUG
-            OS_printf("\n");
-        #endif
-
-        gcry_error = gcry_cipher_authenticate(
-            tmp_hd,
-            aad,                                      // additional authenticated data
-            sa_ptr->abm_len 		                        // length of AAD
-        );
-
-        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            OS_printf(KRED "ERROR: gcry_cipher_authenticate error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-            OS_printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error),gcry_strerror (gcry_error));
-            status = OS_ERROR;
-            return status;
-        }
-
-        gcry_error = gcry_cipher_decrypt(
-            tmp_hd, 
-            tc_sdls_processed_frame->tc_pdu,                                                            // plaintext output
-            tc_sdls_processed_frame->tc_pdu_len,                                                        // length of data
-            &(ingest[*len_ingest - tc_sdls_processed_frame->tc_pdu_len - sa_ptr->stmacf_len - 2]),      // ciphertext input
-            tc_sdls_processed_frame->tc_pdu_len                                                         // in data length
-        );
-        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            OS_printf(KRED "ERROR: gcry_cipher_decrypt error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-            status = OS_ERROR;
-            return status;
-        }
-        gcry_error = gcry_cipher_checktag(
-            tmp_hd, 
-            tc_sdls_processed_frame->tc_sec_trailer.mac,              // tag input
-            sa_ptr->stmacf_len                                        // tag size
-        );
-
-        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            OS_printf(KRED "ERROR: gcry_cipher_checktag error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-            
-            OS_printf("Calculated MAC   = 0x");
-            for (int z = 0; z < MAC_SIZE; z++)
-            {
-                OS_printf("%02x",tc_sdls_processed_frame->tc_sec_trailer.mac[z]);
-            }
-            OS_printf("\n");
-            
-            gcry_error = gcry_cipher_gettag(
-                tmp_hd,
-                &(tc_sdls_processed_frame->tc_sec_trailer.mac[0]),   // tag output
-                MAC_SIZE                                             // tag size
-            );
-            if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-            {
-                OS_printf(KRED "ERROR: gcry_cipher_checktag error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-            }
-
-            OS_printf("Expected MAC = 0x");
-            for (int z = 0; z < MAC_SIZE; z++)
-            {
-                OS_printf("%02x",tc_sdls_processed_frame->tc_sec_trailer.mac[z]);
-            }
-            OS_printf("\n");
-            status = OS_ERROR;
-            report.bmacf = 1;
-            #ifdef OCF_DEBUG
-                Crypto_fsrPrint(&report);
-            #endif
-            return status;
-        }
-        gcry_cipher_close(tmp_hd);
-        
-        // Increment the IV for next time
-        #ifdef INCREMENT
-            Crypto_increment(sa_ptr->iv, sa_ptr->shivf_len);
-        #endif
-    }
-    else if((sa_ptr->ast == 1) && (sa_ptr->est == 0))
-    {
-        // Authentication only
-        #ifdef DEBUG
-            OS_printf(KBLU "Authenticated TC Received!\n" RESET);
-        #endif
-        #ifdef TC_DEBUG
-            OS_printf(KYEL "IV: \n\t");
-        #endif
-        
-        for (x = byte_idx; x < (byte_idx + sa_ptr->shivf_len); x++)
-        {
-            tc_sdls_processed_frame->tc_sec_header.iv[x-byte_idx] = (uint8)ingest[x];
-            #ifdef TC_DEBUG
-                OS_printf("%02x", tc_sdls_processed_frame->tc_sec_header.iv[x-byte_idx]);
-            #endif
-        }
-       
-        #ifdef TC_DEBUG
-            OS_printf("\n"RESET);
-        #endif
-        byte_idx += sa_ptr->shivf_len;
-        report.snval = tc_sdls_processed_frame->tc_sec_header.iv[sa_ptr->shivf_len-1];
-        
-        #ifdef DEBUG
-            OS_printf("\ttc_sec_header.iv[%d] = 0x%02x \n", sa_ptr->shivf_len-1, tc_sdls_processed_frame->tc_sec_header.iv[sa_ptr->shivf_len-1]);
-            OS_printf("\tsa[%d].iv[%d] = 0x%02x \n", tc_sdls_processed_frame->tc_sec_header.spi, sa_ptr->shivf_len-1, sa_ptr->iv[sa_ptr->shivf_len-1]);
-        #endif
-
-        if ( crypto_config->ignore_anti_replay==TC_IGNORE_ANTI_REPLAY_FALSE )
-        {
-            // Check IV is in ARCW
-            if (Crypto_window(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len,
-                              sa_ptr->arcw[sa_ptr->arcw_len-1]) != OS_SUCCESS )
-            {
-                report.af = 1;
-                report.bsnf = 1;
-                if (log_summary.rs > 0)
-                {
-                    Crypto_increment((uint8*)&log_summary.num_se, 4);
-                    log_summary.rs--;
-                    log.blk[log_count].emt = IV_WINDOW_ERR_EID;
-                    log.blk[log_count].emv[0] = 0x4E;
-                    log.blk[log_count].emv[1] = 0x41;
-                    log.blk[log_count].emv[2] = 0x53;
-                    log.blk[log_count].emv[3] = 0x41;
-                    log.blk[log_count++].em_len = 4;
-                }
-                OS_printf(KRED "Error: IV not in window! \n" RESET);
-                #ifdef OCF_DEBUG
-                Crypto_fsrPrint(&report);
-                #endif
-                status = OS_ERROR;
-            }
-            else
-            {
-                if (Crypto_compare_less_equal(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len) == OS_SUCCESS )
-                {   // Replay - IV value lower than expected
-                    report.af = 1;
-                    report.bsnf = 1;
-                    if (log_summary.rs > 0)
-                    {
-                        Crypto_increment((uint8*)&log_summary.num_se, 4);
-                        log_summary.rs--;
-                        log.blk[log_count].emt = IV_REPLAY_ERR_EID;
-                        log.blk[log_count].emv[0] = 0x4E;
-                        log.blk[log_count].emv[1] = 0x41;
-                        log.blk[log_count].emv[2] = 0x53;
-                        log.blk[log_count].emv[3] = 0x41;
-                        log.blk[log_count++].em_len = 4;
-                    }
-                    OS_printf(KRED "Error: IV replay! Value lower than expected! \n" RESET);
-                    #ifdef OCF_DEBUG
-                    Crypto_fsrPrint(&report);
-                    #endif
-                    status = OS_ERROR;
-                }
-                else
-                {   // Adjust expected IV to acceptable received value
-                    for (int i = 0; i < (sa_ptr->shivf_len); i++)
-                    {
-                        sa_ptr->iv[i] = tc_sdls_processed_frame->tc_sec_header.iv[i];
-                    }
-                }
-            }
-        }
-        if ( status == OS_ERROR )
-        {   // Exit
-            *len_ingest = 0;
-            return status;
-        }
-        tc_sdls_processed_frame->tc_pdu_len = Crypto_Get_tcPayloadLength(tc_sdls_processed_frame, sa_ptr);
-    
-        // Copy pdu data from ingest into memory
-        for(int i=0; i<tc_sdls_processed_frame->tc_pdu_len; i++)
-        {
-            tc_sdls_processed_frame->tc_pdu[i] = ingest[x];
-            x++;
-        }
-        // x = x + tc_sdls_processed_frame->tc_pdu_len;
-        
-        #ifdef TC_DEBUG
-            OS_printf("tc_pdu_len is: %d\n", tc_sdls_processed_frame->tc_pdu_len);
-            OS_printf("TC PDU ingest Payload: \n\t"); 
-            for (int temp = 0; temp < tc_sdls_processed_frame->tc_pdu_len; temp++)
-            {   
-                OS_printf("%02x", (uint8)ingest[temp+20]);
-            }
-            OS_printf("\n");
-        #endif
-        
-        // Security Trailer
-        #ifdef TC_DEBUG
-            OS_printf("MAC: \n\t");
-        #endif
-        for (y = x; y < (x + sa_ptr->stmacf_len); y++)
-        {
-            tc_sdls_processed_frame->tc_sec_trailer.mac[y-x]  = (uint8)ingest[y];
-            #ifdef TC_DEBUG
-                OS_printf("%02x", tc_sdls_processed_frame->tc_sec_trailer.mac[y-x]);
-            #endif
-        }
-        #ifdef TC_DEBUG
-            OS_printf("\n");
-        #endif
-        x = x + sa_ptr->stmacf_len;
-
-        // FECF
-        tc_sdls_processed_frame->tc_sec_trailer.fecf = ((uint8)ingest[x] << 8) | ((uint8)ingest[x+1]);
-        Crypto_FECF(tc_sdls_processed_frame->tc_sec_trailer.fecf, ingest, (tc_sdls_processed_frame->tc_header.fl-1),tc_sdls_processed_frame);
-        
-        gcry_error = gcry_cipher_open(
-            &(tmp_hd),
-            GCRY_CIPHER_AES256, 
-            GCRY_CIPHER_MODE_GCM, 
-            GCRY_CIPHER_CBC_MAC
-        );
-        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            OS_printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-            status = OS_ERROR;
-            return status;
-        }
-        #ifdef DEBUG
-            OS_printf("Key ID = %d, 0x", sa_ptr->ekid);
-            for(int y = 0; y < KEY_SIZE; y++)
-            {
-                OS_printf("%02x", ek_ring[sa_ptr->ekid].value[y]);
-            }
-            OS_printf("\n");
-        #endif
-        gcry_error = gcry_cipher_setkey(
-            tmp_hd,
-            ek_ring[sa_ptr->ekid].value,
-            KEY_SIZE
-        );
-        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            OS_printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-            status = OS_ERROR;
-            return status;
-        }
-        gcry_error = gcry_cipher_setiv(
-            tmp_hd,
-            sa_ptr->iv,
-            sa_ptr->iv_len
-        );
-        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            OS_printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-            status = OS_ERROR;
-            return status;
-        }
-        #ifdef MAC_DEBUG
-            OS_printf("AAD = 0x");
-        #endif
-        // Prepare additional authenticated data (AAD)
-        for (y = 0; y < sa_ptr->abm_len; y++)
-        {
-            ingest[y] = (uint8) ((uint8)ingest[y] & (uint8)sa_ptr->abm[y]);
-            #ifdef DEBUG
-                OS_printf("%02x", (uint8) ingest[y]);
-            #endif
-        }
-        #ifdef DEBUG
-            OS_printf("\n");
-        #endif
-        
-        gcry_error = gcry_cipher_authenticate(
-            tmp_hd,
-            ingest,                                      // additional authenticated data
-            sa_ptr->abm_len 		                     // length of AAD
-        );
-
-        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            OS_printf(KRED "ERROR: gcry_cipher_authenticate error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-            OS_printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error),gcry_strerror (gcry_error));
-            status = OS_ERROR;
-            return status;
-        }
-        // printf("PDU LEN: %d\n", tc_sdls_processed_frame->tc_pdu_len);
-        // gcry_error = gcry_cipher_decrypt(
-        //     tmp_hd, 
-        //     tc_sdls_processed_frame->tc_pdu,                                                            // plaintext output
-        //     tc_sdls_processed_frame->tc_pdu_len,                                                        // length of data
-        //     &(ingest[*len_ingest - tc_sdls_processed_frame->tc_pdu_len - sa_ptr->stmacf_len - 2]),      // ciphertext input
-        //     tc_sdls_processed_frame->tc_pdu_len                                                         // in data length
-        // );
-        // if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        // {
-        //     OS_printf(KRED "ERROR: gcry_cipher_decrypt error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-        //     status = OS_ERROR;
-        //     return status;
-        // }
-        char *garbage_buff = malloc(tc_sdls_processed_frame->tc_pdu_len * sizeof(unsigned char));
-
-        gcry_error = gcry_cipher_encrypt(
-            tmp_hd, 
-            // tc_sdls_processed_frame->tc_pdu,                                                            // plaintext output
-            garbage_buff,
-            tc_sdls_processed_frame->tc_pdu_len,                                                        // length of data
-            &(ingest[*len_ingest - tc_sdls_processed_frame->tc_pdu_len - sa_ptr->stmacf_len - 2]),      // ciphertext input
-            tc_sdls_processed_frame->tc_pdu_len                                                         // in data length
-        );
-        free(garbage_buff);
-        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            OS_printf(KRED "ERROR: gcry_cipher_encrypt error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-            status = OS_ERROR;
-            return status;
-        }
-        gcry_error = gcry_cipher_gettag(
-            tmp_hd,
-            &(tc_sdls_processed_frame->tc_sec_trailer.mac[0]),     // tag output
-            sa_ptr->stmacf_len                                     // tag size
-        );
-        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            OS_printf(KRED "ERROR: gcry_cipher_gettag error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-        }
-
-        #ifdef MAC_DEBUG
-        OS_printf("TC_Process Expected MAC = 0x");
-        for (int z = 0; z < sa_ptr->stmacf_len ; z++)
-        {
-            OS_printf("%02x", tc_sdls_processed_frame->tc_sec_trailer.mac[z]);
-        }
-        OS_printf("\n");
-        OS_printf("TC_Process Actual MAC   = 0x");
-        for (int z = 0; z < sa_ptr->stmacf_len ; z++)
-        {
-            OS_printf("%02x",tc_sdls_processed_frame->tc_sec_trailer.mac[z]);
-        }
-        OS_printf("\n");
-        #endif
-
-        #ifdef DEBUG
-            OS_printf("Using PDU length of: %d\n", tc_sdls_processed_frame->tc_pdu_len);
-            OS_printf("Printing entire frame sans header in memory:\n\t0x");
-            // for(int i=0; i<sizeof(tc_sdls_processed_frame->tc_header); i++)
-            // {
-            //     OS_printf("%02x", tc_sdls_processed_frame->tc_header[i]);
-            // }
-            OS_printf("%02x", tc_sdls_processed_frame->tc_sec_header.sh);
-            OS_printf("%04x", tc_sdls_processed_frame->tc_sec_header.spi);
-            for(int i=0; i<sa_ptr->iv_len; i++)
-            {
-                OS_printf("%02x", tc_sdls_processed_frame->tc_sec_header.iv[i]);
-            }
-            for(int i=0; i<tc_sdls_processed_frame->tc_pdu_len; i++)
-            {
-                OS_printf("%02x", tc_sdls_processed_frame->tc_pdu[i]);
-            }
-            for(int i=0; i<sa_ptr->stmacf_len; i++)
-            {
-                OS_printf("%02x", tc_sdls_processed_frame->tc_sec_trailer.mac[i]);
-            }
-            OS_printf("%04x\n", tc_sdls_processed_frame->tc_sec_trailer.fecf);
-        #endif
-
-        status = OS_ERROR;
-        report.bmacf = 1;
-        #ifdef OCF_DEBUG
-            Crypto_fsrPrint(&report);
-        #endif
-        return status;
-    gcry_cipher_close(tmp_hd);
-    
-    // Increment the IV for next time
-    #ifdef INCREMENT
-        Crypto_increment(sa_ptr->iv, sa_ptr->shivf_len);
-    #endif
-
-    }
-    else
-    {	// Clear
-        #ifdef DEBUG
-            OS_printf(KBLU "CLEAR TC Received!\n" RESET);
-        #endif
-
-        for (y = 10; y <= (tc_sdls_processed_frame->tc_header.fl -1); y++) //tfhdr+seghdr+sechdr=5+1+6=12
-        {	
-            tc_sdls_processed_frame->tc_pdu[y - 10] = (uint8)ingest[y];
-        }
-        // FECF
-        tc_sdls_processed_frame->tc_sec_trailer.fecf = ((uint8)ingest[y] << 8) | ((uint8)ingest[y+1]);
-        Crypto_FECF((int) tc_sdls_processed_frame->tc_sec_trailer.fecf, ingest, (tc_sdls_processed_frame->tc_header.fl),tc_sdls_processed_frame);
-    }
-    
-    #ifdef TC_DEBUG
-        Crypto_tcPrint(tc_sdls_processed_frame);
-    #endif
-
-    // // Zero ingest
-    // for (x = 0; x < *len_ingest; x++)
-    // {
-    //     ingest[x] = 0;
-    // }
-
-
-    if(crypto_config->process_sdls_pdus==TC_PROCESS_SDLS_PDUS_FALSE) //If we don't want to process frame data for SDLS PDUs, only reverse security & return content.
-    {
-        // CCSDS Pass-through
-        #ifdef DEBUG
-        OS_printf(KGRN "CCSDS Pass-through (No Extended Procedure PDU Processing) \n" RESET);
-        #endif
-        if (crypto_config->has_pus_hdr==TC_HAS_PUS_HDR) {
-            for (x = 0; x < (tc_sdls_processed_frame->tc_header.fl - 11); x++) { //TODO - Need to account for security header!
-                ingest[x] = tc_sdls_processed_frame->tc_pdu[x];
-                #ifdef CCSDS_DEBUG
-                OS_printf("tc_sdls_processed_frame->tc_pdu[%d] = 0x%02x\n", x, tc_sdls_processed_frame->tc_pdu[x]);
-                #endif
-                *len_ingest = x;
-            }
-        } else {
-            for (x = 0; x < (tc_sdls_processed_frame->tc_header.fl); x++) { //with no PUS header, entire PDU is data
-                ingest[x] = tc_sdls_processed_frame->tc_pdu[x];
-                #ifdef CCSDS_DEBUG
-                OS_printf("tc_sdls_processed_frame->tc_pdu[%d] = 0x%02x\n", x, tc_sdls_processed_frame->tc_pdu[x]);
-                #endif
-                *len_ingest = x;
-            }
-        }
-    }
-    else //Process SDLS PDU
-    {
-        if (crypto_config->has_pus_hdr==TC_HAS_PUS_HDR)
-        {
-            if ((tc_sdls_processed_frame->tc_pdu[0] == 0x18) && (tc_sdls_processed_frame->tc_pdu[1] == 0x80))
-            // Crypto Lib Application ID
-            {
-                #ifdef DEBUG
-                OS_printf(KGRN "Received SDLS command: " RESET);
-                #endif
-                // CCSDS Header
-                sdls_frame.hdr.pvn = (tc_sdls_processed_frame->tc_pdu[0] & 0xE0) >> 5;
-                sdls_frame.hdr.type = (tc_sdls_processed_frame->tc_pdu[0] & 0x10) >> 4;
-                sdls_frame.hdr.shdr = (tc_sdls_processed_frame->tc_pdu[0] & 0x08) >> 3;
-                sdls_frame.hdr.appID =
-                        ((tc_sdls_processed_frame->tc_pdu[0] & 0x07) << 8) | tc_sdls_processed_frame->tc_pdu[1];
-                sdls_frame.hdr.seq = (tc_sdls_processed_frame->tc_pdu[2] & 0xC0) >> 6;
-                sdls_frame.hdr.pktid =
-                        ((tc_sdls_processed_frame->tc_pdu[2] & 0x3F) << 8) | tc_sdls_processed_frame->tc_pdu[3];
-                sdls_frame.hdr.pkt_length = (tc_sdls_processed_frame->tc_pdu[4] << 8) | tc_sdls_processed_frame->tc_pdu[5];
-
-                // CCSDS PUS
-                sdls_frame.pus.shf = (tc_sdls_processed_frame->tc_pdu[6] & 0x80) >> 7;
-                sdls_frame.pus.pusv = (tc_sdls_processed_frame->tc_pdu[6] & 0x70) >> 4;
-                sdls_frame.pus.ack = (tc_sdls_processed_frame->tc_pdu[6] & 0x0F);
-                sdls_frame.pus.st = tc_sdls_processed_frame->tc_pdu[7];
-                sdls_frame.pus.sst = tc_sdls_processed_frame->tc_pdu[8];
-                sdls_frame.pus.sid = (tc_sdls_processed_frame->tc_pdu[9] & 0xF0) >> 4;
-                sdls_frame.pus.spare = (tc_sdls_processed_frame->tc_pdu[9] & 0x0F);
-
-                // SDLS TLV PDU
-                sdls_frame.pdu.type = (tc_sdls_processed_frame->tc_pdu[10] & 0x80) >> 7;
-                sdls_frame.pdu.uf = (tc_sdls_processed_frame->tc_pdu[10] & 0x40) >> 6;
-                sdls_frame.pdu.sg = (tc_sdls_processed_frame->tc_pdu[10] & 0x30) >> 4;
-                sdls_frame.pdu.pid = (tc_sdls_processed_frame->tc_pdu[10] & 0x0F);
-                sdls_frame.pdu.pdu_len = (tc_sdls_processed_frame->tc_pdu[11] << 8) | tc_sdls_processed_frame->tc_pdu[12];
-                for (x = 13; x < (13 + sdls_frame.hdr.pkt_length); x++) {
-                    sdls_frame.pdu.data[x - 13] = tc_sdls_processed_frame->tc_pdu[x];
-                }
-
-                #ifdef CCSDS_DEBUG
-                Crypto_ccsdsPrint(&sdls_frame);
-                #endif
-
-                // Determine type of PDU
-                *len_ingest = Crypto_PDU(ingest, tc_sdls_processed_frame);
-            }
-        }
-        else if (tc_sdls_processed_frame->tc_header.vcid == TC_SDLS_EP_VCID) //TC SDLS PDU with no packet layer
-        {
-            #ifdef DEBUG
-            OS_printf(KGRN "Received SDLS command: " RESET);
-            #endif
-            // No Packet HDR or PUS in these frames
-            // SDLS TLV PDU
-            sdls_frame.pdu.type = (tc_sdls_processed_frame->tc_pdu[0] & 0x80) >> 7;
-            sdls_frame.pdu.uf = (tc_sdls_processed_frame->tc_pdu[0] & 0x40) >> 6;
-            sdls_frame.pdu.sg = (tc_sdls_processed_frame->tc_pdu[0] & 0x30) >> 4;
-            sdls_frame.pdu.pid = (tc_sdls_processed_frame->tc_pdu[0] & 0x0F);
-            sdls_frame.pdu.pdu_len = (tc_sdls_processed_frame->tc_pdu[1] << 8) | tc_sdls_processed_frame->tc_pdu[2];
-            for (x = 3; x < (3 + tc_sdls_processed_frame->tc_header.fl); x++) {
-                //Todo - Consider how this behaves with large OTAR PDUs that are larger than 1 TC in size. Most likely fails. Must consider Uplink Sessions (sequence numbers).
-                sdls_frame.pdu.data[x - 3] = tc_sdls_processed_frame->tc_pdu[x];
-            }
-
-            #ifdef CCSDS_DEBUG
-            Crypto_ccsdsPrint(&sdls_frame);
-            #endif
-
-            // Determine type of PDU
-            *len_ingest = Crypto_PDU(ingest, tc_sdls_processed_frame);
-        }
-        else {
-            //TODO - Process SDLS PDU with Packet Layer without PUS_HDR
-        }
-    }//End Process SDLS PDU
-
-    // Zero ingest
-    memset(ingest, 0, *len_ingest);
-    // for (x = 0; x < *len_ingest; x++)
-    // {
-    //     ingest[x] = 0;
-    // }
-
-    #ifdef OCF_DEBUG
-        Crypto_fsrPrint(&report);
-    #endif
-    
-    #ifdef DEBUG
-        OS_printf(KYEL "----- Crypto_TC_ProcessSecurity END -----\n" RESET);
-    #endif
 
     return status;
 }

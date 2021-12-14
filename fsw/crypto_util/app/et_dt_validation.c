@@ -959,6 +959,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 {
     // Setup & Initialize CryptoLib
     uint16 enc_frame_len = 0;
+    int32 status;
     Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY,CRYPTO_TC_CREATE_FECF_TRUE,TC_PROCESS_SDLS_PDUS_TRUE,TC_HAS_PUS_HDR,TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, 0x3F);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,0,TC_HAS_FECF,TC_HAS_SEGMENT_HDRS);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,1,TC_HAS_FECF,TC_HAS_SEGMENT_HDRS);
@@ -971,7 +972,8 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 
     // Create a MAC'd frame by adding our headers and a fecf
                                  //  |  Header | SPI |           iv          |         plaintext             |             mac               |fecf|
-    char *buffer_nist_mac_frame_h = "2003003500FF0009D79CF22D504CC793C3FB6C8A722ee47da4b77424733546c2d400c4e599eff39be8327e6950f03a329209d5776cb8";
+    char *buffer_nist_mac_frame_h = "2003003500FF0009D79CF22D504CC793C3FB6C8A722ee47da4b77424733546c2d400c40099eff39be8327e6950f03a329209d5776cb8"; // modified
+    // char *buffer_nist_mac_frame_h = "2003003500FF0009D79CF22D504CC793C3FB6C8A722ee47da4b77424733546c2d400c4e599eff39be8327e6950f03a329209d5776cb8"; // original
 
     uint8 *buffer_nist_iv_b, *buffer_nist_pt_b, *buffer_nist_key_b, *buffer_cyber_chef_mac_b , *buffer_nist_mac_frame_b, *buffer_nist_cp_b = NULL;
     int buffer_nist_iv_len, buffer_nist_pt_len, buffer_nist_key_len, buffer_cyber_chef_mac_len , buffer_nist_mac_frame_len, buffer_nist_cp_len = 0;
@@ -991,7 +993,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     test_association->ast = 1;
     test_association->est = 0;
     test_association->arc_len = 0;
-    test_association->abm_len = 20;
+    test_association->abm_len = 1024;
     memset(test_association->abm, 0xFF, (test_association->abm_len*sizeof(unsigned char)));
     test_association->shivf_len = 12;
     test_association->stmacf_len = 16;
@@ -1012,18 +1014,19 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     // Convert mac frame
     hex_conversion(buffer_nist_mac_frame_h, &buffer_nist_mac_frame_b, &buffer_nist_mac_frame_len);
 
-    Crypto_TC_ProcessSecurity(buffer_nist_mac_frame_b, &buffer_nist_mac_frame_len, tc_nist_processed_frame);
+    status = Crypto_TC_ProcessSecurity(buffer_nist_mac_frame_b, &buffer_nist_mac_frame_len, tc_nist_processed_frame);
+    printf("TC_Process returned status %d\n", status);
 
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
     // Calc payload index: total length - pt length
     #ifdef DEBUG
         printf("Expected MAC: ");
-        for (int i=0; i<tc_nist_processed_frame->tc_pdu_len; i++)
+        for (int i=0; i<buffer_cyber_chef_mac_len; i++)
         {
             printf("%02x ", buffer_cyber_chef_mac_b[i]);
         }
         printf("\nReceived MAC: ");
-        for (int i=0; i<tc_nist_processed_frame->tc_pdu_len; i++)
+        for (int i=0; i<test_association->stmacf_len; i++)
         {
             printf("%02x ", tc_nist_processed_frame->tc_sec_trailer.mac[i]);
         }    
@@ -1032,7 +1035,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 
     Crypto_Shutdown();
     // Verify the MAC
-    for (int i=0; i < tc_nist_processed_frame->tc_pdu_len; i++)
+    for (int i=0; i < test_association->stmacf_len; i++)
     {
        ASSERT_EQ(tc_nist_processed_frame->tc_sec_trailer.mac[i], buffer_cyber_chef_mac_b[i]);
     }
@@ -1041,6 +1044,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     {
        ASSERT_EQ(tc_nist_processed_frame->tc_pdu[i], buffer_nist_pt_b[i]);
     }
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     free(buffer_nist_iv_b);
     free(buffer_nist_key_b);
     free(buffer_cyber_chef_mac_b);
