@@ -31,20 +31,24 @@ class Encryption:
     def __init__(self):
         self.results = 0x00
         self.length = 0.0
+    # Function: Encrypt
+    # Encrypts data - given a key, iv, header, and bitmask
     def encrypt(self, data, key, iv, header, bitmask):
-        hex_header = header + iv
-        bitmask_b = bytes.fromhex(bitmask)
+        hex_header = header + iv                # Combines Header and IV (AAD)
+        bitmask_b = bytes.fromhex(bitmask)      
         header_b = bytes.fromhex(hex_header)
         key_b = bytes.fromhex(key)
         iv_b = bytes.fromhex(iv)
         data_b = bytes.fromhex(data)
 
+        # Create Cipher
         cipher = AES.new(key_b, AES.MODE_GCM, nonce=iv_b)
 
+        # Performs some bitmasking if necessary -  This will need work if we get more advanced in testing
         if len(bitmask) > 1:
             zeroed_header = ''
             zeroed_header_b = bytes.fromhex(zeroed_header)            
-
+            # Right now we're only zeroing out the header based on the bitmask existing
             L = [header_b[i:i+1] for i in range (len(header_b))]
 
             for pieces in L:
@@ -53,13 +57,17 @@ class Encryption:
                 zeroed_header_b += value_b
             cipher.update(zeroed_header_b)
             #cipher.update(header_b)
+        # Get Cipher and tag
         ciphertext, tag = cipher.encrypt_and_digest(data_b)
         print("Cipher: ", ciphertext.hex())
         print("Tag: ", tag.hex())
         
+        # Create final_val with non-zeroed header, cipher, and tag
         final_val = header_b + ciphertext + tag
 
+        # Calculate check_sum
         check_sum = crc16(bytearray(final_val), 0, len(final_val))
+        # Apply CRC to final_val
         final_val += check_sum.to_bytes(2, byteorder = "big")
 
         print(final_val.hex())

@@ -25,11 +25,12 @@
 #include "crypto_structs.h"
 
 
-/*
-** Print Functions
-*/
+/**
+ * @brief Function: Crypto_tcPrint
+ * Prints the current TC in memory.
+ * @param tc_frame: TC_t*
+ **/
 void Crypto_tcPrint(TC_t* tc_frame)
-// Prints the current TC in memory 
 {
     OS_printf("Current TC in memory is: \n");
     OS_printf("\t Header\n");
@@ -54,8 +55,12 @@ void Crypto_tcPrint(TC_t* tc_frame)
     OS_printf("\n");
 }
 
+/**
+ * @brief Function: Crypto_tmPrint
+ * Prints the current TM in memory.
+ * @param tm_frame: TM_t*
+ **/
 void Crypto_tmPrint(TM_t* tm_frame)
-// Prints the current TM in memory 
 {
     OS_printf("Current TM in memory is: \n");
     OS_printf("\t Header\n");
@@ -90,8 +95,12 @@ void Crypto_tmPrint(TM_t* tm_frame)
     OS_printf("\n");
 }
 
+/**
+ * @brief Function: Crypto_clcwPrint
+ * Prints the current CLCW in memory.
+ * @param clcw: TM_FrameCLCW_t*
+ **/
 void Crypto_clcwPrint(TM_FrameCLCW_t* clcw)
-// Prints the current CLCW in memory
 {
     OS_printf("Current CLCW in memory is: \n");
     OS_printf("\t cwt    = 0x%01x \n", clcw->cwt);
@@ -111,8 +120,12 @@ void Crypto_clcwPrint(TM_FrameCLCW_t* clcw)
     OS_printf("\n");
 }
 
+/**
+ * @brief Function: Crypto_fsrPrint
+ * Prints the current FSR in memory.
+ * @param report: SDLS_FSR_t*
+ **/
 void Crypto_fsrPrint(SDLS_FSR_t* report)
-// Prints the current FSR in memory
 {
     OS_printf("Current FSR in memory is: \n");
     OS_printf("\t cwt    = 0x%01x \n", report->cwt);
@@ -126,8 +139,12 @@ void Crypto_fsrPrint(SDLS_FSR_t* report)
     OS_printf("\n");
 }
 
+/**
+ * @brief Function: Crypto_ccsdsPrint
+ * Prints the current CCSDS in memory.
+ * @param sdls_frame: CCSDS_t*
+ **/
 void Crypto_ccsdsPrint(CCSDS_t* sdls_frame)
-// Prints the current CCSDS in memory 
 {
     OS_printf("Current CCSDS in memory is: \n");
     OS_printf("\t Primary Header\n");
@@ -158,8 +175,12 @@ void Crypto_ccsdsPrint(CCSDS_t* sdls_frame)
     OS_printf("\n");
 }
 
+/**
+ * @brief Function: Crypto_saPrint
+ * Prints the current Security Association in memory.
+ * @param sa: SecurityAssociation_t*
+ **/
 void Crypto_saPrint(SecurityAssociation_t* sa)
-// Prints the Security Association in memory
 {
     OS_printf("SA status: \n");
     OS_printf("\t spi   = 0x%01x \n", sa->spi);
@@ -204,7 +225,12 @@ void Crypto_saPrint(SecurityAssociation_t* sa)
     OS_printf("\t arcw[0]    = 0x%02x \n", sa->arcw[0]);
 }
 
-//Hex Print:
+/**
+ * @brief Function: Crypto_hexPrint
+ * Prints the array of hex characters.
+ * @param c: void*, The hex to be printed.
+ * @param n: size_t, The size of the array to be printed.
+ **/
 void Crypto_hexprint(void *c, size_t n)
 {
     unsigned char *t = c;
@@ -217,7 +243,12 @@ void Crypto_hexprint(void *c, size_t n)
     printf("\n");
 }
 
-//Binary Print
+/**
+ * @brief Function: Crypto_binprint
+ * Prints the array of binary data.
+ * @param c: void*, The binary array to be printed.
+ * @param n: size_t, The size of the array to be printed.
+ **/
 void Crypto_binprint(void *c, size_t n)
 {
     unsigned char *t = c;
