@@ -1066,7 +1066,7 @@ int32 Crypto_increment(uint8 *num, int length)
 
 static int32 Crypto_window(uint8 *actual, uint8 *expected, int length, int window)
 {
-    int status = OS_ERROR;
+    int status = CRYPTO_LIB_ERR_BAD_ANTIREPLAY_WINDOW;
     int result = 0;
     uint8 temp[length];
 
@@ -1085,7 +1085,7 @@ static int32 Crypto_window(uint8 *actual, uint8 *expected, int length, int windo
         }        
         if (result == length)
         {
-            status = OS_SUCCESS;
+            status = CRYPTO_LIB_SUCCESS;
             break;
         }
         Crypto_increment(&temp[0], length);
@@ -2831,6 +2831,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
     gcry_cipher_hd_t tmp_hd;
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     SecurityAssociation_t* sa_ptr = NULL;
+    uint8 sa_service_type = -1;
 
     if(crypto_config == NULL)
     {
@@ -2867,11 +2868,12 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
 
     if(status != OS_SUCCESS) {return status;} //Unable to get necessary Managed Parameters for TC TF -- return with error.
 
-    // Security Header
+    // Segment Header
     if(current_managed_parameters->has_segmentation_hdr==TC_HAS_SEGMENT_HDRS){
         tc_sdls_processed_frame->tc_sec_header.sh  = (uint8)ingest[byte_idx];
         byte_idx++;
     }
+    // Security Header
     tc_sdls_processed_frame->tc_sec_header.spi = ((uint8)ingest[byte_idx] << 8) | (uint8)ingest[byte_idx+1];
     byte_idx+=2;
     #ifdef TC_DEBUG
@@ -2879,97 +2881,123 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
         OS_printf("spi  = %d \n", tc_sdls_processed_frame->tc_sec_header.spi);
     #endif
 
-    // Checks
-    if (crypto_config->has_pus_hdr==TC_HAS_PUS_HDR && ((uint8)ingest[18] == 0x0B) && ((uint8)ingest[19] == 0x00) && (((uint8)ingest[20] & 0xF0) == 0x40))
-    {   
-        // User packet check only used for ESA Testing!
-    }
-    else
-    {   // Update last spi used
-        report.lspiu = tc_sdls_processed_frame->tc_sec_header.spi;
-
-        // Verify 
-        if (tc_sdls_processed_frame->tc_header.scid != current_managed_parameters->scid)
-        {
-            OS_printf(KRED "Error: SCID incorrect! \n" RESET);
-            status = OS_ERROR;
-        }
-        else
-        {   
-            switch (report.lspiu)
-            {	// Invalid SPIs fall through to trigger flag in FSR
-                case 0x0000:
-                case 0xFFFF:
-                    status = OS_ERROR;
-                    report.ispif = 1;
-                    OS_printf(KRED "Error: SPI invalid! \n" RESET);
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        if ((report.lspiu > NUM_SA) && (status == OS_SUCCESS))
-        {
-            report.ispif = 1;
-            OS_printf(KRED "Error: SPI value greater than NUM_SA! \n" RESET);
-            status = OS_ERROR;
-        }
-        if (status == OS_SUCCESS)
-        {
-            if(sadb_routine->sadb_get_sa_from_spi(report.lspiu,&sa_ptr) != OS_SUCCESS){
-                //TODO - Error handling
-                status = OS_ERROR; //Error -- unable to get SA from SPI.
-            }
-        }
-        if (status == OS_SUCCESS)
-        {
-            if (sa_ptr->gvcid_tc_blk.mapid != TYPE_TC)
-            {	
-                OS_printf(KRED "Error: SA invalid type! \n" RESET);
-                status = OS_ERROR;
-            }
-        }
-        // TODO: I don't think this is needed.
-        //if (status == OS_SUCCESS)
-        //{
-        //    if (sa_ptr->gvcid_tc_blk.vcid != tc_sdls_processed_frame->tc_header.vcid)
-        //    {	
-        //        OS_printf(KRED "Error: VCID not mapped to provided SPI! \n" RESET);
-        //        status = OS_ERROR;
-        //    }
-        //}
-        if (status == OS_SUCCESS)
-        {
-            if (sa_ptr->sa_state != SA_OPERATIONAL)
-            {
-                OS_printf(KRED "Error: SA state not operational! \n" RESET);
-                status = OS_ERROR;
-            }
-        }
-        if (status != OS_SUCCESS)
-        {
-            report.af = 1;
-            if (log_summary.rs > 0)
-            {
-                Crypto_increment((uint8*)&log_summary.num_se, 4);
-                log_summary.rs--;
-                log.blk[log_count].emt = SPI_INVALID_EID;
-                log.blk[log_count].emv[0] = 0x4E;
-                log.blk[log_count].emv[1] = 0x41;
-                log.blk[log_count].emv[2] = 0x53;
-                log.blk[log_count].emv[3] = 0x41;
-                log.blk[log_count++].em_len = 4;
-            }
-            *len_ingest = 0;
-            return status;
-        }
-    }
-    if(sadb_routine->sadb_get_sa_from_spi(tc_sdls_processed_frame->tc_sec_header.spi,&sa_ptr) != OS_SUCCESS){
-        //TODO - Error handling
-        status = OS_ERROR; //Error -- unable to get SA from SPI.
+    status = sadb_routine->sadb_get_sa_from_spi(tc_sdls_processed_frame->tc_sec_header.spi,&sa_ptr);
+    // If no valid SPI, return
+    if(status != CRYPTO_LIB_SUCCESS){
         return status;
     }
+
+    // Determine SA Service Type
+    if ((sa_ptr->est == 0) && (sa_ptr->ast == 0))
+    {
+        sa_service_type = SA_PLAINTEXT;
+    }
+    else if ((sa_ptr->est == 0) && (sa_ptr->ast == 1))
+    {
+        sa_service_type = SA_AUTHENTICATION;
+    }
+    else if ((sa_ptr->est == 1) && (sa_ptr->ast == 0))
+    {
+        sa_service_type = SA_ENCRYPTION;
+    }
+    else if ((sa_ptr->est == 1) && (sa_ptr->ast == 1))
+    {
+        sa_service_type = SA_AUTHENTICATED_ENCRYPTION;
+    }
+    else
+    {
+        // Probably unnecessary check
+        // Leaving for now as it would be cleaner in SA to have an association enum returned I believe
+        OS_printf(KRED "Error: SA Service Type is not defined! \n" RESET);
+        status = OS_ERROR;
+        return status;
+    }
+
+    #ifdef TC_DEBUG
+        switch(sa_service_type)
+        {
+            case SA_PLAINTEXT:
+                OS_printf(KBLU "Processing a TC - CLEAR!\n" RESET);
+                break;
+            case SA_AUTHENTICATION:
+                OS_printf(KBLU "Processing a TC - AUTHENTICATED!\n" RESET);
+                break;
+            case SA_ENCRYPTION:
+                OS_printf(KBLU "Processing a TC - ENCRYPTED!\n" RESET);
+                break;
+            case SA_AUTHENTICATED_ENCRYPTION:
+                OS_printf(KBLU "Processing a TC - AUTHENTICATED ENCRYPTION!\n" RESET);
+                break;
+        }
+    #endif
+
+    // TODO: Calculate lengths when needed
+    uint8 fecf_len = FECF_SIZE;
+    if(current_managed_parameters->has_fecf==TC_NO_FECF) { fecf_len = 0; }
+
+    uint8 segment_hdr_len = SEGMENT_HDR_SIZE;
+    if(current_managed_parameters->has_segmentation_hdr==TC_NO_SEGMENT_HDRS) { segment_hdr_len = 0; }
+
+    // Check FECF
+    if(current_managed_parameters->has_fecf==TC_HAS_FECF)
+    {
+        if(crypto_config->crypto_check_fecf == TC_CHECK_FECF_TRUE)
+        {
+            uint16 received_fecf = (tc_sdls_processed_frame->tc_header.fl-1 & 0xFF00) || (tc_sdls_processed_frame->tc_header.fl & 0x00FF); 
+            // Calculate our own
+            uint16 calculated_fecf = Crypto_Calc_FECF(ingest, len_ingest-2);
+            // Compare
+            if (received_fecf != calculated_fecf)
+            {
+                status = CRYPTO_LIB_ERR_INVALID_FECF;
+                return status;
+            }
+        }
+    }
+
+    // Parse the security header
+    tc_sdls_processed_frame->tc_sec_header.spi = (uint16)ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len];
+    // Get SA via SPI
+    status = sadb_routine->sadb_get_sa_from_spi(tc_sdls_processed_frame->tc_sec_header.spi, &sa_ptr);
+    if(status != CRYPTO_LIB_SUCCESS){ return status; }
+    // Parse IV
+    memcpy(&(tc_sdls_processed_frame->tc_sec_header.iv)+(IV_SIZE-sa_ptr->shivf_len), ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN], sa_ptr->shivf_len);
+    // Parse Sequence Number
+    memcpy(&(tc_sdls_processed_frame->tc_sec_header.sn)+(TC_SN_SIZE-sa_ptr->shsnf_len), ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len], sa_ptr->shsnf_len);
+    // Parse pad length
+    memcpy(&(tc_sdls_processed_frame->tc_sec_header.pad)+(TC_PAD_SIZE-sa_ptr->shplf_len), ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len] , sa_ptr->shplf_len);
+
+    // Check MAC, if applicable
+    if((sa_service_type == SA_AUTHENTICATION) || 
+        (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
+    {
+        if (crypto_config->ignore_anti_replay==TC_IGNORE_ANTI_REPLAY_FALSE )
+        {
+            // If sequence number field is greater than zero, use as arsn
+            if(sa_ptr->shsnf_len > 0)
+            {
+                // Check Sequence Number is in ARCW
+                status = Crypto_window(tc_sdls_processed_frame->tc_sec_header.sn, sa_ptr->arc, sa_ptr->shsnf_len,
+                                sa_ptr->arcw[sa_ptr->arcw_len-1]);
+                if (status != CRYPTO_LIB_SUCCESS) { return status; }
+                // TODO: Update SA ARC through SADB_Routine function call
+            }
+            else
+            {
+                // Check IV is in ARCW
+                status = Crypto_window(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len,
+                                sa_ptr->arcw[sa_ptr->arcw_len-1]);
+                if (status != CRYPTO_LIB_SUCCESS) { return status; }
+                // TODO: Update SA IV through SADB_Routine function call
+            }
+            
+        }
+    }
+
+    // Decrypt, if applicable
+
+    // Extended PDU processing, if applicable
+
     if((sa_ptr->est == 1) && (sa_ptr->ast == 0))
     {
         // Encryption Only

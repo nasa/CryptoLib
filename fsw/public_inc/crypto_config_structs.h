@@ -36,6 +36,7 @@ typedef enum { TC_NO_PUS_HDR, TC_HAS_PUS_HDR } TcPusHdrPresent;
 typedef enum { TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_SA_STATE_TRUE } TcIgnoreSaState;
 typedef enum { TC_IGNORE_ANTI_REPLAY_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE } TcIgnoreAntiReplay;
 typedef enum { TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE } TcUniqueSaPerMapId;
+typedef enum { TC_CHECK_FECF_FALSE, TC_CHECK_FECF_TRUE } TcCheckFecfBool;
 
 /*
 ** Main Crypto Configuration Block
@@ -49,6 +50,7 @@ typedef struct
     TcIgnoreSaState ignore_sa_state; //TODO - add logic that uses this configuration
     TcIgnoreAntiReplay ignore_anti_replay;
     TcUniqueSaPerMapId unique_sa_per_mapid;
+    TcCheckFecfBool crypto_check_fecf;
     uint8 vcid_bitmask;
 } CryptoConfig_t;
 #define CRYPTO_CONFIG_SIZE (sizeof(CryptoConfig_t))

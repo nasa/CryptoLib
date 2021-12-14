@@ -258,8 +258,8 @@ typedef struct
     uint8   sh:TC_SH_SIZE;		// Segment Header
     uint16	spi;				// Security Parameter Index
     uint8	iv[IV_SIZE]; 	    // Initialization Vector for encryption
-    //uint8	sn[TC_SN_SIZE]; 	// Sequence Number for anti-replay
-    //uint8	pad[TC_PAD_SIZE]; 	// Count of the used fill Bytes
+    uint8	sn[TC_SN_SIZE]; 	// Sequence Number for anti-replay
+    uint8	pad[TC_PAD_SIZE]; 	// Count of the used fill Bytes
 } TC_FrameSecurityHeader_t;
 #define TC_FRAME_SECHEADER_SIZE     (sizeof(TC_FrameSecurityHeader_t))
 

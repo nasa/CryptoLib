@@ -38,5 +38,7 @@
 #define CRYPTO_LIB_ERR_NULL_BUFFER          (-9)
 #define CRYPTO_LIB_ERR_UT_BYTE_MISMATCH     (-10)
 #define CRYPTO_LIB_ERR_NO_CONFIG            (-11)
+#define CRYPTO_LIB_ERR_INVALID_FECF         (-12)
+#define CRYPTO_LIB_ERR_BAD_ANTIREPLAY_WINDOW (-13)
 
 #endif //_crypto_error_h_
