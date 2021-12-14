@@ -192,6 +192,7 @@ static int32 parse_sa_from_mysql_query(char* query, SecurityAssociation_t** secu
     char *field_names[num_fields]; //[64]; 64 == max length of column name in MySQL
 
 
+    //TODO -- Need to store mysql query hex string and then malloc sa->iv according to size.
     while((row = mysql_fetch_row(result))){
         for(int i=0; i < num_fields; i++)
         {
@@ -224,7 +225,6 @@ static int32 parse_sa_from_mysql_query(char* query, SecurityAssociation_t** secu
             if(strcmp(field_names[i],"stmacf_len")==0){sa->stmacf_len=atoi(row[i]);continue;}
             if(strcmp(field_names[i],"ecs_len")==0){sa->ecs_len=atoi(row[i]);continue;}
             if(strcmp(field_names[i],"HEX(ecs)")==0){convert_hexstring_to_byte_array(row[i],sa->ecs);continue;}
-            if(strcmp(field_names[i],"iv_len")==0){sa->iv_len=atoi(row[i]);continue;}
             //if(strcmp(field_names[i],"HEX(iv)")==0){memcpy(&(sa->iv),&row[i],IV_SIZE);continue;}
             if(strcmp(field_names[i],"HEX(iv)")==0){convert_hexstring_to_byte_array(row[i],sa->iv);continue;}
             if(strcmp(field_names[i],"acs_len")==0){sa->acs_len=atoi(row[i]);continue;}

@@ -754,7 +754,7 @@ static void Crypto_Local_Init(void)
     tm_frame.tm_sec_header.spi = 0x0000;
     for ( int x = 0; x < IV_SIZE; x++)
     { 	// Initialization Vector
-        tm_frame.tm_sec_header.iv[x] = 0x00;
+        *(tm_frame.tm_sec_header.iv + x) = 0x00;
     }
     // TM Payload Data Unit
     for ( int x = 0; x < TM_FRAME_DATA_SIZE; x++)
@@ -1590,7 +1590,7 @@ static int32 Crypto_Key_verify(char* ingest,TC_t* tc_frame)
         iv_loc = count;
         for (int y = 0; y < IV_SIZE; y++)
         {   
-            ingest[count++] = tc_frame->tc_sec_header.iv[y];
+            ingest[count++] = *(tc_frame->tc_sec_header.iv)+y;
         }
         ingest[count-1] = ingest[count-1] + x + 1;
 
@@ -1810,21 +1810,21 @@ static int32 Crypto_SA_readARSN(char* ingest)
     }
 
 
-    if (sa_ptr->iv_len > 0)
+    if (sa_ptr->shivf_len > 0)
     {   // Set IV - authenticated encryption
-        for (int x = 0; x < sa_ptr->iv_len - 1; x++)
+        for (int x = 0; x < sa_ptr->shivf_len - 1; x++)
         {
-            ingest[count++] = sa_ptr->iv[x];
+            ingest[count++] = *(sa_ptr->iv + x);
         }
         
         // TODO: Do we need this?
-        if (sa_ptr->iv[IV_SIZE - 1] > 0)
+        if (*(sa_ptr->iv + sa_ptr->shivf_len - 1) > 0)
         {   // Adjust to report last received, not expected
-            ingest[count++] = sa_ptr->iv[IV_SIZE - 1] - 1;
+            ingest[count++] = *(sa_ptr->iv +sa_ptr->shivf_len - 1) - 1;
         }
         else
         {   
-            ingest[count++] = sa_ptr->iv[IV_SIZE - 1];
+            ingest[count++] = *(sa_ptr->iv + sa_ptr->shivf_len - 1);
         }
     }
     else
@@ -1834,12 +1834,12 @@ static int32 Crypto_SA_readARSN(char* ingest)
 
     #ifdef PDU_DEBUG
         OS_printf("spi = %d \n", spi);
-        if (sa_ptr->iv_len > 0)
+        if (sa_ptr->shivf_len > 0)
         {
             OS_printf("ARSN = 0x");
-            for (int x = 0; x < sa_ptr->iv_len; x++)
+            for (int x = 0; x < sa_ptr->shivf_len; x++)
             {
-                OS_printf("%02x", sa_ptr->iv[x]);
+                OS_printf("%02x", *(sa_ptr->iv + x));
             }
             OS_printf("\n");
         }
@@ -2528,7 +2528,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         {
             #ifdef SA_DEBUG
                 OS_printf(KYEL "Using IV value:\n\t");
-                for(int i=0; i<sa_ptr->shivf_len; i++) {OS_printf("%02x", sa_ptr->iv[i]);}
+                for(int i=0; i<sa_ptr->shivf_len; i++) {OS_printf("%02x", *(sa_ptr->iv + i));}
                 OS_printf("\n" RESET);
             #endif
 
@@ -2536,7 +2536,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
             {
                 // TODO: Likely API call
                 // Copy in IV from SA
-                *(p_new_enc_frame + index) = sa_ptr->iv[i];
+                *(p_new_enc_frame + index) = *(sa_ptr->iv + i);
                 index++;
             }
         }
@@ -2652,8 +2652,8 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
             }
             gcry_error = gcry_cipher_setiv(
                 tmp_hd, 
-                &(sa_ptr->iv[0]),
-                sa_ptr->iv_len
+                sa_ptr->iv,
+                sa_ptr->shivf_len
             );
             if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
             {
@@ -2767,10 +2767,11 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         }
 
         #ifdef INCREMENT
+            if(sa_ptr->iv == NULL) { printf("\n\nNULL\n\n");}
             Crypto_increment(sa_ptr->iv, sa_ptr->shivf_len);
             #ifdef SA_DEBUG
                 OS_printf(KYEL "Next IV value is:\n\t");
-                for(int i=0; i<sa_ptr->shivf_len; i++) {OS_printf("%02x", sa_ptr->iv[i]);}
+                for(int i=0; i<sa_ptr->shivf_len; i++) {OS_printf("%02x", *(sa_ptr->iv + i));}
                 OS_printf("\n" RESET);
             #endif
         #endif
@@ -2962,7 +2963,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
     status = sadb_routine->sadb_get_sa_from_spi(tc_sdls_processed_frame->tc_sec_header.spi, &sa_ptr);
     if(status != CRYPTO_LIB_SUCCESS){ return status; }
     // Parse IV
-    memcpy((tc_sdls_processed_frame->tc_sec_header.iv)+(IV_SIZE-sa_ptr->shivf_len), &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN]), sa_ptr->shivf_len);
+    memcpy((tc_sdls_processed_frame->tc_sec_header.iv), &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN]), sa_ptr->shivf_len);
     // Parse Sequence Number
     memcpy((tc_sdls_processed_frame->tc_sec_header.sn)+(TC_SN_SIZE-sa_ptr->shsnf_len), &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len]), sa_ptr->shsnf_len);
     // Parse pad length
@@ -2989,18 +2990,18 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
             else
             {
                 // Check IV is in ARCW
-                status = Crypto_window(tc_sdls_processed_frame->tc_sec_header.iv+(IV_SIZE-sa_ptr->shivf_len), sa_ptr->iv, sa_ptr->shivf_len,
+                status = Crypto_window(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len,
                                 sa_ptr->arcw[sa_ptr->arcw_len-1]);
                 printf("Received IV is\n\t");
-                for(int i=IV_SIZE-sa_ptr->shivf_len; i<sa_ptr->shivf_len+(IV_SIZE-sa_ptr->shivf_len); i++)
+                for(int i=0; i<sa_ptr->shivf_len; i++)
                 // for(int i=0; i<IV_SIZE; i++)
                 {
-                    printf("%02x", tc_sdls_processed_frame->tc_sec_header.iv[i]);
+                    printf("%02x", *(tc_sdls_processed_frame->tc_sec_header.iv + i));
                 }
                 printf("\nSA IV is\n\t");
                 for(int i=0; i<sa_ptr->shivf_len; i++)
                 {
-                    printf("%02x", sa_ptr->iv[i]);
+                    printf("%02x", *(sa_ptr->iv + i));
                 }
                 printf("\nARCW is: %02x\n", sa_ptr->arcw[0]);
                 if (status != CRYPTO_LIB_SUCCESS) { return status; }
@@ -3199,7 +3200,7 @@ int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
         }
         if (badIV == 1)
         {
-            sa_ptr->iv[IV_SIZE-1]++;
+            *(sa_ptr->iv + sa_ptr->shivf_len -1) = *(sa_ptr->iv + sa_ptr->shivf_len -1) + 1;
         }
         if (badMAC == 1)
         {
@@ -3218,7 +3219,7 @@ int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
         // Security Header
         tempTM[count++] = (uint8) ((spi & 0xFF00) >> 8);
         tempTM[count++] = (uint8) ((spi & 0x00FF));
-        CFE_PSP_MemCpy(tm_frame.tm_sec_header.iv, sa_ptr->iv, IV_SIZE);
+        CFE_PSP_MemCpy(tm_frame.tm_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len);
 
         // Padding Length
             pad_len = Crypto_Get_tmLength(*len_ingest) - TM_MIN_SIZE + IV_SIZE + TM_PAD_SIZE - *len_ingest;
@@ -3228,12 +3229,12 @@ int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
             (sa_ptr->ast == 1))
         {	// Initialization Vector
             #ifdef INCREMENT
-                Crypto_increment(sa_ptr->iv, IV_SIZE);
+                Crypto_increment(sa_ptr->iv, sa_ptr->shivf_len);
             #endif
             if ((sa_ptr->est == 1) || (sa_ptr->ast == 1))
             {	for (x = 0; x < IV_SIZE; x++)
                 {
-                    tempTM[count++] = sa_ptr->iv[x];
+                    tempTM[count++] = *(sa_ptr->iv + x);
                 }
             }
             pdu_loc = count;
@@ -3332,8 +3333,8 @@ int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
             }
             gcry_error = gcry_cipher_setiv(
                 tmp_hd, 
-                &(sa_ptr->iv[0]),
-                sa_ptr->iv_len
+                sa_ptr->iv,
+                sa_ptr->shivf_len
             );
             if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
             {

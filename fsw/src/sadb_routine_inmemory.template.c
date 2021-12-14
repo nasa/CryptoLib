@@ -74,6 +74,8 @@ static int32 sadb_config(void)
     sa[1].sa_state = SA_OPERATIONAL;
     sa[1].est = 0;
     sa[1].ast = 0;
+    sa[1].shivf_len = 12;
+    sa[1].iv = (uint8*) calloc(1, sa[1].shivf_len * sizeof(uint8));
     sa[1].arc_len = 1;
     sa[1].arcw_len = 1;
     sa[1].arcw[0] = 5;
@@ -88,8 +90,8 @@ static int32 sadb_config(void)
     sa[2].est = 1;
     sa[2].ast = 1;
     sa[2].shivf_len = 12;
-    sa[2].iv_len = IV_SIZE;
-    sa[2].iv[IV_SIZE-1] = 0;
+    sa[2].iv = (uint8*) calloc(1, sa[2].shivf_len * sizeof(uint8));
+    *(sa[2].iv + sa[2].shivf_len - 1) = 0;
     sa[2].abm_len = 0x14; // 20
     for (int i = 0; i < sa[2].abm_len; i++)
     {	// Zero AAD bit mask
@@ -105,8 +107,8 @@ static int32 sadb_config(void)
     sa[3].est = 1;
     sa[3].ast = 1;
     sa[3].shivf_len = 12;
-    sa[3].iv_len = IV_SIZE;
-    sa[3].iv[IV_SIZE-1] = 0;
+    sa[3].iv = (uint8*) calloc(1, sa[3].shivf_len * sizeof(uint8));
+    *(sa[3].iv + sa[3].shivf_len - 1) = 0;
     sa[3].abm_len = 0x14; // 20
     for (int i = 0; i < sa[3].abm_len; i++)
     {	// Zero AAD bit mask
@@ -124,8 +126,8 @@ static int32 sadb_config(void)
     sa[4].ast = 1;
     sa[4].shivf_len = 12;
     sa[4].stmacf_len = 16;
-    sa[4].iv_len = 12;
-    sa[4].iv[11] = 0;
+    sa[4].iv = (uint8*) calloc(1, sa[4].shivf_len * sizeof(uint8));
+    *(sa[4].iv + 11) = 0;
     sa[4].abm_len = 0x14; // 20
     for (int i = 0; i < sa[4].abm_len; i++)
     {	// Zero AAD bit mask
@@ -146,8 +148,8 @@ static int32 sadb_config(void)
     sa[5].est = 1;
     sa[5].ast = 1;
     sa[5].shivf_len = 12;
-    sa[5].iv_len = IV_SIZE;
-    sa[5].iv[IV_SIZE-1] = 0;
+    sa[5].iv = (uint8*) calloc(1, sa[5].shivf_len * sizeof(uint8));
+    *(sa[5].iv + sa[5].shivf_len - 1) = 0;
     sa[5].abm_len = 0x14; // 20
     for (int i = 0; i < sa[5].abm_len; i++)
     {	// Zero AAD bit mask
@@ -162,8 +164,8 @@ static int32 sadb_config(void)
     sa[6].est = 1;
     sa[6].ast = 1;
     sa[6].shivf_len = 12;
-    sa[6].iv_len = IV_SIZE;
-    sa[6].iv[IV_SIZE-1] = 0;
+    sa[6].iv = (uint8*) calloc(1, sa[6].shivf_len * sizeof(uint8));
+    *(sa[6].iv + sa[6].shivf_len - 1) = 0;
     sa[6].abm_len = 0x14; // 20
     for (int i = 0; i < sa[6].abm_len; i++)
     {	// Zero AAD bit mask
@@ -181,8 +183,8 @@ static int32 sadb_config(void)
     sa[7].est = 1;
     sa[7].ast = 1;
     sa[7].shivf_len = 12;
-    sa[7].iv_len = IV_SIZE;
-    sa[7].iv[IV_SIZE-1] = 0;
+    sa[7].iv = (uint8*) calloc(1, sa[7].shivf_len * sizeof(uint8));
+    *(sa[7].iv + sa[7].shivf_len - 1) = 0;
     sa[7].abm_len = 0x14; // 20
     for (int i = 0; i < sa[7].abm_len; i++)
     {	// Zero AAD bit mask
@@ -216,8 +218,8 @@ static int32 sadb_config(void)
     sa[9].est = 1;
     sa[9].ast = 0;
     sa[9].shivf_len = 12;
-    sa[9].iv_len = 12;
-    sa[9].iv[12] = 0;
+    sa[9].iv = (uint8*) calloc(1, sa[9].shivf_len * sizeof(uint8));
+    *(sa[9].iv + 11) = 0;
     sa[9].abm_len = 0x14; // 20
     for (int i = 0; i < sa[9].abm_len; i++)
     {	// Zero AAD bit mask
@@ -248,7 +250,8 @@ static int32 sadb_init(void)
         sa[x].ecs[1] = 0;
         sa[x].ecs[2] = 0;
         sa[x].ecs[3] = 0;
-        sa[x].iv_len = IV_SIZE;
+        sa[x].shivf_len = IV_SIZE;
+        sa[x].iv = NULL;
         sa[x].acs_len = 0;
         sa[x].acs = 0;
         sa[x].arc_len = 0;
@@ -276,6 +279,7 @@ int32 expose_sadb_get_sa_from_spi(uint16 spi, SecurityAssociation_t** security_a
 static int32 sadb_get_sa_from_spi(uint16 spi,SecurityAssociation_t** security_association)
 {
     int32 status = OS_SUCCESS;
+    if(sa == NULL) { return CRYPTO_LIB_ERR_NO_INIT; }
     *security_association = &sa[spi];
     #ifdef SA_DEBUG
         OS_printf(KYEL "DEBUG - Printing local copy of SA Entry for current SPI.\n" RESET);
@@ -287,6 +291,7 @@ static int32 sadb_get_sa_from_spi(uint16 spi,SecurityAssociation_t** security_as
 static int32 sadb_get_operational_sa_from_gvcid(uint8 tfvn,uint16 scid,uint16 vcid,uint8 mapid,SecurityAssociation_t** security_association)
 {
     int32 status = CRYPTO_LIB_ERROR;
+    if(sa == NULL) { return CRYPTO_LIB_ERR_NO_INIT; }
 
     for (int i=0; i<10; i++)
     {
@@ -294,6 +299,7 @@ static int32 sadb_get_operational_sa_from_gvcid(uint8 tfvn,uint16 scid,uint16 vc
                 (crypto_config->unique_sa_per_mapid==TC_UNIQUE_SA_PER_MAP_ID_FALSE || sa[i].gvcid_tc_blk.mapid == mapid)) //only require MapID match is unique SA per MapID set (only relevant when using segmentation hdrs)
         {
             *security_association = &sa[i];
+            if(sa[i].iv == NULL) { return CRYPTO_LIB_ERR_NULL_IV; }
 
             #ifdef SA_DEBUG
                 OS_printf("Valid operational SA found at index %d.\n", i);
@@ -577,13 +583,13 @@ static int32 sadb_sa_rekey(void)
 #ifdef PDU_DEBUG
             OS_printf("SPI %d IV updated to: 0x", spi);
 #endif
-            if (sa[spi].iv_len > 0)
+            if (sa[spi].shivf_len > 0)
             {   // Set IV - authenticated encryption
-                for (x = count; x < (sa[spi].iv_len + count); x++)
+                for (x = count; x < (sa[spi].shivf_len + count); x++)
                 {
                     // TODO: Uncomment once fixed in ESA implementation
                     // TODO: Assuming this was fixed...
-                    sa[spi].iv[x - count] = (uint8) sdls_frame.pdu.data[x];
+                    *(sa[spi].iv + x - count) = (uint8) sdls_frame.pdu.data[x];
 #ifdef PDU_DEBUG
                     OS_printf("%02x", sdls_frame.pdu.data[x]);
 #endif
@@ -682,10 +688,10 @@ static int32 sadb_sa_create(void)
     {
         sa[spi].ecs[x] = ((uint8)sdls_frame.pdu.data[count++]);
     }
-    sa[spi].iv_len = ((uint8)sdls_frame.pdu.data[count++]);
-    for (int x = 0; x < sa[spi].iv_len; x++)
+    sa[spi].shivf_len = ((uint8)sdls_frame.pdu.data[count++]);
+    for (int x = 0; x < sa[spi].shivf_len; x++)
     {
-        sa[spi].iv[x] = ((uint8)sdls_frame.pdu.data[count++]);
+        *(sa[spi].iv + x) = ((uint8)sdls_frame.pdu.data[count++]);
     }
     sa[spi].acs_len = ((uint8)sdls_frame.pdu.data[count++]);
     for (int x = 0; x < sa[spi].acs_len; x++)
@@ -776,16 +782,16 @@ static int32 sadb_sa_setARSN(void)
 #ifdef PDU_DEBUG
         OS_printf("SPI %d IV updated to: 0x", spi);
 #endif
-        if (sa[spi].iv_len > 0)
+        if (sa[spi].shivf_len > 0)
         {   // Set IV - authenticated encryption
             for (int x = 0; x < IV_SIZE; x++)
             {
-                sa[spi].iv[x] = (uint8) sdls_frame.pdu.data[x + 2];
+                *(sa[spi].iv + x) = (uint8) sdls_frame.pdu.data[x + 2];
 #ifdef PDU_DEBUG
-                OS_printf("%02x", sa[spi].iv[x]);
+                OS_printf("%02x", *(sa[spi].iv + x));
 #endif
             }
-            Crypto_increment((uint8*)sa[spi].iv, IV_SIZE);
+            Crypto_increment(sa[spi].iv, sa[spi].shivf_len);
         }
         else
         {   // Set SN
