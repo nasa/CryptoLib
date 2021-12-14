@@ -13,6 +13,11 @@
  */
 
 #include "sadb_routine.h"
+/**
+ * @brief Function: init_parse_sadb_routine
+ * @param config: char*
+ * @return SadbRoutine
+ **/
 SadbRoutine init_parse_sadb_routine(char* config)
 {
     SadbRoutine sadb_routine;

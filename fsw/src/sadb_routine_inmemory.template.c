@@ -44,6 +44,10 @@ static int32 sadb_sa_delete(void);
 static SadbRoutineStruct sadb_routine;
 static SecurityAssociation_t sa[NUM_SA];
 
+/**
+ * @brief Function: get_sadb_routine_inmemory
+ * @return SadbRoutine
+ **/
 SadbRoutine get_sadb_routine_inmemory(void)
 {
     sadb_routine.sadb_config = sadb_config;
@@ -63,6 +67,10 @@ SadbRoutine get_sadb_routine_inmemory(void)
     return &sadb_routine;
 }
 
+/**
+ * @brief Function; sadb_config
+ * @return int32: Success/Failure
+ **/
 static int32 sadb_config(void)
 {
     int32 status = OS_SUCCESS;
@@ -234,6 +242,10 @@ static int32 sadb_config(void)
     return status;
 }
 
+/**
+ * @brief Function: sadb_init
+ * @return int32: Success/Failure
+ **/
 static int32 sadb_init(void)
 {
     int32 status = OS_SUCCESS;
@@ -257,6 +269,10 @@ static int32 sadb_init(void)
     return status;
 }
 
+/**
+ * @brief Function: sadb_close
+ * @return int32: Success/Failure
+ **/
 static int32 sadb_close(void)
 {
     //closing not necessary for inmemory DB.
@@ -273,6 +289,12 @@ int32 expose_sadb_get_sa_from_spi(uint16 spi, SecurityAssociation_t** security_a
 /*
 ** Security Association Interaction Functions
 */
+/**
+ * @brief Function: sadb_get_sa_from_spi
+ * @param spi: uint16
+ * @param security_association: SecurityAssociation_t**
+ * @return int32: Success/Failure
+ **/
 static int32 sadb_get_sa_from_spi(uint16 spi,SecurityAssociation_t** security_association)
 {
     int32 status = OS_SUCCESS;
@@ -284,6 +306,15 @@ static int32 sadb_get_sa_from_spi(uint16 spi,SecurityAssociation_t** security_as
     return status;
 }
 
+/**
+ * @brief Function: sadb_get_operational_sa_from_gvcid
+ * @param tfvn: uint8
+ * @param scid: uint16
+ * @param vcid: uint16
+ * @param mapid: uint8
+ * @param security_association: SecurityAssociation_t**
+ * @return int32: Success/Failure
+ **/
 static int32 sadb_get_operational_sa_from_gvcid(uint8 tfvn,uint16 scid,uint16 vcid,uint8 mapid,SecurityAssociation_t** security_association)
 {
     int32 status = CRYPTO_LIB_ERROR;
@@ -361,6 +392,13 @@ static int32 sadb_get_operational_sa_from_gvcid(uint8 tfvn,uint16 scid,uint16 vc
     return status;
 }
 
+//TODO: Nothing actually happens here
+/**
+ * @brief Function: sadb_save_sa
+ * @param sa: SecurityAssociation_t*
+ * @return int32: Success/Failure
+ * @note Nothing currently actually happens in this function
+ **/
 static int32 sadb_save_sa(SecurityAssociation_t* sa)
 {
     int32 status = OS_SUCCESS;
@@ -372,6 +410,11 @@ static int32 sadb_save_sa(SecurityAssociation_t* sa)
 /*
 ** Security Association Management Services
 */
+/**
+ * @brief sadb_sa_start
+ * @param tc_frame: TC_t
+ * @return int32: Success/Failure
+ **/
 static int32 sadb_sa_start(TC_t* tc_frame)
 {
     // Local variables
@@ -492,6 +535,10 @@ static int32 sadb_sa_start(TC_t* tc_frame)
     return OS_SUCCESS;
 }
 
+/**
+ * @brief Function: sadb_sa_stop
+ * @return int32: Success/Failure
+ **/
 static int32 sadb_sa_stop(void)
 {
     // Local variables
@@ -546,6 +593,10 @@ static int32 sadb_sa_stop(void)
     return OS_SUCCESS;
 }
 
+/**
+ * @brief Function: sadb_sa_rekey
+ * @return int32: Success/Failure
+ **/
 static int32 sadb_sa_rekey(void)
 {
     // Local variables
@@ -621,6 +672,10 @@ static int32 sadb_sa_rekey(void)
     return OS_SUCCESS;
 }
 
+/**
+ * @brief Function: sadb_sa_expire
+ * @return int32: Success/Failure
+ **/
 static int32 sadb_sa_expire(void)
 {
     // Local variables
@@ -656,6 +711,10 @@ static int32 sadb_sa_expire(void)
     return OS_SUCCESS;
 }
 
+/**
+ * @brief Function: sadb_sa_create
+ * @return int32: Success/Failure
+ **/
 static int32 sadb_sa_create(void)
 {
     // Local variables
@@ -720,6 +779,10 @@ static int32 sadb_sa_create(void)
     return OS_SUCCESS;
 }
 
+/**
+ * @brief Function: sadb_sa_delete
+ * @return int32: Success/Failure
+ **/
 static int32 sadb_sa_delete(void)
 {
     // Local variables
@@ -757,6 +820,10 @@ static int32 sadb_sa_delete(void)
     return OS_SUCCESS;
 }
 
+/**
+ * @brief Function: sadb_sa_setASRN
+ * @return int32: Success/Failure
+ **/
 static int32 sadb_sa_setARSN(void)
 {
     // Local variables
@@ -802,6 +869,10 @@ static int32 sadb_sa_setARSN(void)
     return OS_SUCCESS;
 }
 
+/**
+ * @brief Function: sadb_sa_setARSNW
+ * @return int32: Success/Failure
+ **/
 static int32 sadb_sa_setARSNW(void)
 {
     // Local variables
@@ -835,6 +906,11 @@ static int32 sadb_sa_setARSNW(void)
     return OS_SUCCESS;
 }
 
+/**
+ * @brief Function: sadb_sa_status
+ * @param ingest: char*
+ * @return int32: count
+ **/
 static int32 sadb_sa_status(char* ingest)
 {
     // Local variables
