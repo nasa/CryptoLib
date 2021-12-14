@@ -233,7 +233,8 @@ typedef struct
 /*
 ** Telecommand (TC) Definitions
 */
-typedef struct __attribute__ ((packed))
+//typedef struct __attribute__ ((packed)) //__attribute__ ((packed)) is not easily supported in CFFI python. Only add when CFFI properly supports packed & nonpacked structs.
+typedef struct
 {
     uint8 	tfvn	:2;			// Transfer Frame Version Number
     uint8 	bypass	:1;			// Bypass
@@ -249,7 +250,8 @@ typedef struct __attribute__ ((packed))
     uint16	fl		:10;		// The whole transfer frame length (max 1024)
     uint8	fsn		:8;			// Frame sequence number, also N(S), zeroed on Type-B frames
 } TC_FramePrimaryHeader_t;
-#define TC_FRAME_PRIMARYHEADER_SIZE     (sizeof(TC_FramePrimaryHeader_t))
+#define TC_FRAME_PRIMARYHEADER_STRUCT_SIZE     (sizeof(TC_FramePrimaryHeader_t))
+#define TC_FRAME_HEADER_SIZE    5
 
 typedef struct
 {

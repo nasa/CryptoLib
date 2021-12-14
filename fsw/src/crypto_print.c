@@ -263,4 +263,19 @@ void Crypto_binprint(void *c, size_t n)
     printf("\n");
 }
 
+void Crypto_mpPrint(GvcidManagedParameters_t* managed_parameters, uint8 print_children)
+//Prints the currently configured Managed Parameters
+{
+    if(managed_parameters != NULL){
+        OS_printf("Managed Parameter: \n");
+        OS_printf("\t tfvn: %d", managed_parameters->tfvn);
+        OS_printf("\t scid: %d", managed_parameters->scid);
+        OS_printf("\t vcid: %d", managed_parameters->vcid);
+        OS_printf("\t has_fecf: %d", managed_parameters->has_fecf);
+        OS_printf("\t has_segmentation_headers: %d\n", managed_parameters->has_segmentation_hdr);
+    }
+    if(managed_parameters->next!=NULL && print_children!=0){
+        Crypto_mpPrint(managed_parameters->next,print_children);
+    }
+}
 #endif

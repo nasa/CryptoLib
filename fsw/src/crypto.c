@@ -27,6 +27,7 @@
 // #include "itc_gcm128.h"
 
 #include "crypto_structs.h"
+#include "crypto_config_structs.h"
 #include "crypto_print.h"
 #include "crypto_config.h"
 #include "crypto_events.h"
@@ -87,6 +88,11 @@ static int32 Crypto_User_ModifyActiveTM(void);
 static int32 Crypto_User_ModifyVCID(void);
 // Determine Payload Data Unit
 static int32 Crypto_PDU(char* ingest, TC_t* tc_frame);
+// Managed Parameter Functions
+static int32 Crypto_Get_Managed_Parameters_For_Gvcid(uint8 tfvn,uint16 scid,uint8 vcid,GvcidManagedParameters_t* managed_parameters_in,
+                                                      GvcidManagedParameters_t** managed_parameters_out);
+static int32 crypto_config_add_gvcid_managed_parameter_recursion(uint8 tfvn, uint16 scid, uint8 vcid, uint8 has_fecf, uint8 has_segmentation_hdr,GvcidManagedParameters_t* managed_parameter);
+static void Crypto_Free_Managed_Parameters(GvcidManagedParameters_t* managed_parameters);
 
 /*
 ** Global Variables
@@ -96,6 +102,10 @@ crypto_key_t ek_ring[NUM_KEYS] = {0};
 //static crypto_key_t ak_ring[NUM_KEYS];
 CCSDS_t sdls_frame;
 TM_t tm_frame;
+CryptoConfig_t* crypto_config = NULL;
+SadbMariaDBConfig_t* sadb_mariadb_config = NULL;
+GvcidManagedParameters_t* gvcid_managed_parameters = NULL;
+GvcidManagedParameters_t* current_managed_parameters = NULL;
 // OCF
 static uint8 ocf = 0;
 static SDLS_FSR_t report;
@@ -113,23 +123,75 @@ static uint8 badFECF = 0;
 //  CRC
 static uint32 crc32Table[256];
 static uint16 crc16Table[256];
-
 /*
 ** Initialization Functions
 */
+
+/**
+* @brief Function: Crypto_Init_Unit_test
+* @return int32: status
+**/
+int32 Crypto_Init_Unit_Test(void)
+{
+    int32 status = OS_SUCCESS;
+    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY,CRYPTO_TC_CREATE_FECF_TRUE,TC_PROCESS_SDLS_PDUS_TRUE,TC_HAS_PUS_HDR,TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, 0x3F);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,0,TC_HAS_FECF,TC_HAS_SEGMENT_HDRS);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,1,TC_HAS_FECF,TC_HAS_SEGMENT_HDRS);
+    status = Crypto_Init();
+    return status;
+}
+
+/**
+* @brief Function: Crypto_Init_With_Configs
+* @param crypto_config_p: CryptoConfig_t*
+* @param gvcid_managed_parameters_p: GvcidManagedParameters_t*
+* @param sadb_mariadb_config_p: SadbMariaDBConfig_t*
+* @return int32: Success/Failure
+**/
+int32 Crypto_Init_With_Configs(CryptoConfig_t* crypto_config_p,GvcidManagedParameters_t* gvcid_managed_parameters_p,SadbMariaDBConfig_t* sadb_mariadb_config_p)
+{
+    int32 status = OS_SUCCESS;
+    crypto_config = crypto_config_p;
+    gvcid_managed_parameters = gvcid_managed_parameters_p;
+    sadb_mariadb_config = sadb_mariadb_config_p;
+    status = Crypto_Init();
+    return status;
+}
 
 /**
  * @brief Function Crypto_Init
  * Initializes libgcrypt, Security Associations
  **/
 int32 Crypto_Init(void)
-{   
+{
     int32 status = OS_SUCCESS;
 
-    //TODO -- Make the routine that gets called variable based on configuration!
-    sadb_routine = get_sadb_routine_inmemory();
-    //sadb_routine = get_sadb_routine_mariadb();
+    if(crypto_config==NULL){
+        status = CRYPTO_CONFIGURATION_NOT_COMPLETE;
+        OS_printf(KRED "ERROR: CryptoLib must be configured before intializing!\n" RESET);
+        return status; //No configuration set -- return!
+    }
+    if(gvcid_managed_parameters==NULL){
+        status = CRYPTO_MANAGED_PARAM_CONFIGURATION_NOT_COMPLETE;
+        OS_printf(KRED "ERROR: CryptoLib  Managed Parameters must be configured before intializing!\n" RESET);
+        return status; //No Managed Parameter configuration set -- return!
+    }
 
+    #ifdef TC_DEBUG
+    Crypto_mpPrint(gvcid_managed_parameters,1);
+    #endif
+
+    //Prepare SADB type from config
+    if (crypto_config->sadb_type == SADB_TYPE_INMEMORY){ sadb_routine = get_sadb_routine_inmemory(); }
+    else if (crypto_config->sadb_type == SADB_TYPE_MARIADB){
+        if(sadb_mariadb_config == NULL){
+            status = CRYPTO_MARIADB_CONFIGURATION_NOT_COMPLETE;
+            OS_printf(KRED "ERROR: CryptoLib MariaDB must be configured before intializing!\n" RESET);
+            return status; //MariaDB connection specified but no configuration exists, return!
+        }
+        sadb_routine = get_sadb_routine_mariadb();
+    }
+    else { status = SADB_INVALID_SADB_TYPE; return status; }  //TODO: Error stack
 
     // Initialize libgcrypt
     if (!gcry_check_version(GCRYPT_VERSION))
@@ -163,6 +225,135 @@ int32 Crypto_Init(void)
                 CRYPTO_LIB_MISSION_REV);
                                 
     return status; 
+}
+
+/**
+* @brief Function: Crypto_Shutdown
+* Free memory objects & restore pointers to NULL for re-initialization
+* @return int32: Success/Failure
+**/
+int32 Crypto_Shutdown(void)
+{
+    int32 status = OS_SUCCESS;
+
+    if(crypto_config!=NULL){
+        free(crypto_config);
+        crypto_config=NULL;
+    }
+    if(sadb_mariadb_config!=NULL){
+        free(sadb_mariadb_config);
+        sadb_mariadb_config=NULL;
+    }
+    current_managed_parameters=NULL;
+
+    if(gvcid_managed_parameters!=NULL){
+        Crypto_Free_Managed_Parameters(gvcid_managed_parameters);
+        gvcid_managed_parameters=NULL;
+    }
+
+    return status;
+}
+
+/**
+* @brief Function: Crypto_Config_CryptoLib
+* @param sadb_type: uint8
+* @param crypto_create_fecf: uint8
+* @param process_sdls_pdus: uint8
+* @param has_pus_hdr: uint8
+* @param ignore_sa_state: uint8
+* @param ignore_anti_replay: uint8
+* @param unique_sa_per_mapid: uint8
+* @param vcid_bitmask: uint8
+* @return int32: Success/Failure
+**/
+int32 Crypto_Config_CryptoLib(uint8 sadb_type, uint8 crypto_create_fecf, uint8 process_sdls_pdus, uint8 has_pus_hdr, uint8 ignore_sa_state, uint8 ignore_anti_replay, uint8 unique_sa_per_mapid, uint8 vcid_bitmask)
+{
+    int32 status = OS_SUCCESS;
+    crypto_config = (CryptoConfig_t*) calloc(1, CRYPTO_CONFIG_SIZE);
+    crypto_config->sadb_type=sadb_type;
+    crypto_config->crypto_create_fecf=crypto_create_fecf;
+    crypto_config->process_sdls_pdus=process_sdls_pdus;
+    crypto_config->has_pus_hdr=has_pus_hdr;
+    crypto_config->ignore_sa_state=ignore_sa_state;
+    crypto_config->ignore_anti_replay=ignore_anti_replay;
+    crypto_config->unique_sa_per_mapid = unique_sa_per_mapid;
+    crypto_config->vcid_bitmask=vcid_bitmask;
+    return status;
+}
+
+/**
+* @brief Function: Crypto_Config_MariaDB
+* @param mysql_username: char*
+* @param mysql_password: char*
+* @param mysql_hostname: char*
+* @param mysql_database: char*
+* @param mysql_port: uint16
+* @return int32: Success/Failure
+**/
+int32 Crypto_Config_MariaDB(char* mysql_username, char* mysql_password, char* mysql_hostname, char* mysql_database, uint16 mysql_port)
+{
+    int32 status = OS_SUCCESS;
+    sadb_mariadb_config = (SadbMariaDBConfig_t*)calloc(1, SADB_MARIADB_CONFIG_SIZE);
+    sadb_mariadb_config->mysql_username=mysql_username;
+    sadb_mariadb_config->mysql_password=mysql_password;
+    sadb_mariadb_config->mysql_hostname=mysql_hostname;
+    sadb_mariadb_config->mysql_database=mysql_database;
+    sadb_mariadb_config->mysql_port=mysql_port;
+    return status;
+}
+
+/**
+* @brief Function: Crypto_Config_Add_Gvcid_Managed_Parameter
+* @param tfvn: uint8
+* @param scid: uint16
+* @param vcid: uint8
+* @param has_fecf: uint8
+* @param has_segmentation_hdr: uint8
+* @return int32: Success/Failure
+**/
+int32 Crypto_Config_Add_Gvcid_Managed_Parameter(uint8 tfvn, uint16 scid, uint8 vcid, uint8 has_fecf, uint8 has_segmentation_hdr)
+{
+    int32 status = OS_SUCCESS;
+
+    if(gvcid_managed_parameters==NULL){//case: Global Root Node not Set
+        gvcid_managed_parameters = (GvcidManagedParameters_t*) calloc(1,GVCID_MANAGED_PARAMETERS_SIZE);
+        gvcid_managed_parameters->tfvn=tfvn;
+        gvcid_managed_parameters->scid=scid;
+        gvcid_managed_parameters->vcid=vcid;
+        gvcid_managed_parameters->has_fecf=has_fecf;
+        gvcid_managed_parameters->has_segmentation_hdr=has_segmentation_hdr;
+        gvcid_managed_parameters->next=NULL;
+        return status;
+    } else { //Recurse through nodes and add at end
+        return crypto_config_add_gvcid_managed_parameter_recursion(tfvn, scid, vcid, has_fecf, has_segmentation_hdr,gvcid_managed_parameters);
+    }
+
+}
+
+/**
+* @brief Function: crypto_config_add_gvcid_managed_parameter_recursion
+* @param tfvn: uint8
+* @param scid: uint16
+* @param vcid: uint8
+* @param has_fecf: uint8
+* @param has_segmentation_hdr: uint8
+* @param managed_parameter: GvcidManagedParameters_t*
+* @return int32: Success/Failure
+**/
+static int32 crypto_config_add_gvcid_managed_parameter_recursion(uint8 tfvn, uint16 scid, uint8 vcid, uint8 has_fecf, uint8 has_segmentation_hdr,GvcidManagedParameters_t* managed_parameter)
+{
+    if(managed_parameter->next!=NULL){
+        return crypto_config_add_gvcid_managed_parameter_recursion(tfvn, scid, vcid, has_fecf, has_segmentation_hdr,managed_parameter->next);
+    } else {
+        managed_parameter->next = (GvcidManagedParameters_t*) calloc(1,GVCID_MANAGED_PARAMETERS_SIZE);
+        managed_parameter->next->tfvn = tfvn;
+        managed_parameter->next->scid = scid;
+        managed_parameter->next->vcid = vcid;
+        managed_parameter->next->has_fecf = has_fecf;
+        managed_parameter->next->has_segmentation_hdr = has_segmentation_hdr;
+        managed_parameter->next->next = NULL;
+        return OS_SUCCESS;
+    }
 }
 
 /**
@@ -731,11 +922,11 @@ static void Crypto_Calc_CRC_Init_Table(void)
 static int32 Crypto_Get_tcPayloadLength(TC_t* tc_frame, SecurityAssociation_t *sa_ptr)
 {
     int tf_hdr = 5;
-    int seg_hdr = 0;if(SEGMENTATION_HDR){seg_hdr=1;}
+    int seg_hdr = 0;if(current_managed_parameters->has_segmentation_hdr==TC_HAS_SEGMENT_HDRS){seg_hdr=1;}
+    int fecf = 0;if(current_managed_parameters->has_fecf==TC_HAS_FECF){fecf=FECF_SIZE;}
     int spi = 2;
-    int iv_size = sa_ptr->shivf_len; if(PUS_HDR){iv_size=sa_ptr->shivf_len - 1;} //For some reason, the interoperability tests with PUS header frames work with a 12 byte TC IV, so we'll use that for those.
+    int iv_size = sa_ptr->shivf_len;
     int mac_size = sa_ptr->stmacf_len;
-    int fecf = 0;if(HAS_FECF){fecf=FECF_SIZE;}
 
     #ifdef TC_DEBUG
         OS_printf("Get_tcPayloadLength Debug [byte lengths]:\n");
@@ -746,10 +937,10 @@ static int32 Crypto_Get_tcPayloadLength(TC_t* tc_frame, SecurityAssociation_t *s
         OS_printf("\tiv_size\t%d\n",iv_size);
         OS_printf("\tmac\t%d\n",mac_size);
         OS_printf("\tfecf \t%d\n",fecf);
-        OS_printf("\tTOTAL LENGTH: %d\n", (tc_frame->tc_header.fl - (tf_hdr + seg_hdr + spi + iv_size ) - (mac_size + FECF_SIZE)));
+        OS_printf("\tTOTAL LENGTH: %d\n", (tc_frame->tc_header.fl - (tf_hdr + seg_hdr + spi + iv_size ) - (mac_size + fecf)));
     #endif
 
-    return (tc_frame->tc_header.fl - (tf_hdr + seg_hdr + spi + iv_size ) - (mac_size + FECF_SIZE) );
+    return (tc_frame->tc_header.fl + 1 - (tf_hdr + seg_hdr + spi + iv_size ) - (mac_size + fecf) );
 }
 
 /**
@@ -1928,13 +2119,13 @@ static int32 Crypto_User_BadIV(void)
     if (badIV == 0)
     {
         badIV = 1;
-    }   
+    }
     else
     {
         badIV = 0;
     }
-    
-    return OS_SUCCESS; 
+
+    return OS_SUCCESS;
 }
 
 /**
@@ -2295,6 +2486,53 @@ static int32 Crypto_PDU(char* ingest,TC_t* tc_frame)
 }
 
 /**
+* @brief Function: Crypto_Get_Managed_Parameters_For_Gvcid
+* @param tfvn: uint8
+* @param scid: uint16
+* @param vcid: uint8
+* @param managed_parameters_in: GvcidManagedParameters_t*
+* @param managed_parameters_out: GvcidManagedParameters_t**
+* @return int32: Success/Failure
+**/
+static int32 Crypto_Get_Managed_Parameters_For_Gvcid(uint8 tfvn,uint16 scid,uint8 vcid,GvcidManagedParameters_t* managed_parameters_in,
+                                                      GvcidManagedParameters_t** managed_parameters_out)
+{
+    int32 status = MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND;
+
+    if(managed_parameters_in != NULL)
+    {
+        if(managed_parameters_in->tfvn==tfvn && managed_parameters_in->scid==scid && managed_parameters_in->vcid==vcid) {
+            *managed_parameters_out = managed_parameters_in;
+            status = OS_SUCCESS;
+            return status;
+        }else {
+            return Crypto_Get_Managed_Parameters_For_Gvcid(tfvn,scid,vcid,managed_parameters_in->next,managed_parameters_out);
+        }
+    }
+    else
+    {
+        OS_printf(KRED "Error: Managed Parameters for GVCID(TFVN: %d, SCID: %d, VCID: %d) not found. \n" RESET,tfvn,scid,vcid);
+        return status;
+    }
+}
+
+/**
+* @brief Function: Crypto_Free_Managed_Parameters
+* Managed parameters are expected to live the duration of the program, this may not be necessary.
+* @param managed_parameters: GvcidManagedParameters_t*
+**/
+static void Crypto_Free_Managed_Parameters(GvcidManagedParameters_t* managed_parameters)
+{
+    if(managed_parameters==NULL){
+        return; //Nothing to free, just return!
+    }
+    if(managed_parameters->next != NULL){
+        Crypto_Free_Managed_Parameters(managed_parameters->next);
+    }
+    free(managed_parameters);
+}
+
+/**
  * @brief Function: Crypto_TC_ApplySecurity
  * Applies Security to incoming frame.  Encryption, Authentication, and Authenticated Encryption
  * @param p_in_frame: uint8*
@@ -2318,6 +2556,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
     uint8 aad[20];
     gcry_cipher_hd_t tmp_hd;
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
+    uint16 new_enc_frame_header_field_length = 0;
 
     #ifdef DEBUG
         OS_printf(KYEL "\n----- Crypto_TC_ApplySecurity START -----\n" RESET);
@@ -2340,6 +2579,12 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         OS_printf("\nPrinted %d bytes\n", in_frame_length);
     #endif
 
+    if(crypto_config == NULL)
+    {
+        OS_printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
+        status = CRYPTO_LIB_ERR_NO_CONFIG;
+    }
+
     // Primary Header
     temp_tc_header.tfvn   = ((uint8)p_in_frame[0] & 0xC0) >> 6;
     temp_tc_header.bypass = ((uint8)p_in_frame[0] & 0x20) >> 5;
@@ -2347,15 +2592,23 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
     temp_tc_header.spare  = ((uint8)p_in_frame[0] & 0x0C) >> 2;
     temp_tc_header.scid   = ((uint8)p_in_frame[0] & 0x03) << 8;
     temp_tc_header.scid   = temp_tc_header.scid | (uint8)p_in_frame[1];
-    temp_tc_header.vcid   = ((uint8)p_in_frame[2] & 0xFC) >> 2 & VCID_BITMASK;
+    temp_tc_header.vcid   = ((uint8)p_in_frame[2] & 0xFC) >> 2 & crypto_config->vcid_bitmask;
     temp_tc_header.fl     = ((uint8)p_in_frame[2] & 0x03) << 8;
     temp_tc_header.fl     = temp_tc_header.fl | (uint8)p_in_frame[3];
     temp_tc_header.fsn	  = (uint8)p_in_frame[4];
 
-    //TODO -- Handle segmentation header logic (this is a per-VCID managed parameter!)
-    //If segmentation header for VCID, parse out MAP_ID
-    // probably need to augment crypto_structs.h to handle segmentation headers.
+    //Lookup-retrieve managed parameters for frame via gvcid:
+    status = Crypto_Get_Managed_Parameters_For_Gvcid(temp_tc_header.tfvn,temp_tc_header.scid,temp_tc_header.vcid,gvcid_managed_parameters,&current_managed_parameters);
+    if(status != OS_SUCCESS) {return status;} //Unable to get necessary Managed Parameters for TC TF -- return with error.
+
+
+    uint8 segmentation_hdr = 0x00;
     uint8 map_id = 0;
+    if(current_managed_parameters->has_segmentation_hdr==TC_HAS_SEGMENT_HDRS){
+        segmentation_hdr = p_in_frame[5];
+        map_id = segmentation_hdr & 0x3F;
+    }
+
 
     // Check if command frame flag set
     if ((temp_tc_header.cc == 1) && (status == OS_SUCCESS))
@@ -2371,10 +2624,6 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         status = CRYPTO_LIB_ERR_INVALID_CC_FLAG;
     }
 
-    // TODO: If command frame flag not set, need to know SDLS parameters
-    // What is the best way to do this - copy in the entire SA for a channel?
-    // Expect these calls will return an error is the SA is not usable
-    // Will need to know lengths of various parameters from the SA DB
     if (status == OS_SUCCESS)
     {
         // Query SA DB for active SA / SDLS parameters
@@ -2445,34 +2694,38 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         #endif
 
         // Determine length of buffer to be malloced
-        // TODO: Determine presence of FECF & TC_PAD_SIZE
+        // TODO: Determine TC_PAD_SIZE
         // TODO: Note: Currently assumes ciphertext output length is same as ciphertext input length
         switch(sa_service_type)
         {
             case SA_PLAINTEXT:
-                // Ingest length + segment header (1) + spi_index (2) + some variable length fields
-                    *p_enc_frame_len = in_frame_length + 1 + 2 + sa_ptr->shplf_len;
+                // Ingest length + spi_index (2) + some variable length fields
+                *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shplf_len;
+                new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
             case SA_AUTHENTICATION:
-                // Ingest length + segment header (1) + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
+                // Ingest length + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
                 //   + shplf_len + arc_len + pad_size + stmacf_len
-                *p_enc_frame_len = in_frame_length + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + \
-                sa_ptr->shplf_len + sa_ptr->arc_len + TC_PAD_SIZE + sa_ptr->stmacf_len;;
-            case SA_ENCRYPTION:
-                // Ingest length + segment header (1) + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
-                //   + shplf_len + arc_len + pad_size
-                *p_enc_frame_len = in_frame_length + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + \
-                sa_ptr->shplf_len + sa_ptr->arc_len + TC_PAD_SIZE;
-            case SA_AUTHENTICATED_ENCRYPTION:
-                // Ingest length + segment header (1) + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
-                //   + shplf_len + arc_len + pad_size + stmacf_len
-                *p_enc_frame_len = in_frame_length + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + \
+                *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + \
                 sa_ptr->shplf_len + sa_ptr->arc_len + TC_PAD_SIZE + sa_ptr->stmacf_len;
+                new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
+            case SA_ENCRYPTION:
+                // Ingest length + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
+                //   + shplf_len + arc_len + pad_size
+                *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + \
+                sa_ptr->shplf_len + sa_ptr->arc_len + TC_PAD_SIZE;
+                new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
+            case SA_AUTHENTICATED_ENCRYPTION:
+                // Ingest length + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
+                //   + shplf_len + arc_len + pad_size + stmacf_len
+                *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + \
+                sa_ptr->shplf_len + sa_ptr->arc_len + TC_PAD_SIZE + sa_ptr->stmacf_len;
+                new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
         }
 
         #ifdef TC_DEBUG
             OS_printf(KYEL "DEBUG - Total TC Buffer to be malloced is: %d bytes\n" RESET, *p_enc_frame_len);
-            OS_printf(KYEL "\tlen of TF\t = %d\n" RESET, in_frame_length);
-            OS_printf(KYEL "\tsegment hdr\t = 1\n" RESET); // TODO: Determine presence of this so not hard-coded
+            OS_printf(KYEL "\tlen of TF\t = %d\n" RESET, temp_tc_header.fl);
+            //OS_printf(KYEL "\tsegment hdr\t = 1\n" RESET); // TODO: Determine presence of this so not hard-coded
             OS_printf(KYEL "\tspi len\t\t = 2\n" RESET);
             OS_printf(KYEL "\tshivf_len\t = %d\n" RESET, sa_ptr->shivf_len);
             OS_printf(KYEL "\tshsnf_len\t = %d\n" RESET, sa_ptr->shsnf_len);
@@ -2481,9 +2734,9 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
             OS_printf(KYEL "\tpad_size\t = %d\n" RESET, TC_PAD_SIZE);
             OS_printf(KYEL "\tstmacf_len\t = %d\n" RESET, sa_ptr->stmacf_len);
         #endif
-
+        
         // Accio buffer
-        p_new_enc_frame = (uint8 *)malloc(*p_enc_frame_len * sizeof (unsigned char));
+        p_new_enc_frame = (uint8 *)malloc((*p_enc_frame_len) * sizeof (unsigned char));
         if(!p_new_enc_frame)
         {
             OS_printf(KRED "Error: Malloc for encrypted output buffer failed! \n" RESET);
@@ -2493,32 +2746,31 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         CFE_PSP_MemSet(p_new_enc_frame, 0, *p_enc_frame_len);
 
         // Copy original TF header
-        CFE_PSP_MemCpy(p_new_enc_frame, p_in_frame, TC_FRAME_PRIMARYHEADER_SIZE);
+        CFE_PSP_MemCpy(p_new_enc_frame, p_in_frame, TC_FRAME_PRIMARYHEADER_STRUCT_SIZE);
 
         // Set new TF Header length
         // Recall: Length field is one minus total length per spec
-        *(p_new_enc_frame+2) = ((*(p_new_enc_frame+2) & 0xFC) | (((*p_enc_frame_len - 1) & (0x0300)) >> 8));
-        *(p_new_enc_frame+3) = ((*p_enc_frame_len - 1) & (0x00FF));
+        *(p_new_enc_frame+2) = ((*(p_new_enc_frame + 2) & 0xFC) | (((new_enc_frame_header_field_length) & (0x0300)) >> 8));
+        *(p_new_enc_frame+3) = ((new_enc_frame_header_field_length) & (0x00FF));
 
         #ifdef TC_DEBUG
             OS_printf(KYEL "Printing updated TF Header:\n\t");
-            for (int i=0; i<TC_FRAME_PRIMARYHEADER_SIZE; i++)
+            for (int i=0; i<TC_FRAME_HEADER_SIZE; i++)
             {
                 OS_printf("%02X", *(p_new_enc_frame+i));
             }
             // Recall: The buffer length is 1 greater than the field value set in the TCTF
-            OS_printf("\n\tLength set to 0x%02X\n" RESET, *p_enc_frame_len-1);
+            OS_printf("\n\tLength set to 0x%02X\n" RESET, new_enc_frame_header_field_length);
         #endif
 
         /*
         ** Start variable length fields
         */
-        uint16_t index = TC_FRAME_PRIMARYHEADER_SIZE;
-        
-        // Set Segment Header flags
-        // TODO: Determine segment header exists
-        *(p_new_enc_frame + index) = 0xFF;
-        index++;
+        uint16_t index = TC_FRAME_HEADER_SIZE; //Frame header is 5 bytes
+
+        if(current_managed_parameters->has_segmentation_hdr==TC_HAS_SEGMENT_HDRS){
+            index++; //Add 1 byte to index because segmentation header used for this gvcid.
+        }
 
         /*
         ** Begin Security Header Fields
@@ -2592,15 +2844,19 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         ** End Security Header Fields
         */
 
+        uint8 fecf_len = FECF_SIZE;
+        if(current_managed_parameters->has_fecf==TC_NO_FECF) { fecf_len = 0; }
+        uint8 segment_hdr_len = SEGMENT_HDR_SIZE;
+        if(current_managed_parameters->has_segmentation_hdr==TC_NO_SEGMENT_HDRS) { segment_hdr_len = 0; }
         // Copy in original TF data - except FECF
         // Will be over-written if using encryption later
-        // TODO: This will change depending on how we handle segment header and FECF above, 
         // and if it was present in the original TCTF
         //if FECF
-        tf_payload_len = in_frame_length - TC_FRAME_PRIMARYHEADER_SIZE - FECF_SIZE;
+        // Even though FECF is not part of apply_security payload, we still have to subtract the length from the temp_tc_header.fl since that includes FECF length & segment header length.
+        tf_payload_len = temp_tc_header.fl - TC_FRAME_HEADER_SIZE - segment_hdr_len - fecf_len + 1;
         //if no FECF
-        //tf_payload_len = in_frame_length - TC_FRAME_PRIMARYHEADER_SIZE;
-        CFE_PSP_MemCpy((p_new_enc_frame+index), (p_in_frame+TC_FRAME_PRIMARYHEADER_SIZE), tf_payload_len);
+        //tf_payload_len = temp_tc_header.fl - TC_FRAME_PRIMARYHEADER_STRUCT_SIZE;
+        CFE_PSP_MemCpy((p_new_enc_frame+index), (p_in_frame+TC_FRAME_PRIMARYHEADER_STRUCT_SIZE), tf_payload_len);
         //index += tf_payload_len;
 
         /*
@@ -2702,7 +2958,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                 (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
             {
                 // TODO: More robust calculation of this location
-                // uint16 output_loc = TC_FRAME_PRIMARYHEADER_SIZE + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + temp_SA.shplf_len;
+                // uint16 output_loc = TC_FRAME_PRIMARYHEADER_STRUCT_SIZE + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + temp_SA.shplf_len;
                 #ifdef TC_DEBUG
                     OS_printf("Encrypted bytes output_loc is %d\n", index);
                     OS_printf("tf_payload_len is %d\n", tf_payload_len);
@@ -2718,7 +2974,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                     tmp_hd,
                     &p_new_enc_frame[index],                              // ciphertext output
                     tf_payload_len,		 		                    // length of data
-                    (p_in_frame + TC_FRAME_PRIMARYHEADER_SIZE),       // plaintext input TODO: Determine if Segment header exists, assuming yes (+1) for now
+                    (p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len),       // plaintext input
                     tf_payload_len                                  // in data length
                 );
 
@@ -2745,7 +3001,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                 (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
             {
                 // TODO - Know if FECF exists
-                mac_loc = *p_enc_frame_len - sa_ptr->stmacf_len - FECF_SIZE;
+                mac_loc = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len + tf_payload_len;
                 #ifdef MAC_DEBUG
                     OS_printf(KYEL "MAC location is: %d\n" RESET, mac_loc);
                     OS_printf(KYEL "MAC size is: %d\n" RESET, MAC_SIZE);
@@ -2753,7 +3009,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                 gcry_error = gcry_cipher_gettag(
                     tmp_hd,
                     &p_new_enc_frame[mac_loc],                             // tag output
-                    MAC_SIZE                                         // tag size
+                    MAC_SIZE                                         // tag size // TODO - use sa_ptr->abm_len instead of hardcoded mac size?
                 );
                 if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
                 {
@@ -2781,17 +3037,27 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         ** End Authentication / Encryption
         */
 
-        // Set FECF Field if present
-        // TODO: Determine is FECF is even present
-        // on this particular channel
-        // Calc new fecf, don't include old fecf in length
-        #ifdef FECF_DEBUG
-            OS_printf(KCYN "Calcing FECF over %d bytes\n" RESET, *p_enc_frame_len - 2);
-        #endif
-        new_fecf = Crypto_Calc_FECF(p_new_enc_frame, *p_enc_frame_len - 2);
-        *(p_new_enc_frame + *p_enc_frame_len - 2) = (uint8) ((new_fecf & 0xFF00) >> 8);
-        *(p_new_enc_frame + *p_enc_frame_len - 1) = (uint8) (new_fecf & 0x00FF);
-        index += 2;
+        //Only calculate & insert FECF if CryptoLib is configured to do so & gvcid includes FECF.
+        if( current_managed_parameters->has_fecf==TC_HAS_FECF )
+        {
+            // Set FECF Field if present
+            #ifdef FECF_DEBUG
+            OS_printf(KCYN "Calcing FECF over %d bytes\n" RESET, new_enc_frame_header_field_length - 1);
+            #endif
+            if ( crypto_config->crypto_create_fecf==CRYPTO_TC_CREATE_FECF_TRUE )
+            {
+                new_fecf = Crypto_Calc_FECF(p_new_enc_frame, new_enc_frame_header_field_length - 1);
+                *(p_new_enc_frame + new_enc_frame_header_field_length - 1) = (uint8) ((new_fecf & 0xFF00) >> 8);
+                *(p_new_enc_frame + new_enc_frame_header_field_length ) = (uint8) (new_fecf & 0x00FF);
+            }
+            else // CRYPTO_TC_CREATE_FECF_FALSE
+            {
+                *(p_new_enc_frame + new_enc_frame_header_field_length - 1) = (uint8) 0x00;
+                *(p_new_enc_frame + new_enc_frame_header_field_length ) = (uint8) 0x00;
+            }
+
+            index += 2;
+        }
 
         #ifdef TC_DEBUG
             OS_printf(KYEL "Printing new TC Frame:\n\t");
@@ -2799,7 +3065,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
             {
                 OS_printf("%02X", *(p_new_enc_frame + i));
             }
-            OS_printf("\n\tThe returned length is: %d\n" RESET, *p_enc_frame_len);
+            OS_printf("\n\tThe returned length is: %d\n" RESET, new_enc_frame_header_field_length);
         #endif
 
         *pp_in_frame = p_new_enc_frame;
@@ -2833,6 +3099,13 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     SecurityAssociation_t* sa_ptr = NULL;
 
+    if(crypto_config == NULL)
+    {
+        OS_printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
+        status = CRYPTO_LIB_ERR_NO_CONFIG;
+        return status;
+    }
+
     #ifdef DEBUG
         OS_printf(KYEL "\n----- Crypto_TC_ProcessSecurity START -----\n" RESET);
     #endif
@@ -2847,7 +3120,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
     byte_idx++;
     tc_sdls_processed_frame->tc_header.scid   = tc_sdls_processed_frame->tc_header.scid | (uint8)ingest[byte_idx];
     byte_idx++;
-    tc_sdls_processed_frame->tc_header.vcid   = (((uint8)ingest[byte_idx] & 0xFC) >> 2) & VCID_BITMASK;
+    tc_sdls_processed_frame->tc_header.vcid   = (((uint8)ingest[byte_idx] & 0xFC) >> 2) & crypto_config->vcid_bitmask;
     tc_sdls_processed_frame->tc_header.fl     = ((uint8)ingest[byte_idx] & 0x03) << 8;
     byte_idx++;
     tc_sdls_processed_frame->tc_header.fl     = tc_sdls_processed_frame->tc_header.fl | (uint8)ingest[byte_idx];
@@ -2855,8 +3128,14 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
     tc_sdls_processed_frame->tc_header.fsn	  = (uint8)ingest[byte_idx];
     byte_idx++;
 
+    //Lookup-retrieve managed parameters for frame via gvcid:
+    status = Crypto_Get_Managed_Parameters_For_Gvcid(tc_sdls_processed_frame->tc_header.tfvn,tc_sdls_processed_frame->tc_header.scid,
+                                                     tc_sdls_processed_frame->tc_header.vcid,gvcid_managed_parameters,&current_managed_parameters);
+
+    if(status != OS_SUCCESS) {return status;} //Unable to get necessary Managed Parameters for TC TF -- return with error.
+
     // Security Header
-    if(SEGMENTATION_HDR){
+    if(current_managed_parameters->has_segmentation_hdr==TC_HAS_SEGMENT_HDRS){
         tc_sdls_processed_frame->tc_sec_header.sh  = (uint8)ingest[byte_idx];
         byte_idx++;
     }
@@ -2868,7 +3147,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
     #endif
 
     // Checks
-    if (PUS_HDR && ((uint8)ingest[18] == 0x0B) && ((uint8)ingest[19] == 0x00) && (((uint8)ingest[20] & 0xF0) == 0x40))
+    if (crypto_config->has_pus_hdr==TC_HAS_PUS_HDR && ((uint8)ingest[18] == 0x0B) && ((uint8)ingest[19] == 0x00) && (((uint8)ingest[20] & 0xF0) == 0x40))
     {   
         // User packet check only used for ESA Testing!
     }
@@ -2877,7 +3156,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
         report.lspiu = tc_sdls_processed_frame->tc_sec_header.spi;
 
         // Verify 
-        if (tc_sdls_processed_frame->tc_header.scid != (SCID & 0x3FF))
+        if (tc_sdls_processed_frame->tc_header.scid != current_managed_parameters->scid)
         {
             OS_printf(KRED "Error: SCID incorrect! \n" RESET);
             status = OS_ERROR;
@@ -2984,58 +3263,64 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
         #endif
 
         // Check IV is in ARCW
-        if ( Crypto_window(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len,
-            sa_ptr->arcw[sa_ptr->arcw_len-1]) != CRYPTO_LIB_SUCCESS )
+        if ( crypto_config->ignore_anti_replay==TC_IGNORE_ANTI_REPLAY_FALSE )
         {
-            report.af = 1;
-            report.bsnf = 1;
-            if (log_summary.rs > 0)
+
+            if ( Crypto_window(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len,
+                               sa_ptr->arcw[sa_ptr->arcw_len-1]) != CRYPTO_LIB_SUCCESS )
             {
-                Crypto_increment((uint8*)&log_summary.num_se, 4);
-                log_summary.rs--;
-                log.blk[log_count].emt = IV_WINDOW_ERR_EID;
-                log.blk[log_count].emv[0] = 0x4E;
-                log.blk[log_count].emv[1] = 0x41;
-                log.blk[log_count].emv[2] = 0x53;
-                log.blk[log_count].emv[3] = 0x41;
-                log.blk[log_count++].em_len = 4;
-            }
-            OS_printf(KRED "Error: IV not in window! \n" RESET);
-            #ifdef OCF_DEBUG
-                Crypto_fsrPrint(&report);
-            #endif
-            status = OS_ERROR;
-        }
-        else 
-        {
-            if ( Crypto_compare_less_equal(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len) == CRYPTO_LIB_SUCCESS )
-            {   // Replay - IV value lower than expected
                 report.af = 1;
                 report.bsnf = 1;
                 if (log_summary.rs > 0)
                 {
                     Crypto_increment((uint8*)&log_summary.num_se, 4);
                     log_summary.rs--;
-                    log.blk[log_count].emt = IV_REPLAY_ERR_EID;
+                    log.blk[log_count].emt = IV_WINDOW_ERR_EID;
                     log.blk[log_count].emv[0] = 0x4E;
                     log.blk[log_count].emv[1] = 0x41;
                     log.blk[log_count].emv[2] = 0x53;
                     log.blk[log_count].emv[3] = 0x41;
                     log.blk[log_count++].em_len = 4;
                 }
-                OS_printf(KRED "Error: IV replay! Value lower than expected! \n" RESET);
+                OS_printf(KRED "Error: IV not in window! \n" RESET);
                 #ifdef OCF_DEBUG
-                    Crypto_fsrPrint(&report);
+                Crypto_fsrPrint(&report);
                 #endif
                 status = OS_ERROR;
-            } 
+            }
             else
-            {   // Adjust expected IV to acceptable received value
-                for (int i = 0; i < (sa_ptr->shivf_len); i++)
-                {
-                    sa_ptr->iv[i] = tc_sdls_processed_frame->tc_sec_header.iv[i];
+            {
+                if ( Crypto_compare_less_equal(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len) == CRYPTO_LIB_SUCCESS )
+                {   // Replay - IV value lower than expected
+                    report.af = 1;
+                    report.bsnf = 1;
+                    if (log_summary.rs > 0)
+                    {
+                        Crypto_increment((uint8*)&log_summary.num_se, 4);
+                        log_summary.rs--;
+                        log.blk[log_count].emt = IV_REPLAY_ERR_EID;
+                        log.blk[log_count].emv[0] = 0x4E;
+                        log.blk[log_count].emv[1] = 0x41;
+                        log.blk[log_count].emv[2] = 0x53;
+                        log.blk[log_count].emv[3] = 0x41;
+                        log.blk[log_count++].em_len = 4;
+                    }
+                    OS_printf(KRED "Error: IV replay! Value lower than expected! \n" RESET);
+                    #ifdef OCF_DEBUG
+                    Crypto_fsrPrint(&report);
+                    #endif
+                    status = OS_ERROR;
+                }
+                else
+                {   // Adjust expected IV to acceptable received value // TODO - separate ground processing from fsw processing
+                    for (int i = 0; i < (sa_ptr->shivf_len); i++)
+                    {
+                        sa_ptr->iv[i] = tc_sdls_processed_frame->tc_sec_header.iv[i];
+                    }
                 }
             }
+
+
         }
 
         if ( status != CRYPTO_LIB_SUCCESS )
@@ -3151,61 +3436,64 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
             OS_printf("\t sa[%d].iv[%d] = 0x%02x \n", tc_sdls_processed_frame->tc_sec_header.spi, sa_ptr->shivf_len-1, sa_ptr->iv[sa_ptr->shivf_len-1]);
         #endif
 
-        // Check IV is in ARCW
-        if ( Crypto_window(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len,
-            sa_ptr->arcw[sa_ptr->arcw_len-1]) != OS_SUCCESS )
+        if ( crypto_config->ignore_anti_replay==TC_IGNORE_ANTI_REPLAY_FALSE )
         {
-            report.af = 1;
-            report.bsnf = 1;
-            if (log_summary.rs > 0)
+            // Check IV is in ARCW
+            if ( Crypto_window(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len,
+                               sa_ptr->arcw[sa_ptr->arcw_len-1]) != OS_SUCCESS )
             {
-                Crypto_increment((uint8*)&log_summary.num_se, 4);
-                log_summary.rs--;
-                log.blk[log_count].emt = IV_WINDOW_ERR_EID;
-                log.blk[log_count].emv[0] = 0x4E;
-                log.blk[log_count].emv[1] = 0x41;
-                log.blk[log_count].emv[2] = 0x53;
-                log.blk[log_count].emv[3] = 0x41;
-                log.blk[log_count++].em_len = 4;
-            }
-            OS_printf(KRED "Error: IV not in window! \n" RESET);
-            #ifdef OCF_DEBUG
-                Crypto_fsrPrint(&report);
-            #endif
-            status = OS_ERROR;
-        }
-        else 
-        {
-            if ( Crypto_compare_less_equal(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len) == OS_SUCCESS )
-            {   // Replay - IV value lower than expected
                 report.af = 1;
                 report.bsnf = 1;
                 if (log_summary.rs > 0)
                 {
                     Crypto_increment((uint8*)&log_summary.num_se, 4);
                     log_summary.rs--;
-                    log.blk[log_count].emt = IV_REPLAY_ERR_EID;
+                    log.blk[log_count].emt = IV_WINDOW_ERR_EID;
                     log.blk[log_count].emv[0] = 0x4E;
                     log.blk[log_count].emv[1] = 0x41;
                     log.blk[log_count].emv[2] = 0x53;
                     log.blk[log_count].emv[3] = 0x41;
                     log.blk[log_count++].em_len = 4;
                 }
-                OS_printf(KRED "Error: IV replay! Value lower than expected! \n" RESET);
+                OS_printf(KRED "Error: IV not in window! \n" RESET);
                 #ifdef OCF_DEBUG
-                    Crypto_fsrPrint(&report);
+                Crypto_fsrPrint(&report);
                 #endif
                 status = OS_ERROR;
-            } 
+            }
             else
-            {   // Adjust expected IV to acceptable received value
-                for (int i = 0; i < (sa_ptr->shivf_len); i++)
-                {
-                    sa_ptr->iv[i] = tc_sdls_processed_frame->tc_sec_header.iv[i];
+            {
+                if ( Crypto_compare_less_equal(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len) == OS_SUCCESS )
+                {   // Replay - IV value lower than expected
+                    report.af = 1;
+                    report.bsnf = 1;
+                    if (log_summary.rs > 0)
+                    {
+                        Crypto_increment((uint8*)&log_summary.num_se, 4);
+                        log_summary.rs--;
+                        log.blk[log_count].emt = IV_REPLAY_ERR_EID;
+                        log.blk[log_count].emv[0] = 0x4E;
+                        log.blk[log_count].emv[1] = 0x41;
+                        log.blk[log_count].emv[2] = 0x53;
+                        log.blk[log_count].emv[3] = 0x41;
+                        log.blk[log_count++].em_len = 4;
+                    }
+                    OS_printf(KRED "Error: IV replay! Value lower than expected! \n" RESET);
+                    #ifdef OCF_DEBUG
+                    Crypto_fsrPrint(&report);
+                    #endif
+                    status = OS_ERROR;
+                }
+                else
+                {   // Adjust expected IV to acceptable received value
+                    for (int i = 0; i < (sa_ptr->shivf_len); i++)
+                    {
+                        sa_ptr->iv[i] = tc_sdls_processed_frame->tc_sec_header.iv[i];
+                    }
                 }
             }
         }
-        
+
         if ( status == OS_ERROR )
         {   // Exit
             *len_ingest = 0;
@@ -3213,7 +3501,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
         }
 
         tc_sdls_processed_frame->tc_pdu_len = Crypto_Get_tcPayloadLength(tc_sdls_processed_frame, sa_ptr);
-
+        
         x = x + tc_sdls_processed_frame->tc_pdu_len;
 
         #ifdef TC_DEBUG
@@ -3386,6 +3674,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
         #ifdef TC_DEBUG
             OS_printf(KYEL "IV: \n\t");
         #endif
+        
         for (x = byte_idx; x < (byte_idx + sa_ptr->shivf_len); x++)
         {
             tc_sdls_processed_frame->tc_sec_header.iv[x-byte_idx] = (uint8)ingest[x];
@@ -3393,6 +3682,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
                 OS_printf("%02x", tc_sdls_processed_frame->tc_sec_header.iv[x-byte_idx]);
             #endif
         }
+       
         #ifdef TC_DEBUG
             OS_printf("\n"RESET);
         #endif
@@ -3404,57 +3694,60 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
             OS_printf("\tsa[%d].iv[%d] = 0x%02x \n", tc_sdls_processed_frame->tc_sec_header.spi, sa_ptr->shivf_len-1, sa_ptr->iv[sa_ptr->shivf_len-1]);
         #endif
 
-        // Check IV is in ARCW
-        if (Crypto_window(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len,
-            sa_ptr->arcw[sa_ptr->arcw_len-1]) != OS_SUCCESS )
+        if ( crypto_config->ignore_anti_replay==TC_IGNORE_ANTI_REPLAY_FALSE )
         {
-            report.af = 1;
-            report.bsnf = 1;
-            if (log_summary.rs > 0)
+            // Check IV is in ARCW
+            if (Crypto_window(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len,
+                              sa_ptr->arcw[sa_ptr->arcw_len-1]) != OS_SUCCESS )
             {
-                Crypto_increment((uint8*)&log_summary.num_se, 4);
-                log_summary.rs--;
-                log.blk[log_count].emt = IV_WINDOW_ERR_EID;
-                log.blk[log_count].emv[0] = 0x4E;
-                log.blk[log_count].emv[1] = 0x41;
-                log.blk[log_count].emv[2] = 0x53;
-                log.blk[log_count].emv[3] = 0x41;
-                log.blk[log_count++].em_len = 4;
-            }
-            OS_printf(KRED "Error: IV not in window! \n" RESET);
-            #ifdef OCF_DEBUG
-                Crypto_fsrPrint(&report);
-            #endif
-            status = OS_ERROR;
-        }
-        else 
-        {
-            if (Crypto_compare_less_equal(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len) == OS_SUCCESS )
-            {   // Replay - IV value lower than expected
                 report.af = 1;
                 report.bsnf = 1;
                 if (log_summary.rs > 0)
                 {
                     Crypto_increment((uint8*)&log_summary.num_se, 4);
                     log_summary.rs--;
-                    log.blk[log_count].emt = IV_REPLAY_ERR_EID;
+                    log.blk[log_count].emt = IV_WINDOW_ERR_EID;
                     log.blk[log_count].emv[0] = 0x4E;
                     log.blk[log_count].emv[1] = 0x41;
                     log.blk[log_count].emv[2] = 0x53;
                     log.blk[log_count].emv[3] = 0x41;
                     log.blk[log_count++].em_len = 4;
                 }
-                OS_printf(KRED "Error: IV replay! Value lower than expected! \n" RESET);
+                OS_printf(KRED "Error: IV not in window! \n" RESET);
                 #ifdef OCF_DEBUG
-                    Crypto_fsrPrint(&report);
+                Crypto_fsrPrint(&report);
                 #endif
                 status = OS_ERROR;
-            } 
+            }
             else
-            {   // Adjust expected IV to acceptable received value
-                for (int i = 0; i < (sa_ptr->shivf_len); i++)
-                {
-                    sa_ptr->iv[i] = tc_sdls_processed_frame->tc_sec_header.iv[i];
+            {
+                if (Crypto_compare_less_equal(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len) == OS_SUCCESS )
+                {   // Replay - IV value lower than expected
+                    report.af = 1;
+                    report.bsnf = 1;
+                    if (log_summary.rs > 0)
+                    {
+                        Crypto_increment((uint8*)&log_summary.num_se, 4);
+                        log_summary.rs--;
+                        log.blk[log_count].emt = IV_REPLAY_ERR_EID;
+                        log.blk[log_count].emv[0] = 0x4E;
+                        log.blk[log_count].emv[1] = 0x41;
+                        log.blk[log_count].emv[2] = 0x53;
+                        log.blk[log_count].emv[3] = 0x41;
+                        log.blk[log_count++].em_len = 4;
+                    }
+                    OS_printf(KRED "Error: IV replay! Value lower than expected! \n" RESET);
+                    #ifdef OCF_DEBUG
+                    Crypto_fsrPrint(&report);
+                    #endif
+                    status = OS_ERROR;
+                }
+                else
+                {   // Adjust expected IV to acceptable received value
+                    for (int i = 0; i < (sa_ptr->shivf_len); i++)
+                    {
+                        sa_ptr->iv[i] = tc_sdls_processed_frame->tc_sec_header.iv[i];
+                    }
                 }
             }
         }
@@ -3464,14 +3757,13 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
             return status;
         }
         tc_sdls_processed_frame->tc_pdu_len = Crypto_Get_tcPayloadLength(tc_sdls_processed_frame, sa_ptr);
-        
+    
         // Copy pdu data from ingest into memory
         for(int i=0; i<tc_sdls_processed_frame->tc_pdu_len; i++)
         {
             tc_sdls_processed_frame->tc_pdu[i] = ingest[x];
             x++;
         }
-
         // x = x + tc_sdls_processed_frame->tc_pdu_len;
         
         #ifdef TC_DEBUG
@@ -3694,14 +3986,14 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
     // }
 
 
-    if(!TC_PROCESS_SDLS_PDUS) //If we don't want to process frame data for SDLS PDUs, only reverse security & return content.
+    if(crypto_config->process_sdls_pdus==TC_PROCESS_SDLS_PDUS_FALSE) //If we don't want to process frame data for SDLS PDUs, only reverse security & return content.
     {
         // CCSDS Pass-through
         #ifdef DEBUG
-        OS_printf(KGRN "CCSDS Pass-through \n" RESET);
+        OS_printf(KGRN "CCSDS Pass-through (No Extended Procedure PDU Processing) \n" RESET);
         #endif
-        if (PUS_HDR) {
-            for (x = 0; x < (tc_sdls_processed_frame->tc_header.fl - 11); x++) {
+        if (crypto_config->has_pus_hdr==TC_HAS_PUS_HDR) {
+            for (x = 0; x < (tc_sdls_processed_frame->tc_header.fl - 11); x++) { //TODO - Need to account for security header!
                 ingest[x] = tc_sdls_processed_frame->tc_pdu[x];
                 #ifdef CCSDS_DEBUG
                 OS_printf("tc_sdls_processed_frame->tc_pdu[%d] = 0x%02x\n", x, tc_sdls_processed_frame->tc_pdu[x]);
@@ -3720,7 +4012,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
     }
     else //Process SDLS PDU
     {
-        if (PUS_HDR)
+        if (crypto_config->has_pus_hdr==TC_HAS_PUS_HDR)
         {
             if ((tc_sdls_processed_frame->tc_pdu[0] == 0x18) && (tc_sdls_processed_frame->tc_pdu[1] == 0x80))
             // Crypto Lib Application ID

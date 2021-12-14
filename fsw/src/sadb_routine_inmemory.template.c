@@ -321,7 +321,8 @@ static int32 sadb_get_operational_sa_from_gvcid(uint8 tfvn,uint16 scid,uint16 vc
 
     for (int i=0; i<10; i++)
     {
-        if ((sa[i].gvcid_tc_blk.tfvn == tfvn) && (sa[i].gvcid_tc_blk.scid == scid) && (sa[i].gvcid_tc_blk.vcid == vcid) && (sa[i].gvcid_tc_blk.mapid == mapid && sa[i].sa_state == SA_OPERATIONAL))
+        if ((sa[i].gvcid_tc_blk.tfvn == tfvn) && (sa[i].gvcid_tc_blk.scid == scid) && (sa[i].gvcid_tc_blk.vcid == vcid) && (sa[i].sa_state == SA_OPERATIONAL) &&
+                (crypto_config->unique_sa_per_mapid==TC_UNIQUE_SA_PER_MAP_ID_FALSE || sa[i].gvcid_tc_blk.mapid == mapid)) //only require MapID match is unique SA per MapID set (only relevant when using segmentation hdrs)
         {
             *security_association = &sa[i];
 
@@ -443,7 +444,7 @@ static int32 sadb_sa_start(TC_t* tc_frame)
                               (sdls_frame.pdu.data[count + 2] >> 4);
                 gvcid.vcid  = (sdls_frame.pdu.data[count + 2] << 4)  |
                               (sdls_frame.pdu.data[count + 3] && 0x3F);
-                if(SEGMENTATION_HDR){gvcid.mapid = (sdls_frame.pdu.data[count + 3]);}
+                if(current_managed_parameters->has_segmentation_hdr==TC_HAS_SEGMENT_HDRS){gvcid.mapid = (sdls_frame.pdu.data[count + 3]);}
                 else {gvcid.mapid=0;}
 
                 // TC
