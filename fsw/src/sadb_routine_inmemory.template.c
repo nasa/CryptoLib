@@ -306,7 +306,7 @@ static int32 sadb_get_sa_from_spi(uint16 spi,SecurityAssociation_t** security_as
  **/
 static int32 sadb_get_operational_sa_from_gvcid(uint8 tfvn,uint16 scid,uint16 vcid,uint8 mapid,SecurityAssociation_t** security_association)
 {
-    int32 status = CRYPTO_LIB_ERROR;
+    int32 status = CRYPTO_LIB_ERR_NO_OPERATIONAL_SA;
     if(sa == NULL) { return CRYPTO_LIB_ERR_NO_INIT; }
 
     for (int i=0; i<10; i++)

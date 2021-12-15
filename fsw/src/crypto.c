@@ -2602,7 +2602,6 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
     status = Crypto_Get_Managed_Parameters_For_Gvcid(temp_tc_header.tfvn,temp_tc_header.scid,temp_tc_header.vcid,gvcid_managed_parameters,&current_managed_parameters);
     if(status != OS_SUCCESS) {return status;} //Unable to get necessary Managed Parameters for TC TF -- return with error.
 
-
     uint8 segmentation_hdr = 0x00;
     uint8 map_id = 0;
     if(current_managed_parameters->has_segmentation_hdr==TC_HAS_SEGMENT_HDRS){
@@ -2625,7 +2624,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         status = CRYPTO_LIB_ERR_INVALID_CC_FLAG;
     }
 
-    if (status == OS_SUCCESS)
+    if (status == CRYPTO_LIB_SUCCESS)
     {
         // Query SA DB for active SA / SDLS parameters
         if(sadb_routine == NULL) //This should not happen, but tested here for safety
@@ -2637,10 +2636,9 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         {
             status = sadb_routine->sadb_get_operational_sa_from_gvcid(temp_tc_header.tfvn, temp_tc_header.scid, temp_tc_header.vcid, map_id,&sa_ptr);
         }
-        
 
         // If unable to get operational SA, can return
-        if (status != OS_SUCCESS)
+        if (status != CRYPTO_LIB_SUCCESS)
         {
             return status;
         }
@@ -2926,15 +2924,16 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
             if ((sa_service_type == SA_AUTHENTICATION) || \
                 (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
             {
-                uint8 bit_masked_data[sa_ptr->abm_len];
-                for (int y = 0; y < sa_ptr->abm_len; y++)
+                uint16 bit_masked_data_len = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;
+                uint8 bit_masked_data[bit_masked_data_len];
+                for (int y = 0; y < bit_masked_data_len; y++)
                 {
                     bit_masked_data[y] = p_new_enc_frame[y] & *(sa_ptr->abm + y);
                 }
                 #ifdef MAC_DEBUG 
-                    OS_printf(KYEL "Preparing AAD:\n");
-                    OS_printf("\tUsing ABM Length of %d\n\t", sa_ptr->abm_len);
-                    for (int y = 0; y < sa_ptr->abm_len; y++)
+                    OS_printf(KYEL "Preparing Header AAD:\n");
+                    OS_printf("\tUsing Header AAD Length of %d\n\t", bit_masked_data_len);
+                    for (int y = 0; y < bit_masked_data_len; y++)
                     {
                         OS_printf("%02x", bit_masked_data[y]);
                     }
@@ -2944,7 +2943,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                 gcry_error = gcry_cipher_authenticate(
                     tmp_hd,
                     bit_masked_data,                                     // additional authenticated data
-                    sa_ptr->abm_len 		                        // length of AAD
+                    bit_masked_data_len 		                        // length of AAD
                 );
                 if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
                 {
@@ -2973,10 +2972,10 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
 
                 gcry_error = gcry_cipher_encrypt(
                     tmp_hd,
-                    &p_new_enc_frame[index],                              // ciphertext output
-                    tf_payload_len,		 		                    // length of data
-                    (p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len),       // plaintext input
-                    tf_payload_len                                  // in data length
+                    &p_new_enc_frame[index],                                // ciphertext output
+                    tf_payload_len,		 		                            // length of data
+                    (p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len),  // plaintext input
+                    tf_payload_len                                          // in data length
                 );
 
                 if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
@@ -3240,6 +3239,46 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
     // Parse pad length
     memcpy((tc_sdls_processed_frame->tc_sec_header.pad)+(TC_PAD_SIZE-sa_ptr->shplf_len), &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len]) , sa_ptr->shplf_len);
 
+    if((sa_service_type == SA_AUTHENTICATION) || 
+        (sa_service_type == SA_AUTHENTICATED_ENCRYPTION) ||
+        (sa_service_type == SA_ENCRYPTION))
+    {
+        gcry_error = gcry_cipher_open(
+            &(tmp_hd),
+            GCRY_CIPHER_AES256, 
+            GCRY_CIPHER_MODE_GCM, 
+            GCRY_CIPHER_CBC_MAC
+        );
+        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+        {
+            OS_printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+            status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
+            return status;
+        }
+        gcry_error = gcry_cipher_setkey(
+            tmp_hd,
+            ek_ring[sa_ptr->ekid].value,
+            KEY_SIZE
+        );
+        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+        {
+            OS_printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
+            status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
+            return status;
+        }
+        gcry_error = gcry_cipher_setiv(
+            tmp_hd,
+            tc_sdls_processed_frame->tc_sec_header.iv,
+            sa_ptr->shivf_len
+        );
+        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+        {
+            OS_printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
+            status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
+            return status;
+        }
+    }
+
     // Check MAC, if applicable
     if((sa_service_type == SA_AUTHENTICATION) || 
         (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
@@ -3281,41 +3320,6 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
                 // TODO: Update SA IV through SADB_Routine function call
             }
             
-        }
-
-        gcry_error = gcry_cipher_open(
-            &(tmp_hd),
-            GCRY_CIPHER_AES256, 
-            GCRY_CIPHER_MODE_GCM, 
-            GCRY_CIPHER_CBC_MAC
-        );
-        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            OS_printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-            status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
-            return status;
-        }
-        gcry_error = gcry_cipher_setkey(
-            tmp_hd,
-            ek_ring[sa_ptr->ekid].value,
-            KEY_SIZE
-        );
-        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            OS_printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-            status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
-            return status;
-        }
-        gcry_error = gcry_cipher_setiv(
-            tmp_hd,
-            tc_sdls_processed_frame->tc_sec_header.iv,
-            sa_ptr->shivf_len
-        );
-        if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            OS_printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-            status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
-            return status;
         }
 
         aad = (uint8*)malloc(tc_mac_start_index * sizeof(uint8));
@@ -3360,6 +3364,20 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
             return status;
         }
 
+        #ifdef DEBUG
+            OS_printf(KRED "Expected: \n\t" RESET);
+            for(int i=0; i<sa_ptr->stmacf_len; i++)
+            {
+                printf("%02x", calculated_mac[i]);
+            }
+            OS_printf(KRED "\nActual: \n\t" RESET);
+            for(int i=0; i<sa_ptr->stmacf_len; i++)
+            {
+                printf("%02x", tc_sdls_processed_frame->tc_sec_trailer.mac[i]);
+            }
+            printf("\n");            
+        #endif
+
         for(int i=0; i<sa_ptr->stmacf_len; i++)
         {
             if (calculated_mac[i] != tc_sdls_processed_frame->tc_sec_trailer.mac[i])
@@ -3380,7 +3398,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
         
         gcry_error = gcry_cipher_decrypt(
             tmp_hd, 
-            &(tc_sdls_processed_frame->tc_pdu[0]),          // plaintext output
+            tc_sdls_processed_frame->tc_pdu,               // plaintext output
             tc_sdls_processed_frame->tc_pdu_len,	 		// length of data
             &(ingest[tc_enc_payload_start_index]),          // ciphertext input
             tc_sdls_processed_frame->tc_pdu_len             // in data length

@@ -143,6 +143,7 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
     test_association->iv[11] = 1;
     test_association->ast = 1;
     test_association->est = 1;
+    test_association->sa_state = SA_OPERATIONAL;
     
     int32 ret_status = Crypto_TC_ApplySecurity(enc_test_ping_b, enc_test_ping_len, &ptr_enc_frame, &enc_frame_len);
     // Get Truth Baseline
@@ -192,8 +193,8 @@ UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
     memset(tc_sdls_processed_frame, 0, (sizeof(uint8) * TC_SIZE));
 
     // Ensure that Process Security can activate SA 4
-    Crypto_TC_ProcessSecurity(activate_sa4_b, &activate_sa4_len, tc_sdls_processed_frame);
-    
+    return_val = Crypto_TC_ProcessSecurity(activate_sa4_b, &activate_sa4_len, tc_sdls_processed_frame);
+    ASSERT_EQ(return_val, CRYPTO_LIB_SUCCESS);
     // Expose SA 1 for testing
     expose_sadb_get_sa_from_spi(1,&test_association);
 
@@ -207,10 +208,23 @@ UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
     test_association->iv[11] = 1;
     test_association->ast = 1;
     test_association->est = 1;
+    test_association->sa_state = SA_OPERATIONAL;
 
     Crypto_TC_ProcessSecurity(dec_test_ping_b, &dec_test_ping_len, tc_sdls_processed_frame);
 
     Crypto_Shutdown();
+
+    printf("PDU:\n\t");
+    for(int i = 0; i < tc_sdls_processed_frame->tc_pdu_len; i++)
+    {
+        printf("%02x", enc_test_ping_b[i]);
+    }
+    printf("\nPF PDU:\n\t");
+    for(int i = 0; i < tc_sdls_processed_frame->tc_pdu_len; i++)
+    {
+        printf("%02x", tc_sdls_processed_frame->tc_pdu[i]);
+    }
+    printf("\n");
     for(int i = 0; i < tc_sdls_processed_frame->tc_pdu_len; i++)
     {
         ASSERT_EQ(enc_test_ping_b[i], tc_sdls_processed_frame->tc_pdu[i]);
@@ -265,7 +279,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     hex_conversion(buffer_nist_pt_h, &buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
     hex_conversion(buffer_nist_iv_h, &buffer_nist_iv_b, &buffer_nist_iv_len);
-    memcpy(&test_association->iv[0], buffer_nist_iv_b, buffer_nist_iv_len);
+    memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input ciphertext
     hex_conversion(buffer_nist_ct_h, &buffer_nist_ct_b, &buffer_nist_ct_len);
 
@@ -323,7 +337,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     expose_sadb_get_sa_from_spi(9, &test_association);
     test_association->arc_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
-
+    expose_sadb_get_sa_from_spi(9, &test_association);
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, &buffer_nist_key_b, &buffer_nist_key_len);
     memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
@@ -333,7 +347,8 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     hex_conversion(buffer_nist_pt_h, &buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
     hex_conversion(buffer_nist_iv_h, &buffer_nist_iv_b, &buffer_nist_iv_len);
-    memcpy(&test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
+    memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
+    printf("NIST IV LEN: %d\n", buffer_nist_iv_len);
     // Convert input encryptedtext
     hex_conversion(buffer_nist_et_h, &buffer_nist_et_b, &buffer_nist_et_len);
 
@@ -396,7 +411,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     hex_conversion(buffer_nist_pt_h, &buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
     hex_conversion(buffer_nist_iv_h, &buffer_nist_iv_b, &buffer_nist_iv_len);
-    memcpy(&test_association->iv[0], buffer_nist_iv_b, buffer_nist_iv_len);
+    memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input ciphertext
     hex_conversion(buffer_nist_ct_h, &buffer_nist_ct_b, &buffer_nist_ct_len);
 
@@ -463,7 +478,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     hex_conversion(buffer_nist_pt_h, &buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
     hex_conversion(buffer_nist_iv_h, &buffer_nist_iv_b, &buffer_nist_iv_len);
-    memcpy(&test_association->iv[0], buffer_nist_iv_b, buffer_nist_iv_len);
+    memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input ciphertext
     hex_conversion(buffer_nist_et_h, &buffer_nist_et_b, &buffer_nist_et_len);
 
@@ -524,7 +539,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
     hex_conversion(buffer_nist_pt_h, &buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
     hex_conversion(buffer_nist_iv_h, &buffer_nist_iv_b, &buffer_nist_iv_len);
-    memcpy(&test_association->iv[0], buffer_nist_iv_b, buffer_nist_iv_len);
+    memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input ciphertext
     hex_conversion(buffer_nist_ct_h, &buffer_nist_ct_b, &buffer_nist_ct_len);
 
@@ -591,7 +606,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
     hex_conversion(buffer_nist_pt_h, &buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
     hex_conversion(buffer_nist_iv_h, &buffer_nist_iv_b, &buffer_nist_iv_len);
-    memcpy(&test_association->iv[0], buffer_nist_iv_b, buffer_nist_iv_len);
+    memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input ciphertext
     hex_conversion(buffer_nist_et_h, &buffer_nist_et_b, &buffer_nist_et_len);
 
@@ -652,7 +667,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
     hex_conversion(buffer_nist_pt_h, &buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
     hex_conversion(buffer_nist_iv_h, &buffer_nist_iv_b, &buffer_nist_iv_len);
-    memcpy(&test_association->iv[0], buffer_nist_iv_b, buffer_nist_iv_len);
+    memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input ciphertext
     hex_conversion(buffer_nist_ct_h, &buffer_nist_ct_b, &buffer_nist_ct_len);
 
@@ -719,7 +734,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
     hex_conversion(buffer_nist_pt_h, &buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
     hex_conversion(buffer_nist_iv_h, &buffer_nist_iv_b, &buffer_nist_iv_len);
-    memcpy(&test_association->iv[0], buffer_nist_iv_b, buffer_nist_iv_len);
+    memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input ciphertext
     hex_conversion(buffer_nist_et_h, &buffer_nist_et_b, &buffer_nist_et_len);
 
@@ -780,7 +795,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
     hex_conversion(buffer_nist_pt_h, &buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
     hex_conversion(buffer_nist_iv_h, &buffer_nist_iv_b, &buffer_nist_iv_len);
-    memcpy(&test_association->iv[0], buffer_nist_iv_b, buffer_nist_iv_len);
+    memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input ciphertext
     hex_conversion(buffer_nist_ct_h, &buffer_nist_ct_b, &buffer_nist_ct_len);
 
@@ -847,7 +862,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
     hex_conversion(buffer_nist_pt_h, &buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
     hex_conversion(buffer_nist_iv_h, &buffer_nist_iv_b, &buffer_nist_iv_len);
-    memcpy(&test_association->iv[0], buffer_nist_iv_b, buffer_nist_iv_len);
+    memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input ciphertext
     hex_conversion(buffer_nist_et_h, &buffer_nist_et_b, &buffer_nist_et_len);
 
@@ -924,7 +939,7 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     hex_conversion(buffer_nist_pt_h, &buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
     hex_conversion(buffer_nist_iv_h, &buffer_nist_iv_b, &buffer_nist_iv_len);
-    memcpy(&test_association->iv[0], buffer_nist_iv_b, buffer_nist_iv_len);
+    memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input aad
     hex_conversion(buffer_nist_aad_h, &buffer_nist_aad_b, &buffer_nist_aad_len);
     // Convert input mac
@@ -1000,7 +1015,7 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     hex_conversion(buffer_nist_pt_h, &buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
     hex_conversion(buffer_nist_iv_h, &buffer_nist_iv_b, &buffer_nist_iv_len);
-    memcpy(&test_association->iv[0], buffer_nist_iv_b, buffer_nist_iv_len);
+    memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input mac
     hex_conversion(buffer_cyber_chef_mac_h, &buffer_cyber_chef_mac_b, &buffer_cyber_chef_mac_len);
 
