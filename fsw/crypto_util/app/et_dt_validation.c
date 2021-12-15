@@ -130,7 +130,8 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
     tc_sdls_processed_frame = malloc(sizeof(uint8) * TC_SIZE);
     memset(tc_sdls_processed_frame, 0, (sizeof(uint8) * TC_SIZE));
     // Ensure that Process Security can activate SA 4
-    Crypto_TC_ProcessSecurity(activate_sa4_b, &activate_sa4_len, tc_sdls_processed_frame);
+    return_val =  Crypto_TC_ProcessSecurity(activate_sa4_b, &activate_sa4_len, tc_sdls_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
     // Expose SA 1 for testing
     expose_sadb_get_sa_from_spi(1,&test_association);
     // Deactive SA 1
