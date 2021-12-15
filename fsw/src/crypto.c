@@ -2609,7 +2609,6 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         map_id = segmentation_hdr & 0x3F;
     }
 
-
     // Check if command frame flag set
     if ((temp_tc_header.cc == 1) && (status == OS_SUCCESS))
     {
@@ -2920,40 +2919,6 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                 return status;
             }
 
-            // Prepare additional authenticated data, if needed
-            if ((sa_service_type == SA_AUTHENTICATION) || \
-                (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
-            {
-                uint16 bit_masked_data_len = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;
-                uint8 bit_masked_data[bit_masked_data_len];
-                for (int y = 0; y < bit_masked_data_len; y++)
-                {
-                    bit_masked_data[y] = p_new_enc_frame[y] & *(sa_ptr->abm + y);
-                }
-                #ifdef MAC_DEBUG 
-                    OS_printf(KYEL "Preparing Header AAD:\n");
-                    OS_printf("\tUsing Header AAD Length of %d\n\t", bit_masked_data_len);
-                    for (int y = 0; y < bit_masked_data_len; y++)
-                    {
-                        OS_printf("%02x", bit_masked_data[y]);
-                    }
-                    OS_printf("\n" RESET);
-                #endif
-
-                gcry_error = gcry_cipher_authenticate(
-                    tmp_hd,
-                    bit_masked_data,                                     // additional authenticated data
-                    bit_masked_data_len 		                        // length of AAD
-                );
-                if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-                {
-                    OS_printf(KRED "ERROR: gcry_cipher_authenticate error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-                    OS_printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error),gcry_strerror (gcry_error));
-                    status = OS_ERROR;
-                    return status;
-                }
-            }
-
             if ((sa_service_type == SA_ENCRYPTION) || \
                 (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
             {
@@ -2995,11 +2960,80 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                     }
                     OS_printf("\n");
                 #endif
+
+                // Close cipher, so we can authenticate encrypted data
+                gcry_cipher_close(tmp_hd);
             }
 
+            // Prepare additional authenticated data, if needed
             if ((sa_service_type == SA_AUTHENTICATION) || \
                 (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
             {
+                gcry_error = gcry_cipher_open(
+                    &(tmp_hd), 
+                    GCRY_CIPHER_AES256, 
+                    GCRY_CIPHER_MODE_GCM, 
+                    GCRY_CIPHER_CBC_MAC
+                );
+                if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+                {
+                    OS_printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
+                    status = OS_ERROR;
+                    return status;
+                }
+                gcry_error = gcry_cipher_setkey(
+                    tmp_hd, 
+                    &(ek_ring[sa_ptr->ekid].value[0]),
+                    KEY_SIZE //TODO:  look into this
+                );
+                if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+                {
+                    OS_printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
+                    status = OS_ERROR;
+                    return status;
+                }
+                gcry_error = gcry_cipher_setiv(
+                    tmp_hd, 
+                    sa_ptr->iv,
+                    sa_ptr->shivf_len
+                );
+                if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+                {
+                    OS_printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
+                    status = OS_ERROR;
+                    return status;
+                }
+
+                uint16 bit_masked_data_len = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len + tf_payload_len;
+                uint8 bit_masked_data[bit_masked_data_len];
+
+                for (int y = 0; y < bit_masked_data_len; y++)
+                {
+                    bit_masked_data[y] = p_new_enc_frame[y] & *(sa_ptr->abm + y);
+                }
+                #ifdef MAC_DEBUG 
+                    OS_printf(KYEL "Preparing Header AAD:\n");
+                    OS_printf("\tUsing Header AAD Length of %d\n\t", bit_masked_data_len);
+                    for (int y = 0; y < bit_masked_data_len; y++)
+                    {
+                        OS_printf("%02x", bit_masked_data[y]);
+                    }
+                    OS_printf("\n" RESET);
+                #endif
+
+                gcry_error = gcry_cipher_authenticate(
+                    tmp_hd,
+                    bit_masked_data,                                     // additional authenticated data
+                    bit_masked_data_len 		                        // length of AAD
+                );
+                if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+                {
+                    OS_printf(KRED "ERROR: gcry_cipher_authenticate error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
+                    OS_printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error),gcry_strerror (gcry_error));
+                    status = OS_ERROR;
+                    return status;
+                }
+
                 // TODO - Know if FECF exists
                 mac_loc = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len + tf_payload_len;
                 #ifdef MAC_DEBUG
@@ -3008,7 +3042,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                 #endif
                 gcry_error = gcry_cipher_gettag(
                     tmp_hd,
-                    &p_new_enc_frame[mac_loc],                             // tag output
+                    &p_new_enc_frame[mac_loc],                       // tag output
                     MAC_SIZE                                         // tag size // TODO - use sa_ptr->abm_len instead of hardcoded mac size?
                 );
                 if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
@@ -3017,10 +3051,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                     status = OS_ERROR;
                     return status;
                 }
-            }
-            // Zeroise any sensitive information
-            if (sa_service_type != SA_PLAINTEXT)
-            {
+                // Zeroise any sensitive information
                 gcry_cipher_close(tmp_hd);
             }
         }
