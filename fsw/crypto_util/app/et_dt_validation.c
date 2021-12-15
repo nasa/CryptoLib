@@ -107,6 +107,7 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
 {
     //Setup & Initialize CryptoLib
     Crypto_Init_Unit_Test();
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
 
     uint8* expected = NULL;
     long expected_length = 0;
@@ -133,11 +134,11 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
     return_val =  Crypto_TC_ProcessSecurity(activate_sa4_b, &activate_sa4_len, tc_sdls_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
     // Expose SA 1 for testing
-    expose_sadb_get_sa_from_spi(1,&test_association);
+    sadb_routine->sadb_get_sa_from_spi(1,&test_association);
     // Deactive SA 1
     test_association->sa_state = SA_NONE;
     // Expose SA 4 for testing
-    expose_sadb_get_sa_from_spi(4, &test_association);
+    sadb_routine->sadb_get_sa_from_spi(4,&test_association);
     test_association->arc_len = 0;
     test_association->gvcid_tc_blk.vcid=1;
     test_association->iv[11] = 1;
@@ -171,6 +172,7 @@ UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
 {
     //Setup & Initialize CryptoLib
     Crypto_Init_Unit_Test();
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
 
     char *activate_sa4_h  = "2003002000ff000100001880d2c9000e197f0b001b0004000400003040d95ea61a"; 
     char *dec_test_ping_h = "2003043400FF00040000000000000000000000017E1D8EEA8D45CEBA17888E0CDCD747DC78E5F372F997F2A63AA5DFC168395DC987";   
@@ -196,13 +198,13 @@ UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
     return_val = Crypto_TC_ProcessSecurity(activate_sa4_b, &activate_sa4_len, tc_sdls_processed_frame);
     ASSERT_EQ(return_val, CRYPTO_LIB_SUCCESS);
     // Expose SA 1 for testing
-    expose_sadb_get_sa_from_spi(1,&test_association);
+    sadb_routine->sadb_get_sa_from_spi(1,&test_association);
 
     // Deactive SA 1
     test_association->sa_state = SA_NONE;
 
     // Expose SA 4 for testing
-    expose_sadb_get_sa_from_spi(4, &test_association);
+    sadb_routine->sadb_get_sa_from_spi(4,&test_association);
     test_association->arc_len = 0;
     test_association->gvcid_tc_blk.vcid=1;
     test_association->iv[11] = 1;
@@ -250,6 +252,8 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,0,TC_HAS_FECF,TC_NO_SEGMENT_HDRS);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,1,TC_HAS_FECF,TC_NO_SEGMENT_HDRS);
     Crypto_Init();
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "ef9f9284cf599eac3b119905a7d18851e7e374cf63aea04358586b0f757670f8";
@@ -263,10 +267,10 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     SecurityAssociation_t* test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(unsigned char));
     // Deactivate SA 1
-    expose_sadb_get_sa_from_spi(1,&test_association);
+    sadb_routine->sadb_get_sa_from_spi(1,&test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
-    expose_sadb_get_sa_from_spi(9, &test_association);
+    sadb_routine->sadb_get_sa_from_spi(9,&test_association);
     test_association->arc_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
 
@@ -314,6 +318,8 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,0,TC_HAS_FECF,TC_HAS_SEGMENT_HDRS);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,1,TC_HAS_FECF,TC_HAS_SEGMENT_HDRS);
     Crypto_Init();
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "ef9f9284cf599eac3b119905a7d18851e7e374cf63aea04358586b0f757670f8";
@@ -331,13 +337,13 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     SecurityAssociation_t* test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(unsigned char));
     // Deactivate SA 1
-    expose_sadb_get_sa_from_spi(1,&test_association);
+    sadb_routine->sadb_get_sa_from_spi(1,&test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
-    expose_sadb_get_sa_from_spi(9, &test_association);
+    sadb_routine->sadb_get_sa_from_spi(9,&test_association);
     test_association->arc_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
-    expose_sadb_get_sa_from_spi(9, &test_association);
+    sadb_routine->sadb_get_sa_from_spi(9,&test_association);
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, &buffer_nist_key_b, &buffer_nist_key_len);
     memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
@@ -382,6 +388,8 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,0,TC_HAS_FECF,TC_NO_SEGMENT_HDRS);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,1,TC_HAS_FECF,TC_NO_SEGMENT_HDRS);
     Crypto_Init();
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "e9ccd6eef27f740d1d5c70b187734e11e76a8ac0ad1702ff02180c5c1c9e5399";
@@ -395,10 +403,10 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     SecurityAssociation_t* test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(unsigned char));
     // Deactivate SA 1
-    expose_sadb_get_sa_from_spi(1,&test_association);
+    sadb_routine->sadb_get_sa_from_spi(1,&test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
-    expose_sadb_get_sa_from_spi(9, &test_association);
+    sadb_routine->sadb_get_sa_from_spi(9,&test_association);
     test_association->arc_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
 
@@ -445,6 +453,8 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,0,TC_HAS_FECF,TC_HAS_SEGMENT_HDRS);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,1,TC_HAS_FECF,TC_HAS_SEGMENT_HDRS);
     Crypto_Init();
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "e9ccd6eef27f740d1d5c70b187734e11e76a8ac0ad1702ff02180c5c1c9e5399";
@@ -462,10 +472,10 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     SecurityAssociation_t* test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(unsigned char));
     // Deactivate SA 1
-    expose_sadb_get_sa_from_spi(1,&test_association);
+    sadb_routine->sadb_get_sa_from_spi(1,&test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
-    expose_sadb_get_sa_from_spi(9, &test_association);
+    sadb_routine->sadb_get_sa_from_spi(9,&test_association);
     test_association->arc_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
 
@@ -510,6 +520,8 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,0,TC_HAS_FECF,TC_NO_SEGMENT_HDRS);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,1,TC_HAS_FECF,TC_NO_SEGMENT_HDRS);
     Crypto_Init();
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "7ecc9dcb3d5b413cadc3af7b7812758bd869295f8aaf611ba9935de76bd87013";
@@ -523,10 +535,10 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
     SecurityAssociation_t* test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(unsigned char));
     // Deactivate SA 1
-    expose_sadb_get_sa_from_spi(1,&test_association);
+    sadb_routine->sadb_get_sa_from_spi(1,&test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
-    expose_sadb_get_sa_from_spi(9, &test_association);
+    sadb_routine->sadb_get_sa_from_spi(9,&test_association);
     test_association->arc_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
 
@@ -573,6 +585,8 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,0,TC_HAS_FECF,TC_HAS_SEGMENT_HDRS);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,1,TC_HAS_FECF,TC_HAS_SEGMENT_HDRS);
     Crypto_Init();
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "7ecc9dcb3d5b413cadc3af7b7812758bd869295f8aaf611ba9935de76bd87013";
@@ -590,10 +604,10 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
     SecurityAssociation_t* test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(unsigned char));
     // Deactivate SA 1
-    expose_sadb_get_sa_from_spi(1,&test_association);
+    sadb_routine->sadb_get_sa_from_spi(1,&test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
-    expose_sadb_get_sa_from_spi(9, &test_association);
+    sadb_routine->sadb_get_sa_from_spi(9,&test_association);
     test_association->arc_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
 
@@ -638,6 +652,8 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,0,TC_HAS_FECF,TC_NO_SEGMENT_HDRS);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,1,TC_HAS_FECF,TC_NO_SEGMENT_HDRS);
     Crypto_Init();
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "a881373e248615e3d6576f5a5fb68883515ae72d6a2938e3a6f0b8dcb639c9c0";
@@ -651,10 +667,10 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
     SecurityAssociation_t* test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(unsigned char));
     // Deactivate SA 1
-    expose_sadb_get_sa_from_spi(1,&test_association);
+    sadb_routine->sadb_get_sa_from_spi(1,&test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
-    expose_sadb_get_sa_from_spi(9, &test_association);
+    sadb_routine->sadb_get_sa_from_spi(9,&test_association);
     test_association->arc_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
 
@@ -701,6 +717,8 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,0,TC_HAS_FECF,TC_HAS_SEGMENT_HDRS);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,1,TC_HAS_FECF,TC_HAS_SEGMENT_HDRS);
     Crypto_Init();
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "a881373e248615e3d6576f5a5fb68883515ae72d6a2938e3a6f0b8dcb639c9c0";
@@ -718,10 +736,10 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
     SecurityAssociation_t* test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(unsigned char));
     // Deactivate SA 1
-    expose_sadb_get_sa_from_spi(1,&test_association);
+    sadb_routine->sadb_get_sa_from_spi(1,&test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
-    expose_sadb_get_sa_from_spi(9, &test_association);
+    sadb_routine->sadb_get_sa_from_spi(9,&test_association);
     test_association->arc_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
 
@@ -766,6 +784,8 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,0,TC_HAS_FECF,TC_NO_SEGMENT_HDRS);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,1,TC_HAS_FECF,TC_NO_SEGMENT_HDRS);
     Crypto_Init();
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "84c90349539c2a7989cb24dfae5e4182382ae94ba717d385977017f74f0d87d6";
@@ -779,10 +799,10 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
     SecurityAssociation_t* test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(unsigned char));
     // Deactivate SA 1
-    expose_sadb_get_sa_from_spi(1,&test_association);
+    sadb_routine->sadb_get_sa_from_spi(1,&test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
-    expose_sadb_get_sa_from_spi(9, &test_association);
+    sadb_routine->sadb_get_sa_from_spi(9,&test_association);
     test_association->arc_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
 
@@ -829,6 +849,8 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,0,TC_HAS_FECF,TC_HAS_SEGMENT_HDRS);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,1,TC_HAS_FECF,TC_HAS_SEGMENT_HDRS);
     Crypto_Init();
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "84c90349539c2a7989cb24dfae5e4182382ae94ba717d385977017f74f0d87d6";
@@ -846,10 +868,10 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
     SecurityAssociation_t* test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(unsigned char));
     // Deactivate SA 1
-    expose_sadb_get_sa_from_spi(1,&test_association);
+    sadb_routine->sadb_get_sa_from_spi(1,&test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
-    expose_sadb_get_sa_from_spi(9, &test_association);
+    sadb_routine->sadb_get_sa_from_spi(9,&test_association);
     test_association->arc_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
 
@@ -904,6 +926,8 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,0,TC_HAS_FECF,TC_NO_SEGMENT_HDRS);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,1,TC_HAS_FECF,TC_NO_SEGMENT_HDRS);
     Crypto_Init();
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
@@ -918,10 +942,10 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     SecurityAssociation_t* test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(unsigned char));
     // Deactivate SA 1
-    expose_sadb_get_sa_from_spi(1,&test_association);
+    sadb_routine->sadb_get_sa_from_spi(1,&test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
-    expose_sadb_get_sa_from_spi(9, &test_association);
+    sadb_routine->sadb_get_sa_from_spi(9,&test_association);
     test_association->ast = 1;
     test_association->est = 0;
     test_association->arc_len = 0;
@@ -980,6 +1004,8 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,0,TC_HAS_FECF,TC_NO_SEGMENT_HDRS);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,1,TC_HAS_FECF,TC_NO_SEGMENT_HDRS);
     Crypto_Init();
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
@@ -993,10 +1019,10 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     SecurityAssociation_t* test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(unsigned char));
     // Deactivate SA 1
-    expose_sadb_get_sa_from_spi(1,&test_association);
+    sadb_routine->sadb_get_sa_from_spi(1,&test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
-    expose_sadb_get_sa_from_spi(9, &test_association);
+    sadb_routine->sadb_get_sa_from_spi(9,&test_association);
     test_association->ast = 1;
     test_association->est = 0;
     test_association->arc_len = 0;
@@ -1053,6 +1079,8 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,0,TC_HAS_FECF,TC_HAS_SEGMENT_HDRS);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,1,TC_HAS_FECF,TC_HAS_SEGMENT_HDRS);
     Crypto_Init();
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+
     // NIST supplied vectors
     char *buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
     char *buffer_nist_iv_h  = "d79cf22d504cc793c3fb6c8a";
@@ -1076,10 +1104,10 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     SecurityAssociation_t* test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(unsigned char));
     // Deactivate SA 1
-    expose_sadb_get_sa_from_spi(1,&test_association);
+    sadb_routine->sadb_get_sa_from_spi(1,&test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
-    expose_sadb_get_sa_from_spi(9, &test_association);
+    sadb_routine->sadb_get_sa_from_spi(9,&test_association);
     test_association->ast = 1;
     test_association->est = 0;
     test_association->arc_len = 0;
@@ -1154,6 +1182,8 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_DATA)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,0,TC_HAS_FECF,TC_HAS_SEGMENT_HDRS);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,1,TC_HAS_FECF,TC_HAS_SEGMENT_HDRS);
     Crypto_Init();
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+
     // NIST supplied vectors
     char *buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
     char *buffer_nist_iv_h  = "d79cf22d504cc793c3fb6c8a";
@@ -1176,10 +1206,10 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_DATA)
     SecurityAssociation_t* test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(unsigned char));
     // Deactivate SA 1
-    expose_sadb_get_sa_from_spi(1,&test_association);
+    sadb_routine->sadb_get_sa_from_spi(1,&test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
-    expose_sadb_get_sa_from_spi(9, &test_association);
+    sadb_routine->sadb_get_sa_from_spi(9,&test_association);
     test_association->ast = 1;
     test_association->est = 0;
     test_association->arc_len = 0;
@@ -1244,6 +1274,8 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_MAC)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,0,TC_HAS_FECF,TC_HAS_SEGMENT_HDRS);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,1,TC_HAS_FECF,TC_HAS_SEGMENT_HDRS);
     Crypto_Init();
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+
     // NIST supplied vectors
     char *buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
     char *buffer_nist_iv_h  = "d79cf22d504cc793c3fb6c8a";
@@ -1266,10 +1298,10 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_MAC)
     SecurityAssociation_t* test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(unsigned char));
     // Deactivate SA 1
-    expose_sadb_get_sa_from_spi(1,&test_association);
+    sadb_routine->sadb_get_sa_from_spi(1,&test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
-    expose_sadb_get_sa_from_spi(9, &test_association);
+    sadb_routine->sadb_get_sa_from_spi(9,&test_association);
     test_association->ast = 1;
     test_association->est = 0;
     test_association->arc_len = 0;

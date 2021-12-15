@@ -49,7 +49,7 @@ const static char* SQL_SADB_GET_SA_BY_GVCID = "SELECT spi,ekid,akid,sa_state,tfv
                                               " FROM security_associations WHERE tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d' AND sa_state='%d'";
 const static char* SQL_SADB_UPDATE_IV_ARC_BY_SPI = "UPDATE security_associations"
                                                         " SET iv=X'%s', arc=X'%s'"
-                                                        " WHERE spi='%d'AND tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d'";
+                                                        " WHERE spi='%d' AND tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d'";
 
 // sadb_routine mariaDB private helper functions
 static int32 parse_sa_from_mysql_query(char* query, SecurityAssociation_t** security_association);
@@ -278,6 +278,7 @@ static char* convert_byte_array_to_hexstring(void* src_buffer, size_t buffer_len
         hexstr[i*2+0] = nib1  < 0xA ? '0' + nib1  : 'A' + nib1  - 0xA;
         hexstr[i*2+1] = nib2  < 0xA ? '0' + nib2  : 'A' + nib2  - 0xA;
     }
+    hexstr[buffer_length*2] = '\0';
     return hexstr;
 }
 

@@ -88,6 +88,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC)
     char *raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
     uint8 *raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
@@ -97,9 +98,10 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC)
     int32 return_val = CRYPTO_LIB_ERROR;
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(unsigned char));
-    expose_sadb_get_sa_from_spi(1,&test_association);
+    //Expose the SADB Security Association for test edits.
+    sadb_routine->sadb_get_sa_from_spi(1,&test_association);
     test_association->sa_state = SA_NONE;
-    expose_sadb_get_sa_from_spi(4,&test_association);
+    sadb_routine->sadb_get_sa_from_spi(4,&test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ast=0;
 
@@ -120,6 +122,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_AUTH_ENC)
     char *raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
     uint8 *raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
@@ -129,9 +132,10 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_AUTH_ENC)
     int32 return_val = CRYPTO_LIB_ERROR;
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(unsigned char));
-    expose_sadb_get_sa_from_spi(1,&test_association);
+    //Expose the SADB Security Association for test edits.
+    sadb_routine->sadb_get_sa_from_spi(1,&test_association);
     test_association->sa_state = SA_NONE;
-    expose_sadb_get_sa_from_spi(4,&test_association);
+    sadb_routine->sadb_get_sa_from_spi(4,&test_association);
     test_association->sa_state = SA_OPERATIONAL;
 
     return_val = Crypto_TC_ApplySecurity(raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);

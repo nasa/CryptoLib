@@ -47,10 +47,6 @@ typedef struct {
 
 } SadbRoutineStruct, *SadbRoutine;
 
-#ifdef ENCTEST
-int32 expose_sadb_get_sa_from_spi(uint16, SecurityAssociation_t**);
-#endif
-
 SadbRoutine get_sadb_routine_mariadb(void);
 SadbRoutine get_sadb_routine_inmemory(void);
 SadbRoutine init_parse_sadb_routine(char *);
