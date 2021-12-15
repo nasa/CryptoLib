@@ -74,11 +74,11 @@ static int32 sadb_config(void)
     sa[1].sa_state = SA_OPERATIONAL;
     sa[1].est = 0;
     sa[1].ast = 0;
-    sa[1].shivf_len = 12;
-    sa[1].iv = (uint8*) calloc(1, sa[1].shivf_len * sizeof(uint8));
+    //sa[1].shivf_len = 12;
+    //sa[1].iv = (uint8*) calloc(1, sa[1].shivf_len * sizeof(uint8));
     sa[1].arc_len = 1;
     sa[1].arcw_len = 1;
-    sa[1].arcw[0] = 5;
+    sa[1].arcw = 5;
     sa[1].gvcid_tc_blk.tfvn  = 0;
     sa[1].gvcid_tc_blk.scid  = SCID & 0x3FF;
     sa[1].gvcid_tc_blk.vcid  = 0;
@@ -92,14 +92,11 @@ static int32 sadb_config(void)
     sa[2].shivf_len = 12;
     sa[2].iv = (uint8*) calloc(1, sa[2].shivf_len * sizeof(uint8));
     *(sa[2].iv + sa[2].shivf_len - 1) = 0;
-    sa[2].abm_len = 0x14; // 20
-    for (int i = 0; i < sa[2].abm_len; i++)
-    {	// Zero AAD bit mask
-        sa[2].abm[i] = 0x00;
-    }
+    sa[2].abm_len = ABM_SIZE; // 20
+    sa[2].abm = (uint8*) calloc(1, sa[2].abm_len * sizeof(uint8));
     sa[2].arcw_len = 1;
-    sa[2].arcw[0] = 5;
-    sa[2].arc_len = (sa[2].arcw[0] * 2) + 1;
+    sa[2].arcw = 5;
+    sa[2].arc_len = (sa[2].arcw * 2) + 1;
     // SA 3 - KEYED;   ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 129
     sa[3].spi = 3;
     sa[3].ekid = 129;
@@ -109,14 +106,11 @@ static int32 sadb_config(void)
     sa[3].shivf_len = 12;
     sa[3].iv = (uint8*) calloc(1, sa[3].shivf_len * sizeof(uint8));
     *(sa[3].iv + sa[3].shivf_len - 1) = 0;
-    sa[3].abm_len = 0x14; // 20
-    for (int i = 0; i < sa[3].abm_len; i++)
-    {	// Zero AAD bit mask
-        sa[3].abm[i] = 0x00;
-    }
+    sa[3].abm_len = ABM_SIZE; // 20
+    sa[3].abm = (uint8*) calloc(1, sa[3].abm_len * sizeof(uint8));
     sa[3].arcw_len = 1;
-    sa[3].arcw[0] = 5;
-    sa[3].arc_len = (sa[3].arcw[0] * 2) + 1;
+    sa[3].arcw = 5;
+    sa[3].arc_len = (sa[3].arcw * 2) + 1;
     // SA 4 - KEYED;  ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 130
     // SA 4 VC0/1 is now 4-VC0, 7-VC1
     sa[4].spi = 4;
@@ -128,14 +122,11 @@ static int32 sadb_config(void)
     sa[4].stmacf_len = 16;
     sa[4].iv = (uint8*) calloc(1, sa[4].shivf_len * sizeof(uint8));
     *(sa[4].iv + 11) = 0;
-    sa[4].abm_len = 0x14; // 20
-    for (int i = 0; i < sa[4].abm_len; i++)
-    {	// Zero AAD bit mask
-        sa[4].abm[i] = 0x00;
-    }
+    sa[4].abm_len = ABM_SIZE; // 20
+    sa[4].abm = (uint8*) calloc(1, sa[4].abm_len * sizeof(uint8));
     sa[4].arcw_len = 1;
-    sa[4].arcw[0] = 5;
-    sa[4].arc_len = (sa[4].arcw[0] * 2) + 1;
+    sa[4].arcw = 5;
+    sa[4].arc_len = (sa[4].arcw * 2) + 1;
     sa[4].gvcid_tc_blk.tfvn  = 0;
     sa[4].gvcid_tc_blk.scid  = SCID & 0x3FF;
     sa[4].gvcid_tc_blk.vcid  = 0;
@@ -150,14 +141,11 @@ static int32 sadb_config(void)
     sa[5].shivf_len = 12;
     sa[5].iv = (uint8*) calloc(1, sa[5].shivf_len * sizeof(uint8));
     *(sa[5].iv + sa[5].shivf_len - 1) = 0;
-    sa[5].abm_len = 0x14; // 20
-    for (int i = 0; i < sa[5].abm_len; i++)
-    {	// Zero AAD bit mask
-        sa[5].abm[i] = 0x00;
-    }
+    sa[5].abm_len = ABM_SIZE; // 20
+    sa[5].abm = (uint8*) calloc(1, sa[5].abm_len * sizeof(uint8));
     sa[5].arcw_len = 1;
-    sa[5].arcw[0] = 5;
-    sa[5].arc_len = (sa[5].arcw[0] * 2) + 1;
+    sa[5].arcw = 5;
+    sa[5].arc_len = (sa[5].arcw * 2) + 1;
     // SA 6 - UNKEYED; ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: -
     sa[6].spi = 6;
     sa[6].sa_state = SA_UNKEYED;
@@ -166,14 +154,11 @@ static int32 sadb_config(void)
     sa[6].shivf_len = 12;
     sa[6].iv = (uint8*) calloc(1, sa[6].shivf_len * sizeof(uint8));
     *(sa[6].iv + sa[6].shivf_len - 1) = 0;
-    sa[6].abm_len = 0x14; // 20
-    for (int i = 0; i < sa[6].abm_len; i++)
-    {	// Zero AAD bit mask
-        sa[6].abm[i] = 0x00;
-    }
+    sa[6].abm_len = ABM_SIZE; // 20
+    sa[6].abm = (uint8*) calloc(1, sa[6].abm_len * sizeof(uint8));
     sa[6].arcw_len = 1;
-    sa[6].arcw[0] = 5;
-    sa[6].arc_len = (sa[6].arcw[0] * 2) + 1;
+    sa[6].arcw = 5;
+    sa[6].arc_len = (sa[6].arcw * 2) + 1;
     //itc_gcm128_init(&(sa[6].gcm_ctx), (unsigned char *)&(ek_ring[sa[6].ekid]));
 
     // SA 7 - KEYED;  ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 130
@@ -185,14 +170,11 @@ static int32 sadb_config(void)
     sa[7].shivf_len = 12;
     sa[7].iv = (uint8*) calloc(1, sa[7].shivf_len * sizeof(uint8));
     *(sa[7].iv + sa[7].shivf_len - 1) = 0;
-    sa[7].abm_len = 0x14; // 20
-    for (int i = 0; i < sa[7].abm_len; i++)
-    {	// Zero AAD bit mask
-        sa[7].abm[i] = 0x00;
-    }
+    sa[7].abm_len = ABM_SIZE; // 20
+    sa[7].abm = (uint8*) calloc(1, sa[7].abm_len * sizeof(uint8));
     sa[7].arcw_len = 1;
-    sa[7].arcw[0] = 5;
-    sa[7].arc_len = (sa[7].arcw[0] * 2) + 1;
+    sa[7].arcw = 5;
+    sa[7].arc_len = (sa[7].arcw * 2) + 1;
     sa[7].gvcid_tc_blk.tfvn  = 0;
     sa[7].gvcid_tc_blk.scid  = SCID & 0x3FF;
     sa[7].gvcid_tc_blk.vcid  = 1;
@@ -205,7 +187,7 @@ static int32 sadb_config(void)
     sa[8].ast = 0;
     sa[8].arc_len = 1;
     sa[8].arcw_len = 1;
-    sa[8].arcw[0] = 5;
+    sa[8].arcw = 5;
     sa[8].gvcid_tc_blk.tfvn  = 0;
     sa[8].gvcid_tc_blk.scid  = SCID & 0x3FF;
     sa[8].gvcid_tc_blk.vcid  = 1;
@@ -220,14 +202,11 @@ static int32 sadb_config(void)
     sa[9].shivf_len = 12;
     sa[9].iv = (uint8*) calloc(1, sa[9].shivf_len * sizeof(uint8));
     *(sa[9].iv + 11) = 0;
-    sa[9].abm_len = 0x14; // 20
-    for (int i = 0; i < sa[9].abm_len; i++)
-    {	// Zero AAD bit mask
-        sa[9].abm[i] = 0x00;
-    }
+    sa[9].abm_len = ABM_SIZE; // 20
+    sa[9].abm = (uint8*) calloc(1, sa[9].abm_len * sizeof(uint8));
     sa[9].arcw_len = 1;
-    sa[9].arcw[0] = 5;
-    sa[9].arc_len = (sa[9].arcw[0] * 2) + 1;
+    sa[9].arcw = 5;
+    sa[9].arc_len = (sa[9].arcw * 2) + 1;
     sa[9].gvcid_tc_blk.tfvn  = 0;
     sa[9].gvcid_tc_blk.scid  = SCID & 0x3FF;
     sa[9].gvcid_tc_blk.vcid  = 0;
@@ -255,7 +234,7 @@ static int32 sadb_init(void)
         sa[x].acs_len = 0;
         sa[x].acs = 0;
         sa[x].arc_len = 0;
-        sa[x].arc[0] = 5;
+        sa[x].arc = NULL; // calloc and set to 5?
     }
     return status;
 }
@@ -281,6 +260,8 @@ static int32 sadb_get_sa_from_spi(uint16 spi,SecurityAssociation_t** security_as
     int32 status = OS_SUCCESS;
     if(sa == NULL) { return CRYPTO_LIB_ERR_NO_INIT; }
     *security_association = &sa[spi];
+    if(sa[spi].iv == NULL && ( sa[spi].ast == 1 || sa[spi].est == 1 )) { return CRYPTO_LIB_ERR_NULL_IV; } //Must have IV if doing encryption or authentication
+    if(sa[spi].abm == NULL && sa[spi].ast) { return CRYPTO_LIB_ERR_NULL_ABM; } //Must have IV if doing encryption or authentication
     #ifdef SA_DEBUG
         OS_printf(KYEL "DEBUG - Printing local copy of SA Entry for current SPI.\n" RESET);
         Crypto_saPrint(*security_association);
@@ -299,7 +280,8 @@ static int32 sadb_get_operational_sa_from_gvcid(uint8 tfvn,uint16 scid,uint16 vc
                 (crypto_config->unique_sa_per_mapid==TC_UNIQUE_SA_PER_MAP_ID_FALSE || sa[i].gvcid_tc_blk.mapid == mapid)) //only require MapID match is unique SA per MapID set (only relevant when using segmentation hdrs)
         {
             *security_association = &sa[i];
-            if(sa[i].iv == NULL) { return CRYPTO_LIB_ERR_NULL_IV; }
+            if(sa[i].iv == NULL && ( sa[i].ast == 1 || sa[i].est == 1 )) { return CRYPTO_LIB_ERR_NULL_IV; }
+            if(sa[i].abm == NULL && sa[i].ast) { return CRYPTO_LIB_ERR_NULL_ABM; } //Must have IV if doing encryption or authentication
 
             #ifdef SA_DEBUG
                 OS_printf("Valid operational SA found at index %d.\n", i);
@@ -680,6 +662,8 @@ static int32 sadb_sa_create(void)
     sa[spi].est = ((uint8)sdls_frame.pdu.data[2] & 0x80) >> 7;
     sa[spi].ast = ((uint8)sdls_frame.pdu.data[2] & 0x40) >> 6;
     sa[spi].shivf_len = ((uint8)sdls_frame.pdu.data[2] & 0x3F);
+    if(sa[spi].iv != NULL) { free(sa[spi].iv); }
+    sa[spi].iv = (uint8*) calloc(1, sa[spi].shivf_len * sizeof(uint8));
     sa[spi].shsnf_len = ((uint8)sdls_frame.pdu.data[3] & 0xFC) >> 2;
     sa[spi].shplf_len = ((uint8)sdls_frame.pdu.data[3] & 0x03);
     sa[spi].stmacf_len = ((uint8)sdls_frame.pdu.data[4]);
@@ -705,14 +689,16 @@ static int32 sadb_sa_create(void)
         sa[spi].abm[x] = ((uint8)sdls_frame.pdu.data[count++]);
     }
     sa[spi].arc_len = ((uint8)sdls_frame.pdu.data[count++]);
+    if(sa[spi].arc != NULL) { free(sa[spi].arc); }
+    sa[spi].arc = (uint8*) calloc(1, sa[spi].arc_len * sizeof(uint8));
     for (int x = 0; x < sa[spi].arc_len; x++)
     {
-        sa[spi].arc[x] = ((uint8)sdls_frame.pdu.data[count++]);
+        *(sa[spi].arc + x) = ((uint8)sdls_frame.pdu.data[count++]);
     }
     sa[spi].arcw_len = ((uint8)sdls_frame.pdu.data[count++]);
     for (int x = 0; x < sa[spi].arcw_len; x++)
     {
-        sa[spi].arcw[x] = ((uint8)sdls_frame.pdu.data[count++]);
+        sa[spi].arcw = sa[spi].arcw | ( ((uint8)sdls_frame.pdu.data[count++]) << (sa[spi].arcw_len - x) );
     }
 
     // TODO: Checks for valid data
@@ -831,7 +817,7 @@ static int32 sadb_sa_setARSNW(void)
 
         for(int x = 0; x < sa[spi].arcw_len; x++)
         {
-            sa[spi].arcw[x] = (uint8) sdls_frame.pdu.data[x+3];
+            sa[spi].arcw = (((uint8) sdls_frame.pdu.data[x+3]) << (sa[spi].arcw_len - x) );
         }
     }
     else

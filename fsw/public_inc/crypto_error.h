@@ -43,5 +43,6 @@
 #define CRYPTO_LIB_ERR_LIBGCRYPT_ERROR      (-14)
 #define CRYPTO_LIB_ERR_AUTHENTICATION_ERROR (-15)
 #define CRYPTO_LIB_ERR_NULL_IV              (-16)
+#define CRYPTO_LIB_ERR_NULL_ABM              (-17)
 
 #endif //_crypto_error_h_

@@ -193,6 +193,7 @@ static int32 parse_sa_from_mysql_query(char* query, SecurityAssociation_t** secu
 
 
     //TODO -- Need to store mysql query hex string and then malloc sa->iv according to size.
+    //TODO -- IV && arc && abm as uint8* instead of uint8[]!!!
     while((row = mysql_fetch_row(result))){
         for(int i=0; i < num_fields; i++)
         {
@@ -234,7 +235,7 @@ static int32 parse_sa_from_mysql_query(char* query, SecurityAssociation_t** secu
             if(strcmp(field_names[i],"arc_len")==0){sa->arc_len=atoi(row[i]);continue;}
             if(strcmp(field_names[i],"HEX(arc)")==0){convert_hexstring_to_byte_array(row[i],sa->arc);continue;}
             if(strcmp(field_names[i],"arcw_len")==0){sa->arcw_len=atoi(row[i]);continue;}
-            if(strcmp(field_names[i],"HEX(arcw)")==0){convert_hexstring_to_byte_array(row[i],sa->arcw);continue;}
+            if(strcmp(field_names[i],"arcw")==0){sa->arcw=atoi(row[i]);continue;}
             //printf("%s:%s ",field_names[i], row[i] ? row[i] : "NULL");
         }
         //printf("\n");

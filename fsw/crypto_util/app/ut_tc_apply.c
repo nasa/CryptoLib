@@ -22,6 +22,8 @@
 #include "utest.h"
 #include "crypto.h"
 #include "crypto_error.h"
+#include "sadb_routine.h"
+
 
 // TODO:  Should this be set up with a set of tests, or continue to Crypto_Init() each time.  For now I think the current setup is the best path.
 
@@ -53,7 +55,7 @@ UTEST(TC_APPLY_SECURITY, NO_CRYPTO_INIT)
 }
 
 // Nominal Test.  This should read a raw_tc_sdls_ping.dat file, continue down the "happy path", and return CRYPTO_LIB_SUCCESS
-UTEST(TC_APPLY_SECURITY, HAPPY_PATH)
+UTEST(TC_APPLY_SECURITY, HAPPY_PATH_CLEAR)
 {
     //Setup & Initialize CryptoLib
     Crypto_Init_Unit_Test();
@@ -74,6 +76,36 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH)
     free(ptr_enc_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
 }
+
+UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC)
+{
+    //Setup & Initialize CryptoLib
+    Crypto_Init_Unit_Test();
+    char *raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
+    uint8 *raw_tc_sdls_ping_b = NULL;
+    int raw_tc_sdls_ping_len = 0;
+
+    hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
+
+    uint8 *ptr_enc_frame = NULL;
+    uint16 enc_frame_len = 0;
+
+    int32 return_val = CRYPTO_LIB_ERROR;
+
+    SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(unsigned char));
+    expose_sadb_get_sa_from_spi(1,&test_association);
+    test_association->sa_state = SA_NONE;
+    expose_sadb_get_sa_from_spi(4,&test_association);
+    test_association->sa_state = SA_OPERATIONAL;
+    //test_association->ast=0;
+
+    return_val = Crypto_TC_ApplySecurity(raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    Crypto_Shutdown();
+    free(raw_tc_sdls_ping_b);
+    free(ptr_enc_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+}
+
 
 // Bad Space Craft ID.  This should pass the flawed .dat file, and return MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND
 UTEST(TC_APPLY_SECURITY, BAD_SPACE_CRAFT_ID)

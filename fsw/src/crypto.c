@@ -2558,7 +2558,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
             Crypto_increment(sa_ptr->arc, sa_ptr->shsnf_len);
             for (int i=0; i < sa_ptr->shsnf_len; i++)
             {
-                *(p_new_enc_frame + index) = sa_ptr->arc[i];
+                *(p_new_enc_frame + index) = *(sa_ptr->arc + i);
                 index++;
             }
         }
@@ -2669,7 +2669,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                 uint8 bit_masked_data[sa_ptr->abm_len];
                 for (int y = 0; y < sa_ptr->abm_len; y++)
                 {
-                    bit_masked_data[y] = p_new_enc_frame[y] & sa_ptr->abm[y];
+                    bit_masked_data[y] = p_new_enc_frame[y] & *(sa_ptr->abm + y);
                 }
                 #ifdef MAC_DEBUG 
                     OS_printf(KYEL "Preparing AAD:\n");
@@ -2766,15 +2766,18 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
             }
         }
 
-        #ifdef INCREMENT
-            if(sa_ptr->iv == NULL) { printf("\n\nNULL\n\n");}
-            Crypto_increment(sa_ptr->iv, sa_ptr->shivf_len);
-            #ifdef SA_DEBUG
-                OS_printf(KYEL "Next IV value is:\n\t");
-                for(int i=0; i<sa_ptr->shivf_len; i++) {OS_printf("%02x", *(sa_ptr->iv + i));}
-                OS_printf("\n" RESET);
+        if (sa_service_type != SA_PLAINTEXT)
+        {
+            #ifdef INCREMENT
+                if(sa_ptr->iv == NULL) { printf("\n\nNULL\n\n");}
+                Crypto_increment(sa_ptr->iv, sa_ptr->shivf_len);
+                #ifdef SA_DEBUG
+                    OS_printf(KYEL "Next IV value is:\n\t");
+                    for(int i=0; i<sa_ptr->shivf_len; i++) {OS_printf("%02x", *(sa_ptr->iv + i));}
+                    OS_printf("\n" RESET);
+                #endif
             #endif
-        #endif
+        }
         /*
         ** End Authentication / Encryption
         */
@@ -2983,7 +2986,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
             {
                 // Check Sequence Number is in ARCW
                 status = Crypto_window(tc_sdls_processed_frame->tc_sec_header.sn, sa_ptr->arc, sa_ptr->shsnf_len,
-                                sa_ptr->arcw[sa_ptr->arcw_len-1]);
+                                sa_ptr->arcw);
                 if (status != CRYPTO_LIB_SUCCESS) { return status; }
                 // TODO: Update SA ARC through SADB_Routine function call
             }
@@ -2991,7 +2994,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
             {
                 // Check IV is in ARCW
                 status = Crypto_window(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len,
-                                sa_ptr->arcw[sa_ptr->arcw_len-1]);
+                                sa_ptr->arcw);
                 printf("Received IV is\n\t");
                 for(int i=0; i<sa_ptr->shivf_len; i++)
                 // for(int i=0; i<IV_SIZE; i++)
@@ -3003,7 +3006,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
                 {
                     printf("%02x", *(sa_ptr->iv + i));
                 }
-                printf("\nARCW is: %02x\n", sa_ptr->arcw[0]);
+                printf("\nARCW is: %d\n", sa_ptr->arcw);
                 if (status != CRYPTO_LIB_SUCCESS) { return status; }
                 // TODO: Update SA IV through SADB_Routine function call
             }
@@ -3049,7 +3052,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
         // Prepare additional authenticated data (AAD)
         for (y = 0; y < tc_mac_start_index; y++)
         {
-            aad[y] = (uint8) ((uint8)ingest[y] & (uint8)sa_ptr->abm[y]);
+            aad[y] = (uint8) ((uint8)ingest[y] & (uint8) *(sa_ptr->abm + y));
         }
 
         gcry_error = gcry_cipher_authenticate(
@@ -3299,7 +3302,7 @@ int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
             // Prepare additional authenticated data
             for (y = 0; y < sa_ptr->abm_len; y++)
             {
-                aad[y] = ingest[y] & sa_ptr->abm[y];
+                aad[y] = ingest[y] & *(sa_ptr->abm + y);
                 #ifdef MAC_DEBUG
                     OS_printf("%02x", aad[y]);
                 #endif
