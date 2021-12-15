@@ -83,6 +83,7 @@ static int32 sadb_config(void)
     sa[1].gvcid_tc_blk.scid  = SCID & 0x3FF;
     sa[1].gvcid_tc_blk.vcid  = 0;
     sa[1].gvcid_tc_blk.mapid = TYPE_TC;
+
     // SA 2 - KEYED;  ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 128
     sa[2].spi = 2;
     sa[2].ekid = 128;
@@ -97,6 +98,7 @@ static int32 sadb_config(void)
     sa[2].arcw_len = 1;
     sa[2].arcw = 5;
     sa[2].arc_len = (sa[2].arcw * 2) + 1;
+
     // SA 3 - KEYED;   ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 129
     sa[3].spi = 3;
     sa[3].ekid = 129;
@@ -111,6 +113,7 @@ static int32 sadb_config(void)
     sa[3].arcw_len = 1;
     sa[3].arcw = 5;
     sa[3].arc_len = (sa[3].arcw * 2) + 1;
+    
     // SA 4 - KEYED;  ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 130
     // SA 4 VC0/1 is now 4-VC0, 7-VC1
     sa[4].spi = 4;
@@ -146,6 +149,7 @@ static int32 sadb_config(void)
     sa[5].arcw_len = 1;
     sa[5].arcw = 5;
     sa[5].arc_len = (sa[5].arcw * 2) + 1;
+
     // SA 6 - UNKEYED; ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: -
     sa[6].spi = 6;
     sa[6].sa_state = SA_UNKEYED;

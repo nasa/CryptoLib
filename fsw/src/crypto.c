@@ -3050,10 +3050,19 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
 
         aad = (uint8*)malloc(tc_mac_start_index * sizeof(uint8));
         // Prepare additional authenticated data (AAD)
+        #ifdef DEBUG
+            OS_printf(KYEL "AAD: \n\t" RESET);
+        #endif
         for (y = 0; y < tc_mac_start_index; y++)
         {
             aad[y] = (uint8) ((uint8)ingest[y] & (uint8) *(sa_ptr->abm + y));
+            #ifdef DEBUG
+                OS_printf("%02x", aad[y]);
+            #endif
         }
+        #ifdef DEBUG
+            OS_printf("\n");
+        #endif
 
         gcry_error = gcry_cipher_authenticate(
             tmp_hd,
@@ -3107,6 +3116,8 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
 
         for(int i=0; i<sa_ptr->stmacf_len; i++)
         {
+        //     printf("Expected: %02x\n", calculated_mac[i]);
+        //     printf("Actual: %02x\n", tc_sdls_processed_frame->tc_sec_trailer.mac[i]);
             if (calculated_mac[i] != tc_sdls_processed_frame->tc_sec_trailer.mac[i])
             {
                 status = CRYPTO_LIB_ERR_AUTHENTICATION_ERROR;
