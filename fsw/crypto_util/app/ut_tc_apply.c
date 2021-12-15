@@ -15,9 +15,9 @@
    jstar-development-team@mail.nasa.gov
 */
 
-/*
+/**
  *  Unit Tests that macke use of TC_ApplySecurity function on the data.
- */
+ **/
 #include "ut_tc_apply.h"
 #include "utest.h"
 #include "crypto.h"
@@ -25,13 +25,11 @@
 #include "sadb_routine.h"
 
 
-// TODO:  Should this be set up with a set of tests, or continue to Crypto_Init() each time.  For now I think the current setup is the best path.
-
-// Inactive SA Database
-// TODO:  Should this return or continue to function as currently written when SA is not initalized?
-// TODO:  I don't believe Crypto Init is cleaned up between each test.  I am fairly certain that the init persists between tests.
-
-// TODO:  Need to cherry-pick Crypto_reInit functionality to use between each of these tests
+/**
+ * @brief Unit Test: No Crypto_Init()
+ * 
+ * TC_ApplySecurity should reject functionality if the Crypto_Init() function has not been called.
+ **/
 UTEST(TC_APPLY_SECURITY, NO_CRYPTO_INIT)
 {
     // No Crypto_Init(), but we still Configure It;
@@ -54,7 +52,10 @@ UTEST(TC_APPLY_SECURITY, NO_CRYPTO_INIT)
     Crypto_Shutdown();
 }
 
-// Nominal Test.  This should read a raw_tc_sdls_ping.dat file, continue down the "happy path", and return CRYPTO_LIB_SUCCESS
+/**
+ * @brief Unit Test:  Nominal Case
+ * This should read a raw_tc_sdls_ping and continue down the "happy Path", finally returning CRYPTO_LIB_SUCCESS
+ **/
 UTEST(TC_APPLY_SECURITY, HAPPY_PATH_CLEAR)
 {
     //Setup & Initialize CryptoLib
@@ -140,8 +141,11 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_AUTH_ENC)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
 }
 
-
-// Bad Space Craft ID.  This should pass the flawed .dat file, and return MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND
+/**
+ * @brief Unit Test: Bad Spacecraft ID
+ * This should pass the flawed hex string, and return CRYPTO_LIB_ERR_INVALID_SCID
+ * Bad Space Craft ID.  This should pass the flawed .dat file, and return MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND
+**/
 UTEST(TC_APPLY_SECURITY, BAD_SPACE_CRAFT_ID)
 {
     //Setup & Initialize CryptoLib
@@ -162,6 +166,10 @@ UTEST(TC_APPLY_SECURITY, BAD_SPACE_CRAFT_ID)
     ASSERT_EQ(MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND, return_val);
 }
 
+/**
+ * @brief Unit Test: Bad Virtual Channel ID
+ * This will be passed a flawed hex string with an invalid virtual channel ID.  CRYPTO_LIB_ERR_INVALID_VCID should be returned.
+ **/
 UTEST(TC_APPLY_SECURITY, BAD_VIRTUAL_CHANNEL_ID)
 {
     //Setup & Initialize CryptoLib
@@ -183,10 +191,10 @@ UTEST(TC_APPLY_SECURITY, BAD_VIRTUAL_CHANNEL_ID)
     ASSERT_EQ(MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND, return_val);
 }
 
-// This test should test how to handle a null buffer being passed into the ApplySecurity Function.
-// Currently this functionality isn't handled properly, and casues a seg-fault.
-// TODO:  We need to determine how this would return, as it will help in other test cases.
-//        Should this return the original buffer, a null pointer, OS_ERROR, etc?
+/**
+ * @brief Unit Test: Null Buffer -> TC_ApplySecurity
+ * Tests how ApplySecurity function handles a null buffer.  Should reject functionality, and return CRYPTO_LIB_ERR_NULL_BUFFER
+ **/
 UTEST(TC_APPLY_SECURITY, NULL_BUFFER)
 {
     //Setup & Initialize CryptoLib

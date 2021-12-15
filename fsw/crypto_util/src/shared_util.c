@@ -21,18 +21,14 @@
 #include <string.h>
 
 
-/*
-* Function:  c_read_file
-* --------------------
-* Reads a file from disk into a char * buffer.
-*
-*
-*  const char* f_name: file name & path to be read
-*  long* f_size:
-*
-*  returns: a malloc'd char* containing the contents of the buffer.
-*      Note that this buffer is NOT null terminated and must be free()'d.
-*/
+/**
+ * @brief Function:  c_read_file
+ * Reads a file from disk into a char * buffer.
+ * @param f_name: const char*, file name & path to be read
+ * @param f_size: long*
+ * @return malloc'd char* containing the contents of the buffer.
+ * @note This buffer is NOT null terminated and must be free()'d.
+ **/
 char * c_read_file(const char * f_name, long * f_size) {
     char* buffer=0;
     long length;
@@ -57,6 +53,13 @@ char * c_read_file(const char * f_name, long * f_size) {
 
 }
 
+/**
+ * @brief Function: convert_hexstring_to_byte_array
+ * Converts hexstring based character array to a byte array
+ * @param source_str: char*, The source character array in hex format to be converted
+ * @param dest_buffer: uint8*, The destination uint8 array from which the hex array will be converted to bytes
+ * @return int length of dest_buffer
+ **/
 int convert_hexstring_to_byte_array(char* source_str, uint8* dest_buffer)
 {
     char *line = source_str;
@@ -73,6 +76,15 @@ int convert_hexstring_to_byte_array(char* source_str, uint8* dest_buffer)
     return data_len;
 }
 
+/**
+ * @brief Function: hex_conversion
+ * Makes use of the convert_hexstring_to_byte_array(char* source_str, uint8* dest_buffer) function to malloc the approrpiate destination buffer
+ * As well as to make the function call as well.
+ * @param buffer_h: char*, The incoming hexstyle character array.
+ * @param buffer_b: uint**, The resulting byte array.
+ * @param buffer_b_length: int*, The resulting length of the new buffer_b array.
+ * @note buffer_b is not null terminated, and must be free()'d by the user.
+ **/
 void hex_conversion(char *buffer_h, uint8 **buffer_b, int *buffer_b_length)
 {
     // Convert input plaintext
@@ -81,6 +93,10 @@ void hex_conversion(char *buffer_h, uint8 **buffer_b, int *buffer_b_length)
 }
 
 #ifdef DEBUG
+/**
+ * @brief Function: debug_printf
+ * Formatted debug print statement
+ **/
 void debug_printf(const char *format, ...)
 {
     va_list args;
@@ -96,6 +112,12 @@ void debug_printf(const char* format, ...) {
 #endif
 
 #ifdef DEBUG
+/**
+ * @brief Function: debug_hexprintf
+ * Used to print hexlike byte array.
+ * @param bin_data: char*, Incoming Binary data
+ * @param size_bin_data: int, Size of bin_data
+ **/
 void debug_hexprintf(const char *bin_data, int size_bin_data)
 {
     //https://stackoverflow.com/questions/6357031/how-do-you-convert-a-byte-array-to-a-hexadecimal-string-in-c
