@@ -196,7 +196,7 @@ UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
 
     // Ensure that Process Security can activate SA 4
     return_val = Crypto_TC_ProcessSecurity(activate_sa4_b, &activate_sa4_len, tc_sdls_processed_frame);
-    ASSERT_EQ(return_val, CRYPTO_LIB_SUCCESS);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS,return_val);
     // Expose SA 1 for testing
     sadb_routine->sadb_get_sa_from_spi(1,&test_association);
 
@@ -212,7 +212,8 @@ UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
     test_association->est = 1;
     test_association->sa_state = SA_OPERATIONAL;
 
-    Crypto_TC_ProcessSecurity(dec_test_ping_b, &dec_test_ping_len, tc_sdls_processed_frame);
+    return_val = Crypto_TC_ProcessSecurity(dec_test_ping_b, &dec_test_ping_len, tc_sdls_processed_frame);
+    ASSERT_EQ(9,return_val); // 9 is the number of pings in that EP PDU.
 
     Crypto_Shutdown();
 
@@ -950,7 +951,7 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     test_association->est = 0;
     test_association->arc_len = 0;
     test_association->shivf_len = 12;
-    test_association->abm_len = 19;
+    test_association->abm_len = 1024;
     test_association->stmacf_len = 16;
     test_association->sa_state = SA_OPERATIONAL;
 
@@ -1027,7 +1028,7 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     test_association->est = 0;
     test_association->arc_len = 0;
     test_association->shivf_len = 12;
-    test_association->abm_len = 19;
+    test_association->abm_len = 1024;
     memset(test_association->abm, 0xFF, (test_association->abm_len*sizeof(unsigned char))); // Bitmask
     test_association->stmacf_len = 16;
     test_association->sa_state = SA_OPERATIONAL;
@@ -1084,14 +1085,13 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     // NIST supplied vectors
     char *buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
     char *buffer_nist_iv_h  = "d79cf22d504cc793c3fb6c8a";
-    //char *buffer_cyber_chef_mac_h = "99eff39be8327e6950f03a329209d577";
     char *buffer_cyber_chef_mac_h = "34d0e323f5e4b80426401d4aa37930da";
     char *buffer_nist_pt_h = "722ee47da4b77424733546c2d400c4e5";
 
     // Create a MAC'd frame by adding our headers and a fecf
                                  //  |  Header | SPI |           iv          |         plaintext             |             mac               |fecf|
     char *buffer_nist_mac_frame_h = "2003003500FF0009D79CF22D504CC793C3FB6C8A722ee47da4b77424733546c2d400c4e534d0e323f5e4b80426401d4aa37930daf55f";
-    
+
 
     uint8 *buffer_nist_iv_b, *buffer_nist_pt_b, *buffer_nist_key_b, *buffer_cyber_chef_mac_b , *buffer_nist_mac_frame_b, *buffer_nist_cp_b = NULL;
     int buffer_nist_iv_len, buffer_nist_pt_len, buffer_nist_key_len, buffer_cyber_chef_mac_len , buffer_nist_mac_frame_len, buffer_nist_cp_len = 0;
@@ -1254,7 +1254,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_DATA)
     // #endif
 
     Crypto_Shutdown();
-    ASSERT_EQ(CRYPTO_LIB_ERR_AUTHENTICATION_ERROR, status);
+    ASSERT_EQ(CRYPTO_LIB_ERR_MAC_VALIDATION_ERROR, status);
     free(buffer_nist_iv_b);
     free(buffer_nist_key_b);
     free(buffer_cyber_chef_mac_b);
@@ -1346,7 +1346,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_MAC)
     // #endif
 
     Crypto_Shutdown();
-    ASSERT_EQ(CRYPTO_LIB_ERR_AUTHENTICATION_ERROR, status);
+    ASSERT_EQ(CRYPTO_LIB_ERR_MAC_VALIDATION_ERROR, status);
     free(buffer_nist_iv_b);
     free(buffer_nist_key_b);
     free(buffer_cyber_chef_mac_b);

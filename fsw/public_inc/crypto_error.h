@@ -47,5 +47,7 @@
 #define CRYPTO_LIB_ERR_DECRYPT_ERROR            (-18)
 #define CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD    (-19)
 #define CRYPTO_LIB_ERR_MAC_RETRIEVAL_ERROR      (-20)
+#define CRYPTO_LIB_ERR_MAC_VALIDATION_ERROR     (-21)
+
 
 #endif //_crypto_error_h_
