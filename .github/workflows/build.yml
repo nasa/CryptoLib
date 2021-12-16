@@ -1,10 +1,6 @@
 name: Build
 
-on: 
-  push:
-    branches: [ CI_Updates ]
-  pull_request:
-    branches: [${{ github.head_ref }}]
+on: [push, pull_request]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
