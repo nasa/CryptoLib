@@ -136,6 +136,7 @@ static int32 sadb_get_operational_sa_from_gvcid(uint8 tfvn,uint16 scid,uint16 vc
 static int32 sadb_save_sa(SecurityAssociation_t* sa)
 {
     int32 status = OS_SUCCESS;
+    if(sa==NULL) {return SADB_NULL_SA_USED;}
 
     char update_sa_query[2048];
     snprintf(update_sa_query, sizeof(update_sa_query),SQL_SADB_UPDATE_IV_ARC_BY_SPI,convert_byte_array_to_hexstring(sa->iv,sa->shivf_len),convert_byte_array_to_hexstring(sa->arc,sa->shsnf_len),sa->spi,sa->gvcid_tc_blk.tfvn,sa->gvcid_tc_blk.scid,sa->gvcid_tc_blk.vcid,sa->gvcid_tc_blk.mapid);
@@ -151,6 +152,9 @@ static int32 sadb_save_sa(SecurityAssociation_t* sa)
     // todo - if query fails, need to push failure message to error stack instead of just return code.
 
     //We free the allocated SA memory in the save function.
+    if(sa->iv != NULL) free(sa->iv);
+    if(sa->abm != NULL) free(sa->abm);
+    if(sa->arc != NULL) free(sa->arc);
     free(sa);
     return status;
 }
@@ -194,6 +198,9 @@ static int32 parse_sa_from_mysql_query(char* query, SecurityAssociation_t** secu
 
     //TODO -- Need to store mysql query hex string and then malloc sa->iv according to size.
     //TODO -- IV && arc && abm as uint8* instead of uint8[]!!!
+    char* iv_byte_str;
+    char* arc_byte_str;
+    char* abm_byte_str;
     while((row = mysql_fetch_row(result))){
         for(int i=0; i < num_fields; i++)
         {
@@ -226,20 +233,28 @@ static int32 parse_sa_from_mysql_query(char* query, SecurityAssociation_t** secu
             if(strcmp(field_names[i],"stmacf_len")==0){sa->stmacf_len=atoi(row[i]);continue;}
             if(strcmp(field_names[i],"ecs_len")==0){sa->ecs_len=atoi(row[i]);continue;}
             if(strcmp(field_names[i],"HEX(ecs)")==0){convert_hexstring_to_byte_array(row[i],sa->ecs);continue;}
-            //if(strcmp(field_names[i],"HEX(iv)")==0){memcpy(&(sa->iv),&row[i],IV_SIZE);continue;}
-            if(strcmp(field_names[i],"HEX(iv)")==0){convert_hexstring_to_byte_array(row[i],sa->iv);continue;}
+            // if(strcmp(field_names[i],"HEX(iv)")==0){memcpy(&(sa->iv),&row[i],IV_SIZE);continue;}
+            if(strcmp(field_names[i],"HEX(iv)")==0){iv_byte_str = row[i];continue;}
             if(strcmp(field_names[i],"acs_len")==0){sa->acs_len=atoi(row[i]);continue;}
             if(strcmp(field_names[i],"acs")==0){sa->acs=atoi(row[i]);continue;}
             if(strcmp(field_names[i],"abm_len")==0){sa->abm_len=atoi(row[i]);continue;}
-            if(strcmp(field_names[i],"HEX(abm)")==0){convert_hexstring_to_byte_array(row[i],sa->abm);continue;}
+            if(strcmp(field_names[i],"HEX(abm)")==0){abm_byte_str = row[i];continue;}
+            // if(strcmp(field_names[i],"HEX(abm)")==0){convert_hexstring_to_byte_array(row[i],sa->abm);continue;}
             if(strcmp(field_names[i],"arc_len")==0){sa->arc_len=atoi(row[i]);continue;}
-            if(strcmp(field_names[i],"HEX(arc)")==0){convert_hexstring_to_byte_array(row[i],sa->arc);continue;}
+            if(strcmp(field_names[i],"HEX(arc)")==0){arc_byte_str = row[i];continue;}
+            // if(strcmp(field_names[i],"HEX(arc)")==0){convert_hexstring_to_byte_array(row[i],sa->arc);continue;}
             if(strcmp(field_names[i],"arcw_len")==0){sa->arcw_len=atoi(row[i]);continue;}
             if(strcmp(field_names[i],"arcw")==0){sa->arcw=atoi(row[i]);continue;}
             //printf("%s:%s ",field_names[i], row[i] ? row[i] : "NULL");
         }
         //printf("\n");
     }
+    sa->iv = (uint8*) calloc(1, sa->shivf_len * sizeof(uint8));
+    sa->arc = (uint8*) calloc(1, sa->arc_len * sizeof(uint8));
+    sa->abm = (uint8*) calloc(1, sa->abm_len * sizeof(uint8));
+    convert_hexstring_to_byte_array(iv_byte_str,sa->iv);
+    convert_hexstring_to_byte_array(arc_byte_str,sa->arc);
+    convert_hexstring_to_byte_array(abm_byte_str,sa->abm);
 
     *security_association = sa;
     mysql_free_result(result);

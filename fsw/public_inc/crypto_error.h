@@ -20,6 +20,7 @@
 #include "sadb_mariadb_error.h"
 
 #define SADB_INVALID_SADB_TYPE                                    201
+#define SADB_NULL_SA_USED                                         202
 #define CRYPTO_CONFIGURATION_NOT_COMPLETE                         101
 #define CRYPTO_MANAGED_PARAM_CONFIGURATION_NOT_COMPLETE           102
 #define CRYPTO_MARIADB_CONFIGURATION_NOT_COMPLETE                 103
