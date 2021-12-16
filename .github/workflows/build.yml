@@ -2,7 +2,7 @@ name: Build
 
 on: 
   push:
-    branches: [ collab_main ]
+    branches: [ CI_Updates ]
   pull_request:
 
 env:
