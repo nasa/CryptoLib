@@ -68,7 +68,7 @@ typedef struct
     uint8		stmacf_len:8;		// Sec. Trailer MAC Field Length
     uint8		ecs_len	:8;			// Encryption Cipher Suite Length
     uint8		ecs[ECS_SIZE];		// Encryption Cipher Suite (algorithm / mode ID)
-    uint8*		iv;		        // Initialization Vector
+    uint8*		iv;		            // Initialization Vector
     uint8		acs_len	:8;			// Authentication Cipher Suite Length
     uint8		acs		:8;			// Authentication Cipher Suite (algorithm / mode ID)
     uint16		abm_len	:16;		// Authentication Bit Mask Length
@@ -76,7 +76,7 @@ typedef struct
     uint8		arc_len	:8;			// Anti-Replay Counter Length
     uint8*		arc;        		// Anti-Replay Counter
     uint8		arcw_len:8;			// Anti-Replay Counter Window Length
-    uint16		arcw;	// Anti-Replay Counter Window
+    uint16		arcw;           	// Anti-Replay Counter Window
     
 } SecurityAssociation_t;
 #define SA_SIZE	(sizeof(SecurityAssociation_t))

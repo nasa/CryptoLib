@@ -34,7 +34,7 @@ class Encryption:
     # Function: Encrypt
     # Encrypts data - given a key, iv, header, and bitmask
     def encrypt(self, data, key, iv, header, bitmask):
-        hex_header = header + iv + data             # Combines Header and IV (AAD)
+        hex_header = header + iv             # Combines Header and IV (AAD)
         bitmask_b = bytes.fromhex(bitmask)      
         header_b = bytes.fromhex(hex_header)
         key_b = bytes.fromhex(key)

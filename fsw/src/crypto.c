@@ -53,6 +53,8 @@ static SadbRoutine sadb_routine = NULL;
 // Assisting Functions
 static int32  Crypto_Get_tcPayloadLength(TC_t* tc_frame, SecurityAssociation_t *sa_ptr);
 static int32  Crypto_Get_tmLength(int len);
+static uint8  Crypto_Is_AEAD_Algorithm(uint32 cipher_suite_id);
+static uint8* Crypto_Prepare_TC_AAD(uint8* buffer, uint16 len_aad, uint8* abm_buffer);
 static void   Crypto_TM_updatePDU(char* ingest, int len_ingest);
 static void   Crypto_TM_updateOCF(void);
 static void   Crypto_Local_Config(void);
@@ -959,6 +961,48 @@ static int32 Crypto_Get_tmLength(int len)
     #endif
 
     return len;
+}
+
+/**
+ * @brief Function: Crypto_Is_AEAD_Algorithm
+ * Looks up cipher suite ID and determines if it's an AEAD algorithm. Returns 1 if true, 0 if false;
+ * @param cipher_suite_id: uint32
+ **/
+static uint8 Crypto_Is_AEAD_Algorithm(uint32 cipher_suite_id)
+{
+    //CryptoLib only supports AES-GCM, which is an AEAD (Authenticated Encryption with Associated Data) algorithm, so return true/1.
+    //TODO - Add cipher suite mapping to which algorithms are AEAD and which are not.
+    return CRYPTO_TRUE;
+}
+
+/**
+ * @brief Function: Crypto_Prepare_TC_AAD
+ * Callocs and returns pointer to buffer where AAD is created & bitwise-anded with bitmask!
+ * Note: Function caller is responsible for freeing the returned buffer!
+ * @param buffer: uint8*
+ * @param len_aad: uint16
+ * @param abm_buffer: uint8*
+ **/
+static uint8* Crypto_Prepare_TC_AAD(uint8* buffer, uint16 len_aad, uint8* abm_buffer)
+{
+    uint8* aad = (uint8*) calloc(1,len_aad*sizeof(uint8));
+
+    for (int i = 0; i < len_aad; i++)
+    {
+        aad[i] = buffer[i] & abm_buffer[i];
+    }
+
+    #ifdef MAC_DEBUG
+        OS_printf(KYEL "Preparing AAD:\n");
+        OS_printf("\tUsing AAD Length of %d\n\t", len_aad);
+        for (int i = 0; i < len_aad; i++)
+        {
+            OS_printf("%02x", aad[i]);
+        }
+        OS_printf("\n" RESET);
+    #endif
+
+    return aad;
 }
 
 /**
@@ -2554,7 +2598,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
     uint16 mac_loc = 0;
     uint16 tf_payload_len = 0x0000;
     uint16 new_fecf = 0x0000;
-    uint8 aad[20];
+    uint8* aad;
     gcry_cipher_hd_t tmp_hd;
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     uint16 new_enc_frame_header_field_length = 0;
@@ -2635,6 +2679,9 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         {
             status = sadb_routine->sadb_get_operational_sa_from_gvcid(temp_tc_header.tfvn, temp_tc_header.scid, temp_tc_header.vcid, map_id,&sa_ptr);
         }
+
+        uint32 encryption_cipher = (sa_ptr->ecs[0] << 3) | (sa_ptr->ecs[1] << 2) |  (sa_ptr->ecs[2] << 1) | sa_ptr->ecs[3];
+        uint8 ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(encryption_cipher);
 
         // If unable to get operational SA, can return
         if (status != CRYPTO_LIB_SUCCESS)
@@ -2935,6 +2982,30 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                     OS_printf("\n");
                 #endif
 
+                if(sa_service_type == SA_AUTHENTICATED_ENCRYPTION && ecs_is_aead_algorithm==CRYPTO_TRUE) // Algorithm is AEAD algorithm, Add AAD before encrypt!
+                {
+                    //Prepare the Header AAD (CCSDS 335.0-B-1 4.2.3.2.2.3)
+                    uint16 aad_len = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;
+                    if(sa_ptr->abm_len < aad_len) { return CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD; }
+                    aad = Crypto_Prepare_TC_AAD(p_new_enc_frame, aad_len, sa_ptr->abm);
+
+                    //Add the AAD to the libgcrypt cipher handle
+                    gcry_error = gcry_cipher_authenticate(
+                            tmp_hd,
+                            aad,                                     // additional authenticated data
+                            aad_len 		                        // length of AAD
+                    );
+                    if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+                    {
+                        OS_printf(KRED "ERROR: gcry_cipher_authenticate error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
+                        OS_printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error),gcry_strerror (gcry_error));
+                        status = CRYPTO_LIB_ERR_AUTHENTICATION_ERROR;
+                        return status;
+                    }
+
+                    free(aad);
+                }
+
                 gcry_error = gcry_cipher_encrypt(
                     tmp_hd,
                     &p_new_enc_frame[index],                                // ciphertext output
@@ -2961,13 +3032,34 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                     OS_printf("\n");
                 #endif
 
+                //Get MAC & insert into p_new_enc_frame
+                if(sa_service_type == SA_AUTHENTICATED_ENCRYPTION && ecs_is_aead_algorithm==CRYPTO_TRUE)
+                {
+                    mac_loc = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len + tf_payload_len;
+                    #ifdef MAC_DEBUG
+                        OS_printf(KYEL "MAC location is: %d\n" RESET, mac_loc);
+                        OS_printf(KYEL "MAC size is: %d\n" RESET, MAC_SIZE);
+                    #endif
+                    gcry_error = gcry_cipher_gettag(
+                            tmp_hd,
+                            &p_new_enc_frame[mac_loc],                       // tag output
+                            MAC_SIZE                                         // tag size // TODO - use sa_ptr->abm_len instead of hardcoded mac size?
+                    );
+                    if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+                    {
+                        OS_printf(KRED "ERROR: gcry_cipher_checktag error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
+                        status = CRYPTO_LIB_ERR_MAC_RETRIEVAL_ERROR;
+                        return status;
+                    }
+                }
+
                 // Close cipher, so we can authenticate encrypted data
                 gcry_cipher_close(tmp_hd);
             }
 
             // Prepare additional authenticated data, if needed
             if ((sa_service_type == SA_AUTHENTICATION) || \
-                (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
+                ( (sa_service_type == SA_AUTHENTICATED_ENCRYPTION) && ecs_is_aead_algorithm==CRYPTO_FALSE ) ) //Authenticated Encryption without AEAD algorithm, AEAD algorithms handled in encryption block!
             {
                 gcry_error = gcry_cipher_open(
                     &(tmp_hd), 
@@ -3004,27 +3096,14 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                     return status;
                 }
 
-                uint16 bit_masked_data_len = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len + tf_payload_len;
-                uint8 bit_masked_data[bit_masked_data_len];
-
-                for (int y = 0; y < bit_masked_data_len; y++)
-                {
-                    bit_masked_data[y] = p_new_enc_frame[y] & *(sa_ptr->abm + y);
-                }
-                #ifdef MAC_DEBUG 
-                    OS_printf(KYEL "Preparing Header AAD:\n");
-                    OS_printf("\tUsing Header AAD Length of %d\n\t", bit_masked_data_len);
-                    for (int y = 0; y < bit_masked_data_len; y++)
-                    {
-                        OS_printf("%02x", bit_masked_data[y]);
-                    }
-                    OS_printf("\n" RESET);
-                #endif
+                uint16 aad_len = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len + tf_payload_len;
+                if(sa_ptr->abm_len < aad_len) { return CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD; }
+                aad = Crypto_Prepare_TC_AAD(p_new_enc_frame, aad_len, sa_ptr->abm);
 
                 gcry_error = gcry_cipher_authenticate(
                     tmp_hd,
-                    bit_masked_data,                                     // additional authenticated data
-                    bit_masked_data_len 		                        // length of AAD
+                    aad,                                     // additional authenticated data
+                    aad_len 		                        // length of AAD
                 );
                 if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
                 {
@@ -3034,7 +3113,6 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                     return status;
                 }
 
-                // TODO - Know if FECF exists
                 mac_loc = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len + tf_payload_len;
                 #ifdef MAC_DEBUG
                     OS_printf(KYEL "MAC location is: %d\n" RESET, mac_loc);
@@ -3048,7 +3126,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                 if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
                 {
                     OS_printf(KRED "ERROR: gcry_cipher_checktag error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-                    status = OS_ERROR;
+                    status = CRYPTO_LIB_ERR_MAC_RETRIEVAL_ERROR;
                     return status;
                 }
                 // Zeroise any sensitive information
