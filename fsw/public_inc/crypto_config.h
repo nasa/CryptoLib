@@ -175,4 +175,7 @@
 // TC Behavior Defines
     #define TC_SDLS_EP_VCID             4 //VCID which has SDLS PDUs (JPL uses VCIDs to determine TC type, there is no space packet layer with APIDs). Set to -1 if uses SP APIDs.
 
+// Logic Behavior Defines
+    #define CRYPTO_FALSE                0
+    #define CRYPTO_TRUE                 1
 #endif

@@ -200,29 +200,39 @@ void Crypto_saPrint(SecurityAssociation_t* sa)
     OS_printf("\t ecs[%d]    = 0x%02x \n", ECS_SIZE-3, sa->ecs[ECS_SIZE - 3]);
     OS_printf("\t ecs[%d]    = 0x%02x \n", ECS_SIZE-2, sa->ecs[ECS_SIZE - 2]);
     OS_printf("\t ecs[%d]    = 0x%02x \n", ECS_SIZE-1, sa->ecs[ECS_SIZE - 1]);
-    OS_printf("\t iv_len     = 0x%02x \n", sa->iv_len);
-    OS_printf("\t iv[%d]     = 0x%02x \n", IV_SIZE-12, sa->iv[IV_SIZE - 12]);
-    OS_printf("\t iv[%d]     = 0x%02x \n", IV_SIZE-11, sa->iv[IV_SIZE - 11]);
-    OS_printf("\t iv[%d]     = 0x%02x \n", IV_SIZE-10, sa->iv[IV_SIZE - 10]);
-    OS_printf("\t iv[%d]     = 0x%02x \n", IV_SIZE-9, sa->iv[IV_SIZE - 9]);
-    OS_printf("\t iv[%d]     = 0x%02x \n", IV_SIZE-8, sa->iv[IV_SIZE - 8]);
-    OS_printf("\t iv[%d]     = 0x%02x \n", IV_SIZE-7, sa->iv[IV_SIZE - 7]);
-    OS_printf("\t iv[%d]     = 0x%02x \n", IV_SIZE-6, sa->iv[IV_SIZE - 6]);
-    OS_printf("\t iv[%d]     = 0x%02x \n", IV_SIZE-5, sa->iv[IV_SIZE - 5]);
-    OS_printf("\t iv[%d]     = 0x%02x \n", IV_SIZE-4, sa->iv[IV_SIZE - 4]);
-    OS_printf("\t iv[%d]     = 0x%02x \n", IV_SIZE-3, sa->iv[IV_SIZE - 3]);
-    OS_printf("\t iv[%d]     = 0x%02x \n", IV_SIZE-2, sa->iv[IV_SIZE - 2]);
-    OS_printf("\t iv[%d]     = 0x%02x \n", IV_SIZE-1, sa->iv[IV_SIZE - 1]);
+    OS_printf("\t iv_len     = 0x%02x \n", sa->shivf_len);
+    if(sa->iv != NULL)
+    {
+        for(int i = 0; i < sa->shivf_len; i++)
+        {
+            OS_printf("\t iv[%d]     = 0x%02x \n", i, *(sa->iv + i));
+        }
+    }
     OS_printf("\t acs_len    = 0x%02x \n", sa->acs_len);
     OS_printf("\t acs        = 0x%02x \n", sa->acs);
     OS_printf("\t abm_len    = 0x%04x \n", sa->abm_len);
-    OS_printf("\t abm[0]     = 0x%02x \n", sa->abm[0]);
-    OS_printf("\t abm[1]     = 0x%02x \n", sa->abm[1]);
+    if(sa->abm != NULL)
+    {
+        OS_printf("\t abm: \n");
+        for(int i = 0; i < sa->abm_len; i++)
+        {
+            OS_printf("%02x", *(sa->abm + i));
+        }
+        OS_printf("\n");
+    }
     OS_printf("\t arc_len    = 0x%02x \n", sa->arc_len);
-    OS_printf("\t arc[0]     = 0x%02x \n", sa->arc[0]);
-    OS_printf("\t arc[1]     = 0x%02x \n", sa->arc[1]);
+    if(sa->arc != NULL)
+    {
+        OS_printf("\t arc: \n");
+        for(int i = 0; i < sa->arc_len; i++)
+        {
+            OS_printf("%02x", *(sa->arc + i));
+        }
+        OS_printf("\n");
+    }
+
     OS_printf("\t arcw_len   = 0x%02x \n", sa->arcw_len);
-    OS_printf("\t arcw[0]    = 0x%02x \n", sa->arcw[0]);
+    OS_printf("\t arcw       = 0x%d \n", sa->arcw);
 }
 
 /**

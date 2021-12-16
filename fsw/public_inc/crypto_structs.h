@@ -68,16 +68,15 @@ typedef struct
     uint8		stmacf_len:8;		// Sec. Trailer MAC Field Length
     uint8		ecs_len	:8;			// Encryption Cipher Suite Length
     uint8		ecs[ECS_SIZE];		// Encryption Cipher Suite (algorithm / mode ID)
-    uint8		iv_len	:8;			// Initialization Vector Length
-    uint8		iv[IV_SIZE];		        // Initialization Vector
+    uint8*		iv;		            // Initialization Vector
     uint8		acs_len	:8;			// Authentication Cipher Suite Length
     uint8		acs		:8;			// Authentication Cipher Suite (algorithm / mode ID)
     uint16		abm_len	:16;		// Authentication Bit Mask Length
-    uint8		abm[ABM_SIZE];		// Authentication Bit Mask (Primary Hdr. through Security Hdr.)
+    uint8*		abm;        		// Authentication Bit Mask (Primary Hdr. through Security Hdr.)
     uint8		arc_len	:8;			// Anti-Replay Counter Length
-    uint8		arc[ARC_SIZE];		// Anti-Replay Counter
+    uint8*		arc;        		// Anti-Replay Counter
     uint8		arcw_len:8;			// Anti-Replay Counter Window Length
-    uint8		arcw[ARCW_SIZE];	// Anti-Replay Counter Window
+    uint16		arcw;           	// Anti-Replay Counter Window
     
 } SecurityAssociation_t;
 #define SA_SIZE	(sizeof(SecurityAssociation_t))
@@ -258,8 +257,8 @@ typedef struct
     uint8   sh:TC_SH_SIZE;		// Segment Header
     uint16	spi;				// Security Parameter Index
     uint8	iv[IV_SIZE]; 	    // Initialization Vector for encryption
-    //uint8	sn[TC_SN_SIZE]; 	// Sequence Number for anti-replay
-    //uint8	pad[TC_PAD_SIZE]; 	// Count of the used fill Bytes
+    uint8	sn[TC_SN_SIZE]; 	// Sequence Number for anti-replay
+    uint8	pad[TC_PAD_SIZE]; 	// Count of the used fill Bytes
 } TC_FrameSecurityHeader_t;
 #define TC_FRAME_SECHEADER_SIZE     (sizeof(TC_FrameSecurityHeader_t))
 

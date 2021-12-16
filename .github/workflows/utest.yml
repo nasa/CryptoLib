@@ -3,6 +3,8 @@ name: Unit Tests
 on:
   push:
     branches: [ collab_main ]
+  pull_request:
+    branches: [ collab_main ]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)

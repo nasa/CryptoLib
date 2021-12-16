@@ -20,23 +20,35 @@
 #include "sadb_mariadb_error.h"
 
 #define SADB_INVALID_SADB_TYPE                                    201
+#define SADB_NULL_SA_USED                                         202
 #define CRYPTO_CONFIGURATION_NOT_COMPLETE                         101
 #define CRYPTO_MANAGED_PARAM_CONFIGURATION_NOT_COMPLETE           102
 #define CRYPTO_MARIADB_CONFIGURATION_NOT_COMPLETE                 103
 #define MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND                    104
 
 
-#define CRYPTO_LIB_SUCCESS                  (0)
-#define CRYPTO_LIB_ERROR                    (-1)
-#define CRYPTO_LIB_ERR_NO_INIT              (-2)
-#define CRYPTO_LIB_ERR_INVALID_TFVN         (-3)
-#define CRYPTO_LIB_ERR_INVALID_SCID         (-4)
-#define CRYPTO_LIB_ERR_INVALID_VCID         (-5)
-#define CRYPTO_LIB_ERR_INVALID_MAPID        (-6)
-#define CRYPTO_LIB_ERR_INVALID_CC_FLAG      (-7)
-#define CRYPTO_LIB_ERR_NO_OPERATIONAL_SA    (-8)
-#define CRYPTO_LIB_ERR_NULL_BUFFER          (-9)
-#define CRYPTO_LIB_ERR_UT_BYTE_MISMATCH     (-10)
-#define CRYPTO_LIB_ERR_NO_CONFIG            (-11)
+#define CRYPTO_LIB_SUCCESS                      (0)
+#define CRYPTO_LIB_ERROR                        (-1)
+#define CRYPTO_LIB_ERR_NO_INIT                  (-2)
+#define CRYPTO_LIB_ERR_INVALID_TFVN             (-3)
+#define CRYPTO_LIB_ERR_INVALID_SCID             (-4)
+#define CRYPTO_LIB_ERR_INVALID_VCID             (-5)
+#define CRYPTO_LIB_ERR_INVALID_MAPID            (-6)
+#define CRYPTO_LIB_ERR_INVALID_CC_FLAG          (-7)
+#define CRYPTO_LIB_ERR_NO_OPERATIONAL_SA        (-8)
+#define CRYPTO_LIB_ERR_NULL_BUFFER              (-9)
+#define CRYPTO_LIB_ERR_UT_BYTE_MISMATCH         (-10)
+#define CRYPTO_LIB_ERR_NO_CONFIG                (-11)
+#define CRYPTO_LIB_ERR_INVALID_FECF             (-12)
+#define CRYPTO_LIB_ERR_BAD_ANTIREPLAY_WINDOW    (-13)
+#define CRYPTO_LIB_ERR_LIBGCRYPT_ERROR          (-14)
+#define CRYPTO_LIB_ERR_AUTHENTICATION_ERROR     (-15)
+#define CRYPTO_LIB_ERR_NULL_IV                  (-16)
+#define CRYPTO_LIB_ERR_NULL_ABM                 (-17)
+#define CRYPTO_LIB_ERR_DECRYPT_ERROR            (-18)
+#define CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD    (-19)
+#define CRYPTO_LIB_ERR_MAC_RETRIEVAL_ERROR      (-20)
+#define CRYPTO_LIB_ERR_MAC_VALIDATION_ERROR     (-21)
+
 
 #endif //_crypto_error_h_

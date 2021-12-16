@@ -34,7 +34,7 @@ class Encryption:
     # Function: Encrypt
     # Encrypts data - given a key, iv, header, and bitmask
     def encrypt(self, data, key, iv, header, bitmask):
-        hex_header = header + iv                # Combines Header and IV (AAD)
+        hex_header = header + iv             # Combines Header and IV (AAD)
         bitmask_b = bytes.fromhex(bitmask)      
         header_b = bytes.fromhex(hex_header)
         key_b = bytes.fromhex(key)
@@ -55,6 +55,8 @@ class Encryption:
                 value_i = int.from_bytes(pieces, byteorder="big") & int.from_bytes(bitmask_b, byteorder="big")
                 value_b = value_i.to_bytes(max(len(pieces), len(bitmask_b)), byteorder="big")
                 zeroed_header_b += value_b
+            print("ZEROED AAD:", zeroed_header_b.hex())
+            print("DATA:", data_b.hex())
             cipher.update(zeroed_header_b)
             #cipher.update(header_b)
         # Get Cipher and tag

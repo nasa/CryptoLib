@@ -22,8 +22,9 @@
 #include "utest.h"
 #include "crypto.h"
 #include "crypto_error.h"
+#include "sadb_routine.h"
 
-// TODO:  I don't believe Crypto Init is cleaned up between each test.  I am fairly certain that the init persists between tests.
+
 /**
  * @brief Unit Test: No Crypto_Init()
  * 
@@ -38,7 +39,7 @@ UTEST(TC_APPLY_SECURITY, NO_CRYPTO_INIT)
     int raw_tc_sdls_ping_len = 0;
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY,CRYPTO_TC_CREATE_FECF_TRUE,TC_PROCESS_SDLS_PDUS_TRUE,TC_HAS_PUS_HDR,TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE, 0x3F);
+    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY,CRYPTO_TC_CREATE_FECF_TRUE,TC_PROCESS_SDLS_PDUS_TRUE,TC_HAS_PUS_HDR,TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE, TC_CHECK_FECF_TRUE, 0x3F);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,0,TC_HAS_FECF,TC_HAS_SEGMENT_HDRS);
 
     uint8 *ptr_enc_frame = NULL;
@@ -55,7 +56,7 @@ UTEST(TC_APPLY_SECURITY, NO_CRYPTO_INIT)
  * @brief Unit Test:  Nominal Case
  * This should read a raw_tc_sdls_ping and continue down the "happy Path", finally returning CRYPTO_LIB_SUCCESS
  **/
-UTEST(TC_APPLY_SECURITY, HAPPY_PATH)
+UTEST(TC_APPLY_SECURITY, HAPPY_PATH_CLEAR)
 {
     //Setup & Initialize CryptoLib
     Crypto_Init_Unit_Test();
@@ -78,9 +79,77 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH)
 }
 
 /**
+ * @brief Unit Test: Nominal Encryption
+ **/
+UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC)
+{
+    //Setup & Initialize CryptoLib
+    Crypto_Init_Unit_Test();
+    char *raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
+    uint8 *raw_tc_sdls_ping_b = NULL;
+    int raw_tc_sdls_ping_len = 0;
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+
+    hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
+
+    uint8 *ptr_enc_frame = NULL;
+    uint16 enc_frame_len = 0;
+
+    int32 return_val = CRYPTO_LIB_ERROR;
+
+    SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(unsigned char));
+    //Expose the SADB Security Association for test edits.
+    sadb_routine->sadb_get_sa_from_spi(1,&test_association);
+    test_association->sa_state = SA_NONE;
+    sadb_routine->sadb_get_sa_from_spi(4,&test_association);
+    test_association->sa_state = SA_OPERATIONAL;
+    test_association->ast=0;
+
+    return_val = Crypto_TC_ApplySecurity(raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    Crypto_Shutdown();
+    free(raw_tc_sdls_ping_b);
+    free(ptr_enc_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+}
+
+/**
+ * @brief Unit Test: Nominal Authorized Encryption
+ **/
+UTEST(TC_APPLY_SECURITY, HAPPY_PATH_AUTH_ENC)
+{
+    //Setup & Initialize CryptoLib
+    Crypto_Init_Unit_Test();
+    char *raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
+    uint8 *raw_tc_sdls_ping_b = NULL;
+    int raw_tc_sdls_ping_len = 0;
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+
+    hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
+
+    uint8 *ptr_enc_frame = NULL;
+    uint16 enc_frame_len = 0;
+
+    int32 return_val = CRYPTO_LIB_ERROR;
+
+    SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(unsigned char));
+    //Expose the SADB Security Association for test edits.
+    sadb_routine->sadb_get_sa_from_spi(1,&test_association);
+    test_association->sa_state = SA_NONE;
+    sadb_routine->sadb_get_sa_from_spi(4,&test_association);
+    test_association->sa_state = SA_OPERATIONAL;
+
+    return_val = Crypto_TC_ApplySecurity(raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    Crypto_Shutdown();
+    free(raw_tc_sdls_ping_b);
+    free(ptr_enc_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+}
+
+/**
  * @brief Unit Test: Bad Spacecraft ID
  * This should pass the flawed hex string, and return CRYPTO_LIB_ERR_INVALID_SCID
- **/
+ * Bad Space Craft ID.  This should pass the flawed .dat file, and return MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND
+**/
 UTEST(TC_APPLY_SECURITY, BAD_SPACE_CRAFT_ID)
 {
     //Setup & Initialize CryptoLib

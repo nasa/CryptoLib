@@ -21,7 +21,7 @@ include_directories(../crypto/public_inc)
 
 if(${ENCTEST})
     find_package (Python3 REQUIRED COMPONENTS Interpreter Development)
-    execute_process(COMMAND pip show pycryptodome RESULT_VARIABLE EXIT_CODE OUTPUT_QUIET)
+    execute_process(COMMAND pip3 show pycryptodome RESULT_VARIABLE EXIT_CODE OUTPUT_QUIET)
     if(NOT ${EXIT_CODE} EQUAL 0)
         message(FATAL_ERROR "The \"pycryptodome\" Python3 package is not installed, and is required for ENCTEST.")
     endif()
