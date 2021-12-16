@@ -1,6 +1,9 @@
 name: Build
 
-on: [push, pull_request]
+on: 
+  push:
+    branches: [ collab_main ]
+on: pull_request
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
@@ -11,7 +14,7 @@ jobs:
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
     # You can convert this to a matrix build if you need cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: centos-latest
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
