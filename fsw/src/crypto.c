@@ -1800,7 +1800,7 @@ static int32 Crypto_Key_verify(char* ingest,TC_t* tc_frame)
         iv_loc = count;
         for (int y = 0; y < IV_SIZE; y++)
         {   
-            ingest[count++] = *(tc_frame->tc_sec_header.iv)+y;
+            ingest[count++] = *(tc_frame->tc_sec_header.iv+y);
         }
         ingest[count-1] = ingest[count-1] + x + 1;
 
@@ -3344,7 +3344,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
     {
         if(crypto_config->crypto_check_fecf == TC_CHECK_FECF_TRUE)
         {
-            uint16 received_fecf = (tc_sdls_processed_frame->tc_header.fl-1 & 0xFF00) | (tc_sdls_processed_frame->tc_header.fl & 0x00FF); 
+            uint16 received_fecf = (((ingest[tc_sdls_processed_frame->tc_header.fl - 1] << 8) & 0xFF00) | (ingest[tc_sdls_processed_frame->tc_header.fl] & 0x00FF));
             // Calculate our own
             uint16 calculated_fecf = Crypto_Calc_FECF(ingest, *len_ingest-2);
             // Compare

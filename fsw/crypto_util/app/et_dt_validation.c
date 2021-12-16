@@ -132,6 +132,7 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
     memset(tc_sdls_processed_frame, 0, (sizeof(uint8) * TC_SIZE));
     // Ensure that Process Security can activate SA 4
     return_val =  Crypto_TC_ProcessSecurity(activate_sa4_b, &activate_sa4_len, tc_sdls_processed_frame);
+    printf("Verifying TC_Process Return Value\n");
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
     // Expose SA 1 for testing
     sadb_routine->sadb_get_sa_from_spi(1,&test_association);
@@ -149,7 +150,7 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
     int32 ret_status = Crypto_TC_ApplySecurity(enc_test_ping_b, enc_test_ping_len, &ptr_enc_frame, &enc_frame_len);
     // Get Truth Baseline
     python_auth_encryption("1880d2ca0008197f0b0031000039c5", "FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210", "000000000000000000000001", "2003043400FF0004", "00", &expected, &expected_length);
-
+    
     for(int i = 0; i < expected_length; i++)
     {
         printf("[%d]: %02x -> %02x \n", i, expected[i], ptr_enc_frame[i]);
