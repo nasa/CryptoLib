@@ -1,10 +1,9 @@
 name: Build
 
-on:
+on: 
   push:
-    branches: [ collab_main ]
-  pull_request:
-    branches: [ collab_main ]
+    branches: [ CI_Updates ]
+  pull_request
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
