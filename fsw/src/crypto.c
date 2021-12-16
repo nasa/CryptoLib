@@ -137,7 +137,7 @@ static uint16 crc16Table[256];
 int32 Crypto_Init_Unit_Test(void)
 {
     int32 status = OS_SUCCESS;
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY,CRYPTO_TC_CREATE_FECF_TRUE,TC_PROCESS_SDLS_PDUS_TRUE,TC_HAS_PUS_HDR,TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, 0x3F);
+    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY,CRYPTO_TC_CREATE_FECF_TRUE,TC_PROCESS_SDLS_PDUS_TRUE,TC_HAS_PUS_HDR,TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,0,TC_HAS_FECF,TC_HAS_SEGMENT_HDRS);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,1,TC_HAS_FECF,TC_HAS_SEGMENT_HDRS);
     status = Crypto_Init();
@@ -266,10 +266,11 @@ int32 Crypto_Shutdown(void)
 * @param ignore_sa_state: uint8
 * @param ignore_anti_replay: uint8
 * @param unique_sa_per_mapid: uint8
+* @param crypto_check_fecf: uint8
 * @param vcid_bitmask: uint8
 * @return int32: Success/Failure
 **/
-int32 Crypto_Config_CryptoLib(uint8 sadb_type, uint8 crypto_create_fecf, uint8 process_sdls_pdus, uint8 has_pus_hdr, uint8 ignore_sa_state, uint8 ignore_anti_replay, uint8 unique_sa_per_mapid, uint8 vcid_bitmask)
+int32 Crypto_Config_CryptoLib(uint8 sadb_type, uint8 crypto_create_fecf, uint8 process_sdls_pdus, uint8 has_pus_hdr, uint8 ignore_sa_state, uint8 ignore_anti_replay, uint8 unique_sa_per_mapid,uint8 crypto_check_fecf, uint8 vcid_bitmask)
 {
     int32 status = OS_SUCCESS;
     crypto_config = (CryptoConfig_t*) calloc(1, CRYPTO_CONFIG_SIZE);
@@ -280,6 +281,7 @@ int32 Crypto_Config_CryptoLib(uint8 sadb_type, uint8 crypto_create_fecf, uint8 p
     crypto_config->ignore_sa_state=ignore_sa_state;
     crypto_config->ignore_anti_replay=ignore_anti_replay;
     crypto_config->unique_sa_per_mapid = unique_sa_per_mapid;
+    crypto_config->crypto_check_fecf = crypto_check_fecf;
     crypto_config->vcid_bitmask=vcid_bitmask;
     return status;
 }
