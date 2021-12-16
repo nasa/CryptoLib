@@ -1,6 +1,9 @@
 name: Unit Tests
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [ collab_main ]
+  pull_request:
     branches: [ collab_main ]
 
 env:
