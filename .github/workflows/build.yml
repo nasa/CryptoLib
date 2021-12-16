@@ -3,7 +3,8 @@ name: Build
 on: 
   push:
     branches: [ CI_Updates ]
-  pull_request
+  pull_request:
+    branches: [${GITHUB_REF##*/}]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
