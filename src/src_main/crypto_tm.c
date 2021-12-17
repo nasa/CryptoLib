@@ -347,3 +347,202 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *ingest, int *len_ingest)
 
     return status;
 }
+
+/**
+ * @brief Function: Crypto_Get_tmLength
+ * Returns the total length of the current tm_frame in BYTES!
+ * @param len: int
+ * @return int32_t Length of TM
+ **/
+int32_t Crypto_Get_tmLength(int len)
+{
+#ifdef FILL
+    len = TM_FILL_SIZE;
+#else
+    len = TM_FRAME_PRIMARYHEADER_SIZE + TM_FRAME_SECHEADER_SIZE + len + TM_FRAME_SECTRAILER_SIZE + TM_FRAME_CLCW_SIZE;
+#endif
+
+    return len;
+}
+
+/**
+ * @brief Function: Crypto_TM_updatePDU
+ * Update the Telemetry Payload Data Unit
+ * @param ingest: uint8_t*
+ * @param len_ingest: int
+ **/
+void Crypto_TM_updatePDU(uint8_t *ingest, int len_ingest)
+{ // Copy ingest to PDU
+    int x = 0;
+    int fill_size = 0;
+    SecurityAssociation_t *sa_ptr;
+
+    if (sadb_routine->sadb_get_sa_from_spi(tm_frame.tm_sec_header.spi, &sa_ptr) != CRYPTO_LIB_SUCCESS)
+    {
+        // TODO - Error handling
+        return; // Error -- unable to get SA from SPI.
+    }
+
+    if ((sa_ptr->est == 1) && (sa_ptr->ast == 1))
+    {
+        fill_size = 1129 - MAC_SIZE - IV_SIZE + 2; // +2 for padding bytes
+    }
+    else
+    {
+        fill_size = 1129;
+    }
+
+#ifdef TM_ZERO_FILL
+    for (int x = 0; x < TM_FILL_SIZE; x++)
+    {
+        if (x < len_ingest)
+        { // Fill
+            tm_frame.tm_pdu[x] = (uint8_t)ingest[x];
+        }
+        else
+        { // Zero
+            tm_frame.tm_pdu[x] = 0x00;
+        }
+    }
+#else
+    // Pre-append remaining packet if exist
+    if (tm_offset == 63)
+    {
+        tm_frame.tm_pdu[x++] = 0xff;
+        tm_offset--;
+    }
+    if (tm_offset == 62)
+    {
+        tm_frame.tm_pdu[x++] = 0x00;
+        tm_offset--;
+    }
+    if (tm_offset == 61)
+    {
+        tm_frame.tm_pdu[x++] = 0x00;
+        tm_offset--;
+    }
+    if (tm_offset == 60)
+    {
+        tm_frame.tm_pdu[x++] = 0x00;
+        tm_offset--;
+    }
+    if (tm_offset == 59)
+    {
+        tm_frame.tm_pdu[x++] = 0x39;
+        tm_offset--;
+    }
+    while (x < tm_offset)
+    {
+        tm_frame.tm_pdu[x] = 0x00;
+        x++;
+    }
+    // Copy actual packet
+    while (x < len_ingest + tm_offset)
+    {
+        // printf("ingest[x - tm_offset] = 0x%02x \n", (uint8_t)ingest[x - tm_offset]);
+        tm_frame.tm_pdu[x] = (uint8_t)ingest[x - tm_offset];
+        x++;
+    }
+#ifdef TM_IDLE_FILL
+    // Check for idle frame trigger
+    if (((uint8_t)ingest[0] == 0x08) && ((uint8_t)ingest[1] == 0x90))
+    {
+        // Don't fill idle frames
+    }
+    else
+    {
+        while (x < (fill_size - 64))
+        {
+            tm_frame.tm_pdu[x++] = 0x07;
+            tm_frame.tm_pdu[x++] = 0xff;
+            tm_frame.tm_pdu[x++] = 0x00;
+            tm_frame.tm_pdu[x++] = 0x00;
+            tm_frame.tm_pdu[x++] = 0x00;
+            tm_frame.tm_pdu[x++] = 0x39;
+            for (int y = 0; y < 58; y++)
+            {
+                tm_frame.tm_pdu[x++] = 0x00;
+            }
+        }
+        // Add partial packet, if possible, and set offset
+        if (x < fill_size)
+        {
+            tm_frame.tm_pdu[x++] = 0x07;
+            tm_offset = 63;
+        }
+        if (x < fill_size)
+        {
+            tm_frame.tm_pdu[x++] = 0xff;
+            tm_offset--;
+        }
+        if (x < fill_size)
+        {
+            tm_frame.tm_pdu[x++] = 0x00;
+            tm_offset--;
+        }
+        if (x < fill_size)
+        {
+            tm_frame.tm_pdu[x++] = 0x00;
+            tm_offset--;
+        }
+        if (x < fill_size)
+        {
+            tm_frame.tm_pdu[x++] = 0x00;
+            tm_offset--;
+        }
+        if (x < fill_size)
+        {
+            tm_frame.tm_pdu[x++] = 0x39;
+            tm_offset--;
+        }
+        for (int y = 0; x < fill_size; y++)
+        {
+            tm_frame.tm_pdu[x++] = 00;
+            tm_offset--;
+        }
+    }
+    while (x < TM_FILL_SIZE)
+    {
+        tm_frame.tm_pdu[x++] = 0x00;
+    }
+#endif
+#endif
+
+    return;
+}
+
+/**
+ * @brief Function: Crypto_TM_updateOCF
+ * Update the TM OCF
+ **/
+void Crypto_TM_updateOCF(void)
+{
+    if (ocf == 0)
+    { // CLCW
+        clcw.vci = tm_frame.tm_header.vcid;
+
+        tm_frame.tm_sec_trailer.ocf[0] = (clcw.cwt << 7) | (clcw.cvn << 5) | (clcw.sf << 2) | (clcw.cie);
+        tm_frame.tm_sec_trailer.ocf[1] = (clcw.vci << 2) | (clcw.spare0);
+        tm_frame.tm_sec_trailer.ocf[2] = (clcw.nrfa << 7) | (clcw.nbl << 6) | (clcw.lo << 5) | (clcw.wait << 4) |
+                                         (clcw.rt << 3) | (clcw.fbc << 1) | (clcw.spare1);
+        tm_frame.tm_sec_trailer.ocf[3] = (clcw.rv);
+        // Alternate OCF
+        ocf = 1;
+#ifdef OCF_DEBUG
+        Crypto_clcwPrint(&clcw);
+#endif
+    }
+    else
+    { // FSR
+        tm_frame.tm_sec_trailer.ocf[0] = (report.cwt << 7) | (report.vnum << 4) | (report.af << 3) |
+                                         (report.bsnf << 2) | (report.bmacf << 1) | (report.ispif);
+        tm_frame.tm_sec_trailer.ocf[1] = (report.lspiu & 0xFF00) >> 8;
+        tm_frame.tm_sec_trailer.ocf[2] = (report.lspiu & 0x00FF);
+        tm_frame.tm_sec_trailer.ocf[3] = (report.snval);
+        // Alternate OCF
+        ocf = 0;
+#ifdef OCF_DEBUG
+        Crypto_fsrPrint(&report);
+#endif
+    }
+}

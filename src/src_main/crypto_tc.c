@@ -1028,3 +1028,66 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t *ingest, int *len_ingest, TC_t *tc_sdl
 
     return status;
 }
+
+/**
+ * @brief Function: Crypto_Get_tcPayloadLength
+ * Returns the payload length of current tc_frame in BYTES!
+ * @param tc_frame: TC_t*
+ * @param sa_ptr: SecurityAssociation_t
+ * @return int32, Length of TCPayload
+ **/
+/*
+int32_t Crypto_Get_tcPayloadLength(TC_t* tc_frame, SecurityAssociation_t *sa_ptr)
+{
+    int tf_hdr = 5;
+    int seg_hdr = 0;if(current_managed_parameters->has_segmentation_hdr==TC_HAS_SEGMENT_HDRS){seg_hdr=1;}
+    int fecf = 0;if(current_managed_parameters->has_fecf==TC_HAS_FECF){fecf=FECF_SIZE;}
+    int spi = 2;
+    int iv_size = sa_ptr->shivf_len;
+    int mac_size = sa_ptr->stmacf_len;
+
+    #ifdef TC_DEBUG
+        printf("Get_tcPayloadLength Debug [byte lengths]:\n");
+        printf("\thdr.fl\t%d\n", tc_frame->tc_header.fl);
+        printf("\ttf_hdr\t%d\n",tf_hdr);
+        printf("\tSeg hdr\t%d\t\n",seg_hdr);
+        printf("\tspi \t%d\n",spi);
+        printf("\tiv_size\t%d\n",iv_size);
+        printf("\tmac\t%d\n",mac_size);
+        printf("\tfecf \t%d\n",fecf);
+        printf("\tTOTAL LENGTH: %d\n", (tc_frame->tc_header.fl - (tf_hdr + seg_hdr + spi + iv_size ) - (mac_size +
+fecf))); #endif
+
+    return (tc_frame->tc_header.fl + 1 - (tf_hdr + seg_hdr + spi + iv_size ) - (mac_size + fecf) );
+}
+*/
+
+/**
+ * @brief Function: Crypto_Prepare_TC_AAD
+ * Callocs and returns pointer to buffer where AAD is created & bitwise-anded with bitmask!
+ * Note: Function caller is responsible for freeing the returned buffer!
+ * @param buffer: uint8_t*
+ * @param len_aad: uint16_t
+ * @param abm_buffer: uint8_t*
+ **/
+uint8_t *Crypto_Prepare_TC_AAD(uint8_t *buffer, uint16_t len_aad, uint8_t *abm_buffer)
+{
+    uint8_t *aad = (uint8_t *)calloc(1, len_aad * sizeof(uint8_t));
+
+    for (int i = 0; i < len_aad; i++)
+    {
+        aad[i] = buffer[i] & abm_buffer[i];
+    }
+
+#ifdef MAC_DEBUG
+    printf(KYEL "Preparing AAD:\n");
+    printf("\tUsing AAD Length of %d\n\t", len_aad);
+    for (int i = 0; i < len_aad; i++)
+    {
+        printf("%02x", aad[i]);
+    }
+    printf("\n" RESET);
+#endif
+
+    return aad;
+}
