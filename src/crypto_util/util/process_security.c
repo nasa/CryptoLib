@@ -22,11 +22,11 @@
 
 #include "process_security.h"
 
-int main(int argc, char *argv[]) {
-    char *buffer;
-    char const *filename;
+int main(int argc, uint8_t *argv[]) {
+    uint8_t *buffer;
+    uint8_t const *filename;
     long buffer_size;
-    char *security_type;
+    uint8_t *security_type;
 
     if (argc == 3) {
         security_type = argv[1];

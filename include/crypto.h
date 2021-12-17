@@ -25,7 +25,7 @@
 #ifdef NOS3 //NOS3/cFS build is ready
 #include "cfe.h"
 #else //Assume build outside of NOS3/cFS infrastructure
-#include "common_types_minimum.h"
+#include <stdint.h>
 #include "osapi_minimum.h"
 #endif
 
@@ -42,39 +42,39 @@
 */
 
 // Crypto Library Configuration functions
-extern int32 Crypto_Config_CryptoLib(uint8 sadb_type, uint8 crypto_create_fecf, uint8 process_sdls_pdus, uint8 has_pus_hdr, uint8 ignore_sa_state, uint8 ignore_anti_replay, uint8 unique_sa_per_mapid, uint8 crypto_check_fecf, uint8 vcid_bitmask);
-extern int32 Crypto_Config_MariaDB(char* mysql_username, char* mysql_password, char* mysql_hostname, char* mysql_database, uint16 mysql_port);
-extern int32 Crypto_Config_Add_Gvcid_Managed_Parameter(uint8 tfvn, uint16 scid, uint8 vcid, uint8 has_fecf, uint8 has_segmentation_hdr);
+extern int32_t Crypto_Config_CryptoLib(uint8_t sadb_type, uint8_t crypto_create_fecf, uint8_t process_sdls_pdus, uint8_t has_pus_hdr, uint8_t ignore_sa_state, uint8_t ignore_anti_replay, uint8_t unique_sa_per_mapid, uint8_t crypto_check_fecf, uint8_t vcid_bitmask);
+extern int32_t Crypto_Config_MariaDB(uint8_t* mysql_username, uint8_t* mysql_password, uint8_t* mysql_hostname, uint8_t* mysql_database, uint16_t mysql_port);
+extern int32_t Crypto_Config_Add_Gvcid_Managed_Parameter(uint8_t tfvn, uint16_t scid, uint8_t vcid, uint8_t has_fecf, uint8_t has_segmentation_hdr);
 
 // Initialization
-extern int32 Crypto_Init(void); // Initialize CryptoLib After Configuration Calls
-extern int32 Crypto_Init_With_Configs(CryptoConfig_t* crypto_config_p,GvcidManagedParameters_t* gvcid_managed_parameters_p,SadbMariaDBConfig_t* sadb_mariadb_config_p); // Initialize CryptoLib With Application Defined Configuration
-extern int32 Crypto_Init_Unit_Test(void); // Initialize CryptoLib with unit test default Configurations
+extern int32_t Crypto_Init(void); // Initialize CryptoLib After Configuration Calls
+extern int32_t Crypto_Init_With_Configs(CryptoConfig_t* crypto_config_p,GvcidManagedParameters_t* gvcid_managed_parameters_p,SadbMariaDBConfig_t* sadb_mariadb_config_p); // Initialize CryptoLib With Application Defined Configuration
+extern int32_t Crypto_Init_Unit_Test(void); // Initialize CryptoLib with unit test default Configurations
 
 // Cleanup
-extern int32 Crypto_Shutdown(void); // Free all allocated memory
+extern int32_t Crypto_Shutdown(void); // Free all allocated memory
 
 // Telecommand (TC)
-extern int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_length, \
-                                      uint8 **pp_enc_frame, uint16 *p_enc_frame_len);
-extern int32 Crypto_TC_ProcessSecurity(char* ingest, int*  len_ingest, TC_t* tc_sdls_processed_frame);
+extern int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_frame_length, \
+                                      uint8_t **pp_enc_frame, uint16_t *p_enc_frame_len);
+extern int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int*  len_ingest, TC_t* tc_sdls_processed_frame);
 // Telemetry (TM)
-extern int32 Crypto_TM_ApplySecurity(char* ingest, int* len_ingest);
-extern int32 Crypto_TM_ProcessSecurity(char* ingest, int* len_ingest);
+extern int32_t Crypto_TM_ApplySecurity(uint8_t* ingest, int* len_ingest);
+extern int32_t Crypto_TM_ProcessSecurity(uint8_t* ingest, int* len_ingest);
 // Advanced Orbiting Systems (AOS)
-extern int32 Crypto_AOS_ApplySecurity(char* ingest, int* len_ingest);
-extern int32 Crypto_AOS_ProcessSecurity(char* ingest, int* len_ingest);
+extern int32_t Crypto_AOS_ApplySecurity(uint8_t* ingest, int* len_ingest);
+extern int32_t Crypto_AOS_ProcessSecurity(uint8_t* ingest, int* len_ingest);
 // Security Functions
-extern int32 Crypto_ApplySecurity(char* ingest, int* len_ingest);
-extern int32 Crypto_ProcessSecurity(char* ingest, int* len_ingest);
+extern int32_t Crypto_ApplySecurity(uint8_t* ingest, int* len_ingest);
+extern int32_t Crypto_ProcessSecurity(uint8_t* ingest, int* len_ingest);
 
 // Data stores used in multiple components
 extern CCSDS_t sdls_frame;
 extern TM_t tm_frame;
 extern crypto_key_t ek_ring[NUM_KEYS];
 // Assisting functions used in multiple components
-extern uint8 Crypto_Prep_Reply(char* ingest, uint8 appID);
-extern int32 Crypto_increment(uint8 *num, int length);
+extern uint8_t Crypto_Prep_Reply(uint8_t* ingest, uint8_t appID);
+extern int32_t Crypto_increment(uint8_t *num, int length);
 
 //Global configuration structs
 extern CryptoConfig_t* crypto_config;

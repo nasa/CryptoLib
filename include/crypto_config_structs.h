@@ -22,7 +22,7 @@ ivv-itc@lists.nasa.gov
 #ifdef NOS3 //NOS3/cFS build is ready
 #include "common_types.h"
 #else //Assume build outside of NOS3/cFS infrastructure
-#include "common_types_minimum.h"
+#include <stdint.h>
 #endif
 
 //main config enums
@@ -51,15 +51,15 @@ typedef struct
     TcIgnoreAntiReplay ignore_anti_replay;
     TcUniqueSaPerMapId unique_sa_per_mapid;
     TcCheckFecfBool crypto_check_fecf;
-    uint8 vcid_bitmask;
+    uint8_t vcid_bitmask;
 } CryptoConfig_t;
 #define CRYPTO_CONFIG_SIZE (sizeof(CryptoConfig_t))
 
 typedef struct _GvcidManagedParameters_t GvcidManagedParameters_t;
 struct _GvcidManagedParameters_t{
-    uint8   tfvn     :4;  // Transfer Frame Version Number
-    uint16  scid    :10; //SpacecraftID
-    uint8   vcid    :6; //Virtual Channel ID
+    uint8_t   tfvn     :4;  // Transfer Frame Version Number
+    uint16_t  scid    :10; //SpacecraftID
+    uint8_t   vcid    :6; //Virtual Channel ID
     TcFecfPresent has_fecf;
     TcSegmentHdrsPresent has_segmentation_hdr;
     GvcidManagedParameters_t* next; //Will be a list of managed parameters!
@@ -71,11 +71,11 @@ struct _GvcidManagedParameters_t{
 */
 typedef struct
 {
-    char*   mysql_username;
-    char*   mysql_password;
-    char*   mysql_hostname;
-    char*   mysql_database;
-    uint16  mysql_port;
+    uint8_t*   mysql_username;
+    uint8_t*   mysql_password;
+    uint8_t*   mysql_hostname;
+    uint8_t*   mysql_database;
+    uint16_t  mysql_port;
 } SadbMariaDBConfig_t;
 #define SADB_MARIADB_CONFIG_SIZE (sizeof(SadbMariaDBConfig_t))
 

@@ -19,7 +19,7 @@
 #include "common_types.h"
 #include "osapi.h"
 #else //Assume build outside of NOS3/cFS infrastructure
-#include "common_types_minimum.h"
+#include <stdint.h>
 #include "osapi_minimum.h"
 #endif
 
@@ -27,28 +27,28 @@
 
 typedef struct {
     // Security Association Initialization & Management Functions
-    int32 (*sadb_config)(void);
-    int32 (*sadb_init)(void);
-    int32 (*sadb_close)(void);
+    int32_t (*sadb_config)(void);
+    int32_t (*sadb_init)(void);
+    int32_t (*sadb_close)(void);
     // Security Association Interaction Functions
-    int32 (*sadb_get_sa_from_spi)(uint16,SecurityAssociation_t**);
-    int32 (*sadb_get_operational_sa_from_gvcid)(uint8,uint16,uint16,uint8,SecurityAssociation_t**);
-    int32 (*sadb_save_sa)(SecurityAssociation_t*);
+    int32_t (*sadb_get_sa_from_spi)(uint16_t,SecurityAssociation_t**);
+    int32_t (*sadb_get_operational_sa_from_gvcid)(uint8_t,uint16_t,uint16_t,uint8_t,SecurityAssociation_t**);
+    int32_t (*sadb_save_sa)(SecurityAssociation_t*);
     // Security Association Utility Functions
-    int32 (*sadb_sa_stop)(void);
-    int32  (*sadb_sa_start)(TC_t* tc_frame);
-    int32  (*sadb_sa_expire)(void);
-    int32  (*sadb_sa_rekey)(void);
-    int32  (*sadb_sa_status)(char*);
-    int32  (*sadb_sa_create)(void);
-    int32  (*sadb_sa_setARSN)(void);
-    int32  (*sadb_sa_setARSNW)(void);
-    int32  (*sadb_sa_delete)(void);
+    int32_t (*sadb_sa_stop)(void);
+    int32_t  (*sadb_sa_start)(TC_t* tc_frame);
+    int32_t  (*sadb_sa_expire)(void);
+    int32_t  (*sadb_sa_rekey)(void);
+    int32_t  (*sadb_sa_status)(uint8_t*);
+    int32_t  (*sadb_sa_create)(void);
+    int32_t  (*sadb_sa_setARSN)(void);
+    int32_t  (*sadb_sa_setARSNW)(void);
+    int32_t  (*sadb_sa_delete)(void);
 
 } SadbRoutineStruct, *SadbRoutine;
 
 SadbRoutine get_sadb_routine_mariadb(void);
 SadbRoutine get_sadb_routine_inmemory(void);
-SadbRoutine init_parse_sadb_routine(char *);
+SadbRoutine init_parse_sadb_routine(uint8_t *);
 
 #endif //CRYPTOLIB_SADB_ROUTINE_H

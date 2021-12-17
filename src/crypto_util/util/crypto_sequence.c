@@ -22,11 +22,11 @@
 
 #include "crypto_sequence.h"
 
-int main(int argc, char *argv[]) {
-    char *buffer;
-    char const *filename;
+int main(int argc, uint8_t *argv[]) {
+    uint8_t *buffer;
+    uint8_t const *filename;
     long buffer_size;
-    char *security_type;
+    uint8_t *security_type;
 
     if (argc < 3 || argc % 2 == 0) {
         fprintf(stderr,"Command line usage: \n"\
@@ -42,8 +42,8 @@ int main(int argc, char *argv[]) {
     Crypto_Init();
 
     int arg_index = 0;
-    uint8 * ptr_enc_frame = NULL;
-    uint16 enc_frame_len; 
+    uint8_t * ptr_enc_frame = NULL;
+    uint16_t enc_frame_len; 
 
     while(arg_index != argc-1){
         security_type = argv[++arg_index];

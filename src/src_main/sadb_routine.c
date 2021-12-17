@@ -15,10 +15,10 @@
 #include "sadb_routine.h"
 /**
  * @brief Function: init_parse_sadb_routine
- * @param config: char*
+ * @param config: uint8_t*
  * @return SadbRoutine
  **/
-SadbRoutine init_parse_sadb_routine(char* config)
+SadbRoutine init_parse_sadb_routine(uint8_t* config)
 {
     SadbRoutine sadb_routine;
     return sadb_routine;

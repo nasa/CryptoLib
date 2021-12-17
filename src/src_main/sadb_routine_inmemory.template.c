@@ -19,22 +19,22 @@
 #include "crypto_error.h"
 
 // Security Association Initialization Functions
-static int32 sadb_config(void);
-static int32 sadb_init(void);
-static int32 sadb_close(void);
+static int32_t sadb_config(void);
+static int32_t sadb_init(void);
+static int32_t sadb_close(void);
 // Security Association Interaction Functions
-static int32 sadb_get_sa_from_spi(uint16,SecurityAssociation_t**);
-static int32 sadb_get_operational_sa_from_gvcid(uint8,uint16,uint16,uint8,SecurityAssociation_t**);
-static int32 sadb_save_sa(SecurityAssociation_t* sa);
+static int32_t sadb_get_sa_from_spi(uint16_t,SecurityAssociation_t**);
+static int32_t sadb_get_operational_sa_from_gvcid(uint8_t,uint16_t,uint16_t,uint8_t,SecurityAssociation_t**);
+static int32_t sadb_save_sa(SecurityAssociation_t* sa);
 // Security Association Utility Functions
-static int32 sadb_sa_start(TC_t* tc_frame);
-static int32 sadb_sa_expire(void);
-static int32 sadb_sa_rekey(void);
-static int32 sadb_sa_status(char*);
-static int32 sadb_sa_create(void);
-static int32 sadb_sa_setARSN(void);
-static int32 sadb_sa_setARSNW(void);
-static int32 sadb_sa_delete(void);
+static int32_t sadb_sa_start(TC_t* tc_frame);
+static int32_t sadb_sa_expire(void);
+static int32_t sadb_sa_rekey(void);
+static int32_t sadb_sa_status(uint8_t*);
+static int32_t sadb_sa_create(void);
+static int32_t sadb_sa_setARSN(void);
+static int32_t sadb_sa_setARSNW(void);
+static int32_t sadb_sa_delete(void);
 
 
 /*
@@ -71,9 +71,9 @@ SadbRoutine get_sadb_routine_inmemory(void)
  * @brief Function; sadb_config
  * @return int32: Success/Failure
  **/
-static int32 sadb_config(void)
+static int32_t sadb_config(void)
 {
-    int32 status = OS_SUCCESS;
+    int32_t status = OS_SUCCESS;
 
     // Security Associations
     // SA 1 - CLEAR MODE
@@ -83,7 +83,7 @@ static int32 sadb_config(void)
     sa[1].est = 0;
     sa[1].ast = 0;
     //sa[1].shivf_len = 12;
-    //sa[1].iv = (uint8*) calloc(1, sa[1].shivf_len * sizeof(uint8));
+    //sa[1].iv = (uint8_t*) calloc(1, sa[1].shivf_len * sizeof(uint8_t));
     sa[1].arc_len = 1;
     sa[1].arcw_len = 1;
     sa[1].arcw = 5;
@@ -99,10 +99,10 @@ static int32 sadb_config(void)
     sa[2].est = 1;
     sa[2].ast = 1;
     sa[2].shivf_len = 12;
-    sa[2].iv = (uint8*) calloc(1, sa[2].shivf_len * sizeof(uint8));
+    sa[2].iv = (uint8_t*) calloc(1, sa[2].shivf_len * sizeof(uint8_t));
     *(sa[2].iv + sa[2].shivf_len - 1) = 0;
     sa[2].abm_len = ABM_SIZE; // 20
-    sa[2].abm = (uint8*) calloc(1, sa[2].abm_len * sizeof(uint8));
+    sa[2].abm = (uint8_t*) calloc(1, sa[2].abm_len * sizeof(uint8_t));
     sa[2].arcw_len = 1;
     sa[2].arcw = 5;
     sa[2].arc_len = (sa[2].arcw * 2) + 1;
@@ -114,10 +114,10 @@ static int32 sadb_config(void)
     sa[3].est = 1;
     sa[3].ast = 1;
     sa[3].shivf_len = 12;
-    sa[3].iv = (uint8*) calloc(1, sa[3].shivf_len * sizeof(uint8));
+    sa[3].iv = (uint8_t*) calloc(1, sa[3].shivf_len * sizeof(uint8_t));
     *(sa[3].iv + sa[3].shivf_len - 1) = 0;
     sa[3].abm_len = ABM_SIZE; // 20
-    sa[3].abm = (uint8*) calloc(1, sa[3].abm_len * sizeof(uint8));
+    sa[3].abm = (uint8_t*) calloc(1, sa[3].abm_len * sizeof(uint8_t));
     sa[3].arcw_len = 1;
     sa[3].arcw = 5;
     sa[3].arc_len = (sa[3].arcw * 2) + 1;
@@ -131,10 +131,10 @@ static int32 sadb_config(void)
     sa[4].ast = 1;
     sa[4].shivf_len = 12;
     sa[4].stmacf_len = 16;
-    sa[4].iv = (uint8*) calloc(1, sa[4].shivf_len * sizeof(uint8));
+    sa[4].iv = (uint8_t*) calloc(1, sa[4].shivf_len * sizeof(uint8_t));
     *(sa[4].iv + 11) = 0;
     sa[4].abm_len = ABM_SIZE; // 20
-    sa[4].abm = (uint8*) calloc(1, sa[4].abm_len * sizeof(uint8));
+    sa[4].abm = (uint8_t*) calloc(1, sa[4].abm_len * sizeof(uint8_t));
     sa[4].arcw_len = 1;
     sa[4].arcw = 5;
     sa[4].arc_len = (sa[4].arcw * 2) + 1;
@@ -150,10 +150,10 @@ static int32 sadb_config(void)
     sa[5].est = 1;
     sa[5].ast = 1;
     sa[5].shivf_len = 12;
-    sa[5].iv = (uint8*) calloc(1, sa[5].shivf_len * sizeof(uint8));
+    sa[5].iv = (uint8_t*) calloc(1, sa[5].shivf_len * sizeof(uint8_t));
     *(sa[5].iv + sa[5].shivf_len - 1) = 0;
     sa[5].abm_len = ABM_SIZE; // 20
-    sa[5].abm = (uint8*) calloc(1, sa[5].abm_len * sizeof(uint8));
+    sa[5].abm = (uint8_t*) calloc(1, sa[5].abm_len * sizeof(uint8_t));
     sa[5].arcw_len = 1;
     sa[5].arcw = 5;
     sa[5].arc_len = (sa[5].arcw * 2) + 1;
@@ -164,10 +164,10 @@ static int32 sadb_config(void)
     sa[6].est = 1;
     sa[6].ast = 1;
     sa[6].shivf_len = 12;
-    sa[6].iv = (uint8*) calloc(1, sa[6].shivf_len * sizeof(uint8));
+    sa[6].iv = (uint8_t*) calloc(1, sa[6].shivf_len * sizeof(uint8_t));
     *(sa[6].iv + sa[6].shivf_len - 1) = 0;
     sa[6].abm_len = ABM_SIZE; // 20
-    sa[6].abm = (uint8*) calloc(1, sa[6].abm_len * sizeof(uint8));
+    sa[6].abm = (uint8_t*) calloc(1, sa[6].abm_len * sizeof(uint8_t));
     sa[6].arcw_len = 1;
     sa[6].arcw = 5;
     sa[6].arc_len = (sa[6].arcw * 2) + 1;
@@ -179,10 +179,10 @@ static int32 sadb_config(void)
     sa[7].est = 1;
     sa[7].ast = 1;
     sa[7].shivf_len = 12;
-    sa[7].iv = (uint8*) calloc(1, sa[7].shivf_len * sizeof(uint8));
+    sa[7].iv = (uint8_t*) calloc(1, sa[7].shivf_len * sizeof(uint8_t));
     *(sa[7].iv + sa[7].shivf_len - 1) = 0;
     sa[7].abm_len = ABM_SIZE; // 20
-    sa[7].abm = (uint8*) calloc(1, sa[7].abm_len * sizeof(uint8));
+    sa[7].abm = (uint8_t*) calloc(1, sa[7].abm_len * sizeof(uint8_t));
     sa[7].arcw_len = 1;
     sa[7].arcw = 5;
     sa[7].arc_len = (sa[7].arcw * 2) + 1;
@@ -211,10 +211,10 @@ static int32 sadb_config(void)
     sa[9].est = 1;
     sa[9].ast = 0;
     sa[9].shivf_len = 12;
-    sa[9].iv = (uint8*) calloc(1, sa[9].shivf_len * sizeof(uint8));
+    sa[9].iv = (uint8_t*) calloc(1, sa[9].shivf_len * sizeof(uint8_t));
     *(sa[9].iv + 11) = 0;
     sa[9].abm_len = ABM_SIZE; // 20
-    sa[9].abm = (uint8*) calloc(1, sa[9].abm_len * sizeof(uint8));
+    sa[9].abm = (uint8_t*) calloc(1, sa[9].abm_len * sizeof(uint8_t));
     sa[9].arcw_len = 1;
     sa[9].arcw = 5;
     sa[9].arc_len = (sa[9].arcw * 2) + 1;
@@ -230,9 +230,9 @@ static int32 sadb_config(void)
  * @brief Function: sadb_init
  * @return int32: Success/Failure
  **/
-static int32 sadb_init(void)
+static int32_t sadb_init(void)
 {
-    int32 status = OS_SUCCESS;
+    int32_t status = OS_SUCCESS;
 
     for (int x = 0; x < NUM_SA; x++)
     {
@@ -258,7 +258,7 @@ static int32 sadb_init(void)
  * @brief Function: sadb_close
  * @return int32: Success/Failure
  **/
-static int32 sadb_close(void)
+static int32_t sadb_close(void)
 {
     //closing not necessary for inmemory DB.
     return OS_SUCCESS;
@@ -273,9 +273,9 @@ static int32 sadb_close(void)
  * @param security_association: SecurityAssociation_t**
  * @return int32: Success/Failure
  **/
-static int32 sadb_get_sa_from_spi(uint16 spi,SecurityAssociation_t** security_association)
+static int32_t sadb_get_sa_from_spi(uint16_t spi,SecurityAssociation_t** security_association)
 {
-    int32 status = OS_SUCCESS;
+    int32_t status = OS_SUCCESS;
     if(sa == NULL) { return CRYPTO_LIB_ERR_NO_INIT; }
     *security_association = &sa[spi];
     if(sa[spi].iv == NULL && ( sa[spi].ast == 1 || sa[spi].est == 1 )) { return CRYPTO_LIB_ERR_NULL_IV; } //Must have IV if doing encryption or authentication
@@ -296,9 +296,9 @@ static int32 sadb_get_sa_from_spi(uint16 spi,SecurityAssociation_t** security_as
  * @param security_association: SecurityAssociation_t**
  * @return int32: Success/Failure
  **/
-static int32 sadb_get_operational_sa_from_gvcid(uint8 tfvn,uint16 scid,uint16 vcid,uint8 mapid,SecurityAssociation_t** security_association)
+static int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn,uint16_t scid,uint16_t vcid,uint8_t mapid,SecurityAssociation_t** security_association)
 {
-    int32 status = CRYPTO_LIB_ERR_NO_OPERATIONAL_SA;
+    int32_t status = CRYPTO_LIB_ERR_NO_OPERATIONAL_SA;
     if(sa == NULL) { return CRYPTO_LIB_ERR_NO_INIT; }
 
     for (int i=0; i<10; i++)
@@ -384,9 +384,9 @@ static int32 sadb_get_operational_sa_from_gvcid(uint8 tfvn,uint16 scid,uint16 vc
  * @return int32: Success/Failure
  * @note Nothing currently actually happens in this function
  **/
-static int32 sadb_save_sa(SecurityAssociation_t* sa)
+static int32_t sadb_save_sa(SecurityAssociation_t* sa)
 {
-    int32 status = OS_SUCCESS;
+    int32_t status = OS_SUCCESS;
     //We could do a memory copy of the SA into the sa[NUM_SA] array at the given SPI, however, the inmemory code currently updates in place so no need for that.
     // If we change the in-place update logic, we should update this function to actually update the SA.
     return status;
@@ -400,15 +400,15 @@ static int32 sadb_save_sa(SecurityAssociation_t* sa)
  * @param tc_frame: TC_t
  * @return int32: Success/Failure
  **/
-static int32 sadb_sa_start(TC_t* tc_frame)
+static int32_t sadb_sa_start(TC_t* tc_frame)
 {
     // Local variables
-    uint8 count = 0;
-    uint16 spi = 0x0000;
+    uint8_t count = 0;
+    uint16_t spi = 0x0000;
     crypto_gvcid_t gvcid;
 
     // Read ingest
-    spi = ((uint8)sdls_frame.pdu.data[0] << 8) | (uint8)sdls_frame.pdu.data[1];
+    spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
 
     // Overwrite last PID
     sa[spi].lpid = (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
@@ -524,13 +524,13 @@ static int32 sadb_sa_start(TC_t* tc_frame)
  * @brief Function: sadb_sa_stop
  * @return int32: Success/Failure
  **/
-static int32 sadb_sa_stop(void)
+static int32_t sadb_sa_stop(void)
 {
     // Local variables
-    uint16 spi = 0x0000;
+    uint16_t spi = 0x0000;
 
     // Read ingest
-    spi = ((uint8)sdls_frame.pdu.data[0] << 8) | (uint8)sdls_frame.pdu.data[1];
+    spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
     printf("spi = %d \n", spi);
 
     // Overwrite last PID
@@ -582,15 +582,15 @@ static int32 sadb_sa_stop(void)
  * @brief Function: sadb_sa_rekey
  * @return int32: Success/Failure
  **/
-static int32 sadb_sa_rekey(void)
+static int32_t sadb_sa_rekey(void)
 {
     // Local variables
-    uint16 spi = 0x0000;
+    uint16_t spi = 0x0000;
     int count = 0;
     int x = 0;
 
     // Read ingest
-    spi = ((uint8)sdls_frame.pdu.data[count] << 8) | (uint8)sdls_frame.pdu.data[count+1];
+    spi = ((uint8_t)sdls_frame.pdu.data[count] << 8) | (uint8_t)sdls_frame.pdu.data[count+1];
     count = count + 2;
 
     // Overwrite last PID
@@ -601,11 +601,11 @@ static int32 sadb_sa_rekey(void)
     {
         if (sa[spi].sa_state == SA_UNKEYED)
         {	// Encryption Key
-            sa[spi].ekid = ((uint8)sdls_frame.pdu.data[count] << 8) | (uint8)sdls_frame.pdu.data[count+1];
+            sa[spi].ekid = ((uint8_t)sdls_frame.pdu.data[count] << 8) | (uint8_t)sdls_frame.pdu.data[count+1];
             count = count + 2;
 
             // Authentication Key
-            //sa[spi].akid = ((uint8)sdls_frame.pdu.data[count] << 8) | (uint8)sdls_frame.pdu.data[count+1];
+            //sa[spi].akid = ((uint8_t)sdls_frame.pdu.data[count] << 8) | (uint8_t)sdls_frame.pdu.data[count+1];
             //count = count + 2;
 
             // Anti-Replay Counter
@@ -618,7 +618,7 @@ static int32 sadb_sa_rekey(void)
                 {
                     // TODO: Uncomment once fixed in ESA implementation
                     // TODO: Assuming this was fixed...
-                    *(sa[spi].iv + x - count) = (uint8) sdls_frame.pdu.data[x];
+                    *(sa[spi].iv + x - count) = (uint8_t) sdls_frame.pdu.data[x];
 #ifdef PDU_DEBUG
                     printf("%02x", sdls_frame.pdu.data[x]);
 #endif
@@ -661,13 +661,13 @@ static int32 sadb_sa_rekey(void)
  * @brief Function: sadb_sa_expire
  * @return int32: Success/Failure
  **/
-static int32 sadb_sa_expire(void)
+static int32_t sadb_sa_expire(void)
 {
     // Local variables
-    uint16 spi = 0x0000;
+    uint16_t spi = 0x0000;
 
     // Read ingest
-    spi = ((uint8)sdls_frame.pdu.data[0] << 8) | (uint8)sdls_frame.pdu.data[1];
+    spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
     printf("spi = %d \n", spi);
 
     // Overwrite last PID
@@ -700,60 +700,60 @@ static int32 sadb_sa_expire(void)
  * @brief Function: sadb_sa_create
  * @return int32: Success/Failure
  **/
-static int32 sadb_sa_create(void)
+static int32_t sadb_sa_create(void)
 {
     // Local variables
-    uint8 count = 6;
-    uint16 spi = 0x0000;
+    uint8_t count = 6;
+    uint16_t spi = 0x0000;
 
     // Read sdls_frame.pdu.data
-    spi = ((uint8)sdls_frame.pdu.data[0] << 8) | (uint8)sdls_frame.pdu.data[1];
+    spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
     printf("spi = %d \n", spi);
 
     // Overwrite last PID
     sa[spi].lpid = (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
 
     // Write SA Configuration
-    sa[spi].est = ((uint8)sdls_frame.pdu.data[2] & 0x80) >> 7;
-    sa[spi].ast = ((uint8)sdls_frame.pdu.data[2] & 0x40) >> 6;
-    sa[spi].shivf_len = ((uint8)sdls_frame.pdu.data[2] & 0x3F);
+    sa[spi].est = ((uint8_t)sdls_frame.pdu.data[2] & 0x80) >> 7;
+    sa[spi].ast = ((uint8_t)sdls_frame.pdu.data[2] & 0x40) >> 6;
+    sa[spi].shivf_len = ((uint8_t)sdls_frame.pdu.data[2] & 0x3F);
     if(sa[spi].iv != NULL) { free(sa[spi].iv); }
-    sa[spi].iv = (uint8*) calloc(1, sa[spi].shivf_len * sizeof(uint8));
-    sa[spi].shsnf_len = ((uint8)sdls_frame.pdu.data[3] & 0xFC) >> 2;
-    sa[spi].shplf_len = ((uint8)sdls_frame.pdu.data[3] & 0x03);
-    sa[spi].stmacf_len = ((uint8)sdls_frame.pdu.data[4]);
-    sa[spi].ecs_len = ((uint8)sdls_frame.pdu.data[5]);
+    sa[spi].iv = (uint8_t*) calloc(1, sa[spi].shivf_len * sizeof(uint8_t));
+    sa[spi].shsnf_len = ((uint8_t)sdls_frame.pdu.data[3] & 0xFC) >> 2;
+    sa[spi].shplf_len = ((uint8_t)sdls_frame.pdu.data[3] & 0x03);
+    sa[spi].stmacf_len = ((uint8_t)sdls_frame.pdu.data[4]);
+    sa[spi].ecs_len = ((uint8_t)sdls_frame.pdu.data[5]);
     for (int x = 0; x < sa[spi].ecs_len; x++)
     {
-        sa[spi].ecs[x] = ((uint8)sdls_frame.pdu.data[count++]);
+        sa[spi].ecs[x] = ((uint8_t)sdls_frame.pdu.data[count++]);
     }
-    sa[spi].shivf_len = ((uint8)sdls_frame.pdu.data[count++]);
+    sa[spi].shivf_len = ((uint8_t)sdls_frame.pdu.data[count++]);
     for (int x = 0; x < sa[spi].shivf_len; x++)
     {
-        *(sa[spi].iv + x) = ((uint8)sdls_frame.pdu.data[count++]);
+        *(sa[spi].iv + x) = ((uint8_t)sdls_frame.pdu.data[count++]);
     }
-    sa[spi].acs_len = ((uint8)sdls_frame.pdu.data[count++]);
+    sa[spi].acs_len = ((uint8_t)sdls_frame.pdu.data[count++]);
     for (int x = 0; x < sa[spi].acs_len; x++)
     {
-        sa[spi].acs = ((uint8)sdls_frame.pdu.data[count++]);
+        sa[spi].acs = ((uint8_t)sdls_frame.pdu.data[count++]);
     }
-    sa[spi].abm_len = (uint8)((sdls_frame.pdu.data[count] << 8) | (sdls_frame.pdu.data[count+1]));
+    sa[spi].abm_len = (uint8_t)((sdls_frame.pdu.data[count] << 8) | (sdls_frame.pdu.data[count+1]));
     count = count + 2;
     for (int x = 0; x < sa[spi].abm_len; x++)
     {
-        sa[spi].abm[x] = ((uint8)sdls_frame.pdu.data[count++]);
+        sa[spi].abm[x] = ((uint8_t)sdls_frame.pdu.data[count++]);
     }
-    sa[spi].arc_len = ((uint8)sdls_frame.pdu.data[count++]);
+    sa[spi].arc_len = ((uint8_t)sdls_frame.pdu.data[count++]);
     if(sa[spi].arc != NULL) { free(sa[spi].arc); }
-    sa[spi].arc = (uint8*) calloc(1, sa[spi].arc_len * sizeof(uint8));
+    sa[spi].arc = (uint8_t*) calloc(1, sa[spi].arc_len * sizeof(uint8_t));
     for (int x = 0; x < sa[spi].arc_len; x++)
     {
-        *(sa[spi].arc + x) = ((uint8)sdls_frame.pdu.data[count++]);
+        *(sa[spi].arc + x) = ((uint8_t)sdls_frame.pdu.data[count++]);
     }
-    sa[spi].arcw_len = ((uint8)sdls_frame.pdu.data[count++]);
+    sa[spi].arcw_len = ((uint8_t)sdls_frame.pdu.data[count++]);
     for (int x = 0; x < sa[spi].arcw_len; x++)
     {
-        sa[spi].arcw = sa[spi].arcw | ( ((uint8)sdls_frame.pdu.data[count++]) << (sa[spi].arcw_len - x) );
+        sa[spi].arcw = sa[spi].arcw | ( ((uint8_t)sdls_frame.pdu.data[count++]) << (sa[spi].arcw_len - x) );
     }
 
     // TODO: Checks for valid data
@@ -772,13 +772,13 @@ static int32 sadb_sa_create(void)
  * @brief Function: sadb_sa_delete
  * @return int32: Success/Failure
  **/
-static int32 sadb_sa_delete(void)
+static int32_t sadb_sa_delete(void)
 {
     // Local variables
-    uint16 spi = 0x0000;
+    uint16_t spi = 0x0000;
 
     // Read ingest
-    spi = ((uint8)sdls_frame.pdu.data[0] << 8) | (uint8)sdls_frame.pdu.data[1];
+    spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
     printf("spi = %d \n", spi);
 
     // Overwrite last PID
@@ -813,13 +813,13 @@ static int32 sadb_sa_delete(void)
  * @brief Function: sadb_sa_setASRN
  * @return int32: Success/Failure
  **/
-static int32 sadb_sa_setARSN(void)
+static int32_t sadb_sa_setARSN(void)
 {
     // Local variables
-    uint16 spi = 0x0000;
+    uint16_t spi = 0x0000;
 
     // Read ingest
-    spi = ((uint8)sdls_frame.pdu.data[0] << 8) | (uint8)sdls_frame.pdu.data[1];
+    spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
     printf("spi = %d \n", spi);
 
     // TODO: Check SA type (authenticated, encrypted, both) and set appropriately
@@ -835,7 +835,7 @@ static int32 sadb_sa_setARSN(void)
         {   // Set IV - authenticated encryption
             for (int x = 0; x < IV_SIZE; x++)
             {
-                *(sa[spi].iv + x) = (uint8) sdls_frame.pdu.data[x + 2];
+                *(sa[spi].iv + x) = (uint8_t) sdls_frame.pdu.data[x + 2];
 #ifdef PDU_DEBUG
                 printf("%02x", *(sa[spi].iv + x));
 #endif
@@ -862,19 +862,19 @@ static int32 sadb_sa_setARSN(void)
  * @brief Function: sadb_sa_setARSNW
  * @return int32: Success/Failure
  **/
-static int32 sadb_sa_setARSNW(void)
+static int32_t sadb_sa_setARSNW(void)
 {
     // Local variables
-    uint16 spi = 0x0000;
+    uint16_t spi = 0x0000;
 
     // Read ingest
-    spi = ((uint8)sdls_frame.pdu.data[0] << 8) | (uint8)sdls_frame.pdu.data[1];
+    spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
     printf("spi = %d \n", spi);
 
     // Check SPI exists
     if (spi < NUM_SA)
     {
-        sa[spi].arcw_len = (uint8) sdls_frame.pdu.data[2];
+        sa[spi].arcw_len = (uint8_t) sdls_frame.pdu.data[2];
 
         // Check for out of bounds
         if (sa[spi].arcw_len > (ARC_SIZE))
@@ -884,7 +884,7 @@ static int32 sadb_sa_setARSNW(void)
 
         for(int x = 0; x < sa[spi].arcw_len; x++)
         {
-            sa[spi].arcw = (((uint8) sdls_frame.pdu.data[x+3]) << (sa[spi].arcw_len - x) );
+            sa[spi].arcw = (((uint8_t) sdls_frame.pdu.data[x+3]) << (sa[spi].arcw_len - x) );
         }
     }
     else
@@ -897,17 +897,17 @@ static int32 sadb_sa_setARSNW(void)
 
 /**
  * @brief Function: sadb_sa_status
- * @param ingest: char*
+ * @param ingest: uint8_t*
  * @return int32: count
  **/
-static int32 sadb_sa_status(char* ingest)
+static int32_t sadb_sa_status(uint8_t* ingest)
 {
     // Local variables
     int count = 0;
-    uint16 spi = 0x0000;
+    uint16_t spi = 0x0000;
 
     // Read ingest
-    spi = ((uint8)sdls_frame.pdu.data[0] << 8) | (uint8)sdls_frame.pdu.data[1];
+    spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
     printf("spi = %d \n", spi);
 
     // Check SPI exists

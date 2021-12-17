@@ -243,7 +243,7 @@ void Crypto_saPrint(SecurityAssociation_t* sa)
  **/
 void Crypto_hexprint(void *c, size_t n)
 {
-    unsigned char *t = c;
+    uint8_t *t = c;
     if (c == NULL)
         return;
     while (n > 0) {
@@ -261,7 +261,7 @@ void Crypto_hexprint(void *c, size_t n)
  **/
 void Crypto_binprint(void *c, size_t n)
 {
-    unsigned char *t = c;
+    uint8_t *t = c;
     if (c == NULL)
         return;
     while (n > 0) {
@@ -273,7 +273,7 @@ void Crypto_binprint(void *c, size_t n)
     printf("\n");
 }
 
-void Crypto_mpPrint(GvcidManagedParameters_t* managed_parameters, uint8 print_children)
+void Crypto_mpPrint(GvcidManagedParameters_t* managed_parameters, uint8_t print_children)
 //Prints the currently configured Managed Parameters
 {
     if(managed_parameters != NULL){

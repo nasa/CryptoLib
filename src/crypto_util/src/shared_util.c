@@ -23,14 +23,14 @@
 
 /**
  * @brief Function:  c_read_file
- * Reads a file from disk into a char * buffer.
- * @param f_name: const char*, file name & path to be read
+ * Reads a file from disk into a uint8_t * buffer.
+ * @param f_name: const uint8_t*, file name & path to be read
  * @param f_size: long*
- * @return malloc'd char* containing the contents of the buffer.
+ * @return malloc'd uint8_t* containing the contents of the buffer.
  * @note This buffer is NOT null terminated and must be free()'d.
  **/
-char * c_read_file(const char * f_name, long * f_size) {
-    char* buffer=0;
+uint8_t * c_read_file(const uint8_t * f_name, long * f_size) {
+    uint8_t* buffer=0;
     long length;
     FILE* f = fopen(f_name,"rb");
     if (f){
@@ -56,14 +56,14 @@ char * c_read_file(const char * f_name, long * f_size) {
 /**
  * @brief Function: convert_hexstring_to_byte_array
  * Converts hexstring based character array to a byte array
- * @param source_str: char*, The source character array in hex format to be converted
- * @param dest_buffer: uint8*, The destination uint8 array from which the hex array will be converted to bytes
+ * @param source_str: uint8_t*, The source character array in hex format to be converted
+ * @param dest_buffer: uint8*, The destination uint8_t array from which the hex array will be converted to bytes
  * @return int length of dest_buffer
  **/
-int convert_hexstring_to_byte_array(char* source_str, uint8* dest_buffer)
+int convert_hexstring_to_byte_array(uint8_t* source_str, uint8_t* dest_buffer)
 {
-    char *line = source_str;
-    char *data = line;
+    uint8_t *line = source_str;
+    uint8_t *data = line;
     int offset;
     int read_byte;
     int data_len = 0;
@@ -78,17 +78,17 @@ int convert_hexstring_to_byte_array(char* source_str, uint8* dest_buffer)
 
 /**
  * @brief Function: hex_conversion
- * Makes use of the convert_hexstring_to_byte_array(char* source_str, uint8* dest_buffer) function to malloc the approrpiate destination buffer
+ * Makes use of the convert_hexstring_to_byte_array(uint8_t* source_str, uint8_t* dest_buffer) function to malloc the approrpiate destination buffer
  * As well as to make the function call as well.
- * @param buffer_h: char*, The incoming hexstyle character array.
+ * @param buffer_h: uint8_t*, The incoming hexstyle character array.
  * @param buffer_b: uint**, The resulting byte array.
  * @param buffer_b_length: int*, The resulting length of the new buffer_b array.
  * @note buffer_b is not null terminated, and must be free()'d by the user.
  **/
-void hex_conversion(char *buffer_h, uint8 **buffer_b, int *buffer_b_length)
+void hex_conversion(uint8_t *buffer_h, uint8_t **buffer_b, int *buffer_b_length)
 {
     // Convert input plaintext
-    *buffer_b = (uint8*)malloc((strlen(buffer_h) / 2) * sizeof(uint8));
+    *buffer_b = (uint8_t*)malloc((strlen(buffer_h) / 2) * sizeof(uint8_t));
     *buffer_b_length = convert_hexstring_to_byte_array(buffer_h, *buffer_b);
 }
 
@@ -97,7 +97,7 @@ void hex_conversion(char *buffer_h, uint8 **buffer_b, int *buffer_b_length)
  * @brief Function: debug_printf
  * Formatted debug print statement
  **/
-void debug_printf(const char *format, ...)
+void debug_printf(const uint8_t *format, ...)
 {
     va_list args;
     fprintf(stderr, "DEBUG - ");
@@ -106,7 +106,7 @@ void debug_printf(const char *format, ...)
     va_end(args);
 }
 #else
-void debug_printf(const char* format, ...) {
+void debug_printf(const uint8_t* format, ...) {
     //Do nothing, DEBUG preprocessor disabled.
 }
 #endif
@@ -115,16 +115,16 @@ void debug_printf(const char* format, ...) {
 /**
  * @brief Function: debug_hexprintf
  * Used to print hexlike byte array.
- * @param bin_data: char*, Incoming Binary data
+ * @param bin_data: uint8_t*, Incoming Binary data
  * @param size_bin_data: int, Size of bin_data
  **/
-void debug_hexprintf(const char *bin_data, int size_bin_data)
+void debug_hexprintf(const uint8_t *bin_data, int size_bin_data)
 {
     //https://stackoverflow.com/questions/6357031/how-do-you-convert-a-byte-array-to-a-hexadecimal-string-in-c
     //https://stackoverflow.com/questions/5040920/converting-from-signed-char-to-unsigned-char-and-back-again
-    unsigned char* u_bin_data = (unsigned char*)bin_data;
-    unsigned char output[(size_bin_data*2)+1];
-    char *ptr = &output[0];
+    uint8_t* u_bin_data = (uint8_t*)bin_data;
+    uint8_t output[(size_bin_data*2)+1];
+    uint8_t *ptr = &output[0];
     int i;
     for(i=0; i < size_bin_data; i++){
         ptr += sprintf(ptr,"%02X",u_bin_data[i]);
@@ -132,7 +132,7 @@ void debug_hexprintf(const char *bin_data, int size_bin_data)
     debug_printf("%s\n",output);
 }
 #else
-void debug_hexprintf(const char* bin_data, int size_bin_data) {
+void debug_hexprintf(const uint8_t* bin_data, int size_bin_data) {
     //Do nothing, DEBUG preprocessor disabled.
 }
 #endif

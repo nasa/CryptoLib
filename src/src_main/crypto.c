@@ -46,50 +46,50 @@ static SadbRoutine sadb_routine = NULL;
 ** Static Prototypes
 */
 // Assisting Functions
-static int32  Crypto_Get_tcPayloadLength(TC_t* tc_frame, SecurityAssociation_t *sa_ptr);
-static int32  Crypto_Get_tmLength(int len);
-static uint8  Crypto_Is_AEAD_Algorithm(uint32 cipher_suite_id);
-static uint8* Crypto_Prepare_TC_AAD(uint8* buffer, uint16 len_aad, uint8* abm_buffer);
-static void   Crypto_TM_updatePDU(char* ingest, int len_ingest);
+static int32_t  Crypto_Get_tcPayloadLength(TC_t* tc_frame, SecurityAssociation_t *sa_ptr);
+static int32_t  Crypto_Get_tmLength(int len);
+static uint8_t  Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id);
+static uint8_t* Crypto_Prepare_TC_AAD(uint8_t* buffer, uint16_t len_aad, uint8_t* abm_buffer);
+static void   Crypto_TM_updatePDU(uint8_t* ingest, int len_ingest);
 static void   Crypto_TM_updateOCF(void);
 static void   Crypto_Local_Config(void);
 static void   Crypto_Local_Init(void);
-//static int32  Crypto_gcm_err(int gcm_err);
-static int32 Crypto_window(uint8 *actual, uint8 *expected, int length, int window);
-static int32 Crypto_compare_less_equal(uint8 *actual, uint8 *expected, int length);
-static int32  Crypto_FECF(int fecf, char* ingest, int len_ingest,TC_t* tc_frame);
-static uint16 Crypto_Calc_FECF(char* ingest, int len_ingest);
+//static int32_t  Crypto_gcm_err(int gcm_err);
+static int32_t Crypto_window(uint8_t *actual, uint8_t *expected, int length, int window);
+static int32_t Crypto_compare_less_equal(uint8_t *actual, uint8_t *expected, int length);
+static int32_t  Crypto_FECF(int fecf, uint8_t* ingest, int len_ingest,TC_t* tc_frame);
+static uint16_t Crypto_Calc_FECF(uint8_t* ingest, int len_ingest);
 static void   Crypto_Calc_CRC_Init_Table(void);
-static uint16 Crypto_Calc_CRC16(char* data, int size);
+static uint16_t Crypto_Calc_CRC16(uint8_t* data, int size);
 // Key Management Functions
-static int32 Crypto_Key_OTAR(void);
-static int32 Crypto_Key_update(uint8 state);
-static int32 Crypto_Key_inventory(char*);
-static int32 Crypto_Key_verify(char*,TC_t* tc_frame);
+static int32_t Crypto_Key_OTAR(void);
+static int32_t Crypto_Key_update(uint8_t state);
+static int32_t Crypto_Key_inventory(uint8_t*);
+static int32_t Crypto_Key_verify(uint8_t*,TC_t* tc_frame);
 // Security Monitoring & Control Procedure
-static int32 Crypto_MC_ping(char* ingest);
-static int32 Crypto_MC_status(char* ingest);
-static int32 Crypto_MC_dump(char* ingest);
-static int32 Crypto_MC_erase(char* ingest);
-static int32 Crypto_MC_selftest(char* ingest);
-static int32 Crypto_SA_readARSN(char* ingest);
-static int32 Crypto_MC_resetalarm(void);
+static int32_t Crypto_MC_ping(uint8_t* ingest);
+static int32_t Crypto_MC_status(uint8_t* ingest);
+static int32_t Crypto_MC_dump(uint8_t* ingest);
+static int32_t Crypto_MC_erase(uint8_t* ingest);
+static int32_t Crypto_MC_selftest(uint8_t* ingest);
+static int32_t Crypto_SA_readARSN(uint8_t* ingest);
+static int32_t Crypto_MC_resetalarm(void);
 // User Functions
-static int32 Crypto_User_IdleTrigger(char* ingest);
-static int32 Crypto_User_BadSPI(void);
-static int32 Crypto_User_BadIV(void);
-static int32 Crypto_User_BadMAC(void);
-static int32 Crypto_User_BadFECF(void);
-static int32 Crypto_User_ModifyKey(void);
-static int32 Crypto_User_ModifyActiveTM(void);
-static int32 Crypto_User_ModifyVCID(void);
+static int32_t Crypto_User_IdleTrigger(uint8_t* ingest);
+static int32_t Crypto_User_BadSPI(void);
+static int32_t Crypto_User_BadIV(void);
+static int32_t Crypto_User_BadMAC(void);
+static int32_t Crypto_User_BadFECF(void);
+static int32_t Crypto_User_ModifyKey(void);
+static int32_t Crypto_User_ModifyActiveTM(void);
+static int32_t Crypto_User_ModifyVCID(void);
 // Determine Payload Data Unit
-static int32 Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, char* ingest);
-static int32 Crypto_PDU(char* ingest, TC_t* tc_frame);
+static int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, uint8_t* ingest);
+static int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame);
 // Managed Parameter Functions
-static int32 Crypto_Get_Managed_Parameters_For_Gvcid(uint8 tfvn,uint16 scid,uint8 vcid,GvcidManagedParameters_t* managed_parameters_in,
+static int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn,uint16_t scid,uint8_t vcid,GvcidManagedParameters_t* managed_parameters_in,
                                                       GvcidManagedParameters_t** managed_parameters_out);
-static int32 crypto_config_add_gvcid_managed_parameter_recursion(uint8 tfvn, uint16 scid, uint8 vcid, uint8 has_fecf, uint8 has_segmentation_hdr,GvcidManagedParameters_t* managed_parameter);
+static int32_t crypto_config_add_gvcid_managed_parameter_recursion(uint8_t tfvn, uint16_t scid, uint8_t vcid, uint8_t has_fecf, uint8_t has_segmentation_hdr,GvcidManagedParameters_t* managed_parameter);
 static void Crypto_Free_Managed_Parameters(GvcidManagedParameters_t* managed_parameters);
 
 /*
@@ -105,22 +105,22 @@ SadbMariaDBConfig_t* sadb_mariadb_config = NULL;
 GvcidManagedParameters_t* gvcid_managed_parameters = NULL;
 GvcidManagedParameters_t* current_managed_parameters = NULL;
 // OCF
-static uint8 ocf = 0;
+static uint8_t ocf = 0;
 static SDLS_FSR_t report;
 static TM_FrameCLCW_t clcw;
 // Flags
 static SDLS_MC_LOG_RPLY_t log_summary;
 static SDLS_MC_DUMP_BLK_RPLY_t log;
-static uint8 log_count = 0;
-static uint16 tm_offset = 0;
+static uint8_t log_count = 0;
+static uint16_t tm_offset = 0;
 // ESA Testing - 0 = disabled, 1 = enabled
-static uint8 badSPI = 0;
-static uint8 badIV = 0;
-static uint8 badMAC = 0;
-static uint8 badFECF = 0;
+static uint8_t badSPI = 0;
+static uint8_t badIV = 0;
+static uint8_t badMAC = 0;
+static uint8_t badFECF = 0;
 //  CRC
-static uint32 crc32Table[256];
-static uint16 crc16Table[256];
+static uint32_t crc32Table[256];
+static uint16_t crc16Table[256];
 /*
 ** Initialization Functions
 */
@@ -129,9 +129,9 @@ static uint16 crc16Table[256];
 * @brief Function: Crypto_Init_Unit_test
 * @return int32: status
 **/
-int32 Crypto_Init_Unit_Test(void)
+int32_t Crypto_Init_Unit_Test(void)
 {
-    int32 status = OS_SUCCESS;
+    int32_t status = OS_SUCCESS;
     Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY,CRYPTO_TC_CREATE_FECF_TRUE,TC_PROCESS_SDLS_PDUS_TRUE,TC_HAS_PUS_HDR,TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,0,TC_HAS_FECF,TC_HAS_SEGMENT_HDRS);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,1,TC_HAS_FECF,TC_HAS_SEGMENT_HDRS);
@@ -146,9 +146,9 @@ int32 Crypto_Init_Unit_Test(void)
 * @param sadb_mariadb_config_p: SadbMariaDBConfig_t*
 * @return int32: Success/Failure
 **/
-int32 Crypto_Init_With_Configs(CryptoConfig_t* crypto_config_p,GvcidManagedParameters_t* gvcid_managed_parameters_p,SadbMariaDBConfig_t* sadb_mariadb_config_p)
+int32_t Crypto_Init_With_Configs(CryptoConfig_t* crypto_config_p,GvcidManagedParameters_t* gvcid_managed_parameters_p,SadbMariaDBConfig_t* sadb_mariadb_config_p)
 {
-    int32 status = OS_SUCCESS;
+    int32_t status = OS_SUCCESS;
     crypto_config = crypto_config_p;
     gvcid_managed_parameters = gvcid_managed_parameters_p;
     sadb_mariadb_config = sadb_mariadb_config_p;
@@ -160,9 +160,9 @@ int32 Crypto_Init_With_Configs(CryptoConfig_t* crypto_config_p,GvcidManagedParam
  * @brief Function Crypto_Init
  * Initializes libgcrypt, Security Associations
  **/
-int32 Crypto_Init(void)
+int32_t Crypto_Init(void)
 {
-    int32 status = OS_SUCCESS;
+    int32_t status = OS_SUCCESS;
 
     if(crypto_config==NULL){
         status = CRYPTO_CONFIGURATION_NOT_COMPLETE;
@@ -230,9 +230,9 @@ int32 Crypto_Init(void)
 * Free memory objects & restore pointers to NULL for re-initialization
 * @return int32: Success/Failure
 **/
-int32 Crypto_Shutdown(void)
+int32_t Crypto_Shutdown(void)
 {
-    int32 status = OS_SUCCESS;
+    int32_t status = OS_SUCCESS;
 
     if(crypto_config!=NULL){
         free(crypto_config);
@@ -265,9 +265,9 @@ int32 Crypto_Shutdown(void)
 * @param vcid_bitmask: uint8
 * @return int32: Success/Failure
 **/
-int32 Crypto_Config_CryptoLib(uint8 sadb_type, uint8 crypto_create_fecf, uint8 process_sdls_pdus, uint8 has_pus_hdr, uint8 ignore_sa_state, uint8 ignore_anti_replay, uint8 unique_sa_per_mapid,uint8 crypto_check_fecf, uint8 vcid_bitmask)
+int32_t Crypto_Config_CryptoLib(uint8_t sadb_type, uint8_t crypto_create_fecf, uint8_t process_sdls_pdus, uint8_t has_pus_hdr, uint8_t ignore_sa_state, uint8_t ignore_anti_replay, uint8_t unique_sa_per_mapid,uint8_t crypto_check_fecf, uint8_t vcid_bitmask)
 {
-    int32 status = OS_SUCCESS;
+    int32_t status = OS_SUCCESS;
     crypto_config = (CryptoConfig_t*) calloc(1, CRYPTO_CONFIG_SIZE);
     crypto_config->sadb_type=sadb_type;
     crypto_config->crypto_create_fecf=crypto_create_fecf;
@@ -283,16 +283,16 @@ int32 Crypto_Config_CryptoLib(uint8 sadb_type, uint8 crypto_create_fecf, uint8 p
 
 /**
 * @brief Function: Crypto_Config_MariaDB
-* @param mysql_username: char*
-* @param mysql_password: char*
-* @param mysql_hostname: char*
-* @param mysql_database: char*
+* @param mysql_username: uint8_t*
+* @param mysql_password: uint8_t*
+* @param mysql_hostname: uint8_t*
+* @param mysql_database: uint8_t*
 * @param mysql_port: uint16
 * @return int32: Success/Failure
 **/
-int32 Crypto_Config_MariaDB(char* mysql_username, char* mysql_password, char* mysql_hostname, char* mysql_database, uint16 mysql_port)
+int32_t Crypto_Config_MariaDB(uint8_t* mysql_username, uint8_t* mysql_password, uint8_t* mysql_hostname, uint8_t* mysql_database, uint16_t mysql_port)
 {
-    int32 status = OS_SUCCESS;
+    int32_t status = OS_SUCCESS;
     sadb_mariadb_config = (SadbMariaDBConfig_t*)calloc(1, SADB_MARIADB_CONFIG_SIZE);
     sadb_mariadb_config->mysql_username=mysql_username;
     sadb_mariadb_config->mysql_password=mysql_password;
@@ -311,9 +311,9 @@ int32 Crypto_Config_MariaDB(char* mysql_username, char* mysql_password, char* my
 * @param has_segmentation_hdr: uint8
 * @return int32: Success/Failure
 **/
-int32 Crypto_Config_Add_Gvcid_Managed_Parameter(uint8 tfvn, uint16 scid, uint8 vcid, uint8 has_fecf, uint8 has_segmentation_hdr)
+int32_t Crypto_Config_Add_Gvcid_Managed_Parameter(uint8_t tfvn, uint16_t scid, uint8_t vcid, uint8_t has_fecf, uint8_t has_segmentation_hdr)
 {
-    int32 status = OS_SUCCESS;
+    int32_t status = OS_SUCCESS;
 
     if(gvcid_managed_parameters==NULL){//case: Global Root Node not Set
         gvcid_managed_parameters = (GvcidManagedParameters_t*) calloc(1,GVCID_MANAGED_PARAMETERS_SIZE);
@@ -340,7 +340,7 @@ int32 Crypto_Config_Add_Gvcid_Managed_Parameter(uint8 tfvn, uint16 scid, uint8 v
 * @param managed_parameter: GvcidManagedParameters_t*
 * @return int32: Success/Failure
 **/
-static int32 crypto_config_add_gvcid_managed_parameter_recursion(uint8 tfvn, uint16 scid, uint8 vcid, uint8 has_fecf, uint8 has_segmentation_hdr,GvcidManagedParameters_t* managed_parameter)
+static int32_t crypto_config_add_gvcid_managed_parameter_recursion(uint8_t tfvn, uint16_t scid, uint8_t vcid, uint8_t has_fecf, uint8_t has_segmentation_hdr,GvcidManagedParameters_t* managed_parameter)
 {
     if(managed_parameter->next!=NULL){
         return crypto_config_add_gvcid_managed_parameter_recursion(tfvn, scid, vcid, has_fecf, has_segmentation_hdr,managed_parameter->next);
@@ -876,9 +876,9 @@ static void Crypto_Local_Init(void)
  **/
 static void Crypto_Calc_CRC_Init_Table(void)
 {   
-    uint16 val;
-    uint32 poly = 0xEDB88320;
-    uint32 crc;
+    uint16_t val;
+    uint32_t poly = 0xEDB88320;
+    uint32_t crc;
 
     // http://create.stephan-brumme.com/crc32/
     for (unsigned int i = 0; i <= 0xFF; i++)
@@ -919,7 +919,7 @@ static void Crypto_Calc_CRC_Init_Table(void)
  * @param sa_ptr: SecurityAssociation_t
  * @return int32, Length of TCPayload
  **/
-static int32 Crypto_Get_tcPayloadLength(TC_t* tc_frame, SecurityAssociation_t *sa_ptr)
+static int32_t Crypto_Get_tcPayloadLength(TC_t* tc_frame, SecurityAssociation_t *sa_ptr)
 {
     int tf_hdr = 5;
     int seg_hdr = 0;if(current_managed_parameters->has_segmentation_hdr==TC_HAS_SEGMENT_HDRS){seg_hdr=1;}
@@ -947,9 +947,9 @@ static int32 Crypto_Get_tcPayloadLength(TC_t* tc_frame, SecurityAssociation_t *s
  * @brief Function: Crypto_Get_tmLength
  * Returns the total length of the current tm_frame in BYTES!
  * @param len: int
- * @return int32 Length of TM
+ * @return int32_t Length of TM
  **/
-static int32 Crypto_Get_tmLength(int len)
+static int32_t Crypto_Get_tmLength(int len)
 {
     #ifdef FILL
         len = TM_FILL_SIZE;
@@ -965,7 +965,7 @@ static int32 Crypto_Get_tmLength(int len)
  * Looks up cipher suite ID and determines if it's an AEAD algorithm. Returns 1 if true, 0 if false;
  * @param cipher_suite_id: uint32
  **/
-static uint8 Crypto_Is_AEAD_Algorithm(uint32 cipher_suite_id)
+static uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
 {
     //CryptoLib only supports AES-GCM, which is an AEAD (Authenticated Encryption with Associated Data) algorithm, so return true/1.
     //TODO - Add cipher suite mapping to which algorithms are AEAD and which are not.
@@ -976,13 +976,13 @@ static uint8 Crypto_Is_AEAD_Algorithm(uint32 cipher_suite_id)
  * @brief Function: Crypto_Prepare_TC_AAD
  * Callocs and returns pointer to buffer where AAD is created & bitwise-anded with bitmask!
  * Note: Function caller is responsible for freeing the returned buffer!
- * @param buffer: uint8*
- * @param len_aad: uint16
- * @param abm_buffer: uint8*
+ * @param buffer: uint8_t*
+ * @param len_aad: uint16_t
+ * @param abm_buffer: uint8_t*
  **/
-static uint8* Crypto_Prepare_TC_AAD(uint8* buffer, uint16 len_aad, uint8* abm_buffer)
+static uint8_t* Crypto_Prepare_TC_AAD(uint8_t* buffer, uint16_t len_aad, uint8_t* abm_buffer)
 {
-    uint8* aad = (uint8*) calloc(1,len_aad*sizeof(uint8));
+    uint8_t* aad = (uint8_t*) calloc(1,len_aad*sizeof(uint8_t));
 
     for (int i = 0; i < len_aad; i++)
     {
@@ -1005,10 +1005,10 @@ static uint8* Crypto_Prepare_TC_AAD(uint8* buffer, uint16 len_aad, uint8* abm_bu
 /**
  * @brief Function: Crypto_TM_updatePDU
  * Update the Telemetry Payload Data Unit
- * @param ingest: char*
+ * @param ingest: uint8_t*
  * @param len_ingest: int
  **/
-static void Crypto_TM_updatePDU(char* ingest, int len_ingest)
+static void Crypto_TM_updatePDU(uint8_t* ingest, int len_ingest)
 {	// Copy ingest to PDU
     int x = 0;
     int fill_size = 0;
@@ -1033,7 +1033,7 @@ static void Crypto_TM_updatePDU(char* ingest, int len_ingest)
         {
             if (x < len_ingest)
             {	// Fill
-                tm_frame.tm_pdu[x] = (uint8)ingest[x];
+                tm_frame.tm_pdu[x] = (uint8_t)ingest[x];
             }
             else
             {	// Zero
@@ -1075,13 +1075,13 @@ static void Crypto_TM_updatePDU(char* ingest, int len_ingest)
         // Copy actual packet
         while (x < len_ingest + tm_offset)
         {
-            //printf("ingest[x - tm_offset] = 0x%02x \n", (uint8)ingest[x - tm_offset]);
-            tm_frame.tm_pdu[x] = (uint8)ingest[x - tm_offset];
+            //printf("ingest[x - tm_offset] = 0x%02x \n", (uint8_t)ingest[x - tm_offset]);
+            tm_frame.tm_pdu[x] = (uint8_t)ingest[x - tm_offset];
             x++;
         }
         #ifdef TM_IDLE_FILL
             // Check for idle frame trigger
-            if (((uint8)ingest[0] == 0x08) && ((uint8)ingest[1] == 0x90))
+            if (((uint8_t)ingest[0] == 0x08) && ((uint8_t)ingest[1] == 0x90))
             { 
                 // Don't fill idle frames   
             }
@@ -1183,12 +1183,12 @@ static void Crypto_TM_updateOCF(void)
 //TODO - Review this. Not sure it quite works how we think
 /**
  * @brief Function: Crypto_increment
- * Increments the bytes within a uint8 array
+ * Increments the bytes within a uint8_t array
  * @param num: uint8*
  * @param length: int
  * @return int32: Success/Failure
  **/
-int32 Crypto_increment(uint8 *num, int length)
+int32_t Crypto_increment(uint8_t *num, int length)
 {
     int i;
     /* go from right (least significant) to left (most signifcant) */
@@ -1215,11 +1215,11 @@ int32 Crypto_increment(uint8 *num, int length)
  * @param window: int
  * @return int32: Success/Failure
  **/
-static int32 Crypto_window(uint8 *actual, uint8 *expected, int length, int window)
+static int32_t Crypto_window(uint8_t *actual, uint8_t *expected, int length, int window)
 {
     int status = CRYPTO_LIB_ERR_BAD_ANTIREPLAY_WINDOW;
     int result = 0;
-    uint8 temp[length];
+    uint8_t temp[length];
 
     memcpy(temp, expected, length);
 
@@ -1251,7 +1251,7 @@ static int32 Crypto_window(uint8 *actual, uint8 *expected, int length, int windo
  * @param length: int
  * @return int32: Success/Failure
  **/
-static int32 Crypto_compare_less_equal(uint8 *actual, uint8 *expected, int length)
+static int32_t Crypto_compare_less_equal(uint8_t *actual, uint8_t *expected, int length)
 {
     int status = OS_ERROR;
 
@@ -1274,13 +1274,13 @@ static int32 Crypto_compare_less_equal(uint8 *actual, uint8 *expected, int lengt
 /**
  * @brief Function: Crypto_Prep_Reply
  * Assumes that both the pkt_length and pdu_len are set properly
- * @param ingest: char*
+ * @param ingest: uint8_t*
  * @param appID: uint8
  * @return uint8: Count
  **/
-uint8 Crypto_Prep_Reply(char* ingest, uint8 appID)
+uint8_t Crypto_Prep_Reply(uint8_t* ingest, uint8_t appID)
 {
-    uint8 count = 0;
+    uint8_t count = 0;
     
     // Prepare CCSDS for reply
     sdls_frame.hdr.pvn   = 0;
@@ -1316,19 +1316,19 @@ uint8 Crypto_Prep_Reply(char* ingest, uint8 appID)
  * @brief Function Crypto_FECF
  * Calculate the Frame Error Control Field (FECF), also known as a cyclic redundancy check (CRC)
  * @param fecf: int
- * @param ingest: char*
+ * @param ingest: uint8_t*
  * @param len_ingest: int
  * @param tc_frame: TC_t*
  * @return int32: Success/Failure
  **/
-static int32 Crypto_FECF(int fecf, char* ingest, int len_ingest,TC_t* tc_frame)
+static int32_t Crypto_FECF(int fecf, uint8_t* ingest, int len_ingest,TC_t* tc_frame)
 {
-    int32 result = OS_SUCCESS;
-    uint16 calc_fecf = Crypto_Calc_FECF(ingest, len_ingest);
+    int32_t result = OS_SUCCESS;
+    uint16_t calc_fecf = Crypto_Calc_FECF(ingest, len_ingest);
 
     if ( (fecf & 0xFFFF) != calc_fecf )
         {
-            if (((uint8)ingest[18] == 0x0B) && ((uint8)ingest[19] == 0x00) && (((uint8)ingest[20] & 0xF0) == 0x40))
+            if (((uint8_t)ingest[18] == 0x0B) && ((uint8_t)ingest[19] == 0x00) && (((uint8_t)ingest[20] & 0xF0) == 0x40))
             {   
                 // User packet check only used for ESA Testing!
             }
@@ -1337,7 +1337,7 @@ static int32 Crypto_FECF(int fecf, char* ingest, int len_ingest,TC_t* tc_frame)
                 printf(KRED "Error: FECF incorrect!\n" RESET);
                 if (log_summary.rs > 0)
                 {
-                    Crypto_increment((uint8*)&log_summary.num_se, 4);
+                    Crypto_increment((uint8_t*)&log_summary.num_se, 4);
                     log_summary.rs--;
                     log.blk[log_count].emt = FECF_ERR_EID;
                     log.blk[log_count].emv[0] = 0x4E;
@@ -1359,16 +1359,16 @@ static int32 Crypto_FECF(int fecf, char* ingest, int len_ingest,TC_t* tc_frame)
 /**
  * @brief Function Crypto_Calc_FECF
  * Calculate the Frame Error Control Field (FECF), also known as a cyclic redundancy check (CRC)
- * @param ingest: char*
+ * @param ingest: uint8_t*
  * @param len_ingest: int
  * @return uint16: FECF
  **/
-static uint16 Crypto_Calc_FECF(char* ingest, int len_ingest)
+static uint16_t Crypto_Calc_FECF(uint8_t* ingest, int len_ingest)
 {
-    uint16 fecf = 0xFFFF;
-    uint16 poly = 0x1021;	// TODO: This polynomial is (CRC-CCITT) for ESA testing, may not match standard protocol
-    uint8 bit;
-    uint8 c15;
+    uint16_t fecf = 0xFFFF;
+    uint16_t poly = 0x1021;	// TODO: This polynomial is (CRC-CCITT) for ESA testing, may not match standard protocol
+    uint8_t bit;
+    uint8_t c15;
 
     for (int i = 0; i < len_ingest; i++)
     {	// Byte Logic
@@ -1394,7 +1394,7 @@ static uint16 Crypto_Calc_FECF(char* ingest, int len_ingest)
         printf(KCYN "0x" RESET);
         for (int x = 0; x < len_ingest; x++)
         {
-            printf(KCYN "%02x" RESET, (uint8)*(ingest+x));
+            printf(KCYN "%02x" RESET, (uint8_t)*(ingest+x));
         }
         printf(KCYN "\n" RESET);
         printf(KCYN "In Crypto_Calc_FECF! fecf = 0x%04x\n" RESET, fecf);
@@ -1406,17 +1406,17 @@ static uint16 Crypto_Calc_FECF(char* ingest, int len_ingest)
 /**
  * @brief Function: Crypto_Calc_CRC16
  * Calculates CRC16
- * @param data: char*
+ * @param data: uint8_t*
  * @param size: int
  * @return uint16: CRC
  **/
-static uint16 Crypto_Calc_CRC16(char* data, int size)
+static uint16_t Crypto_Calc_CRC16(uint8_t* data, int size)
 {   // Code provided by ESA
-    uint16 crc = 0xFFFF;
+    uint16_t crc = 0xFFFF;
 
     for ( ; size > 0; size--)
     {  
-        //printf("*data = 0x%02x \n", (uint8) *data);
+        //printf("*data = 0x%02x \n", (uint8_t) *data);
         crc = ((crc << 8) & 0xFF00) ^ crc16Table[(crc >> 8) ^ *data++];
     }
        
@@ -1438,14 +1438,14 @@ static uint16 Crypto_Calc_CRC16(char* data, int size)
  * c- Agreed Cryptographic Algorithm (managed)
  * @return int32: Success/Failure
  **/
-static int32 Crypto_Key_OTAR(void)
+static int32_t Crypto_Key_OTAR(void)
 
 {
     // Local variables
     SDLS_OTAR_t packet;
     int count = 0;
     int x = 0;
-    int32 status = OS_SUCCESS;
+    int32_t status = OS_SUCCESS;
     int pdu_keys = (sdls_frame.pdu.pdu_len - 30) / (2 + KEY_SIZE);
 
     gcry_cipher_hd_t tmp_hd;
@@ -1459,7 +1459,7 @@ static int32 Crypto_Key_OTAR(void)
         report.af = 1;
         if (log_summary.rs > 0)
         {
-            Crypto_increment((uint8*)&log_summary.num_se, 4);
+            Crypto_increment((uint8_t*)&log_summary.num_se, 4);
             log_summary.rs--;
             log.blk[log_count].emt = MKID_INVALID_EID;
             log.blk[log_count].emv[0] = 0x4E;
@@ -1555,7 +1555,7 @@ static int32 Crypto_Key_OTAR(void)
             report.af = 1;
             if (log_summary.rs > 0)
             {
-                Crypto_increment((uint8*)&log_summary.num_se, 4);
+                Crypto_increment((uint8_t*)&log_summary.num_se, 4);
                 log_summary.rs--;
                 log.blk[log_count].emt = OTAR_MK_ERR_EID;
                 log.blk[log_count].emv[0] = 0x4E; // N
@@ -1609,7 +1609,7 @@ static int32 Crypto_Key_OTAR(void)
  * @param state: uint8
  * @return uint32: Success/Failure
  **/
-static int32 Crypto_Key_update(uint8 state)
+static int32_t Crypto_Key_update(uint8_t state)
 {	// Local variables
     SDLS_KEY_BLK_t packet;
     int count = 0;
@@ -1665,7 +1665,7 @@ static int32 Crypto_Key_update(uint8 state)
             report.af = 1;
             if (log_summary.rs > 0)
             {
-                Crypto_increment((uint8*)&log_summary.num_se, 4);
+                Crypto_increment((uint8_t*)&log_summary.num_se, 4);
                 log_summary.rs--;
                 log.blk[log_count].emt = MKID_STATE_ERR_EID;
                 log.blk[log_count].emv[0] = 0x4E;
@@ -1689,7 +1689,7 @@ static int32 Crypto_Key_update(uint8 state)
         {
             if (log_summary.rs > 0)
             {
-                Crypto_increment((uint8*)&log_summary.num_se, 4);
+                Crypto_increment((uint8_t*)&log_summary.num_se, 4);
                 log_summary.rs--;
                 log.blk[log_count].emt = KEY_TRANSITION_ERR_EID;
                 log.blk[log_count].emv[0] = 0x4E;
@@ -1706,10 +1706,10 @@ static int32 Crypto_Key_update(uint8 state)
 
 /**
  * @brief Function: Crypto_Key_inventory
- * @param ingest: char*
+ * @param ingest: uint8_t*
  * @return int32: count
  **/
-static int32 Crypto_Key_inventory(char* ingest)
+static int32_t Crypto_Key_inventory(uint8_t* ingest)
 {
     // Local variables
     SDLS_KEY_INVENTORY_t packet;
@@ -1717,9 +1717,9 @@ static int32 Crypto_Key_inventory(char* ingest)
     uint16_t range = 0;
 
     // Read in PDU
-    packet.kid_first = ((uint8)sdls_frame.pdu.data[count] << 8) | ((uint8)sdls_frame.pdu.data[count+1]);
+    packet.kid_first = ((uint8_t)sdls_frame.pdu.data[count] << 8) | ((uint8_t)sdls_frame.pdu.data[count+1]);
     count = count + 2;
-    packet.kid_last = ((uint8)sdls_frame.pdu.data[count] << 8) | ((uint8)sdls_frame.pdu.data[count+1]);
+    packet.kid_last = ((uint8_t)sdls_frame.pdu.data[count] << 8) | ((uint8_t)sdls_frame.pdu.data[count+1]);
     count = count + 2;
 
     // Prepare for Reply
@@ -1741,11 +1741,11 @@ static int32 Crypto_Key_inventory(char* ingest)
 
 /**
  * @brief Function: Crypto_Key_verify
- * @param ingest: char*
+ * @param ingest: uint8_t*
  * @param tc_frame: TC_t*
  * @return int32: count
  **/
-static int32 Crypto_Key_verify(char* ingest,TC_t* tc_frame)
+static int32_t Crypto_Key_verify(uint8_t* ingest,TC_t* tc_frame)
 {
     // Local variables
     SDLS_KEYV_CMD_t packet;
@@ -1754,9 +1754,9 @@ static int32 Crypto_Key_verify(char* ingest,TC_t* tc_frame)
 
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     gcry_cipher_hd_t tmp_hd;
-    uint8 iv_loc;
+    uint8_t iv_loc;
 
-    //uint8 tmp_mac[MAC_SIZE];
+    //uint8_t tmp_mac[MAC_SIZE];
 
     #ifdef PDU_DEBUG
         printf("Crypto_Key_verify: Requested %d key(s) to verify \n", pdu_keys);
@@ -1766,7 +1766,7 @@ static int32 Crypto_Key_verify(char* ingest,TC_t* tc_frame)
     for (int x = 0; x < pdu_keys; x++)
     {	
         // Key ID
-        packet.blk[x].kid = ((uint8)sdls_frame.pdu.data[count] << 8) | ((uint8)sdls_frame.pdu.data[count+1]);
+        packet.blk[x].kid = ((uint8_t)sdls_frame.pdu.data[count] << 8) | ((uint8_t)sdls_frame.pdu.data[count+1]);
         count = count + 2;
         #ifdef PDU_DEBUG
             printf("Crypto_Key_verify: Block %d Key ID is %d \n", x, packet.blk[x].kid);
@@ -1874,10 +1874,10 @@ static int32 Crypto_Key_verify(char* ingest,TC_t* tc_frame)
 */
 /**
  * @brief Function: Crypto_MC_ping
- * @param ingest: char*
+ * @param ingest: uint8_t*
  * return int32: count
  **/
-static int32 Crypto_MC_ping(char* ingest)
+static int32_t Crypto_MC_ping(uint8_t* ingest)
 {
     int count = 0;
 
@@ -1891,10 +1891,10 @@ static int32 Crypto_MC_ping(char* ingest)
 
 /**
  * @brief Function: Crypto_MC_status
- * @param ingest: char*
+ * @param ingest: uint8_t*
  * @return int32: count
  **/
-static int32 Crypto_MC_status(char* ingest)
+static int32_t Crypto_MC_status(uint8_t* ingest)
 {
     int count = 0;
 
@@ -1921,10 +1921,10 @@ static int32 Crypto_MC_status(char* ingest)
 
 /**
  * @brief Function: Crypto_MC_dump
- * @param ingest: char*
+ * @param ingest: uint8_t*
  * @return int32: Count
  **/
-static int32 Crypto_MC_dump(char* ingest)
+static int32_t Crypto_MC_dump(uint8_t* ingest)
 {
     int count = 0;
     
@@ -1956,10 +1956,10 @@ static int32 Crypto_MC_dump(char* ingest)
 
 /**
  * @brief Function: Crypto_MC_erase
- * @param ingest: char*
+ * @param ingest: uint8_t*
  * @return int32: count
  **/
-static int32 Crypto_MC_erase(char* ingest)
+static int32_t Crypto_MC_erase(uint8_t* ingest)
 {
     int count = 0;
 
@@ -1995,13 +1995,13 @@ static int32 Crypto_MC_erase(char* ingest)
 
 /**
  * @brief Function: Crypto_MC_selftest
- * @param ingest: char*
+ * @param ingest: uint8_t*
  * @return int32: Count
  **/
-static int32 Crypto_MC_selftest(char* ingest)
+static int32_t Crypto_MC_selftest(uint8_t* ingest)
 {
-    uint8 count = 0;
-    uint8 result = ST_OK;
+    uint8_t count = 0;
+    uint8_t result = ST_OK;
 
     // TODO: Perform test
 
@@ -2017,17 +2017,17 @@ static int32 Crypto_MC_selftest(char* ingest)
 
 /**
  * @brief Function: Crypto_SA_readASRN
- * @param ingest: char*
+ * @param ingest: uint8_t*
  * @return int32: Count
  **/
-static int32 Crypto_SA_readARSN(char* ingest)
+static int32_t Crypto_SA_readARSN(uint8_t* ingest)
 {
-    uint8 count = 0;
-    uint16 spi = 0x0000;
+    uint8_t count = 0;
+    uint16_t spi = 0x0000;
     SecurityAssociation_t* sa_ptr;
 
     // Read ingest
-    spi = ((uint8)sdls_frame.pdu.data[0] << 8) | (uint8)sdls_frame.pdu.data[1];
+    spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
 
     // Prepare for Reply
     sdls_frame.pdu.pdu_len = 2 + IV_SIZE;
@@ -2087,7 +2087,7 @@ static int32 Crypto_SA_readARSN(char* ingest)
  * @brief Function: Crypto_MC_resetalarm
  * @return int32: Success/Failure
  **/
-static int32 Crypto_MC_resetalarm(void)
+static int32_t Crypto_MC_resetalarm(void)
 {   // Reset all alarm flags
     report.af = 0;
     report.bsnf = 0;
@@ -2098,12 +2098,12 @@ static int32 Crypto_MC_resetalarm(void)
 
 /**
  * @brief Function: Crypto_User_IdleTrigger
- * @param ingest: char*
+ * @param ingest: uint8_t*
  * @return int32: count
  **/
-static int32 Crypto_User_IdleTrigger(char* ingest)
+static int32_t Crypto_User_IdleTrigger(uint8_t* ingest)
 {
-    uint8 count = 0;
+    uint8_t count = 0;
 
     // Prepare for Reply
     sdls_frame.pdu.pdu_len = 0;
@@ -2117,7 +2117,7 @@ static int32 Crypto_User_IdleTrigger(char* ingest)
  * @brief Function: Crypto_User_BadSPI
  * @return int32: Success/Failure
  **/                         
-static int32 Crypto_User_BadSPI(void)
+static int32_t Crypto_User_BadSPI(void)
 {
     // Toggle Bad Sequence Number
     if (badSPI == 0)
@@ -2136,7 +2136,7 @@ static int32 Crypto_User_BadSPI(void)
  * @brief Function: Crypto_User_BadMAC
  * @return int32: Success/Failure
  **/
-static int32 Crypto_User_BadMAC(void)
+static int32_t Crypto_User_BadMAC(void)
 {
     // Toggle Bad MAC
     if (badMAC == 0)
@@ -2155,7 +2155,7 @@ static int32 Crypto_User_BadMAC(void)
  * @brief Function: Crypto_User_BadIV
  * @return int32: Success/Failure
  **/
-static int32 Crypto_User_BadIV(void)
+static int32_t Crypto_User_BadIV(void)
 {
     // Toggle Bad MAC
     if (badIV == 0)
@@ -2174,7 +2174,7 @@ static int32 Crypto_User_BadIV(void)
  * @brief Function: Crypto_User_BadFECF
  * @return int32: Success/Failure
  **/
-static int32 Crypto_User_BadFECF(void)
+static int32_t Crypto_User_BadFECF(void)
 {
     // Toggle Bad FECF
     if (badFECF == 0)
@@ -2193,11 +2193,11 @@ static int32 Crypto_User_BadFECF(void)
  * @brief Function: Crypto_User_ModifyKey
  * @return int32: Success/Failure
  **/
-static int32 Crypto_User_ModifyKey(void)
+static int32_t Crypto_User_ModifyKey(void)
 {
     // Local variables
-    uint16 kid = ((uint8)sdls_frame.pdu.data[0] << 8) | ((uint8)sdls_frame.pdu.data[1]);
-    uint8 mod = (uint8)sdls_frame.pdu.data[2];
+    uint16_t kid = ((uint8_t)sdls_frame.pdu.data[0] << 8) | ((uint8_t)sdls_frame.pdu.data[1]);
+    uint8_t mod = (uint8_t)sdls_frame.pdu.data[2];
 
     switch (mod)
     {
@@ -2206,7 +2206,7 @@ static int32 Crypto_User_ModifyKey(void)
             printf("Key %d value invalidated! \n", kid);
             break;
         case 2: // Modify key state
-            ek_ring[kid].key_state = (uint8)sdls_frame.pdu.data[3] & 0x0F;
+            ek_ring[kid].key_state = (uint8_t)sdls_frame.pdu.data[3] & 0x0F;
             printf("Key %d state changed to %d! \n", kid, mod);
             break;
         default:
@@ -2222,9 +2222,9 @@ static int32 Crypto_User_ModifyKey(void)
  * Modifies tm_sec_header.spi based on sdls_frame.pdu.data[0]
  * @return int32: Success/Failure
  **/
-static int32 Crypto_User_ModifyActiveTM(void)
+static int32_t Crypto_User_ModifyActiveTM(void)
 {
-    tm_frame.tm_sec_header.spi = (uint8)sdls_frame.pdu.data[0];   
+    tm_frame.tm_sec_header.spi = (uint8_t)sdls_frame.pdu.data[0];   
     return OS_SUCCESS; 
 }
 
@@ -2232,9 +2232,9 @@ static int32 Crypto_User_ModifyActiveTM(void)
  * @brief Function: Crypto_User_ModifyVCID
  * @return int32: Success/Failure
  **/
-static int32 Crypto_User_ModifyVCID(void)
+static int32_t Crypto_User_ModifyVCID(void)
 {
-    tm_frame.tm_header.vcid = (uint8)sdls_frame.pdu.data[0];
+    tm_frame.tm_header.vcid = (uint8_t)sdls_frame.pdu.data[0];
     SecurityAssociation_t* sa_ptr;
 
     for (int i = 0; i < NUM_GVCID; i++)
@@ -2266,13 +2266,13 @@ static int32 Crypto_User_ModifyVCID(void)
 */
 /**
  * @brief Function: Crypto_PDU
- * @param ingest: char*
+ * @param ingest: uint8_t*
  * @param tc_frame: TC_t*
  * @return int32: Success/Failure
  **/
-static int32 Crypto_PDU(char* ingest,TC_t* tc_frame)
+static int32_t Crypto_PDU(uint8_t* ingest,TC_t* tc_frame)
 {
-    int32 status = CRYPTO_LIB_SUCCESS;
+    int32_t status = CRYPTO_LIB_SUCCESS;
     
     switch (sdls_frame.pdu.type)
     {
@@ -2518,7 +2518,7 @@ static int32 Crypto_PDU(char* ingest,TC_t* tc_frame)
             printf(KMAG "CCSDS message put on software bus: 0x" RESET);
             for (int x = 0; x < status; x++)
             {
-                printf(KMAG "%02x" RESET, (uint8) ingest[x]);
+                printf(KMAG "%02x" RESET, (uint8_t) ingest[x]);
             }
             printf("\n");
         }
@@ -2536,10 +2536,10 @@ static int32 Crypto_PDU(char* ingest,TC_t* tc_frame)
 * @param managed_parameters_out: GvcidManagedParameters_t**
 * @return int32: Success/Failure
 **/
-static int32 Crypto_Get_Managed_Parameters_For_Gvcid(uint8 tfvn,uint16 scid,uint8 vcid,GvcidManagedParameters_t* managed_parameters_in,
+static int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn,uint16_t scid,uint8_t vcid,GvcidManagedParameters_t* managed_parameters_in,
                                                       GvcidManagedParameters_t** managed_parameters_out)
 {
-    int32 status = MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND;
+    int32_t status = MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND;
 
     if(managed_parameters_in != NULL)
     {
@@ -2579,28 +2579,28 @@ static void Crypto_Free_Managed_Parameters(GvcidManagedParameters_t* managed_par
  * Applies Security to incoming frame.  Encryption, Authentication, and Authenticated Encryption
  * @param p_in_frame: uint8*
  * @param in_frame_length: uint16
- * @param pp_in_frame: uint8**
+ * @param pp_in_frame: uint8_t**
  * @param p_enc_frame_len: uint16
  * @return int32: Success/Failure
  **/
-int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_length, \
-    uint8 **pp_in_frame, uint16 *p_enc_frame_len)
+int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_frame_length, \
+    uint8_t **pp_in_frame, uint16_t *p_enc_frame_len)
 {
     // Local Variables
-    int32 status = OS_SUCCESS;
+    int32_t status = OS_SUCCESS;
     TC_FramePrimaryHeader_t temp_tc_header;
     SecurityAssociation_t* sa_ptr = NULL;
-    uint8 *p_new_enc_frame = NULL;
-    uint8 sa_service_type = -1;
-    uint16 mac_loc = 0;
-    uint16 tf_payload_len = 0x0000;
-    uint16 new_fecf = 0x0000;
-    uint8* aad;
+    uint8_t *p_new_enc_frame = NULL;
+    uint8_t sa_service_type = -1;
+    uint16_t mac_loc = 0;
+    uint16_t tf_payload_len = 0x0000;
+    uint16_t new_fecf = 0x0000;
+    uint8_t* aad;
     gcry_cipher_hd_t tmp_hd;
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
-    uint16 new_enc_frame_header_field_length = 0;
-    uint32 encryption_cipher;
-    uint8 ecs_is_aead_algorithm;
+    uint16_t new_enc_frame_header_field_length = 0;
+    uint32_t encryption_cipher;
+    uint8_t ecs_is_aead_algorithm;
 
     #ifdef DEBUG
         printf(KYEL "\n----- Crypto_TC_ApplySecurity START -----\n" RESET);
@@ -2618,7 +2618,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         printf("DEBUG - ");
         for(int i=0; i < in_frame_length; i++)
         {
-            printf("%02X", ((uint8 *)&*p_in_frame)[i]);
+            printf("%02X", ((uint8_t *)&*p_in_frame)[i]);
         }
         printf("\nPrinted %d bytes\n", in_frame_length);
     #endif
@@ -2630,23 +2630,23 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
     }
 
     // Primary Header
-    temp_tc_header.tfvn   = ((uint8)p_in_frame[0] & 0xC0) >> 6;
-    temp_tc_header.bypass = ((uint8)p_in_frame[0] & 0x20) >> 5;
-    temp_tc_header.cc     = ((uint8)p_in_frame[0] & 0x10) >> 4;
-    temp_tc_header.spare  = ((uint8)p_in_frame[0] & 0x0C) >> 2;
-    temp_tc_header.scid   = ((uint8)p_in_frame[0] & 0x03) << 8;
-    temp_tc_header.scid   = temp_tc_header.scid | (uint8)p_in_frame[1];
-    temp_tc_header.vcid   = ((uint8)p_in_frame[2] & 0xFC) >> 2 & crypto_config->vcid_bitmask;
-    temp_tc_header.fl     = ((uint8)p_in_frame[2] & 0x03) << 8;
-    temp_tc_header.fl     = temp_tc_header.fl | (uint8)p_in_frame[3];
-    temp_tc_header.fsn	  = (uint8)p_in_frame[4];
+    temp_tc_header.tfvn   = ((uint8_t)p_in_frame[0] & 0xC0) >> 6;
+    temp_tc_header.bypass = ((uint8_t)p_in_frame[0] & 0x20) >> 5;
+    temp_tc_header.cc     = ((uint8_t)p_in_frame[0] & 0x10) >> 4;
+    temp_tc_header.spare  = ((uint8_t)p_in_frame[0] & 0x0C) >> 2;
+    temp_tc_header.scid   = ((uint8_t)p_in_frame[0] & 0x03) << 8;
+    temp_tc_header.scid   = temp_tc_header.scid | (uint8_t)p_in_frame[1];
+    temp_tc_header.vcid   = ((uint8_t)p_in_frame[2] & 0xFC) >> 2 & crypto_config->vcid_bitmask;
+    temp_tc_header.fl     = ((uint8_t)p_in_frame[2] & 0x03) << 8;
+    temp_tc_header.fl     = temp_tc_header.fl | (uint8_t)p_in_frame[3];
+    temp_tc_header.fsn	  = (uint8_t)p_in_frame[4];
 
     //Lookup-retrieve managed parameters for frame via gvcid:
     status = Crypto_Get_Managed_Parameters_For_Gvcid(temp_tc_header.tfvn,temp_tc_header.scid,temp_tc_header.vcid,gvcid_managed_parameters,&current_managed_parameters);
     if(status != OS_SUCCESS) {return status;} //Unable to get necessary Managed Parameters for TC TF -- return with error.
 
-    uint8 segmentation_hdr = 0x00;
-    uint8 map_id = 0;
+    uint8_t segmentation_hdr = 0x00;
+    uint8_t map_id = 0;
     if(current_managed_parameters->has_segmentation_hdr==TC_HAS_SEGMENT_HDRS){
         segmentation_hdr = p_in_frame[5];
         map_id = segmentation_hdr & 0x3F;
@@ -2784,7 +2784,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         #endif
         
         // Accio buffer
-        p_new_enc_frame = (uint8 *)malloc((*p_enc_frame_len) * sizeof (unsigned char));
+        p_new_enc_frame = (uint8_t *)malloc((*p_enc_frame_len) * sizeof (uint8_t));
         if(!p_new_enc_frame)
         {
             printf(KRED "Error: Malloc for encrypted output buffer failed! \n" RESET);
@@ -2892,9 +2892,9 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         ** End Security Header Fields
         */
 
-        uint8 fecf_len = FECF_SIZE;
+        uint8_t fecf_len = FECF_SIZE;
         if(current_managed_parameters->has_fecf==TC_NO_FECF) { fecf_len = 0; }
-        uint8 segment_hdr_len = SEGMENT_HDR_SIZE;
+        uint8_t segment_hdr_len = SEGMENT_HDR_SIZE;
         if(current_managed_parameters->has_segmentation_hdr==TC_NO_SEGMENT_HDRS) { segment_hdr_len = 0; }
         // Copy in original TF data - except FECF
         // Will be over-written if using encryption later
@@ -2973,7 +2973,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                 (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
             {
                 // TODO: More robust calculation of this location
-                // uint16 output_loc = TC_FRAME_PRIMARYHEADER_STRUCT_SIZE + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + temp_SA.shplf_len;
+                // uint16_t output_loc = TC_FRAME_PRIMARYHEADER_STRUCT_SIZE + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len + temp_SA.shplf_len;
                 #ifdef TC_DEBUG
                     printf("Encrypted bytes output_loc is %d\n", index);
                     printf("tf_payload_len is %d\n", tf_payload_len);
@@ -2988,7 +2988,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                 if(sa_service_type == SA_AUTHENTICATED_ENCRYPTION && ecs_is_aead_algorithm==CRYPTO_TRUE) // Algorithm is AEAD algorithm, Add AAD before encrypt!
                 {
                     //Prepare the Header AAD (CCSDS 335.0-B-1 4.2.3.2.2.3)
-                    uint16 aad_len = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;
+                    uint16_t aad_len = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;
                     if(sa_ptr->abm_len < aad_len) { return CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD; }
                     aad = Crypto_Prepare_TC_AAD(p_new_enc_frame, aad_len, sa_ptr->abm);
 
@@ -3099,7 +3099,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
                     return status;
                 }
 
-                uint16 aad_len = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len + tf_payload_len;
+                uint16_t aad_len = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len + tf_payload_len;
                 if(sa_ptr->abm_len < aad_len) { return CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD; }
                 aad = Crypto_Prepare_TC_AAD(p_new_enc_frame, aad_len, sa_ptr->abm);
 
@@ -3163,13 +3163,13 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
             if ( crypto_config->crypto_create_fecf==CRYPTO_TC_CREATE_FECF_TRUE )
             {
                 new_fecf = Crypto_Calc_FECF(p_new_enc_frame, new_enc_frame_header_field_length - 1);
-                *(p_new_enc_frame + new_enc_frame_header_field_length - 1) = (uint8) ((new_fecf & 0xFF00) >> 8);
-                *(p_new_enc_frame + new_enc_frame_header_field_length ) = (uint8) (new_fecf & 0x00FF);
+                *(p_new_enc_frame + new_enc_frame_header_field_length - 1) = (uint8_t) ((new_fecf & 0xFF00) >> 8);
+                *(p_new_enc_frame + new_enc_frame_header_field_length ) = (uint8_t) (new_fecf & 0x00FF);
             }
             else // CRYPTO_TC_CREATE_FECF_FALSE
             {
-                *(p_new_enc_frame + new_enc_frame_header_field_length - 1) = (uint8) 0x00;
-                *(p_new_enc_frame + new_enc_frame_header_field_length ) = (uint8) 0x00;
+                *(p_new_enc_frame + new_enc_frame_header_field_length - 1) = (uint8_t) 0x00;
+                *(p_new_enc_frame + new_enc_frame_header_field_length ) = (uint8_t) 0x00;
             }
 
             index += 2;
@@ -3199,25 +3199,25 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
 /**
  * @brief Function: Crypto_TC_ProcessSecurity
  * Performs Authenticated decryption, decryption, and authentication
- * @param ingest: char*
+ * @param ingest: uint8_t*
  * @param len_ingest: int*
  * @param tc_sdls_processed_frame: TC_t*
  * @return int32: Success/Failure
  **/
-int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_processed_frame)
+int32_t Crypto_TC_ProcessSecurity( uint8_t* ingest, int* len_ingest,TC_t* tc_sdls_processed_frame)
 // Loads the ingest frame into the global tc_frame while performing decryption
 {
     // Local Variables
-    int32 status = OS_SUCCESS;
+    int32_t status = OS_SUCCESS;
     int x = 0;
     int y = 0;
     gcry_cipher_hd_t tmp_hd;
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     SecurityAssociation_t* sa_ptr = NULL;
-    uint8 sa_service_type = -1;
-    uint8* aad;
-    uint32 encryption_cipher;
-    uint8 ecs_is_aead_algorithm;
+    uint8_t sa_service_type = -1;
+    uint8_t* aad;
+    uint32_t encryption_cipher;
+    uint8_t ecs_is_aead_algorithm;
 
     if(crypto_config == NULL)
     {
@@ -3232,20 +3232,20 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
 
     int byte_idx = 0;
     // Primary Header
-    tc_sdls_processed_frame->tc_header.tfvn   = ((uint8)ingest[byte_idx] & 0xC0) >> 6;
-    tc_sdls_processed_frame->tc_header.bypass = ((uint8)ingest[byte_idx] & 0x20) >> 5;
-    tc_sdls_processed_frame->tc_header.cc     = ((uint8)ingest[byte_idx] & 0x10) >> 4;
-    tc_sdls_processed_frame->tc_header.spare  = ((uint8)ingest[byte_idx] & 0x0C) >> 2;
-    tc_sdls_processed_frame->tc_header.scid   = ((uint8)ingest[byte_idx] & 0x03) << 8;
+    tc_sdls_processed_frame->tc_header.tfvn   = ((uint8_t)ingest[byte_idx] & 0xC0) >> 6;
+    tc_sdls_processed_frame->tc_header.bypass = ((uint8_t)ingest[byte_idx] & 0x20) >> 5;
+    tc_sdls_processed_frame->tc_header.cc     = ((uint8_t)ingest[byte_idx] & 0x10) >> 4;
+    tc_sdls_processed_frame->tc_header.spare  = ((uint8_t)ingest[byte_idx] & 0x0C) >> 2;
+    tc_sdls_processed_frame->tc_header.scid   = ((uint8_t)ingest[byte_idx] & 0x03) << 8;
     byte_idx++;
-    tc_sdls_processed_frame->tc_header.scid   = tc_sdls_processed_frame->tc_header.scid | (uint8)ingest[byte_idx];
+    tc_sdls_processed_frame->tc_header.scid   = tc_sdls_processed_frame->tc_header.scid | (uint8_t)ingest[byte_idx];
     byte_idx++;
-    tc_sdls_processed_frame->tc_header.vcid   = (((uint8)ingest[byte_idx] & 0xFC) >> 2) & crypto_config->vcid_bitmask;
-    tc_sdls_processed_frame->tc_header.fl     = ((uint8)ingest[byte_idx] & 0x03) << 8;
+    tc_sdls_processed_frame->tc_header.vcid   = (((uint8_t)ingest[byte_idx] & 0xFC) >> 2) & crypto_config->vcid_bitmask;
+    tc_sdls_processed_frame->tc_header.fl     = ((uint8_t)ingest[byte_idx] & 0x03) << 8;
     byte_idx++;
-    tc_sdls_processed_frame->tc_header.fl     = tc_sdls_processed_frame->tc_header.fl | (uint8)ingest[byte_idx];
+    tc_sdls_processed_frame->tc_header.fl     = tc_sdls_processed_frame->tc_header.fl | (uint8_t)ingest[byte_idx];
     byte_idx++;
-    tc_sdls_processed_frame->tc_header.fsn	  = (uint8)ingest[byte_idx];
+    tc_sdls_processed_frame->tc_header.fsn	  = (uint8_t)ingest[byte_idx];
     byte_idx++;
 
     //Lookup-retrieve managed parameters for frame via gvcid:
@@ -3256,11 +3256,11 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
 
     // Segment Header
     if(current_managed_parameters->has_segmentation_hdr==TC_HAS_SEGMENT_HDRS){
-        tc_sdls_processed_frame->tc_sec_header.sh  = (uint8)ingest[byte_idx];
+        tc_sdls_processed_frame->tc_sec_header.sh  = (uint8_t)ingest[byte_idx];
         byte_idx++;
     }
     // Security Header
-    tc_sdls_processed_frame->tc_sec_header.spi = ((uint8)ingest[byte_idx] << 8) | (uint8)ingest[byte_idx+1];
+    tc_sdls_processed_frame->tc_sec_header.spi = ((uint8_t)ingest[byte_idx] << 8) | (uint8_t)ingest[byte_idx+1];
     byte_idx+=2;
     #ifdef TC_DEBUG
         printf("vcid = %d \n", tc_sdls_processed_frame->tc_header.vcid );
@@ -3328,10 +3328,10 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
     #endif
 
     // TODO: Calculate lengths when needed
-    uint8 fecf_len = FECF_SIZE;
+    uint8_t fecf_len = FECF_SIZE;
     if(current_managed_parameters->has_fecf==TC_NO_FECF) { fecf_len = 0; }
 
-    uint8 segment_hdr_len = SEGMENT_HDR_SIZE;
+    uint8_t segment_hdr_len = SEGMENT_HDR_SIZE;
     if(current_managed_parameters->has_segmentation_hdr==TC_NO_SEGMENT_HDRS) { segment_hdr_len = 0; }
 
     // Check FECF
@@ -3339,9 +3339,9 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
     {
         if(crypto_config->crypto_check_fecf == TC_CHECK_FECF_TRUE)
         {
-            uint16 received_fecf = (((ingest[tc_sdls_processed_frame->tc_header.fl - 1] << 8) & 0xFF00) | (ingest[tc_sdls_processed_frame->tc_header.fl] & 0x00FF));
+            uint16_t received_fecf = (((ingest[tc_sdls_processed_frame->tc_header.fl - 1] << 8) & 0xFF00) | (ingest[tc_sdls_processed_frame->tc_header.fl] & 0x00FF));
             // Calculate our own
-            uint16 calculated_fecf = Crypto_Calc_FECF(ingest, *len_ingest-2);
+            uint16_t calculated_fecf = Crypto_Calc_FECF(ingest, *len_ingest-2);
             // Compare
             if (received_fecf != calculated_fecf)
             {
@@ -3352,7 +3352,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
     }
 
     // Parse the security header
-    tc_sdls_processed_frame->tc_sec_header.spi = (uint16)((uint8)ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len] | (uint8)ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + 1]);
+    tc_sdls_processed_frame->tc_sec_header.spi = (uint16_t)((uint8_t)ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len] | (uint8_t)ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + 1]);
     // Get SA via SPI
     status = sadb_routine->sadb_get_sa_from_spi(tc_sdls_processed_frame->tc_sec_header.spi, &sa_ptr);
     if(status != CRYPTO_LIB_SUCCESS){ return status; }
@@ -3407,7 +3407,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
     if((sa_service_type == SA_AUTHENTICATION) || 
         (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
     {
-        uint16 tc_mac_start_index = tc_sdls_processed_frame->tc_header.fl + 1 - fecf_len - sa_ptr->stmacf_len;
+        uint16_t tc_mac_start_index = tc_sdls_processed_frame->tc_header.fl + 1 - fecf_len - sa_ptr->stmacf_len;
         // Parse the received MAC
         memcpy((tc_sdls_processed_frame->tc_sec_trailer.mac)+(MAC_SIZE-sa_ptr->stmacf_len), &(ingest[tc_mac_start_index]) , sa_ptr->stmacf_len);
         if (crypto_config->ignore_anti_replay==TC_IGNORE_ANTI_REPLAY_FALSE )
@@ -3446,7 +3446,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
             
         }
 
-        uint16 aad_len = tc_mac_start_index;
+        uint16_t aad_len = tc_mac_start_index;
         if((sa_service_type == SA_AUTHENTICATED_ENCRYPTION) && (ecs_is_aead_algorithm == CRYPTO_TRUE)) { aad_len = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len; }
         aad = Crypto_Prepare_TC_AAD(ingest, aad_len, sa_ptr->abm);
 
@@ -3469,7 +3469,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
         (sa_service_type == SA_AUTHENTICATED_ENCRYPTION) ||
             (sa_service_type == SA_AUTHENTICATION))
     {
-        uint16 tc_enc_payload_start_index = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;
+        uint16_t tc_enc_payload_start_index = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;
         tc_sdls_processed_frame->tc_pdu_len = tc_sdls_processed_frame->tc_header.fl + 1 - tc_enc_payload_start_index - sa_ptr->stmacf_len - fecf_len;
 
         if(sa_service_type == SA_AUTHENTICATION)
@@ -3529,7 +3529,7 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
     {
         // TODO: Plaintext ARSN
 
-        uint16 tc_enc_payload_start_index = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;
+        uint16_t tc_enc_payload_start_index = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;
         tc_sdls_processed_frame->tc_pdu_len = tc_sdls_processed_frame->tc_header.fl + 1 - tc_enc_payload_start_index - sa_ptr->stmacf_len - fecf_len;
         memcpy(tc_sdls_processed_frame->tc_pdu, &(ingest[tc_enc_payload_start_index]), tc_sdls_processed_frame->tc_pdu_len);
     }
@@ -3546,12 +3546,12 @@ int32 Crypto_TC_ProcessSecurity( char* ingest, int* len_ingest,TC_t* tc_sdls_pro
 /**
  * @brief Function: Crypto_Process_Extended_Procedure_Pdu
  * @param tc_sdls_processed_frame: TC_t*
- * @param ingest: char*
+ * @param ingest: uint8_t*
  * @note TODO - Actually update based on variable config
  * */
-static int32 Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, char* ingest)
+static int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, uint8_t* ingest)
 {
-    int32 status = CRYPTO_LIB_SUCCESS;
+    int32_t status = CRYPTO_LIB_SUCCESS;
     if (crypto_config->has_pus_hdr==TC_HAS_PUS_HDR)
     {
         if ((tc_sdls_processed_frame->tc_pdu[0] == 0x18) && (tc_sdls_processed_frame->tc_pdu[1] == 0x80))
@@ -3632,26 +3632,26 @@ static int32 Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame
 
 /**
  * @brief Function: Crypto_TM_ApplySecurity
- * @param ingest: char*
+ * @param ingest: uint8_t*
  * @param len_ingest: int*
  * @return int32: Success/Failure
  **/
-int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
+int32_t Crypto_TM_ApplySecurity( uint8_t* ingest, int* len_ingest)
 // Accepts CCSDS message in ingest, and packs into TM before encryption
 {
-    int32 status = CRYPTO_LIB_SUCCESS;
+    int32_t status = CRYPTO_LIB_SUCCESS;
     int count = 0;
     int pdu_loc = 0;
     int pdu_len = *len_ingest - TM_MIN_SIZE;
     int pad_len = 0;
     int mac_loc = 0;
     int fecf_loc = 0;
-    uint8 tempTM[TM_SIZE];
+    uint8_t tempTM[TM_SIZE];
     int x = 0;
     int y = 0;
-    uint8 aad[20];
-    uint16 spi = tm_frame.tm_sec_header.spi;
-    uint16 spp_crc = 0x0000;
+    uint8_t aad[20];
+    uint16_t spi = tm_frame.tm_sec_header.spi;
+    uint16_t spp_crc = 0x0000;
     SecurityAssociation_t* sa_ptr;
     SecurityAssociation_t sa;
 
@@ -3664,7 +3664,7 @@ int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
     #endif
 
     // Check for idle frame trigger
-    if (((uint8)ingest[0] == 0x08) && ((uint8)ingest[1] == 0x90))
+    if (((uint8_t)ingest[0] == 0x08) && ((uint8_t)ingest[1] == 0x90))
     {   // Zero ingest
         for (x = 0; x < *len_ingest; x++)
         {
@@ -3683,7 +3683,7 @@ int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
         ingest[2] = 0xFF;
         ingest[3] = 0xFF;
         // Add 2 bytes of CRC to space packet
-        spp_crc = Crypto_Calc_CRC16((char*) ingest, *len_ingest);
+        spp_crc = Crypto_Calc_CRC16((uint8_t*) ingest, *len_ingest);
         ingest[*len_ingest] = (spp_crc & 0xFF00) >> 8;
         ingest[*len_ingest+1] = (spp_crc & 0x00FF);
         *len_ingest = *len_ingest + 2;
@@ -3725,16 +3725,16 @@ int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
 
     // Initialize the temporary TM frame
         // Header
-        tempTM[count++] = (uint8) ((tm_frame.tm_header.tfvn << 6) | ((tm_frame.tm_header.scid & 0x3F0) >> 4));
-        tempTM[count++] = (uint8) (((tm_frame.tm_header.scid & 0x00F) << 4) | (tm_frame.tm_header.vcid << 1) | (tm_frame.tm_header.ocff));
-        tempTM[count++] = (uint8) (tm_frame.tm_header.mcfc);
-        tempTM[count++] = (uint8) (tm_frame.tm_header.vcfc);
-        tempTM[count++] = (uint8) ((tm_frame.tm_header.tfsh << 7) | (tm_frame.tm_header.sf << 6) | (tm_frame.tm_header.pof << 5) | (tm_frame.tm_header.slid << 3) | ((tm_frame.tm_header.fhp & 0x700) >> 8));
-        tempTM[count++] = (uint8) (tm_frame.tm_header.fhp & 0x0FF);
-        //	tempTM[count++] = (uint8) ((tm_frame.tm_header.tfshvn << 6) | tm_frame.tm_header.tfshlen);
+        tempTM[count++] = (uint8_t) ((tm_frame.tm_header.tfvn << 6) | ((tm_frame.tm_header.scid & 0x3F0) >> 4));
+        tempTM[count++] = (uint8_t) (((tm_frame.tm_header.scid & 0x00F) << 4) | (tm_frame.tm_header.vcid << 1) | (tm_frame.tm_header.ocff));
+        tempTM[count++] = (uint8_t) (tm_frame.tm_header.mcfc);
+        tempTM[count++] = (uint8_t) (tm_frame.tm_header.vcfc);
+        tempTM[count++] = (uint8_t) ((tm_frame.tm_header.tfsh << 7) | (tm_frame.tm_header.sf << 6) | (tm_frame.tm_header.pof << 5) | (tm_frame.tm_header.slid << 3) | ((tm_frame.tm_header.fhp & 0x700) >> 8));
+        tempTM[count++] = (uint8_t) (tm_frame.tm_header.fhp & 0x0FF);
+        //	tempTM[count++] = (uint8_t) ((tm_frame.tm_header.tfshvn << 6) | tm_frame.tm_header.tfshlen);
         // Security Header
-        tempTM[count++] = (uint8) ((spi & 0xFF00) >> 8);
-        tempTM[count++] = (uint8) ((spi & 0x00FF));
+        tempTM[count++] = (uint8_t) ((spi & 0xFF00) >> 8);
+        tempTM[count++] = (uint8_t) ((spi & 0x00FF));
         memcpy(tm_frame.tm_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len);
 
         // Padding Length
@@ -3768,7 +3768,7 @@ int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
         // Payload Data Unit
         for (x = 0; x < (pdu_len); x++)	
         {
-            tempTM[count++] = (uint8) tm_frame.tm_pdu[x];
+            tempTM[count++] = (uint8_t) tm_frame.tm_pdu[x];
         }
         // Message Authentication Code
         mac_loc = count;
@@ -3779,13 +3779,13 @@ int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
         // Operational Control Field
         for (x = 0; x < OCF_SIZE; x++)
         {
-            tempTM[count++] = (uint8) tm_frame.tm_sec_trailer.ocf[x];
+            tempTM[count++] = (uint8_t) tm_frame.tm_sec_trailer.ocf[x];
         }
         // Frame Error Control Field
         fecf_loc = count;
-        tm_frame.tm_sec_trailer.fecf = Crypto_Calc_FECF((char*) tempTM, count);	
-        tempTM[count++] = (uint8) ((tm_frame.tm_sec_trailer.fecf & 0xFF00) >> 8);
-        tempTM[count++] = (uint8) (tm_frame.tm_sec_trailer.fecf & 0x00FF);
+        tm_frame.tm_sec_trailer.fecf = Crypto_Calc_FECF((uint8_t*) tempTM, count);	
+        tempTM[count++] = (uint8_t) ((tm_frame.tm_sec_trailer.fecf & 0xFF00) >> 8);
+        tempTM[count++] = (uint8_t) (tm_frame.tm_sec_trailer.fecf & 0x00FF);
 
     // Determine Mode
         // Clear
@@ -3898,7 +3898,7 @@ int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
                 printf("MAC = 0x");
                 for(x = 0; x < MAC_SIZE; x++)
                 {
-                    printf("%02x", (uint8) ingest[x + mac_loc]);
+                    printf("%02x", (uint8_t) ingest[x + mac_loc]);
                 }
                 printf("\n");
             #endif
@@ -3911,9 +3911,9 @@ int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
             }
 
             // Update FECF
-            tm_frame.tm_sec_trailer.fecf = Crypto_Calc_FECF((char*) ingest, fecf_loc - 1);
-            ingest[fecf_loc] = (uint8) ((tm_frame.tm_sec_trailer.fecf & 0xFF00) >> 8);
-            ingest[fecf_loc + 1] = (uint8) (tm_frame.tm_sec_trailer.fecf & 0x00FF); 
+            tm_frame.tm_sec_trailer.fecf = Crypto_Calc_FECF((uint8_t*) ingest, fecf_loc - 1);
+            ingest[fecf_loc] = (uint8_t) ((tm_frame.tm_sec_trailer.fecf & 0xFF00) >> 8);
+            ingest[fecf_loc + 1] = (uint8_t) (tm_frame.tm_sec_trailer.fecf & 0x00FF); 
         }
         // Authentication
         else if ((sa_ptr->est == 0) &&
@@ -3950,14 +3950,14 @@ int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
 
 /**
  * @brief Function: Crypto_TM_ProcessSecurity
- * @param ingest: char*
+ * @param ingest: uint8_t*
  * @param len_ingest: int*
  * @return int32: Success/Failure
  **/
-int32 Crypto_TM_ProcessSecurity(char* ingest, int* len_ingest)
+int32_t Crypto_TM_ProcessSecurity(uint8_t* ingest, int* len_ingest)
 {
     // Local Variables
-    int32 status = OS_SUCCESS;
+    int32_t status = OS_SUCCESS;
 
     #ifdef DEBUG
         printf(KYEL "\n----- Crypto_TM_ProcessSecurity START -----\n" RESET);
@@ -3976,14 +3976,14 @@ int32 Crypto_TM_ProcessSecurity(char* ingest, int* len_ingest)
 
 /**
  * @brief Function: Crypto_AOS_ApplySecurity
- * @param ingest: char*
+ * @param ingest: uint8_t*
  * @param len_ingest: int*
  * @return int32: Success/Failure
  **/
-int32 Crypto_AOS_ApplySecurity(char* ingest, int* len_ingest)
+int32_t Crypto_AOS_ApplySecurity(uint8_t* ingest, int* len_ingest)
 {
     // Local Variables
-    int32 status = OS_SUCCESS;
+    int32_t status = OS_SUCCESS;
 
     #ifdef DEBUG
         printf(KYEL "\n----- Crypto_AOS_ApplySecurity START -----\n" RESET);
@@ -4002,14 +4002,14 @@ int32 Crypto_AOS_ApplySecurity(char* ingest, int* len_ingest)
 
 /**
  * @brief Function: Crypto_AOS_ProcessSecurity
- * @param ingest: char*
+ * @param ingest: uint8_t*
  * @param len_ingest: int*
  * @return int32: Success/Failure
  **/
-int32 Crypto_AOS_ProcessSecurity(char* ingest, int* len_ingest)
+int32_t Crypto_AOS_ProcessSecurity(uint8_t* ingest, int* len_ingest)
 {
     // Local Variables
-    int32 status = OS_SUCCESS;
+    int32_t status = OS_SUCCESS;
 
     #ifdef DEBUG
         printf(KYEL "\n----- Crypto_AOS_ProcessSecurity START -----\n" RESET);
@@ -4028,14 +4028,14 @@ int32 Crypto_AOS_ProcessSecurity(char* ingest, int* len_ingest)
 
 /**
  * @brief Function: Crypto_ApplySecurity
- * @param ingest: char*
+ * @param ingest: uint8_t*
  * @param len_ingest: int*
  * @return int32: Success/Failure
  **/
-int32 Crypto_ApplySecurity(char* ingest, int* len_ingest)
+int32_t Crypto_ApplySecurity(uint8_t* ingest, int* len_ingest)
 {
     // Local Variables
-    int32 status = OS_SUCCESS;
+    int32_t status = OS_SUCCESS;
 
     #ifdef DEBUG
         printf(KYEL "\n----- Crypto_ApplySecurity START -----\n" RESET);
@@ -4054,14 +4054,14 @@ int32 Crypto_ApplySecurity(char* ingest, int* len_ingest)
 
 /**
  * @brief Function: Crypto_ProcessSecurity
- * @param ingest: char*
+ * @param ingest: uint8_t*
  * @param len_ingest: int*
  * @return int32: Success/Failure
  **/
-int32 Crypto_ProcessSecurity(char* ingest, int* len_ingest)
+int32_t Crypto_ProcessSecurity(uint8_t* ingest, int* len_ingest)
 {
     // Local Variables
-    int32 status = OS_SUCCESS;
+    int32_t status = OS_SUCCESS;
 
     #ifdef DEBUG
         printf(KYEL "\n----- Crypto_ProcessSecurity START -----\n" RESET);
