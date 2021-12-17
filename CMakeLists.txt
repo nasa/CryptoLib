@@ -57,3 +57,7 @@ if(NOT DEFINED ${PROJECT_BINARY_DIR})
 endif()
 
 add_subdirectory(src)
+
+if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR MYPROJECT_BUILD_TESTING) AND BUILD_TESTING)
+    add_subdirectory(test)
+endif()

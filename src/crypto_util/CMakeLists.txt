@@ -28,9 +28,9 @@ if(${ENCTEST})
 endif(${ENCTEST})
 
 aux_source_directory(src UTIL_SRC_FILES)
-aux_source_directory(app APP_SRC_FILES) 
+aux_source_directory(util APP_SRC_FILES) 
 
-file( GLOB SOURCE_FILES app/*.c )
+file( GLOB SOURCE_FILES util/*.c )
 foreach(SOURCE_PATH ${SOURCE_FILES})
     get_filename_component(EXECUTABLE_NAME ${SOURCE_PATH} NAME_WE)
 

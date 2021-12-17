@@ -60,7 +60,3 @@ add_custom_command(TARGET Crypto POST_BUILD
         )
 
 add_subdirectory(crypto_util)
-
-if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR MYPROJECT_BUILD_TESTING) AND BUILD_TESTING)
-    add_subdirectory(crypto_tests)
-endif()
