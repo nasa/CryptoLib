@@ -63,3 +63,5 @@ add_subdirectory(src)
 if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR MYPROJECT_BUILD_TESTING) AND BUILD_TESTING)
     add_subdirectory(test)
 endif()
+
+add_subdirectory(util)

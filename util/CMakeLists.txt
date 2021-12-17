@@ -27,10 +27,10 @@ if(${ENCTEST})
     endif()
 endif(${ENCTEST})
 
-aux_source_directory(src UTIL_SRC_FILES)
-aux_source_directory(util APP_SRC_FILES) 
+aux_source_directory(core UTIL_SRC_FILES)
+aux_source_directory(src_util APP_SRC_FILES) 
 
-file( GLOB SOURCE_FILES util/*.c )
+file( GLOB SOURCE_FILES src_util/*.c )
 foreach(SOURCE_PATH ${SOURCE_FILES})
     get_filename_component(EXECUTABLE_NAME ${SOURCE_PATH} NAME_WE)
 
@@ -38,7 +38,7 @@ foreach(SOURCE_PATH ${SOURCE_FILES})
         continue()
     else()
         add_executable(${EXECUTABLE_NAME} ${SOURCE_PATH}) 
-        target_sources(${EXECUTABLE_NAME} PRIVATE src/shared_util.c)
+        target_sources(${EXECUTABLE_NAME} PRIVATE core/shared_util.c)
         target_link_libraries(${EXECUTABLE_NAME} LINK_PUBLIC Crypto)
     endif()
 

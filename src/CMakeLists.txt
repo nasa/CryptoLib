@@ -58,5 +58,3 @@ add_custom_command(TARGET Crypto POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:Crypto> ${PROJECT_BINARY_DIR}/lib/libCrypto.so
         COMMENT "Created ${PROJECT_BINARY_DIR}/lib/libCrypto.so"
         )
-
-add_subdirectory(crypto_util)
