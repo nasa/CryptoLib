@@ -171,7 +171,6 @@ static int32 sadb_config(void)
     sa[6].arcw_len = 1;
     sa[6].arcw = 5;
     sa[6].arc_len = (sa[6].arcw * 2) + 1;
-    //itc_gcm128_init(&(sa[6].gcm_ctx), (unsigned char *)&(ek_ring[sa[6].ekid]));
 
     // SA 7 - KEYED;  ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 130
     sa[7].spi = 7;

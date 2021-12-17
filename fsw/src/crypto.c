@@ -23,17 +23,12 @@
 #include "crypto.h"
 #include "sadb_routine.h"
 
-// #include "itc_aes128.h"
-// #include "itc_gcm128.h"
-
 #include "crypto_structs.h"
 #include "crypto_config_structs.h"
 #include "crypto_print.h"
 #include "crypto_config.h"
 #include "crypto_events.h"
 #include "crypto_error.h"
-
-
 
 #include <gcrypt.h>
 
