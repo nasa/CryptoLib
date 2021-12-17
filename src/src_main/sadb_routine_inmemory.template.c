@@ -281,7 +281,7 @@ static int32 sadb_get_sa_from_spi(uint16 spi,SecurityAssociation_t** security_as
     if(sa[spi].iv == NULL && ( sa[spi].ast == 1 || sa[spi].est == 1 )) { return CRYPTO_LIB_ERR_NULL_IV; } //Must have IV if doing encryption or authentication
     if(sa[spi].abm == NULL && sa[spi].ast) { return CRYPTO_LIB_ERR_NULL_ABM; } //Must have IV if doing encryption or authentication
     #ifdef SA_DEBUG
-        OS_printf(KYEL "DEBUG - Printing local copy of SA Entry for current SPI.\n" RESET);
+        printf(KYEL "DEBUG - Printing local copy of SA Entry for current SPI.\n" RESET);
         Crypto_saPrint(*security_association);
     #endif
     return status;
@@ -311,7 +311,7 @@ static int32 sadb_get_operational_sa_from_gvcid(uint8 tfvn,uint16 scid,uint16 vc
             if(sa[i].abm == NULL && sa[i].ast) { return CRYPTO_LIB_ERR_NULL_ABM; } //Must have IV if doing encryption or authentication
 
             #ifdef SA_DEBUG
-                OS_printf("Valid operational SA found at index %d.\n", i);
+                printf("Valid operational SA found at index %d.\n", i);
             #endif
 
             status = CRYPTO_LIB_SUCCESS;
@@ -323,7 +323,7 @@ static int32 sadb_get_operational_sa_from_gvcid(uint8 tfvn,uint16 scid,uint16 vc
     if (status != CRYPTO_LIB_SUCCESS)
     {
         #ifdef SA_DEBUG
-            OS_printf(KRED "Error - Making best attempt at a useful error code:\n\t" RESET);
+            printf(KRED "Error - Making best attempt at a useful error code:\n\t" RESET);
         #endif
 
         for (int i=0; i<NUM_SA; i++)
@@ -335,7 +335,7 @@ static int32 sadb_get_operational_sa_from_gvcid(uint8 tfvn,uint16 scid,uint16 vc
                 (sa[i].gvcid_tc_blk.mapid == mapid && sa[i].sa_state == SA_OPERATIONAL))
             {
                 #ifdef SA_DEBUG
-                    OS_printf(KRED "An operational SA was found - but mismatched tfvn.\n" RESET);
+                    printf(KRED "An operational SA was found - but mismatched tfvn.\n" RESET);
                 #endif
                 status = CRYPTO_LIB_ERR_INVALID_TFVN;
             }
@@ -343,7 +343,7 @@ static int32 sadb_get_operational_sa_from_gvcid(uint8 tfvn,uint16 scid,uint16 vc
                 (sa[i].gvcid_tc_blk.mapid == mapid && sa[i].sa_state == SA_OPERATIONAL))
             {
                 #ifdef SA_DEBUG
-                    OS_printf(KRED "An operational SA was found - but mismatched scid.\n" RESET);
+                    printf(KRED "An operational SA was found - but mismatched scid.\n" RESET);
                 #endif
                 status = CRYPTO_LIB_ERR_INVALID_SCID;
             }
@@ -351,7 +351,7 @@ static int32 sadb_get_operational_sa_from_gvcid(uint8 tfvn,uint16 scid,uint16 vc
                 (sa[i].gvcid_tc_blk.mapid == mapid && sa[i].sa_state == SA_OPERATIONAL))
             {
                 #ifdef SA_DEBUG
-                    OS_printf(KRED "An operational SA was found - but mismatched vcid.\n" RESET);
+                    printf(KRED "An operational SA was found - but mismatched vcid.\n" RESET);
                 #endif
                 status = CRYPTO_LIB_ERR_INVALID_VCID;
             }
@@ -359,7 +359,7 @@ static int32 sadb_get_operational_sa_from_gvcid(uint8 tfvn,uint16 scid,uint16 vc
                 (sa[i].gvcid_tc_blk.mapid != mapid && sa[i].sa_state == SA_OPERATIONAL))
             {
                 #ifdef SA_DEBUG
-                    OS_printf(KRED "An operational SA was found - but mismatched mapid.\n" RESET);
+                    printf(KRED "An operational SA was found - but mismatched mapid.\n" RESET);
                 #endif
                 status = CRYPTO_LIB_ERR_INVALID_MAPID;
             }
@@ -367,7 +367,7 @@ static int32 sadb_get_operational_sa_from_gvcid(uint8 tfvn,uint16 scid,uint16 vc
                 (sa[i].gvcid_tc_blk.mapid == mapid && sa[i].sa_state != SA_OPERATIONAL))
             {
                 #ifdef SA_DEBUG
-                    OS_printf(KRED "A valid but non-operational SA was found.\n" RESET);
+                    printf(KRED "A valid but non-operational SA was found.\n" RESET);
                 #endif
                 status = CRYPTO_LIB_ERR_NO_OPERATIONAL_SA;
             }
@@ -481,20 +481,20 @@ static int32 sadb_sa_start(TC_t* tc_frame)
                 }
 
 #ifdef PDU_DEBUG
-                OS_printf("SPI %d changed to OPERATIONAL state. \n", spi);
+                printf("SPI %d changed to OPERATIONAL state. \n", spi);
                     switch (gvcid.mapid)
                     {
                         case TYPE_TC:
-                            OS_printf("Type TC, ");
+                            printf("Type TC, ");
                             break;
                         case TYPE_MAP:
-                            OS_printf("Type MAP, ");
+                            printf("Type MAP, ");
                             break;
                         case TYPE_TM:
-                            OS_printf("Type TM, ");
+                            printf("Type TM, ");
                             break;
                         default:
-                            OS_printf("Type Unknown, ");
+                            printf("Type Unknown, ");
                             break;
                     }
 #endif
@@ -505,16 +505,16 @@ static int32 sadb_sa_start(TC_t* tc_frame)
         }
         else
         {
-            OS_printf(KRED "ERROR: SPI %d is not in the KEYED state.\n" RESET, spi);
+            printf(KRED "ERROR: SPI %d is not in the KEYED state.\n" RESET, spi);
         }
     }
     else
     {
-        OS_printf(KRED "ERROR: SPI %d does not exist.\n" RESET, spi);
+        printf(KRED "ERROR: SPI %d does not exist.\n" RESET, spi);
     }
 
 #ifdef DEBUG
-    OS_printf("\t spi = %d \n", spi);
+    printf("\t spi = %d \n", spi);
 #endif
 
     return OS_SUCCESS;
@@ -531,7 +531,7 @@ static int32 sadb_sa_stop(void)
 
     // Read ingest
     spi = ((uint8)sdls_frame.pdu.data[0] << 8) | (uint8)sdls_frame.pdu.data[1];
-    OS_printf("spi = %d \n", spi);
+    printf("spi = %d \n", spi);
 
     // Overwrite last PID
     sa[spi].lpid = (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
@@ -558,21 +558,21 @@ static int32 sadb_sa_stop(void)
             // Change to operational state
             sa[spi].sa_state = SA_KEYED;
 #ifdef PDU_DEBUG
-            OS_printf("SPI %d changed to KEYED state. \n", spi);
+            printf("SPI %d changed to KEYED state. \n", spi);
 #endif
         }
         else
         {
-            OS_printf(KRED "ERROR: SPI %d is not in the OPERATIONAL state.\n" RESET, spi);
+            printf(KRED "ERROR: SPI %d is not in the OPERATIONAL state.\n" RESET, spi);
         }
     }
     else
     {
-        OS_printf(KRED "ERROR: SPI %d does not exist.\n" RESET, spi);
+        printf(KRED "ERROR: SPI %d does not exist.\n" RESET, spi);
     }
 
 #ifdef DEBUG
-    OS_printf("\t spi = %d \n", spi);
+    printf("\t spi = %d \n", spi);
 #endif
 
     return OS_SUCCESS;
@@ -610,7 +610,7 @@ static int32 sadb_sa_rekey(void)
 
             // Anti-Replay Counter
 #ifdef PDU_DEBUG
-            OS_printf("SPI %d IV updated to: 0x", spi);
+            printf("SPI %d IV updated to: 0x", spi);
 #endif
             if (sa[spi].shivf_len > 0)
             {   // Set IV - authenticated encryption
@@ -620,7 +620,7 @@ static int32 sadb_sa_rekey(void)
                     // TODO: Assuming this was fixed...
                     *(sa[spi].iv + x - count) = (uint8) sdls_frame.pdu.data[x];
 #ifdef PDU_DEBUG
-                    OS_printf("%02x", sdls_frame.pdu.data[x]);
+                    printf("%02x", sdls_frame.pdu.data[x]);
 #endif
                 }
             }
@@ -629,29 +629,29 @@ static int32 sadb_sa_rekey(void)
                 // TODO
             }
 #ifdef PDU_DEBUG
-            OS_printf("\n");
+            printf("\n");
 #endif
 
             // Change to keyed state
             sa[spi].sa_state = SA_KEYED;
 #ifdef PDU_DEBUG
-            OS_printf("SPI %d changed to KEYED state with encrypted Key ID %d. \n", spi, sa[spi].ekid);
+            printf("SPI %d changed to KEYED state with encrypted Key ID %d. \n", spi, sa[spi].ekid);
 #endif
         }
         else
         {
-            OS_printf(KRED "ERROR: SPI %d is not in the UNKEYED state.\n" RESET, spi);
+            printf(KRED "ERROR: SPI %d is not in the UNKEYED state.\n" RESET, spi);
         }
     }
     else
     {
-        OS_printf(KRED "ERROR: SPI %d does not exist.\n" RESET, spi);
+        printf(KRED "ERROR: SPI %d does not exist.\n" RESET, spi);
     }
 
 #ifdef DEBUG
-    OS_printf("\t spi  = %d \n", spi);
-        OS_printf("\t ekid = %d \n", sa[spi].ekid);
-        //OS_printf("\t akid = %d \n", sa[spi].akid);
+    printf("\t spi  = %d \n", spi);
+        printf("\t ekid = %d \n", sa[spi].ekid);
+        //printf("\t akid = %d \n", sa[spi].akid);
 #endif
 
     return OS_SUCCESS;
@@ -668,7 +668,7 @@ static int32 sadb_sa_expire(void)
 
     // Read ingest
     spi = ((uint8)sdls_frame.pdu.data[0] << 8) | (uint8)sdls_frame.pdu.data[1];
-    OS_printf("spi = %d \n", spi);
+    printf("spi = %d \n", spi);
 
     // Overwrite last PID
     sa[spi].lpid = (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
@@ -680,17 +680,17 @@ static int32 sadb_sa_expire(void)
         {	// Change to 'Unkeyed' state
             sa[spi].sa_state = SA_UNKEYED;
 #ifdef PDU_DEBUG
-            OS_printf("SPI %d changed to UNKEYED state. \n", spi);
+            printf("SPI %d changed to UNKEYED state. \n", spi);
 #endif
         }
         else
         {
-            OS_printf(KRED "ERROR: SPI %d is not in the KEYED state.\n" RESET, spi);
+            printf(KRED "ERROR: SPI %d is not in the KEYED state.\n" RESET, spi);
         }
     }
     else
     {
-        OS_printf(KRED "ERROR: SPI %d does not exist.\n" RESET, spi);
+        printf(KRED "ERROR: SPI %d does not exist.\n" RESET, spi);
     }
 
     return OS_SUCCESS;
@@ -708,7 +708,7 @@ static int32 sadb_sa_create(void)
 
     // Read sdls_frame.pdu.data
     spi = ((uint8)sdls_frame.pdu.data[0] << 8) | (uint8)sdls_frame.pdu.data[1];
-    OS_printf("spi = %d \n", spi);
+    printf("spi = %d \n", spi);
 
     // Overwrite last PID
     sa[spi].lpid = (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
@@ -779,7 +779,7 @@ static int32 sadb_sa_delete(void)
 
     // Read ingest
     spi = ((uint8)sdls_frame.pdu.data[0] << 8) | (uint8)sdls_frame.pdu.data[1];
-    OS_printf("spi = %d \n", spi);
+    printf("spi = %d \n", spi);
 
     // Overwrite last PID
     sa[spi].lpid = (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
@@ -791,19 +791,19 @@ static int32 sadb_sa_delete(void)
         {	// Change to 'None' state
             sa[spi].sa_state = SA_NONE;
 #ifdef PDU_DEBUG
-            OS_printf("SPI %d changed to NONE state. \n", spi);
+            printf("SPI %d changed to NONE state. \n", spi);
 #endif
 
             // TODO: Zero entire SA
         }
         else
         {
-            OS_printf(KRED "ERROR: SPI %d is not in the UNKEYED state.\n" RESET, spi);
+            printf(KRED "ERROR: SPI %d is not in the UNKEYED state.\n" RESET, spi);
         }
     }
     else
     {
-        OS_printf(KRED "ERROR: SPI %d does not exist.\n" RESET, spi);
+        printf(KRED "ERROR: SPI %d does not exist.\n" RESET, spi);
     }
 
     return OS_SUCCESS;
@@ -820,7 +820,7 @@ static int32 sadb_sa_setARSN(void)
 
     // Read ingest
     spi = ((uint8)sdls_frame.pdu.data[0] << 8) | (uint8)sdls_frame.pdu.data[1];
-    OS_printf("spi = %d \n", spi);
+    printf("spi = %d \n", spi);
 
     // TODO: Check SA type (authenticated, encrypted, both) and set appropriately
     // TODO: Add more checks on bounds
@@ -829,7 +829,7 @@ static int32 sadb_sa_setARSN(void)
     if (spi < NUM_SA)
     {
 #ifdef PDU_DEBUG
-        OS_printf("SPI %d IV updated to: 0x", spi);
+        printf("SPI %d IV updated to: 0x", spi);
 #endif
         if (sa[spi].shivf_len > 0)
         {   // Set IV - authenticated encryption
@@ -837,7 +837,7 @@ static int32 sadb_sa_setARSN(void)
             {
                 *(sa[spi].iv + x) = (uint8) sdls_frame.pdu.data[x + 2];
 #ifdef PDU_DEBUG
-                OS_printf("%02x", *(sa[spi].iv + x));
+                printf("%02x", *(sa[spi].iv + x));
 #endif
             }
             Crypto_increment(sa[spi].iv, sa[spi].shivf_len);
@@ -847,12 +847,12 @@ static int32 sadb_sa_setARSN(void)
             // TODO
         }
 #ifdef PDU_DEBUG
-        OS_printf("\n");
+        printf("\n");
 #endif
     }
     else
     {
-        OS_printf("sadb_sa_setARSN ERROR: SPI %d does not exist.\n", spi);
+        printf("sadb_sa_setARSN ERROR: SPI %d does not exist.\n", spi);
     }
 
     return OS_SUCCESS;
@@ -869,7 +869,7 @@ static int32 sadb_sa_setARSNW(void)
 
     // Read ingest
     spi = ((uint8)sdls_frame.pdu.data[0] << 8) | (uint8)sdls_frame.pdu.data[1];
-    OS_printf("spi = %d \n", spi);
+    printf("spi = %d \n", spi);
 
     // Check SPI exists
     if (spi < NUM_SA)
@@ -889,7 +889,7 @@ static int32 sadb_sa_setARSNW(void)
     }
     else
     {
-        OS_printf("sadb_sa_setARSNW ERROR: SPI %d does not exist.\n", spi);
+        printf("sadb_sa_setARSNW ERROR: SPI %d does not exist.\n", spi);
     }
 
     return OS_SUCCESS;
@@ -908,7 +908,7 @@ static int32 sadb_sa_status(char* ingest)
 
     // Read ingest
     spi = ((uint8)sdls_frame.pdu.data[0] << 8) | (uint8)sdls_frame.pdu.data[1];
-    OS_printf("spi = %d \n", spi);
+    printf("spi = %d \n", spi);
 
     // Check SPI exists
     if (spi < NUM_SA)
@@ -924,7 +924,7 @@ static int32 sadb_sa_status(char* ingest)
     }
     else
     {
-        OS_printf("sadb_sa_status ERROR: SPI %d does not exist.\n", spi);
+        printf("sadb_sa_status ERROR: SPI %d does not exist.\n", spi);
     }
 
 #ifdef SA_DEBUG

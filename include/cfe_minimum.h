@@ -45,6 +45,6 @@
 
 #define CFE_PSP_MemCpy memcpy
 #define CFE_PSP_MemSet memset
-#define OS_printf printf
+#define printf printf
 
 #endif  /* _cfe_ */

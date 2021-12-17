@@ -61,15 +61,15 @@ int main(int argc, char *argv[]) {
     }
 
     #ifdef TC_DEBUG
-        OS_printf(KYEL "ApplySecurity Output:\n" RESET);
-        OS_printf(KYEL "\tBuffer size int:%d\n" RESET, enc_frame_len);
-        OS_printf(KYEL "\tEncrypted Frame Contents: \n\t" RESET);
+        printf(KYEL "ApplySecurity Output:\n" RESET);
+        printf(KYEL "\tBuffer size int:%d\n" RESET, enc_frame_len);
+        printf(KYEL "\tEncrypted Frame Contents: \n\t" RESET);
     
         for(int i=0; i < enc_frame_len; i++)
             {
-                OS_printf(KYEL "%02X" RESET, *(ptr_enc_frame+i));
+                printf(KYEL "%02X" RESET, *(ptr_enc_frame+i));
             }
-        OS_printf("\n");
+        printf("\n");
     #endif
 
     free(buffer);
