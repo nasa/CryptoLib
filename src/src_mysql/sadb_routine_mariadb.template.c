@@ -84,12 +84,12 @@ SadbRoutine get_sadb_routine_mariadb(void)
 
 static int32_t sadb_config(void)
 {
-    return OS_SUCCESS;
+    return CRYPTO_LIB_SUCCESS;
 }
 
 static int32_t sadb_init(void)
 {
-    int32_t status = OS_SUCCESS;
+    int32_t status = CRYPTO_LIB_SUCCESS;
     con = mysql_init(NULL);
 
     //TODO - add mysql_options/mysql_get_ssl_cipher logic for mTLS connections.
@@ -107,13 +107,13 @@ static int32_t sadb_init(void)
 static int32_t sadb_close(void)
 {
     mysql_close(con);
-    return OS_SUCCESS;
+    return CRYPTO_LIB_SUCCESS;
 }
 
 // Security Association Interaction Functions
 static int32_t sadb_get_sa_from_spi(uint16_t spi,SecurityAssociation_t** security_association)
 {
-    int32_t status = OS_SUCCESS;
+    int32_t status = CRYPTO_LIB_SUCCESS;
 
     uint8_t spi_query[2048];
     snprintf(spi_query, sizeof(spi_query),SQL_SADB_GET_SA_BY_SPI,spi);
@@ -124,7 +124,7 @@ static int32_t sadb_get_sa_from_spi(uint16_t spi,SecurityAssociation_t** securit
 }
 static int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn,uint16_t scid,uint16_t vcid,uint8_t mapid,SecurityAssociation_t** security_association)
 {
-    int32_t status = OS_SUCCESS;
+    int32_t status = CRYPTO_LIB_SUCCESS;
 
     uint8_t gvcid_query[2048];
     snprintf(gvcid_query, sizeof(gvcid_query),SQL_SADB_GET_SA_BY_GVCID,tfvn,scid,vcid,mapid,SA_OPERATIONAL);
@@ -135,7 +135,7 @@ static int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn,uint16_t scid,uin
 }
 static int32_t sadb_save_sa(SecurityAssociation_t* sa)
 {
-    int32_t status = OS_SUCCESS;
+    int32_t status = CRYPTO_LIB_SUCCESS;
     if(sa==NULL) {return SADB_NULL_SA_USED;}
 
     uint8_t update_sa_query[2048];
@@ -159,19 +159,19 @@ static int32_t sadb_save_sa(SecurityAssociation_t* sa)
     return status;
 }
 // Security Association Utility Functions
-static int32_t sadb_sa_start(TC_t* tc_frame){return OS_SUCCESS;}
-static int32_t sadb_sa_expire(void){return OS_SUCCESS;}
-static int32_t sadb_sa_rekey(void){return OS_SUCCESS;}
-static int32_t sadb_sa_status(uint8_t* ingest){return OS_SUCCESS;}
-static int32_t sadb_sa_create(void){return OS_SUCCESS;}
-static int32_t sadb_sa_setARSN(void){return OS_SUCCESS;}
-static int32_t sadb_sa_setARSNW(void){return OS_SUCCESS;}
-static int32_t sadb_sa_delete(void){return OS_SUCCESS;}
+static int32_t sadb_sa_start(TC_t* tc_frame){return CRYPTO_LIB_SUCCESS;}
+static int32_t sadb_sa_expire(void){return CRYPTO_LIB_SUCCESS;}
+static int32_t sadb_sa_rekey(void){return CRYPTO_LIB_SUCCESS;}
+static int32_t sadb_sa_status(uint8_t* ingest){return CRYPTO_LIB_SUCCESS;}
+static int32_t sadb_sa_create(void){return CRYPTO_LIB_SUCCESS;}
+static int32_t sadb_sa_setARSN(void){return CRYPTO_LIB_SUCCESS;}
+static int32_t sadb_sa_setARSNW(void){return CRYPTO_LIB_SUCCESS;}
+static int32_t sadb_sa_delete(void){return CRYPTO_LIB_SUCCESS;}
 
 // sadb_routine private helper functions
 static int32_t parse_sa_from_mysql_query(uint8_t* query, SecurityAssociation_t** security_association)
 {
-    int32_t status = OS_SUCCESS;
+    int32_t status = CRYPTO_LIB_SUCCESS;
     SecurityAssociation_t* sa = malloc(sizeof(SecurityAssociation_t));
 
     #ifdef SA_DEBUG

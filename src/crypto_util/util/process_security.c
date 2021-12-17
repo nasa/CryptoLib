@@ -37,7 +37,7 @@ int main(int argc, uint8_t *argv[]) {
                "<tc|tm|aos> : Process TeleCommand (tc) | Telemetry (tm) | Advanced Orbiting Systems (aos) Security T\n"\
                "<filename> : binary file with telecommand transfer frame bits\n",argv[0]);
 
-        return OS_ERROR;
+        return CRYPTO_LIB_ERROR;
     }
     buffer = c_read_file(filename,&buffer_size);
     debug_printf("File buffer size:%lu\n",buffer_size);

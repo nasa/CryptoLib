@@ -36,7 +36,7 @@ int main(int argc, uint8_t *argv[]) {
                "<tc_p|tm_p|aos_p> : Process TeleCommand (tc_p) | Telemetry (tm_p) | Advanced Orbiting Systems (aos_p) Security T\n"\
                "<filename> : binary file with telecommand transfer frame bits\n",argv[0]);
 
-        return OS_ERROR;
+        return CRYPTO_LIB_ERROR;
     }
     //Setup & Initialize CryptoLib
     Crypto_Init();

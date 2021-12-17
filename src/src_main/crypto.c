@@ -131,7 +131,7 @@ static uint16_t crc16Table[256];
 **/
 int32_t Crypto_Init_Unit_Test(void)
 {
-    int32_t status = OS_SUCCESS;
+    int32_t status = CRYPTO_LIB_SUCCESS;
     Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY,CRYPTO_TC_CREATE_FECF_TRUE,TC_PROCESS_SDLS_PDUS_TRUE,TC_HAS_PUS_HDR,TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,0,TC_HAS_FECF,TC_HAS_SEGMENT_HDRS);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0,0x0003,1,TC_HAS_FECF,TC_HAS_SEGMENT_HDRS);
@@ -148,7 +148,7 @@ int32_t Crypto_Init_Unit_Test(void)
 **/
 int32_t Crypto_Init_With_Configs(CryptoConfig_t* crypto_config_p,GvcidManagedParameters_t* gvcid_managed_parameters_p,SadbMariaDBConfig_t* sadb_mariadb_config_p)
 {
-    int32_t status = OS_SUCCESS;
+    int32_t status = CRYPTO_LIB_SUCCESS;
     crypto_config = crypto_config_p;
     gvcid_managed_parameters = gvcid_managed_parameters_p;
     sadb_mariadb_config = sadb_mariadb_config_p;
@@ -162,7 +162,7 @@ int32_t Crypto_Init_With_Configs(CryptoConfig_t* crypto_config_p,GvcidManagedPar
  **/
 int32_t Crypto_Init(void)
 {
-    int32_t status = OS_SUCCESS;
+    int32_t status = CRYPTO_LIB_SUCCESS;
 
     if(crypto_config==NULL){
         status = CRYPTO_CONFIGURATION_NOT_COMPLETE;
@@ -232,7 +232,7 @@ int32_t Crypto_Init(void)
 **/
 int32_t Crypto_Shutdown(void)
 {
-    int32_t status = OS_SUCCESS;
+    int32_t status = CRYPTO_LIB_SUCCESS;
 
     if(crypto_config!=NULL){
         free(crypto_config);
@@ -267,7 +267,7 @@ int32_t Crypto_Shutdown(void)
 **/
 int32_t Crypto_Config_CryptoLib(uint8_t sadb_type, uint8_t crypto_create_fecf, uint8_t process_sdls_pdus, uint8_t has_pus_hdr, uint8_t ignore_sa_state, uint8_t ignore_anti_replay, uint8_t unique_sa_per_mapid,uint8_t crypto_check_fecf, uint8_t vcid_bitmask)
 {
-    int32_t status = OS_SUCCESS;
+    int32_t status = CRYPTO_LIB_SUCCESS;
     crypto_config = (CryptoConfig_t*) calloc(1, CRYPTO_CONFIG_SIZE);
     crypto_config->sadb_type=sadb_type;
     crypto_config->crypto_create_fecf=crypto_create_fecf;
@@ -292,7 +292,7 @@ int32_t Crypto_Config_CryptoLib(uint8_t sadb_type, uint8_t crypto_create_fecf, u
 **/
 int32_t Crypto_Config_MariaDB(uint8_t* mysql_username, uint8_t* mysql_password, uint8_t* mysql_hostname, uint8_t* mysql_database, uint16_t mysql_port)
 {
-    int32_t status = OS_SUCCESS;
+    int32_t status = CRYPTO_LIB_SUCCESS;
     sadb_mariadb_config = (SadbMariaDBConfig_t*)calloc(1, SADB_MARIADB_CONFIG_SIZE);
     sadb_mariadb_config->mysql_username=mysql_username;
     sadb_mariadb_config->mysql_password=mysql_password;
@@ -313,7 +313,7 @@ int32_t Crypto_Config_MariaDB(uint8_t* mysql_username, uint8_t* mysql_password, 
 **/
 int32_t Crypto_Config_Add_Gvcid_Managed_Parameter(uint8_t tfvn, uint16_t scid, uint8_t vcid, uint8_t has_fecf, uint8_t has_segmentation_hdr)
 {
-    int32_t status = OS_SUCCESS;
+    int32_t status = CRYPTO_LIB_SUCCESS;
 
     if(gvcid_managed_parameters==NULL){//case: Global Root Node not Set
         gvcid_managed_parameters = (GvcidManagedParameters_t*) calloc(1,GVCID_MANAGED_PARAMETERS_SIZE);
@@ -352,7 +352,7 @@ static int32_t crypto_config_add_gvcid_managed_parameter_recursion(uint8_t tfvn,
         managed_parameter->next->has_fecf = has_fecf;
         managed_parameter->next->has_segmentation_hdr = has_segmentation_hdr;
         managed_parameter->next->next = NULL;
-        return OS_SUCCESS;
+        return CRYPTO_LIB_SUCCESS;
     }
 }
 
@@ -1014,7 +1014,7 @@ static void Crypto_TM_updatePDU(uint8_t* ingest, int len_ingest)
     int fill_size = 0;
     SecurityAssociation_t* sa_ptr;
 
-    if(sadb_routine->sadb_get_sa_from_spi(tm_frame.tm_sec_header.spi,&sa_ptr) != OS_SUCCESS){
+    if(sadb_routine->sadb_get_sa_from_spi(tm_frame.tm_sec_header.spi,&sa_ptr) != CRYPTO_LIB_SUCCESS){
         //TODO - Error handling
         return; //Error -- unable to get SA from SPI.
     }
@@ -1201,9 +1201,9 @@ int32_t Crypto_increment(uint8_t *num, int length)
     }
 
     if(i < 0) /* this means num[0] was incremented and overflowed */
-        return OS_ERROR;
+        return CRYPTO_LIB_ERROR;
     else
-        return OS_SUCCESS;
+        return CRYPTO_LIB_SUCCESS;
 }
 
 /**
@@ -1253,18 +1253,18 @@ static int32_t Crypto_window(uint8_t *actual, uint8_t *expected, int length, int
  **/
 static int32_t Crypto_compare_less_equal(uint8_t *actual, uint8_t *expected, int length)
 {
-    int status = OS_ERROR;
+    int status = CRYPTO_LIB_ERROR;
 
     for(int i = 0; i < length - 1; i++)
     {
         if (actual[i] > expected[i])
         {
-            status = OS_SUCCESS;
+            status = CRYPTO_LIB_SUCCESS;
             break;
         }
         else if (actual[i] < expected[i])
         {
-            status = OS_ERROR;
+            status = CRYPTO_LIB_ERROR;
             break;
         }
     }
@@ -1323,7 +1323,7 @@ uint8_t Crypto_Prep_Reply(uint8_t* ingest, uint8_t appID)
  **/
 static int32_t Crypto_FECF(int fecf, uint8_t* ingest, int len_ingest,TC_t* tc_frame)
 {
-    int32_t result = OS_SUCCESS;
+    int32_t result = CRYPTO_LIB_SUCCESS;
     uint16_t calc_fecf = Crypto_Calc_FECF(ingest, len_ingest);
 
     if ( (fecf & 0xFFFF) != calc_fecf )
@@ -1349,7 +1349,7 @@ static int32_t Crypto_FECF(int fecf, uint8_t* ingest, int len_ingest,TC_t* tc_fr
                 #ifdef FECF_DEBUG
                     printf("\t Calculated = 0x%04x \n\t Received   = 0x%04x \n", calc_fecf, tc_frame->tc_sec_trailer.fecf);
                 #endif
-                result = OS_ERROR;
+                result = CRYPTO_LIB_ERROR;
             }
         }
 
@@ -1445,7 +1445,7 @@ static int32_t Crypto_Key_OTAR(void)
     SDLS_OTAR_t packet;
     int count = 0;
     int x = 0;
-    int32_t status = OS_SUCCESS;
+    int32_t status = CRYPTO_LIB_SUCCESS;
     int pdu_keys = (sdls_frame.pdu.pdu_len - 30) / (2 + KEY_SIZE);
 
     gcry_cipher_hd_t tmp_hd;
@@ -1469,7 +1469,7 @@ static int32_t Crypto_Key_OTAR(void)
             log.blk[log_count++].em_len = 4;
         }
         printf(KRED "Error: MKID is not valid! \n" RESET);
-        status = OS_ERROR;
+        status = CRYPTO_LIB_ERROR;
         return status;
     }
 
@@ -1495,7 +1495,7 @@ static int32_t Crypto_Key_OTAR(void)
     if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-        status = OS_ERROR;
+        status = CRYPTO_LIB_ERROR;
         return status;
     }
     gcry_error = gcry_cipher_setkey(
@@ -1506,7 +1506,7 @@ static int32_t Crypto_Key_OTAR(void)
     if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-        status = OS_ERROR;
+        status = CRYPTO_LIB_ERROR;
         return status;
     }
     gcry_error = gcry_cipher_setiv(
@@ -1517,7 +1517,7 @@ static int32_t Crypto_Key_OTAR(void)
     if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-        status = OS_ERROR;
+        status = CRYPTO_LIB_ERROR;
         return status;
     }
     gcry_error = gcry_cipher_decrypt(
@@ -1530,7 +1530,7 @@ static int32_t Crypto_Key_OTAR(void)
     if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "ERROR: gcry_cipher_decrypt error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-        status = OS_ERROR;
+        status = CRYPTO_LIB_ERROR;
         return status;
     }
     gcry_error = gcry_cipher_checktag(
@@ -1541,7 +1541,7 @@ static int32_t Crypto_Key_OTAR(void)
     if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "ERROR: gcry_cipher_checktag error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-        status = OS_ERROR;
+        status = CRYPTO_LIB_ERROR;
         return status;
     }
     gcry_cipher_close(tmp_hd);
@@ -1565,7 +1565,7 @@ static int32_t Crypto_Key_OTAR(void)
                 log.blk[log_count++].em_len = 4;
             }
             printf(KRED "Error: Cannot OTAR master key! \n" RESET);
-            status = OS_ERROR;
+            status = CRYPTO_LIB_ERROR;
         return status;
         }
         else
@@ -1601,7 +1601,7 @@ static int32_t Crypto_Key_OTAR(void)
         } 
     #endif
     
-    return OS_SUCCESS; 
+    return CRYPTO_LIB_SUCCESS; 
 }
 /**
  * @brief Function: Crypto_Key_update
@@ -1701,7 +1701,7 @@ static int32_t Crypto_Key_update(uint8_t state)
             printf(KRED "Error: Key %d cannot transition to desired state! \n" RESET, packet.kblk[x].kid);
         }
     }
-    return OS_SUCCESS; 
+    return CRYPTO_LIB_SUCCESS; 
 }
 
 /**
@@ -2039,9 +2039,9 @@ static int32_t Crypto_SA_readARSN(uint8_t* ingest)
     ingest[count++] = (spi & 0x00FF);
 
 
-    if(sadb_routine->sadb_get_sa_from_spi(spi,&sa_ptr) != OS_SUCCESS){
+    if(sadb_routine->sadb_get_sa_from_spi(spi,&sa_ptr) != CRYPTO_LIB_SUCCESS){
         //TODO - Error handling
-        return OS_ERROR; //Error -- unable to get SA from SPI.
+        return CRYPTO_LIB_ERROR; //Error -- unable to get SA from SPI.
     }
 
 
@@ -2093,7 +2093,7 @@ static int32_t Crypto_MC_resetalarm(void)
     report.bsnf = 0;
     report.bmacf = 0;
     report.ispif = 0;    
-    return OS_SUCCESS; 
+    return CRYPTO_LIB_SUCCESS; 
 }
 
 /**
@@ -2129,7 +2129,7 @@ static int32_t Crypto_User_BadSPI(void)
         badSPI = 0;
     }
     
-    return OS_SUCCESS; 
+    return CRYPTO_LIB_SUCCESS; 
 }
 
 /**
@@ -2148,7 +2148,7 @@ static int32_t Crypto_User_BadMAC(void)
         badMAC = 0;
     }
     
-    return OS_SUCCESS; 
+    return CRYPTO_LIB_SUCCESS; 
 }
 
 /**
@@ -2167,7 +2167,7 @@ static int32_t Crypto_User_BadIV(void)
         badIV = 0;
     }
 
-    return OS_SUCCESS;
+    return CRYPTO_LIB_SUCCESS;
 }
 
 /**
@@ -2186,7 +2186,7 @@ static int32_t Crypto_User_BadFECF(void)
         badFECF = 0;
     }
     
-    return OS_SUCCESS; 
+    return CRYPTO_LIB_SUCCESS; 
 }
 
 /**
@@ -2214,7 +2214,7 @@ static int32_t Crypto_User_ModifyKey(void)
             break;
     }
     
-    return OS_SUCCESS; 
+    return CRYPTO_LIB_SUCCESS; 
 }
 
 /**
@@ -2225,7 +2225,7 @@ static int32_t Crypto_User_ModifyKey(void)
 static int32_t Crypto_User_ModifyActiveTM(void)
 {
     tm_frame.tm_sec_header.spi = (uint8_t)sdls_frame.pdu.data[0];   
-    return OS_SUCCESS; 
+    return CRYPTO_LIB_SUCCESS; 
 }
 
 /**
@@ -2239,9 +2239,9 @@ static int32_t Crypto_User_ModifyVCID(void)
 
     for (int i = 0; i < NUM_GVCID; i++)
     {
-        if(sadb_routine->sadb_get_sa_from_spi(i,&sa_ptr) != OS_SUCCESS){
+        if(sadb_routine->sadb_get_sa_from_spi(i,&sa_ptr) != CRYPTO_LIB_SUCCESS){
             //TODO - Error handling
-            return OS_ERROR; //Error -- unable to get SA from SPI.
+            return CRYPTO_LIB_ERROR; //Error -- unable to get SA from SPI.
         }
         for (int j = 0; j < NUM_SA; j++)
         {
@@ -2258,7 +2258,7 @@ static int32_t Crypto_User_ModifyVCID(void)
         }
     }
 
-    return OS_SUCCESS;
+    return CRYPTO_LIB_SUCCESS;
 }
 
 /*
@@ -2545,7 +2545,7 @@ static int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn,uint16_t sci
     {
         if(managed_parameters_in->tfvn==tfvn && managed_parameters_in->scid==scid && managed_parameters_in->vcid==vcid) {
             *managed_parameters_out = managed_parameters_in;
-            status = OS_SUCCESS;
+            status = CRYPTO_LIB_SUCCESS;
             return status;
         }else {
             return Crypto_Get_Managed_Parameters_For_Gvcid(tfvn,scid,vcid,managed_parameters_in->next,managed_parameters_out);
@@ -2587,7 +2587,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
     uint8_t **pp_in_frame, uint16_t *p_enc_frame_len)
 {
     // Local Variables
-    int32_t status = OS_SUCCESS;
+    int32_t status = CRYPTO_LIB_SUCCESS;
     TC_FramePrimaryHeader_t temp_tc_header;
     SecurityAssociation_t* sa_ptr = NULL;
     uint8_t *p_new_enc_frame = NULL;
@@ -2643,7 +2643,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
 
     //Lookup-retrieve managed parameters for frame via gvcid:
     status = Crypto_Get_Managed_Parameters_For_Gvcid(temp_tc_header.tfvn,temp_tc_header.scid,temp_tc_header.vcid,gvcid_managed_parameters,&current_managed_parameters);
-    if(status != OS_SUCCESS) {return status;} //Unable to get necessary Managed Parameters for TC TF -- return with error.
+    if(status != CRYPTO_LIB_SUCCESS) {return status;} //Unable to get necessary Managed Parameters for TC TF -- return with error.
 
     uint8_t segmentation_hdr = 0x00;
     uint8_t map_id = 0;
@@ -2653,7 +2653,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
     }
 
     // Check if command frame flag set
-    if ((temp_tc_header.cc == 1) && (status == OS_SUCCESS))
+    if ((temp_tc_header.cc == 1) && (status == CRYPTO_LIB_SUCCESS))
     {
         /*
         ** CCSDS 232.0-B-3
@@ -2712,7 +2712,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
             // Probably unnecessary check
             // Leaving for now as it would be cleaner in SA to have an association enum returned I believe
             printf(KRED "Error: SA Service Type is not defined! \n" RESET);
-            status = OS_ERROR;
+            status = CRYPTO_LIB_ERROR;
             return status;
         }
 
@@ -2788,7 +2788,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
         if(!p_new_enc_frame)
         {
             printf(KRED "Error: Malloc for encrypted output buffer failed! \n" RESET);
-            status = OS_ERROR;
+            status = CRYPTO_LIB_ERROR;
             return status;
         }
         memset(p_new_enc_frame, 0, *p_enc_frame_len);
@@ -2943,7 +2943,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
             if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
             {
                 printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-                status = OS_ERROR;
+                status = CRYPTO_LIB_ERROR;
                 return status;
             }
             gcry_error = gcry_cipher_setkey(
@@ -2954,7 +2954,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
             if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
             {
                 printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-                status = OS_ERROR;
+                status = CRYPTO_LIB_ERROR;
                 return status;
             }
             gcry_error = gcry_cipher_setiv(
@@ -2965,7 +2965,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
             if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
             {
                 printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-                status = OS_ERROR;
+                status = CRYPTO_LIB_ERROR;
                 return status;
             }
 
@@ -3020,7 +3020,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
                 if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
                 {
                     printf(KRED "ERROR: gcry_cipher_encrypt error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-                    status = OS_ERROR;
+                    status = CRYPTO_LIB_ERROR;
                     return status;
                 }
 
@@ -3073,7 +3073,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
                 if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
                 {
                     printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-                    status = OS_ERROR;
+                    status = CRYPTO_LIB_ERROR;
                     return status;
                 }
                 gcry_error = gcry_cipher_setkey(
@@ -3084,7 +3084,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
                 if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
                 {
                     printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-                    status = OS_ERROR;
+                    status = CRYPTO_LIB_ERROR;
                     return status;
                 }
                 gcry_error = gcry_cipher_setiv(
@@ -3095,7 +3095,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
                 if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
                 {
                     printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-                    status = OS_ERROR;
+                    status = CRYPTO_LIB_ERROR;
                     return status;
                 }
 
@@ -3112,7 +3112,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
                 {
                     printf(KRED "ERROR: gcry_cipher_authenticate error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
                     printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error),gcry_strerror (gcry_error));
-                    status = OS_ERROR;
+                    status = CRYPTO_LIB_ERROR;
                     return status;
                 }
 
@@ -3208,7 +3208,7 @@ int32_t Crypto_TC_ProcessSecurity( uint8_t* ingest, int* len_ingest,TC_t* tc_sdl
 // Loads the ingest frame into the global tc_frame while performing decryption
 {
     // Local Variables
-    int32_t status = OS_SUCCESS;
+    int32_t status = CRYPTO_LIB_SUCCESS;
     int x = 0;
     int y = 0;
     gcry_cipher_hd_t tmp_hd;
@@ -3252,7 +3252,7 @@ int32_t Crypto_TC_ProcessSecurity( uint8_t* ingest, int* len_ingest,TC_t* tc_sdl
     status = Crypto_Get_Managed_Parameters_For_Gvcid(tc_sdls_processed_frame->tc_header.tfvn,tc_sdls_processed_frame->tc_header.scid,
                                                      tc_sdls_processed_frame->tc_header.vcid,gvcid_managed_parameters,&current_managed_parameters);
 
-    if(status != OS_SUCCESS) {return status;} //Unable to get necessary Managed Parameters for TC TF -- return with error.
+    if(status != CRYPTO_LIB_SUCCESS) {return status;} //Unable to get necessary Managed Parameters for TC TF -- return with error.
 
     // Segment Header
     if(current_managed_parameters->has_segmentation_hdr==TC_HAS_SEGMENT_HDRS){
@@ -3298,7 +3298,7 @@ int32_t Crypto_TC_ProcessSecurity( uint8_t* ingest, int* len_ingest,TC_t* tc_sdl
         // Probably unnecessary check
         // Leaving for now as it would be cleaner in SA to have an association enum returned I believe
         printf(KRED "Error: SA Service Type is not defined! \n" RESET);
-        status = OS_ERROR;
+        status = CRYPTO_LIB_ERROR;
         return status;
     }
 
@@ -3703,9 +3703,9 @@ int32_t Crypto_TM_ApplySecurity( uint8_t* ingest, int* len_ingest)
         // Payload Data Unit
         Crypto_TM_updatePDU(ingest, *len_ingest);
 
-        if(sadb_routine->sadb_get_sa_from_spi(spi,&sa_ptr) != OS_SUCCESS){
+        if(sadb_routine->sadb_get_sa_from_spi(spi,&sa_ptr) != CRYPTO_LIB_SUCCESS){
             //TODO - Error handling
-            return OS_ERROR; //Error -- unable to get SA from SPI.
+            return CRYPTO_LIB_ERROR; //Error -- unable to get SA from SPI.
         }
 
 
@@ -3833,7 +3833,7 @@ int32_t Crypto_TM_ApplySecurity( uint8_t* ingest, int* len_ingest)
             if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
             {
                 printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-                status = OS_ERROR;
+                status = CRYPTO_LIB_ERROR;
                 return status;
             }
             gcry_error = gcry_cipher_setkey(
@@ -3844,7 +3844,7 @@ int32_t Crypto_TM_ApplySecurity( uint8_t* ingest, int* len_ingest)
             if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
             {
                 printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-                status = OS_ERROR;
+                status = CRYPTO_LIB_ERROR;
                 return status;
             }
             gcry_error = gcry_cipher_setiv(
@@ -3855,7 +3855,7 @@ int32_t Crypto_TM_ApplySecurity( uint8_t* ingest, int* len_ingest)
             if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
             {
                 printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-                status = OS_ERROR;
+                status = CRYPTO_LIB_ERROR;
                 return status;
             }
             gcry_error = gcry_cipher_encrypt(
@@ -3868,7 +3868,7 @@ int32_t Crypto_TM_ApplySecurity( uint8_t* ingest, int* len_ingest)
             if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
             {
                 printf(KRED "ERROR: gcry_cipher_decrypt error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-                status = OS_ERROR;
+                status = CRYPTO_LIB_ERROR;
                 return status;
             }
             gcry_error = gcry_cipher_authenticate(
@@ -3879,7 +3879,7 @@ int32_t Crypto_TM_ApplySecurity( uint8_t* ingest, int* len_ingest)
             if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
             {
                 printf(KRED "ERROR: gcry_cipher_authenticate error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-                status = OS_ERROR;
+                status = CRYPTO_LIB_ERROR;
                 return status;
             }
             gcry_error = gcry_cipher_gettag(
@@ -3890,7 +3890,7 @@ int32_t Crypto_TM_ApplySecurity( uint8_t* ingest, int* len_ingest)
             if((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
             {
                 printf(KRED "ERROR: gcry_cipher_checktag error code %d\n" RESET,gcry_error & GPG_ERR_CODE_MASK);
-                status = OS_ERROR;
+                status = CRYPTO_LIB_ERROR;
                 return status;
             }
 
@@ -3957,7 +3957,7 @@ int32_t Crypto_TM_ApplySecurity( uint8_t* ingest, int* len_ingest)
 int32_t Crypto_TM_ProcessSecurity(uint8_t* ingest, int* len_ingest)
 {
     // Local Variables
-    int32_t status = OS_SUCCESS;
+    int32_t status = CRYPTO_LIB_SUCCESS;
 
     #ifdef DEBUG
         printf(KYEL "\n----- Crypto_TM_ProcessSecurity START -----\n" RESET);
@@ -3983,7 +3983,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* ingest, int* len_ingest)
 int32_t Crypto_AOS_ApplySecurity(uint8_t* ingest, int* len_ingest)
 {
     // Local Variables
-    int32_t status = OS_SUCCESS;
+    int32_t status = CRYPTO_LIB_SUCCESS;
 
     #ifdef DEBUG
         printf(KYEL "\n----- Crypto_AOS_ApplySecurity START -----\n" RESET);
@@ -4009,7 +4009,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t* ingest, int* len_ingest)
 int32_t Crypto_AOS_ProcessSecurity(uint8_t* ingest, int* len_ingest)
 {
     // Local Variables
-    int32_t status = OS_SUCCESS;
+    int32_t status = CRYPTO_LIB_SUCCESS;
 
     #ifdef DEBUG
         printf(KYEL "\n----- Crypto_AOS_ProcessSecurity START -----\n" RESET);
@@ -4035,7 +4035,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t* ingest, int* len_ingest)
 int32_t Crypto_ApplySecurity(uint8_t* ingest, int* len_ingest)
 {
     // Local Variables
-    int32_t status = OS_SUCCESS;
+    int32_t status = CRYPTO_LIB_SUCCESS;
 
     #ifdef DEBUG
         printf(KYEL "\n----- Crypto_ApplySecurity START -----\n" RESET);
@@ -4061,7 +4061,7 @@ int32_t Crypto_ApplySecurity(uint8_t* ingest, int* len_ingest)
 int32_t Crypto_ProcessSecurity(uint8_t* ingest, int* len_ingest)
 {
     // Local Variables
-    int32_t status = OS_SUCCESS;
+    int32_t status = CRYPTO_LIB_SUCCESS;
 
     #ifdef DEBUG
         printf(KYEL "\n----- Crypto_ProcessSecurity START -----\n" RESET);

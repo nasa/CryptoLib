@@ -26,7 +26,8 @@
 #include "cfe.h"
 #else //Assume build outside of NOS3/cFS infrastructure
 #include <stdint.h>
-#include "osapi_minimum.h"
+#include <stdio.h>
+#include <stdlib.h>
 #endif
 
 #include "crypto_structs.h"

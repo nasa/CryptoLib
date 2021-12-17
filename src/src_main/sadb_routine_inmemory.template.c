@@ -73,7 +73,7 @@ SadbRoutine get_sadb_routine_inmemory(void)
  **/
 static int32_t sadb_config(void)
 {
-    int32_t status = OS_SUCCESS;
+    int32_t status = CRYPTO_LIB_SUCCESS;
 
     // Security Associations
     // SA 1 - CLEAR MODE
@@ -232,7 +232,7 @@ static int32_t sadb_config(void)
  **/
 static int32_t sadb_init(void)
 {
-    int32_t status = OS_SUCCESS;
+    int32_t status = CRYPTO_LIB_SUCCESS;
 
     for (int x = 0; x < NUM_SA; x++)
     {
@@ -261,7 +261,7 @@ static int32_t sadb_init(void)
 static int32_t sadb_close(void)
 {
     //closing not necessary for inmemory DB.
-    return OS_SUCCESS;
+    return CRYPTO_LIB_SUCCESS;
 }
 
 /*
@@ -275,7 +275,7 @@ static int32_t sadb_close(void)
  **/
 static int32_t sadb_get_sa_from_spi(uint16_t spi,SecurityAssociation_t** security_association)
 {
-    int32_t status = OS_SUCCESS;
+    int32_t status = CRYPTO_LIB_SUCCESS;
     if(sa == NULL) { return CRYPTO_LIB_ERR_NO_INIT; }
     *security_association = &sa[spi];
     if(sa[spi].iv == NULL && ( sa[spi].ast == 1 || sa[spi].est == 1 )) { return CRYPTO_LIB_ERR_NULL_IV; } //Must have IV if doing encryption or authentication
@@ -386,7 +386,7 @@ static int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn,uint16_t scid,uin
  **/
 static int32_t sadb_save_sa(SecurityAssociation_t* sa)
 {
-    int32_t status = OS_SUCCESS;
+    int32_t status = CRYPTO_LIB_SUCCESS;
     //We could do a memory copy of the SA into the sa[NUM_SA] array at the given SPI, however, the inmemory code currently updates in place so no need for that.
     // If we change the in-place update logic, we should update this function to actually update the SA.
     return status;
@@ -517,7 +517,7 @@ static int32_t sadb_sa_start(TC_t* tc_frame)
     printf("\t spi = %d \n", spi);
 #endif
 
-    return OS_SUCCESS;
+    return CRYPTO_LIB_SUCCESS;
 }
 
 /**
@@ -575,7 +575,7 @@ static int32_t sadb_sa_stop(void)
     printf("\t spi = %d \n", spi);
 #endif
 
-    return OS_SUCCESS;
+    return CRYPTO_LIB_SUCCESS;
 }
 
 /**
@@ -654,7 +654,7 @@ static int32_t sadb_sa_rekey(void)
         //printf("\t akid = %d \n", sa[spi].akid);
 #endif
 
-    return OS_SUCCESS;
+    return CRYPTO_LIB_SUCCESS;
 }
 
 /**
@@ -693,7 +693,7 @@ static int32_t sadb_sa_expire(void)
         printf(KRED "ERROR: SPI %d does not exist.\n" RESET, spi);
     }
 
-    return OS_SUCCESS;
+    return CRYPTO_LIB_SUCCESS;
 }
 
 /**
@@ -765,7 +765,7 @@ static int32_t sadb_sa_create(void)
     Crypto_saPrint(&sa[spi]);
 #endif
 
-    return OS_SUCCESS;
+    return CRYPTO_LIB_SUCCESS;
 }
 
 /**
@@ -806,7 +806,7 @@ static int32_t sadb_sa_delete(void)
         printf(KRED "ERROR: SPI %d does not exist.\n" RESET, spi);
     }
 
-    return OS_SUCCESS;
+    return CRYPTO_LIB_SUCCESS;
 }
 
 /**
@@ -855,7 +855,7 @@ static int32_t sadb_sa_setARSN(void)
         printf("sadb_sa_setARSN ERROR: SPI %d does not exist.\n", spi);
     }
 
-    return OS_SUCCESS;
+    return CRYPTO_LIB_SUCCESS;
 }
 
 /**
@@ -892,7 +892,7 @@ static int32_t sadb_sa_setARSNW(void)
         printf("sadb_sa_setARSNW ERROR: SPI %d does not exist.\n", spi);
     }
 
-    return OS_SUCCESS;
+    return CRYPTO_LIB_SUCCESS;
 }
 
 /**

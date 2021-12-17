@@ -22,12 +22,14 @@
 extern "C" {
 #endif
 
-#include <stdio.h>
 #include <stdarg.h>
 #include <stddef.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 
-#include "osapi_minimum.h"
+#include "crypto_error.h"
 
 uint8_t * c_read_file(const uint8_t * f_name, long * f_size);
 
