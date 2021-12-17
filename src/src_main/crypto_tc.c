@@ -68,6 +68,10 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
         printf("%02X", ((uint8_t *)&*p_in_frame)[i]);
     }
     printf("\nPrinted %d bytes\n", in_frame_length);
+#else
+    // TODO - Find another way to know this and remove this argument
+    uint16_t tmp = in_frame_length; 
+    tmp = tmp;
 #endif
 
     if (crypto_config == NULL)

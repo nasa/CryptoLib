@@ -113,6 +113,7 @@ void debug_printf(const char *format, ...)
 #else
 void debug_printf(const char *format, ...)
 {
+    format = format; // TODO - is this function / argument necessary?
     // Do nothing, DEBUG preprocessor disabled.
 }
 #endif
@@ -141,6 +142,9 @@ void debug_hexprintf(const char *bin_data, int size_bin_data)
 #else
 void debug_hexprintf(const char *bin_data, int size_bin_data)
 {
+    // TODO - is this function / argument necessary?
+    bin_data = bin_data; 
+    size_bin_data = size_bin_data;
     // Do nothing, DEBUG preprocessor disabled.
 }
 #endif

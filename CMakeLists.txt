@@ -40,7 +40,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     enable_testing()
 endif()
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra") #-Werror
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror")
 
 include_directories(include)
 
