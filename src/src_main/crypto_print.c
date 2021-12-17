@@ -1,14 +1,15 @@
-/* Copyright (C) 2009 - 2022 National Aeronautics and Space Administration. All Foreign Rights are Reserved to the U.S. Government.
+/* Copyright (C) 2009 - 2022 National Aeronautics and Space Administration.
+   All Foreign Rights are Reserved to the U.S. Government.
 
-   This software is provided "as is" without any warranty of any kind, either expressed, implied, or statutory, including, but not
-   limited to, any warranty that the software will conform to specifications, any implied warranties of merchantability, fitness
-   for a particular purpose, and freedom from infringement, and any warranty that the documentation will conform to the program, or
-   any warranty that the software will be error free.
+   This software is provided "as is" without any warranty of any kind, either expressed, implied, or statutory,
+   including, but not limited to, any warranty that the software will conform to specifications, any implied warranties
+   of merchantability, fitness for a particular purpose, and freedom from infringement, and any warranty that the
+   documentation will conform to the program, or any warranty that the software will be error free.
 
-   In no event shall NASA be liable for any damages, including, but not limited to direct, indirect, special or consequential damages,
-   arising out of, resulting from, or in any way connected with the software or its documentation, whether or not based upon warranty,
-   contract, tort or otherwise, and whether or not loss was sustained from, or arose out of the results of, or use of, the software,
-   documentation or services provided hereunder.
+   In no event shall NASA be liable for any damages, including, but not limited to direct, indirect, special or
+   consequential damages, arising out of, resulting from, or in any way connected with the software or its
+   documentation, whether or not based upon warranty, contract, tort or otherwise, and whether or not loss was sustained
+   from, or arose out of the results of, or use of, the software, documentation or services provided hereunder.
 
    ITC Team
    NASA IV&V
@@ -24,13 +25,12 @@
 #include "crypto_print.h"
 #include "crypto_structs.h"
 
-
 /**
  * @brief Function: Crypto_tcPrint
  * Prints the current TC in memory.
  * @param tc_frame: TC_t*
  **/
-void Crypto_tcPrint(TC_t* tc_frame)
+void Crypto_tcPrint(TC_t *tc_frame)
 {
     printf("Current TC in memory is: \n");
     printf("\t Header\n");
@@ -60,7 +60,7 @@ void Crypto_tcPrint(TC_t* tc_frame)
  * Prints the current TM in memory.
  * @param tm_frame: TM_t*
  **/
-void Crypto_tmPrint(TM_t* tm_frame)
+void Crypto_tmPrint(TM_t *tm_frame)
 {
     printf("Current TM in memory is: \n");
     printf("\t Header\n");
@@ -75,8 +75,8 @@ void Crypto_tmPrint(TM_t* tm_frame)
     printf("\t\t pof    = 0x%01x \n", tm_frame->tm_header.pof);
     printf("\t\t slid   = 0x%01x \n", tm_frame->tm_header.slid);
     printf("\t\t fhp    = 0x%03x \n", tm_frame->tm_header.fhp);
-    //printf("\t\t tfshvn = 0x%01x \n", tm_frame.tm_header.tfshvn);
-    //printf("\t\t tfshlen= 0x%02x \n", tm_frame.tm_header.tfshlen);
+    // printf("\t\t tfshvn = 0x%01x \n", tm_frame.tm_header.tfshvn);
+    // printf("\t\t tfshlen= 0x%02x \n", tm_frame.tm_header.tfshlen);
     printf("\t SDLS Header\n");
     printf("\t\t spi    = 0x%04x \n", tm_frame->tm_sec_header.spi);
     printf("\t\t iv[%d]  = 0x%02x \n", (IV_SIZE - 1), tm_frame->tm_sec_header.iv[IV_SIZE - 1]);
@@ -100,7 +100,7 @@ void Crypto_tmPrint(TM_t* tm_frame)
  * Prints the current CLCW in memory.
  * @param clcw: TM_FrameCLCW_t*
  **/
-void Crypto_clcwPrint(TM_FrameCLCW_t* clcw)
+void Crypto_clcwPrint(TM_FrameCLCW_t *clcw)
 {
     printf("Current CLCW in memory is: \n");
     printf("\t cwt    = 0x%01x \n", clcw->cwt);
@@ -125,7 +125,7 @@ void Crypto_clcwPrint(TM_FrameCLCW_t* clcw)
  * Prints the current FSR in memory.
  * @param report: SDLS_FSR_t*
  **/
-void Crypto_fsrPrint(SDLS_FSR_t* report)
+void Crypto_fsrPrint(SDLS_FSR_t *report)
 {
     printf("Current FSR in memory is: \n");
     printf("\t cwt    = 0x%01x \n", report->cwt);
@@ -144,7 +144,7 @@ void Crypto_fsrPrint(SDLS_FSR_t* report)
  * Prints the current CCSDS in memory.
  * @param sdls_frame: CCSDS_t*
  **/
-void Crypto_ccsdsPrint(CCSDS_t* sdls_frame)
+void Crypto_ccsdsPrint(CCSDS_t *sdls_frame)
 {
     printf("Current CCSDS in memory is: \n");
     printf("\t Primary Header\n");
@@ -180,15 +180,15 @@ void Crypto_ccsdsPrint(CCSDS_t* sdls_frame)
  * Prints the current Security Association in memory.
  * @param sa: SecurityAssociation_t*
  **/
-void Crypto_saPrint(SecurityAssociation_t* sa)
+void Crypto_saPrint(SecurityAssociation_t *sa)
 {
     printf("SA status: \n");
     printf("\t spi   = 0x%01x \n", sa->spi);
     printf("\t sa_state   = 0x%01x \n", sa->sa_state);
-    //printf("\t gvcid[0]   = 0x%02x \n", sa->gvcid_blk[spi].gvcid[0]);
-    //printf("\t gvcid[1]   = 0x%02x \n", sa->gvcid_blk[spi].gvcid[1]);
-    //printf("\t gvcid[2]   = 0x%02x \n", sa->gvcid_blk[spi].gvcid[2]);
-    //printf("\t gvcid[3]   = 0x%02x \n", sa->gvcid_blk[spi].gvcid[3]);
+    // printf("\t gvcid[0]   = 0x%02x \n", sa->gvcid_blk[spi].gvcid[0]);
+    // printf("\t gvcid[1]   = 0x%02x \n", sa->gvcid_blk[spi].gvcid[1]);
+    // printf("\t gvcid[2]   = 0x%02x \n", sa->gvcid_blk[spi].gvcid[2]);
+    // printf("\t gvcid[3]   = 0x%02x \n", sa->gvcid_blk[spi].gvcid[3]);
     printf("\t est        = 0x%01x \n", sa->est);
     printf("\t ast        = 0x%01x \n", sa->ast);
     printf("\t shivf_len  = 0x%02x \n", sa->shivf_len);
@@ -196,14 +196,14 @@ void Crypto_saPrint(SecurityAssociation_t* sa)
     printf("\t shplf_len  = 0x%01x \n", sa->shplf_len);
     printf("\t stmacf_len = 0x%02x \n", sa->stmacf_len);
     printf("\t ecs_len    = 0x%02x \n", sa->ecs_len);
-    printf("\t ecs[%d]    = 0x%02x \n", ECS_SIZE-4, sa->ecs[ECS_SIZE - 4]);
-    printf("\t ecs[%d]    = 0x%02x \n", ECS_SIZE-3, sa->ecs[ECS_SIZE - 3]);
-    printf("\t ecs[%d]    = 0x%02x \n", ECS_SIZE-2, sa->ecs[ECS_SIZE - 2]);
-    printf("\t ecs[%d]    = 0x%02x \n", ECS_SIZE-1, sa->ecs[ECS_SIZE - 1]);
+    printf("\t ecs[%d]    = 0x%02x \n", ECS_SIZE - 4, sa->ecs[ECS_SIZE - 4]);
+    printf("\t ecs[%d]    = 0x%02x \n", ECS_SIZE - 3, sa->ecs[ECS_SIZE - 3]);
+    printf("\t ecs[%d]    = 0x%02x \n", ECS_SIZE - 2, sa->ecs[ECS_SIZE - 2]);
+    printf("\t ecs[%d]    = 0x%02x \n", ECS_SIZE - 1, sa->ecs[ECS_SIZE - 1]);
     printf("\t iv_len     = 0x%02x \n", sa->shivf_len);
-    if(sa->iv != NULL)
+    if (sa->iv != NULL)
     {
-        for(int i = 0; i < sa->shivf_len; i++)
+        for (int i = 0; i < sa->shivf_len; i++)
         {
             printf("\t iv[%d]     = 0x%02x \n", i, *(sa->iv + i));
         }
@@ -211,20 +211,20 @@ void Crypto_saPrint(SecurityAssociation_t* sa)
     printf("\t acs_len    = 0x%02x \n", sa->acs_len);
     printf("\t acs        = 0x%02x \n", sa->acs);
     printf("\t abm_len    = 0x%04x \n", sa->abm_len);
-    if(sa->abm != NULL)
+    if (sa->abm != NULL)
     {
         printf("\t abm: \n");
-        for(int i = 0; i < sa->abm_len; i++)
+        for (int i = 0; i < sa->abm_len; i++)
         {
             printf("%02x", *(sa->abm + i));
         }
         printf("\n");
     }
     printf("\t arc_len    = 0x%02x \n", sa->arc_len);
-    if(sa->arc != NULL)
+    if (sa->arc != NULL)
     {
         printf("\t arc: \n");
-        for(int i = 0; i < sa->arc_len; i++)
+        for (int i = 0; i < sa->arc_len; i++)
         {
             printf("%02x", *(sa->arc + i));
         }
@@ -246,7 +246,8 @@ void Crypto_hexprint(void *c, size_t n)
     uint8_t *t = c;
     if (c == NULL)
         return;
-    while (n > 0) {
+    while (n > 0)
+    {
         --n;
         printf("%02x", t[n]);
     }
@@ -264,19 +265,21 @@ void Crypto_binprint(void *c, size_t n)
     uint8_t *t = c;
     if (c == NULL)
         return;
-    while (n > 0) {
+    while (n > 0)
+    {
         int q;
         --n;
-        for(q = 0x80; q; q >>= 1)
+        for (q = 0x80; q; q >>= 1)
             printf("%x", !!(t[n] & q));
     }
     printf("\n");
 }
 
-void Crypto_mpPrint(GvcidManagedParameters_t* managed_parameters, uint8_t print_children)
-//Prints the currently configured Managed Parameters
+void Crypto_mpPrint(GvcidManagedParameters_t *managed_parameters, uint8_t print_children)
+// Prints the currently configured Managed Parameters
 {
-    if(managed_parameters != NULL){
+    if (managed_parameters != NULL)
+    {
         printf("Managed Parameter: \n");
         printf("\t tfvn: %d", managed_parameters->tfvn);
         printf("\t scid: %d", managed_parameters->scid);
@@ -284,8 +287,9 @@ void Crypto_mpPrint(GvcidManagedParameters_t* managed_parameters, uint8_t print_
         printf("\t has_fecf: %d", managed_parameters->has_fecf);
         printf("\t has_segmentation_headers: %d\n", managed_parameters->has_segmentation_hdr);
     }
-    if(managed_parameters->next!=NULL && print_children!=0){
-        Crypto_mpPrint(managed_parameters->next,print_children);
+    if (managed_parameters->next != NULL && print_children != 0)
+    {
+        Crypto_mpPrint(managed_parameters->next, print_children);
     }
 }
 #endif

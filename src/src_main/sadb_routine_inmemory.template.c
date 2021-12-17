@@ -12,30 +12,29 @@
  * foreign persons.
  */
 
-#include "sadb_routine.h"
-#include "crypto_structs.h"
-#include "crypto_print.h"
 #include "crypto.h"
 #include "crypto_error.h"
+#include "crypto_print.h"
+#include "crypto_structs.h"
+#include "sadb_routine.h"
 
 // Security Association Initialization Functions
 int32_t sadb_config(void);
 int32_t sadb_init(void);
 int32_t sadb_close(void);
 // Security Association Interaction Functions
-int32_t sadb_get_sa_from_spi(uint16_t,SecurityAssociation_t**);
-int32_t sadb_get_operational_sa_from_gvcid(uint8_t,uint16_t,uint16_t,uint8_t,SecurityAssociation_t**);
-int32_t sadb_save_sa(SecurityAssociation_t* sa);
+int32_t sadb_get_sa_from_spi(uint16_t, SecurityAssociation_t **);
+int32_t sadb_get_operational_sa_from_gvcid(uint8_t, uint16_t, uint16_t, uint8_t, SecurityAssociation_t **);
+int32_t sadb_save_sa(SecurityAssociation_t *sa);
 // Security Association Utility Functions
-int32_t sadb_sa_start(TC_t* tc_frame);
+int32_t sadb_sa_start(TC_t *tc_frame);
 int32_t sadb_sa_expire(void);
 int32_t sadb_sa_rekey(void);
-int32_t sadb_sa_status(uint8_t*);
+int32_t sadb_sa_status(uint8_t *);
 int32_t sadb_sa_create(void);
 int32_t sadb_sa_setARSN(void);
 int32_t sadb_sa_setARSNW(void);
 int32_t sadb_sa_delete(void);
-
 
 /*
 ** Global Variables
@@ -82,14 +81,14 @@ int32_t sadb_config(void)
     sa[1].sa_state = SA_OPERATIONAL;
     sa[1].est = 0;
     sa[1].ast = 0;
-    //sa[1].shivf_len = 12;
-    //sa[1].iv = (uint8_t*) calloc(1, sa[1].shivf_len * sizeof(uint8_t));
+    // sa[1].shivf_len = 12;
+    // sa[1].iv = (uint8_t*) calloc(1, sa[1].shivf_len * sizeof(uint8_t));
     sa[1].arc_len = 1;
     sa[1].arcw_len = 1;
     sa[1].arcw = 5;
-    sa[1].gvcid_tc_blk.tfvn  = 0;
-    sa[1].gvcid_tc_blk.scid  = SCID & 0x3FF;
-    sa[1].gvcid_tc_blk.vcid  = 0;
+    sa[1].gvcid_tc_blk.tfvn = 0;
+    sa[1].gvcid_tc_blk.scid = SCID & 0x3FF;
+    sa[1].gvcid_tc_blk.vcid = 0;
     sa[1].gvcid_tc_blk.mapid = TYPE_TC;
 
     // SA 2 - KEYED;  ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 128
@@ -99,10 +98,10 @@ int32_t sadb_config(void)
     sa[2].est = 1;
     sa[2].ast = 1;
     sa[2].shivf_len = 12;
-    sa[2].iv = (uint8_t*) calloc(1, sa[2].shivf_len * sizeof(uint8_t));
+    sa[2].iv = (uint8_t *)calloc(1, sa[2].shivf_len * sizeof(uint8_t));
     *(sa[2].iv + sa[2].shivf_len - 1) = 0;
     sa[2].abm_len = ABM_SIZE; // 20
-    sa[2].abm = (uint8_t*) calloc(1, sa[2].abm_len * sizeof(uint8_t));
+    sa[2].abm = (uint8_t *)calloc(1, sa[2].abm_len * sizeof(uint8_t));
     sa[2].arcw_len = 1;
     sa[2].arcw = 5;
     sa[2].arc_len = (sa[2].arcw * 2) + 1;
@@ -114,14 +113,14 @@ int32_t sadb_config(void)
     sa[3].est = 1;
     sa[3].ast = 1;
     sa[3].shivf_len = 12;
-    sa[3].iv = (uint8_t*) calloc(1, sa[3].shivf_len * sizeof(uint8_t));
+    sa[3].iv = (uint8_t *)calloc(1, sa[3].shivf_len * sizeof(uint8_t));
     *(sa[3].iv + sa[3].shivf_len - 1) = 0;
     sa[3].abm_len = ABM_SIZE; // 20
-    sa[3].abm = (uint8_t*) calloc(1, sa[3].abm_len * sizeof(uint8_t));
+    sa[3].abm = (uint8_t *)calloc(1, sa[3].abm_len * sizeof(uint8_t));
     sa[3].arcw_len = 1;
     sa[3].arcw = 5;
     sa[3].arc_len = (sa[3].arcw * 2) + 1;
-    
+
     // SA 4 - KEYED;  ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 130
     // SA 4 VC0/1 is now 4-VC0, 7-VC1
     sa[4].spi = 4;
@@ -131,16 +130,16 @@ int32_t sadb_config(void)
     sa[4].ast = 1;
     sa[4].shivf_len = 12;
     sa[4].stmacf_len = 16;
-    sa[4].iv = (uint8_t*) calloc(1, sa[4].shivf_len * sizeof(uint8_t));
+    sa[4].iv = (uint8_t *)calloc(1, sa[4].shivf_len * sizeof(uint8_t));
     *(sa[4].iv + 11) = 0;
     sa[4].abm_len = ABM_SIZE; // 20
-    sa[4].abm = (uint8_t*) calloc(1, sa[4].abm_len * sizeof(uint8_t));
+    sa[4].abm = (uint8_t *)calloc(1, sa[4].abm_len * sizeof(uint8_t));
     sa[4].arcw_len = 1;
     sa[4].arcw = 5;
     sa[4].arc_len = (sa[4].arcw * 2) + 1;
-    sa[4].gvcid_tc_blk.tfvn  = 0;
-    sa[4].gvcid_tc_blk.scid  = SCID & 0x3FF;
-    sa[4].gvcid_tc_blk.vcid  = 0;
+    sa[4].gvcid_tc_blk.tfvn = 0;
+    sa[4].gvcid_tc_blk.scid = SCID & 0x3FF;
+    sa[4].gvcid_tc_blk.vcid = 0;
     sa[4].gvcid_tc_blk.mapid = TYPE_TC;
 
     // SA 5 - KEYED;   ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 131
@@ -150,10 +149,10 @@ int32_t sadb_config(void)
     sa[5].est = 1;
     sa[5].ast = 1;
     sa[5].shivf_len = 12;
-    sa[5].iv = (uint8_t*) calloc(1, sa[5].shivf_len * sizeof(uint8_t));
+    sa[5].iv = (uint8_t *)calloc(1, sa[5].shivf_len * sizeof(uint8_t));
     *(sa[5].iv + sa[5].shivf_len - 1) = 0;
     sa[5].abm_len = ABM_SIZE; // 20
-    sa[5].abm = (uint8_t*) calloc(1, sa[5].abm_len * sizeof(uint8_t));
+    sa[5].abm = (uint8_t *)calloc(1, sa[5].abm_len * sizeof(uint8_t));
     sa[5].arcw_len = 1;
     sa[5].arcw = 5;
     sa[5].arc_len = (sa[5].arcw * 2) + 1;
@@ -164,10 +163,10 @@ int32_t sadb_config(void)
     sa[6].est = 1;
     sa[6].ast = 1;
     sa[6].shivf_len = 12;
-    sa[6].iv = (uint8_t*) calloc(1, sa[6].shivf_len * sizeof(uint8_t));
+    sa[6].iv = (uint8_t *)calloc(1, sa[6].shivf_len * sizeof(uint8_t));
     *(sa[6].iv + sa[6].shivf_len - 1) = 0;
     sa[6].abm_len = ABM_SIZE; // 20
-    sa[6].abm = (uint8_t*) calloc(1, sa[6].abm_len * sizeof(uint8_t));
+    sa[6].abm = (uint8_t *)calloc(1, sa[6].abm_len * sizeof(uint8_t));
     sa[6].arcw_len = 1;
     sa[6].arcw = 5;
     sa[6].arc_len = (sa[6].arcw * 2) + 1;
@@ -179,16 +178,16 @@ int32_t sadb_config(void)
     sa[7].est = 1;
     sa[7].ast = 1;
     sa[7].shivf_len = 12;
-    sa[7].iv = (uint8_t*) calloc(1, sa[7].shivf_len * sizeof(uint8_t));
+    sa[7].iv = (uint8_t *)calloc(1, sa[7].shivf_len * sizeof(uint8_t));
     *(sa[7].iv + sa[7].shivf_len - 1) = 0;
     sa[7].abm_len = ABM_SIZE; // 20
-    sa[7].abm = (uint8_t*) calloc(1, sa[7].abm_len * sizeof(uint8_t));
+    sa[7].abm = (uint8_t *)calloc(1, sa[7].abm_len * sizeof(uint8_t));
     sa[7].arcw_len = 1;
     sa[7].arcw = 5;
     sa[7].arc_len = (sa[7].arcw * 2) + 1;
-    sa[7].gvcid_tc_blk.tfvn  = 0;
-    sa[7].gvcid_tc_blk.scid  = SCID & 0x3FF;
-    sa[7].gvcid_tc_blk.vcid  = 1;
+    sa[7].gvcid_tc_blk.tfvn = 0;
+    sa[7].gvcid_tc_blk.scid = SCID & 0x3FF;
+    sa[7].gvcid_tc_blk.vcid = 1;
     sa[7].gvcid_tc_blk.mapid = TYPE_TC;
 
     // SA 8 - CLEAR MODE
@@ -199,9 +198,9 @@ int32_t sadb_config(void)
     sa[8].arc_len = 1;
     sa[8].arcw_len = 1;
     sa[8].arcw = 5;
-    sa[8].gvcid_tc_blk.tfvn  = 0;
-    sa[8].gvcid_tc_blk.scid  = SCID & 0x3FF;
-    sa[8].gvcid_tc_blk.vcid  = 1;
+    sa[8].gvcid_tc_blk.tfvn = 0;
+    sa[8].gvcid_tc_blk.scid = SCID & 0x3FF;
+    sa[8].gvcid_tc_blk.vcid = 1;
     sa[8].gvcid_tc_blk.mapid = TYPE_TC;
 
     // SA 9 - Validation Tests
@@ -211,16 +210,16 @@ int32_t sadb_config(void)
     sa[9].est = 1;
     sa[9].ast = 0;
     sa[9].shivf_len = 12;
-    sa[9].iv = (uint8_t*) calloc(1, sa[9].shivf_len * sizeof(uint8_t));
+    sa[9].iv = (uint8_t *)calloc(1, sa[9].shivf_len * sizeof(uint8_t));
     *(sa[9].iv + 11) = 0;
     sa[9].abm_len = ABM_SIZE; // 20
-    sa[9].abm = (uint8_t*) calloc(1, sa[9].abm_len * sizeof(uint8_t));
+    sa[9].abm = (uint8_t *)calloc(1, sa[9].abm_len * sizeof(uint8_t));
     sa[9].arcw_len = 1;
     sa[9].arcw = 5;
     sa[9].arc_len = (sa[9].arcw * 2) + 1;
-    sa[9].gvcid_tc_blk.tfvn  = 0;
-    sa[9].gvcid_tc_blk.scid  = SCID & 0x3FF;
-    sa[9].gvcid_tc_blk.vcid  = 0;
+    sa[9].gvcid_tc_blk.tfvn = 0;
+    sa[9].gvcid_tc_blk.scid = SCID & 0x3FF;
+    sa[9].gvcid_tc_blk.vcid = 0;
     sa[9].gvcid_tc_blk.mapid = TYPE_TC;
 
     return status;
@@ -260,7 +259,7 @@ int32_t sadb_init(void)
  **/
 int32_t sadb_close(void)
 {
-    //closing not necessary for inmemory DB.
+    // closing not necessary for inmemory DB.
     return CRYPTO_LIB_SUCCESS;
 }
 
@@ -273,17 +272,26 @@ int32_t sadb_close(void)
  * @param security_association: SecurityAssociation_t**
  * @return int32: Success/Failure
  **/
-int32_t sadb_get_sa_from_spi(uint16_t spi,SecurityAssociation_t** security_association)
+int32_t sadb_get_sa_from_spi(uint16_t spi, SecurityAssociation_t **security_association)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    if(sa == NULL) { return CRYPTO_LIB_ERR_NO_INIT; }
+    if (sa == NULL)
+    {
+        return CRYPTO_LIB_ERR_NO_INIT;
+    }
     *security_association = &sa[spi];
-    if(sa[spi].iv == NULL && ( sa[spi].ast == 1 || sa[spi].est == 1 )) { return CRYPTO_LIB_ERR_NULL_IV; } //Must have IV if doing encryption or authentication
-    if(sa[spi].abm == NULL && sa[spi].ast) { return CRYPTO_LIB_ERR_NULL_ABM; } //Must have IV if doing encryption or authentication
-    #ifdef SA_DEBUG
-        printf(KYEL "DEBUG - Printing local copy of SA Entry for current SPI.\n" RESET);
-        Crypto_saPrint(*security_association);
-    #endif
+    if (sa[spi].iv == NULL && (sa[spi].ast == 1 || sa[spi].est == 1))
+    {
+        return CRYPTO_LIB_ERR_NULL_IV;
+    } // Must have IV if doing encryption or authentication
+    if (sa[spi].abm == NULL && sa[spi].ast)
+    {
+        return CRYPTO_LIB_ERR_NULL_ABM;
+    } // Must have IV if doing encryption or authentication
+#ifdef SA_DEBUG
+    printf(KYEL "DEBUG - Printing local copy of SA Entry for current SPI.\n" RESET);
+    Crypto_saPrint(*security_association);
+#endif
     return status;
 }
 
@@ -296,23 +304,36 @@ int32_t sadb_get_sa_from_spi(uint16_t spi,SecurityAssociation_t** security_assoc
  * @param security_association: SecurityAssociation_t**
  * @return int32: Success/Failure
  **/
-int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn,uint16_t scid,uint16_t vcid,uint8_t mapid,SecurityAssociation_t** security_association)
+int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uint16_t vcid, uint8_t mapid,
+                                           SecurityAssociation_t **security_association)
 {
     int32_t status = CRYPTO_LIB_ERR_NO_OPERATIONAL_SA;
-    if(sa == NULL) { return CRYPTO_LIB_ERR_NO_INIT; }
-
-    for (int i=0; i<10; i++)
+    if (sa == NULL)
     {
-        if ((sa[i].gvcid_tc_blk.tfvn == tfvn) && (sa[i].gvcid_tc_blk.scid == scid) && (sa[i].gvcid_tc_blk.vcid == vcid) && (sa[i].sa_state == SA_OPERATIONAL) &&
-                (crypto_config->unique_sa_per_mapid==TC_UNIQUE_SA_PER_MAP_ID_FALSE || sa[i].gvcid_tc_blk.mapid == mapid)) //only require MapID match is unique SA per MapID set (only relevant when using segmentation hdrs)
+        return CRYPTO_LIB_ERR_NO_INIT;
+    }
+
+    for (int i = 0; i < 10; i++)
+    {
+        if ((sa[i].gvcid_tc_blk.tfvn == tfvn) && (sa[i].gvcid_tc_blk.scid == scid) &&
+            (sa[i].gvcid_tc_blk.vcid == vcid) && (sa[i].sa_state == SA_OPERATIONAL) &&
+            (crypto_config->unique_sa_per_mapid == TC_UNIQUE_SA_PER_MAP_ID_FALSE ||
+             sa[i].gvcid_tc_blk.mapid == mapid)) // only require MapID match is unique SA per MapID set (only relevant
+                                                 // when using segmentation hdrs)
         {
             *security_association = &sa[i];
-            if(sa[i].iv == NULL && ( sa[i].ast == 1 || sa[i].est == 1 )) { return CRYPTO_LIB_ERR_NULL_IV; }
-            if(sa[i].abm == NULL && sa[i].ast) { return CRYPTO_LIB_ERR_NULL_ABM; } //Must have IV if doing encryption or authentication
+            if (sa[i].iv == NULL && (sa[i].ast == 1 || sa[i].est == 1))
+            {
+                return CRYPTO_LIB_ERR_NULL_IV;
+            }
+            if (sa[i].abm == NULL && sa[i].ast)
+            {
+                return CRYPTO_LIB_ERR_NULL_ABM;
+            } // Must have IV if doing encryption or authentication
 
-            #ifdef SA_DEBUG
-                printf("Valid operational SA found at index %d.\n", i);
-            #endif
+#ifdef SA_DEBUG
+            printf("Valid operational SA found at index %d.\n", i);
+#endif
 
             status = CRYPTO_LIB_SUCCESS;
             break;
@@ -322,53 +343,58 @@ int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn,uint16_t scid,uint16_t v
     // If not a success, attempt to generate a meaningful error code
     if (status != CRYPTO_LIB_SUCCESS)
     {
-        #ifdef SA_DEBUG
-            printf(KRED "Error - Making best attempt at a useful error code:\n\t" RESET);
-        #endif
+#ifdef SA_DEBUG
+        printf(KRED "Error - Making best attempt at a useful error code:\n\t" RESET);
+#endif
 
-        for (int i=0; i<NUM_SA; i++)
+        for (int i = 0; i < NUM_SA; i++)
         {
             // Could possibly have more than one field mismatched,
             // ordering so the 'most accurate' SA's error is returned
             // (determined by matching header fields L to R)
-            if ((sa[i].gvcid_tc_blk.tfvn != tfvn) && (sa[i].gvcid_tc_blk.scid == scid) && (sa[i].gvcid_tc_blk.vcid == vcid) && \
+            if ((sa[i].gvcid_tc_blk.tfvn != tfvn) && (sa[i].gvcid_tc_blk.scid == scid) &&
+                (sa[i].gvcid_tc_blk.vcid == vcid) &&
                 (sa[i].gvcid_tc_blk.mapid == mapid && sa[i].sa_state == SA_OPERATIONAL))
             {
-                #ifdef SA_DEBUG
-                    printf(KRED "An operational SA was found - but mismatched tfvn.\n" RESET);
-                #endif
+#ifdef SA_DEBUG
+                printf(KRED "An operational SA was found - but mismatched tfvn.\n" RESET);
+#endif
                 status = CRYPTO_LIB_ERR_INVALID_TFVN;
             }
-            if ((sa[i].gvcid_tc_blk.tfvn == tfvn) && (sa[i].gvcid_tc_blk.scid != scid) && (sa[i].gvcid_tc_blk.vcid == vcid) && \
+            if ((sa[i].gvcid_tc_blk.tfvn == tfvn) && (sa[i].gvcid_tc_blk.scid != scid) &&
+                (sa[i].gvcid_tc_blk.vcid == vcid) &&
                 (sa[i].gvcid_tc_blk.mapid == mapid && sa[i].sa_state == SA_OPERATIONAL))
             {
-                #ifdef SA_DEBUG
-                    printf(KRED "An operational SA was found - but mismatched scid.\n" RESET);
-                #endif
+#ifdef SA_DEBUG
+                printf(KRED "An operational SA was found - but mismatched scid.\n" RESET);
+#endif
                 status = CRYPTO_LIB_ERR_INVALID_SCID;
             }
-            if ((sa[i].gvcid_tc_blk.tfvn == tfvn) && (sa[i].gvcid_tc_blk.scid == scid) && (sa[i].gvcid_tc_blk.vcid != vcid) && \
+            if ((sa[i].gvcid_tc_blk.tfvn == tfvn) && (sa[i].gvcid_tc_blk.scid == scid) &&
+                (sa[i].gvcid_tc_blk.vcid != vcid) &&
                 (sa[i].gvcid_tc_blk.mapid == mapid && sa[i].sa_state == SA_OPERATIONAL))
             {
-                #ifdef SA_DEBUG
-                    printf(KRED "An operational SA was found - but mismatched vcid.\n" RESET);
-                #endif
+#ifdef SA_DEBUG
+                printf(KRED "An operational SA was found - but mismatched vcid.\n" RESET);
+#endif
                 status = CRYPTO_LIB_ERR_INVALID_VCID;
             }
-            if ((sa[i].gvcid_tc_blk.tfvn == tfvn) && (sa[i].gvcid_tc_blk.scid == scid) && (sa[i].gvcid_tc_blk.vcid == vcid) && \
+            if ((sa[i].gvcid_tc_blk.tfvn == tfvn) && (sa[i].gvcid_tc_blk.scid == scid) &&
+                (sa[i].gvcid_tc_blk.vcid == vcid) &&
                 (sa[i].gvcid_tc_blk.mapid != mapid && sa[i].sa_state == SA_OPERATIONAL))
             {
-                #ifdef SA_DEBUG
-                    printf(KRED "An operational SA was found - but mismatched mapid.\n" RESET);
-                #endif
+#ifdef SA_DEBUG
+                printf(KRED "An operational SA was found - but mismatched mapid.\n" RESET);
+#endif
                 status = CRYPTO_LIB_ERR_INVALID_MAPID;
             }
-            if ((sa[i].gvcid_tc_blk.tfvn == tfvn) && (sa[i].gvcid_tc_blk.scid == scid) && (sa[i].gvcid_tc_blk.vcid == vcid) && \
+            if ((sa[i].gvcid_tc_blk.tfvn == tfvn) && (sa[i].gvcid_tc_blk.scid == scid) &&
+                (sa[i].gvcid_tc_blk.vcid == vcid) &&
                 (sa[i].gvcid_tc_blk.mapid == mapid && sa[i].sa_state != SA_OPERATIONAL))
             {
-                #ifdef SA_DEBUG
-                    printf(KRED "A valid but non-operational SA was found.\n" RESET);
-                #endif
+#ifdef SA_DEBUG
+                printf(KRED "A valid but non-operational SA was found.\n" RESET);
+#endif
                 status = CRYPTO_LIB_ERR_NO_OPERATIONAL_SA;
             }
         }
@@ -377,19 +403,20 @@ int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn,uint16_t scid,uint16_t v
     return status;
 }
 
-//TODO: Nothing actually happens here
+// TODO: Nothing actually happens here
 /**
  * @brief Function: sadb_save_sa
  * @param sa: SecurityAssociation_t*
  * @return int32: Success/Failure
  * @note Nothing currently actually happens in this function
  **/
-int32_t sadb_save_sa(SecurityAssociation_t* sa)
+int32_t sadb_save_sa(SecurityAssociation_t *sa)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     sa = sa; // TODO - use argument
-    //We could do a memory copy of the SA into the sa[NUM_SA] array at the given SPI, however, the inmemory code currently updates in place so no need for that.
-    // If we change the in-place update logic, we should update this function to actually update the SA.
+    // We could do a memory copy of the SA into the sa[NUM_SA] array at the given SPI, however, the inmemory code
+    // currently updates in place so no need for that.
+    //  If we change the in-place update logic, we should update this function to actually update the SA.
     return status;
 }
 
@@ -401,7 +428,7 @@ int32_t sadb_save_sa(SecurityAssociation_t* sa)
  * @param tc_frame: TC_t
  * @return int32: Success/Failure
  **/
-int32_t sadb_sa_start(TC_t* tc_frame)
+int32_t sadb_sa_start(TC_t *tc_frame)
 {
     // Local variables
     uint8_t count = 0;
@@ -412,7 +439,8 @@ int32_t sadb_sa_start(TC_t* tc_frame)
     spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
 
     // Overwrite last PID
-    sa[spi].lpid = (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
+    sa[spi].lpid =
+        (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
 
     // Check SPI exists and in 'Keyed' state
     if (spi < NUM_SA)
@@ -421,32 +449,36 @@ int32_t sadb_sa_start(TC_t* tc_frame)
         {
             count = 2;
 
-            for(int x = 0; x <= ((sdls_frame.pdu.pdu_len - 2) / 4); x++)
-            {   // Read in GVCID
-                gvcid.tfvn  = (sdls_frame.pdu.data[count] >> 4);
-                gvcid.scid  = (sdls_frame.pdu.data[count] << 12)     |
-                              (sdls_frame.pdu.data[count + 1] << 4)  |
-                              (sdls_frame.pdu.data[count + 2] >> 4);
-                gvcid.vcid  = (sdls_frame.pdu.data[count + 2] << 4)  |
-                              (sdls_frame.pdu.data[count + 3] && 0x3F);
-                if(current_managed_parameters->has_segmentation_hdr==TC_HAS_SEGMENT_HDRS){gvcid.mapid = (sdls_frame.pdu.data[count + 3]);}
-                else {gvcid.mapid=0;}
+            for (int x = 0; x <= ((sdls_frame.pdu.pdu_len - 2) / 4); x++)
+            { // Read in GVCID
+                gvcid.tfvn = (sdls_frame.pdu.data[count] >> 4);
+                gvcid.scid = (sdls_frame.pdu.data[count] << 12) | (sdls_frame.pdu.data[count + 1] << 4) |
+                             (sdls_frame.pdu.data[count + 2] >> 4);
+                gvcid.vcid = (sdls_frame.pdu.data[count + 2] << 4) | (sdls_frame.pdu.data[count + 3] && 0x3F);
+                if (current_managed_parameters->has_segmentation_hdr == TC_HAS_SEGMENT_HDRS)
+                {
+                    gvcid.mapid = (sdls_frame.pdu.data[count + 3]);
+                }
+                else
+                {
+                    gvcid.mapid = 0;
+                }
 
                 // TC
                 if (gvcid.vcid != tc_frame->tc_header.vcid)
-                {   // Clear all GVCIDs for provided SPI
+                { // Clear all GVCIDs for provided SPI
                     if (gvcid.mapid == TYPE_TC)
                     {
-                            sa[spi].gvcid_tc_blk.tfvn  = 0;
-                            sa[spi].gvcid_tc_blk.scid  = 0;
-                            sa[spi].gvcid_tc_blk.vcid  = 0;
-                            sa[spi].gvcid_tc_blk.mapid = 0;
+                        sa[spi].gvcid_tc_blk.tfvn = 0;
+                        sa[spi].gvcid_tc_blk.scid = 0;
+                        sa[spi].gvcid_tc_blk.vcid = 0;
+                        sa[spi].gvcid_tc_blk.mapid = 0;
                     }
                     // Write channel to SA
                     if (gvcid.mapid != TYPE_MAP)
-                    {   // TC
-                        sa[spi].gvcid_tc_blk.tfvn  = gvcid.tfvn;
-                        sa[spi].gvcid_tc_blk.scid  = gvcid.scid;
+                    { // TC
+                        sa[spi].gvcid_tc_blk.tfvn = gvcid.tfvn;
+                        sa[spi].gvcid_tc_blk.scid = gvcid.scid;
                         sa[spi].gvcid_tc_blk.mapid = gvcid.mapid;
                     }
                     else
@@ -456,23 +488,23 @@ int32_t sadb_sa_start(TC_t* tc_frame)
                 }
                 // TM
                 if (gvcid.vcid != tm_frame.tm_header.vcid)
-                {   // Clear all GVCIDs for provided SPI
+                { // Clear all GVCIDs for provided SPI
                     if (gvcid.mapid == TYPE_TM)
                     {
                         for (int i = 0; i < NUM_GVCID; i++)
-                        {   // TM
-                            sa[spi].gvcid_tm_blk[x].tfvn  = 0;
-                            sa[spi].gvcid_tm_blk[x].scid  = 0;
-                            sa[spi].gvcid_tm_blk[x].vcid  = 0;
+                        { // TM
+                            sa[spi].gvcid_tm_blk[x].tfvn = 0;
+                            sa[spi].gvcid_tm_blk[x].scid = 0;
+                            sa[spi].gvcid_tm_blk[x].vcid = 0;
                             sa[spi].gvcid_tm_blk[x].mapid = 0;
                         }
                     }
                     // Write channel to SA
                     if (gvcid.mapid != TYPE_MAP)
-                    {   // TM
-                        sa[spi].gvcid_tm_blk[gvcid.vcid].tfvn  = gvcid.tfvn;
-                        sa[spi].gvcid_tm_blk[gvcid.vcid].scid  = gvcid.scid;
-                        sa[spi].gvcid_tm_blk[gvcid.vcid].vcid  = gvcid.vcid;
+                    { // TM
+                        sa[spi].gvcid_tm_blk[gvcid.vcid].tfvn = gvcid.tfvn;
+                        sa[spi].gvcid_tm_blk[gvcid.vcid].scid = gvcid.scid;
+                        sa[spi].gvcid_tm_blk[gvcid.vcid].vcid = gvcid.vcid;
                         sa[spi].gvcid_tm_blk[gvcid.vcid].mapid = gvcid.mapid;
                     }
                     else
@@ -483,21 +515,21 @@ int32_t sadb_sa_start(TC_t* tc_frame)
 
 #ifdef PDU_DEBUG
                 printf("SPI %d changed to OPERATIONAL state. \n", spi);
-                    switch (gvcid.mapid)
-                    {
-                        case TYPE_TC:
-                            printf("Type TC, ");
-                            break;
-                        case TYPE_MAP:
-                            printf("Type MAP, ");
-                            break;
-                        case TYPE_TM:
-                            printf("Type TM, ");
-                            break;
-                        default:
-                            printf("Type Unknown, ");
-                            break;
-                    }
+                switch (gvcid.mapid)
+                {
+                case TYPE_TC:
+                    printf("Type TC, ");
+                    break;
+                case TYPE_MAP:
+                    printf("Type MAP, ");
+                    break;
+                case TYPE_TM:
+                    printf("Type TM, ");
+                    break;
+                default:
+                    printf("Type Unknown, ");
+                    break;
+                }
 #endif
 
                 // Change to operational state
@@ -535,7 +567,8 @@ int32_t sadb_sa_stop(void)
     printf("spi = %d \n", spi);
 
     // Overwrite last PID
-    sa[spi].lpid = (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
+    sa[spi].lpid =
+        (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
 
     // Check SPI exists and in 'Active' state
     if (spi < NUM_SA)
@@ -543,16 +576,16 @@ int32_t sadb_sa_stop(void)
         if (sa[spi].sa_state == SA_OPERATIONAL)
         {
             // Remove all GVC/GMAP IDs
-            sa[spi].gvcid_tc_blk.tfvn  = 0;
-            sa[spi].gvcid_tc_blk.scid  = 0;
-            sa[spi].gvcid_tc_blk.vcid  = 0;
+            sa[spi].gvcid_tc_blk.tfvn = 0;
+            sa[spi].gvcid_tc_blk.scid = 0;
+            sa[spi].gvcid_tc_blk.vcid = 0;
             sa[spi].gvcid_tc_blk.mapid = 0;
             for (int x = 0; x < NUM_GVCID; x++)
             {
                 // TM
-                sa[spi].gvcid_tm_blk[x].tfvn  = 0;
-                sa[spi].gvcid_tm_blk[x].scid  = 0;
-                sa[spi].gvcid_tm_blk[x].vcid  = 0;
+                sa[spi].gvcid_tm_blk[x].tfvn = 0;
+                sa[spi].gvcid_tm_blk[x].scid = 0;
+                sa[spi].gvcid_tm_blk[x].vcid = 0;
                 sa[spi].gvcid_tm_blk[x].mapid = 0;
             }
 
@@ -591,43 +624,44 @@ int32_t sadb_sa_rekey(void)
     int x = 0;
 
     // Read ingest
-    spi = ((uint8_t)sdls_frame.pdu.data[count] << 8) | (uint8_t)sdls_frame.pdu.data[count+1];
+    spi = ((uint8_t)sdls_frame.pdu.data[count] << 8) | (uint8_t)sdls_frame.pdu.data[count + 1];
     count = count + 2;
 
     // Overwrite last PID
-    sa[spi].lpid = (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
+    sa[spi].lpid =
+        (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
 
     // Check SPI exists and in 'Unkeyed' state
     if (spi < NUM_SA)
     {
         if (sa[spi].sa_state == SA_UNKEYED)
-        {	// Encryption Key
-            sa[spi].ekid = ((uint8_t)sdls_frame.pdu.data[count] << 8) | (uint8_t)sdls_frame.pdu.data[count+1];
+        { // Encryption Key
+            sa[spi].ekid = ((uint8_t)sdls_frame.pdu.data[count] << 8) | (uint8_t)sdls_frame.pdu.data[count + 1];
             count = count + 2;
 
             // Authentication Key
-            //sa[spi].akid = ((uint8_t)sdls_frame.pdu.data[count] << 8) | (uint8_t)sdls_frame.pdu.data[count+1];
-            //count = count + 2;
+            // sa[spi].akid = ((uint8_t)sdls_frame.pdu.data[count] << 8) | (uint8_t)sdls_frame.pdu.data[count+1];
+            // count = count + 2;
 
             // Anti-Replay Counter
 #ifdef PDU_DEBUG
             printf("SPI %d IV updated to: 0x", spi);
 #endif
             if (sa[spi].shivf_len > 0)
-            {   // Set IV - authenticated encryption
+            { // Set IV - authenticated encryption
                 for (x = count; x < (sa[spi].shivf_len + count); x++)
                 {
                     // TODO: Uncomment once fixed in ESA implementation
                     // TODO: Assuming this was fixed...
-                    *(sa[spi].iv + x - count) = (uint8_t) sdls_frame.pdu.data[x];
+                    *(sa[spi].iv + x - count) = (uint8_t)sdls_frame.pdu.data[x];
 #ifdef PDU_DEBUG
                     printf("%02x", sdls_frame.pdu.data[x]);
 #endif
                 }
             }
             else
-            {   // Set SN
-                // TODO
+            { // Set SN
+              // TODO
             }
 #ifdef PDU_DEBUG
             printf("\n");
@@ -651,8 +685,8 @@ int32_t sadb_sa_rekey(void)
 
 #ifdef DEBUG
     printf("\t spi  = %d \n", spi);
-        printf("\t ekid = %d \n", sa[spi].ekid);
-        //printf("\t akid = %d \n", sa[spi].akid);
+    printf("\t ekid = %d \n", sa[spi].ekid);
+    // printf("\t akid = %d \n", sa[spi].akid);
 #endif
 
     return CRYPTO_LIB_SUCCESS;
@@ -672,13 +706,14 @@ int32_t sadb_sa_expire(void)
     printf("spi = %d \n", spi);
 
     // Overwrite last PID
-    sa[spi].lpid = (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
+    sa[spi].lpid =
+        (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
 
     // Check SPI exists and in 'Keyed' state
     if (spi < NUM_SA)
     {
         if (sa[spi].sa_state == SA_KEYED)
-        {	// Change to 'Unkeyed' state
+        { // Change to 'Unkeyed' state
             sa[spi].sa_state = SA_UNKEYED;
 #ifdef PDU_DEBUG
             printf("SPI %d changed to UNKEYED state. \n", spi);
@@ -712,14 +747,18 @@ int32_t sadb_sa_create(void)
     printf("spi = %d \n", spi);
 
     // Overwrite last PID
-    sa[spi].lpid = (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
+    sa[spi].lpid =
+        (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
 
     // Write SA Configuration
     sa[spi].est = ((uint8_t)sdls_frame.pdu.data[2] & 0x80) >> 7;
     sa[spi].ast = ((uint8_t)sdls_frame.pdu.data[2] & 0x40) >> 6;
     sa[spi].shivf_len = ((uint8_t)sdls_frame.pdu.data[2] & 0x3F);
-    if(sa[spi].iv != NULL) { free(sa[spi].iv); }
-    sa[spi].iv = (uint8_t*) calloc(1, sa[spi].shivf_len * sizeof(uint8_t));
+    if (sa[spi].iv != NULL)
+    {
+        free(sa[spi].iv);
+    }
+    sa[spi].iv = (uint8_t *)calloc(1, sa[spi].shivf_len * sizeof(uint8_t));
     sa[spi].shsnf_len = ((uint8_t)sdls_frame.pdu.data[3] & 0xFC) >> 2;
     sa[spi].shplf_len = ((uint8_t)sdls_frame.pdu.data[3] & 0x03);
     sa[spi].stmacf_len = ((uint8_t)sdls_frame.pdu.data[4]);
@@ -738,15 +777,18 @@ int32_t sadb_sa_create(void)
     {
         sa[spi].acs = ((uint8_t)sdls_frame.pdu.data[count++]);
     }
-    sa[spi].abm_len = (uint8_t)((sdls_frame.pdu.data[count] << 8) | (sdls_frame.pdu.data[count+1]));
+    sa[spi].abm_len = (uint8_t)((sdls_frame.pdu.data[count] << 8) | (sdls_frame.pdu.data[count + 1]));
     count = count + 2;
     for (int x = 0; x < sa[spi].abm_len; x++)
     {
         sa[spi].abm[x] = ((uint8_t)sdls_frame.pdu.data[count++]);
     }
     sa[spi].arc_len = ((uint8_t)sdls_frame.pdu.data[count++]);
-    if(sa[spi].arc != NULL) { free(sa[spi].arc); }
-    sa[spi].arc = (uint8_t*) calloc(1, sa[spi].arc_len * sizeof(uint8_t));
+    if (sa[spi].arc != NULL)
+    {
+        free(sa[spi].arc);
+    }
+    sa[spi].arc = (uint8_t *)calloc(1, sa[spi].arc_len * sizeof(uint8_t));
     for (int x = 0; x < sa[spi].arc_len; x++)
     {
         *(sa[spi].arc + x) = ((uint8_t)sdls_frame.pdu.data[count++]);
@@ -754,7 +796,7 @@ int32_t sadb_sa_create(void)
     sa[spi].arcw_len = ((uint8_t)sdls_frame.pdu.data[count++]);
     for (int x = 0; x < sa[spi].arcw_len; x++)
     {
-        sa[spi].arcw = sa[spi].arcw | ( ((uint8_t)sdls_frame.pdu.data[count++]) << (sa[spi].arcw_len - x) );
+        sa[spi].arcw = sa[spi].arcw | (((uint8_t)sdls_frame.pdu.data[count++]) << (sa[spi].arcw_len - x));
     }
 
     // TODO: Checks for valid data
@@ -783,13 +825,14 @@ int32_t sadb_sa_delete(void)
     printf("spi = %d \n", spi);
 
     // Overwrite last PID
-    sa[spi].lpid = (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
+    sa[spi].lpid =
+        (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
 
     // Check SPI exists and in 'Unkeyed' state
     if (spi < NUM_SA)
     {
         if (sa[spi].sa_state == SA_UNKEYED)
-        {	// Change to 'None' state
+        { // Change to 'None' state
             sa[spi].sa_state = SA_NONE;
 #ifdef PDU_DEBUG
             printf("SPI %d changed to NONE state. \n", spi);
@@ -833,10 +876,10 @@ int32_t sadb_sa_setARSN(void)
         printf("SPI %d IV updated to: 0x", spi);
 #endif
         if (sa[spi].shivf_len > 0)
-        {   // Set IV - authenticated encryption
+        { // Set IV - authenticated encryption
             for (int x = 0; x < IV_SIZE; x++)
             {
-                *(sa[spi].iv + x) = (uint8_t) sdls_frame.pdu.data[x + 2];
+                *(sa[spi].iv + x) = (uint8_t)sdls_frame.pdu.data[x + 2];
 #ifdef PDU_DEBUG
                 printf("%02x", *(sa[spi].iv + x));
 #endif
@@ -844,8 +887,8 @@ int32_t sadb_sa_setARSN(void)
             Crypto_increment(sa[spi].iv, sa[spi].shivf_len);
         }
         else
-        {   // Set SN
-            // TODO
+        { // Set SN
+          // TODO
         }
 #ifdef PDU_DEBUG
         printf("\n");
@@ -875,7 +918,7 @@ int32_t sadb_sa_setARSNW(void)
     // Check SPI exists
     if (spi < NUM_SA)
     {
-        sa[spi].arcw_len = (uint8_t) sdls_frame.pdu.data[2];
+        sa[spi].arcw_len = (uint8_t)sdls_frame.pdu.data[2];
 
         // Check for out of bounds
         if (sa[spi].arcw_len > (ARC_SIZE))
@@ -883,9 +926,9 @@ int32_t sadb_sa_setARSNW(void)
             sa[spi].arcw_len = ARC_SIZE;
         }
 
-        for(int x = 0; x < sa[spi].arcw_len; x++)
+        for (int x = 0; x < sa[spi].arcw_len; x++)
         {
-            sa[spi].arcw = (((uint8_t) sdls_frame.pdu.data[x+3]) << (sa[spi].arcw_len - x) );
+            sa[spi].arcw = (((uint8_t)sdls_frame.pdu.data[x + 3]) << (sa[spi].arcw_len - x));
         }
     }
     else
@@ -901,7 +944,7 @@ int32_t sadb_sa_setARSNW(void)
  * @param ingest: uint8_t*
  * @return int32: count
  **/
-int32_t sadb_sa_status(uint8_t* ingest)
+int32_t sadb_sa_status(uint8_t *ingest)
 {
     // Local variables
     int count = 0;
