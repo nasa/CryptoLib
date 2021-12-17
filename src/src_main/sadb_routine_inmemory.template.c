@@ -13,10 +13,6 @@
  */
 
 #include "crypto.h"
-#include "crypto_error.h"
-#include "crypto_print.h"
-#include "crypto_structs.h"
-#include "sadb_routine.h"
 
 // Security Association Initialization Functions
 int32_t sadb_config(void);
@@ -40,7 +36,7 @@ int32_t sadb_sa_delete(void);
 ** Global Variables
 */
 // Security
-static SadbRoutineStruct sadb_routine;
+static SadbRoutineStruct sadb_routine_struct;
 static SecurityAssociation_t sa[NUM_SA];
 
 /**
@@ -49,21 +45,21 @@ static SecurityAssociation_t sa[NUM_SA];
  **/
 SadbRoutine get_sadb_routine_inmemory(void)
 {
-    sadb_routine.sadb_config = sadb_config;
-    sadb_routine.sadb_init = sadb_init;
-    sadb_routine.sadb_close = sadb_close;
-    sadb_routine.sadb_get_sa_from_spi = sadb_get_sa_from_spi;
-    sadb_routine.sadb_get_operational_sa_from_gvcid = sadb_get_operational_sa_from_gvcid;
-    sadb_routine.sadb_save_sa = sadb_save_sa;
-    sadb_routine.sadb_sa_start = sadb_sa_start;
-    sadb_routine.sadb_sa_expire = sadb_sa_expire;
-    sadb_routine.sadb_sa_rekey = sadb_sa_rekey;
-    sadb_routine.sadb_sa_status = sadb_sa_status;
-    sadb_routine.sadb_sa_create = sadb_sa_create;
-    sadb_routine.sadb_sa_setARSN = sadb_sa_setARSN;
-    sadb_routine.sadb_sa_setARSNW = sadb_sa_setARSNW;
-    sadb_routine.sadb_sa_delete = sadb_sa_delete;
-    return &sadb_routine;
+    sadb_routine_struct.sadb_config = sadb_config;
+    sadb_routine_struct.sadb_init = sadb_init;
+    sadb_routine_struct.sadb_close = sadb_close;
+    sadb_routine_struct.sadb_get_sa_from_spi = sadb_get_sa_from_spi;
+    sadb_routine_struct.sadb_get_operational_sa_from_gvcid = sadb_get_operational_sa_from_gvcid;
+    sadb_routine_struct.sadb_save_sa = sadb_save_sa;
+    sadb_routine_struct.sadb_sa_start = sadb_sa_start;
+    sadb_routine_struct.sadb_sa_expire = sadb_sa_expire;
+    sadb_routine_struct.sadb_sa_rekey = sadb_sa_rekey;
+    sadb_routine_struct.sadb_sa_status = sadb_sa_status;
+    sadb_routine_struct.sadb_sa_create = sadb_sa_create;
+    sadb_routine_struct.sadb_sa_setARSN = sadb_sa_setARSN;
+    sadb_routine_struct.sadb_sa_setARSNW = sadb_sa_setARSNW;
+    sadb_routine_struct.sadb_sa_delete = sadb_sa_delete;
+    return &sadb_routine_struct;
 }
 
 /**

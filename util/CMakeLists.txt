@@ -16,7 +16,7 @@
 # jstar-development-team@mail.nasa.gov 
 
 include_directories(include)
-include_directories(../crypto/public_inc) 
+include_directories(../include) 
 
 if(${ENCTEST})
     find_package (Python3 REQUIRED COMPONENTS Interpreter Development)

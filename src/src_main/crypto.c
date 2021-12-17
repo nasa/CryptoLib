@@ -15,23 +15,11 @@
    NASA IV&V
    jstar-development-team@mail.nasa.gov
 */
-#ifndef _crypto_c_
-#define _crypto_c_
 
 /*
 ** Includes
 */
 #include "crypto.h"
-#include "sadb_routine.h"
-
-#include "crypto_config.h"
-#include "crypto_config_structs.h"
-#include "crypto_error.h"
-#include "crypto_events.h"
-#include "crypto_print.h"
-#include "crypto_structs.h"
-
-#include <gcrypt.h>
 
 /*
 ** Static Library Declaration
@@ -40,67 +28,13 @@
 CFS_MODULE_DECLARE_LIB(crypto);
 #endif
 
-static SadbRoutine sadb_routine = NULL;
-
-/*
-** Static Prototypes
-*/
-// Assisting Functions
-// static int32_t  Crypto_Get_tcPayloadLength(TC_t* tc_frame, SecurityAssociation_t *sa_ptr);
-static int32_t Crypto_Get_tmLength(int len);
-static uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id);
-static uint8_t *Crypto_Prepare_TC_AAD(uint8_t *buffer, uint16_t len_aad, uint8_t *abm_buffer);
-static void Crypto_TM_updatePDU(uint8_t *ingest, int len_ingest);
-static void Crypto_TM_updateOCF(void);
-static void Crypto_Local_Config(void);
-static void Crypto_Local_Init(void);
-// static int32_t  Crypto_gcm_err(int gcm_err);
-static int32_t Crypto_window(uint8_t *actual, uint8_t *expected, int length, int window);
-// static int32_t Crypto_compare_less_equal(uint8_t *actual, uint8_t *expected, int length);
-// static int32_t  Crypto_FECF(int fecf, uint8_t* ingest, int len_ingest,TC_t* tc_frame);
-static uint16_t Crypto_Calc_FECF(uint8_t *ingest, int len_ingest);
-static void Crypto_Calc_CRC_Init_Table(void);
-static uint16_t Crypto_Calc_CRC16(uint8_t *data, int size);
-// Key Management Functions
-static int32_t Crypto_Key_OTAR(void);
-static int32_t Crypto_Key_update(uint8_t state);
-static int32_t Crypto_Key_inventory(uint8_t *);
-static int32_t Crypto_Key_verify(uint8_t *, TC_t *tc_frame);
-// Security Monitoring & Control Procedure
-static int32_t Crypto_MC_ping(uint8_t *ingest);
-static int32_t Crypto_MC_status(uint8_t *ingest);
-static int32_t Crypto_MC_dump(uint8_t *ingest);
-static int32_t Crypto_MC_erase(uint8_t *ingest);
-static int32_t Crypto_MC_selftest(uint8_t *ingest);
-static int32_t Crypto_SA_readARSN(uint8_t *ingest);
-static int32_t Crypto_MC_resetalarm(void);
-// User Functions
-static int32_t Crypto_User_IdleTrigger(uint8_t *ingest);
-static int32_t Crypto_User_BadSPI(void);
-static int32_t Crypto_User_BadIV(void);
-static int32_t Crypto_User_BadMAC(void);
-static int32_t Crypto_User_BadFECF(void);
-static int32_t Crypto_User_ModifyKey(void);
-static int32_t Crypto_User_ModifyActiveTM(void);
-static int32_t Crypto_User_ModifyVCID(void);
-// Determine Payload Data Unit
-static int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uint8_t *ingest);
-static int32_t Crypto_PDU(uint8_t *ingest, TC_t *tc_frame);
-// Managed Parameter Functions
-static int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
-                                                       GvcidManagedParameters_t *managed_parameters_in,
-                                                       GvcidManagedParameters_t **managed_parameters_out);
-static int32_t crypto_config_add_gvcid_managed_parameter_recursion(uint8_t tfvn, uint16_t scid, uint8_t vcid,
-                                                                   uint8_t has_fecf, uint8_t has_segmentation_hdr,
-                                                                   GvcidManagedParameters_t *managed_parameter);
-static void Crypto_Free_Managed_Parameters(GvcidManagedParameters_t *managed_parameters);
-
 /*
 ** Global Variables
 */
+SadbRoutine sadb_routine = NULL;
 // Security
 crypto_key_t ek_ring[NUM_KEYS] = {0};
-// static crypto_key_t ak_ring[NUM_KEYS];
+// crypto_key_t ak_ring[NUM_KEYS];
 CCSDS_t sdls_frame;
 TM_t tm_frame;
 CryptoConfig_t *crypto_config = NULL;
@@ -108,22 +42,23 @@ SadbMariaDBConfig_t *sadb_mariadb_config = NULL;
 GvcidManagedParameters_t *gvcid_managed_parameters = NULL;
 GvcidManagedParameters_t *current_managed_parameters = NULL;
 // OCF
-static uint8_t ocf = 0;
-static SDLS_FSR_t report;
-static TM_FrameCLCW_t clcw;
+uint8_t ocf = 0;
+SDLS_FSR_t report;
+TM_FrameCLCW_t clcw;
 // Flags
-static SDLS_MC_LOG_RPLY_t log_summary;
-static SDLS_MC_DUMP_BLK_RPLY_t log;
-static uint8_t log_count = 0;
-static uint16_t tm_offset = 0;
+SDLS_MC_LOG_RPLY_t log_summary;
+SDLS_MC_DUMP_BLK_RPLY_t mc_log;
+uint8_t log_count = 0;
+uint16_t tm_offset = 0;
 // ESA Testing - 0 = disabled, 1 = enabled
-static uint8_t badSPI = 0;
-static uint8_t badIV = 0;
-static uint8_t badMAC = 0;
-static uint8_t badFECF = 0;
+uint8_t badSPI = 0;
+uint8_t badIV = 0;
+uint8_t badMAC = 0;
+uint8_t badFECF = 0;
 //  CRC
-static uint32_t crc32Table[256];
-static uint16_t crc16Table[256];
+uint32_t crc32Table[256];
+uint16_t crc16Table[256];
+
 /*
 ** Initialization Functions
 */
@@ -364,7 +299,7 @@ int32_t Crypto_Config_Add_Gvcid_Managed_Parameter(uint8_t tfvn, uint16_t scid, u
  * @param managed_parameter: GvcidManagedParameters_t*
  * @return int32: Success/Failure
  **/
-static int32_t crypto_config_add_gvcid_managed_parameter_recursion(uint8_t tfvn, uint16_t scid, uint8_t vcid,
+int32_t crypto_config_add_gvcid_managed_parameter_recursion(uint8_t tfvn, uint16_t scid, uint8_t vcid,
                                                                    uint8_t has_fecf, uint8_t has_segmentation_hdr,
                                                                    GvcidManagedParameters_t *managed_parameter)
 {
@@ -390,7 +325,7 @@ static int32_t crypto_config_add_gvcid_managed_parameter_recursion(uint8_t tfvn,
  * @brief Function: Crypto_Local_Config
  * Initalizes TM Configuration, Log, and Keyrings
  **/
-static void Crypto_Local_Config(void)
+void Crypto_Local_Config(void)
 {
     // Initial TM configuration
     tm_frame.tm_sec_header.spi = 1;
@@ -400,19 +335,19 @@ static void Crypto_Local_Config(void)
     log_summary.rs = LOG_SIZE;
     // Add a two messages to the log
     log_summary.rs--;
-    log.blk[log_count].emt = STARTUP;
-    log.blk[log_count].emv[0] = 0x4E;
-    log.blk[log_count].emv[1] = 0x41;
-    log.blk[log_count].emv[2] = 0x53;
-    log.blk[log_count].emv[3] = 0x41;
-    log.blk[log_count++].em_len = 4;
+    mc_log.blk[log_count].emt = STARTUP;
+    mc_log.blk[log_count].emv[0] = 0x4E;
+    mc_log.blk[log_count].emv[1] = 0x41;
+    mc_log.blk[log_count].emv[2] = 0x53;
+    mc_log.blk[log_count].emv[3] = 0x41;
+    mc_log.blk[log_count++].em_len = 4;
     log_summary.rs--;
-    log.blk[log_count].emt = STARTUP;
-    log.blk[log_count].emv[0] = 0x4E;
-    log.blk[log_count].emv[1] = 0x41;
-    log.blk[log_count].emv[2] = 0x53;
-    log.blk[log_count].emv[3] = 0x41;
-    log.blk[log_count++].em_len = 4;
+    mc_log.blk[log_count].emt = STARTUP;
+    mc_log.blk[log_count].emv[0] = 0x4E;
+    mc_log.blk[log_count].emv[1] = 0x41;
+    mc_log.blk[log_count].emv[2] = 0x53;
+    mc_log.blk[log_count].emv[3] = 0x41;
+    mc_log.blk[log_count++].em_len = 4;
 
     // Master Keys
     // 0 - 000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F -> ACTIVE
@@ -835,7 +770,7 @@ static void Crypto_Local_Config(void)
  * @brief Function: Crypto_Local_Init
  * Initalize TM Frame, CLCW
  **/
-static void Crypto_Local_Init(void)
+void Crypto_Local_Init(void)
 {
 
     // Initialize TM Frame
@@ -904,7 +839,7 @@ static void Crypto_Local_Init(void)
  * @brief Function: Crypto_Calc_CRC_Init_Table
  * Initialize CRC Table
  **/
-static void Crypto_Calc_CRC_Init_Table(void)
+void Crypto_Calc_CRC_Init_Table(void)
 {
     uint16_t val;
     uint32_t poly = 0xEDB88320;
@@ -958,7 +893,7 @@ static void Crypto_Calc_CRC_Init_Table(void)
  * @return int32, Length of TCPayload
  **/
 /*
-static int32_t Crypto_Get_tcPayloadLength(TC_t* tc_frame, SecurityAssociation_t *sa_ptr)
+int32_t Crypto_Get_tcPayloadLength(TC_t* tc_frame, SecurityAssociation_t *sa_ptr)
 {
     int tf_hdr = 5;
     int seg_hdr = 0;if(current_managed_parameters->has_segmentation_hdr==TC_HAS_SEGMENT_HDRS){seg_hdr=1;}
@@ -989,7 +924,7 @@ fecf))); #endif
  * @param len: int
  * @return int32_t Length of TM
  **/
-static int32_t Crypto_Get_tmLength(int len)
+int32_t Crypto_Get_tmLength(int len)
 {
 #ifdef FILL
     len = TM_FILL_SIZE;
@@ -1005,7 +940,7 @@ static int32_t Crypto_Get_tmLength(int len)
  * Looks up cipher suite ID and determines if it's an AEAD algorithm. Returns 1 if true, 0 if false;
  * @param cipher_suite_id: uint32
  **/
-static uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
+uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
 {
     // CryptoLib only supports AES-GCM, which is an AEAD (Authenticated Encryption with Associated Data) algorithm, so
     // return true/1.
@@ -1023,7 +958,7 @@ static uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
  * @param len_aad: uint16_t
  * @param abm_buffer: uint8_t*
  **/
-static uint8_t *Crypto_Prepare_TC_AAD(uint8_t *buffer, uint16_t len_aad, uint8_t *abm_buffer)
+uint8_t *Crypto_Prepare_TC_AAD(uint8_t *buffer, uint16_t len_aad, uint8_t *abm_buffer)
 {
     uint8_t *aad = (uint8_t *)calloc(1, len_aad * sizeof(uint8_t));
 
@@ -1051,7 +986,7 @@ static uint8_t *Crypto_Prepare_TC_AAD(uint8_t *buffer, uint16_t len_aad, uint8_t
  * @param ingest: uint8_t*
  * @param len_ingest: int
  **/
-static void Crypto_TM_updatePDU(uint8_t *ingest, int len_ingest)
+void Crypto_TM_updatePDU(uint8_t *ingest, int len_ingest)
 { // Copy ingest to PDU
     int x = 0;
     int fill_size = 0;
@@ -1194,7 +1129,7 @@ static void Crypto_TM_updatePDU(uint8_t *ingest, int len_ingest)
  * @brief Function: Crypto_TM_updateOCF
  * Update the TM OCF
  **/
-static void Crypto_TM_updateOCF(void)
+void Crypto_TM_updateOCF(void)
 {
     if (ocf == 0)
     { // CLCW
@@ -1261,7 +1196,7 @@ int32_t Crypto_increment(uint8_t *num, int length)
  * @param window: int
  * @return int32: Success/Failure
  **/
-static int32_t Crypto_window(uint8_t *actual, uint8_t *expected, int length, int window)
+int32_t Crypto_window(uint8_t *actual, uint8_t *expected, int length, int window)
 {
     int status = CRYPTO_LIB_ERR_BAD_ANTIREPLAY_WINDOW;
     int result = 0;
@@ -1298,7 +1233,7 @@ static int32_t Crypto_window(uint8_t *actual, uint8_t *expected, int length, int
  * @return int32: Success/Failure
  **/
 /*
-static int32_t Crypto_compare_less_equal(uint8_t *actual, uint8_t *expected, int length)
+int32_t Crypto_compare_less_equal(uint8_t *actual, uint8_t *expected, int length)
 {
     int status = CRYPTO_LIB_ERROR;
 
@@ -1372,7 +1307,7 @@ uint8_t Crypto_Prep_Reply(uint8_t *ingest, uint8_t appID)
  * @return int32: Success/Failure
  **/
 /*
-static int32_t Crypto_FECF(int fecf, uint8_t* ingest, int len_ingest,TC_t* tc_frame)
+int32_t Crypto_FECF(int fecf, uint8_t* ingest, int len_ingest,TC_t* tc_frame)
 {
     int32_t result = CRYPTO_LIB_SUCCESS;
     uint16_t calc_fecf = Crypto_Calc_FECF(ingest, len_ingest);
@@ -1391,12 +1326,12 @@ static int32_t Crypto_FECF(int fecf, uint8_t* ingest, int len_ingest,TC_t* tc_fr
                 {
                     Crypto_increment((uint8_t*)&log_summary.num_se, 4);
                     log_summary.rs--;
-                    log.blk[log_count].emt = FECF_ERR_EID;
-                    log.blk[log_count].emv[0] = 0x4E;
-                    log.blk[log_count].emv[1] = 0x41;
-                    log.blk[log_count].emv[2] = 0x53;
-                    log.blk[log_count].emv[3] = 0x41;
-                    log.blk[log_count++].em_len = 4;
+                    mc_log.blk[log_count].emt = FECF_ERR_EID;
+                    mc_log.blk[log_count].emv[0] = 0x4E;
+                    mc_log.blk[log_count].emv[1] = 0x41;
+                    mc_log.blk[log_count].emv[2] = 0x53;
+                    mc_log.blk[log_count].emv[3] = 0x41;
+                    mc_log.blk[log_count++].em_len = 4;
                 }
                 #ifdef FECF_DEBUG
                     printf("\t Calculated = 0x%04x \n\t Received   = 0x%04x \n", calc_fecf,
@@ -1415,7 +1350,7 @@ tc_frame->tc_sec_trailer.fecf); #endif result = CRYPTO_LIB_ERROR;
  * @param len_ingest: int
  * @return uint16: FECF
  **/
-static uint16_t Crypto_Calc_FECF(uint8_t *ingest, int len_ingest)
+uint16_t Crypto_Calc_FECF(uint8_t *ingest, int len_ingest)
 {
     uint16_t fecf = 0xFFFF;
     uint16_t poly = 0x1021; // TODO: This polynomial is (CRC-CCITT) for ESA testing, may not match standard protocol
@@ -1463,7 +1398,7 @@ static uint16_t Crypto_Calc_FECF(uint8_t *ingest, int len_ingest)
  * @param size: int
  * @return uint16: CRC
  **/
-static uint16_t Crypto_Calc_CRC16(uint8_t *data, int size)
+uint16_t Crypto_Calc_CRC16(uint8_t *data, int size)
 { // Code provided by ESA
     uint16_t crc = 0xFFFF;
 
@@ -1476,652 +1411,12 @@ static uint16_t Crypto_Calc_CRC16(uint8_t *data, int size)
     return crc;
 }
 
-/*
-** Key Management Services
-*/
-/**
- * @brief Function: Crypto_Key_OTAR
- * The OTAR Rekeying procedure shall have the following Service Parameters:
- * a- Key ID of the Master Key (Integer, unmanaged)
- * b- Size of set of Upload Keys (Integer, managed)
- * c- Set of Upload Keys (Integer[Session Key]; managed)
- * NOTE- The size of the session keys is mission specific.
- * a- Set of Key IDs of Upload Keys (Integer[Key IDs]; managed)
- * b- Set of Encrypted Upload Keys (Integer[Size of set of Key ID]; unmanaged)
- * c- Agreed Cryptographic Algorithm (managed)
- * @return int32: Success/Failure
- **/
-static int32_t Crypto_Key_OTAR(void)
-
-{
-    // Local variables
-    SDLS_OTAR_t packet;
-    int count = 0;
-    int x = 0;
-    int32_t status = CRYPTO_LIB_SUCCESS;
-    int pdu_keys = (sdls_frame.pdu.pdu_len - 30) / (2 + KEY_SIZE);
-
-    gcry_cipher_hd_t tmp_hd;
-    gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
-
-    // Master Key ID
-    packet.mkid = (sdls_frame.pdu.data[0] << 8) | (sdls_frame.pdu.data[1]);
-
-    if (packet.mkid >= 128)
-    {
-        report.af = 1;
-        if (log_summary.rs > 0)
-        {
-            Crypto_increment((uint8_t *)&log_summary.num_se, 4);
-            log_summary.rs--;
-            log.blk[log_count].emt = MKID_INVALID_EID;
-            log.blk[log_count].emv[0] = 0x4E;
-            log.blk[log_count].emv[1] = 0x41;
-            log.blk[log_count].emv[2] = 0x53;
-            log.blk[log_count].emv[3] = 0x41;
-            log.blk[log_count++].em_len = 4;
-        }
-        printf(KRED "Error: MKID is not valid! \n" RESET);
-        status = CRYPTO_LIB_ERROR;
-        return status;
-    }
-
-    for (int count = 2; count < (2 + IV_SIZE); count++)
-    { // Initialization Vector
-        packet.iv[count - 2] = sdls_frame.pdu.data[count];
-        // printf("packet.iv[%d] = 0x%02x\n", count-2, packet.iv[count-2]);
-    }
-
-    count = sdls_frame.pdu.pdu_len - MAC_SIZE;
-    for (int w = 0; w < 16; w++)
-    { // MAC
-        packet.mac[w] = sdls_frame.pdu.data[count + w];
-        // printf("packet.mac[%d] = 0x%02x\n", w, packet.mac[w]);
-    }
-
-    gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_CBC_MAC);
-    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-    {
-        printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        status = CRYPTO_LIB_ERROR;
-        return status;
-    }
-    gcry_error = gcry_cipher_setkey(tmp_hd, &(ek_ring[packet.mkid].value[0]), KEY_SIZE);
-    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-    {
-        printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        status = CRYPTO_LIB_ERROR;
-        return status;
-    }
-    gcry_error = gcry_cipher_setiv(tmp_hd, &(packet.iv[0]), IV_SIZE);
-    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-    {
-        printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        status = CRYPTO_LIB_ERROR;
-        return status;
-    }
-    gcry_error = gcry_cipher_decrypt(tmp_hd,
-                                     &(sdls_frame.pdu.data[14]), // plaintext output
-                                     pdu_keys * (2 + KEY_SIZE),  // length of data
-                                     NULL,                       // in place decryption
-                                     0                           // in data length
-    );
-    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-    {
-        printf(KRED "ERROR: gcry_cipher_decrypt error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        status = CRYPTO_LIB_ERROR;
-        return status;
-    }
-    gcry_error = gcry_cipher_checktag(tmp_hd,
-                                      &(packet.mac[0]), // tag input
-                                      MAC_SIZE          // tag size
-    );
-    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-    {
-        printf(KRED "ERROR: gcry_cipher_checktag error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        status = CRYPTO_LIB_ERROR;
-        return status;
-    }
-    gcry_cipher_close(tmp_hd);
-
-    // Read in Decrypted Data
-    for (int count = 14; x < pdu_keys; x++)
-    { // Encrypted Key Blocks
-        packet.EKB[x].ekid = (sdls_frame.pdu.data[count] << 8) | (sdls_frame.pdu.data[count + 1]);
-        if (packet.EKB[x].ekid < 128)
-        {
-            report.af = 1;
-            if (log_summary.rs > 0)
-            {
-                Crypto_increment((uint8_t *)&log_summary.num_se, 4);
-                log_summary.rs--;
-                log.blk[log_count].emt = OTAR_MK_ERR_EID;
-                log.blk[log_count].emv[0] = 0x4E; // N
-                log.blk[log_count].emv[1] = 0x41; // A
-                log.blk[log_count].emv[2] = 0x53; // S
-                log.blk[log_count].emv[3] = 0x41; // A
-                log.blk[log_count++].em_len = 4;
-            }
-            printf(KRED "Error: Cannot OTAR master key! \n" RESET);
-            status = CRYPTO_LIB_ERROR;
-            return status;
-        }
-        else
-        {
-            count = count + 2;
-            for (int y = count; y < (KEY_SIZE + count); y++)
-            { // Encrypted Key
-                packet.EKB[x].ek[y - count] = sdls_frame.pdu.data[y];
-#ifdef SA_DEBUG
-                printf("\t packet.EKB[%d].ek[%d] = 0x%02x\n", x, y - count, packet.EKB[x].ek[y - count]);
-#endif
-
-                // Setup Key Ring
-                ek_ring[packet.EKB[x].ekid].value[y - count] = sdls_frame.pdu.data[y];
-            }
-            count = count + KEY_SIZE;
-
-            // Set state to PREACTIVE
-            ek_ring[packet.EKB[x].ekid].key_state = KEY_PREACTIVE;
-        }
-    }
-
-#ifdef PDU_DEBUG
-    printf("Received %d keys via master key %d: \n", pdu_keys, packet.mkid);
-    for (int x = 0; x < pdu_keys; x++)
-    {
-        printf("%d) Key ID = %d, 0x", x + 1, packet.EKB[x].ekid);
-        for (int y = 0; y < KEY_SIZE; y++)
-        {
-            printf("%02x", packet.EKB[x].ek[y]);
-        }
-        printf("\n");
-    }
-#endif
-
-    return CRYPTO_LIB_SUCCESS;
-}
-/**
- * @brief Function: Crypto_Key_update
- * Updates the state of the all keys in the received SDLS EP PDU
- * @param state: uint8
- * @return uint32: Success/Failure
- **/
-static int32_t Crypto_Key_update(uint8_t state)
-{ // Local variables
-    SDLS_KEY_BLK_t packet;
-    int count = 0;
-    int pdu_keys = sdls_frame.pdu.pdu_len / 2;
-#ifdef PDU_DEBUG
-    printf("Keys ");
-#endif
-    // Read in PDU
-    for (int x = 0; x < pdu_keys; x++)
-    {
-        packet.kblk[x].kid = (sdls_frame.pdu.data[count] << 8) | (sdls_frame.pdu.data[count + 1]);
-        count = count + 2;
-#ifdef PDU_DEBUG
-        if (x != (pdu_keys - 1))
-        {
-            printf("%d, ", packet.kblk[x].kid);
-        }
-        else
-        {
-            printf("and %d ", packet.kblk[x].kid);
-        }
-#endif
-    }
-#ifdef PDU_DEBUG
-    printf("changed to state ");
-    switch (state)
-    {
-    case KEY_PREACTIVE:
-        printf("PREACTIVE. \n");
-        break;
-    case KEY_ACTIVE:
-        printf("ACTIVE. \n");
-        break;
-    case KEY_DEACTIVATED:
-        printf("DEACTIVATED. \n");
-        break;
-    case KEY_DESTROYED:
-        printf("DESTROYED. \n");
-        break;
-    case KEY_CORRUPTED:
-        printf("CORRUPTED. \n");
-        break;
-    default:
-        printf("ERROR. \n");
-        break;
-    }
-#endif
-    // Update Key State
-    for (int x = 0; x < pdu_keys; x++)
-    {
-        if (packet.kblk[x].kid < 128)
-        {
-            report.af = 1;
-            if (log_summary.rs > 0)
-            {
-                Crypto_increment((uint8_t *)&log_summary.num_se, 4);
-                log_summary.rs--;
-                log.blk[log_count].emt = MKID_STATE_ERR_EID;
-                log.blk[log_count].emv[0] = 0x4E;
-                log.blk[log_count].emv[1] = 0x41;
-                log.blk[log_count].emv[2] = 0x53;
-                log.blk[log_count].emv[3] = 0x41;
-                log.blk[log_count++].em_len = 4;
-            }
-            printf(KRED "Error: MKID state cannot be changed! \n" RESET);
-            // TODO: Exit
-        }
-
-        if (ek_ring[packet.kblk[x].kid].key_state == (state - 1))
-        {
-            ek_ring[packet.kblk[x].kid].key_state = state;
-#ifdef PDU_DEBUG
-            // printf("Key ID %d state changed to ", packet.kblk[x].kid);
-#endif
-        }
-        else
-        {
-            if (log_summary.rs > 0)
-            {
-                Crypto_increment((uint8_t *)&log_summary.num_se, 4);
-                log_summary.rs--;
-                log.blk[log_count].emt = KEY_TRANSITION_ERR_EID;
-                log.blk[log_count].emv[0] = 0x4E;
-                log.blk[log_count].emv[1] = 0x41;
-                log.blk[log_count].emv[2] = 0x53;
-                log.blk[log_count].emv[3] = 0x41;
-                log.blk[log_count++].em_len = 4;
-            }
-            printf(KRED "Error: Key %d cannot transition to desired state! \n" RESET, packet.kblk[x].kid);
-        }
-    }
-    return CRYPTO_LIB_SUCCESS;
-}
-
-/**
- * @brief Function: Crypto_Key_inventory
- * @param ingest: uint8_t*
- * @return int32: count
- **/
-static int32_t Crypto_Key_inventory(uint8_t *ingest)
-{
-    // Local variables
-    SDLS_KEY_INVENTORY_t packet;
-    int count = 0;
-    uint16_t range = 0;
-
-    // Read in PDU
-    packet.kid_first = ((uint8_t)sdls_frame.pdu.data[count] << 8) | ((uint8_t)sdls_frame.pdu.data[count + 1]);
-    count = count + 2;
-    packet.kid_last = ((uint8_t)sdls_frame.pdu.data[count] << 8) | ((uint8_t)sdls_frame.pdu.data[count + 1]);
-    count = count + 2;
-
-    // Prepare for Reply
-    range = packet.kid_last - packet.kid_first;
-    sdls_frame.pdu.pdu_len = 2 + (range * (2 + 1));
-    sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
-    count = Crypto_Prep_Reply(ingest, 128);
-    ingest[count++] = (range & 0xFF00) >> 8;
-    ingest[count++] = (range & 0x00FF);
-    for (uint16_t x = packet.kid_first; x < packet.kid_last; x++)
-    { // Key ID
-        ingest[count++] = (x & 0xFF00) >> 8;
-        ingest[count++] = (x & 0x00FF);
-        // Key State
-        ingest[count++] = ek_ring[x].key_state;
-    }
-    return count;
-}
-
-/**
- * @brief Function: Crypto_Key_verify
- * @param ingest: uint8_t*
- * @param tc_frame: TC_t*
- * @return int32: count
- **/
-static int32_t Crypto_Key_verify(uint8_t *ingest, TC_t *tc_frame)
-{
-    // Local variables
-    SDLS_KEYV_CMD_t packet;
-    int count = 0;
-    int pdu_keys = sdls_frame.pdu.pdu_len / SDLS_KEYV_CMD_BLK_SIZE;
-
-    gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
-    gcry_cipher_hd_t tmp_hd;
-    uint8_t iv_loc;
-
-    // uint8_t tmp_mac[MAC_SIZE];
-
-#ifdef PDU_DEBUG
-    printf("Crypto_Key_verify: Requested %d key(s) to verify \n", pdu_keys);
-#endif
-
-    // Read in PDU
-    for (int x = 0; x < pdu_keys; x++)
-    {
-        // Key ID
-        packet.blk[x].kid = ((uint8_t)sdls_frame.pdu.data[count] << 8) | ((uint8_t)sdls_frame.pdu.data[count + 1]);
-        count = count + 2;
-#ifdef PDU_DEBUG
-        printf("Crypto_Key_verify: Block %d Key ID is %d \n", x, packet.blk[x].kid);
-#endif
-        // Key Challenge
-        for (int y = 0; y < CHALLENGE_SIZE; y++)
-        {
-            packet.blk[x].challenge[y] = sdls_frame.pdu.data[count++];
-        }
-#ifdef PDU_DEBUG
-        printf("\n");
-#endif
-    }
-
-    // Prepare for Reply
-    sdls_frame.pdu.pdu_len = pdu_keys * (2 + IV_SIZE + CHALLENGE_SIZE + CHALLENGE_MAC_SIZE);
-    sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
-    count = Crypto_Prep_Reply(ingest, 128);
-
-    for (int x = 0; x < pdu_keys; x++)
-    { // Key ID
-        ingest[count++] = (packet.blk[x].kid & 0xFF00) >> 8;
-        ingest[count++] = (packet.blk[x].kid & 0x00FF);
-
-        // Initialization Vector
-        iv_loc = count;
-        for (int y = 0; y < IV_SIZE; y++)
-        {
-            ingest[count++] = *(tc_frame->tc_sec_header.iv + y);
-        }
-        ingest[count - 1] = ingest[count - 1] + x + 1;
-
-        // Encrypt challenge
-        gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_CBC_MAC);
-        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        }
-        gcry_error = gcry_cipher_setkey(tmp_hd, &(ek_ring[packet.blk[x].kid].value[0]), KEY_SIZE);
-        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        }
-        gcry_error = gcry_cipher_setiv(tmp_hd, &(ingest[iv_loc]), IV_SIZE);
-        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        }
-        gcry_error = gcry_cipher_encrypt(tmp_hd,
-                                         &(ingest[count]),              // ciphertext output
-                                         CHALLENGE_SIZE,                // length of data
-                                         &(packet.blk[x].challenge[0]), // plaintext input
-                                         CHALLENGE_SIZE                 // in data length
-        );
-        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            printf(KRED "ERROR: gcry_cipher_encrypt error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        }
-        count = count + CHALLENGE_SIZE; // Don't forget to increment count!
-
-        gcry_error = gcry_cipher_gettag(tmp_hd,
-                                        &(ingest[count]),  // tag output
-                                        CHALLENGE_MAC_SIZE // tag size
-        );
-        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            printf(KRED "ERROR: gcry_cipher_gettag error code %d \n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        }
-        count = count + CHALLENGE_MAC_SIZE; // Don't forget to increment count!
-
-        // Copy from tmp_mac into ingest
-        // for( int y = 0; y < CHALLENGE_MAC_SIZE; y++)
-        //{
-        //    ingest[count++] = tmp_mac[y];
-        //}
-        gcry_cipher_close(tmp_hd);
-    }
-
-#ifdef PDU_DEBUG
-    printf("Crypto_Key_verify: Response is %d bytes \n", count);
-#endif
-
-    return count;
-}
-
-/*
-** Security Association Monitoring and Control
-*/
-/**
- * @brief Function: Crypto_MC_ping
- * @param ingest: uint8_t*
- * return int32: count
- **/
-static int32_t Crypto_MC_ping(uint8_t *ingest)
-{
-    int count = 0;
-
-    // Prepare for Reply
-    sdls_frame.pdu.pdu_len = 0;
-    sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
-    count = Crypto_Prep_Reply(ingest, 128);
-
-    return count;
-}
-
-/**
- * @brief Function: Crypto_MC_status
- * @param ingest: uint8_t*
- * @return int32: count
- **/
-static int32_t Crypto_MC_status(uint8_t *ingest)
-{
-    int count = 0;
-
-    // TODO: Update log_summary.rs;
-
-    // Prepare for Reply
-    sdls_frame.pdu.pdu_len = 2; // 4
-    sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
-    count = Crypto_Prep_Reply(ingest, 128);
-
-    // PDU
-    // ingest[count++] = (log_summary.num_se & 0xFF00) >> 8;
-    ingest[count++] = (log_summary.num_se & 0x00FF);
-    // ingest[count++] = (log_summary.rs & 0xFF00) >> 8;
-    ingest[count++] = (log_summary.rs & 0x00FF);
-
-#ifdef PDU_DEBUG
-    printf("log_summary.num_se = 0x%02x \n", log_summary.num_se);
-    printf("log_summary.rs = 0x%02x \n", log_summary.rs);
-#endif
-
-    return count;
-}
-
-/**
- * @brief Function: Crypto_MC_dump
- * @param ingest: uint8_t*
- * @return int32: Count
- **/
-static int32_t Crypto_MC_dump(uint8_t *ingest)
-{
-    int count = 0;
-
-    // Prepare for Reply
-    sdls_frame.pdu.pdu_len = (log_count * 6); // SDLS_MC_DUMP_RPLY_SIZE
-    sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
-    count = Crypto_Prep_Reply(ingest, 128);
-
-    // PDU
-    for (int x = 0; x < log_count; x++)
-    {
-        ingest[count++] = log.blk[x].emt;
-        // ingest[count++] = (log.blk[x].em_len & 0xFF00) >> 8;
-        ingest[count++] = (log.blk[x].em_len & 0x00FF);
-        for (int y = 0; y < EMV_SIZE; y++)
-        {
-            ingest[count++] = log.blk[x].emv[y];
-        }
-    }
-
-#ifdef PDU_DEBUG
-    printf("log_count = %d \n", log_count);
-    printf("log_summary.num_se = 0x%02x \n", log_summary.num_se);
-    printf("log_summary.rs = 0x%02x \n", log_summary.rs);
-#endif
-
-    return count;
-}
-
-/**
- * @brief Function: Crypto_MC_erase
- * @param ingest: uint8_t*
- * @return int32: count
- **/
-static int32_t Crypto_MC_erase(uint8_t *ingest)
-{
-    int count = 0;
-
-    // Zero Logs
-    for (int x = 0; x < LOG_SIZE; x++)
-    {
-        log.blk[x].emt = 0;
-        log.blk[x].em_len = 0;
-        for (int y = 0; y < EMV_SIZE; y++)
-        {
-            log.blk[x].emv[y] = 0;
-        }
-    }
-
-    // Compute Summary
-    log_count = 0;
-    log_summary.num_se = 0;
-    log_summary.rs = LOG_SIZE;
-
-    // Prepare for Reply
-    sdls_frame.pdu.pdu_len = 2; // 4
-    sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
-    count = Crypto_Prep_Reply(ingest, 128);
-
-    // PDU
-    // ingest[count++] = (log_summary.num_se & 0xFF00) >> 8;
-    ingest[count++] = (log_summary.num_se & 0x00FF);
-    // ingest[count++] = (log_summary.rs & 0xFF00) >> 8;
-    ingest[count++] = (log_summary.rs & 0x00FF);
-
-    return count;
-}
-
-/**
- * @brief Function: Crypto_MC_selftest
- * @param ingest: uint8_t*
- * @return int32: Count
- **/
-static int32_t Crypto_MC_selftest(uint8_t *ingest)
-{
-    uint8_t count = 0;
-    uint8_t result = ST_OK;
-
-    // TODO: Perform test
-
-    // Prepare for Reply
-    sdls_frame.pdu.pdu_len = 1;
-    sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
-    count = Crypto_Prep_Reply(ingest, 128);
-
-    ingest[count++] = result;
-
-    return count;
-}
-
-/**
- * @brief Function: Crypto_SA_readASRN
- * @param ingest: uint8_t*
- * @return int32: Count
- **/
-static int32_t Crypto_SA_readARSN(uint8_t *ingest)
-{
-    uint8_t count = 0;
-    uint16_t spi = 0x0000;
-    SecurityAssociation_t *sa_ptr;
-
-    // Read ingest
-    spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
-
-    // Prepare for Reply
-    sdls_frame.pdu.pdu_len = 2 + IV_SIZE;
-    sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
-    count = Crypto_Prep_Reply(ingest, 128);
-
-    // Write SPI to reply
-    ingest[count++] = (spi & 0xFF00) >> 8;
-    ingest[count++] = (spi & 0x00FF);
-
-    if (sadb_routine->sadb_get_sa_from_spi(spi, &sa_ptr) != CRYPTO_LIB_SUCCESS)
-    {
-        // TODO - Error handling
-        return CRYPTO_LIB_ERROR; // Error -- unable to get SA from SPI.
-    }
-
-    if (sa_ptr->shivf_len > 0)
-    { // Set IV - authenticated encryption
-        for (int x = 0; x < sa_ptr->shivf_len - 1; x++)
-        {
-            ingest[count++] = *(sa_ptr->iv + x);
-        }
-
-        // TODO: Do we need this?
-        if (*(sa_ptr->iv + sa_ptr->shivf_len - 1) > 0)
-        { // Adjust to report last received, not expected
-            ingest[count++] = *(sa_ptr->iv + sa_ptr->shivf_len - 1) - 1;
-        }
-        else
-        {
-            ingest[count++] = *(sa_ptr->iv + sa_ptr->shivf_len - 1);
-        }
-    }
-    else
-    {
-        // TODO
-    }
-
-#ifdef PDU_DEBUG
-    printf("spi = %d \n", spi);
-    if (sa_ptr->shivf_len > 0)
-    {
-        printf("ARSN = 0x");
-        for (int x = 0; x < sa_ptr->shivf_len; x++)
-        {
-            printf("%02x", *(sa_ptr->iv + x));
-        }
-        printf("\n");
-    }
-#endif
-
-    return count;
-}
-
-/**
- * @brief Function: Crypto_MC_resetalarm
- * @return int32: Success/Failure
- **/
-static int32_t Crypto_MC_resetalarm(void)
-{ // Reset all alarm flags
-    report.af = 0;
-    report.bsnf = 0;
-    report.bmacf = 0;
-    report.ispif = 0;
-    return CRYPTO_LIB_SUCCESS;
-}
-
 /**
  * @brief Function: Crypto_User_IdleTrigger
  * @param ingest: uint8_t*
  * @return int32: count
  **/
-static int32_t Crypto_User_IdleTrigger(uint8_t *ingest)
+int32_t Crypto_User_IdleTrigger(uint8_t *ingest)
 {
     uint8_t count = 0;
 
@@ -2137,7 +1432,7 @@ static int32_t Crypto_User_IdleTrigger(uint8_t *ingest)
  * @brief Function: Crypto_User_BadSPI
  * @return int32: Success/Failure
  **/
-static int32_t Crypto_User_BadSPI(void)
+int32_t Crypto_User_BadSPI(void)
 {
     // Toggle Bad Sequence Number
     if (badSPI == 0)
@@ -2156,7 +1451,7 @@ static int32_t Crypto_User_BadSPI(void)
  * @brief Function: Crypto_User_BadMAC
  * @return int32: Success/Failure
  **/
-static int32_t Crypto_User_BadMAC(void)
+int32_t Crypto_User_BadMAC(void)
 {
     // Toggle Bad MAC
     if (badMAC == 0)
@@ -2175,7 +1470,7 @@ static int32_t Crypto_User_BadMAC(void)
  * @brief Function: Crypto_User_BadIV
  * @return int32: Success/Failure
  **/
-static int32_t Crypto_User_BadIV(void)
+int32_t Crypto_User_BadIV(void)
 {
     // Toggle Bad MAC
     if (badIV == 0)
@@ -2194,7 +1489,7 @@ static int32_t Crypto_User_BadIV(void)
  * @brief Function: Crypto_User_BadFECF
  * @return int32: Success/Failure
  **/
-static int32_t Crypto_User_BadFECF(void)
+int32_t Crypto_User_BadFECF(void)
 {
     // Toggle Bad FECF
     if (badFECF == 0)
@@ -2213,7 +1508,7 @@ static int32_t Crypto_User_BadFECF(void)
  * @brief Function: Crypto_User_ModifyKey
  * @return int32: Success/Failure
  **/
-static int32_t Crypto_User_ModifyKey(void)
+int32_t Crypto_User_ModifyKey(void)
 {
     // Local variables
     uint16_t kid = ((uint8_t)sdls_frame.pdu.data[0] << 8) | ((uint8_t)sdls_frame.pdu.data[1]);
@@ -2242,7 +1537,7 @@ static int32_t Crypto_User_ModifyKey(void)
  * Modifies tm_sec_header.spi based on sdls_frame.pdu.data[0]
  * @return int32: Success/Failure
  **/
-static int32_t Crypto_User_ModifyActiveTM(void)
+int32_t Crypto_User_ModifyActiveTM(void)
 {
     tm_frame.tm_sec_header.spi = (uint8_t)sdls_frame.pdu.data[0];
     return CRYPTO_LIB_SUCCESS;
@@ -2252,7 +1547,7 @@ static int32_t Crypto_User_ModifyActiveTM(void)
  * @brief Function: Crypto_User_ModifyVCID
  * @return int32: Success/Failure
  **/
-static int32_t Crypto_User_ModifyVCID(void)
+int32_t Crypto_User_ModifyVCID(void)
 {
     tm_frame.tm_header.vcid = (uint8_t)sdls_frame.pdu.data[0];
     SecurityAssociation_t *sa_ptr;
@@ -2291,7 +1586,7 @@ static int32_t Crypto_User_ModifyVCID(void)
  * @param tc_frame: TC_t*
  * @return int32: Success/Failure
  **/
-static int32_t Crypto_PDU(uint8_t *ingest, TC_t *tc_frame)
+int32_t Crypto_PDU(uint8_t *ingest, TC_t *tc_frame)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
@@ -2558,7 +1853,7 @@ static int32_t Crypto_PDU(uint8_t *ingest, TC_t *tc_frame)
  * @param managed_parameters_out: GvcidManagedParameters_t**
  * @return int32: Success/Failure
  **/
-static int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
+int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
                                                        GvcidManagedParameters_t *managed_parameters_in,
                                                        GvcidManagedParameters_t **managed_parameters_out)
 {
@@ -2592,7 +1887,7 @@ static int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t sc
  * Managed parameters are expected to live the duration of the program, this may not be necessary.
  * @param managed_parameters: GvcidManagedParameters_t*
  **/
-static void Crypto_Free_Managed_Parameters(GvcidManagedParameters_t *managed_parameters)
+void Crypto_Free_Managed_Parameters(GvcidManagedParameters_t *managed_parameters)
 {
     if (managed_parameters == NULL)
     {
@@ -2606,1020 +1901,12 @@ static void Crypto_Free_Managed_Parameters(GvcidManagedParameters_t *managed_par
 }
 
 /**
- * @brief Function: Crypto_TC_ApplySecurity
- * Applies Security to incoming frame.  Encryption, Authentication, and Authenticated Encryption
- * @param p_in_frame: uint8*
- * @param in_frame_length: uint16
- * @param pp_in_frame: uint8_t**
- * @param p_enc_frame_len: uint16
- * @return int32: Success/Failure
- **/
-int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_frame_length, uint8_t **pp_in_frame,
-                                uint16_t *p_enc_frame_len)
-{
-    // Local Variables
-    int32_t status = CRYPTO_LIB_SUCCESS;
-    TC_FramePrimaryHeader_t temp_tc_header;
-    SecurityAssociation_t *sa_ptr = NULL;
-    uint8_t *p_new_enc_frame = NULL;
-    uint8_t sa_service_type = -1;
-    uint16_t mac_loc = 0;
-    uint16_t tf_payload_len = 0x0000;
-    uint16_t new_fecf = 0x0000;
-    uint8_t *aad;
-    gcry_cipher_hd_t tmp_hd;
-    gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
-    uint16_t new_enc_frame_header_field_length = 0;
-    uint32_t encryption_cipher;
-    uint8_t ecs_is_aead_algorithm;
-
-#ifdef DEBUG
-    printf(KYEL "\n----- Crypto_TC_ApplySecurity START -----\n" RESET);
-#endif
-
-    if (p_in_frame == NULL)
-    {
-        status = CRYPTO_LIB_ERR_NULL_BUFFER;
-        printf(KRED "Error: Input Buffer NULL! \n" RESET);
-        return status; // Just return here, nothing can be done.
-    }
-
-#ifdef DEBUG
-    printf("%d TF Bytes received\n", in_frame_length);
-    printf("DEBUG - ");
-    for (int i = 0; i < in_frame_length; i++)
-    {
-        printf("%02X", ((uint8_t *)&*p_in_frame)[i]);
-    }
-    printf("\nPrinted %d bytes\n", in_frame_length);
-#endif
-
-    if (crypto_config == NULL)
-    {
-        printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
-        status = CRYPTO_LIB_ERR_NO_CONFIG;
-    }
-
-    // Primary Header
-    temp_tc_header.tfvn = ((uint8_t)p_in_frame[0] & 0xC0) >> 6;
-    temp_tc_header.bypass = ((uint8_t)p_in_frame[0] & 0x20) >> 5;
-    temp_tc_header.cc = ((uint8_t)p_in_frame[0] & 0x10) >> 4;
-    temp_tc_header.spare = ((uint8_t)p_in_frame[0] & 0x0C) >> 2;
-    temp_tc_header.scid = ((uint8_t)p_in_frame[0] & 0x03) << 8;
-    temp_tc_header.scid = temp_tc_header.scid | (uint8_t)p_in_frame[1];
-    temp_tc_header.vcid = ((uint8_t)p_in_frame[2] & 0xFC) >> 2 & crypto_config->vcid_bitmask;
-    temp_tc_header.fl = ((uint8_t)p_in_frame[2] & 0x03) << 8;
-    temp_tc_header.fl = temp_tc_header.fl | (uint8_t)p_in_frame[3];
-    temp_tc_header.fsn = (uint8_t)p_in_frame[4];
-
-    // Lookup-retrieve managed parameters for frame via gvcid:
-    status = Crypto_Get_Managed_Parameters_For_Gvcid(temp_tc_header.tfvn, temp_tc_header.scid, temp_tc_header.vcid,
-                                                     gvcid_managed_parameters, &current_managed_parameters);
-    if (status != CRYPTO_LIB_SUCCESS)
-    {
-        return status;
-    } // Unable to get necessary Managed Parameters for TC TF -- return with error.
-
-    uint8_t segmentation_hdr = 0x00;
-    uint8_t map_id = 0;
-    if (current_managed_parameters->has_segmentation_hdr == TC_HAS_SEGMENT_HDRS)
-    {
-        segmentation_hdr = p_in_frame[5];
-        map_id = segmentation_hdr & 0x3F;
-    }
-
-    // Check if command frame flag set
-    if ((temp_tc_header.cc == 1) && (status == CRYPTO_LIB_SUCCESS))
-    {
-/*
-** CCSDS 232.0-B-3
-** Section 6.3.1
-** "Type-C frames do not have the Security Header and Security Trailer."
-*/
-#ifdef TC_DEBUG
-        printf(KYEL "DEBUG - Received Control/Command frame - nothing to do.\n" RESET);
-#endif
-        status = CRYPTO_LIB_ERR_INVALID_CC_FLAG;
-    }
-
-    if (status == CRYPTO_LIB_SUCCESS)
-    {
-        // Query SA DB for active SA / SDLS parameters
-        if (sadb_routine == NULL) // This should not happen, but tested here for safety
-        {
-            printf(KRED "ERROR: SA DB Not initalized! -- CRYPTO_LIB_ERR_NO_INIT, Will Exit\n" RESET);
-            status = CRYPTO_LIB_ERR_NO_INIT;
-        }
-        else
-        {
-            status = sadb_routine->sadb_get_operational_sa_from_gvcid(temp_tc_header.tfvn, temp_tc_header.scid,
-                                                                      temp_tc_header.vcid, map_id, &sa_ptr);
-        }
-
-        // If unable to get operational SA, can return
-        if (status != CRYPTO_LIB_SUCCESS)
-        {
-            return status;
-        }
-
-#ifdef SA_DEBUG
-        printf(KYEL "DEBUG - Printing SA Entry for current frame.\n" RESET);
-        Crypto_saPrint(sa_ptr);
-#endif
-
-        // Determine SA Service Type
-        if ((sa_ptr->est == 0) && (sa_ptr->ast == 0))
-        {
-            sa_service_type = SA_PLAINTEXT;
-        }
-        else if ((sa_ptr->est == 0) && (sa_ptr->ast == 1))
-        {
-            sa_service_type = SA_AUTHENTICATION;
-        }
-        else if ((sa_ptr->est == 1) && (sa_ptr->ast == 0))
-        {
-            sa_service_type = SA_ENCRYPTION;
-        }
-        else if ((sa_ptr->est == 1) && (sa_ptr->ast == 1))
-        {
-            sa_service_type = SA_AUTHENTICATED_ENCRYPTION;
-        }
-        else
-        {
-            // Probably unnecessary check
-            // Leaving for now as it would be cleaner in SA to have an association enum returned I believe
-            printf(KRED "Error: SA Service Type is not defined! \n" RESET);
-            status = CRYPTO_LIB_ERROR;
-            return status;
-        }
-
-        // Determine Algorithm cipher & mode. // TODO - Parse authentication_cipher, and handle AEAD cases properly
-        if (sa_service_type != SA_PLAINTEXT)
-        {
-            encryption_cipher =
-                (sa_ptr->ecs[0] << 24) | (sa_ptr->ecs[1] << 16) | (sa_ptr->ecs[2] << 8) | sa_ptr->ecs[3];
-            ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(encryption_cipher);
-        }
-
-#ifdef TC_DEBUG
-        switch (sa_service_type)
-        {
-        case SA_PLAINTEXT:
-            printf(KBLU "Creating a TC - CLEAR!\n" RESET);
-            break;
-        case SA_AUTHENTICATION:
-            printf(KBLU "Creating a TC - AUTHENTICATED!\n" RESET);
-            break;
-        case SA_ENCRYPTION:
-            printf(KBLU "Creating a TC - ENCRYPTED!\n" RESET);
-            break;
-        case SA_AUTHENTICATED_ENCRYPTION:
-            printf(KBLU "Creating a TC - AUTHENTICATED ENCRYPTION!\n" RESET);
-            break;
-        }
-#endif
-
-        // Determine length of buffer to be malloced
-        // TODO: Determine TC_PAD_SIZE
-        // TODO: Note: Currently assumes ciphertext output length is same as ciphertext input length
-        switch (sa_service_type)
-        {
-        case SA_PLAINTEXT:
-            // Ingest length + spi_index (2) + some variable length fields
-            *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shplf_len;
-            new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
-            break;
-        case SA_AUTHENTICATION:
-            // Ingest length + spi_index (2) + shivf_len (varies) + shsnf_len (varies)
-            //   + shplf_len + arc_len + pad_size + stmacf_len
-            *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len +
-                               sa_ptr->arc_len + TC_PAD_SIZE + sa_ptr->stmacf_len;
-            new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
-            break;
-        case SA_ENCRYPTION:
-            // Ingest length + spi_index (2) + shivf_len (varies) + shsnf_len (varies)
-            //   + shplf_len + arc_len + pad_size
-            *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len +
-                               sa_ptr->arc_len + TC_PAD_SIZE;
-            new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
-            break;
-        case SA_AUTHENTICATED_ENCRYPTION:
-            // Ingest length + spi_index (2) + shivf_len (varies) + shsnf_len (varies)
-            //   + shplf_len + arc_len + pad_size + stmacf_len
-            *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len +
-                               sa_ptr->arc_len + TC_PAD_SIZE + sa_ptr->stmacf_len;
-            new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
-            break;
-        default:
-            printf(KRED "Unknown SA Service Type Detected!" RESET);
-            break;
-        }
-
-#ifdef TC_DEBUG
-        printf(KYEL "DEBUG - Total TC Buffer to be malloced is: %d bytes\n" RESET, *p_enc_frame_len);
-        printf(KYEL "\tlen of TF\t = %d\n" RESET, temp_tc_header.fl);
-        // printf(KYEL "\tsegment hdr\t = 1\n" RESET); // TODO: Determine presence of this so not hard-coded
-        printf(KYEL "\tspi len\t\t = 2\n" RESET);
-        printf(KYEL "\tshivf_len\t = %d\n" RESET, sa_ptr->shivf_len);
-        printf(KYEL "\tshsnf_len\t = %d\n" RESET, sa_ptr->shsnf_len);
-        printf(KYEL "\tshplf len\t = %d\n" RESET, sa_ptr->shplf_len);
-        printf(KYEL "\tarc_len\t\t = %d\n" RESET, sa_ptr->arc_len);
-        printf(KYEL "\tpad_size\t = %d\n" RESET, TC_PAD_SIZE);
-        printf(KYEL "\tstmacf_len\t = %d\n" RESET, sa_ptr->stmacf_len);
-#endif
-
-        // Accio buffer
-        p_new_enc_frame = (uint8_t *)malloc((*p_enc_frame_len) * sizeof(uint8_t));
-        if (!p_new_enc_frame)
-        {
-            printf(KRED "Error: Malloc for encrypted output buffer failed! \n" RESET);
-            status = CRYPTO_LIB_ERROR;
-            return status;
-        }
-        memset(p_new_enc_frame, 0, *p_enc_frame_len);
-
-        // Copy original TF header
-        memcpy(p_new_enc_frame, p_in_frame, TC_FRAME_PRIMARYHEADER_STRUCT_SIZE);
-
-        // Set new TF Header length
-        // Recall: Length field is one minus total length per spec
-        *(p_new_enc_frame + 2) =
-            ((*(p_new_enc_frame + 2) & 0xFC) | (((new_enc_frame_header_field_length) & (0x0300)) >> 8));
-        *(p_new_enc_frame + 3) = ((new_enc_frame_header_field_length) & (0x00FF));
-
-#ifdef TC_DEBUG
-        printf(KYEL "Printing updated TF Header:\n\t");
-        for (int i = 0; i < TC_FRAME_HEADER_SIZE; i++)
-        {
-            printf("%02X", *(p_new_enc_frame + i));
-        }
-        // Recall: The buffer length is 1 greater than the field value set in the TCTF
-        printf("\n\tLength set to 0x%02X\n" RESET, new_enc_frame_header_field_length);
-#endif
-
-        /*
-        ** Start variable length fields
-        */
-        uint16_t index = TC_FRAME_HEADER_SIZE; // Frame header is 5 bytes
-
-        if (current_managed_parameters->has_segmentation_hdr == TC_HAS_SEGMENT_HDRS)
-        {
-            index++; // Add 1 byte to index because segmentation header used for this gvcid.
-        }
-
-        /*
-        ** Begin Security Header Fields
-        ** Reference CCSDS SDLP 3550b1 4.1.1.1.3
-        */
-        // Set SPI
-        *(p_new_enc_frame + index) = ((sa_ptr->spi & 0xFF00) >> 8);
-        *(p_new_enc_frame + index + 1) = (sa_ptr->spi & 0x00FF);
-        index += 2;
-
-        // Set initialization vector if specified
-        if ((sa_service_type == SA_AUTHENTICATION) || (sa_service_type == SA_AUTHENTICATED_ENCRYPTION) ||
-            (sa_service_type == SA_ENCRYPTION))
-        {
-#ifdef SA_DEBUG
-            printf(KYEL "Using IV value:\n\t");
-            for (int i = 0; i < sa_ptr->shivf_len; i++)
-            {
-                printf("%02x", *(sa_ptr->iv + i));
-            }
-            printf("\n" RESET);
-#endif
-
-            for (int i = 0; i < sa_ptr->shivf_len; i++)
-            {
-                // TODO: Likely API call
-                // Copy in IV from SA
-                *(p_new_enc_frame + index) = *(sa_ptr->iv + i);
-                index++;
-            }
-        }
-
-        // Set anti-replay sequence number if specified
-        /*
-        ** See also: 4.1.1.4.2
-        ** 4.1.1.4.4 If authentication or authenticated encryption is not selected
-        ** for an SA, the Sequence Number field shall be zero octets in length.
-        ** Reference CCSDS 3550b1
-        */
-        // Determine if seq num field is needed
-        // TODO: Likely SA API Call
-        if (sa_ptr->shsnf_len > 0)
-        {
-            // If using anti-replay counter, increment it
-            // TODO: API call instead?
-            // TODO: Check return code
-            Crypto_increment(sa_ptr->arc, sa_ptr->shsnf_len);
-            for (int i = 0; i < sa_ptr->shsnf_len; i++)
-            {
-                *(p_new_enc_frame + index) = *(sa_ptr->arc + i);
-                index++;
-            }
-        }
-
-        // Set security header padding if specified
-        /*
-        ** 4.2.3.4 h) if the algorithm and mode selected for the SA require the use of
-        ** fill padding, place the number of fill bytes used into the Pad Length field
-        ** of the Security Header - Reference CCSDS 3550b1
-        */
-        // TODO: Revisit this
-        // TODO: Likely SA API Call
-        for (int i = 0; i < sa_ptr->shplf_len; i++)
-        {
-            /* 4.1.1.5.2 The Pad Length field shall contain the count of fill bytes used in the
-            ** cryptographic process, consisting of an integral number of octets. - CCSDS 3550b1
-            */
-            // TODO: Set this depending on crypto cipher used
-            *(p_new_enc_frame + index) = 0x00;
-            index++;
-        }
-
-        /*
-        ** End Security Header Fields
-        */
-
-        uint8_t fecf_len = FECF_SIZE;
-        if (current_managed_parameters->has_fecf == TC_NO_FECF)
-        {
-            fecf_len = 0;
-        }
-        uint8_t segment_hdr_len = SEGMENT_HDR_SIZE;
-        if (current_managed_parameters->has_segmentation_hdr == TC_NO_SEGMENT_HDRS)
-        {
-            segment_hdr_len = 0;
-        }
-        // Copy in original TF data - except FECF
-        // Will be over-written if using encryption later
-        // and if it was present in the original TCTF
-        // if FECF
-        // Even though FECF is not part of apply_security payload, we still have to subtract the length from the
-        // temp_tc_header.fl since that includes FECF length & segment header length.
-        tf_payload_len = temp_tc_header.fl - TC_FRAME_HEADER_SIZE - segment_hdr_len - fecf_len + 1;
-        // if no FECF
-        // tf_payload_len = temp_tc_header.fl - TC_FRAME_PRIMARYHEADER_STRUCT_SIZE;
-        memcpy((p_new_enc_frame + index), (p_in_frame + TC_FRAME_PRIMARYHEADER_STRUCT_SIZE), tf_payload_len);
-        // index += tf_payload_len;
-
-        /*
-        ** Begin Security Trailer Fields
-        */
-
-        // Set MAC Field if present
-        /*
-        ** May be present and unused if switching between clear and authenticated
-        ** CCSDS 3550b1 4.1.2.3
-        */
-        // By leaving MAC as zeros, can use index for encryption output
-        // for (int i=0; i < temp_SA.stmacf_len; i++)
-        // {
-        //     // Temp fill MAC
-        //     *(p_new_enc_frame + index) = 0x00;
-        //     index++;
-        // }
-
-        /*
-        ** End Security Trailer Fields
-        */
-
-        /*
-        ** Begin Authentication / Encryption
-        */
-
-        if (sa_service_type != SA_PLAINTEXT)
-        {
-            gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_CBC_MAC);
-            if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-            {
-                printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-                status = CRYPTO_LIB_ERROR;
-                return status;
-            }
-            gcry_error = gcry_cipher_setkey(tmp_hd, &(ek_ring[sa_ptr->ekid].value[0]),
-                                            KEY_SIZE // TODO:  look into this
-            );
-            if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-            {
-                printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-                status = CRYPTO_LIB_ERROR;
-                return status;
-            }
-            gcry_error = gcry_cipher_setiv(tmp_hd, sa_ptr->iv, sa_ptr->shivf_len);
-            if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-            {
-                printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-                status = CRYPTO_LIB_ERROR;
-                return status;
-            }
-
-            if ((sa_service_type == SA_ENCRYPTION) || (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
-            {
-// TODO: More robust calculation of this location
-// uint16_t output_loc = TC_FRAME_PRIMARYHEADER_STRUCT_SIZE + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len +
-// temp_SA.shplf_len;
-#ifdef TC_DEBUG
-                printf("Encrypted bytes output_loc is %d\n", index);
-                printf("tf_payload_len is %d\n", tf_payload_len);
-                printf(KYEL "Printing TC Frame prior to encryption:\n\t");
-                for (int i = 0; i < *p_enc_frame_len; i++)
-                {
-                    printf("%02X", *(p_new_enc_frame + i));
-                }
-                printf("\n");
-#endif
-
-                if (sa_service_type == SA_AUTHENTICATED_ENCRYPTION &&
-                    ecs_is_aead_algorithm == CRYPTO_TRUE) // Algorithm is AEAD algorithm, Add AAD before encrypt!
-                {
-                    // Prepare the Header AAD (CCSDS 335.0-B-1 4.2.3.2.2.3)
-                    uint16_t aad_len = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len +
-                                       sa_ptr->shsnf_len + sa_ptr->shplf_len;
-                    if (sa_ptr->abm_len < aad_len)
-                    {
-                        return CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
-                    }
-                    aad = Crypto_Prepare_TC_AAD(p_new_enc_frame, aad_len, sa_ptr->abm);
-
-                    // Add the AAD to the libgcrypt cipher handle
-                    gcry_error = gcry_cipher_authenticate(tmp_hd,
-                                                          aad,    // additional authenticated data
-                                                          aad_len // length of AAD
-                    );
-                    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-                    {
-                        printf(KRED "ERROR: gcry_cipher_authenticate error code %d\n" RESET,
-                               gcry_error & GPG_ERR_CODE_MASK);
-                        printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
-                        status = CRYPTO_LIB_ERR_AUTHENTICATION_ERROR;
-                        return status;
-                    }
-
-                    free(aad);
-                }
-
-                gcry_error =
-                    gcry_cipher_encrypt(tmp_hd,
-                                        &p_new_enc_frame[index],                               // ciphertext output
-                                        tf_payload_len,                                        // length of data
-                                        (p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), // plaintext input
-                                        tf_payload_len                                         // in data length
-                    );
-
-                if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-                {
-                    printf(KRED "ERROR: gcry_cipher_encrypt error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-                    status = CRYPTO_LIB_ERROR;
-                    return status;
-                }
-
-#ifdef TC_DEBUG
-                printf("Encrypted bytes output_loc is %d\n", index);
-                printf("tf_payload_len is %d\n", tf_payload_len);
-                printf(KYEL "Printing TC Frame after encryption:\n\t");
-                for (int i = 0; i < *p_enc_frame_len; i++)
-                {
-                    printf("%02X", *(p_new_enc_frame + i));
-                }
-                printf("\n");
-#endif
-
-                // Get MAC & insert into p_new_enc_frame
-                if (sa_service_type == SA_AUTHENTICATED_ENCRYPTION && ecs_is_aead_algorithm == CRYPTO_TRUE)
-                {
-                    mac_loc = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len +
-                              sa_ptr->shplf_len + tf_payload_len;
-#ifdef MAC_DEBUG
-                    printf(KYEL "MAC location is: %d\n" RESET, mac_loc);
-                    printf(KYEL "MAC size is: %d\n" RESET, MAC_SIZE);
-#endif
-                    gcry_error = gcry_cipher_gettag(
-                        tmp_hd,
-                        &p_new_enc_frame[mac_loc], // tag output
-                        MAC_SIZE // tag size // TODO - use sa_ptr->abm_len instead of hardcoded mac size?
-                    );
-                    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-                    {
-                        printf(KRED "ERROR: gcry_cipher_checktag error code %d\n" RESET,
-                               gcry_error & GPG_ERR_CODE_MASK);
-                        status = CRYPTO_LIB_ERR_MAC_RETRIEVAL_ERROR;
-                        return status;
-                    }
-                }
-
-                // Close cipher, so we can authenticate encrypted data
-                gcry_cipher_close(tmp_hd);
-            }
-
-            // Prepare additional authenticated data, if needed
-            if ((sa_service_type == SA_AUTHENTICATION) ||
-                ((sa_service_type == SA_AUTHENTICATED_ENCRYPTION) &&
-                 ecs_is_aead_algorithm == CRYPTO_FALSE)) // Authenticated Encryption without AEAD algorithm, AEAD
-                                                         // algorithms handled in encryption block!
-            {
-                gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_CBC_MAC);
-                if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-                {
-                    printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-                    status = CRYPTO_LIB_ERROR;
-                    return status;
-                }
-                gcry_error = gcry_cipher_setkey(tmp_hd, &(ek_ring[sa_ptr->ekid].value[0]),
-                                                KEY_SIZE // TODO:  look into this
-                );
-                if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-                {
-                    printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-                    status = CRYPTO_LIB_ERROR;
-                    return status;
-                }
-                gcry_error = gcry_cipher_setiv(tmp_hd, sa_ptr->iv, sa_ptr->shivf_len);
-                if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-                {
-                    printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-                    status = CRYPTO_LIB_ERROR;
-                    return status;
-                }
-
-                uint16_t aad_len = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len +
-                                   sa_ptr->shsnf_len + sa_ptr->shplf_len + tf_payload_len;
-                if (sa_ptr->abm_len < aad_len)
-                {
-                    return CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
-                }
-                aad = Crypto_Prepare_TC_AAD(p_new_enc_frame, aad_len, sa_ptr->abm);
-
-                gcry_error = gcry_cipher_authenticate(tmp_hd,
-                                                      aad,    // additional authenticated data
-                                                      aad_len // length of AAD
-                );
-                if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-                {
-                    printf(KRED "ERROR: gcry_cipher_authenticate error code %d\n" RESET,
-                           gcry_error & GPG_ERR_CODE_MASK);
-                    printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
-                    status = CRYPTO_LIB_ERROR;
-                    return status;
-                }
-
-                mac_loc = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len +
-                          sa_ptr->shplf_len + tf_payload_len;
-#ifdef MAC_DEBUG
-                printf(KYEL "MAC location is: %d\n" RESET, mac_loc);
-                printf(KYEL "MAC size is: %d\n" RESET, MAC_SIZE);
-#endif
-                gcry_error =
-                    gcry_cipher_gettag(tmp_hd,
-                                       &p_new_enc_frame[mac_loc], // tag output
-                                       MAC_SIZE // tag size // TODO - use sa_ptr->abm_len instead of hardcoded mac size?
-                    );
-                if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-                {
-                    printf(KRED "ERROR: gcry_cipher_checktag error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-                    status = CRYPTO_LIB_ERR_MAC_RETRIEVAL_ERROR;
-                    return status;
-                }
-                // Zeroise any sensitive information
-                gcry_cipher_close(tmp_hd);
-            }
-        }
-
-        if (sa_service_type != SA_PLAINTEXT)
-        {
-#ifdef INCREMENT
-            if (sa_ptr->iv == NULL)
-            {
-                printf("\n\nNULL\n\n");
-            }
-            Crypto_increment(sa_ptr->iv, sa_ptr->shivf_len);
-#ifdef SA_DEBUG
-            printf(KYEL "Next IV value is:\n\t");
-            for (int i = 0; i < sa_ptr->shivf_len; i++)
-            {
-                printf("%02x", *(sa_ptr->iv + i));
-            }
-            printf("\n" RESET);
-#endif
-#endif
-        }
-        /*
-        ** End Authentication / Encryption
-        */
-
-        // Only calculate & insert FECF if CryptoLib is configured to do so & gvcid includes FECF.
-        if (current_managed_parameters->has_fecf == TC_HAS_FECF)
-        {
-// Set FECF Field if present
-#ifdef FECF_DEBUG
-            printf(KCYN "Calcing FECF over %d bytes\n" RESET, new_enc_frame_header_field_length - 1);
-#endif
-            if (crypto_config->crypto_create_fecf == CRYPTO_TC_CREATE_FECF_TRUE)
-            {
-                new_fecf = Crypto_Calc_FECF(p_new_enc_frame, new_enc_frame_header_field_length - 1);
-                *(p_new_enc_frame + new_enc_frame_header_field_length - 1) = (uint8_t)((new_fecf & 0xFF00) >> 8);
-                *(p_new_enc_frame + new_enc_frame_header_field_length) = (uint8_t)(new_fecf & 0x00FF);
-            }
-            else // CRYPTO_TC_CREATE_FECF_FALSE
-            {
-                *(p_new_enc_frame + new_enc_frame_header_field_length - 1) = (uint8_t)0x00;
-                *(p_new_enc_frame + new_enc_frame_header_field_length) = (uint8_t)0x00;
-            }
-
-            index += 2;
-        }
-
-#ifdef TC_DEBUG
-        printf(KYEL "Printing new TC Frame:\n\t");
-        for (int i = 0; i < *p_enc_frame_len; i++)
-        {
-            printf("%02X", *(p_new_enc_frame + i));
-        }
-        printf("\n\tThe returned length is: %d\n" RESET, new_enc_frame_header_field_length);
-#endif
-
-        *pp_in_frame = p_new_enc_frame;
-    }
-
-    status = sadb_routine->sadb_save_sa(sa_ptr);
-
-#ifdef DEBUG
-    printf(KYEL "----- Crypto_TC_ApplySecurity END -----\n" RESET);
-#endif
-
-    return status;
-}
-
-/**
- * @brief Function: Crypto_TC_ProcessSecurity
- * Performs Authenticated decryption, decryption, and authentication
- * @param ingest: uint8_t*
- * @param len_ingest: int*
- * @param tc_sdls_processed_frame: TC_t*
- * @return int32: Success/Failure
- **/
-int32_t Crypto_TC_ProcessSecurity(uint8_t *ingest, int *len_ingest, TC_t *tc_sdls_processed_frame)
-// Loads the ingest frame into the global tc_frame while performing decryption
-{
-    // Local Variables
-    int32_t status = CRYPTO_LIB_SUCCESS;
-    gcry_cipher_hd_t tmp_hd;
-    gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
-    SecurityAssociation_t *sa_ptr = NULL;
-    uint8_t sa_service_type = -1;
-    uint8_t *aad;
-    uint32_t encryption_cipher;
-    uint8_t ecs_is_aead_algorithm;
-
-    if (crypto_config == NULL)
-    {
-        printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
-        status = CRYPTO_LIB_ERR_NO_CONFIG;
-        return status;
-    }
-
-#ifdef DEBUG
-    printf(KYEL "\n----- Crypto_TC_ProcessSecurity START -----\n" RESET);
-#endif
-
-    int byte_idx = 0;
-    // Primary Header
-    tc_sdls_processed_frame->tc_header.tfvn = ((uint8_t)ingest[byte_idx] & 0xC0) >> 6;
-    tc_sdls_processed_frame->tc_header.bypass = ((uint8_t)ingest[byte_idx] & 0x20) >> 5;
-    tc_sdls_processed_frame->tc_header.cc = ((uint8_t)ingest[byte_idx] & 0x10) >> 4;
-    tc_sdls_processed_frame->tc_header.spare = ((uint8_t)ingest[byte_idx] & 0x0C) >> 2;
-    tc_sdls_processed_frame->tc_header.scid = ((uint8_t)ingest[byte_idx] & 0x03) << 8;
-    byte_idx++;
-    tc_sdls_processed_frame->tc_header.scid = tc_sdls_processed_frame->tc_header.scid | (uint8_t)ingest[byte_idx];
-    byte_idx++;
-    tc_sdls_processed_frame->tc_header.vcid = (((uint8_t)ingest[byte_idx] & 0xFC) >> 2) & crypto_config->vcid_bitmask;
-    tc_sdls_processed_frame->tc_header.fl = ((uint8_t)ingest[byte_idx] & 0x03) << 8;
-    byte_idx++;
-    tc_sdls_processed_frame->tc_header.fl = tc_sdls_processed_frame->tc_header.fl | (uint8_t)ingest[byte_idx];
-    byte_idx++;
-    tc_sdls_processed_frame->tc_header.fsn = (uint8_t)ingest[byte_idx];
-    byte_idx++;
-
-    // Lookup-retrieve managed parameters for frame via gvcid:
-    status = Crypto_Get_Managed_Parameters_For_Gvcid(
-        tc_sdls_processed_frame->tc_header.tfvn, tc_sdls_processed_frame->tc_header.scid,
-        tc_sdls_processed_frame->tc_header.vcid, gvcid_managed_parameters, &current_managed_parameters);
-
-    if (status != CRYPTO_LIB_SUCCESS)
-    {
-        return status;
-    } // Unable to get necessary Managed Parameters for TC TF -- return with error.
-
-    // Segment Header
-    if (current_managed_parameters->has_segmentation_hdr == TC_HAS_SEGMENT_HDRS)
-    {
-        tc_sdls_processed_frame->tc_sec_header.sh = (uint8_t)ingest[byte_idx];
-        byte_idx++;
-    }
-    // Security Header
-    tc_sdls_processed_frame->tc_sec_header.spi = ((uint8_t)ingest[byte_idx] << 8) | (uint8_t)ingest[byte_idx + 1];
-    byte_idx += 2;
-#ifdef TC_DEBUG
-    printf("vcid = %d \n", tc_sdls_processed_frame->tc_header.vcid);
-    printf("spi  = %d \n", tc_sdls_processed_frame->tc_sec_header.spi);
-#endif
-
-    status = sadb_routine->sadb_get_sa_from_spi(tc_sdls_processed_frame->tc_sec_header.spi, &sa_ptr);
-    // If no valid SPI, return
-    if (status != CRYPTO_LIB_SUCCESS)
-    {
-        return status;
-    }
-
-    encryption_cipher = (sa_ptr->ecs[0] << 24) | (sa_ptr->ecs[1] << 16) | (sa_ptr->ecs[2] << 8) | sa_ptr->ecs[3];
-    ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(encryption_cipher);
-
-    // Determine SA Service Type
-    if ((sa_ptr->est == 0) && (sa_ptr->ast == 0))
-    {
-        sa_service_type = SA_PLAINTEXT;
-    }
-    else if ((sa_ptr->est == 0) && (sa_ptr->ast == 1))
-    {
-        sa_service_type = SA_AUTHENTICATION;
-    }
-    else if ((sa_ptr->est == 1) && (sa_ptr->ast == 0))
-    {
-        sa_service_type = SA_ENCRYPTION;
-    }
-    else if ((sa_ptr->est == 1) && (sa_ptr->ast == 1))
-    {
-        sa_service_type = SA_AUTHENTICATED_ENCRYPTION;
-    }
-    else
-    {
-        // Probably unnecessary check
-        // Leaving for now as it would be cleaner in SA to have an association enum returned I believe
-        printf(KRED "Error: SA Service Type is not defined! \n" RESET);
-        status = CRYPTO_LIB_ERROR;
-        return status;
-    }
-
-    // Determine Algorithm cipher & mode. // TODO - Parse authentication_cipher, and handle AEAD cases properly
-    if (sa_service_type != SA_PLAINTEXT)
-    {
-        encryption_cipher = (sa_ptr->ecs[0] << 24) | (sa_ptr->ecs[1] << 16) | (sa_ptr->ecs[2] << 8) | sa_ptr->ecs[3];
-        ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(encryption_cipher);
-    }
-
-#ifdef TC_DEBUG
-    switch (sa_service_type)
-    {
-    case SA_PLAINTEXT:
-        printf(KBLU "Processing a TC - CLEAR!\n" RESET);
-        break;
-    case SA_AUTHENTICATION:
-        printf(KBLU "Processing a TC - AUTHENTICATED!\n" RESET);
-        break;
-    case SA_ENCRYPTION:
-        printf(KBLU "Processing a TC - ENCRYPTED!\n" RESET);
-        break;
-    case SA_AUTHENTICATED_ENCRYPTION:
-        printf(KBLU "Processing a TC - AUTHENTICATED ENCRYPTION!\n" RESET);
-        break;
-    }
-#endif
-
-    // TODO: Calculate lengths when needed
-    uint8_t fecf_len = FECF_SIZE;
-    if (current_managed_parameters->has_fecf == TC_NO_FECF)
-    {
-        fecf_len = 0;
-    }
-
-    uint8_t segment_hdr_len = SEGMENT_HDR_SIZE;
-    if (current_managed_parameters->has_segmentation_hdr == TC_NO_SEGMENT_HDRS)
-    {
-        segment_hdr_len = 0;
-    }
-
-    // Check FECF
-    if (current_managed_parameters->has_fecf == TC_HAS_FECF)
-    {
-        if (crypto_config->crypto_check_fecf == TC_CHECK_FECF_TRUE)
-        {
-            uint16_t received_fecf = (((ingest[tc_sdls_processed_frame->tc_header.fl - 1] << 8) & 0xFF00) |
-                                      (ingest[tc_sdls_processed_frame->tc_header.fl] & 0x00FF));
-            // Calculate our own
-            uint16_t calculated_fecf = Crypto_Calc_FECF(ingest, *len_ingest - 2);
-            // Compare
-            if (received_fecf != calculated_fecf)
-            {
-                status = CRYPTO_LIB_ERR_INVALID_FECF;
-                return status;
-            }
-        }
-    }
-
-    // Parse the security header
-    tc_sdls_processed_frame->tc_sec_header.spi =
-        (uint16_t)((uint8_t)ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len] |
-                   (uint8_t)ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + 1]);
-    // Get SA via SPI
-    status = sadb_routine->sadb_get_sa_from_spi(tc_sdls_processed_frame->tc_sec_header.spi, &sa_ptr);
-    if (status != CRYPTO_LIB_SUCCESS)
-    {
-        return status;
-    }
-    // Parse IV
-    memcpy((tc_sdls_processed_frame->tc_sec_header.iv), &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN]),
-           sa_ptr->shivf_len);
-    // Parse Sequence Number
-    memcpy((tc_sdls_processed_frame->tc_sec_header.sn) + (TC_SN_SIZE - sa_ptr->shsnf_len),
-           &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len]), sa_ptr->shsnf_len);
-    // Parse pad length
-    memcpy((tc_sdls_processed_frame->tc_sec_header.pad) + (TC_PAD_SIZE - sa_ptr->shplf_len),
-           &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len]),
-           sa_ptr->shplf_len);
-
-    if ((sa_service_type == SA_AUTHENTICATION) || (sa_service_type == SA_AUTHENTICATED_ENCRYPTION) ||
-        (sa_service_type == SA_ENCRYPTION))
-    {
-        gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_CBC_MAC);
-        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-            status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
-            return status;
-        }
-        gcry_error = gcry_cipher_setkey(tmp_hd, ek_ring[sa_ptr->ekid].value, KEY_SIZE);
-        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-            status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
-            return status;
-        }
-        gcry_error = gcry_cipher_setiv(tmp_hd, tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->shivf_len);
-        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-            status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
-            return status;
-        }
-    }
-
-    // Check MAC, if applicable
-    if ((sa_service_type == SA_AUTHENTICATION) || (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
-    {
-        uint16_t tc_mac_start_index = tc_sdls_processed_frame->tc_header.fl + 1 - fecf_len - sa_ptr->stmacf_len;
-        // Parse the received MAC
-        memcpy((tc_sdls_processed_frame->tc_sec_trailer.mac) + (MAC_SIZE - sa_ptr->stmacf_len),
-               &(ingest[tc_mac_start_index]), sa_ptr->stmacf_len);
-        if (crypto_config->ignore_anti_replay == TC_IGNORE_ANTI_REPLAY_FALSE)
-        {
-            // If sequence number field is greater than zero, use as arsn
-            if (sa_ptr->shsnf_len > 0)
-            {
-                // Check Sequence Number is in ARCW
-                status = Crypto_window(tc_sdls_processed_frame->tc_sec_header.sn, sa_ptr->arc, sa_ptr->shsnf_len,
-                                       sa_ptr->arcw);
-                if (status != CRYPTO_LIB_SUCCESS)
-                {
-                    return status;
-                }
-                // TODO: Update SA ARC through SADB_Routine function call
-            }
-            else
-            {
-                // Check IV is in ARCW
-                status = Crypto_window(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len,
-                                       sa_ptr->arcw);
-#ifdef DEBUG
-                printf("Received IV is\n\t");
-                for (int i = 0; i < sa_ptr->shivf_len; i++)
-                // for(int i=0; i<IV_SIZE; i++)
-                {
-                    printf("%02x", *(tc_sdls_processed_frame->tc_sec_header.iv + i));
-                }
-                printf("\nSA IV is\n\t");
-                for (int i = 0; i < sa_ptr->shivf_len; i++)
-                {
-                    printf("%02x", *(sa_ptr->iv + i));
-                }
-                printf("\nARCW is: %d\n", sa_ptr->arcw);
-#endif
-                if (status != CRYPTO_LIB_SUCCESS)
-                {
-                    return status;
-                }
-                // TODO: Update SA IV through SADB_Routine function call
-            }
-        }
-
-        uint16_t aad_len = tc_mac_start_index;
-        if ((sa_service_type == SA_AUTHENTICATED_ENCRYPTION) && (ecs_is_aead_algorithm == CRYPTO_TRUE))
-        {
-            aad_len = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len +
-                      sa_ptr->shplf_len;
-        }
-        aad = Crypto_Prepare_TC_AAD(ingest, aad_len, sa_ptr->abm);
-
-        gcry_error = gcry_cipher_authenticate(tmp_hd,
-                                              aad,    // additional authenticated data
-                                              aad_len // length of AAD
-        );
-        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            printf(KRED "ERROR: gcry_cipher_authenticate error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-            printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
-            status = CRYPTO_LIB_ERR_AUTHENTICATION_ERROR;
-            return status;
-        }
-    }
-
-    // Decrypt, if applicable
-    if ((sa_service_type == SA_ENCRYPTION) || (sa_service_type == SA_AUTHENTICATED_ENCRYPTION) ||
-        (sa_service_type == SA_AUTHENTICATION))
-    {
-        uint16_t tc_enc_payload_start_index = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len +
-                                              sa_ptr->shsnf_len + sa_ptr->shplf_len;
-        tc_sdls_processed_frame->tc_pdu_len =
-            tc_sdls_processed_frame->tc_header.fl + 1 - tc_enc_payload_start_index - sa_ptr->stmacf_len - fecf_len;
-
-        if (sa_service_type == SA_AUTHENTICATION)
-        { // Authenticate only! No input data passed into decryption function, only AAD.
-            gcry_error = gcry_cipher_decrypt(tmp_hd,
-                                             NULL, // plaintext output
-                                             0,    // length of data
-                                             NULL, // ciphertext input
-                                             0     // in data length
-            );
-            // If authentication only, don't decrypt the data. Just pass the data PDU through.
-            memcpy(tc_sdls_processed_frame->tc_pdu, &(ingest[tc_enc_payload_start_index]),
-                   tc_sdls_processed_frame->tc_pdu_len);
-        }
-        else
-        { // Decrypt
-            gcry_error = gcry_cipher_decrypt(tmp_hd,
-                                             tc_sdls_processed_frame->tc_pdu,       // plaintext output
-                                             tc_sdls_processed_frame->tc_pdu_len,   // length of data
-                                             &(ingest[tc_enc_payload_start_index]), // ciphertext input
-                                             tc_sdls_processed_frame->tc_pdu_len    // in data length
-            );
-        }
-        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            printf(KRED "ERROR: gcry_cipher_decrypt error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-            status = CRYPTO_LIB_ERR_DECRYPT_ERROR;
-            return status;
-        }
-
-        if ((sa_service_type == SA_AUTHENTICATED_ENCRYPTION) || (sa_service_type == SA_AUTHENTICATION))
-        {
-
-            gcry_error = gcry_cipher_checktag(tmp_hd,
-                                              tc_sdls_processed_frame->tc_sec_trailer.mac, // Frame Expected Tag
-                                              sa_ptr->stmacf_len                           // tag size
-            );
-            if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-            {
-                printf(KRED "ERROR: gcry_cipher_checktag error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-                fprintf(stderr, "gcry_cipher_decrypt failed: %s\n", gpg_strerror(gcry_error));
-                status = CRYPTO_LIB_ERR_MAC_VALIDATION_ERROR;
-                return status;
-            }
-        }
-    }
-
-    if (sa_service_type != SA_PLAINTEXT)
-    {
-        gcry_cipher_close(tmp_hd);
-    }
-
-    if (sa_service_type == SA_PLAINTEXT)
-    {
-        // TODO: Plaintext ARSN
-
-        uint16_t tc_enc_payload_start_index = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len +
-                                              sa_ptr->shsnf_len + sa_ptr->shplf_len;
-        tc_sdls_processed_frame->tc_pdu_len =
-            tc_sdls_processed_frame->tc_header.fl + 1 - tc_enc_payload_start_index - sa_ptr->stmacf_len - fecf_len;
-        memcpy(tc_sdls_processed_frame->tc_pdu, &(ingest[tc_enc_payload_start_index]),
-               tc_sdls_processed_frame->tc_pdu_len);
-    }
-
-    // Extended PDU processing, if applicable
-    if (crypto_config->process_sdls_pdus == TC_PROCESS_SDLS_PDUS_TRUE)
-    {
-        status = Crypto_Process_Extended_Procedure_Pdu(tc_sdls_processed_frame, ingest);
-    }
-
-    return status;
-}
-
-/**
  * @brief Function: Crypto_Process_Extended_Procedure_Pdu
  * @param tc_sdls_processed_frame: TC_t*
  * @param ingest: uint8_t*
  * @note TODO - Actually update based on variable config
  * */
-static int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uint8_t *ingest)
+int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uint8_t *ingest)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     if (crypto_config->has_pus_hdr == TC_HAS_PUS_HDR)
@@ -3702,436 +1989,3 @@ static int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_fra
 
     return status;
 } // End Process SDLS PDU
-
-/**
- * @brief Function: Crypto_TM_ApplySecurity
- * @param ingest: uint8_t*
- * @param len_ingest: int*
- * @return int32: Success/Failure
- **/
-int32_t Crypto_TM_ApplySecurity(uint8_t *ingest, int *len_ingest)
-// Accepts CCSDS message in ingest, and packs into TM before encryption
-{
-    int32_t status = CRYPTO_LIB_SUCCESS;
-    int count = 0;
-    int pdu_loc = 0;
-    int pdu_len = *len_ingest - TM_MIN_SIZE;
-    int pad_len = 0;
-    int mac_loc = 0;
-    int fecf_loc = 0;
-    uint8_t tempTM[TM_SIZE];
-    int x = 0;
-    int y = 0;
-    uint8_t aad[20];
-    uint16_t spi = tm_frame.tm_sec_header.spi;
-    uint16_t spp_crc = 0x0000;
-    SecurityAssociation_t sa;
-    SecurityAssociation_t *sa_ptr = &sa;
-
-    gcry_cipher_hd_t tmp_hd;
-    gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
-    memset(&tempTM, 0, TM_SIZE);
-
-#ifdef DEBUG
-    printf(KYEL "\n----- Crypto_TM_ApplySecurity START -----\n" RESET);
-#endif
-
-    // Check for idle frame trigger
-    if (((uint8_t)ingest[0] == 0x08) && ((uint8_t)ingest[1] == 0x90))
-    { // Zero ingest
-        for (x = 0; x < *len_ingest; x++)
-        {
-            ingest[x] = 0;
-        }
-        // Update TM First Header Pointer
-        tm_frame.tm_header.fhp = 0xFE;
-    }
-    else
-    { // Update the length of the ingest from the CCSDS header
-        *len_ingest = (ingest[4] << 8) | ingest[5];
-        ingest[5] = ingest[5] - 5;
-        // Remove outgoing secondary space packet header flag
-        ingest[0] = 0x00;
-        // Change sequence flags to 0xFFFF
-        ingest[2] = 0xFF;
-        ingest[3] = 0xFF;
-        // Add 2 bytes of CRC to space packet
-        spp_crc = Crypto_Calc_CRC16((uint8_t *)ingest, *len_ingest);
-        ingest[*len_ingest] = (spp_crc & 0xFF00) >> 8;
-        ingest[*len_ingest + 1] = (spp_crc & 0x00FF);
-        *len_ingest = *len_ingest + 2;
-        // Update TM First Header Pointer
-        tm_frame.tm_header.fhp = tm_offset;
-#ifdef TM_DEBUG
-        printf("tm_offset = %d \n", tm_offset);
-#endif
-    }
-
-    // Update Current Telemetry Frame in Memory
-    // Counters
-    tm_frame.tm_header.mcfc++;
-    tm_frame.tm_header.vcfc++;
-    // Operational Control Field
-    Crypto_TM_updateOCF();
-    // Payload Data Unit
-    Crypto_TM_updatePDU(ingest, *len_ingest);
-
-    if (sadb_routine->sadb_get_sa_from_spi(spi, &sa_ptr) != CRYPTO_LIB_SUCCESS)
-    {
-        // TODO - Error handling
-        return CRYPTO_LIB_ERROR; // Error -- unable to get SA from SPI.
-    }
-
-    // Check test flags
-    if (badSPI == 1)
-    {
-        tm_frame.tm_sec_header.spi++;
-    }
-    if (badIV == 1)
-    {
-        *(sa_ptr->iv + sa_ptr->shivf_len - 1) = *(sa_ptr->iv + sa_ptr->shivf_len - 1) + 1;
-    }
-    if (badMAC == 1)
-    {
-        tm_frame.tm_sec_trailer.mac[MAC_SIZE - 1]++;
-    }
-
-    // Initialize the temporary TM frame
-    // Header
-    tempTM[count++] = (uint8_t)((tm_frame.tm_header.tfvn << 6) | ((tm_frame.tm_header.scid & 0x3F0) >> 4));
-    tempTM[count++] = (uint8_t)(((tm_frame.tm_header.scid & 0x00F) << 4) | (tm_frame.tm_header.vcid << 1) |
-                                (tm_frame.tm_header.ocff));
-    tempTM[count++] = (uint8_t)(tm_frame.tm_header.mcfc);
-    tempTM[count++] = (uint8_t)(tm_frame.tm_header.vcfc);
-    tempTM[count++] =
-        (uint8_t)((tm_frame.tm_header.tfsh << 7) | (tm_frame.tm_header.sf << 6) | (tm_frame.tm_header.pof << 5) |
-                  (tm_frame.tm_header.slid << 3) | ((tm_frame.tm_header.fhp & 0x700) >> 8));
-    tempTM[count++] = (uint8_t)(tm_frame.tm_header.fhp & 0x0FF);
-    //	tempTM[count++] = (uint8_t) ((tm_frame.tm_header.tfshvn << 6) | tm_frame.tm_header.tfshlen);
-    // Security Header
-    tempTM[count++] = (uint8_t)((spi & 0xFF00) >> 8);
-    tempTM[count++] = (uint8_t)((spi & 0x00FF));
-    memcpy(tm_frame.tm_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len);
-
-    // Padding Length
-    pad_len = Crypto_Get_tmLength(*len_ingest) - TM_MIN_SIZE + IV_SIZE + TM_PAD_SIZE - *len_ingest;
-
-    // Only add IV for authenticated encryption
-    if ((sa_ptr->est == 1) && (sa_ptr->ast == 1))
-    { // Initialization Vector
-#ifdef INCREMENT
-        Crypto_increment(sa_ptr->iv, sa_ptr->shivf_len);
-#endif
-        if ((sa_ptr->est == 1) || (sa_ptr->ast == 1))
-        {
-            for (x = 0; x < IV_SIZE; x++)
-            {
-                tempTM[count++] = *(sa_ptr->iv + x);
-            }
-        }
-        pdu_loc = count;
-        pad_len = pad_len - IV_SIZE - TM_PAD_SIZE + OCF_SIZE;
-        pdu_len = *len_ingest + pad_len;
-    }
-    else
-    {                           // Include padding length bytes - hard coded per ESA testing
-        tempTM[count++] = 0x00; // pad_len >> 8;
-        tempTM[count++] = 0x1A; // pad_len
-        pdu_loc = count;
-        pdu_len = *len_ingest + pad_len;
-    }
-
-    // Payload Data Unit
-    for (x = 0; x < (pdu_len); x++)
-    {
-        tempTM[count++] = (uint8_t)tm_frame.tm_pdu[x];
-    }
-    // Message Authentication Code
-    mac_loc = count;
-    for (x = 0; x < MAC_SIZE; x++)
-    {
-        tempTM[count++] = 0x00;
-    }
-    // Operational Control Field
-    for (x = 0; x < OCF_SIZE; x++)
-    {
-        tempTM[count++] = (uint8_t)tm_frame.tm_sec_trailer.ocf[x];
-    }
-    // Frame Error Control Field
-    fecf_loc = count;
-    tm_frame.tm_sec_trailer.fecf = Crypto_Calc_FECF((uint8_t *)tempTM, count);
-    tempTM[count++] = (uint8_t)((tm_frame.tm_sec_trailer.fecf & 0xFF00) >> 8);
-    tempTM[count++] = (uint8_t)(tm_frame.tm_sec_trailer.fecf & 0x00FF);
-
-    // Determine Mode
-    // Clear
-    if ((sa_ptr->est == 0) && (sa_ptr->ast == 0))
-    {
-#ifdef DEBUG
-        printf(KBLU "Creating a TM - CLEAR! \n" RESET);
-#endif
-        // Copy temporary frame to ingest
-        memcpy(ingest, tempTM, count);
-    }
-    // Authenticated Encryption
-    else if ((sa_ptr->est == 1) && (sa_ptr->ast == 1))
-    {
-#ifdef DEBUG
-        printf(KBLU "Creating a TM - AUTHENTICATED ENCRYPTION! \n" RESET);
-#endif
-
-        // Copy TM to ingest
-        memcpy(ingest, tempTM, pdu_loc);
-
-#ifdef MAC_DEBUG
-        printf("AAD = 0x");
-#endif
-        // Prepare additional authenticated data
-        for (y = 0; y < sa_ptr->abm_len; y++)
-        {
-            aad[y] = ingest[y] & *(sa_ptr->abm + y);
-#ifdef MAC_DEBUG
-            printf("%02x", aad[y]);
-#endif
-        }
-#ifdef MAC_DEBUG
-        printf("\n");
-#endif
-
-        gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_CBC_MAC);
-        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-            status = CRYPTO_LIB_ERROR;
-            return status;
-        }
-        gcry_error = gcry_cipher_setkey(tmp_hd, &(ek_ring[sa_ptr->ekid].value[0]), KEY_SIZE);
-        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-            status = CRYPTO_LIB_ERROR;
-            return status;
-        }
-        gcry_error = gcry_cipher_setiv(tmp_hd, sa_ptr->iv, sa_ptr->shivf_len);
-        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-            status = CRYPTO_LIB_ERROR;
-            return status;
-        }
-        gcry_error = gcry_cipher_encrypt(tmp_hd,
-                                         &(ingest[pdu_loc]), // ciphertext output
-                                         pdu_len,            // length of data
-                                         &(tempTM[pdu_loc]), // plaintext input
-                                         pdu_len             // in data length
-        );
-        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            printf(KRED "ERROR: gcry_cipher_decrypt error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-            status = CRYPTO_LIB_ERROR;
-            return status;
-        }
-        gcry_error = gcry_cipher_authenticate(tmp_hd,
-                                              &(aad[0]),      // additional authenticated data
-                                              sa_ptr->abm_len // length of AAD
-        );
-        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            printf(KRED "ERROR: gcry_cipher_authenticate error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-            status = CRYPTO_LIB_ERROR;
-            return status;
-        }
-        gcry_error = gcry_cipher_gettag(tmp_hd,
-                                        &(ingest[mac_loc]), // tag output
-                                        MAC_SIZE            // tag size
-        );
-        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            printf(KRED "ERROR: gcry_cipher_checktag error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-            status = CRYPTO_LIB_ERROR;
-            return status;
-        }
-
-#ifdef MAC_DEBUG
-        printf("MAC = 0x");
-        for (x = 0; x < MAC_SIZE; x++)
-        {
-            printf("%02x", (uint8_t)ingest[x + mac_loc]);
-        }
-        printf("\n");
-#endif
-
-        // Update OCF
-        y = 0;
-        for (x = OCF_SIZE; x > 0; x--)
-        {
-            ingest[fecf_loc - x] = tm_frame.tm_sec_trailer.ocf[y++];
-        }
-
-        // Update FECF
-        tm_frame.tm_sec_trailer.fecf = Crypto_Calc_FECF((uint8_t *)ingest, fecf_loc - 1);
-        ingest[fecf_loc] = (uint8_t)((tm_frame.tm_sec_trailer.fecf & 0xFF00) >> 8);
-        ingest[fecf_loc + 1] = (uint8_t)(tm_frame.tm_sec_trailer.fecf & 0x00FF);
-    }
-    // Authentication
-    else if ((sa_ptr->est == 0) && (sa_ptr->ast == 1))
-    {
-#ifdef DEBUG
-        printf(KBLU "Creating a TM - AUTHENTICATED! \n" RESET);
-#endif
-        // TODO: Future work. Operationally same as clear.
-        memcpy(ingest, tempTM, count);
-    }
-    // Encryption
-    else if ((sa_ptr->est == 1) && (sa_ptr->ast == 0))
-    {
-#ifdef DEBUG
-        printf(KBLU "Creating a TM - ENCRYPTED! \n" RESET);
-#endif
-        // TODO: Future work. Operationally same as clear.
-        memcpy(ingest, tempTM, count);
-    }
-
-#ifdef TM_DEBUG
-    Crypto_tmPrint(&tm_frame);
-#endif
-
-#ifdef DEBUG
-    printf(KYEL "----- Crypto_TM_ApplySecurity END -----\n" RESET);
-#endif
-
-    *len_ingest = count;
-    return status;
-}
-
-/**
- * @brief Function: Crypto_TM_ProcessSecurity
- * @param ingest: uint8_t*
- * @param len_ingest: int*
- * @return int32: Success/Failure
- **/
-int32_t Crypto_TM_ProcessSecurity(uint8_t *ingest, int *len_ingest)
-{
-    // Local Variables
-    int32_t status = CRYPTO_LIB_SUCCESS;
-
-#ifdef DEBUG
-    printf(KYEL "\n----- Crypto_TM_ProcessSecurity START -----\n" RESET);
-#endif
-
-    // TODO: This whole function!
-    len_ingest = len_ingest;
-    ingest[0] = ingest[0];
-
-#ifdef DEBUG
-    printf(KYEL "----- Crypto_TM_ProcessSecurity END -----\n" RESET);
-#endif
-
-    return status;
-}
-
-/**
- * @brief Function: Crypto_AOS_ApplySecurity
- * @param ingest: uint8_t*
- * @param len_ingest: int*
- * @return int32: Success/Failure
- **/
-int32_t Crypto_AOS_ApplySecurity(uint8_t *ingest, int *len_ingest)
-{
-    // Local Variables
-    int32_t status = CRYPTO_LIB_SUCCESS;
-
-#ifdef DEBUG
-    printf(KYEL "\n----- Crypto_AOS_ApplySecurity START -----\n" RESET);
-#endif
-
-    // TODO: This whole function!
-    len_ingest = len_ingest;
-    ingest[0] = ingest[0];
-
-#ifdef DEBUG
-    printf(KYEL "----- Crypto_AOS_ApplySecurity END -----\n" RESET);
-#endif
-
-    return status;
-}
-
-/**
- * @brief Function: Crypto_AOS_ProcessSecurity
- * @param ingest: uint8_t*
- * @param len_ingest: int*
- * @return int32: Success/Failure
- **/
-int32_t Crypto_AOS_ProcessSecurity(uint8_t *ingest, int *len_ingest)
-{
-    // Local Variables
-    int32_t status = CRYPTO_LIB_SUCCESS;
-
-#ifdef DEBUG
-    printf(KYEL "\n----- Crypto_AOS_ProcessSecurity START -----\n" RESET);
-#endif
-
-    // TODO: This whole function!
-    len_ingest = len_ingest;
-    ingest[0] = ingest[0];
-
-#ifdef DEBUG
-    printf(KYEL "----- Crypto_AOS_ProcessSecurity END -----\n" RESET);
-#endif
-
-    return status;
-}
-
-/**
- * @brief Function: Crypto_ApplySecurity
- * @param ingest: uint8_t*
- * @param len_ingest: int*
- * @return int32: Success/Failure
- **/
-int32_t Crypto_ApplySecurity(uint8_t *ingest, int *len_ingest)
-{
-    // Local Variables
-    int32_t status = CRYPTO_LIB_SUCCESS;
-
-#ifdef DEBUG
-    printf(KYEL "\n----- Crypto_ApplySecurity START -----\n" RESET);
-#endif
-
-    // TODO: This whole function!
-    len_ingest = len_ingest;
-    ingest[0] = ingest[0];
-
-#ifdef DEBUG
-    printf(KYEL "----- Crypto_ApplySecurity END -----\n" RESET);
-#endif
-
-    return status;
-}
-
-/**
- * @brief Function: Crypto_ProcessSecurity
- * @param ingest: uint8_t*
- * @param len_ingest: int*
- * @return int32: Success/Failure
- **/
-int32_t Crypto_ProcessSecurity(uint8_t *ingest, int *len_ingest)
-{
-    // Local Variables
-    int32_t status = CRYPTO_LIB_SUCCESS;
-
-#ifdef DEBUG
-    printf(KYEL "\n----- Crypto_ProcessSecurity START -----\n" RESET);
-#endif
-
-    // TODO: This whole function!
-    len_ingest = len_ingest;
-    ingest[0] = ingest[0];
-
-#ifdef DEBUG
-    printf(KYEL "----- Crypto_ProcessSecurity END -----\n" RESET);
-#endif
-
-    return status;
-}
-
-#endif
