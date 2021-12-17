@@ -14,9 +14,9 @@
 #   NASA IV&V
 #   jstar-development-team@mail.nasa.gov
 
-include_directories(public_inc)
+include_directories(../include)
 
-aux_source_directory(src LIB_SRC_FILES)
+aux_source_directory(src_main LIB_SRC_FILES)
 if(MYSQL)
     aux_source_directory(src_mysql LIB_SRC_MYSQL_FILES)
     list(APPEND LIB_SRC_FILES ${LIB_SRC_MYSQL_FILES})

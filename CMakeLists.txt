@@ -39,7 +39,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     enable_testing()
 endif()
 
-include_directories(fsw/public_inc)
+include_directories(include)
 
 # The shared OSAL and cFE include directories should always be used
 # Note that this intentionally does NOT include PSP-specific includes, just the generic
@@ -56,4 +56,4 @@ if(NOT DEFINED ${PROJECT_BINARY_DIR})
     set(PROJECT_BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build)
 endif()
 
-add_subdirectory(fsw)
+add_subdirectory(src)
