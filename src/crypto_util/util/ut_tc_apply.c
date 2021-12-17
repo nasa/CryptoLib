@@ -33,9 +33,8 @@
 UTEST(TC_APPLY_SECURITY, NO_CRYPTO_INIT)
 {
     // No Crypto_Init(), but we still Configure It;
-    long buffer_size = 0;
-    uint8_t *raw_tc_sdls_ping_h = "20030015001880d2c70008197f0b00310000b1fe3128";
-    uint8_t *raw_tc_sdls_ping_b = NULL;
+    char *raw_tc_sdls_ping_h = "20030015001880d2c70008197f0b00310000b1fe3128";
+    char *raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
@@ -46,7 +45,7 @@ UTEST(TC_APPLY_SECURITY, NO_CRYPTO_INIT)
     uint16_t enc_frame_len = 0;
     int32_t return_val = CRYPTO_LIB_ERROR;
 
-    return_val = Crypto_TC_ApplySecurity(raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    return_val = Crypto_TC_ApplySecurity((uint8_t*) raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(CRYPTO_LIB_ERR_NO_INIT, return_val);
     free(raw_tc_sdls_ping_b);
     Crypto_Shutdown();
@@ -60,8 +59,8 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_CLEAR)
 {
     //Setup & Initialize CryptoLib
     Crypto_Init_Unit_Test();
-    uint8_t *raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
-    uint8_t *raw_tc_sdls_ping_b = NULL;
+    char *raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
+    char *raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
@@ -71,7 +70,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_CLEAR)
 
     int32_t return_val = CRYPTO_LIB_ERROR;
 
-    return_val = Crypto_TC_ApplySecurity(raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    return_val = Crypto_TC_ApplySecurity((uint8_t*) raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
     Crypto_Shutdown();
     free(raw_tc_sdls_ping_b);
     free(ptr_enc_frame);
@@ -85,8 +84,8 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC)
 {
     //Setup & Initialize CryptoLib
     Crypto_Init_Unit_Test();
-    uint8_t *raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
-    uint8_t *raw_tc_sdls_ping_b = NULL;
+    char *raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
+    char *raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
 
@@ -105,7 +104,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC)
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ast=0;
 
-    return_val = Crypto_TC_ApplySecurity(raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    return_val = Crypto_TC_ApplySecurity((uint8_t*) raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
     Crypto_Shutdown();
     free(raw_tc_sdls_ping_b);
     free(ptr_enc_frame);
@@ -119,8 +118,8 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_AUTH_ENC)
 {
     //Setup & Initialize CryptoLib
     Crypto_Init_Unit_Test();
-    uint8_t *raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
-    uint8_t *raw_tc_sdls_ping_b = NULL;
+    char *raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
+    char *raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
 
@@ -138,7 +137,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_AUTH_ENC)
     sadb_routine->sadb_get_sa_from_spi(4,&test_association);
     test_association->sa_state = SA_OPERATIONAL;
 
-    return_val = Crypto_TC_ApplySecurity(raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    return_val = Crypto_TC_ApplySecurity((uint8_t*) raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
     Crypto_Shutdown();
     free(raw_tc_sdls_ping_b);
     free(ptr_enc_frame);
@@ -154,8 +153,8 @@ UTEST(TC_APPLY_SECURITY, BAD_SPACE_CRAFT_ID)
 {
     //Setup & Initialize CryptoLib
     Crypto_Init_Unit_Test();
-    uint8_t *raw_tc_sdls_ping_bad_scid_h = "20010015000080d2c70008197f0b00310000b1fe3128";
-    uint8_t *raw_tc_sdls_ping_bad_scid_b = NULL;
+    char *raw_tc_sdls_ping_bad_scid_h = "20010015000080d2c70008197f0b00310000b1fe3128";
+    char *raw_tc_sdls_ping_bad_scid_b = NULL;
     int raw_tc_sdls_ping_bad_scid_len = 0;
 
     hex_conversion(raw_tc_sdls_ping_bad_scid_h, &raw_tc_sdls_ping_bad_scid_b, &raw_tc_sdls_ping_bad_scid_len);
@@ -163,7 +162,7 @@ UTEST(TC_APPLY_SECURITY, BAD_SPACE_CRAFT_ID)
     uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;    
 
-    uint32_t return_val = Crypto_TC_ApplySecurity(raw_tc_sdls_ping_bad_scid_b, raw_tc_sdls_ping_bad_scid_len, &ptr_enc_frame, &enc_frame_len);
+    int32_t return_val = Crypto_TC_ApplySecurity((uint8_t*) raw_tc_sdls_ping_bad_scid_b, raw_tc_sdls_ping_bad_scid_len, &ptr_enc_frame, &enc_frame_len);
     free(raw_tc_sdls_ping_bad_scid_b);
     free(ptr_enc_frame);
     Crypto_Shutdown();
@@ -178,8 +177,8 @@ UTEST(TC_APPLY_SECURITY, BAD_VIRTUAL_CHANNEL_ID)
 {
     //Setup & Initialize CryptoLib
     Crypto_Init_Unit_Test();
-    uint8_t *raw_tc_sdls_ping_bad_vcid_h = "20032015000080d2c70008197f0b00310000b1fe3128";
-    uint8_t *raw_tc_sdls_ping_bad_vcid_b = NULL;
+    char *raw_tc_sdls_ping_bad_vcid_h = "20032015000080d2c70008197f0b00310000b1fe3128";
+    char *raw_tc_sdls_ping_bad_vcid_b = NULL;
     int raw_tc_sdls_ping_bad_vcid_len = 0;
 
     hex_conversion(raw_tc_sdls_ping_bad_vcid_h, &raw_tc_sdls_ping_bad_vcid_b, &raw_tc_sdls_ping_bad_vcid_len);
@@ -188,7 +187,7 @@ UTEST(TC_APPLY_SECURITY, BAD_VIRTUAL_CHANNEL_ID)
     uint16_t enc_frame_len = 0;
     int32_t return_val = CRYPTO_LIB_ERROR;
 
-    return_val = Crypto_TC_ApplySecurity(raw_tc_sdls_ping_bad_vcid_b, raw_tc_sdls_ping_bad_vcid_len, &ptr_enc_frame, &enc_frame_len);
+    return_val = Crypto_TC_ApplySecurity((uint8_t*) raw_tc_sdls_ping_bad_vcid_b, raw_tc_sdls_ping_bad_vcid_len, &ptr_enc_frame, &enc_frame_len);
     free(raw_tc_sdls_ping_bad_vcid_b);
     free(ptr_enc_frame);
     Crypto_Shutdown();

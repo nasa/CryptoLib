@@ -46,7 +46,7 @@ static SadbRoutine sadb_routine = NULL;
 ** Static Prototypes
 */
 // Assisting Functions
-static int32_t  Crypto_Get_tcPayloadLength(TC_t* tc_frame, SecurityAssociation_t *sa_ptr);
+//static int32_t  Crypto_Get_tcPayloadLength(TC_t* tc_frame, SecurityAssociation_t *sa_ptr);
 static int32_t  Crypto_Get_tmLength(int len);
 static uint8_t  Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id);
 static uint8_t* Crypto_Prepare_TC_AAD(uint8_t* buffer, uint16_t len_aad, uint8_t* abm_buffer);
@@ -56,8 +56,8 @@ static void   Crypto_Local_Config(void);
 static void   Crypto_Local_Init(void);
 //static int32_t  Crypto_gcm_err(int gcm_err);
 static int32_t Crypto_window(uint8_t *actual, uint8_t *expected, int length, int window);
-static int32_t Crypto_compare_less_equal(uint8_t *actual, uint8_t *expected, int length);
-static int32_t  Crypto_FECF(int fecf, uint8_t* ingest, int len_ingest,TC_t* tc_frame);
+//static int32_t Crypto_compare_less_equal(uint8_t *actual, uint8_t *expected, int length);
+//static int32_t  Crypto_FECF(int fecf, uint8_t* ingest, int len_ingest,TC_t* tc_frame);
 static uint16_t Crypto_Calc_FECF(uint8_t* ingest, int len_ingest);
 static void   Crypto_Calc_CRC_Init_Table(void);
 static uint16_t Crypto_Calc_CRC16(uint8_t* data, int size);
@@ -919,6 +919,7 @@ static void Crypto_Calc_CRC_Init_Table(void)
  * @param sa_ptr: SecurityAssociation_t
  * @return int32, Length of TCPayload
  **/
+/*
 static int32_t Crypto_Get_tcPayloadLength(TC_t* tc_frame, SecurityAssociation_t *sa_ptr)
 {
     int tf_hdr = 5;
@@ -942,6 +943,7 @@ static int32_t Crypto_Get_tcPayloadLength(TC_t* tc_frame, SecurityAssociation_t 
 
     return (tc_frame->tc_header.fl + 1 - (tf_hdr + seg_hdr + spi + iv_size ) - (mac_size + fecf) );
 }
+*/
 
 /**
  * @brief Function: Crypto_Get_tmLength
@@ -969,6 +971,8 @@ static uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
 {
     //CryptoLib only supports AES-GCM, which is an AEAD (Authenticated Encryption with Associated Data) algorithm, so return true/1.
     //TODO - Add cipher suite mapping to which algorithms are AEAD and which are not.
+    cipher_suite_id = cipher_suite_id;
+
     return CRYPTO_TRUE;
 }
 
@@ -1251,6 +1255,7 @@ static int32_t Crypto_window(uint8_t *actual, uint8_t *expected, int length, int
  * @param length: int
  * @return int32: Success/Failure
  **/
+/*
 static int32_t Crypto_compare_less_equal(uint8_t *actual, uint8_t *expected, int length)
 {
     int status = CRYPTO_LIB_ERROR;
@@ -1270,6 +1275,7 @@ static int32_t Crypto_compare_less_equal(uint8_t *actual, uint8_t *expected, int
     }
     return status;
 }
+*/
 
 /**
  * @brief Function: Crypto_Prep_Reply
@@ -1321,6 +1327,7 @@ uint8_t Crypto_Prep_Reply(uint8_t* ingest, uint8_t appID)
  * @param tc_frame: TC_t*
  * @return int32: Success/Failure
  **/
+/*
 static int32_t Crypto_FECF(int fecf, uint8_t* ingest, int len_ingest,TC_t* tc_frame)
 {
     int32_t result = CRYPTO_LIB_SUCCESS;
@@ -1355,6 +1362,7 @@ static int32_t Crypto_FECF(int fecf, uint8_t* ingest, int len_ingest,TC_t* tc_fr
 
     return result;
 }
+*/
 
 /**
  * @brief Function Crypto_Calc_FECF
@@ -1867,7 +1875,6 @@ static int32_t Crypto_Key_verify(uint8_t* ingest,TC_t* tc_frame)
     return count;
 }
 
-/*
 
 /*
 ** Security Association Monitoring and Control
@@ -2750,24 +2757,31 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
                 // Ingest length + spi_index (2) + some variable length fields
                 *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shplf_len;
                 new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
+                break;
             case SA_AUTHENTICATION:
-                // Ingest length + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
+                // Ingest length + spi_index (2) + shivf_len (varies) + shsnf_len (varies)
                 //   + shplf_len + arc_len + pad_size + stmacf_len
                 *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + \
                 sa_ptr->shplf_len + sa_ptr->arc_len + TC_PAD_SIZE + sa_ptr->stmacf_len;
                 new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
+                break;
             case SA_ENCRYPTION:
-                // Ingest length + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
+                // Ingest length + spi_index (2) + shivf_len (varies) + shsnf_len (varies)
                 //   + shplf_len + arc_len + pad_size
                 *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + \
                 sa_ptr->shplf_len + sa_ptr->arc_len + TC_PAD_SIZE;
                 new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
+                break;
             case SA_AUTHENTICATED_ENCRYPTION:
-                // Ingest length + spi_index (2) + shivf_len (varies) + shsnf_len (varies) \
+                // Ingest length + spi_index (2) + shivf_len (varies) + shsnf_len (varies)
                 //   + shplf_len + arc_len + pad_size + stmacf_len
                 *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + \
                 sa_ptr->shplf_len + sa_ptr->arc_len + TC_PAD_SIZE + sa_ptr->stmacf_len;
                 new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
+                break;
+            default:
+                printf(KRED "Unknown SA Service Type Detected!" RESET);
+                break;
         }
 
         #ifdef TC_DEBUG
@@ -3209,8 +3223,6 @@ int32_t Crypto_TC_ProcessSecurity( uint8_t* ingest, int* len_ingest,TC_t* tc_sdl
 {
     // Local Variables
     int32_t status = CRYPTO_LIB_SUCCESS;
-    int x = 0;
-    int y = 0;
     gcry_cipher_hd_t tmp_hd;
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     SecurityAssociation_t* sa_ptr = NULL;
@@ -3652,8 +3664,8 @@ int32_t Crypto_TM_ApplySecurity( uint8_t* ingest, int* len_ingest)
     uint8_t aad[20];
     uint16_t spi = tm_frame.tm_sec_header.spi;
     uint16_t spp_crc = 0x0000;
-    SecurityAssociation_t* sa_ptr;
     SecurityAssociation_t sa;
+    SecurityAssociation_t* sa_ptr = &sa;
 
     gcry_cipher_hd_t tmp_hd;
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;

@@ -22,11 +22,11 @@
 
 #include "crypto_sequence.h"
 
-int main(int argc, uint8_t *argv[]) {
-    uint8_t *buffer;
-    uint8_t const *filename;
+int main(int argc, char *argv[]) {
+    char *buffer;
+    const char *filename;
     long buffer_size;
-    uint8_t *security_type;
+    char *security_type;
 
     if (argc < 3 || argc % 2 == 0) {
         fprintf(stderr,"Command line usage: \n"\
@@ -60,19 +60,19 @@ int main(int argc, uint8_t *argv[]) {
 
         //Call Apply/ProcessSecurity on buffer contents depending on type.
         if (strcmp(security_type,"tc_a")==0){
-            Crypto_TC_ApplySecurity(buffer, buffer_size_i, &ptr_enc_frame, &enc_frame_len);}
+            Crypto_TC_ApplySecurity((const uint8_t*) buffer, (const uint16_t) buffer_size_i, &ptr_enc_frame, &enc_frame_len);}
         else if (strcmp(security_type,"tm_a")==0){
-            Crypto_TM_ApplySecurity(buffer, &buffer_size_i);
+            Crypto_TM_ApplySecurity((uint8_t*) buffer, (int*) &buffer_size_i);
         } else if (strcmp(security_type,"aos_a")==0){
-            Crypto_AOS_ApplySecurity(buffer, &buffer_size_i);
+            Crypto_AOS_ApplySecurity((uint8_t*) buffer, (int*) &buffer_size_i);
         } else if (strcmp(security_type,"tc_p")==0){
             TC_t* tc_sdls_processed_frame = malloc(sizeof(TC_t));
-            Crypto_TC_ProcessSecurity(buffer, &buffer_size_i,tc_sdls_processed_frame);
+            Crypto_TC_ProcessSecurity((uint8_t*) buffer, (int*) &buffer_size_i, tc_sdls_processed_frame);
             free(tc_sdls_processed_frame);
         } else if (strcmp(security_type,"tm_p")==0){
-            Crypto_TM_ProcessSecurity(buffer, &buffer_size_i);
+            Crypto_TM_ProcessSecurity((uint8_t*) buffer, (int*) &buffer_size_i);
         } else if (strcmp(security_type,"aos_p")==0){
-            Crypto_AOS_ProcessSecurity(buffer, &buffer_size_i);
+            Crypto_AOS_ProcessSecurity((uint8_t*) buffer, (int*) &buffer_size_i);
         }
         free(buffer);
     }

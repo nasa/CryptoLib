@@ -31,13 +31,13 @@ extern "C" {
 
 #include "crypto_error.h"
 
-uint8_t * c_read_file(const uint8_t * f_name, long * f_size);
+char * c_read_file(const char * f_name, long * f_size);
 
-void debug_printf(const uint8_t* format, ...);
-void debug_hexprintf(const uint8_t* bin_data,int size_bin_data);
+void debug_printf(const char* format, ...);
+void debug_hexprintf(const char* bin_data,int size_bin_data);
 
-void hex_conversion(uint8_t *buffer_h, uint8_t **buffer_b, int *buffer_b_length);
-int convert_hexstring_to_byte_array(uint8_t* source_str, uint8_t* dest_buffer);
+void hex_conversion(char *buffer_h, char **buffer_b, int *buffer_b_length);
+int convert_hexstring_to_byte_array(char* source_str, char* dest_buffer);
 
 #ifdef __cplusplus
 }  /* Close scope of 'extern "C"' declaration which encloses file. */

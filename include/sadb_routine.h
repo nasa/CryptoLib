@@ -50,6 +50,6 @@ typedef struct {
 
 SadbRoutine get_sadb_routine_mariadb(void);
 SadbRoutine get_sadb_routine_inmemory(void);
-SadbRoutine init_parse_sadb_routine(uint8_t *);
+//SadbRoutine init_parse_sadb_routine(uint8_t *);
 
 #endif //CRYPTOLIB_SADB_ROUTINE_H

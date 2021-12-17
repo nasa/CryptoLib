@@ -18,8 +18,10 @@
  * @param config: uint8_t*
  * @return SadbRoutine
  **/
+/*
 SadbRoutine init_parse_sadb_routine(uint8_t* config)
 {
     SadbRoutine sadb_routine;
     return sadb_routine;
 }
+*/

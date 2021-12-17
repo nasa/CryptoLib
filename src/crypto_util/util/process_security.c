@@ -22,11 +22,11 @@
 
 #include "process_security.h"
 
-int main(int argc, uint8_t *argv[]) {
-    uint8_t *buffer;
-    uint8_t const *filename;
+int main(int argc, char *argv[]) {
+    char *buffer;
+    const char *filename;
     long buffer_size;
-    uint8_t *security_type;
+    char *security_type;
 
     if (argc == 3) {
         security_type = argv[1];
@@ -53,12 +53,12 @@ int main(int argc, uint8_t *argv[]) {
     //Call ProcessSecurity on buffer contents depending on type.
     if (strcmp(security_type,"tc")==0){
         TC_t* tc_sdls_processed_frame = malloc(sizeof(TC_t));
-        Crypto_TC_ProcessSecurity(buffer, &buffer_size_i,tc_sdls_processed_frame);
+        Crypto_TC_ProcessSecurity((uint8_t*) buffer, &buffer_size_i,tc_sdls_processed_frame);
         free(tc_sdls_processed_frame);
     } else if (strcmp(security_type,"tm")==0){
-        Crypto_TM_ProcessSecurity(buffer, &buffer_size_i);
+        Crypto_TM_ProcessSecurity((uint8_t*) buffer, &buffer_size_i);
     } else if (strcmp(security_type,"aos")==0){
-        Crypto_AOS_ProcessSecurity(buffer, &buffer_size_i);
+        Crypto_AOS_ProcessSecurity((uint8_t*) buffer, &buffer_size_i);
     }
 
     free(buffer);
