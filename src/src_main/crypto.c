@@ -1221,7 +1221,7 @@ static int32 Crypto_window(uint8 *actual, uint8 *expected, int length, int windo
     int result = 0;
     uint8 temp[length];
 
-    CFE_PSP_MemCpy(temp, expected, length);
+    memcpy(temp, expected, length);
 
     for (int i = 0; i < window; i++)
     {   
@@ -2791,10 +2791,10 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
             status = OS_ERROR;
             return status;
         }
-        CFE_PSP_MemSet(p_new_enc_frame, 0, *p_enc_frame_len);
+        memset(p_new_enc_frame, 0, *p_enc_frame_len);
 
         // Copy original TF header
-        CFE_PSP_MemCpy(p_new_enc_frame, p_in_frame, TC_FRAME_PRIMARYHEADER_STRUCT_SIZE);
+        memcpy(p_new_enc_frame, p_in_frame, TC_FRAME_PRIMARYHEADER_STRUCT_SIZE);
 
         // Set new TF Header length
         // Recall: Length field is one minus total length per spec
@@ -2904,7 +2904,7 @@ int32 Crypto_TC_ApplySecurity(const uint8* p_in_frame, const uint16 in_frame_len
         tf_payload_len = temp_tc_header.fl - TC_FRAME_HEADER_SIZE - segment_hdr_len - fecf_len + 1;
         //if no FECF
         //tf_payload_len = temp_tc_header.fl - TC_FRAME_PRIMARYHEADER_STRUCT_SIZE;
-        CFE_PSP_MemCpy((p_new_enc_frame+index), (p_in_frame+TC_FRAME_PRIMARYHEADER_STRUCT_SIZE), tf_payload_len);
+        memcpy((p_new_enc_frame+index), (p_in_frame+TC_FRAME_PRIMARYHEADER_STRUCT_SIZE), tf_payload_len);
         //index += tf_payload_len;
 
         /*
@@ -3657,7 +3657,7 @@ int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
 
     gcry_cipher_hd_t tmp_hd;
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
-    CFE_PSP_MemSet(&tempTM, 0, TM_SIZE);
+    memset(&tempTM, 0, TM_SIZE);
     
     #ifdef DEBUG
         printf(KYEL "\n----- Crypto_TM_ApplySecurity START -----\n" RESET);
@@ -3735,7 +3735,7 @@ int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
         // Security Header
         tempTM[count++] = (uint8) ((spi & 0xFF00) >> 8);
         tempTM[count++] = (uint8) ((spi & 0x00FF));
-        CFE_PSP_MemCpy(tm_frame.tm_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len);
+        memcpy(tm_frame.tm_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len);
 
         // Padding Length
             pad_len = Crypto_Get_tmLength(*len_ingest) - TM_MIN_SIZE + IV_SIZE + TM_PAD_SIZE - *len_ingest;
@@ -3796,7 +3796,7 @@ int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
                 printf(KBLU "Creating a TM - CLEAR! \n" RESET);
             #endif
             // Copy temporary frame to ingest
-            CFE_PSP_MemCpy(ingest, tempTM, count);
+            memcpy(ingest, tempTM, count);
         }
         // Authenticated Encryption
         else if ((sa_ptr->est == 1) &&
@@ -3807,7 +3807,7 @@ int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
             #endif
 
             // Copy TM to ingest
-            CFE_PSP_MemCpy(ingest, tempTM, pdu_loc);
+            memcpy(ingest, tempTM, pdu_loc);
             
             #ifdef MAC_DEBUG
                 printf("AAD = 0x");
@@ -3923,7 +3923,7 @@ int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
                 printf(KBLU "Creating a TM - AUTHENTICATED! \n" RESET);
             #endif
             // TODO: Future work. Operationally same as clear.
-            CFE_PSP_MemCpy(ingest, tempTM, count);
+            memcpy(ingest, tempTM, count);
         }
         // Encryption
         else if ((sa_ptr->est == 1) &&
@@ -3933,7 +3933,7 @@ int32 Crypto_TM_ApplySecurity( char* ingest, int* len_ingest)
                 printf(KBLU "Creating a TM - ENCRYPTED! \n" RESET);
             #endif
             // TODO: Future work. Operationally same as clear.
-            CFE_PSP_MemCpy(ingest, tempTM, count);
+            memcpy(ingest, tempTM, count);
         }
 
     #ifdef TM_DEBUG
