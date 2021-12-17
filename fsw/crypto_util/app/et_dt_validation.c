@@ -61,7 +61,7 @@ int EndPython()
 void python_auth_encryption(char* data, char* key, char* iv, char* header, char* bitmask, uint8** expected, long* expected_length)
 {
     Py_Initialize();
-    PyRun_SimpleString("import sys\nsys.path.append('../../python')");
+    PyRun_SimpleString("import sys\nsys.path.append('../../test')");
 
     pName = PyUnicode_FromString("encryption_test");
     pModule = PyImport_Import(pName);
