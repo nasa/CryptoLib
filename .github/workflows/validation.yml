@@ -48,7 +48,7 @@ jobs:
     
     - name: Verify DIR
       working-directory: ${{github.workspace}}/build
-      run: ls ./coverage
+      run: pwd && ls ./coverage
 
     - name: Upload 
       uses: codecov/codecov-action@v1
