@@ -45,9 +45,10 @@ jobs:
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: make gcov
+      run: ls
+      run: ls ./coverage
     
-    - name: Upload 
-        needs: Code-Coverage
-        uses: codecov/codecov-action@v1
-        with:
-          files: ${{github.workspace}}/build/coverage/crypto_aos.c.gcov ${{github.workspace}}/build/coverage/crypto_config.c.gcov ${{github.workspace}}/build/coverage/crypto_mc.c.gcov ${{github.workspace}}/build/coverage/crypto_tc.c.gcov ${{github.workspace}}/build/coverage/crypto_user.c.gcov ${{github.workspace}}/build/coverage/crypto.c.gcov ${{github.workspace}}/build/coverage/crypto_key_mgmt.c.gcov ${{github.workspace}}/build/coverage/crypto_print.c.gcov ${{github.workspace}}/build/coverage/crypto_tm.c.gcov ${{github.workspace}}/build/coverage/sadb_routine_inmemory.template.c.gcov
+    # - name: Upload 
+    #   uses: codecov/codecov-action@v1
+    #   with:
+    #     files: ${{github.workspace}}/build/coverage/crypto_aos.c.gcov ${{github.workspace}}/build/coverage/crypto_config.c.gcov ${{github.workspace}}/build/coverage/crypto_mc.c.gcov ${{github.workspace}}/build/coverage/crypto_tc.c.gcov ${{github.workspace}}/build/coverage/crypto_user.c.gcov ${{github.workspace}}/build/coverage/crypto.c.gcov ${{github.workspace}}/build/coverage/crypto_key_mgmt.c.gcov ${{github.workspace}}/build/coverage/crypto_print.c.gcov ${{github.workspace}}/build/coverage/crypto_tm.c.gcov ${{github.workspace}}/build/coverage/sadb_routine_inmemory.template.c.gcov
