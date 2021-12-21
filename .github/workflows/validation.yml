@@ -48,6 +48,5 @@ jobs:
     
     - name: Upload 
       uses: codecov/codecov-action@v1
-      working-directory: ${{github.workspace}}/build/coverage
       with:
-        files: ./crypto_aos.c.gcov ./crypto_config.c.gcov ./crypto_mc.c.gcov ./crypto_tc.c.gcov ./crypto_user.c.gcov ./crypto.c.gcov ./crypto_key_mgmt.c.gcov ./crypto_print.c.gcov ./crypto_tm.c.gcov ./sadb_routine_inmemory.template.c.gcov
+        files: ${{github.workspace}}/build/coverage/crypto_aos.c.gcov ${{github.workspace}}/build/coverage/crypto_config.c.gcov ${{github.workspace}}/build/coverage/crypto_mc.c.gcov ${{github.workspace}}/build/coverage/crypto_tc.c.gcov ${{github.workspace}}/build/coverage/crypto_user.c.gcov ${{github.workspace}}/build/coverage/crypto.c.gcov ${{github.workspace}}/build/coverage/crypto_key_mgmt.c.gcov ${{github.workspace}}/build/coverage/crypto_print.c.gcov ${{github.workspace}}/build/coverage/crypto_tm.c.gcov ${{github.workspace}}/build/coverage/sadb_routine_inmemory.template.c.gcov
