@@ -1,6 +1,6 @@
 .idea
 vgcore*
-core
+**core
 *.so
 build
 venv
