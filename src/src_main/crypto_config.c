@@ -199,15 +199,15 @@ int32_t Crypto_Config_CryptoLib(uint8_t sadb_type, uint8_t crypto_create_fecf, u
 
 /**
  * @brief Function: Crypto_Config_MariaDB
- * @param mysql_username: uint8_t*
- * @param mysql_password: uint8_t*
- * @param mysql_hostname: uint8_t*
- * @param mysql_database: uint8_t*
+ * @param mysql_username: char*
+ * @param mysql_password: char*
+ * @param mysql_hostname: char*
+ * @param mysql_database: char*
  * @param mysql_port: uint16
  * @return int32: Success/Failure
  **/
-int32_t Crypto_Config_MariaDB(uint8_t *mysql_username, uint8_t *mysql_password, uint8_t *mysql_hostname,
-                              uint8_t *mysql_database, uint16_t mysql_port)
+int32_t Crypto_Config_MariaDB(char *mysql_username, char *mysql_password, char *mysql_hostname,
+                              char *mysql_database, uint16_t mysql_port)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     sadb_mariadb_config = (SadbMariaDBConfig_t *)calloc(1, SADB_MARIADB_CONFIG_SIZE);

@@ -15,22 +15,23 @@
 #include "crypto.h"
 
 // Security Association Initialization Functions
-int32_t sadb_config(void);
-int32_t sadb_init(void);
-int32_t sadb_close(void);
+static int32_t sadb_config(void);
+static int32_t sadb_init(void);
+static int32_t sadb_close(void);
 // Security Association Interaction Functions
-int32_t sadb_get_sa_from_spi(uint16_t, SecurityAssociation_t **);
-int32_t sadb_get_operational_sa_from_gvcid(uint8_t, uint16_t, uint16_t, uint8_t, SecurityAssociation_t **);
-int32_t sadb_save_sa(SecurityAssociation_t *sa);
+static int32_t sadb_get_sa_from_spi(uint16_t, SecurityAssociation_t **);
+static int32_t sadb_get_operational_sa_from_gvcid(uint8_t, uint16_t, uint16_t, uint8_t, SecurityAssociation_t **);
+static int32_t sadb_save_sa(SecurityAssociation_t *sa);
 // Security Association Utility Functions
-int32_t sadb_sa_start(TC_t *tc_frame);
-int32_t sadb_sa_expire(void);
-int32_t sadb_sa_rekey(void);
-int32_t sadb_sa_status(uint8_t *);
-int32_t sadb_sa_create(void);
-int32_t sadb_sa_setARSN(void);
-int32_t sadb_sa_setARSNW(void);
-int32_t sadb_sa_delete(void);
+static int32_t sadb_sa_stop(void);
+static int32_t sadb_sa_start(TC_t *tc_frame);
+static int32_t sadb_sa_expire(void);
+static int32_t sadb_sa_rekey(void);
+static int32_t sadb_sa_status(uint8_t *);
+static int32_t sadb_sa_create(void);
+static int32_t sadb_sa_setARSN(void);
+static int32_t sadb_sa_setARSNW(void);
+static int32_t sadb_sa_delete(void);
 
 /*
 ** Global Variables
@@ -50,6 +51,7 @@ SadbRoutine get_sadb_routine_inmemory(void)
     sadb_routine_struct.sadb_close = sadb_close;
     sadb_routine_struct.sadb_get_sa_from_spi = sadb_get_sa_from_spi;
     sadb_routine_struct.sadb_get_operational_sa_from_gvcid = sadb_get_operational_sa_from_gvcid;
+    sadb_routine_struct.sadb_sa_stop = sadb_sa_stop;
     sadb_routine_struct.sadb_save_sa = sadb_save_sa;
     sadb_routine_struct.sadb_sa_start = sadb_sa_start;
     sadb_routine_struct.sadb_sa_expire = sadb_sa_expire;
@@ -253,7 +255,7 @@ int32_t sadb_init(void)
  * @brief Function: sadb_close
  * @return int32: Success/Failure
  **/
-int32_t sadb_close(void)
+static int32_t sadb_close(void)
 {
     // closing not necessary for inmemory DB.
     return CRYPTO_LIB_SUCCESS;
@@ -268,7 +270,7 @@ int32_t sadb_close(void)
  * @param security_association: SecurityAssociation_t**
  * @return int32: Success/Failure
  **/
-int32_t sadb_get_sa_from_spi(uint16_t spi, SecurityAssociation_t **security_association)
+static int32_t sadb_get_sa_from_spi(uint16_t spi, SecurityAssociation_t **security_association)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     if (sa == NULL)
@@ -300,7 +302,7 @@ int32_t sadb_get_sa_from_spi(uint16_t spi, SecurityAssociation_t **security_asso
  * @param security_association: SecurityAssociation_t**
  * @return int32: Success/Failure
  **/
-int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uint16_t vcid, uint8_t mapid,
+static int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uint16_t vcid, uint8_t mapid,
                                            SecurityAssociation_t **security_association)
 {
     int32_t status = CRYPTO_LIB_ERR_NO_OPERATIONAL_SA;
@@ -406,7 +408,7 @@ int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uint16_t
  * @return int32: Success/Failure
  * @note Nothing currently actually happens in this function
  **/
-int32_t sadb_save_sa(SecurityAssociation_t *sa)
+static int32_t sadb_save_sa(SecurityAssociation_t *sa)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     sa = sa; // TODO - use argument
@@ -424,7 +426,7 @@ int32_t sadb_save_sa(SecurityAssociation_t *sa)
  * @param tc_frame: TC_t
  * @return int32: Success/Failure
  **/
-int32_t sadb_sa_start(TC_t *tc_frame)
+static int32_t sadb_sa_start(TC_t *tc_frame)
 {
     // Local variables
     uint8_t count = 0;
@@ -553,7 +555,7 @@ int32_t sadb_sa_start(TC_t *tc_frame)
  * @brief Function: sadb_sa_stop
  * @return int32: Success/Failure
  **/
-int32_t sadb_sa_stop(void)
+static int32_t sadb_sa_stop(void)
 {
     // Local variables
     uint16_t spi = 0x0000;
@@ -612,7 +614,7 @@ int32_t sadb_sa_stop(void)
  * @brief Function: sadb_sa_rekey
  * @return int32: Success/Failure
  **/
-int32_t sadb_sa_rekey(void)
+static int32_t sadb_sa_rekey(void)
 {
     // Local variables
     uint16_t spi = 0x0000;
@@ -692,7 +694,7 @@ int32_t sadb_sa_rekey(void)
  * @brief Function: sadb_sa_expire
  * @return int32: Success/Failure
  **/
-int32_t sadb_sa_expire(void)
+static int32_t sadb_sa_expire(void)
 {
     // Local variables
     uint16_t spi = 0x0000;
@@ -732,7 +734,7 @@ int32_t sadb_sa_expire(void)
  * @brief Function: sadb_sa_create
  * @return int32: Success/Failure
  **/
-int32_t sadb_sa_create(void)
+static int32_t sadb_sa_create(void)
 {
     // Local variables
     uint8_t count = 6;
@@ -811,7 +813,7 @@ int32_t sadb_sa_create(void)
  * @brief Function: sadb_sa_delete
  * @return int32: Success/Failure
  **/
-int32_t sadb_sa_delete(void)
+static int32_t sadb_sa_delete(void)
 {
     // Local variables
     uint16_t spi = 0x0000;
@@ -853,7 +855,7 @@ int32_t sadb_sa_delete(void)
  * @brief Function: sadb_sa_setASRN
  * @return int32: Success/Failure
  **/
-int32_t sadb_sa_setARSN(void)
+static int32_t sadb_sa_setARSN(void)
 {
     // Local variables
     uint16_t spi = 0x0000;
@@ -902,7 +904,7 @@ int32_t sadb_sa_setARSN(void)
  * @brief Function: sadb_sa_setARSNW
  * @return int32: Success/Failure
  **/
-int32_t sadb_sa_setARSNW(void)
+static int32_t sadb_sa_setARSNW(void)
 {
     // Local variables
     uint16_t spi = 0x0000;
@@ -940,7 +942,7 @@ int32_t sadb_sa_setARSNW(void)
  * @param ingest: uint8_t*
  * @return int32: count
  **/
-int32_t sadb_sa_status(uint8_t *ingest)
+static int32_t sadb_sa_status(uint8_t *ingest)
 {
     // Local variables
     int count = 0;

@@ -114,10 +114,10 @@ struct _GvcidManagedParameters_t
 */
 typedef struct
 {
-    uint8_t *mysql_username;
-    uint8_t *mysql_password;
-    uint8_t *mysql_hostname;
-    uint8_t *mysql_database;
+    char *mysql_username;
+    char *mysql_password;
+    char *mysql_hostname;
+    char *mysql_database;
     uint16_t mysql_port;
 } SadbMariaDBConfig_t;
 #define SADB_MARIADB_CONFIG_SIZE (sizeof(SadbMariaDBConfig_t))

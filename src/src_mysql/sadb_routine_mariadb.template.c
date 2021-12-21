@@ -28,10 +28,11 @@ static int32_t sadb_config(void);
 static int32_t sadb_init(void);
 static int32_t sadb_close(void);
 // Security Association Interaction Functions
-static int32_t sadb_get_sa_from_spi(uint16, SecurityAssociation_t **);
-static int32_t sadb_get_operational_sa_from_gvcid(uint8, uint16, uint16, uint8, SecurityAssociation_t **);
+static int32_t sadb_get_sa_from_spi(uint16_t, SecurityAssociation_t **);
+static int32_t sadb_get_operational_sa_from_gvcid(uint8_t, uint16_t, uint16_t, uint8_t, SecurityAssociation_t **);
 static int32_t sadb_save_sa(SecurityAssociation_t *sa);
 // Security Association Utility Functions
+static int32_t sadb_sa_stop(void);
 static int32_t sadb_sa_start(TC_t *tc_frame);
 static int32_t sadb_sa_expire(void);
 static int32_t sadb_sa_rekey(void);
@@ -43,50 +44,51 @@ static int32_t sadb_sa_delete(void);
 // MySQL local functions
 static int32_t finish_with_error(MYSQL *con, int err);
 // MySQL Queries
-const static uint8_t *SQL_SADB_GET_SA_BY_SPI =
+static const char *SQL_SADB_GET_SA_BY_SPI =
     "SELECT "
     "spi,ekid,akid,sa_state,tfvn,scid,vcid,mapid,lpid,est,ast,shivf_len,shsnf_len,shplf_len,stmacf_len,ecs_len,HEX(ecs)"
     ",iv_len,HEX(iv),acs_len,acs,abm_len,HEX(abm),arc_len,HEX(arc),arcw_len,HEX(arcw)"
     " FROM security_associations WHERE spi='%d'";
-const static uint8_t *SQL_SADB_GET_SA_BY_GVCID =
+static const char *SQL_SADB_GET_SA_BY_GVCID =
     "SELECT "
     "spi,ekid,akid,sa_state,tfvn,scid,vcid,mapid,lpid,est,ast,shivf_len,shsnf_len,shplf_len,stmacf_len,ecs_len,HEX(ecs)"
     ",iv_len,HEX(iv),acs_len,acs,abm_len,HEX(abm),arc_len,HEX(arc),arcw_len,HEX(arcw)"
     " FROM security_associations WHERE tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d' AND sa_state='%d'";
-const static uint8_t *SQL_SADB_UPDATE_IV_ARC_BY_SPI =
+static const char *SQL_SADB_UPDATE_IV_ARC_BY_SPI =
     "UPDATE security_associations"
     " SET iv=X'%s', arc=X'%s'"
     " WHERE spi='%d' AND tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d'";
 
 // sadb_routine mariaDB private helper functions
-static int32_t parse_sa_from_mysql_query(uint8_t *query, SecurityAssociation_t **security_association);
-static int32_t convert_hexstring_to_byte_array(uint8_t *hexstr, uint8_t *byte_array);
-static uint8_t *convert_byte_array_to_hexstring(void *src_buffer, size_t buffer_length);
+static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **security_association);
+static int32_t convert_hexstring_to_byte_array(char *hexstr, uint8_t *byte_array);
+static char *convert_byte_array_to_hexstring(void *src_buffer, size_t buffer_length);
 
 /*
 ** Global Variables
 */
 // Security
-static SadbRoutineStruct sadb_routine;
-static SecurityAssociation_t sa[NUM_SA];
+static SadbRoutineStruct sadb_routine_struct;
 static MYSQL *con;
 
 SadbRoutine get_sadb_routine_mariadb(void)
 {
-    sadb_routine.sadb_config = sadb_config;
-    sadb_routine.sadb_init = sadb_init;
-    sadb_routine.sadb_get_sa_from_spi = sadb_get_sa_from_spi;
-    sadb_routine.sadb_get_operational_sa_from_gvcid = sadb_get_operational_sa_from_gvcid;
-    sadb_routine.sadb_save_sa = sadb_save_sa;
-    sadb_routine.sadb_sa_start = sadb_sa_start;
-    sadb_routine.sadb_sa_expire = sadb_sa_expire;
-    sadb_routine.sadb_sa_rekey = sadb_sa_rekey;
-    sadb_routine.sadb_sa_status = sadb_sa_status;
-    sadb_routine.sadb_sa_create = sadb_sa_create;
-    sadb_routine.sadb_sa_setARSN = sadb_sa_setARSN;
-    sadb_routine.sadb_sa_setARSNW = sadb_sa_setARSNW;
-    sadb_routine.sadb_sa_delete = sadb_sa_delete;
-    return &sadb_routine;
+    sadb_routine_struct.sadb_config = sadb_config;
+    sadb_routine_struct.sadb_init = sadb_init;
+    sadb_routine_struct.sadb_close = sadb_close;
+    sadb_routine_struct.sadb_get_sa_from_spi = sadb_get_sa_from_spi;
+    sadb_routine_struct.sadb_get_operational_sa_from_gvcid = sadb_get_operational_sa_from_gvcid;
+    sadb_routine_struct.sadb_sa_stop = sadb_sa_stop;
+    sadb_routine_struct.sadb_save_sa = sadb_save_sa;
+    sadb_routine_struct.sadb_sa_start = sadb_sa_start;
+    sadb_routine_struct.sadb_sa_expire = sadb_sa_expire;
+    sadb_routine_struct.sadb_sa_rekey = sadb_sa_rekey;
+    sadb_routine_struct.sadb_sa_status = sadb_sa_status;
+    sadb_routine_struct.sadb_sa_create = sadb_sa_create;
+    sadb_routine_struct.sadb_sa_setARSN = sadb_sa_setARSN;
+    sadb_routine_struct.sadb_sa_setARSNW = sadb_sa_setARSNW;
+    sadb_routine_struct.sadb_sa_delete = sadb_sa_delete;
+    return &sadb_routine_struct;
 }
 
 static int32_t sadb_config(void)
@@ -122,7 +124,7 @@ static int32_t sadb_get_sa_from_spi(uint16_t spi, SecurityAssociation_t **securi
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
-    uint8_t spi_query[2048];
+    char spi_query[2048];
     snprintf(spi_query, sizeof(spi_query), SQL_SADB_GET_SA_BY_SPI, spi);
 
     status = parse_sa_from_mysql_query(&spi_query[0], security_association);
@@ -134,7 +136,7 @@ static int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, u
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
-    uint8_t gvcid_query[2048];
+    char gvcid_query[2048];
     snprintf(gvcid_query, sizeof(gvcid_query), SQL_SADB_GET_SA_BY_GVCID, tfvn, scid, vcid, mapid, SA_OPERATIONAL);
 
     status = parse_sa_from_mysql_query(&gvcid_query[0], security_association);
@@ -149,7 +151,7 @@ static int32_t sadb_save_sa(SecurityAssociation_t *sa)
         return SADB_NULL_SA_USED;
     }
 
-    uint8_t update_sa_query[2048];
+    char update_sa_query[2048];
     snprintf(update_sa_query, sizeof(update_sa_query), SQL_SADB_UPDATE_IV_ARC_BY_SPI,
              convert_byte_array_to_hexstring(sa->iv, sa->shivf_len),
              convert_byte_array_to_hexstring(sa->arc, sa->shsnf_len), sa->spi, sa->gvcid_tc_blk.tfvn,
@@ -178,8 +180,13 @@ static int32_t sadb_save_sa(SecurityAssociation_t *sa)
     return status;
 }
 // Security Association Utility Functions
+static int32_t sadb_sa_stop(void)
+{
+    return CRYPTO_LIB_SUCCESS;
+}
 static int32_t sadb_sa_start(TC_t *tc_frame)
 {
+    tc_frame = tc_frame;
     return CRYPTO_LIB_SUCCESS;
 }
 static int32_t sadb_sa_expire(void)
@@ -192,6 +199,7 @@ static int32_t sadb_sa_rekey(void)
 }
 static int32_t sadb_sa_status(uint8_t *ingest)
 {
+    ingest = ingest;
     return CRYPTO_LIB_SUCCESS;
 }
 static int32_t sadb_sa_create(void)
@@ -212,7 +220,7 @@ static int32_t sadb_sa_delete(void)
 }
 
 // sadb_routine private helper functions
-static int32_t parse_sa_from_mysql_query(uint8_t *query, SecurityAssociation_t **security_association)
+static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **security_association)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     SecurityAssociation_t *sa = malloc(sizeof(SecurityAssociation_t));
@@ -240,13 +248,13 @@ static int32_t parse_sa_from_mysql_query(uint8_t *query, SecurityAssociation_t *
     MYSQL_ROW row;
     MYSQL_FIELD *field;
 
-    uint8_t *field_names[num_fields]; //[64]; 64 == max length of column name in MySQL
+    char *field_names[num_fields]; //[64]; 64 == max length of column name in MySQL
 
     // TODO -- Need to store mysql query hex string and then malloc sa->iv according to size.
     // TODO -- IV && arc && abm as uint8_t* instead of uint8[]!!!
-    uint8_t *iv_byte_str;
-    uint8_t *arc_byte_str;
-    uint8_t *abm_byte_str;
+    char *iv_byte_str;
+    char *arc_byte_str;
+    char *abm_byte_str;
     while ((row = mysql_fetch_row(result)))
     {
         for (int i = 0; i < num_fields; i++)
@@ -255,15 +263,13 @@ static int32_t parse_sa_from_mysql_query(uint8_t *query, SecurityAssociation_t *
             if (i == 0)
             {
                 int field_idx = 0;
-                while (field = mysql_fetch_field(result))
+                while ((field = mysql_fetch_field(result)))
                 {
                     field_names[field_idx] = field->name;
                     field_idx++;
                 }
             }
             // Handle query results
-            int spi;
-            uint8_t tmp_uint8;
             if (row[i] == NULL)
             {
                 continue;
@@ -417,12 +423,12 @@ static int32_t parse_sa_from_mysql_query(uint8_t *query, SecurityAssociation_t *
 
     return status;
 }
-static int32_t convert_hexstring_to_byte_array(uint8_t *source_str, uint8_t *dest_buffer)
+static int32_t convert_hexstring_to_byte_array(char *source_str, uint8_t *dest_buffer)
 { // https://stackoverflow.com/questions/3408706/hexadecimal-string-to-byte-array-in-c/56247335#56247335
-    uint8_t *line = source_str;
-    uint8_t *data = line;
+    char *line = source_str;
+    char *data = line;
     int offset;
-    uint8_t read_byte;
+    unsigned int read_byte;
     uint8_t data_len = 0;
 
     while (sscanf(data, " %02x%n", &read_byte, &offset) == 1)
@@ -433,15 +439,15 @@ static int32_t convert_hexstring_to_byte_array(uint8_t *source_str, uint8_t *des
     return data_len;
 }
 
-static uint8_t *convert_byte_array_to_hexstring(void *src_buffer, size_t buffer_length)
+static char *convert_byte_array_to_hexstring(void *src_buffer, size_t buffer_length)
 {
     if (buffer_length == 0)
     { // Return empty string (with null char!) if buffer is empty
         return "";
     }
 
-    unsigned uint8_t *bytes = src_buffer;
-    unsigned uint8_t *hexstr = malloc(buffer_length * 2 + 1);
+    unsigned char *bytes = src_buffer;
+    char *hexstr = malloc(buffer_length * 2 + 1);
 
     if (src_buffer == NULL)
         return NULL;

@@ -609,10 +609,6 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
         if (sa_service_type != SA_PLAINTEXT)
         {
 #ifdef INCREMENT
-            if (sa_ptr->iv == NULL)
-            {
-                printf("\n\nNULL\n\n");
-            }
             Crypto_increment(sa_ptr->iv, sa_ptr->shivf_len);
 #ifdef SA_DEBUG
             printf(KYEL "Next IV value is:\n\t");
