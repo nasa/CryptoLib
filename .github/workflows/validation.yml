@@ -47,7 +47,7 @@ jobs:
       run: make gcov
     
     - name: Upload 
-      working-directory: ${{github.workspace}}/build/coverage
       uses: codecov/codecov-action@v1
+      working-directory: ${{github.workspace}}/build/coverage
       with:
         files: ./crypto_aos.c.gcov ./crypto_config.c.gcov ./crypto_mc.c.gcov ./crypto_tc.c.gcov ./crypto_user.c.gcov ./crypto.c.gcov ./crypto_key_mgmt.c.gcov ./crypto_print.c.gcov ./crypto_tm.c.gcov ./sadb_routine_inmemory.template.c.gcov
