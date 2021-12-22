@@ -235,19 +235,6 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
             break;
         }
 
-#ifdef TC_DEBUG
-        printf(KYEL "DEBUG - Total TC Buffer to be malloced is: %d bytes\n" RESET, *p_enc_frame_len);
-        printf(KYEL "\tlen of TF\t = %d\n" RESET, temp_tc_header.fl);
-        // printf(KYEL "\tsegment hdr\t = 1\n" RESET); // TODO: Determine presence of this so not hard-coded
-        printf(KYEL "\tspi len\t\t = 2\n" RESET);
-        printf(KYEL "\tshivf_len\t = %d\n" RESET, sa_ptr->shivf_len);
-        printf(KYEL "\tshsnf_len\t = %d\n" RESET, sa_ptr->shsnf_len);
-        printf(KYEL "\tshplf len\t = %d\n" RESET, sa_ptr->shplf_len);
-        printf(KYEL "\tarc_len\t\t = %d\n" RESET, sa_ptr->arc_len);
-        printf(KYEL "\tpad_size\t = %d\n" RESET, TC_PAD_SIZE);
-        printf(KYEL "\tstmacf_len\t = %d\n" RESET, sa_ptr->stmacf_len);
-#endif
-
         // Accio buffer
         p_new_enc_frame = (uint8_t *)malloc((*p_enc_frame_len) * sizeof(uint8_t));
         if (!p_new_enc_frame)
@@ -264,6 +251,19 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
         {
             segment_hdr_len = 0;
         }
+
+#ifdef TC_DEBUG
+        printf(KYEL "DEBUG - Total TC Buffer to be malloced is: %d bytes\n" RESET, *p_enc_frame_len);
+        printf(KYEL "\tlen of TF\t = %d\n" RESET, temp_tc_header.fl);
+        printf(KYEL "\tsegment hdr len\t = %d\n" RESET, segment_hdr_len); 
+        printf(KYEL "\tspi len\t\t = 2\n" RESET);
+        printf(KYEL "\tshivf_len\t = %d\n" RESET, sa_ptr->shivf_len);
+        printf(KYEL "\tshsnf_len\t = %d\n" RESET, sa_ptr->shsnf_len);
+        printf(KYEL "\tshplf len\t = %d\n" RESET, sa_ptr->shplf_len);
+        printf(KYEL "\tarc_len\t\t = %d\n" RESET, sa_ptr->arc_len);
+        printf(KYEL "\tpad_size\t = %d\n" RESET, TC_PAD_SIZE);
+        printf(KYEL "\tstmacf_len\t = %d\n" RESET, sa_ptr->stmacf_len);
+#endif
 
         // Copy original TF header, w/ segment header if applicable
         memcpy(p_new_enc_frame, p_in_frame, TC_FRAME_HEADER_SIZE + segment_hdr_len);
