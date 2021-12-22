@@ -337,7 +337,6 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
         if (sa_ptr->shsnf_len > 0)
         {
             // If using anti-replay counter, increment it
-            // TODO: API call instead?
             // TODO: Check return code
             Crypto_increment(sa_ptr->arc, sa_ptr->shsnf_len);
             for (int i = 0; i < sa_ptr->shsnf_len; i++)
@@ -378,15 +377,8 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
 
         // Copy in original TF data - except FECF
         // Will be over-written if using encryption later
-        // and if it was present in the original TCTF
-        // if FECF
-        // Even though FECF is not part of apply_security payload, we still have to subtract the length from the
-        // temp_tc_header.fl since that includes FECF length & segment header length.
         tf_payload_len = temp_tc_header.fl - TC_FRAME_HEADER_SIZE - segment_hdr_len - fecf_len + 1;
-        // if no FECF
-        // tf_payload_len = temp_tc_header.fl - TC_FRAME_PRIMARYHEADER_STRUCT_SIZE;
         memcpy((p_new_enc_frame + index), (p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), tf_payload_len);
-        // index += tf_payload_len;
 
         /*
         ** Begin Security Trailer Fields
@@ -441,9 +433,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
 
             if ((sa_service_type == SA_ENCRYPTION) || (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
             {
-// TODO: More robust calculation of this location
-// uint16_t output_loc = TC_FRAME_PRIMARYHEADER_STRUCT_SIZE + 1 + 2 + temp_SA.shivf_len + temp_SA.shsnf_len +
-// temp_SA.shplf_len;
+
 #ifdef TC_DEBUG
                 printf("Encrypted bytes output_loc is %d\n", index);
                 printf("tf_payload_len is %d\n", tf_payload_len);
@@ -480,7 +470,6 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
                         status = CRYPTO_LIB_ERR_AUTHENTICATION_ERROR;
                         return status;
                     }
-
                     free(aad);
                 }
 
@@ -532,7 +521,6 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
                         return status;
                     }
                 }
-
                 // Close cipher, so we can authenticate encrypted data
                 gcry_cipher_close(tmp_hd);
             }
@@ -631,7 +619,6 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
         // Only calculate & insert FECF if CryptoLib is configured to do so & gvcid includes FECF.
         if (current_managed_parameters->has_fecf == TC_HAS_FECF)
         {
-// Set FECF Field if present
 #ifdef FECF_DEBUG
             printf(KCYN "Calcing FECF over %d bytes\n" RESET, new_enc_frame_header_field_length - 1);
 #endif
@@ -646,7 +633,6 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
                 *(p_new_enc_frame + new_enc_frame_header_field_length - 1) = (uint8_t)0x00;
                 *(p_new_enc_frame + new_enc_frame_header_field_length) = (uint8_t)0x00;
             }
-
             index += 2;
         }
 
