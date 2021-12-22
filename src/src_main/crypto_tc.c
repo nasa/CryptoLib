@@ -258,8 +258,15 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
         }
         memset(p_new_enc_frame, 0, *p_enc_frame_len);
 
-        // Copy original TF header
-        memcpy(p_new_enc_frame, p_in_frame, TC_FRAME_PRIMARYHEADER_STRUCT_SIZE);
+        // Determine if segment header exists
+        uint8_t segment_hdr_len = SEGMENT_HDR_SIZE;
+        if (current_managed_parameters->has_segmentation_hdr == TC_NO_SEGMENT_HDRS)
+        {
+            segment_hdr_len = 0;
+        }
+
+        // Copy original TF header, w/ segment header if applicable
+        memcpy(p_new_enc_frame, p_in_frame, TC_FRAME_HEADER_SIZE + segment_hdr_len);
 
         // Set new TF Header length
         // Recall: Length field is one minus total length per spec
@@ -362,16 +369,13 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
         ** End Security Header Fields
         */
 
+        // Determine if FECF exists
         uint8_t fecf_len = FECF_SIZE;
         if (current_managed_parameters->has_fecf == TC_NO_FECF)
         {
             fecf_len = 0;
         }
-        uint8_t segment_hdr_len = SEGMENT_HDR_SIZE;
-        if (current_managed_parameters->has_segmentation_hdr == TC_NO_SEGMENT_HDRS)
-        {
-            segment_hdr_len = 0;
-        }
+
         // Copy in original TF data - except FECF
         // Will be over-written if using encryption later
         // and if it was present in the original TCTF
@@ -381,7 +385,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
         tf_payload_len = temp_tc_header.fl - TC_FRAME_HEADER_SIZE - segment_hdr_len - fecf_len + 1;
         // if no FECF
         // tf_payload_len = temp_tc_header.fl - TC_FRAME_PRIMARYHEADER_STRUCT_SIZE;
-        memcpy((p_new_enc_frame + index), (p_in_frame + TC_FRAME_PRIMARYHEADER_STRUCT_SIZE), tf_payload_len);
+        memcpy((p_new_enc_frame + index), (p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), tf_payload_len);
         // index += tf_payload_len;
 
         /*
