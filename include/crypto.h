@@ -58,6 +58,8 @@ extern int32_t Crypto_Config_CryptoLib(uint8_t sadb_type, uint8_t crypto_create_
                                        uint8_t unique_sa_per_mapid, uint8_t crypto_check_fecf, uint8_t vcid_bitmask);
 extern int32_t Crypto_Config_MariaDB(char *mysql_username, char *mysql_password, char *mysql_hostname,
                                      char *mysql_database, uint16_t mysql_port);
+/*set parameters for an encrypted TLS connection*/
+extern int32_t Crypto_Config_MariaDB_TLS_Connection(char* mysql_username, char* password, char* mysql_hostname, char* mysql_database, uint16_t mysql_port, uint8_t encrypted_connection, char* ssl_cert, char* ssl_key, char* ssl_ca, char* ssl_capath,char* bind_address);
 extern int32_t Crypto_Config_Add_Gvcid_Managed_Parameter(uint8_t tfvn, uint16_t scid, uint8_t vcid, uint8_t has_fecf,
                                                          uint8_t has_segmentation_hdr);
 

@@ -119,20 +119,26 @@ int32_t Crypto_Init(void)
 
     // Init Security Associations
     status = sadb_routine->sadb_init();
-    status = sadb_routine->sadb_config();
+    if (status==CRYPTO_LIB_SUCCESS)
+    {
+        status = sadb_routine->sadb_config();
 
-    Crypto_Local_Init();
-    Crypto_Local_Config();
+        Crypto_Local_Init();
+        Crypto_Local_Config();
 
-    // TODO - Add error checking
+        // TODO - Add error checking
 
-    // Init table for CRC calculations
-    Crypto_Calc_CRC_Init_Table();
+        // Init table for CRC calculations
+        Crypto_Calc_CRC_Init_Table();
 
-    // cFS Standard Initialized Message
-    printf(KBLU "Crypto Lib Intialized.  Version %d.%d.%d.%d\n" RESET, CRYPTO_LIB_MAJOR_VERSION,
-           CRYPTO_LIB_MINOR_VERSION, CRYPTO_LIB_REVISION, CRYPTO_LIB_MISSION_REV);
-
+        // cFS Standard Initialized Message
+        printf(KBLU "Crypto Lib Intialized.  Version %d.%d.%d.%d\n" RESET, CRYPTO_LIB_MAJOR_VERSION,
+               CRYPTO_LIB_MINOR_VERSION, CRYPTO_LIB_REVISION, CRYPTO_LIB_MISSION_REV);
+    }
+    else
+    {
+         printf(KRED "ERROR: CryptoLib sadb_init() returned status=%d\n",status); 
+    }
     return status;
 }
 

@@ -20,7 +20,7 @@
 ** Includes
 */
 #include "crypto.h"
-
+#include "crypto_error.h"
 /*
 ** Static Library Declaration
 */
@@ -326,6 +326,31 @@ uint16_t Crypto_Calc_CRC16(uint8_t *data, int size)
     }
 
     return crc;
+}
+
+/*set parameters for an encrypted TLS connection*/
+int32_t Crypto_Config_MariaDB_TLS_Connection(char* mysql_username, char* mysql_password, char* mysql_hostname, char* mysql_database, uint16_t mysql_port, uint8_t encrypted_connection, char* ssl_cert, char* ssl_key, char* ssl_ca, char* ssl_capath,char* bind_address)
+{
+    int32_t status = CRYPTO_LIB_ERROR;
+    sadb_mariadb_config = (SadbMariaDBConfig_t*)calloc(1, SADB_MARIADB_CONFIG_SIZE);
+    if (NULL!=sadb_mariadb_config)
+    {
+        sadb_mariadb_config->mysql_username=mysql_username;
+        sadb_mariadb_config->mysql_password=mysql_password;
+        sadb_mariadb_config->mysql_hostname=mysql_hostname;
+        sadb_mariadb_config->mysql_database=mysql_database;
+        sadb_mariadb_config->mysql_port=mysql_port;
+        /*start - encrypted connection related parameters*/
+        sadb_mariadb_config->encrypted_connection = encrypted_connection; 
+        sadb_mariadb_config->ssl_cert = ssl_cert; 
+        sadb_mariadb_config->ssl_key = ssl_key; 
+        sadb_mariadb_config->ssl_ca = ssl_ca; 
+        sadb_mariadb_config->ssl_capath = ssl_capath; 
+        sadb_mariadb_config->bind_address = bind_address;
+        /*end - encrypted connection related parameters*/
+        status = CRYPTO_LIB_SUCCESS; 
+    }
+    return status;
 }
 
 /*

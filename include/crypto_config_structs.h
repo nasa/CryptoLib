@@ -119,6 +119,14 @@ typedef struct
     char *mysql_hostname;
     char *mysql_database;
     uint16_t mysql_port;
+    /*attributes ssl_cert,ssl_key,ssl_ca,bind_address are related to a TLS
+     connection*/
+    uint8_t encrypted_connection; 
+    char* ssl_cert; 
+    char* ssl_key; 
+    char* ssl_ca; 
+    char* ssl_capath;
+    char* bind_address;
 } SadbMariaDBConfig_t;
 #define SADB_MARIADB_CONFIG_SIZE (sizeof(SadbMariaDBConfig_t))
 
