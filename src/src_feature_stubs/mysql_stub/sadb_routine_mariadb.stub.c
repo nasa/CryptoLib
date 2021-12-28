@@ -18,5 +18,6 @@ static SadbRoutineStruct sadb_routine;
 
 SadbRoutine get_sadb_routine_mariadb(void)
 {
+    fprintf(stderr,"ERROR: Loading mariadb stub source code. Rebuild CryptoLib with -DMYSQL=ON to use proper MariaDB implementation.\n");
     return &sadb_routine;
 }

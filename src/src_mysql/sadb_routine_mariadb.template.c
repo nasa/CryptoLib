@@ -45,19 +45,19 @@ static int32_t sadb_sa_delete(void);
 static int32_t finish_with_error(MYSQL *con, int err);
 // MySQL Queries
 static const char *SQL_SADB_GET_SA_BY_SPI =
-    "SELECT "
-    "spi,ekid,akid,sa_state,tfvn,scid,vcid,mapid,lpid,est,ast,shivf_len,shsnf_len,shplf_len,stmacf_len,ecs_len,HEX(ecs)"
-    ",iv_len,HEX(iv),acs_len,acs,abm_len,HEX(abm),arc_len,HEX(arc),arcw_len,HEX(arcw)"
-    " FROM security_associations WHERE spi='%d'";
+        "SELECT "
+        "spi,ekid,akid,sa_state,tfvn,scid,vcid,mapid,lpid,est,ast,shivf_len,shsnf_len,shplf_len,stmacf_len,ecs_len,HEX(ecs)"
+        ",HEX(iv),acs_len,acs,abm_len,HEX(abm),arc_len,HEX(arc),arcw_len,HEX(arcw)"
+        " FROM security_associations WHERE spi='%d'";
 static const char *SQL_SADB_GET_SA_BY_GVCID =
-    "SELECT "
-    "spi,ekid,akid,sa_state,tfvn,scid,vcid,mapid,lpid,est,ast,shivf_len,shsnf_len,shplf_len,stmacf_len,ecs_len,HEX(ecs)"
-    ",iv_len,HEX(iv),acs_len,acs,abm_len,HEX(abm),arc_len,HEX(arc),arcw_len,HEX(arcw)"
-    " FROM security_associations WHERE tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d' AND sa_state='%d'";
+        "SELECT "
+        "spi,ekid,akid,sa_state,tfvn,scid,vcid,mapid,lpid,est,ast,shivf_len,shsnf_len,shplf_len,stmacf_len,ecs_len,HEX(ecs)"
+        ",HEX(iv),acs_len,acs,abm_len,HEX(abm),arc_len,HEX(arc),arcw_len,HEX(arcw)"
+        " FROM security_associations WHERE tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d' AND sa_state='%d'";
 static const char *SQL_SADB_UPDATE_IV_ARC_BY_SPI =
-    "UPDATE security_associations"
-    " SET iv=X'%s', arc=X'%s'"
-    " WHERE spi='%d' AND tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d'";
+        "UPDATE security_associations"
+        " SET iv=X'%s', arc=X'%s'"
+        " WHERE spi='%d' AND tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d'";
 
 // sadb_routine mariaDB private helper functions
 static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **security_association);
