@@ -56,10 +56,33 @@
 extern int32_t Crypto_Config_CryptoLib(uint8_t sadb_type, uint8_t crypto_create_fecf, uint8_t process_sdls_pdus,
                                        uint8_t has_pus_hdr, uint8_t ignore_sa_state, uint8_t ignore_anti_replay,
                                        uint8_t unique_sa_per_mapid, uint8_t crypto_check_fecf, uint8_t vcid_bitmask);
-extern int32_t Crypto_Config_MariaDB(char *mysql_username, char *mysql_password, char *mysql_hostname,
-                                     char *mysql_database, uint16_t mysql_port);
-/*set parameters for an encrypted TLS connection*/
-extern int32_t Crypto_Config_MariaDB_TLS_Connection(char* mysql_username, char* password, char* mysql_hostname, char* mysql_database, uint16_t mysql_port, uint8_t encrypted_connection, char* ssl_cert, char* ssl_key, char* ssl_ca, char* ssl_capath,char* bind_address);
+/*===========================================================================
+Function:           Crypto_Config_MariaDB
+Description:        sets the fields the struct SadbMariaDBConfig_t for required 
+ *                  parameters to create MySQL connection. 
+ *                  1) char* mysql_username -  mariadb username
+ *                  2) char* mysql_password - password associated with the username
+ *                  3) char* mysql_hostname - hostname of the server that hosts the mariadb database
+ *                  4) char* mysql_hostname - database schema name - OPTIONAL. 
+                    5) char* mysql_hostname - port associated with mariadb. By default port 3306. 
+                    6) uint8_t encrypted_connection - attempting an encrypted connection. 
+ *                  Set encrypted_connection = 1 if you are attempting an encrypted connection. 
+                    Optional parameters that are only required for an encrypted connection:
+                    uint8_t encrypted_connection
+                    7) char* ssl_cert - sThe path name of the server public key certificate file with .pem extension. 
+                    8) char* ssl_key - The path name of the server private key file with .pem extension. 
+                    9) char* ssl_ca - The path name of the Certificate Authority (CA) certificate file. 
+                    10) char* ssl_capath - Certificate Authority (CA) directory.      
+Outputs:            status - int32
+References:         1) https://dev.mysql.com/doc/c-api/8.0/en/c-api-encrypted-
+ *                      connections.html#c-api-enforcing-encrypted-connection
+ *                  2) https://dev.mysql.com/doc/c-api/8.0/en/mysql-ssl-set.html
+ *                  3) https://www.xuchao.org/docs/mysql/connectors-apis.html#c-api-encrypted-connections
+Example call:        
+Note:               MySQL server MUST be configured for encrypted connections:
+ *                  https://dev.mysql.com/doc/refman/5.7/en/using-encrypted-connections.html
+==========================================================*/
+extern int32_t Crypto_Config_MariaDB(char* mysql_username, char* mysql_password, char* mysql_hostname, char* mysql_database, uint16_t mysql_port, uint8_t encrypted_connection, char* ssl_cert, char* ssl_key, char* ssl_ca, char* ssl_capath);
 extern int32_t Crypto_Config_Add_Gvcid_Managed_Parameter(uint8_t tfvn, uint16_t scid, uint8_t vcid, uint8_t has_fecf,
                                                          uint8_t has_segmentation_hdr);
 

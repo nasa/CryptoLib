@@ -27,8 +27,6 @@
 // Security Association Initialization Functions
 static int32_t sadb_config(void);
 static int32_t sadb_init(void);
-static void encrypted_tls_connection(MYSQL* con, SadbMariaDBConfig_t* sadb_mariadb_config);
-static int32_t is_user_signed_into_db(MYSQL* con, char* username);
 static int32_t sadb_close(void);
 // Security Association Interaction Functions
 static int32_t sadb_get_sa_from_spi(uint16_t, SecurityAssociation_t **);
@@ -105,8 +103,16 @@ static int32_t sadb_init(void) {
         con = mysql_init(NULL);
         //if encrypted connection (TLS) connection 
         if (sadb_mariadb_config->encrypted_connection == 1) {
-            encrypted_tls_connection(con, sadb_mariadb_config);
-            //TLS needs no password 
+            /*Note:MySQL server MUST be configured for encrypted connections:
+ *          https://dev.mysql.com/doc/refman/5.7/en/using-encrypted-connections.html*/
+            mysql_ssl_set(con,
+            sadb_mariadb_config->ssl_key,
+            sadb_mariadb_config->ssl_cert,
+            sadb_mariadb_config->ssl_ca,
+            sadb_mariadb_config->ssl_capath, NULL);
+            /*Based documentation mysql_ssl_set() always returns 0.
+            Therefore successful connections can only be checked
+            via subsequent call to mysql_real_connect()*/
             //if NULL is returned then there is an error, else success
             if (mysql_real_connect(con, sadb_mariadb_config->mysql_hostname,
                     sadb_mariadb_config->mysql_username,
@@ -116,9 +122,9 @@ static int32_t sadb_init(void) {
                 //0,NULL,0 are port number, unix socket, client flag
                 status = finish_with_error(con, SADB_MARIADB_CONNECTION_FAILED);
             } else {
-                status = is_user_signed_into_db(con, sadb_mariadb_config->mysql_username);
+                status = CRYPTO_LIB_SUCCESS;
                 if (status) {
-                    printf("sadb_init(), Using an encrypted connection \n");
+                    printf("sadb_initUsing an encrypted connection \n");
                 }
             }
         }//end if TLS connection    
@@ -137,73 +143,6 @@ static int32_t sadb_init(void) {
             }
         }//end regular password 
     }
-    return status;
-}
-/*===========================================================================
-Function:           encrypted_tls_connection
-Description:        Attempts to establish a encrypted connection using TLS.  
-Inputs:             MYSQL* con, SadbMariaDBConfig_t* sadb_mariadb_config         
-Outputs:            status - int32
-References:         1) https://dev.mysql.com/doc/c-api/8.0/en/c-api-encrypted-
- *                      connections.html#c-api-enforcing-encrypted-connection
- *                  2) https://dev.mysql.com/doc/c-api/8.0/en/mysql-ssl-set.html
- *                  3) https://www.xuchao.org/docs/mysql/connectors-apis.html#c-api-encrypted-connections
-Example call:        
-Note:               MySQL server MUST be configured for encrypted connections:
- *                  https://dev.mysql.com/doc/refman/5.7/en/using-encrypted-connections.html
-==========================================================*/
-static void encrypted_tls_connection(MYSQL* con, SadbMariaDBConfig_t* sadb_mariadb_config) {
-    if (NULL != con) {
-        /*Based documentation mysql_ssl_set() always returns 0.
-         Therefore successful connections can only be checked'
-         via subsequent call to mysql_real_connect()*/
-        mysql_ssl_set(con,
-                sadb_mariadb_config->ssl_key,
-                sadb_mariadb_config->ssl_cert,
-                sadb_mariadb_config->ssl_ca,
-                sadb_mariadb_config->ssl_capath, NULL);
-    }
-}
-/*===========================================================================
-Function:           is_user_signed_into_db
-Description:        Queries mariadb for users that are signed & if the expected
- *                  username appearss then the function return success else error. 
-Inputs:             MYSQL* con, char* username        
-Outputs:            status - int32 (success or error)
-References:         1) techonthenet.com/mysql/questions/find_users_logged_in.php
-==========================================================*/
-static int32_t is_user_signed_into_db(MYSQL* con, char* username) {
-    int32_t status = CRYPTO_LIB_ERROR;
-    int8_t found = -1; 
-    if (NULL != con && NULL != username) {
-        //query for the user
-        //This query returns current users that are logged/signed in. 
-        char user_query [] = "SELECT GROUP_CONCAT(DISTINCT user) AS users FROM information_schema.processlist";
-        //printf("DEBUG, is_user_signed_into_db(), user_query:%s\n",user_query);
-        if (mysql_query(con, user_query)) {
-            fprintf(stderr, "%s ERROR, is_user_signed_into_db() \n", mysql_error(con));
-            mysql_close(con);
-        } else {
-            //check query results
-            MYSQL_RES *result = mysql_store_result(con);
-            if (result != NULL) {
-                int num_fields = mysql_num_fields(result);
-                MYSQL_ROW row;
-                //loop for each result &  check if the username is present 
-                while ((row = mysql_fetch_row(result)) && found!=0) {
-                    for (int i = 0; i < num_fields; i++) {
-                        //loop through column fields 
-                        //found username?
-                        if (strstr(row[i], username)) {
-                            //success user is found
-                            status = found = CRYPTO_LIB_SUCCESS;
-                            break;
-                        }
-                    }
-                }//end results loop 
-            }
-        }
-    }//end input param check 
     return status;
 }
 
