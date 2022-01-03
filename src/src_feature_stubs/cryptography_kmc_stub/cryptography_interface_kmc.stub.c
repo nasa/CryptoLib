@@ -13,7 +13,6 @@
  */
 
 #include "cryptography_interface.h"
-#include <stdio.h>
 
 static CryptographyInterfaceStruct cryptography_if;
 

@@ -24,20 +24,36 @@
 #include <stdlib.h>
 #endif
 
+#include "crypto_structs.h"
 
 typedef struct
 {
     // Cryptography Interface Initialization & Management Functions
     int32_t (*cryptography_config)(void);
     int32_t (*cryptography_init)(void);
+    crypto_key_t* (*get_ek_ring)(void);
     int32_t (*cryptography_close)(void);
     // Cryptography Interface Functions
     int32_t (*cryptography_encrypt)(void);
     int32_t (*cryptography_decrypt)(void);
     int32_t (*cryptography_authenticate)(void);
     int32_t (*cryptography_validate_authentication)(void);
-    int32_t (*cryptography_aead_encrypt)(void);
-    int32_t (*cryptography_aead_decrypt)(void);
+    int32_t (*cryptography_aead_encrypt)(uint8_t* data_out, uint32_t len_data_out,
+                                         uint8_t* data_in, uint32_t len_data_in,
+                                         uint8_t* key, uint32_t len_key,
+                                         SecurityAssociation_t* sa_ptr,
+                                         uint8_t* iv, uint32_t iv_len,
+                                         uint8_t* mac, uint32_t mac_size,
+                                         uint8_t* aad, uint32_t aad_len,
+                                         uint8_t encrypt_bool, uint8_t authenticate_bool,
+                                         uint8_t aad_bool);
+    int32_t (*cryptography_aead_decrypt)(uint8_t* data_out, uint32_t len_data_out,
+                                         uint8_t* data_in, uint32_t len_data_in,
+                                         uint8_t* key, uint32_t len_key,
+                                         char* key_ref,
+                                         uint8_t* iv, uint32_t iv_len,
+                                         uint8_t* mac, uint32_t mac_size,
+                                         uint8_t decrypt_bool, uint8_t authenticate_bool);
 
 } CryptographyInterfaceStruct, *CryptographyInterface;
 

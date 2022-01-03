@@ -21,6 +21,8 @@
 */
 #include "crypto.h"
 
+#include <string.h> // memcpy/memset
+
 /**
  * @brief Function: Crypto_TM_ApplySecurity
  * @param ingest: uint8_t*
@@ -46,8 +48,6 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *ingest, int *len_ingest)
     SecurityAssociation_t sa;
     SecurityAssociation_t *sa_ptr = &sa;
 
-    gcry_cipher_hd_t tmp_hd;
-    gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     memset(&tempTM, 0, TM_SIZE);
 
 #ifdef DEBUG
@@ -216,68 +216,24 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *ingest, int *len_ingest)
         printf("\n");
 #endif
 
-        gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_CBC_MAC);
-        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-            status = CRYPTO_LIB_ERROR;
-            return status;
-        }
-        gcry_error = gcry_cipher_setkey(tmp_hd, &(ek_ring[sa_ptr->ekid].value[0]), KEY_SIZE);
-        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-            status = CRYPTO_LIB_ERROR;
-            return status;
-        }
-        gcry_error = gcry_cipher_setiv(tmp_hd, sa_ptr->iv, sa_ptr->shivf_len);
-        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-            status = CRYPTO_LIB_ERROR;
-            return status;
-        }
-        gcry_error = gcry_cipher_encrypt(tmp_hd,
-                                         &(ingest[pdu_loc]), // ciphertext output
-                                         pdu_len,            // length of data
-                                         &(tempTM[pdu_loc]), // plaintext input
-                                         pdu_len             // in data length
-        );
-        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            printf(KRED "ERROR: gcry_cipher_decrypt error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-            status = CRYPTO_LIB_ERROR;
-            return status;
-        }
-        gcry_error = gcry_cipher_authenticate(tmp_hd,
-                                              &(aad[0]),      // additional authenticated data
-                                              sa_ptr->abm_len // length of AAD
-        );
-        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            printf(KRED "ERROR: gcry_cipher_authenticate error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-            status = CRYPTO_LIB_ERROR;
-            return status;
-        }
-        gcry_error = gcry_cipher_gettag(tmp_hd,
-                                        &(ingest[mac_loc]), // tag output
-                                        MAC_SIZE            // tag size
-        );
-        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            printf(KRED "ERROR: gcry_cipher_checktag error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-            status = CRYPTO_LIB_ERROR;
-            return status;
-        }
+        cryptography_if->cryptography_aead_encrypt(&(ingest[pdu_loc]), // ciphertext output
+                                                   pdu_len,            // length of data
+                                                   &(tempTM[pdu_loc]), // plaintext input
+                                                   pdu_len,             // in data length
+                                                   NULL, // Key is mapped via SA
+                                                   KEY_SIZE,
+                                                   sa_ptr,
+                                                   sa_ptr->iv,
+                                                   sa_ptr->shivf_len,
+                                                   &(ingest[mac_loc]),
+                                                   MAC_SIZE,
+                                                   &(aad[0]), // AAD Input location
+                                                   sa_ptr->abm_len, // AAD is size of ABM in this case
+                                                   CRYPTO_TRUE, // Encrypt
+                                                   CRYPTO_TRUE, // Authenticate
+                                                   CRYPTO_TRUE // Use AAD
+                                                   );
 
-#ifdef MAC_DEBUG
-        printf("MAC = 0x");
-        for (x = 0; x < MAC_SIZE; x++)
-        {
-            printf("%02x", (uint8_t)ingest[x + mac_loc]);
-        }
-        printf("\n");
-#endif
 
         // Update OCF
         y = 0;

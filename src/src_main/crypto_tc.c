@@ -21,6 +21,8 @@
 */
 #include "crypto.h"
 
+#include <string.h> // memcpy
+
 /**
  * @brief Function: Crypto_TC_ApplySecurity
  * Applies Security to incoming frame.  Encryption, Authentication, and Authenticated Encryption
@@ -42,9 +44,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
     uint16_t mac_loc = 0;
     uint16_t tf_payload_len = 0x0000;
     uint16_t new_fecf = 0x0000;
-    uint8_t *aad;
-    gcry_cipher_hd_t tmp_hd;
-    gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
+    uint8_t *aad = NULL;
     uint16_t new_enc_frame_header_field_length = 0;
     uint32_t encryption_cipher;
     uint8_t ecs_is_aead_algorithm;
@@ -407,123 +407,53 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
 
         if (sa_service_type != SA_PLAINTEXT)
         {
-            gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_CBC_MAC);
-            if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+            uint8_t* mac_ptr = NULL;
+            uint16_t aad_len = 0;
+
+            if (sa_service_type == SA_AUTHENTICATED_ENCRYPTION && ecs_is_aead_algorithm == CRYPTO_TRUE)
             {
-                printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-                status = CRYPTO_LIB_ERROR;
-                return status;
-            }
-            gcry_error = gcry_cipher_setkey(tmp_hd, &(ek_ring[sa_ptr->ekid].value[0]),
-                                            KEY_SIZE // TODO:  look into this
-            );
-            if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-            {
-                printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-                status = CRYPTO_LIB_ERROR;
-                return status;
-            }
-            gcry_error = gcry_cipher_setiv(tmp_hd, sa_ptr->iv, sa_ptr->shivf_len);
-            if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-            {
-                printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-                status = CRYPTO_LIB_ERROR;
-                return status;
-            }
-
-            if ((sa_service_type == SA_ENCRYPTION) || (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
-            {
-
-#ifdef TC_DEBUG
-                printf("Encrypted bytes output_loc is %d\n", index);
-                printf("tf_payload_len is %d\n", tf_payload_len);
-                printf(KYEL "Printing TC Frame prior to encryption:\n\t");
-                for (int i = 0; i < *p_enc_frame_len; i++)
-                {
-                    printf("%02X", *(p_new_enc_frame + i));
-                }
-                printf("\n");
-#endif
-
-                if (sa_service_type == SA_AUTHENTICATED_ENCRYPTION &&
-                    ecs_is_aead_algorithm == CRYPTO_TRUE) // Algorithm is AEAD algorithm, Add AAD before encrypt!
-                {
-                    // Prepare the Header AAD (CCSDS 335.0-B-1 4.2.3.2.2.3)
-                    uint16_t aad_len = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len +
-                                       sa_ptr->shsnf_len + sa_ptr->shplf_len;
-                    if (sa_ptr->abm_len < aad_len)
-                    {
-                        return CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
-                    }
-                    aad = Crypto_Prepare_TC_AAD(p_new_enc_frame, aad_len, sa_ptr->abm);
-
-                    // Add the AAD to the libgcrypt cipher handle
-                    gcry_error = gcry_cipher_authenticate(tmp_hd,
-                                                          aad,    // additional authenticated data
-                                                          aad_len // length of AAD
-                    );
-                    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-                    {
-                        printf(KRED "ERROR: gcry_cipher_authenticate error code %d\n" RESET,
-                               gcry_error & GPG_ERR_CODE_MASK);
-                        printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
-                        status = CRYPTO_LIB_ERR_AUTHENTICATION_ERROR;
-                        return status;
-                    }
-                    free(aad);
-                }
-
-                gcry_error =
-                    gcry_cipher_encrypt(tmp_hd,
-                                        &p_new_enc_frame[index],                               // ciphertext output
-                                        tf_payload_len,                                        // length of data
-                                        (p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), // plaintext input
-                                        tf_payload_len                                         // in data length
-                    );
-
-                if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-                {
-                    printf(KRED "ERROR: gcry_cipher_encrypt error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-                    status = CRYPTO_LIB_ERROR;
-                    return status;
-                }
-
-#ifdef TC_DEBUG
-                printf("Encrypted bytes output_loc is %d\n", index);
-                printf("tf_payload_len is %d\n", tf_payload_len);
-                printf(KYEL "Printing TC Frame after encryption:\n\t");
-                for (int i = 0; i < *p_enc_frame_len; i++)
-                {
-                    printf("%02X", *(p_new_enc_frame + i));
-                }
-                printf("\n");
-#endif
-
-                // Get MAC & insert into p_new_enc_frame
-                if (sa_service_type == SA_AUTHENTICATED_ENCRYPTION && ecs_is_aead_algorithm == CRYPTO_TRUE)
-                {
-                    mac_loc = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len +
-                              sa_ptr->shplf_len + tf_payload_len;
+                mac_loc = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len +
+                          sa_ptr->shplf_len + tf_payload_len;
 #ifdef MAC_DEBUG
-                    printf(KYEL "MAC location is: %d\n" RESET, mac_loc);
-                    printf(KYEL "MAC size is: %d\n" RESET, MAC_SIZE);
+                printf(KYEL "MAC location is: %d\n" RESET, mac_loc);
+                printf(KYEL "MAC size is: %d\n" RESET, MAC_SIZE);
 #endif
-                    gcry_error = gcry_cipher_gettag(
-                        tmp_hd,
-                        &p_new_enc_frame[mac_loc], // tag output
-                        MAC_SIZE // tag size // TODO - use sa_ptr->abm_len instead of hardcoded mac size?
-                    );
-                    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-                    {
-                        printf(KRED "ERROR: gcry_cipher_checktag error code %d\n" RESET,
-                               gcry_error & GPG_ERR_CODE_MASK);
-                        status = CRYPTO_LIB_ERR_MAC_RETRIEVAL_ERROR;
-                        return status;
-                    }
+                mac_ptr = &p_new_enc_frame[mac_loc];
+
+                // Prepare the Header AAD (CCSDS 335.0-B-1 4.2.3.2.2.3)
+                aad_len = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len +
+                                   sa_ptr->shsnf_len + sa_ptr->shplf_len;
+                if (sa_ptr->abm_len < aad_len)
+                {
+                    return CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
                 }
-                // Close cipher, so we can authenticate encrypted data
-                gcry_cipher_close(tmp_hd);
+                aad = Crypto_Prepare_TC_AAD(p_new_enc_frame, aad_len, sa_ptr->abm);
+
             }
+
+
+            cryptography_if->cryptography_aead_encrypt(&p_new_enc_frame[index],                               // ciphertext output
+                                                       tf_payload_len,                                        // length of data
+                                                       (uint8_t*)(p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), // plaintext input
+                                                       tf_payload_len,                                         // in data length
+                                                       NULL, // Using SA key reference, key is null
+                                                       KEY_SIZE, // Length of key. TODO - why is this hard-coded?
+                                                       sa_ptr, // SA (for key reference)
+                                                       sa_ptr->iv, // IV
+                                                       sa_ptr->shivf_len, // IV Length
+                                                       mac_ptr, // tag output
+                                                       MAC_SIZE, // tag size // TODO - why is this hard-coded?!
+                                                       aad, // AAD Input
+                                                       aad_len, // Length of AAD
+                                                       (sa_service_type==SA_AUTHENTICATED_ENCRYPTION || sa_service_type == SA_ENCRYPTION),
+                                                       (sa_service_type==SA_AUTHENTICATED_ENCRYPTION || sa_service_type == SA_AUTHENTICATION),
+                                                       (sa_service_type==SA_AUTHENTICATED_ENCRYPTION || sa_service_type == SA_AUTHENTICATION)
+                                                       );
+
+            // ENDS HERE!!!! //
+            // ENDS HERE!!!! //
+            // ENDS HERE!!!! //
+
 
             // Prepare additional authenticated data, if needed
             if ((sa_service_type == SA_AUTHENTICATION) ||
@@ -531,70 +461,10 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
                  ecs_is_aead_algorithm == CRYPTO_FALSE)) // Authenticated Encryption without AEAD algorithm, AEAD
                                                          // algorithms handled in encryption block!
             {
-                gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_CBC_MAC);
-                if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-                {
-                    printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-                    status = CRYPTO_LIB_ERROR;
-                    return status;
-                }
-                gcry_error = gcry_cipher_setkey(tmp_hd, &(ek_ring[sa_ptr->ekid].value[0]),
-                                                KEY_SIZE // TODO:  look into this
-                );
-                if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-                {
-                    printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-                    status = CRYPTO_LIB_ERROR;
-                    return status;
-                }
-                gcry_error = gcry_cipher_setiv(tmp_hd, sa_ptr->iv, sa_ptr->shivf_len);
-                if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-                {
-                    printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-                    status = CRYPTO_LIB_ERROR;
-                    return status;
-                }
+                // TODO
 
-                uint16_t aad_len = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len +
-                                   sa_ptr->shsnf_len + sa_ptr->shplf_len + tf_payload_len;
-                if (sa_ptr->abm_len < aad_len)
-                {
-                    return CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
-                }
-                aad = Crypto_Prepare_TC_AAD(p_new_enc_frame, aad_len, sa_ptr->abm);
-
-                gcry_error = gcry_cipher_authenticate(tmp_hd,
-                                                      aad,    // additional authenticated data
-                                                      aad_len // length of AAD
-                );
-                if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-                {
-                    printf(KRED "ERROR: gcry_cipher_authenticate error code %d\n" RESET,
-                           gcry_error & GPG_ERR_CODE_MASK);
-                    printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
-                    status = CRYPTO_LIB_ERROR;
-                    return status;
-                }
-
-                mac_loc = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len +
-                          sa_ptr->shplf_len + tf_payload_len;
-#ifdef MAC_DEBUG
-                printf(KYEL "MAC location is: %d\n" RESET, mac_loc);
-                printf(KYEL "MAC size is: %d\n" RESET, MAC_SIZE);
-#endif
-                gcry_error =
-                    gcry_cipher_gettag(tmp_hd,
-                                       &p_new_enc_frame[mac_loc], // tag output
-                                       MAC_SIZE // tag size // TODO - use sa_ptr->abm_len instead of hardcoded mac size?
-                    );
-                if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-                {
-                    printf(KRED "ERROR: gcry_cipher_checktag error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-                    status = CRYPTO_LIB_ERR_MAC_RETRIEVAL_ERROR;
-                    return status;
-                }
-                // Zeroise any sensitive information
-                gcry_cipher_close(tmp_hd);
+                cryptography_if->cryptography_encrypt();
+                cryptography_if->cryptography_authenticate();
             }
         }
 
@@ -670,8 +540,6 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t *ingest, int *len_ingest, TC_t *tc_sdl
 {
     // Local Variables
     int32_t status = CRYPTO_LIB_SUCCESS;
-    gcry_cipher_hd_t tmp_hd;
-    gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     SecurityAssociation_t *sa_ptr = NULL;
     uint8_t sa_service_type = -1;
     uint8_t *aad;
