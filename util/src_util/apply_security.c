@@ -25,7 +25,7 @@
 
 int main(int argc, char *argv[])
 {
-    char *buffer;
+    char *buffer = NULL;
     const char *filename;
     long buffer_size;
     char st[64];
@@ -48,6 +48,9 @@ int main(int argc, char *argv[])
         return CRYPTO_LIB_ERROR;
     }
     buffer = c_read_file(filename, &buffer_size);
+    if(buffer == NULL)
+        return -1;
+
     debug_printf("File buffer size:%lu\n", buffer_size);
     uint32_t buffer_size_i = (uint32_t)buffer_size;
     debug_printf("File buffer size int:%d\n", buffer_size_i);
@@ -58,7 +61,7 @@ int main(int argc, char *argv[])
     Crypto_Init();
 
     uint8_t *ptr_enc_frame = NULL;
-    uint16_t enc_frame_len;
+    uint16_t enc_frame_len = 0;
 
     // Call ApplySecurity on buffer contents depending on type.
     if (strcmp(security_type, "tc") == 0)
