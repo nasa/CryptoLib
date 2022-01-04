@@ -226,8 +226,7 @@ UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
     test_association->sa_state = SA_OPERATIONAL;
 
     return_val = Crypto_TC_ProcessSecurity(dec_test_ping_b, &dec_test_ping_len, tc_sdls_processed_frame);
-    //Commenting out, decrypt procedure is invalid (data generated with 'authenticate then encrypt' instead of 'encrypt then authenticate')
-    //ASSERT_EQ(9, return_val); // 9 is the number of pings in that EP PDU.
+    ASSERT_EQ(9, return_val); // 9 is the number of pings in that EP PDU.
 
     Crypto_Shutdown();
 
