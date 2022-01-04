@@ -435,10 +435,14 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
 
             }
 
+#ifdef TC_DEBUG
+            printf("Encrypted bytes output_loc is %d\n", index);
+            printf("Input bytes input_loc is %d\n", TC_FRAME_HEADER_SIZE + segment_hdr_len);
+#endif
 
             if(ecs_is_aead_algorithm == CRYPTO_TRUE)
             {
-                cryptography_if->cryptography_aead_encrypt(&p_new_enc_frame[index],                               // ciphertext output
+                status = cryptography_if->cryptography_aead_encrypt(&p_new_enc_frame[index],                               // ciphertext output
                                                            tf_payload_len,                                        // length of data
                                                            (uint8_t*)(p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), // plaintext input
                                                            tf_payload_len,                                         // in data length
@@ -542,7 +546,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t *ingest, int *len_ingest, TC_t *tc_sdl
     uint8_t *aad = NULL;
     uint16_t aad_len;
     uint32_t encryption_cipher;
-    uint8_t ecs_is_aead_algorithm;
+    uint8_t ecs_is_aead_algorithm = -1;
 
     if (crypto_config == NULL)
     {
@@ -776,7 +780,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t *ingest, int *len_ingest, TC_t *tc_sdl
     if((sa_service_type == SA_AUTHENTICATION || sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
         && ecs_is_aead_algorithm == CRYPTO_TRUE)
     {
-        cryptography_if->cryptography_aead_decrypt(tc_sdls_processed_frame->tc_pdu,       // plaintext output
+        status = cryptography_if->cryptography_aead_decrypt(tc_sdls_processed_frame->tc_pdu,       // plaintext output
                                                    tc_sdls_processed_frame->tc_pdu_len,   // length of data
                                                    &(ingest[tc_enc_payload_start_index]), // ciphertext input
                                                    tc_sdls_processed_frame->tc_pdu_len,    // in data length
@@ -809,7 +813,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t *ingest, int *len_ingest, TC_t *tc_sdl
     }
 
     // Extended PDU processing, if applicable
-    if (crypto_config->process_sdls_pdus == TC_PROCESS_SDLS_PDUS_TRUE)
+    if (status == CRYPTO_LIB_SUCCESS && crypto_config->process_sdls_pdus == TC_PROCESS_SDLS_PDUS_TRUE)
     {
         status = Crypto_Process_Extended_Procedure_Pdu(tc_sdls_processed_frame, ingest);
     }

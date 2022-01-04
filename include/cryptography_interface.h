@@ -32,7 +32,7 @@ typedef struct
     int32_t (*cryptography_config)(void);
     int32_t (*cryptography_init)(void);
     crypto_key_t* (*get_ek_ring)(void);
-    int32_t (*cryptography_close)(void);
+    int32_t (*cryptography_shutdown)(void);
     // Cryptography Interface Functions
     int32_t (*cryptography_encrypt)(void);
     int32_t (*cryptography_decrypt)(void);

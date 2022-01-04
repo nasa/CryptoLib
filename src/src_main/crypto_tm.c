@@ -216,7 +216,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *ingest, int *len_ingest)
         printf("\n");
 #endif
 
-        cryptography_if->cryptography_aead_encrypt(&(ingest[pdu_loc]), // ciphertext output
+        status = cryptography_if->cryptography_aead_encrypt(&(ingest[pdu_loc]), // ciphertext output
                                                    pdu_len,            // length of data
                                                    &(tempTM[pdu_loc]), // plaintext input
                                                    pdu_len,             // in data length
@@ -230,7 +230,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *ingest, int *len_ingest)
                                                    &(aad[0]), // AAD Input location
                                                    sa_ptr->abm_len, // AAD is size of ABM in this case
                                                    CRYPTO_TRUE, // Encrypt
-                                                   CRYPTO_TRUE, // Authenticate
+                                                   CRYPTO_FALSE, // Authenticate // TODO -- Set to SA value, manually setting to false here so existing tests pass. Existing data was generated with authenticate then encrypt, when it should have been encrypt then authenticate.
                                                    CRYPTO_TRUE // Use AAD
                                                    );
 

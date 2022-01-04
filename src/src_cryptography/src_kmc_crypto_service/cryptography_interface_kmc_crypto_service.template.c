@@ -21,7 +21,7 @@
 static int32_t cryptography_config(void);
 static int32_t cryptography_init(void);
 static crypto_key_t* get_ek_ring(void);
-static int32_t cryptography_close(void);
+static int32_t cryptography_shutdown(void);
 // Cryptography Interface Functions
 static int32_t cryptography_encrypt(void);
 static int32_t cryptography_decrypt(void);
@@ -56,7 +56,7 @@ CryptographyInterface get_cryptography_interface_kmc_crypto_service(void)
     cryptography_if_struct.cryptography_config = cryptography_config;
     cryptography_if_struct.cryptography_init = cryptography_init;
     cryptography_if_struct.get_ek_ring = get_ek_ring;
-    cryptography_if_struct.cryptography_close = cryptography_close;
+    cryptography_if_struct.cryptography_shutdown = cryptography_shutdown;
     cryptography_if_struct.cryptography_encrypt = cryptography_encrypt;
     cryptography_if_struct.cryptography_decrypt = cryptography_decrypt;
     cryptography_if_struct.cryptography_authenticate = cryptography_authenticate;
@@ -69,7 +69,7 @@ CryptographyInterface get_cryptography_interface_kmc_crypto_service(void)
 static int32_t cryptography_config(void){ return CRYPTO_LIB_SUCCESS; }
 static int32_t cryptography_init(void){ return CRYPTO_LIB_SUCCESS; }
 static crypto_key_t* get_ek_ring(void){ return NULL; }
-static int32_t cryptography_close(void){ return CRYPTO_LIB_SUCCESS; }
+static int32_t cryptography_shutdown(void){ return CRYPTO_LIB_SUCCESS; }
 static int32_t cryptography_encrypt(void){ return CRYPTO_LIB_SUCCESS; }
 static int32_t cryptography_decrypt(void){ return CRYPTO_LIB_SUCCESS; }
 static int32_t cryptography_authenticate(void){ return CRYPTO_LIB_SUCCESS; }

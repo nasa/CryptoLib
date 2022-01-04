@@ -138,8 +138,10 @@ int32_t Crypto_Init(void)
         return status;
     }
 
-    //Initialize the cryptography library.
+    // Initialize the cryptography library.
     status = cryptography_if->cryptography_init();
+    // Configure the cryptography library.
+    status = cryptography_if->cryptography_config();
 
 
     // Init Security Associations
@@ -186,6 +188,12 @@ int32_t Crypto_Shutdown(void)
     {
         Crypto_Free_Managed_Parameters(gvcid_managed_parameters);
         gvcid_managed_parameters = NULL;
+    }
+
+    if (cryptography_if != NULL)
+    {
+        cryptography_if->cryptography_shutdown();
+        cryptography_if = NULL;
     }
 
     return status;
