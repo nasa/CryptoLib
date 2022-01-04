@@ -27,8 +27,8 @@ static int32_t cryptography_encrypt(void);
 static int32_t cryptography_decrypt(void);
 static int32_t cryptography_authenticate(void);
 static int32_t cryptography_validate_authentication(void);
-static int32_t cryptography_aead_encrypt(uint8_t* data_out, uint32_t len_data_out,
-                                         uint8_t* data_in, uint32_t len_data_in,
+static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
+                                         uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
                                          SecurityAssociation_t* sa_ptr,
                                          uint8_t* iv, uint32_t iv_len,
@@ -36,8 +36,8 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, uint32_t len_data_ou
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t encrypt_bool, uint8_t authenticate_bool,
                                          uint8_t aad_bool);
-static int32_t cryptography_aead_decrypt(uint8_t* data_out, uint32_t len_data_out,
-                                         uint8_t* data_in, uint32_t len_data_in,
+static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
+                                         uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
                                          SecurityAssociation_t* sa_ptr,
                                          uint8_t* iv, uint32_t iv_len,
@@ -46,7 +46,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, uint32_t len_data_ou
                                          uint8_t decrypt_bool, uint8_t authenticate_bool,
                                          uint8_t aad_bool);
 /*
-** Global Variables
+** Module Variables
 */
 // Cryptography Interface
 static CryptographyInterfaceStruct cryptography_if_struct;
@@ -74,8 +74,8 @@ static int32_t cryptography_encrypt(void){ return CRYPTO_LIB_SUCCESS; }
 static int32_t cryptography_decrypt(void){ return CRYPTO_LIB_SUCCESS; }
 static int32_t cryptography_authenticate(void){ return CRYPTO_LIB_SUCCESS; }
 static int32_t cryptography_validate_authentication(void){ return CRYPTO_LIB_SUCCESS; }
-static int32_t cryptography_aead_encrypt(uint8_t* data_out, uint32_t len_data_out,
-                                         uint8_t* data_in, uint32_t len_data_in,
+static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
+                                         uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
                                          SecurityAssociation_t* sa_ptr,
                                          uint8_t* iv, uint32_t iv_len,
@@ -102,8 +102,8 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, uint32_t len_data_ou
     aad_bool = aad_bool;
     return CRYPTO_LIB_SUCCESS;
 }
-static int32_t cryptography_aead_decrypt(uint8_t* data_out, uint32_t len_data_out,
-                                         uint8_t* data_in, uint32_t len_data_in,
+static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
+                                         uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
                                          SecurityAssociation_t* sa_ptr,
                                          uint8_t* iv, uint32_t iv_len,

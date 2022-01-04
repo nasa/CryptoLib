@@ -89,7 +89,7 @@ int32_t Crypto_Key_OTAR(void)
 
 
     status = cryptography_if->cryptography_aead_decrypt(&(sdls_frame.pdu.data[14]), // plaintext output
-                                                        pdu_keys * (2 + KEY_SIZE), // length of data
+                                                        (size_t)(pdu_keys * (2 + KEY_SIZE)), // length of data
                                                         NULL,                               // in place decryption
                                                         0,                                  // in data length
                                                         &(ek_ring[packet.mkid].value[0]), //key
@@ -376,9 +376,9 @@ int32_t Crypto_Key_verify(uint8_t *ingest, TC_t *tc_frame)
 
         // Encrypt challenge
         cryptography_if->cryptography_aead_encrypt(&(ingest[count]), // ciphertext output
-                                                   CHALLENGE_SIZE, // length of data
+                                                   (size_t)CHALLENGE_SIZE, // length of data
                                                    &(packet.blk[x].challenge[0]), // plaintext input
-                                                   CHALLENGE_SIZE, // in data length
+                                                   (size_t)CHALLENGE_SIZE, // in data length
                                                    &(ek_ring[packet.blk[x].kid].value[0]), // Key Index
                                                    KEY_SIZE, // Key Length
                                                    NULL, // SA Reference for key

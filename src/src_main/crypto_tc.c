@@ -443,21 +443,21 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
             if(ecs_is_aead_algorithm == CRYPTO_TRUE)
             {
                 status = cryptography_if->cryptography_aead_encrypt(&p_new_enc_frame[index],                               // ciphertext output
-                                                           tf_payload_len,                                        // length of data
-                                                           (uint8_t*)(p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), // plaintext input
-                                                           tf_payload_len,                                         // in data length
-                                                           NULL, // Using SA key reference, key is null
-                                                           KEY_SIZE, // Length of key. TODO - why is this hard-coded?
-                                                           sa_ptr, // SA (for key reference)
-                                                           sa_ptr->iv, // IV
-                                                           sa_ptr->shivf_len, // IV Length
-                                                           mac_ptr, // tag output
-                                                           MAC_SIZE, // tag size // TODO - why is this hard-coded?!
-                                                           aad, // AAD Input
-                                                           aad_len, // Length of AAD
-                                                           (sa_ptr->est==1),
-                                                           (sa_ptr->ast==1),
-                                                           (sa_ptr->ast==1)
+                                                                    (size_t)tf_payload_len,                                        // length of data
+                                                                    (uint8_t*)(p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), // plaintext input
+                                                                    (size_t)tf_payload_len,                                         // in data length
+                                                                    NULL, // Using SA key reference, key is null
+                                                                    KEY_SIZE, // Length of key. TODO - why is this hard-coded?
+                                                                    sa_ptr, // SA (for key reference)
+                                                                    sa_ptr->iv, // IV
+                                                                    sa_ptr->shivf_len, // IV Length
+                                                                    mac_ptr, // tag output
+                                                                    MAC_SIZE, // tag size // TODO - why is this hard-coded?!
+                                                                    aad, // AAD Input
+                                                                    aad_len, // Length of AAD
+                                                                    (sa_ptr->est==1),
+                                                                    (sa_ptr->ast==1),
+                                                                    (sa_ptr->ast==1)
                 );
 
             } else // non aead algorithm
@@ -777,25 +777,32 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t *ingest, int *len_ingest, TC_t *tc_sdl
     uint16_t tc_enc_payload_start_index = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len +
                                           sa_ptr->shsnf_len + sa_ptr->shplf_len;
 
+    tc_sdls_processed_frame->tc_pdu_len =
+            tc_sdls_processed_frame->tc_header.fl + 1 - tc_enc_payload_start_index - sa_ptr->stmacf_len - fecf_len;
+
+#ifdef DEBUG
+    printf(KYEL "TC PDU Calculated Length: %d \n", tc_sdls_processed_frame->tc_pdu_len);
+#endif
+
     if((sa_service_type == SA_AUTHENTICATION || sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
         && ecs_is_aead_algorithm == CRYPTO_TRUE)
     {
         status = cryptography_if->cryptography_aead_decrypt(tc_sdls_processed_frame->tc_pdu,       // plaintext output
-                                                   tc_sdls_processed_frame->tc_pdu_len,   // length of data
-                                                   &(ingest[tc_enc_payload_start_index]), // ciphertext input
-                                                   tc_sdls_processed_frame->tc_pdu_len,    // in data length
-                                                   NULL, // Key
-                                                   KEY_SIZE, // TODO - This shouldn't be hardcoded
-                                                   sa_ptr, // SA for key reference
-                                                   tc_sdls_processed_frame->tc_sec_header.iv, // IV
-                                                   sa_ptr->shivf_len, // IV Length
-                                                   tc_sdls_processed_frame->tc_sec_trailer.mac, // Frame Expected Tag
-                                                   sa_ptr->stmacf_len,                           // tag size
-                                                   aad,    // additional authenticated data
-                                                   aad_len, // length of AAD
-                                                   (sa_ptr->est==1),
-                                                   (sa_ptr->ast==1),
-                                                   (sa_ptr->ast==1)
+                                                            (size_t)(tc_sdls_processed_frame->tc_pdu_len),   // length of data
+                                                            &(ingest[tc_enc_payload_start_index]), // ciphertext input
+                                                            (size_t)(tc_sdls_processed_frame->tc_pdu_len),    // in data length
+                                                            NULL, // Key
+                                                            KEY_SIZE, // TODO - This shouldn't be hardcoded
+                                                            sa_ptr, // SA for key reference
+                                                            tc_sdls_processed_frame->tc_sec_header.iv, // IV
+                                                            sa_ptr->shivf_len, // IV Length
+                                                            tc_sdls_processed_frame->tc_sec_trailer.mac, // Frame Expected Tag
+                                                            sa_ptr->stmacf_len,                           // tag size
+                                                            aad,    // additional authenticated data
+                                                            aad_len, // length of AAD
+                                                            (sa_ptr->est==1), // Decryption Bool
+                                                            (sa_ptr->ast==1), // Authentication Bool
+                                                            (sa_ptr->ast==1) // AAD Bool
         );
     }else if (sa_service_type == SA_AUTHENTICATION || sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION) // Non aead algorithm
     {
@@ -806,8 +813,6 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t *ingest, int *len_ingest, TC_t *tc_sdl
     } else // sa_service_type == SA_PLAINTEXT
     {
         // TODO: Plaintext ARSN
-        tc_sdls_processed_frame->tc_pdu_len =
-            tc_sdls_processed_frame->tc_header.fl + 1 - tc_enc_payload_start_index - sa_ptr->stmacf_len - fecf_len;
         memcpy(tc_sdls_processed_frame->tc_pdu, &(ingest[tc_enc_payload_start_index]),
                tc_sdls_processed_frame->tc_pdu_len);
     }

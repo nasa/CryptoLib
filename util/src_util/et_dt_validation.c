@@ -1202,19 +1202,34 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
     // Calc payload index: total length - pt length
-    // #ifdef DEBUG
-    //     printf("Expected MAC: ");
-    //     for (int i=0; i<buffer_cyber_chef_mac_len; i++)
-    //     {
-    //         printf("%02x ", buffer_cyber_chef_mac_b[i]);
-    //     }
-    //     printf("\nReceived MAC: ");
-    //     for (int i=0; i<test_association->stmacf_len; i++)
-    //     {
-    //         printf("%02x ", tc_nist_processed_frame->tc_sec_trailer.mac[i]);
-    //     }
-    //     printf("\n");
-    // #endif
+     #ifdef DEBUG
+         printf("Expected MAC: ");
+         for (int i=0; i<buffer_cyber_chef_mac_len; i++)
+         {
+             printf("%02x ", buffer_cyber_chef_mac_b[i]);
+         }
+         printf("\nReceived MAC: ");
+         for (int i=0; i<test_association->stmacf_len; i++)
+         {
+             printf("%02x ", tc_nist_processed_frame->tc_sec_trailer.mac[i]);
+         }
+         printf("\n");
+     #endif
+
+#ifdef DEBUG
+        printf("PDU Length: %d \n",tc_nist_processed_frame->tc_pdu_len);
+        printf("Expected PDU: ");
+         for (int i=0; i < tc_nist_processed_frame->tc_pdu_len; i++)
+         {
+             printf("%02x ", buffer_nist_pt_b[i]);
+         }
+         printf("\nReceived PDU: ");
+         for (int i=0; i < tc_nist_processed_frame->tc_pdu_len; i++)
+         {
+             printf("%02x ", tc_nist_processed_frame->tc_pdu[i]);
+         }
+         printf("\n");
+#endif
 
     Crypto_Shutdown();
     // Verify the MAC

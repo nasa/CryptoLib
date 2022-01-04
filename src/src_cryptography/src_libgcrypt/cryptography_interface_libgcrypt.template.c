@@ -29,8 +29,8 @@ static int32_t cryptography_encrypt(void);
 static int32_t cryptography_decrypt(void);
 static int32_t cryptography_authenticate(void);
 static int32_t cryptography_validate_authentication(void);
-static int32_t cryptography_aead_encrypt(uint8_t* data_out, uint32_t len_data_out,
-                                         uint8_t* data_in, uint32_t len_data_in,
+static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
+                                         uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
                                          SecurityAssociation_t* sa_ptr,
                                          uint8_t* iv, uint32_t iv_len,
@@ -38,8 +38,8 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, uint32_t len_data_ou
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t encrypt_bool, uint8_t authenticate_bool,
                                          uint8_t aad_bool);
-static int32_t cryptography_aead_decrypt(uint8_t* data_out, uint32_t len_data_out,
-                                         uint8_t* data_in, uint32_t len_data_in,
+static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
+                                         uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
                                          SecurityAssociation_t* sa_ptr,
                                          uint8_t* iv, uint32_t iv_len,
@@ -524,8 +524,8 @@ static int32_t cryptography_encrypt(void){ return CRYPTO_LIB_SUCCESS; }
 static int32_t cryptography_decrypt(void){ return CRYPTO_LIB_SUCCESS; }
 static int32_t cryptography_authenticate(void){ return CRYPTO_LIB_SUCCESS; }
 static int32_t cryptography_validate_authentication(void){ return CRYPTO_LIB_SUCCESS; }
-static int32_t cryptography_aead_encrypt(uint8_t* data_out, uint32_t len_data_out,
-                                         uint8_t* data_in, uint32_t len_data_in,
+static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
+                                         uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
                                          SecurityAssociation_t* sa_ptr, // For key index or key references (when key not passed in explicitly via key param)
                                          uint8_t* iv, uint32_t iv_len,
@@ -578,7 +578,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, uint32_t len_data_ou
     }
 
 #ifdef TC_DEBUG
-    printf("Input payload length is %d\n", len_data_in);
+    printf("Input payload length is %ld\n", len_data_in);
     printf(KYEL "Printing Frame Data prior to encryption:\n\t");
     for (uint32_t i = 0; i < len_data_in; i++)
     {
@@ -632,7 +632,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, uint32_t len_data_ou
     }
 
 #ifdef TC_DEBUG
-    printf("Output payload length is %d\n", len_data_out);
+    printf("Output payload length is %ld\n", len_data_out);
     printf(KYEL "Printing TC Frame Data after encryption:\n\t");
     for (uint32_t i = 0; i < len_data_out; i++)
     {
@@ -674,8 +674,8 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, uint32_t len_data_ou
     return status;
 }
 
-static int32_t cryptography_aead_decrypt(uint8_t* data_out, uint32_t len_data_out,
-                                         uint8_t* data_in, uint32_t len_data_in,
+static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
+                                         uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
                                          SecurityAssociation_t* sa_ptr,
                                          uint8_t* iv, uint32_t iv_len,
@@ -747,6 +747,8 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, uint32_t len_data_ou
     {
         // Authenticate only! No input data passed into decryption function, only AAD.
         gcry_error = gcry_cipher_decrypt(tmp_hd,NULL,0, NULL,0);
+        // If authentication only, don't decrypt the data. Just pass the data PDU through.
+        memcpy(data_out, data_in, len_data_in);
     }
 
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
