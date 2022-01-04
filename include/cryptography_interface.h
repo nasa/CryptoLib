@@ -50,10 +50,12 @@ typedef struct
     int32_t (*cryptography_aead_decrypt)(uint8_t* data_out, uint32_t len_data_out,
                                          uint8_t* data_in, uint32_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
-                                         char* key_ref,
+                                         SecurityAssociation_t* sa_ptr,
                                          uint8_t* iv, uint32_t iv_len,
+                                         uint8_t* aad, uint32_t aad_len,
                                          uint8_t* mac, uint32_t mac_size,
-                                         uint8_t decrypt_bool, uint8_t authenticate_bool);
+                                         uint8_t decrypt_bool, uint8_t authenticate_bool,
+                                         uint8_t aad_bool);
 
 } CryptographyInterfaceStruct, *CryptographyInterface;
 

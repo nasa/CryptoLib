@@ -41,10 +41,12 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, uint32_t len_data_ou
 static int32_t cryptography_aead_decrypt(uint8_t* data_out, uint32_t len_data_out,
                                          uint8_t* data_in, uint32_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
-                                         char* key_ref,
+                                         SecurityAssociation_t* sa_ptr,
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
-                                         uint8_t decrypt_bool, uint8_t authenticate_bool);
+                                         uint8_t* aad, uint32_t aad_len,
+                                         uint8_t decrypt_bool, uint8_t authenticate_bool,
+                                         uint8_t aad_bool);
 /*
 ** Module Variables
 */
@@ -543,21 +545,21 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, uint32_t len_data_ou
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        status = CRYPTO_LIB_ERROR;
+        status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
         return status;
     }
     gcry_error = gcry_cipher_setkey(tmp_hd, key_ptr, len_key);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        status = CRYPTO_LIB_ERROR;
+        status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
         return status;
     }
     gcry_error = gcry_cipher_setiv(tmp_hd, iv, iv_len);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        status = CRYPTO_LIB_ERROR;
+        status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
         return status;
     }
 
@@ -658,36 +660,60 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, uint32_t len_data_ou
 static int32_t cryptography_aead_decrypt(uint8_t* data_out, uint32_t len_data_out,
                                          uint8_t* data_in, uint32_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
-                                         char* key_ref,
+                                         SecurityAssociation_t* sa_ptr,
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
-                                         uint8_t decrypt_bool, uint8_t authenticate_bool)
+                                         uint8_t* aad, uint32_t aad_len,
+                                         uint8_t decrypt_bool, uint8_t authenticate_bool,
+                                         uint8_t aad_bool)
 {
     gcry_cipher_hd_t tmp_hd;
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     int32_t status = CRYPTO_LIB_SUCCESS;
+    uint8_t* key_ptr = key;
+
+    if(sa_ptr != NULL) //Using SA key pointer
+    {
+        key_ptr = &(ek_ring[sa_ptr->ekid].value[0]);
+    }
 
     gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_CBC_MAC);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        status = CRYPTO_LIB_ERROR;
+        status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
         return status;
     }
-    gcry_error = gcry_cipher_setkey(tmp_hd, key, len_key);
+    gcry_error = gcry_cipher_setkey(tmp_hd, key_ptr, len_key);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        status = CRYPTO_LIB_ERROR;
+        status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
         return status;
     }
     gcry_error = gcry_cipher_setiv(tmp_hd, iv, iv_len);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        status = CRYPTO_LIB_ERROR;
+        status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
         return status;
     }
+
+    if (aad_bool == CRYPTO_TRUE)
+    {
+        gcry_error = gcry_cipher_authenticate(tmp_hd,
+                                              aad,    // additional authenticated data
+                                              aad_len // length of AAD
+        );
+        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+        {
+            printf(KRED "ERROR: gcry_cipher_authenticate error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+            printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+            status = CRYPTO_LIB_ERR_AUTHENTICATION_ERROR;
+            return status;
+        }
+    }
+
     if (decrypt_bool == CRYPTO_TRUE)
     {
         gcry_error = gcry_cipher_decrypt(tmp_hd,
@@ -706,7 +732,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, uint32_t len_data_ou
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "ERROR: gcry_cipher_decrypt error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        status = CRYPTO_LIB_ERROR;
+        status = CRYPTO_LIB_ERR_DECRYPT_ERROR;
         return status;
     }
     if (authenticate_bool == CRYPTO_TRUE)
@@ -718,14 +744,13 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, uint32_t len_data_ou
         if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
         {
             printf(KRED "ERROR: gcry_cipher_checktag error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-            status = CRYPTO_LIB_ERROR;
+            fprintf(stderr, "gcry_cipher_decrypt failed: %s\n", gpg_strerror(gcry_error));
+            status = CRYPTO_LIB_ERR_MAC_VALIDATION_ERROR;
             return status;
         }
     }
 
     gcry_cipher_close(tmp_hd);
-
-
 
     return status;
 }

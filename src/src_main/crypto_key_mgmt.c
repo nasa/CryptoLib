@@ -94,13 +94,16 @@ int32_t Crypto_Key_OTAR(void)
                                                         0,                                  // in data length
                                                         &(ek_ring[packet.mkid].value[0]), //key
                                                         KEY_SIZE, //key length
-                                                        NULL, //key reference
+                                                        NULL, //SA reference
                                                         &(packet.iv[0]), //IV
                                                         IV_SIZE, //IV length
                                                         &(packet.mac[0]), // tag input
                                                         MAC_SIZE,          // tag size
+                                                        NULL, // AAD
+                                                        0, // AAD Length
                                                         CRYPTO_TRUE, // decrypt
-                                                        CRYPTO_TRUE  // authenticate
+                                                        CRYPTO_TRUE,  // authenticate
+                                                        CRYPTO_FALSE // AAD Bool
                                                         );
 
     // Read in Decrypted Data

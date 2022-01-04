@@ -270,6 +270,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -338,6 +339,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -411,7 +413,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-
+    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "e9ccd6eef27f740d1d5c70b187734e11e76a8ac0ad1702ff02180c5c1c9e5399";
@@ -478,7 +480,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-
+    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "e9ccd6eef27f740d1d5c70b187734e11e76a8ac0ad1702ff02180c5c1c9e5399";
@@ -548,6 +550,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -615,6 +618,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -685,6 +689,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -752,6 +757,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -822,6 +828,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -889,6 +896,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -970,6 +978,7 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -1052,6 +1061,7 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -1129,6 +1139,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
 
     // NIST supplied vectors
     char *buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
@@ -1234,6 +1245,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_DATA)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
 
     // NIST supplied vectors
     char *buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
@@ -1330,6 +1342,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_MAC)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
 
     // NIST supplied vectors
     char *buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
