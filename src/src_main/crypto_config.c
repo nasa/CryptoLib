@@ -233,6 +233,11 @@ int32_t Crypto_Config_MariaDB(char* mysql_username, char* mysql_password, char* 
         /*end - encrypted connection related parameters*/
         status = CRYPTO_LIB_SUCCESS; 
     }
+    else
+    {
+        // null returned, throw error and return
+        status = CRYPTO_LIB_ERR_NULL_BUFFER;
+    }
     return status;
 }
 
@@ -253,13 +258,22 @@ int32_t Crypto_Config_Add_Gvcid_Managed_Parameter(uint8_t tfvn, uint16_t scid, u
     if (gvcid_managed_parameters == NULL)
     { // case: Global Root Node not Set
         gvcid_managed_parameters = (GvcidManagedParameters_t *)calloc(1, GVCID_MANAGED_PARAMETERS_SIZE);
-        gvcid_managed_parameters->tfvn = tfvn;
-        gvcid_managed_parameters->scid = scid;
-        gvcid_managed_parameters->vcid = vcid;
-        gvcid_managed_parameters->has_fecf = has_fecf;
-        gvcid_managed_parameters->has_segmentation_hdr = has_segmentation_hdr;
-        gvcid_managed_parameters->next = NULL;
-        return status;
+        if(gvcid_managed_parameters != NULL)
+        {
+            gvcid_managed_parameters->tfvn = tfvn;
+            gvcid_managed_parameters->scid = scid;
+            gvcid_managed_parameters->vcid = vcid;
+            gvcid_managed_parameters->has_fecf = has_fecf;
+            gvcid_managed_parameters->has_segmentation_hdr = has_segmentation_hdr;
+            gvcid_managed_parameters->next = NULL;
+            return status;
+        }
+        else
+        {
+            // calloc failed - return error
+            status = CRYPTO_LIB_ERR_NULL_BUFFER;
+            return status;
+        }
     }
     else
     { // Recurse through nodes and add at end

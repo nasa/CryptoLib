@@ -42,6 +42,7 @@
           - python3-devel
           - python3-pip
           - kernel-devel
+          - mysql-devel
           # add additional packages here
 
     - name: Install pycryptodome
