@@ -68,7 +68,8 @@ add_custom_target(gcov
     )
 add_custom_command(TARGET gcov
     COMMAND echo "=================== GCOV ===================="
-    COMMAND gcov -b -o ${OBJECT_DIR} crypto_aos.c.gnco crypto_config.c.gnco crypto_key_mgmt.c.gnco crypto_mc.c.gnco crypto_print.c.gnco crypto_tc.c.gnco crypto_tm.c.gnco crypto_user.c.gnco crypto.c.gnco sadb_routine_inmemory.template.c.gnco sadb_routine.c.gnco
+    #COMMAND gcov -b -o ${OBJECT_DIR} crypto_aos.c.gnco crypto_config.c.gnco crypto_key_mgmt.c.gnco crypto_mc.c.gnco crypto_print.c.gnco crypto_tc.c.gnco crypto_tm.c.gnco crypto_user.c.gnco crypto.c.gnco sadb_routine_inmemory.template.c.gnco sadb_routine.c.gnco
+    COMMAND gcov -b -o ${OBJECT_DIR} crypto_aos.c.gnco crypto_config.c.gnco crypto_key_mgmt.c.gnco crypto_mc.c.gnco crypto_tc.c.gnco crypto_tm.c.gnco crypto_user.c.gnco crypto.c.gnco sadb_routine_inmemory.template.c.gnco 
     # | grep -A 5 "Adder.cpp" > CoverageSummary.tmp
     #COMMAND cat CoverageSummary.tmp
     #COMMAND echo "-- Coverage files have been output to ${PROJECT_BINARY_DIR}/coverage"
