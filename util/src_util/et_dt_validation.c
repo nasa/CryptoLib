@@ -47,26 +47,14 @@ int EndPython()
 }
 
 /**
- * @brief Python Cryptodome Truth Baseline
- * Used to generate truth data for Authorized Encryption.  Results are compared against TC_ApplySecurity Functionality,
- * as well as in reverse using the TC_ProcessSecurity function.
- * @param data Hexstring of the plain text to be encrypted
- * @param key Hexstring of the key to be used during encryption
- * @param iv Hextring of the IV to be used during encryption
- * @param header Hextring of the header (AAD) that will be used during encryption
- * @param bitmask Hexstring of the bitmask that will be used on the header
- * @param expected Ouput character array that will be allocated within this function.  Memory must be freed upon
- *completion of test.
- * @param expected_length The length of the expected character array that is set within this function
- * @note The char** expected that is passsed to this function must be freed by the user upon completion of unit test or
- *other call.
- **/
-void python_auth_encryption(char *data, char *key, char *iv, char *header, char *bitmask, uint8_t **expected,
-                            long *expected_length)
+ * @brief Python Setup
+ * Sets up the use of python encryption class within CTests
+ * */
+void setup_python()
 {
     Py_Initialize();
+    PyRun_SimpleString("import sys\nsys.path.append('../test')");
     PyRun_SimpleString("import sys\nsys.path.append('../../test')");
-
     pName = PyUnicode_FromString("encryption_test");
     pModule = PyImport_Import(pName);
     if (pModule == NULL)
@@ -89,7 +77,50 @@ void python_auth_encryption(char *data, char *key, char *iv, char *header, char 
         EndPython();
         return;
     }
+}
 
+/**
+ * @brief Python Cryptodoem CMAC Truth Baseline
+ * @param data Hexstring of the plain text
+ * @param key Hexstring of the key to be used
+ * @param expected Output character array that will be allocated within this function.  Memory must be freed upon completion of the test
+ * @param expected_length The length of the expected character array this is set within this function
+ * @note User must free memory themselves.
+ **/
+void python_cmac(char *data, char *key, uint8_t **expected, long *expected_length)
+{
+    setup_python();
+
+    pValue = PyObject_CallMethod(pInstance, "encrypt_cmac", "ss", data, key);
+    pValue = PyObject_CallMethod(pInstance, "get_len", NULL);
+    long temp_length = PyLong_AsLong(pValue);
+    *expected_length = temp_length;
+    pValue = PyObject_CallMethod(pInstance, "get_results", NULL);
+    char *temp_expected = PyBytes_AsString(pValue);
+    *expected = (uint8_t *)malloc(sizeof(uint8_t) * (int)*expected_length);
+    memcpy(*expected, temp_expected, (int)*expected_length);
+    return;
+}
+
+/**
+ * @brief Python Cryptodome Truth Baseline
+ * Used to generate truth data for Authorized Encryption.  Results are compared against TC_ApplySecurity Functionality,
+ * as well as in reverse using the TC_ProcessSecurity function.
+ * @param data Hexstring of the plain text to be encrypted
+ * @param key Hexstring of the key to be used during encryption
+ * @param iv Hextring of the IV to be used during encryption
+ * @param header Hextring of the header (AAD) that will be used during encryption
+ * @param bitmask Hexstring of the bitmask that will be used on the header
+ * @param expected Ouput character array that will be allocated within this function.  Memory must be freed upon
+ *completion of test.
+ * @param expected_length The length of the expected character array that is set within this function
+ * @note The char** expected that is passsed to this function must be freed by the user upon completion of unit test or
+ *other call.
+ **/
+void python_auth_encryption(char *data, char *key, char *iv, char *header, char *bitmask, uint8_t **expected,
+                            long *expected_length)
+{
+    setup_python();
     pValue = PyObject_CallMethod(pInstance, "encrypt", "sssss", data, key, iv, header, bitmask);
 
     pValue = PyObject_CallMethod(pInstance, "get_len", NULL);
@@ -138,7 +169,7 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
     memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
     // Ensure that Process Security can activate SA 4
     return_val = Crypto_TC_ProcessSecurity(activate_sa4_b, &activate_sa4_len, tc_sdls_processed_frame);
-    printf("Verifying TC_Process Return Value\n");
+    //printf("Verifying TC_Process Return Value\n");
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
     // Expose SA 1 for testing
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
@@ -162,7 +193,7 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
 
     for (int i = 0; i < expected_length; i++)
     {
-        printf("[%d]: %02x -> %02x \n", i, expected[i], ptr_enc_frame[i]);
+        //printf("[%d]: %02x -> %02x \n", i, expected[i], ptr_enc_frame[i]);
         ASSERT_EQ(expected[i], ptr_enc_frame[i]);
     }
     free(activate_sa4_b);
@@ -230,17 +261,17 @@ UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
 
     Crypto_Shutdown();
 
-    printf("PDU:\n\t");
-    for (int i = 0; i < tc_sdls_processed_frame->tc_pdu_len; i++)
-    {
-        printf("%02x", enc_test_ping_b[i]);
-    }
-    printf("\nPF PDU:\n\t");
-    for (int i = 0; i < tc_sdls_processed_frame->tc_pdu_len; i++)
-    {
-        printf("%02x", tc_sdls_processed_frame->tc_pdu[i]);
-    }
-    printf("\n");
+    // printf("PDU:\n\t");
+    // for (int i = 0; i < tc_sdls_processed_frame->tc_pdu_len; i++)
+    // {
+    //     printf("%02x", enc_test_ping_b[i]);
+    // }
+    // printf("\nPF PDU:\n\t");
+    // for (int i = 0; i < tc_sdls_processed_frame->tc_pdu_len; i++)
+    // {
+    //     printf("%02x", tc_sdls_processed_frame->tc_pdu[i]);
+    // }
+    // printf("\n");
     for (int i = 0; i < tc_sdls_processed_frame->tc_pdu_len; i++)
     {
         ASSERT_EQ(enc_test_ping_b[i], tc_sdls_processed_frame->tc_pdu[i]);
@@ -312,7 +343,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     Crypto_Shutdown();
     for (int i = 0; i < buffer_nist_pt_len - 7; i++)
     {
-        printf("[%d]: %02x -> %02x \n", i, *(ptr_enc_frame + enc_data_idx), buffer_nist_ct_b[i]);
+        //printf("[%d]: %02x -> %02x \n", i, *(ptr_enc_frame + enc_data_idx), buffer_nist_ct_b[i]);
         ASSERT_EQ(*(ptr_enc_frame + enc_data_idx), buffer_nist_ct_b[i]);
         enc_data_idx++;
     }
@@ -385,7 +416,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 
     for (int i = 0; i < tc_nist_processed_frame->tc_pdu_len; i++)
     {
-        printf("[%d]: %02x -> %02x \n", i, buffer_nist_pt_b[i + 5], tc_nist_processed_frame->tc_pdu[i]);
+        //printf("[%d]: %02x -> %02x \n", i, buffer_nist_pt_b[i + 5], tc_nist_processed_frame->tc_pdu[i]);
         ASSERT_EQ(buffer_nist_pt_b[i + 5], tc_nist_processed_frame->tc_pdu[i]);
     }
 
@@ -1114,8 +1145,8 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
 
     for (int i = 0; i < buffer_cyber_chef_mac_len; i++)
     {
-        printf("[%d] Truth: %02x, Actual: %02x\n", enc_data_idx, buffer_cyber_chef_mac_b[i],
-               *(ptr_enc_frame + enc_data_idx));
+        //printf("[%d] Truth: %02x, Actual: %02x\n", enc_data_idx, buffer_cyber_chef_mac_b[i],
+        //       *(ptr_enc_frame + enc_data_idx));
         ASSERT_EQ(*(ptr_enc_frame + enc_data_idx), buffer_cyber_chef_mac_b[i]);
         enc_data_idx++;
     }
@@ -1197,7 +1228,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     hex_conversion(buffer_nist_mac_frame_h, (char **)&buffer_nist_mac_frame_b, &buffer_nist_mac_frame_len);
 
     status = Crypto_TC_ProcessSecurity(buffer_nist_mac_frame_b, &buffer_nist_mac_frame_len, tc_nist_processed_frame);
-    printf("TC_Process returned status %d\n", status);
+    //printf("TC_Process returned status %d\n", status);
 
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
     // Calc payload index: total length - pt length
@@ -1319,7 +1350,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_DATA)
     hex_conversion(buffer_nist_mac_frame_h, (char **)&buffer_nist_mac_frame_b, &buffer_nist_mac_frame_len);
 
     status = Crypto_TC_ProcessSecurity(buffer_nist_mac_frame_b, &buffer_nist_mac_frame_len, tc_nist_processed_frame);
-    printf("TC_Process returned status %d\n", status);
+    //printf("TC_Process returned status %d\n", status);
 
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
     // Calc payload index: total length - pt length
@@ -1416,7 +1447,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_MAC)
     hex_conversion(buffer_nist_mac_frame_h, (char **)&buffer_nist_mac_frame_b, &buffer_nist_mac_frame_len);
 
     status = Crypto_TC_ProcessSecurity(buffer_nist_mac_frame_b, &buffer_nist_mac_frame_len, tc_nist_processed_frame);
-    printf("TC_Process returned status %d\n", status);
+    //printf("TC_Process returned status %d\n", status);
 
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
     // Calc payload index: total length - pt length

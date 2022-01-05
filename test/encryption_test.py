@@ -1,4 +1,5 @@
 from Crypto.Cipher import AES
+from Crypto.Hash import CMAC
 import codecs
 import sys
 
@@ -22,6 +23,7 @@ def crc16(data : bytearray, offset , length):
                 crc = crc << 1
     return crc & 0xFFFF
 
+
 """
 Class: Encryption
 This class is used to perform AES, GCM encryption in order to provide a truth baseline.
@@ -31,6 +33,18 @@ class Encryption:
     def __init__(self):
         self.results = 0x00
         self.length = 0.0
+
+    def encrypt_cmac(self, data, key):
+        data_b = bytes.fromhex(data)
+        key_b = bytes.fromhex(key)
+
+        cmac_obj = CMAC.new(key_b, ciphermod=AES)
+        cmac_obj.update(data_b)
+
+        self.results = cmac_obj.hexdigest()
+        print(self.results)
+        self.length = len(self.results)
+
     # Function: Encrypt
     # Encrypts data - given a key, iv, header, and bitmask
     def encrypt(self, data, key, iv, header, bitmask):
@@ -92,7 +106,7 @@ class Encryption:
 
 if __name__ == '__main__':
     something=Encryption()
-    something.encrypt("1880d2ca0008197f0b0031000039c5", "FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210", "000000000000000000000001", "2003043400FF0004", "00")
+    something.encrypt_cmac("2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258", "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445")
     something.get_len()
     something.get_results()
 
