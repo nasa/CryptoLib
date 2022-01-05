@@ -1,0 +1,3 @@
+ignore:
+  - "/src/src_feature_stubs"
+  - "/src/src_main/crypto_print.c"
