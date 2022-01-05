@@ -24,6 +24,8 @@ set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib")
 
 OPTION(DEBUG "Debug" OFF) # Disabled by default, enable with: -DDEBUG=ON
 OPTION(MYSQL "Mysql" OFF) # Disabled by default, enable with: -DMYSQL=ON
+OPTION(LIBGCRYPT "Libgcrypt" ON) # Enabled by default, disable with: -DLIBGCRYPT=OFF
+OPTION(KMCCRYPTO "KmcCrypto" OFF) # Disabled by default, enable with: -DKMCCRYPTO=ON
 OPTION(ENCTEST "Encryption-Tests" OFF) # Disabled by default, enable with: -DENCTEST=ON
 
 IF(DEBUG)

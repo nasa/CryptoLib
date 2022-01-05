@@ -53,7 +53,8 @@ typedef struct
 {
     // Status
     uint16_t spi;  // Security Parameter Index
-    uint16_t ekid; // Encryption Key ID
+    uint16_t ekid; // Encryption Key ID  (Used with numerically indexed keystores, EG inmemory keyring)
+    char*    ek_ref; // Encryption Key Reference (Used with string-referenced keystores,EG-PKCS12 keystores, KMC crypto)
     uint16_t akid; // Authentication Key ID
     uint8_t sa_state : 2;
     crypto_gvcid_t gvcid_tc_blk;

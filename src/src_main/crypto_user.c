@@ -123,6 +123,12 @@ int32_t Crypto_User_ModifyKey(void)
     // Local variables
     uint16_t kid = ((uint8_t)sdls_frame.pdu.data[0] << 8) | ((uint8_t)sdls_frame.pdu.data[1]);
     uint8_t mod = (uint8_t)sdls_frame.pdu.data[2];
+    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+
+    if ( ek_ring == NULL )
+    {
+        return CRYPTOGRAPHY_UNSUPPORTED_OPERATION_FOR_KEY_RING;
+    }
 
     switch (mod)
     {

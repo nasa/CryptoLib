@@ -12,12 +12,12 @@
  * foreign persons.
  */
 
-#include "sadb_routine.h"
+#include "cryptography_interface.h"
 
-static SadbRoutineStruct sadb_routine;
+static CryptographyInterfaceStruct cryptography_if;
 
-SadbRoutine get_sadb_routine_mariadb(void)
+CryptographyInterface get_cryptography_interface_kmc_crypto_service(void)
 {
-    fprintf(stderr,"ERROR: Loading mariadb stub source code. Rebuild CryptoLib with -DMYSQL=ON to use proper MariaDB implementation.\n");
-    return &sadb_routine;
+    fprintf(stderr,"ERROR: Loading KMC Crypto Service cryptography interface stub source code. Rebuild CryptoLib with -DKMCCRYPTO=ON to use proper KMC Crytpo Service implementation.\n");
+    return &cryptography_if;
 }
