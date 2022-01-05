@@ -44,9 +44,13 @@ int32_t Crypto_Key_OTAR(void)
     int x = 0;
     int32_t status = CRYPTO_LIB_SUCCESS;
     int pdu_keys = (sdls_frame.pdu.pdu_len - 30) / (2 + KEY_SIZE);
+    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
 
-    gcry_cipher_hd_t tmp_hd;
-    gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
+    if ( ek_ring == NULL )
+    {
+        status = CRYPTOGRAPHY_UNSUPPORTED_OPERATION_FOR_KEY_RING;
+        return status;
+    }
 
     // Master Key ID
     packet.mkid = (sdls_frame.pdu.data[0] << 8) | (sdls_frame.pdu.data[1]);
@@ -70,7 +74,7 @@ int32_t Crypto_Key_OTAR(void)
         return status;
     }
 
-    for (int count = 2; count < (2 + IV_SIZE); count++)
+    for (count = 2; count < (2 + IV_SIZE); count++)
     { // Initialization Vector
         packet.iv[count - 2] = sdls_frame.pdu.data[count];
         // printf("packet.iv[%d] = 0x%02x\n", count-2, packet.iv[count-2]);
@@ -83,53 +87,27 @@ int32_t Crypto_Key_OTAR(void)
         // printf("packet.mac[%d] = 0x%02x\n", w, packet.mac[w]);
     }
 
-    gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_CBC_MAC);
-    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-    {
-        printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        status = CRYPTO_LIB_ERROR;
-        return status;
-    }
-    gcry_error = gcry_cipher_setkey(tmp_hd, &(ek_ring[packet.mkid].value[0]), KEY_SIZE);
-    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-    {
-        printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        status = CRYPTO_LIB_ERROR;
-        return status;
-    }
-    gcry_error = gcry_cipher_setiv(tmp_hd, &(packet.iv[0]), IV_SIZE);
-    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-    {
-        printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        status = CRYPTO_LIB_ERROR;
-        return status;
-    }
-    gcry_error = gcry_cipher_decrypt(tmp_hd,
-                                     &(sdls_frame.pdu.data[14]), // plaintext output
-                                     pdu_keys * (2 + KEY_SIZE),  // length of data
-                                     NULL,                       // in place decryption
-                                     0                           // in data length
-    );
-    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-    {
-        printf(KRED "ERROR: gcry_cipher_decrypt error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        status = CRYPTO_LIB_ERROR;
-        return status;
-    }
-    gcry_error = gcry_cipher_checktag(tmp_hd,
-                                      &(packet.mac[0]), // tag input
-                                      MAC_SIZE          // tag size
-    );
-    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-    {
-        printf(KRED "ERROR: gcry_cipher_checktag error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        status = CRYPTO_LIB_ERROR;
-        return status;
-    }
-    gcry_cipher_close(tmp_hd);
+
+    status = cryptography_if->cryptography_aead_decrypt(&(sdls_frame.pdu.data[14]), // plaintext output
+                                                        (size_t)(pdu_keys * (2 + KEY_SIZE)), // length of data
+                                                        NULL,                               // in place decryption
+                                                        0,                                  // in data length
+                                                        &(ek_ring[packet.mkid].value[0]), //key
+                                                        KEY_SIZE, //key length
+                                                        NULL, //SA reference
+                                                        &(packet.iv[0]), //IV
+                                                        IV_SIZE, //IV length
+                                                        &(packet.mac[0]), // tag input
+                                                        MAC_SIZE,          // tag size
+                                                        NULL, // AAD
+                                                        0, // AAD Length
+                                                        CRYPTO_TRUE, // decrypt
+                                                        CRYPTO_TRUE,  // authenticate
+                                                        CRYPTO_FALSE // AAD Bool
+                                                        );
 
     // Read in Decrypted Data
-    for (int count = 14; x < pdu_keys; x++)
+    for (count = 14; x < pdu_keys; x++)
     { // Encrypted Key Blocks
         packet.EKB[x].ekid = (sdls_frame.pdu.data[count] << 8) | (sdls_frame.pdu.data[count + 1]);
         if (packet.EKB[x].ekid < 128)
@@ -196,6 +174,12 @@ int32_t Crypto_Key_update(uint8_t state)
     SDLS_KEY_BLK_t packet;
     int count = 0;
     int pdu_keys = sdls_frame.pdu.pdu_len / 2;
+    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+
+    if ( ek_ring == NULL )
+    {
+        return CRYPTOGRAPHY_UNSUPPORTED_OPERATION_FOR_KEY_RING;
+    }
 #ifdef PDU_DEBUG
     printf("Keys ");
 #endif
@@ -297,6 +281,12 @@ int32_t Crypto_Key_inventory(uint8_t *ingest)
     SDLS_KEY_INVENTORY_t packet;
     int count = 0;
     uint16_t range = 0;
+    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+
+    if ( ek_ring == NULL )
+    {
+        return CRYPTOGRAPHY_UNSUPPORTED_OPERATION_FOR_KEY_RING;
+    }
 
     // Read in PDU
     packet.kid_first = ((uint8_t)sdls_frame.pdu.data[count] << 8) | ((uint8_t)sdls_frame.pdu.data[count + 1]);
@@ -334,10 +324,7 @@ int32_t Crypto_Key_verify(uint8_t *ingest, TC_t *tc_frame)
     int count = 0;
     int pdu_keys = sdls_frame.pdu.pdu_len / SDLS_KEYV_CMD_BLK_SIZE;
 
-    gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
-    gcry_cipher_hd_t tmp_hd;
     uint8_t iv_loc;
-
     // uint8_t tmp_mac[MAC_SIZE];
 
 #ifdef PDU_DEBUG
@@ -367,6 +354,12 @@ int32_t Crypto_Key_verify(uint8_t *ingest, TC_t *tc_frame)
     sdls_frame.pdu.pdu_len = pdu_keys * (2 + IV_SIZE + CHALLENGE_SIZE + CHALLENGE_MAC_SIZE);
     sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
     count = Crypto_Prep_Reply(ingest, 128);
+    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+
+    if ( ek_ring == NULL ) // Can't verify key without a key ring, action supported for this cryptography interface!
+    {
+        return CRYPTOGRAPHY_UNSUPPORTED_OPERATION_FOR_KEY_RING;
+    }
 
     for (int x = 0; x < pdu_keys; x++)
     { // Key ID
@@ -382,49 +375,25 @@ int32_t Crypto_Key_verify(uint8_t *ingest, TC_t *tc_frame)
         ingest[count - 1] = ingest[count - 1] + x + 1;
 
         // Encrypt challenge
-        gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_CBC_MAC);
-        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        }
-        gcry_error = gcry_cipher_setkey(tmp_hd, &(ek_ring[packet.blk[x].kid].value[0]), KEY_SIZE);
-        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        }
-        gcry_error = gcry_cipher_setiv(tmp_hd, &(ingest[iv_loc]), IV_SIZE);
-        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        }
-        gcry_error = gcry_cipher_encrypt(tmp_hd,
-                                         &(ingest[count]),              // ciphertext output
-                                         CHALLENGE_SIZE,                // length of data
-                                         &(packet.blk[x].challenge[0]), // plaintext input
-                                         CHALLENGE_SIZE                 // in data length
-        );
-        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            printf(KRED "ERROR: gcry_cipher_encrypt error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        }
-        count = count + CHALLENGE_SIZE; // Don't forget to increment count!
+        cryptography_if->cryptography_aead_encrypt(&(ingest[count]), // ciphertext output
+                                                   (size_t)CHALLENGE_SIZE, // length of data
+                                                   &(packet.blk[x].challenge[0]), // plaintext input
+                                                   (size_t)CHALLENGE_SIZE, // in data length
+                                                   &(ek_ring[packet.blk[x].kid].value[0]), // Key Index
+                                                   KEY_SIZE, // Key Length
+                                                   NULL, // SA Reference for key
+                                                   &(ingest[iv_loc]), // IV
+                                                   IV_SIZE, // IV Length
+                                                   &(ingest[(count + CHALLENGE_SIZE)]), // MAC
+                                                   CHALLENGE_MAC_SIZE, // MAC Size
+                                                   NULL,
+                                                   0,
+                                                   CRYPTO_TRUE, // Encrypt
+                                                   CRYPTO_TRUE, // Authenticate
+                                                   CRYPTO_FALSE // AAD
+                                                   );
 
-        gcry_error = gcry_cipher_gettag(tmp_hd,
-                                        &(ingest[count]),  // tag output
-                                        CHALLENGE_MAC_SIZE // tag size
-        );
-        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            printf(KRED "ERROR: gcry_cipher_gettag error code %d \n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        }
-        count = count + CHALLENGE_MAC_SIZE; // Don't forget to increment count!
-
-        // Copy from tmp_mac into ingest
-        // for( int y = 0; y < CHALLENGE_MAC_SIZE; y++)
-        //{
-        //    ingest[count++] = tmp_mac[y];
-        //}
-        gcry_cipher_close(tmp_hd);
+        count += CHALLENGE_SIZE + CHALLENGE_MAC_SIZE; // Don't forget to increment count!
     }
 
 #ifdef PDU_DEBUG

@@ -32,6 +32,11 @@ typedef enum
     SADB_TYPE_INMEMORY,
     SADB_TYPE_MARIADB
 } SadbType;
+typedef enum
+{
+    CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+    CRYPTOGRAPHY_TYPE_KMCCRYPTO
+} CryptographyType;
 // gvcid managed parameter enums
 typedef enum
 {
@@ -85,6 +90,7 @@ typedef enum
 typedef struct
 {
     SadbType sadb_type;
+    CryptographyType cryptography_type;
     TcCreateFecfBool crypto_create_fecf; // Whether or not CryptoLib is expected to calculate TC FECFs and return
                                          // payloads with the FECF
     TcProcessSdlsPdus process_sdls_pdus; // Config to process SDLS extended procedure PDUs in CryptoLib
@@ -121,5 +127,20 @@ typedef struct
     uint16_t mysql_port;
 } SadbMariaDBConfig_t;
 #define SADB_MARIADB_CONFIG_SIZE (sizeof(SadbMariaDBConfig_t))
+
+/*
+** SaDB MariaDB Configuration Block
+*/
+typedef struct
+{
+    char *kmc_crypto_hostname;
+    uint16_t kmc_crypto_port;
+    char *mtls_cert_path;
+    char *mtls_key_path;
+    uint8_t ignore_ssl_hostname_validation;
+
+} CryptographyKmcCryptoServiceConfig_t;
+#define CRYPTOGRAPHY_KMC_CRYPTO_SERVICE_CONFIG_SIZE (sizeof(CryptographyKmcCryptoServiceConfig_t))
+
 
 #endif

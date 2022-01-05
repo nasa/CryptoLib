@@ -30,8 +30,6 @@
 #include <stdlib.h>
 #endif
 
-#include <gcrypt.h>
-
 #include "crypto_config.h"
 #include "crypto_config_structs.h"
 #include "crypto_error.h"
@@ -39,6 +37,7 @@
 #include "crypto_print.h"
 #include "crypto_structs.h"
 #include "sadb_routine.h"
+#include "cryptography_interface.h"
 
 /*
 ** Crypto Version
@@ -53,11 +52,13 @@
 */
 
 // Crypto Library Configuration functions
-extern int32_t Crypto_Config_CryptoLib(uint8_t sadb_type, uint8_t crypto_create_fecf, uint8_t process_sdls_pdus,
+extern int32_t Crypto_Config_CryptoLib(uint8_t sadb_type, uint8_t cryptography_type, uint8_t crypto_create_fecf, uint8_t process_sdls_pdus,
                                        uint8_t has_pus_hdr, uint8_t ignore_sa_state, uint8_t ignore_anti_replay,
                                        uint8_t unique_sa_per_mapid, uint8_t crypto_check_fecf, uint8_t vcid_bitmask);
 extern int32_t Crypto_Config_MariaDB(char *mysql_username, char *mysql_password, char *mysql_hostname,
                                      char *mysql_database, uint16_t mysql_port);
+extern int32_t Crypto_Config_Kmc_Crypto_Service(char *kmc_crypto_hostname, uint16_t kmc_crypto_port, char *mtls_cert_path,
+                                                char *mtls_key_path, uint8_t ignore_ssl_hostname_validation);
 extern int32_t Crypto_Config_Add_Gvcid_Managed_Parameter(uint8_t tfvn, uint16_t scid, uint8_t vcid, uint8_t has_fecf,
                                                          uint8_t has_segmentation_hdr);
 
@@ -65,7 +66,8 @@ extern int32_t Crypto_Config_Add_Gvcid_Managed_Parameter(uint8_t tfvn, uint16_t 
 extern int32_t Crypto_Init(void); // Initialize CryptoLib After Configuration Calls
 extern int32_t Crypto_Init_With_Configs(
     CryptoConfig_t *crypto_config_p, GvcidManagedParameters_t *gvcid_managed_parameters_p,
-    SadbMariaDBConfig_t *sadb_mariadb_config_p); // Initialize CryptoLib With Application Defined Configuration
+    SadbMariaDBConfig_t *sadb_mariadb_config_p,
+    CryptographyKmcCryptoServiceConfig_t *cryptography_kmc_crypto_config_p); // Initialize CryptoLib With Application Defined Configuration
 extern int32_t Crypto_Init_Unit_Test(void);      // Initialize CryptoLib with unit test default Configurations
 
 // Cleanup
@@ -149,16 +151,16 @@ void Crypto_Free_Managed_Parameters(GvcidManagedParameters_t *managed_parameters
 // Data stores used in multiple components
 extern CCSDS_t sdls_frame;
 extern TM_t tm_frame;
-extern crypto_key_t ek_ring[NUM_KEYS];
 
 // Global configuration structs
 extern CryptoConfig_t *crypto_config;
 extern SadbMariaDBConfig_t *sadb_mariadb_config;
+extern CryptographyKmcCryptoServiceConfig_t *cryptography_kmc_crypto_config;
 extern GvcidManagedParameters_t *gvcid_managed_parameters;
 extern GvcidManagedParameters_t *current_managed_parameters;
 extern SadbRoutine sadb_routine;
+extern CryptographyInterface cryptography_if;
 
-extern crypto_key_t ek_ring[NUM_KEYS];
 // extern crypto_key_t ak_ring[NUM_KEYS];
 extern CCSDS_t sdls_frame;
 extern TM_t tm_frame;

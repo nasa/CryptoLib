@@ -12,12 +12,12 @@
  * foreign persons.
  */
 
-#include "sadb_routine.h"
+#include "cryptography_interface.h"
 
-static SadbRoutineStruct sadb_routine;
+static CryptographyInterfaceStruct cryptography_if;
 
-SadbRoutine get_sadb_routine_mariadb(void)
+CryptographyInterface get_cryptography_interface_libgcrypt(void)
 {
-    fprintf(stderr,"ERROR: Loading mariadb stub source code. Rebuild CryptoLib with -DMYSQL=ON to use proper MariaDB implementation.\n");
-    return &sadb_routine;
+    fprintf(stderr,"ERROR: Loading libgcrypt cryptography interface stub source code. Rebuild CryptoLib with -DLIBGCRYPT=ON to use proper libgcrypt implementation.\n");
+    return &cryptography_if;
 }

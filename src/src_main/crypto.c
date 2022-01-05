@@ -21,6 +21,8 @@
 */
 #include "crypto.h"
 
+#include <string.h>
+
 /*
 ** Static Library Declaration
 */
@@ -31,16 +33,9 @@ CFS_MODULE_DECLARE_LIB(crypto);
 /*
 ** Global Variables
 */
-SadbRoutine sadb_routine = NULL;
-// Security
-crypto_key_t ek_ring[NUM_KEYS] = {0};
 // crypto_key_t ak_ring[NUM_KEYS];
 CCSDS_t sdls_frame;
 TM_t tm_frame;
-CryptoConfig_t *crypto_config = NULL;
-SadbMariaDBConfig_t *sadb_mariadb_config = NULL;
-GvcidManagedParameters_t *gvcid_managed_parameters = NULL;
-GvcidManagedParameters_t *current_managed_parameters = NULL;
 // OCF
 uint8_t ocf = 0;
 SDLS_FSR_t report;

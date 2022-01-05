@@ -200,6 +200,7 @@ void Crypto_saPrint(SecurityAssociation_t *sa)
     printf("\t ecs[%d]    = 0x%02x \n", ECS_SIZE - 3, sa->ecs[ECS_SIZE - 3]);
     printf("\t ecs[%d]    = 0x%02x \n", ECS_SIZE - 2, sa->ecs[ECS_SIZE - 2]);
     printf("\t ecs[%d]    = 0x%02x \n", ECS_SIZE - 1, sa->ecs[ECS_SIZE - 1]);
+    printf("\t ekid       = %d \n", sa->ekid);
     printf("\t iv_len     = 0x%02x \n", sa->shivf_len);
     if (sa->iv != NULL)
     {
