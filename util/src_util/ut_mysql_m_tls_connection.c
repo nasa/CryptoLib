@@ -77,7 +77,7 @@ UTEST(MARIA_DB_CONNECTION_TESTS, TLS_TEST) {
     char* mysql_hostname = "asec-cmdenc-dev2.jpl.nasa.gov";
     char* mysql_database = NULL;
     uint16_t mysql_port = 3306;
-    /*encrypted_connection = 1 means we want to attempt a encrypted connection.*/
+    /*encrypted_connection = 2 means we want to attempt a mTLS encrypted connection.*/
     uint8_t encrypted_connection = 2;
     char* ssl_cert = "/etc/pki/tls/certs/local-test-cert.pem";
     char* ssl_key = "/etc/pki/tls/private/local-test-key.pem";
