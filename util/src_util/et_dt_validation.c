@@ -332,6 +332,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
     hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
+    test_association->iv = malloc(*buffer_nist_iv_b * sizeof(uint8_t));
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input ciphertext
     hex_conversion(buffer_nist_ct_h, (char **)&buffer_nist_ct_b, &buffer_nist_ct_len);
@@ -1472,6 +1473,91 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_MAC)
     free(buffer_cyber_chef_mac_b);
     free(buffer_nist_mac_frame_b);
     free(buffer_nist_cp_b);
+}
+
+/**
+ * @brief Unit Test: Test CMAC, bitmask of 1s
+ **/
+UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
+{
+    uint8_t *ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
+    Crypto_Init();
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+
+    // NIST supplied vectors
+    // NOTE: Added Transfer Frame header to the plaintext
+    char *buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
+    //                        |  Header |           NIST CMAC Test Vector                                                                                               |FECF|
+    char *buffer_nist_pt_h = "2003004600C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258C925";
+    // Python truth string passed below, not including a MAC or FECF which isn't hashed against, but the LENGTH (including fecf) needs to be updated in the Tf Header
+    // Length is dependent on whatevr the variable mac length to be updated in the header
+    //                           | Header |SPI|  ARSN  | NIST CMAC Frame Data                                                                                                         |
+    // char *buffer_nist_pt_h = "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258";
+    //                           2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258CF549CC15D63EAB7AD25EB3089D94E6C2D9D
+    // Python output MAC                                                                                                                                                               cf549cc15d63eab7ad25eb3089d94e6c
+    uint8_t *buffer_nist_pt_b, *buffer_nist_key_b, *buffer_cyber_chef_mac_b = NULL;
+    int buffer_nist_pt_len, buffer_nist_key_len, buffer_cyber_chef_mac_len = 0;
+
+    // Expose/setup SAs for testing
+    SecurityAssociation_t *test_association = NULL;
+    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    // Deactivate SA 1
+    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    test_association->sa_state = SA_NONE;
+    // Activate SA 9
+    sadb_routine->sadb_get_sa_from_spi(9, &test_association);
+    test_association->ast = 1;
+    test_association->est = 0;
+    test_association->arc_len = 0;
+    test_association->shivf_len = 0;
+    test_association->shsnf_len = 4;
+    test_association->arc = 0;
+    test_association->arc_len = 4;
+    test_association->arc = calloc(1, test_association->arc_len * sizeof(uint8_t));
+    test_association->abm_len = 1024;
+    memset(test_association->abm, 0xFF, (test_association->abm_len * sizeof(uint8_t))); // Bitmask
+    test_association->stmacf_len = 16;
+    test_association->sa_state = SA_OPERATIONAL;
+
+    // Insert key into keyring of SA 9
+    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
+    memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
+
+    // Convert input plaintext
+    // TODO: Account for length of header and FECF (5+2)
+    hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
+    // Convert/Set input IV
+    // hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
+    // memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
+    // Convert input mac
+    // hex_conversion(buffer_cyber_chef_mac_h, (char **)&buffer_cyber_chef_mac_b, &buffer_cyber_chef_mac_len);
+
+    Crypto_TC_ApplySecurity(buffer_nist_pt_b, buffer_nist_pt_len, &ptr_enc_frame, &enc_frame_len);
+
+    // Note: For comparison, primarily interested in the MAC
+    // Calc payload index: total length - pt length
+    uint16_t enc_data_idx = enc_frame_len - buffer_cyber_chef_mac_len - 2;
+    Crypto_Shutdown();
+
+    for (int i = 0; i < buffer_cyber_chef_mac_len; i++)
+    {
+        //printf("[%d] Truth: %02x, Actual: %02x\n", enc_data_idx, buffer_cyber_chef_mac_b[i],
+        ASSERT_EQ(*(ptr_enc_frame + enc_data_idx), buffer_cyber_chef_mac_b[i]);
+        enc_data_idx++;
+    }
+
+    free(ptr_enc_frame);
+    free(buffer_nist_pt_b);
+    free(buffer_nist_key_b);
+    free(buffer_cyber_chef_mac_b);
 }
 
 UTEST_MAIN();

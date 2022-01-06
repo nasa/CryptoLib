@@ -175,7 +175,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
         }
 
         // Determine Algorithm cipher & mode. // TODO - Parse authentication_cipher, and handle AEAD cases properly
-        if (sa_service_type != SA_PLAINTEXT)
+        if (sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
         {
             encryption_cipher =
                 (sa_ptr->ecs[0] << 24) | (sa_ptr->ecs[1] << 16) | (sa_ptr->ecs[2] << 8) | sa_ptr->ecs[3];
@@ -213,8 +213,9 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
         case SA_AUTHENTICATION:
             // Ingest length + spi_index (2) + shivf_len (varies) + shsnf_len (varies)
             //   + shplf_len + arc_len + pad_size + stmacf_len
+            // TODO: If ARC is transmitted in the SHSNF field (as in CMAC... don't double count those bytes)
             *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len +
-                               sa_ptr->arc_len + TC_PAD_SIZE + sa_ptr->stmacf_len;
+                               TC_PAD_SIZE + sa_ptr->stmacf_len;
             new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
             break;
         case SA_ENCRYPTION:
@@ -319,7 +320,6 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
 
             for (int i = 0; i < sa_ptr->shivf_len; i++)
             {
-                // TODO: Likely API call
                 // Copy in IV from SA
                 *(p_new_enc_frame + index) = *(sa_ptr->iv + i);
                 index++;
@@ -333,18 +333,13 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
         ** for an SA, the Sequence Number field shall be zero octets in length.
         ** Reference CCSDS 3550b1
         */
-        // Determine if seq num field is needed
-        // TODO: Likely SA API Call
-        if (sa_ptr->shsnf_len > 0)
+        // TODO: Workout ARC vs SN and when they may
+        // or may not be the same or different field 
+        for (int i = 0; i < sa_ptr->shsnf_len; i++)
         {
-            // If using anti-replay counter, increment it
-            // TODO: Check return code
-            Crypto_increment(sa_ptr->arc, sa_ptr->shsnf_len);
-            for (int i = 0; i < sa_ptr->shsnf_len; i++)
-            {
-                *(p_new_enc_frame + index) = *(sa_ptr->arc + i);
-                index++;
-            }
+            // Copy in ARC from SA
+            *(p_new_enc_frame + index) = *(sa_ptr->arc + i);
+            index++;
         }
 
         // Set security header padding if specified
@@ -465,7 +460,20 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
             {
                 // TODO - implement non-AEAD algorithm logic
                 cryptography_if->cryptography_encrypt();
-                cryptography_if->cryptography_authenticate();
+                cryptography_if->cryptography_authenticate(&p_new_enc_frame[index],                               // ciphertext output
+                                                                    (size_t)tf_payload_len,                                        // length of data
+                                                                    (uint8_t*)(p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), // plaintext input
+                                                                    (size_t)tf_payload_len,                                         // in data length
+                                                                    NULL, // Using SA key reference, key is null
+                                                                    KEY_SIZE, // Length of key. TODO - why is this hard-coded?
+                                                                    sa_ptr, // SA (for key reference)
+                                                                    sa_ptr->iv, // IV
+                                                                    sa_ptr->shivf_len, // IV Length
+                                                                    mac_ptr, // tag output
+                                                                    MAC_SIZE, // tag size // TODO - why is this hard-coded?!
+                                                                    aad, // AAD Input
+                                                                    aad_len // Length of AAD
+                );
             }
 
         }
@@ -474,11 +482,18 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
         {
 #ifdef INCREMENT
             Crypto_increment(sa_ptr->iv, sa_ptr->shivf_len);
+            Crypto_increment(sa_ptr->arc, sa_ptr->arc_len);
 #ifdef SA_DEBUG
             printf(KYEL "Next IV value is:\n\t");
             for (int i = 0; i < sa_ptr->shivf_len; i++)
             {
                 printf("%02x", *(sa_ptr->iv + i));
+            }
+            printf("\n" RESET);
+            printf(KYEL "Next ARC value is:\n\t");
+            for (int i = 0; i < sa_ptr->arc_len; i++)
+            {
+                printf("%02x", *(sa_ptr->arc + i));
             }
             printf("\n" RESET);
 #endif
