@@ -74,7 +74,7 @@ UTEST(MARIA_DB_CONNECTION_TESTS, TLS_TEST) {
     /*connection input parameters. 
      Note: username, pass, and paths may differ on your system*/
     char* mysql_username = "testuser1";
-    char* password = "l0ngp@ssWord"; //replace with actual password or test will fail. 
+    char* password = "<PASSWORD>"; //replace with actual password or test will fail. 
     char* mysql_hostname = "asec-cmdenc-dev2.jpl.nasa.gov";
     char* mysql_database = NULL;
     uint16_t mysql_port = 3306;
