@@ -68,19 +68,20 @@ mysql -u testuser2 -h asec-cmdenc-dev2.jpl.nasa.gov --ssl-ca=/etc/pki/tls/certs/
 Password: 2 way TLS or mTLS does not require a password.  
 However using the MySQL's C API*/
 UTEST(MARIA_DB_CONNECTION_TESTS, TLS_TEST) {
-    printf("START mariadb connection, mTLS test() \n");
+    
+    printf("START mariadb connection, TLS test() \n");
     int status = 0;
     /*connection input parameters. 
      Note: username, pass, and paths may differ on your system*/
-    char* mysql_username = "testuser2";
-    char* password = NULL; //mTLS does not require a password.
+    char* mysql_username = "testuser1";
+    char* password = "l0ngp@ssWord"; //replace with actual password or test will fail. 
     char* mysql_hostname = "asec-cmdenc-dev2.jpl.nasa.gov";
     char* mysql_database = NULL;
     uint16_t mysql_port = 3306;
-    /*encrypted_connection = 2 means we want to attempt a mTLS encrypted connection.*/
-    uint8_t encrypted_connection = 2;
-    char* ssl_cert = "/etc/pki/tls/certs/local-test-cert.pem";
-    char* ssl_key = "/etc/pki/tls/private/local-test-key.pem";
+    /*encrypted_connection = 1 means we want to attempt a TLS encrypted connection.*/
+    uint8_t encrypted_connection = 1;
+    char* ssl_cert = "/etc/pki/tls/certs/ammos-server-cert.pem";
+    char* ssl_key = "/etc/pki/tls/private/ammos-server-key.pem";
     char* ssl_ca = "/etc/pki/tls/certs/ammos-ca-bundle.crt";
     char* ssl_capath = "/etc/pki/tls/certs/";
     /*set configuration params*/
@@ -89,7 +90,30 @@ UTEST(MARIA_DB_CONNECTION_TESTS, TLS_TEST) {
     /*Prepare SADB type from config*/
     status = Crypto_Init_Unit_Test_For_DB();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    printf("END mariadb connection, TLS test() status:%d \n", status);
+    printf("START mariadb connection, mTLS test() \n");
+    status = 0;
+    /*connection input parameters. 
+     Note: username, pass, and paths may differ on your system*/
+    mysql_username = "testuser2";
+    password = NULL; //mTLS does not require a password.
+    mysql_hostname = "asec-cmdenc-dev2.jpl.nasa.gov";
+    mysql_database = NULL;
+    mysql_port = 3306;
+    /*encrypted_connection = 2 means we want to attempt a mTLS encrypted connection.*/
+    encrypted_connection = 2;
+    ssl_cert = "/etc/pki/tls/certs/local-test-cert.pem";
+    ssl_key = "/etc/pki/tls/private/local-test-key.pem";
+    ssl_ca = "/etc/pki/tls/certs/ammos-ca-bundle.crt";
+    ssl_capath = "/etc/pki/tls/certs/";
+    /*set configuration params*/
+    status = Crypto_Config_MariaDB(mysql_username, password, mysql_hostname, mysql_database, mysql_port, encrypted_connection, ssl_cert, ssl_key, ssl_ca, ssl_capath);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    /*Prepare SADB type from config*/
+    status = Crypto_Init_Unit_Test_For_DB();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     printf("END mariadb connection, mTLS test() status:%d \n", status);
+    
 }
 
 /*Helper Functions:*/
