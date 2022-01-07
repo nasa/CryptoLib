@@ -530,10 +530,7 @@ static int32_t cryptography_init(void)
 
     return status;
 }
-static int32_t cryptography_shutdown(void)
-{
-    return CRYPTO_LIB_SUCCESS;
-}
+static int32_t cryptography_shutdown(void){ return CRYPTO_LIB_SUCCESS; }
 static int32_t cryptography_encrypt(void){ return CRYPTO_LIB_SUCCESS; }
 static int32_t cryptography_decrypt(void){ return CRYPTO_LIB_SUCCESS; }
 static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
