@@ -1233,7 +1233,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
     // Calc payload index: total length - pt length
-     #ifdef DEBUG
+#ifdef DEBUG
          printf("Expected MAC: ");
          for (int i=0; i<buffer_cyber_chef_mac_len; i++)
          {
@@ -1245,7 +1245,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
              printf("%02x ", tc_nist_processed_frame->tc_sec_trailer.mac[i]);
          }
          printf("\n");
-     #endif
+#endif
 
 #ifdef DEBUG
         printf("PDU Length: %d \n",tc_nist_processed_frame->tc_pdu_len);
@@ -1478,6 +1478,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_MAC)
 /**
  * @brief Unit Test: Test CMAC, bitmask of 0s
  **/
+#ifdef WHOMP
 UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
 {
     uint8_t *ptr_enc_frame = NULL;
@@ -1728,5 +1729,6 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
     free(test_association->arc);
     // free(test_association);
 }
+#endif
 
 UTEST_MAIN();

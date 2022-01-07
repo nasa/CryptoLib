@@ -731,7 +731,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
         key_ptr = &(ek_ring[sa_ptr->ekid].value[0]);
     }
 
-    gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_CBC_MAC);
+    gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_NONE);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
@@ -881,7 +881,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
         key_ptr = &(ek_ring[sa_ptr->ekid].value[0]);
     }
 
-    gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_CBC_MAC);
+    gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_NONE);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
@@ -924,11 +924,18 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
     if (decrypt_bool == CRYPTO_TRUE)
     {
         gcry_error = gcry_cipher_decrypt(tmp_hd,
-                                         data_out, // plaintext output
+                                         data_out,      // plaintext output
                                          len_data_out,  // length of data
-                                         data_in,                       // in place decryption
-                                         len_data_in                           // in data length
+                                         data_in,       // in place decryption
+                                         len_data_in    // in data length
         );
+        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+        {
+            printf(KRED "ERROR: gcry_cipher_decrypt error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+            status = CRYPTO_LIB_ERR_DECRYPT_ERROR;
+            gcry_cipher_close(tmp_hd);
+            return status;
+        }
     }
     else // Authentication only
     {
@@ -936,20 +943,20 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
         gcry_error = gcry_cipher_decrypt(tmp_hd,NULL,0, NULL,0);
         // If authentication only, don't decrypt the data. Just pass the data PDU through.
         memcpy(data_out, data_in, len_data_in);
-    }
 
-    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-    {
-        printf(KRED "ERROR: gcry_cipher_decrypt error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        status = CRYPTO_LIB_ERR_DECRYPT_ERROR;
-        gcry_cipher_close(tmp_hd);
-        return status;
+        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+        {
+            printf(KRED "ERROR: gcry_cipher_decrypt error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+            status = CRYPTO_LIB_ERR_DECRYPT_ERROR;
+            gcry_cipher_close(tmp_hd);
+            return status;
+        }
     }
     if (authenticate_bool == CRYPTO_TRUE)
     {
         gcry_error = gcry_cipher_checktag(tmp_hd,
-                                          mac, // tag input
-                                          mac_size          // tag size
+                                          mac,       // tag input
+                                          mac_size   // tag size
         );
         if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
         {

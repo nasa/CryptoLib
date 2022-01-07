@@ -175,7 +175,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
         }
 
         // Determine Algorithm cipher & mode. // TODO - Parse authentication_cipher, and handle AEAD cases properly
-        if (sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
+        if (sa_service_type != SA_PLAINTEXT)
         {
             encryption_cipher =
                 (sa_ptr->ecs[0] << 24) | (sa_ptr->ecs[1] << 16) | (sa_ptr->ecs[2] << 8) | sa_ptr->ecs[3];
@@ -436,9 +436,8 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
             printf("Input bytes input_loc is %d\n", TC_FRAME_HEADER_SIZE + segment_hdr_len);
 #endif
 
-            if((sa_service_type == SA_AUTHENTICATED_ENCRYPTION || sa_service_type == SA_ENCRYPTION) && ecs_is_aead_algorithm == CRYPTO_TRUE)
+            if(ecs_is_aead_algorithm == CRYPTO_TRUE)
             {
-                printf("Should be in here?\n\n");
                 status = cryptography_if->cryptography_aead_encrypt(&p_new_enc_frame[index],                               // ciphertext output
                                                                     (size_t)tf_payload_len,                                        // length of data
                                                                     (uint8_t*)(p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), // plaintext input
@@ -801,7 +800,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t *ingest, int *len_ingest, TC_t *tc_sdl
     printf(KYEL "TC PDU Calculated Length: %d \n", tc_sdls_processed_frame->tc_pdu_len);
 #endif
 
-    if(sa_service_type == SA_AUTHENTICATED_ENCRYPTION && ecs_is_aead_algorithm == CRYPTO_TRUE)
+    if(sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_TRUE)
     {
         status = cryptography_if->cryptography_aead_decrypt(tc_sdls_processed_frame->tc_pdu,       // plaintext output
                                                             (size_t)(tc_sdls_processed_frame->tc_pdu_len),   // length of data
@@ -816,11 +815,11 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t *ingest, int *len_ingest, TC_t *tc_sdl
                                                             sa_ptr->stmacf_len,                           // tag size
                                                             aad,    // additional authenticated data
                                                             aad_len, // length of AAD
-                                                            (sa_ptr->est==1), // Decryption Bool
-                                                            (sa_ptr->ast==1), // Authentication Bool
-                                                            (sa_ptr->ast==1) // AAD Bool
+                                                            (sa_ptr->est), // Decryption Bool
+                                                            (sa_ptr->ast), // Authentication Bool
+                                                            (sa_ptr->ast) // AAD Bool
         );
-    }else if (sa_service_type == SA_AUTHENTICATION || sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION) // Non aead algorithm
+    }else if (sa_service_type != SA_PLAINTEXT) // Non aead algorithm
     {
         // TODO - implement non-AEAD algorithm logic
         cryptography_if->cryptography_decrypt();
