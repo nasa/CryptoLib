@@ -33,14 +33,16 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                                          SecurityAssociation_t* sa_ptr,
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
-                                         uint8_t* aad, uint32_t aad_len);
+                                         uint8_t* aad, uint32_t aad_len,
+                                         uint8_t ecs, uint8_t acs);
 static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
                                          SecurityAssociation_t* sa_ptr,
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
-                                         uint8_t* aad, uint32_t aad_len);
+                                         uint8_t* aad, uint32_t aad_len,
+                                         uint8_t ecs, uint8_t acs);
 static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -540,7 +542,8 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                                          SecurityAssociation_t* sa_ptr, // For key index or key references (when key not passed in explicitly via key param)
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
-                                         uint8_t* aad, uint32_t aad_len)
+                                         uint8_t* aad, uint32_t aad_len,
+                                         uint8_t ecs, uint8_t acs)
 { 
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     gcry_mac_hd_t tmp_mac_hd;
@@ -556,6 +559,8 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
 
     // Using to fix warning
     len_data_out = len_data_out;
+    ecs = ecs;
+    acs = acs;
 
     gcry_error = gcry_mac_open(&(tmp_mac_hd), GCRY_MAC_CMAC_AES, GCRY_MAC_FLAG_SECURE, NULL);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
@@ -628,7 +633,8 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
                                          SecurityAssociation_t* sa_ptr,
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
-                                         uint8_t* aad, uint32_t aad_len)
+                                         uint8_t* aad, uint32_t aad_len,
+                                         uint8_t ecs, uint8_t acs)
 { 
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     gcry_mac_hd_t tmp_mac_hd;
@@ -644,6 +650,8 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
 
     // Using to fix warning
     len_data_out = len_data_out;
+    ecs = ecs;
+    acs = acs;
 
     gcry_error = gcry_mac_open(&(tmp_mac_hd), GCRY_MAC_CMAC_AES, GCRY_MAC_FLAG_SECURE, NULL);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
@@ -669,7 +677,6 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
         gcry_mac_close(tmp_mac_hd);
         return status;
     }
-printf("\t%d\n", __LINE__);
     // If MAC needs IV, set it (only for certain ciphers)
     if (iv_len > 0)
     {
@@ -681,7 +688,6 @@ printf("\t%d\n", __LINE__);
             return status;
         }
     }
-printf("\t%d\n", __LINE__);
     gcry_error = gcry_mac_write(tmp_mac_hd,
                                 aad,    // additional authenticated data
                                 aad_len // length of AAD
@@ -694,7 +700,6 @@ printf("\t%d\n", __LINE__);
         status = CRYPTO_LIB_ERROR;
         return status;
     }
-printf("\t%d\n", __LINE__);
     // Compare computed mac with MAC in frame
     gcry_error = gcry_mac_verify(tmp_mac_hd,
                                  mac,      // original mac
@@ -706,7 +711,6 @@ printf("\t%d\n", __LINE__);
         status = CRYPTO_LIB_ERR_MAC_RETRIEVAL_ERROR;
         return status;
     }
-printf("\t%d\n", __LINE__);
     // Zeroise any sensitive information
     gcry_mac_close(tmp_mac_hd);
     return status; 

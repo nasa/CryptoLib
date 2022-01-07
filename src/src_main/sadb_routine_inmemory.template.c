@@ -237,16 +237,13 @@ int32_t sadb_init(void)
         sa[x].akid = x;
         sa[x].sa_state = SA_NONE;
         sa[x].ecs_len = 0;
-        sa[x].ecs[0] = 0;
-        sa[x].ecs[1] = 0;
-        sa[x].ecs[2] = 0;
-        sa[x].ecs[3] = 0;
+        sa[x].ecs = NULL;
         sa[x].shivf_len = IV_SIZE;
         sa[x].iv = NULL;
         sa[x].acs_len = 0;
-        sa[x].acs = 0;
+        sa[x].acs = CRYPTO_ACS_NONE;
         sa[x].arc_len = 0;
-        sa[x].arc = NULL; // calloc and set to 5?
+        sa[x].arc = NULL;
     }
     return status;
 }
@@ -763,7 +760,7 @@ static int32_t sadb_sa_create(void)
     sa[spi].ecs_len = ((uint8_t)sdls_frame.pdu.data[5]);
     for (int x = 0; x < sa[spi].ecs_len; x++)
     {
-        sa[spi].ecs[x] = ((uint8_t)sdls_frame.pdu.data[count++]);
+        *(sa[spi].ecs + x) = ((uint8_t)sdls_frame.pdu.data[count++]);
     }
     sa[spi].shivf_len = ((uint8_t)sdls_frame.pdu.data[count++]);
     for (int x = 0; x < sa[spi].shivf_len; x++)

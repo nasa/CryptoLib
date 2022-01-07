@@ -177,8 +177,15 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
         // Determine Algorithm cipher & mode. // TODO - Parse authentication_cipher, and handle AEAD cases properly
         if (sa_service_type != SA_PLAINTEXT)
         {
-            encryption_cipher =
-                (sa_ptr->ecs[0] << 24) | (sa_ptr->ecs[1] << 16) | (sa_ptr->ecs[2] << 8) | sa_ptr->ecs[3];
+            if (sa_ptr->ecs != NULL)
+            {
+                encryption_cipher = *sa_ptr->ecs;
+            }
+            // If no pointer, must not be using ECS at all
+            else
+            {
+                encryption_cipher = CRYPTO_ECS_NONE;
+            }
             ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(encryption_cipher);
         }
 
@@ -459,21 +466,30 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
             } else // non aead algorithm
             {
                 // TODO - implement non-AEAD algorithm logic
-                cryptography_if->cryptography_encrypt();
-                cryptography_if->cryptography_authenticate(&p_new_enc_frame[index],                               // ciphertext output
-                                                                    (size_t)tf_payload_len,                                        // length of data
-                                                                    (uint8_t*)(p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), // plaintext input
-                                                                    (size_t)tf_payload_len,                                         // in data length
-                                                                    NULL, // Using SA key reference, key is null
-                                                                    KEY_SIZE, // Length of key. TODO - why is this hard-coded?
-                                                                    sa_ptr, // SA (for key reference)
-                                                                    sa_ptr->iv, // IV
-                                                                    sa_ptr->shivf_len, // IV Length
-                                                                    mac_ptr, // tag output
-                                                                    MAC_SIZE, // tag size // TODO - why is this hard-coded?!
-                                                                    aad, // AAD Input
-                                                                    aad_len // Length of AAD
-                );
+                if (sa_service_type == SA_ENCRYPTION)
+                {
+                    cryptography_if->cryptography_encrypt();
+                }
+
+                if (sa_service_type == SA_AUTHENTICATION)
+                {
+                    cryptography_if->cryptography_authenticate(&p_new_enc_frame[index],                               // ciphertext output
+                                                                (size_t)tf_payload_len,                                        // length of data
+                                                                (uint8_t*)(p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), // plaintext input
+                                                                (size_t)tf_payload_len,                                         // in data length
+                                                                NULL, // Using SA key reference, key is null
+                                                                KEY_SIZE, // Length of key. TODO - why is this hard-coded?
+                                                                sa_ptr, // SA (for key reference)
+                                                                sa_ptr->iv, // IV
+                                                                sa_ptr->shivf_len, // IV Length
+                                                                mac_ptr, // tag output
+                                                                MAC_SIZE, // tag size // TODO - why is this hard-coded?!
+                                                                aad, // AAD Input
+                                                                aad_len, // Length of AAD
+                                                                *sa_ptr->ecs, // encryption cipher
+                                                                sa_ptr->acs  // authentication cipher
+                    );
+                }
             }
 
         }
@@ -623,8 +639,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t *ingest, int *len_ingest, TC_t *tc_sdl
     {
         return status;
     }
-
-    encryption_cipher = (sa_ptr->ecs[0] << 24) | (sa_ptr->ecs[1] << 16) | (sa_ptr->ecs[2] << 8) | sa_ptr->ecs[3];
+    encryption_cipher = *sa_ptr->ecs;
     ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(encryption_cipher);
 
     // Determine SA Service Type
@@ -656,7 +671,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t *ingest, int *len_ingest, TC_t *tc_sdl
     // Determine Algorithm cipher & mode. // TODO - Parse authentication_cipher, and handle AEAD cases properly
     if (sa_service_type != SA_PLAINTEXT)
     {
-        encryption_cipher = (sa_ptr->ecs[0] << 24) | (sa_ptr->ecs[1] << 16) | (sa_ptr->ecs[2] << 8) | sa_ptr->ecs[3];
+        encryption_cipher = *sa_ptr->ecs;
         ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(encryption_cipher);
     }
 
@@ -835,9 +850,10 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t *ingest, int *len_ingest, TC_t *tc_sdl
                                                             tc_sdls_processed_frame->tc_sec_trailer.mac, // Frame Expected Tag
                                                             sa_ptr->stmacf_len,                           // tag size
                                                             aad,    // additional authenticated data
-                                                            aad_len // length of AAD
+                                                            aad_len, // length of AAD
+                                                            CRYPTO_ECS_NONE, //encryption cipher
+                                                            sa_ptr->acs  //authentication cipher
                 );
-        printf("\t%d\n", __LINE__);
 
     } else // sa_service_type == SA_PLAINTEXT
     {

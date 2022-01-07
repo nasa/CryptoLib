@@ -85,6 +85,21 @@ typedef enum
 } TcCheckFecfBool;
 
 /*
+**  Used for selecting supported algorithms
+*/
+typedef enum
+{
+    CRYPTO_ACS_NONE,
+    CRYPTO_AES256_CMAC,
+    CRYPTO_AES256_GMAC
+} AuthCipherSuite;
+typedef enum
+{
+    CRYPTO_ECS_NONE,
+    CRYPTO_AES256_GCM
+} EncCipherSuite;
+
+/*
 ** Main Crypto Configuration Block
 */
 typedef struct
