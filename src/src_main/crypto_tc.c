@@ -406,7 +406,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
             uint8_t* mac_ptr = NULL;
             uint16_t aad_len = 0;
 
-            if ((sa_service_type == SA_AUTHENTICATED_ENCRYPTION || sa_service_type == SA_AUTHENTICATION))
+            if (sa_service_type == SA_AUTHENTICATED_ENCRYPTION || sa_service_type == SA_AUTHENTICATION)
             {
                 mac_loc = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len +
                           sa_ptr->shplf_len + tf_payload_len;
@@ -436,8 +436,9 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
             printf("Input bytes input_loc is %d\n", TC_FRAME_HEADER_SIZE + segment_hdr_len);
 #endif
 
-            if(ecs_is_aead_algorithm == CRYPTO_TRUE)
+            if((sa_service_type == SA_AUTHENTICATED_ENCRYPTION || sa_service_type == SA_ENCRYPTION) && ecs_is_aead_algorithm == CRYPTO_TRUE)
             {
+                printf("Should be in here?\n\n");
                 status = cryptography_if->cryptography_aead_encrypt(&p_new_enc_frame[index],                               // ciphertext output
                                                                     (size_t)tf_payload_len,                                        // length of data
                                                                     (uint8_t*)(p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), // plaintext input
@@ -481,8 +482,8 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
         if (sa_service_type != SA_PLAINTEXT)
         {
 #ifdef INCREMENT
-            Crypto_increment(sa_ptr->iv, sa_ptr->shivf_len);
-            Crypto_increment(sa_ptr->arc, sa_ptr->arc_len);
+            if(sa_ptr->shivf_len > 0){ Crypto_increment(sa_ptr->iv, sa_ptr->shivf_len); } 
+            if(sa_ptr->arc_len > 0){ Crypto_increment(sa_ptr->arc, sa_ptr->arc_len); }
 #ifdef SA_DEBUG
             printf(KYEL "Next IV value is:\n\t");
             for (int i = 0; i < sa_ptr->shivf_len; i++)
@@ -800,8 +801,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t *ingest, int *len_ingest, TC_t *tc_sdl
     printf(KYEL "TC PDU Calculated Length: %d \n", tc_sdls_processed_frame->tc_pdu_len);
 #endif
 
-    if((sa_service_type == SA_AUTHENTICATION || sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
-        && ecs_is_aead_algorithm == CRYPTO_TRUE)
+    if(sa_service_type == SA_AUTHENTICATED_ENCRYPTION && ecs_is_aead_algorithm == CRYPTO_TRUE)
     {
         status = cryptography_if->cryptography_aead_decrypt(tc_sdls_processed_frame->tc_pdu,       // plaintext output
                                                             (size_t)(tc_sdls_processed_frame->tc_pdu_len),   // length of data
@@ -824,7 +824,21 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t *ingest, int *len_ingest, TC_t *tc_sdl
     {
         // TODO - implement non-AEAD algorithm logic
         cryptography_if->cryptography_decrypt();
-        cryptography_if->cryptography_validate_authentication();
+        cryptography_if->cryptography_validate_authentication(tc_sdls_processed_frame->tc_pdu,       // plaintext output
+                                                            (size_t)(tc_sdls_processed_frame->tc_pdu_len),   // length of data
+                                                            &(ingest[tc_enc_payload_start_index]), // ciphertext input
+                                                            (size_t)(tc_sdls_processed_frame->tc_pdu_len),    // in data length
+                                                            NULL, // Key
+                                                            KEY_SIZE, // TODO - This shouldn't be hardcoded
+                                                            sa_ptr, // SA for key reference
+                                                            tc_sdls_processed_frame->tc_sec_header.iv, // IV
+                                                            sa_ptr->shivf_len, // IV Length
+                                                            tc_sdls_processed_frame->tc_sec_trailer.mac, // Frame Expected Tag
+                                                            sa_ptr->stmacf_len,                           // tag size
+                                                            aad,    // additional authenticated data
+                                                            aad_len // length of AAD
+                );
+        printf("\t%d\n", __LINE__);
 
     } else // sa_service_type == SA_PLAINTEXT
     {

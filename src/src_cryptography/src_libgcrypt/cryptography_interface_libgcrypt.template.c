@@ -34,7 +34,13 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len);
-static int32_t cryptography_validate_authentication(void);
+static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t len_data_out,
+                                         uint8_t* data_in, size_t len_data_in,
+                                         uint8_t* key, uint32_t len_key,
+                                         SecurityAssociation_t* sa_ptr,
+                                         uint8_t* iv, uint32_t iv_len,
+                                         uint8_t* mac, uint32_t mac_size,
+                                         uint8_t* aad, uint32_t aad_len);
 static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -561,7 +567,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
 
     gcry_error = gcry_mac_setkey(tmp_mac_hd, key_ptr, len_key);
 #ifdef SA_DEBUG
-    printf(KYEL "Printing Key:\n\t");
+    printf(KYEL "Auth MAC Printing Key:\n\t");
     for (uint32_t i = 0; i < len_key; i++)
     {
         printf("%02X", *(key_ptr + i));
@@ -616,7 +622,95 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
     gcry_mac_close(tmp_mac_hd);
     return status; 
 }
-static int32_t cryptography_validate_authentication(void){ return CRYPTO_LIB_SUCCESS; }
+static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t len_data_out,
+                                         uint8_t* data_in, size_t len_data_in,
+                                         uint8_t* key, uint32_t len_key,
+                                         SecurityAssociation_t* sa_ptr,
+                                         uint8_t* iv, uint32_t iv_len,
+                                         uint8_t* mac, uint32_t mac_size,
+                                         uint8_t* aad, uint32_t aad_len)
+{ 
+    gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
+    gcry_mac_hd_t tmp_mac_hd;
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    uint8_t* key_ptr = key;
+    if(sa_ptr != NULL) //Using SA key pointer
+    {
+        key_ptr = &(ek_ring[sa_ptr->ekid].value[0]);
+    }
+
+    // Need to copy the data over, since authentication won't change/move the data directly
+    memcpy(data_out, data_in, len_data_in);
+
+    // Using to fix warning
+    len_data_out = len_data_out;
+
+    gcry_error = gcry_mac_open(&(tmp_mac_hd), GCRY_MAC_CMAC_AES, GCRY_MAC_FLAG_SECURE, NULL);
+    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+    {
+        printf(KRED "ERROR: gcry_mac_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+        status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
+        return status;
+    }
+
+    gcry_error = gcry_mac_setkey(tmp_mac_hd, key_ptr, len_key);
+#ifdef SA_DEBUG
+    printf(KYEL "Validate MAC Printing Key:\n\t");
+    for (uint32_t i = 0; i < len_key; i++)
+    {
+        printf("%02X", *(key_ptr + i));
+    }
+    printf("\n");
+#endif
+    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+    {
+        printf(KRED "ERROR: gcry_mac_setkey error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+        status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
+        gcry_mac_close(tmp_mac_hd);
+        return status;
+    }
+printf("\t%d\n", __LINE__);
+    // If MAC needs IV, set it (only for certain ciphers)
+    if (iv_len > 0)
+    {
+        gcry_error = gcry_mac_setiv(tmp_mac_hd, iv, iv_len);
+        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+        {
+            printf(KRED "ERROR: gcry_mac_setiv error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+            status = CRYPTO_LIB_ERROR;
+            return status;
+        }
+    }
+printf("\t%d\n", __LINE__);
+    gcry_error = gcry_mac_write(tmp_mac_hd,
+                                aad,    // additional authenticated data
+                                aad_len // length of AAD
+    );
+    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+    {
+        printf(KRED "ERROR: gcry_mac_write error code %d\n" RESET,
+                gcry_error & GPG_ERR_CODE_MASK);
+        printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+        status = CRYPTO_LIB_ERROR;
+        return status;
+    }
+printf("\t%d\n", __LINE__);
+    // Compare computed mac with MAC in frame
+    gcry_error = gcry_mac_verify(tmp_mac_hd,
+                                 mac,      // original mac
+                                 (size_t)mac_size // tag size
+    );
+    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+    {
+        printf(KRED "ERROR: gcry_mac_read error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+        status = CRYPTO_LIB_ERR_MAC_RETRIEVAL_ERROR;
+        return status;
+    }
+printf("\t%d\n", __LINE__);
+    // Zeroise any sensitive information
+    gcry_mac_close(tmp_mac_hd);
+    return status; 
+}
 static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -646,7 +740,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     }
     gcry_error = gcry_cipher_setkey(tmp_hd, key_ptr, len_key);
 #ifdef SA_DEBUG
-    printf(KYEL "Printing Key:\n\t");
+    printf(KYEL "AEAD MAC: Printing Key:\n\t");
     for (uint32_t i = 0; i < len_key; i++)
     {
         printf("%02X", *(key_ptr + i));
