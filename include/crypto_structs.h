@@ -68,8 +68,8 @@ typedef struct
     uint8_t shsnf_len : 6;  // Sec. Header SN Field Length
     uint8_t shplf_len : 2;  // Sec. Header PL Field Length
     uint8_t stmacf_len : 8; // Sec. Trailer MAC Field Length
+    uint8_t *ecs;           // Encryption Cipher Suite (algorithm / mode ID)
     uint8_t ecs_len : 8;    // Encryption Cipher Suite Length
-    uint8_t ecs[ECS_SIZE];  // Encryption Cipher Suite (algorithm / mode ID)
     uint8_t *iv;            // Initialization Vector
     uint8_t acs_len : 8;    // Authentication Cipher Suite Length
     uint8_t acs : 8;        // Authentication Cipher Suite (algorithm / mode ID)

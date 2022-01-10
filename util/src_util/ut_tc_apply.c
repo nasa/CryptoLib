@@ -107,6 +107,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC)
     sadb_routine->sadb_get_sa_from_spi(4, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ast = 0;
+    test_association->arc_len = 0;
 
     return_val =
         Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
@@ -141,6 +142,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_AUTH_ENC)
     test_association->sa_state = SA_NONE;
     sadb_routine->sadb_get_sa_from_spi(4, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
+    test_association->arc_len = 0;
 
     return_val =
         Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
