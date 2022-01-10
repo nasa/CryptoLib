@@ -552,7 +552,14 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
     }
 
     // Need to copy the data over, since authentication won't change/move the data directly
-    memcpy(data_out, data_in, len_data_in);
+    if(data_out != NULL)
+    {
+        memcpy(data_out, data_in, len_data_in);
+    }
+    else
+    {
+        return CRYPTO_LIB_ERR_NULL_BUFFER;
+    }
 
     // Using to fix warning
     len_data_out = len_data_out;
@@ -643,8 +650,14 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     }
 
     // Need to copy the data over, since authentication won't change/move the data directly
-    memcpy(data_out, data_in, len_data_in);
-
+    if(data_out != NULL)
+    {
+        memcpy(data_out, data_in, len_data_in);
+    }
+    else
+    {
+        return CRYPTO_LIB_ERR_NULL_BUFFER;
+    }
     // Using to fix warning
     len_data_out = len_data_out;
     ecs = ecs;
