@@ -54,6 +54,14 @@ else() #standalone build
     add_library(Crypto SHARED ${LIB_SRC_FILES})
 endif()
 
+if(LIBGCRYPT)
+    target_link_libraries(Crypto gcrypt)
+endif()
+
+if(KMCCRYPTO)
+    target_link_libraries(Crypto curl)
+endif()
+
 if(MYSQL)
     execute_process(COMMAND mysql_config --cflags
             OUTPUT_VARIABLE MYSQL_CFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -64,8 +72,6 @@ if(MYSQL)
     target_link_libraries(Crypto ${MYSQL_LIBS})
 endif()
 
-# Add libgcrypt
-target_link_libraries(Crypto gcrypt)
 
 #Include cmake install module - todo
 #include(GNUInstallDirs)

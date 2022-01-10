@@ -82,8 +82,9 @@ Note:               MySQL server MUST be configured for encrypted connections:
  *                  https://dev.mysql.com/doc/refman/5.7/en/using-encrypted-connections.html
 ==========================================================*/
 extern int32_t Crypto_Config_MariaDB(char* mysql_username, char* mysql_password, char* mysql_hostname, char* mysql_database, uint16_t mysql_port, uint8_t encrypted_connection, char* ssl_cert, char* ssl_key, char* ssl_ca, char* ssl_capath);
-extern int32_t Crypto_Config_Kmc_Crypto_Service(char *kmc_crypto_hostname, uint16_t kmc_crypto_port, char *mtls_cert_path,
-                                                char *mtls_key_path, uint8_t ignore_ssl_hostname_validation);
+extern int32_t Crypto_Config_Kmc_Crypto_Service(char *protocol, char *kmc_crypto_hostname, uint16_t kmc_crypto_port, char *mtls_client_cert_path, char *mtls_client_cert_type,
+                                                char *mtls_client_key_path,char *mtls_client_key_pass, char *mtls_ca_bundle, char *mtls_ca_path,
+                                                char *mtls_issuer_cert, uint8_t ignore_ssl_hostname_validation);
 extern int32_t Crypto_Config_Add_Gvcid_Managed_Parameter(uint8_t tfvn, uint16_t scid, uint8_t vcid, uint8_t has_fecf,
                                                          uint8_t has_segmentation_hdr);
 

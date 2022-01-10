@@ -14,8 +14,12 @@
 
 #include "crypto_error.h"
 #include "cryptography_interface.h"
+#include "crypto.h"
 
 #include <stdio.h>
+#include <string.h>
+
+#include <curl/curl.h>
 
 // Cryptography Interface Initialization & Management Functions
 static int32_t cryptography_config(void);
@@ -50,6 +54,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
 */
 // Cryptography Interface
 static CryptographyInterfaceStruct cryptography_if_struct;
+static CURL* curl;
 
 CryptographyInterface get_cryptography_interface_kmc_crypto_service(void)
 {
@@ -66,10 +71,91 @@ CryptographyInterface get_cryptography_interface_kmc_crypto_service(void)
     return &cryptography_if_struct;
 }
 
-static int32_t cryptography_config(void){ return CRYPTO_LIB_SUCCESS; }
-static int32_t cryptography_init(void){ return CRYPTO_LIB_SUCCESS; }
-static crypto_key_t* get_ek_ring(void){ return NULL; }
-static int32_t cryptography_shutdown(void){ return CRYPTO_LIB_SUCCESS; }
+static int32_t cryptography_config(void)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    // Error out if Crypto_Config_Kmc_Crypto_Service(...) function was not called before intializing library.
+    if(cryptography_kmc_crypto_config == NULL)
+    {
+        fprintf(stderr, "You must configure the KMC Crypto Service before starting the interface!\n");
+        status = CRYPTOGRAPHY_KMC_CRYPTO_SERVICE_CONFIGURATION_NOT_COMPLETE;
+        return status;
+    }
+
+    if(curl)
+    {
+        //Determine length of port and convert to string for use in URL
+        // int port_str_len = snprintf( NULL, 0, "%d", cryptography_kmc_crypto_config->kmc_crypto_port);
+        // char* port_str = malloc( port_str_len + 1);
+        // snprintf( port_str, port_str_len + 1, "%d", cryptography_kmc_crypto_config->kmc_crypto_port );
+
+        // Form URL
+        //len(protocol)+len(://)+len(hostname)+strlen('\0')
+        uint32_t len_url = strlen(cryptography_kmc_crypto_config->protocol) + 3 +
+                            strlen(cryptography_kmc_crypto_config->kmc_crypto_hostname) + 1;
+        char* url_str = malloc(len_url);
+        snprintf(url_str,len_url,"%s://%s",cryptography_kmc_crypto_config->protocol,
+                 cryptography_kmc_crypto_config->kmc_crypto_hostname);
+
+#ifdef DEBUG
+        printf("Setting up cURL connection to KMC Crypto Service with Params:\n");
+        printf("\tURL: %s\n",url_str);
+        printf("\tPort: %d\n",cryptography_kmc_crypto_config->kmc_crypto_port);
+        printf("\tSSL Client Cert: %s\n",cryptography_kmc_crypto_config->mtls_client_cert_path);
+        printf("\tSSL Client Key: %s\n",cryptography_kmc_crypto_config->mtls_client_key_path);
+#endif
+
+        curl_easy_setopt(curl, CURLOPT_URL, url_str);
+        //curl_easy_setopt(curl, CURLOPT_PROTOCOLS,CURLPROTO_HTTPS); // use default CURLPROTO_ALL
+        curl_easy_setopt(curl, CURLOPT_PORT, cryptography_kmc_crypto_config->kmc_crypto_port);
+        curl_easy_setopt(curl, CURLOPT_SSLCERT, cryptography_kmc_crypto_config->mtls_client_cert_path);
+        curl_easy_setopt(curl, CURLOPT_SSLKEY, cryptography_kmc_crypto_config->mtls_client_key_path);
+        if(cryptography_kmc_crypto_config->mtls_client_cert_type != NULL){
+            curl_easy_setopt(curl, CURLOPT_SSLCERTTYPE, cryptography_kmc_crypto_config->mtls_client_cert_type);
+        }
+        if(cryptography_kmc_crypto_config->mtls_client_key_pass != NULL){
+            curl_easy_setopt(curl, CURLOPT_KEYPASSWD, cryptography_kmc_crypto_config->mtls_client_key_pass);
+        }
+        if(cryptography_kmc_crypto_config->mtls_ca_bundle != NULL){
+            curl_easy_setopt(curl, CURLOPT_CAINFO, cryptography_kmc_crypto_config->mtls_ca_bundle);
+        }
+        if(cryptography_kmc_crypto_config->mtls_ca_path != NULL){
+            curl_easy_setopt(curl, CURLOPT_CAPATH, cryptography_kmc_crypto_config->mtls_ca_path);
+        }
+        if(cryptography_kmc_crypto_config->mtls_issuer_cert != NULL){
+            curl_easy_setopt(curl, CURLOPT_ISSUERCERT, cryptography_kmc_crypto_config->mtls_issuer_cert);
+        }
+        if(cryptography_kmc_crypto_config->ignore_ssl_hostname_validation == CRYPTO_TRUE){
+            curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+            curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+        }
+
+        curl_easy_perform(curl);
+    }
+    return status;
+}
+static int32_t cryptography_init(void)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    curl = curl_easy_init();
+    if(curl == NULL) {
+        status = CRYPTOGRAPHY_KMC_CURL_INITIALIZATION_FAILURE;
+    }
+    return status;
+}
+static crypto_key_t* get_ek_ring(void)
+{
+    fprintf(stderr, "Attempting to access key ring with KMC Crypto Service. This shouldn't happen!\n ");
+    return NULL;
+}
+static int32_t cryptography_shutdown(void)
+{
+    if(curl){
+        curl_easy_cleanup(curl);
+    }
+    return CRYPTO_LIB_SUCCESS;
+}
 static int32_t cryptography_encrypt(void){ return CRYPTO_LIB_SUCCESS; }
 static int32_t cryptography_decrypt(void){ return CRYPTO_LIB_SUCCESS; }
 static int32_t cryptography_authenticate(void){ return CRYPTO_LIB_SUCCESS; }
@@ -84,6 +170,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t encrypt_bool, uint8_t authenticate_bool,
                                          uint8_t aad_bool)
 {
+    int32_t status = CRYPTO_LIB_SUCCESS;
     data_out = data_out;
     len_data_out = len_data_out;
     data_in = data_in;
@@ -100,7 +187,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     encrypt_bool = encrypt_bool;
     authenticate_bool = authenticate_bool;
     aad_bool = aad_bool;
-    return CRYPTO_LIB_SUCCESS;
+    return status;
 }
 static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,

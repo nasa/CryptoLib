@@ -155,10 +155,16 @@ typedef struct
 */
 typedef struct
 {
-    char *kmc_crypto_hostname;
+    char* kmc_crypto_hostname;
+    char* protocol;
     uint16_t kmc_crypto_port;
-    char *mtls_cert_path;
-    char *mtls_key_path;
+    char* mtls_client_cert_path;
+    char* mtls_client_cert_type; // default "PEM", supports "P12" and "DER"
+    char* mtls_client_key_path;
+    char* mtls_client_key_pass;
+    char* mtls_ca_bundle;
+    char* mtls_ca_path;
+    char* mtls_issuer_cert;
     uint8_t ignore_ssl_hostname_validation;
 
 } CryptographyKmcCryptoServiceConfig_t;

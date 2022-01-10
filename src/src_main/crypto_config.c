@@ -272,15 +272,22 @@ int32_t Crypto_Config_MariaDB(char* mysql_username, char* mysql_password, char* 
     return status;
 }
 
-extern int32_t Crypto_Config_Kmc_Crypto_Service(char *kmc_crypto_hostname, uint16_t kmc_crypto_port, char *mtls_cert_path,
-                                                char *mtls_key_path, uint8_t ignore_ssl_hostname_validation)
+extern int32_t Crypto_Config_Kmc_Crypto_Service(char* protocol, char *kmc_crypto_hostname, uint16_t kmc_crypto_port, char *mtls_client_cert_path, char *mtls_client_cert_type,
+                                                char *mtls_client_key_path,char *mtls_client_key_pass,char *mtls_ca_bundle, char *mtls_ca_path, char *mtls_issuer_cert,
+                                                uint8_t ignore_ssl_hostname_validation)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     cryptography_kmc_crypto_config = (CryptographyKmcCryptoServiceConfig_t *)calloc(1, CRYPTOGRAPHY_KMC_CRYPTO_SERVICE_CONFIG_SIZE);
+    cryptography_kmc_crypto_config->protocol = protocol;
     cryptography_kmc_crypto_config->kmc_crypto_hostname = kmc_crypto_hostname;
     cryptography_kmc_crypto_config->kmc_crypto_port = kmc_crypto_port;
-    cryptography_kmc_crypto_config->mtls_cert_path = mtls_cert_path;
-    cryptography_kmc_crypto_config->mtls_key_path = mtls_key_path;
+    cryptography_kmc_crypto_config->mtls_client_cert_path = mtls_client_cert_path;
+    cryptography_kmc_crypto_config->mtls_client_cert_type = mtls_client_cert_type;
+    cryptography_kmc_crypto_config->mtls_client_key_path = mtls_client_key_path;
+    cryptography_kmc_crypto_config->mtls_client_key_pass = mtls_client_key_pass;
+    cryptography_kmc_crypto_config->mtls_ca_bundle = mtls_ca_bundle;
+    cryptography_kmc_crypto_config->mtls_ca_path = mtls_ca_path;
+    cryptography_kmc_crypto_config->mtls_issuer_cert = mtls_issuer_cert;
     cryptography_kmc_crypto_config->ignore_ssl_hostname_validation = ignore_ssl_hostname_validation;
     return status;
 }
