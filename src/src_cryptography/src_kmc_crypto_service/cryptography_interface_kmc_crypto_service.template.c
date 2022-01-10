@@ -29,8 +29,22 @@ static int32_t cryptography_shutdown(void);
 // Cryptography Interface Functions
 static int32_t cryptography_encrypt(void);
 static int32_t cryptography_decrypt(void);
-static int32_t cryptography_authenticate(void);
-static int32_t cryptography_validate_authentication(void);
+static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
+                                         uint8_t* data_in, size_t len_data_in,
+                                         uint8_t* key, uint32_t len_key,
+                                         SecurityAssociation_t* sa_ptr,
+                                         uint8_t* iv, uint32_t iv_len,
+                                         uint8_t* mac, uint32_t mac_size,
+                                         uint8_t* aad, uint32_t aad_len,
+                                         uint8_t ecs, uint8_t acs);
+static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t len_data_out,
+                                                    uint8_t* data_in, size_t len_data_in,
+                                                    uint8_t* key, uint32_t len_key,
+                                                    SecurityAssociation_t* sa_ptr,
+                                                    uint8_t* iv, uint32_t iv_len,
+                                                    uint8_t* mac, uint32_t mac_size,
+                                                    uint8_t* aad, uint32_t aad_len,
+                                                    uint8_t ecs, uint8_t acs);
 static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -158,8 +172,58 @@ static int32_t cryptography_shutdown(void)
 }
 static int32_t cryptography_encrypt(void){ return CRYPTO_LIB_SUCCESS; }
 static int32_t cryptography_decrypt(void){ return CRYPTO_LIB_SUCCESS; }
-static int32_t cryptography_authenticate(void){ return CRYPTO_LIB_SUCCESS; }
-static int32_t cryptography_validate_authentication(void){ return CRYPTO_LIB_SUCCESS; }
+static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
+                                         uint8_t* data_in, size_t len_data_in,
+                                         uint8_t* key, uint32_t len_key,
+                                         SecurityAssociation_t* sa_ptr,
+                                         uint8_t* iv, uint32_t iv_len,
+                                         uint8_t* mac, uint32_t mac_size,
+                                         uint8_t* aad, uint32_t aad_len,
+                                         uint8_t ecs, uint8_t acs)
+{
+    data_out = data_out;
+    len_data_out = len_data_out;
+    data_in = data_in;
+    len_data_in = len_data_in;
+    key = key;
+    len_key = len_key;
+    sa_ptr = sa_ptr;
+    iv = iv;
+    iv_len = iv_len;
+    mac = mac;
+    mac_size = mac_size;
+    aad = aad;
+    aad_len = aad_len;
+    ecs = ecs;
+    acs = acs;
+    return CRYPTO_LIB_SUCCESS;
+}
+static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t len_data_out,
+                                                    uint8_t* data_in, size_t len_data_in,
+                                                    uint8_t* key, uint32_t len_key,
+                                                    SecurityAssociation_t* sa_ptr,
+                                                    uint8_t* iv, uint32_t iv_len,
+                                                    uint8_t* mac, uint32_t mac_size,
+                                                    uint8_t* aad, uint32_t aad_len,
+                                                    uint8_t ecs, uint8_t acs)
+{
+    data_out = data_out;
+    len_data_out = len_data_out;
+    data_in = data_in;
+    len_data_in = len_data_in;
+    key = key;
+    len_key = len_key;
+    sa_ptr = sa_ptr;
+    iv = iv;
+    iv_len = iv_len;
+    mac = mac;
+    mac_size = mac_size;
+    aad = aad;
+    aad_len = aad_len;
+    ecs = ecs;
+    acs = acs;
+    return CRYPTO_LIB_SUCCESS;
+}
 static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,

@@ -124,8 +124,8 @@ static int32_t sadb_init(void) {
                 status = CRYPTO_LIB_ERROR;
             } else {
                 status = CRYPTO_LIB_SUCCESS;
-                if (status) {
-                    printf("sadb_initUsing an encrypted connection \n");
+                if (status==CRYPTO_LIB_SUCCESS) {
+                    printf("sadb_init Using an encrypted connection \n");
                 }
             }
         }//end if TLS connection  
@@ -142,6 +142,10 @@ static int32_t sadb_init(void) {
                 status = CRYPTO_LIB_ERROR;
             } else {
                 status = CRYPTO_LIB_SUCCESS;
+                if (status==CRYPTO_LIB_SUCCESS) {
+                    printf("sadb_init Using plain socket connection \n");
+                }
+
             }
         }//end regular password 
     }
@@ -290,6 +294,7 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
     char *iv_byte_str;
     char *arc_byte_str;
     char *abm_byte_str;
+    char *ecs_byte_str;
     while ((row = mysql_fetch_row(result)))
     {
         for (int i = 0; i < num_fields; i++)
@@ -391,7 +396,7 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
             }
             if (strcmp(field_names[i], "HEX(ecs)") == 0)
             {
-                convert_hexstring_to_byte_array(row[i], sa->ecs);
+                ecs_byte_str = row[i];
                 continue;
             }
             // if(strcmp(field_names[i],"HEX(iv)")==0){memcpy(&(sa->iv),&row[i],IV_SIZE);continue;}
@@ -449,9 +454,12 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
     sa->iv = (uint8_t *)calloc(1, sa->shivf_len * sizeof(uint8_t));
     sa->arc = (uint8_t *)calloc(1, sa->arc_len * sizeof(uint8_t));
     sa->abm = (uint8_t *)calloc(1, sa->abm_len * sizeof(uint8_t));
+    sa->ecs = calloc(1, sa->ecs_len * sizeof(uint8_t));
     convert_hexstring_to_byte_array(iv_byte_str, sa->iv);
     convert_hexstring_to_byte_array(arc_byte_str, sa->arc);
     convert_hexstring_to_byte_array(abm_byte_str, sa->abm);
+    convert_hexstring_to_byte_array(ecs_byte_str, sa->ecs);
+
 
     *security_association = sa;
     mysql_free_result(result);
