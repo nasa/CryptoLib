@@ -181,7 +181,8 @@ int32_t Crypto_compare_less_equal(uint8_t *actual, uint8_t *expected, int length
 uint8_t Crypto_Prep_Reply(uint8_t *ingest, uint8_t appID)
 {
     uint8_t count = 0;
-
+    if(ingest == NULL) return count;
+    
     // Prepare CCSDS for reply
     sdls_frame.hdr.pvn = 0;
     sdls_frame.hdr.type = 0;
@@ -581,7 +582,7 @@ int32_t Crypto_PDU(uint8_t *ingest, TC_t *tc_frame)
     }
 
 #ifdef CCSDS_DEBUG
-    if (status > 0)
+    if ((status > 0) && (ingest != NULL))
     {
         printf(KMAG "CCSDS message put on software bus: 0x" RESET);
         for (int x = 0; x < status; x++)

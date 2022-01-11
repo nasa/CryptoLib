@@ -25,6 +25,14 @@ add_test(NAME UT_TC_APPLY
          COMMAND ${PROJECT_BINARY_DIR}/bin/ut_tc_apply 
          WORKING_DIRECTORY ${PROJECT_TEST_DIR})
 
+add_test(NAME UT_CRYPTO_CONFIG
+         COMMAND ${PROJECT_BINARY_DIR}/bin/ut_crypto_config 
+         WORKING_DIRECTORY ${PROJECT_TEST_DIR})
+
+add_test(NAME UT_CRYPTO
+         COMMAND ${PROJECT_BINARY_DIR}/bin/ut_crypto 
+         WORKING_DIRECTORY ${PROJECT_TEST_DIR})
+
 if(${ENCTEST})
     add_test(NAME ET_DT_VALIDATION
              COMMAND ${PROJECT_BINARY_DIR}/bin/et_dt_validation 

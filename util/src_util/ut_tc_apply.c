@@ -47,9 +47,27 @@ UTEST(TC_APPLY_SECURITY, NO_CRYPTO_INIT)
     uint16_t enc_frame_len = 0;
     int32_t return_val = CRYPTO_LIB_ERROR;
 
-    return_val =
-        Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    return_val = Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(CRYPTO_LIB_ERR_NO_INIT, return_val);
+    free(raw_tc_sdls_ping_b);
+    Crypto_Shutdown();
+}
+
+UTEST(TC_APPLY_SECURITY, NO_CONFIG)
+{
+    // No Crypto_Init(), but we still Configure It;
+    char *raw_tc_sdls_ping_h = "20030015001880d2c70008197f0b00310000b1fe3128";
+    char *raw_tc_sdls_ping_b = NULL;
+    int raw_tc_sdls_ping_len = 0;
+
+    hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
+
+    uint8_t *ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+    int32_t return_val = CRYPTO_LIB_ERROR;
+
+    return_val = Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_ERR_NO_CONFIG, return_val);
     free(raw_tc_sdls_ping_b);
     Crypto_Shutdown();
 }

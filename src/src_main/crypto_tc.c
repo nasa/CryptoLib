@@ -121,6 +121,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
         printf(KYEL "DEBUG - Received Control/Command frame - nothing to do.\n" RESET);
 #endif
         status = CRYPTO_LIB_ERR_INVALID_CC_FLAG;
+        return status;
     }
 
     if (status == CRYPTO_LIB_SUCCESS)
