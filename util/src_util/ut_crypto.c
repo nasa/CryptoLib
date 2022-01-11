@@ -114,7 +114,7 @@ UTEST(CRYPTO_C, PDU_SWITCH)
     sdls_frame.pdu.pid = PID_KEY_INVENTORY;
     status = Crypto_PDU(ingest, tc_frame);
     ASSERT_EQ(status, CRYPTOGRAPHY_UNSUPPORTED_OPERATION_FOR_KEY_RING);
-
+    
     sdls_frame.pdu.pid = SG_KEY_MGMT;
     status = Crypto_PDU(ingest, tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);

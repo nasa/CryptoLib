@@ -55,12 +55,14 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_MARIADB_NULL)
 {
     int32_t status = CRYPTO_LIB_ERROR;
     CryptoConfig_t *crypto_config_p = malloc(sizeof(CryptoConfig_t) * sizeof(uint8_t));
-    GvcidManagedParameters_t *gvcid_managed_paramenters_p = malloc(sizeof(GvcidManagedParameters_t) * sizeof(uint8_t));
+    GvcidManagedParameters_t *gvcid_managed_paramenters_p = malloc(sizeof(GvcidManagedParameters_t));
+    gvcid_managed_paramenters_p->next = NULL;
     SadbMariaDBConfig_t *sadb_mariadb_config_p = NULL;
     CryptographyKmcCryptoServiceConfig_t *cryptography_kmc_crypto_config_p = NULL;
 
     crypto_config->sadb_type = SADB_TYPE_MARIADB;
     status = Crypto_Init_With_Configs(crypto_config_p, gvcid_managed_paramenters_p, sadb_mariadb_config_p, cryptography_kmc_crypto_config_p);
+ 
     free(crypto_config_p);
     free(gvcid_managed_paramenters_p);
     ASSERT_EQ(CRYPTO_MARIADB_CONFIGURATION_NOT_COMPLETE, status);
@@ -70,7 +72,8 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_KMCCRYPTO_NULL)
 {
     int32_t status = CRYPTO_LIB_ERROR;
     CryptoConfig_t *crypto_config_p = malloc(sizeof(CryptoConfig_t) * sizeof(uint8_t));
-    GvcidManagedParameters_t *gvcid_managed_paramenters_p = malloc(sizeof(GvcidManagedParameters_t) * sizeof(uint8_t));
+    GvcidManagedParameters_t *gvcid_managed_paramenters_p = malloc(sizeof(GvcidManagedParameters_t));
+    gvcid_managed_paramenters_p->next = NULL;
     SadbMariaDBConfig_t *sadb_mariadb_config_p = malloc(sizeof(SadbMariaDBConfig_t) * sizeof(uint8_t));
     CryptographyKmcCryptoServiceConfig_t *cryptography_kmc_crypto_config_p = NULL;
 
@@ -88,7 +91,8 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_INVALID_INTERFACE)
 {
     int32_t status = CRYPTO_LIB_ERROR;
     CryptoConfig_t *crypto_config_p = malloc(sizeof(CryptoConfig_t) * sizeof(uint8_t));
-    GvcidManagedParameters_t *gvcid_managed_paramenters_p = malloc(sizeof(GvcidManagedParameters_t) * sizeof(uint8_t));
+    GvcidManagedParameters_t *gvcid_managed_paramenters_p = malloc(sizeof(GvcidManagedParameters_t));
+    gvcid_managed_paramenters_p->next = NULL;
     SadbMariaDBConfig_t *sadb_mariadb_config_p = malloc(sizeof(SadbMariaDBConfig_t) * sizeof(uint8_t));
     CryptographyKmcCryptoServiceConfig_t *cryptography_kmc_crypto_config_p = NULL;
 
@@ -107,6 +111,7 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_INVALID_SADB)
     int32_t status = CRYPTO_LIB_ERROR;
     CryptoConfig_t *crypto_config_p = malloc(sizeof(CryptoConfig_t) * sizeof(uint8_t));
     GvcidManagedParameters_t *gvcid_managed_paramenters_p = malloc(sizeof(GvcidManagedParameters_t) * sizeof(uint8_t));
+    gvcid_managed_paramenters_p->next = NULL;
     SadbMariaDBConfig_t *sadb_mariadb_config_p = malloc(sizeof(SadbMariaDBConfig_t) * sizeof(uint8_t));
     CryptographyKmcCryptoServiceConfig_t *cryptography_kmc_crypto_config_p = NULL;
 
