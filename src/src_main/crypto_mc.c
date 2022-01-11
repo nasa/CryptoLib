@@ -48,6 +48,7 @@ int32_t Crypto_MC_ping(uint8_t *ingest)
  **/
 int32_t Crypto_MC_status(uint8_t *ingest)
 {
+    if(ingest == NULL) return CRYPTO_LIB_ERROR;
     int count = 0;
 
     // TODO: Update log_summary.rs;
@@ -78,6 +79,7 @@ int32_t Crypto_MC_status(uint8_t *ingest)
  **/
 int32_t Crypto_MC_dump(uint8_t *ingest)
 {
+    if(ingest == NULL) return CRYPTO_LIB_ERROR;
     int count = 0;
 
     // Prepare for Reply
@@ -113,6 +115,7 @@ int32_t Crypto_MC_dump(uint8_t *ingest)
  **/
 int32_t Crypto_MC_erase(uint8_t *ingest)
 {
+    if(ingest == NULL) return CRYPTO_LIB_ERROR;
     int count = 0;
 
     // Zero Logs
@@ -152,6 +155,7 @@ int32_t Crypto_MC_erase(uint8_t *ingest)
  **/
 int32_t Crypto_MC_selftest(uint8_t *ingest)
 {
+    if(ingest == NULL) return CRYPTO_LIB_ERROR;
     uint8_t count = 0;
     uint8_t result = ST_OK;
 
@@ -174,6 +178,7 @@ int32_t Crypto_MC_selftest(uint8_t *ingest)
  **/
 int32_t Crypto_SA_readARSN(uint8_t *ingest)
 {
+    if(ingest == NULL) return CRYPTO_LIB_ERROR;
     uint8_t count = 0;
     uint16_t spi = 0x0000;
     SecurityAssociation_t *sa_ptr;

@@ -176,7 +176,8 @@ int32_t Crypto_compare_less_equal(uint8_t *actual, uint8_t *expected, int length
 uint8_t Crypto_Prep_Reply(uint8_t *ingest, uint8_t appID)
 {
     uint8_t count = 0;
-
+    if(ingest == NULL) return count;
+    
     // Prepare CCSDS for reply
     sdls_frame.hdr.pvn = 0;
     sdls_frame.hdr.type = 0;
