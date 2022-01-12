@@ -54,8 +54,9 @@ typedef struct
     // Status
     uint16_t spi;  // Security Parameter Index
     uint16_t ekid; // Encryption Key ID  (Used with numerically indexed keystores, EG inmemory keyring)
-    char*    ek_ref; // Encryption Key Reference (Used with string-referenced keystores,EG-PKCS12 keystores, KMC crypto)
     uint16_t akid; // Authentication Key ID
+    char*    ek_ref; // Encryption Key Reference (Used with string-referenced keystores,EG-PKCS12 keystores, KMC crypto)
+    char*    ak_ref; // Authentication Key Reference (Used with string-referenced keystores,EG-PKCS12 keystores, KMC crypto)
     uint8_t sa_state : 2;
     crypto_gvcid_t gvcid_tc_blk;
     crypto_gvcid_t gvcid_tm_blk[NUM_GVCID];
