@@ -315,7 +315,7 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_AUTH_ONLY)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
     int32_t status = Crypto_Init();
 
-    char *enc_tc_jpl_mmt_scid44_vcid1= "202C0C26000004000000000000000000000001000100000000000000000000000000000000C4F4";
+    char *enc_tc_jpl_mmt_scid44_vcid1= "202C0C2600000400000000000000000000000100016E2051F96CAB186BCE364A65AF599AE52F38";
     char *enc_tc_jpl_mmt_scid44_vcid1_expect = NULL;
     int enc_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
 
@@ -342,9 +342,9 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_AUTH_ONLY)
 
     status = Crypto_TC_ProcessSecurity((uint8_t *)enc_tc_jpl_mmt_scid44_vcid1_expect, &enc_tc_jpl_mmt_scid44_vcid1_expect_len, tc_processed_frame);
 
-    // ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Expected to fail -- KMC doesn't support 0 cipher text input for decrypt function.
-    ASSERT_EQ(CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE, status);
+    // ASSERT_EQ(CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE, status);
     printf("Processed PDU:\n");
     for (int i=0; i<tc_processed_frame->tc_pdu_len; i++)
     {

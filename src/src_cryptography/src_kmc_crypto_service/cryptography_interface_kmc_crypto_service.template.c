@@ -490,7 +490,9 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     // If authenticate, Copy the MAC to the output stream
     if(authenticate_bool == CRYPTO_TRUE)
     {
-        memcpy(mac,ciphertext_decoded + aad_len + len_data_out, mac_size);
+        uint32_t data_offset = len_data_out;
+        if(encrypt_bool == CRYPTO_FALSE) { data_offset = 0; }
+        memcpy(mac,ciphertext_decoded + aad_len + data_offset, mac_size);
     }
     return status;
 }
@@ -569,7 +571,9 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
         }
         if(authenticate_bool == CRYPTO_TRUE)
         {
-            memcpy(&decrypt_payload[aad_len + len_data_in],mac,mac_size);
+            uint32_t data_offset = len_data_in;
+            if(decrypt_bool == CRYPTO_FALSE) { data_offset = 0; }
+            memcpy(&decrypt_payload[aad_len + data_offset],mac,mac_size);
         }
     }
     else //No AAD - just prepare the endpoint URI string
