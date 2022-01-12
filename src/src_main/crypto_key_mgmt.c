@@ -283,7 +283,7 @@ int32_t Crypto_Key_inventory(uint8_t *ingest)
     uint16_t range = 0;
     crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
 
-    if ( ek_ring == NULL )
+    if ( ek_ring == NULL || ingest == NULL)
     {
         return CRYPTOGRAPHY_UNSUPPORTED_OPERATION_FOR_KEY_RING;
     }
@@ -330,7 +330,7 @@ int32_t Crypto_Key_verify(uint8_t *ingest, TC_t *tc_frame)
 #ifdef PDU_DEBUG
     printf("Crypto_Key_verify: Requested %d key(s) to verify \n", pdu_keys);
 #endif
-
+    
     // Read in PDU
     for (int x = 0; x < pdu_keys; x++)
     {
@@ -349,13 +349,12 @@ int32_t Crypto_Key_verify(uint8_t *ingest, TC_t *tc_frame)
         printf("\n");
 #endif
     }
-
+    
     // Prepare for Reply
     sdls_frame.pdu.pdu_len = pdu_keys * (2 + IV_SIZE + CHALLENGE_SIZE + CHALLENGE_MAC_SIZE);
     sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
     count = Crypto_Prep_Reply(ingest, 128);
     crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
-
     if ( ek_ring == NULL ) // Can't verify key without a key ring, action supported for this cryptography interface!
     {
         return CRYPTOGRAPHY_UNSUPPORTED_OPERATION_FOR_KEY_RING;

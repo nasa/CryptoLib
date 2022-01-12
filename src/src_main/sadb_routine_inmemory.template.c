@@ -950,6 +950,8 @@ static int32_t sadb_sa_setARSNW(void)
  **/
 static int32_t sadb_sa_status(uint8_t *ingest)
 {
+    if(ingest == NULL) return CRYPTO_LIB_ERROR;
+    
     // Local variables
     int count = 0;
     uint16_t spi = 0x0000;
