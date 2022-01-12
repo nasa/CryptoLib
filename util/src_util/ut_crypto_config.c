@@ -146,13 +146,22 @@ UTEST(CRYPTO_CONFIG, CRYPTO_CONFIG_MDB)
 UTEST(CRYPTO_CONFIG, CRYPTO_CONFIG_KMC)
 {
     int32_t status = CRYPTO_LIB_ERROR;
+    char* protocol = "https";
     char* hostname = "ITC_JPL";
     int16_t port = 9999;
-    char* cert_path = "NONE";
-    char* key_path = "NONE";
-    uint8_t ssl_host_val = 123;
 
-    status = Crypto_Config_Kmc_Crypto_Service(hostname,port,cert_path,key_path,ssl_host_val);
+    char *kmc_crypto_app_uri = "crypto-service";
+    char *mtls_client_cert_path = "/dev/null";
+    char *mtls_client_cert_type = "PEM";
+    char *mtls_client_key_path = "/dev/null";
+    char *mtls_client_key_pass = "12345";
+    char *mtls_ca_bundle = "/dev/null";
+    char *mtls_ca_path = "/dev/null";
+    char *mtls_issuer_cert = "/dev/null";
+    uint8_t ignore_ssl_hostname_validation = CRYPTO_TRUE;
+
+    status = Crypto_Config_Kmc_Crypto_Service(protocol,hostname,port,kmc_crypto_app_uri, mtls_client_cert_path,mtls_client_cert_type,mtls_client_key_path,
+                                              mtls_client_key_pass, mtls_ca_bundle,mtls_ca_path, mtls_issuer_cert, ignore_ssl_hostname_validation);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
