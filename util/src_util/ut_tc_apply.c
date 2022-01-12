@@ -53,6 +53,9 @@ UTEST(TC_APPLY_SECURITY, NO_CRYPTO_INIT)
     Crypto_Shutdown();
 }
 
+/**
+ * @brief Unit Test: No Set Configuration
+ **/
 UTEST(TC_APPLY_SECURITY, NO_CONFIG)
 {
     // No Crypto_Init(), but we still Configure It;
