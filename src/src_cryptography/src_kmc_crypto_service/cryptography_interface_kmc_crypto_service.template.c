@@ -775,22 +775,40 @@ static size_t read_callback(char *dest, size_t size, size_t nmemb, void *userp)
 static void configure_curl_connect_opts(CURL* curl_handle)
 {
     //curl_easy_setopt(curl_handle, CURLOPT_PROTOCOLS,CURLPROTO_HTTPS); // use default CURLPROTO_ALL
+#ifdef DEBUG
+    printf("KMC Crypto Port: %d\n",cryptography_kmc_crypto_config->kmc_crypto_port);
+    printf("KMC mTLS Client Cert Path: %s\n",cryptography_kmc_crypto_config->mtls_client_cert_path);
+    printf("KMC mTLS Client Key Path: %s\n",cryptography_kmc_crypto_config->mtls_client_key_path);
+
+    if(cryptography_kmc_crypto_config->mtls_client_cert_type != NULL && (strcmp(cryptography_kmc_crypto_config->mtls_client_cert_type,"")!=0)){
+        printf("KMC mTLS Client Cert Type: %s\n",cryptography_kmc_crypto_config->mtls_client_cert_type);
+    }
+    if(cryptography_kmc_crypto_config->mtls_ca_bundle != NULL && (strcmp(cryptography_kmc_crypto_config->mtls_ca_bundle,"")!=0)){
+        printf("KMC mTLS CA Bundle: %s\n",cryptography_kmc_crypto_config->mtls_ca_bundle);
+    }
+    if(cryptography_kmc_crypto_config->mtls_ca_path != NULL && (strcmp(cryptography_kmc_crypto_config->mtls_ca_path,"")!=0)){
+        printf("KMC mTLS CA Path: %s\n",cryptography_kmc_crypto_config->mtls_ca_path);
+    }
+    if(cryptography_kmc_crypto_config->mtls_issuer_cert != NULL && (strcmp(cryptography_kmc_crypto_config->mtls_issuer_cert,"")!=0)){
+        printf("KMC mTLS Client Issuer Cert: %s\n",cryptography_kmc_crypto_config->mtls_issuer_cert);
+    }
+#endif
     curl_easy_setopt(curl_handle, CURLOPT_PORT, cryptography_kmc_crypto_config->kmc_crypto_port);
     curl_easy_setopt(curl_handle, CURLOPT_SSLCERT, cryptography_kmc_crypto_config->mtls_client_cert_path);
     curl_easy_setopt(curl_handle, CURLOPT_SSLKEY, cryptography_kmc_crypto_config->mtls_client_key_path);
-    if(cryptography_kmc_crypto_config->mtls_client_cert_type != NULL){
+    if(cryptography_kmc_crypto_config->mtls_client_cert_type != NULL && (strcmp(cryptography_kmc_crypto_config->mtls_client_cert_type,"")!=0)){
         curl_easy_setopt(curl_handle, CURLOPT_SSLCERTTYPE, cryptography_kmc_crypto_config->mtls_client_cert_type);
     }
-    if(cryptography_kmc_crypto_config->mtls_client_key_pass != NULL){
+    if(cryptography_kmc_crypto_config->mtls_client_key_pass != NULL && (strcmp(cryptography_kmc_crypto_config->mtls_client_key_pass,"")!=0)){
         curl_easy_setopt(curl_handle, CURLOPT_KEYPASSWD, cryptography_kmc_crypto_config->mtls_client_key_pass);
     }
-    if(cryptography_kmc_crypto_config->mtls_ca_bundle != NULL){
+    if(cryptography_kmc_crypto_config->mtls_ca_bundle != NULL && (strcmp(cryptography_kmc_crypto_config->mtls_ca_bundle,"")!=0)){
         curl_easy_setopt(curl_handle, CURLOPT_CAINFO, cryptography_kmc_crypto_config->mtls_ca_bundle);
     }
-    if(cryptography_kmc_crypto_config->mtls_ca_path != NULL){
+    if(cryptography_kmc_crypto_config->mtls_ca_path != NULL && (strcmp(cryptography_kmc_crypto_config->mtls_ca_path,"")!=0)){
         curl_easy_setopt(curl_handle, CURLOPT_CAPATH, cryptography_kmc_crypto_config->mtls_ca_path);
     }
-    if(cryptography_kmc_crypto_config->mtls_issuer_cert != NULL){
+    if(cryptography_kmc_crypto_config->mtls_issuer_cert != NULL && (strcmp(cryptography_kmc_crypto_config->mtls_issuer_cert,"")!=0)){
         curl_easy_setopt(curl_handle, CURLOPT_ISSUERCERT, cryptography_kmc_crypto_config->mtls_issuer_cert);
     }
     if(cryptography_kmc_crypto_config->ignore_ssl_hostname_validation == CRYPTO_TRUE){
