@@ -140,8 +140,18 @@ int32_t Crypto_Init(void)
 
     // Initialize the cryptography library.
     status = cryptography_if->cryptography_init();
+    if(status != CRYPTO_LIB_SUCCESS){
+        fprintf(stderr, "Fatal Error: Unable to initialize Cryptography Interface.\n");
+        return status;
+    }
+
     // Configure the cryptography library.
     status = cryptography_if->cryptography_config();
+
+    if(status != CRYPTO_LIB_SUCCESS){
+        fprintf(stderr, "Fatal Error: Unable to configure Cryptography Interface.\n");
+        return status;
+    }
 
 
     // Init Security Associations
@@ -272,7 +282,7 @@ int32_t Crypto_Config_MariaDB(char* mysql_username, char* mysql_password, char* 
     return status;
 }
 
-extern int32_t Crypto_Config_Kmc_Crypto_Service(char* protocol, char *kmc_crypto_hostname, uint16_t kmc_crypto_port, char *mtls_client_cert_path, char *mtls_client_cert_type,
+extern int32_t Crypto_Config_Kmc_Crypto_Service(char* protocol, char *kmc_crypto_hostname, uint16_t kmc_crypto_port, char *kmc_crypto_app_uri, char *mtls_client_cert_path, char *mtls_client_cert_type,
                                                 char *mtls_client_key_path,char *mtls_client_key_pass,char *mtls_ca_bundle, char *mtls_ca_path, char *mtls_issuer_cert,
                                                 uint8_t ignore_ssl_hostname_validation)
 {
@@ -281,6 +291,12 @@ extern int32_t Crypto_Config_Kmc_Crypto_Service(char* protocol, char *kmc_crypto
     cryptography_kmc_crypto_config->protocol = protocol;
     cryptography_kmc_crypto_config->kmc_crypto_hostname = kmc_crypto_hostname;
     cryptography_kmc_crypto_config->kmc_crypto_port = kmc_crypto_port;
+    if(kmc_crypto_app_uri != NULL){
+        cryptography_kmc_crypto_config->kmc_crypto_app_uri = kmc_crypto_app_uri;
+    } else{
+        cryptography_kmc_crypto_config->kmc_crypto_app_uri = "crypto-service";
+    }
+
     cryptography_kmc_crypto_config->mtls_client_cert_path = mtls_client_cert_path;
     cryptography_kmc_crypto_config->mtls_client_cert_type = mtls_client_cert_type;
     cryptography_kmc_crypto_config->mtls_client_key_path = mtls_client_key_path;

@@ -38,7 +38,7 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_ENC)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F);
     Crypto_Config_MariaDB("sadb_user", "sadb_password", "localhost","sadb", 3306, CRYPTO_FALSE, NULL, NULL, NULL, NULL);
-    Crypto_Config_Kmc_Crypto_Service("https", "asec-cmdenc-srv1.jpl.nasa.gov", 443, "/home/isaleh/git/KMC/CryptoLib-IbraheemYSaleh/util/etc/local-test-cert.pem", "PEM","/home/isaleh/git/KMC/CryptoLib-IbraheemYSaleh/util/etc/local-test-key.pem",NULL,"/home/isaleh/git/KMC/CryptoLib-IbraheemYSaleh/util/etc/local-test-cert.pem", NULL, NULL, CRYPTO_FALSE);
+    Crypto_Config_Kmc_Crypto_Service("https", "asec-cmdenc-srv1.jpl.nasa.gov", 8443, "crypto-service", "/home/isaleh/git/KMC/CryptoLib-IbraheemYSaleh/util/etc/local-test-cert.pem", "PEM","/home/isaleh/git/KMC/CryptoLib-IbraheemYSaleh/util/etc/local-test-key.pem",NULL,"/home/isaleh/git/KMC/CryptoLib-IbraheemYSaleh/util/etc/ammos-ca-bundle.crt", NULL, NULL, CRYPTO_FALSE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 2, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
@@ -46,10 +46,10 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_ENC)
     int32_t status = Crypto_Init();
 
     char *raw_tc_jpl_mmt_scid44_vcid1= "202c04080000017ade";
-    char *raw_tc_sdls_ping_b = NULL;
-    int raw_tc_sdls_ping_len = 0;
+    char *raw_tc_jpl_mmt_scid44_vcid1_expect = NULL;
+    int raw_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
 
-    hex_conversion(raw_tc_jpl_mmt_scid44_vcid1, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
+    hex_conversion(raw_tc_jpl_mmt_scid44_vcid1, &raw_tc_jpl_mmt_scid44_vcid1_expect, &raw_tc_jpl_mmt_scid44_vcid1_expect_len);
 
     uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
@@ -57,14 +57,14 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_ENC)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     printf("Frame before encryption:\n");
-    for (int i=0; i<raw_tc_sdls_ping_len; i++)
+    for (int i=0; i<raw_tc_jpl_mmt_scid44_vcid1_expect_len; i++)
     {
-        printf("%02x ", raw_tc_sdls_ping_b[i]);
+        printf("%02x ", raw_tc_jpl_mmt_scid44_vcid1_expect[i]);
     }
     printf("\n");
 
-    status = Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
-
+    status = Crypto_TC_ApplySecurity((uint8_t *)raw_tc_jpl_mmt_scid44_vcid1_expect, raw_tc_jpl_mmt_scid44_vcid1_expect_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     printf("Frame after encryption:\n");
     for (int i=0; i<enc_frame_len; i++)
     {
@@ -74,7 +74,7 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_ENC)
 
 
     Crypto_Shutdown();
-    free(raw_tc_sdls_ping_b);
+    free(raw_tc_jpl_mmt_scid44_vcid1_expect);
     free(ptr_enc_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
@@ -87,11 +87,11 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_ENC)
 //    // Setup & Initialize CryptoLib
 //    Crypto_Init_Unit_Test();
 //    char *raw_tc_jpl_mmt_scid44_vcid1 = "20030015000080d2c70008197f0b00310000b1fe3128";
-//    char *raw_tc_sdls_ping_b = NULL;
-//    int raw_tc_sdls_ping_len = 0;
+//    char *raw_tc_jpl_mmt_scid44_vcid1_expect = NULL;
+//    int raw_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
 //    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
 //
-//    hex_conversion(raw_tc_jpl_mmt_scid44_vcid1, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
+//    hex_conversion(raw_tc_jpl_mmt_scid44_vcid1, &raw_tc_jpl_mmt_scid44_vcid1_expect, &raw_tc_jpl_mmt_scid44_vcid1_expect_len);
 //
 //    uint8_t *ptr_enc_frame = NULL;
 //    uint16_t enc_frame_len = 0;
@@ -106,9 +106,9 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_ENC)
 //    test_association->sa_state = SA_OPERATIONAL;
 //
 //    return_val =
-//            Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+//            Crypto_TC_ApplySecurity((uint8_t *)raw_tc_jpl_mmt_scid44_vcid1_expect, raw_tc_jpl_mmt_scid44_vcid1_expect_len, &ptr_enc_frame, &enc_frame_len);
 //    Crypto_Shutdown();
-//    free(raw_tc_sdls_ping_b);
+//    free(raw_tc_jpl_mmt_scid44_vcid1_expect);
 //    free(ptr_enc_frame);
 //    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
 //}

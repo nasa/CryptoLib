@@ -321,12 +321,24 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
             }
             if (strcmp(field_names[i], "ekid") == 0)
             {
-                sa->ekid = atoi(row[i]);
+                if(crypto_config->cryptography_type==CRYPTOGRAPHY_TYPE_LIBGCRYPT)
+                {
+                    sa->ekid = atoi(row[i]);
+                } else // Cryptography Type KMC Crypto Service with PKCS12 String Key References
+                {
+                    sa->ek_ref = row[i];
+                }
                 continue;
             }
             if (strcmp(field_names[i], "akid") == 0)
             {
-                sa->akid = atoi(row[i]);
+                if(crypto_config->cryptography_type==CRYPTOGRAPHY_TYPE_LIBGCRYPT)
+                {
+                    sa->akid = atoi(row[i]);
+                } else // Cryptography Type KMC Crypto Service with PKCS12 String Key References
+                {
+                    sa->ak_ref = row[i];
+                }
                 continue;
             }
             if (strcmp(field_names[i], "sa_state") == 0)

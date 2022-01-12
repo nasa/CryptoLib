@@ -180,6 +180,9 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
             if (sa_ptr->ecs != NULL)
             {
                 encryption_cipher = *sa_ptr->ecs;
+#ifdef TC_DEBUG
+                printf(KYEL "SA Encryption Cipher: %d\n", encryption_cipher);
+#endif
             }
             // If no pointer, must not be using ECS at all
             else
@@ -419,7 +422,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
                           sa_ptr->shplf_len + tf_payload_len;
 #ifdef MAC_DEBUG
                 printf(KYEL "MAC location is: %d\n" RESET, mac_loc);
-                printf(KYEL "MAC size is: %d\n" RESET, MAC_SIZE);
+                printf(KYEL "MAC size is: %d\n" RESET, sa_ptr->stmacf_len);
 #endif
                 mac_ptr = &p_new_enc_frame[mac_loc];
 
@@ -455,7 +458,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
                                                                     sa_ptr->iv, // IV
                                                                     sa_ptr->shivf_len, // IV Length
                                                                     mac_ptr, // tag output
-                                                                    MAC_SIZE, // tag size // TODO - why is this hard-coded?!
+                                                                    sa_ptr->stmacf_len, // tag size
                                                                     aad, // AAD Input
                                                                     aad_len, // Length of AAD
                                                                     (sa_ptr->est==1),
@@ -483,7 +486,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
                                                                 sa_ptr->iv, // IV
                                                                 sa_ptr->shivf_len, // IV Length
                                                                 mac_ptr, // tag output
-                                                                MAC_SIZE, // tag size // TODO - why is this hard-coded?!
+                                                                sa_ptr->stmacf_len, // tag size
                                                                 aad, // AAD Input
                                                                 aad_len, // Length of AAD
                                                                 *sa_ptr->ecs, // encryption cipher

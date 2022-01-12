@@ -151,13 +151,14 @@ typedef struct
 #define SADB_MARIADB_CONFIG_SIZE (sizeof(SadbMariaDBConfig_t))
 
 /*
-** SaDB MariaDB Configuration Block
+** KMC Cryptography Service Configuration Block
 */
 typedef struct
 {
     char* kmc_crypto_hostname;
     char* protocol;
     uint16_t kmc_crypto_port;
+    char* kmc_crypto_app_uri;
     char* mtls_client_cert_path;
     char* mtls_client_cert_type; // default "PEM", supports "P12" and "DER"
     char* mtls_client_key_path;
