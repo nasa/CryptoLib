@@ -25,7 +25,9 @@
 #include "sadb_routine.h"
 #include "utest.h"
 
-
+/**
+ * @brief Unit Test: Crypto Init with incomplete configuration
+ **/
 UTEST(CRYPTO_CONFIG, CRYPTO_INIT_WITH_INCOMPLETE_CONFIG)
 {
     // Make use of Crypto_Init_With_Configs
@@ -39,6 +41,9 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_WITH_INCOMPLETE_CONFIG)
     ASSERT_EQ(CRYPTO_CONFIGURATION_NOT_COMPLETE, status);
 }
 
+/**
+ * @brief Unit Test: Crypto Init with no managed parameters configuration
+ **/
 UTEST(CRYPTO_CONFIG, CRYPTO_INIT_NO_MANAGED_PARAM_CONFIG)
 {
     int32_t status = CRYPTO_LIB_ERROR;
@@ -51,6 +56,9 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_NO_MANAGED_PARAM_CONFIG)
     ASSERT_EQ(CRYPTO_MANAGED_PARAM_CONFIGURATION_NOT_COMPLETE, status);
 }
 
+/**
+ * @brief Unit Test: Crypto Init with NULL Maria DB
+ **/
 UTEST(CRYPTO_CONFIG, CRYPTO_INIT_MARIADB_NULL)
 {
     int32_t status = CRYPTO_LIB_ERROR;
@@ -68,6 +76,9 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_MARIADB_NULL)
     ASSERT_EQ(CRYPTO_MARIADB_CONFIGURATION_NOT_COMPLETE, status);
 }
 
+/**
+ * @brief Unit Test: Crypto Init with NULL KMC Crypto configuration
+ **/
 UTEST(CRYPTO_CONFIG, CRYPTO_INIT_KMCCRYPTO_NULL)
 {
     int32_t status = CRYPTO_LIB_ERROR;
@@ -87,6 +98,9 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_KMCCRYPTO_NULL)
     ASSERT_EQ(CRYPTOGRAPHY_KMC_CRYPTO_SERVICE_CONFIGURATION_NOT_COMPLETE, status);
 }
 
+/**
+ * @brief Unit Test: Crypto Init with Invalid Interface
+ **/
 UTEST(CRYPTO_CONFIG, CRYPTO_INIT_INVALID_INTERFACE)
 {
     int32_t status = CRYPTO_LIB_ERROR;
@@ -106,6 +120,9 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_INVALID_INTERFACE)
     ASSERT_EQ(CRYPTOGRAPHY_INVALID_CRYPTO_INTERFACE_TYPE, status);
 }
 
+/**
+ * @brief Unit Test: Crypto Init with invalid SADB
+ **/
 UTEST(CRYPTO_CONFIG, CRYPTO_INIT_INVALID_SADB)
 {
     int32_t status = CRYPTO_LIB_ERROR;
@@ -125,7 +142,10 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_INVALID_SADB)
     ASSERT_EQ(SADB_INVALID_SADB_TYPE, status);
 }
 
-// TODO: Not able to force the Crypto_Lib_Error ATM
+/**
+ * @brief Unit Test: Crypto Init with incomplete configuration
+ * @note TODO: Not able to force the Crypto_Lib_Error ATM
+ **/
 UTEST(CRYPTO_CONFIG, CRYPTO_CONFIG_MDB)
 {
     int32_t status = CRYPTO_LIB_ERROR;
@@ -143,6 +163,9 @@ UTEST(CRYPTO_CONFIG, CRYPTO_CONFIG_MDB)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
+/**
+ * @brief Unit Test: Crypto KMC Configuration
+ **/
 UTEST(CRYPTO_CONFIG, CRYPTO_CONFIG_KMC)
 {
     int32_t status = CRYPTO_LIB_ERROR;

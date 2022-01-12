@@ -25,6 +25,9 @@
 #include "sadb_routine.h"
 #include "utest.h"
 
+/**
+ * @brief Unit Test: Crypto Calc/Verify CRC16
+ **/
 UTEST(CRYPTO_C, CALC_CRC16)
 {
     char *data_h = "2003002000ff000100001880d2c9000e197f0b001b0004000400003040d95e";
@@ -43,7 +46,10 @@ UTEST(CRYPTO_C, CALC_CRC16)
     ASSERT_EQ(crc, validated_crc);
 }
 
-UTEST(CRYPTO_C, HAPPY_BAD_CC)
+/**
+ * @brief Unit Test: Crypto Bad CC Flag
+ **/
+UTEST(CRYPTO_C, BAD_CC_FLAG)
 {
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
@@ -71,7 +77,10 @@ UTEST(CRYPTO_C, HAPPY_BAD_CC)
     ASSERT_EQ(CRYPTO_LIB_ERR_INVALID_CC_FLAG, return_val);
 }
 
-//TODO:  This needs to be reworked to actually better test.
+/**
+ * @brief Unit Test: PDU Switch testing
+ * @note: TODO: This needs to be reworked to actually better test.
+ **/
 UTEST(CRYPTO_C, PDU_SWITCH)
 {
     int32_t status = CRYPTO_LIB_ERROR;
@@ -114,7 +123,7 @@ UTEST(CRYPTO_C, PDU_SWITCH)
     sdls_frame.pdu.pid = PID_KEY_INVENTORY;
     status = Crypto_PDU(ingest, tc_frame);
     ASSERT_EQ(status, CRYPTOGRAPHY_UNSUPPORTED_OPERATION_FOR_KEY_RING);
-    
+
     sdls_frame.pdu.pid = SG_KEY_MGMT;
     status = Crypto_PDU(ingest, tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
@@ -237,6 +246,9 @@ UTEST(CRYPTO_C, PDU_SWITCH)
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 }
 
+/**
+ * @brief Unit Test: Crypto Extended Procedures PDU Test
+ **/
 UTEST(CRYPTO_C, EXT_PROC_PDU)
 {
     uint8_t *ingest = NULL;
@@ -254,7 +266,10 @@ UTEST(CRYPTO_C, EXT_PROC_PDU)
 
 //TODO: Move these to their own unit test files.
 
-//TODO:  This test will need to be reworked when this functionality exists.
+/**
+ * @brief Unit Test: Crypto Init with invalid SADB
+ * @note: TODO:  This test will need to be reworked when this functionality exists.
+ **/
 UTEST(CRYPTO_AOS, APPLY_SECURITY)
 {
     int32_t status = CRYPTO_LIB_ERROR;
@@ -266,6 +281,9 @@ UTEST(CRYPTO_AOS, APPLY_SECURITY)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
+/**
+ * @brief Unit Test: Crypto AOS Process Security
+ **/
 UTEST(CRYPTO_AOS, PROCESS_SECURITY)
 {
     int32_t status = CRYPTO_LIB_ERROR;
@@ -277,6 +295,9 @@ UTEST(CRYPTO_AOS, PROCESS_SECURITY)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
+/**
+ * @brief Unit Test: Crypto MC Status test
+ **/
 UTEST(CRYPTO_MC, STATUS)
 {
     int count = 0;
@@ -286,6 +307,9 @@ UTEST(CRYPTO_MC, STATUS)
     ASSERT_EQ(11, count);
 }
 
+/**
+ * @brief Unit Test: Crypto MC Dump test
+ **/
 UTEST(CRYPTO_MC, DUMP)
 {
     int count = 0;
@@ -295,6 +319,9 @@ UTEST(CRYPTO_MC, DUMP)
     ASSERT_EQ(((log_count * 4) + (log_count * 2) + 9), count);
 }
 
+/**
+ * @brief Unit Test: Crypto MC Erase Test
+ **/
 UTEST(CRYPTO_MC, ERASE)
 {
     int count = 0;
@@ -304,6 +331,9 @@ UTEST(CRYPTO_MC, ERASE)
     ASSERT_EQ(11, count);
 }
 
+/**
+ * @brief Unit Test: Crypto MC SelfTest Test
+ **/
 UTEST(CRYPTO_MC, SELFTEST)
 {
     int count = 0;
@@ -313,6 +343,9 @@ UTEST(CRYPTO_MC, SELFTEST)
     ASSERT_EQ(10, count);
 }
 
+/**
+ * @brief Unit Test: Crypto MC ReadARSN Test
+ **/
 UTEST(CRYPTO_MC, READARSN)
 {
     int count = 0;
@@ -322,6 +355,9 @@ UTEST(CRYPTO_MC, READARSN)
     ASSERT_EQ(11, count);
 }
 
+/**
+ * @brief Unit Test: Crypto MC Process Security Test
+ **/
 UTEST(CRYPTO_MC, PROCESS)
 {
     uint8_t ingest[1024] = {0};
@@ -332,6 +368,9 @@ UTEST(CRYPTO_MC, PROCESS)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
+/**
+ * @brief Unit Test: Crypto Get TM Length Test
+ **/
 UTEST(CRYPTO_MC, TMLENGTH)
 {
     int length = 0;
