@@ -5,10 +5,6 @@ on:
     branches: [ collab_main ]
   pull_request:
 
-env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
-  BUILD_TYPE: DEBUG 
-
 jobs:
   debug_build:
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
@@ -29,7 +25,7 @@ jobs:
 
     - name: Build
       # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} 
+      run: cmake --build ${{github.workspace}}/build 
    
     - name: Test
       working-directory: ${{github.workspace}}/build
@@ -51,7 +47,7 @@ jobs:
 
     - name: Build
       # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} 
+      run: cmake --build ${{github.workspace}}/build 
    
     - name: Test
       working-directory: ${{github.workspace}}/build
@@ -74,7 +70,7 @@ jobs:
 
     - name: Build
       # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} 
+      run: cmake --build ${{github.workspace}}/build 
    
     - name: Test
       working-directory: ${{github.workspace}}/build
@@ -97,7 +93,7 @@ jobs:
 
     - name: Build
       # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} 
+      run: cmake --build ${{github.workspace}}/build  
    
     - name: Test
       working-directory: ${{github.workspace}}/build
@@ -120,7 +116,7 @@ jobs:
 
     - name: Build
       # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} 
+      run: cmake --build ${{github.workspace}}/build 
    
     - name: Test
       working-directory: ${{github.workspace}}/build
@@ -143,7 +139,7 @@ jobs:
 
     - name: Build
       # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} 
+      run: cmake --build ${{github.workspace}}/build 
    
     - name: Test
       working-directory: ${{github.workspace}}/build
@@ -166,7 +162,7 @@ jobs:
 
     - name: Build
       # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} 
+      run: cmake --build ${{github.workspace}}/build 
    
     - name: Test
       working-directory: ${{github.workspace}}/build
@@ -189,7 +185,7 @@ jobs:
 
     - name: Build
       # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} 
+      run: cmake --build ${{github.workspace}}/build  
    
     - name: Test
       working-directory: ${{github.workspace}}/build
@@ -212,7 +208,7 @@ jobs:
 
     - name: Build
       # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} 
+      run: cmake --build ${{github.workspace}}/build  
    
     - name: Test
       working-directory: ${{github.workspace}}/build
@@ -235,7 +231,7 @@ jobs:
 
     - name: Build
       # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} 
+      run: cmake --build ${{github.workspace}}/build 
    
     - name: Test
       working-directory: ${{github.workspace}}/build
