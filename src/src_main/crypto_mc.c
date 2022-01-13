@@ -200,11 +200,14 @@ int32_t Crypto_SA_readARSN(uint8_t *ingest)
         // TODO - Error handling
         return CRYPTO_LIB_ERROR; // Error -- unable to get SA from SPI.
     }
-
     if (sa_ptr->shivf_len > 0)
     { // Set IV - authenticated encryption
         for (int x = 0; x < sa_ptr->shivf_len - 1; x++)
         {
+            if(sa_ptr->iv == NULL)
+            {
+                return CRYPTO_LIB_ERROR;
+            }
             ingest[count++] = *(sa_ptr->iv + x);
         }
 
@@ -222,7 +225,7 @@ int32_t Crypto_SA_readARSN(uint8_t *ingest)
     {
         // TODO
     }
-
+    printf("HERE3\n");
 #ifdef PDU_DEBUG
     printf("spi = %d \n", spi);
     if (sa_ptr->shivf_len > 0)
