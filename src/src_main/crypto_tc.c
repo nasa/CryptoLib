@@ -434,6 +434,9 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
                 {
                     aad_len += tf_payload_len;
                 }
+#ifdef TC_DEBUG
+                printf("Calculated AAD Length: %d\n",aad_len);
+#endif
                 if (sa_ptr->abm_len < aad_len)
                 {
                     return CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
