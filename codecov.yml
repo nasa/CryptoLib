@@ -9,4 +9,5 @@ ignore:
   - "util/core/shared_util.c"
   - "src/src_feature_stubs/cryptography_kmc_stub/cryptography_interface_kmc.stub.c"
   - "src/src_feature_stubs/mysql_stub/sadb_routine_mariadb.stub.c"
-  
+  - "util/src_util/ut_kmc_crypto.c"
+  - "util/src_util/ut_kmc_crypto_aes_cmac.c"
