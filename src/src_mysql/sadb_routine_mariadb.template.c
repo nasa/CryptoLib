@@ -282,6 +282,13 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
         return status;
     }
 
+    int num_rows = mysql_num_rows(result);
+    if(num_rows == 0) // No rows returned in query!!
+    {
+        status = finish_with_error(con, SADB_QUERY_EMPTY_RESULTS);
+        return status;
+    }
+
     int num_fields = mysql_num_fields(result);
 
     MYSQL_ROW row;
