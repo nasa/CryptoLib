@@ -465,6 +465,8 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
                                                                     sa_ptr->stmacf_len, // tag size
                                                                     aad, // AAD Input
                                                                     aad_len, // Length of AAD
+                                                                    *sa_ptr->ecs, // ecs
+                                                                    sa_ptr->acs, // acs
                                                                     (sa_ptr->est==1),
                                                                     (sa_ptr->ast==1),
                                                                     (sa_ptr->ast==1)
@@ -838,6 +840,8 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t *ingest, int *len_ingest, TC_t *tc_sdl
                                                             sa_ptr->stmacf_len,                           // tag size
                                                             aad,    // additional authenticated data
                                                             aad_len, // length of AAD
+                                                            *sa_ptr->ecs, // ecs
+                                                            sa_ptr->acs, // acs
                                                             (sa_ptr->est), // Decryption Bool
                                                             (sa_ptr->ast), // Authentication Bool
                                                             (sa_ptr->ast) // AAD Bool

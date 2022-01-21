@@ -59,6 +59,7 @@ typedef struct
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
+                                         uint8_t ecs, uint8_t acs,
                                          uint8_t encrypt_bool, uint8_t authenticate_bool,
                                          uint8_t aad_bool);
     int32_t (*cryptography_aead_decrypt)(uint8_t* data_out, size_t len_data_out,
@@ -68,6 +69,7 @@ typedef struct
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t* mac, uint32_t mac_size,
+                                         uint8_t ecs, uint8_t acs,
                                          uint8_t decrypt_bool, uint8_t authenticate_bool,
                                          uint8_t aad_bool);
 

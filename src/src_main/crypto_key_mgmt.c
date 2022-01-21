@@ -101,6 +101,8 @@ int32_t Crypto_Key_OTAR(void)
                                                         MAC_SIZE,          // tag size
                                                         NULL, // AAD
                                                         0, // AAD Length
+                                                        CRYPTO_CIPHER_NONE, // ecs
+                                                        CRYPTO_MAC_NONE, // acs
                                                         CRYPTO_TRUE, // decrypt
                                                         CRYPTO_TRUE,  // authenticate
                                                         CRYPTO_FALSE // AAD Bool
@@ -387,6 +389,8 @@ int32_t Crypto_Key_verify(uint8_t *ingest, TC_t *tc_frame)
                                                    CHALLENGE_MAC_SIZE, // MAC Size
                                                    NULL,
                                                    0,
+                                                   CRYPTO_CIPHER_NONE, // ecs
+                                                   CRYPTO_MAC_NONE, // acs
                                                    CRYPTO_TRUE, // Encrypt
                                                    CRYPTO_TRUE, // Authenticate
                                                    CRYPTO_FALSE // AAD

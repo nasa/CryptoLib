@@ -50,6 +50,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
+                                         uint8_t ecs, uint8_t acs,
                                          uint8_t encrypt_bool, uint8_t authenticate_bool,
                                          uint8_t aad_bool);
 static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
@@ -59,6 +60,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
+                                         uint8_t ecs, uint8_t acs,
                                          uint8_t decrypt_bool, uint8_t authenticate_bool,
                                          uint8_t aad_bool);
 /*
@@ -566,6 +568,9 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
     ecs = ecs;
 
     switch (acs){
+        case CRYPTO_MAC_NONE:
+            gcry_error = gcry_mac_open(&(tmp_mac_hd), GCRY_MAC_NONE, 0, NULL);
+            break;
         case CRYPTO_MAC_CMAC_AES256:
             gcry_error = gcry_mac_open(&(tmp_mac_hd), GCRY_MAC_CMAC_AES, GCRY_MAC_FLAG_SECURE, NULL);
             break;
@@ -673,9 +678,24 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     // Using to fix warning
     len_data_out = len_data_out;
     ecs = ecs;
-    acs = acs;
 
-    gcry_error = gcry_mac_open(&(tmp_mac_hd), GCRY_MAC_CMAC_AES, GCRY_MAC_FLAG_SECURE, NULL);
+    switch (acs){
+        case CRYPTO_MAC_NONE:
+            gcry_error = gcry_mac_open(&(tmp_mac_hd), GCRY_MAC_NONE, 0, NULL);
+            break;
+        case CRYPTO_MAC_CMAC_AES256:
+            gcry_error = gcry_mac_open(&(tmp_mac_hd), GCRY_MAC_CMAC_AES, GCRY_MAC_FLAG_SECURE, NULL);
+            break;
+        case CRYPTO_MAC_HMAC_SHA256:
+            gcry_error = gcry_mac_open(&(tmp_mac_hd), GCRY_MAC_HMAC_SHA256, GCRY_MAC_FLAG_SECURE, NULL);
+            break;
+        case CRYPTO_MAC_HMAC_SHA512:
+            gcry_error = gcry_mac_open(&(tmp_mac_hd), GCRY_MAC_HMAC_SHA512, GCRY_MAC_FLAG_SECURE, NULL);
+            break;
+        default:
+            status = CRYPTO_LIB_ERR_UNSUPPORTED_ACS;
+            return status;
+    }
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "ERROR: gcry_mac_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
@@ -744,12 +764,14 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
+                                         uint8_t ecs, uint8_t acs,
                                          uint8_t encrypt_bool, uint8_t authenticate_bool,
                                          uint8_t aad_bool)
 {
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     gcry_cipher_hd_t tmp_hd;
     int32_t status = CRYPTO_LIB_SUCCESS;
+    acs = acs;
 
     uint8_t* key_ptr = key;
     if(sa_ptr != NULL) //Using SA key pointer
@@ -757,7 +779,14 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
         key_ptr = &(ek_ring[sa_ptr->ekid].value[0]);
     }
 
-    gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_NONE);
+    switch(ecs){
+        case CRYPTO_CIPHER_AES256_GCM:
+            gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_NONE);
+            break;
+        default:
+            status = CRYPTO_LIB_ERR_UNSUPPORTED_ECS;
+            return status;
+    }
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
@@ -894,6 +923,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
+                                         uint8_t ecs, uint8_t acs,
                                          uint8_t decrypt_bool, uint8_t authenticate_bool,
                                          uint8_t aad_bool)
 {
@@ -902,12 +932,21 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
     int32_t status = CRYPTO_LIB_SUCCESS;
     uint8_t* key_ptr = key;
 
+    acs = acs;
+
     if(sa_ptr != NULL) //Using SA key pointer
     {
         key_ptr = &(ek_ring[sa_ptr->ekid].value[0]);
     }
 
-    gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_NONE);
+    switch(ecs){
+        case CRYPTO_CIPHER_AES256_GCM:
+            gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_NONE);
+            break;
+        default:
+            status = CRYPTO_LIB_ERR_UNSUPPORTED_ECS;
+            return status;
+    }
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
