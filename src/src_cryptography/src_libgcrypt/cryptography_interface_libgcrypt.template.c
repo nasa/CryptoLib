@@ -564,9 +564,21 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
     // Using to fix warning
     len_data_out = len_data_out;
     ecs = ecs;
-    acs = acs;
 
-    gcry_error = gcry_mac_open(&(tmp_mac_hd), GCRY_MAC_CMAC_AES, GCRY_MAC_FLAG_SECURE, NULL);
+    switch (acs){
+        case CRYPTO_MAC_CMAC_AES256:
+            gcry_error = gcry_mac_open(&(tmp_mac_hd), GCRY_MAC_CMAC_AES, GCRY_MAC_FLAG_SECURE, NULL);
+            break;
+        case CRYPTO_MAC_HMAC_SHA256:
+            gcry_error = gcry_mac_open(&(tmp_mac_hd), GCRY_MAC_HMAC_SHA256, GCRY_MAC_FLAG_SECURE, NULL);
+            break;
+        case CRYPTO_MAC_HMAC_SHA512:
+            gcry_error = gcry_mac_open(&(tmp_mac_hd), GCRY_MAC_HMAC_SHA512, GCRY_MAC_FLAG_SECURE, NULL);
+            break;
+        default:
+            status = CRYPTO_LIB_ERR_UNSUPPORTED_ACS;
+            return status;
+    }
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "ERROR: gcry_mac_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
