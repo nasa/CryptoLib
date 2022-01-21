@@ -172,7 +172,7 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
     // Expose SA 1 for testing
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_ECS_NONE;
+    *test_association->ecs = CRYPTO_CIPHER_NONE;
 
     // Ensure that Process Security can activate SA 4
     return_val = Crypto_TC_ProcessSecurity(activate_sa4_b, &activate_sa4_len, tc_sdls_processed_frame);
@@ -191,7 +191,7 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
     test_association->est = 1;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_AES256_GCM;
+    *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     return_val = Crypto_TC_ApplySecurity(enc_test_ping_b, enc_test_ping_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
@@ -254,7 +254,7 @@ UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
     // Expose SA 1 for testing
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_ECS_NONE;
+    *test_association->ecs = CRYPTO_CIPHER_NONE;
 
     // Ensure that Process Security can activate SA 4
     return_val = Crypto_TC_ProcessSecurity(activate_sa4_b, &activate_sa4_len, tc_sdls_processed_frame);
@@ -273,7 +273,7 @@ UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
     test_association->est = 1;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_AES256_GCM;
+    *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     return_val = Crypto_TC_ProcessSecurity(dec_test_ping_b, &dec_test_ping_len, tc_sdls_processed_frame);
     ASSERT_EQ(9, return_val); // 9 is the number of pings in that EP PDU.
@@ -345,7 +345,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     test_association->arc_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_AES256_GCM;
+    *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
@@ -424,7 +424,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     test_association->sa_state = SA_OPERATIONAL;
     sadb_routine->sadb_get_sa_from_spi(9, &test_association);
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_AES256_GCM;
+    *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
     memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
@@ -496,7 +496,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     test_association->arc_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_AES256_GCM;
+    *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
@@ -571,7 +571,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     test_association->arc_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_AES256_GCM;
+    *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
@@ -645,7 +645,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
     test_association->arc_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_AES256_GCM;
+    *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
@@ -721,7 +721,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
     test_association->arc_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_AES256_GCM;
+    *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
@@ -792,7 +792,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
     test_association->arc_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_AES256_GCM;
+    *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
@@ -868,7 +868,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
     test_association->arc_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_AES256_GCM;
+    *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
@@ -939,7 +939,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
     test_association->arc_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_AES256_GCM;
+    *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
@@ -1015,7 +1015,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
     test_association->arc_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_AES256_GCM;
+    *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
@@ -1104,7 +1104,7 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     test_association->stmacf_len = 16;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_AES256_GCM;
+    *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
@@ -1190,7 +1190,7 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     test_association->stmacf_len = 16;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_AES256_GCM;
+    *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
@@ -1283,7 +1283,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     test_association->stmacf_len = 16;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_AES256_GCM;
+    *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
@@ -1409,7 +1409,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_DATA)
     test_association->stmacf_len = 16;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_AES256_GCM;
+    *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
@@ -1510,7 +1510,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_MAC)
     test_association->stmacf_len = 16;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_AES256_GCM;
+    *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
@@ -1610,8 +1610,8 @@ UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
     test_association->stmacf_len = 16;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_ECS_NONE;
-    test_association->acs = CRYPTO_AES256_CMAC;
+    *test_association->ecs = CRYPTO_CIPHER_NONE;
+    test_association->acs = CRYPTO_MAC_CMAC_AES256;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
@@ -1698,8 +1698,8 @@ UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
     test_association->stmacf_len = 16;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_ECS_NONE;
-    test_association->acs = CRYPTO_AES256_CMAC;
+    *test_association->ecs = CRYPTO_CIPHER_NONE;
+    test_association->acs = CRYPTO_MAC_CMAC_AES256;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
@@ -1784,8 +1784,8 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
     test_association->stmacf_len = 16;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_ECS_NONE;
-    test_association->acs = CRYPTO_AES256_CMAC;
+    *test_association->ecs = CRYPTO_CIPHER_NONE;
+    test_association->acs = CRYPTO_MAC_CMAC_AES256;
 
     TC_t *tc_sdls_processed_frame;
     tc_sdls_processed_frame = calloc(1, sizeof(uint8_t) * TC_SIZE);
@@ -1874,8 +1874,8 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
     test_association->stmacf_len = 16;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_ECS_NONE;
-    test_association->acs = CRYPTO_AES256_CMAC;
+    *test_association->ecs = CRYPTO_CIPHER_NONE;
+    test_association->acs = CRYPTO_MAC_CMAC_AES256;
 
     TC_t *tc_sdls_processed_frame;
     tc_sdls_processed_frame = calloc(1, sizeof(uint8_t) * TC_SIZE);

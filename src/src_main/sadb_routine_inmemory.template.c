@@ -243,7 +243,7 @@ int32_t sadb_init(void)
         sa[x].abm = NULL;
         sa[x].abm_len = 0;
         sa[x].acs_len = 0;
-        sa[x].acs = CRYPTO_ACS_NONE;
+        sa[x].acs = CRYPTO_MAC_NONE;
         sa[x].arc_len = 0;
         sa[x].arc = NULL;
     }
