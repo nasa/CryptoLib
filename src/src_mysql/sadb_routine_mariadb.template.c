@@ -96,61 +96,100 @@ static int32_t sadb_config(void)
     return CRYPTO_LIB_SUCCESS;
 }
 
+/*Note:For TLS & mTLS connections MySQL server MUST be configured for encrypted 
+connections: https://dev.mysql.com/doc/refman/5.7/en/using-encrypted-connections.html*/
 static int32_t sadb_init(void) {
     int32_t status = CRYPTO_LIB_ERROR;
     if (NULL != sadb_mariadb_config) {
         con = mysql_init(NULL);
-        //if encrypted connection (TLS) connection 
-        if (sadb_mariadb_config->encrypted_connection == 1 || 
-            sadb_mariadb_config->encrypted_connection == 2) {
-            /*Note:MySQL server MUST be configured for encrypted connections:
- *          https://dev.mysql.com/doc/refman/5.7/en/using-encrypted-connections.html*/
-            mysql_ssl_set(con,
-            sadb_mariadb_config->ssl_key,
-            sadb_mariadb_config->ssl_cert,
-            sadb_mariadb_config->ssl_ca,
-            sadb_mariadb_config->ssl_capath, NULL);
-            /*Based documentation mysql_ssl_set() always returns 0.
-            Therefore successful connections can only be checked
-            via subsequent call to mysql_real_connect()*/
-            //if NULL is returned then there is an error, else success
-            if (mysql_real_connect(con, sadb_mariadb_config->mysql_hostname,
-                    sadb_mariadb_config->mysql_username,
-                    sadb_mariadb_config->mysql_password,
-                    sadb_mariadb_config->mysql_database,
-                    sadb_mariadb_config->mysql_port, NULL, 0) == NULL) {
-                //0,NULL,0 are port number, unix socket, client flag
-                finish_with_error(con, SADB_MARIADB_CONNECTION_FAILED);
-                status = CRYPTO_LIB_ERROR;
-            } else {
-                status = CRYPTO_LIB_SUCCESS;
-                if (status==CRYPTO_LIB_SUCCESS) {
-                    printf("sadb_init Using an encrypted connection \n");
+        if (NULL != con) {
+            mysql_ssl_set(con, sadb_mariadb_config->ssl_key,
+                    sadb_mariadb_config->ssl_cert,
+                    sadb_mariadb_config->ssl_ca,
+                    sadb_mariadb_config->ssl_capath, NULL);
+            //if encrypted connection (TLS) connection. No need for SSL Key 
+            if (sadb_mariadb_config->encrypted_connection == 1) {
+                //extra parameters 
+                if (sadb_mariadb_config->tls_verifyserver ==1)
+                {
+                    mysql_options4(con, MYSQL_OPT_CONNECT_ATTR_ADD, "MASTER_SSL_VERIFY_SERVER_CERT", "1");
                 }
-            }
-        }//end if TLS connection  
-            //else regular username & password connection 
-        else {
-            //if NULL is returned then there is an error, else success
-            if (mysql_real_connect(con, sadb_mariadb_config->mysql_hostname,
-                    sadb_mariadb_config->mysql_username,
-                    sadb_mariadb_config->mysql_password,
-                    sadb_mariadb_config->mysql_database,
-                    sadb_mariadb_config->mysql_port, NULL, 0) == NULL) {
-                //0,NULL,0 are port number, unix socket, client flag
-                finish_with_error(con, SADB_MARIADB_CONNECTION_FAILED);
-                status = CRYPTO_LIB_ERROR;
-            } else {
-                status = CRYPTO_LIB_SUCCESS;
-                if (status==CRYPTO_LIB_SUCCESS) {
-                    printf("sadb_init Using plain socket connection \n");
+                if (NULL!=sadb_mariadb_config->tls_clientkeypassword)
+                {
+                    mysql_options4(con, MYSQL_OPT_CONNECT_ATTR_ADD, "ssl-passphrase", sadb_mariadb_config->tls_clientkeypassword);
                 }
+                /*Based documentation mysql_ssl_set() always returns 0.
+                Therefore successful connections can only be checked
+                via subsequent call to mysql_real_connect()*/
+                //if NULL is returned then there is an error, else success
+                if (mysql_real_connect(con, sadb_mariadb_config->mysql_hostname,
+                        sadb_mariadb_config->mysql_username,
+                        sadb_mariadb_config->mysql_password,
+                        sadb_mariadb_config->mysql_database,
+                        sadb_mariadb_config->mysql_port, NULL, 0) == NULL) {
+                    //0,NULL,0 are port number, unix socket, client flag
+                    finish_with_error(con, SADB_MARIADB_CONNECTION_FAILED);
+                    status = CRYPTO_LIB_ERROR;
+                } else {
+                    status = CRYPTO_LIB_SUCCESS;
+                    if (status == CRYPTO_LIB_SUCCESS) {
+                        printf("sadb_init Using an encrypted connection \n");
+                    }
+                }
+            }//end if TLS connection 
+                //if mTLS connection. No need password. 
+            else if (sadb_mariadb_config->encrypted_connection == 2) {
+                //if NULL is returned then there is an error, else success
+                //extra parameters 
+                if (sadb_mariadb_config->tls_verifyserver ==1)
+                {
+                    mysql_options4(con, MYSQL_OPT_CONNECT_ATTR_ADD, "MASTER_SSL_VERIFY_SERVER_CERT", "1");
+                }
+                if (NULL!=sadb_mariadb_config->tls_clientkeypassword)
+                {
+                    mysql_options4(con, MYSQL_OPT_CONNECT_ATTR_ADD, "ssl-passphrase", sadb_mariadb_config->tls_clientkeypassword);
+                }
+                if (mysql_real_connect(con, sadb_mariadb_config->mysql_hostname,
+                        sadb_mariadb_config->mysql_username,
+                        NULL,
+                        sadb_mariadb_config->mysql_database,
+                        sadb_mariadb_config->mysql_port, NULL, 0) == NULL) {
+                    //0,NULL,0 are port number, unix socket, client flag
+                    finish_with_error(con, SADB_MARIADB_CONNECTION_FAILED);
+                    status = CRYPTO_LIB_ERROR;
+                } else {
+                    status = CRYPTO_LIB_SUCCESS;
+                    if (status == CRYPTO_LIB_SUCCESS) {
+                        printf("sadb_init Using an encrypted connection \n");
+                    }
+                }
+            }//end if mTLS connection 
+                //else regular username & password connection 
+            else {
+                //if NULL is returned then there is an error, else success
+                if (mysql_real_connect(con, sadb_mariadb_config->mysql_hostname,
+                        sadb_mariadb_config->mysql_username,
+                        sadb_mariadb_config->mysql_password,
+                        sadb_mariadb_config->mysql_database,
+                        sadb_mariadb_config->mysql_port, NULL, 0) == NULL) {
+                    //0,NULL,0 are port number, unix socket, client flag
+                    finish_with_error(con, SADB_MARIADB_CONNECTION_FAILED);
+                    status = CRYPTO_LIB_ERROR;
+                } else {
+                    status = CRYPTO_LIB_SUCCESS;
+                    if (status == CRYPTO_LIB_SUCCESS) {
+                        printf("sadb_init Using plain socket connection \n");
+                    }
+                }
+            }//end regular password 
+        } else {
+            //error
+            fprintf(stderr, "Error, sadb_init() MySQL API function mysql_init() returned a connection object that is NULL\n");
+        }
 
-            }
-        }//end regular password 
     }
     return status;
-}
+}//end int32_t sadb_init()
 
 static int32_t sadb_close(void)
 {

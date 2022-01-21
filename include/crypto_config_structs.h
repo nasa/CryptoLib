@@ -147,6 +147,9 @@ typedef struct
     char* ssl_key; 
     char* ssl_ca; 
     char* ssl_capath;
+    uint8_t tls_verifyserver;
+    char* tls_clientkeypassword;
+
 } SadbMariaDBConfig_t;
 #define SADB_MARIADB_CONFIG_SIZE (sizeof(SadbMariaDBConfig_t))
 

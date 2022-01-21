@@ -71,17 +71,22 @@ Description:        sets the fields the struct SadbMariaDBConfig_t for required
                     7) char* ssl_cert - The path name of the server public key certificate file with .pem extension. 
                     8) char* ssl_key - The path name of the server private key file with .pem extension. 
                     9) char* ssl_ca - The path name of the Certificate Authority (CA) certificate file. 
-                    10) char* ssl_capath - Certificate Authority (CA) directory.      
+                    10) char* ssl_capath - Certificate Authority (CA) directory.    
+ *                  11) uint8_t tls_verify_server  - 0ptional parameter that corresponds to MySQL connection parameter MASTER_SSL_VERIFY_SERVER_CERT=1. Any 
+ *                  other value except 1 will be ignored. 
+ *                  12) char* tls_client_key_password - 0ptional parameter that corresponds to optional passcode that may be paired with ssl certs during cert creation. Not required.  
 Outputs:            status - int32
 References:         1) https://dev.mysql.com/doc/c-api/8.0/en/c-api-encrypted-
  *                      connections.html#c-api-enforcing-encrypted-connection
  *                  2) https://dev.mysql.com/doc/c-api/8.0/en/mysql-ssl-set.html
  *                  3) https://www.xuchao.org/docs/mysql/connectors-apis.html#c-api-encrypted-connections
+ *                  4) https://dev.mysql.com/doc/refman/5.7/en/replication-solutions-encrypted-connections.html
 Example call:        
 Note:               MySQL server MUST be configured for encrypted connections:
  *                  https://dev.mysql.com/doc/refman/5.7/en/using-encrypted-connections.html
 ==========================================================*/
-extern int32_t Crypto_Config_MariaDB(char* mysql_username, char* mysql_password, char* mysql_hostname, char* mysql_database, uint16_t mysql_port, uint8_t encrypted_connection, char* ssl_cert, char* ssl_key, char* ssl_ca, char* ssl_capath);
+extern int32_t Crypto_Config_MariaDB(char* mysql_username, char* mysql_password, char* mysql_hostname, char* mysql_database, uint16_t mysql_port, uint8_t encrypted_connection, char* ssl_cert, char* ssl_key, char* ssl_ca, char* ssl_capath, 
+        uint8_t tls_verify_server, char* tls_client_key_password);
 extern int32_t Crypto_Config_Kmc_Crypto_Service(char *protocol, char *kmc_crypto_hostname, uint16_t kmc_crypto_port, char *kmc_crypto_app_uri, char *mtls_client_cert_path, char *mtls_client_cert_type,
                                                 char *mtls_client_key_path,char *mtls_client_key_pass, char *mtls_ca_bundle, char *mtls_ca_path,
                                                 char *mtls_issuer_cert, uint8_t ignore_ssl_hostname_validation);

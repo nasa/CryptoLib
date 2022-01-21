@@ -159,7 +159,9 @@ UTEST(CRYPTO_CONFIG, CRYPTO_CONFIG_MDB)
     char* ssl_key = "NONE";
     char* ssl_ca = "NONE";
     char* ssl_capath = "NONE";
-    status = Crypto_Config_MariaDB(mysql_username, mysql_password, mysql_hostname, mysql_database, mysql_port, enc_conn, ssl_cert, ssl_key, ssl_ca, ssl_capath);
+    uint8_t verify_server = 0; 
+    char* client_key_password = NULL;
+    status = Crypto_Config_MariaDB(mysql_username, mysql_password, mysql_hostname, mysql_database, mysql_port, enc_conn, ssl_cert, ssl_key, ssl_ca, ssl_capath, verify_server,client_key_password);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 

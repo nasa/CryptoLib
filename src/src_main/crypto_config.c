@@ -259,7 +259,8 @@ int32_t Crypto_Config_CryptoLib(uint8_t sadb_type, uint8_t cryptography_type, ui
  * @return int32: Success/Failure 
  **/
 /*set parameters for an encrypted TLS connection*/
-int32_t Crypto_Config_MariaDB(char* mysql_username, char* mysql_password, char* mysql_hostname, char* mysql_database, uint16_t mysql_port, uint8_t encrypted_connection, char* ssl_cert, char* ssl_key, char* ssl_ca, char* ssl_capath)
+int32_t Crypto_Config_MariaDB(char* mysql_username, char* mysql_password, char* mysql_hostname, char* mysql_database, uint16_t mysql_port, uint8_t encrypted_connection, char* ssl_cert, char* ssl_key, char* ssl_ca, char* ssl_capath, 
+uint8_t tls_verify_server, char* tls_client_key_password)
 {
     int32_t status = CRYPTO_LIB_ERROR;
     sadb_mariadb_config = (SadbMariaDBConfig_t*)calloc(1, SADB_MARIADB_CONFIG_SIZE);
@@ -275,7 +276,9 @@ int32_t Crypto_Config_MariaDB(char* mysql_username, char* mysql_password, char* 
         sadb_mariadb_config->ssl_cert = ssl_cert; 
         sadb_mariadb_config->ssl_key = ssl_key; 
         sadb_mariadb_config->ssl_ca = ssl_ca; 
-        sadb_mariadb_config->ssl_capath = ssl_capath; 
+        sadb_mariadb_config->ssl_capath = ssl_capath;
+        sadb_mariadb_config->tls_verifyserver = tls_verify_server; 
+        sadb_mariadb_config->tls_clientkeypassword = tls_client_key_password;
         /*end - encrypted connection related parameters*/
         status = CRYPTO_LIB_SUCCESS; 
     }
