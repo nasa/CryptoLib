@@ -150,7 +150,7 @@
 #define PID_READ_ARSN 0b0000
 #define PID_SA_STATUS 0b1111
 // Service Group - Security Monitoring & Control
-#define SG_SEC_MON_CTRL 0b11
+#define SG_SEC_MON_CTRL 0b10
 #define PID_PING 0b0001
 #define PID_LOG_STATUS 0b0010
 #define PID_DUMP_LOG 0b0011
