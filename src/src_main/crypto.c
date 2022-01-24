@@ -341,6 +341,8 @@ uint16_t Crypto_Calc_CRC16(uint8_t *data, int size)
 int32_t Crypto_PDU(uint8_t *ingest, TC_t *tc_frame)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
+    SecurityAssociation_t* sa_ptr = calloc(1, sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    status = sadb_routine->sadb_get_sa_from_spi(tc_frame->tc_sec_header.spi, &sa_ptr);
 
     switch (sdls_frame.pdu.type)
     {
@@ -357,7 +359,7 @@ int32_t Crypto_PDU(uint8_t *ingest, TC_t *tc_frame)
 #ifdef PDU_DEBUG
                     printf(KGRN "Key OTAR\n" RESET);
 #endif
-                    status = Crypto_Key_OTAR();
+                    status = Crypto_Key_OTAR(sa_ptr);
                     break;
                 case PID_KEY_ACTIVATION:
 #ifdef PDU_DEBUG
@@ -384,7 +386,7 @@ int32_t Crypto_PDU(uint8_t *ingest, TC_t *tc_frame)
                     status = Crypto_Key_update(KEY_DESTROYED);
                     break;
                 case PID_KEY_INVENTORY:
-#ifdef PDU_DEBUG
+#ifdef PDU_DEmBUG
                     printf(KGRN "Key Inventory\n" RESET);
 #endif
                     status = Crypto_Key_inventory(ingest);

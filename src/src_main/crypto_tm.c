@@ -229,8 +229,8 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *ingest, int *len_ingest)
                                                            MAC_SIZE,
                                                            &(aad[0]), // AAD Input location
                                                            sa_ptr->abm_len, // AAD is size of ABM in this case
-                                                           *sa_ptr->ecs, // ecs
-                                                           sa_ptr->acs, // acs
+                                                           sa_ptr->ecs, // *ecs
+                                                           sa_ptr->acs, // *acs
                                                            CRYPTO_TRUE, // Encrypt
                                                            CRYPTO_FALSE, // Authenticate // TODO -- Set to SA value, manually setting to false here so existing tests pass. Existing data was generated with authenticate then encrypt, when it should have been encrypt then authenticate.
                                                            CRYPTO_TRUE // Use AAD

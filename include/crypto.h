@@ -132,7 +132,7 @@ void Crypto_Calc_CRC_Init_Table(void);
 uint16_t Crypto_Calc_CRC16(uint8_t *data, int size);
 
 // Key Management Functions
-int32_t Crypto_Key_OTAR(void);
+int32_t Crypto_Key_OTAR(SecurityAssociation_t* sa_ptr);
 int32_t Crypto_Key_update(uint8_t state);
 int32_t Crypto_Key_inventory(uint8_t *);
 int32_t Crypto_Key_verify(uint8_t *, TC_t *tc_frame);

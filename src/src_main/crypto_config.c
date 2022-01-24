@@ -117,7 +117,7 @@ int32_t Crypto_Init(void)
         return status;
     } // TODO: Error stack
 
-    //Prepare Cryptographic Library from config
+    // Prepare Cryptographic Library from config
     if(crypto_config->cryptography_type == CRYPTOGRAPHY_TYPE_LIBGCRYPT)
     {
         cryptography_if = get_cryptography_interface_libgcrypt();

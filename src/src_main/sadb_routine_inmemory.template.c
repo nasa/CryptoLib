@@ -243,7 +243,7 @@ int32_t sadb_init(void)
         sa[x].abm = NULL;
         sa[x].abm_len = 0;
         sa[x].acs_len = 0;
-        sa[x].acs = CRYPTO_MAC_NONE;
+        sa[x].acs = NULL;
         sa[x].arc_len = 0;
         sa[x].arc = NULL;
     }
@@ -779,7 +779,7 @@ static int32_t sadb_sa_create(void)
     sa[spi].acs_len = ((uint8_t)sdls_frame.pdu.data[count++]);
     for (int x = 0; x < sa[spi].acs_len; x++)
     {
-        sa[spi].acs = ((uint8_t)sdls_frame.pdu.data[count++]);
+        *(sa[spi].acs + x) = ((uint8_t)sdls_frame.pdu.data[count++]);
     }
     sa[spi].abm_len = (uint8_t)((sdls_frame.pdu.data[count] << 8) | (sdls_frame.pdu.data[count + 1]));
     count = count + 2;

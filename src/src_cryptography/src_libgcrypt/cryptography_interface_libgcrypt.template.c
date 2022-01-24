@@ -34,7 +34,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
-                                         uint8_t ecs, uint8_t acs);
+                                         uint8_t* ecs, uint8_t* acs);
 static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -42,7 +42,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
-                                         uint8_t ecs, uint8_t acs);
+                                         uint8_t* ecs, uint8_t* acs);
 static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -50,7 +50,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
-                                         uint8_t ecs, uint8_t acs,
+                                         uint8_t* ecs, uint8_t *acs,
                                          uint8_t encrypt_bool, uint8_t authenticate_bool,
                                          uint8_t aad_bool);
 static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
@@ -60,7 +60,6 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
-                                         uint8_t ecs, uint8_t acs,
                                          uint8_t decrypt_bool, uint8_t authenticate_bool,
                                          uint8_t aad_bool);
 /*
@@ -542,7 +541,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
-                                         uint8_t ecs, uint8_t acs)
+                                         uint8_t* ecs, uint8_t* acs)
 { 
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     gcry_mac_hd_t tmp_mac_hd;
@@ -567,7 +566,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
     len_data_out = len_data_out;
     ecs = ecs;
 
-    switch (acs){
+    switch (*acs){
         case CRYPTO_MAC_NONE:
             gcry_error = gcry_mac_open(&(tmp_mac_hd), GCRY_MAC_NONE, 0, NULL);
             break;
@@ -655,7 +654,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
-                                         uint8_t ecs, uint8_t acs)
+                                         uint8_t* ecs, uint8_t* acs)
 { 
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     gcry_mac_hd_t tmp_mac_hd;
@@ -679,7 +678,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     len_data_out = len_data_out;
     ecs = ecs;
 
-    switch (acs){
+    switch (*acs){
         case CRYPTO_MAC_NONE:
             gcry_error = gcry_mac_open(&(tmp_mac_hd), GCRY_MAC_NONE, 0, NULL);
             break;
@@ -764,7 +763,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
-                                         uint8_t ecs, uint8_t acs,
+                                         uint8_t* ecs, uint8_t *acs,
                                          uint8_t encrypt_bool, uint8_t authenticate_bool,
                                          uint8_t aad_bool)
 {
@@ -779,7 +778,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
         key_ptr = &(ek_ring[sa_ptr->ekid].value[0]);
     }
 
-    switch(ecs){
+    switch(*ecs){
         case CRYPTO_CIPHER_AES256_GCM:
             gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_NONE);
             break;
@@ -923,7 +922,6 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
-                                         uint8_t ecs, uint8_t acs,
                                          uint8_t decrypt_bool, uint8_t authenticate_bool,
                                          uint8_t aad_bool)
 {
@@ -932,14 +930,12 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
     int32_t status = CRYPTO_LIB_SUCCESS;
     uint8_t* key_ptr = key;
 
-    acs = acs;
-
     if(sa_ptr != NULL) //Using SA key pointer
     {
         key_ptr = &(ek_ring[sa_ptr->ekid].value[0]);
     }
 
-    switch(ecs){
+    switch(*(sa_ptr->ecs)){
         case CRYPTO_CIPHER_AES256_GCM:
             gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_NONE);
             break;
@@ -953,6 +949,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
         status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
         return status;
     }
+
     gcry_error = gcry_cipher_setkey(tmp_hd, key_ptr, len_key);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {

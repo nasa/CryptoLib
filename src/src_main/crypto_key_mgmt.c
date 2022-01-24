@@ -36,7 +36,7 @@
  * c- Agreed Cryptographic Algorithm (managed)
  * @return int32: Success/Failure
  **/
-int32_t Crypto_Key_OTAR(void)
+int32_t Crypto_Key_OTAR(SecurityAssociation_t* sa_ptr)
 {
     // Local variables
     SDLS_OTAR_t packet;
@@ -87,27 +87,24 @@ int32_t Crypto_Key_OTAR(void)
         // printf("packet.mac[%d] = 0x%02x\n", w, packet.mac[w]);
     }
 
-
     status = cryptography_if->cryptography_aead_decrypt(&(sdls_frame.pdu.data[14]), // plaintext output
                                                         (size_t)(pdu_keys * (2 + KEY_SIZE)), // length of data
                                                         NULL,                               // in place decryption
                                                         0,                                  // in data length
                                                         &(ek_ring[packet.mkid].value[0]), //key
                                                         KEY_SIZE, //key length
-                                                        NULL, //SA reference
+                                                        sa_ptr, //SA reference
                                                         &(packet.iv[0]), //IV
                                                         IV_SIZE, //IV length
                                                         &(packet.mac[0]), // tag input
                                                         MAC_SIZE,          // tag size
                                                         NULL, // AAD
                                                         0, // AAD Length
-                                                        CRYPTO_CIPHER_NONE, // ecs
-                                                        CRYPTO_MAC_NONE, // acs
                                                         CRYPTO_TRUE, // decrypt
                                                         CRYPTO_TRUE,  // authenticate
                                                         CRYPTO_FALSE // AAD Bool
                                                         );
-
+                                                        
     // Read in Decrypted Data
     for (count = 14; x < pdu_keys; x++)
     { // Encrypted Key Blocks
@@ -389,8 +386,8 @@ int32_t Crypto_Key_verify(uint8_t *ingest, TC_t *tc_frame)
                                                    CHALLENGE_MAC_SIZE, // MAC Size
                                                    NULL,
                                                    0,
-                                                   CRYPTO_CIPHER_NONE, // ecs
-                                                   CRYPTO_MAC_NONE, // acs
+                                                   NULL, // ecs
+                                                   NULL, // acs
                                                    CRYPTO_TRUE, // Encrypt
                                                    CRYPTO_TRUE, // Authenticate
                                                    CRYPTO_FALSE // AAD

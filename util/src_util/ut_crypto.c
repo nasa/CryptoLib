@@ -92,6 +92,14 @@ UTEST(CRYPTO_C, PDU_SWITCH)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS);
     Crypto_Init();
 
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+
+    SecurityAssociation_t *test_association = NULL;
+    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
+    *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
+
     sdls_frame.pdu.type = 0;
     sdls_frame.pdu.uf = 0;
     sdls_frame.pdu.sg = SG_KEY_MGMT;
@@ -100,6 +108,7 @@ UTEST(CRYPTO_C, PDU_SWITCH)
 
     TC_t *tc_frame;
     tc_frame = malloc(sizeof(uint8_t) * TC_SIZE);
+    tc_frame->tc_sec_header.spi = 1;
     status = Crypto_PDU(ingest, tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
