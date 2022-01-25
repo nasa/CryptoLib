@@ -1,5 +1,5 @@
 from Crypto.Cipher import AES
-from Crypto.Hash import CMAC
+from Crypto.Hash import CMAC, HMAC, SHA256
 import codecs
 import sys
 
@@ -33,17 +33,6 @@ class Encryption:
     def __init__(self):
         self.results = 0x00
         self.length = 0.0
-
-    def encrypt_cmac(self, data, key):
-        data_b = bytes.fromhex(data)
-        key_b = bytes.fromhex(key)
-
-        cmac_obj = CMAC.new(key_b, ciphermod=AES)
-        cmac_obj.update(data_b)
-
-        self.results = cmac_obj.hexdigest()
-        print(self.results)
-        self.length = len(self.results)
 
     # Function: Encrypt
     # Encrypts data - given a key, iv, header, and bitmask
@@ -104,8 +93,43 @@ class Encryption:
         #print(self.results.hex())
         return self.results
 
+class Authentication:
+    def __init__(self):
+        self.results = 0x00
+        self.length = 0.0
+
+    def encrypt_cmac(self, data, key):
+        data_b = bytes.fromhex(data)
+        key_b = bytes.fromhex(key)
+
+        cmac_obj = CMAC.new(key_b, ciphermod=AES)
+        cmac_obj.update(data_b)
+
+        self.results = cmac_obj.hexdigest()
+        print(self.results)
+        self.length = len(self.results)
+
+    def encrypt_hmac_256(self, data, key):
+        data_b = bytes.fromhex(data)
+        key_b = bytes.fromhex(key)
+
+        hmac_obj = HMAC.new(key_b, digestmod=SHA256)
+        hmac_obj.update(data_b)
+
+        self.results = hmac_obj.hexdigest()
+        print(self.results)
+        self.length = len(self.results)
+
+    def get_len(self):
+        #print(self.length)
+        return self.length
+    
+    def get_results(self):
+        #print(self.results.hex())
+        return self.results
+
 if __name__ == '__main__':
-    something=Encryption()
-    something.encrypt_cmac("0000000000000000000000000000000000000000000000000000", "ef9f9284cf599eac3b119905a7d18851e7e374cf63aea04358586b0f757670f8")
+    something=Authentication()
+    something.encrypt_hmac_256("000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445")
     something.get_len()
     something.get_results()
