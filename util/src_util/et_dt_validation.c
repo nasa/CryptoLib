@@ -2457,4 +2457,188 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
     // free(test_association);
 }
 
+/**
+ * @brief Unit Test: Test HMAC SHA-512, bitmask of 0s
+ **/
+UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
+{
+    uint8_t status = 0;
+    uint8_t *ptr_enc_frame = NULL;
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
+    Crypto_Init();
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+
+    // NIST supplied vectors
+    // NOTE: Added Transfer Frame header to the plaintext
+    char *buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
+    //                        |  Header |SPI | ARC   |     Payload                                                                                                                   | SHA 512 HMAC                 |FECF|
+    char *buffer_frame_pt_h = "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F1939425864b8f7ccdbc86109a981c9f29243e365a334";
+    // Python truth string passed below is ZEROed out, not including a MAC or FECF which isn't hashed against, but the LENGTH (including fecf) needs to be updated in the Tf Header
+    // Length is dependent on whatever the variable mac length to be updated in the header
+    //  | Header |SPI|  ARSN  | NIST CMAC Frame Data                                                                                                         |
+    // "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258";
+    // "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"         
+    // Python output MAC   
+    // 64b8f7ccdbc86109a981c9f29243e36548716e94f5ef30ade090c41ecd6fa2a226909d706bdebcf3baeb24c4ed8373ae1bcd9a32a5596136e24e0f1ae68a8ac0
+    // Trunc to first 16 bytes
+    // 64b8f7ccdbc86109a981c9f29243e365
+    char* buffer_python_mac_h = "64b8f7ccdbc86109a981c9f29243e365";
+    uint8_t *buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b = NULL;
+    int buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
+
+    // Expose/setup SAs for testing
+    SecurityAssociation_t *test_association = NULL;
+    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    // Deactivate SA 1
+    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    test_association->sa_state = SA_NONE;
+    // Activate SA 9
+    sadb_routine->sadb_get_sa_from_spi(9, &test_association);
+    test_association->ast = 1;
+    test_association->est = 0;
+    test_association->shivf_len = 0;
+    test_association->shsnf_len = 4;
+    test_association->arc_len = 4;
+    test_association->arc = calloc(1, test_association->arc_len * sizeof(uint8_t));
+    test_association->abm_len = 1024;
+    memset(test_association->abm, 0x00, (test_association->abm_len * sizeof(uint8_t))); // Bitmask
+    test_association->stmacf_len = 16;
+    test_association->sa_state = SA_OPERATIONAL;
+    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
+    *test_association->ecs = CRYPTO_CIPHER_NONE;
+    test_association->acs = calloc(1, test_association->acs_len * sizeof(uint8_t));
+    *test_association->acs = CRYPTO_MAC_HMAC_SHA512;
+
+    TC_t *tc_sdls_processed_frame;
+    tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
+    memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
+
+    // Insert key into keyring of SA 9
+    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
+    memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
+
+    // Convert input plaintext
+    hex_conversion(buffer_frame_pt_h, (char **)&buffer_frame_pt_b, &buffer_frame_pt_len);
+    // Convert input mac
+    hex_conversion(buffer_python_mac_h, (char **)&buffer_python_mac_b, &buffer_python_mac_len);
+
+    status = Crypto_TC_ProcessSecurity(buffer_frame_pt_b, &buffer_frame_pt_len, tc_sdls_processed_frame);
+    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+
+    // Note: For comparison, primarily interested in the MAC
+    Crypto_Shutdown();
+
+    for (int i = 0; i < buffer_python_mac_len; i++)
+    {
+        printf("[%d] Truth: %02x, Actual: %02x\n", i, buffer_python_mac_b[i], *(tc_sdls_processed_frame->tc_sec_trailer.mac + i));
+        ASSERT_EQ(*(tc_sdls_processed_frame->tc_sec_trailer.mac + i), buffer_python_mac_b[i]);
+    }
+
+    free(ptr_enc_frame);
+    free(buffer_frame_pt_b);
+    free(buffer_nist_key_b);
+    free(buffer_python_mac_b);
+    free(test_association->arc);
+    // sadb_routine->sadb_close();
+    // free(test_association);
+}
+
+/**
+ * @brief Unit Test: Test HMAC SHA-512, bitmask of 1s
+ **/
+UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
+{
+    uint8_t status = 0;
+    uint8_t *ptr_enc_frame = NULL;
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
+    Crypto_Init();
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+
+    // NIST supplied vectors
+    // NOTE: Added Transfer Frame header to the plaintext
+    char *buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
+    //                        |  Header |SPI | ARC   |     Payload                                                                                                                   | SHA 512 HMAC                                                 |FECF|
+    char *buffer_frame_pt_h = "2003006C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258b386316ac54f6b78413471560eb20f0a4e0d2f56173a1b70eed77496a45d989edfa0";
+    // Python truth string passed below, not including a MAC or FECF which isn't hashed against, but the LENGTH (including fecf) needs to be updated in the Tf Header
+    // Length is dependent on whatever the variable mac length to be updated in the header
+    //  | Header |SPI|  ARSN  | NIST CMAC Frame Data                                                                                                         |
+    // "2003006C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258";
+    // "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"         
+    // Python output MAC   
+    // b386316ac54f6b78413471560eb20f0a4e0d2f56173a1b70eed77496a45d989e39226b12f6615564d81169b0d77b059ed8a4aa7740f0feb090201e3c2cb80b34
+    // Trunc to first 32 bytes
+    // b386316ac54f6b78413471560eb20f0a4e0d2f56173a1b70eed77496a45d989e
+    char* buffer_python_mac_h = "b386316ac54f6b78413471560eb20f0a4e0d2f56173a1b70eed77496a45d989e";
+    uint8_t *buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b = NULL;
+    int buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
+
+    // Expose/setup SAs for testing
+    SecurityAssociation_t *test_association = NULL;
+    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    // Deactivate SA 1
+    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    test_association->sa_state = SA_NONE;
+    // Activate SA 9
+    sadb_routine->sadb_get_sa_from_spi(9, &test_association);
+    test_association->ast = 1;
+    test_association->est = 0;
+    test_association->shivf_len = 0;
+    test_association->shsnf_len = 4;
+    test_association->arc_len = 4;
+    test_association->arc = calloc(1, test_association->arc_len * sizeof(uint8_t));
+    test_association->abm_len = 1024;
+    memset(test_association->abm, 0xFF, (test_association->abm_len * sizeof(uint8_t))); // Bitmask
+    test_association->stmacf_len = 32;
+    test_association->sa_state = SA_OPERATIONAL;
+    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
+    *test_association->ecs = CRYPTO_CIPHER_NONE;
+    test_association->acs = calloc(1, test_association->acs_len * sizeof(uint8_t));
+    *test_association->acs = CRYPTO_MAC_HMAC_SHA256;
+
+    TC_t *tc_sdls_processed_frame;
+    tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
+    memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
+
+    // Insert key into keyring of SA 9
+    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
+    memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
+
+    // Convert input plaintext
+    hex_conversion(buffer_frame_pt_h, (char **)&buffer_frame_pt_b, &buffer_frame_pt_len);
+    // Convert input mac
+    hex_conversion(buffer_python_mac_h, (char **)&buffer_python_mac_b, &buffer_python_mac_len);
+
+    status = Crypto_TC_ProcessSecurity(buffer_frame_pt_b, &buffer_frame_pt_len, tc_sdls_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    // Note: For comparison, primarily interested in the MAC
+    Crypto_Shutdown();
+
+    for (int i = 0; i < buffer_python_mac_len; i++)
+    {
+        printf("[%d] Truth: %02x, Actual: %02x\n", i, buffer_python_mac_b[i], *(tc_sdls_processed_frame->tc_sec_trailer.mac + i));
+        ASSERT_EQ(*(tc_sdls_processed_frame->tc_sec_trailer.mac + i), buffer_python_mac_b[i]);
+    }
+
+    free(ptr_enc_frame);
+    free(buffer_frame_pt_b);
+    free(buffer_nist_key_b);
+    free(buffer_python_mac_b);
+    free(test_association->arc);
+    // sadb_routine->sadb_close();
+    // free(test_association);
+}
+
 UTEST_MAIN();
