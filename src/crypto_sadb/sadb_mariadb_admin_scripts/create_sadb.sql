@@ -34,3 +34,5 @@ CREATE TABLE security_associations
   ,arcw_len SMALLINT
   ,arcw SMALLINT NOT NULL DEFAULT 0 -- ARCW_SIZE=1
 );
+
+create unique index if not exists main_spi on security_associations (spi,scid,vcid,tfvn,mapid);

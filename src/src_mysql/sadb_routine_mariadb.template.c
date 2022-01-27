@@ -491,7 +491,7 @@ static int32_t convert_hexstring_to_byte_array(char *source_str, uint8_t *dest_b
     char *data = line;
     int offset;
     unsigned int read_byte;
-    uint8_t data_len = 0;
+    uint32_t data_len = 0;
 
     while (sscanf(data, " %02x%n", &read_byte, &offset) == 1)
     {
