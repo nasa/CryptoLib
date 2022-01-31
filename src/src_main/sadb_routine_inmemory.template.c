@@ -235,6 +235,7 @@ int32_t sadb_init(void)
     {
         sa[x].ekid = x;
         sa[x].akid = x;
+        sa[x].key_size = 0;
         sa[x].sa_state = SA_NONE;
         sa[x].ecs_len = 0;
         sa[x].ecs = NULL;

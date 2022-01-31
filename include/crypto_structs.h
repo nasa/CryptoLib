@@ -61,6 +61,7 @@ typedef struct
     crypto_gvcid_t gvcid_tc_blk;
     crypto_gvcid_t gvcid_tm_blk[NUM_GVCID];
     uint8_t lpid;
+    uint8_t key_size;
 
     // Configuration
     uint8_t est : 1;        // Encryption Service Type
