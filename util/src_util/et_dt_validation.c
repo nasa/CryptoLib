@@ -211,7 +211,7 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
     free(enc_test_ping_b);
     free(ptr_enc_frame);
     free(expected);
-    free(test_association->ecs);
+    // free(test_association->ecs);
     free(tc_sdls_processed_frame);
     EndPython();
 }
@@ -298,7 +298,7 @@ UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
 
     free(activate_sa4_b);
     free(dec_test_ping_b);
-    free(test_association->ecs);
+    // free(test_association->ecs);
     free(tc_sdls_processed_frame);
     // sadb_routine->sadb_close();
     EndPython();
@@ -377,7 +377,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     free(buffer_nist_iv_b);
     free(buffer_nist_ct_b);
     free(buffer_nist_key_b);
-    free(test_association->ecs);
+    // free(test_association->ecs);
     // sadb_routine->sadb_close();
 }
 
@@ -454,7 +454,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     free(buffer_nist_iv_b);
     free(buffer_nist_et_b);
     free(buffer_nist_key_b);
-    free(test_association->ecs);
+    // free(test_association->ecs);
     // sadb_routine->sadb_close();
 }
 
@@ -526,7 +526,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     free(buffer_nist_iv_b);
     free(buffer_nist_ct_b);
     free(buffer_nist_key_b);
-    free(test_association->ecs);
+    // free(test_association->ecs);
     // sadb_routine->sadb_close();
 }
 
@@ -602,7 +602,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     free(buffer_nist_iv_b);
     free(buffer_nist_et_b);
     free(buffer_nist_key_b);
-    free(test_association->ecs);
+    // free(test_association->ecs);
     // sadb_routine->sadb_close();
 }
 
@@ -675,7 +675,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
     free(buffer_nist_iv_b);
     free(buffer_nist_ct_b);
     free(buffer_nist_key_b);
-    free(test_association->ecs);
+    // free(test_association->ecs);
     // sadb_routine->sadb_close();
 }
 
@@ -749,7 +749,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
     free(buffer_nist_iv_b);
     free(buffer_nist_et_b);
     free(buffer_nist_key_b);
-    free(test_association->ecs);
+    // free(test_association->ecs);
     // sadb_routine->sadb_close();
 }
 
@@ -822,7 +822,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
     free(buffer_nist_iv_b);
     free(buffer_nist_ct_b);
     free(buffer_nist_key_b);
-    free(test_association->ecs);
+    // free(test_association->ecs);
     // sadb_routine->sadb_close();
 }
 
@@ -896,7 +896,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
     free(buffer_nist_iv_b);
     free(buffer_nist_et_b);
     free(buffer_nist_key_b);
-    free(test_association->ecs);
+    // free(test_association->ecs);
     // sadb_routine->sadb_close();
 }
 
@@ -969,7 +969,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
     free(buffer_nist_iv_b);
     free(buffer_nist_ct_b);
     free(buffer_nist_key_b);
-    free(test_association->ecs);
+    // free(test_association->ecs);
     // sadb_routine->sadb_close();
 }
 
@@ -1043,7 +1043,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
     free(buffer_nist_iv_b);
     free(buffer_nist_et_b);
     free(buffer_nist_key_b);
-    free(test_association->ecs);
+    // free(test_association->ecs);
     // sadb_routine->sadb_close();
 }
 
@@ -1139,7 +1139,7 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     free(buffer_nist_key_b);
     free(buffer_cyber_chef_mac_b);
     free(buffer_nist_aad_b);
-    free(test_association->ecs);
+    // free(test_association->ecs);
     // sadb_routine->sadb_close();
 }
 
@@ -1225,7 +1225,7 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     free(buffer_nist_iv_b);
     free(buffer_nist_key_b);
     free(buffer_cyber_chef_mac_b);
-    free(test_association->ecs);
+    // free(test_association->ecs);
     // sadb_routine->sadb_close();
 }
 
@@ -1351,7 +1351,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     free(buffer_cyber_chef_mac_b);
     free(buffer_nist_mac_frame_b);
     free(buffer_nist_cp_b);
-    free(test_association->ecs);
+    // free(test_association->ecs);
     // sadb_routine->sadb_close();
 }
 
@@ -1452,7 +1452,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_DATA)
     free(buffer_cyber_chef_mac_b);
     free(buffer_nist_mac_frame_b);
     free(buffer_nist_cp_b);
-    free(test_association->ecs);
+    // free(test_association->ecs);
     // sadb_routine->sadb_close();
 }
 
@@ -1553,7 +1553,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_MAC)
     free(buffer_cyber_chef_mac_b);
     free(buffer_nist_mac_frame_b);
     free(buffer_nist_cp_b);
-    free(test_association->ecs);
+    // free(test_association->ecs);
     // sadb_routine->sadb_close();
 }
 
@@ -1640,7 +1640,7 @@ UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
     free(buffer_frame_pt_b);
     free(buffer_nist_key_b);
     free(buffer_python_mac_b);
-    free(test_association->arc);
+    // free(test_association->arc);
     // sadb_routine->sadb_close();
     // free(test_association);
 }

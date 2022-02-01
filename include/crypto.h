@@ -55,33 +55,10 @@
 extern int32_t Crypto_Config_CryptoLib(uint8_t sadb_type, uint8_t cryptography_type, uint8_t crypto_create_fecf, uint8_t process_sdls_pdus,
                                        uint8_t has_pus_hdr, uint8_t ignore_sa_state, uint8_t ignore_anti_replay,
                                        uint8_t unique_sa_per_mapid, uint8_t crypto_check_fecf, uint8_t vcid_bitmask);
-/*===========================================================================
-Function:           Crypto_Config_MariaDB
-Description:        sets the fields the struct SadbMariaDBConfig_t for required 
- *                  parameters to create MySQL connection. 
- *                  1) char* mysql_username -  mariadb username
- *                  2) char* mysql_password - password associated with the username
- *                  3) char* mysql_hostname - hostname of the server that hosts the mariadb database
- *                  4) char* mysql_hostname - database schema name - OPTIONAL. 
-                    5) char* mysql_hostname - port associated with mariadb. By default port 3306. 
-                    6) uint8_t encrypted_connection - attempting an encrypted connection. 
- *                  Set encrypted_connection = 1 if you are attempting an encrypted connection. 
-                    Optional parameters that are only required for an encrypted connection:
-                    uint8_t encrypted_connection
-                    7) char* ssl_cert - The path name of the server public key certificate file with .pem extension. 
-                    8) char* ssl_key - The path name of the server private key file with .pem extension. 
-                    9) char* ssl_ca - The path name of the Certificate Authority (CA) certificate file. 
-                    10) char* ssl_capath - Certificate Authority (CA) directory.      
-Outputs:            status - int32
-References:         1) https://dev.mysql.com/doc/c-api/8.0/en/c-api-encrypted-
- *                      connections.html#c-api-enforcing-encrypted-connection
- *                  2) https://dev.mysql.com/doc/c-api/8.0/en/mysql-ssl-set.html
- *                  3) https://www.xuchao.org/docs/mysql/connectors-apis.html#c-api-encrypted-connections
-Example call:        
-Note:               MySQL server MUST be configured for encrypted connections:
- *                  https://dev.mysql.com/doc/refman/5.7/en/using-encrypted-connections.html
-==========================================================*/
-extern int32_t Crypto_Config_MariaDB(char* mysql_username, char* mysql_password, char* mysql_hostname, char* mysql_database, uint16_t mysql_port, uint8_t encrypted_connection, char* ssl_cert, char* ssl_key, char* ssl_ca, char* ssl_capath);
+extern int32_t Crypto_Config_MariaDB(char* mysql_username, char* mysql_password, char* mysql_hostname,
+                                     char* mysql_database, uint16_t mysql_port, char* mysql_mtls_cert,
+                                     char* mysql_mtls_key, char* mysql_mtls_ca, char* mysql_mtls_capath,
+                                     uint8_t mysql_tls_verify_server, char* mysql_mtls_client_key_password, uint8_t mysql_require_secure_transport);
 extern int32_t Crypto_Config_Kmc_Crypto_Service(char *protocol, char *kmc_crypto_hostname, uint16_t kmc_crypto_port, char *kmc_crypto_app_uri, char *mtls_client_cert_path, char *mtls_client_cert_type,
                                                 char *mtls_client_key_path,char *mtls_client_key_pass, char *mtls_ca_bundle, char *mtls_ca_path,
                                                 char *mtls_issuer_cert, uint8_t ignore_ssl_hostname_validation);
