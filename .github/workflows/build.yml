@@ -16,7 +16,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Install Dependencies
-      run: sudo apt-get install -y libgpg-error-dev libgcrypt20-dev libmariadb-dev
+      run: sudo apt-get install -y libgpg-error-dev libgcrypt20-dev libmariadb-dev libmariadb-dev-compat
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
@@ -38,7 +38,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Install Dependencies
-      run: sudo apt-get install -y libgpg-error-dev libgcrypt20-dev libmariadb-dev libcurl4-openssl-dev
+      run: sudo apt-get install -y libgpg-error-dev libgcrypt20-dev libmariadb-dev libmariadb-dev-compat libcurl4-openssl-dev
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
@@ -61,7 +61,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Install Dependencies
-      run: sudo apt-get install -y libgpg-error-dev libgcrypt20-dev libmariadb-dev libcurl4-openssl-dev
+      run: sudo apt-get install -y libgpg-error-dev libgcrypt20-dev libmariadb-dev libmariadb-dev-compat libcurl4-openssl-dev
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
@@ -84,7 +84,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Install Dependencies
-      run: sudo apt-get install -y libgpg-error-dev libgcrypt20-dev libmariadb-dev libcurl4-openssl-dev
+      run: sudo apt-get install -y libgpg-error-dev libgcrypt20-dev libmariadb-dev libmariadb-dev-compat libcurl4-openssl-dev
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
@@ -107,7 +107,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Install Dependencies
-      run: sudo apt-get install -y libgpg-error-dev libgcrypt20-dev libmariadb-dev libcurl4-openssl-dev
+      run: sudo apt-get install -y libgpg-error-dev libgcrypt20-dev libmariadb-dev libmariadb-dev-compat libcurl4-openssl-dev
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
@@ -130,7 +130,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Install Dependencies
-      run: sudo apt-get install -y libgpg-error-dev libgcrypt20-dev libmariadb-dev libcurl4-openssl-dev
+      run: sudo apt-get install -y libgpg-error-dev libgcrypt20-dev libmariadb-dev libmariadb-dev-compat libcurl4-openssl-dev
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
