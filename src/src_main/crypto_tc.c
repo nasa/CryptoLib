@@ -752,6 +752,11 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t *ingest, int *len_ingest, TC_t *tc_sdl
            &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len]),
            sa_ptr->shplf_len);
 
+    // Set tc_sec_header fields for actual lengths from the SA (downstream apps won't know this length otherwise since they don't access the SADB!).
+    tc_sdls_processed_frame->tc_sec_header.iv_field_len = sa_ptr->shivf_len;
+    tc_sdls_processed_frame->tc_sec_header.sn_field_len = sa_ptr->shsnf_len;
+    tc_sdls_processed_frame->tc_sec_header.pad_field_len = sa_ptr->shplf_len;
+
     // Check ARC/ARC-Window and calculate MAC location, if applicable
     if ((sa_service_type == SA_AUTHENTICATION) || (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
     {
@@ -825,7 +830,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t *ingest, int *len_ingest, TC_t *tc_sdl
     }
 
 #ifdef DEBUG
-    printf(KYEL "TC PDU Calculated Length: %d \n", tc_sdls_processed_frame->tc_pdu_len);
+    printf(KYEL "TC PDU Calculated Length: %d \n" RESET, tc_sdls_processed_frame->tc_pdu_len);
 #endif
 
     if(sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_TRUE)

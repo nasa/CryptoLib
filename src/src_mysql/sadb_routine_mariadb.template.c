@@ -141,7 +141,9 @@ static int32_t sadb_init(void)
             } else {
                 status = CRYPTO_LIB_SUCCESS;
                 if (status == CRYPTO_LIB_SUCCESS) {
-                    // printf("sadb_init created mysql connection successfully. \n");
+#ifdef DEBUG
+                    printf("sadb_init created mysql connection successfully. \n");
+#endif
                 }
             }
         }
