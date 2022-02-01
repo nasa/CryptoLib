@@ -104,29 +104,37 @@ static int32_t sadb_init(void)
         con = mysql_init(con);
         if (con != NULL)
         {
+            //mysql_options is removed in MariaDB C connector v3, using mysql_optionsv
+            // Lots of small configuration differences between MySQL connector & MariaDB Connector
+            // Only MariaDB Connector is implemented here:
+            // https://wikidev.in/wiki/C/mysql_mysql_h/mysql_options | https://mariadb.com/kb/en/mysql_optionsv/
             if(sadb_mariadb_config->mysql_mtls_key != NULL)
             {
-                mysql_options(con, MYSQL_OPT_SSL_KEY, sadb_mariadb_config->mysql_mtls_key);
+                mysql_optionsv(con, MYSQL_OPT_SSL_KEY, sadb_mariadb_config->mysql_mtls_key);
             }
             if(sadb_mariadb_config->mysql_mtls_cert != NULL)
             {
-                mysql_options(con, MYSQL_OPT_SSL_CERT, sadb_mariadb_config->mysql_mtls_cert);
+                mysql_optionsv(con, MYSQL_OPT_SSL_CERT, sadb_mariadb_config->mysql_mtls_cert);
             }
             if(sadb_mariadb_config->mysql_mtls_ca != NULL)
             {
-                mysql_options(con, MYSQL_OPT_SSL_CA, sadb_mariadb_config->mysql_mtls_ca);
+                mysql_optionsv(con, MYSQL_OPT_SSL_CA, sadb_mariadb_config->mysql_mtls_ca);
             }
             if(sadb_mariadb_config->mysql_mtls_capath != NULL)
             {
-                mysql_options(con, MYSQL_OPT_SSL_CAPATH, sadb_mariadb_config->mysql_mtls_capath);
+                mysql_optionsv(con, MYSQL_OPT_SSL_CAPATH, sadb_mariadb_config->mysql_mtls_capath);
             }
             if (sadb_mariadb_config->mysql_tls_verify_server != CRYPTO_FALSE)
             {
-                mysql_options4(con, MYSQL_OPT_CONNECT_ATTR_ADD, "MASTER_SSL_VERIFY_SERVER_CERT", "1");
+                mysql_optionsv(con, MYSQL_OPT_SSL_VERIFY_SERVER_CERT, &(sadb_mariadb_config->mysql_tls_verify_server));
             }
             if (sadb_mariadb_config->mysql_mtls_client_key_password != NULL)
             {
-                mysql_options4(con, MYSQL_OPT_CONNECT_ATTR_ADD, "ssl-passphrase", sadb_mariadb_config->mysql_mtls_client_key_password);
+                mysql_optionsv(con, MARIADB_OPT_TLS_PASSPHRASE, sadb_mariadb_config->mysql_mtls_client_key_password);
+            }
+            if (sadb_mariadb_config->mysql_require_secure_transport == CRYPTO_TRUE)
+            {
+                mysql_optionsv(con, MYSQL_OPT_SSL_ENFORCE,&(sadb_mariadb_config->mysql_require_secure_transport));
             }
             //if encrypted connection (TLS) connection. No need for SSL Key
             if (mysql_real_connect(con, sadb_mariadb_config->mysql_hostname,

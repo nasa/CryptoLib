@@ -58,7 +58,7 @@ extern int32_t Crypto_Config_CryptoLib(uint8_t sadb_type, uint8_t cryptography_t
 extern int32_t Crypto_Config_MariaDB(char* mysql_username, char* mysql_password, char* mysql_hostname,
                                      char* mysql_database, uint16_t mysql_port, char* mysql_mtls_cert,
                                      char* mysql_mtls_key, char* mysql_mtls_ca, char* mysql_mtls_capath,
-                                     uint8_t mysql_tls_verify_server, char* mysql_mtls_client_key_password);
+                                     uint8_t mysql_tls_verify_server, char* mysql_mtls_client_key_password, uint8_t mysql_require_secure_transport);
 extern int32_t Crypto_Config_Kmc_Crypto_Service(char *protocol, char *kmc_crypto_hostname, uint16_t kmc_crypto_port, char *kmc_crypto_app_uri, char *mtls_client_cert_path, char *mtls_client_cert_type,
                                                 char *mtls_client_key_path,char *mtls_client_key_pass, char *mtls_ca_bundle, char *mtls_ca_path,
                                                 char *mtls_issuer_cert, uint8_t ignore_ssl_hostname_validation);

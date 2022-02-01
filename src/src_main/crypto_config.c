@@ -268,7 +268,7 @@ int32_t Crypto_Config_CryptoLib(uint8_t sadb_type, uint8_t cryptography_type, ui
 int32_t Crypto_Config_MariaDB(char* mysql_username, char* mysql_password, char* mysql_hostname, char* mysql_database,
                               uint16_t mysql_port, char* mysql_mtls_cert, char* mysql_mtls_key,
                               char* mysql_mtls_ca, char* mysql_mtls_capath, uint8_t mysql_tls_verify_server,
-                              char* mysql_mtls_client_key_password)
+                              char* mysql_mtls_client_key_password, uint8_t mysql_require_secure_transport)
 {
     int32_t status = CRYPTO_LIB_ERROR;
     sadb_mariadb_config = (SadbMariaDBConfig_t*)calloc(1, SADB_MARIADB_CONFIG_SIZE);
@@ -286,6 +286,7 @@ int32_t Crypto_Config_MariaDB(char* mysql_username, char* mysql_password, char* 
         sadb_mariadb_config->mysql_mtls_capath = mysql_mtls_capath;
         sadb_mariadb_config->mysql_tls_verify_server = mysql_tls_verify_server;
         sadb_mariadb_config->mysql_mtls_client_key_password = mysql_mtls_client_key_password;
+        sadb_mariadb_config->mysql_require_secure_transport = mysql_require_secure_transport;
         /*end - encrypted connection related parameters*/
         status = CRYPTO_LIB_SUCCESS; 
     }

@@ -84,7 +84,7 @@ UTEST(MARIA_DB_CONNECTION_TESTS, TLS_TEST) {
     char* client_key_password = NULL;
 
     /*set configuration params*/
-    status = Crypto_Config_MariaDB(mysql_username, password, mysql_hostname, mysql_database, mysql_port, ssl_cert, ssl_key, ssl_ca, ssl_capath,verify_server,client_key_password);
+    status = Crypto_Config_MariaDB(mysql_username, password, mysql_hostname, mysql_database, mysql_port, ssl_cert, ssl_key, ssl_ca, ssl_capath,verify_server,client_key_password, CRYPTO_TRUE);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     /*Prepare SADB type from config*/
     status = Crypto_Init_Unit_Test_For_DB();

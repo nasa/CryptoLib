@@ -146,6 +146,7 @@ typedef struct
     char* mysql_mtls_capath;
     uint8_t mysql_tls_verify_server;
     char* mysql_mtls_client_key_password;
+    uint8_t mysql_require_secure_transport;
 
 } SadbMariaDBConfig_t;
 #define SADB_MARIADB_CONFIG_SIZE (sizeof(SadbMariaDBConfig_t))
