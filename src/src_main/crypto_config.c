@@ -208,6 +208,12 @@ int32_t Crypto_Shutdown(void)
         gvcid_managed_parameters = NULL;
     }
 
+    if (sadb_routine != NULL)
+    {
+        sadb_routine->sadb_close();
+        sadb_routine = NULL;
+    }
+
     if (cryptography_if != NULL)
     {
         cryptography_if->cryptography_shutdown();
@@ -259,11 +265,14 @@ int32_t Crypto_Config_CryptoLib(uint8_t sadb_type, uint8_t cryptography_type, ui
  * @return int32: Success/Failure 
  **/
 /*set parameters for an encrypted TLS connection*/
-int32_t Crypto_Config_MariaDB(char* mysql_username, char* mysql_password, char* mysql_hostname, char* mysql_database, uint16_t mysql_port, uint8_t encrypted_connection, char* ssl_cert, char* ssl_key, char* ssl_ca, char* ssl_capath)
+int32_t Crypto_Config_MariaDB(char* mysql_username, char* mysql_password, char* mysql_hostname, char* mysql_database,
+                              uint16_t mysql_port, char* mysql_mtls_cert, char* mysql_mtls_key,
+                              char* mysql_mtls_ca, char* mysql_mtls_capath, uint8_t mysql_tls_verify_server,
+                              char* mysql_mtls_client_key_password)
 {
     int32_t status = CRYPTO_LIB_ERROR;
     sadb_mariadb_config = (SadbMariaDBConfig_t*)calloc(1, SADB_MARIADB_CONFIG_SIZE);
-    if (NULL!=sadb_mariadb_config)
+    if (sadb_mariadb_config != NULL)
     {
         sadb_mariadb_config->mysql_username=mysql_username;
         sadb_mariadb_config->mysql_password=mysql_password;
@@ -271,11 +280,12 @@ int32_t Crypto_Config_MariaDB(char* mysql_username, char* mysql_password, char* 
         sadb_mariadb_config->mysql_database=mysql_database;
         sadb_mariadb_config->mysql_port=mysql_port;
         /*start - encrypted connection related parameters*/
-        sadb_mariadb_config->encrypted_connection = encrypted_connection; 
-        sadb_mariadb_config->ssl_cert = ssl_cert; 
-        sadb_mariadb_config->ssl_key = ssl_key; 
-        sadb_mariadb_config->ssl_ca = ssl_ca; 
-        sadb_mariadb_config->ssl_capath = ssl_capath; 
+        sadb_mariadb_config->mysql_mtls_cert = mysql_mtls_cert;
+        sadb_mariadb_config->mysql_mtls_key = mysql_mtls_key;
+        sadb_mariadb_config->mysql_mtls_ca = mysql_mtls_ca;
+        sadb_mariadb_config->mysql_mtls_capath = mysql_mtls_capath;
+        sadb_mariadb_config->mysql_tls_verify_server = mysql_tls_verify_server;
+        sadb_mariadb_config->mysql_mtls_client_key_password = mysql_mtls_client_key_password;
         /*end - encrypted connection related parameters*/
         status = CRYPTO_LIB_SUCCESS; 
     }

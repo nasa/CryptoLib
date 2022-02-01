@@ -154,12 +154,13 @@ UTEST(CRYPTO_CONFIG, CRYPTO_CONFIG_MDB)
     char* mysql_hostname = "ITC_JPL";
     char* mysql_database = "ITC_JPL";
     uint16_t mysql_port = 9999;
-    uint8_t enc_conn = 123;
     char* ssl_cert = "NONE";
     char* ssl_key = "NONE";
     char* ssl_ca = "NONE";
     char* ssl_capath = "NONE";
-    status = Crypto_Config_MariaDB(mysql_username, mysql_password, mysql_hostname, mysql_database, mysql_port, enc_conn, ssl_cert, ssl_key, ssl_ca, ssl_capath);
+    uint8_t verify_server = 0; 
+    char* client_key_password = NULL;
+    status = Crypto_Config_MariaDB(mysql_username, mysql_password, mysql_hostname, mysql_database, mysql_port, ssl_cert, ssl_key, ssl_ca, ssl_capath, verify_server,client_key_password);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
