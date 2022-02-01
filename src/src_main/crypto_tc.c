@@ -728,6 +728,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t *ingest, int *len_ingest, TC_t *tc_sdl
             if (received_fecf != calculated_fecf)
             {
                 status = CRYPTO_LIB_ERR_INVALID_FECF;
+                printf("BAD FECF\n");
                 return status;
             }
         }
@@ -844,10 +845,12 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t *ingest, int *len_ingest, TC_t *tc_sdl
                                                             (sa_ptr->ast), // Authentication Bool
                                                             (sa_ptr->ast) // AAD Bool
         );
-    }else if (sa_service_type != SA_PLAINTEXT) // Non aead algorithm
+    }else if (sa_service_type != SA_PLAINTEXT && sa_service_type == SA_ENCRYPTION)  // Non aead algorithm
     {
         // TODO - implement non-AEAD algorithm logic
-        cryptography_if->cryptography_decrypt();
+        status = cryptography_if->cryptography_decrypt();
+    }else if (sa_service_type != SA_PLAINTEXT && sa_service_type == SA_AUTHENTICATION)  // Non aead algorithm
+    {
         status = cryptography_if->cryptography_validate_authentication(tc_sdls_processed_frame->tc_pdu,       // plaintext output
                                                             (size_t)(tc_sdls_processed_frame->tc_pdu_len),   // length of data
                                                             &(ingest[tc_enc_payload_start_index]), // ciphertext input
@@ -858,7 +861,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t *ingest, int *len_ingest, TC_t *tc_sdl
                                                             tc_sdls_processed_frame->tc_sec_header.iv, // IV
                                                             sa_ptr->shivf_len, // IV Length
                                                             tc_sdls_processed_frame->tc_sec_trailer.mac, // Frame Expected Tag
-                                                            sa_ptr->stmacf_len,                           // tag size
+                                                            sa_ptr->stmacf_len,                          // tag size
                                                             aad,    // additional authenticated data
                                                             aad_len, // length of AAD
                                                             CRYPTO_CIPHER_NONE, //encryption cipher

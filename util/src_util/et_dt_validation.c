@@ -2396,7 +2396,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_0)
 }
 
 /**
- * @brief Unit Test: Test HMAC SHA-256, bitmask of 0s
+ * @brief Unit Test: Test HMAC SHA-256, bitmask of 1s
  **/
 UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
 {
@@ -2507,9 +2507,9 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
+    char *buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
     //                        |  Header |SPI | ARC   |     Payload                                                                                                                   | SHA 512 HMAC                 |FECF|
-    char *buffer_frame_pt_h = "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258676e9ebdf306b7db7ad41892887342e80dc5";
+    char *buffer_frame_pt_h = "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F1939425864b8f7ccdbc86109a981c9f29243e365a334";
     // Python truth string passed below is ZEROed out, not including a MAC or FECF which isn't hashed against, but the LENGTH (including fecf) needs to be updated in the Tf Header
     // Length is dependent on whatever the variable mac length to be updated in the header
     //  | Header |SPI|  ARSN  | NIST CMAC Frame Data                                                                                                         |
@@ -2519,10 +2519,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
     // 64b8f7ccdbc86109a981c9f29243e36548716e94f5ef30ade090c41ecd6fa2a226909d706bdebcf3baeb24c4ed8373ae1bcd9a32a5596136e24e0f1ae68a8ac0
     // Trunc to first 16 bytes
     // 64b8f7ccdbc86109a981c9f29243e365
-    // Python output mac, longer key length
-    // 676e9ebdf306b7db7ad41892887342e892bcc59688caef44693c1659b6a683e844d584030b7c532105b8c2539e0aed51af6df77e87f1834e92c2085889d1c44b
-    // 676e9ebdf306b7db7ad41892887342e8
-    char* buffer_python_mac_h = "676e9ebdf306b7db7ad41892887342e8";
+    char* buffer_python_mac_h = "64b8f7ccdbc86109a981c9f29243e365";
     uint8_t *buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b = NULL;
     int buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
 
@@ -2536,7 +2533,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
     sadb_routine->sadb_get_sa_from_spi(9, &test_association);
     test_association->ast = 1;
     test_association->est = 0;
-    test_association->key_size = 64;
+    test_association->key_size = 32;
     test_association->shivf_len = 0;
     test_association->shsnf_len = 4;
     test_association->arc_len = 4;
@@ -2584,6 +2581,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
     // free(test_association);
 }
 
+
 /**
  * @brief Unit Test: Test HMAC SHA-512, bitmask of 1s
  **/
@@ -2603,20 +2601,18 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
-    //                        |  Header |SPI | ARC   |     Payload                                                                                                                   | SHA 512 HMAC                  |FECF|
-    char *buffer_frame_pt_h = "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258907bbd1d9f2fd37e541f0b1ee12f5db0679a";
+    char *buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
+    //                        |  Header |SPI | ARC   |     Payload                                                                                                                   | SHA 512 HMAC                 |FECF|
+    char *buffer_frame_pt_h = "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F1939425875c570016a9458a71cea6aaca6ff46970f67";
     // Python truth string passed below, not including a MAC or FECF which isn't hashed against, but the LENGTH (including fecf) needs to be updated in the Tf Header
     // Length is dependent on whatever the variable mac length to be updated in the header
     //  | Header |SPI|  ARSN  | NIST CMAC Frame Data                                                                                                         |
-    // "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258";       
-    // Python output MAC: 907bbd1d9f2fd37e541f0b1ee12f5db0b1e0cbc57cfe08aecfc74b001371db711abb39caf658ee692d418725dc92cabd8d0a93ce423ff7594adf3fd91e7a6435
-    
-    // Below MAC is what libgcrypt generates
-    // 907bbd1d9f2fd37e541f0b1ee12f5db0b1e0cbc57cfe08aecfc74b001371db711abb39caf658ee692d418725dc92cabd8d0a93ce423ff7594adf3fd91e7a6435
+    // "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258";
+    // Python output MAC   
+    // 75c570016a9458a71cea6aaca6ff46971ea007ed0a84e97fd2df79f6634c3efbb62edef3d1fb6549d0c9319e2d1dea866f634f67a2006c435b5bd2a3dd314fef
     // Trunc to first 16 bytes
-    // 907bbd1d9f2fd37e541f0b1ee12f5db0
-    char* buffer_python_mac_h = "907bbd1d9f2fd37e541f0b1ee12f5db0";
+    // 75c570016a9458a71cea6aaca6ff4697
+    char* buffer_python_mac_h = "75c570016a9458a71cea6aaca6ff4697";
     uint8_t *buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b = NULL;
     int buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
 
@@ -2630,7 +2626,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
     sadb_routine->sadb_get_sa_from_spi(9, &test_association);
     test_association->ast = 1;
     test_association->est = 0;
-    test_association->key_size = 64;
+    test_association->key_size = 32;
     test_association->shivf_len = 0;
     test_association->shsnf_len = 4;
     test_association->arc_len = 4;
@@ -2642,7 +2638,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_CIPHER_NONE;
     test_association->acs = calloc(1, test_association->acs_len * sizeof(uint8_t));
-    *test_association->acs = CRYPTO_MAC_HMAC_SHA256;
+    *test_association->acs = CRYPTO_MAC_HMAC_SHA512;
 
     TC_t *tc_sdls_processed_frame;
     tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
@@ -2658,7 +2654,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
     hex_conversion(buffer_python_mac_h, (char **)&buffer_python_mac_b, &buffer_python_mac_len);
 
     status = Crypto_TC_ProcessSecurity(buffer_frame_pt_b, &buffer_frame_pt_len, tc_sdls_processed_frame);
-    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
     // Note: For comparison, primarily interested in the MAC
     Crypto_Shutdown();
@@ -2666,7 +2662,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
     for (int i = 0; i < buffer_python_mac_len; i++)
     {
         printf("[%d] Truth: %02x, Actual: %02x\n", i, buffer_python_mac_b[i], *(tc_sdls_processed_frame->tc_sec_trailer.mac + i));
-        ASSERT_EQ(buffer_python_mac_b[i], *(tc_sdls_processed_frame->tc_sec_trailer.mac + i));
+        ASSERT_EQ(*(tc_sdls_processed_frame->tc_sec_trailer.mac + i), buffer_python_mac_b[i]);
     }
 
     free(ptr_enc_frame);

@@ -743,7 +743,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     }
 
 #ifdef MAC_DEBUG
-    uint32_t tmac_size = 64;
+    uint32_t tmac_size = mac_size;
     uint8_t* tmac = malloc(tmac_size);
     gcry_error = gcry_mac_read(tmp_mac_hd,
                                tmac,      // tag output
@@ -756,12 +756,20 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
         return status;
     }
 
+    printf("Calculated Mac Size: %d\n", tmac_size);
+
     printf("Calculated MAC:\n\t");
     for (uint32_t i = 0; i < tmac_size; i ++){
         printf("%02X", *(tmac + i));
     }
     printf("\n");
     free(tmac);
+
+    printf("Received MAC:\n\t");
+    for (uint32_t i = 0; i < tmac_size; i ++){
+        printf("%02X", *(mac + i));
+    }
+    printf("\n");
 #endif
 
     // Compare computed mac with MAC in frame
@@ -904,8 +912,6 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     }
     printf("\n");
 #endif
-
-
 
     if ( authenticate_bool == CRYPTO_TRUE )
     {
