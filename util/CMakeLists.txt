@@ -59,35 +59,36 @@ target_include_directories (Crypto PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 set(OBJECT_DIR ${PROJECT_BINARY_DIR}/src/CMakeFiles/Crypto.dir/src_main)
 
+if(${DEBUG})
+    # Create the gcov target. Run coverage tests with 'make gcov'
+    add_custom_target(gcov
+        COMMAND mkdir -p coverage
+        COMMAND ${CMAKE_MAKE_PROGRAM} test
+        WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+        )
+    add_custom_command(TARGET gcov
+        COMMAND echo "=================== GCOV ===================="
+        #COMMAND gcov -b -o ${OBJECT_DIR} crypto_aos.c.gnco crypto_config.c.gnco crypto_key_mgmt.c.gnco crypto_mc.c.gnco crypto_print.c.gnco crypto_tc.c.gnco crypto_tm.c.gnco crypto_user.c.gnco crypto.c.gnco sadb_routine_inmemory.template.c.gnco sadb_routine.c.gnco
+        COMMAND gcov -b -o ${OBJECT_DIR} crypto_aos.c.gnco crypto_config.c.gnco crypto_key_mgmt.c.gnco crypto_mc.c.gnco crypto_tc.c.gnco crypto_tm.c.gnco crypto_user.c.gnco crypto.c.gnco sadb_routine_inmemory.template.c.gnco 
+        # | grep -A 5 "Adder.cpp" > CoverageSummary.tmp
+        #COMMAND cat CoverageSummary.tmp
+        #COMMAND echo "-- Coverage files have been output to ${PROJECT_BINARY_DIR}/coverage"
+        COMMAND lcov -c --directory ${OBJECT_DIR} --output-file ${PROJECT_BINARY_DIR}/coverage/results.info
+        COMMAND genhtml ${PROJECT_BINARY_DIR}/coverage/results.info --output-directory ${PROJECT_BINARY_DIR}/coverage/results
+        WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/coverage
+        )
+    add_dependencies(gcov ut_tc_apply)
+    # Make sure to clean up the coverage folder
+    set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES coverage)
 
-# Create the gcov target. Run coverage tests with 'make gcov'
-add_custom_target(gcov
-    COMMAND mkdir -p coverage
-    COMMAND ${CMAKE_MAKE_PROGRAM} test
+
+
+    # Create the gcov-clean target. This cleans the build as well as generated 
+    # .gcda and .gcno files.
+    add_custom_target(scrub
+    COMMAND ${CMAKE_MAKE_PROGRAM} clean
+    COMMAND rm -f ${OBJECT_DIR}/*.gcno
+    COMMAND rm -f ${OBJECT_DIR}/*.gcda
     WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
     )
-add_custom_command(TARGET gcov
-    COMMAND echo "=================== GCOV ===================="
-    #COMMAND gcov -b -o ${OBJECT_DIR} crypto_aos.c.gnco crypto_config.c.gnco crypto_key_mgmt.c.gnco crypto_mc.c.gnco crypto_print.c.gnco crypto_tc.c.gnco crypto_tm.c.gnco crypto_user.c.gnco crypto.c.gnco sadb_routine_inmemory.template.c.gnco sadb_routine.c.gnco
-    COMMAND gcov -b -o ${OBJECT_DIR} crypto_aos.c.gnco crypto_config.c.gnco crypto_key_mgmt.c.gnco crypto_mc.c.gnco crypto_tc.c.gnco crypto_tm.c.gnco crypto_user.c.gnco crypto.c.gnco sadb_routine_inmemory.template.c.gnco 
-    # | grep -A 5 "Adder.cpp" > CoverageSummary.tmp
-    #COMMAND cat CoverageSummary.tmp
-    #COMMAND echo "-- Coverage files have been output to ${PROJECT_BINARY_DIR}/coverage"
-    COMMAND lcov -c --directory ${OBJECT_DIR} --output-file ${PROJECT_BINARY_DIR}/coverage/results.info
-    COMMAND genhtml ${PROJECT_BINARY_DIR}/coverage/results.info --output-directory ${PROJECT_BINARY_DIR}/coverage/results
-    WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/coverage
-    )
-add_dependencies(gcov ut_tc_apply)
-# Make sure to clean up the coverage folder
-set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES coverage)
-
-
-
-# Create the gcov-clean target. This cleans the build as well as generated 
-# .gcda and .gcno files.
-add_custom_target(scrub
-COMMAND ${CMAKE_MAKE_PROGRAM} clean
-COMMAND rm -f ${OBJECT_DIR}/*.gcno
-COMMAND rm -f ${OBJECT_DIR}/*.gcda
-WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
-) 
+endif(${DEBUG})
