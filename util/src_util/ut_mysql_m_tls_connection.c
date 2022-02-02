@@ -85,7 +85,8 @@ UTEST(MARIA_DB_CONNECTION_TESTS, TLS_TEST) {
     char* client_key_password = NULL; 
     //uint8_t ssl_verify_server_cert = 1;
     /*set configuration params*/
-    status = Crypto_Config_MariaDB(mysql_username, password, mysql_hostname, mysql_database, mysql_port, ssl_cert, ssl_key, ssl_ca, ssl_capath,verify_server,client_key_password, CRYPTO_TRUE);
+    status = Crypto_Config_MariaDB(mysql_hostname, mysql_database, mysql_port, CRYPTO_TRUE, verify_server, ssl_ca,
+                                   ssl_capath, ssl_cert, ssl_key, client_key_password, mysql_username, password);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     /*Prepare SADB type from config*/
     status = Crypto_Init_Unit_Test_For_DB();
@@ -108,7 +109,8 @@ UTEST(MARIA_DB_CONNECTION_TESTS, TLS_TEST) {
     ssl_ca = "/etc/pki/tls/certs/ammos-ca-bundle.crt";
     ssl_capath = "/etc/pki/tls/certs/";
     /*set configuration params*/
-    status = Crypto_Config_MariaDB(mysql_username, password, mysql_hostname, mysql_database, mysql_port, ssl_cert, ssl_key, ssl_ca, ssl_capath,verify_server,client_key_password, CRYPTO_TRUE);
+    status = Crypto_Config_MariaDB(mysql_hostname, mysql_database, mysql_port, CRYPTO_TRUE, verify_server, ssl_ca,
+                                   ssl_capath, ssl_cert, ssl_key, client_key_password, mysql_username, password);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     /*Prepare SADB type from config*/
     status = Crypto_Init_Unit_Test_For_DB();
