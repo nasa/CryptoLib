@@ -42,7 +42,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
-                                         uint8_t ecs, uint8_t acs);
+                                         uint8_t* ecs, uint8_t* acs);
 static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t len_data_out,
                                                     uint8_t* data_in, size_t len_data_in,
                                                     uint8_t* key, uint32_t len_key,
@@ -50,7 +50,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
                                                     uint8_t* iv, uint32_t iv_len,
                                                     uint8_t* mac, uint32_t mac_size,
                                                     uint8_t* aad, uint32_t aad_len,
-                                                    uint8_t ecs, uint8_t acs);
+                                                    uint8_t* ecs, uint8_t* acs);
 static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -58,6 +58,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
+                                         uint8_t* ecs, uint8_t *acs,
                                          uint8_t encrypt_bool, uint8_t authenticate_bool,
                                          uint8_t aad_bool);
 static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
@@ -248,7 +249,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
-                                         uint8_t ecs, uint8_t acs)
+                                         uint8_t* ecs, uint8_t* acs)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
@@ -468,7 +469,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
                                                     uint8_t* iv, uint32_t iv_len,
                                                     uint8_t* mac, uint32_t mac_size,
                                                     uint8_t* aad, uint32_t aad_len,
-                                                    uint8_t ecs, uint8_t acs)
+                                                    uint8_t* ecs, uint8_t* acs)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
@@ -623,12 +624,17 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
+                                         uint8_t* ecs, uint8_t *acs,
                                          uint8_t encrypt_bool, uint8_t authenticate_bool,
                                          uint8_t aad_bool)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     key = key; // Direct key input is not supported in KMC interface
     len_key = len_key; // Direct key input is not supported in KMC interface
+
+    // TODO - Use these
+    ecs = ecs;
+    acs = acs;
 
     curl_easy_reset(curl);
     configure_curl_connect_opts(curl);
