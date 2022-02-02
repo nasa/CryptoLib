@@ -207,12 +207,10 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
         ASSERT_EQ(expected[i], ptr_enc_frame[i]);
     }
     Crypto_Shutdown();
-    // sadb_routine->sadb_close();
     free(activate_sa4_b);
     free(enc_test_ping_b);
     free(ptr_enc_frame);
     free(expected);
-    // free(test_association->ecs);
     free(tc_sdls_processed_frame);
     EndPython();
 }
@@ -300,9 +298,7 @@ UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
 
     free(activate_sa4_b);
     free(dec_test_ping_b);
-    // free(test_association->ecs);
     free(tc_sdls_processed_frame);
-    // sadb_routine->sadb_close();
     EndPython();
 }
 
@@ -380,8 +376,6 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     free(buffer_nist_iv_b);
     free(buffer_nist_ct_b);
     free(buffer_nist_key_b);
-    // free(test_association->ecs);
-    // sadb_routine->sadb_close();
 }
 
 /**
@@ -458,8 +452,6 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     free(buffer_nist_iv_b);
     free(buffer_nist_et_b);
     free(buffer_nist_key_b);
-    // free(test_association->ecs);
-    // sadb_routine->sadb_close();
 }
 
 /**
@@ -531,8 +523,6 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     free(buffer_nist_iv_b);
     free(buffer_nist_ct_b);
     free(buffer_nist_key_b);
-    // free(test_association->ecs);
-    // sadb_routine->sadb_close();
 }
 
 /**
@@ -608,8 +598,6 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     free(buffer_nist_iv_b);
     free(buffer_nist_et_b);
     free(buffer_nist_key_b);
-    // free(test_association->ecs);
-    // sadb_routine->sadb_close();
 }
 
 /**
@@ -682,8 +670,6 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
     free(buffer_nist_iv_b);
     free(buffer_nist_ct_b);
     free(buffer_nist_key_b);
-    // free(test_association->ecs);
-    // sadb_routine->sadb_close();
 }
 
 /**
@@ -757,8 +743,6 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
     free(buffer_nist_iv_b);
     free(buffer_nist_et_b);
     free(buffer_nist_key_b);
-    // free(test_association->ecs);
-    // sadb_routine->sadb_close();
 }
 
 /**
@@ -831,8 +815,6 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
     free(buffer_nist_iv_b);
     free(buffer_nist_ct_b);
     free(buffer_nist_key_b);
-    // free(test_association->ecs);
-    // sadb_routine->sadb_close();
 }
 
 /**
@@ -906,8 +888,6 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
     free(buffer_nist_iv_b);
     free(buffer_nist_et_b);
     free(buffer_nist_key_b);
-    // free(test_association->ecs);
-    // sadb_routine->sadb_close();
 }
 
 /**
@@ -980,8 +960,6 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
     free(buffer_nist_iv_b);
     free(buffer_nist_ct_b);
     free(buffer_nist_key_b);
-    // free(test_association->ecs);
-    // sadb_routine->sadb_close();
 }
 
 /**
@@ -1055,8 +1033,6 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
     free(buffer_nist_iv_b);
     free(buffer_nist_et_b);
     free(buffer_nist_key_b);
-    // free(test_association->ecs);
-    // sadb_routine->sadb_close();
 }
 
 /**
@@ -1153,8 +1129,6 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     free(buffer_nist_key_b);
     free(buffer_cyber_chef_mac_b);
     free(buffer_nist_aad_b);
-    // free(test_association->ecs);
-    // sadb_routine->sadb_close();
 }
 
 /**
@@ -1241,8 +1215,6 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     free(buffer_nist_iv_b);
     free(buffer_nist_key_b);
     free(buffer_cyber_chef_mac_b);
-    // free(test_association->ecs);
-    // sadb_routine->sadb_close();
 }
 
 /**
@@ -1369,8 +1341,6 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     free(buffer_cyber_chef_mac_b);
     free(buffer_nist_mac_frame_b);
     free(buffer_nist_cp_b);
-    // free(test_association->ecs);
-    // sadb_routine->sadb_close();
 }
 
 /**
@@ -1472,8 +1442,6 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_DATA)
     free(buffer_cyber_chef_mac_b);
     free(buffer_nist_mac_frame_b);
     free(buffer_nist_cp_b);
-    // free(test_association->ecs);
-    // sadb_routine->sadb_close();
 }
 
 /**
@@ -1574,8 +1542,6 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_MAC)
     free(buffer_cyber_chef_mac_b);
     free(buffer_nist_mac_frame_b);
     free(buffer_nist_cp_b);
-    // free(test_association->ecs);
-    // sadb_routine->sadb_close();
 }
 
 /**
@@ -1663,9 +1629,6 @@ UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
     free(buffer_frame_pt_b);
     free(buffer_nist_key_b);
     free(buffer_python_mac_b);
-    // free(test_association->arc);
-    // sadb_routine->sadb_close();
-    // free(test_association);
 }
 
 /**
@@ -1752,8 +1715,6 @@ UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
     free(buffer_frame_pt_b);
     free(buffer_nist_key_b);
     free(buffer_python_mac_b);
-    // free(test_association);
-    // sadb_routine->sadb_close();
 }
 
 /**
@@ -1844,9 +1805,6 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
     free(buffer_frame_pt_b);
     free(buffer_nist_key_b);
     free(buffer_python_mac_b);
-    // free(test_association->arc);
-    // free(test_association);
-    // sadb_routine->sadb_close();
 }
 
 /**
@@ -1936,8 +1894,6 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
     free(buffer_frame_pt_b);
     free(buffer_nist_key_b);
     free(buffer_python_mac_b);
-    // free(test_association->arc);
-    // free(test_association);
 }
 
 /**
@@ -2026,9 +1982,6 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_256_PT_128_TEST_0)
     free(buffer_frame_pt_b);
     free(buffer_nist_key_b);
     free(buffer_python_mac_b);
-    free(test_association->arc);
-    // sadb_routine->sadb_close();
-    // free(test_association);
 }
 
 /**
@@ -2047,7 +2000,6 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
     crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
-
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
@@ -2064,7 +2016,6 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
     char* buffer_python_mac_h = "5d0ae5c3859d51d9c1e31681db475acb";
     uint8_t *buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b = NULL;
     int buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
-
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
@@ -2116,9 +2067,6 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
     free(buffer_frame_pt_b);
     free(buffer_nist_key_b);
     free(buffer_python_mac_b);
-    free(test_association->arc);
-    // sadb_routine->sadb_close();
-    // free(test_association);
 }
 
 /**
@@ -2207,9 +2155,6 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
     free(buffer_frame_pt_b);
     free(buffer_nist_key_b);
     free(buffer_python_mac_b);
-    free(test_association->arc);
-    // sadb_routine->sadb_close();
-    // free(test_association);
 }
 
 /**
@@ -2297,9 +2242,6 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
     free(buffer_frame_pt_b);
     free(buffer_nist_key_b);
     free(buffer_python_mac_b);
-    free(test_association->arc);
-    // sadb_routine->sadb_close();
-    // free(test_association);
 }
 
 /**
@@ -2388,9 +2330,6 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_2)
     free(buffer_frame_pt_b);
     free(buffer_nist_key_b);
     free(buffer_python_mac_b);
-    free(test_association->arc);
-    // sadb_routine->sadb_close();
-    // free(test_association);
 }
 
 /**
@@ -2478,9 +2417,6 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_3)
     free(buffer_frame_pt_b);
     free(buffer_nist_key_b);
     free(buffer_python_mac_b);
-    free(test_association->arc);
-    // sadb_routine->sadb_close();
-    // free(test_association);
 }
 
 /**
@@ -2488,7 +2424,7 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_3)
  **/
 UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_0)
 {
-    uint8_t status = 0;
+    int32_t status = 0;
     uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
@@ -2571,9 +2507,6 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_0)
     free(buffer_frame_pt_b);
     free(buffer_nist_key_b);
     free(buffer_python_mac_b);
-    free(test_association->arc);
-    // sadb_routine->sadb_close();
-    // free(test_association);
 }
 
 /**
@@ -2581,7 +2514,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_0)
  **/
 UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
 {
-    uint8_t status = 0;
+    int32_t status = 0;
     uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
@@ -2664,9 +2597,6 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
     free(buffer_frame_pt_b);
     free(buffer_nist_key_b);
     free(buffer_python_mac_b);
-    free(test_association->arc);
-    // sadb_routine->sadb_close();
-    // free(test_association);
 }
 
 /**
@@ -2674,7 +2604,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
  **/
 UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
 {
-    uint8_t status = 0;
+    int32_t status = 0;
     uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
@@ -2757,9 +2687,6 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
     free(buffer_frame_pt_b);
     free(buffer_nist_key_b);
     free(buffer_python_mac_b);
-    free(test_association->arc);
-    // sadb_routine->sadb_close();
-    // free(test_association);
 }
 
 /**
@@ -2767,7 +2694,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
  **/
 UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
 {
-    uint8_t status = 0;
+    int32_t status = 0;
     uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
@@ -2849,9 +2776,6 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
     free(buffer_frame_pt_b);
     free(buffer_nist_key_b);
     free(buffer_python_mac_b);
-    free(test_association->arc);
-    // sadb_routine->sadb_close();
-    // free(test_association);
 }
 
 /**
@@ -2859,7 +2783,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
  **/
 UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_2)
 {
-    uint8_t status = 0;
+    int32_t status = 0;
     uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
@@ -2942,9 +2866,6 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_2)
     free(buffer_frame_pt_b);
     free(buffer_nist_key_b);
     free(buffer_python_mac_b);
-    free(test_association->arc);
-    // sadb_routine->sadb_close();
-    // free(test_association);
 }
 
 /**
@@ -2952,7 +2873,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_2)
  **/
 UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_3)
 {
-    uint8_t status = 0;
+    int32_t status = 0;
     uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
@@ -3035,9 +2956,6 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_3)
     free(buffer_frame_pt_b);
     free(buffer_nist_key_b);
     free(buffer_python_mac_b);
-    free(test_association->arc);
-    // sadb_routine->sadb_close();
-    // free(test_association);
 }
 
 UTEST_MAIN();
