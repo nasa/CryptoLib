@@ -160,7 +160,8 @@ UTEST(CRYPTO_CONFIG, CRYPTO_CONFIG_MDB)
     char* ssl_capath = "NONE";
     uint8_t verify_server = 0; 
     char* client_key_password = NULL;
-    status = Crypto_Config_MariaDB(mysql_username, mysql_password, mysql_hostname, mysql_database, mysql_port, ssl_cert, ssl_key, ssl_ca, ssl_capath, verify_server,client_key_password,CRYPTO_FALSE);
+    status = Crypto_Config_MariaDB(mysql_hostname, mysql_database, mysql_port, CRYPTO_FALSE, verify_server, ssl_ca,
+                                   ssl_capath, ssl_cert, ssl_key, client_key_password, mysql_username, mysql_password);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
@@ -184,8 +185,10 @@ UTEST(CRYPTO_CONFIG, CRYPTO_CONFIG_KMC)
     char *mtls_issuer_cert = "/dev/null";
     uint8_t ignore_ssl_hostname_validation = CRYPTO_TRUE;
 
-    status = Crypto_Config_Kmc_Crypto_Service(protocol,hostname,port,kmc_crypto_app_uri, mtls_client_cert_path,mtls_client_cert_type,mtls_client_key_path,
-                                              mtls_client_key_pass, mtls_ca_bundle,mtls_ca_path, mtls_issuer_cert, ignore_ssl_hostname_validation);
+    status = Crypto_Config_Kmc_Crypto_Service(protocol, hostname, port, kmc_crypto_app_uri, mtls_ca_bundle,
+                                              mtls_ca_path, ignore_ssl_hostname_validation, mtls_client_cert_path,
+                                              mtls_client_cert_type, mtls_client_key_path,
+                                              mtls_client_key_pass, mtls_issuer_cert);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
