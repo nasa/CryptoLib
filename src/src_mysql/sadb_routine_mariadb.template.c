@@ -444,7 +444,8 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
             }
             if (strcmp(field_names[i], "acs") == 0)
             {
-                sa->acs = atoi(row[i]);
+                uint8_t temp_acs = atoi(row[i]);
+                sa->acs = &temp_acs;
                 continue;
             }
             if (strcmp(field_names[i], "abm_len") == 0)
