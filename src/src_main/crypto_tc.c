@@ -755,6 +755,11 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t *ingest, int *len_ingest, TC_t *tc_sdl
            &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len]),
            sa_ptr->shplf_len);
 
+    // Set tc_sec_header fields for actual lengths from the SA (downstream apps won't know this length otherwise since they don't access the SADB!).
+    tc_sdls_processed_frame->tc_sec_header.iv_field_len = sa_ptr->shivf_len;
+    tc_sdls_processed_frame->tc_sec_header.sn_field_len = sa_ptr->shsnf_len;
+    tc_sdls_processed_frame->tc_sec_header.pad_field_len = sa_ptr->shplf_len;
+
     // Check ARC/ARC-Window and calculate MAC location, if applicable
     if ((sa_service_type == SA_AUTHENTICATION) || (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
     {
@@ -822,8 +827,13 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t *ingest, int *len_ingest, TC_t *tc_sdl
     tc_sdls_processed_frame->tc_pdu_len =
             tc_sdls_processed_frame->tc_header.fl + 1 - tc_enc_payload_start_index - sa_ptr->stmacf_len - fecf_len;
 
+    if(tc_sdls_processed_frame->tc_pdu_len > tc_sdls_processed_frame->tc_header.fl) // invalid header parsed, sizes overflowed & make no sense!
+    {
+        return CRYPTO_LIB_ERR_INVALID_HEADER;
+    }
+
 #ifdef DEBUG
-    printf(KYEL "TC PDU Calculated Length: %d \n", tc_sdls_processed_frame->tc_pdu_len);
+    printf(KYEL "TC PDU Calculated Length: %d \n" RESET, tc_sdls_processed_frame->tc_pdu_len);
 #endif
 
     if(sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_TRUE)
@@ -933,6 +943,15 @@ uint8_t *Crypto_Prepare_TC_AAD(uint8_t *buffer, uint16_t len_aad, uint8_t *abm_b
     {
         aad[i] = buffer[i] & abm_buffer[i];
     }
+
+#ifdef MAC_DEBUG
+    printf(KYEL "AAD before ABM Bitmask:\n\t");
+    for (int i = 0; i < len_aad; i++)
+    {
+        printf("%02x", buffer[i]);
+    }
+    printf("\n" RESET);
+#endif
 
 #ifdef MAC_DEBUG
     printf(KYEL "Preparing AAD:\n");

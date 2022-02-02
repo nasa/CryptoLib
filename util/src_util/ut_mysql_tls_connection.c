@@ -72,18 +72,19 @@ UTEST(MARIA_DB_CONNECTION_TESTS, TLS_TEST) {
     /*connection input parameters. 
      Note: username, pass, and paths may differ on your system*/
     char* mysql_username = "testuser1";
-    char* password = "<PASSWORD>"; //replace with actual password or test will fail. 
+    char* password = "l0ngp@ssWord"; //replace with actual password or test will fail.
     char* mysql_hostname = "asec-cmdenc-dev2.jpl.nasa.gov";
     char* mysql_database = NULL;
     uint16_t mysql_port = 3306;
-    /*encrypted_connection = 1 means we want to attempt a TLS encrypted connection.*/
-    uint8_t encrypted_connection = 1;
     char* ssl_cert = "/etc/pki/tls/certs/ammos-server-cert.pem";
     char* ssl_key = "/etc/pki/tls/private/ammos-server-key.pem";
     char* ssl_ca = "/etc/pki/tls/certs/ammos-ca-bundle.crt";
     char* ssl_capath = "/etc/pki/tls/certs/";
+    uint8_t verify_server = 0;
+    char* client_key_password = NULL;
+
     /*set configuration params*/
-    status = Crypto_Config_MariaDB(mysql_username, password, mysql_hostname, mysql_database, mysql_port, encrypted_connection, ssl_cert, ssl_key, ssl_ca, ssl_capath);
+    status = Crypto_Config_MariaDB(mysql_username, password, mysql_hostname, mysql_database, mysql_port, ssl_cert, ssl_key, ssl_ca, ssl_capath,verify_server,client_key_password, CRYPTO_TRUE);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     /*Prepare SADB type from config*/
     status = Crypto_Init_Unit_Test_For_DB();
