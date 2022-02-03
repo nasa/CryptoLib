@@ -29,7 +29,7 @@
  * @param ingest: uint8_t*
  * return int32: count
  **/
-int32_t Crypto_MC_ping(uint8_t *ingest)
+int32_t Crypto_MC_ping(uint8_t* ingest)
 {
     int count = 0;
 
@@ -46,7 +46,7 @@ int32_t Crypto_MC_ping(uint8_t *ingest)
  * @param ingest: uint8_t*
  * @return int32: count
  **/
-int32_t Crypto_MC_status(uint8_t *ingest)
+int32_t Crypto_MC_status(uint8_t* ingest)
 {
     if(ingest == NULL) return CRYPTO_LIB_ERROR;
     int count = 0;
@@ -77,10 +77,12 @@ int32_t Crypto_MC_status(uint8_t *ingest)
  * @param ingest: uint8_t*
  * @return int32: Count
  **/
-int32_t Crypto_MC_dump(uint8_t *ingest)
+int32_t Crypto_MC_dump(uint8_t* ingest)
 {
     if(ingest == NULL) return CRYPTO_LIB_ERROR;
     int count = 0;
+    int x;
+    int y;
 
     // Prepare for Reply
     sdls_frame.pdu.pdu_len = (log_count * 6); // SDLS_MC_DUMP_RPLY_SIZE
@@ -88,12 +90,12 @@ int32_t Crypto_MC_dump(uint8_t *ingest)
     count = Crypto_Prep_Reply(ingest, 128);
 
     // PDU
-    for (int x = 0; x < log_count; x++)
+    for (x = 0; x < log_count; x++)
     {
         ingest[count++] = mc_log.blk[x].emt;
         // ingest[count++] = (mc_log.blk[x].em_len & 0xFF00) >> 8;
         ingest[count++] = (mc_log.blk[x].em_len & 0x00FF);
-        for (int y = 0; y < EMV_SIZE; y++)
+        for (y = 0; y < EMV_SIZE; y++)
         {
             ingest[count++] = mc_log.blk[x].emv[y];
         }
@@ -113,17 +115,19 @@ int32_t Crypto_MC_dump(uint8_t *ingest)
  * @param ingest: uint8_t*
  * @return int32: count
  **/
-int32_t Crypto_MC_erase(uint8_t *ingest)
+int32_t Crypto_MC_erase(uint8_t* ingest)
 {
     if(ingest == NULL) return CRYPTO_LIB_ERROR;
     int count = 0;
+    int x;
+    int y;
 
     // Zero Logs
-    for (int x = 0; x < LOG_SIZE; x++)
+    for (x = 0; x < LOG_SIZE; x++)
     {
         mc_log.blk[x].emt = 0;
         mc_log.blk[x].em_len = 0;
-        for (int y = 0; y < EMV_SIZE; y++)
+        for (y = 0; y < EMV_SIZE; y++)
         {
             mc_log.blk[x].emv[y] = 0;
         }
@@ -153,7 +157,7 @@ int32_t Crypto_MC_erase(uint8_t *ingest)
  * @param ingest: uint8_t*
  * @return int32: Count
  **/
-int32_t Crypto_MC_selftest(uint8_t *ingest)
+int32_t Crypto_MC_selftest(uint8_t* ingest)
 {
     if(ingest == NULL) return CRYPTO_LIB_ERROR;
     uint8_t count = 0;
@@ -176,12 +180,13 @@ int32_t Crypto_MC_selftest(uint8_t *ingest)
  * @param ingest: uint8_t*
  * @return int32: Count
  **/
-int32_t Crypto_SA_readARSN(uint8_t *ingest)
+int32_t Crypto_SA_readARSN(uint8_t* ingest)
 {
     if(ingest == NULL) return CRYPTO_LIB_ERROR;
     uint8_t count = 0;
     uint16_t spi = 0x0000;
-    SecurityAssociation_t *sa_ptr;
+    SecurityAssociation_t* sa_ptr;
+    int x;
 
     // Read ingest
     spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
@@ -202,7 +207,7 @@ int32_t Crypto_SA_readARSN(uint8_t *ingest)
     }
     if (sa_ptr->shivf_len > 0)
     { // Set IV - authenticated encryption
-        for (int x = 0; x < sa_ptr->shivf_len - 1; x++)
+        for (x = 0; x < sa_ptr->shivf_len - 1; x++)
         {
             if(sa_ptr->iv == NULL)
             {
@@ -231,7 +236,7 @@ int32_t Crypto_SA_readARSN(uint8_t *ingest)
     if (sa_ptr->shivf_len > 0)
     {
         printf("ARSN = 0x");
-        for (int x = 0; x < sa_ptr->shivf_len; x++)
+        for (x = 0; x < sa_ptr->shivf_len; x++)
         {
             printf("%02x", *(sa_ptr->iv + x));
         }

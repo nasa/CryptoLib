@@ -51,13 +51,13 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_APPLY_SEC_ENC_AND_AUTH)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
     int32_t status = Crypto_Init();
 
-    char *raw_tc_jpl_mmt_scid44_vcid1= "202c0408000001bd37";
-    char *raw_tc_jpl_mmt_scid44_vcid1_expect = NULL;
+    char* raw_tc_jpl_mmt_scid44_vcid1= "202c0408000001bd37";
+    char* raw_tc_jpl_mmt_scid44_vcid1_expect = NULL;
     int raw_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
 
     hex_conversion(raw_tc_jpl_mmt_scid44_vcid1, &raw_tc_jpl_mmt_scid44_vcid1_expect, &raw_tc_jpl_mmt_scid44_vcid1_expect_len);
 
-    uint8_t *ptr_enc_frame = NULL;
+    uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
 
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -69,7 +69,7 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_APPLY_SEC_ENC_AND_AUTH)
     }
     printf("\n");
 
-    status = Crypto_TC_ApplySecurity((uint8_t *)raw_tc_jpl_mmt_scid44_vcid1_expect, raw_tc_jpl_mmt_scid44_vcid1_expect_len, &ptr_enc_frame, &enc_frame_len);
+    status = Crypto_TC_ApplySecurity((uint8_t* )raw_tc_jpl_mmt_scid44_vcid1_expect, raw_tc_jpl_mmt_scid44_vcid1_expect_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     printf("Frame after encryption:\n");
     for (int i=0; i<enc_frame_len; i++)
@@ -102,13 +102,13 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_APPLY_SEC_ENC_AND_AUTH)
 //    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
 //    int32_t status = Crypto_Init();
 //
-//    char *raw_tc_jpl_mmt_scid44_vcid1= "202c0808000001361c";
-//    char *raw_tc_jpl_mmt_scid44_vcid1_expect = NULL;
+//    char* raw_tc_jpl_mmt_scid44_vcid1= "202c0808000001361c";
+//    char* raw_tc_jpl_mmt_scid44_vcid1_expect = NULL;
 //    int raw_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
 //
 //    hex_conversion(raw_tc_jpl_mmt_scid44_vcid1, &raw_tc_jpl_mmt_scid44_vcid1_expect, &raw_tc_jpl_mmt_scid44_vcid1_expect_len);
 //
-//    uint8_t *ptr_enc_frame = NULL;
+//    uint8_t* ptr_enc_frame = NULL;
 //    uint16_t enc_frame_len = 0;
 //
 //    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -120,7 +120,7 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_APPLY_SEC_ENC_AND_AUTH)
 //    }
 //    printf("\n");
 //
-//    status = Crypto_TC_ApplySecurity((uint8_t *)raw_tc_jpl_mmt_scid44_vcid1_expect, raw_tc_jpl_mmt_scid44_vcid1_expect_len, &ptr_enc_frame, &enc_frame_len);
+//    status = Crypto_TC_ApplySecurity((uint8_t* )raw_tc_jpl_mmt_scid44_vcid1_expect, raw_tc_jpl_mmt_scid44_vcid1_expect_len, &ptr_enc_frame, &enc_frame_len);
 //    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 //    printf("Frame after encryption:\n");
 //    for (int i=0; i<enc_frame_len; i++)
@@ -158,13 +158,13 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_APPLY_SEC_AUTH_ONLY)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
     int32_t status = Crypto_Init();
 
-    char *raw_tc_jpl_mmt_scid44_vcid1= "202c0C08000001bf1a";
-    char *raw_tc_jpl_mmt_scid44_vcid1_expect = NULL;
+    char* raw_tc_jpl_mmt_scid44_vcid1= "202c0C08000001bf1a";
+    char* raw_tc_jpl_mmt_scid44_vcid1_expect = NULL;
     int raw_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
 
     hex_conversion(raw_tc_jpl_mmt_scid44_vcid1, &raw_tc_jpl_mmt_scid44_vcid1_expect, &raw_tc_jpl_mmt_scid44_vcid1_expect_len);
 
-    uint8_t *ptr_enc_frame = NULL;
+    uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
 
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -176,7 +176,7 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_APPLY_SEC_AUTH_ONLY)
     }
     printf("\n");
 
-    status = Crypto_TC_ApplySecurity((uint8_t *)raw_tc_jpl_mmt_scid44_vcid1_expect, raw_tc_jpl_mmt_scid44_vcid1_expect_len, &ptr_enc_frame, &enc_frame_len);
+    status = Crypto_TC_ApplySecurity((uint8_t* )raw_tc_jpl_mmt_scid44_vcid1_expect, raw_tc_jpl_mmt_scid44_vcid1_expect_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     printf("Frame after encryption:\n");
     for (int i=0; i<enc_frame_len; i++)
@@ -215,8 +215,8 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_ENC_AND_AUTH)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
     int32_t status = Crypto_Init();
 
-    char *enc_tc_jpl_mmt_scid44_vcid1= "202C0426000002000000000000000000000001669C5639DCCFEA8C6CE33230EE2E7065496367CC";
-    char *enc_tc_jpl_mmt_scid44_vcid1_expect = NULL;
+    char* enc_tc_jpl_mmt_scid44_vcid1= "202C0426000002000000000000000000000001669C5639DCCFEA8C6CE33230EE2E7065496367CC";
+    char* enc_tc_jpl_mmt_scid44_vcid1_expect = NULL;
     int enc_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
 
     // Data=0001
@@ -224,12 +224,12 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_ENC_AND_AUTH)
     // AAD=00000000000000000000000000000000000000
 
 
-    TC_t *tc_processed_frame;
+    TC_t* tc_processed_frame;
     tc_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
 
     hex_conversion(enc_tc_jpl_mmt_scid44_vcid1, &enc_tc_jpl_mmt_scid44_vcid1_expect, &enc_tc_jpl_mmt_scid44_vcid1_expect_len);
 
-    uint8_t *ptr_enc_frame = NULL;
+    uint8_t* ptr_enc_frame = NULL;
 
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
@@ -240,7 +240,7 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_ENC_AND_AUTH)
     }
     printf("\n");
 
-    status = Crypto_TC_ProcessSecurity((uint8_t *)enc_tc_jpl_mmt_scid44_vcid1_expect, &enc_tc_jpl_mmt_scid44_vcid1_expect_len, tc_processed_frame);
+    status = Crypto_TC_ProcessSecurity((uint8_t* )enc_tc_jpl_mmt_scid44_vcid1_expect, &enc_tc_jpl_mmt_scid44_vcid1_expect_len, tc_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     printf("Processed PDU:\n");
     for (int i=0; i<tc_processed_frame->tc_pdu_len; i++)
@@ -275,18 +275,18 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_ENC_AND_AUTH)
 //    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
 //    int32_t status = Crypto_Init();
 //
-//    char *enc_tc_jpl_mmt_scid44_vcid1= "202C0816000003000000000000000000000001669CD238";
-//    char *enc_tc_jpl_mmt_scid44_vcid1_expect = NULL;
+//    char* enc_tc_jpl_mmt_scid44_vcid1= "202C0816000003000000000000000000000001669CD238";
+//    char* enc_tc_jpl_mmt_scid44_vcid1_expect = NULL;
 //    int enc_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
 //
 //    // IV = 000000000000000000000001
 //
-//    TC_t *tc_processed_frame;
+//    TC_t* tc_processed_frame;
 //    tc_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
 //
 //    hex_conversion(enc_tc_jpl_mmt_scid44_vcid1, &enc_tc_jpl_mmt_scid44_vcid1_expect, &enc_tc_jpl_mmt_scid44_vcid1_expect_len);
 //
-//    uint8_t *ptr_enc_frame = NULL;
+//    uint8_t* ptr_enc_frame = NULL;
 //
 //    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 //
@@ -297,7 +297,7 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_ENC_AND_AUTH)
 //    }
 //    printf("\n");
 //
-//    status = Crypto_TC_ProcessSecurity((uint8_t *)enc_tc_jpl_mmt_scid44_vcid1_expect, &enc_tc_jpl_mmt_scid44_vcid1_expect_len, tc_processed_frame);
+//    status = Crypto_TC_ProcessSecurity((uint8_t* )enc_tc_jpl_mmt_scid44_vcid1_expect, &enc_tc_jpl_mmt_scid44_vcid1_expect_len, tc_processed_frame);
 //    // ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 //    // Expected to fail -- KMC Crypto Service doesn't support AES/GCM with no AAD/MAC
 //    ASSERT_EQ(CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE, status);
@@ -341,8 +341,8 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_AUTH_ONLY)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
     int32_t status = Crypto_Init();
 
-    char *enc_tc_jpl_mmt_scid44_vcid1= "202C0C2600000400000000000000000000000100016E2051F96CAB186BCE364A65AF599AE52F38";
-    char *enc_tc_jpl_mmt_scid44_vcid1_expect = NULL;
+    char* enc_tc_jpl_mmt_scid44_vcid1= "202C0C2600000400000000000000000000000100016E2051F96CAB186BCE364A65AF599AE52F38";
+    char* enc_tc_jpl_mmt_scid44_vcid1_expect = NULL;
     int enc_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
 
     // Data=0001
@@ -350,12 +350,12 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_AUTH_ONLY)
     // AAD=00000000000000000000000000000000000000
 
 
-    TC_t *tc_processed_frame;
+    TC_t* tc_processed_frame;
     tc_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
 
     hex_conversion(enc_tc_jpl_mmt_scid44_vcid1, &enc_tc_jpl_mmt_scid44_vcid1_expect, &enc_tc_jpl_mmt_scid44_vcid1_expect_len);
 
-    uint8_t *ptr_enc_frame = NULL;
+    uint8_t* ptr_enc_frame = NULL;
 
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
@@ -366,7 +366,7 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_AUTH_ONLY)
     }
     printf("\n");
 
-    status = Crypto_TC_ProcessSecurity((uint8_t *)enc_tc_jpl_mmt_scid44_vcid1_expect, &enc_tc_jpl_mmt_scid44_vcid1_expect_len, tc_processed_frame);
+    status = Crypto_TC_ProcessSecurity((uint8_t* )enc_tc_jpl_mmt_scid44_vcid1_expect, &enc_tc_jpl_mmt_scid44_vcid1_expect_len, tc_processed_frame);
 
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Expected to fail -- KMC doesn't support 0 cipher text input for decrypt function.

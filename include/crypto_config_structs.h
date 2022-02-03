@@ -126,7 +126,7 @@ struct _GvcidManagedParameters_t
     uint8_t vcid : 6;   // Virtual Channel ID
     TcFecfPresent has_fecf;
     TcSegmentHdrsPresent has_segmentation_hdr;
-    GvcidManagedParameters_t *next; // Will be a list of managed parameters!
+    GvcidManagedParameters_t* next; // Will be a list of managed parameters!
 };
 #define GVCID_MANAGED_PARAMETERS_SIZE (sizeof(GvcidManagedParameters_t))
 
@@ -135,10 +135,10 @@ struct _GvcidManagedParameters_t
 */
 typedef struct
 {
-    char *mysql_username;
-    char *mysql_password;
-    char *mysql_hostname;
-    char *mysql_database;
+    char* mysql_username;
+    char* mysql_password;
+    char* mysql_hostname;
+    char* mysql_database;
     uint16_t mysql_port;
     char* mysql_mtls_cert;
     char* mysql_mtls_key;

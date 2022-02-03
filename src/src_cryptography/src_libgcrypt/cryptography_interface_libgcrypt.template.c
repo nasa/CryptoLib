@@ -546,6 +546,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
     gcry_mac_hd_t tmp_mac_hd;
     int32_t status = CRYPTO_LIB_SUCCESS;
     uint8_t* key_ptr = key;
+
     if(sa_ptr != NULL) //Using SA key pointer
     {
         key_ptr = &(ek_ring[sa_ptr->ekid].value[0]);
@@ -576,8 +577,9 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
 
     gcry_error = gcry_mac_setkey(tmp_mac_hd, key_ptr, len_key);
 #ifdef SA_DEBUG
+    uint32_t i;
     printf(KYEL "Auth MAC Printing Key:\n\t");
-    for (uint32_t i = 0; i < len_key; i++)
+    for (i = 0; i < len_key; i++)
     {
         printf("%02X", *(key_ptr + i));
     }
@@ -618,7 +620,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
 
     gcry_error = gcry_mac_read(tmp_mac_hd,
                                mac,      // tag output
-                               (size_t *)&mac_size // tag size // TODO - use sa_ptr->abm_len instead of hardcoded mac size?
+                               (size_t* )&mac_size // tag size // TODO - use sa_ptr->abm_len instead of hardcoded mac size?
     );
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
@@ -673,8 +675,9 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
 
     gcry_error = gcry_mac_setkey(tmp_mac_hd, key_ptr, len_key);
 #ifdef SA_DEBUG
+    uint32_t i;
     printf(KYEL "Validate MAC Printing Key:\n\t");
-    for (uint32_t i = 0; i < len_key; i++)
+    for (i = 0; i < len_key; i++)
     {
         printf("%02X", *(key_ptr + i));
     }
@@ -754,8 +757,9 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     }
     gcry_error = gcry_cipher_setkey(tmp_hd, key_ptr, len_key);
 #ifdef SA_DEBUG
+    uint32_t i;
     printf(KYEL "AEAD MAC: Printing Key:\n\t");
-    for (uint32_t i = 0; i < len_key; i++)
+    for (i = 0; i < len_key; i++)
     {
         printf("%02X", *(key_ptr + i));
     }
@@ -779,11 +783,12 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     }
 
 #ifdef TC_DEBUG
+    size_t j;
     printf("Input payload length is %ld\n", len_data_in);
     printf(KYEL "Printing Frame Data prior to encryption:\n\t");
-    for (uint32_t i = 0; i < len_data_in; i++)
+    for (j = 0; j < len_data_in; j++)
     {
-        printf("%02X", *(data_in + i));
+        printf("%02X", *(data_in + j));
     }
     printf("\n");
 #endif
@@ -835,9 +840,9 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
 #ifdef TC_DEBUG
     printf("Output payload length is %ld\n", len_data_out);
     printf(KYEL "Printing TC Frame Data after encryption:\n\t");
-    for (uint32_t i = 0; i < len_data_out; i++)
+    for (j = 0; j < len_data_out; j++)
     {
-        printf("%02X", *(data_out + i));
+        printf("%02X", *(data_out + j));
     }
     printf("\n");
 #endif
@@ -861,9 +866,9 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
 
 #ifdef MAC_DEBUG
         printf("MAC = 0x");
-        for (uint32_t x = 0; x < mac_size; x++)
+        for (i = 0; i < mac_size; i++)
         {
-            printf("%02x", (uint8_t)mac[x]);
+            printf("%02x", (uint8_t)mac[i]);
         }
         printf("\n");
 #endif

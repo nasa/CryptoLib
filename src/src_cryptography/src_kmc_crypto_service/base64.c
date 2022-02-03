@@ -67,18 +67,18 @@ static const uint8_t base64DecTable[128] =
  * @param[out] outputLen Length of the encoded string (optional parameter)
  **/
 
-void base64Encode(const void *input, size_t inputLen, char_t *output,
-                  size_t *outputLen)
+void base64Encode(const void* input, size_t inputLen, char_t* output,
+                  size_t* outputLen)
 {
     size_t n;
     uint8_t a;
     uint8_t b;
     uint8_t c;
     uint8_t d;
-    const uint8_t *p;
+    const uint8_t* p;
 
     //Point to the first byte of the input data
-    p = (const uint8_t *) input;
+    p = (const uint8_t* ) input;
 
     //Divide the input stream into blocks of 3 bytes
     n = inputLen / 3;
@@ -183,8 +183,8 @@ void base64Encode(const void *input, size_t inputLen, char_t *output,
  * @return Error code
  **/
 
-int32_t base64Decode(const char_t *input, size_t inputLen, void *output,
-                     size_t *outputLen)
+int32_t base64Decode(const char_t* input, size_t inputLen, void* output,
+                     size_t* outputLen)
 {
     int32_t error;
     uint32_t value;
@@ -193,7 +193,7 @@ int32_t base64Decode(const char_t *input, size_t inputLen, void *output,
     size_t j;
     size_t n;
     size_t padLen;
-    uint8_t *p;
+    uint8_t* p;
 
     //Check parameters
     if(input == NULL && inputLen != 0)
@@ -205,7 +205,7 @@ int32_t base64Decode(const char_t *input, size_t inputLen, void *output,
     error = NO_ERROR;
 
     //Point to the buffer where to write the decoded data
-    p = (uint8_t *) output;
+    p = (uint8_t* ) output;
 
     //Initialize variables
     j = 0;

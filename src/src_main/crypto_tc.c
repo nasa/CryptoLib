@@ -32,22 +32,23 @@
  * @param p_enc_frame_len: uint16
  * @return int32: Success/Failure
  **/
-int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_frame_length, uint8_t **pp_in_frame,
-                                uint16_t *p_enc_frame_len)
+int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_frame_length, uint8_t** pp_in_frame,
+                                uint16_t* p_enc_frame_len)
 {
     // Local Variables
     int32_t status = CRYPTO_LIB_SUCCESS;
     TC_FramePrimaryHeader_t temp_tc_header;
-    SecurityAssociation_t *sa_ptr = NULL;
-    uint8_t *p_new_enc_frame = NULL;
+    SecurityAssociation_t* sa_ptr = NULL;
+    uint8_t* p_new_enc_frame = NULL;
     uint8_t sa_service_type = -1;
     uint16_t mac_loc = 0;
     uint16_t tf_payload_len = 0x0000;
     uint16_t new_fecf = 0x0000;
-    uint8_t *aad = NULL;
+    uint8_t* aad = NULL;
     uint16_t new_enc_frame_header_field_length = 0;
     uint32_t encryption_cipher;
     uint8_t ecs_is_aead_algorithm;
+    int i;
 
 #ifdef DEBUG
     printf(KYEL "\n----- Crypto_TC_ApplySecurity START -----\n" RESET);
@@ -63,9 +64,9 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
 #ifdef DEBUG
     printf("%d TF Bytes received\n", in_frame_length);
     printf("DEBUG - ");
-    for (int i = 0; i < in_frame_length; i++)
+    for (i = 0; i < in_frame_length; i++)
     {
-        printf("%02X", ((uint8_t *)&*p_in_frame)[i]);
+        printf("%02X", ((uint8_t* )&*p_in_frame)[i]);
     }
     printf("\nPrinted %d bytes\n", in_frame_length);
 #else
@@ -249,7 +250,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
         }
 
         // Accio buffer
-        p_new_enc_frame = (uint8_t *)malloc((*p_enc_frame_len) * sizeof(uint8_t));
+        p_new_enc_frame = (uint8_t* )malloc((*p_enc_frame_len) * sizeof(uint8_t));
         if (!p_new_enc_frame)
         {
             printf(KRED "Error: Malloc for encrypted output buffer failed! \n" RESET);
@@ -289,7 +290,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
 
 #ifdef TC_DEBUG
         printf(KYEL "Printing updated TF Header:\n\t");
-        for (int i = 0; i < TC_FRAME_HEADER_SIZE; i++)
+        for (i = 0; i < TC_FRAME_HEADER_SIZE; i++)
         {
             printf("%02X", *(p_new_enc_frame + i));
         }
@@ -322,14 +323,14 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
         {
 #ifdef SA_DEBUG
             printf(KYEL "Using IV value:\n\t");
-            for (int i = 0; i < sa_ptr->shivf_len; i++)
+            for (i = 0; i < sa_ptr->shivf_len; i++)
             {
                 printf("%02x", *(sa_ptr->iv + i));
             }
             printf("\n" RESET);
 #endif
 
-            for (int i = 0; i < sa_ptr->shivf_len; i++)
+            for (i = 0; i < sa_ptr->shivf_len; i++)
             {
                 // Copy in IV from SA
                 *(p_new_enc_frame + index) = *(sa_ptr->iv + i);
@@ -346,7 +347,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
         */
         // TODO: Workout ARC vs SN and when they may
         // or may not be the same or different field 
-        for (int i = 0; i < sa_ptr->shsnf_len; i++)
+        for (i = 0; i < sa_ptr->shsnf_len; i++)
         {
             // Copy in ARC from SA
             *(p_new_enc_frame + index) = *(sa_ptr->arc + i);
@@ -361,7 +362,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
         */
         // TODO: Revisit this
         // TODO: Likely SA API Call
-        for (int i = 0; i < sa_ptr->shplf_len; i++)
+        for (i = 0; i < sa_ptr->shplf_len; i++)
         {
             /* 4.1.1.5.2 The Pad Length field shall contain the count of fill bytes used in the
             ** cryptographic process, consisting of an integral number of octets. - CCSDS 3550b1
@@ -397,7 +398,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
         ** CCSDS 3550b1 4.1.2.3
         */
         // By leaving MAC as zeros, can use index for encryption output
-        // for (int i=0; i < temp_SA.stmacf_len; i++)
+        // for (i=0; i < temp_SA.stmacf_len; i++)
         // {
         //     // Temp fill MAC
         //     *(p_new_enc_frame + index) = 0x00;
@@ -508,13 +509,13 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
             if(sa_ptr->arc_len > 0){ Crypto_increment(sa_ptr->arc, sa_ptr->arc_len); }
 #ifdef SA_DEBUG
             printf(KYEL "Next IV value is:\n\t");
-            for (int i = 0; i < sa_ptr->shivf_len; i++)
+            for (i = 0; i < sa_ptr->shivf_len; i++)
             {
                 printf("%02x", *(sa_ptr->iv + i));
             }
             printf("\n" RESET);
             printf(KYEL "Next ARC value is:\n\t");
-            for (int i = 0; i < sa_ptr->arc_len; i++)
+            for (i = 0; i < sa_ptr->arc_len; i++)
             {
                 printf("%02x", *(sa_ptr->arc + i));
             }
@@ -548,7 +549,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
 
 #ifdef TC_DEBUG
         printf(KYEL "Printing new TC Frame:\n\t");
-        for (int i = 0; i < *p_enc_frame_len; i++)
+        for (i = 0; i < *p_enc_frame_len; i++)
         {
             printf("%02X", *(p_new_enc_frame + i));
         }
@@ -575,14 +576,14 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
  * @param tc_sdls_processed_frame: TC_t*
  * @return int32: Success/Failure
  **/
-int32_t Crypto_TC_ProcessSecurity(uint8_t *ingest, int *len_ingest, TC_t *tc_sdls_processed_frame)
+int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdls_processed_frame)
 // Loads the ingest frame into the global tc_frame while performing decryption
 {
     // Local Variables
     int32_t status = CRYPTO_LIB_SUCCESS;
-    SecurityAssociation_t *sa_ptr = NULL;
+    SecurityAssociation_t* sa_ptr = NULL;
     uint8_t sa_service_type = -1;
-    uint8_t *aad = NULL;
+    uint8_t* aad = NULL;
     uint16_t aad_len;
     uint32_t encryption_cipher;
     uint8_t ecs_is_aead_algorithm = -1;
@@ -595,6 +596,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t *ingest, int *len_ingest, TC_t *tc_sdl
     }
 
 #ifdef DEBUG
+    int i;
     printf(KYEL "\n----- Crypto_TC_ProcessSecurity START -----\n" RESET);
 #endif
 
@@ -785,13 +787,13 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t *ingest, int *len_ingest, TC_t *tc_sdl
                                        sa_ptr->arcw);
 #ifdef DEBUG
                 printf("Received IV is\n\t");
-                for (int i = 0; i < sa_ptr->shivf_len; i++)
-                // for(int i=0; i<IV_SIZE; i++)
+                for (i = 0; i < sa_ptr->shivf_len; i++)
+                // for(i=0; i<IV_SIZE; i++)
                 {
                     printf("%02x", *(tc_sdls_processed_frame->tc_sec_header.iv + i));
                 }
                 printf("\nSA IV is\n\t");
-                for (int i = 0; i < sa_ptr->shivf_len; i++)
+                for (i = 0; i < sa_ptr->shivf_len; i++)
                 {
                     printf("%02x", *(sa_ptr->iv + i));
                 }
@@ -897,7 +899,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t *ingest, int *len_ingest, TC_t *tc_sdl
  * @return int32, Length of TCPayload
  **/
 /*
-int32_t Crypto_Get_tcPayloadLength(TC_t* tc_frame, SecurityAssociation_t *sa_ptr)
+int32_t Crypto_Get_tcPayloadLength(TC_t* tc_frame, SecurityAssociation_t* sa_ptr)
 {
     int tf_hdr = 5;
     int seg_hdr = 0;if(current_managed_parameters->has_segmentation_hdr==TC_HAS_SEGMENT_HDRS){seg_hdr=1;}
@@ -930,18 +932,19 @@ fecf))); #endif
  * @param len_aad: uint16_t
  * @param abm_buffer: uint8_t*
  **/
-uint8_t *Crypto_Prepare_TC_AAD(uint8_t *buffer, uint16_t len_aad, uint8_t *abm_buffer)
+uint8_t* Crypto_Prepare_TC_AAD(uint8_t* buffer, uint16_t len_aad, uint8_t* abm_buffer)
 {
-    uint8_t *aad = (uint8_t *)calloc(1, len_aad * sizeof(uint8_t));
+    uint8_t* aad = (uint8_t* )calloc(1, len_aad * sizeof(uint8_t));
+    int i;
 
-    for (int i = 0; i < len_aad; i++)
+    for (i = 0; i < len_aad; i++)
     {
         aad[i] = buffer[i] & abm_buffer[i];
     }
 
 #ifdef MAC_DEBUG
     printf(KYEL "AAD before ABM Bitmask:\n\t");
-    for (int i = 0; i < len_aad; i++)
+    for (i = 0; i < len_aad; i++)
     {
         printf("%02x", buffer[i]);
     }
@@ -951,7 +954,7 @@ uint8_t *Crypto_Prepare_TC_AAD(uint8_t *buffer, uint16_t len_aad, uint8_t *abm_b
 #ifdef MAC_DEBUG
     printf(KYEL "Preparing AAD:\n");
     printf("\tUsing AAD Length of %d\n\t", len_aad);
-    for (int i = 0; i < len_aad; i++)
+    for (i = 0; i < len_aad; i++)
     {
         printf("%02x", aad[i]);
     }

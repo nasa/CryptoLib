@@ -86,7 +86,7 @@ uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
  * @param length: int
  * @return int32: Success/Failure
  **/
-int32_t Crypto_increment(uint8_t *num, int length)
+int32_t Crypto_increment(uint8_t* num, int length)
 {
     int i;
     /* go from right (least significant) to left (most signifcant) */
@@ -113,19 +113,21 @@ int32_t Crypto_increment(uint8_t *num, int length)
  * @param window: int
  * @return int32: Success/Failure
  **/
-int32_t Crypto_window(uint8_t *actual, uint8_t *expected, int length, int window)
+int32_t Crypto_window(uint8_t* actual, uint8_t* expected, int length, int window)
 {
     int status = CRYPTO_LIB_ERR_BAD_ANTIREPLAY_WINDOW;
     int result = 0;
     uint8_t temp[length];
+    int i;
+    int j;
 
     memcpy(temp, expected, length);
 
-    for (int i = 0; i < window; i++)
+    for (i = 0; i < window; i++)
     {
         result = 0;
         /* go from right (least significant) to left (most signifcant) */
-        for (int j = length - 1; j >= 0; --j)
+        for (j = length - 1; j >= 0; --j)
         {
             if (actual[j] == temp[j])
             {
@@ -150,11 +152,12 @@ int32_t Crypto_window(uint8_t *actual, uint8_t *expected, int length, int window
  * @return int32: Success/Failure
  **/
 /*
-int32_t Crypto_compare_less_equal(uint8_t *actual, uint8_t *expected, int length)
+int32_t Crypto_compare_less_equal(uint8_t* actual, uint8_t* expected, int length)
 {
     int status = CRYPTO_LIB_ERROR;
+    int i;
 
-    for(int i = 0; i < length - 1; i++)
+    for(i = 0; i < length - 1; i++)
     {
         if (actual[i] > expected[i])
         {
@@ -178,7 +181,7 @@ int32_t Crypto_compare_less_equal(uint8_t *actual, uint8_t *expected, int length
  * @param appID: uint8
  * @return uint8: Count
  **/
-uint8_t Crypto_Prep_Reply(uint8_t *ingest, uint8_t appID)
+uint8_t Crypto_Prep_Reply(uint8_t* ingest, uint8_t appID)
 {
     uint8_t count = 0;
     if(ingest == NULL) return count;
@@ -268,16 +271,18 @@ tc_frame->tc_sec_trailer.fecf); #endif result = CRYPTO_LIB_ERROR;
  * @param len_ingest: int
  * @return uint16: FECF
  **/
-uint16_t Crypto_Calc_FECF(uint8_t *ingest, int len_ingest)
+uint16_t Crypto_Calc_FECF(uint8_t* ingest, int len_ingest)
 {
     uint16_t fecf = 0xFFFF;
     uint16_t poly = 0x1021; // TODO: This polynomial is (CRC-CCITT) for ESA testing, may not match standard protocol
     uint8_t bit;
     uint8_t c15;
+    int i;
+    int j;
 
-    for (int i = 0; i < len_ingest; i++)
+    for (i = 0; i < len_ingest; i++)
     { // Byte Logic
-        for (int j = 0; j < 8; j++)
+        for (j = 0; j < 8; j++)
         { // Bit Logic
             bit = ((ingest[i] >> (7 - j) & 1) == 1);
             c15 = ((fecf >> 15 & 1) == 1);
@@ -295,10 +300,11 @@ uint16_t Crypto_Calc_FECF(uint8_t *ingest, int len_ingest)
     }
 
 #ifdef FECF_DEBUG
+    int x;
     printf(KCYN "Crypto_Calc_FECF: 0x%02x%02x%02x%02x%02x, len_ingest = %d\n" RESET, ingest[0], ingest[1], ingest[2],
            ingest[3], ingest[4], len_ingest);
     printf(KCYN "0x" RESET);
-    for (int x = 0; x < len_ingest; x++)
+    for (x = 0; x < len_ingest; x++)
     {
         printf(KCYN "%02x" RESET, (uint8_t) * (ingest + x));
     }
@@ -316,7 +322,7 @@ uint16_t Crypto_Calc_FECF(uint8_t *ingest, int len_ingest)
  * @param size: int
  * @return uint16: CRC
  **/
-uint16_t Crypto_Calc_CRC16(uint8_t *data, int size)
+uint16_t Crypto_Calc_CRC16(uint8_t* data, int size)
 { // Code provided by ESA
     uint16_t crc = 0xFFFF;
 
@@ -338,7 +344,7 @@ uint16_t Crypto_Calc_CRC16(uint8_t *data, int size)
  * @param tc_frame: TC_t*
  * @return int32: Success/Failure
  **/
-int32_t Crypto_PDU(uint8_t *ingest, TC_t *tc_frame)
+int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
@@ -582,10 +588,11 @@ int32_t Crypto_PDU(uint8_t *ingest, TC_t *tc_frame)
     }
 
 #ifdef CCSDS_DEBUG
+    int x;
     if ((status > 0) && (ingest != NULL))
     {
         printf(KMAG "CCSDS message put on software bus: 0x" RESET);
-        for (int x = 0; x < status; x++)
+        for (x = 0; x < status; x++)
         {
             printf(KMAG "%02x" RESET, (uint8_t)ingest[x]);
         }
@@ -606,8 +613,8 @@ int32_t Crypto_PDU(uint8_t *ingest, TC_t *tc_frame)
  * @return int32: Success/Failure
  **/
 int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
-                                                GvcidManagedParameters_t *managed_parameters_in,
-                                                GvcidManagedParameters_t **managed_parameters_out)
+                                                GvcidManagedParameters_t* managed_parameters_in,
+                                                GvcidManagedParameters_t** managed_parameters_out)
 {
     int32_t status = MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND;
 
@@ -639,7 +646,7 @@ int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uin
  * Managed parameters are expected to live the duration of the program, this may not be necessary.
  * @param managed_parameters: GvcidManagedParameters_t*
  **/
-void Crypto_Free_Managed_Parameters(GvcidManagedParameters_t *managed_parameters)
+void Crypto_Free_Managed_Parameters(GvcidManagedParameters_t* managed_parameters)
 {
     if (managed_parameters == NULL)
     {
@@ -657,10 +664,12 @@ void Crypto_Free_Managed_Parameters(GvcidManagedParameters_t *managed_parameters
  * @param tc_sdls_processed_frame: TC_t*
  * @param ingest: uint8_t*
  * @note TODO - Actually update based on variable config
- * */
-int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uint8_t *ingest)
+ **/
+int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, uint8_t* ingest)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
+    int x;
+
     if (crypto_config->has_pus_hdr == TC_HAS_PUS_HDR)
     {
         if ((tc_sdls_processed_frame->tc_pdu[0] == 0x18) && (tc_sdls_processed_frame->tc_pdu[1] == 0x80))
@@ -695,7 +704,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
             sdls_frame.pdu.sg = (tc_sdls_processed_frame->tc_pdu[10] & 0x30) >> 4;
             sdls_frame.pdu.pid = (tc_sdls_processed_frame->tc_pdu[10] & 0x0F);
             sdls_frame.pdu.pdu_len = (tc_sdls_processed_frame->tc_pdu[11] << 8) | tc_sdls_processed_frame->tc_pdu[12];
-            for (int x = 13; x < (13 + sdls_frame.hdr.pkt_length); x++)
+            for (x = 13; x < (13 + sdls_frame.hdr.pkt_length); x++)
             {
                 sdls_frame.pdu.data[x - 13] = tc_sdls_processed_frame->tc_pdu[x];
             }
@@ -720,7 +729,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
         sdls_frame.pdu.sg = (tc_sdls_processed_frame->tc_pdu[0] & 0x30) >> 4;
         sdls_frame.pdu.pid = (tc_sdls_processed_frame->tc_pdu[0] & 0x0F);
         sdls_frame.pdu.pdu_len = (tc_sdls_processed_frame->tc_pdu[1] << 8) | tc_sdls_processed_frame->tc_pdu[2];
-        for (int x = 3; x < (3 + tc_sdls_processed_frame->tc_header.fl); x++)
+        for (x = 3; x < (3 + tc_sdls_processed_frame->tc_header.fl); x++)
         {
             // Todo - Consider how this behaves with large OTAR PDUs that are larger than 1 TC in size. Most likely
             // fails. Must consider Uplink Sessions (sequence numbers).

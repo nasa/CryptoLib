@@ -45,13 +45,13 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_APPLY_SEC_ENC_AND_AUTH_MTLS)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
     int32_t status = Crypto_Init();
 
-    char *raw_tc_jpl_mmt_scid44_vcid1= "202c0408000001bd37";
-    char *raw_tc_jpl_mmt_scid44_vcid1_expect = NULL;
+    char* raw_tc_jpl_mmt_scid44_vcid1= "202c0408000001bd37";
+    char* raw_tc_jpl_mmt_scid44_vcid1_expect = NULL;
     int raw_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
 
     hex_conversion(raw_tc_jpl_mmt_scid44_vcid1, &raw_tc_jpl_mmt_scid44_vcid1_expect, &raw_tc_jpl_mmt_scid44_vcid1_expect_len);
 
-    uint8_t *ptr_enc_frame = NULL;
+    uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
 
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -63,7 +63,7 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_APPLY_SEC_ENC_AND_AUTH_MTLS)
     }
     printf("\n");
 
-    status = Crypto_TC_ApplySecurity((uint8_t *)raw_tc_jpl_mmt_scid44_vcid1_expect, raw_tc_jpl_mmt_scid44_vcid1_expect_len, &ptr_enc_frame, &enc_frame_len);
+    status = Crypto_TC_ApplySecurity((uint8_t* )raw_tc_jpl_mmt_scid44_vcid1_expect, raw_tc_jpl_mmt_scid44_vcid1_expect_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     printf("Frame after encryption:\n");
     for (int i=0; i<enc_frame_len; i++)
@@ -93,13 +93,13 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_APPLY_SEC_ENC_AND_AUTH_TLS)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
     int32_t status = Crypto_Init();
 
-    char *raw_tc_jpl_mmt_scid44_vcid1= "202c0408000001bd37";
-    char *raw_tc_jpl_mmt_scid44_vcid1_expect = NULL;
+    char* raw_tc_jpl_mmt_scid44_vcid1= "202c0408000001bd37";
+    char* raw_tc_jpl_mmt_scid44_vcid1_expect = NULL;
     int raw_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
 
     hex_conversion(raw_tc_jpl_mmt_scid44_vcid1, &raw_tc_jpl_mmt_scid44_vcid1_expect, &raw_tc_jpl_mmt_scid44_vcid1_expect_len);
 
-    uint8_t *ptr_enc_frame = NULL;
+    uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
 
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -111,7 +111,7 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_APPLY_SEC_ENC_AND_AUTH_TLS)
     }
     printf("\n");
 
-    status = Crypto_TC_ApplySecurity((uint8_t *)raw_tc_jpl_mmt_scid44_vcid1_expect, raw_tc_jpl_mmt_scid44_vcid1_expect_len, &ptr_enc_frame, &enc_frame_len);
+    status = Crypto_TC_ApplySecurity((uint8_t* )raw_tc_jpl_mmt_scid44_vcid1_expect, raw_tc_jpl_mmt_scid44_vcid1_expect_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     printf("Frame after encryption:\n");
     for (int i=0; i<enc_frame_len; i++)

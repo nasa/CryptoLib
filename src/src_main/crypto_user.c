@@ -26,7 +26,7 @@
  * @param ingest: uint8_t*
  * @return int32: count
  **/
-int32_t Crypto_User_IdleTrigger(uint8_t *ingest)
+int32_t Crypto_User_IdleTrigger(uint8_t* ingest)
 {
     uint8_t count = 0;
 
@@ -166,16 +166,18 @@ int32_t Crypto_User_ModifyActiveTM(void)
 int32_t Crypto_User_ModifyVCID(void)
 {
     tm_frame.tm_header.vcid = (uint8_t)sdls_frame.pdu.data[0];
-    SecurityAssociation_t *sa_ptr;
+    SecurityAssociation_t* sa_ptr;
+    int i;
+    int j;
 
-    for (int i = 0; i < NUM_GVCID; i++)
+    for (i = 0; i < NUM_GVCID; i++)
     {
         if (sadb_routine->sadb_get_sa_from_spi(i, &sa_ptr) != CRYPTO_LIB_SUCCESS)
         {
             // TODO - Error handling
             return CRYPTO_LIB_ERROR; // Error -- unable to get SA from SPI.
         }
-        for (int j = 0; j < NUM_SA; j++)
+        for (j = 0; j < NUM_SA; j++)
         {
 
             if (sa_ptr->gvcid_tm_blk[j].mapid == TYPE_TM)

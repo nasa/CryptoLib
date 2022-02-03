@@ -27,6 +27,7 @@ OPTION(MYSQL "Mysql" OFF) # Disabled by default, enable with: -DMYSQL=ON
 OPTION(LIBGCRYPT "Libgcrypt" ON) # Enabled by default, disable with: -DLIBGCRYPT=OFF
 OPTION(KMCCRYPTO "KmcCrypto" OFF) # Disabled by default, enable with: -DKMCCRYPTO=ON
 OPTION(ENCTEST "Encryption-Tests" OFF) # Disabled by default, enable with: -DENCTEST=ON
+OPTION(CODECOV "Code-Coverage" OFF) # Disabled by default, enable with: -DCODECOV=ON
 
 IF(DEBUG)
     ADD_DEFINITIONS(-DDEBUG -DOCF_DEBUG -DFECF_DEBUG -DSA_DEBUG -DPDU_DEBUG -DCCSDS_DEBUG -DTC_DEBUG -DMAC_DEBUG -DTM_DEBUG)
@@ -42,7 +43,11 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     enable_testing()
 endif()
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror -g -O0 -fprofile-arcs -ftest-coverage")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror -g -O0")
+
+if(CODECOV)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage")
+endif()
 
 include_directories(include)
 

@@ -42,9 +42,11 @@ int32_t Crypto_Key_OTAR(void)
     SDLS_OTAR_t packet;
     int count = 0;
     int x = 0;
+    int y;
     int32_t status = CRYPTO_LIB_SUCCESS;
     int pdu_keys = (sdls_frame.pdu.pdu_len - 30) / (2 + KEY_SIZE);
     crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    int w;
 
     if ( ek_ring == NULL )
     {
@@ -60,7 +62,7 @@ int32_t Crypto_Key_OTAR(void)
         report.af = 1;
         if (log_summary.rs > 0)
         {
-            Crypto_increment((uint8_t *)&log_summary.num_se, 4);
+            Crypto_increment((uint8_t* )&log_summary.num_se, 4);
             log_summary.rs--;
             mc_log.blk[log_count].emt = MKID_INVALID_EID;
             mc_log.blk[log_count].emv[0] = 0x4E;
@@ -81,7 +83,7 @@ int32_t Crypto_Key_OTAR(void)
     }
 
     count = sdls_frame.pdu.pdu_len - MAC_SIZE;
-    for (int w = 0; w < 16; w++)
+    for (w = 0; w < 16; w++)
     { // MAC
         packet.mac[w] = sdls_frame.pdu.data[count + w];
         // printf("packet.mac[%d] = 0x%02x\n", w, packet.mac[w]);
@@ -115,7 +117,7 @@ int32_t Crypto_Key_OTAR(void)
             report.af = 1;
             if (log_summary.rs > 0)
             {
-                Crypto_increment((uint8_t *)&log_summary.num_se, 4);
+                Crypto_increment((uint8_t* )&log_summary.num_se, 4);
                 log_summary.rs--;
                 mc_log.blk[log_count].emt = OTAR_MK_ERR_EID;
                 mc_log.blk[log_count].emv[0] = 0x4E; // N
@@ -131,7 +133,7 @@ int32_t Crypto_Key_OTAR(void)
         else
         {
             count = count + 2;
-            for (int y = count; y < (KEY_SIZE + count); y++)
+            for (y = count; y < (KEY_SIZE + count); y++)
             { // Encrypted Key
                 packet.EKB[x].ek[y - count] = sdls_frame.pdu.data[y];
 #ifdef SA_DEBUG
@@ -150,10 +152,10 @@ int32_t Crypto_Key_OTAR(void)
 
 #ifdef PDU_DEBUG
     printf("Received %d keys via master key %d: \n", pdu_keys, packet.mkid);
-    for (int x = 0; x < pdu_keys; x++)
+    for (x = 0; x < pdu_keys; x++)
     {
         printf("%d) Key ID = %d, 0x", x + 1, packet.EKB[x].ekid);
-        for (int y = 0; y < KEY_SIZE; y++)
+        for (y = 0; y < KEY_SIZE; y++)
         {
             printf("%02x", packet.EKB[x].ek[y]);
         }
@@ -175,6 +177,7 @@ int32_t Crypto_Key_update(uint8_t state)
     int count = 0;
     int pdu_keys = sdls_frame.pdu.pdu_len / 2;
     crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    int x;
 
     if ( ek_ring == NULL )
     {
@@ -184,7 +187,7 @@ int32_t Crypto_Key_update(uint8_t state)
     printf("Keys ");
 #endif
     // Read in PDU
-    for (int x = 0; x < pdu_keys; x++)
+    for (x = 0; x < pdu_keys; x++)
     {
         packet.kblk[x].kid = (sdls_frame.pdu.data[count] << 8) | (sdls_frame.pdu.data[count + 1]);
         count = count + 2;
@@ -224,14 +227,14 @@ int32_t Crypto_Key_update(uint8_t state)
     }
 #endif
     // Update Key State
-    for (int x = 0; x < pdu_keys; x++)
+    for (x = 0; x < pdu_keys; x++)
     {
         if (packet.kblk[x].kid < 128)
         {
             report.af = 1;
             if (log_summary.rs > 0)
             {
-                Crypto_increment((uint8_t *)&log_summary.num_se, 4);
+                Crypto_increment((uint8_t* )&log_summary.num_se, 4);
                 log_summary.rs--;
                 mc_log.blk[log_count].emt = MKID_STATE_ERR_EID;
                 mc_log.blk[log_count].emv[0] = 0x4E;
@@ -255,7 +258,7 @@ int32_t Crypto_Key_update(uint8_t state)
         {
             if (log_summary.rs > 0)
             {
-                Crypto_increment((uint8_t *)&log_summary.num_se, 4);
+                Crypto_increment((uint8_t* )&log_summary.num_se, 4);
                 log_summary.rs--;
                 mc_log.blk[log_count].emt = KEY_TRANSITION_ERR_EID;
                 mc_log.blk[log_count].emv[0] = 0x4E;
@@ -275,13 +278,14 @@ int32_t Crypto_Key_update(uint8_t state)
  * @param ingest: uint8_t*
  * @return int32: count
  **/
-int32_t Crypto_Key_inventory(uint8_t *ingest)
+int32_t Crypto_Key_inventory(uint8_t* ingest)
 {
     // Local variables
     SDLS_KEY_INVENTORY_t packet;
     int count = 0;
     uint16_t range = 0;
     crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    uint16_t x;
 
     if ( ek_ring == NULL || ingest == NULL)
     {
@@ -301,7 +305,7 @@ int32_t Crypto_Key_inventory(uint8_t *ingest)
     count = Crypto_Prep_Reply(ingest, 128);
     ingest[count++] = (range & 0xFF00) >> 8;
     ingest[count++] = (range & 0x00FF);
-    for (uint16_t x = packet.kid_first; x < packet.kid_last; x++)
+    for (x = packet.kid_first; x < packet.kid_last; x++)
     { // Key ID
         ingest[count++] = (x & 0xFF00) >> 8;
         ingest[count++] = (x & 0x00FF);
@@ -317,7 +321,7 @@ int32_t Crypto_Key_inventory(uint8_t *ingest)
  * @param tc_frame: TC_t*
  * @return int32: count
  **/
-int32_t Crypto_Key_verify(uint8_t *ingest, TC_t *tc_frame)
+int32_t Crypto_Key_verify(uint8_t* ingest, TC_t* tc_frame)
 {
     // Local variables
     SDLS_KEYV_CMD_t packet;
@@ -326,13 +330,15 @@ int32_t Crypto_Key_verify(uint8_t *ingest, TC_t *tc_frame)
 
     uint8_t iv_loc;
     // uint8_t tmp_mac[MAC_SIZE];
+    int x;
+    int y;
 
 #ifdef PDU_DEBUG
     printf("Crypto_Key_verify: Requested %d key(s) to verify \n", pdu_keys);
 #endif
     
     // Read in PDU
-    for (int x = 0; x < pdu_keys; x++)
+    for (x = 0; x < pdu_keys; x++)
     {
         // Key ID
         packet.blk[x].kid = ((uint8_t)sdls_frame.pdu.data[count] << 8) | ((uint8_t)sdls_frame.pdu.data[count + 1]);
@@ -341,7 +347,7 @@ int32_t Crypto_Key_verify(uint8_t *ingest, TC_t *tc_frame)
         printf("Crypto_Key_verify: Block %d Key ID is %d \n", x, packet.blk[x].kid);
 #endif
         // Key Challenge
-        for (int y = 0; y < CHALLENGE_SIZE; y++)
+        for (y = 0; y < CHALLENGE_SIZE; y++)
         {
             packet.blk[x].challenge[y] = sdls_frame.pdu.data[count++];
         }
@@ -360,14 +366,14 @@ int32_t Crypto_Key_verify(uint8_t *ingest, TC_t *tc_frame)
         return CRYPTOGRAPHY_UNSUPPORTED_OPERATION_FOR_KEY_RING;
     }
 
-    for (int x = 0; x < pdu_keys; x++)
+    for (x = 0; x < pdu_keys; x++)
     { // Key ID
         ingest[count++] = (packet.blk[x].kid & 0xFF00) >> 8;
         ingest[count++] = (packet.blk[x].kid & 0x00FF);
 
         // Initialization Vector
         iv_loc = count;
-        for (int y = 0; y < IV_SIZE; y++)
+        for (y = 0; y < IV_SIZE; y++)
         {
             ingest[count++] = *(tc_frame->tc_sec_header.iv + y);
         }

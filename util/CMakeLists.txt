@@ -59,7 +59,7 @@ target_include_directories (Crypto PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 set(OBJECT_DIR ${PROJECT_BINARY_DIR}/src/CMakeFiles/Crypto.dir/src_main)
 
-if(${DEBUG})
+if(${CODECOV})
     # Create the gcov target. Run coverage tests with 'make gcov'
     add_custom_target(gcov
         COMMAND mkdir -p coverage
@@ -91,4 +91,4 @@ if(${DEBUG})
     COMMAND rm -f ${OBJECT_DIR}/*.gcda
     WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
     )
-endif(${DEBUG})
+endif(${CODECOV})
