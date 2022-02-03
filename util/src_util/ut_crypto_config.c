@@ -175,14 +175,14 @@ UTEST(CRYPTO_CONFIG, CRYPTO_CONFIG_KMC)
     char* hostname = "ITC_JPL";
     int16_t port = 9999;
 
-    char *kmc_crypto_app_uri = "crypto-service";
-    char *mtls_client_cert_path = "/dev/null";
-    char *mtls_client_cert_type = "PEM";
-    char *mtls_client_key_path = "/dev/null";
-    char *mtls_client_key_pass = "12345";
-    char *mtls_ca_bundle = "/dev/null";
-    char *mtls_ca_path = "/dev/null";
-    char *mtls_issuer_cert = "/dev/null";
+    char* kmc_crypto_app_uri = "crypto-service";
+    char* mtls_client_cert_path = "/dev/null";
+    char* mtls_client_cert_type = "PEM";
+    char* mtls_client_key_path = "/dev/null";
+    char* mtls_client_key_pass = "12345";
+    char* mtls_ca_bundle = "/dev/null";
+    char* mtls_ca_path = "/dev/null";
+    char* mtls_issuer_cert = "/dev/null";
     uint8_t ignore_ssl_hostname_validation = CRYPTO_TRUE;
 
     status = Crypto_Config_Kmc_Crypto_Service(protocol, hostname, port, kmc_crypto_app_uri, mtls_ca_bundle,

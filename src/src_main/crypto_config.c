@@ -265,10 +265,10 @@ int32_t Crypto_Config_CryptoLib(uint8_t sadb_type, uint8_t cryptography_type, ui
  * @return int32: Success/Failure 
  **/
 /*set parameters for an encrypted TLS connection*/
-int32_t Crypto_Config_MariaDB(char *mysql_hostname, char *mysql_database, uint16_t mysql_port,
+int32_t Crypto_Config_MariaDB(char* mysql_hostname, char* mysql_database, uint16_t mysql_port,
                               uint8_t mysql_require_secure_transport, uint8_t mysql_tls_verify_server,
-                              char *mysql_tls_ca, char *mysql_tls_capath, char *mysql_mtls_cert, char *mysql_mtls_key,
-                              char *mysql_mtls_client_key_password, char *mysql_username, char *mysql_password)
+                              char* mysql_tls_ca, char* mysql_tls_capath, char* mysql_mtls_cert, char* mysql_mtls_key,
+                              char* mysql_mtls_client_key_password, char* mysql_username, char* mysql_password)
 {
     int32_t status = CRYPTO_LIB_ERROR;
     sadb_mariadb_config = (SadbMariaDBConfig_t*)calloc(1, SADB_MARIADB_CONFIG_SIZE);
@@ -293,11 +293,11 @@ int32_t Crypto_Config_MariaDB(char *mysql_hostname, char *mysql_database, uint16
     return status;
 }
 
-extern int32_t Crypto_Config_Kmc_Crypto_Service(char *protocol, char *kmc_crypto_hostname, uint16_t kmc_crypto_port,
-                                                char *kmc_crypto_app, char *kmc_tls_ca_bundle, char *kmc_tls_ca_path,
-                                                uint8_t kmc_ignore_ssl_hostname_validation, char *mtls_client_cert_path,
-                                                char *mtls_client_cert_type, char *mtls_client_key_path,
-                                                char *mtls_client_key_pass, char *mtls_issuer_cert)
+extern int32_t Crypto_Config_Kmc_Crypto_Service(char* protocol, char* kmc_crypto_hostname, uint16_t kmc_crypto_port,
+                                                char* kmc_crypto_app, char* kmc_tls_ca_bundle, char* kmc_tls_ca_path,
+                                                uint8_t kmc_ignore_ssl_hostname_validation, char* mtls_client_cert_path,
+                                                char* mtls_client_cert_type, char* mtls_client_key_path,
+                                                char* mtls_client_key_pass, char* mtls_issuer_cert)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     cryptography_kmc_crypto_config = (CryptographyKmcCryptoServiceConfig_t* )calloc(1, CRYPTOGRAPHY_KMC_CRYPTO_SERVICE_CONFIG_SIZE);

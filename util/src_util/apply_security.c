@@ -23,13 +23,13 @@
 
 #include "apply_security.h"
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-    char *buffer = NULL;
-    const char *filename;
+    char* buffer = NULL;
+    const char* filename;
     long buffer_size;
     char st[64];
-    char *security_type = st;
+    char* security_type = st;
 
     if (argc == 3)
     {

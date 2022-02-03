@@ -73,9 +73,9 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
 // libcurl call back and support function declarations
 static void configure_curl_connect_opts(CURL* curl);
 static size_t write_callback(void* data, size_t size, size_t nmemb, void* userp);
-static size_t read_callback(char *dest, size_t size, size_t nmemb, void* userp);
+static size_t read_callback(char* dest, size_t size, size_t nmemb, void* userp);
 static char* int_to_str(uint32_t int_src, uint32_t* converted_str_length);
-static int jsoneq(const char *json, jsmntok_t* tok, const char *s);
+static int jsoneq(const char* json, jsmntok_t* tok, const char* s);
 
 
 /*
@@ -106,12 +106,12 @@ static const char* AES_CMAC_TRANSFORMATION="AESCMAC";
 
 // libcurl call-back response handling Structures
 typedef struct {
-    char *response;
+    char* response;
     size_t size;
 } memory_write;
 #define MEMORY_WRITE_SIZE (sizeof(memory_write))
 typedef struct  {
-    char *response;
+    char* response;
     size_t size;
 } memory_read;
 #define MEMORY_READ_SIZE (sizeof(memory_read))
@@ -1088,7 +1088,7 @@ static size_t write_callback(void* data, size_t size, size_t nmemb, void* userp)
     size_t realsize = size * nmemb;
     memory_write *mem = (memory_write *)userp;
 
-    char *ptr;
+    char* ptr;
     if(mem->response != NULL)
     {
         ptr = realloc(mem->response, mem->size + realsize + 1);
@@ -1109,7 +1109,7 @@ static size_t write_callback(void* data, size_t size, size_t nmemb, void* userp)
     return realsize;
 }
 
-static size_t read_callback(char *dest, size_t size, size_t nmemb, void* userp)
+static size_t read_callback(char* dest, size_t size, size_t nmemb, void* userp)
 {
     memory_read *wt = (memory_read *)userp;
     size_t buffer_size = size*nmemb;
@@ -1183,7 +1183,7 @@ static char* int_to_str(uint32_t int_src, uint32_t* converted_str_length)
 
 // JSON local functions
 
-static int jsoneq(const char *json, jsmntok_t* tok, const char *s)
+static int jsoneq(const char* json, jsmntok_t* tok, const char* s)
 {
     if (tok->type == JSMN_STRING && (int)strlen(s) == tok->end - tok->start &&
         strncmp(json + tok->start, s, tok->end - tok->start) == 0) {

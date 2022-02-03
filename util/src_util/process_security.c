@@ -23,12 +23,12 @@
 
 #include "process_security.h"
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-    char *buffer;
-    const char *filename;
+    char* buffer;
+    const char* filename;
     long buffer_size;
-    char *security_type;
+    char* security_type;
 
     if (argc == 3)
     {

@@ -33,8 +33,8 @@
 UTEST(TC_APPLY_SECURITY, NO_CRYPTO_INIT)
 {
     // No Crypto_Init(), but we still Configure It;
-    char *raw_tc_sdls_ping_h = "20030015001880d2c70008197f0b00310000b1fe3128";
-    char *raw_tc_sdls_ping_b = NULL;
+    char* raw_tc_sdls_ping_h = "20030015001880d2c70008197f0b00310000b1fe3128";
+    char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
@@ -59,8 +59,8 @@ UTEST(TC_APPLY_SECURITY, NO_CRYPTO_INIT)
 UTEST(TC_APPLY_SECURITY, NO_CONFIG)
 {
     // No Crypto_Init(), but we still Configure It;
-    char *raw_tc_sdls_ping_h = "20030015001880d2c70008197f0b00310000b1fe3128";
-    char *raw_tc_sdls_ping_b = NULL;
+    char* raw_tc_sdls_ping_h = "20030015001880d2c70008197f0b00310000b1fe3128";
+    char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
@@ -83,8 +83,8 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_CLEAR)
 {
     // Setup & Initialize CryptoLib
     Crypto_Init_Unit_Test();
-    char *raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
-    char *raw_tc_sdls_ping_b = NULL;
+    char* raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
+    char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
@@ -109,8 +109,8 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC)
 {
     // Setup & Initialize CryptoLib
     Crypto_Init_Unit_Test();
-    char *raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
-    char *raw_tc_sdls_ping_b = NULL;
+    char* raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
+    char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
 
@@ -145,8 +145,8 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_AUTH_ENC)
 {
     // Setup & Initialize CryptoLib
     Crypto_Init_Unit_Test();
-    char *raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
-    char *raw_tc_sdls_ping_b = NULL;
+    char* raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
+    char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
 
@@ -182,8 +182,8 @@ UTEST(TC_APPLY_SECURITY, BAD_SPACE_CRAFT_ID)
 {
     // Setup & Initialize CryptoLib
     Crypto_Init_Unit_Test();
-    char *raw_tc_sdls_ping_bad_scid_h = "20010015000080d2c70008197f0b00310000b1fe3128";
-    char *raw_tc_sdls_ping_bad_scid_b = NULL;
+    char* raw_tc_sdls_ping_bad_scid_h = "20010015000080d2c70008197f0b00310000b1fe3128";
+    char* raw_tc_sdls_ping_bad_scid_b = NULL;
     int raw_tc_sdls_ping_bad_scid_len = 0;
 
     hex_conversion(raw_tc_sdls_ping_bad_scid_h, &raw_tc_sdls_ping_bad_scid_b, &raw_tc_sdls_ping_bad_scid_len);
@@ -208,8 +208,8 @@ UTEST(TC_APPLY_SECURITY, BAD_VIRTUAL_CHANNEL_ID)
 {
     // Setup & Initialize CryptoLib
     Crypto_Init_Unit_Test();
-    char *raw_tc_sdls_ping_bad_vcid_h = "20032015000080d2c70008197f0b00310000b1fe3128";
-    char *raw_tc_sdls_ping_bad_vcid_b = NULL;
+    char* raw_tc_sdls_ping_bad_vcid_h = "20032015000080d2c70008197f0b00310000b1fe3128";
+    char* raw_tc_sdls_ping_bad_vcid_b = NULL;
     int raw_tc_sdls_ping_bad_vcid_len = 0;
 
     hex_conversion(raw_tc_sdls_ping_bad_vcid_h, &raw_tc_sdls_ping_bad_vcid_b, &raw_tc_sdls_ping_bad_vcid_len);

@@ -135,10 +135,10 @@ struct _GvcidManagedParameters_t
 */
 typedef struct
 {
-    char *mysql_username;
-    char *mysql_password;
-    char *mysql_hostname;
-    char *mysql_database;
+    char* mysql_username;
+    char* mysql_password;
+    char* mysql_hostname;
+    char* mysql_database;
     uint16_t mysql_port;
     char* mysql_mtls_cert;
     char* mysql_mtls_key;

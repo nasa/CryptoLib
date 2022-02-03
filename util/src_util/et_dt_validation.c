@@ -87,7 +87,7 @@ void setup_python()
  * @param expected_length The length of the expected character array this is set within this function
  * @note User must free memory themselves.
  **/
-void python_cmac(char *data, char *key, uint8_t* *expected, long *expected_length)
+void python_cmac(char* data, char* key, uint8_t* *expected, long *expected_length)
 {
     setup_python();
 
@@ -96,7 +96,7 @@ void python_cmac(char *data, char *key, uint8_t* *expected, long *expected_lengt
     long temp_length = PyLong_AsLong(pValue);
     *expected_length = temp_length;
     pValue = PyObject_CallMethod(pInstance, "get_results", NULL);
-    char *temp_expected = PyBytes_AsString(pValue);
+    char* temp_expected = PyBytes_AsString(pValue);
     *expected = (uint8_t* )malloc(sizeof(uint8_t) * (int)*expected_length);
     memcpy(*expected, temp_expected, (int)*expected_length);
     return;
@@ -117,7 +117,7 @@ void python_cmac(char *data, char *key, uint8_t* *expected, long *expected_lengt
  * @note The char** expected that is passsed to this function must be freed by the user upon completion of unit test or
  *other call.
  **/
-void python_auth_encryption(char *data, char *key, char *iv, char *header, char *bitmask, uint8_t* *expected,
+void python_auth_encryption(char* data, char* key, char* iv, char* header, char* bitmask, uint8_t* *expected,
                             long *expected_length)
 {
     setup_python();
@@ -127,7 +127,7 @@ void python_auth_encryption(char *data, char *key, char *iv, char *header, char 
     long temp_length = PyLong_AsLong(pValue);
     *expected_length = temp_length;
     pValue = PyObject_CallMethod(pInstance, "get_results", NULL);
-    char *temp_expected = PyBytes_AsString(pValue);
+    char* temp_expected = PyBytes_AsString(pValue);
     *expected = (uint8_t* )malloc(sizeof(uint8_t) * (int)*expected_length);
     memcpy(*expected, temp_expected, (int)*expected_length);
     return;
@@ -149,14 +149,14 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
     uint8_t* expected = NULL;
     long expected_length = 0;
 
-    char *activate_sa4_h = "2003002000ff000100001880d2c9000e197f0b001b0004000400003040d95ea61a";
-    char *enc_test_ping_h = "2003041600ff1880d2ca0008197f0b0031000039c5082d";
+    char* activate_sa4_h = "2003002000ff000100001880d2c9000e197f0b001b0004000400003040d95ea61a";
+    char* enc_test_ping_h = "2003041600ff1880d2ca0008197f0b0031000039c5082d";
 
     uint8_t* activate_sa4_b, *enc_test_ping_b = NULL;
     int activate_sa4_len, enc_test_ping_len = 0;
 
-    hex_conversion(activate_sa4_h, (char **)&activate_sa4_b, &activate_sa4_len);
-    hex_conversion(enc_test_ping_h, (char **)&enc_test_ping_b, &enc_test_ping_len);
+    hex_conversion(activate_sa4_h, (char* *)&activate_sa4_b, &activate_sa4_len);
+    hex_conversion(enc_test_ping_h, (char* *)&enc_test_ping_b, &enc_test_ping_len);
     SecurityAssociation_t* test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
 
@@ -229,17 +229,17 @@ UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
     Crypto_Init_Unit_Test();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
 
-    char *activate_sa4_h = "2003002000ff000100001880d2c9000e197f0b001b0004000400003040d95ea61a";
-    char *dec_test_ping_h =
+    char* activate_sa4_h = "2003002000ff000100001880d2c9000e197f0b001b0004000400003040d95ea61a";
+    char* dec_test_ping_h =
         "2003043400FF00040000000000000000000000017E1D8EEA8D45CEBA17888E0CDCD747DC78E5F372F997F2A63AA5DFC168395DC987";
-    char *enc_test_ping_h = "1880d2ca0008197f0b0031000039c5";
+    char* enc_test_ping_h = "1880d2ca0008197f0b0031000039c5";
 
     uint8_t* activate_sa4_b, *dec_test_ping_b, *enc_test_ping_b = NULL;
     int activate_sa4_len, dec_test_ping_len, enc_test_ping_len = 0;
 
-    hex_conversion(activate_sa4_h, (char **)&activate_sa4_b, &activate_sa4_len);
-    hex_conversion(dec_test_ping_h, (char **)&dec_test_ping_b, &dec_test_ping_len);
-    hex_conversion(enc_test_ping_h, (char **)&enc_test_ping_b, &enc_test_ping_len);
+    hex_conversion(activate_sa4_h, (char* *)&activate_sa4_b, &activate_sa4_len);
+    hex_conversion(dec_test_ping_h, (char* *)&dec_test_ping_b, &dec_test_ping_len);
+    hex_conversion(enc_test_ping_h, (char* *)&enc_test_ping_b, &enc_test_ping_len);
 
     SecurityAssociation_t* test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
@@ -327,10 +327,10 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_nist_key_h = "ef9f9284cf599eac3b119905a7d18851e7e374cf63aea04358586b0f757670f8";
-    char *buffer_nist_pt_h = "2003001600722ee47da4b77424733546c2d400c4e567a8";
-    char *buffer_nist_iv_h = "b6ac8e4963f49207ffd6374c";
-    char *buffer_nist_ct_h = "1224dfefb72a20d49e09256908874979";
+    char* buffer_nist_key_h = "ef9f9284cf599eac3b119905a7d18851e7e374cf63aea04358586b0f757670f8";
+    char* buffer_nist_pt_h = "2003001600722ee47da4b77424733546c2d400c4e567a8";
+    char* buffer_nist_iv_h = "b6ac8e4963f49207ffd6374c";
+    char* buffer_nist_ct_h = "1224dfefb72a20d49e09256908874979";
     uint8_t* buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_ct_b, *buffer_nist_key_b = NULL;
     int buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_ct_len, buffer_nist_key_len = 0;
 
@@ -348,18 +348,18 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     *test_association->ecs = CRYPTO_AES256_GCM;
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char* *)&buffer_nist_key_b, &buffer_nist_key_len);
     memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
+    hex_conversion(buffer_nist_pt_h, (char* *)&buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
+    hex_conversion(buffer_nist_iv_h, (char* *)&buffer_nist_iv_b, &buffer_nist_iv_len);
     test_association->iv = malloc(*buffer_nist_iv_b * sizeof(uint8_t));
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input ciphertext
-    hex_conversion(buffer_nist_ct_h, (char **)&buffer_nist_ct_b, &buffer_nist_ct_len);
+    hex_conversion(buffer_nist_ct_h, (char* *)&buffer_nist_ct_b, &buffer_nist_ct_len);
 
     Crypto_TC_ApplySecurity(buffer_nist_pt_b, buffer_nist_pt_len, &ptr_enc_frame, &enc_frame_len);
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
@@ -401,10 +401,10 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_nist_key_h = "ef9f9284cf599eac3b119905a7d18851e7e374cf63aea04358586b0f757670f8";
-    char *buffer_nist_pt_h = "2003001600722ee47da4b77424733546c2d400c4e567a8";
-    char *buffer_nist_iv_h = "b6ac8e4963f49207ffd6374c";
-    char *buffer_nist_et_h = "2003002500FF0009B6AC8E4963F49207FFD6374C1224DFEFB72A20D49E09256908874979AD6F";
+    char* buffer_nist_key_h = "ef9f9284cf599eac3b119905a7d18851e7e374cf63aea04358586b0f757670f8";
+    char* buffer_nist_pt_h = "2003001600722ee47da4b77424733546c2d400c4e567a8";
+    char* buffer_nist_iv_h = "b6ac8e4963f49207ffd6374c";
+    char* buffer_nist_et_h = "2003002500FF0009B6AC8E4963F49207FFD6374C1224DFEFB72A20D49E09256908874979AD6F";
     uint8_t* buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_et_b, *buffer_nist_key_b = NULL;
     int buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_et_len, buffer_nist_key_len = 0;
 
@@ -426,18 +426,18 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_AES256_GCM;
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char* *)&buffer_nist_key_b, &buffer_nist_key_len);
     memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
+    hex_conversion(buffer_nist_pt_h, (char* *)&buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
+    hex_conversion(buffer_nist_iv_h, (char* *)&buffer_nist_iv_b, &buffer_nist_iv_len);
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     printf("NIST IV LEN: %d\n", buffer_nist_iv_len);
     // Convert input encryptedtext
-    hex_conversion(buffer_nist_et_h, (char **)&buffer_nist_et_b, &buffer_nist_et_len);
+    hex_conversion(buffer_nist_et_h, (char* *)&buffer_nist_et_b, &buffer_nist_et_len);
 
     Crypto_TC_ProcessSecurity(buffer_nist_et_b, &buffer_nist_et_len, tc_nist_processed_frame);
 
@@ -478,10 +478,10 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_nist_key_h = "e9ccd6eef27f740d1d5c70b187734e11e76a8ac0ad1702ff02180c5c1c9e5399";
-    char *buffer_nist_pt_h = "2003001600419635e6e12b257a8ecae411f94480ff56be";
-    char *buffer_nist_iv_h = "1af2613c4184dbd101fcedce";
-    char *buffer_nist_ct_h = "9cd21f414f1f54d5f6f58b1f2f77e5b6";
+    char* buffer_nist_key_h = "e9ccd6eef27f740d1d5c70b187734e11e76a8ac0ad1702ff02180c5c1c9e5399";
+    char* buffer_nist_pt_h = "2003001600419635e6e12b257a8ecae411f94480ff56be";
+    char* buffer_nist_iv_h = "1af2613c4184dbd101fcedce";
+    char* buffer_nist_ct_h = "9cd21f414f1f54d5f6f58b1f2f77e5b6";
     uint8_t* buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_ct_b, *buffer_nist_key_b = NULL;
     int buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_ct_len, buffer_nist_key_len = 0;
 
@@ -499,17 +499,17 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     *test_association->ecs = CRYPTO_AES256_GCM;
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char* *)&buffer_nist_key_b, &buffer_nist_key_len);
     memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
+    hex_conversion(buffer_nist_pt_h, (char* *)&buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
+    hex_conversion(buffer_nist_iv_h, (char* *)&buffer_nist_iv_b, &buffer_nist_iv_len);
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input ciphertext
-    hex_conversion(buffer_nist_ct_h, (char **)&buffer_nist_ct_b, &buffer_nist_ct_len);
+    hex_conversion(buffer_nist_ct_h, (char* *)&buffer_nist_ct_b, &buffer_nist_ct_len);
 
     Crypto_TC_ApplySecurity(buffer_nist_pt_b, buffer_nist_pt_len, &ptr_enc_frame, &enc_frame_len);
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
@@ -549,10 +549,10 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_nist_key_h = "e9ccd6eef27f740d1d5c70b187734e11e76a8ac0ad1702ff02180c5c1c9e5399";
-    char *buffer_nist_pt_h = "2003001600419635e6e12b257a8ecae411f94480ff56be";
-    char *buffer_nist_iv_h = "1af2613c4184dbd101fcedce";
-    char *buffer_nist_et_h = "2003002500FF00091AF2613C4184DBD101FCEDCE9CD21F414F1F54D5F6F58B1F2F77E5B66987";
+    char* buffer_nist_key_h = "e9ccd6eef27f740d1d5c70b187734e11e76a8ac0ad1702ff02180c5c1c9e5399";
+    char* buffer_nist_pt_h = "2003001600419635e6e12b257a8ecae411f94480ff56be";
+    char* buffer_nist_iv_h = "1af2613c4184dbd101fcedce";
+    char* buffer_nist_et_h = "2003002500FF00091AF2613C4184DBD101FCEDCE9CD21F414F1F54D5F6F58B1F2F77E5B66987";
     uint8_t* buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_et_b, *buffer_nist_key_b = NULL;
     int buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_et_len, buffer_nist_key_len = 0;
 
@@ -574,17 +574,17 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     *test_association->ecs = CRYPTO_AES256_GCM;
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char* *)&buffer_nist_key_b, &buffer_nist_key_len);
     memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
+    hex_conversion(buffer_nist_pt_h, (char* *)&buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
+    hex_conversion(buffer_nist_iv_h, (char* *)&buffer_nist_iv_b, &buffer_nist_iv_len);
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input ciphertext
-    hex_conversion(buffer_nist_et_h, (char **)&buffer_nist_et_b, &buffer_nist_et_len);
+    hex_conversion(buffer_nist_et_h, (char* *)&buffer_nist_et_b, &buffer_nist_et_len);
 
     int32_t status;
 
@@ -627,10 +627,10 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_nist_key_h = "7ecc9dcb3d5b413cadc3af7b7812758bd869295f8aaf611ba9935de76bd87013";
-    char *buffer_nist_pt_h = "200300160073d4d7984ce422ac983797c0526ac6f9446b";
-    char *buffer_nist_iv_h = "6805be41e983717bf6781052";
-    char *buffer_nist_ct_h = "487211dd440f4d09d00bc5c3158a822c";
+    char* buffer_nist_key_h = "7ecc9dcb3d5b413cadc3af7b7812758bd869295f8aaf611ba9935de76bd87013";
+    char* buffer_nist_pt_h = "200300160073d4d7984ce422ac983797c0526ac6f9446b";
+    char* buffer_nist_iv_h = "6805be41e983717bf6781052";
+    char* buffer_nist_ct_h = "487211dd440f4d09d00bc5c3158a822c";
     uint8_t* buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_ct_b, *buffer_nist_key_b = NULL;
     int buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_ct_len, buffer_nist_key_len = 0;
 
@@ -648,17 +648,17 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
     *test_association->ecs = CRYPTO_AES256_GCM;
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char* *)&buffer_nist_key_b, &buffer_nist_key_len);
     memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
+    hex_conversion(buffer_nist_pt_h, (char* *)&buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
+    hex_conversion(buffer_nist_iv_h, (char* *)&buffer_nist_iv_b, &buffer_nist_iv_len);
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input ciphertext
-    hex_conversion(buffer_nist_ct_h, (char **)&buffer_nist_ct_b, &buffer_nist_ct_len);
+    hex_conversion(buffer_nist_ct_h, (char* *)&buffer_nist_ct_b, &buffer_nist_ct_len);
 
     Crypto_TC_ApplySecurity(buffer_nist_pt_b, buffer_nist_pt_len, &ptr_enc_frame, &enc_frame_len);
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
@@ -699,10 +699,10 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_nist_key_h = "7ecc9dcb3d5b413cadc3af7b7812758bd869295f8aaf611ba9935de76bd87013";
-    char *buffer_nist_pt_h = "200300160073d4d7984ce422ac983797c0526ac6f9446b";
-    char *buffer_nist_iv_h = "6805be41e983717bf6781052";
-    char *buffer_nist_et_h = "2003002500FF00096805BE41E983717BF6781052487211DD440F4D09D00BC5C3158A822C46E3";
+    char* buffer_nist_key_h = "7ecc9dcb3d5b413cadc3af7b7812758bd869295f8aaf611ba9935de76bd87013";
+    char* buffer_nist_pt_h = "200300160073d4d7984ce422ac983797c0526ac6f9446b";
+    char* buffer_nist_iv_h = "6805be41e983717bf6781052";
+    char* buffer_nist_et_h = "2003002500FF00096805BE41E983717BF6781052487211DD440F4D09D00BC5C3158A822C46E3";
     uint8_t* buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_et_b, *buffer_nist_key_b = NULL;
     int buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_et_len, buffer_nist_key_len = 0;
 
@@ -724,17 +724,17 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
     *test_association->ecs = CRYPTO_AES256_GCM;
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char* *)&buffer_nist_key_b, &buffer_nist_key_len);
     memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
+    hex_conversion(buffer_nist_pt_h, (char* *)&buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
+    hex_conversion(buffer_nist_iv_h, (char* *)&buffer_nist_iv_b, &buffer_nist_iv_len);
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input ciphertext
-    hex_conversion(buffer_nist_et_h, (char **)&buffer_nist_et_b, &buffer_nist_et_len);
+    hex_conversion(buffer_nist_et_h, (char* *)&buffer_nist_et_b, &buffer_nist_et_len);
 
     Crypto_TC_ProcessSecurity(buffer_nist_et_b, &buffer_nist_et_len, tc_nist_processed_frame);
 
@@ -774,10 +774,10 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_nist_key_h = "a881373e248615e3d6576f5a5fb68883515ae72d6a2938e3a6f0b8dcb639c9c0";
-    char *buffer_nist_pt_h = "200300160007d1dc9930e710b1ebe533c81f671101e43c";
-    char *buffer_nist_iv_h = "f0b744f157087df4e41818a9";
-    char *buffer_nist_ct_h = "b65a2878b9dddbd4a0204dae6a6a6fc0";
+    char* buffer_nist_key_h = "a881373e248615e3d6576f5a5fb68883515ae72d6a2938e3a6f0b8dcb639c9c0";
+    char* buffer_nist_pt_h = "200300160007d1dc9930e710b1ebe533c81f671101e43c";
+    char* buffer_nist_iv_h = "f0b744f157087df4e41818a9";
+    char* buffer_nist_ct_h = "b65a2878b9dddbd4a0204dae6a6a6fc0";
     uint8_t* buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_ct_b, *buffer_nist_key_b = NULL;
     int buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_ct_len, buffer_nist_key_len = 0;
 
@@ -795,17 +795,17 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
     *test_association->ecs = CRYPTO_AES256_GCM;
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char* *)&buffer_nist_key_b, &buffer_nist_key_len);
     memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
+    hex_conversion(buffer_nist_pt_h, (char* *)&buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
+    hex_conversion(buffer_nist_iv_h, (char* *)&buffer_nist_iv_b, &buffer_nist_iv_len);
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input ciphertext
-    hex_conversion(buffer_nist_ct_h, (char **)&buffer_nist_ct_b, &buffer_nist_ct_len);
+    hex_conversion(buffer_nist_ct_h, (char* *)&buffer_nist_ct_b, &buffer_nist_ct_len);
 
     Crypto_TC_ApplySecurity(buffer_nist_pt_b, buffer_nist_pt_len, &ptr_enc_frame, &enc_frame_len);
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
@@ -846,10 +846,10 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_nist_key_h = "a881373e248615e3d6576f5a5fb68883515ae72d6a2938e3a6f0b8dcb639c9c0";
-    char *buffer_nist_pt_h = "200300160007d1dc9930e710b1ebe533c81f671101e43c";
-    char *buffer_nist_iv_h = "f0b744f157087df4e41818a9";
-    char *buffer_nist_et_h = "2003002500FF0009F0B744F157087DF4E41818A9B65A2878B9DDDBD4A0204DAE6A6A6FC0C327";
+    char* buffer_nist_key_h = "a881373e248615e3d6576f5a5fb68883515ae72d6a2938e3a6f0b8dcb639c9c0";
+    char* buffer_nist_pt_h = "200300160007d1dc9930e710b1ebe533c81f671101e43c";
+    char* buffer_nist_iv_h = "f0b744f157087df4e41818a9";
+    char* buffer_nist_et_h = "2003002500FF0009F0B744F157087DF4E41818A9B65A2878B9DDDBD4A0204DAE6A6A6FC0C327";
     uint8_t* buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_et_b, *buffer_nist_key_b = NULL;
     int buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_et_len, buffer_nist_key_len = 0;
 
@@ -871,17 +871,17 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
     *test_association->ecs = CRYPTO_AES256_GCM;
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char* *)&buffer_nist_key_b, &buffer_nist_key_len);
     memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
+    hex_conversion(buffer_nist_pt_h, (char* *)&buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
+    hex_conversion(buffer_nist_iv_h, (char* *)&buffer_nist_iv_b, &buffer_nist_iv_len);
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input ciphertext
-    hex_conversion(buffer_nist_et_h, (char **)&buffer_nist_et_b, &buffer_nist_et_len);
+    hex_conversion(buffer_nist_et_h, (char* *)&buffer_nist_et_b, &buffer_nist_et_len);
 
     Crypto_TC_ProcessSecurity(buffer_nist_et_b, &buffer_nist_et_len, tc_nist_processed_frame);
 
@@ -921,10 +921,10 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_nist_key_h = "84c90349539c2a7989cb24dfae5e4182382ae94ba717d385977017f74f0d87d6";
-    char *buffer_nist_pt_h = "200300160031c4e1d0ccece6b7a999bfc31f38559af5dd";
-    char *buffer_nist_iv_h = "eeddeaf4355c826dfd153393";
-    char *buffer_nist_ct_h = "5c6cfbdd06c19445ecf500c21aeca173";
+    char* buffer_nist_key_h = "84c90349539c2a7989cb24dfae5e4182382ae94ba717d385977017f74f0d87d6";
+    char* buffer_nist_pt_h = "200300160031c4e1d0ccece6b7a999bfc31f38559af5dd";
+    char* buffer_nist_iv_h = "eeddeaf4355c826dfd153393";
+    char* buffer_nist_ct_h = "5c6cfbdd06c19445ecf500c21aeca173";
     uint8_t* buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_ct_b, *buffer_nist_key_b = NULL;
     int buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_ct_len, buffer_nist_key_len = 0;
 
@@ -942,17 +942,17 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
     *test_association->ecs = CRYPTO_AES256_GCM;
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char* *)&buffer_nist_key_b, &buffer_nist_key_len);
     memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
+    hex_conversion(buffer_nist_pt_h, (char* *)&buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
+    hex_conversion(buffer_nist_iv_h, (char* *)&buffer_nist_iv_b, &buffer_nist_iv_len);
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input ciphertext
-    hex_conversion(buffer_nist_ct_h, (char **)&buffer_nist_ct_b, &buffer_nist_ct_len);
+    hex_conversion(buffer_nist_ct_h, (char* *)&buffer_nist_ct_b, &buffer_nist_ct_len);
 
     Crypto_TC_ApplySecurity(buffer_nist_pt_b, buffer_nist_pt_len, &ptr_enc_frame, &enc_frame_len);
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
@@ -993,10 +993,10 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_nist_key_h = "84c90349539c2a7989cb24dfae5e4182382ae94ba717d385977017f74f0d87d6";
-    char *buffer_nist_pt_h = "200300160031c4e1d0ccece6b7a999bfc31f38559af5dd";
-    char *buffer_nist_iv_h = "eeddeaf4355c826dfd153393";
-    char *buffer_nist_et_h = "2003002500FF0009EEDDEAF4355C826DFD1533935C6CFBDD06C19445ECF500C21AECA1738A7D";
+    char* buffer_nist_key_h = "84c90349539c2a7989cb24dfae5e4182382ae94ba717d385977017f74f0d87d6";
+    char* buffer_nist_pt_h = "200300160031c4e1d0ccece6b7a999bfc31f38559af5dd";
+    char* buffer_nist_iv_h = "eeddeaf4355c826dfd153393";
+    char* buffer_nist_et_h = "2003002500FF0009EEDDEAF4355C826DFD1533935C6CFBDD06C19445ECF500C21AECA1738A7D";
     uint8_t* buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_et_b, *buffer_nist_key_b = NULL;
     int buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_et_len, buffer_nist_key_len = 0;
 
@@ -1018,17 +1018,17 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
     *test_association->ecs = CRYPTO_AES256_GCM;
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char* *)&buffer_nist_key_b, &buffer_nist_key_len);
     memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
+    hex_conversion(buffer_nist_pt_h, (char* *)&buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
+    hex_conversion(buffer_nist_iv_h, (char* *)&buffer_nist_iv_b, &buffer_nist_iv_len);
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input ciphertext
-    hex_conversion(buffer_nist_et_h, (char **)&buffer_nist_et_b, &buffer_nist_et_len);
+    hex_conversion(buffer_nist_et_h, (char* *)&buffer_nist_et_b, &buffer_nist_et_len);
 
     Crypto_TC_ProcessSecurity(buffer_nist_et_b, &buffer_nist_et_len, tc_nist_processed_frame);
 
@@ -1079,11 +1079,11 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
-    char *buffer_nist_pt_h = "200300060028C2"; // Empty Transfer frame
-    char *buffer_nist_iv_h = "d79cf22d504cc793c3fb6c8a";
-    char *buffer_nist_aad_h = "b96baa8c1c75a671bfb2d08d06be5f36"; // Zeroed out by abm
-    char *buffer_cyber_chef_mac_h = "77e98911a1704df3d9745bc7b97cc66d";
+    char* buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
+    char* buffer_nist_pt_h = "200300060028C2"; // Empty Transfer frame
+    char* buffer_nist_iv_h = "d79cf22d504cc793c3fb6c8a";
+    char* buffer_nist_aad_h = "b96baa8c1c75a671bfb2d08d06be5f36"; // Zeroed out by abm
+    char* buffer_cyber_chef_mac_h = "77e98911a1704df3d9745bc7b97cc66d";
     uint8_t* buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_nist_aad_b,
         *buffer_cyber_chef_mac_b = NULL;
     int buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_key_len, buffer_nist_aad_len, buffer_cyber_chef_mac_len = 0;
@@ -1107,19 +1107,19 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     *test_association->ecs = CRYPTO_AES256_GCM;
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char* *)&buffer_nist_key_b, &buffer_nist_key_len);
     memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
+    hex_conversion(buffer_nist_pt_h, (char* *)&buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
+    hex_conversion(buffer_nist_iv_h, (char* *)&buffer_nist_iv_b, &buffer_nist_iv_len);
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input aad
-    hex_conversion(buffer_nist_aad_h, (char **)&buffer_nist_aad_b, &buffer_nist_aad_len);
+    hex_conversion(buffer_nist_aad_h, (char* *)&buffer_nist_aad_b, &buffer_nist_aad_len);
     // Convert input mac
-    hex_conversion(buffer_cyber_chef_mac_h, (char **)&buffer_cyber_chef_mac_b, &buffer_cyber_chef_mac_len);
+    hex_conversion(buffer_cyber_chef_mac_h, (char* *)&buffer_cyber_chef_mac_b, &buffer_cyber_chef_mac_len);
 
     Crypto_TC_ApplySecurity(buffer_nist_pt_b, buffer_nist_pt_len, &ptr_enc_frame, &enc_frame_len);
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
@@ -1166,10 +1166,10 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
-    char *buffer_nist_pt_h = "200300060028C2"; // Empty Transfer frame
-    char *buffer_nist_iv_h = "d79cf22d504cc793c3fb6c8a";
-    char *buffer_cyber_chef_mac_h = "629c2143c30e2f8450b059cd559a7102";
+    char* buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
+    char* buffer_nist_pt_h = "200300060028C2"; // Empty Transfer frame
+    char* buffer_nist_iv_h = "d79cf22d504cc793c3fb6c8a";
+    char* buffer_cyber_chef_mac_h = "629c2143c30e2f8450b059cd559a7102";
     uint8_t* buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_cyber_chef_mac_b = NULL;
     int buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_key_len, buffer_cyber_chef_mac_len = 0;
 
@@ -1193,17 +1193,17 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     *test_association->ecs = CRYPTO_AES256_GCM;
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char* *)&buffer_nist_key_b, &buffer_nist_key_len);
     memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
+    hex_conversion(buffer_nist_pt_h, (char* *)&buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
+    hex_conversion(buffer_nist_iv_h, (char* *)&buffer_nist_iv_b, &buffer_nist_iv_len);
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input mac
-    hex_conversion(buffer_cyber_chef_mac_h, (char **)&buffer_cyber_chef_mac_b, &buffer_cyber_chef_mac_len);
+    hex_conversion(buffer_cyber_chef_mac_h, (char* *)&buffer_cyber_chef_mac_b, &buffer_cyber_chef_mac_len);
 
     Crypto_TC_ApplySecurity(buffer_nist_pt_b, buffer_nist_pt_len, &ptr_enc_frame, &enc_frame_len);
 
@@ -1247,14 +1247,14 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
 
     // NIST supplied vectors
-    char *buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
-    char *buffer_nist_iv_h = "d79cf22d504cc793c3fb6c8a";
-    char *buffer_cyber_chef_mac_h = "34d0e323f5e4b80426401d4aa37930da";
-    char *buffer_nist_pt_h = "722ee47da4b77424733546c2d400c4e5";
+    char* buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
+    char* buffer_nist_iv_h = "d79cf22d504cc793c3fb6c8a";
+    char* buffer_cyber_chef_mac_h = "34d0e323f5e4b80426401d4aa37930da";
+    char* buffer_nist_pt_h = "722ee47da4b77424733546c2d400c4e5";
 
     // Create a MAC'd frame by adding our headers and a fecf
     //  |  Header | SPI |           iv          |         plaintext             |             mac               |fecf|
-    char *buffer_nist_mac_frame_h =
+    char* buffer_nist_mac_frame_h =
         "2003003500FF0009D79CF22D504CC793C3FB6C8A722ee47da4b77424733546c2d400c4e534d0e323f5e4b80426401d4aa37930daf55f";
 
     uint8_t* buffer_nist_iv_b, *buffer_nist_pt_b, *buffer_nist_key_b, *buffer_cyber_chef_mac_b,
@@ -1286,19 +1286,19 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     *test_association->ecs = CRYPTO_AES256_GCM;
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char* *)&buffer_nist_key_b, &buffer_nist_key_len);
     memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
+    hex_conversion(buffer_nist_pt_h, (char* *)&buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
+    hex_conversion(buffer_nist_iv_h, (char* *)&buffer_nist_iv_b, &buffer_nist_iv_len);
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input mac
-    hex_conversion(buffer_cyber_chef_mac_h, (char **)&buffer_cyber_chef_mac_b, &buffer_cyber_chef_mac_len);
+    hex_conversion(buffer_cyber_chef_mac_h, (char* *)&buffer_cyber_chef_mac_b, &buffer_cyber_chef_mac_len);
     // Convert mac frame
-    hex_conversion(buffer_nist_mac_frame_h, (char **)&buffer_nist_mac_frame_b, &buffer_nist_mac_frame_len);
+    hex_conversion(buffer_nist_mac_frame_h, (char* *)&buffer_nist_mac_frame_b, &buffer_nist_mac_frame_len);
 
     status = Crypto_TC_ProcessSecurity(buffer_nist_mac_frame_b, &buffer_nist_mac_frame_len, tc_nist_processed_frame);
     //printf("TC_Process returned status %d\n", status);
@@ -1372,15 +1372,15 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_DATA)
     crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
 
     // NIST supplied vectors
-    char *buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
-    char *buffer_nist_iv_h = "d79cf22d504cc793c3fb6c8a";
-    // char *buffer_cyber_chef_mac_h = "99eff39be8327e6950f03a329209d577";
-    char *buffer_cyber_chef_mac_h = "34d0e323f5e4b80426401d4aa37930da";
-    char *buffer_nist_pt_h = "722ee47da4b77424733546c2d400c4e5";
+    char* buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
+    char* buffer_nist_iv_h = "d79cf22d504cc793c3fb6c8a";
+    // char* buffer_cyber_chef_mac_h = "99eff39be8327e6950f03a329209d577";
+    char* buffer_cyber_chef_mac_h = "34d0e323f5e4b80426401d4aa37930da";
+    char* buffer_nist_pt_h = "722ee47da4b77424733546c2d400c4e5";
 
     // Create a MAC'd frame by adding our headers and a fecf
     //  |  Header | SPI |           iv          |         plaintext             |             mac               |fecf|
-    char *buffer_nist_mac_frame_h =
+    char* buffer_nist_mac_frame_h =
         "2003003500FF0009D79CF22D504CC793C3FB6C8A722ee47da4b77424733546c2d400c40034d0e323f5e4b80426401d4aa37930da123b";
 
     uint8_t* buffer_nist_iv_b, *buffer_nist_pt_b, *buffer_nist_key_b, *buffer_cyber_chef_mac_b,
@@ -1412,19 +1412,19 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_DATA)
     *test_association->ecs = CRYPTO_AES256_GCM;
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char* *)&buffer_nist_key_b, &buffer_nist_key_len);
     memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
+    hex_conversion(buffer_nist_pt_h, (char* *)&buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
+    hex_conversion(buffer_nist_iv_h, (char* *)&buffer_nist_iv_b, &buffer_nist_iv_len);
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input mac
-    hex_conversion(buffer_cyber_chef_mac_h, (char **)&buffer_cyber_chef_mac_b, &buffer_cyber_chef_mac_len);
+    hex_conversion(buffer_cyber_chef_mac_h, (char* *)&buffer_cyber_chef_mac_b, &buffer_cyber_chef_mac_len);
     // Convert mac frame
-    hex_conversion(buffer_nist_mac_frame_h, (char **)&buffer_nist_mac_frame_b, &buffer_nist_mac_frame_len);
+    hex_conversion(buffer_nist_mac_frame_h, (char* *)&buffer_nist_mac_frame_b, &buffer_nist_mac_frame_len);
 
     status = Crypto_TC_ProcessSecurity(buffer_nist_mac_frame_b, &buffer_nist_mac_frame_len, tc_nist_processed_frame);
     //printf("TC_Process returned status %d\n", status);
@@ -1473,15 +1473,15 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_MAC)
     crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
 
     // NIST supplied vectors
-    char *buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
-    char *buffer_nist_iv_h = "d79cf22d504cc793c3fb6c8a";
-    // char *buffer_cyber_chef_mac_h = "99eff39be8327e6950f03a329209d577";
-    char *buffer_cyber_chef_mac_h = "34d0e323f5e4b80426401d4aa37930da";
-    char *buffer_nist_pt_h = "722ee47da4b77424733546c2d400c4e5";
+    char* buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
+    char* buffer_nist_iv_h = "d79cf22d504cc793c3fb6c8a";
+    // char* buffer_cyber_chef_mac_h = "99eff39be8327e6950f03a329209d577";
+    char* buffer_cyber_chef_mac_h = "34d0e323f5e4b80426401d4aa37930da";
+    char* buffer_nist_pt_h = "722ee47da4b77424733546c2d400c4e5";
 
     // Create a MAC'd frame by adding our headers and a fecf
     //  |  Header | SPI |           iv          |         plaintext             |             mac               |fecf|
-    char *buffer_nist_mac_frame_h =
+    char* buffer_nist_mac_frame_h =
         "2003003500FF0009D79CF22D504CC793C3FB6C8A722ee47da4b77424733546c2d400c4e534d0e323f5e4b80426401d4aa37930009f68";
 
     uint8_t* buffer_nist_iv_b, *buffer_nist_pt_b, *buffer_nist_key_b, *buffer_cyber_chef_mac_b,
@@ -1513,19 +1513,19 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_MAC)
     *test_association->ecs = CRYPTO_AES256_GCM;
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char* *)&buffer_nist_key_b, &buffer_nist_key_len);
     memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
+    hex_conversion(buffer_nist_pt_h, (char* *)&buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
+    hex_conversion(buffer_nist_iv_h, (char* *)&buffer_nist_iv_b, &buffer_nist_iv_len);
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input mac
-    hex_conversion(buffer_cyber_chef_mac_h, (char **)&buffer_cyber_chef_mac_b, &buffer_cyber_chef_mac_len);
+    hex_conversion(buffer_cyber_chef_mac_h, (char* *)&buffer_cyber_chef_mac_b, &buffer_cyber_chef_mac_len);
     // Convert mac frame
-    hex_conversion(buffer_nist_mac_frame_h, (char **)&buffer_nist_mac_frame_b, &buffer_nist_mac_frame_len);
+    hex_conversion(buffer_nist_mac_frame_h, (char* *)&buffer_nist_mac_frame_b, &buffer_nist_mac_frame_len);
 
     status = Crypto_TC_ProcessSecurity(buffer_nist_mac_frame_b, &buffer_nist_mac_frame_len, tc_nist_processed_frame);
     //printf("TC_Process returned status %d\n", status);
@@ -1576,9 +1576,9 @@ UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
+    char* buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
     //                        |  Header |           NIST CMAC Test Vector                                                                                               |FECF|
-    char *buffer_frame_pt_h = "2003004600C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258C925";
+    char* buffer_frame_pt_h = "2003004600C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258C925";
     // Python truth string passed below is ZEROed out, not including a MAC or FECF which isn't hashed against, but the LENGTH (including fecf) needs to be updated in the Tf Header
     // Length is dependent on whatever the variable mac length to be updated in the header
     //  | Header |SPI|  ARSN  | NIST CMAC Frame Data                                                                                                         |
@@ -1614,13 +1614,13 @@ UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
     test_association->acs = CRYPTO_AES256_CMAC;
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char* *)&buffer_nist_key_b, &buffer_nist_key_len);
     memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
-    hex_conversion(buffer_frame_pt_h, (char **)&buffer_frame_pt_b, &buffer_frame_pt_len);
+    hex_conversion(buffer_frame_pt_h, (char* *)&buffer_frame_pt_b, &buffer_frame_pt_len);
     // Convert input mac
-    hex_conversion(buffer_python_mac_h, (char **)&buffer_python_mac_b, &buffer_python_mac_len);
+    hex_conversion(buffer_python_mac_h, (char* *)&buffer_python_mac_b, &buffer_python_mac_len);
 
     Crypto_TC_ApplySecurity(buffer_frame_pt_b, buffer_frame_pt_len, &ptr_enc_frame, &enc_frame_len);
 
@@ -1664,13 +1664,13 @@ UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
+    char* buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
     //                        |  Header |           NIST CMAC Test Vector                                                                                               |FECF|
-    char *buffer_frame_pt_h = "2003004600C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258C925";
+    char* buffer_frame_pt_h = "2003004600C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258C925";
     // Python truth string passed below, not including a MAC or FECF which isn't hashed against, but the LENGTH (including fecf) needs to be updated in the Tf Header
     // Length is dependent on whatevr the variable mac length to be updated in the header
     //                           | Header |SPI|  ARSN  | NIST CMAC Frame Data                                                                                                         |
-    // char *buffer_frame_pt_h = "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258";
+    // char* buffer_frame_pt_h = "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258";
     //                           2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258CF549CC15D63EAB7AD25EB3089D94E6C2D9D
     // Python output MAC   
     char* buffer_python_mac_h = "cf549cc15d63eab7ad25eb3089d94e6c";
@@ -1702,13 +1702,13 @@ UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
     test_association->acs = CRYPTO_AES256_CMAC;
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char* *)&buffer_nist_key_b, &buffer_nist_key_len);
     memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
-    hex_conversion(buffer_frame_pt_h, (char **)&buffer_frame_pt_b, &buffer_frame_pt_len);
+    hex_conversion(buffer_frame_pt_h, (char* *)&buffer_frame_pt_b, &buffer_frame_pt_len);
     // Convert input mac
-    hex_conversion(buffer_python_mac_h, (char **)&buffer_python_mac_b, &buffer_python_mac_len);
+    hex_conversion(buffer_python_mac_h, (char* *)&buffer_python_mac_b, &buffer_python_mac_len);
 
     Crypto_TC_ApplySecurity(buffer_frame_pt_b, buffer_frame_pt_len, &ptr_enc_frame, &enc_frame_len);
 
@@ -1749,13 +1749,13 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
+    char* buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
     //                        | Header  |SPI|  ARSN  |           NIST CMAC Test Vector                                                                                               |   MAC                        |FECF|
-    char *buffer_frame_pt_h = "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F193942587629961f6b92145290ad3e149940511a46ce";
+    char* buffer_frame_pt_h = "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F193942587629961f6b92145290ad3e149940511a46ce";
     // Python truth string passed below, not including a MAC or FECF which isn't hashed against, but the LENGTH (including fecf) needs to be updated in the Tf Header
     // Length is dependent on whatevr the variable mac length to be updated in the header
     //                           | Header |SPI|  ARSN  | NIST CMAC Frame Data                                                                                                         |
-    // char *buffer_frame_pt_h = "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258";
+    // char* buffer_frame_pt_h = "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258";
     //                           2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258CF549CC15D63EAB7AD25EB3089D94E6C2D9D
     // Zeroed out w. bitmask      000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     // Python output MAC   
@@ -1791,13 +1791,13 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
     tc_sdls_processed_frame = calloc(1, sizeof(uint8_t) * TC_SIZE);
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char* *)&buffer_nist_key_b, &buffer_nist_key_len);
     memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
-    hex_conversion(buffer_frame_pt_h, (char **)&buffer_frame_pt_b, &buffer_frame_pt_len);
+    hex_conversion(buffer_frame_pt_h, (char* *)&buffer_frame_pt_b, &buffer_frame_pt_len);
     // Convert input mac
-    hex_conversion(buffer_python_mac_h, (char **)&buffer_python_mac_b, &buffer_python_mac_len);
+    hex_conversion(buffer_python_mac_h, (char* *)&buffer_python_mac_b, &buffer_python_mac_len);
 
     Crypto_TC_ProcessSecurity(buffer_frame_pt_b, &buffer_frame_pt_len, tc_sdls_processed_frame);
 
@@ -1840,13 +1840,13 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
+    char* buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
     //                        | Header  |SPI|  ARSN  |           NIST CMAC Test Vector                                                                                               |   MAC                        |FECF|
-    char *buffer_frame_pt_h = "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258CF549CC15D63EAB7AD25EB3089D94E6C2D9D";
+    char* buffer_frame_pt_h = "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258CF549CC15D63EAB7AD25EB3089D94E6C2D9D";
     // Python truth string passed below, not including a MAC or FECF which isn't hashed against, but the LENGTH (including fecf) needs to be updated in the Tf Header
     // Length is dependent on whatevr the variable mac length to be updated in the header
     //                           | Header |SPI|  ARSN  | NIST CMAC Frame Data                                                                                                         |
-    // char *buffer_frame_pt_h = "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258";
+    // char* buffer_frame_pt_h = "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258";
     //                           2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258CF549CC15D63EAB7AD25EB3089D94E6C2D9D
     // Python output MAC   
     char* buffer_python_mac_h = "cf549cc15d63eab7ad25eb3089d94e6c";
@@ -1881,13 +1881,13 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
     tc_sdls_processed_frame = calloc(1, sizeof(uint8_t) * TC_SIZE);
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char* *)&buffer_nist_key_b, &buffer_nist_key_len);
     memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
-    hex_conversion(buffer_frame_pt_h, (char **)&buffer_frame_pt_b, &buffer_frame_pt_len);
+    hex_conversion(buffer_frame_pt_h, (char* *)&buffer_frame_pt_b, &buffer_frame_pt_len);
     // Convert input mac
-    hex_conversion(buffer_python_mac_h, (char **)&buffer_python_mac_b, &buffer_python_mac_len);
+    hex_conversion(buffer_python_mac_h, (char* *)&buffer_python_mac_b, &buffer_python_mac_len);
 
     Crypto_TC_ProcessSecurity(buffer_frame_pt_b, &buffer_frame_pt_len, tc_sdls_processed_frame);
 

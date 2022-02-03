@@ -321,7 +321,7 @@ typedef void (*utest_testcase_t)(int *, size_t);
 struct utest_test_state_s {
   utest_testcase_t func;
   size_t index;
-  char *name;
+  char* name;
 };
 
 struct utest_state_s {
@@ -799,9 +799,9 @@ utest_type_printer(long long unsigned int i) {
   }                                                                            \
   UTEST_INITIALIZER(utest_register_##SET##_##NAME) {                           \
     const size_t index = utest_state.tests_length++;                           \
-    const char *name_part = #SET "." #NAME;                                    \
+    const char* name_part = #SET "." #NAME;                                    \
     const size_t name_size = strlen(name_part) + 1;                            \
-    char *name = UTEST_PTR_CAST(char *, malloc(name_size));                    \
+    char* name = UTEST_PTR_CAST(char* , malloc(name_size));                    \
     utest_state.tests = UTEST_PTR_CAST(                                        \
         struct utest_test_state_s *,                                           \
         utest_realloc(UTEST_PTR_CAST(void* , utest_state.tests),               \
@@ -841,9 +841,9 @@ utest_type_printer(long long unsigned int i) {
   }                                                                            \
   UTEST_INITIALIZER(utest_register_##FIXTURE##_##NAME) {                       \
     const size_t index = utest_state.tests_length++;                           \
-    const char *name_part = #FIXTURE "." #NAME;                                \
+    const char* name_part = #FIXTURE "." #NAME;                                \
     const size_t name_size = strlen(name_part) + 1;                            \
-    char *name = UTEST_PTR_CAST(char *, malloc(name_size));                    \
+    char* name = UTEST_PTR_CAST(char* , malloc(name_size));                    \
     utest_state.tests = UTEST_PTR_CAST(                                        \
         struct utest_test_state_s *,                                           \
         utest_realloc(UTEST_PTR_CAST(void* , utest_state.tests),               \
@@ -883,9 +883,9 @@ utest_type_printer(long long unsigned int i) {
     utest_uint64_t iUp;                                                        \
     for (i = 0; i < (INDEX); i++) {                                            \
       const size_t index = utest_state.tests_length++;                         \
-      const char *name_part = #FIXTURE "." #NAME;                              \
+      const char* name_part = #FIXTURE "." #NAME;                              \
       const size_t name_size = strlen(name_part) + 32;                         \
-      char *name = UTEST_PTR_CAST(char *, malloc(name_size));                  \
+      char* name = UTEST_PTR_CAST(char* , malloc(name_size));                  \
       utest_state.tests = UTEST_PTR_CAST(                                      \
           struct utest_test_state_s *,                                         \
           utest_realloc(UTEST_PTR_CAST(void* , utest_state.tests),             \
@@ -902,13 +902,13 @@ utest_type_printer(long long unsigned int i) {
                                               struct FIXTURE *utest_fixture)
 
 UTEST_WEAK
-int utest_should_filter_test(const char *filter, const char *testcase);
-UTEST_WEAK int utest_should_filter_test(const char *filter,
-                                        const char *testcase) {
+int utest_should_filter_test(const char* filter, const char* testcase);
+UTEST_WEAK int utest_should_filter_test(const char* filter,
+                                        const char* testcase) {
   if (filter) {
-    const char *filter_cur = filter;
-    const char *testcase_cur = testcase;
-    const char *filter_wildcard = UTEST_NULL;
+    const char* filter_cur = filter;
+    const char* testcase_cur = testcase;
+    const char* filter_wildcard = UTEST_NULL;
 
     while (('\0' != *filter_cur) && ('\0' != *testcase_cur)) {
       if ('*' == *filter_cur) {
@@ -969,7 +969,7 @@ UTEST_WEAK int utest_should_filter_test(const char *filter,
   return 0;
 }
 
-static UTEST_INLINE FILE *utest_fopen(const char *filename, const char *mode) {
+static UTEST_INLINE FILE *utest_fopen(const char* filename, const char* mode) {
 #ifdef _MSC_VER
   FILE *file;
   if (0 == fopen_s(&file, filename, mode)) {
@@ -982,19 +982,19 @@ static UTEST_INLINE FILE *utest_fopen(const char *filename, const char *mode) {
 #endif
 }
 
-static UTEST_INLINE int utest_main(int argc, const char *const argv[]);
-int utest_main(int argc, const char *const argv[]) {
+static UTEST_INLINE int utest_main(int argc, const char* const argv[]);
+int utest_main(int argc, const char* const argv[]) {
   utest_uint64_t failed = 0;
   size_t index = 0;
   size_t* failed_testcases = UTEST_NULL;
   size_t failed_testcases_length = 0;
-  const char *filter = UTEST_NULL;
+  const char* filter = UTEST_NULL;
   utest_uint64_t ran_tests = 0;
 
   enum colours { U_RESET, U_GREEN, U_RED };
 
   const int use_colours = UTEST_COLOUR_OUTPUT();
-  const char *colours[] = {"\033[0m", "\033[32m", "\033[31m"};
+  const char* colours[] = {"\033[0m", "\033[32m", "\033[31m"};
 
   if (!use_colours) {
     for (index = 0; index < sizeof colours / sizeof colours[0]; index++) {
@@ -1149,7 +1149,7 @@ cleanup:
 */
 #define UTEST_MAIN()                                                           \
   UTEST_STATE();                                                               \
-  int main(int argc, const char *const argv[]) {                               \
+  int main(int argc, const char* const argv[]) {                               \
     return utest_main(argc, argv);                                             \
   }
 

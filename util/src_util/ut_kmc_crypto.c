@@ -51,8 +51,8 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_APPLY_SEC_ENC_AND_AUTH)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
     int32_t status = Crypto_Init();
 
-    char *raw_tc_jpl_mmt_scid44_vcid1= "202c0408000001bd37";
-    char *raw_tc_jpl_mmt_scid44_vcid1_expect = NULL;
+    char* raw_tc_jpl_mmt_scid44_vcid1= "202c0408000001bd37";
+    char* raw_tc_jpl_mmt_scid44_vcid1_expect = NULL;
     int raw_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
 
     hex_conversion(raw_tc_jpl_mmt_scid44_vcid1, &raw_tc_jpl_mmt_scid44_vcid1_expect, &raw_tc_jpl_mmt_scid44_vcid1_expect_len);
@@ -102,8 +102,8 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_APPLY_SEC_ENC_AND_AUTH)
 //    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
 //    int32_t status = Crypto_Init();
 //
-//    char *raw_tc_jpl_mmt_scid44_vcid1= "202c0808000001361c";
-//    char *raw_tc_jpl_mmt_scid44_vcid1_expect = NULL;
+//    char* raw_tc_jpl_mmt_scid44_vcid1= "202c0808000001361c";
+//    char* raw_tc_jpl_mmt_scid44_vcid1_expect = NULL;
 //    int raw_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
 //
 //    hex_conversion(raw_tc_jpl_mmt_scid44_vcid1, &raw_tc_jpl_mmt_scid44_vcid1_expect, &raw_tc_jpl_mmt_scid44_vcid1_expect_len);
@@ -158,8 +158,8 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_APPLY_SEC_AUTH_ONLY)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
     int32_t status = Crypto_Init();
 
-    char *raw_tc_jpl_mmt_scid44_vcid1= "202c0C08000001bf1a";
-    char *raw_tc_jpl_mmt_scid44_vcid1_expect = NULL;
+    char* raw_tc_jpl_mmt_scid44_vcid1= "202c0C08000001bf1a";
+    char* raw_tc_jpl_mmt_scid44_vcid1_expect = NULL;
     int raw_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
 
     hex_conversion(raw_tc_jpl_mmt_scid44_vcid1, &raw_tc_jpl_mmt_scid44_vcid1_expect, &raw_tc_jpl_mmt_scid44_vcid1_expect_len);
@@ -215,8 +215,8 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_ENC_AND_AUTH)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
     int32_t status = Crypto_Init();
 
-    char *enc_tc_jpl_mmt_scid44_vcid1= "202C0426000002000000000000000000000001669C5639DCCFEA8C6CE33230EE2E7065496367CC";
-    char *enc_tc_jpl_mmt_scid44_vcid1_expect = NULL;
+    char* enc_tc_jpl_mmt_scid44_vcid1= "202C0426000002000000000000000000000001669C5639DCCFEA8C6CE33230EE2E7065496367CC";
+    char* enc_tc_jpl_mmt_scid44_vcid1_expect = NULL;
     int enc_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
 
     // Data=0001
@@ -275,8 +275,8 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_ENC_AND_AUTH)
 //    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
 //    int32_t status = Crypto_Init();
 //
-//    char *enc_tc_jpl_mmt_scid44_vcid1= "202C0816000003000000000000000000000001669CD238";
-//    char *enc_tc_jpl_mmt_scid44_vcid1_expect = NULL;
+//    char* enc_tc_jpl_mmt_scid44_vcid1= "202C0816000003000000000000000000000001669CD238";
+//    char* enc_tc_jpl_mmt_scid44_vcid1_expect = NULL;
 //    int enc_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
 //
 //    // IV = 000000000000000000000001
@@ -341,8 +341,8 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_AUTH_ONLY)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
     int32_t status = Crypto_Init();
 
-    char *enc_tc_jpl_mmt_scid44_vcid1= "202C0C2600000400000000000000000000000100016E2051F96CAB186BCE364A65AF599AE52F38";
-    char *enc_tc_jpl_mmt_scid44_vcid1_expect = NULL;
+    char* enc_tc_jpl_mmt_scid44_vcid1= "202C0C2600000400000000000000000000000100016E2051F96CAB186BCE364A65AF599AE52F38";
+    char* enc_tc_jpl_mmt_scid44_vcid1_expect = NULL;
     int enc_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
 
     // Data=0001

@@ -30,12 +30,12 @@
  **/
 UTEST(CRYPTO_C, CALC_CRC16)
 {
-    char *data_h = "2003002000ff000100001880d2c9000e197f0b001b0004000400003040d95e";
+    char* data_h = "2003002000ff000100001880d2c9000e197f0b001b0004000400003040d95e";
     uint8_t* data_b = NULL;
     int data_b_len = 0;
     Crypto_Init_Unit_Test();
 
-    hex_conversion(data_h, (char **)&data_b, &data_b_len);
+    hex_conversion(data_h, (char**) &data_b, &data_b_len);
 
     int size = 31;
     uint16_t crc = 0x00;
@@ -58,8 +58,8 @@ UTEST(CRYPTO_C, BAD_CC_FLAG)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_NO_SEGMENT_HDRS);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_NO_FECF, TC_NO_SEGMENT_HDRS);
     Crypto_Init();
-    char *raw_tc_sdls_ping_h = "3003002000ff000100001880d2c9000e197f0b001b0004000400003040d95ea61a";
-    char *raw_tc_sdls_ping_b = NULL;
+    char* raw_tc_sdls_ping_h = "3003002000ff000100001880d2c9000e197f0b001b0004000400003040d95ea61a";
+    char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
