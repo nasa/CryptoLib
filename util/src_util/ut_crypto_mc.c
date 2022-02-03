@@ -84,7 +84,7 @@ UTEST(CRYPTO_MC, READARSN)
 
     Crypto_Init_Unit_Test();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-    SecurityAssociation_t *test_association = NULL;
+    SecurityAssociation_t* test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
 
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);

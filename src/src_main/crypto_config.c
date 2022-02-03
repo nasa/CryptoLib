@@ -26,11 +26,11 @@
 */
 SadbRoutine sadb_routine = NULL;
 CryptographyInterface cryptography_if = NULL;
-CryptoConfig_t *crypto_config = NULL;
-SadbMariaDBConfig_t *sadb_mariadb_config = NULL;
-CryptographyKmcCryptoServiceConfig_t *cryptography_kmc_crypto_config = NULL;
-GvcidManagedParameters_t *gvcid_managed_parameters = NULL;
-GvcidManagedParameters_t *current_managed_parameters = NULL;
+CryptoConfig_t* crypto_config = NULL;
+SadbMariaDBConfig_t* sadb_mariadb_config = NULL;
+CryptographyKmcCryptoServiceConfig_t* cryptography_kmc_crypto_config = NULL;
+GvcidManagedParameters_t* gvcid_managed_parameters = NULL;
+GvcidManagedParameters_t* current_managed_parameters = NULL;
 
 /*
 ** Initialization Functions
@@ -59,8 +59,8 @@ int32_t Crypto_Init_Unit_Test(void)
  * @param sadb_mariadb_config_p: SadbMariaDBConfig_t*
  * @return int32: Success/Failure
  **/
-int32_t Crypto_Init_With_Configs(CryptoConfig_t *crypto_config_p, GvcidManagedParameters_t *gvcid_managed_parameters_p,
-                                 SadbMariaDBConfig_t *sadb_mariadb_config_p, CryptographyKmcCryptoServiceConfig_t *cryptography_kmc_crypto_config_p)
+int32_t Crypto_Init_With_Configs(CryptoConfig_t* crypto_config_p, GvcidManagedParameters_t* gvcid_managed_parameters_p,
+                                 SadbMariaDBConfig_t* sadb_mariadb_config_p, CryptographyKmcCryptoServiceConfig_t* cryptography_kmc_crypto_config_p)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     crypto_config = crypto_config_p;
@@ -241,7 +241,7 @@ int32_t Crypto_Config_CryptoLib(uint8_t sadb_type, uint8_t cryptography_type, ui
                                 uint8_t unique_sa_per_mapid, uint8_t crypto_check_fecf, uint8_t vcid_bitmask)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    crypto_config = (CryptoConfig_t *)calloc(1, CRYPTO_CONFIG_SIZE);
+    crypto_config = (CryptoConfig_t* )calloc(1, CRYPTO_CONFIG_SIZE);
     crypto_config->sadb_type = sadb_type;
     crypto_config->cryptography_type = cryptography_type;
     crypto_config->crypto_create_fecf = crypto_create_fecf;
@@ -300,7 +300,7 @@ extern int32_t Crypto_Config_Kmc_Crypto_Service(char *protocol, char *kmc_crypto
                                                 char *mtls_client_key_pass, char *mtls_issuer_cert)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    cryptography_kmc_crypto_config = (CryptographyKmcCryptoServiceConfig_t *)calloc(1, CRYPTOGRAPHY_KMC_CRYPTO_SERVICE_CONFIG_SIZE);
+    cryptography_kmc_crypto_config = (CryptographyKmcCryptoServiceConfig_t* )calloc(1, CRYPTOGRAPHY_KMC_CRYPTO_SERVICE_CONFIG_SIZE);
     cryptography_kmc_crypto_config->protocol = protocol;
     cryptography_kmc_crypto_config->kmc_crypto_hostname = kmc_crypto_hostname;
     cryptography_kmc_crypto_config->kmc_crypto_port = kmc_crypto_port;
@@ -338,7 +338,7 @@ int32_t Crypto_Config_Add_Gvcid_Managed_Parameter(uint8_t tfvn, uint16_t scid, u
 
     if (gvcid_managed_parameters == NULL)
     { // case: Global Root Node not Set
-        gvcid_managed_parameters = (GvcidManagedParameters_t *)calloc(1, GVCID_MANAGED_PARAMETERS_SIZE);
+        gvcid_managed_parameters = (GvcidManagedParameters_t* )calloc(1, GVCID_MANAGED_PARAMETERS_SIZE);
         if(gvcid_managed_parameters != NULL)
         {
             gvcid_managed_parameters->tfvn = tfvn;
@@ -375,7 +375,7 @@ int32_t Crypto_Config_Add_Gvcid_Managed_Parameter(uint8_t tfvn, uint16_t scid, u
  **/
 int32_t crypto_config_add_gvcid_managed_parameter_recursion(uint8_t tfvn, uint16_t scid, uint8_t vcid, uint8_t has_fecf,
                                                             uint8_t has_segmentation_hdr,
-                                                            GvcidManagedParameters_t *managed_parameter)
+                                                            GvcidManagedParameters_t* managed_parameter)
 {
     if (managed_parameter->next != NULL)
     {
@@ -384,7 +384,7 @@ int32_t crypto_config_add_gvcid_managed_parameter_recursion(uint8_t tfvn, uint16
     }
     else
     {
-        managed_parameter->next = (GvcidManagedParameters_t *)calloc(1, GVCID_MANAGED_PARAMETERS_SIZE);
+        managed_parameter->next = (GvcidManagedParameters_t* )calloc(1, GVCID_MANAGED_PARAMETERS_SIZE);
         managed_parameter->next->tfvn = tfvn;
         managed_parameter->next->scid = scid;
         managed_parameter->next->vcid = vcid;
@@ -431,6 +431,7 @@ void Crypto_Local_Config(void)
  **/
 void Crypto_Local_Init(void)
 {
+    int x;
 
     // Initialize TM Frame
     // TM Header
@@ -447,21 +448,21 @@ void Crypto_Local_Init(void)
     tm_frame.tm_header.fhp = 0;
     // TM Security Header
     tm_frame.tm_sec_header.spi = 0x0000;
-    for (int x = 0; x < IV_SIZE; x++)
+    for (x = 0; x < IV_SIZE; x++)
     { // Initialization Vector
         *(tm_frame.tm_sec_header.iv + x) = 0x00;
     }
     // TM Payload Data Unit
-    for (int x = 0; x < TM_FRAME_DATA_SIZE; x++)
+    for (x = 0; x < TM_FRAME_DATA_SIZE; x++)
     { // Zero TM PDU
         tm_frame.tm_pdu[x] = 0x00;
     }
     // TM Security Trailer
-    for (int x = 0; x < MAC_SIZE; x++)
+    for (x = 0; x < MAC_SIZE; x++)
     { // Zero TM Message Authentication Code
         tm_frame.tm_sec_trailer.mac[x] = 0x00;
     }
-    for (int x = 0; x < OCF_SIZE; x++)
+    for (x = 0; x < OCF_SIZE; x++)
     { // Zero TM Operational Control Field
         tm_frame.tm_sec_trailer.ocf[x] = 0x00;
     }
@@ -503,12 +504,14 @@ void Crypto_Calc_CRC_Init_Table(void)
     uint16_t val;
     uint32_t poly = 0xEDB88320;
     uint32_t crc;
+    unsigned int i;
+    unsigned int j;
 
     // http://create.stephan-brumme.com/crc32/
-    for (unsigned int i = 0; i <= 0xFF; i++)
+    for (i = 0; i <= 0xFF; i++)
     {
         crc = i;
-        for (unsigned int j = 0; j < 8; j++)
+        for (j = 0; j < 8; j++)
         {
             crc = (crc >> 1) ^ (-(int)(crc & 1) & poly);
         }
@@ -517,7 +520,7 @@ void Crypto_Calc_CRC_Init_Table(void)
     }
 
     // Code provided by ESA
-    for (int i = 0; i < 256; i++)
+    for (i = 0; i < 256; i++)
     {
         val = 0;
         if ((i & 1) != 0)

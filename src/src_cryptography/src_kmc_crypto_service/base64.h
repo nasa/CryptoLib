@@ -44,11 +44,11 @@ typedef char char_t;
 typedef unsigned int uint_t;
 
 //Base64 encoding related functions
-void base64Encode(const void *input, size_t inputLen, char_t *output,
-                  size_t *outputLen);
+void base64Encode(const void* input, size_t inputLen, char_t* output,
+                  size_t* outputLen);
 
-int32_t base64Decode(const char_t *input, size_t inputLen, void *output,
-                     size_t *outputLen);
+int32_t base64Decode(const char_t* input, size_t inputLen, void* output,
+                     size_t* outputLen);
 
 #define ERROR_INVALID_PARAMETER 21
 #define ERROR_INVALID_LENGTH 22

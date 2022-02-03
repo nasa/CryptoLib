@@ -28,15 +28,15 @@ static int32_t sadb_config(void);
 static int32_t sadb_init(void);
 static int32_t sadb_close(void);
 // Security Association Interaction Functions
-static int32_t sadb_get_sa_from_spi(uint16_t, SecurityAssociation_t **);
-static int32_t sadb_get_operational_sa_from_gvcid(uint8_t, uint16_t, uint16_t, uint8_t, SecurityAssociation_t **);
-static int32_t sadb_save_sa(SecurityAssociation_t *sa);
+static int32_t sadb_get_sa_from_spi(uint16_t, SecurityAssociation_t* *);
+static int32_t sadb_get_operational_sa_from_gvcid(uint8_t, uint16_t, uint16_t, uint8_t, SecurityAssociation_t* *);
+static int32_t sadb_save_sa(SecurityAssociation_t* sa);
 // Security Association Utility Functions
 static int32_t sadb_sa_stop(void);
-static int32_t sadb_sa_start(TC_t *tc_frame);
+static int32_t sadb_sa_start(TC_t* tc_frame);
 static int32_t sadb_sa_expire(void);
 static int32_t sadb_sa_rekey(void);
-static int32_t sadb_sa_status(uint8_t *);
+static int32_t sadb_sa_status(uint8_t* );
 static int32_t sadb_sa_create(void);
 static int32_t sadb_sa_setARSN(void);
 static int32_t sadb_sa_setARSNW(void);
@@ -60,9 +60,9 @@ static const char *SQL_SADB_UPDATE_IV_ARC_BY_SPI =
         " WHERE spi='%d' AND tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d'";
 
 // sadb_routine mariaDB private helper functions
-static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **security_association);
-static int32_t convert_hexstring_to_byte_array(char *hexstr, uint8_t *byte_array);
-static char *convert_byte_array_to_hexstring(void *src_buffer, size_t buffer_length);
+static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t* *security_association);
+static int32_t convert_hexstring_to_byte_array(char *hexstr, uint8_t* byte_array);
+static char *convert_byte_array_to_hexstring(void* src_buffer, size_t buffer_length);
 
 /*
 ** Global Variables
@@ -172,7 +172,7 @@ static int32_t sadb_close(void)
 }
 
 // Security Association Interaction Functions
-static int32_t sadb_get_sa_from_spi(uint16_t spi, SecurityAssociation_t **security_association)
+static int32_t sadb_get_sa_from_spi(uint16_t spi, SecurityAssociation_t* *security_association)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
@@ -184,7 +184,7 @@ static int32_t sadb_get_sa_from_spi(uint16_t spi, SecurityAssociation_t **securi
     return status;
 }
 static int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uint16_t vcid, uint8_t mapid,
-                                                  SecurityAssociation_t **security_association)
+                                                  SecurityAssociation_t* *security_association)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
@@ -195,7 +195,7 @@ static int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, u
 
     return status;
 }
-static int32_t sadb_save_sa(SecurityAssociation_t *sa)
+static int32_t sadb_save_sa(SecurityAssociation_t* sa)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     if (sa == NULL)
@@ -236,7 +236,7 @@ static int32_t sadb_sa_stop(void)
 {
     return CRYPTO_LIB_SUCCESS;
 }
-static int32_t sadb_sa_start(TC_t *tc_frame)
+static int32_t sadb_sa_start(TC_t* tc_frame)
 {
     tc_frame = tc_frame;
     return CRYPTO_LIB_SUCCESS;
@@ -249,7 +249,7 @@ static int32_t sadb_sa_rekey(void)
 {
     return CRYPTO_LIB_SUCCESS;
 }
-static int32_t sadb_sa_status(uint8_t *ingest)
+static int32_t sadb_sa_status(uint8_t* ingest)
 {
     ingest = ingest;
     return CRYPTO_LIB_SUCCESS;
@@ -272,10 +272,10 @@ static int32_t sadb_sa_delete(void)
 }
 
 // sadb_routine private helper functions
-static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **security_association)
+static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t* *security_association)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    SecurityAssociation_t *sa = malloc(sizeof(SecurityAssociation_t));
+    SecurityAssociation_t* sa = malloc(sizeof(SecurityAssociation_t));
 
 #ifdef SA_DEBUG
     fprintf(stderr, "MySQL Query: %s \n", query);
@@ -483,9 +483,9 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
         }
         // printf("\n");
     }
-    sa->iv = (uint8_t *)calloc(1, sa->shivf_len * sizeof(uint8_t));
-    sa->arc = (uint8_t *)calloc(1, sa->arc_len * sizeof(uint8_t));
-    sa->abm = (uint8_t *)calloc(1, sa->abm_len * sizeof(uint8_t));
+    sa->iv = (uint8_t* )calloc(1, sa->shivf_len * sizeof(uint8_t));
+    sa->arc = (uint8_t* )calloc(1, sa->arc_len * sizeof(uint8_t));
+    sa->abm = (uint8_t* )calloc(1, sa->abm_len * sizeof(uint8_t));
     sa->ecs = calloc(1, sa->ecs_len * sizeof(uint8_t));
     convert_hexstring_to_byte_array(iv_byte_str, sa->iv);
     convert_hexstring_to_byte_array(arc_byte_str, sa->arc);
@@ -498,7 +498,7 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
 
     return status;
 }
-static int32_t convert_hexstring_to_byte_array(char *source_str, uint8_t *dest_buffer)
+static int32_t convert_hexstring_to_byte_array(char *source_str, uint8_t* dest_buffer)
 { // https://stackoverflow.com/questions/3408706/hexadecimal-string-to-byte-array-in-c/56247335#56247335
     char *line = source_str;
     char *data = line;
@@ -514,7 +514,7 @@ static int32_t convert_hexstring_to_byte_array(char *source_str, uint8_t *dest_b
     return data_len;
 }
 
-static char *convert_byte_array_to_hexstring(void *src_buffer, size_t buffer_length)
+static char *convert_byte_array_to_hexstring(void* src_buffer, size_t buffer_length)
 {
     if (buffer_length == 0)
     { // Return empty string (with null char!) if buffer is empty

@@ -29,7 +29,7 @@
  * @param len_ingest: int*
  * @return int32: Success/Failure
  **/
-int32_t Crypto_TM_ApplySecurity(uint8_t *ingest, int *len_ingest)
+int32_t Crypto_TM_ApplySecurity(uint8_t* ingest, int *len_ingest)
 // Accepts CCSDS message in ingest, and packs into TM before encryption
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -46,7 +46,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *ingest, int *len_ingest)
     uint16_t spi = tm_frame.tm_sec_header.spi;
     uint16_t spp_crc = 0x0000;
     SecurityAssociation_t sa;
-    SecurityAssociation_t *sa_ptr = &sa;
+    SecurityAssociation_t* sa_ptr = &sa;
 
     memset(&tempTM, 0, TM_SIZE);
 
@@ -74,7 +74,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *ingest, int *len_ingest)
         ingest[2] = 0xFF;
         ingest[3] = 0xFF;
         // Add 2 bytes of CRC to space packet
-        spp_crc = Crypto_Calc_CRC16((uint8_t *)ingest, *len_ingest);
+        spp_crc = Crypto_Calc_CRC16((uint8_t* )ingest, *len_ingest);
         ingest[*len_ingest] = (spp_crc & 0xFF00) >> 8;
         ingest[*len_ingest + 1] = (spp_crc & 0x00FF);
         *len_ingest = *len_ingest + 2;
@@ -177,7 +177,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *ingest, int *len_ingest)
     }
     // Frame Error Control Field
     fecf_loc = count;
-    tm_frame.tm_sec_trailer.fecf = Crypto_Calc_FECF((uint8_t *)tempTM, count);
+    tm_frame.tm_sec_trailer.fecf = Crypto_Calc_FECF((uint8_t* )tempTM, count);
     tempTM[count++] = (uint8_t)((tm_frame.tm_sec_trailer.fecf & 0xFF00) >> 8);
     tempTM[count++] = (uint8_t)(tm_frame.tm_sec_trailer.fecf & 0x00FF);
 
@@ -243,7 +243,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *ingest, int *len_ingest)
         }
 
         // Update FECF
-        tm_frame.tm_sec_trailer.fecf = Crypto_Calc_FECF((uint8_t *)ingest, fecf_loc - 1);
+        tm_frame.tm_sec_trailer.fecf = Crypto_Calc_FECF((uint8_t* )ingest, fecf_loc - 1);
         ingest[fecf_loc] = (uint8_t)((tm_frame.tm_sec_trailer.fecf & 0xFF00) >> 8);
         ingest[fecf_loc + 1] = (uint8_t)(tm_frame.tm_sec_trailer.fecf & 0x00FF);
     }
@@ -284,7 +284,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *ingest, int *len_ingest)
  * @param len_ingest: int*
  * @return int32: Success/Failure
  **/
-int32_t Crypto_TM_ProcessSecurity(uint8_t *ingest, int *len_ingest)
+int32_t Crypto_TM_ProcessSecurity(uint8_t* ingest, int *len_ingest)
 {
     // Local Variables
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -327,11 +327,12 @@ int32_t Crypto_Get_tmLength(int len)
  * @param ingest: uint8_t*
  * @param len_ingest: int
  **/
-void Crypto_TM_updatePDU(uint8_t *ingest, int len_ingest)
+void Crypto_TM_updatePDU(uint8_t* ingest, int len_ingest)
 { // Copy ingest to PDU
     int x = 0;
+    int y = 0;
     int fill_size = 0;
-    SecurityAssociation_t *sa_ptr;
+    SecurityAssociation_t* sa_ptr;
 
     if (sadb_routine->sadb_get_sa_from_spi(tm_frame.tm_sec_header.spi, &sa_ptr) != CRYPTO_LIB_SUCCESS)
     {
@@ -349,7 +350,7 @@ void Crypto_TM_updatePDU(uint8_t *ingest, int len_ingest)
     }
 
 #ifdef TM_ZERO_FILL
-    for (int x = 0; x < TM_FILL_SIZE; x++)
+    for (x = 0; x < TM_FILL_SIZE; x++)
     {
         if (x < len_ingest)
         { // Fill
@@ -415,7 +416,7 @@ void Crypto_TM_updatePDU(uint8_t *ingest, int len_ingest)
             tm_frame.tm_pdu[x++] = 0x00;
             tm_frame.tm_pdu[x++] = 0x00;
             tm_frame.tm_pdu[x++] = 0x39;
-            for (int y = 0; y < 58; y++)
+            for (y = 0; y < 58; y++)
             {
                 tm_frame.tm_pdu[x++] = 0x00;
             }
@@ -451,7 +452,7 @@ void Crypto_TM_updatePDU(uint8_t *ingest, int len_ingest)
             tm_frame.tm_pdu[x++] = 0x39;
             tm_offset--;
         }
-        for (int y = 0; x < fill_size; y++)
+        for (y = 0; x < fill_size; y++)
         {
             tm_frame.tm_pdu[x++] = 00;
             tm_offset--;

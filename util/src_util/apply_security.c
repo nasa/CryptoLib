@@ -60,21 +60,21 @@ int main(int argc, char *argv[])
     // Setup & Initialize CryptoLib
     Crypto_Init();
 
-    uint8_t *ptr_enc_frame = NULL;
+    uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
 
     // Call ApplySecurity on buffer contents depending on type.
     if (strcmp(security_type, "tc") == 0)
     {
-        Crypto_TC_ApplySecurity((uint8_t *)buffer, (const uint16_t)buffer_size_i, &ptr_enc_frame, &enc_frame_len);
+        Crypto_TC_ApplySecurity((uint8_t* )buffer, (const uint16_t)buffer_size_i, &ptr_enc_frame, &enc_frame_len);
     }
     else if (strcmp(security_type, "tm") == 0)
     {
-        Crypto_TM_ApplySecurity((uint8_t *)buffer, (int *)&buffer_size_i);
+        Crypto_TM_ApplySecurity((uint8_t* )buffer, (int *)&buffer_size_i);
     }
     else if (strcmp(security_type, "aos") == 0)
     {
-        Crypto_AOS_ApplySecurity((uint8_t *)buffer, (int *)&buffer_size_i);
+        Crypto_AOS_ApplySecurity((uint8_t* )buffer, (int *)&buffer_size_i);
     }
 
 #ifdef TC_DEBUG

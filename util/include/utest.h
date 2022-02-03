@@ -274,8 +274,8 @@ UTEST_C_FUNC __declspec(dllimport) int __stdcall QueryPerformanceFrequency(
 #endif
 #endif
 
-static UTEST_INLINE void *utest_realloc(void *const pointer, size_t new_size) {
-  void *const new_pointer = realloc(pointer, new_size);
+static UTEST_INLINE void* utest_realloc(void* const pointer, size_t new_size) {
+  void* const new_pointer = realloc(pointer, new_size);
 
   if (UTEST_NULL == new_pointer) {
     free(new_pointer);
@@ -419,8 +419,8 @@ UTEST_WEAK UTEST_OVERLOADABLE void utest_type_printer(long unsigned int i) {
   UTEST_PRINTF("%lu", i);
 }
 
-UTEST_WEAK UTEST_OVERLOADABLE void utest_type_printer(const void *p);
-UTEST_WEAK UTEST_OVERLOADABLE void utest_type_printer(const void *p) {
+UTEST_WEAK UTEST_OVERLOADABLE void utest_type_printer(const void* p);
+UTEST_WEAK UTEST_OVERLOADABLE void utest_type_printer(const void* p) {
   UTEST_PRINTF("%p", p);
 }
 
@@ -804,7 +804,7 @@ utest_type_printer(long long unsigned int i) {
     char *name = UTEST_PTR_CAST(char *, malloc(name_size));                    \
     utest_state.tests = UTEST_PTR_CAST(                                        \
         struct utest_test_state_s *,                                           \
-        utest_realloc(UTEST_PTR_CAST(void *, utest_state.tests),               \
+        utest_realloc(UTEST_PTR_CAST(void* , utest_state.tests),               \
                       sizeof(struct utest_test_state_s) *                      \
                           utest_state.tests_length));                          \
     utest_state.tests[index].func = &utest_##SET##_##NAME;                     \
@@ -846,7 +846,7 @@ utest_type_printer(long long unsigned int i) {
     char *name = UTEST_PTR_CAST(char *, malloc(name_size));                    \
     utest_state.tests = UTEST_PTR_CAST(                                        \
         struct utest_test_state_s *,                                           \
-        utest_realloc(UTEST_PTR_CAST(void *, utest_state.tests),               \
+        utest_realloc(UTEST_PTR_CAST(void* , utest_state.tests),               \
                       sizeof(struct utest_test_state_s) *                      \
                           utest_state.tests_length));                          \
     utest_state.tests[index].func = &utest_f_##FIXTURE##_##NAME;               \
@@ -888,7 +888,7 @@ utest_type_printer(long long unsigned int i) {
       char *name = UTEST_PTR_CAST(char *, malloc(name_size));                  \
       utest_state.tests = UTEST_PTR_CAST(                                      \
           struct utest_test_state_s *,                                         \
-          utest_realloc(UTEST_PTR_CAST(void *, utest_state.tests),             \
+          utest_realloc(UTEST_PTR_CAST(void* , utest_state.tests),             \
                         sizeof(struct utest_test_state_s) *                    \
                             utest_state.tests_length));                        \
       utest_state.tests[index].func = &utest_i_##FIXTURE##_##NAME##_##INDEX;   \
@@ -986,7 +986,7 @@ static UTEST_INLINE int utest_main(int argc, const char *const argv[]);
 int utest_main(int argc, const char *const argv[]) {
   utest_uint64_t failed = 0;
   size_t index = 0;
-  size_t *failed_testcases = UTEST_NULL;
+  size_t* failed_testcases = UTEST_NULL;
   size_t failed_testcases_length = 0;
   const char *filter = UTEST_NULL;
   utest_uint64_t ran_tests = 0;
@@ -1085,7 +1085,7 @@ int utest_main(int argc, const char *const argv[]) {
     if (0 != result) {
       const size_t failed_testcase_index = failed_testcases_length++;
       failed_testcases = UTEST_PTR_CAST(
-          size_t *, utest_realloc(UTEST_PTR_CAST(void *, failed_testcases),
+          size_t* , utest_realloc(UTEST_PTR_CAST(void* , failed_testcases),
                                   sizeof(size_t) * failed_testcases_length));
       if (UTEST_NULL != failed_testcases) {
         failed_testcases[failed_testcase_index] = index;
@@ -1119,11 +1119,11 @@ int utest_main(int argc, const char *const argv[]) {
 
 cleanup:
   for (index = 0; index < utest_state.tests_length; index++) {
-    free(UTEST_PTR_CAST(void *, utest_state.tests[index].name));
+    free(UTEST_PTR_CAST(void* , utest_state.tests[index].name));
   }
 
-  free(UTEST_PTR_CAST(void *, failed_testcases));
-  free(UTEST_PTR_CAST(void *, utest_state.tests));
+  free(UTEST_PTR_CAST(void* , failed_testcases));
+  free(UTEST_PTR_CAST(void* , utest_state.tests));
 
   if (utest_state.output) {
     fclose(utest_state.output);

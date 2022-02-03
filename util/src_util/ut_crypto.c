@@ -31,7 +31,7 @@
 UTEST(CRYPTO_C, CALC_CRC16)
 {
     char *data_h = "2003002000ff000100001880d2c9000e197f0b001b0004000400003040d95e";
-    uint8_t *data_b = NULL;
+    uint8_t* data_b = NULL;
     int data_b_len = 0;
     Crypto_Init_Unit_Test();
 
@@ -64,13 +64,13 @@ UTEST(CRYPTO_C, BAD_CC_FLAG)
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
-    uint8_t *ptr_enc_frame = NULL;
+    uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
 
     int32_t return_val = CRYPTO_LIB_ERROR;
 
     return_val =
-        Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+        Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
     Crypto_Shutdown();
     free(raw_tc_sdls_ping_b);
     free(ptr_enc_frame);
@@ -96,9 +96,9 @@ UTEST(CRYPTO_C, PDU_SWITCH)
     sdls_frame.pdu.uf = 0;
     sdls_frame.pdu.sg = SG_KEY_MGMT;
     sdls_frame.pdu.pid = PID_OTAR;
-    uint8_t *ingest = NULL;
+    uint8_t* ingest = NULL;
 
-    TC_t *tc_frame;
+    TC_t* tc_frame;
     tc_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     status = Crypto_PDU(ingest, tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
@@ -251,8 +251,8 @@ UTEST(CRYPTO_C, PDU_SWITCH)
  **/
 UTEST(CRYPTO_C, EXT_PROC_PDU)
 {
-    uint8_t *ingest = NULL;
-    TC_t *tc_frame = NULL;
+    uint8_t* ingest = NULL;
+    TC_t* tc_frame = NULL;
     tc_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     int32_t status = CRYPTO_LIB_ERROR;
     crypto_config->has_pus_hdr = TC_NO_PUS_HDR;

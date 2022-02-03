@@ -27,7 +27,7 @@
  * @param len_ingest: int*
  * @return int32: Success/Failure
  **/
-int32_t Crypto_AOS_ApplySecurity(uint8_t *ingest, int *len_ingest)
+int32_t Crypto_AOS_ApplySecurity(uint8_t* ingest, int *len_ingest)
 {
     // Local Variables
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -53,7 +53,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *ingest, int *len_ingest)
  * @param len_ingest: int*
  * @return int32: Success/Failure
  **/
-int32_t Crypto_AOS_ProcessSecurity(uint8_t *ingest, int *len_ingest)
+int32_t Crypto_AOS_ProcessSecurity(uint8_t* ingest, int *len_ingest)
 {
     // Local Variables
     int32_t status = CRYPTO_LIB_SUCCESS;

@@ -33,15 +33,15 @@ typedef struct
     int32_t (*sadb_init)(void);
     int32_t (*sadb_close)(void);
     // Security Association Interaction Functions
-    int32_t (*sadb_get_sa_from_spi)(uint16_t, SecurityAssociation_t **);
-    int32_t (*sadb_get_operational_sa_from_gvcid)(uint8_t, uint16_t, uint16_t, uint8_t, SecurityAssociation_t **);
-    int32_t (*sadb_save_sa)(SecurityAssociation_t *);
+    int32_t (*sadb_get_sa_from_spi)(uint16_t, SecurityAssociation_t* *);
+    int32_t (*sadb_get_operational_sa_from_gvcid)(uint8_t, uint16_t, uint16_t, uint8_t, SecurityAssociation_t* *);
+    int32_t (*sadb_save_sa)(SecurityAssociation_t* );
     // Security Association Utility Functions
     int32_t (*sadb_sa_stop)(void);
-    int32_t (*sadb_sa_start)(TC_t *tc_frame);
+    int32_t (*sadb_sa_start)(TC_t* tc_frame);
     int32_t (*sadb_sa_expire)(void);
     int32_t (*sadb_sa_rekey)(void);
-    int32_t (*sadb_sa_status)(uint8_t *);
+    int32_t (*sadb_sa_status)(uint8_t* );
     int32_t (*sadb_sa_create)(void);
     int32_t (*sadb_sa_setARSN)(void);
     int32_t (*sadb_sa_setARSNW)(void);
@@ -51,6 +51,6 @@ typedef struct
 
 SadbRoutine get_sadb_routine_mariadb(void);
 SadbRoutine get_sadb_routine_inmemory(void);
-// SadbRoutine init_parse_sadb_routine(uint8_t *);
+// SadbRoutine init_parse_sadb_routine(uint8_t* );
 
 #endif // CRYPTOLIB_SADB_ROUTINE_H

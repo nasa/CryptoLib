@@ -19,15 +19,15 @@ static int32_t sadb_config(void);
 static int32_t sadb_init(void);
 static int32_t sadb_close(void);
 // Security Association Interaction Functions
-static int32_t sadb_get_sa_from_spi(uint16_t, SecurityAssociation_t **);
-static int32_t sadb_get_operational_sa_from_gvcid(uint8_t, uint16_t, uint16_t, uint8_t, SecurityAssociation_t **);
-static int32_t sadb_save_sa(SecurityAssociation_t *sa);
+static int32_t sadb_get_sa_from_spi(uint16_t, SecurityAssociation_t* *);
+static int32_t sadb_get_operational_sa_from_gvcid(uint8_t, uint16_t, uint16_t, uint8_t, SecurityAssociation_t* *);
+static int32_t sadb_save_sa(SecurityAssociation_t* sa);
 // Security Association Utility Functions
 static int32_t sadb_sa_stop(void);
-static int32_t sadb_sa_start(TC_t *tc_frame);
+static int32_t sadb_sa_start(TC_t* tc_frame);
 static int32_t sadb_sa_expire(void);
 static int32_t sadb_sa_rekey(void);
-static int32_t sadb_sa_status(uint8_t *);
+static int32_t sadb_sa_status(uint8_t* );
 static int32_t sadb_sa_create(void);
 static int32_t sadb_sa_setARSN(void);
 static int32_t sadb_sa_setARSNW(void);
@@ -96,10 +96,10 @@ int32_t sadb_config(void)
     sa[2].est = 1;
     sa[2].ast = 1;
     sa[2].shivf_len = 12;
-    sa[2].iv = (uint8_t *)calloc(1, sa[2].shivf_len * sizeof(uint8_t));
+    sa[2].iv = (uint8_t* )calloc(1, sa[2].shivf_len * sizeof(uint8_t));
     *(sa[2].iv + sa[2].shivf_len - 1) = 0;
     sa[2].abm_len = ABM_SIZE; // 20
-    sa[2].abm = (uint8_t *)calloc(1, sa[2].abm_len * sizeof(uint8_t));
+    sa[2].abm = (uint8_t* )calloc(1, sa[2].abm_len * sizeof(uint8_t));
     sa[2].arcw_len = 1;
     sa[2].arcw = 5;
     sa[2].arc_len = (sa[2].arcw * 2) + 1;
@@ -111,10 +111,10 @@ int32_t sadb_config(void)
     sa[3].est = 1;
     sa[3].ast = 1;
     sa[3].shivf_len = 12;
-    sa[3].iv = (uint8_t *)calloc(1, sa[3].shivf_len * sizeof(uint8_t));
+    sa[3].iv = (uint8_t* )calloc(1, sa[3].shivf_len * sizeof(uint8_t));
     *(sa[3].iv + sa[3].shivf_len - 1) = 0;
     sa[3].abm_len = ABM_SIZE; // 20
-    sa[3].abm = (uint8_t *)calloc(1, sa[3].abm_len * sizeof(uint8_t));
+    sa[3].abm = (uint8_t* )calloc(1, sa[3].abm_len * sizeof(uint8_t));
     sa[3].arcw_len = 1;
     sa[3].arcw = 5;
     sa[3].arc_len = (sa[3].arcw * 2) + 1;
@@ -128,10 +128,10 @@ int32_t sadb_config(void)
     sa[4].ast = 1;
     sa[4].shivf_len = 12;
     sa[4].stmacf_len = 16;
-    sa[4].iv = (uint8_t *)calloc(1, sa[4].shivf_len * sizeof(uint8_t));
+    sa[4].iv = (uint8_t* )calloc(1, sa[4].shivf_len * sizeof(uint8_t));
     *(sa[4].iv + 11) = 0;
     sa[4].abm_len = ABM_SIZE; // 20
-    sa[4].abm = (uint8_t *)calloc(1, sa[4].abm_len * sizeof(uint8_t));
+    sa[4].abm = (uint8_t* )calloc(1, sa[4].abm_len * sizeof(uint8_t));
     sa[4].arcw_len = 1;
     sa[4].arcw = 5;
     sa[4].arc_len = (sa[4].arcw * 2) + 1;
@@ -147,10 +147,10 @@ int32_t sadb_config(void)
     sa[5].est = 1;
     sa[5].ast = 1;
     sa[5].shivf_len = 12;
-    sa[5].iv = (uint8_t *)calloc(1, sa[5].shivf_len * sizeof(uint8_t));
+    sa[5].iv = (uint8_t* )calloc(1, sa[5].shivf_len * sizeof(uint8_t));
     *(sa[5].iv + sa[5].shivf_len - 1) = 0;
     sa[5].abm_len = ABM_SIZE; // 20
-    sa[5].abm = (uint8_t *)calloc(1, sa[5].abm_len * sizeof(uint8_t));
+    sa[5].abm = (uint8_t* )calloc(1, sa[5].abm_len * sizeof(uint8_t));
     sa[5].arcw_len = 1;
     sa[5].arcw = 5;
     sa[5].arc_len = (sa[5].arcw * 2) + 1;
@@ -161,10 +161,10 @@ int32_t sadb_config(void)
     sa[6].est = 1;
     sa[6].ast = 1;
     sa[6].shivf_len = 12;
-    sa[6].iv = (uint8_t *)calloc(1, sa[6].shivf_len * sizeof(uint8_t));
+    sa[6].iv = (uint8_t* )calloc(1, sa[6].shivf_len * sizeof(uint8_t));
     *(sa[6].iv + sa[6].shivf_len - 1) = 0;
     sa[6].abm_len = ABM_SIZE; // 20
-    sa[6].abm = (uint8_t *)calloc(1, sa[6].abm_len * sizeof(uint8_t));
+    sa[6].abm = (uint8_t* )calloc(1, sa[6].abm_len * sizeof(uint8_t));
     sa[6].arcw_len = 1;
     sa[6].arcw = 5;
     sa[6].arc_len = (sa[6].arcw * 2) + 1;
@@ -176,10 +176,10 @@ int32_t sadb_config(void)
     sa[7].est = 1;
     sa[7].ast = 1;
     sa[7].shivf_len = 12;
-    sa[7].iv = (uint8_t *)calloc(1, sa[7].shivf_len * sizeof(uint8_t));
+    sa[7].iv = (uint8_t* )calloc(1, sa[7].shivf_len * sizeof(uint8_t));
     *(sa[7].iv + sa[7].shivf_len - 1) = 0;
     sa[7].abm_len = ABM_SIZE; // 20
-    sa[7].abm = (uint8_t *)calloc(1, sa[7].abm_len * sizeof(uint8_t));
+    sa[7].abm = (uint8_t* )calloc(1, sa[7].abm_len * sizeof(uint8_t));
     sa[7].arcw_len = 1;
     sa[7].arcw = 5;
     sa[7].arc_len = (sa[7].arcw * 2) + 1;
@@ -208,10 +208,10 @@ int32_t sadb_config(void)
     sa[9].est = 1;
     sa[9].ast = 0;
     sa[9].shivf_len = 12;
-    sa[9].iv = (uint8_t *)calloc(1, sa[9].shivf_len * sizeof(uint8_t));
+    sa[9].iv = (uint8_t* )calloc(1, sa[9].shivf_len * sizeof(uint8_t));
     *(sa[9].iv + 11) = 0;
     sa[9].abm_len = ABM_SIZE; // 20
-    sa[9].abm = (uint8_t *)calloc(1, sa[9].abm_len * sizeof(uint8_t));
+    sa[9].abm = (uint8_t* )calloc(1, sa[9].abm_len * sizeof(uint8_t));
     sa[9].arcw_len = 1;
     sa[9].arcw = 5;
     sa[9].arc_len = (sa[9].arcw * 2) + 1;
@@ -230,8 +230,9 @@ int32_t sadb_config(void)
 int32_t sadb_init(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
+    int x;
 
-    for (int x = 0; x < NUM_SA; x++)
+    for (x = 0; x < NUM_SA; x++)
     {
         sa[x].ekid = x;
         sa[x].akid = x;
@@ -257,7 +258,9 @@ int32_t sadb_init(void)
 static int32_t sadb_close(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    for (int x = 0; x < NUM_SA; x++)
+    int x;
+
+    for (x = 0; x < NUM_SA; x++)
     {
         if(sa[x].ecs != NULL) free(sa[x].ecs);
         if(sa[x].iv != NULL) free(sa[x].iv);
@@ -276,7 +279,7 @@ static int32_t sadb_close(void)
  * @param security_association: SecurityAssociation_t**
  * @return int32: Success/Failure
  **/
-static int32_t sadb_get_sa_from_spi(uint16_t spi, SecurityAssociation_t **security_association)
+static int32_t sadb_get_sa_from_spi(uint16_t spi, SecurityAssociation_t* *security_association)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     if (sa == NULL)
@@ -309,15 +312,17 @@ static int32_t sadb_get_sa_from_spi(uint16_t spi, SecurityAssociation_t **securi
  * @return int32: Success/Failure
  **/
 static int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uint16_t vcid, uint8_t mapid,
-                                           SecurityAssociation_t **security_association)
+                                           SecurityAssociation_t* *security_association)
 {
     int32_t status = CRYPTO_LIB_ERR_NO_OPERATIONAL_SA;
+    int i;
+
     if (sa == NULL)
     {
         return CRYPTO_LIB_ERR_NO_INIT;
     }
 
-    for (int i = 0; i < 10; i++)
+    for (i = 0; i < 10; i++)
     {
         if ((sa[i].gvcid_tc_blk.tfvn == tfvn) && (sa[i].gvcid_tc_blk.scid == scid) &&
             (sa[i].gvcid_tc_blk.vcid == vcid) && (sa[i].sa_state == SA_OPERATIONAL) &&
@@ -351,7 +356,7 @@ static int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, u
         printf(KRED "Error - Making best attempt at a useful error code:\n\t" RESET);
 #endif
 
-        for (int i = 0; i < NUM_SA; i++)
+        for (i = 0; i < NUM_SA; i++)
         {
             // Could possibly have more than one field mismatched,
             // ordering so the 'most accurate' SA's error is returned
@@ -414,7 +419,7 @@ static int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, u
  * @return int32: Success/Failure
  * @note Nothing currently actually happens in this function
  **/
-static int32_t sadb_save_sa(SecurityAssociation_t *sa)
+static int32_t sadb_save_sa(SecurityAssociation_t* sa)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     sa = sa; // TODO - use argument
@@ -432,12 +437,14 @@ static int32_t sadb_save_sa(SecurityAssociation_t *sa)
  * @param tc_frame: TC_t
  * @return int32: Success/Failure
  **/
-static int32_t sadb_sa_start(TC_t *tc_frame)
+static int32_t sadb_sa_start(TC_t* tc_frame)
 {
     // Local variables
     uint8_t count = 0;
     uint16_t spi = 0x0000;
     crypto_gvcid_t gvcid;
+    int x;
+    int i;
 
     // Read ingest
     spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
@@ -453,7 +460,7 @@ static int32_t sadb_sa_start(TC_t *tc_frame)
         {
             count = 2;
 
-            for (int x = 0; x <= ((sdls_frame.pdu.pdu_len - 2) / 4); x++)
+            for (x = 0; x <= ((sdls_frame.pdu.pdu_len - 2) / 4); x++)
             { // Read in GVCID
                 gvcid.tfvn = (sdls_frame.pdu.data[count] >> 4);
                 gvcid.scid = (sdls_frame.pdu.data[count] << 12) | (sdls_frame.pdu.data[count + 1] << 4) |
@@ -495,7 +502,7 @@ static int32_t sadb_sa_start(TC_t *tc_frame)
                 { // Clear all GVCIDs for provided SPI
                     if (gvcid.mapid == TYPE_TM)
                     {
-                        for (int i = 0; i < NUM_GVCID; i++)
+                        for (i = 0; i < NUM_GVCID; i++)
                         { // TM
                             sa[spi].gvcid_tm_blk[x].tfvn = 0;
                             sa[spi].gvcid_tm_blk[x].scid = 0;
@@ -565,6 +572,7 @@ static int32_t sadb_sa_stop(void)
 {
     // Local variables
     uint16_t spi = 0x0000;
+    int x;
 
     // Read ingest
     spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
@@ -584,7 +592,7 @@ static int32_t sadb_sa_stop(void)
             sa[spi].gvcid_tc_blk.scid = 0;
             sa[spi].gvcid_tc_blk.vcid = 0;
             sa[spi].gvcid_tc_blk.mapid = 0;
-            for (int x = 0; x < NUM_GVCID; x++)
+            for (x = 0; x < NUM_GVCID; x++)
             {
                 // TM
                 sa[spi].gvcid_tm_blk[x].tfvn = 0;
@@ -745,6 +753,7 @@ static int32_t sadb_sa_create(void)
     // Local variables
     uint8_t count = 6;
     uint16_t spi = 0x0000;
+    int x;
 
     // Read sdls_frame.pdu.data
     spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
@@ -762,28 +771,28 @@ static int32_t sadb_sa_create(void)
     {
         free(sa[spi].iv);
     }
-    sa[spi].iv = (uint8_t *)calloc(1, sa[spi].shivf_len * sizeof(uint8_t));
+    sa[spi].iv = (uint8_t* )calloc(1, sa[spi].shivf_len * sizeof(uint8_t));
     sa[spi].shsnf_len = ((uint8_t)sdls_frame.pdu.data[3] & 0xFC) >> 2;
     sa[spi].shplf_len = ((uint8_t)sdls_frame.pdu.data[3] & 0x03);
     sa[spi].stmacf_len = ((uint8_t)sdls_frame.pdu.data[4]);
     sa[spi].ecs_len = ((uint8_t)sdls_frame.pdu.data[5]);
-    for (int x = 0; x < sa[spi].ecs_len; x++)
+    for (x = 0; x < sa[spi].ecs_len; x++)
     {
         *(sa[spi].ecs + x) = ((uint8_t)sdls_frame.pdu.data[count++]);
     }
     sa[spi].shivf_len = ((uint8_t)sdls_frame.pdu.data[count++]);
-    for (int x = 0; x < sa[spi].shivf_len; x++)
+    for (x = 0; x < sa[spi].shivf_len; x++)
     {
         *(sa[spi].iv + x) = ((uint8_t)sdls_frame.pdu.data[count++]);
     }
     sa[spi].acs_len = ((uint8_t)sdls_frame.pdu.data[count++]);
-    for (int x = 0; x < sa[spi].acs_len; x++)
+    for (x = 0; x < sa[spi].acs_len; x++)
     {
         sa[spi].acs = ((uint8_t)sdls_frame.pdu.data[count++]);
     }
     sa[spi].abm_len = (uint8_t)((sdls_frame.pdu.data[count] << 8) | (sdls_frame.pdu.data[count + 1]));
     count = count + 2;
-    for (int x = 0; x < sa[spi].abm_len; x++)
+    for (x = 0; x < sa[spi].abm_len; x++)
     {
         sa[spi].abm[x] = ((uint8_t)sdls_frame.pdu.data[count++]);
     }
@@ -792,13 +801,13 @@ static int32_t sadb_sa_create(void)
     {
         free(sa[spi].arc);
     }
-    sa[spi].arc = (uint8_t *)calloc(1, sa[spi].arc_len * sizeof(uint8_t));
-    for (int x = 0; x < sa[spi].arc_len; x++)
+    sa[spi].arc = (uint8_t* )calloc(1, sa[spi].arc_len * sizeof(uint8_t));
+    for (x = 0; x < sa[spi].arc_len; x++)
     {
         *(sa[spi].arc + x) = ((uint8_t)sdls_frame.pdu.data[count++]);
     }
     sa[spi].arcw_len = ((uint8_t)sdls_frame.pdu.data[count++]);
-    for (int x = 0; x < sa[spi].arcw_len; x++)
+    for (x = 0; x < sa[spi].arcw_len; x++)
     {
         sa[spi].arcw = sa[spi].arcw | (((uint8_t)sdls_frame.pdu.data[count++]) << (sa[spi].arcw_len - x));
     }
@@ -865,6 +874,7 @@ static int32_t sadb_sa_setARSN(void)
 {
     // Local variables
     uint16_t spi = 0x0000;
+    int x;
 
     // Read ingest
     spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
@@ -881,7 +891,7 @@ static int32_t sadb_sa_setARSN(void)
 #endif
         if (sa[spi].shivf_len > 0)
         { // Set IV - authenticated encryption
-            for (int x = 0; x < IV_SIZE; x++)
+            for (x = 0; x < IV_SIZE; x++)
             {
                 *(sa[spi].iv + x) = (uint8_t)sdls_frame.pdu.data[x + 2];
 #ifdef PDU_DEBUG
@@ -914,6 +924,7 @@ static int32_t sadb_sa_setARSNW(void)
 {
     // Local variables
     uint16_t spi = 0x0000;
+    int x;
 
     // Read ingest
     spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
@@ -930,7 +941,7 @@ static int32_t sadb_sa_setARSNW(void)
             sa[spi].arcw_len = ARC_SIZE;
         }
 
-        for (int x = 0; x < sa[spi].arcw_len; x++)
+        for (x = 0; x < sa[spi].arcw_len; x++)
         {
             sa[spi].arcw = (((uint8_t)sdls_frame.pdu.data[x + 3]) << (sa[spi].arcw_len - x));
         }
@@ -948,7 +959,7 @@ static int32_t sadb_sa_setARSNW(void)
  * @param ingest: uint8_t*
  * @return int32: count
  **/
-static int32_t sadb_sa_status(uint8_t *ingest)
+static int32_t sadb_sa_status(uint8_t* ingest)
 {
     if(ingest == NULL) return CRYPTO_LIB_ERROR;
     

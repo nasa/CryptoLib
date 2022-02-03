@@ -126,7 +126,7 @@ struct _GvcidManagedParameters_t
     uint8_t vcid : 6;   // Virtual Channel ID
     TcFecfPresent has_fecf;
     TcSegmentHdrsPresent has_segmentation_hdr;
-    GvcidManagedParameters_t *next; // Will be a list of managed parameters!
+    GvcidManagedParameters_t* next; // Will be a list of managed parameters!
 };
 #define GVCID_MANAGED_PARAMETERS_SIZE (sizeof(GvcidManagedParameters_t))
 

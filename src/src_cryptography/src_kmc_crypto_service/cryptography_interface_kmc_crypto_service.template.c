@@ -72,10 +72,10 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
 
 // libcurl call back and support function declarations
 static void configure_curl_connect_opts(CURL* curl);
-static size_t write_callback(void *data, size_t size, size_t nmemb, void *userp);
-static size_t read_callback(char *dest, size_t size, size_t nmemb, void *userp);
+static size_t write_callback(void* data, size_t size, size_t nmemb, void* userp);
+static size_t read_callback(char *dest, size_t size, size_t nmemb, void* userp);
 static char* int_to_str(uint32_t int_src, uint32_t* converted_str_length);
-static int jsoneq(const char *json, jsmntok_t *tok, const char *s);
+static int jsoneq(const char *json, jsmntok_t* tok, const char *s);
 
 
 /*
@@ -183,7 +183,7 @@ static int32_t cryptography_config(void)
         /* send all data to this function  */
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
         /* we pass our 'chunk' struct to the callback function */
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)chunk);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void* )chunk);
 
         CURLcode res;
         res = curl_easy_perform(curl);
@@ -1083,7 +1083,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
 }
 
 // libcurl local functions
-static size_t write_callback(void *data, size_t size, size_t nmemb, void *userp)
+static size_t write_callback(void* data, size_t size, size_t nmemb, void* userp)
 {
     size_t realsize = size * nmemb;
     memory_write *mem = (memory_write *)userp;
@@ -1109,7 +1109,7 @@ static size_t write_callback(void *data, size_t size, size_t nmemb, void *userp)
     return realsize;
 }
 
-static size_t read_callback(char *dest, size_t size, size_t nmemb, void *userp)
+static size_t read_callback(char *dest, size_t size, size_t nmemb, void* userp)
 {
     memory_read *wt = (memory_read *)userp;
     size_t buffer_size = size*nmemb;
@@ -1183,7 +1183,7 @@ static char* int_to_str(uint32_t int_src, uint32_t* converted_str_length)
 
 // JSON local functions
 
-static int jsoneq(const char *json, jsmntok_t *tok, const char *s)
+static int jsoneq(const char *json, jsmntok_t* tok, const char *s)
 {
     if (tok->type == JSMN_STRING && (int)strlen(s) == tok->end - tok->start &&
         strncmp(json + tok->start, s, tok->end - tok->start) == 0) {
