@@ -44,9 +44,7 @@ jobs:
       working-directory: ${{github.workspace}}/build
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: |
-        gcov -b -o crypto_aos.c.gnco crypto_config.c.gnco crypto_key_mgmt.c.gnco crypto_mc.c.gnco crypto_tc.c.gnco crypto_tm.c.gnco crypto_user.c.gnco crypto.c.gnco sadb_routine_inmemory.template.c.gnco 
-        lcov -c --directory ${{github.workspace}}/src/CMakeFiles/Crypto.dir/src_main --output-file {{github.workspace}}/build/coverage/results.info
+      run: gcov -b -o crypto_aos.c.gnco crypto_config.c.gnco crypto_key_mgmt.c.gnco crypto_mc.c.gnco crypto_tc.c.gnco crypto_tm.c.gnco crypto_user.c.gnco crypto.c.gnco sadb_routine_inmemory.template.c.gnco 
   
     - name: Upload 
       uses: codecov/codecov-action@v1
