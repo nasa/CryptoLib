@@ -81,7 +81,7 @@ extern int32_t Crypto_Shutdown(void); // Free all allocated memory
 
 // Telecommand (TC)
 extern int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_frame_length,
-                                       uint8_t* *pp_enc_frame, uint16_t* p_enc_frame_len);
+                                       uint8_t** pp_enc_frame, uint16_t* p_enc_frame_len);
 extern int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdls_processed_frame);
 // Telemetry (TM)
 extern int32_t Crypto_TM_ApplySecurity(uint8_t* ingest, int *len_ingest);
@@ -143,7 +143,7 @@ int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame);
 // Managed Parameter Functions
 int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
                                                        GvcidManagedParameters_t* managed_parameters_in,
-                                                       GvcidManagedParameters_t* *managed_parameters_out);
+                                                       GvcidManagedParameters_t** managed_parameters_out);
 int32_t crypto_config_add_gvcid_managed_parameter_recursion(uint8_t tfvn, uint16_t scid, uint8_t vcid,
                                                                    uint8_t has_fecf, uint8_t has_segmentation_hdr,
                                                                    GvcidManagedParameters_t* managed_parameter);

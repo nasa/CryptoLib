@@ -28,8 +28,8 @@ static int32_t sadb_config(void);
 static int32_t sadb_init(void);
 static int32_t sadb_close(void);
 // Security Association Interaction Functions
-static int32_t sadb_get_sa_from_spi(uint16_t, SecurityAssociation_t* *);
-static int32_t sadb_get_operational_sa_from_gvcid(uint8_t, uint16_t, uint16_t, uint8_t, SecurityAssociation_t* *);
+static int32_t sadb_get_sa_from_spi(uint16_t, SecurityAssociation_t**);
+static int32_t sadb_get_operational_sa_from_gvcid(uint8_t, uint16_t, uint16_t, uint8_t, SecurityAssociation_t**);
 static int32_t sadb_save_sa(SecurityAssociation_t* sa);
 // Security Association Utility Functions
 static int32_t sadb_sa_stop(void);
@@ -60,7 +60,7 @@ static const char* SQL_SADB_UPDATE_IV_ARC_BY_SPI =
         " WHERE spi='%d' AND tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d'";
 
 // sadb_routine mariaDB private helper functions
-static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t* *security_association);
+static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** security_association);
 static int32_t convert_hexstring_to_byte_array(char* hexstr, uint8_t* byte_array);
 static char* convert_byte_array_to_hexstring(void* src_buffer, size_t buffer_length);
 
@@ -172,7 +172,7 @@ static int32_t sadb_close(void)
 }
 
 // Security Association Interaction Functions
-static int32_t sadb_get_sa_from_spi(uint16_t spi, SecurityAssociation_t* *security_association)
+static int32_t sadb_get_sa_from_spi(uint16_t spi, SecurityAssociation_t** security_association)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
@@ -184,7 +184,7 @@ static int32_t sadb_get_sa_from_spi(uint16_t spi, SecurityAssociation_t* *securi
     return status;
 }
 static int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uint16_t vcid, uint8_t mapid,
-                                                  SecurityAssociation_t* *security_association)
+                                                  SecurityAssociation_t** security_association)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
@@ -272,7 +272,7 @@ static int32_t sadb_sa_delete(void)
 }
 
 // sadb_routine private helper functions
-static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t* *security_association)
+static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** security_association)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     SecurityAssociation_t* sa = malloc(sizeof(SecurityAssociation_t));

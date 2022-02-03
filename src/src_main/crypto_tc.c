@@ -32,7 +32,7 @@
  * @param p_enc_frame_len: uint16
  * @return int32: Success/Failure
  **/
-int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_frame_length, uint8_t* *pp_in_frame,
+int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_frame_length, uint8_t** pp_in_frame,
                                 uint16_t* p_enc_frame_len)
 {
     // Local Variables

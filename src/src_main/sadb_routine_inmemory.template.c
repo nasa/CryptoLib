@@ -19,8 +19,8 @@ static int32_t sadb_config(void);
 static int32_t sadb_init(void);
 static int32_t sadb_close(void);
 // Security Association Interaction Functions
-static int32_t sadb_get_sa_from_spi(uint16_t, SecurityAssociation_t* *);
-static int32_t sadb_get_operational_sa_from_gvcid(uint8_t, uint16_t, uint16_t, uint8_t, SecurityAssociation_t* *);
+static int32_t sadb_get_sa_from_spi(uint16_t, SecurityAssociation_t**);
+static int32_t sadb_get_operational_sa_from_gvcid(uint8_t, uint16_t, uint16_t, uint8_t, SecurityAssociation_t**);
 static int32_t sadb_save_sa(SecurityAssociation_t* sa);
 // Security Association Utility Functions
 static int32_t sadb_sa_stop(void);
@@ -279,7 +279,7 @@ static int32_t sadb_close(void)
  * @param security_association: SecurityAssociation_t**
  * @return int32: Success/Failure
  **/
-static int32_t sadb_get_sa_from_spi(uint16_t spi, SecurityAssociation_t* *security_association)
+static int32_t sadb_get_sa_from_spi(uint16_t spi, SecurityAssociation_t** security_association)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     if (sa == NULL)
@@ -312,7 +312,7 @@ static int32_t sadb_get_sa_from_spi(uint16_t spi, SecurityAssociation_t* *securi
  * @return int32: Success/Failure
  **/
 static int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uint16_t vcid, uint8_t mapid,
-                                           SecurityAssociation_t* *security_association)
+                                           SecurityAssociation_t** security_association)
 {
     int32_t status = CRYPTO_LIB_ERR_NO_OPERATIONAL_SA;
     int i;

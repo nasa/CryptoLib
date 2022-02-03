@@ -38,7 +38,7 @@ extern "C"
     void debug_printf(const char* format, ...);
     void debug_hexprintf(const char* bin_data, int size_bin_data);
 
-    void hex_conversion(char* buffer_h, char* *buffer_b, int *buffer_b_length);
+    void hex_conversion(char* buffer_h, char** buffer_b, int *buffer_b_length);
     int convert_hexstring_to_byte_array(char* source_str, char* dest_buffer);
 
 #ifdef __cplusplus

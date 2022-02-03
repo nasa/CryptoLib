@@ -614,7 +614,7 @@ int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
  **/
 int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
                                                 GvcidManagedParameters_t* managed_parameters_in,
-                                                GvcidManagedParameters_t* *managed_parameters_out)
+                                                GvcidManagedParameters_t** managed_parameters_out)
 {
     int32_t status = MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND;
 
@@ -664,7 +664,7 @@ void Crypto_Free_Managed_Parameters(GvcidManagedParameters_t* managed_parameters
  * @param tc_sdls_processed_frame: TC_t*
  * @param ingest: uint8_t*
  * @note TODO - Actually update based on variable config
- * */
+ **/
 int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, uint8_t* ingest)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;

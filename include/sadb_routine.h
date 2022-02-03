@@ -33,8 +33,8 @@ typedef struct
     int32_t (*sadb_init)(void);
     int32_t (*sadb_close)(void);
     // Security Association Interaction Functions
-    int32_t (*sadb_get_sa_from_spi)(uint16_t, SecurityAssociation_t* *);
-    int32_t (*sadb_get_operational_sa_from_gvcid)(uint8_t, uint16_t, uint16_t, uint8_t, SecurityAssociation_t* *);
+    int32_t (*sadb_get_sa_from_spi)(uint16_t, SecurityAssociation_t** );
+    int32_t (*sadb_get_operational_sa_from_gvcid)(uint8_t, uint16_t, uint16_t, uint8_t, SecurityAssociation_t**);
     int32_t (*sadb_save_sa)(SecurityAssociation_t* );
     // Security Association Utility Functions
     int32_t (*sadb_sa_stop)(void);
