@@ -1,0 +1,13 @@
+ignore:
+  - "util/src_util/process_security.c"
+  - "util/src_util/ut_mysql_tls_connection.c"
+  - "util/src_util/ut_mysql_m_tls_connection.c"  
+  - "util/src_util/ut_kmc_crypto.c"
+  - "util/src_util/ut_kmc_crypto_aes_cmac.c"
+  - "util/src_util/apply_security.c"
+  - "util/src_util/crypto_sequence.c"
+  - "util/include/utest.h"
+  - "util/core/shared_util.c"
+  - "src/src_main/crypto_print.c"
+  - "src/src_feature_stubs/cryptography_kmc_stub/cryptography_interface_kmc.stub.c"
+  - "src/src_feature_stubs/mysql_stub/sadb_routine_mariadb.stub.c"

@@ -1,0 +1,90 @@
+# Copyright (C) 2009 - 2022 National Aeronautics and Space Administration. All Foreign Rights are Reserved to the U.S. Government.
+#   This software is provided "as is" without any warranty of any kind, either expressed, implied, or statutory, including, but not
+#   limited to, any warranty that the software will conform to specifications, any implied warranties of merchantability, fitness
+#   for a particular purpose, and freedom from infringement, and any warranty that the documentation will conform to the program, or
+#   any warranty that the software will be error free.
+#   In no event shall NASA be liable for any damages, including, but not limited to direct, indirect, special or consequential damages,
+#   arising out of, resulting from, or in any way connected with the software or its documentation, whether or not based upon warranty,
+#   contract, tort or otherwise, and whether or not loss was sustained from, or arose out of the results of, or use of, the software,
+#   documentation or services provided hereunder.
+#   ITC Team
+#   NASA IV&V
+#   jstar-development-team@mail.nasa.gov
+# 
+#
+#
+# sudo ansible-playbook cryptolib-centos.yml -i ./hosts
+---
+- name: CryptoLib CentOS 8 Setup
+  hosts: all 
+  vars:
+    # Set this to 1 to install visual studio code
+    # todo: make a command line variable
+    install_vscode: 0
+
+  tasks:
+    - name: install updates
+      yum: update_cache=yes
+    - name: install EPEL
+      dnf: 
+        name: epel-release
+        state: latest
+    - name: Install Dependencies
+      yum:
+        name: "{{ packages }}"
+      vars:
+        packages:
+          - git
+          - "@development tools"
+          - cmake
+          - libgcrypt-devel
+          - python3
+          - python3-devel
+          - python3-pip
+          - kernel-devel
+          - mysql-devel
+          # add additional packages here
+
+    - name: Install pycryptodome
+      pip:
+         name: pycryptodome
+    - name: Install vscode Key
+      rpm_key:
+        key: https://packages.microsoft.com/keys/microsoft.asc
+        state: present
+      when: install_vscode == 1
+    
+    - name: Insert/Update vscode.repository in/etc/yum.repos.d/vscode.repo
+      blockinfile:
+        path: /etc/yum.repos.d/vscode.repo
+        create: yes
+        block: |
+            [code]
+            name=Visual Studio Code
+            baseurl=https://packages.microsoft.com/yumrepos/vscode
+            enabled=1
+            gpgcheck=1
+            gpgkey=https://packages.microsoft.com/keys/microsoft.asc
+      when: install_vscode == 1
+
+    - name: install vscode
+      yum:
+        name: code
+        state: latest
+      when: install_vscode == 1
+
+  pre_tasks:
+    - name: check requirements
+      block:
+        - name: check supported os
+          assert:
+            that: (ansible_facts['distribution'] == "CentOS" and ansible_facts['distribution_major_version'] is version('8', '>='))
+            fail_msg: "unsupported os: {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}"
+
+        - name: check architecture
+          assert:
+            that: ansible_architecture == "x86_64"
+            fail_msg: "unsupported architecture: {{ ansible_architecture }}"
+      tags:
+        - always
+
