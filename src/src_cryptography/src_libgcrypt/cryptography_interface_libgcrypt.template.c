@@ -549,7 +549,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
 
     if(sa_ptr != NULL) //Using SA key pointer
     {
-        key_ptr = &(ek_ring[sa_ptr->ekid].value[0]);
+        key_ptr = &(ek_ring[sa_ptr->akid].value[0]);
     }
 
     // Need to copy the data over, since authentication won't change/move the data directly
@@ -652,7 +652,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     uint8_t* key_ptr = key;
     if(sa_ptr != NULL) //Using SA key pointer
     {
-        key_ptr = &(ek_ring[sa_ptr->ekid].value[0]);
+        key_ptr = &(ek_ring[sa_ptr->akid].value[0]);
     }
 
     // Need to copy the data over, since authentication won't change/move the data directly
