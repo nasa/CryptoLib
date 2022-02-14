@@ -1615,7 +1615,7 @@ UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
+    memcpy(ek_ring[test_association->akid].value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     hex_conversion(buffer_frame_pt_h, (char**) &buffer_frame_pt_b, &buffer_frame_pt_len);
@@ -1703,7 +1703,7 @@ UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
+    memcpy(ek_ring[test_association->akid].value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     hex_conversion(buffer_frame_pt_h, (char**) &buffer_frame_pt_b, &buffer_frame_pt_len);
@@ -1792,7 +1792,7 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
+    memcpy(ek_ring[test_association->akid].value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     hex_conversion(buffer_frame_pt_h, (char**) &buffer_frame_pt_b, &buffer_frame_pt_len);
@@ -1882,7 +1882,7 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
+    memcpy(ek_ring[test_association->akid].value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     hex_conversion(buffer_frame_pt_h, (char**) &buffer_frame_pt_b, &buffer_frame_pt_len);
