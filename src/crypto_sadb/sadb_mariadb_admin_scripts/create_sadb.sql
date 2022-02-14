@@ -7,8 +7,8 @@ USE sadb;
 CREATE TABLE security_associations
 (
   spi INT NOT NULL
-  ,ekid VARCHAR(100) CHARACTER SET utf8 NOT NULL DEFAULT '0' -- 'EG, for KMC Crypto KeyRef, 'kmc/test/KEY0', for libgcrypt '130'
-  ,akid VARCHAR(100) CHARACTER SET utf8 NOT NULL DEFAULT '0' -- Same as ekid
+  ,ekid VARCHAR(100) CHARACTER SET utf8 DEFAULT NULL -- 'EG, for KMC Crypto KeyRef, 'kmc/test/KEY130', for libgcrypt '130'
+  ,akid VARCHAR(100) CHARACTER SET utf8 DEFAULT NULL -- Same as ekid
   ,sa_state SMALLINT NOT NULL DEFAULT 0
   ,tfvn TINYINT NOT NULL
   ,scid SMALLINT NOT NULL

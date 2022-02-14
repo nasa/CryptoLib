@@ -481,7 +481,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
 
                 if (sa_service_type == SA_AUTHENTICATION)
                 {
-                    cryptography_if->cryptography_authenticate(&p_new_enc_frame[index],                               // ciphertext output
+                    status = cryptography_if->cryptography_authenticate(&p_new_enc_frame[index],                               // ciphertext output
                                                                 (size_t)tf_payload_len,                                        // length of data
                                                                 (uint8_t*)(p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), // plaintext input
                                                                 (size_t)tf_payload_len,                                         // in data length
@@ -497,6 +497,10 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
                                                                 *sa_ptr->ecs, // encryption cipher
                                                                 sa_ptr->acs  // authentication cipher
                     );
+                    if (status != CRYPTO_LIB_SUCCESS)
+                    {
+                        return status; // authenticate call failed, return.
+                    }
                 }
             }
 

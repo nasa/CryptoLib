@@ -70,6 +70,10 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_APPLY_SEC_ENC_AND_AUTH)
     printf("\n");
 
     status = Crypto_TC_ApplySecurity((uint8_t* )raw_tc_jpl_mmt_scid44_vcid1_expect, raw_tc_jpl_mmt_scid44_vcid1_expect_len, &ptr_enc_frame, &enc_frame_len);
+    if(status != CRYPTO_LIB_SUCCESS)
+    {
+        Crypto_Shutdown();
+    }
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     printf("Frame after encryption:\n");
     for (int i=0; i<enc_frame_len; i++)
@@ -177,6 +181,10 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_APPLY_SEC_AUTH_ONLY)
     printf("\n");
 
     status = Crypto_TC_ApplySecurity((uint8_t* )raw_tc_jpl_mmt_scid44_vcid1_expect, raw_tc_jpl_mmt_scid44_vcid1_expect_len, &ptr_enc_frame, &enc_frame_len);
+    if(status != CRYPTO_LIB_SUCCESS)
+    {
+        Crypto_Shutdown();
+    }
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     printf("Frame after encryption:\n");
     for (int i=0; i<enc_frame_len; i++)
@@ -241,6 +249,10 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_ENC_AND_AUTH)
     printf("\n");
 
     status = Crypto_TC_ProcessSecurity((uint8_t* )enc_tc_jpl_mmt_scid44_vcid1_expect, &enc_tc_jpl_mmt_scid44_vcid1_expect_len, tc_processed_frame);
+    if(status != CRYPTO_LIB_SUCCESS)
+    {
+        Crypto_Shutdown();
+    }
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     printf("Processed PDU:\n");
     for (int i=0; i<tc_processed_frame->tc_pdu_len; i++)
@@ -368,6 +380,10 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_AUTH_ONLY)
 
     status = Crypto_TC_ProcessSecurity((uint8_t* )enc_tc_jpl_mmt_scid44_vcid1_expect, &enc_tc_jpl_mmt_scid44_vcid1_expect_len, tc_processed_frame);
 
+    if(status != CRYPTO_LIB_SUCCESS)
+    {
+        Crypto_Shutdown();
+    }
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Expected to fail -- KMC doesn't support 0 cipher text input for decrypt function.
     // ASSERT_EQ(CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE, status);

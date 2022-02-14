@@ -167,7 +167,11 @@ static int32_t sadb_init(void)
 
 static int32_t sadb_close(void)
 {
-    mysql_close(con);
+    if(con)
+    {
+        mysql_close(con);
+        con = NULL;
+    }
     return CRYPTO_LIB_SUCCESS;
 }
 
