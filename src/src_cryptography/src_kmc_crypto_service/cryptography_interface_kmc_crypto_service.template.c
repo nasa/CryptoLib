@@ -279,10 +279,16 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
         return CRYPTO_LIB_ERR_NULL_BUFFER;
     }
 
+    if(sa_ptr->ak_ref == NULL)
+    {
+        status = CRYPTOGRAHPY_KMC_NULL_AUTHENTICATION_KEY_REFERENCE_IN_SA;
+        return status;
+    }
+
     // Prepare the Authentication Endpoint URI for KMC Crypto Service
-    int len_auth_endpoint = strlen(icv_create_endpoint)+strlen(sa_ptr->ek_ref);
+    int len_auth_endpoint = strlen(icv_create_endpoint)+strlen(sa_ptr->ak_ref);
     char* auth_endpoint_final = (char*) malloc(len_auth_endpoint);
-    snprintf(auth_endpoint_final,len_auth_endpoint,icv_create_endpoint,sa_ptr->ek_ref);
+    snprintf(auth_endpoint_final,len_auth_endpoint,icv_create_endpoint,sa_ptr->ak_ref);
 
     char* auth_uri = (char*) malloc(strlen(kmc_root_uri)+len_auth_endpoint);
     auth_uri[0] = '\0';
@@ -502,10 +508,16 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     printf("MAC Base64 URL Encoded: %s\n",mac_base64);
 #endif
 
+    if(sa_ptr->ak_ref == NULL)
+    {
+        status = CRYPTOGRAHPY_KMC_NULL_AUTHENTICATION_KEY_REFERENCE_IN_SA;
+        return status;
+    }
+
     // Prepare the Authentication Endpoint URI for KMC Crypto Service
-    int len_auth_endpoint = strlen(icv_verify_endpoint)+strlen(mac_base64)+strlen(sa_ptr->ek_ref)+strlen(AES_CMAC_TRANSFORMATION);
+    int len_auth_endpoint = strlen(icv_verify_endpoint)+strlen(mac_base64)+strlen(sa_ptr->ak_ref)+strlen(AES_CMAC_TRANSFORMATION);
     char* auth_endpoint_final = (char*) malloc(len_auth_endpoint);
-    snprintf(auth_endpoint_final,len_auth_endpoint,icv_verify_endpoint,mac_base64,sa_ptr->ek_ref,AES_CMAC_TRANSFORMATION);
+    snprintf(auth_endpoint_final,len_auth_endpoint,icv_verify_endpoint,mac_base64,sa_ptr->ak_ref,AES_CMAC_TRANSFORMATION);
 
     char* auth_uri = (char*) malloc(strlen(kmc_root_uri)+len_auth_endpoint);
     auth_uri[0] = '\0';
@@ -643,6 +655,13 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
 #ifdef DEBUG
     printf("IV Base64 URL Encoded: %s\n",iv_base64);
 #endif
+
+    if(sa_ptr->ek_ref == NULL)
+    {
+        status = CRYPTOGRAHPY_KMC_NULL_ENCRYPTION_KEY_REFERENCE_IN_SA;
+        return status;
+    }
+
     char* encrypt_uri;
     if(aad_bool == CRYPTO_TRUE)
     {
@@ -882,6 +901,13 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
 #ifdef DEBUG
     printf("IV Base64 URL Encoded: %s\n",iv_base64);
 #endif
+
+
+    if(sa_ptr->ek_ref == NULL)
+    {
+        status = CRYPTOGRAHPY_KMC_NULL_ENCRYPTION_KEY_REFERENCE_IN_SA;
+        return status;
+    }
 
     char* decrypt_uri;
     if(aad_bool == CRYPTO_TRUE)

@@ -2,7 +2,7 @@ name: Validation Tests
 
 on: 
   push:
-    branches: [ collab_main ]
+    branches: [ main, dev]
   pull_request:
 
 env:
