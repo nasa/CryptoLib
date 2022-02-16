@@ -105,8 +105,8 @@ int32_t Crypto_Key_OTAR(void)
                                                         0, // AAD Length
                                                         CRYPTO_TRUE, // decrypt
                                                         CRYPTO_TRUE,  // authenticate
-                                                        CRYPTO_FALSE // AAD Bool
-                                                        );
+                                                        CRYPTO_FALSE, // AAD Bool
+                                                        NULL);
 
     // Read in Decrypted Data
     for (count = 14; x < pdu_keys; x++)

@@ -596,7 +596,6 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
     }
 
 #ifdef DEBUG
-    int i;
     printf(KYEL "\n----- Crypto_TC_ProcessSecurity START -----\n" RESET);
 #endif
 
@@ -648,8 +647,6 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
     {
         return status;
     }
-    encryption_cipher = *sa_ptr->ecs;
-    ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(encryption_cipher);
 
     // Determine SA Service Type
     if ((sa_ptr->est == 0) && (sa_ptr->ast == 0))
@@ -759,53 +756,13 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
     tc_sdls_processed_frame->tc_sec_header.sn_field_len = sa_ptr->shsnf_len;
     tc_sdls_processed_frame->tc_sec_header.pad_field_len = sa_ptr->shplf_len;
 
-    // Check ARC/ARC-Window and calculate MAC location, if applicable
+    // Parse MAC, prepare AAD
     if ((sa_service_type == SA_AUTHENTICATION) || (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
     {
         uint16_t tc_mac_start_index = tc_sdls_processed_frame->tc_header.fl + 1 - fecf_len - sa_ptr->stmacf_len;
         // Parse the received MAC
         memcpy((tc_sdls_processed_frame->tc_sec_trailer.mac) + (MAC_SIZE - sa_ptr->stmacf_len),
                &(ingest[tc_mac_start_index]), sa_ptr->stmacf_len);
-        if (crypto_config->ignore_anti_replay == TC_IGNORE_ANTI_REPLAY_FALSE)
-        {
-            // If sequence number field is greater than zero, use as arsn
-            if (sa_ptr->shsnf_len > 0)
-            {
-                // Check Sequence Number is in ARCW
-                status = Crypto_window(tc_sdls_processed_frame->tc_sec_header.sn, sa_ptr->arc, sa_ptr->shsnf_len,
-                                       sa_ptr->arcw);
-                if (status != CRYPTO_LIB_SUCCESS)
-                {
-                    return status;
-                }
-                // TODO: Update SA ARC through SADB_Routine function call
-            }
-            else
-            {
-                // Check IV is in ARCW
-                status = Crypto_window(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len,
-                                       sa_ptr->arcw);
-#ifdef DEBUG
-                printf("Received IV is\n\t");
-                for (i = 0; i < sa_ptr->shivf_len; i++)
-                // for(i=0; i<IV_SIZE; i++)
-                {
-                    printf("%02x", *(tc_sdls_processed_frame->tc_sec_header.iv + i));
-                }
-                printf("\nSA IV is\n\t");
-                for (i = 0; i < sa_ptr->shivf_len; i++)
-                {
-                    printf("%02x", *(sa_ptr->iv + i));
-                }
-                printf("\nARCW is: %d\n", sa_ptr->arcw);
-#endif
-                if (status != CRYPTO_LIB_SUCCESS)
-                {
-                    return status;
-                }
-                // TODO: Update SA IV through SADB_Routine function call
-            }
-        }
 
         aad_len = tc_mac_start_index;
         if ((sa_service_type == SA_AUTHENTICATED_ENCRYPTION) && (ecs_is_aead_algorithm == CRYPTO_TRUE))
@@ -818,7 +775,9 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
             return CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
         }
         aad = Crypto_Prepare_TC_AAD(ingest, aad_len, sa_ptr->abm);
+
     }
+
     uint16_t tc_enc_payload_start_index = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len +
                                           sa_ptr->shsnf_len + sa_ptr->shplf_len;
 
@@ -852,7 +811,8 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
                                                             aad_len, // length of AAD
                                                             (sa_ptr->est), // Decryption Bool
                                                             (sa_ptr->ast), // Authentication Bool
-                                                            (sa_ptr->ast) // AAD Bool
+                                                            (sa_ptr->ast), // AAD Bool
+                                                            tc_sdls_processed_frame->tc_sec_header.sn // ARSN
         );
     }else if (sa_service_type != SA_PLAINTEXT) // Non aead algorithm
     {
