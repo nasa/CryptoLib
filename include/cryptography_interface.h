@@ -69,7 +69,7 @@ typedef struct
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t decrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool);
+                                         uint8_t aad_bool, uint8_t *arsn);
 
 } CryptographyInterfaceStruct, *CryptographyInterface;
 

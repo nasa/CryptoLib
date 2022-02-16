@@ -60,7 +60,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t decrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool);
+                                         uint8_t aad_bool, uint8_t* arsn);
 /*
 ** Module Variables
 */
@@ -901,7 +901,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t decrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool)
+                                         uint8_t aad_bool, uint8_t* arsn)
 {
     gcry_cipher_hd_t tmp_hd;
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
@@ -956,6 +956,18 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
         }
     }
 
+    // Now that MAC has been verified, check IV & ARSN if applicable
+    if (crypto_config->ignore_anti_replay == TC_IGNORE_ANTI_REPLAY_FALSE)
+    {
+        status = Crypto_Check_Anti_Replay(sa_ptr, arsn, iv);
+    }
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        // Error with IV or ARSN
+        return status;
+    }
+
+    // If applicable, IV/ARSN have been checked out, NOW we can decrypt without fear of replay attack.
     if (decrypt_bool == CRYPTO_TRUE)
     {
         gcry_error = gcry_cipher_decrypt(tmp_hd,

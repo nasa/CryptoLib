@@ -110,6 +110,7 @@ int32_t Crypto_window(uint8_t* actual, uint8_t* expected, int length, int window
 uint16_t Crypto_Calc_FECF(uint8_t* ingest, int len_ingest);
 void Crypto_Calc_CRC_Init_Table(void);
 uint16_t Crypto_Calc_CRC16(uint8_t* data, int size);
+int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, uint8_t *iv);
 
 // Key Management Functions
 int32_t Crypto_Key_OTAR(void);
