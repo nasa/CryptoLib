@@ -321,7 +321,6 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
     Crypto_Init();
-    printf("E\n");
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
     crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
 

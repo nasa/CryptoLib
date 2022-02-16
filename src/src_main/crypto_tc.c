@@ -779,7 +779,6 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
             return CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
         }
         aad = Crypto_Prepare_TC_AAD(ingest, aad_len, sa_ptr->abm);
-
     }
 
     uint16_t tc_enc_payload_start_index = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len +
