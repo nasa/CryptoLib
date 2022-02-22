@@ -794,12 +794,13 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
         // Valid ARSN received, increment stored value
         else
         {
-            // FINISH below line, cherrypick commits from other branches to this one
             memcpy(sa_ptr->arc, arsn, sa_ptr->arc_len);
         }
     }
 
         // If IV is greater than zero, check for replay
+        // Should IV always be sequential in a window,
+        // is it mode dependent, or is the only req. uniqueness?
         if (sa_ptr->shivf_len > 0)
         {
             // Check IV is in ARCW

@@ -50,7 +50,8 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
                                                     uint8_t* iv, uint32_t iv_len,
                                                     uint8_t* mac, uint32_t mac_size,
                                                     uint8_t* aad, uint32_t aad_len,
-                                                    uint8_t ecs, uint8_t acs);
+                                                    uint8_t ecs, uint8_t acs,
+                                                    uint8_t* arsn);
 static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -474,7 +475,8 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
                                                     uint8_t* iv, uint32_t iv_len,
                                                     uint8_t* mac, uint32_t mac_size,
                                                     uint8_t* aad, uint32_t aad_len,
-                                                    uint8_t ecs, uint8_t acs)
+                                                    uint8_t ecs, uint8_t acs,
+                                                    uint8_t* arsn)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
