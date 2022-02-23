@@ -224,24 +224,24 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
             break;
         case SA_AUTHENTICATION:
             // Ingest length + spi_index (2) + shivf_len (varies) + shsnf_len (varies)
-            //   + shplf_len + arc_len + pad_size + stmacf_len
-            // TODO: If ARC is transmitted in the SHSNF field (as in CMAC... don't double count those bytes)
+            //   + shplf_len + arsn_len + pad_size + stmacf_len
+            // TODO: If ARSN is transmitted in the SHSNF field (as in CMAC... don't double count those bytes)
             *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len +
                                TC_PAD_SIZE + sa_ptr->stmacf_len;
             new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
             break;
         case SA_ENCRYPTION:
             // Ingest length + spi_index (2) + shivf_len (varies) + shsnf_len (varies)
-            //   + shplf_len + arc_len + pad_size
+            //   + shplf_len + arsn_len + pad_size
             *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len +
-                               sa_ptr->arc_len + TC_PAD_SIZE;
+                               sa_ptr->arsn_len + TC_PAD_SIZE;
             new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
             break;
         case SA_AUTHENTICATED_ENCRYPTION:
             // Ingest length + spi_index (2) + shivf_len (varies) + shsnf_len (varies)
-            //   + shplf_len + arc_len + pad_size + stmacf_len
+            //   + shplf_len + arsn_len + pad_size + stmacf_len
             *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len +
-                               sa_ptr->arc_len + TC_PAD_SIZE + sa_ptr->stmacf_len;
+                               sa_ptr->arsn_len + TC_PAD_SIZE + sa_ptr->stmacf_len;
             new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
             break;
         default:
@@ -274,7 +274,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
         printf(KYEL "\tshivf_len\t = %d\n" RESET, sa_ptr->shivf_len);
         printf(KYEL "\tshsnf_len\t = %d\n" RESET, sa_ptr->shsnf_len);
         printf(KYEL "\tshplf len\t = %d\n" RESET, sa_ptr->shplf_len);
-        printf(KYEL "\tarc_len\t\t = %d\n" RESET, sa_ptr->arc_len);
+        printf(KYEL "\tarsn_len\t\t = %d\n" RESET, sa_ptr->arsn_len);
         printf(KYEL "\tpad_size\t = %d\n" RESET, TC_PAD_SIZE);
         printf(KYEL "\tstmacf_len\t = %d\n" RESET, sa_ptr->stmacf_len);
 #endif
@@ -345,12 +345,12 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
         ** for an SA, the Sequence Number field shall be zero octets in length.
         ** Reference CCSDS 3550b1
         */
-        // TODO: Workout ARC vs SN and when they may
+        // TODO: Workout ARSN vs SN and when they may
         // or may not be the same or different field 
         for (i = 0; i < sa_ptr->shsnf_len; i++)
         {
-            // Copy in ARC from SA
-            *(p_new_enc_frame + index) = *(sa_ptr->arc + i);
+            // Copy in ARSN from SA
+            *(p_new_enc_frame + index) = *(sa_ptr->arsn + i);
             index++;
         }
 
@@ -510,7 +510,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
         {
 #ifdef INCREMENT
             if(sa_ptr->shivf_len > 0){ Crypto_increment(sa_ptr->iv, sa_ptr->shivf_len); } 
-            if(sa_ptr->arc_len > 0){ Crypto_increment(sa_ptr->arc, sa_ptr->arc_len); }
+            if(sa_ptr->arsn_len > 0){ Crypto_increment(sa_ptr->arsn, sa_ptr->arsn_len); }
 #ifdef SA_DEBUG
             printf(KYEL "Next IV value is:\n\t");
             for (i = 0; i < sa_ptr->shivf_len; i++)
@@ -518,10 +518,10 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
                 printf("%02x", *(sa_ptr->iv + i));
             }
             printf("\n" RESET);
-            printf(KYEL "Next ARC value is:\n\t");
-            for (i = 0; i < sa_ptr->arc_len; i++)
+            printf(KYEL "Next ARSN value is:\n\t");
+            for (i = 0; i < sa_ptr->arsn_len; i++)
             {
-                printf("%02x", *(sa_ptr->arc + i));
+                printf("%02x", *(sa_ptr->arsn + i));
             }
             printf("\n" RESET);
 #endif

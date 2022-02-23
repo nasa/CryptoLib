@@ -226,19 +226,19 @@ void Crypto_saPrint(SecurityAssociation_t* sa)
         }
         printf("\n");
     }
-    printf("\t arc_len    = 0x%02x \n", sa->arc_len);
-    if (sa->arc != NULL)
+    printf("\t arsn_len    = 0x%02x \n", sa->arsn_len);
+    if (sa->arsn != NULL)
     {
-        printf("\t arc        = ");
-        for (i = 0; i < sa->arc_len; i++)
+        printf("\t arsn        = ");
+        for (i = 0; i < sa->arsn_len; i++)
         {
-            printf("%02x", *(sa->arc + i));
+            printf("%02x", *(sa->arsn + i));
         }
         printf("\n");
     }
 
-    printf("\t arcw_len   = 0x%02x \n", sa->arcw_len);
-    printf("\t arcw       = 0x%d \n", sa->arcw);
+    printf("\t arsnw_len   = 0x%02x \n", sa->arsnw_len);
+    printf("\t arsnw       = 0x%d \n", sa->arsnw);
 }
 
 /**

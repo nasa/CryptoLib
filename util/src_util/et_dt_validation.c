@@ -184,7 +184,7 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
     
     // Expose SA 4 for testing
     sadb_routine->sadb_get_sa_from_spi(4, &test_association);
-    test_association->arc_len = 0;
+    test_association->arsn_len = 0;
     test_association->gvcid_tc_blk.vcid = 1;
     test_association->iv[11] = 1;
     test_association->ast = 1;
@@ -265,7 +265,7 @@ UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
 
     // Expose SA 4 for testing
     sadb_routine->sadb_get_sa_from_spi(4, &test_association);
-    test_association->arc_len = 0;
+    test_association->arsn_len = 0;
     test_association->gvcid_tc_blk.vcid = 1;
     test_association->iv = calloc(1, test_association->shivf_len * sizeof(uint8_t));
     test_association->iv[11] = 0;
@@ -341,7 +341,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sadb_routine->sadb_get_sa_from_spi(9, &test_association);
-    test_association->arc_len = 0;
+    test_association->arsn_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_AES256_GCM;
@@ -419,12 +419,12 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sadb_routine->sadb_get_sa_from_spi(9, &test_association);
-    test_association->arc_len = 0;
+    test_association->arsn_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
     sadb_routine->sadb_get_sa_from_spi(9, &test_association);
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_AES256_GCM;
-    // test_association->ast =1;
+    test_association->ast =1;
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
     memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
@@ -493,7 +493,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sadb_routine->sadb_get_sa_from_spi(9, &test_association);
-    test_association->arc_len = 0;
+    test_association->arsn_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_AES256_GCM;
@@ -568,7 +568,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sadb_routine->sadb_get_sa_from_spi(9, &test_association);
-    test_association->arc_len = 0;
+    test_association->arsn_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_AES256_GCM;
@@ -642,7 +642,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sadb_routine->sadb_get_sa_from_spi(9, &test_association);
-    test_association->arc_len = 0;
+    test_association->arsn_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_AES256_GCM;
@@ -718,7 +718,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sadb_routine->sadb_get_sa_from_spi(9, &test_association);
-    test_association->arc_len = 0;
+    test_association->arsn_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_AES256_GCM;
@@ -789,7 +789,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sadb_routine->sadb_get_sa_from_spi(9, &test_association);
-    test_association->arc_len = 0;
+    test_association->arsn_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_AES256_GCM;
@@ -865,7 +865,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sadb_routine->sadb_get_sa_from_spi(9, &test_association);
-    test_association->arc_len = 0;
+    test_association->arsn_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_AES256_GCM;
@@ -936,7 +936,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sadb_routine->sadb_get_sa_from_spi(9, &test_association);
-    test_association->arc_len = 0;
+    test_association->arsn_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_AES256_GCM;
@@ -1012,7 +1012,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sadb_routine->sadb_get_sa_from_spi(9, &test_association);
-    test_association->arc_len = 0;
+    test_association->arsn_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_AES256_GCM;
@@ -1098,7 +1098,7 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     sadb_routine->sadb_get_sa_from_spi(9, &test_association);
     test_association->ast = 1;
     test_association->est = 0;
-    test_association->arc_len = 0;
+    test_association->arsn_len = 0;
     test_association->shivf_len = 12;
     test_association->abm_len = 1024;
     test_association->stmacf_len = 16;
@@ -1183,7 +1183,7 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     sadb_routine->sadb_get_sa_from_spi(9, &test_association);
     test_association->ast = 1;
     test_association->est = 0;
-    test_association->arc_len = 0;
+    test_association->arsn_len = 0;
     test_association->shivf_len = 12;
     test_association->abm_len = 1024;
     memset(test_association->abm, 0xFF, (test_association->abm_len * sizeof(uint8_t))); // Bitmask
@@ -1276,7 +1276,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     sadb_routine->sadb_get_sa_from_spi(9, &test_association);
     test_association->ast = 1;
     test_association->est = 0;
-    test_association->arc_len = 0;
+    test_association->arsn_len = 0;
     test_association->abm_len = 1024;
     memset(test_association->abm, 0xFF, (test_association->abm_len * sizeof(uint8_t)));
     test_association->shivf_len = 12;
@@ -1402,7 +1402,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_DATA)
     sadb_routine->sadb_get_sa_from_spi(9, &test_association);
     test_association->ast = 1;
     test_association->est = 0;
-    test_association->arc_len = 0;
+    test_association->arsn_len = 0;
     test_association->abm_len = 1024;
     memset(test_association->abm, 0xFF, (test_association->abm_len * sizeof(uint8_t)));
     test_association->shivf_len = 12;
@@ -1503,7 +1503,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_MAC)
     sadb_routine->sadb_get_sa_from_spi(9, &test_association);
     test_association->ast = 1;
     test_association->est = 0;
-    test_association->arc_len = 0;
+    test_association->arsn_len = 0;
     test_association->abm_len = 1024;
     memset(test_association->abm, 0xFF, (test_association->abm_len * sizeof(uint8_t)));
     test_association->shivf_len = 12;
@@ -1599,12 +1599,12 @@ UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
     sadb_routine->sadb_get_sa_from_spi(9, &test_association);
     test_association->ast = 1;
     test_association->est = 0;
-    test_association->arc_len = 0;
+    test_association->arsn_len = 0;
     test_association->shivf_len = 0;
     test_association->shsnf_len = 4;
-    test_association->arc = 0;
-    test_association->arc_len = 4;
-    test_association->arc = calloc(1, test_association->arc_len * sizeof(uint8_t));
+    test_association->arsn = 0;
+    test_association->arsn_len = 4;
+    test_association->arsn = calloc(1, test_association->arsn_len * sizeof(uint8_t));
     test_association->abm_len = 1024;
     memset(test_association->abm, 0x00, (test_association->abm_len * sizeof(uint8_t))); // Bitmask
     test_association->stmacf_len = 16;
@@ -1640,7 +1640,7 @@ UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
     free(buffer_frame_pt_b);
     free(buffer_nist_key_b);
     free(buffer_python_mac_b);
-    // free(test_association->arc);
+    // free(test_association->arsn);
     // sadb_routine->sadb_close();
     // free(test_association);
 }
@@ -1687,12 +1687,12 @@ UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
     sadb_routine->sadb_get_sa_from_spi(9, &test_association);
     test_association->ast = 1;
     test_association->est = 0;
-    test_association->arc_len = 0;
+    test_association->arsn_len = 0;
     test_association->shivf_len = 0;
     test_association->shsnf_len = 4;
-    test_association->arc = 0;
-    test_association->arc_len = 4;
-    test_association->arc = calloc(1, test_association->arc_len * sizeof(uint8_t));
+    test_association->arsn = 0;
+    test_association->arsn_len = 4;
+    test_association->arsn = calloc(1, test_association->arsn_len * sizeof(uint8_t));
     test_association->abm_len = 1024;
     memset(test_association->abm, 0xFF, (test_association->abm_len * sizeof(uint8_t))); // Bitmask
     test_association->stmacf_len = 16;
@@ -1773,12 +1773,12 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
     sadb_routine->sadb_get_sa_from_spi(9, &test_association);
     test_association->ast = 1;
     test_association->est = 0;
-    test_association->arc_len = 0;
+    test_association->arsn_len = 0;
     test_association->shivf_len = 0;
     test_association->shsnf_len = 4;
-    test_association->arc = 0;
-    test_association->arc_len = 4;
-    test_association->arc = calloc(1, test_association->arc_len * sizeof(uint8_t));
+    test_association->arsn = 0;
+    test_association->arsn_len = 4;
+    test_association->arsn = calloc(1, test_association->arsn_len * sizeof(uint8_t));
     test_association->abm_len = 1024;
     memset(test_association->abm, 0x00, (test_association->abm_len * sizeof(uint8_t))); // Bitmask
     test_association->stmacf_len = 16;
@@ -1817,7 +1817,7 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
     free(buffer_frame_pt_b);
     free(buffer_nist_key_b);
     free(buffer_python_mac_b);
-    // free(test_association->arc);
+    // free(test_association->arsn);
     // free(test_association);
     // sadb_routine->sadb_close();
 }
@@ -1863,12 +1863,12 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
     sadb_routine->sadb_get_sa_from_spi(9, &test_association);
     test_association->ast = 1;
     test_association->est = 0;
-    test_association->arc_len = 0;
+    test_association->arsn_len = 0;
     test_association->shivf_len = 0;
     test_association->shsnf_len = 4;
-    test_association->arc = 0;
-    test_association->arc_len = 4;
-    test_association->arc = calloc(1, test_association->arc_len * sizeof(uint8_t));
+    test_association->arsn = 0;
+    test_association->arsn_len = 4;
+    test_association->arsn = calloc(1, test_association->arsn_len * sizeof(uint8_t));
     test_association->abm_len = 1024;
     memset(test_association->abm, 0xFF, (test_association->abm_len * sizeof(uint8_t))); // Bitmask
     test_association->stmacf_len = 16;
@@ -1907,7 +1907,7 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
     free(buffer_frame_pt_b);
     free(buffer_nist_key_b);
     free(buffer_python_mac_b);
-    // free(test_association->arc);
+    // free(test_association->arsn);
     // free(test_association);
     // sadb_routine->sadb_close();
 }

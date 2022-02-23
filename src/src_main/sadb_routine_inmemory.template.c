@@ -81,15 +81,15 @@ int32_t sadb_config(void)
     sa[1].ast = 0;
     // sa[1].shivf_len = 12;
     // sa[1].iv = (uint8_t*) calloc(1, sa[1].shivf_len * sizeof(uint8_t));
-    sa[1].arc_len = 1;
-    sa[1].arcw_len = 1;
-    sa[1].arcw = 5;
+    sa[1].arsn_len = 1;
+    sa[1].arsnw_len = 1;
+    sa[1].arsnw = 5;
     sa[1].gvcid_tc_blk.tfvn = 0;
     sa[1].gvcid_tc_blk.scid = SCID & 0x3FF;
     sa[1].gvcid_tc_blk.vcid = 0;
     sa[1].gvcid_tc_blk.mapid = TYPE_TC;
 
-    // SA 2 - KEYED;  ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 128
+    // SA 2 - KEYED;  ARSNW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 128
     sa[2].spi = 2;
     sa[2].ekid = 128;
     sa[2].sa_state = SA_KEYED;
@@ -100,11 +100,11 @@ int32_t sadb_config(void)
     *(sa[2].iv + sa[2].shivf_len - 1) = 0;
     sa[2].abm_len = ABM_SIZE; // 20
     sa[2].abm = (uint8_t* )calloc(1, sa[2].abm_len * sizeof(uint8_t));
-    sa[2].arcw_len = 1;
-    sa[2].arcw = 5;
-    sa[2].arc_len = (sa[2].arcw * 2) + 1;
+    sa[2].arsnw_len = 1;
+    sa[2].arsnw = 5;
+    sa[2].arsn_len = (sa[2].arsnw * 2) + 1;
 
-    // SA 3 - KEYED;   ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 129
+    // SA 3 - KEYED;   ARSNW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 129
     sa[3].spi = 3;
     sa[3].ekid = 129;
     sa[3].sa_state = SA_KEYED;
@@ -115,11 +115,11 @@ int32_t sadb_config(void)
     *(sa[3].iv + sa[3].shivf_len - 1) = 0;
     sa[3].abm_len = ABM_SIZE; // 20
     sa[3].abm = (uint8_t* )calloc(1, sa[3].abm_len * sizeof(uint8_t));
-    sa[3].arcw_len = 1;
-    sa[3].arcw = 5;
-    sa[3].arc_len = (sa[3].arcw * 2) + 1;
+    sa[3].arsnw_len = 1;
+    sa[3].arsnw = 5;
+    sa[3].arsn_len = (sa[3].arsnw * 2) + 1;
 
-    // SA 4 - KEYED;  ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 130
+    // SA 4 - KEYED;  ARSNW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 130
     // SA 4 VC0/1 is now 4-VC0, 7-VC1
     sa[4].spi = 4;
     sa[4].ekid = 130;
@@ -132,15 +132,15 @@ int32_t sadb_config(void)
     *(sa[4].iv + 11) = 0;
     sa[4].abm_len = ABM_SIZE; // 20
     sa[4].abm = (uint8_t* )calloc(1, sa[4].abm_len * sizeof(uint8_t));
-    sa[4].arcw_len = 1;
-    sa[4].arcw = 5;
-    sa[4].arc_len = (sa[4].arcw * 2) + 1;
+    sa[4].arsnw_len = 1;
+    sa[4].arsnw = 5;
+    sa[4].arsn_len = (sa[4].arsnw * 2) + 1;
     sa[4].gvcid_tc_blk.tfvn = 0;
     sa[4].gvcid_tc_blk.scid = SCID & 0x3FF;
     sa[4].gvcid_tc_blk.vcid = 0;
     sa[4].gvcid_tc_blk.mapid = TYPE_TC;
 
-    // SA 5 - KEYED;   ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 131
+    // SA 5 - KEYED;   ARSNW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 131
     sa[5].spi = 5;
     sa[5].ekid = 131;
     sa[5].sa_state = SA_KEYED;
@@ -151,11 +151,11 @@ int32_t sadb_config(void)
     *(sa[5].iv + sa[5].shivf_len - 1) = 0;
     sa[5].abm_len = ABM_SIZE; // 20
     sa[5].abm = (uint8_t* )calloc(1, sa[5].abm_len * sizeof(uint8_t));
-    sa[5].arcw_len = 1;
-    sa[5].arcw = 5;
-    sa[5].arc_len = (sa[5].arcw * 2) + 1;
+    sa[5].arsnw_len = 1;
+    sa[5].arsnw = 5;
+    sa[5].arsn_len = (sa[5].arsnw * 2) + 1;
 
-    // SA 6 - UNKEYED; ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: -
+    // SA 6 - UNKEYED; ARSNW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: -
     sa[6].spi = 6;
     sa[6].sa_state = SA_UNKEYED;
     sa[6].est = 1;
@@ -165,11 +165,11 @@ int32_t sadb_config(void)
     *(sa[6].iv + sa[6].shivf_len - 1) = 0;
     sa[6].abm_len = ABM_SIZE; // 20
     sa[6].abm = (uint8_t* )calloc(1, sa[6].abm_len * sizeof(uint8_t));
-    sa[6].arcw_len = 1;
-    sa[6].arcw = 5;
-    sa[6].arc_len = (sa[6].arcw * 2) + 1;
+    sa[6].arsnw_len = 1;
+    sa[6].arsnw = 5;
+    sa[6].arsn_len = (sa[6].arsnw * 2) + 1;
 
-    // SA 7 - KEYED;  ARCW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 130
+    // SA 7 - KEYED;  ARSNW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 130
     sa[7].spi = 7;
     sa[7].ekid = 130;
     sa[7].sa_state = SA_KEYED;
@@ -180,9 +180,9 @@ int32_t sadb_config(void)
     *(sa[7].iv + sa[7].shivf_len - 1) = 0;
     sa[7].abm_len = ABM_SIZE; // 20
     sa[7].abm = (uint8_t* )calloc(1, sa[7].abm_len * sizeof(uint8_t));
-    sa[7].arcw_len = 1;
-    sa[7].arcw = 5;
-    sa[7].arc_len = (sa[7].arcw * 2) + 1;
+    sa[7].arsnw_len = 1;
+    sa[7].arsnw = 5;
+    sa[7].arsn_len = (sa[7].arsnw * 2) + 1;
     sa[7].gvcid_tc_blk.tfvn = 0;
     sa[7].gvcid_tc_blk.scid = SCID & 0x3FF;
     sa[7].gvcid_tc_blk.vcid = 1;
@@ -193,9 +193,9 @@ int32_t sadb_config(void)
     sa[8].sa_state = SA_NONE;
     sa[8].est = 0;
     sa[8].ast = 0;
-    sa[8].arc_len = 1;
-    sa[8].arcw_len = 1;
-    sa[8].arcw = 5;
+    sa[8].arsn_len = 1;
+    sa[8].arsnw_len = 1;
+    sa[8].arsnw = 5;
     sa[8].gvcid_tc_blk.tfvn = 0;
     sa[8].gvcid_tc_blk.scid = SCID & 0x3FF;
     sa[8].gvcid_tc_blk.vcid = 1;
@@ -212,9 +212,9 @@ int32_t sadb_config(void)
     *(sa[9].iv + 11) = 0;
     sa[9].abm_len = ABM_SIZE; // 20
     sa[9].abm = (uint8_t* )calloc(1, sa[9].abm_len * sizeof(uint8_t));
-    sa[9].arcw_len = 1;
-    sa[9].arcw = 5;
-    sa[9].arc_len = (sa[9].arcw * 2) + 1;
+    sa[9].arsnw_len = 1;
+    sa[9].arsnw = 5;
+    sa[9].arsn_len = (sa[9].arsnw * 2) + 1;
     sa[9].gvcid_tc_blk.tfvn = 0;
     sa[9].gvcid_tc_blk.scid = SCID & 0x3FF;
     sa[9].gvcid_tc_blk.vcid = 0;
@@ -245,8 +245,8 @@ int32_t sadb_init(void)
         sa[x].abm_len = 0;
         sa[x].acs_len = 0;
         sa[x].acs = CRYPTO_ACS_NONE;
-        sa[x].arc_len = 0;
-        sa[x].arc = NULL;
+        sa[x].arsn_len = 0;
+        sa[x].arsn = NULL;
     }
     return status;
 }
@@ -265,7 +265,7 @@ static int32_t sadb_close(void)
         if(sa[x].ecs != NULL) free(sa[x].ecs);
         if(sa[x].iv != NULL) free(sa[x].iv);
         if(sa[x].abm != NULL) free(sa[x].abm);
-        if(sa[x].arc != NULL) free(sa[x].arc);
+        if(sa[x].arsn != NULL) free(sa[x].arsn);
     }
     return status;
 }
@@ -655,7 +655,7 @@ static int32_t sadb_sa_rekey(void)
             // sa[spi].akid = ((uint8_t)sdls_frame.pdu.data[count] << 8) | (uint8_t)sdls_frame.pdu.data[count+1];
             // count = count + 2;
 
-            // Anti-Replay Counter
+            // Anti-Replay Seq Num
 #ifdef PDU_DEBUG
             printf("SPI %d IV updated to: 0x", spi);
 #endif
@@ -796,20 +796,20 @@ static int32_t sadb_sa_create(void)
     {
         sa[spi].abm[x] = ((uint8_t)sdls_frame.pdu.data[count++]);
     }
-    sa[spi].arc_len = ((uint8_t)sdls_frame.pdu.data[count++]);
-    if (sa[spi].arc != NULL)
+    sa[spi].arsn_len = ((uint8_t)sdls_frame.pdu.data[count++]);
+    if (sa[spi].arsn != NULL)
     {
-        free(sa[spi].arc);
+        free(sa[spi].arsn);
     }
-    sa[spi].arc = (uint8_t* )calloc(1, sa[spi].arc_len * sizeof(uint8_t));
-    for (x = 0; x < sa[spi].arc_len; x++)
+    sa[spi].arsn = (uint8_t* )calloc(1, sa[spi].arsn_len * sizeof(uint8_t));
+    for (x = 0; x < sa[spi].arsn_len; x++)
     {
-        *(sa[spi].arc + x) = ((uint8_t)sdls_frame.pdu.data[count++]);
+        *(sa[spi].arsn + x) = ((uint8_t)sdls_frame.pdu.data[count++]);
     }
-    sa[spi].arcw_len = ((uint8_t)sdls_frame.pdu.data[count++]);
-    for (x = 0; x < sa[spi].arcw_len; x++)
+    sa[spi].arsnw_len = ((uint8_t)sdls_frame.pdu.data[count++]);
+    for (x = 0; x < sa[spi].arsnw_len; x++)
     {
-        sa[spi].arcw = sa[spi].arcw | (((uint8_t)sdls_frame.pdu.data[count++]) << (sa[spi].arcw_len - x));
+        sa[spi].arsnw = sa[spi].arsnw | (((uint8_t)sdls_frame.pdu.data[count++]) << (sa[spi].arsnw_len - x));
     }
 
     // TODO: Checks for valid data
@@ -933,17 +933,17 @@ static int32_t sadb_sa_setARSNW(void)
     // Check SPI exists
     if (spi < NUM_SA)
     {
-        sa[spi].arcw_len = (uint8_t)sdls_frame.pdu.data[2];
+        sa[spi].arsnw_len = (uint8_t)sdls_frame.pdu.data[2];
 
         // Check for out of bounds
-        if (sa[spi].arcw_len > (ARC_SIZE))
+        if (sa[spi].arsnw_len > (ARSN_SIZE))
         {
-            sa[spi].arcw_len = ARC_SIZE;
+            sa[spi].arsnw_len = ARSN_SIZE;
         }
 
-        for (x = 0; x < sa[spi].arcw_len; x++)
+        for (x = 0; x < sa[spi].arsnw_len; x++)
         {
-            sa[spi].arcw = (((uint8_t)sdls_frame.pdu.data[x + 3]) << (sa[spi].arcw_len - x));
+            sa[spi].arsnw = (((uint8_t)sdls_frame.pdu.data[x + 3]) << (sa[spi].arsnw_len - x));
         }
     }
     else

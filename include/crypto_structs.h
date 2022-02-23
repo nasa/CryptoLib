@@ -76,10 +76,10 @@ typedef struct
     uint8_t acs : 8;        // Authentication Cipher Suite (algorithm / mode ID)
     uint16_t abm_len : 16;  // Authentication Bit Mask Length
     uint8_t* abm;           // Authentication Bit Mask (Primary Hdr. through Security Hdr.)
-    uint8_t arc_len : 8;    // Anti-Replay Counter Length
-    uint8_t* arc;           // Anti-Replay Counter
-    uint8_t arcw_len : 8;   // Anti-Replay Counter Window Length
-    uint16_t arcw;          // Anti-Replay Counter Window
+    uint8_t arsn_len : 8;    // Anti-Replay Seq Num Length
+    uint8_t* arsn;           // Anti-Replay Seq Num
+    uint8_t arsnw_len : 8;   // Anti-Replay Seq Num Window Length
+    uint16_t arsnw;          // Anti-Replay Seq Num Window
 
 } SecurityAssociation_t;
 #define SA_SIZE (sizeof(SecurityAssociation_t))

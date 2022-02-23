@@ -106,7 +106,7 @@ int32_t Crypto_increment(uint8_t* num, int length)
 
 /**
  * @brief Function: Crypto_window
- * Determines if a value is within the expected window of values
+ * Determines if a value is within the expected positive window of values
  * @param actual: uint8*
  * @param expected: uint8*
  * @param length: int
@@ -772,8 +772,8 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
     // If sequence number field is greater than zero, check for replay
     if (sa_ptr->shsnf_len > 0)
     {
-        // Check Sequence Number is in ARCW
-        status = Crypto_window(arsn, sa_ptr->arc, sa_ptr->shsnf_len, sa_ptr->arcw);
+        // Check Sequence Number is in ARSNW
+        status = Crypto_window(arsn, sa_ptr->arsn, sa_ptr->shsnf_len, sa_ptr->arsnw);
 #ifdef DEBUG
         printf("Received ARSN is\n\t");
         for (int i = 0; i < sa_ptr->shsnf_len; i++)
@@ -783,18 +783,18 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
         printf("\nSA ARSN is\n\t");
         for (int i = 0; i < sa_ptr->shsnf_len; i++)
         {
-            printf("%02x", *(sa_ptr->arc + i));
+            printf("%02x", *(sa_ptr->arsn + i));
         }
-        printf("\nARCW is: %d\n", sa_ptr->arcw);
+        printf("\nARSNW is: %d\n", sa_ptr->arsnw);
 #endif
         if (status != CRYPTO_LIB_SUCCESS)
         {
-            return CRYPTO_LIB_ERR_BAD_ANTIREPLAY_WINDOW;
+            return CRYPTO_LIB_ERR_ARSN_OUTSIDE_WINDOW;
         }
         // Valid ARSN received, increment stored value
         else
         {
-            memcpy(sa_ptr->arc, arsn, sa_ptr->arc_len);
+            memcpy(sa_ptr->arsn, arsn, sa_ptr->arsn_len);
         }
     }
 
@@ -803,8 +803,8 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
         // is it mode dependent, or is the only req. uniqueness?
         if (sa_ptr->shivf_len > 0)
         {
-            // Check IV is in ARCW
-            status = Crypto_window(iv, sa_ptr->iv, sa_ptr->shivf_len, sa_ptr->arcw);
+            // Check IV is in ARSNW
+            status = Crypto_window(iv, sa_ptr->iv, sa_ptr->shivf_len, sa_ptr->arsnw);
 #ifdef DEBUG
             printf("Received IV is\n\t");
             for (int i = 0; i < sa_ptr->shivf_len; i++)
@@ -817,12 +817,12 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
             {
                 printf("%02x", *(sa_ptr->iv + i));
             }
-            printf("\nARCW is: %d\n", sa_ptr->arcw);
+            printf("\nARSNW is: %d\n", sa_ptr->arsnw);
             printf("Crypto_Window return status is: %d\n", status);
 #endif
             if (status != CRYPTO_LIB_SUCCESS)
             {
-                return CRYPTO_LIB_ERR_BAD_IV_WINDOW;
+                return CRYPTO_LIB_ERR_IV_OUTSIDE_WINDOW;
             }
             // Valid IV received, increment stored value
             else
