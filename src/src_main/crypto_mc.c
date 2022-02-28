@@ -230,7 +230,6 @@ int32_t Crypto_SA_readARSN(uint8_t* ingest)
     {
         // TODO
     }
-    printf("HERE3\n");
 #ifdef PDU_DEBUG
     printf("spi = %d \n", spi);
     if (sa_ptr->shivf_len > 0)

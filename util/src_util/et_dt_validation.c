@@ -1611,7 +1611,8 @@ UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_ECS_NONE;
-    test_association->acs = CRYPTO_AES256_CMAC;
+    test_association->acs = calloc(1, test_association->acs_len * sizeof(uint8_t));
+    *test_association->acs = CRYPTO_AES256_CMAC;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
@@ -1699,7 +1700,8 @@ UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_ECS_NONE;
-    test_association->acs = CRYPTO_AES256_CMAC;
+    test_association->acs = calloc(1, test_association->acs_len * sizeof(uint8_t));
+    *test_association->acs = CRYPTO_AES256_CMAC;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
@@ -1785,7 +1787,8 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_ECS_NONE;
-    test_association->acs = CRYPTO_AES256_CMAC;
+    test_association->acs = calloc(1, test_association->acs_len * sizeof(uint8_t));
+    *test_association->acs = CRYPTO_AES256_CMAC;
 
     TC_t* tc_sdls_processed_frame;
     tc_sdls_processed_frame = calloc(1, sizeof(uint8_t) * TC_SIZE);
@@ -1875,7 +1878,8 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_ECS_NONE;
-    test_association->acs = CRYPTO_AES256_CMAC;
+    test_association->acs = calloc(1, test_association->acs_len * sizeof(uint8_t));
+    *test_association->acs = CRYPTO_AES256_CMAC;
 
     TC_t* tc_sdls_processed_frame;
     tc_sdls_processed_frame = calloc(1, sizeof(uint8_t) * TC_SIZE);

@@ -788,7 +788,7 @@ static int32_t sadb_sa_create(void)
     sa[spi].acs_len = ((uint8_t)sdls_frame.pdu.data[count++]);
     for (x = 0; x < sa[spi].acs_len; x++)
     {
-        sa[spi].acs = ((uint8_t)sdls_frame.pdu.data[count++]);
+        *sa[spi].acs = ((uint8_t)sdls_frame.pdu.data[count++]);
     }
     sa[spi].abm_len = (uint8_t)((sdls_frame.pdu.data[count] << 8) | (sdls_frame.pdu.data[count + 1]));
     count = count + 2;

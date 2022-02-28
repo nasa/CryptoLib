@@ -495,7 +495,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
                                                                 aad, // AAD Input
                                                                 aad_len, // Length of AAD
                                                                 *sa_ptr->ecs, // encryption cipher
-                                                                sa_ptr->acs  // authentication cipher
+                                                                *sa_ptr->acs  // authentication cipher
                     );
                     if (status != CRYPTO_LIB_SUCCESS)
                     {
@@ -728,6 +728,11 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
             // Compare
             if (received_fecf != calculated_fecf)
             {
+#ifdef DEBUG
+                printf("Received FECF is 0x%04X\n", received_fecf);
+                printf("Calculated FECF is 0x%04X\n", calculated_fecf);
+                printf("FECF was Calced over %d bytes\n", *len_ingest-2);
+#endif
                 status = CRYPTO_LIB_ERR_INVALID_FECF;
                 return status;
             }
@@ -748,7 +753,8 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
     memcpy((tc_sdls_processed_frame->tc_sec_header.iv), &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN]),
            sa_ptr->shivf_len);
     // Parse Sequence Number
-    memcpy((tc_sdls_processed_frame->tc_sec_header.sn) + (TC_SN_SIZE - sa_ptr->shsnf_len),
+    // 2003002b00ff000901241224dfefb72a20d49e09256908874979
+    memcpy((tc_sdls_processed_frame->tc_sec_header.sn), //+ (TC_SN_SIZE - sa_ptr->shsnf_len)
            &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len]), sa_ptr->shsnf_len);
     // Parse pad length
     memcpy((tc_sdls_processed_frame->tc_sec_header.pad) + (TC_PAD_SIZE - sa_ptr->shplf_len),
@@ -825,9 +831,9 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
         { 
             cryptography_if->cryptography_decrypt();
         }
-        if(sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
+        if(sa_service_type == SA_AUTHENTICATION)
         {
-            cryptography_if->cryptography_validate_authentication(tc_sdls_processed_frame->tc_pdu,       // plaintext output
+            status = cryptography_if->cryptography_validate_authentication(tc_sdls_processed_frame->tc_pdu,       // plaintext output
                                                             (size_t)(tc_sdls_processed_frame->tc_pdu_len),   // length of data
                                                             &(ingest[tc_enc_payload_start_index]), // ciphertext input
                                                             (size_t)(tc_sdls_processed_frame->tc_pdu_len),    // in data length
@@ -841,7 +847,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
                                                             aad,    // additional authenticated data
                                                             aad_len, // length of AAD
                                                             CRYPTO_ECS_NONE, //encryption cipher
-                                                            sa_ptr->acs,  //authentication cipher
+                                                            *sa_ptr->acs,  //authentication cipher
                                                             tc_sdls_processed_frame->tc_sec_header.sn // ARSN
                 );
         }
