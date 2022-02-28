@@ -776,16 +776,17 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
         status = Crypto_window(arsn, sa_ptr->arsn, sa_ptr->shsnf_len, sa_ptr->arsnw);
 #ifdef DEBUG
         printf("Received ARSN is\n\t");
-        for (int i = 0; i < sa_ptr->shsnf_len; i++)
+        for (int i = 0; i < sa_ptr->arsn_len; i++)
         {
             printf("%02x", *(arsn + i));
         }
         printf("\nSA ARSN is\n\t");
-        for (int i = 0; i < sa_ptr->shsnf_len; i++)
+        for (int i = 0; i < sa_ptr->arsn_len; i++)
         {
             printf("%02x", *(sa_ptr->arsn + i));
         }
         printf("\nARSNW is: %d\n", sa_ptr->arsnw);
+        printf("Status from Crypto_Window is: %d\n", status);
 #endif
         if (status != CRYPTO_LIB_SUCCESS)
         {
