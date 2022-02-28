@@ -69,7 +69,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t decrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool);
+                                         uint8_t aad_bool, uint8_t *arsn);
 
 // libcurl call back and support function declarations
 static void configure_curl_connect_opts(CURL* curl);
@@ -482,6 +482,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     iv_len = iv_len;
     ecs = ecs;
     acs = acs;
+    arsn = arsn;
 
 
     // Need to copy the data over, since authentication won't change/move the data directly
@@ -858,10 +859,13 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t decrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool)
+                                         uint8_t aad_bool, uint8_t *arsn)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     key = key; // Direct key input is not supported in KMC interface
+
+    // For build warnings
+    arsn = arsn;
 
     // Get the key length in bits, in string format.
     // TODO -- Parse the key length from the keyInfo endpoint of the Crypto Service!
