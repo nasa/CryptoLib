@@ -176,12 +176,12 @@ UTEST(TC_PROCESS, EXERCISE_ARSN)
     test_association->arsn_len = 2;
     test_association->arsnw = 5;
     test_association->abm_len = 1024;
-    memset(test_association->abm, 0x00, (test_association->abm_len * sizeof(uint8_t)));
+    // memset(test_association->abm, 0x00, (test_association->abm_len * sizeof(uint8_t)));
+    test_association->abm = calloc(1, test_association->abm_len * sizeof(uint8_t));
     test_association->stmacf_len = 16;
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
-    printf("KEY inserted\n");
+    memcpy(ek_ring[test_association->akid].value, buffer_nist_key_b, buffer_nist_key_len);
     // Convert frames that will be processed
     hex_conversion(buffer_replay_h, (char**) &buffer_replay_b, &buffer_replay_len);
     hex_conversion(buffer_outside_window_h, (char**) &buffer_outside_window_b, &buffer_outside_window_len);
@@ -190,13 +190,10 @@ UTEST(TC_PROCESS, EXERCISE_ARSN)
     // Convert/Set input IV
     hex_conversion(buffer_arsn_h, (char**) &buffer_arsn_b, &buffer_arsn_len);
     test_association->arsn = calloc(1, test_association->arsn_len);
-    printf("HEX CONVERSION\n");
     memcpy(test_association->arsn, buffer_arsn_b, buffer_arsn_len);
-    printf("ARSN set\n");
     // Expect to fail on replay
     printf(KGRN "Checking replay - using previous received IV...\n" RESET);
     status = Crypto_TC_ProcessSecurity(buffer_replay_b, &buffer_replay_len, tc_nist_processed_frame);
-    printf("STATUS IS %d\n", status);
     ASSERT_EQ(CRYPTO_LIB_ERR_ARSN_OUTSIDE_WINDOW, status);
 
     // Expect to fail on counter being too high

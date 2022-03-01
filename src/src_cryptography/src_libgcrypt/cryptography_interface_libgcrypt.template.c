@@ -724,6 +724,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
         status = CRYPTO_LIB_ERROR;
         return status;
     }
+
     // Compare computed mac with MAC in frame
     gcry_error = gcry_mac_verify(tmp_mac_hd,
                                  mac,      // original mac
@@ -731,7 +732,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     );
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
-        printf(KRED "ERROR: gcry_mac_read error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+        printf(KRED "ERROR: gcry_mac_verify error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
         printf(KRED "Failure: %s/%s\n" RESET, gcry_strsource(gcry_error), gcry_strerror(gcry_error));
         gcry_mac_close(tmp_mac_hd);
         status = CRYPTO_LIB_ERR_MAC_RETRIEVAL_ERROR;
