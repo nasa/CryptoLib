@@ -606,24 +606,47 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
             char* http_code_str = malloc(len_httpcode+1);
             memcpy(http_code_str,chunk_write->response + t[json_idx + 1].start, len_httpcode);
             http_code_str[len_httpcode] = '\0';
+            http_status_found = CRYPTO_TRUE;
             int http_code = atoi(http_code_str);
 #ifdef DEBUG
             printf("Parsed http code: %d\n",http_code);
 #endif
             if(http_code != 200)
             {
-                status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_MAC_VALIDATION_ERROR;
-                fprintf(stderr,"KMC Crypto Failure Response:\n%s\n",chunk_write->response);
+                status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE;
+                fprintf(stderr,"KMC Crypto Generic Failure Response:\n%s\n",chunk_write->response);
                 return status;
             }
             json_idx++;
-            break;
+            continue;
         }
 
+        if (jsoneq(chunk_write->response, &t[json_idx], "result") == 0)
+        {
+#ifdef DEBUG
+            printf("result: %.*s\n", t[json_idx + 1].end - t[json_idx + 1].start,
+                   chunk_write->response + t[json_idx + 1].start);
+#endif
+            uint32_t len_result = t[json_idx + 1].end - t[json_idx + 1].start;
+            char* result_str = malloc(len_result+1);
+            memcpy(result_str,chunk_write->response + t[json_idx + 1].start, len_result);
+            result_str[len_result] = '\0';
+
+#ifdef DEBUG
+            printf("Parsed result string: %s\n",result_str);
+#endif
+            if(strcmp(result_str,"true")!=0) // KMC crypto service returns true string if ICV check succeeds.
+            {
+                status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_MAC_VALIDATION_ERROR;
+                fprintf(stderr,"KMC Crypto MAC Validation Failure Response:\n%s\n",chunk_write->response);
+                return status;
+            }
+            continue;
+        }
     }
     if(http_status_found == CRYPTO_FALSE){
         status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE;
-        fprintf(stderr,"KMC Crypto Failure Response:\n%s\n",chunk_write->response);
+        fprintf(stderr,"KMC Crypto Generic Failure Response:\n%s\n",chunk_write->response);
         return status;
     }
 
