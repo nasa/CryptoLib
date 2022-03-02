@@ -820,8 +820,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
                                                             aad_len, // length of AAD
                                                             (sa_ptr->est), // Decryption Bool
                                                             (sa_ptr->ast), // Authentication Bool
-                                                            (sa_ptr->ast), // AAD Bool
-                                                            tc_sdls_processed_frame->tc_sec_header.sn // ARSN
+                                                            (sa_ptr->ast) // AAD Bool
         );
     }else if (sa_service_type != SA_PLAINTEXT) // Non aead algorithm
     {
@@ -847,9 +846,13 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
                                                             aad,    // additional authenticated data
                                                             aad_len, // length of AAD
                                                             CRYPTO_ECS_NONE, //encryption cipher
-                                                            *sa_ptr->acs,  //authentication cipher
-                                                            tc_sdls_processed_frame->tc_sec_header.sn // ARSN
+                                                            *sa_ptr->acs  //authentication cipher
                 );
+            // Now that MAC has been verified, check IV & ARSN if applicable
+            if (crypto_config->ignore_anti_replay == TC_IGNORE_ANTI_REPLAY_FALSE && status == CRYPTO_LIB_SUCCESS)
+            {
+                status = Crypto_Check_Anti_Replay(sa_ptr, tc_sdls_processed_frame->tc_sec_header.sn, tc_sdls_processed_frame->tc_sec_header.iv);
+            }
         }
 
     } else // sa_service_type == SA_PLAINTEXT

@@ -42,8 +42,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
-                                         uint8_t ecs, uint8_t acs,
-                                         uint8_t* arsn);
+                                         uint8_t ecs, uint8_t acs);
 static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -61,7 +60,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t decrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool, uint8_t* arsn);
+                                         uint8_t aad_bool);
 /*
 ** Module Variables
 */
@@ -645,8 +644,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
-                                         uint8_t ecs, uint8_t acs,
-                                         uint8_t* arsn)
+                                         uint8_t ecs, uint8_t acs)
 { 
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     gcry_mac_hd_t tmp_mac_hd;
@@ -737,11 +735,6 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
         gcry_mac_close(tmp_mac_hd);
         status = CRYPTO_LIB_ERR_MAC_RETRIEVAL_ERROR;
         return status;
-    }
-    // Now that MAC has been verified, check IV & ARSN if applicable
-    if (crypto_config->ignore_anti_replay == TC_IGNORE_ANTI_REPLAY_FALSE)
-    {
-        status = Crypto_Check_Anti_Replay(sa_ptr, arsn, iv);
     }
 
     // Zeroise any sensitive information
@@ -913,7 +906,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t decrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool, uint8_t* arsn)
+                                         uint8_t aad_bool)
 {
     gcry_cipher_hd_t tmp_hd;
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
@@ -968,19 +961,6 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
         }
     }
 
-    // Now that MAC has been verified, check IV & ARSN if applicable
-    if (crypto_config->ignore_anti_replay == TC_IGNORE_ANTI_REPLAY_FALSE)
-    {
-        status = Crypto_Check_Anti_Replay(sa_ptr, arsn, iv);
-    }
-    if (status != CRYPTO_LIB_SUCCESS)
-    {
-        // Error with IV or ARSN
-        gcry_cipher_close(tmp_hd);
-        return status;
-    }
-
-    // If applicable, IV/ARSN have been checked out, NOW we can decrypt without fear of replay attack.
     if (decrypt_bool == CRYPTO_TRUE)
     {
         gcry_error = gcry_cipher_decrypt(tmp_hd,
