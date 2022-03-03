@@ -104,7 +104,8 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_CMAC_AUTH_ONLY)
     int32_t status = Crypto_Init();
 
     // char* enc_tc_jpl_mmt_scid44_vcid1= "202C1C1A0000050001C50827915AEB423F054402D5DC3C67566986"; // Returns  CRYPTO_LIB_ERR_INVALID_HEADER since SN/ARC missing from header
-    char* enc_tc_jpl_mmt_scid44_vcid1= "202C1C1E000005000000050001C7BA93010000000000000000000000007ACC";
+    // char* enc_tc_jpl_mmt_scid44_vcid1= "202C1C1E000005000000050001C7BA93010000000000000000000000007ACC";  // Invalid MAC, should fail with error 510
+    char* enc_tc_jpl_mmt_scid44_vcid1= "202C1C1E000005000000030001D5636A648ACCC94A4BA1011C6F429CB94C73";
     char* enc_tc_jpl_mmt_scid44_vcid1_expect = NULL;
     int enc_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
 

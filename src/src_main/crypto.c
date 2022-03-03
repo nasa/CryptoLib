@@ -106,7 +106,7 @@ int32_t Crypto_increment(uint8_t* num, int length)
 
 /**
  * @brief Function: Crypto_window
- * Determines if a value is within the expected window of values
+ * Determines if a value is within the expected positive window of values
  * @param actual: uint8*
  * @param expected: uint8*
  * @param length: int
@@ -115,16 +115,33 @@ int32_t Crypto_increment(uint8_t* num, int length)
  **/
 int32_t Crypto_window(uint8_t* actual, uint8_t* expected, int length, int window)
 {
-    int status = CRYPTO_LIB_ERR_BAD_ANTIREPLAY_WINDOW;
+    int status = CRYPTO_LIB_ERROR;
     int result = 0;
     uint8_t temp[length];
     int i;
     int j;
 
+    // Check Null Pointers
+    if (actual == NULL)
+    {
+#ifdef DEBUG
+        printf("Crypto_Window expected ptr is NULL\n");
+#endif
+        return status;        
+    }
+    if (expected == NULL)
+    {
+#ifdef DEBUG
+        printf("Crypto_Window expected ptr is NULL\n");
+#endif
+        return status;
+    }
     memcpy(temp, expected, length);
-
     for (i = 0; i < window; i++)
     {
+        // Recall - the stored IV or ARSN is the last valid one received, check against next expected
+        Crypto_increment(&temp[0], length);
+        
         result = 0;
         /* go from right (least significant) to left (most signifcant) */
         for (j = length - 1; j >= 0; --j)
@@ -139,7 +156,6 @@ int32_t Crypto_window(uint8_t* actual, uint8_t* expected, int length, int window
             status = CRYPTO_LIB_SUCCESS;
             break;
         }
-        Crypto_increment(&temp[0], length);
     }
     return status;
 }
@@ -750,3 +766,87 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, uin
 
     return status;
 } // End Process SDLS PDU
+
+/*
+** @brief: Check IVs and ARSNs to ensure within valid positive window if applicable
+*/
+int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, uint8_t *iv)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    // Check for NULL pointers
+    if (arsn == NULL)
+    {
+        return CRYPTO_LIB_ERR_NULL_ARSN;
+    }
+    if (iv == NULL)
+    {
+        return CRYPTO_LIB_ERR_NULL_IV;
+    }
+    if (sa_ptr == NULL)
+    {
+        return CRYPTO_LIB_ERR_NULL_SA;
+    }
+    // If sequence number field is greater than zero, check for replay
+    if (sa_ptr->shsnf_len > 0)
+    {
+        // Check Sequence Number is in ARSNW
+        status = Crypto_window(arsn, sa_ptr->arsn, sa_ptr->shsnf_len, sa_ptr->arsnw);
+#ifdef DEBUG
+        printf("Received ARSN is\n\t");
+        for (int i = 0; i < sa_ptr->arsn_len; i++)
+        {
+            printf("%02x", *(arsn + i));
+        }
+        printf("\nSA ARSN is\n\t");
+        for (int i = 0; i < sa_ptr->arsn_len; i++)
+        {
+            printf("%02x", *(sa_ptr->arsn + i));
+        }
+        printf("\nARSNW is: %d\n", sa_ptr->arsnw);
+        printf("Status from Crypto_Window is: %d\n", status);
+#endif
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+            return CRYPTO_LIB_ERR_ARSN_OUTSIDE_WINDOW;
+        }
+        // Valid ARSN received, increment stored value
+        else
+        {
+            memcpy(sa_ptr->arsn, arsn, sa_ptr->arsn_len);
+        }
+    }
+
+        // If IV is greater than zero, check for replay
+        // Should IV always be sequential in a window,
+        // is it mode dependent, or is the only req. uniqueness?
+        if (sa_ptr->shivf_len > 0)
+        {
+            // Check IV is in ARSNW
+            status = Crypto_window(iv, sa_ptr->iv, sa_ptr->shivf_len, sa_ptr->arsnw);
+#ifdef DEBUG
+            printf("Received IV is\n\t");
+            for (int i = 0; i < sa_ptr->shivf_len; i++)
+            // for(i=0; i<IV_SIZE; i++)
+            {
+                printf("%02x", *(iv + i));
+            }
+            printf("\nSA IV is\n\t");
+            for (int i = 0; i < sa_ptr->shivf_len; i++)
+            {
+                printf("%02x", *(sa_ptr->iv + i));
+            }
+            printf("\nARSNW is: %d\n", sa_ptr->arsnw);
+            printf("Crypto_Window return status is: %d\n", status);
+#endif
+            if (status != CRYPTO_LIB_SUCCESS)
+            {
+                return CRYPTO_LIB_ERR_IV_OUTSIDE_WINDOW;
+            }
+            // Valid IV received, increment stored value
+            else
+            {
+                memcpy(sa_ptr->iv, iv, sa_ptr->shivf_len);
+            }
+        }
+    return status;
+}
