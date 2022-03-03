@@ -630,7 +630,6 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
     {
         return status;
     } // Unable to get necessary Managed Parameters for TC TF -- return with error.
-
     // Segment Header
     if (current_managed_parameters->has_segmentation_hdr == TC_HAS_SEGMENT_HDRS)
     {
@@ -644,7 +643,6 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
     printf("vcid = %d \n", tc_sdls_processed_frame->tc_header.vcid);
     printf("spi  = %d \n", tc_sdls_processed_frame->tc_sec_header.spi);
 #endif
-
     status = sadb_routine->sadb_get_sa_from_spi(tc_sdls_processed_frame->tc_sec_header.spi, &sa_ptr);
     // If no valid SPI, return
     if (status != CRYPTO_LIB_SUCCESS)
@@ -760,7 +758,6 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
     memcpy((tc_sdls_processed_frame->tc_sec_header.pad) + (TC_PAD_SIZE - sa_ptr->shplf_len),
            &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len]),
            sa_ptr->shplf_len);
-
     // Set tc_sec_header fields for actual lengths from the SA (downstream apps won't know this length otherwise since they don't access the SADB!).
     tc_sdls_processed_frame->tc_sec_header.iv_field_len = sa_ptr->shivf_len;
     tc_sdls_processed_frame->tc_sec_header.sn_field_len = sa_ptr->shsnf_len;
@@ -847,19 +844,19 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
                                                             aad_len, // length of AAD
                                                             CRYPTO_ECS_NONE, //encryption cipher
                                                             *sa_ptr->acs  //authentication cipher
-                );
-            // Now that MAC has been verified, check IV & ARSN if applicable
-            if (crypto_config->ignore_anti_replay == TC_IGNORE_ANTI_REPLAY_FALSE && status == CRYPTO_LIB_SUCCESS)
-            {
-                status = Crypto_Check_Anti_Replay(sa_ptr, tc_sdls_processed_frame->tc_sec_header.sn, tc_sdls_processed_frame->tc_sec_header.iv);
-            }
+            );
         }
 
     } else // sa_service_type == SA_PLAINTEXT
-    {
+      {
         // TODO: Plaintext ARSN
         memcpy(tc_sdls_processed_frame->tc_pdu, &(ingest[tc_enc_payload_start_index]),
                tc_sdls_processed_frame->tc_pdu_len);
+      }
+    // Now that MAC has been verified, check IV & ARSN if applicable
+    if (crypto_config->ignore_anti_replay == TC_IGNORE_ANTI_REPLAY_FALSE && status == CRYPTO_LIB_SUCCESS)
+    {
+        status = Crypto_Check_Anti_Replay(sa_ptr, tc_sdls_processed_frame->tc_sec_header.sn, tc_sdls_processed_frame->tc_sec_header.iv);
     }
 
     // Extended PDU processing, if applicable

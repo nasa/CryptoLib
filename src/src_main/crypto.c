@@ -121,8 +121,22 @@ int32_t Crypto_window(uint8_t* actual, uint8_t* expected, int length, int window
     int i;
     int j;
 
+    // Check Null Pointers
+    if (actual == NULL)
+    {
+#ifdef DEBUG
+        printf("Crypto_Window expected ptr is NULL\n");
+#endif
+        return status;        
+    }
+    if (expected == NULL)
+    {
+#ifdef DEBUG
+        printf("Crypto_Window expected ptr is NULL\n");
+#endif
+        return status;
+    }
     memcpy(temp, expected, length);
-
     for (i = 0; i < window; i++)
     {
         // Recall - the stored IV or ARSN is the last valid one received, check against next expected
@@ -759,15 +773,18 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, uin
 int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, uint8_t *iv)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-
     // Check for NULL pointers
     if (arsn == NULL)
     {
         return CRYPTO_LIB_ERR_NULL_ARSN;
     }
-    if(iv == NULL)
+    if (iv == NULL)
     {
         return CRYPTO_LIB_ERR_NULL_IV;
+    }
+    if (sa_ptr == NULL)
+    {
+        return CRYPTO_LIB_ERR_NULL_SA;
     }
     // If sequence number field is greater than zero, check for replay
     if (sa_ptr->shsnf_len > 0)

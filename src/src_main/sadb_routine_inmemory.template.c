@@ -79,8 +79,8 @@ int32_t sadb_config(void)
     sa[1].sa_state = SA_OPERATIONAL;
     sa[1].est = 0;
     sa[1].ast = 0;
-    // sa[1].shivf_len = 12;
-    // sa[1].iv = (uint8_t*) calloc(1, sa[1].shivf_len * sizeof(uint8_t));
+    sa[1].shivf_len = 2;
+    sa[1].iv = (uint8_t*) calloc(1, sa[1].shivf_len * sizeof(uint8_t));
     sa[1].arsn_len = 1;
     sa[1].arsnw_len = 1;
     sa[1].arsnw = 5;

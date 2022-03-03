@@ -149,11 +149,15 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
     uint8_t* expected = NULL;
     long expected_length = 0;
 
-    char* activate_sa4_h = "2003002000ff000100001880d2c9000e197f0b001b0004000400003040d95ea61a";
+    char* activate_sa4_h = "2003002000ff000100011880d2c9000e197f0b001b0004000400003040d95ecbc2";
     char* enc_test_ping_h = "2003041600ff1880d2ca0008197f0b0031000039c5082d";
+    char* previous_iv_h = "";
 
-    uint8_t* activate_sa4_b, *enc_test_ping_b = NULL;
+    uint8_t* activate_sa4_b, *enc_test_ping_b, *buffer_previous_iv_b = NULL;
     int activate_sa4_len, enc_test_ping_len = 0;
+
+    buffer_previous_iv_b = buffer_previous_iv_b;
+    previous_iv_h = previous_iv_h;
 
     hex_conversion(activate_sa4_h, (char**) &activate_sa4_b, &activate_sa4_len);
     hex_conversion(enc_test_ping_h, (char**) &enc_test_ping_b, &enc_test_ping_len);
@@ -163,25 +167,20 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     int32_t return_val = -1;
-
     TC_t* tc_sdls_processed_frame;
     tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
-
     // Default SA
     // Expose SA 1 for testing
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_ECS_NONE;
-
     // Ensure that Process Security can activate SA 4
     return_val = Crypto_TC_ProcessSecurity(activate_sa4_b, &activate_sa4_len, tc_sdls_processed_frame);
     //printf("Verifying TC_Process Return Value\n");
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
-
     // Deactive SA 1
     test_association->sa_state = SA_NONE;
-    
     // Expose SA 4 for testing
     sadb_routine->sadb_get_sa_from_spi(4, &test_association);
     test_association->arsn_len = 0;
@@ -192,7 +191,6 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_AES256_GCM;
-
     return_val = Crypto_TC_ApplySecurity(enc_test_ping_b, enc_test_ping_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
     // Get Truth Baseline
@@ -229,7 +227,7 @@ UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
     Crypto_Init_Unit_Test();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
 
-    char* activate_sa4_h = "2003002000ff000100001880d2c9000e197f0b001b0004000400003040d95ea61a";
+    char* activate_sa4_h = "2003002000ff000100011880d2c9000e197f0b001b0004000400003040d95ecbc2";
     char* dec_test_ping_h =
         "2003043400FF00040000000000000000000000017E1D8EEA8D45CEBA17888E0CDCD747DC78E5F372F997F2A63AA5DFC168395DC987";
     char* enc_test_ping_h = "1880d2ca0008197f0b0031000039c5";
@@ -1288,7 +1286,6 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
     memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
-
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
     hex_conversion(buffer_nist_pt_h, (char**) &buffer_nist_pt_b, &buffer_nist_pt_len);
