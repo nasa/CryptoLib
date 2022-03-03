@@ -4,7 +4,7 @@ USE sadb;
 
 -- IV_LEN should probably not have that default -- to be reviewed.
 
-CREATE TABLE security_associations
+CREATE TABLE IF NOT EXISTS security_associations
 (
   spi INT NOT NULL
   ,ekid VARCHAR(100) CHARACTER SET utf8 DEFAULT NULL -- 'EG, for KMC Crypto KeyRef, 'kmc/test/KEY130', for libgcrypt '130'
