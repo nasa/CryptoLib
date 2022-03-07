@@ -859,7 +859,7 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
  **/
 int32_t Crypto_Get_Acs_Algo(int8_t algo_enum)
 {
-    int32_t algo = -1; // All valid algos will be positive
+    int32_t algo = CRYPTO_LIB_ERR_UNSUPPORTED_ACS; // All valid algos will be positive
     switch (algo_enum)
     {
         case CRYPTO_AES256_CMAC:

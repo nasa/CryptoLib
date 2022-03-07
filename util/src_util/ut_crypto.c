@@ -24,6 +24,7 @@
 #include "crypto_error.h"
 #include "sadb_routine.h"
 #include "utest.h"
+#include "gcrypt.h"
 
 /**
  * @brief Unit Test: Crypto Calc/Verify CRC16
@@ -261,6 +262,22 @@ UTEST(CRYPTO_C, EXT_PROC_PDU)
 
     status = Crypto_Process_Extended_Procedure_Pdu(tc_frame, ingest);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+}
+
+/**
+ * @brief Unit Test: Crypto ACS Get Algorithm response
+ **/
+UTEST(CRYPTO_C, GET_ACS_ALGO)
+{
+    // Convert CRYPTOAES enum to GCRY_MAC_CMAC_AES
+    int32_t libgcrypt_algo = -1;
+    uint8_t crypto_algo = CRYPTO_AES256_CMAC;
+    libgcrypt_algo = Crypto_Get_Acs_Algo(crypto_algo);
+    ASSERT_EQ(libgcrypt_algo, GCRY_MAC_CMAC_AES);
+
+    crypto_algo = 99; // Invalid / unsupported
+    libgcrypt_algo = Crypto_Get_Acs_Algo(crypto_algo);
+    ASSERT_EQ(libgcrypt_algo, CRYPTO_LIB_ERR_UNSUPPORTED_ACS);
 }
 
 UTEST_MAIN();

@@ -677,7 +677,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
 
     // Select correct libgcrypt acs enum
     int32_t algo = Crypto_Get_Acs_Algo(acs);
-    if (algo == -1)
+    if (algo == CRYPTO_LIB_ERR_UNSUPPORTED_ACS)
     {
         return CRYPTO_LIB_ERR_UNSUPPORTED_ACS;
     }
