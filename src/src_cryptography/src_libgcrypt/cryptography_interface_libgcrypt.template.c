@@ -14,6 +14,7 @@
 
 #include <gcrypt.h>
 
+
 #include "crypto.h"
 #include "crypto_error.h"
 #include "cryptography_interface.h"
@@ -565,9 +566,16 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
     // Using to fix warning
     len_data_out = len_data_out;
     ecs = ecs;
-    acs = acs;
+    
+    // Select correct libgcrypt acs enum
+    int32_t algo = Crypto_Get_Acs_Algo(acs);
+    if (algo == -1)
+    {
+        return CRYPTO_LIB_ERR_UNSUPPORTED_ACS;
+    }
 
-    gcry_error = gcry_mac_open(&(tmp_mac_hd), GCRY_MAC_CMAC_AES, GCRY_MAC_FLAG_SECURE, NULL);
+    gcry_error = gcry_mac_open(&(tmp_mac_hd), algo, GCRY_MAC_FLAG_SECURE, NULL);
+
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "ERROR: gcry_mac_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
@@ -575,7 +583,6 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
         status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
         return status;
     }
-
     gcry_error = gcry_mac_setkey(tmp_mac_hd, key_ptr, len_key);
 #ifdef SA_DEBUG
     uint32_t i;
@@ -667,9 +674,15 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     // Using to fix warning
     len_data_out = len_data_out;
     ecs = ecs;
-    acs = acs;
 
-    gcry_error = gcry_mac_open(&(tmp_mac_hd), GCRY_MAC_CMAC_AES, GCRY_MAC_FLAG_SECURE, NULL);
+    // Select correct libgcrypt acs enum
+    int32_t algo = Crypto_Get_Acs_Algo(acs);
+    if (algo == -1)
+    {
+        return CRYPTO_LIB_ERR_UNSUPPORTED_ACS;
+    }
+
+    gcry_error = gcry_mac_open(&(tmp_mac_hd), algo, GCRY_MAC_FLAG_SECURE, NULL);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "ERROR: gcry_mac_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);

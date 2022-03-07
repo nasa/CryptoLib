@@ -21,6 +21,8 @@
 */
 #include "crypto.h"
 
+
+#include <gcrypt.h> // GCRY acs/ecs nums
 #include <string.h>
 
 /*
@@ -849,4 +851,28 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
             }
         }
     return status;
+}
+
+/**
+ * @brief Function: Crypto_Get_Acs_Algo
+ * @param algo_enum
+ * @note 
+ **/
+int32_t Crypto_Get_Acs_Algo(int8_t algo_enum)
+{
+    int32_t algo = -1; // All valid algos will be positive
+    switch (algo_enum)
+    {
+        case CRYPTO_AES256_CMAC:
+            algo = GCRY_MAC_CMAC_AES;
+            break;
+
+        default:
+#ifdef DEBUG
+            printf("ACS Algo Enum not supported");
+#endif
+            break;
+    }
+
+    return (int)algo;
 }
