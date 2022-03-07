@@ -854,9 +854,8 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
 }
 
 /**
- * @brief Function: Crypto_Get_Acs_Algo
+ * @brief Function: Crypto_Get_Acs_Algo. Maps Crypto ACS enums to Libgcrypt enums 
  * @param algo_enum
- * @note 
  **/
 int32_t Crypto_Get_Acs_Algo(int8_t algo_enum)
 {
