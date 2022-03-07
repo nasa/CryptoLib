@@ -1913,4 +1913,36 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
     // sadb_routine->sadb_close();
 }
 
+UTEST(PLAINTEXT, ENCRYPT_DECRYPT)
+{
+    int32_t status = CRYPTO_LIB_ERROR;
+    uint8_t* ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_TRUE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
+    Crypto_Init();
+
+    char* jpl_frame_pt_h = "2003001c00ff000100001880d03e000a197f0b000300020093d4ba21c4555555555555";
+    uint8_t* jpl_frame_pt_b = NULL;
+    int jpl_frame_pt_len = 0;
+    TC_t* tc_sdls_processed_frame;
+    tc_sdls_processed_frame = calloc(1, sizeof(uint8_t) * TC_SIZE);
+
+    // Convert input jpl frame
+    hex_conversion(jpl_frame_pt_h, (char**) &jpl_frame_pt_b, &jpl_frame_pt_len);
+
+    // Apply, save the generated frame
+    status = Crypto_TC_ApplySecurity(jpl_frame_pt_b, jpl_frame_pt_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+
+    // // Process the generated frame
+    int len = (int)enc_frame_len;
+    status = Crypto_TC_ProcessSecurity(ptr_enc_frame, &len, tc_sdls_processed_frame);
+    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+}
+
 UTEST_MAIN();

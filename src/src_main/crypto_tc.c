@@ -343,8 +343,6 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
         ** for an SA, the Sequence Number field shall be zero octets in length.
         ** Reference CCSDS 3550b1
         */
-        // TODO: Workout ARSN vs SN and when they may
-        // or may not be the same or different field 
         for (i = 0; i < sa_ptr->shsnf_len; i++)
         {
             // Copy in ARSN from SA
@@ -385,27 +383,6 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
         // Will be over-written if using encryption later
         tf_payload_len = temp_tc_header.fl - TC_FRAME_HEADER_SIZE - segment_hdr_len - fecf_len + 1;
         memcpy((p_new_enc_frame + index), (p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), tf_payload_len);
-
-        /*
-        ** Begin Security Trailer Fields
-        */
-
-        // Set MAC Field if present
-        /*
-        ** May be present and unused if switching between clear and authenticated
-        ** CCSDS 3550b1 4.1.2.3
-        */
-        // By leaving MAC as zeros, can use index for encryption output
-        // for (i=0; i < temp_SA.stmacf_len; i++)
-        // {
-        //     // Temp fill MAC
-        //     *(p_new_enc_frame + index) = 0x00;
-        //     index++;
-        // }
-
-        /*
-        ** End Security Trailer Fields
-        */
 
         /*
         ** Begin Authentication / Encryption
