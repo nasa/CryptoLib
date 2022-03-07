@@ -822,7 +822,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     printf("\n");
 #endif
 
-    if( aad_bool == CRYPTO_TRUE ) // Authenticate with AAD!
+    if(aad_bool == CRYPTO_TRUE) // Authenticate with AAD!
     {
         gcry_error = gcry_cipher_authenticate(tmp_hd,
                                               aad,      // additional authenticated data
@@ -879,7 +879,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
 
 
 
-    if ( authenticate_bool == CRYPTO_TRUE )
+    if (authenticate_bool == CRYPTO_TRUE)
     {
         gcry_error = gcry_cipher_gettag(tmp_hd,
                                         mac,  // tag output
