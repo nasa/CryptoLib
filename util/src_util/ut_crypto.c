@@ -320,5 +320,6 @@ UTEST(INVALID_SA_CONFIGS, INVALID_IV_ARSN)
     test_association->shivf_len = 12;
     status = Crypto_TC_ApplySecurity(jpl_frame_pt_b, jpl_frame_pt_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(CRYPTO_LIB_ERR_INVALID_SA_CONFIGURATION, status);
+}
 
 UTEST_MAIN();
