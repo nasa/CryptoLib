@@ -331,7 +331,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
 #endif
         if (sa_ptr->shivf_len > 0 && sa_ptr->iv == NULL)
         {
-            return CRYPTO_ERR_INVALID_SA_CONFIGURATION;
+            return CRYPTO_LIB_ERR_INVALID_SA_CONFIGURATION;
         }
         else
         {
@@ -352,7 +352,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
         */
         if ((sa_ptr->shsnf_len > 0 || sa_ptr->arsn_len > 0) && sa_ptr->arsn == NULL)
         {
-            return CRYPTO_ERR_INVALID_SA_CONFIGURATION;
+            return CRYPTO_LIB_ERR_INVALID_SA_CONFIGURATION;
         }
         else
         {
