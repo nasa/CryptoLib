@@ -1913,6 +1913,9 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
     // sadb_routine->sadb_close();
 }
 
+/**
+ * @brief Unit Test: Encrypts a frame, then decrypts the output to ensure the reverse doesn't error
+ **/
 UTEST(PLAINTEXT, ENCRYPT_DECRYPT)
 {
     int32_t status = CRYPTO_LIB_ERROR;
