@@ -62,6 +62,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t decrypt_bool, uint8_t authenticate_bool,
                                          uint8_t aad_bool);
+static int32_t cryptography_get_acs_algo(int8_t algo_enum);
 /*
 ** Module Variables
 */
@@ -82,6 +83,7 @@ CryptographyInterface get_cryptography_interface_libgcrypt(void)
     cryptography_if_struct.cryptography_validate_authentication = cryptography_validate_authentication;
     cryptography_if_struct.cryptography_aead_encrypt = cryptography_aead_encrypt;
     cryptography_if_struct.cryptography_aead_decrypt = cryptography_aead_decrypt;
+    cryptography_if_struct.cryptography_get_acs_algo = cryptography_get_acs_algo;
     return &cryptography_if_struct;
 }
 
@@ -568,8 +570,8 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
     ecs = ecs;
     
     // Select correct libgcrypt acs enum
-    int32_t algo = Crypto_Get_Acs_Algo(acs);
-    if (algo == -1)
+    int32_t algo = cryptography_get_acs_algo(acs);
+    if (algo == CRYPTO_LIB_ERR_UNSUPPORTED_ACS)
     {
         return CRYPTO_LIB_ERR_UNSUPPORTED_ACS;
     }
@@ -676,7 +678,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     ecs = ecs;
 
     // Select correct libgcrypt acs enum
-    int32_t algo = Crypto_Get_Acs_Algo(acs);
+    int32_t algo = cryptography_get_acs_algo(acs);
     if (algo == CRYPTO_LIB_ERR_UNSUPPORTED_ACS)
     {
         return CRYPTO_LIB_ERR_UNSUPPORTED_ACS;
@@ -1024,4 +1026,28 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
     gcry_cipher_close(tmp_hd);
 
     return status;
+}
+
+/**
+ * @brief Function: cryptography_get_acs_algo. Maps Cryptolib ACS enums to libgcrypt enums 
+ * It is possible for supported algos to vary between crypto libraries
+ * @param algo_enum
+ **/
+int32_t cryptography_get_acs_algo(int8_t algo_enum)
+{
+    int32_t algo = CRYPTO_LIB_ERR_UNSUPPORTED_ACS; // All valid algos will be positive
+    switch (algo_enum)
+    {
+        case CRYPTO_AES256_CMAC:
+            algo = GCRY_MAC_CMAC_AES;
+            break;
+
+        default:
+#ifdef DEBUG
+            printf("ACS Algo Enum not supported");
+#endif
+            break;
+    }
+
+    return (int)algo;
 }
