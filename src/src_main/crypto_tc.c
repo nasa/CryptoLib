@@ -274,7 +274,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
         printf(KYEL "\tshivf_len\t = %d\n" RESET, sa_ptr->shivf_len);
         printf(KYEL "\tshsnf_len\t = %d\n" RESET, sa_ptr->shsnf_len);
         printf(KYEL "\tshplf len\t = %d\n" RESET, sa_ptr->shplf_len);
-        printf(KYEL "\tarsn_len\t\t = %d\n" RESET, sa_ptr->arsn_len);
+        printf(KYEL "\tarsn_len\t = %d\n" RESET, sa_ptr->arsn_len);
         printf(KYEL "\tpad_size\t = %d\n" RESET, TC_PAD_SIZE);
         printf(KYEL "\tstmacf_len\t = %d\n" RESET, sa_ptr->stmacf_len);
 #endif

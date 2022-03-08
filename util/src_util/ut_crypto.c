@@ -24,6 +24,7 @@
 #include "crypto_error.h"
 #include "sadb_routine.h"
 #include "utest.h"
+#include "gcrypt.h"
 
 /**
  * @brief Unit Test: Crypto Calc/Verify CRC16
@@ -264,6 +265,22 @@ UTEST(CRYPTO_C, EXT_PROC_PDU)
 }
 
 /**
+ * @brief Unit Test: Crypto ACS Get Algorithm response
+ **/
+UTEST(CRYPTO_C, GET_ACS_ALGO)
+{
+    // Convert CRYPTOAES enum to GCRY_MAC_CMAC_AES
+    int32_t libgcrypt_algo = -1;
+    uint8_t crypto_algo = CRYPTO_AES256_CMAC;
+    libgcrypt_algo = cryptography_if->cryptography_get_acs_algo(crypto_algo);
+    ASSERT_EQ(libgcrypt_algo, GCRY_MAC_CMAC_AES);
+
+    crypto_algo = 99; // Invalid / unsupported
+    libgcrypt_algo = cryptography_if->cryptography_get_acs_algo(crypto_algo);
+    ASSERT_EQ(libgcrypt_algo, CRYPTO_LIB_ERR_UNSUPPORTED_ACS);
+}
+
+/*
  * @brief Unit Test: Test that an SA set to use IV/ARSN without mallocing doesn't segfault and returns an error
  **/
 UTEST(INVALID_SA_CONFIGS, INVALID_IV_ARSN)
@@ -295,14 +312,13 @@ UTEST(INVALID_SA_CONFIGS, INVALID_IV_ARSN)
     free(test_association->arsn);
     test_association->arsn = NULL;
     status = Crypto_TC_ApplySecurity(jpl_frame_pt_b, jpl_frame_pt_len, &ptr_enc_frame, &enc_frame_len);
-    ASSERT_EQ(CRYPTO_ERR_INVALID_SA_CONFIGURATION, status);
+    ASSERT_EQ(CRYPTO_LIB_ERR_INVALID_SA_CONFIGURATION, status);
 
     // Should fail, as SA will be set to use IV, but IV pointer is NULL
     free(test_association->iv);
     test_association->iv = NULL;
     test_association->shivf_len = 12;
     status = Crypto_TC_ApplySecurity(jpl_frame_pt_b, jpl_frame_pt_len, &ptr_enc_frame, &enc_frame_len);
-    ASSERT_EQ(CRYPTO_ERR_INVALID_SA_CONFIGURATION, status);
-}
+    ASSERT_EQ(CRYPTO_LIB_ERR_INVALID_SA_CONFIGURATION, status);
 
 UTEST_MAIN();
