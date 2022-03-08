@@ -319,7 +319,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
 
         // Set initialization vector if specified
 #ifdef SA_DEBUG
-            if (sa_ptr->shivf_len > 0)
+            if (sa_ptr->shivf_len > 0 && sa_ptr->iv != NULL)
             {
                 printf(KYEL "Using IV value:\n\t");
                 for (i = 0; i < sa_ptr->shivf_len; i++)
@@ -329,11 +329,18 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
                 printf("\n" RESET);
             }
 #endif
-        for (i = 0; i < sa_ptr->shivf_len; i++)
+        if (sa_ptr->shivf_len > 0 && sa_ptr->iv == NULL)
         {
-            // Copy in IV from SA
-            *(p_new_enc_frame + index) = *(sa_ptr->iv + i);
-            index++;
+            return CRYPTO_ERR_INVALID_SA_CONFIGURATION;
+        }
+        else
+        {
+            for (i = 0; i < sa_ptr->shivf_len; i++)
+            {
+                // Copy in IV from SA
+                *(p_new_enc_frame + index) = *(sa_ptr->iv + i);
+                index++;
+            }
         }
 
         // Set anti-replay sequence number if specified
@@ -343,11 +350,18 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
         ** for an SA, the Sequence Number field shall be zero octets in length.
         ** Reference CCSDS 3550b1
         */
-        for (i = 0; i < sa_ptr->shsnf_len; i++)
+        if ((sa_ptr->shsnf_len > 0 || sa_ptr->arsn_len > 0) && sa_ptr->arsn == NULL)
         {
-            // Copy in ARSN from SA
-            *(p_new_enc_frame + index) = *(sa_ptr->arsn + i);
-            index++;
+            return CRYPTO_ERR_INVALID_SA_CONFIGURATION;
+        }
+        else
+        {
+            for (i = 0; i < sa_ptr->shsnf_len; i++)
+            {
+                // Copy in ARSN from SA
+                *(p_new_enc_frame + index) = *(sa_ptr->arsn + i);
+                index++;
+            }
         }
 
         // Set security header padding if specified
