@@ -613,6 +613,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
             printf(KRED "ERROR: gcry_mac_setiv error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
             printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
             status = CRYPTO_LIB_ERROR;
+            gcry_mac_close(tmp_mac_hd);
             return status;
         }
     }
@@ -627,6 +628,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                 gcry_error & GPG_ERR_CODE_MASK);
         printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
         status = CRYPTO_LIB_ERROR;
+        gcry_mac_close(tmp_mac_hd);
         return status;
     }
 
@@ -639,6 +641,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
         printf(KRED "ERROR: gcry_mac_read error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
         printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
         status = CRYPTO_LIB_ERR_MAC_RETRIEVAL_ERROR;
+        gcry_mac_close(tmp_mac_hd);
         return status;
     }
 
@@ -864,7 +867,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     {
         printf(KRED "ERROR: gcry_cipher_encrypt error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
         printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
-        status = CRYPTO_LIB_ERROR;
+        status = CRYPTO_LIB_ERR_ENCRYPTION_ERROR;
         gcry_cipher_close(tmp_hd);
         return status;
     }
@@ -908,8 +911,6 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     }
 
     gcry_cipher_close(tmp_hd);
-
-
     return status;
 }
 
@@ -1024,7 +1025,6 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
     }
 
     gcry_cipher_close(tmp_hd);
-
     return status;
 }
 

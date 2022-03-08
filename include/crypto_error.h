@@ -77,5 +77,6 @@
 #define CRYPTO_LIB_ERR_NULL_ARSN (-24)
 #define CRYPTO_LIB_ERR_NULL_SA (-25)
 #define CRYPTO_LIB_ERR_UNSUPPORTED_ACS (-26)
+#define CRYPTO_LIB_ERR_ENCRYPTION_ERROR (-27)
 
 #endif //_crypto_error_h_
