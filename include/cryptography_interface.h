@@ -70,6 +70,7 @@ typedef struct
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t decrypt_bool, uint8_t authenticate_bool,
                                          uint8_t aad_bool);
+    int32_t (*cryptography_get_acs_algo)(int8_t algo_enum);
 
 } CryptographyInterfaceStruct, *CryptographyInterface;
 
