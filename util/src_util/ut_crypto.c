@@ -280,4 +280,46 @@ UTEST(CRYPTO_C, GET_ACS_ALGO)
     ASSERT_EQ(libgcrypt_algo, CRYPTO_LIB_ERR_UNSUPPORTED_ACS);
 }
 
+/*
+ * @brief Unit Test: Test that an SA set to use IV/ARSN without mallocing doesn't segfault and returns an error
+ **/
+UTEST(INVALID_SA_CONFIGS, INVALID_IV_ARSN)
+{
+    int32_t status = CRYPTO_LIB_ERROR;
+    uint8_t* ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_TRUE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS);
+    Crypto_Init();
+
+    char* jpl_frame_pt_h = "2003001c00ff000100001880d03e000a197f0b000300020093d4ba21c4555555555555";
+    uint8_t* jpl_frame_pt_b = NULL;
+    int jpl_frame_pt_len = 0;
+
+     // Expose/setup SAs for testing
+    SecurityAssociation_t* test_association = NULL;
+    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+
+    // Convert input jpl frame
+    hex_conversion(jpl_frame_pt_h, (char**) &jpl_frame_pt_b, &jpl_frame_pt_len);
+
+    // Should fail, as SA will be set to use ARSN, but ARSN pointer is NULL
+    free(test_association->arsn);
+    test_association->arsn = NULL;
+    status = Crypto_TC_ApplySecurity(jpl_frame_pt_b, jpl_frame_pt_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_ERR_INVALID_SA_CONFIGURATION, status);
+
+    // Should fail, as SA will be set to use IV, but IV pointer is NULL
+    free(test_association->iv);
+    test_association->iv = NULL;
+    test_association->shivf_len = 12;
+    status = Crypto_TC_ApplySecurity(jpl_frame_pt_b, jpl_frame_pt_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_ERR_INVALID_SA_CONFIGURATION, status);
+}
+
 UTEST_MAIN();

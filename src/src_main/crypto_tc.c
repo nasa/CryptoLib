@@ -318,18 +318,23 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
         index += 2;
 
         // Set initialization vector if specified
-        if ((sa_service_type == SA_AUTHENTICATION) || (sa_service_type == SA_AUTHENTICATED_ENCRYPTION) ||
-            (sa_service_type == SA_ENCRYPTION))
-        {
 #ifdef SA_DEBUG
-            printf(KYEL "Using IV value:\n\t");
-            for (i = 0; i < sa_ptr->shivf_len; i++)
+            if (sa_ptr->shivf_len > 0 && sa_ptr->iv != NULL)
             {
-                printf("%02x", *(sa_ptr->iv + i));
+                printf(KYEL "Using IV value:\n\t");
+                for (i = 0; i < sa_ptr->shivf_len; i++)
+                {
+                    printf("%02x", *(sa_ptr->iv + i));
+                }
+                printf("\n" RESET);
             }
-            printf("\n" RESET);
 #endif
-
+        if (sa_ptr->shivf_len > 0 && sa_ptr->iv == NULL)
+        {
+            return CRYPTO_LIB_ERR_INVALID_SA_CONFIGURATION;
+        }
+        else
+        {
             for (i = 0; i < sa_ptr->shivf_len; i++)
             {
                 // Copy in IV from SA
@@ -345,13 +350,18 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
         ** for an SA, the Sequence Number field shall be zero octets in length.
         ** Reference CCSDS 3550b1
         */
-        // TODO: Workout ARSN vs SN and when they may
-        // or may not be the same or different field 
-        for (i = 0; i < sa_ptr->shsnf_len; i++)
+        if ((sa_ptr->shsnf_len > 0 || sa_ptr->arsn_len > 0) && sa_ptr->arsn == NULL)
         {
-            // Copy in ARSN from SA
-            *(p_new_enc_frame + index) = *(sa_ptr->arsn + i);
-            index++;
+            return CRYPTO_LIB_ERR_INVALID_SA_CONFIGURATION;
+        }
+        else
+        {
+            for (i = 0; i < sa_ptr->shsnf_len; i++)
+            {
+                // Copy in ARSN from SA
+                *(p_new_enc_frame + index) = *(sa_ptr->arsn + i);
+                index++;
+            }
         }
 
         // Set security header padding if specified
@@ -387,27 +397,6 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
         // Will be over-written if using encryption later
         tf_payload_len = temp_tc_header.fl - TC_FRAME_HEADER_SIZE - segment_hdr_len - fecf_len + 1;
         memcpy((p_new_enc_frame + index), (p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), tf_payload_len);
-
-        /*
-        ** Begin Security Trailer Fields
-        */
-
-        // Set MAC Field if present
-        /*
-        ** May be present and unused if switching between clear and authenticated
-        ** CCSDS 3550b1 4.1.2.3
-        */
-        // By leaving MAC as zeros, can use index for encryption output
-        // for (i=0; i < temp_SA.stmacf_len; i++)
-        // {
-        //     // Temp fill MAC
-        //     *(p_new_enc_frame + index) = 0x00;
-        //     index++;
-        // }
-
-        /*
-        ** End Security Trailer Fields
-        */
 
         /*
         ** Begin Authentication / Encryption
