@@ -249,6 +249,14 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
             break;
         }
 
+        // Ensure the frame to be created will not violate managed parameter maximum length
+        if (*p_enc_frame_len > current_managed_parameters->max_tc_frame_size)
+        {
+            printf(KRED "Error: New frame would violate maximum tc frame parameter! \n" RESET);
+            status = CRYPTO_LIB_ERR_TC_FRAME_SIZE_EXCEEDS_MAX_LIMIT;
+            return status;
+        }
+
         // Accio buffer
         p_new_enc_frame = (uint8_t* )malloc((*p_enc_frame_len) * sizeof(uint8_t));
         if (!p_new_enc_frame)
