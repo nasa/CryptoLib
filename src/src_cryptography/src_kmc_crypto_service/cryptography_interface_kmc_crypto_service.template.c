@@ -1253,7 +1253,7 @@ int32_t cryptography_get_acs_algo(int8_t algo_enum)
     int32_t algo = CRYPTO_LIB_ERR_UNSUPPORTED_ACS; // All valid algo enums will be positive
     switch (algo_enum)
     {
-        // case CRYPTO_AES256_CMAC:
+        // case CRYPTO_MAC_CMAC_AES256:
         //     algo = GCRY_MAC_CMAC_AES;
         //     break;
 

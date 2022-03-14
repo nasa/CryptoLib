@@ -89,14 +89,15 @@ typedef enum
 */
 typedef enum
 {
-    CRYPTO_ACS_NONE,
-    CRYPTO_AES256_CMAC,
-    CRYPTO_AES256_GMAC
+    CRYPTO_MAC_NONE,
+    CRYPTO_MAC_CMAC_AES256,
+    CRYPTO_MAC_HMAC_SHA256,
+    CRYPTO_MAC_HMAC_SHA512
 } AuthCipherSuite;
 typedef enum
 {
-    CRYPTO_ECS_NONE,
-    CRYPTO_AES256_GCM
+    CRYPTO_CIPHER_NONE,
+    CRYPTO_CIPHER_AES256_GCM
 } EncCipherSuite;
 
 /*

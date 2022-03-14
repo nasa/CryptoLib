@@ -189,7 +189,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
             // If no pointer, must not be using ECS at all
             else
             {
-                encryption_cipher = CRYPTO_ECS_NONE;
+                encryption_cipher = CRYPTO_CIPHER_NONE;
             }
             ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(encryption_cipher);
         }
@@ -851,7 +851,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
                                                             sa_ptr->stmacf_len,                           // tag size
                                                             aad,    // additional authenticated data
                                                             aad_len, // length of AAD
-                                                            CRYPTO_ECS_NONE, //encryption cipher
+                                                            CRYPTO_CIPHER_NONE, //encryption cipher
                                                             *sa_ptr->acs  //authentication cipher
             );
         }

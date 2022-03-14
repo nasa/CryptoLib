@@ -271,7 +271,7 @@ UTEST(CRYPTO_C, GET_ACS_ALGO)
 {
     // Convert CRYPTOAES enum to GCRY_MAC_CMAC_AES
     int32_t libgcrypt_algo = -1;
-    uint8_t crypto_algo = CRYPTO_AES256_CMAC;
+    uint8_t crypto_algo = CRYPTO_MAC_CMAC_AES256;
     libgcrypt_algo = cryptography_if->cryptography_get_acs_algo(crypto_algo);
     ASSERT_EQ(libgcrypt_algo, GCRY_MAC_CMAC_AES);
 
