@@ -252,6 +252,10 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
         // Ensure the frame to be created will not violate managed parameter maximum length
         if (*p_enc_frame_len > current_managed_parameters->max_tc_frame_size)
         {
+#ifdef DEBUG
+            printf("Managed length is: %d\n", current_managed_parameters->max_tc_frame_size);
+            printf("New enc frame length will be: %d\n", *p_enc_frame_len);
+#endif
             printf(KRED "Error: New frame would violate maximum tc frame managed parameter! \n" RESET);
             status = CRYPTO_LIB_ERR_TC_FRAME_SIZE_EXCEEDS_MANAGED_PARAM_MAX_LIMIT;
             return status;

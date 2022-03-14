@@ -408,6 +408,14 @@ static int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, u
                 status = CRYPTO_LIB_ERR_NO_OPERATIONAL_SA;
             }
         }
+            // Detailed debug block
+#ifdef SA_DEBUG
+            printf(KYEL "Incoming frame parameters:\n" RESET);
+            printf(KYEL "\ttfvn %02X\n" RESET, tfvn);
+            printf(KYEL "\tscid %04X\n" RESET, scid);
+            printf(KYEL "\tvcid %02X\n" RESET, vcid);
+            printf(KYEL "\tmapid %02X\n" RESET, mapid);
+#endif
     }
 
     return status;
