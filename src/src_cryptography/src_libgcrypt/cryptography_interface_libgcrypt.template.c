@@ -1041,6 +1041,12 @@ int32_t cryptography_get_acs_algo(int8_t algo_enum)
         case CRYPTO_MAC_CMAC_AES256:
             algo = GCRY_MAC_CMAC_AES;
             break;
+        case CRYPTO_MAC_HMAC_SHA256:
+            algo = GCRY_MAC_HMAC_SHA256;
+            break;
+        case CRYPTO_MAC_HMAC_SHA512:
+            algo = GCRY_MAC_HMAC_SHA512;
+            break;
 
         default:
 #ifdef DEBUG
