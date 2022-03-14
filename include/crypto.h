@@ -66,7 +66,7 @@ extern int32_t Crypto_Config_Kmc_Crypto_Service(char* protocol, char* kmc_crypto
                                                 char* mtls_client_cert_type, char* mtls_client_key_path,
                                                 char* mtls_client_key_pass, char* mtls_issuer_cert);
 extern int32_t Crypto_Config_Add_Gvcid_Managed_Parameter(uint8_t tfvn, uint16_t scid, uint8_t vcid, uint8_t has_fecf,
-                                                         uint8_t has_segmentation_hdr);
+                                                         uint8_t has_segmentation_hdr, uint16_t max_tc_frame_size);
 
 // Initialization
 extern int32_t Crypto_Init(void); // Initialize CryptoLib After Configuration Calls
@@ -147,6 +147,7 @@ int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uin
                                                        GvcidManagedParameters_t** managed_parameters_out);
 int32_t crypto_config_add_gvcid_managed_parameter_recursion(uint8_t tfvn, uint16_t scid, uint8_t vcid,
                                                                    uint8_t has_fecf, uint8_t has_segmentation_hdr,
+                                                                   uint16_t max_tc_frame_size,
                                                                    GvcidManagedParameters_t* managed_parameter);
 void Crypto_Free_Managed_Parameters(GvcidManagedParameters_t* managed_parameters);
 

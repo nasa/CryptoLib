@@ -126,6 +126,7 @@ struct _GvcidManagedParameters_t
     uint8_t vcid : 6;   // Virtual Channel ID
     TcFecfPresent has_fecf;
     TcSegmentHdrsPresent has_segmentation_hdr;
+    uint16_t max_tc_frame_size; // Maximum TC Frame Length with headers
     GvcidManagedParameters_t* next; // Will be a list of managed parameters!
 };
 #define GVCID_MANAGED_PARAMETERS_SIZE (sizeof(GvcidManagedParameters_t))
