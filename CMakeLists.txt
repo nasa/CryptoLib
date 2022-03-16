@@ -20,7 +20,6 @@
 cmake_minimum_required(VERSION 3.14.0)
 project(CRYPTO C)
 
-set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib")
 
 OPTION(DEBUG "Debug" OFF) # Disabled by default, enable with: -DDEBUG=ON
 OPTION(MYSQL "Mysql" OFF) # Disabled by default, enable with: -DMYSQL=ON
@@ -28,6 +27,19 @@ OPTION(LIBGCRYPT "Libgcrypt" ON) # Enabled by default, disable with: -DLIBGCRYPT
 OPTION(KMCCRYPTO "KmcCrypto" OFF) # Disabled by default, enable with: -DKMCCRYPTO=ON
 OPTION(ENCTEST "Encryption-Tests" OFF) # Disabled by default, enable with: -DENCTEST=ON
 OPTION(CODECOV "Code-Coverage" OFF) # Disabled by default, enable with: -DCODECOV=ON
+OPTION(SYSTEM_INSTALL "SystemInstall" OFF) #Disabled by default, enable with: -DSYSTEM_INSTALL=ON
+
+set(CMAKE_INSTALL_RPATH "$ORIGIN")
+set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}/install)
+
+IF(CRYPTO_SUBMODULE_INSTALL) #If building CryptoLib as a submodule of another build system (EG, JPL KMC, Nasa NOS3, etc...)
+    set(CMAKE_INSTALL_PREFIX ${CRYPTO_SUBMODULE_INSTALL})
+ENDIF()
+
+IF(SYSTEM_INSTALL)
+    set(CMAKE_INSTALL_PREFIX /usr/local)
+ENDIF()
+
 
 IF(DEBUG)
     ADD_DEFINITIONS(-DDEBUG -DOCF_DEBUG -DFECF_DEBUG -DSA_DEBUG -DPDU_DEBUG -DCCSDS_DEBUG -DTC_DEBUG -DMAC_DEBUG -DTM_DEBUG)
