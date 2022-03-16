@@ -262,7 +262,6 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
     iv = iv;
     iv_len = iv_len;
     ecs = ecs;
-    acs = acs;
 
     curl_easy_reset(curl);
     configure_curl_connect_opts(curl);
@@ -274,6 +273,13 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
 
     uint8_t* auth_payload = aad;
     size_t auth_payload_len = aad_len;
+
+    // Verify valid acs enum
+    int32_t algo = cryptography_get_acs_algo(acs);
+    if (algo == CRYPTO_LIB_ERR_UNSUPPORTED_ACS)
+    {
+        return CRYPTO_LIB_ERR_UNSUPPORTED_ACS;
+    }
 
     // Need to copy the data over, since authentication won't change/move the data directly
     if(data_out != NULL){
@@ -488,7 +494,13 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     iv = iv;
     iv_len = iv_len;
     ecs = ecs;
-    acs = acs;
+
+    // Verify valid acs enum
+    int32_t algo = cryptography_get_acs_algo(acs);
+    if (algo == CRYPTO_LIB_ERR_UNSUPPORTED_ACS)
+    {
+        return CRYPTO_LIB_ERR_UNSUPPORTED_ACS;
+    }
 
     // Need to copy the data over, since authentication won't change/move the data directly
     if(data_out != NULL){
@@ -1253,9 +1265,9 @@ int32_t cryptography_get_acs_algo(int8_t algo_enum)
     int32_t algo = CRYPTO_LIB_ERR_UNSUPPORTED_ACS; // All valid algo enums will be positive
     switch (algo_enum)
     {
-        // case CRYPTO_AES256_CMAC:
-        //     algo = GCRY_MAC_CMAC_AES;
-        //     break;
+         case CRYPTO_AES256_CMAC:
+             algo = CRYPTO_AES256_CMAC;
+             break;
 
         default:
 #ifdef DEBUG
@@ -1264,5 +1276,5 @@ int32_t cryptography_get_acs_algo(int8_t algo_enum)
             break;
     }
 
-    return (int)algo;
+    return (int32_t)algo;
 }
