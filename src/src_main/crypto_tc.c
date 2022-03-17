@@ -485,7 +485,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
                 // TODO - implement non-AEAD algorithm logic
                 if (sa_service_type == SA_ENCRYPTION)
                 {
-                    cryptography_if->cryptography_encrypt();
+                    status = cryptography_if->cryptography_encrypt();
                 }
 
                 if (sa_service_type == SA_AUTHENTICATION)
@@ -506,13 +506,12 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
                                                                 *sa_ptr->ecs, // encryption cipher
                                                                 *sa_ptr->acs  // authentication cipher
                     );
-                    if (status != CRYPTO_LIB_SUCCESS)
-                    {
-                        return status; // authenticate call failed, return.
-                    }
                 }
             }
-
+            if (status != CRYPTO_LIB_SUCCESS)
+            {
+                return status; // Cryptography IF call failed, return.
+            }
         }
 
         if (sa_service_type != SA_PLAINTEXT)
@@ -834,7 +833,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
 
         if(sa_service_type == SA_ENCRYPTION) 
         { 
-            cryptography_if->cryptography_decrypt();
+            status = cryptography_if->cryptography_decrypt();
         }
         if(sa_service_type == SA_AUTHENTICATION)
         {
@@ -857,11 +856,17 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
         }
 
     } else // sa_service_type == SA_PLAINTEXT
-      {
-        // TODO: Plaintext ARSN
-        memcpy(tc_sdls_processed_frame->tc_pdu, &(ingest[tc_enc_payload_start_index]),
-               tc_sdls_processed_frame->tc_pdu_len);
-      }
+    {
+      // TODO: Plaintext ARSN
+      memcpy(tc_sdls_processed_frame->tc_pdu, &(ingest[tc_enc_payload_start_index]),
+             tc_sdls_processed_frame->tc_pdu_len);
+    }
+
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        return status; // Cryptography IF call failed, return.
+    }
+
     // Now that MAC has been verified, check IV & ARSN if applicable
     if (crypto_config->ignore_anti_replay == TC_IGNORE_ANTI_REPLAY_FALSE && status == CRYPTO_LIB_SUCCESS)
     {
