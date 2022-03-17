@@ -29,7 +29,7 @@ OPTION(ENCTEST "Encryption-Tests" OFF) # Disabled by default, enable with: -DENC
 OPTION(CODECOV "Code-Coverage" OFF) # Disabled by default, enable with: -DCODECOV=ON
 OPTION(SYSTEM_INSTALL "SystemInstall" OFF) #Disabled by default, enable with: -DSYSTEM_INSTALL=ON
 
-set(CMAKE_INSTALL_RPATH "$ORIGIN")
+set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib")
 set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}/install)
 
 IF(CRYPTO_SUBMODULE_INSTALL) #If building CryptoLib as a submodule of another build system (EG, JPL KMC, Nasa NOS3, etc...)
