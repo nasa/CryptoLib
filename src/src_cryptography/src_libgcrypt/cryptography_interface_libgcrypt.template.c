@@ -127,6 +127,7 @@ static int32_t cryptography_config(void)
     ek_ring[0].value[29] = 0x0D;
     ek_ring[0].value[30] = 0x0E;
     ek_ring[0].value[31] = 0x0F;
+    ek_ring[0].key_len = 32;
     ek_ring[0].key_state = KEY_ACTIVE;
     // 1 - 101112131415161718191A1B1C1D1E1F101112131415161718191A1B1C1D1E1F -> ACTIVE
     ek_ring[1].value[0] = 0x10;
@@ -161,6 +162,7 @@ static int32_t cryptography_config(void)
     ek_ring[1].value[29] = 0x1D;
     ek_ring[1].value[30] = 0x1E;
     ek_ring[1].value[31] = 0x1F;
+    ek_ring[1].key_len = 32;
     ek_ring[1].key_state = KEY_ACTIVE;
     // 2 - 202122232425262728292A2B2C2D2E2F202122232425262728292A2B2C2D2E2F -> ACTIVE
     ek_ring[2].value[0] = 0x20;
@@ -195,6 +197,7 @@ static int32_t cryptography_config(void)
     ek_ring[2].value[29] = 0x2D;
     ek_ring[2].value[30] = 0x2E;
     ek_ring[2].value[31] = 0x2F;
+    ek_ring[2].key_len = 32;
     ek_ring[2].key_state = KEY_ACTIVE;
 
     // Session Keys
@@ -231,6 +234,7 @@ static int32_t cryptography_config(void)
     ek_ring[128].value[29] = 0xAB;
     ek_ring[128].value[30] = 0xCD;
     ek_ring[128].value[31] = 0xEF;
+    ek_ring[128].key_len = 32;
     ek_ring[128].key_state = KEY_ACTIVE;
     // 129 - ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789 -> ACTIVE
     ek_ring[129].value[0] = 0xAB;
@@ -265,6 +269,7 @@ static int32_t cryptography_config(void)
     ek_ring[129].value[29] = 0x45;
     ek_ring[129].value[30] = 0x67;
     ek_ring[129].value[31] = 0x89;
+    ek_ring[129].key_len = 32;
     ek_ring[129].key_state = KEY_ACTIVE;
     // 130 - FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210 -> ACTIVE
     ek_ring[130].value[0] = 0xFE;
@@ -299,6 +304,7 @@ static int32_t cryptography_config(void)
     ek_ring[130].value[29] = 0x54;
     ek_ring[130].value[30] = 0x32;
     ek_ring[130].value[31] = 0x10;
+    ek_ring[130].key_len = 32;
     ek_ring[130].key_state = KEY_ACTIVE;
     // 131 - 9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA -> ACTIVE
     ek_ring[131].value[0] = 0x98;
@@ -333,6 +339,7 @@ static int32_t cryptography_config(void)
     ek_ring[131].value[29] = 0xFE;
     ek_ring[131].value[30] = 0xDC;
     ek_ring[131].value[31] = 0xBA;
+    ek_ring[131].key_len = 32;
     ek_ring[131].key_state = KEY_ACTIVE;
     // 132 - 0123456789ABCDEFABCDEF01234567890123456789ABCDEFABCDEF0123456789 -> PRE_ACTIVATION
     ek_ring[132].value[0] = 0x01;
@@ -367,6 +374,7 @@ static int32_t cryptography_config(void)
     ek_ring[132].value[29] = 0x45;
     ek_ring[132].value[30] = 0x67;
     ek_ring[132].value[31] = 0x89;
+    ek_ring[132].key_len = 32;
     ek_ring[132].key_state = KEY_PREACTIVE;
     // 133 - ABCDEF01234567890123456789ABCDEFABCDEF01234567890123456789ABCDEF -> ACTIVE
     ek_ring[133].value[0] = 0xAB;
@@ -401,6 +409,7 @@ static int32_t cryptography_config(void)
     ek_ring[133].value[29] = 0xAB;
     ek_ring[133].value[30] = 0xCD;
     ek_ring[133].value[31] = 0xEF;
+    ek_ring[133].key_len = 32;
     ek_ring[133].key_state = KEY_ACTIVE;
     // 134 - ABCDEF0123456789FEDCBA9876543210ABCDEF0123456789FEDCBA9876543210 -> DEACTIVE
     ek_ring[134].value[0] = 0xAB;
@@ -435,6 +444,7 @@ static int32_t cryptography_config(void)
     ek_ring[134].value[29] = 0x54;
     ek_ring[134].value[30] = 0x32;
     ek_ring[134].value[31] = 0x10;
+    ek_ring[134].key_len = 32;
     ek_ring[134].key_state = KEY_DEACTIVATED;
 
     // 135 - ABCDEF0123456789FEDCBA9876543210ABCDEF0123456789FEDCBA9876543210 -> DEACTIVE
@@ -470,6 +480,7 @@ static int32_t cryptography_config(void)
     ek_ring[135].value[29] = 0x00;
     ek_ring[135].value[30] = 0x00;
     ek_ring[135].value[31] = 0x00;
+    ek_ring[135].key_len = 32;
     ek_ring[135].key_state = KEY_DEACTIVATED;
 
     // 136 - ef9f9284cf599eac3b119905a7d18851e7e374cf63aea04358586b0f757670f8
@@ -507,7 +518,8 @@ static int32_t cryptography_config(void)
     ek_ring[136].value[29] = 0x76;
     ek_ring[136].value[30] = 0x70;
     ek_ring[136].value[31] = 0xf9;
-    ek_ring[135].key_state = KEY_DEACTIVATED;
+    ek_ring[136].key_len = 32;
+    ek_ring[136].key_state = KEY_DEACTIVATED;
 
     return status;
 }

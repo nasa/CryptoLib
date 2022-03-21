@@ -103,7 +103,7 @@
 // Generic Defines
 #define NUM_SA 64
 #define SPI_LEN 2 /* bytes */
-#define KEY_SIZE 32
+#define KEY_SIZE 512 /* bytes */
 #define KEY_ID_SIZE 8
 #define NUM_KEYS 256
 #define DISABLED 0
