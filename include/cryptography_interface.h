@@ -71,6 +71,7 @@ typedef struct
                                          uint8_t decrypt_bool, uint8_t authenticate_bool,
                                          uint8_t aad_bool);
     int32_t (*cryptography_get_acs_algo)(int8_t algo_enum);
+    int32_t (*cryptography_get_ecs_algo)(int8_t algo_enum);
 
 } CryptographyInterfaceStruct, *CryptographyInterface;
 
