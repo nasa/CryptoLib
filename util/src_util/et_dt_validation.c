@@ -1790,6 +1790,8 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
     *test_association->ecs = CRYPTO_CIPHER_NONE;
     test_association->acs = calloc(1, test_association->acs_len * sizeof(uint8_t));
     *test_association->acs = CRYPTO_MAC_CMAC_AES256;
+    test_association->ekid = 0;
+    test_association->akid = 136;
 
     TC_t* tc_sdls_processed_frame;
     tc_sdls_processed_frame = calloc(1, sizeof(uint8_t) * TC_SIZE);
@@ -1881,6 +1883,8 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
     *test_association->ecs = CRYPTO_CIPHER_NONE;
     test_association->acs = calloc(1, test_association->acs_len * sizeof(uint8_t));
     *test_association->acs = CRYPTO_MAC_CMAC_AES256;
+    test_association->ekid = 0;
+    test_association->akid = 136;
 
     TC_t* tc_sdls_processed_frame;
     tc_sdls_processed_frame = calloc(1, sizeof(uint8_t) * TC_SIZE);
