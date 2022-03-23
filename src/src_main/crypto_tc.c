@@ -499,7 +499,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
                                                                 (uint8_t*)(p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), // plaintext input
                                                                 (size_t)tf_payload_len,                                         // in data length
                                                                 NULL, // Using SA key reference, key is null
-                                                                ek_ring[sa_ptr->ekid].key_len,
+                                                                ek_ring[sa_ptr->akid].key_len,
                                                                 sa_ptr, // SA (for key reference)
                                                                 sa_ptr->iv, // IV
                                                                 sa_ptr->shivf_len, // IV Length
@@ -851,7 +851,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
                                                             &(ingest[tc_enc_payload_start_index]), // ciphertext input
                                                             (size_t)(tc_sdls_processed_frame->tc_pdu_len),    // in data length
                                                             NULL, // Key
-                                                            ek_ring[sa_ptr->ekid].key_len,
+                                                            ek_ring[sa_ptr->akid].key_len,
                                                             sa_ptr, // SA for key reference
                                                             tc_sdls_processed_frame->tc_sec_header.iv, // IV
                                                             sa_ptr->shivf_len, // IV Length

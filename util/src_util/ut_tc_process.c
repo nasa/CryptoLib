@@ -176,6 +176,8 @@ UTEST(TC_PROCESS, EXERCISE_ARSN)
     test_association->arsn_len = 2;
     test_association->arsnw = 5;
     test_association->abm_len = 1024;
+    test_association->akid = 136;
+    test_association->ekid = 0;
     // memset(test_association->abm, 0x00, (test_association->abm_len * sizeof(uint8_t)));
     test_association->abm = calloc(1, test_association->abm_len * sizeof(uint8_t));
     test_association->stmacf_len = 16;
