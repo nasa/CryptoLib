@@ -755,6 +755,36 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
         return status;
     }
 
+#ifdef MAC_DEBUG
+    uint32_t tmac_size = mac_size;
+    uint8_t* tmac = malloc(tmac_size);
+    gcry_error = gcry_mac_read(tmp_mac_hd,
+                               tmac,      // tag output
+                               (size_t *)&tmac_size // tag size // TODO - use sa_ptr->abm_len instead of hardcoded mac size?
+    );
+    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+    {
+        printf(KRED "ERROR: gcry_mac_read error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+        status = CRYPTO_LIB_ERR_MAC_RETRIEVAL_ERROR;
+        return status;
+    }
+
+    printf("Calculated Mac Size: %d\n", tmac_size);
+
+    printf("Calculated MAC:\n\t");
+    for (uint32_t i = 0; i < tmac_size; i ++){
+        printf("%02X", *(tmac + i));
+    }
+    printf("\n");
+    free(tmac);
+
+    printf("Received MAC:\n\t");
+    for (uint32_t i = 0; i < tmac_size; i ++){
+        printf("%02X", *(mac + i));
+    }
+    printf("\n");
+#endif
+
     // Compare computed mac with MAC in frame
     gcry_error = gcry_mac_verify(tmp_mac_hd,
                                  mac,      // original mac
@@ -858,7 +888,6 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
         }
     }
 
-
     if(encrypt_bool == CRYPTO_TRUE)
     {
         gcry_error = gcry_cipher_encrypt(tmp_hd,
@@ -895,8 +924,6 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     }
     printf("\n");
 #endif
-
-
 
     if (authenticate_bool == CRYPTO_TRUE)
     {

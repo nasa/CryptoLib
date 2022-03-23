@@ -834,15 +834,15 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
                                                             (sa_ptr->ast), // Authentication Bool
                                                             (sa_ptr->ast) // AAD Bool
         );
-    }else if (sa_service_type != SA_PLAINTEXT) // Non aead algorithm
+    }else if (sa_service_type != SA_PLAINTEXT && sa_service_type == SA_ENCRYPTION) // Non aead algorithm
     {
         // TODO - implement non-AEAD algorithm logic
 
         if(sa_service_type == SA_ENCRYPTION) 
         { 
-            cryptography_if->cryptography_decrypt();
+            status = cryptography_if->cryptography_decrypt();
         }
-        if(sa_service_type == SA_AUTHENTICATION)
+        if(sa_service_type != SA_PLAINTEXT && sa_service_type == SA_AUTHENTICATION)
         {
             crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
 
