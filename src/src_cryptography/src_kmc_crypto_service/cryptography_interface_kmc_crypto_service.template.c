@@ -201,6 +201,14 @@ static int32_t cryptography_config(void)
             return status;
         }
 
+        if(chunk->response == NULL) // No response, possibly because service is CAM secured.
+        {
+            status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_EMPTY_RESPONSE;
+            fprintf(stderr, "curl_easy_perform() unexpected empty response: \n%s\n",
+                    "Empty Crypto Service response can be caused by CAM security, CryptoLib doesn't support a CAM secured KMC Crypto Service.");
+            return status;
+        }
+
 #ifdef DEBUG
         printf("cURL response:\n\t %s\n",chunk->response);
 #endif
@@ -264,7 +272,6 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
     iv = iv;
     iv_len = iv_len;
     ecs = ecs;
-    acs = acs;
 
     curl_easy_reset(curl);
     configure_curl_connect_opts(curl);
@@ -276,6 +283,13 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
 
     uint8_t* auth_payload = aad;
     size_t auth_payload_len = aad_len;
+
+    // Verify valid acs enum
+    int32_t algo = cryptography_get_acs_algo(acs);
+    if (algo == CRYPTO_LIB_ERR_UNSUPPORTED_ACS)
+    {
+        return CRYPTO_LIB_ERR_UNSUPPORTED_ACS;
+    }
 
     // Need to copy the data over, since authentication won't change/move the data directly
     if(data_out != NULL){
@@ -348,6 +362,15 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
 #ifdef DEBUG
     printf("\ncURL Authenticate Response:\n\t %s\n",chunk_write->response);
 #endif
+
+    if(chunk_write->response == NULL) // No response, possibly because service is CAM secured.
+    {
+        status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_EMPTY_RESPONSE;
+        fprintf(stderr, "curl_easy_perform() unexpected empty response: \n%s\n",
+                "Empty Crypto Service response can be caused by CAM security, CryptoLib doesn't support a CAM secured KMC Crypto Service.");
+        return status;
+    }
+
 
     /* JSON Response Handling */
 
@@ -490,7 +513,13 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     iv = iv;
     iv_len = iv_len;
     ecs = ecs;
-    acs = acs;
+
+    // Verify valid acs enum
+    int32_t algo = cryptography_get_acs_algo(acs);
+    if (algo == CRYPTO_LIB_ERR_UNSUPPORTED_ACS)
+    {
+        return CRYPTO_LIB_ERR_UNSUPPORTED_ACS;
+    }
 
     // Need to copy the data over, since authentication won't change/move the data directly
     if(data_out != NULL){
@@ -577,6 +606,14 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
 #ifdef DEBUG
     printf("\ncURL Authenticate Response:\n\t %s\n",chunk_write->response);
 #endif
+
+    if(chunk_write->response == NULL) // No response, possibly because service is CAM secured.
+    {
+        status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_EMPTY_RESPONSE;
+        fprintf(stderr, "curl_easy_perform() unexpected empty response: \n%s\n",
+                "Empty Crypto Service response can be caused by CAM security, CryptoLib doesn't support a CAM secured KMC Crypto Service.");
+        return status;
+    }
 
     /* JSON Response Handling */
 
@@ -790,6 +827,14 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
 #ifdef DEBUG
     printf("\ncURL Encrypt Response:\n\t %s\n",chunk_write->response);
 #endif
+
+    if(chunk_write->response == NULL) // No response, possibly because service is CAM secured.
+    {
+        status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_EMPTY_RESPONSE;
+        fprintf(stderr, "curl_easy_perform() unexpected empty response: \n%s\n",
+                "Empty Crypto Service response can be caused by CAM security, CryptoLib doesn't support a CAM secured KMC Crypto Service.");
+        return status;
+    }
 
     /* JSON Response Handling */
 
@@ -1042,6 +1087,14 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
     printf("\ncURL Decrypt Response:\n\t %s\n",chunk_write->response);
 #endif
 
+    if(chunk_write->response == NULL) // No response, possibly because service is CAM secured.
+    {
+        status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_EMPTY_RESPONSE;
+        fprintf(stderr, "curl_easy_perform() unexpected empty response: \n%s\n",
+                "Empty Crypto Service response can be caused by CAM security, CryptoLib doesn't support a CAM secured KMC Crypto Service.");
+        return status;
+    }
+
     /* JSON Response Handling */
 
     // Parse the JSON string response
@@ -1290,5 +1343,5 @@ int32_t cryptography_get_ecs_algo(int8_t algo_enum)
             break;
     }
 
-    return (int)algo;
+    return (int32_t)algo;
 }
