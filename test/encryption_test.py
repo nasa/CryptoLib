@@ -1,5 +1,5 @@
 from Crypto.Cipher import AES
-from Crypto.Hash import CMAC, HMAC, SHA256
+from Crypto.Hash import CMAC, HMAC, SHA256, SHA512
 import codecs
 import sys
 
@@ -109,7 +109,7 @@ class Authentication:
         print(self.results)
         self.length = len(self.results)
 
-    def encrypt_hmac_256(self, data, key):
+    def encrypt_hmac_sha256(self, data, key):
         data_b = bytes.fromhex(data)
         key_b = bytes.fromhex(key)
 
@@ -119,6 +119,17 @@ class Authentication:
         self.results = hmac_obj.hexdigest()
         print(self.results)
         self.length = len(self.results)
+
+    def encrypt_hmac_sha512(self, data, key):
+        data_b = bytes.fromhex(data)
+        key_b = bytes.fromhex(key)
+
+        hmac_obj = HMAC.new(key_b, digestmod=SHA512)
+        hmac_obj.update(data_b)
+
+        self.results = hmac_obj.hexdigest()
+        print(self.results)
+        self.length = len(self.results)    
 
     def get_len(self):
         #print(self.length)
@@ -130,6 +141,6 @@ class Authentication:
 
 if __name__ == '__main__':
     something=Authentication()
-    something.encrypt_hmac_256("000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445")
+    something.encrypt_hmac_sha512("000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445")
     something.get_len()
     something.get_results()
