@@ -2457,7 +2457,7 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_3)
  **/
 UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_0)
 {
-    uint8_t status = 0;
+    int32_t status = 0;
     uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
@@ -2548,7 +2548,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_0)
  **/
 UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
 {
-    uint8_t status = 0;
+    int32_t status = 0;
     uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
@@ -2638,7 +2638,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
  **/
 UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
 {
-    uint8_t status = 0;
+    int32_t status = 0;
     uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
@@ -2729,7 +2729,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
  **/
 UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
 {
-    uint8_t status = 0;
+    int32_t status = 0;
     uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
@@ -2819,7 +2819,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
  **/
 UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_2)
 {
-    uint8_t status = 0;
+    int32_t status = 0;
     uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
@@ -2911,7 +2911,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_2)
  **/
 UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_3)
 {
-    uint8_t status = 0;
+    int32_t status = 0;
     uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
