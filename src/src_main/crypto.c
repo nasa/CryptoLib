@@ -104,6 +104,8 @@ int32_t Crypto_increment(uint8_t* num, int length)
             num[i] = 0;
         }
     }
+
+    return CRYPTO_LIB_SUCCESS;
 }
 
 /**
