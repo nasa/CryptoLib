@@ -356,7 +356,20 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
                 printf("\n" RESET);
             }
 #endif
-        if (sa_ptr->shivf_len > 0 && sa_ptr->iv == NULL)
+
+        if(sa_service_type != SA_PLAINTEXT && sa_ptr->ecs == NULL && sa_ptr->acs == NULL)
+        {
+            return CRYPTO_LIB_ERR_NULL_CIPHERS;
+        }
+
+        if(sa_ptr->est == 0 && sa_ptr->ast == 1 && sa_ptr->acs !=NULL && *(sa_ptr->acs) == CRYPTO_MAC_CMAC_AES256 \
+            && *(sa_ptr->acs) == CRYPTO_MAC_HMAC_SHA256 && *(sa_ptr->acs) == CRYPTO_MAC_HMAC_SHA512 &&
+            sa_ptr->iv_len > 0 )
+        {
+            return CRYPTO_LIB_ERR_IV_NOT_SUPPORTED_FOR_ACS_ALGO;
+        }
+
+        if ((sa_ptr->shivf_len > 0 && sa_ptr->iv == NULL) || (sa_ptr->iv_len - sa_ptr->shivf_len  < 0))
         {
             return CRYPTO_LIB_ERR_INVALID_SA_CONFIGURATION;
         }

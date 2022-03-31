@@ -1656,7 +1656,7 @@ UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Init();
@@ -1690,6 +1690,7 @@ UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
     test_association->est = 0;
     test_association->arsn_len = 0;
     test_association->shivf_len = 0;
+    test_association->iv_len = 0;
     test_association->shsnf_len = 4;
     test_association->arsn = 0;
     test_association->arsn_len = 4;
@@ -1714,8 +1715,8 @@ UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
     // Convert input mac
     hex_conversion(buffer_python_mac_h, (char**) &buffer_python_mac_b, &buffer_python_mac_len);
 
-    Crypto_TC_ApplySecurity(buffer_frame_pt_b, buffer_frame_pt_len, &ptr_enc_frame, &enc_frame_len);
-
+    int status = Crypto_TC_ApplySecurity(buffer_frame_pt_b, buffer_frame_pt_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Note: For comparison, primarily interested in the MAC
     // Calc payload index: total length - pt length
     uint16_t enc_data_idx = enc_frame_len - buffer_python_mac_len - 2;
@@ -1967,6 +1968,7 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_256_PT_128_TEST_0)
     test_association->ast = 1;
     test_association->est = 0;
     test_association->shivf_len = 0;
+    test_association->iv_len = 0;
     test_association->shsnf_len = 4;
     test_association->arsn_len = 4;
     test_association->arsn = calloc(1, test_association->arsn_len * sizeof(uint8_t));
@@ -1990,8 +1992,8 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_256_PT_128_TEST_0)
     // Convert input mac
     hex_conversion(buffer_python_mac_h, (char **)&buffer_python_mac_b, &buffer_python_mac_len);
 
-    Crypto_TC_ApplySecurity(buffer_frame_pt_b, buffer_frame_pt_len, &ptr_enc_frame, &enc_frame_len);
-
+    int status = Crypto_TC_ApplySecurity(buffer_frame_pt_b, buffer_frame_pt_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Note: For comparison, primarily interested in the MAC
     // Calc payload index: total length - pt length
     uint16_t enc_data_idx = enc_frame_len - buffer_python_mac_len - 2;
@@ -2055,6 +2057,7 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
     test_association->ast = 1;
     test_association->est = 0;
     test_association->shivf_len = 0;
+    test_association->iv_len = 0;
     test_association->shsnf_len = 4;
     test_association->arsn_len = 4;
     test_association->arsn = calloc(1, test_association->arsn_len * sizeof(uint8_t));
@@ -2143,6 +2146,7 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
     test_association->ast = 1;
     test_association->est = 0;
     test_association->shivf_len = 0;
+    test_association->iv_len = 0;
     test_association->shsnf_len = 4;
     test_association->arsn_len = 4;
     test_association->arsn = calloc(1, test_association->arsn_len * sizeof(uint8_t));
@@ -2231,6 +2235,7 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
     test_association->ast = 1;
     test_association->est = 0;
     test_association->shivf_len = 0;
+    test_association->iv_len = 0;
     test_association->shsnf_len = 4;
     test_association->arsn_len = 4;
     test_association->arsn = calloc(1, test_association->arsn_len * sizeof(uint8_t));
@@ -2320,6 +2325,7 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_2)
     test_association->ast = 1;
     test_association->est = 0;
     test_association->shivf_len = 0;
+    test_association->iv_len = 0;
     test_association->shsnf_len = 4;
     test_association->arsn_len = 4;
     test_association->arsn = calloc(1, test_association->arsn_len * sizeof(uint8_t));
@@ -2409,6 +2415,7 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_3)
     test_association->ast = 1;
     test_association->est = 0;
     test_association->shivf_len = 0;
+    test_association->iv_len = 0;
     test_association->shsnf_len = 4;
     test_association->arsn_len = 4;
     test_association->arsn = calloc(1, test_association->arsn_len * sizeof(uint8_t));
@@ -2499,6 +2506,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_0)
     test_association->ast = 1;
     test_association->est = 0;
     test_association->shivf_len = 0;
+    test_association->iv_len = 0;
     test_association->shsnf_len = 4;
     test_association->arsn_len = 4;
     test_association->arsn = calloc(1, test_association->arsn_len * sizeof(uint8_t));
@@ -2589,6 +2597,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
     test_association->ast = 1;
     test_association->est = 0;
     test_association->shivf_len = 0;
+    test_association->iv_len = 0;
     test_association->shsnf_len = 4;
     test_association->arsn_len = 4;
     test_association->arsn = calloc(1, test_association->arsn_len * sizeof(uint8_t));
@@ -2680,6 +2689,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
     test_association->ast = 1;
     test_association->est = 0;
     test_association->shivf_len = 0;
+    test_association->iv_len = 0;
     test_association->shsnf_len = 4;
     test_association->arsn_len = 4;
     test_association->arsn = calloc(1, test_association->arsn_len * sizeof(uint8_t));
@@ -2770,6 +2780,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
     test_association->ast = 1;
     test_association->est = 0;
     test_association->shivf_len = 0;
+    test_association->iv_len = 0;
     test_association->shsnf_len = 4;
     test_association->arsn_len = 4;
     test_association->arsn = calloc(1, test_association->arsn_len * sizeof(uint8_t));
@@ -2861,6 +2872,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_2)
     test_association->ast = 1;
     test_association->est = 0;
     test_association->shivf_len = 0;
+    test_association->iv_len = 0;
     test_association->shsnf_len = 4;
     test_association->arsn_len = 4;
     test_association->arsn = calloc(1, test_association->arsn_len * sizeof(uint8_t));
@@ -2953,6 +2965,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_3)
     test_association->ast = 1;
     test_association->est = 0;
     test_association->shivf_len = 0;
+    test_association->iv_len = 0;
     test_association->shsnf_len = 4;
     test_association->arsn_len = 4;
     test_association->arsn = calloc(1, test_association->arsn_len * sizeof(uint8_t));
