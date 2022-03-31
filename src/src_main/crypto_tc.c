@@ -795,11 +795,12 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
     {
         return status;
     }
-    // Parse IV
-    memcpy((tc_sdls_processed_frame->tc_sec_header.iv), &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN]),
+    // Retrieve static portion of IV from SA
+    memcpy((tc_sdls_processed_frame->tc_sec_header.iv), sa_ptr->iv, sa_ptr->iv_len-sa_ptr->shivf_len);
+    // Parse transmitted portion of IV
+    memcpy((tc_sdls_processed_frame->tc_sec_header.iv+(sa_ptr->iv_len-sa_ptr->shivf_len)), &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN]),
            sa_ptr->shivf_len);
     // Parse Sequence Number
-    // 2003002b00ff000901241224dfefb72a20d49e09256908874979
     memcpy((tc_sdls_processed_frame->tc_sec_header.sn), //+ (TC_SN_SIZE - sa_ptr->shsnf_len)
            &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len]), sa_ptr->shsnf_len);
     // Parse pad length
@@ -807,7 +808,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
            &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len]),
            sa_ptr->shplf_len);
     // Set tc_sec_header fields for actual lengths from the SA (downstream apps won't know this length otherwise since they don't access the SADB!).
-    tc_sdls_processed_frame->tc_sec_header.iv_field_len = sa_ptr->shivf_len;
+    tc_sdls_processed_frame->tc_sec_header.iv_field_len = sa_ptr->iv_len;
     tc_sdls_processed_frame->tc_sec_header.sn_field_len = sa_ptr->shsnf_len;
     tc_sdls_processed_frame->tc_sec_header.pad_field_len = sa_ptr->shplf_len;
 
@@ -858,7 +859,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
                                                             Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs),
                                                             sa_ptr, // SA for key reference
                                                             tc_sdls_processed_frame->tc_sec_header.iv, // IV
-                                                            sa_ptr->shivf_len, // IV Length
+                                                            sa_ptr->iv_len, // IV Length
                                                             tc_sdls_processed_frame->tc_sec_trailer.mac, // Frame Expected Tag
                                                             sa_ptr->stmacf_len,                           // tag size
                                                             aad,    // additional authenticated data
@@ -889,7 +890,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
                                                             Crypto_Get_ACS_Algo_Keylen(*sa_ptr->acs),
                                                             sa_ptr, // SA for key reference
                                                             tc_sdls_processed_frame->tc_sec_header.iv, // IV
-                                                            sa_ptr->shivf_len, // IV Length
+                                                            sa_ptr->iv_len, // IV Length
                                                             tc_sdls_processed_frame->tc_sec_trailer.mac, // Frame Expected Tag
                                                             sa_ptr->stmacf_len,                           // tag size
                                                             aad,    // additional authenticated data
