@@ -52,7 +52,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t encrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool);
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs);
 static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -61,7 +61,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t decrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool);
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs);
 static int32_t cryptography_get_acs_algo(int8_t algo_enum);
 static int32_t cryptography_get_ecs_algo(int8_t algo_enum);
 /*
@@ -590,6 +590,12 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
         return CRYPTO_LIB_ERR_UNSUPPORTED_ACS;
     }
 
+    // Check that key length to be used is atleast as long as the algo requirement
+    if (sa_ptr != NULL && len_key < ek_ring[sa_ptr->ekid].key_len)
+    {
+        return CRYPTO_LIB_KEY_LENGTH_ERROR;
+    }
+
     gcry_error = gcry_mac_open(&(tmp_mac_hd), algo, GCRY_MAC_FLAG_SECURE, NULL);
 
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
@@ -701,6 +707,11 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
         return CRYPTO_LIB_ERR_UNSUPPORTED_ACS;
     }
 
+    // Check that key length to be used is atleast as long as the algo requirement
+    if (sa_ptr != NULL && len_key < ek_ring[sa_ptr->ekid].key_len)
+    {
+        return CRYPTO_LIB_KEY_LENGTH_ERROR;
+    }
     gcry_error = gcry_mac_open(&(tmp_mac_hd), algo, GCRY_MAC_FLAG_SECURE, NULL);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
@@ -811,16 +822,40 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t encrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool)
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs)
 {
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     gcry_cipher_hd_t tmp_hd;
     int32_t status = CRYPTO_LIB_SUCCESS;
-
     uint8_t* key_ptr = key;
+
+    // Fix warning
+    acs = acs;
+
     if(sa_ptr != NULL) //Using SA key pointer
     {
         key_ptr = &(ek_ring[sa_ptr->ekid].value[0]);
+    }
+
+    // Select correct libgcrypt ecs enum
+    int32_t algo = -1;
+    if (ecs != NULL)
+    {
+        algo = cryptography_get_ecs_algo(*ecs);
+        if (algo == CRYPTO_LIB_ERR_UNSUPPORTED_ECS)
+        {
+            return CRYPTO_LIB_ERR_UNSUPPORTED_ECS;
+        }
+    }
+    else
+    {
+        return CRYPTO_LIB_ERR_NULL_ECS_PTR;
+    }
+
+    // Check that key length to be used is atleast as long as the algo requirement
+    if (sa_ptr != NULL && len_key < ek_ring[sa_ptr->ekid].key_len)
+    {
+        return CRYPTO_LIB_KEY_LENGTH_ERROR;
     }
 
     gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_NONE);
@@ -963,16 +998,40 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t decrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool)
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs)
 {
     gcry_cipher_hd_t tmp_hd;
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     int32_t status = CRYPTO_LIB_SUCCESS;
     uint8_t* key_ptr = key;
+    
+    // Fix warnings
+    acs = acs;
 
     if(sa_ptr != NULL) //Using SA key pointer
     {
         key_ptr = &(ek_ring[sa_ptr->ekid].value[0]);
+    }
+
+    // Select correct libgcrypt ecs enum
+    int32_t algo = -1;
+    if (ecs != NULL)
+    {
+        algo = cryptography_get_ecs_algo(*ecs);
+        if (algo == CRYPTO_LIB_ERR_UNSUPPORTED_ECS)
+        {
+            return CRYPTO_LIB_ERR_UNSUPPORTED_ECS;
+        }
+    }
+    else
+    {
+        return CRYPTO_LIB_ERR_NULL_ECS_PTR;
+    }
+
+    // Check that key length to be used is atleast as long as the algo requirement
+    if (sa_ptr != NULL && len_key < ek_ring[sa_ptr->ekid].key_len)
+    {
+        return CRYPTO_LIB_KEY_LENGTH_ERROR;
     }
 
     gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_NONE);
@@ -1091,7 +1150,7 @@ int32_t cryptography_get_acs_algo(int8_t algo_enum)
 
         default:
 #ifdef DEBUG
-            printf("ACS Algo Enum not supported");
+            printf("ACS Algo Enum not supported\n");
 #endif
             break;
     }
@@ -1115,7 +1174,7 @@ int32_t cryptography_get_ecs_algo(int8_t algo_enum)
 
         default:
 #ifdef DEBUG
-            printf("ECS Algo Enum not supported");
+            printf("ECS Algo Enum not supported\n");
 #endif
             break;
     }
