@@ -343,13 +343,13 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
             if (sa_ptr->shivf_len > 0 && sa_ptr->iv != NULL)
             {
                 printf(KYEL "Using IV value:\n\t");
-                for (i = 0; i < sa_ptr->shivf_len; i++)
+                for (i = 0; i < sa_ptr->iv_len; i++)
                 {
                     printf("%02x", *(sa_ptr->iv + i));
                 }
                 printf("\n" RESET);
                 printf(KYEL "Transmitted IV value:\n\t");
-                for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->shivf_len; i++)
+                for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
                 {
                     printf("%02x", *(sa_ptr->iv + i));
                 }
@@ -376,7 +376,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
         else
         {
             // Start index from the transmitted portion
-            for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->shivf_len; i++)
+            for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
             {
                 // Copy in IV from SA
                 *(p_new_enc_frame + index) = *(sa_ptr->iv + i);
@@ -561,7 +561,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
             }
             printf("\n" RESET);
             printf(KYEL "Next transmitted IV value is:\n\t");
-            for (i = sa_ptr->iv_len-sa_ptr->shivf_len; i < sa_ptr->shivf_len; i++)
+            for (i = sa_ptr->iv_len-sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
             {
                 printf("%02x", *(sa_ptr->iv + i));
             }

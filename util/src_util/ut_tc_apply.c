@@ -173,6 +173,135 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_AUTH_ENC)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
 }
 
+
+/**
+ * @brief Unit Test: Nominal Authorized Encryption With Partial IV Rollover, increment static IV
+ **/
+UTEST(TC_APPLY_SECURITY, HAPPY_PATH_PARTIAL_IV_ROLLOVER)
+{
+    // Setup & Initialize CryptoLib
+    Crypto_Init_Unit_Test();
+    char* raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
+    char* raw_tc_sdls_ping_b = NULL;
+
+    char* new_iv_h = "FFFFFFFFFFFC";
+    char* new_iv_b = NULL;
+
+    char* expected_iv_h = "000000000001000000000001";
+    char* expected_iv_b = NULL;
+
+    int raw_tc_sdls_ping_len = 0;
+    int new_iv_len = 0;
+    int expected_iv_len = 0;
+
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+
+    hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
+    hex_conversion(new_iv_h, &new_iv_b, &new_iv_len);
+    hex_conversion(expected_iv_h, &expected_iv_b, &expected_iv_len);
+    uint8_t* ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+
+    int32_t return_val = CRYPTO_LIB_ERROR;
+
+    SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    // Expose the SADB Security Association for test edits.
+    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    test_association->sa_state = SA_NONE;
+    sadb_routine->sadb_get_sa_from_spi(4, &test_association);
+    test_association->sa_state = SA_OPERATIONAL;
+    test_association->shivf_len = 6;
+    test_association->iv_len = 12;
+    test_association->arsn_len = 0;
+    memcpy(test_association->iv + (test_association->iv_len - test_association->shivf_len), new_iv_b, new_iv_len);
+
+    return_val =
+        Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);    
+    return_val =
+        Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    return_val =
+        Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    return_val =
+        Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    return_val =
+        Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    for (int i = 0; i < test_association->iv_len; i++)
+    {
+        printf("[%d] Truth: %02x, Actual: %02x\n", i, expected_iv_b[i], *(test_association->iv + i)); 
+        ASSERT_EQ(expected_iv_b[i], *(test_association->iv + i));
+    }
+
+    Crypto_Shutdown();
+    free(raw_tc_sdls_ping_b);
+    free(ptr_enc_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+}
+
+/**
+ * @brief Unit Test: Nominal Authorized Encryption With Partial IV Rollover, Static IV
+ **/
+UTEST(TC_APPLY_SECURITY, HAPPY_PATH_PARTIAL_STATIC_IV_ROLLOVER)
+{
+    // Setup & Initialize CryptoLib
+    Crypto_Init_Unit_Test();
+    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
+    char* raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
+    char* raw_tc_sdls_ping_b = NULL;
+
+    char* new_iv_h = "FFFFFFFFFFFC";
+    char* new_iv_b = NULL;
+
+    char* expected_iv_h = "000000000000000000000001";
+    char* expected_iv_b = NULL;
+
+    int raw_tc_sdls_ping_len = 0;
+    int new_iv_len = 0;
+    int expected_iv_len = 0;
+
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+
+    hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
+    hex_conversion(new_iv_h, &new_iv_b, &new_iv_len);
+    hex_conversion(expected_iv_h, &expected_iv_b, &expected_iv_len);
+    uint8_t* ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+
+    int32_t return_val = CRYPTO_LIB_ERROR;
+
+    SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    // Expose the SADB Security Association for test edits.
+    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    test_association->sa_state = SA_NONE;
+    sadb_routine->sadb_get_sa_from_spi(4, &test_association);
+    test_association->sa_state = SA_OPERATIONAL;
+    test_association->shivf_len = 6;
+    test_association->iv_len = 12;
+    test_association->arsn_len = 0;
+    memcpy(test_association->iv + (test_association->iv_len - test_association->shivf_len), new_iv_b, new_iv_len);
+
+    return_val =
+        Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);    
+    return_val =
+        Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    return_val =
+        Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    return_val =
+        Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    return_val =
+        Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    for (int i = 0; i < test_association->iv_len; i++)
+    {
+        printf("[%d] Truth: %02x, Actual: %02x\n", i, expected_iv_b[i], *(test_association->iv + i)); 
+        ASSERT_EQ(expected_iv_b[i], *(test_association->iv + i));
+    }
+
+    Crypto_Shutdown();
+    free(raw_tc_sdls_ping_b);
+    free(ptr_enc_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+}
 /**
  * @brief Unit Test: Bad Spacecraft ID
  * This should pass the flawed hex string, and return CRYPTO_LIB_ERR_INVALID_SCID

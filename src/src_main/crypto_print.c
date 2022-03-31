@@ -210,7 +210,7 @@ void Crypto_saPrint(SecurityAssociation_t* sa)
     printf("\t iv_len     = 0x%02x \n", sa->shivf_len);
     if (sa->iv != NULL)
     {
-        for (i = 0; i < sa->shivf_len; i++)
+        for (i = 0; i < sa->iv_len; i++)
         {
             printf("\t iv[%d]     = 0x%02x \n", i, *(sa->iv + i));
         }
