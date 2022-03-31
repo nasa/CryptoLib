@@ -89,7 +89,7 @@ int32_t Crypto_Key_OTAR(void)
         // printf("packet.mac[%d] = 0x%02x\n", w, packet.mac[w]);
     }
 
-
+    uint8_t ecs = CRYPTO_CIPHER_AES256_GCM;
     status = cryptography_if->cryptography_aead_decrypt(&(sdls_frame.pdu.data[14]), // plaintext output
                                                         (size_t)(pdu_keys * (2 + KEY_SIZE)), // length of data
                                                         NULL,                               // in place decryption
@@ -105,7 +105,9 @@ int32_t Crypto_Key_OTAR(void)
                                                         0, // AAD Length
                                                         CRYPTO_TRUE, // decrypt
                                                         CRYPTO_TRUE,  // authenticate
-                                                        CRYPTO_FALSE // AAD Bool
+                                                        CRYPTO_FALSE, // AAD Bool
+                                                        &ecs, // encryption cipher
+                                                        NULL  // authentication cipher
                                                         );
 
     // Read in Decrypted Data
@@ -380,6 +382,7 @@ int32_t Crypto_Key_verify(uint8_t* ingest, TC_t* tc_frame)
         ingest[count - 1] = ingest[count - 1] + x + 1;
 
         // Encrypt challenge
+        uint8_t ecs = CRYPTO_CIPHER_AES256_GCM;
         cryptography_if->cryptography_aead_encrypt(&(ingest[count]), // ciphertext output
                                                    (size_t)CHALLENGE_SIZE, // length of data
                                                    &(packet.blk[x].challenge[0]), // plaintext input
@@ -395,7 +398,9 @@ int32_t Crypto_Key_verify(uint8_t* ingest, TC_t* tc_frame)
                                                    0,
                                                    CRYPTO_TRUE, // Encrypt
                                                    CRYPTO_TRUE, // Authenticate
-                                                   CRYPTO_FALSE // AAD
+                                                   CRYPTO_FALSE, // AAD
+                                                   &ecs, // encryption cipher
+                                                   NULL  // authentication cipher
                                                    );
 
         count += CHALLENGE_SIZE + CHALLENGE_MAC_SIZE; // Don't forget to increment count!

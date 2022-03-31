@@ -59,7 +59,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t encrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool);
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs);
 static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -68,8 +68,9 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t decrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool);
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs);
 static int32_t cryptography_get_acs_algo(int8_t algo_enum);
+static int32_t cryptography_get_ecs_algo(int8_t algo_enum);
 
 
 // libcurl call back and support function declarations
@@ -132,6 +133,7 @@ CryptographyInterface get_cryptography_interface_kmc_crypto_service(void)
     cryptography_if_struct.cryptography_aead_encrypt = cryptography_aead_encrypt;
     cryptography_if_struct.cryptography_aead_decrypt = cryptography_aead_decrypt;
     cryptography_if_struct.cryptography_get_acs_algo = cryptography_get_acs_algo;
+    cryptography_if_struct.cryptography_get_ecs_algo = cryptography_get_ecs_algo;
     return &cryptography_if_struct;
 }
 
@@ -698,11 +700,13 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t encrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool)
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     key = key; // Direct key input is not supported in KMC interface
     len_key = len_key; // Direct key input is not supported in KMC interface
+    ecs = ecs;
+    acs = acs;
 
     curl_easy_reset(curl);
     configure_curl_connect_opts(curl);
@@ -945,10 +949,12 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t decrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool)
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     key = key; // Direct key input is not supported in KMC interface
+    ecs = ecs;
+    acs = acs;
 
     // Get the key length in bits, in string format.
     // TODO -- Parse the key length from the keyInfo endpoint of the Crypto Service!
@@ -1306,13 +1312,37 @@ int32_t cryptography_get_acs_algo(int8_t algo_enum)
     int32_t algo = CRYPTO_LIB_ERR_UNSUPPORTED_ACS; // All valid algo enums will be positive
     switch (algo_enum)
     {
-         case CRYPTO_AES256_CMAC:
-             algo = CRYPTO_AES256_CMAC;
-             break;
+        // case CRYPTO_MAC_CMAC_AES256:
+        //     algo = GCRY_MAC_CMAC_AES;
+        //     break;
 
         default:
 #ifdef DEBUG
-            printf("ACS Algo Enum not supported");
+            printf("ACS Algo Enum not supported\n");
+#endif
+            break;
+    }
+
+    return (int)algo;
+}
+
+/**
+ * @brief Function: cryptography_get_ecs_algo. Maps Cryptolib ECS enums to KMC enums 
+ * It is possible for supported algos to vary between crypto libraries
+ * @param algo_enum
+ **/
+int32_t cryptography_get_ecs_algo(int8_t algo_enum)
+{
+    int32_t algo = CRYPTO_LIB_ERR_UNSUPPORTED_ECS; // All valid algo enums will be positive
+    switch (algo_enum)
+    {
+        // case CRYPTO_MAC_CMAC_AES256:
+        //     algo = GCRY_MAC_CMAC_AES;
+        //     break;
+
+        default:
+#ifdef DEBUG
+            printf("ECS Algo Enum not supported\n");
 #endif
             break;
     }

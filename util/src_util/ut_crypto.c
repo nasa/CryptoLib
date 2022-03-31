@@ -264,22 +264,6 @@ UTEST(CRYPTO_C, EXT_PROC_PDU)
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 }
 
-/**
- * @brief Unit Test: Crypto ACS Get Algorithm response
- **/
-UTEST(CRYPTO_C, GET_ACS_ALGO)
-{
-    // Convert CRYPTOAES enum to GCRY_MAC_CMAC_AES
-    int32_t libgcrypt_algo = -1;
-    uint8_t crypto_algo = CRYPTO_AES256_CMAC;
-    libgcrypt_algo = cryptography_if->cryptography_get_acs_algo(crypto_algo);
-    ASSERT_EQ(libgcrypt_algo, GCRY_MAC_CMAC_AES);
-
-    crypto_algo = 99; // Invalid / unsupported
-    libgcrypt_algo = cryptography_if->cryptography_get_acs_algo(crypto_algo);
-    ASSERT_EQ(libgcrypt_algo, CRYPTO_LIB_ERR_UNSUPPORTED_ACS);
-}
-
 /*
  * @brief Unit Test: Test that an SA set to use IV/ARSN without mallocing doesn't segfault and returns an error
  **/
@@ -320,6 +304,69 @@ UTEST(INVALID_SA_CONFIGS, INVALID_IV_ARSN)
     test_association->shivf_len = 12;
     status = Crypto_TC_ApplySecurity(jpl_frame_pt_b, jpl_frame_pt_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(CRYPTO_LIB_ERR_INVALID_SA_CONFIGURATION, status);
+}
+
+/**
+ * @brief Unit Test: Crypto ACS Get Algorithm response
+ **/
+UTEST(CRYPTO_C, GET_ACS_ALGO)
+{
+    // Convert CRYPTOAES enum to GCRY_MAC_CMAC_AES
+    int32_t libgcrypt_algo = -1;
+    uint8_t crypto_algo = CRYPTO_MAC_CMAC_AES256;
+    libgcrypt_algo = cryptography_if->cryptography_get_acs_algo(crypto_algo);
+    ASSERT_EQ(libgcrypt_algo, GCRY_MAC_CMAC_AES);
+
+    crypto_algo = 99; // Invalid / unsupported
+    libgcrypt_algo = cryptography_if->cryptography_get_acs_algo(crypto_algo);
+    ASSERT_EQ(libgcrypt_algo, CRYPTO_LIB_ERR_UNSUPPORTED_ACS);
+}
+
+/**
+ * @brief Unit Test: Crypto ACS Get Algorithm key length response
+ **/
+UTEST(CRYPTO_C, GET_ACS_ALGO_KEY_LEN)
+{
+    int32_t algo_keylen = -1;
+    uint8_t crypto_algo = CRYPTO_MAC_CMAC_AES256;
+    algo_keylen = Crypto_Get_ACS_Algo_Keylen(crypto_algo);
+    ASSERT_EQ(algo_keylen, 32);
+
+    crypto_algo = CRYPTO_MAC_HMAC_SHA256;
+    algo_keylen = Crypto_Get_ACS_Algo_Keylen(crypto_algo);
+    ASSERT_EQ(algo_keylen, 32);
+
+    crypto_algo = CRYPTO_MAC_HMAC_SHA512;
+    algo_keylen = Crypto_Get_ACS_Algo_Keylen(crypto_algo);
+    ASSERT_EQ(algo_keylen, 64);
+}
+
+/**
+ * @brief Unit Test: Crypto ECS Get Algorithm response
+ **/
+UTEST(CRYPTO_C, GET_ECS_ALGO)
+{
+    printf("%d\n", __LINE__);
+    // Convert CRYPTOAES enum to GCRY_CIPHER_AES256
+    int32_t libgcrypt_algo = -1;
+    int8_t crypto_algo = CRYPTO_CIPHER_AES256_GCM;
+    libgcrypt_algo = cryptography_if->cryptography_get_ecs_algo(crypto_algo);
+    ASSERT_EQ(libgcrypt_algo, GCRY_CIPHER_AES256);
+
+    crypto_algo = 99; // Invalid / unsupported
+    libgcrypt_algo = cryptography_if->cryptography_get_ecs_algo(crypto_algo);
+    ASSERT_EQ(libgcrypt_algo, CRYPTO_LIB_ERR_UNSUPPORTED_ECS);
+}
+
+/**
+ * @brief Unit Test: Crypto ECS Get Algorithm key length response
+ **/
+UTEST(CRYPTO_C, GET_ECS_ALGO_KEY_LEN)
+{
+    int32_t algo_keylen = -1;
+    uint8_t crypto_algo = CRYPTO_CIPHER_AES256_GCM;
+    algo_keylen = Crypto_Get_ACS_Algo_Keylen(crypto_algo);
+    ASSERT_EQ(algo_keylen, 32);
 }
 
 UTEST_MAIN();

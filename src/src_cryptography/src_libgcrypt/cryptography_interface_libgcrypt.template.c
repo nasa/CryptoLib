@@ -52,7 +52,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t encrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool);
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs);
 static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -61,8 +61,9 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t decrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool);
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs);
 static int32_t cryptography_get_acs_algo(int8_t algo_enum);
+static int32_t cryptography_get_ecs_algo(int8_t algo_enum);
 /*
 ** Module Variables
 */
@@ -84,6 +85,7 @@ CryptographyInterface get_cryptography_interface_libgcrypt(void)
     cryptography_if_struct.cryptography_aead_encrypt = cryptography_aead_encrypt;
     cryptography_if_struct.cryptography_aead_decrypt = cryptography_aead_decrypt;
     cryptography_if_struct.cryptography_get_acs_algo = cryptography_get_acs_algo;
+    cryptography_if_struct.cryptography_get_ecs_algo = cryptography_get_ecs_algo;
     return &cryptography_if_struct;
 }
 
@@ -125,6 +127,7 @@ static int32_t cryptography_config(void)
     ek_ring[0].value[29] = 0x0D;
     ek_ring[0].value[30] = 0x0E;
     ek_ring[0].value[31] = 0x0F;
+    ek_ring[0].key_len = 32;
     ek_ring[0].key_state = KEY_ACTIVE;
     // 1 - 101112131415161718191A1B1C1D1E1F101112131415161718191A1B1C1D1E1F -> ACTIVE
     ek_ring[1].value[0] = 0x10;
@@ -159,6 +162,7 @@ static int32_t cryptography_config(void)
     ek_ring[1].value[29] = 0x1D;
     ek_ring[1].value[30] = 0x1E;
     ek_ring[1].value[31] = 0x1F;
+    ek_ring[1].key_len = 32;
     ek_ring[1].key_state = KEY_ACTIVE;
     // 2 - 202122232425262728292A2B2C2D2E2F202122232425262728292A2B2C2D2E2F -> ACTIVE
     ek_ring[2].value[0] = 0x20;
@@ -193,6 +197,7 @@ static int32_t cryptography_config(void)
     ek_ring[2].value[29] = 0x2D;
     ek_ring[2].value[30] = 0x2E;
     ek_ring[2].value[31] = 0x2F;
+    ek_ring[2].key_len = 32;
     ek_ring[2].key_state = KEY_ACTIVE;
 
     // Session Keys
@@ -229,6 +234,7 @@ static int32_t cryptography_config(void)
     ek_ring[128].value[29] = 0xAB;
     ek_ring[128].value[30] = 0xCD;
     ek_ring[128].value[31] = 0xEF;
+    ek_ring[128].key_len = 32;
     ek_ring[128].key_state = KEY_ACTIVE;
     // 129 - ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789 -> ACTIVE
     ek_ring[129].value[0] = 0xAB;
@@ -263,6 +269,7 @@ static int32_t cryptography_config(void)
     ek_ring[129].value[29] = 0x45;
     ek_ring[129].value[30] = 0x67;
     ek_ring[129].value[31] = 0x89;
+    ek_ring[129].key_len = 32;
     ek_ring[129].key_state = KEY_ACTIVE;
     // 130 - FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210 -> ACTIVE
     ek_ring[130].value[0] = 0xFE;
@@ -297,6 +304,7 @@ static int32_t cryptography_config(void)
     ek_ring[130].value[29] = 0x54;
     ek_ring[130].value[30] = 0x32;
     ek_ring[130].value[31] = 0x10;
+    ek_ring[130].key_len = 32;
     ek_ring[130].key_state = KEY_ACTIVE;
     // 131 - 9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA -> ACTIVE
     ek_ring[131].value[0] = 0x98;
@@ -331,6 +339,7 @@ static int32_t cryptography_config(void)
     ek_ring[131].value[29] = 0xFE;
     ek_ring[131].value[30] = 0xDC;
     ek_ring[131].value[31] = 0xBA;
+    ek_ring[131].key_len = 32;
     ek_ring[131].key_state = KEY_ACTIVE;
     // 132 - 0123456789ABCDEFABCDEF01234567890123456789ABCDEFABCDEF0123456789 -> PRE_ACTIVATION
     ek_ring[132].value[0] = 0x01;
@@ -365,6 +374,7 @@ static int32_t cryptography_config(void)
     ek_ring[132].value[29] = 0x45;
     ek_ring[132].value[30] = 0x67;
     ek_ring[132].value[31] = 0x89;
+    ek_ring[132].key_len = 32;
     ek_ring[132].key_state = KEY_PREACTIVE;
     // 133 - ABCDEF01234567890123456789ABCDEFABCDEF01234567890123456789ABCDEF -> ACTIVE
     ek_ring[133].value[0] = 0xAB;
@@ -399,6 +409,7 @@ static int32_t cryptography_config(void)
     ek_ring[133].value[29] = 0xAB;
     ek_ring[133].value[30] = 0xCD;
     ek_ring[133].value[31] = 0xEF;
+    ek_ring[133].key_len = 32;
     ek_ring[133].key_state = KEY_ACTIVE;
     // 134 - ABCDEF0123456789FEDCBA9876543210ABCDEF0123456789FEDCBA9876543210 -> DEACTIVE
     ek_ring[134].value[0] = 0xAB;
@@ -433,6 +444,7 @@ static int32_t cryptography_config(void)
     ek_ring[134].value[29] = 0x54;
     ek_ring[134].value[30] = 0x32;
     ek_ring[134].value[31] = 0x10;
+    ek_ring[134].key_len = 32;
     ek_ring[134].key_state = KEY_DEACTIVATED;
 
     // 135 - ABCDEF0123456789FEDCBA9876543210ABCDEF0123456789FEDCBA9876543210 -> DEACTIVE
@@ -468,6 +480,7 @@ static int32_t cryptography_config(void)
     ek_ring[135].value[29] = 0x00;
     ek_ring[135].value[30] = 0x00;
     ek_ring[135].value[31] = 0x00;
+    ek_ring[135].key_len = 32;
     ek_ring[135].key_state = KEY_DEACTIVATED;
 
     // 136 - ef9f9284cf599eac3b119905a7d18851e7e374cf63aea04358586b0f757670f8
@@ -505,7 +518,8 @@ static int32_t cryptography_config(void)
     ek_ring[136].value[29] = 0x76;
     ek_ring[136].value[30] = 0x70;
     ek_ring[136].value[31] = 0xf9;
-    ek_ring[135].key_state = KEY_DEACTIVATED;
+    ek_ring[136].key_len = 32;
+    ek_ring[136].key_state = KEY_DEACTIVATED;
 
     return status;
 }
@@ -574,6 +588,12 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
     if (algo == CRYPTO_LIB_ERR_UNSUPPORTED_ACS)
     {
         return CRYPTO_LIB_ERR_UNSUPPORTED_ACS;
+    }
+
+    // Check that key length to be used is atleast as long as the algo requirement
+    if (sa_ptr != NULL && len_key < ek_ring[sa_ptr->ekid].key_len)
+    {
+        return CRYPTO_LIB_KEY_LENGTH_ERROR;
     }
 
     gcry_error = gcry_mac_open(&(tmp_mac_hd), algo, GCRY_MAC_FLAG_SECURE, NULL);
@@ -687,6 +707,11 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
         return CRYPTO_LIB_ERR_UNSUPPORTED_ACS;
     }
 
+    // Check that key length to be used is atleast as long as the algo requirement
+    if (sa_ptr != NULL && len_key < ek_ring[sa_ptr->ekid].key_len)
+    {
+        return CRYPTO_LIB_KEY_LENGTH_ERROR;
+    }
     gcry_error = gcry_mac_open(&(tmp_mac_hd), algo, GCRY_MAC_FLAG_SECURE, NULL);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
@@ -741,6 +766,36 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
         return status;
     }
 
+#ifdef MAC_DEBUG
+    uint32_t tmac_size = mac_size;
+    uint8_t* tmac = malloc(tmac_size);
+    gcry_error = gcry_mac_read(tmp_mac_hd,
+                               tmac,      // tag output
+                               (size_t *)&tmac_size // tag size // TODO - use sa_ptr->abm_len instead of hardcoded mac size?
+    );
+    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+    {
+        printf(KRED "ERROR: gcry_mac_read error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+        status = CRYPTO_LIB_ERR_MAC_RETRIEVAL_ERROR;
+        return status;
+    }
+
+    printf("Calculated Mac Size: %d\n", tmac_size);
+
+    printf("Calculated MAC:\n\t");
+    for (uint32_t i = 0; i < tmac_size; i ++){
+        printf("%02X", *(tmac + i));
+    }
+    printf("\n");
+    free(tmac);
+
+    printf("Received MAC:\n\t");
+    for (uint32_t i = 0; i < tmac_size; i ++){
+        printf("%02X", *(mac + i));
+    }
+    printf("\n");
+#endif
+
     // Compare computed mac with MAC in frame
     gcry_error = gcry_mac_verify(tmp_mac_hd,
                                  mac,      // original mac
@@ -767,16 +822,40 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t encrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool)
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs)
 {
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     gcry_cipher_hd_t tmp_hd;
     int32_t status = CRYPTO_LIB_SUCCESS;
-
     uint8_t* key_ptr = key;
+
+    // Fix warning
+    acs = acs;
+
     if(sa_ptr != NULL) //Using SA key pointer
     {
         key_ptr = &(ek_ring[sa_ptr->ekid].value[0]);
+    }
+
+    // Select correct libgcrypt ecs enum
+    int32_t algo = -1;
+    if (ecs != NULL)
+    {
+        algo = cryptography_get_ecs_algo(*ecs);
+        if (algo == CRYPTO_LIB_ERR_UNSUPPORTED_ECS)
+        {
+            return CRYPTO_LIB_ERR_UNSUPPORTED_ECS;
+        }
+    }
+    else
+    {
+        return CRYPTO_LIB_ERR_NULL_ECS_PTR;
+    }
+
+    // Check that key length to be used is atleast as long as the algo requirement
+    if (sa_ptr != NULL && len_key < ek_ring[sa_ptr->ekid].key_len)
+    {
+        return CRYPTO_LIB_KEY_LENGTH_ERROR;
     }
 
     gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_NONE);
@@ -844,7 +923,6 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
         }
     }
 
-
     if(encrypt_bool == CRYPTO_TRUE)
     {
         gcry_error = gcry_cipher_encrypt(tmp_hd,
@@ -881,8 +959,6 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     }
     printf("\n");
 #endif
-
-
 
     if (authenticate_bool == CRYPTO_TRUE)
     {
@@ -922,16 +998,40 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t decrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool)
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs)
 {
     gcry_cipher_hd_t tmp_hd;
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     int32_t status = CRYPTO_LIB_SUCCESS;
     uint8_t* key_ptr = key;
+    
+    // Fix warnings
+    acs = acs;
 
     if(sa_ptr != NULL) //Using SA key pointer
     {
         key_ptr = &(ek_ring[sa_ptr->ekid].value[0]);
+    }
+
+    // Select correct libgcrypt ecs enum
+    int32_t algo = -1;
+    if (ecs != NULL)
+    {
+        algo = cryptography_get_ecs_algo(*ecs);
+        if (algo == CRYPTO_LIB_ERR_UNSUPPORTED_ECS)
+        {
+            return CRYPTO_LIB_ERR_UNSUPPORTED_ECS;
+        }
+    }
+    else
+    {
+        return CRYPTO_LIB_ERR_NULL_ECS_PTR;
+    }
+
+    // Check that key length to be used is atleast as long as the algo requirement
+    if (sa_ptr != NULL && len_key < ek_ring[sa_ptr->ekid].key_len)
+    {
+        return CRYPTO_LIB_KEY_LENGTH_ERROR;
     }
 
     gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_NONE);
@@ -1038,13 +1138,43 @@ int32_t cryptography_get_acs_algo(int8_t algo_enum)
     int32_t algo = CRYPTO_LIB_ERR_UNSUPPORTED_ACS; // All valid algos will be positive
     switch (algo_enum)
     {
-        case CRYPTO_AES256_CMAC:
+        case CRYPTO_MAC_CMAC_AES256:
             algo = GCRY_MAC_CMAC_AES;
+            break;
+        case CRYPTO_MAC_HMAC_SHA256:
+            algo = GCRY_MAC_HMAC_SHA256;
+            break;
+        case CRYPTO_MAC_HMAC_SHA512:
+            algo = GCRY_MAC_HMAC_SHA512;
             break;
 
         default:
 #ifdef DEBUG
-            printf("ACS Algo Enum not supported");
+            printf("ACS Algo Enum not supported\n");
+#endif
+            break;
+    }
+
+    return (int)algo;
+}
+
+/**
+ * @brief Function: cryptography_get_ecs_algo. Maps Cryptolib ECS enums to libgcrypt enums 
+ * It is possible for supported algos to vary between crypto libraries
+ * @param algo_enum
+ **/
+int32_t cryptography_get_ecs_algo(int8_t algo_enum)
+{
+    int32_t algo = CRYPTO_LIB_ERR_UNSUPPORTED_ECS; // All valid algos will be positive
+    switch (algo_enum)
+    {
+        case CRYPTO_CIPHER_AES256_GCM:
+            algo = GCRY_CIPHER_AES256;
+            break;
+
+        default:
+#ifdef DEBUG
+            printf("ECS Algo Enum not supported\n");
 #endif
             break;
     }

@@ -189,7 +189,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
             // If no pointer, must not be using ECS at all
             else
             {
-                encryption_cipher = CRYPTO_ECS_NONE;
+                encryption_cipher = CRYPTO_CIPHER_NONE;
             }
             ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(encryption_cipher);
         }
@@ -462,12 +462,13 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
 
             if(ecs_is_aead_algorithm == CRYPTO_TRUE)
             {
+
                 status = cryptography_if->cryptography_aead_encrypt(&p_new_enc_frame[index],                               // ciphertext output
                                                                     (size_t)tf_payload_len,                                        // length of data
                                                                     (uint8_t*)(p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), // plaintext input
                                                                     (size_t)tf_payload_len,                                         // in data length
                                                                     NULL, // Using SA key reference, key is null
-                                                                    KEY_SIZE, // Length of key. TODO - why is this hard-coded?
+                                                                    Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs), // Length of key derived from sa_ptr key_ref
                                                                     sa_ptr, // SA (for key reference)
                                                                     sa_ptr->iv, // IV
                                                                     sa_ptr->shivf_len, // IV Length
@@ -477,7 +478,9 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
                                                                     aad_len, // Length of AAD
                                                                     (sa_ptr->est==1),
                                                                     (sa_ptr->ast==1),
-                                                                    (sa_ptr->ast==1)
+                                                                    (sa_ptr->ast==1),
+                                                                    sa_ptr->ecs, // encryption cipher
+                                                                    sa_ptr->acs  // authentication cipher
                 );
 
             } else // non aead algorithm
@@ -490,12 +493,13 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
 
                 if (sa_service_type == SA_AUTHENTICATION)
                 {
+
                     status = cryptography_if->cryptography_authenticate(&p_new_enc_frame[index],                               // ciphertext output
                                                                 (size_t)tf_payload_len,                                        // length of data
                                                                 (uint8_t*)(p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), // plaintext input
                                                                 (size_t)tf_payload_len,                                         // in data length
                                                                 NULL, // Using SA key reference, key is null
-                                                                KEY_SIZE, // Length of key. TODO - why is this hard-coded?
+                                                                Crypto_Get_ACS_Algo_Keylen(*sa_ptr->acs),
                                                                 sa_ptr, // SA (for key reference)
                                                                 sa_ptr->iv, // IV
                                                                 sa_ptr->shivf_len, // IV Length
@@ -815,7 +819,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
                                                             &(ingest[tc_enc_payload_start_index]), // ciphertext input
                                                             (size_t)(tc_sdls_processed_frame->tc_pdu_len),    // in data length
                                                             NULL, // Key
-                                                            KEY_SIZE, // TODO - This shouldn't be hardcoded
+                                                            Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs),
                                                             sa_ptr, // SA for key reference
                                                             tc_sdls_processed_frame->tc_sec_header.iv, // IV
                                                             sa_ptr->shivf_len, // IV Length
@@ -825,9 +829,12 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
                                                             aad_len, // length of AAD
                                                             (sa_ptr->est), // Decryption Bool
                                                             (sa_ptr->ast), // Authentication Bool
-                                                            (sa_ptr->ast) // AAD Bool
+                                                            (sa_ptr->ast), // AAD Bool
+                                                            sa_ptr->ecs, // encryption cipher
+                                                            sa_ptr->acs  // authentication cipher
+                                                            
         );
-    }else if (sa_service_type != SA_PLAINTEXT) // Non aead algorithm
+    }else if (sa_service_type != SA_PLAINTEXT && sa_service_type == SA_ENCRYPTION) // Non aead algorithm
     {
         // TODO - implement non-AEAD algorithm logic
 
@@ -835,14 +842,15 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
         { 
             status = cryptography_if->cryptography_decrypt();
         }
-        if(sa_service_type == SA_AUTHENTICATION)
+        if(sa_service_type != SA_PLAINTEXT && sa_service_type == SA_AUTHENTICATION)
         {
+
             status = cryptography_if->cryptography_validate_authentication(tc_sdls_processed_frame->tc_pdu,       // plaintext output
                                                             (size_t)(tc_sdls_processed_frame->tc_pdu_len),   // length of data
                                                             &(ingest[tc_enc_payload_start_index]), // ciphertext input
                                                             (size_t)(tc_sdls_processed_frame->tc_pdu_len),    // in data length
                                                             NULL, // Key
-                                                            KEY_SIZE, // TODO - This shouldn't be hardcoded
+                                                            Crypto_Get_ACS_Algo_Keylen(*sa_ptr->acs),
                                                             sa_ptr, // SA for key reference
                                                             tc_sdls_processed_frame->tc_sec_header.iv, // IV
                                                             sa_ptr->shivf_len, // IV Length
@@ -850,7 +858,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
                                                             sa_ptr->stmacf_len,                           // tag size
                                                             aad,    // additional authenticated data
                                                             aad_len, // length of AAD
-                                                            CRYPTO_ECS_NONE, //encryption cipher
+                                                            CRYPTO_CIPHER_NONE, //encryption cipher
                                                             *sa_ptr->acs  //authentication cipher
             );
         }
