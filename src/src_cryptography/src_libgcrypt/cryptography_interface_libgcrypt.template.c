@@ -1169,7 +1169,7 @@ int32_t cryptography_get_ecs_algo(int8_t algo_enum)
     switch (algo_enum)
     {
         case CRYPTO_CIPHER_AES256_GCM:
-            algo = GCRY_MAC_CMAC_AES;
+            algo = GCRY_CIPHER_AES256;
             break;
 
         default:

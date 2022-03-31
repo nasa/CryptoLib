@@ -342,6 +342,23 @@ UTEST(CRYPTO_C, GET_ACS_ALGO_KEY_LEN)
 }
 
 /**
+ * @brief Unit Test: Crypto ECS Get Algorithm response
+ **/
+UTEST(CRYPTO_C, GET_ECS_ALGO)
+{
+    printf("%d\n", __LINE__);
+    // Convert CRYPTOAES enum to GCRY_CIPHER_AES256
+    int32_t libgcrypt_algo = -1;
+    int8_t crypto_algo = CRYPTO_CIPHER_AES256_GCM;
+    libgcrypt_algo = cryptography_if->cryptography_get_ecs_algo(crypto_algo);
+    ASSERT_EQ(libgcrypt_algo, GCRY_CIPHER_AES256);
+
+    crypto_algo = 99; // Invalid / unsupported
+    libgcrypt_algo = cryptography_if->cryptography_get_ecs_algo(crypto_algo);
+    ASSERT_EQ(libgcrypt_algo, CRYPTO_LIB_ERR_UNSUPPORTED_ECS);
+}
+
+/**
  * @brief Unit Test: Crypto ECS Get Algorithm key length response
  **/
 UTEST(CRYPTO_C, GET_ECS_ALGO_KEY_LEN)
