@@ -238,7 +238,7 @@ int32_t Crypto_Shutdown(void)
  **/
 int32_t Crypto_Config_CryptoLib(uint8_t sadb_type, uint8_t cryptography_type, uint8_t crypto_create_fecf, uint8_t process_sdls_pdus,
                                 uint8_t has_pus_hdr, uint8_t ignore_sa_state, uint8_t ignore_anti_replay,
-                                uint8_t unique_sa_per_mapid, uint8_t crypto_check_fecf, uint8_t vcid_bitmask)
+                                uint8_t unique_sa_per_mapid, uint8_t crypto_check_fecf, uint8_t vcid_bitmask, uint8_t crypto_increment_nontransmitted_iv)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     crypto_config = (CryptoConfig_t* )calloc(1, CRYPTO_CONFIG_SIZE);
@@ -252,6 +252,7 @@ int32_t Crypto_Config_CryptoLib(uint8_t sadb_type, uint8_t cryptography_type, ui
     crypto_config->unique_sa_per_mapid = unique_sa_per_mapid;
     crypto_config->crypto_check_fecf = crypto_check_fecf;
     crypto_config->vcid_bitmask = vcid_bitmask;
+    crypto_config->crypto_increment_nontransmitted_iv = crypto_increment_nontransmitted_iv;
     return status;
 }
 

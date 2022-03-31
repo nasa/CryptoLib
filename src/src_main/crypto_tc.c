@@ -292,6 +292,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
         printf(KYEL "\tsegment hdr len\t = %d\n" RESET, segment_hdr_len); 
         printf(KYEL "\tspi len\t\t = 2\n" RESET);
         printf(KYEL "\tshivf_len\t = %d\n" RESET, sa_ptr->shivf_len);
+        printf(KYEL "\tiv_len\t = %d\n" RESET, sa_ptr->iv_len);
         printf(KYEL "\tshsnf_len\t = %d\n" RESET, sa_ptr->shsnf_len);
         printf(KYEL "\tshplf len\t = %d\n" RESET, sa_ptr->shplf_len);
         printf(KYEL "\tarsn_len\t = %d\n" RESET, sa_ptr->arsn_len);
@@ -347,6 +348,12 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
                     printf("%02x", *(sa_ptr->iv + i));
                 }
                 printf("\n" RESET);
+                printf(KYEL "Transmitted IV value:\n\t");
+                for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->shivf_len; i++)
+                {
+                    printf("%02x", *(sa_ptr->iv + i));
+                }
+                printf("\n" RESET);
             }
 #endif
         if (sa_ptr->shivf_len > 0 && sa_ptr->iv == NULL)
@@ -355,7 +362,8 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
         }
         else
         {
-            for (i = 0; i < sa_ptr->shivf_len; i++)
+            // Start index from the transmitted portion
+            for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->shivf_len; i++)
             {
                 // Copy in IV from SA
                 *(p_new_enc_frame + index) = *(sa_ptr->iv + i);
@@ -471,7 +479,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
                                                                     Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs), // Length of key derived from sa_ptr key_ref
                                                                     sa_ptr, // SA (for key reference)
                                                                     sa_ptr->iv, // IV
-                                                                    sa_ptr->shivf_len, // IV Length
+                                                                    sa_ptr->iv_len, // IV Length
                                                                     mac_ptr, // tag output
                                                                     sa_ptr->stmacf_len, // tag size
                                                                     aad, // AAD Input
@@ -502,7 +510,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
                                                                 Crypto_Get_ACS_Algo_Keylen(*sa_ptr->acs),
                                                                 sa_ptr, // SA (for key reference)
                                                                 sa_ptr->iv, // IV
-                                                                sa_ptr->shivf_len, // IV Length
+                                                                sa_ptr->iv_len, // IV Length
                                                                 mac_ptr, // tag output
                                                                 sa_ptr->stmacf_len, // tag size
                                                                 aad, // AAD Input
@@ -521,11 +529,26 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
         if (sa_service_type != SA_PLAINTEXT)
         {
 #ifdef INCREMENT
-            if(sa_ptr->shivf_len > 0){ Crypto_increment(sa_ptr->iv, sa_ptr->shivf_len); } 
+            if (crypto_config->crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
+            {
+                if(sa_ptr->shivf_len > 0){ Crypto_increment(sa_ptr->iv, sa_ptr->iv_len); }   
+            }
+            else // SA_INCREMENT_NONTRANSMITTED_IV_FALSE
+            {
+                // Only increment the transmitted portion
+                if(sa_ptr->shivf_len > 0){ Crypto_increment(sa_ptr->iv+(sa_ptr->iv_len-sa_ptr->shivf_len), sa_ptr->shivf_len); }
+            }
             if(sa_ptr->arsn_len > 0){ Crypto_increment(sa_ptr->arsn, sa_ptr->arsn_len); }
+        
 #ifdef SA_DEBUG
             printf(KYEL "Next IV value is:\n\t");
-            for (i = 0; i < sa_ptr->shivf_len; i++)
+            for (i = 0; i < sa_ptr->iv_len; i++)
+            {
+                printf("%02x", *(sa_ptr->iv + i));
+            }
+            printf("\n" RESET);
+            printf(KYEL "Next transmitted IV value is:\n\t");
+            for (i = sa_ptr->iv_len-sa_ptr->shivf_len; i < sa_ptr->shivf_len; i++)
             {
                 printf("%02x", *(sa_ptr->iv + i));
             }

@@ -98,9 +98,12 @@ int32_t Crypto_increment(uint8_t* num, int length)
     }
 
     if (i < 0) /* this means num[0] was incremented and overflowed */
-        return CRYPTO_LIB_ERROR;
-    else
-        return CRYPTO_LIB_SUCCESS;
+    {
+        for(i=0; i<length; i++)
+        {
+            num[i] = 0;
+        }
+    }
 }
 
 /**
