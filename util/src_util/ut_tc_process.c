@@ -172,6 +172,7 @@ UTEST(TC_PROCESS, EXERCISE_ARSN)
     test_association->est = 0;
     test_association->ast = 1;
     test_association->shivf_len = 0;
+    test_association->iv_len = 0;
     test_association->shsnf_len = 2;
     test_association->arsn_len = 2;
     test_association->arsnw = 5;
@@ -189,27 +190,27 @@ UTEST(TC_PROCESS, EXERCISE_ARSN)
     hex_conversion(buffer_outside_window_h, (char**) &buffer_outside_window_b, &buffer_outside_window_len);
     hex_conversion(buffer_good_arsn_h, (char**) &buffer_good_arsn_b, &buffer_good_arsn_len);
     hex_conversion(buffer_good_arsn_with_gap_h, (char**) &buffer_good_arsn_with_gap_b, &buffer_good_arsn_with_gap_len);
-    // Convert/Set input IV
+    // Convert/Set input ARSN
     hex_conversion(buffer_arsn_h, (char**) &buffer_arsn_b, &buffer_arsn_len);
     test_association->arsn = calloc(1, test_association->arsn_len);
     memcpy(test_association->arsn, buffer_arsn_b, buffer_arsn_len);
     // Expect to fail on replay
-    printf(KGRN "Checking replay - using previous received IV...\n" RESET);
+    printf(KGRN "Checking replay - using previous received ARSN...\n" RESET);
     status = Crypto_TC_ProcessSecurity(buffer_replay_b, &buffer_replay_len, tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_ERR_ARSN_OUTSIDE_WINDOW, status);
 
     // Expect to fail on counter being too high
-    printf(KGRN "Checking replay - using IV outside the window...\n" RESET);
+    printf(KGRN "Checking replay - using ARSN outside the window...\n" RESET);
     status = Crypto_TC_ProcessSecurity(buffer_outside_window_b, &buffer_outside_window_len, tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_ERR_ARSN_OUTSIDE_WINDOW, status);
 
-    // Expect success on valid IV
-    printf(KGRN "Checking next valid IV... should be able to receive it... \n" RESET);
+    // Expect success on valid ARSN
+    printf(KGRN "Checking next valid ARSN... should be able to receive it... \n" RESET);
     status = Crypto_TC_ProcessSecurity(buffer_good_arsn_b, &buffer_good_arsn_len, tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-    // // Expect success on valid IV within window, but has a gap
-    printf(KGRN "Checking valid IV within window... should be able to receive it... \n" RESET);
+    // Expect success on valid ARSN within window, but has a gap
+    printf(KGRN "Checking valid ARSN within window... should be able to receive it... \n" RESET);
     status = Crypto_TC_ProcessSecurity(buffer_good_arsn_with_gap_b, &buffer_good_arsn_with_gap_len, tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
