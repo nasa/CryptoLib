@@ -795,11 +795,15 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
     {
         return status;
     }
-    // Retrieve static portion of IV from SA
-    memcpy((tc_sdls_processed_frame->tc_sec_header.iv), sa_ptr->iv, sa_ptr->iv_len-sa_ptr->shivf_len);
+    // Retrieve non-transmitted portion of IV from SA (if applicable)
+    memcpy(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->iv_len-sa_ptr->shivf_len);
     // Parse transmitted portion of IV
     memcpy((tc_sdls_processed_frame->tc_sec_header.iv+(sa_ptr->iv_len-sa_ptr->shivf_len)), &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN]),
            sa_ptr->shivf_len);
+#ifdef DEBUG
+    printf("Full IV Value from Frame and SADB (if applicable):\n");
+    Crypto_hexprint(tc_sdls_processed_frame->tc_sec_header.iv,sa_ptr->iv_len);
+#endif
     // Parse Sequence Number
     memcpy((tc_sdls_processed_frame->tc_sec_header.sn), //+ (TC_SN_SIZE - sa_ptr->shsnf_len)
            &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len]), sa_ptr->shsnf_len);

@@ -22,6 +22,7 @@
 #include "ut_tc_process.h"
 #include "crypto.h"
 #include "crypto_error.h"
+#include "crypto_print.h"
 #include "sadb_routine.h"
 #include "utest.h"
 
@@ -228,5 +229,95 @@ UTEST(TC_PROCESS, EXERCISE_ARSN)
     free(ptr_enc_frame);
     free(buffer_nist_key_b);
 }
+
+UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_STATIC_IV_ROLLOVER)
+{
+    // Setup & Initialize CryptoLib
+    Crypto_Init_Unit_Test();
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+
+    char* dec_test_ping_h =
+            "2003002D00000004FFFFFFFFFFFFCECBA30A6E0B54ACE0D5F92D1360084822CFA46240C0CD7D6830A6A7771ECFEC";
+
+    uint8_t* dec_test_ping_b = NULL;
+    int dec_test_ping_len = 0;
+
+    hex_conversion(dec_test_ping_h, (char**) &dec_test_ping_b, &dec_test_ping_len);
+
+    SecurityAssociation_t* test_association = NULL;
+    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+
+    int32_t return_val = -1;
+
+    TC_t* tc_sdls_processed_frame;
+    tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
+    memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
+
+    // Default SA
+    // Expose SA 1 for testing
+    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
+    *test_association->ecs = CRYPTO_CIPHER_NONE;
+
+    // Deactive SA 1
+    test_association->sa_state = SA_NONE;
+
+    // Expose SA 4 for testing
+    sadb_routine->sadb_get_sa_from_spi(4, &test_association);
+    test_association->arsn_len = 0;
+    test_association->gvcid_tc_blk.vcid = 0;
+    test_association->shivf_len = 6;
+    test_association->iv_len = 12;
+    test_association->iv = calloc(1, test_association->iv_len * sizeof(uint8_t));
+    // IV = "000000000000FFFFFFFFFFFE"
+    test_association->iv[0] = 0x00;
+    test_association->iv[1] = 0x00;
+    test_association->iv[2] = 0x00;
+    test_association->iv[3] = 0x00;
+    test_association->iv[4] = 0x00;
+    test_association->iv[5] = 0x00;
+    test_association->iv[6] = 0xFF;
+    test_association->iv[7] = 0xFF;
+    test_association->iv[8] = 0xFF;
+    test_association->iv[9] = 0xFF;
+    test_association->iv[10] = 0xFF;
+    test_association->iv[11] = 0xFE;
+    test_association->ast = 1;
+    test_association->est = 1;
+    test_association->sa_state = SA_OPERATIONAL;
+    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
+    *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
+
+    Crypto_saPrint(test_association);
+    return_val = Crypto_TC_ProcessSecurity(dec_test_ping_b, &dec_test_ping_len, tc_sdls_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+
+    Crypto_saPrint(test_association);
+
+    Crypto_Shutdown();
+
+    // printf("PDU:\n\t");
+    // for (int i = 0; i < tc_sdls_processed_frame->tc_pdu_len; i++)
+    // {
+    //     printf("%02x", enc_test_ping_b[i]);
+    // }
+    // printf("\nPF PDU:\n\t");
+    // for (int i = 0; i < tc_sdls_processed_frame->tc_pdu_len; i++)
+    // {
+    //     printf("%02x", tc_sdls_processed_frame->tc_pdu[i]);
+    // }
+    // printf("\n");
+
+//    for (int i = 0; i < tc_sdls_processed_frame->tc_pdu_len; i++)
+//    {
+//        ASSERT_EQ(enc_test_ping_b[i], tc_sdls_processed_frame->tc_pdu[i]);
+//    }
+
+    free(dec_test_ping_b);
+    // free(test_association->ecs);
+    free(tc_sdls_processed_frame);
+    // sadb_routine->sadb_close();
+}
+
 
 UTEST_MAIN();

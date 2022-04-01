@@ -257,12 +257,13 @@ void Crypto_saPrint(SecurityAssociation_t* sa)
 void Crypto_hexprint(void* c, size_t n)
 {
     uint8_t* t = c;
+    size_t idx = 0;
     if (c == NULL)
         return;
-    while (n > 0)
+    while (idx < n)
     {
-        --n;
-        printf("%02x", t[n]);
+        printf("%02x", t[idx]);
+        idx++;
     }
     printf("\n");
 }
