@@ -47,12 +47,12 @@ static int32_t finish_with_error(MYSQL *con, int err);
 static const char* SQL_SADB_GET_SA_BY_SPI =
         "SELECT "
         "spi,ekid,akid,sa_state,tfvn,scid,vcid,mapid,lpid,est,ast,shivf_len,shsnf_len,shplf_len,stmacf_len,ecs_len,HEX(ecs)"
-        ",HEX(iv),acs_len,HEX(acs),abm_len,HEX(abm),arsn_len,HEX(arsn),arsnw_len,HEX(arsnw)"
+        ",HEX(iv),iv_len,acs_len,HEX(acs),abm_len,HEX(abm),arsn_len,HEX(arsn),arsnw_len,HEX(arsnw)"
         " FROM security_associations WHERE spi='%d'";
 static const char* SQL_SADB_GET_SA_BY_GVCID =
         "SELECT "
         "spi,ekid,akid,sa_state,tfvn,scid,vcid,mapid,lpid,est,ast,shivf_len,shsnf_len,shplf_len,stmacf_len,ecs_len,HEX(ecs)"
-        ",HEX(iv),acs_len,HEX(acs),abm_len,HEX(abm),arsn_len,HEX(arsn),arsnw_len,HEX(arsnw)"
+        ",HEX(iv),iv_len,acs_len,HEX(acs),abm_len,HEX(abm),arsn_len,HEX(arsn),arsnw_len,HEX(arsnw)"
         " FROM security_associations WHERE tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d' AND sa_state='%d'";
 static const char* SQL_SADB_UPDATE_IV_ARC_BY_SPI =
         "UPDATE security_associations"
@@ -409,6 +409,11 @@ static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** se
             if (strcmp(field_names[i], "shivf_len") == 0)
             {
                 sa->shivf_len = atoi(row[i]);
+                continue;
+            }
+            if (strcmp(field_names[i], "iv_len") == 0)
+            {
+                sa->iv_len = atoi(row[i]);
                 continue;
             }
             if (strcmp(field_names[i], "shsnf_len") == 0)

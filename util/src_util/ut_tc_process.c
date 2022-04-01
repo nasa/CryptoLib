@@ -234,15 +234,25 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_STATIC_IV_ROLLOVER)
 {
     // Setup & Initialize CryptoLib
     Crypto_Init_Unit_Test();
+    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
+
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
 
-    char* dec_test_ping_h =
+    char* dec_test_fe_h =
+            "2003002D00000004FFFFFFFFFFFE610B082EA91C8AA93F08EAA642EA3189128D87159B2354AA753248F050022FD9";
+    char* dec_test_ff_h =
             "2003002D00000004FFFFFFFFFFFFCECBA30A6E0B54ACE0D5F92D1360084822CFA46240C0CD7D6830A6A7771ECFEC";
+    char* dec_test_00_h =
+            "2003002D0000000400000000000064DB31BBC4656F072A8E4A706F9508C440A003496E8A71FD47621297DDCC393C";
 
-    uint8_t* dec_test_ping_b = NULL;
-    int dec_test_ping_len = 0;
+    uint8_t *dec_test_fe_b, *dec_test_ff_b, *dec_test_00_b = NULL;
+    int dec_test_fe_len, dec_test_ff_len, dec_test_00_len = 0;
 
-    hex_conversion(dec_test_ping_h, (char**) &dec_test_ping_b, &dec_test_ping_len);
+    hex_conversion(dec_test_fe_h, (char**) &dec_test_fe_b, &dec_test_fe_len);
+    hex_conversion(dec_test_ff_h, (char**) &dec_test_ff_b, &dec_test_ff_len);
+    hex_conversion(dec_test_00_h, (char**) &dec_test_00_b, &dec_test_00_len);
 
     SecurityAssociation_t* test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
@@ -281,7 +291,7 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_STATIC_IV_ROLLOVER)
     test_association->iv[8] = 0xFF;
     test_association->iv[9] = 0xFF;
     test_association->iv[10] = 0xFF;
-    test_association->iv[11] = 0xFE;
+    test_association->iv[11] = 0xFD;
     test_association->ast = 1;
     test_association->est = 1;
     test_association->sa_state = SA_OPERATIONAL;
@@ -289,31 +299,130 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_STATIC_IV_ROLLOVER)
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     Crypto_saPrint(test_association);
-    return_val = Crypto_TC_ProcessSecurity(dec_test_ping_b, &dec_test_ping_len, tc_sdls_processed_frame);
+    return_val = Crypto_TC_ProcessSecurity(dec_test_fe_b, &dec_test_fe_len, tc_sdls_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+    ASSERT_EQ(test_association->iv[11],0xFE);
+    return_val = Crypto_TC_ProcessSecurity(dec_test_ff_b, &dec_test_ff_len, tc_sdls_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+    ASSERT_EQ(test_association->iv[11],0xFF);
+    return_val = Crypto_TC_ProcessSecurity(dec_test_00_b, &dec_test_00_len, tc_sdls_processed_frame);
+    //Tc_ProcessSecurity Rollover bug ( https://github.jpl.nasa.gov/ASEC/AMMOS-CryptoLib/issues/57 ), cannot assert this!
+    //ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+    //for(int i=0; i < test_association->iv_len; i++)
+    //{
+    //    ASSERT_EQ(test_association->iv[i],0x00);
+    //}
 
     Crypto_saPrint(test_association);
 
     Crypto_Shutdown();
 
-    // printf("PDU:\n\t");
-    // for (int i = 0; i < tc_sdls_processed_frame->tc_pdu_len; i++)
-    // {
-    //     printf("%02x", enc_test_ping_b[i]);
-    // }
-    // printf("\nPF PDU:\n\t");
-    // for (int i = 0; i < tc_sdls_processed_frame->tc_pdu_len; i++)
-    // {
-    //     printf("%02x", tc_sdls_processed_frame->tc_pdu[i]);
-    // }
-    // printf("\n");
+    free(dec_test_fe_b);
+    free(dec_test_ff_b);
+    free(dec_test_00_b);
+    // free(test_association->ecs);
+    free(tc_sdls_processed_frame);
+    // sadb_routine->sadb_close();
+}
 
-//    for (int i = 0; i < tc_sdls_processed_frame->tc_pdu_len; i++)
-//    {
-//        ASSERT_EQ(enc_test_ping_b[i], tc_sdls_processed_frame->tc_pdu[i]);
-//    }
+UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_NONTRANSMITTED_INCREMENTING_IV_ROLLOVER)
+{
+    // Setup & Initialize CryptoLib
+    Crypto_Init_Unit_Test();
+    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    free(dec_test_ping_b);
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+
+    char* dec_test_fe_h =
+            "2003002D00000004FFFFFFFFFFFE610B082EA91C8AA93F08EAA642EA3189128D87159B2354AA753248F050022FD9";
+    char* dec_test_ff_h =
+            "2003002D00000004FFFFFFFFFFFFCECBA30A6E0B54ACE0D5F92D1360084822CFA46240C0CD7D6830A6A7771ECFEC";
+    char* dec_test_00_h =
+            "2003002D00000004000000000000CEB2378F0F335664496406AC4F3A2ABFFD8678CB76DD009D7FE5B425BB96F567";
+
+    uint8_t *dec_test_fe_b, *dec_test_ff_b, *dec_test_00_b = NULL;
+    int dec_test_fe_len, dec_test_ff_len, dec_test_00_len = 0;
+
+    hex_conversion(dec_test_fe_h, (char**) &dec_test_fe_b, &dec_test_fe_len);
+    hex_conversion(dec_test_ff_h, (char**) &dec_test_ff_b, &dec_test_ff_len);
+    hex_conversion(dec_test_00_h, (char**) &dec_test_00_b, &dec_test_00_len);
+
+    SecurityAssociation_t* test_association = NULL;
+    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+
+    int32_t return_val = -1;
+
+    TC_t* tc_sdls_processed_frame;
+    tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
+    memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
+
+    // Default SA
+    // Expose SA 1 for testing
+    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
+    *test_association->ecs = CRYPTO_CIPHER_NONE;
+
+    // Deactive SA 1
+    test_association->sa_state = SA_NONE;
+
+    // Expose SA 4 for testing
+    sadb_routine->sadb_get_sa_from_spi(4, &test_association);
+    test_association->arsn_len = 0;
+    test_association->gvcid_tc_blk.vcid = 0;
+    test_association->shivf_len = 6;
+    test_association->iv_len = 12;
+    test_association->iv = calloc(1, test_association->iv_len * sizeof(uint8_t));
+    // IV = "000000000000FFFFFFFFFFFE"
+    test_association->iv[0] = 0x00;
+    test_association->iv[1] = 0x00;
+    test_association->iv[2] = 0x00;
+    test_association->iv[3] = 0x00;
+    test_association->iv[4] = 0x00;
+    test_association->iv[5] = 0x00;
+    test_association->iv[6] = 0xFF;
+    test_association->iv[7] = 0xFF;
+    test_association->iv[8] = 0xFF;
+    test_association->iv[9] = 0xFF;
+    test_association->iv[10] = 0xFF;
+    test_association->iv[11] = 0xFD;
+    test_association->ast = 1;
+    test_association->est = 1;
+    test_association->sa_state = SA_OPERATIONAL;
+    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
+    *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
+
+    Crypto_saPrint(test_association);
+    return_val = Crypto_TC_ProcessSecurity(dec_test_fe_b, &dec_test_fe_len, tc_sdls_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+    ASSERT_EQ(test_association->iv[11],0xFE);
+    return_val = Crypto_TC_ProcessSecurity(dec_test_ff_b, &dec_test_ff_len, tc_sdls_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+    ASSERT_EQ(test_association->iv[11],0xFF);
+    return_val = Crypto_TC_ProcessSecurity(dec_test_00_b, &dec_test_00_len, tc_sdls_processed_frame);
+    //Tc_ProcessSecurity Rollover bug ( https://github.jpl.nasa.gov/ASEC/AMMOS-CryptoLib/issues/57 ), cannot assert this!
+    //ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+    //ASSERT_EQ(test_association->iv[0] ,0x00);
+    //ASSERT_EQ(test_association->iv[1] ,0x00);
+    //ASSERT_EQ(test_association->iv[2] ,0x00);
+    //ASSERT_EQ(test_association->iv[3] ,0x00);
+    //ASSERT_EQ(test_association->iv[4] ,0x00);
+    //ASSERT_EQ(test_association->iv[5] ,0x01);
+    //ASSERT_EQ(test_association->iv[6] ,0x00);
+    //ASSERT_EQ(test_association->iv[7] ,0x00);
+    //ASSERT_EQ(test_association->iv[8] ,0x00);
+    //ASSERT_EQ(test_association->iv[9] ,0x00);
+    //ASSERT_EQ(test_association->iv[10],0x00);
+    //ASSERT_EQ(test_association->iv[11],0x00);
+
+    Crypto_saPrint(test_association);
+
+    Crypto_Shutdown();
+
+    free(dec_test_fe_b);
+    free(dec_test_ff_b);
+    free(dec_test_00_b);
     // free(test_association->ecs);
     free(tc_sdls_processed_frame);
     // sadb_routine->sadb_close();
