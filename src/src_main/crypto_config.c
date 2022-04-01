@@ -45,7 +45,7 @@ int32_t Crypto_Init_Unit_Test(void)
     int32_t status = CRYPTO_LIB_SUCCESS;
     Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F);
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     status = Crypto_Init();
@@ -238,7 +238,7 @@ int32_t Crypto_Shutdown(void)
  **/
 int32_t Crypto_Config_CryptoLib(uint8_t sadb_type, uint8_t cryptography_type, uint8_t crypto_create_fecf, uint8_t process_sdls_pdus,
                                 uint8_t has_pus_hdr, uint8_t ignore_sa_state, uint8_t ignore_anti_replay,
-                                uint8_t unique_sa_per_mapid, uint8_t crypto_check_fecf, uint8_t vcid_bitmask)
+                                uint8_t unique_sa_per_mapid, uint8_t crypto_check_fecf, uint8_t vcid_bitmask, uint8_t crypto_increment_nontransmitted_iv)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     crypto_config = (CryptoConfig_t* )calloc(1, CRYPTO_CONFIG_SIZE);
@@ -252,6 +252,7 @@ int32_t Crypto_Config_CryptoLib(uint8_t sadb_type, uint8_t cryptography_type, ui
     crypto_config->unique_sa_per_mapid = unique_sa_per_mapid;
     crypto_config->crypto_check_fecf = crypto_check_fecf;
     crypto_config->vcid_bitmask = vcid_bitmask;
+    crypto_config->crypto_increment_nontransmitted_iv = crypto_increment_nontransmitted_iv;
     return status;
 }
 

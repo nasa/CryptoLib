@@ -98,9 +98,14 @@ int32_t Crypto_increment(uint8_t* num, int length)
     }
 
     if (i < 0) /* this means num[0] was incremented and overflowed */
-        return CRYPTO_LIB_ERROR;
-    else
-        return CRYPTO_LIB_SUCCESS;
+    {
+        for(i=0; i<length; i++)
+        {
+            num[i] = 0;
+        }
+    }
+
+    return CRYPTO_LIB_SUCCESS;
 }
 
 /**
@@ -818,19 +823,18 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
         // If IV is greater than zero, check for replay
         // Should IV always be sequential in a window,
         // is it mode dependent, or is the only req. uniqueness?
-        if (sa_ptr->shivf_len > 0)
+        if (sa_ptr->iv_len > 0)
         {
             // Check IV is in ARSNW
-            status = Crypto_window(iv, sa_ptr->iv, sa_ptr->shivf_len, sa_ptr->arsnw);
+            status = Crypto_window(iv, sa_ptr->iv, sa_ptr->iv_len, sa_ptr->arsnw);
 #ifdef DEBUG
             printf("Received IV is\n\t");
-            for (int i = 0; i < sa_ptr->shivf_len; i++)
-            // for(i=0; i<IV_SIZE; i++)
+            for (int i = 0; i < sa_ptr->iv_len; i++)
             {
                 printf("%02x", *(iv + i));
             }
             printf("\nSA IV is\n\t");
-            for (int i = 0; i < sa_ptr->shivf_len; i++)
+            for (int i = 0; i < sa_ptr->iv_len; i++)
             {
                 printf("%02x", *(sa_ptr->iv + i));
             }
@@ -844,7 +848,7 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
             // Valid IV received, increment stored value
             else
             {
-                memcpy(sa_ptr->iv, iv, sa_ptr->shivf_len);
+                memcpy(sa_ptr->iv, iv, sa_ptr->iv_len);
             }
         }
     return status;

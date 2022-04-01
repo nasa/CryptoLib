@@ -66,13 +66,14 @@ typedef struct
     // Configuration
     uint8_t est : 1;        // Encryption Service Type
     uint8_t ast : 1;        // Authentication Service Type
-    uint8_t shivf_len : 6;  // Sec. Header IV Field Length
+    uint8_t shivf_len : 6;  // Sec. Header Transmitted IV Field Length
     uint8_t shsnf_len : 6;  // Sec. Header SN Field Length
     uint8_t shplf_len : 2;  // Sec. Header PL Field Length
     uint8_t stmacf_len : 8; // Sec. Trailer MAC Field Length
     uint8_t* ecs;           // Encryption Cipher Suite (algorithm / mode ID)
     uint8_t ecs_len : 8;    // Encryption Cipher Suite Length
     uint8_t* iv;            // Initialization Vector
+    uint8_t iv_len;         // Length of entire IV
     uint8_t acs_len : 8;    // Authentication Cipher Suite Length
     uint8_t* acs;        // Authentication Cipher Suite (algorithm / mode ID)
     uint16_t abm_len : 16;  // Authentication Bit Mask Length

@@ -292,6 +292,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
         printf(KYEL "\tsegment hdr len\t = %d\n" RESET, segment_hdr_len); 
         printf(KYEL "\tspi len\t\t = 2\n" RESET);
         printf(KYEL "\tshivf_len\t = %d\n" RESET, sa_ptr->shivf_len);
+        printf(KYEL "\tiv_len\t = %d\n" RESET, sa_ptr->iv_len);
         printf(KYEL "\tshsnf_len\t = %d\n" RESET, sa_ptr->shsnf_len);
         printf(KYEL "\tshplf len\t = %d\n" RESET, sa_ptr->shplf_len);
         printf(KYEL "\tarsn_len\t = %d\n" RESET, sa_ptr->arsn_len);
@@ -342,20 +343,40 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
             if (sa_ptr->shivf_len > 0 && sa_ptr->iv != NULL)
             {
                 printf(KYEL "Using IV value:\n\t");
-                for (i = 0; i < sa_ptr->shivf_len; i++)
+                for (i = 0; i < sa_ptr->iv_len; i++)
+                {
+                    printf("%02x", *(sa_ptr->iv + i));
+                }
+                printf("\n" RESET);
+                printf(KYEL "Transmitted IV value:\n\t");
+                for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
                 {
                     printf("%02x", *(sa_ptr->iv + i));
                 }
                 printf("\n" RESET);
             }
 #endif
-        if (sa_ptr->shivf_len > 0 && sa_ptr->iv == NULL)
+
+        if(sa_service_type != SA_PLAINTEXT && sa_ptr->ecs == NULL && sa_ptr->acs == NULL)
+        {
+            return CRYPTO_LIB_ERR_NULL_CIPHERS;
+        }
+
+        if(sa_ptr->est == 0 && sa_ptr->ast == 1 && sa_ptr->acs !=NULL && *(sa_ptr->acs) == CRYPTO_MAC_CMAC_AES256 \
+            && *(sa_ptr->acs) == CRYPTO_MAC_HMAC_SHA256 && *(sa_ptr->acs) == CRYPTO_MAC_HMAC_SHA512 &&
+            sa_ptr->iv_len > 0 )
+        {
+            return CRYPTO_LIB_ERR_IV_NOT_SUPPORTED_FOR_ACS_ALGO;
+        }
+
+        if ((sa_ptr->shivf_len > 0 && sa_ptr->iv == NULL) || (sa_ptr->iv_len - sa_ptr->shivf_len  < 0))
         {
             return CRYPTO_LIB_ERR_INVALID_SA_CONFIGURATION;
         }
         else
         {
-            for (i = 0; i < sa_ptr->shivf_len; i++)
+            // Start index from the transmitted portion
+            for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
             {
                 // Copy in IV from SA
                 *(p_new_enc_frame + index) = *(sa_ptr->iv + i);
@@ -471,7 +492,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
                                                                     Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs), // Length of key derived from sa_ptr key_ref
                                                                     sa_ptr, // SA (for key reference)
                                                                     sa_ptr->iv, // IV
-                                                                    sa_ptr->shivf_len, // IV Length
+                                                                    sa_ptr->iv_len, // IV Length
                                                                     mac_ptr, // tag output
                                                                     sa_ptr->stmacf_len, // tag size
                                                                     aad, // AAD Input
@@ -502,7 +523,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
                                                                 Crypto_Get_ACS_Algo_Keylen(*sa_ptr->acs),
                                                                 sa_ptr, // SA (for key reference)
                                                                 sa_ptr->iv, // IV
-                                                                sa_ptr->shivf_len, // IV Length
+                                                                sa_ptr->iv_len, // IV Length
                                                                 mac_ptr, // tag output
                                                                 sa_ptr->stmacf_len, // tag size
                                                                 aad, // AAD Input
@@ -521,11 +542,26 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
         if (sa_service_type != SA_PLAINTEXT)
         {
 #ifdef INCREMENT
-            if(sa_ptr->shivf_len > 0){ Crypto_increment(sa_ptr->iv, sa_ptr->shivf_len); } 
+            if (crypto_config->crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
+            {
+                if(sa_ptr->shivf_len > 0){ Crypto_increment(sa_ptr->iv, sa_ptr->iv_len); }   
+            }
+            else // SA_INCREMENT_NONTRANSMITTED_IV_FALSE
+            {
+                // Only increment the transmitted portion
+                if(sa_ptr->shivf_len > 0){ Crypto_increment(sa_ptr->iv+(sa_ptr->iv_len-sa_ptr->shivf_len), sa_ptr->shivf_len); }
+            }
             if(sa_ptr->arsn_len > 0){ Crypto_increment(sa_ptr->arsn, sa_ptr->arsn_len); }
+        
 #ifdef SA_DEBUG
             printf(KYEL "Next IV value is:\n\t");
-            for (i = 0; i < sa_ptr->shivf_len; i++)
+            for (i = 0; i < sa_ptr->iv_len; i++)
+            {
+                printf("%02x", *(sa_ptr->iv + i));
+            }
+            printf("\n" RESET);
+            printf(KYEL "Next transmitted IV value is:\n\t");
+            for (i = sa_ptr->iv_len-sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
             {
                 printf("%02x", *(sa_ptr->iv + i));
             }
@@ -759,11 +795,16 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
     {
         return status;
     }
-    // Parse IV
-    memcpy((tc_sdls_processed_frame->tc_sec_header.iv), &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN]),
+    // Retrieve non-transmitted portion of IV from SA (if applicable)
+    memcpy(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->iv_len-sa_ptr->shivf_len);
+    // Parse transmitted portion of IV
+    memcpy((tc_sdls_processed_frame->tc_sec_header.iv+(sa_ptr->iv_len-sa_ptr->shivf_len)), &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN]),
            sa_ptr->shivf_len);
+#ifdef DEBUG
+    printf("Full IV Value from Frame and SADB (if applicable):\n");
+    Crypto_hexprint(tc_sdls_processed_frame->tc_sec_header.iv,sa_ptr->iv_len);
+#endif
     // Parse Sequence Number
-    // 2003002b00ff000901241224dfefb72a20d49e09256908874979
     memcpy((tc_sdls_processed_frame->tc_sec_header.sn), //+ (TC_SN_SIZE - sa_ptr->shsnf_len)
            &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len]), sa_ptr->shsnf_len);
     // Parse pad length
@@ -771,7 +812,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
            &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len]),
            sa_ptr->shplf_len);
     // Set tc_sec_header fields for actual lengths from the SA (downstream apps won't know this length otherwise since they don't access the SADB!).
-    tc_sdls_processed_frame->tc_sec_header.iv_field_len = sa_ptr->shivf_len;
+    tc_sdls_processed_frame->tc_sec_header.iv_field_len = sa_ptr->iv_len;
     tc_sdls_processed_frame->tc_sec_header.sn_field_len = sa_ptr->shsnf_len;
     tc_sdls_processed_frame->tc_sec_header.pad_field_len = sa_ptr->shplf_len;
 
@@ -822,7 +863,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
                                                             Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs),
                                                             sa_ptr, // SA for key reference
                                                             tc_sdls_processed_frame->tc_sec_header.iv, // IV
-                                                            sa_ptr->shivf_len, // IV Length
+                                                            sa_ptr->iv_len, // IV Length
                                                             tc_sdls_processed_frame->tc_sec_trailer.mac, // Frame Expected Tag
                                                             sa_ptr->stmacf_len,                           // tag size
                                                             aad,    // additional authenticated data
@@ -853,7 +894,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
                                                             Crypto_Get_ACS_Algo_Keylen(*sa_ptr->acs),
                                                             sa_ptr, // SA for key reference
                                                             tc_sdls_processed_frame->tc_sec_header.iv, // IV
-                                                            sa_ptr->shivf_len, // IV Length
+                                                            sa_ptr->iv_len, // IV Length
                                                             tc_sdls_processed_frame->tc_sec_trailer.mac, // Frame Expected Tag
                                                             sa_ptr->stmacf_len,                           // tag size
                                                             aad,    // additional authenticated data

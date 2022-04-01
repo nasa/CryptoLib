@@ -96,7 +96,11 @@ int32_t sadb_config(void)
     sa[2].sa_state = SA_KEYED;
     sa[2].est = 1;
     sa[2].ast = 1;
+    sa[2].ecs_len = 1;
+    sa[2].ecs = calloc(1, sa[4].ecs_len * sizeof(uint8_t));
+    *sa[2].ecs = CRYPTO_CIPHER_AES256_GCM;    
     sa[2].shivf_len = 12;
+    sa[2].iv_len = 12;
     sa[2].iv = (uint8_t* )calloc(1, sa[2].shivf_len * sizeof(uint8_t));
     *(sa[2].iv + sa[2].shivf_len - 1) = 0;
     sa[2].abm_len = ABM_SIZE; // 20
@@ -111,7 +115,11 @@ int32_t sadb_config(void)
     sa[3].sa_state = SA_KEYED;
     sa[3].est = 1;
     sa[3].ast = 1;
+    sa[3].ecs_len = 1;
+    sa[3].ecs = calloc(1, sa[4].ecs_len * sizeof(uint8_t));
+    *sa[3].ecs = CRYPTO_CIPHER_AES256_GCM;
     sa[3].shivf_len = 12;
+    sa[3].iv_len = 12;
     sa[3].iv = (uint8_t* )calloc(1, sa[3].shivf_len * sizeof(uint8_t));
     *(sa[3].iv + sa[3].shivf_len - 1) = 0;
     sa[3].abm_len = ABM_SIZE; // 20
@@ -127,7 +135,11 @@ int32_t sadb_config(void)
     sa[4].sa_state = SA_KEYED;
     sa[4].est = 1;
     sa[4].ast = 1;
+    sa[4].ecs_len = 1;
+    sa[4].ecs = calloc(1, sa[4].ecs_len * sizeof(uint8_t));
+    *sa[4].ecs = CRYPTO_CIPHER_AES256_GCM;
     sa[4].shivf_len = 12;
+    sa[4].iv_len = 12;
     sa[4].stmacf_len = 16;
     sa[4].iv = (uint8_t* )calloc(1, sa[4].shivf_len * sizeof(uint8_t));
     *(sa[4].iv + 11) = 0;
@@ -147,7 +159,11 @@ int32_t sadb_config(void)
     sa[5].sa_state = SA_KEYED;
     sa[5].est = 1;
     sa[5].ast = 1;
+    sa[5].ecs_len = 1;
+    sa[5].ecs = calloc(1, sa[4].ecs_len * sizeof(uint8_t));
+    *sa[5].ecs = CRYPTO_CIPHER_AES256_GCM;    
     sa[5].shivf_len = 12;
+    sa[5].iv_len = 12;
     sa[5].iv = (uint8_t* )calloc(1, sa[5].shivf_len * sizeof(uint8_t));
     *(sa[5].iv + sa[5].shivf_len - 1) = 0;
     sa[5].abm_len = ABM_SIZE; // 20
@@ -161,7 +177,11 @@ int32_t sadb_config(void)
     sa[6].sa_state = SA_UNKEYED;
     sa[6].est = 1;
     sa[6].ast = 1;
+    sa[6].ecs_len = 1;
+    sa[6].ecs = calloc(1, sa[4].ecs_len * sizeof(uint8_t));
+    *sa[6].ecs = CRYPTO_CIPHER_AES256_GCM;    
     sa[6].shivf_len = 12;
+    sa[6].iv_len = 12;
     sa[6].iv = (uint8_t* )calloc(1, sa[6].shivf_len * sizeof(uint8_t));
     *(sa[6].iv + sa[6].shivf_len - 1) = 0;
     sa[6].abm_len = ABM_SIZE; // 20
@@ -176,7 +196,11 @@ int32_t sadb_config(void)
     sa[7].sa_state = SA_KEYED;
     sa[7].est = 1;
     sa[7].ast = 1;
+    sa[7].ecs_len = 1;
+    sa[7].ecs = calloc(1, sa[4].ecs_len * sizeof(uint8_t));
+    *sa[7].ecs = CRYPTO_CIPHER_AES256_GCM;    
     sa[7].shivf_len = 12;
+    sa[7].iv_len = 12;
     sa[7].iv = (uint8_t* )calloc(1, sa[7].shivf_len * sizeof(uint8_t));
     *(sa[7].iv + sa[7].shivf_len - 1) = 0;
     sa[7].abm_len = ABM_SIZE; // 20
@@ -209,6 +233,7 @@ int32_t sadb_config(void)
     sa[9].est = 1;
     sa[9].ast = 0;
     sa[9].shivf_len = 12;
+    sa[9].iv_len = 12;
     sa[9].iv = (uint8_t* )calloc(1, sa[9].shivf_len * sizeof(uint8_t));
     *(sa[9].iv + 11) = 0;
     sa[9].abm_len = ABM_SIZE; // 20
@@ -242,6 +267,7 @@ int32_t sadb_init(void)
         sa[x].ecs = NULL;
         sa[x].shivf_len = IV_SIZE;
         sa[x].iv = NULL;
+        sa[x].iv_len = 0;
         sa[x].abm = NULL;
         sa[x].abm_len = 0;
         sa[x].acs_len = 0;

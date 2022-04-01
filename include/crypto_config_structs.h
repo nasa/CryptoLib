@@ -83,6 +83,11 @@ typedef enum
     TC_CHECK_FECF_FALSE,
     TC_CHECK_FECF_TRUE
 } TcCheckFecfBool;
+typedef enum
+{
+    SA_INCREMENT_NONTRANSMITTED_IV_FALSE,
+    SA_INCREMENT_NONTRANSMITTED_IV_TRUE
+} SaIncrementNonTransmittedIvPortion;
 
 /*
 **  Used for selecting supported algorithms
@@ -116,6 +121,7 @@ typedef struct
     TcUniqueSaPerMapId unique_sa_per_mapid;
     TcCheckFecfBool crypto_check_fecf;
     uint8_t vcid_bitmask;
+    uint8_t crypto_increment_nontransmitted_iv; // Whether or not CryptoLib increments the non-transmitted portion of the IV field
 } CryptoConfig_t;
 #define CRYPTO_CONFIG_SIZE (sizeof(CryptoConfig_t))
 
