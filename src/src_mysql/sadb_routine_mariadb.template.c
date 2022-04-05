@@ -47,12 +47,12 @@ static int32_t finish_with_error(MYSQL *con, int err);
 static const char* SQL_SADB_GET_SA_BY_SPI =
         "SELECT "
         "spi,ekid,akid,sa_state,tfvn,scid,vcid,mapid,lpid,est,ast,shivf_len,shsnf_len,shplf_len,stmacf_len,ecs_len,HEX(ecs)"
-        ",HEX(iv),iv_len,acs_len,HEX(acs),abm_len,HEX(abm),arsn_len,HEX(arsn),arsnw_len,HEX(arsnw)"
+        ",HEX(iv),iv_len,acs_len,HEX(acs),abm_len,HEX(abm),arsn_len,HEX(arsn),arsnw"
         " FROM security_associations WHERE spi='%d'";
 static const char* SQL_SADB_GET_SA_BY_GVCID =
         "SELECT "
         "spi,ekid,akid,sa_state,tfvn,scid,vcid,mapid,lpid,est,ast,shivf_len,shsnf_len,shplf_len,stmacf_len,ecs_len,HEX(ecs)"
-        ",HEX(iv),iv_len,acs_len,HEX(acs),abm_len,HEX(abm),arsn_len,HEX(arsn),arsnw_len,HEX(arsnw)"
+        ",HEX(iv),iv_len,acs_len,HEX(acs),abm_len,HEX(abm),arsn_len,HEX(arsn),arsnw"
         " FROM security_associations WHERE tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d' AND sa_state='%d'";
 static const char* SQL_SADB_UPDATE_IV_ARC_BY_SPI =
         "UPDATE security_associations"
@@ -479,11 +479,6 @@ static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** se
                 continue;
             }
             // if(strcmp(field_names[i],"HEX(arsn)")==0){convert_hexstring_to_byte_array(row[i],sa->arsn);continue;}
-            if (strcmp(field_names[i], "arsnw_len") == 0)
-            {
-                sa->arsnw_len = atoi(row[i]);
-                continue;
-            }
             if (strcmp(field_names[i], "arsnw") == 0)
             {
                 sa->arsnw = atoi(row[i]);
@@ -503,6 +498,9 @@ static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** se
     convert_hexstring_to_byte_array(abm_byte_str, sa->abm);
     convert_hexstring_to_byte_array(ecs_byte_str, sa->ecs);
     convert_hexstring_to_byte_array(acs_byte_str, sa->acs);
+
+    //arsnw_len is not necessary for mariadb interface, putty dummy/default value for prints.
+    sa->arsnw_len = 1;
 
 
     *security_association = sa;

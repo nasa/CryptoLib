@@ -1312,9 +1312,12 @@ int32_t cryptography_get_acs_algo(int8_t algo_enum)
     int32_t algo = CRYPTO_LIB_ERR_UNSUPPORTED_ACS; // All valid algo enums will be positive
     switch (algo_enum)
     {
-        // case CRYPTO_MAC_CMAC_AES256:
-        //     algo = GCRY_MAC_CMAC_AES;
-        //     break;
+        case CRYPTO_MAC_CMAC_AES256:
+            return CRYPTO_MAC_CMAC_AES256;
+        case CRYPTO_MAC_HMAC_SHA256:
+            return CRYPTO_MAC_HMAC_SHA256;
+        case CRYPTO_MAC_HMAC_SHA512:
+            return CRYPTO_MAC_HMAC_SHA512;
 
         default:
 #ifdef DEBUG
@@ -1336,9 +1339,8 @@ int32_t cryptography_get_ecs_algo(int8_t algo_enum)
     int32_t algo = CRYPTO_LIB_ERR_UNSUPPORTED_ECS; // All valid algo enums will be positive
     switch (algo_enum)
     {
-        // case CRYPTO_MAC_CMAC_AES256:
-        //     algo = GCRY_MAC_CMAC_AES;
-        //     break;
+        case CRYPTO_CIPHER_AES256_GCM:
+            return CRYPTO_CIPHER_AES256_GCM;
 
         default:
 #ifdef DEBUG
