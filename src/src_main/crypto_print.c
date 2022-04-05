@@ -244,8 +244,8 @@ void Crypto_saPrint(SecurityAssociation_t* sa)
         printf("\n");
     }
 
-    printf("\t arsnw_len   = 0x%02x \n", sa->arsnw_len);
-    printf("\t arsnw       = 0x%d \n", sa->arsnw);
+    printf("\t arsnw_len   = %d \n", sa->arsnw_len);
+    printf("\t arsnw       = %d \n", sa->arsnw);
 }
 
 /**
