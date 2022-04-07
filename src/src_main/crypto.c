@@ -140,6 +140,22 @@ int32_t Crypto_window(uint8_t* actual, uint8_t* expected, int length, int window
 #endif
         return status;
     }
+    // Check for special case where received value is all 0's and expected is all 0's (won't have -1 in sa!)
+    // Received ARSN is: 00000000, SA ARSN is: 00000000
+    uint8_t zero_case = CRYPTO_TRUE;
+    for(i = 0; i < length; i++)
+    {
+        if (actual[i] != 0 || expected[i] != 0 )
+        {
+            zero_case = CRYPTO_FALSE;
+        }
+    }
+    if(zero_case == CRYPTO_TRUE)
+    {
+        status = CRYPTO_LIB_SUCCESS;
+        return status;
+    }
+
     memcpy(temp, expected, length);
     for (i = 0; i < window; i++)
     {

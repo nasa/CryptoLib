@@ -692,6 +692,18 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
     printf("spi  = %d \n", tc_sdls_processed_frame->tc_sec_header.spi);
 #endif
     status = sadb_routine->sadb_get_sa_from_spi(tc_sdls_processed_frame->tc_sec_header.spi, &sa_ptr);
+
+    // Allocate the necessary byte arrays within the security header + trailer given the SA
+    tc_sdls_processed_frame->tc_sec_header.iv = calloc(1,sa_ptr->iv_len);
+    tc_sdls_processed_frame->tc_sec_header.sn = calloc(1,sa_ptr->shsnf_len); //Todo, update to sn_len AMMOSGH56
+    tc_sdls_processed_frame->tc_sec_header.pad = calloc(1,sa_ptr->shplf_len);
+    tc_sdls_processed_frame->tc_sec_trailer.mac = calloc(1,sa_ptr->stmacf_len);
+    // Set tc_sec_header + trailer fields for actual lengths from the SA (downstream apps won't know this length otherwise since they don't access the SADB!).
+    tc_sdls_processed_frame->tc_sec_header.iv_field_len = sa_ptr->iv_len;
+    tc_sdls_processed_frame->tc_sec_header.sn_field_len = sa_ptr->shsnf_len;
+    tc_sdls_processed_frame->tc_sec_header.pad_field_len = sa_ptr->shplf_len;
+    tc_sdls_processed_frame->tc_sec_trailer.mac_field_len = sa_ptr->stmacf_len;
+
     // If no valid SPI, return
     if (status != CRYPTO_LIB_SUCCESS)
     {
@@ -811,26 +823,18 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
     memcpy((tc_sdls_processed_frame->tc_sec_header.pad) + (TC_PAD_SIZE - sa_ptr->shplf_len),
            &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len]),
            sa_ptr->shplf_len);
-    // Set tc_sec_header fields for actual lengths from the SA (downstream apps won't know this length otherwise since they don't access the SADB!).
-    tc_sdls_processed_frame->tc_sec_header.iv_field_len = sa_ptr->iv_len;
-    tc_sdls_processed_frame->tc_sec_header.sn_field_len = sa_ptr->shsnf_len;
-    tc_sdls_processed_frame->tc_sec_header.pad_field_len = sa_ptr->shplf_len;
 
     // Parse MAC, prepare AAD
     if ((sa_service_type == SA_AUTHENTICATION) || (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
     {
         uint16_t tc_mac_start_index = tc_sdls_processed_frame->tc_header.fl + 1 - fecf_len - sa_ptr->stmacf_len;
 
-        // Zero out the security trailer mac
-        memset(tc_sdls_processed_frame->tc_sec_trailer.mac,0,MAC_SIZE);
-
         // Parse the received MAC
-        memcpy((tc_sdls_processed_frame->tc_sec_trailer.mac) + (MAC_SIZE - sa_ptr->stmacf_len),
+        memcpy((tc_sdls_processed_frame->tc_sec_trailer.mac),
                &(ingest[tc_mac_start_index]), sa_ptr->stmacf_len);
-        tc_sdls_processed_frame->tc_sec_trailer.mac_field_len = sa_ptr->stmacf_len; // set mac_field_len for downstream apps without access to SADB.
 #ifdef DEBUG
         printf("MAC Parsed from Frame:\n");
-        Crypto_hexprint(tc_sdls_processed_frame->tc_sec_trailer.mac + (MAC_SIZE - sa_ptr->stmacf_len),sa_ptr->stmacf_len);
+        Crypto_hexprint(tc_sdls_processed_frame->tc_sec_trailer.mac,sa_ptr->stmacf_len);
 #endif
         aad_len = tc_mac_start_index;
         if ((sa_service_type == SA_AUTHENTICATED_ENCRYPTION) && (ecs_is_aead_algorithm == CRYPTO_TRUE))
@@ -872,7 +876,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
                                                             sa_ptr, // SA for key reference
                                                             tc_sdls_processed_frame->tc_sec_header.iv, // IV
                                                             sa_ptr->iv_len, // IV Length
-                                                            tc_sdls_processed_frame->tc_sec_trailer.mac + (MAC_SIZE - sa_ptr->stmacf_len), // Frame Expected Tag
+                                                            tc_sdls_processed_frame->tc_sec_trailer.mac, // Frame Expected Tag
                                                             sa_ptr->stmacf_len,                           // tag size
                                                             aad,    // additional authenticated data
                                                             aad_len, // length of AAD
@@ -903,7 +907,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
                                                             sa_ptr, // SA for key reference
                                                             tc_sdls_processed_frame->tc_sec_header.iv, // IV
                                                             sa_ptr->iv_len, // IV Length
-                                                            tc_sdls_processed_frame->tc_sec_trailer.mac + (MAC_SIZE - sa_ptr->stmacf_len), // Frame Expected Tag
+                                                            tc_sdls_processed_frame->tc_sec_trailer.mac, // Frame Expected Tag
                                                             sa_ptr->stmacf_len,                           // tag size
                                                             aad,    // additional authenticated data
                                                             aad_len, // length of AAD

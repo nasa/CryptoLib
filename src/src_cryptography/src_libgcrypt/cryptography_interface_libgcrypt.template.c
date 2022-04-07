@@ -766,7 +766,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
         return status;
     }
 
-//This MAC_DEBUG is an invalid operation and causes a segfault at gcry_mac_verify, must gcry_mac_reset if you use it this way.
+//This MAC_DEBUG causes a segfault due to gcry_mac_read wonkiness, after gcry_mac_read, gcry_mac_close or gcry_mac_verify fail. (why?tbd!)
 //#ifdef MAC_DEBUG
 //    uint32_t tmac_size = mac_size;
 //    uint8_t* tmac = malloc(tmac_size);
@@ -818,6 +818,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     }
 #endif
     // Zeroise any sensitive information
+    gcry_mac_reset(tmp_mac_hd);
     gcry_mac_close(tmp_mac_hd);
     return status; 
 }
