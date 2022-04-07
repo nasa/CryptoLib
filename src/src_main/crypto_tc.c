@@ -827,6 +827,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
         // Parse the received MAC
         memcpy((tc_sdls_processed_frame->tc_sec_trailer.mac) + (MAC_SIZE - sa_ptr->stmacf_len),
                &(ingest[tc_mac_start_index]), sa_ptr->stmacf_len);
+        tc_sdls_processed_frame->tc_sec_trailer.mac_field_len = sa_ptr->stmacf_len; // set mac_field_len for downstream apps without access to SADB.
 #ifdef DEBUG
         printf("MAC Parsed from Frame:\n");
         Crypto_hexprint(tc_sdls_processed_frame->tc_sec_trailer.mac + (MAC_SIZE - sa_ptr->stmacf_len),sa_ptr->stmacf_len);

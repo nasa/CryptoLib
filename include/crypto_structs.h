@@ -273,6 +273,7 @@ typedef struct
 typedef struct
 {
     uint8_t mac[MAC_SIZE]; // Message Authentication Code
+    uint8_t mac_field_len;
     uint16_t fecf;         // Frame Error Control Field
 } TC_FrameSecurityTrailer_t;
 #define TC_FRAME_SECTRAILER_SIZE (sizeof(TC_FrameSecurityTrailer_t))

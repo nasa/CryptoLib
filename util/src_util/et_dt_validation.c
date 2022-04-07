@@ -1780,6 +1780,7 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
     test_association->est = 0;
     test_association->arsn_len = 0;
     test_association->shivf_len = 0;
+    test_association->iv_len = 0;
     test_association->shsnf_len = 4;
     test_association->arsn = 0;
     test_association->arsn_len = 4;
@@ -1807,7 +1808,8 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
     // Convert input mac
     hex_conversion(buffer_python_mac_h, (char**) &buffer_python_mac_b, &buffer_python_mac_len);
 
-    Crypto_TC_ProcessSecurity(buffer_frame_pt_b, &buffer_frame_pt_len, tc_sdls_processed_frame);
+    int32_t status = Crypto_TC_ProcessSecurity(buffer_frame_pt_b, &buffer_frame_pt_len, tc_sdls_processed_frame);
+    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
     // Note: For comparison, primarily interested in the MAC
     // Calc payload index: total length - pt length
@@ -1873,8 +1875,8 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
     test_association->est = 0;
     test_association->arsn_len = 0;
     test_association->shivf_len = 0;
+    test_association->iv_len = 0;
     test_association->shsnf_len = 4;
-    test_association->arsn = 0;
     test_association->arsn_len = 4;
     test_association->arsn = calloc(1, test_association->arsn_len * sizeof(uint8_t));
     test_association->abm_len = 1024;
