@@ -820,10 +820,17 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
     if ((sa_service_type == SA_AUTHENTICATION) || (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
     {
         uint16_t tc_mac_start_index = tc_sdls_processed_frame->tc_header.fl + 1 - fecf_len - sa_ptr->stmacf_len;
+
+        // Zero out the security trailer mac
+        memset(tc_sdls_processed_frame->tc_sec_trailer.mac,0,MAC_SIZE);
+
         // Parse the received MAC
         memcpy((tc_sdls_processed_frame->tc_sec_trailer.mac) + (MAC_SIZE - sa_ptr->stmacf_len),
                &(ingest[tc_mac_start_index]), sa_ptr->stmacf_len);
-
+#ifdef DEBUG
+        printf("MAC Parsed from Frame:\n");
+        Crypto_hexprint(tc_sdls_processed_frame->tc_sec_trailer.mac + (MAC_SIZE - sa_ptr->stmacf_len),sa_ptr->stmacf_len);
+#endif
         aad_len = tc_mac_start_index;
         if ((sa_service_type == SA_AUTHENTICATED_ENCRYPTION) && (ecs_is_aead_algorithm == CRYPTO_TRUE))
         {
@@ -864,7 +871,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
                                                             sa_ptr, // SA for key reference
                                                             tc_sdls_processed_frame->tc_sec_header.iv, // IV
                                                             sa_ptr->iv_len, // IV Length
-                                                            tc_sdls_processed_frame->tc_sec_trailer.mac, // Frame Expected Tag
+                                                            tc_sdls_processed_frame->tc_sec_trailer.mac + (MAC_SIZE - sa_ptr->stmacf_len), // Frame Expected Tag
                                                             sa_ptr->stmacf_len,                           // tag size
                                                             aad,    // additional authenticated data
                                                             aad_len, // length of AAD
@@ -875,15 +882,15 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
                                                             sa_ptr->acs  // authentication cipher
                                                             
         );
-    }else if (sa_service_type != SA_PLAINTEXT && sa_service_type == SA_ENCRYPTION) // Non aead algorithm
+    }else if (sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_FALSE) // Non aead algorithm
     {
         // TODO - implement non-AEAD algorithm logic
 
-        if(sa_service_type == SA_ENCRYPTION) 
+        if(sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
         { 
             status = cryptography_if->cryptography_decrypt();
         }
-        if(sa_service_type != SA_PLAINTEXT && sa_service_type == SA_AUTHENTICATION)
+        if(sa_service_type == SA_AUTHENTICATION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
         {
 
             status = cryptography_if->cryptography_validate_authentication(tc_sdls_processed_frame->tc_pdu,       // plaintext output
@@ -895,7 +902,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
                                                             sa_ptr, // SA for key reference
                                                             tc_sdls_processed_frame->tc_sec_header.iv, // IV
                                                             sa_ptr->iv_len, // IV Length
-                                                            tc_sdls_processed_frame->tc_sec_trailer.mac, // Frame Expected Tag
+                                                            tc_sdls_processed_frame->tc_sec_trailer.mac + (MAC_SIZE - sa_ptr->stmacf_len), // Frame Expected Tag
                                                             sa_ptr->stmacf_len,                           // tag size
                                                             aad,    // additional authenticated data
                                                             aad_len, // length of AAD

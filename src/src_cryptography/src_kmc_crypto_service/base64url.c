@@ -186,6 +186,12 @@ int32_t base64urlDecode(const char_t* input, size_t inputLen, void* output,
     size_t n;
     uint8_t* p;
 
+    // This function does not handle equals signs at the end of base64 encoded output!
+    while(input[inputLen-1] == '=')
+    {
+        inputLen--;
+    }
+
     //Check parameters
     if(input == NULL && inputLen != 0)
         return ERROR_INVALID_PARAMETER;
