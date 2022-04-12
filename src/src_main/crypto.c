@@ -140,6 +140,22 @@ int32_t Crypto_window(uint8_t* actual, uint8_t* expected, int length, int window
 #endif
         return status;
     }
+    // Check for special case where received value is all 0's and expected is all 0's (won't have -1 in sa!)
+    // Received ARSN is: 00000000, SA ARSN is: 00000000
+    uint8_t zero_case = CRYPTO_TRUE;
+    for(i = 0; i < length; i++)
+    {
+        if (actual[i] != 0 || expected[i] != 0 )
+        {
+            zero_case = CRYPTO_FALSE;
+        }
+    }
+    if(zero_case == CRYPTO_TRUE)
+    {
+        status = CRYPTO_LIB_SUCCESS;
+        return status;
+    }
+
     memcpy(temp, expected, length);
     for (i = 0; i < window; i++)
     {
@@ -819,38 +835,35 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
             memcpy(sa_ptr->arsn, arsn, sa_ptr->arsn_len);
         }
     }
-
-        // If IV is greater than zero, check for replay
-        // Should IV always be sequential in a window,
-        // is it mode dependent, or is the only req. uniqueness?
-        if (sa_ptr->iv_len > 0)
-        {
-            // Check IV is in ARSNW
-            status = Crypto_window(iv, sa_ptr->iv, sa_ptr->iv_len, sa_ptr->arsnw);
+    // If IV is greater than zero (and arsn isn't used), check for replay
+    else if (sa_ptr->iv_len > 0)
+    {
+        // Check IV is in ARSNW
+        status = Crypto_window(iv, sa_ptr->iv, sa_ptr->iv_len, sa_ptr->arsnw);
 #ifdef DEBUG
-            printf("Received IV is\n\t");
-            for (int i = 0; i < sa_ptr->iv_len; i++)
-            {
-                printf("%02x", *(iv + i));
-            }
-            printf("\nSA IV is\n\t");
-            for (int i = 0; i < sa_ptr->iv_len; i++)
-            {
-                printf("%02x", *(sa_ptr->iv + i));
-            }
-            printf("\nARSNW is: %d\n", sa_ptr->arsnw);
-            printf("Crypto_Window return status is: %d\n", status);
-#endif
-            if (status != CRYPTO_LIB_SUCCESS)
-            {
-                return CRYPTO_LIB_ERR_IV_OUTSIDE_WINDOW;
-            }
-            // Valid IV received, increment stored value
-            else
-            {
-                memcpy(sa_ptr->iv, iv, sa_ptr->iv_len);
-            }
+        printf("Received IV is\n\t");
+        for (int i = 0; i < sa_ptr->iv_len; i++)
+        {
+            printf("%02x", *(iv + i));
         }
+        printf("\nSA IV is\n\t");
+        for (int i = 0; i < sa_ptr->iv_len; i++)
+        {
+            printf("%02x", *(sa_ptr->iv + i));
+        }
+        printf("\nARSNW is: %d\n", sa_ptr->arsnw);
+        printf("Crypto_Window return status is: %d\n", status);
+#endif
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+            return CRYPTO_LIB_ERR_IV_OUTSIDE_WINDOW;
+        }
+        // Valid IV received, increment stored value
+        else
+        {
+            memcpy(sa_ptr->iv, iv, sa_ptr->iv_len);
+        }
+    }
     return status;
 }
 

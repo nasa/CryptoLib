@@ -766,35 +766,37 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
         return status;
     }
 
-#ifdef MAC_DEBUG
-    uint32_t tmac_size = mac_size;
-    uint8_t* tmac = malloc(tmac_size);
-    gcry_error = gcry_mac_read(tmp_mac_hd,
-                               tmac,      // tag output
-                               (size_t *)&tmac_size // tag size // TODO - use sa_ptr->abm_len instead of hardcoded mac size?
-    );
-    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-    {
-        printf(KRED "ERROR: gcry_mac_read error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        status = CRYPTO_LIB_ERR_MAC_RETRIEVAL_ERROR;
-        return status;
-    }
-
-    printf("Calculated Mac Size: %d\n", tmac_size);
-
-    printf("Calculated MAC:\n\t");
-    for (uint32_t i = 0; i < tmac_size; i ++){
-        printf("%02X", *(tmac + i));
-    }
-    printf("\n");
-    free(tmac);
-
-    printf("Received MAC:\n\t");
-    for (uint32_t i = 0; i < tmac_size; i ++){
-        printf("%02X", *(mac + i));
-    }
-    printf("\n");
-#endif
+//This MAC_DEBUG causes a segfault due to gcry_mac_read wonkiness, after gcry_mac_read, gcry_mac_close or gcry_mac_verify fail. (why?tbd!)
+//#ifdef MAC_DEBUG
+//    uint32_t tmac_size = mac_size;
+//    uint8_t* tmac = malloc(tmac_size);
+//    gcry_error = gcry_mac_read(tmp_mac_hd,
+//                               tmac,      // tag output
+//                               (size_t *)&tmac_size // tag size // TODO - use sa_ptr->abm_len instead of hardcoded mac size?
+//    );
+//    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+//    {
+//        printf(KRED "ERROR: gcry_mac_read error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+//        status = CRYPTO_LIB_ERR_MAC_RETRIEVAL_ERROR;
+//        return status;
+//    }
+//
+//    printf("Mac Size: %d \n", mac_size);
+//    printf("Calculated Mac Size: %d\n", tmac_size);
+//
+//    printf("Calculated MAC:\n\t");
+//    for (uint32_t i = 0; i < tmac_size; i ++){
+//        printf("%02X", *(tmac + i));
+//    }
+//    printf("\n");
+//    free(tmac);
+//
+//    printf("Received MAC:\n\t");
+//    for (uint32_t i = 0; i < tmac_size; i ++){
+//        printf("%02X", *(mac + i));
+//    }
+//    printf("\n");
+//#endif
 
     // Compare computed mac with MAC in frame
     gcry_error = gcry_mac_verify(tmp_mac_hd,
@@ -806,11 +808,17 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
         printf(KRED "ERROR: gcry_mac_verify error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
         printf(KRED "Failure: %s/%s\n" RESET, gcry_strsource(gcry_error), gcry_strerror(gcry_error));
         gcry_mac_close(tmp_mac_hd);
-        status = CRYPTO_LIB_ERR_MAC_RETRIEVAL_ERROR;
+        status = CRYPTO_LIB_ERR_MAC_VALIDATION_ERROR;
         return status;
     }
-
+#ifdef DEBUG
+    else
+    {
+        printf("Mac verified!\n");
+    }
+#endif
     // Zeroise any sensitive information
+    gcry_mac_reset(tmp_mac_hd);
     gcry_mac_close(tmp_mac_hd);
     return status; 
 }

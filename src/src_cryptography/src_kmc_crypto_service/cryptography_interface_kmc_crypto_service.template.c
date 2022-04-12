@@ -72,6 +72,8 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
 static int32_t cryptography_get_acs_algo(int8_t algo_enum);
 static int32_t cryptography_get_ecs_algo(int8_t algo_enum);
 
+//Local support functions
+static int32_t get_auth_algorithm_from_acs(uint8_t acs_enum, const char** algo_ptr);
 
 // libcurl call back and support function declarations
 static void configure_curl_connect_opts(CURL* curl);
@@ -103,7 +105,8 @@ static const char* AES_GCM_TRANSFORMATION="AES/GCM/NoPadding";
 static const char* AES_CRYPTO_ALGORITHM="AES";
 //static const char* AES_CBC_TRANSFORMATION="AES/CBC/PKCS5Padding";
 static const char* AES_CMAC_TRANSFORMATION="AESCMAC";
-// static const char* HMAC_SHA256="HmacSHA256";
+static const char* HMAC_SHA256="HmacSHA256";
+static const char* HMAC_SHA512="HmacSHA512";
 //static const char* AES_DES_CMAC_TRANSFORMATION="DESedeCMAC";
 
 
@@ -289,6 +292,18 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
     if (algo == CRYPTO_LIB_ERR_UNSUPPORTED_ACS)
     {
         return CRYPTO_LIB_ERR_UNSUPPORTED_ACS;
+    }
+
+
+    if(acs == CRYPTO_MAC_HMAC_SHA256 && sa_ptr->stmacf_len != 32)
+    {
+        status = CRYPTOGRAHPY_KMC_CRYPTO_INVALID_HMAC_SADB_MAC_LENGTH_CONFIGURATION_NOT_32;
+        return status;
+    }
+    if(acs == CRYPTO_MAC_HMAC_SHA512 && sa_ptr->stmacf_len != 64)
+    {
+        status = CRYPTOGRAHPY_KMC_CRYPTO_INVALID_HMAC_SADB_MAC_LENGTH_CONFIGURATION_NOT_64;
+        return status;
     }
 
     // Need to copy the data over, since authentication won't change/move the data directly
@@ -478,9 +493,9 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
 
     /* JSON Response Handling End */
 
-    uint8_t* icv_decoded = malloc((mac_size)*2 + 1);
+    uint8_t* icv_decoded = malloc(mac_size + 1);
     size_t icv_decoded_len = 0;
-    base64Decode(icv_base64,strlen(icv_base64),icv_decoded, &icv_decoded_len);
+    base64urlDecode(icv_base64,strlen(icv_base64),icv_decoded, &icv_decoded_len);
 #ifdef DEBUG
     printf("Mac size: %d\n",mac_size);
     printf("Decoded ICV Length: %ld\n",icv_decoded_len);
@@ -521,6 +536,17 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
         return CRYPTO_LIB_ERR_UNSUPPORTED_ACS;
     }
 
+    if(acs == CRYPTO_MAC_HMAC_SHA256 && sa_ptr->stmacf_len != 32)
+    {
+        status = CRYPTOGRAHPY_KMC_CRYPTO_INVALID_HMAC_SADB_MAC_LENGTH_CONFIGURATION_NOT_32;
+        return status;
+    }
+    if(acs == CRYPTO_MAC_HMAC_SHA512 && sa_ptr->stmacf_len != 64)
+    {
+        status = CRYPTOGRAHPY_KMC_CRYPTO_INVALID_HMAC_SADB_MAC_LENGTH_CONFIGURATION_NOT_64;
+        return status;
+    }
+
     // Need to copy the data over, since authentication won't change/move the data directly
     if(data_out != NULL){
         memcpy(data_out, data_in, len_data_in);
@@ -539,6 +565,8 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     base64urlEncode(mac,mac_size,mac_base64,NULL);
 #ifdef DEBUG
     printf("MAC Base64 URL Encoded: %s\n",mac_base64);
+    printf("Hex Mac:\n");
+    Crypto_hexprint(mac,mac_size);
 #endif
 
     if(sa_ptr->ak_ref == NULL)
@@ -547,10 +575,13 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
         return status;
     }
 
+    const char* auth_algorithm = NULL;
+    get_auth_algorithm_from_acs(acs,&auth_algorithm);
+
     // Prepare the Authentication Endpoint URI for KMC Crypto Service
-    int len_auth_endpoint = strlen(icv_verify_endpoint)+strlen(mac_base64)+strlen(sa_ptr->ak_ref)+strlen(AES_CMAC_TRANSFORMATION);
+    int len_auth_endpoint = strlen(icv_verify_endpoint)+strlen(mac_base64)+strlen(sa_ptr->ak_ref)+strlen(auth_algorithm);
     char* auth_endpoint_final = (char*) malloc(len_auth_endpoint);
-    snprintf(auth_endpoint_final,len_auth_endpoint,icv_verify_endpoint,mac_base64,sa_ptr->ak_ref,AES_CMAC_TRANSFORMATION);
+    snprintf(auth_endpoint_final,len_auth_endpoint,icv_verify_endpoint,mac_base64,sa_ptr->ak_ref,auth_algorithm);
 
     char* auth_uri = (char*) malloc(strlen(kmc_root_uri)+len_auth_endpoint);
     auth_uri[0] = '\0';
@@ -1190,6 +1221,35 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
         memcpy(data_out,cleartext_decoded + aad_len, len_data_out);
     }
     return status;
+}
+
+// Local support functions
+static int32_t get_auth_algorithm_from_acs(uint8_t acs_enum, const char** algo_ptr)
+{
+    int32_t status = CRYPTO_LIB_ERR_UNSUPPORTED_ACS; // All valid algo enums will be positive
+
+    switch(acs_enum)
+    {
+        case CRYPTO_MAC_CMAC_AES256:
+            status = CRYPTO_LIB_SUCCESS;
+            *algo_ptr = AES_CMAC_TRANSFORMATION;
+            break;
+        case CRYPTO_MAC_HMAC_SHA256:
+            status = CRYPTO_LIB_SUCCESS;
+            *algo_ptr = HMAC_SHA256;
+            break;
+        case CRYPTO_MAC_HMAC_SHA512:
+            status = CRYPTO_LIB_SUCCESS;
+            *algo_ptr = HMAC_SHA512;
+            break;
+        default:
+#ifdef DEBUG
+            printf("ACS Algo Enum not supported by Crypto Service\n");
+#endif
+            break;
+    }
+
+    return(status);
 }
 
 // libcurl local functions

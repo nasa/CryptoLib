@@ -201,5 +201,236 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_APPLY_SEC_CMAC_LARGE_FRM_AUTH_ONLY)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
+UTEST(KMC_CRYPTO, HAPPY_PATH_APPLY_SEC_HMAC256_AUTH_ONLY)
+{
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_MariaDB("localhost", "sadb", 3306, CRYPTO_FALSE, 0, NULL, NULL, NULL, NULL, NULL, "sadb_user",
+                          "sadb_password");
+    Crypto_Config_Kmc_Crypto_Service("https", "asec-cmdenc-srv1.jpl.nasa.gov", 8443, "crypto-service",
+                                     "/home/isaleh/git/KMC/CryptoLib-IbraheemYSaleh/util/etc/ammos-ca-bundle.crt", NULL,
+                                     CRYPTO_FALSE,
+                                     "/home/isaleh/git/KMC/CryptoLib-IbraheemYSaleh/util/etc/local-test-cert.pem",
+                                     "PEM", "/home/isaleh/git/KMC/CryptoLib-IbraheemYSaleh/util/etc/local-test-key.pem",
+                                     NULL, NULL);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 8, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
+    int32_t status = Crypto_Init();
+
+    char* raw_tc_jpl_mmt_scid44_vcid1= "202c2008000001bb40";
+
+    char* raw_tc_jpl_mmt_scid44_vcid1_expect = NULL;
+    int raw_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
+
+    hex_conversion(raw_tc_jpl_mmt_scid44_vcid1, &raw_tc_jpl_mmt_scid44_vcid1_expect, &raw_tc_jpl_mmt_scid44_vcid1_expect_len);
+
+    uint8_t* ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    printf("Frame before encryption:\n");
+    for (int i=0; i<raw_tc_jpl_mmt_scid44_vcid1_expect_len; i++)
+    {
+        printf("%02x ", (uint8_t)raw_tc_jpl_mmt_scid44_vcid1_expect[i]);
+    }
+    printf("\n");
+
+    status = Crypto_TC_ApplySecurity((uint8_t* )raw_tc_jpl_mmt_scid44_vcid1_expect, raw_tc_jpl_mmt_scid44_vcid1_expect_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    printf("Frame after encryption:\n");
+    for (int i=0; i<enc_frame_len; i++)
+    {
+        printf("%02x ", ptr_enc_frame[i]);
+    }
+    printf("\n");
+
+
+    Crypto_Shutdown();
+    free(raw_tc_jpl_mmt_scid44_vcid1_expect);
+    free(ptr_enc_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+}
+
+/**
+ * @brief Unit Test: Nominal Encryption with KMC Crypto Service && JPL Unit Test MariaDB
+ * This doesn't work -- Apply Security Auth Only doesn't return the proper tag.
+ **/
+UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_HMAC256_AUTH_ONLY)
+{
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_MariaDB("localhost", "sadb", 3306, CRYPTO_FALSE, 0, NULL, NULL, NULL, NULL, NULL, "sadb_user",
+                          "sadb_password");
+    Crypto_Config_Kmc_Crypto_Service("https", "asec-cmdenc-srv1.jpl.nasa.gov", 8443, "crypto-service",
+                                     "/home/isaleh/git/KMC/CryptoLib-IbraheemYSaleh/util/etc/ammos-ca-bundle.crt", NULL,
+                                     CRYPTO_FALSE,
+                                     "/home/isaleh/git/KMC/CryptoLib-IbraheemYSaleh/util/etc/local-test-cert.pem",
+                                     "PEM", "/home/isaleh/git/KMC/CryptoLib-IbraheemYSaleh/util/etc/local-test-key.pem",
+                                     NULL, NULL);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 8, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
+    int32_t status = Crypto_Init();
+
+    char* enc_tc_jpl_mmt_scid44_vcid1= "202C202E0000060000000100015B61ADE5E01FF3530590E8A868EB6E3A84629306812161C2606CD00EE5DF65C11244";
+    char* enc_tc_jpl_mmt_scid44_vcid1_expect = NULL;
+    int enc_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
+
+    // Data=0001
+
+    TC_t* tc_processed_frame;
+    tc_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
+
+    hex_conversion(enc_tc_jpl_mmt_scid44_vcid1, &enc_tc_jpl_mmt_scid44_vcid1_expect, &enc_tc_jpl_mmt_scid44_vcid1_expect_len);
+
+    uint8_t* ptr_enc_frame = NULL;
+
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    printf("Encrypted Frame Before Processing:\n");
+    for (int i=0; i<enc_tc_jpl_mmt_scid44_vcid1_expect_len; i++)
+    {
+        printf("%02x ", (uint8_t)enc_tc_jpl_mmt_scid44_vcid1_expect[i]);
+    }
+    printf("\n");
+
+    status = Crypto_TC_ProcessSecurity((uint8_t* )enc_tc_jpl_mmt_scid44_vcid1_expect, &enc_tc_jpl_mmt_scid44_vcid1_expect_len, tc_processed_frame);
+
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    printf("Processed PDU:\n");
+    for (int i=0; i<tc_processed_frame->tc_pdu_len; i++)
+    {
+        printf("%02x ", tc_processed_frame->tc_pdu[i]);
+    }
+    printf("\n");
+
+    ASSERT_EQ(0x00,tc_processed_frame->tc_pdu[0]);
+    ASSERT_EQ( 0x01,tc_processed_frame->tc_pdu[1]);
+
+    Crypto_Shutdown();
+    free(enc_tc_jpl_mmt_scid44_vcid1_expect);
+    free(ptr_enc_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+}
+
+
+UTEST(KMC_CRYPTO, HAPPY_PATH_APPLY_SEC_HMAC512_AUTH_ONLY)
+{
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_MariaDB("localhost", "sadb", 3306, CRYPTO_FALSE, 0, NULL, NULL, NULL, NULL, NULL, "sadb_user",
+                          "sadb_password");
+    Crypto_Config_Kmc_Crypto_Service("https", "asec-cmdenc-srv1.jpl.nasa.gov", 8443, "crypto-service",
+                                     "/home/isaleh/git/KMC/CryptoLib-IbraheemYSaleh/util/etc/ammos-ca-bundle.crt", NULL,
+                                     CRYPTO_FALSE,
+                                     "/home/isaleh/git/KMC/CryptoLib-IbraheemYSaleh/util/etc/local-test-cert.pem",
+                                     "PEM", "/home/isaleh/git/KMC/CryptoLib-IbraheemYSaleh/util/etc/local-test-key.pem",
+                                     NULL, NULL);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 9, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
+    int32_t status = Crypto_Init();
+
+    char* raw_tc_jpl_mmt_scid44_vcid1= "202c2408000001bb40";
+
+    char* raw_tc_jpl_mmt_scid44_vcid1_expect = NULL;
+    int raw_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
+
+    hex_conversion(raw_tc_jpl_mmt_scid44_vcid1, &raw_tc_jpl_mmt_scid44_vcid1_expect, &raw_tc_jpl_mmt_scid44_vcid1_expect_len);
+
+    uint8_t* ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    printf("Frame before encryption:\n");
+    for (int i=0; i<raw_tc_jpl_mmt_scid44_vcid1_expect_len; i++)
+    {
+        printf("%02x ", (uint8_t)raw_tc_jpl_mmt_scid44_vcid1_expect[i]);
+    }
+    printf("\n");
+
+    status = Crypto_TC_ApplySecurity((uint8_t* )raw_tc_jpl_mmt_scid44_vcid1_expect, raw_tc_jpl_mmt_scid44_vcid1_expect_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    printf("Frame after encryption:\n");
+    for (int i=0; i<enc_frame_len; i++)
+    {
+        printf("%02x ", ptr_enc_frame[i]);
+    }
+    printf("\n");
+
+
+    Crypto_Shutdown();
+    free(raw_tc_jpl_mmt_scid44_vcid1_expect);
+    free(ptr_enc_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+}
+
+/**
+ * @brief Unit Test: Nominal Encryption with KMC Crypto Service && JPL Unit Test MariaDB
+ * This doesn't work -- Apply Security Auth Only doesn't return the proper tag.
+ **/
+UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_HMAC512_AUTH_ONLY)
+{
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_MariaDB("localhost", "sadb", 3306, CRYPTO_FALSE, 0, NULL, NULL, NULL, NULL, NULL, "sadb_user",
+                          "sadb_password");
+    Crypto_Config_Kmc_Crypto_Service("https", "asec-cmdenc-srv1.jpl.nasa.gov", 8443, "crypto-service",
+                                     "/home/isaleh/git/KMC/CryptoLib-IbraheemYSaleh/util/etc/ammos-ca-bundle.crt", NULL,
+                                     CRYPTO_FALSE,
+                                     "/home/isaleh/git/KMC/CryptoLib-IbraheemYSaleh/util/etc/local-test-cert.pem",
+                                     "PEM", "/home/isaleh/git/KMC/CryptoLib-IbraheemYSaleh/util/etc/local-test-key.pem",
+                                     NULL, NULL);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 9, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
+    int32_t status = Crypto_Init();
+
+    // char* enc_tc_jpl_mmt_scid44_vcid1= "202C1C1A0000050001C50827915AEB423F054402D5DC3C67566986"; // Returns  CRYPTO_LIB_ERR_INVALID_HEADER since SN/ARC missing from header
+    // char* enc_tc_jpl_mmt_scid44_vcid1= "202C1C1E000005000000050001C7BA93010000000000000000000000007ACC";  // Invalid MAC, should fail with error 510
+    char* enc_tc_jpl_mmt_scid44_vcid1= "202C244E00000700000001000128B126A96B65264A7B72ACD5B5F929A764F6FC9B09DC6BAE96352BFD52016680138434BD5372D981008D10479BF45BB7F4465B0517CCDB2AD36CBD987CAFC3A5741B";
+    char* enc_tc_jpl_mmt_scid44_vcid1_expect = NULL;
+    int enc_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
+
+    // Data=0001
+
+    TC_t* tc_processed_frame;
+    tc_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
+
+    hex_conversion(enc_tc_jpl_mmt_scid44_vcid1, &enc_tc_jpl_mmt_scid44_vcid1_expect, &enc_tc_jpl_mmt_scid44_vcid1_expect_len);
+
+    uint8_t* ptr_enc_frame = NULL;
+
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    printf("Encrypted Frame Before Processing:\n");
+    for (int i=0; i<enc_tc_jpl_mmt_scid44_vcid1_expect_len; i++)
+    {
+        printf("%02x ", (uint8_t)enc_tc_jpl_mmt_scid44_vcid1_expect[i]);
+    }
+    printf("\n");
+
+    status = Crypto_TC_ProcessSecurity((uint8_t* )enc_tc_jpl_mmt_scid44_vcid1_expect, &enc_tc_jpl_mmt_scid44_vcid1_expect_len, tc_processed_frame);
+
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    printf("Processed PDU:\n");
+    for (int i=0; i<tc_processed_frame->tc_pdu_len; i++)
+    {
+        printf("%02x ", tc_processed_frame->tc_pdu[i]);
+    }
+    printf("\n");
+
+    ASSERT_EQ(0x00,tc_processed_frame->tc_pdu[0]);
+    ASSERT_EQ( 0x01,tc_processed_frame->tc_pdu[1]);
+
+    Crypto_Shutdown();
+    free(enc_tc_jpl_mmt_scid44_vcid1_expect);
+    free(ptr_enc_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+}
+
 
 UTEST_MAIN();
