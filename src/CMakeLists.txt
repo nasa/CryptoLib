@@ -84,7 +84,7 @@ install(TARGETS Crypto
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 
 IF(MYSQL)
-    file(GLOB MYSQL_SCRIPTS crypto_sadb/sadb-mariadb-sql/*.sql)
+    file(GLOB MYSQL_SCRIPTS crypto_sadb/sadb_mariadb_sql/*.sql)
     install(FILES ${MYSQL_SCRIPTS}
-            DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/sadb-mariadb-sql)
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/sadb_mariadb_sql)
 endif()
