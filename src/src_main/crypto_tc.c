@@ -514,7 +514,6 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
 
                 if (sa_service_type == SA_AUTHENTICATION)
                 {
-
                     status = cryptography_if->cryptography_authenticate(&p_new_enc_frame[index],                               // ciphertext output
                                                                 (size_t)tf_payload_len,                                        // length of data
                                                                 (uint8_t*)(p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), // plaintext input
@@ -890,14 +889,8 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
     }else if (sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_FALSE) // Non aead algorithm
     {
         // TODO - implement non-AEAD algorithm logic
-
-        if(sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
-        { 
-            status = cryptography_if->cryptography_decrypt();
-        }
         if(sa_service_type == SA_AUTHENTICATION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
         {
-
             status = cryptography_if->cryptography_validate_authentication(tc_sdls_processed_frame->tc_pdu,       // plaintext output
                                                             (size_t)(tc_sdls_processed_frame->tc_pdu_len),   // length of data
                                                             &(ingest[tc_enc_payload_start_index]), // ciphertext input
@@ -915,10 +908,13 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
                                                             *sa_ptr->acs  //authentication cipher
             );
         }
+        if(sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
+        {
+            status = cryptography_if->cryptography_decrypt();
+        }
 
-    } else // sa_service_type == SA_PLAINTEXT
+    } else if(sa_service_type == SA_PLAINTEXT)
     {
-      // TODO: Plaintext ARSN
       memcpy(tc_sdls_processed_frame->tc_pdu, &(ingest[tc_enc_payload_start_index]),
              tc_sdls_processed_frame->tc_pdu_len);
     }
