@@ -346,7 +346,6 @@ UTEST(CRYPTO_C, GET_ACS_ALGO_KEY_LEN)
  **/
 UTEST(CRYPTO_C, GET_ECS_ALGO)
 {
-    printf("%d\n", __LINE__);
     // Convert CRYPTOAES enum to GCRY_CIPHER_AES256
     int32_t libgcrypt_algo = -1;
     int8_t crypto_algo = CRYPTO_CIPHER_AES256_GCM;

@@ -2545,13 +2545,14 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_0)
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
     // Note: For comparison, primarily interested in the MAC
-    Crypto_Shutdown();
 
     for (int i = 0; i < buffer_python_mac_len; i++)
     {
         printf("[%d] Truth: %02x, Actual: %02x\n", i, buffer_python_mac_b[i], *(tc_sdls_processed_frame->tc_sec_trailer.mac + i));
         ASSERT_EQ(*(tc_sdls_processed_frame->tc_sec_trailer.mac + i), buffer_python_mac_b[i]);
     }
+
+    Crypto_Shutdown();
 
     free(ptr_enc_frame);
     free(buffer_frame_pt_b);
@@ -2656,7 +2657,6 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
 UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
 {
     int32_t status = 0;
-    uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
@@ -2736,10 +2736,9 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
         ASSERT_EQ(*(tc_sdls_processed_frame->tc_sec_trailer.mac + i), buffer_python_mac_b[i]);
     }
 
-    free(ptr_enc_frame);
-    free(buffer_frame_pt_b);
-    free(buffer_nist_key_b);
-    free(buffer_python_mac_b);
+    // free(buffer_frame_pt_b);
+    // free(buffer_nist_key_b);
+    // free(buffer_python_mac_b);
 }
 
 /**
@@ -2748,7 +2747,6 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
 UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
 {
     int32_t status = 0;
-    uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
@@ -2816,7 +2814,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
     hex_conversion(buffer_python_mac_h, (char **)&buffer_python_mac_b, &buffer_python_mac_len);
 
     status = Crypto_TC_ProcessSecurity(buffer_frame_pt_b, &buffer_frame_pt_len, tc_sdls_processed_frame);
-    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Note: For comparison, primarily interested in the MAC
     Crypto_Shutdown();
@@ -2827,7 +2825,6 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
         ASSERT_EQ(*(tc_sdls_processed_frame->tc_sec_trailer.mac + i), buffer_python_mac_b[i]);
     }
 
-    free(ptr_enc_frame);
     free(buffer_frame_pt_b);
     free(buffer_nist_key_b);
     free(buffer_python_mac_b);
@@ -2839,7 +2836,6 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
 UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_2)
 {
     int32_t status = 0;
-    uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
@@ -2920,7 +2916,6 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_2)
         ASSERT_EQ(*(tc_sdls_processed_frame->tc_sec_trailer.mac + i), buffer_python_mac_b[i]);
     }
 
-    free(ptr_enc_frame);
     free(buffer_frame_pt_b);
     free(buffer_nist_key_b);
     free(buffer_python_mac_b);
@@ -2932,7 +2927,6 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_2)
 UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_3)
 {
     int32_t status = 0;
-    uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
@@ -3013,7 +3007,6 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_3)
         ASSERT_EQ(*(tc_sdls_processed_frame->tc_sec_trailer.mac + i), buffer_python_mac_b[i]);
     }
 
-    free(ptr_enc_frame);
     free(buffer_frame_pt_b);
     free(buffer_nist_key_b);
     free(buffer_python_mac_b);
@@ -3052,6 +3045,8 @@ UTEST(PLAINTEXT, ENCRYPT_DECRYPT)
     int len = (int)enc_frame_len;
     status = Crypto_TC_ProcessSecurity(ptr_enc_frame, &len, tc_sdls_processed_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+
+    Crypto_Shutdown();
 }
 
 UTEST_MAIN();
