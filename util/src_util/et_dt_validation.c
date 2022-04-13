@@ -2105,7 +2105,6 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
 /**
  * @brief Unit Test: Test HMAC SHA-512, bitmask of 0s
  **/
- /* HMAC SHA 512 authentication gcry_mac_read breaks the state of the libgcrypt engine
 UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
 {
     uint8_t *ptr_enc_frame = NULL;
@@ -2191,12 +2190,11 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
     free(buffer_frame_pt_b);
     free(buffer_nist_key_b);
     free(buffer_python_mac_b);
-} */
+}
 
 /**
  * @brief Unit Test: Test HMAC SHA-512, bitmask of 1s
  **/
-/* HMAC SHA 512 authentication gcry_mac_read breaks the state of the libgcrypt engine
 UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
 {
     uint8_t *ptr_enc_frame = NULL;
@@ -2281,12 +2279,12 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
     free(buffer_frame_pt_b);
     free(buffer_nist_key_b);
     free(buffer_python_mac_b);
-} */
+}
 
 /**
  * @brief Unit Test: Test HMAC SHA-512, key length 64 bytes, bitmask of 0s
  **/
-/* HMAC SHA 512 authentication gcry_mac_read breaks the state of the libgcrypt engine
+/* This test and next test cause some sort of issue
 UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_2)
 {
    uint8_t *ptr_enc_frame = NULL;
@@ -2373,12 +2371,12 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_2)
    free(buffer_frame_pt_b);
    free(buffer_nist_key_b);
    free(buffer_python_mac_b);
-} */
+}*/
 
 /**
 * @brief Unit Test: Test HMAC SHA-512, key length 64 bytes, bitmask of 1s
 **/
-/* HMAC SHA 512 authentication gcry_mac_read breaks the state of the libgcrypt engine
+/*
 UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_3)
 {
     uint8_t *ptr_enc_frame = NULL;
@@ -2465,7 +2463,7 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_3)
     free(buffer_frame_pt_b);
     free(buffer_nist_key_b);
     free(buffer_python_mac_b);
-} */
+}*/
 
 /**
  * @brief Unit Test: Test HMAC SHA-256, bitmask of 0s
