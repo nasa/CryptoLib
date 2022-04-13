@@ -295,17 +295,6 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
     }
 
 
-    if(acs == CRYPTO_MAC_HMAC_SHA256 && sa_ptr->stmacf_len != 32)
-    {
-        status = CRYPTOGRAHPY_KMC_CRYPTO_INVALID_HMAC_SADB_MAC_LENGTH_CONFIGURATION_NOT_32;
-        return status;
-    }
-    if(acs == CRYPTO_MAC_HMAC_SHA512 && sa_ptr->stmacf_len != 64)
-    {
-        status = CRYPTOGRAHPY_KMC_CRYPTO_INVALID_HMAC_SADB_MAC_LENGTH_CONFIGURATION_NOT_64;
-        return status;
-    }
-
     // Need to copy the data over, since authentication won't change/move the data directly
     if(data_out != NULL){
         memcpy(data_out, data_in, len_data_in);
@@ -493,7 +482,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
 
     /* JSON Response Handling End */
 
-    uint8_t* icv_decoded = malloc(mac_size + 1);
+    uint8_t* icv_decoded = malloc(strlen(icv_base64) + 1);
     size_t icv_decoded_len = 0;
     base64urlDecode(icv_base64,strlen(icv_base64),icv_decoded, &icv_decoded_len);
 #ifdef DEBUG
@@ -534,17 +523,6 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     if (algo == CRYPTO_LIB_ERR_UNSUPPORTED_ACS)
     {
         return CRYPTO_LIB_ERR_UNSUPPORTED_ACS;
-    }
-
-    if(acs == CRYPTO_MAC_HMAC_SHA256 && sa_ptr->stmacf_len != 32)
-    {
-        status = CRYPTOGRAHPY_KMC_CRYPTO_INVALID_HMAC_SADB_MAC_LENGTH_CONFIGURATION_NOT_32;
-        return status;
-    }
-    if(acs == CRYPTO_MAC_HMAC_SHA512 && sa_ptr->stmacf_len != 64)
-    {
-        status = CRYPTOGRAHPY_KMC_CRYPTO_INVALID_HMAC_SADB_MAC_LENGTH_CONFIGURATION_NOT_64;
-        return status;
     }
 
     // Need to copy the data over, since authentication won't change/move the data directly

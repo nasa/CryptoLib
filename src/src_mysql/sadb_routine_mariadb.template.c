@@ -209,8 +209,8 @@ static int32_t sadb_save_sa(SecurityAssociation_t* sa)
 
     char update_sa_query[2048];
     snprintf(update_sa_query, sizeof(update_sa_query), SQL_SADB_UPDATE_IV_ARC_BY_SPI,
-             convert_byte_array_to_hexstring(sa->iv, sa->shivf_len),
-             convert_byte_array_to_hexstring(sa->arsn, sa->shsnf_len), sa->spi, sa->gvcid_tc_blk.tfvn,
+             convert_byte_array_to_hexstring(sa->iv, sa->iv_len),
+             convert_byte_array_to_hexstring(sa->arsn, sa->arsn_len), sa->spi, sa->gvcid_tc_blk.tfvn,
              sa->gvcid_tc_blk.scid, sa->gvcid_tc_blk.vcid, sa->gvcid_tc_blk.mapid);
 
 #ifdef SA_DEBUG
@@ -488,7 +488,7 @@ static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** se
         }
         // printf("\n");
     }
-    sa->iv = (uint8_t* )calloc(1, sa->shivf_len * sizeof(uint8_t));
+    sa->iv = (uint8_t* )calloc(1, sa->iv_len * sizeof(uint8_t));
     sa->arsn = (uint8_t* )calloc(1, sa->arsn_len * sizeof(uint8_t));
     sa->abm = (uint8_t* )calloc(1, sa->abm_len * sizeof(uint8_t));
     sa->ecs = (uint8_t* )calloc(1, sa->ecs_len * sizeof(uint8_t));
