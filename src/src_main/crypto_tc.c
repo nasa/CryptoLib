@@ -194,6 +194,13 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
             ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(encryption_cipher);
         }
 
+        if ( encryption_cipher == CRYPTO_CIPHER_NONE && sa_ptr->est == 1)
+        {
+            status = CRYPTO_LIB_ERR_NO_ECS_SET_FOR_ENCRYPTION_MODE;
+            return status;
+        }
+
+
 #ifdef TC_DEBUG
         switch (sa_service_type)
         {

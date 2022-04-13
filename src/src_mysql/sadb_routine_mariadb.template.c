@@ -279,7 +279,7 @@ static int32_t sadb_sa_delete(void)
 static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** security_association)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    SecurityAssociation_t* sa = malloc(sizeof(SecurityAssociation_t));
+    SecurityAssociation_t* sa = calloc(1,sizeof(SecurityAssociation_t));
 
 #ifdef SA_DEBUG
     fprintf(stderr, "MySQL Query: %s \n", query);
@@ -502,6 +502,10 @@ static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** se
     //arsnw_len is not necessary for mariadb interface, putty dummy/default value for prints.
     sa->arsnw_len = 1;
 
+#ifdef DEBUG
+    printf("Parsed SA from SQL Query:\n");
+    Crypto_saPrint(sa);
+#endif
 
     *security_association = sa;
     mysql_free_result(result);
