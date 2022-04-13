@@ -3038,13 +3038,12 @@ UTEST(PLAINTEXT, ENCRYPT_DECRYPT)
     // Apply, save the generated frame
     status = Crypto_TC_ApplySecurity(jpl_frame_pt_b, jpl_frame_pt_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
-
-    // // Process the generated frame
+    
+    // Process the generated frame
     int len = (int)enc_frame_len;
     status = Crypto_TC_ProcessSecurity(ptr_enc_frame, &len, tc_sdls_processed_frame);
-    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
-
     Crypto_Shutdown();
+    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 }
 
 UTEST_MAIN();

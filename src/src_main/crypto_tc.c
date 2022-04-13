@@ -889,12 +889,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
     }else if (sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_FALSE) // Non aead algorithm
     {
         // TODO - implement non-AEAD algorithm logic
-
-        if(sa_service_type == SA_ENCRYPTION) 
-        {
-            status = cryptography_if->cryptography_decrypt();
-        }
-        if(sa_service_type == SA_AUTHENTICATION)
+        if(sa_service_type == SA_AUTHENTICATION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
         {
             status = cryptography_if->cryptography_validate_authentication(tc_sdls_processed_frame->tc_pdu,       // plaintext output
                                                             (size_t)(tc_sdls_processed_frame->tc_pdu_len),   // length of data
@@ -912,6 +907,10 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
                                                             CRYPTO_CIPHER_NONE, //encryption cipher
                                                             *sa_ptr->acs  //authentication cipher
             );
+        }
+        if(sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
+        {
+            status = cryptography_if->cryptography_decrypt();
         }
 
     } else if(sa_service_type == SA_PLAINTEXT)
