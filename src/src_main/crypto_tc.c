@@ -23,6 +23,9 @@
 
 #include <string.h> // memcpy
 
+/* Helper validate SA function */
+static int32_t crypto_tc_validate_sa(SecurityAssociation_t *sa);
+
 /**
  * @brief Function: Crypto_TC_ApplySecurity
  * Applies Security to incoming frame.  Encryption, Authentication, and Authenticated Encryption
@@ -138,11 +141,17 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
             status = sadb_routine->sadb_get_operational_sa_from_gvcid(temp_tc_header.tfvn, temp_tc_header.scid,
                                                                       temp_tc_header.vcid, map_id, &sa_ptr);
         }
-
         // If unable to get operational SA, can return
         if (status != CRYPTO_LIB_SUCCESS)
         {
             return status;
+        }
+
+        // Try to assure SA is sane
+        status = crypto_tc_validate_sa(sa_ptr);
+        if (status != CRYPTO_LIB_SUCCESS)
+        { 
+            return status; 
         }
 
 #ifdef SA_DEBUG
@@ -376,19 +385,12 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
             return CRYPTO_LIB_ERR_IV_NOT_SUPPORTED_FOR_ACS_ALGO;
         }
 
-        if ((sa_ptr->shivf_len > 0 && sa_ptr->iv == NULL) || (sa_ptr->iv_len - sa_ptr->shivf_len  < 0))
+        // Start index from the transmitted portion
+        for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
         {
-            return CRYPTO_LIB_ERR_INVALID_SA_CONFIGURATION;
-        }
-        else
-        {
-            // Start index from the transmitted portion
-            for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
-            {
-                // Copy in IV from SA
-                *(p_new_enc_frame + index) = *(sa_ptr->iv + i);
-                index++;
-            }
+            // Copy in IV from SA
+            *(p_new_enc_frame + index) = *(sa_ptr->iv + i);
+            index++;
         }
 
         // Set anti-replay sequence number if specified
@@ -398,18 +400,11 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
         ** for an SA, the Sequence Number field shall be zero octets in length.
         ** Reference CCSDS 3550b1
         */
-        if ((sa_ptr->shsnf_len > 0 || sa_ptr->arsn_len > 0) && sa_ptr->arsn == NULL)
+        for (i = sa_ptr->arsn_len - sa_ptr->shsnf_len; i < sa_ptr->arsn_len; i++)
         {
-            return CRYPTO_LIB_ERR_INVALID_SA_CONFIGURATION;
-        }
-        else
-        {
-            for (i = sa_ptr->arsn_len - sa_ptr->shsnf_len; i < sa_ptr->arsn_len; i++)
-            {
-                // Copy in ARSN from SA
-                *(p_new_enc_frame + index) = *(sa_ptr->arsn + i);
-                index++;
-            }
+            // Copy in ARSN from SA
+            *(p_new_enc_frame + index) = *(sa_ptr->arsn + i);
+            index++;
         }
 
         // Set security header padding if specified
@@ -704,6 +699,17 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
     printf("spi  = %d \n", tc_sdls_processed_frame->tc_sec_header.spi);
 #endif
     status = sadb_routine->sadb_get_sa_from_spi(tc_sdls_processed_frame->tc_sec_header.spi, &sa_ptr);
+    // If no valid SPI, return
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        return status;
+    }
+    // Try to assure SA is sane
+    status = crypto_tc_validate_sa(sa_ptr);
+    if (status != CRYPTO_LIB_SUCCESS)
+    { 
+        return status; 
+    }
 
     // Allocate the necessary byte arrays within the security header + trailer given the SA
     tc_sdls_processed_frame->tc_sec_header.iv = calloc(1,sa_ptr->iv_len);
@@ -715,12 +721,6 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
     tc_sdls_processed_frame->tc_sec_header.sn_field_len = sa_ptr->arsn_len;
     tc_sdls_processed_frame->tc_sec_header.pad_field_len = sa_ptr->shplf_len;
     tc_sdls_processed_frame->tc_sec_trailer.mac_field_len = sa_ptr->stmacf_len;
-
-    // If no valid SPI, return
-    if (status != CRYPTO_LIB_SUCCESS)
-    {
-        return status;
-    }
 
     // Determine SA Service Type
     if ((sa_ptr->est == 0) && (sa_ptr->ast == 0))
@@ -809,16 +809,6 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
         }
     }
 
-    // Parse the security header
-    tc_sdls_processed_frame->tc_sec_header.spi =
-        (uint16_t)((uint8_t)ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len] |
-                   (uint8_t)ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + 1]);
-    // Get SA via SPI
-    status = sadb_routine->sadb_get_sa_from_spi(tc_sdls_processed_frame->tc_sec_header.spi, &sa_ptr);
-    if (status != CRYPTO_LIB_SUCCESS)
-    {
-        return status;
-    }
     // Retrieve non-transmitted portion of IV from SA (if applicable)
     memcpy(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->iv_len-sa_ptr->shivf_len);
     // Parse transmitted portion of IV
@@ -831,7 +821,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
 
     // Parse non-transmitted portion of ARSN from SA
     memcpy(tc_sdls_processed_frame->tc_sec_header.sn, sa_ptr->arsn, sa_ptr->arsn_len-sa_ptr->shsnf_len);
-    // Parse transmitted portion of IV
+    // Parse transmitted portion of ARSN
     memcpy((tc_sdls_processed_frame->tc_sec_header.sn + (sa_ptr->arsn_len-sa_ptr->shsnf_len)),
            &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len]), sa_ptr->shsnf_len);
 #ifdef DEBUG
@@ -1031,4 +1021,41 @@ uint8_t* Crypto_Prepare_TC_AAD(uint8_t* buffer, uint16_t len_aad, uint8_t* abm_b
 #endif
 
     return aad;
+}
+
+/**
+ * @brief Function: crypto_tc_validate_sa
+ * Helper function to assist with ensuring sane SA condigurations
+ * @param sa: SecurityAssociation_t*
+ * @return int32: Success/Failure
+ **/
+static int32_t crypto_tc_validate_sa(SecurityAssociation_t *sa)
+{
+    if (sa->shivf_len > 0 && sa->iv == NULL)
+    {
+        return CRYPTO_LIB_ERR_NULL_IV;
+    }
+    if (sa->iv_len - sa->shivf_len  < 0)
+    {
+        return CRYPTO_LIB_ERR_IV_LEN_SHORTER_THAN_SEC_HEADER_LENGTH;
+    }
+    if (sa->iv_len > 0 && sa->iv == NULL)
+    {
+        return CRYPTO_LIB_ERR_NULL_IV;
+    }
+
+    if (sa->shsnf_len > 0 && sa->arsn == NULL)
+    {
+        return CRYPTO_LIB_ERR_NULL_ARSN;
+    }
+    if (sa->arsn_len - sa->shsnf_len < 0)
+    {
+        return CRYPTO_LIB_ERR_ARSN_LEN_SHORTER_THAN_SEC_HEADER_LENGTH;
+    }
+    if (sa->arsn_len > 0 && sa->arsn == NULL)
+    {
+        return CRYPTO_LIB_ERR_NULL_ARSN;
+    }
+
+    return CRYPTO_LIB_SUCCESS;
 }
