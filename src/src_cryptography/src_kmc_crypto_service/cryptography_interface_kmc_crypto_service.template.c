@@ -281,7 +281,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
 
     // Base64 URL encode IV for KMC REST Encrypt
     // Not needed for CMAC/HMAC (only supported auth ciphers now)
-//    char* iv_base64 = (char*)calloc(1,iv_len*4);
+//    char* iv_base64 = (char*)calloc(1,B64ENCODE_OUT_SAFESIZE(iv_len)+1);
 //    base64urlEncode(iv,iv_len,iv_base64,NULL);
 
     uint8_t* auth_payload = aad;
@@ -482,7 +482,8 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
 
     /* JSON Response Handling End */
 
-    uint8_t* icv_decoded = malloc(strlen(icv_base64) + 1);
+    // https://stackoverflow.com/questions/13378815/base64-length-calculation
+    uint8_t* icv_decoded = calloc(1,B64DECODE_OUT_SAFESIZE(strlen(icv_base64)) + 1);
     size_t icv_decoded_len = 0;
     base64urlDecode(icv_base64,strlen(icv_base64),icv_decoded, &icv_decoded_len);
 #ifdef DEBUG
@@ -539,7 +540,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     size_t auth_payload_len = aad_len;
 
     // Base64 URL encode MAC for KMC REST Encrypt
-    char* mac_base64 = (char*)calloc(1,mac_size*4);
+    char* mac_base64 = (char*)calloc(1,B64ENCODE_OUT_SAFESIZE(mac_size) + 1);
     base64urlEncode(mac,mac_size,mac_base64,NULL);
 #ifdef DEBUG
     printf("MAC Base64 URL Encoded: %s\n",mac_base64);
@@ -721,7 +722,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     configure_curl_connect_opts(curl);
 
     // Base64 URL encode IV for KMC REST Encrypt
-    char* iv_base64 = (char*)calloc(1,iv_len*4);
+    char* iv_base64 = (char*)calloc(1,B64ENCODE_OUT_SAFESIZE(iv_len)+1);
     base64urlEncode(iv,iv_len,iv_base64,NULL);
 
     uint8_t* encrypt_payload = data_in;
@@ -977,7 +978,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
     configure_curl_connect_opts(curl);
 
     // Base64 URL encode IV for KMC REST Encrypt
-    char* iv_base64 = (char*)calloc(1,iv_len*4);
+    char* iv_base64 = (char*)calloc(1,B64ENCODE_OUT_SAFESIZE(iv_len)+1);
     base64urlEncode(iv,iv_len,iv_base64,NULL);
 
     uint8_t* decrypt_payload = data_in;
