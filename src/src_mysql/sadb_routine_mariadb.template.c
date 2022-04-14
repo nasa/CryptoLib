@@ -42,7 +42,7 @@ static int32_t sadb_sa_setARSN(void);
 static int32_t sadb_sa_setARSNW(void);
 static int32_t sadb_sa_delete(void);
 // MySQL local functions
-static int32_t finish_with_error(MYSQL *con, int err);
+static int32_t finish_with_error(MYSQL **con_loc, int err);
 // MySQL Queries
 static const char* SQL_SADB_GET_SA_BY_SPI =
         "SELECT "
@@ -144,7 +144,7 @@ static int32_t sadb_init(void)
                     sadb_mariadb_config->mysql_port, NULL, 0) == NULL)
             {
                 //0,NULL,0 are port number, unix socket, client flag
-                finish_with_error(con, SADB_MARIADB_CONNECTION_FAILED);
+                finish_with_error(&con, SADB_MARIADB_CONNECTION_FAILED);
                 status = CRYPTO_LIB_ERROR;
             } else {
                 status = CRYPTO_LIB_SUCCESS;
@@ -209,8 +209,8 @@ static int32_t sadb_save_sa(SecurityAssociation_t* sa)
 
     char update_sa_query[2048];
     snprintf(update_sa_query, sizeof(update_sa_query), SQL_SADB_UPDATE_IV_ARC_BY_SPI,
-             convert_byte_array_to_hexstring(sa->iv, sa->shivf_len),
-             convert_byte_array_to_hexstring(sa->arsn, sa->shsnf_len), sa->spi, sa->gvcid_tc_blk.tfvn,
+             convert_byte_array_to_hexstring(sa->iv, sa->iv_len),
+             convert_byte_array_to_hexstring(sa->arsn, sa->arsn_len), sa->spi, sa->gvcid_tc_blk.tfvn,
              sa->gvcid_tc_blk.scid, sa->gvcid_tc_blk.vcid, sa->gvcid_tc_blk.mapid);
 
 #ifdef SA_DEBUG
@@ -220,7 +220,7 @@ static int32_t sadb_save_sa(SecurityAssociation_t* sa)
     // Crypto_saPrint(sa);
     if (mysql_query(con, update_sa_query))
     {
-        status = finish_with_error(con, SADB_QUERY_FAILED);
+        status = finish_with_error(&con, SADB_QUERY_FAILED);
         return status;
     }
     // todo - if query fails, need to push failure message to error stack instead of just return code.
@@ -279,7 +279,7 @@ static int32_t sadb_sa_delete(void)
 static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** security_association)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    SecurityAssociation_t* sa = malloc(sizeof(SecurityAssociation_t));
+    SecurityAssociation_t* sa = calloc(1,sizeof(SecurityAssociation_t));
 
 #ifdef SA_DEBUG
     fprintf(stderr, "MySQL Query: %s \n", query);
@@ -287,7 +287,7 @@ static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** se
 
     if (mysql_real_query(con, query, strlen(query)))
     { // query should be NUL terminated!
-        status = finish_with_error(con, SADB_QUERY_FAILED);
+        status = finish_with_error(&con, SADB_QUERY_FAILED);
         return status;
     }
     // todo - if query fails, need to push failure message to error stack instead of just return code.
@@ -295,14 +295,14 @@ static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** se
     MYSQL_RES *result = mysql_store_result(con);
     if (result == NULL)
     {
-        status = finish_with_error(con, SADB_QUERY_EMPTY_RESULTS);
+        status = finish_with_error(&con, SADB_QUERY_EMPTY_RESULTS);
         return status;
     }
 
     int num_rows = mysql_num_rows(result);
     if(num_rows == 0) // No rows returned in query!!
     {
-        status = finish_with_error(con, SADB_QUERY_EMPTY_RESULTS);
+        status = finish_with_error(&con, SADB_QUERY_EMPTY_RESULTS);
         return status;
     }
 
@@ -488,7 +488,7 @@ static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** se
         }
         // printf("\n");
     }
-    sa->iv = (uint8_t* )calloc(1, sa->shivf_len * sizeof(uint8_t));
+    sa->iv = (uint8_t* )calloc(1, sa->iv_len * sizeof(uint8_t));
     sa->arsn = (uint8_t* )calloc(1, sa->arsn_len * sizeof(uint8_t));
     sa->abm = (uint8_t* )calloc(1, sa->abm_len * sizeof(uint8_t));
     sa->ecs = (uint8_t* )calloc(1, sa->ecs_len * sizeof(uint8_t));
@@ -502,6 +502,10 @@ static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** se
     //arsnw_len is not necessary for mariadb interface, putty dummy/default value for prints.
     sa->arsnw_len = 1;
 
+#ifdef DEBUG
+    printf("Parsed SA from SQL Query:\n");
+    Crypto_saPrint(sa);
+#endif
 
     *security_association = sa;
     mysql_free_result(result);
@@ -548,9 +552,10 @@ static char* convert_byte_array_to_hexstring(void* src_buffer, size_t buffer_len
     return hexstr;
 }
 
-static int32_t finish_with_error(MYSQL *con, int err)
+static int32_t finish_with_error(MYSQL **con_loc, int err)
 {
-    fprintf(stderr, "%s\n", mysql_error(con)); // todo - if query fails, need to push failure message to error stack
-    mysql_close(con);
+    fprintf(stderr, "%s\n", mysql_error(*con_loc)); // todo - if query fails, need to push failure message to error stack
+    mysql_close(*con_loc);
+    *con_loc = NULL;
     return err;
 }

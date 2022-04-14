@@ -206,7 +206,9 @@ void Crypto_saPrint(SecurityAssociation_t* sa)
         }
     }
     printf("\t ekid       = %d \n", sa->ekid);
+    printf("\t ek_ref     = %s \n", sa->ek_ref);
     printf("\t akid       = %d \n", sa->akid);
+    printf("\t ak_ref     = %s \n", sa->ak_ref);
     printf("\t iv_len     = %d \n", sa->shivf_len);
     if (sa->iv != NULL)
     {
