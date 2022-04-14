@@ -177,7 +177,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_AUTH_ENC)
 /**
  * @brief Unit Test: Nominal Authorized Encryption With Partial IV Rollover, increment static IV
  **/
-UTEST(TC_APPLY_SECURITY, HAPPY_PATH_PARTIAL_IV_ROLLOVER)
+UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_IV_ROLLOVER)
 {
     // Setup & Initialize CryptoLib
     Crypto_Init_Unit_Test();
@@ -240,7 +240,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_PARTIAL_IV_ROLLOVER)
 /**
  * @brief Unit Test: Nominal Authorized Encryption With Partial IV Rollover, Static IV
  **/
-UTEST(TC_APPLY_SECURITY, HAPPY_PATH_PARTIAL_STATIC_IV_ROLLOVER)
+UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_STATIC_IV_ROLLOVER)
 {
     // Setup & Initialize CryptoLib
     Crypto_Init_Unit_Test();
