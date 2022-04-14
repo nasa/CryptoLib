@@ -57,6 +57,12 @@ int32_t base64urlDecode(const char_t* input, size_t inputLen, void* output,
 #define ERROR_INVALID_CHARACTER 23
 #define NO_ERROR 0
 
+// https://stackoverflow.com/questions/13378815/base64-length-calculation
+// calculate the size of 'output' buffer required for a 'input' buffer of length x during Base64 encoding operation
+#define B64ENCODE_OUT_SAFESIZE(x) ((((x) + 3 - 1)/3) * 4 + 1)
+
+// calculate the size of 'output' buffer required for a 'input' buffer of length x during Base64 decoding operation
+#define B64DECODE_OUT_SAFESIZE(x) (((x)*3)/4)
 
 //C++ guard
 #ifdef __cplusplus
