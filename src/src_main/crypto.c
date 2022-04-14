@@ -810,7 +810,7 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
     if (sa_ptr->shsnf_len > 0)
     {
         // Check Sequence Number is in ARSNW
-        status = Crypto_window(arsn, sa_ptr->arsn, sa_ptr->shsnf_len, sa_ptr->arsnw);
+        status = Crypto_window(arsn, sa_ptr->arsn, sa_ptr->arsn_len, sa_ptr->arsnw);
 #ifdef DEBUG
         printf("Received ARSN is\n\t");
         for (int i = 0; i < sa_ptr->arsn_len; i++)

@@ -404,7 +404,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
         }
         else
         {
-            for (i = 0; i < sa_ptr->shsnf_len; i++)
+            for (i = sa_ptr->arsn_len - sa_ptr->shsnf_len; i < sa_ptr->arsn_len; i++)
             {
                 // Copy in ARSN from SA
                 *(p_new_enc_frame + index) = *(sa_ptr->arsn + i);
@@ -557,7 +557,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
                 // Only increment the transmitted portion
                 if(sa_ptr->shivf_len > 0){ Crypto_increment(sa_ptr->iv+(sa_ptr->iv_len-sa_ptr->shivf_len), sa_ptr->shivf_len); }
             }
-            if(sa_ptr->arsn_len > 0){ Crypto_increment(sa_ptr->arsn, sa_ptr->arsn_len); }
+            if(sa_ptr->shsnf_len > 0){ Crypto_increment(sa_ptr->arsn, sa_ptr->arsn_len); }
         
 #ifdef SA_DEBUG
             printf(KYEL "Next IV value is:\n\t");
@@ -574,6 +574,12 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
             printf("\n" RESET);
             printf(KYEL "Next ARSN value is:\n\t");
             for (i = 0; i < sa_ptr->arsn_len; i++)
+            {
+                printf("%02x", *(sa_ptr->arsn + i));
+            }
+            printf("\n" RESET);
+            printf(KYEL "Next transmitted ARSN value is:\n\t");
+            for (i = sa_ptr->arsn_len-sa_ptr->shsnf_len; i < sa_ptr->arsn_len; i++)
             {
                 printf("%02x", *(sa_ptr->arsn + i));
             }
@@ -701,12 +707,12 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
 
     // Allocate the necessary byte arrays within the security header + trailer given the SA
     tc_sdls_processed_frame->tc_sec_header.iv = calloc(1,sa_ptr->iv_len);
-    tc_sdls_processed_frame->tc_sec_header.sn = calloc(1,sa_ptr->shsnf_len); //Todo, update to sn_len AMMOSGH56
+    tc_sdls_processed_frame->tc_sec_header.sn = calloc(1,sa_ptr->arsn_len);
     tc_sdls_processed_frame->tc_sec_header.pad = calloc(1,sa_ptr->shplf_len);
     tc_sdls_processed_frame->tc_sec_trailer.mac = calloc(1,sa_ptr->stmacf_len);
     // Set tc_sec_header + trailer fields for actual lengths from the SA (downstream apps won't know this length otherwise since they don't access the SADB!).
     tc_sdls_processed_frame->tc_sec_header.iv_field_len = sa_ptr->iv_len;
-    tc_sdls_processed_frame->tc_sec_header.sn_field_len = sa_ptr->shsnf_len;
+    tc_sdls_processed_frame->tc_sec_header.sn_field_len = sa_ptr->arsn_len;
     tc_sdls_processed_frame->tc_sec_header.pad_field_len = sa_ptr->shplf_len;
     tc_sdls_processed_frame->tc_sec_trailer.mac_field_len = sa_ptr->stmacf_len;
 
@@ -822,9 +828,17 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
     printf("Full IV Value from Frame and SADB (if applicable):\n");
     Crypto_hexprint(tc_sdls_processed_frame->tc_sec_header.iv,sa_ptr->iv_len);
 #endif
-    // Parse Sequence Number
-    memcpy((tc_sdls_processed_frame->tc_sec_header.sn), //+ (TC_SN_SIZE - sa_ptr->shsnf_len)
+
+    // Parse non-transmitted portion of ARSN from SA
+    memcpy(tc_sdls_processed_frame->tc_sec_header.sn, sa_ptr->arsn, sa_ptr->arsn_len-sa_ptr->shsnf_len);
+    // Parse transmitted portion of IV
+    memcpy((tc_sdls_processed_frame->tc_sec_header.sn + (sa_ptr->arsn_len-sa_ptr->shsnf_len)),
            &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len]), sa_ptr->shsnf_len);
+#ifdef DEBUG
+    printf("Full ARSN Value from Frame and SADB (if applicable):\n");
+    Crypto_hexprint(tc_sdls_processed_frame->tc_sec_header.sn,sa_ptr->arsn_len);
+#endif
+    
     // Parse pad length
     memcpy((tc_sdls_processed_frame->tc_sec_header.pad) + (TC_PAD_SIZE - sa_ptr->shplf_len),
            &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len]),
