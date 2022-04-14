@@ -71,8 +71,6 @@ UTEST(TC_PROCESS, EXERCISE_IV)
     sadb_routine->sadb_get_sa_from_spi(9, &test_association);
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
-    test_association->arsn_len = 1;
-    test_association->arsnw = 5;
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
     memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
@@ -306,12 +304,11 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_STATIC_IV_ROLLOVER)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
     ASSERT_EQ(test_association->iv[11],0xFF);
     return_val = Crypto_TC_ProcessSecurity(dec_test_00_b, &dec_test_00_len, tc_sdls_processed_frame);
-    //Tc_ProcessSecurity Rollover bug ( https://github.jpl.nasa.gov/ASEC/AMMOS-CryptoLib/issues/57 ), cannot assert this!
-    //ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
-    //for(int i=0; i < test_association->iv_len; i++)
-    //{
-    //    ASSERT_EQ(test_association->iv[i],0x00);
-    //}
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+    for(int i=0; i < test_association->iv_len; i++)
+    {
+        ASSERT_EQ(test_association->iv[i],0x00);
+    }
 
     Crypto_saPrint(test_association);
 
@@ -400,21 +397,22 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_NONTRANSMITTED_INCREMENTING_IV_ROLLOVER)
     return_val = Crypto_TC_ProcessSecurity(dec_test_ff_b, &dec_test_ff_len, tc_sdls_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
     ASSERT_EQ(test_association->iv[11],0xFF);
+    // test_association->iv[5] = 0x01;
     return_val = Crypto_TC_ProcessSecurity(dec_test_00_b, &dec_test_00_len, tc_sdls_processed_frame);
     //Tc_ProcessSecurity Rollover bug ( https://github.jpl.nasa.gov/ASEC/AMMOS-CryptoLib/issues/57 ), cannot assert this!
-    //ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
-    //ASSERT_EQ(test_association->iv[0] ,0x00);
-    //ASSERT_EQ(test_association->iv[1] ,0x00);
-    //ASSERT_EQ(test_association->iv[2] ,0x00);
-    //ASSERT_EQ(test_association->iv[3] ,0x00);
-    //ASSERT_EQ(test_association->iv[4] ,0x00);
-    //ASSERT_EQ(test_association->iv[5] ,0x01);
-    //ASSERT_EQ(test_association->iv[6] ,0x00);
-    //ASSERT_EQ(test_association->iv[7] ,0x00);
-    //ASSERT_EQ(test_association->iv[8] ,0x00);
-    //ASSERT_EQ(test_association->iv[9] ,0x00);
-    //ASSERT_EQ(test_association->iv[10],0x00);
-    //ASSERT_EQ(test_association->iv[11],0x00);
+//    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+//    ASSERT_EQ(test_association->iv[0] ,0x00);
+//    ASSERT_EQ(test_association->iv[1] ,0x00);
+//    ASSERT_EQ(test_association->iv[2] ,0x00);
+//    ASSERT_EQ(test_association->iv[3] ,0x00);
+//    ASSERT_EQ(test_association->iv[4] ,0x00);
+//    ASSERT_EQ(test_association->iv[5] ,0x01);
+//    ASSERT_EQ(test_association->iv[6] ,0x00);
+//    ASSERT_EQ(test_association->iv[7] ,0x00);
+//    ASSERT_EQ(test_association->iv[8] ,0x00);
+//    ASSERT_EQ(test_association->iv[9] ,0x00);
+//    ASSERT_EQ(test_association->iv[10],0x00);
+//    ASSERT_EQ(test_association->iv[11],0x00);
 
     Crypto_saPrint(test_association);
 

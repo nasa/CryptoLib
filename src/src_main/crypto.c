@@ -161,6 +161,11 @@ int32_t Crypto_window(uint8_t* actual, uint8_t* expected, int length, int window
     {
         // Recall - the stored IV or ARSN is the last valid one received, check against next expected
         Crypto_increment(&temp[0], length);
+
+#ifdef DEBUG
+        printf("Checking Frame Against Incremented Window:\n");
+        Crypto_hexprint(temp,length);
+#endif
         
         result = 0;
         /* go from right (least significant) to left (most signifcant) */
@@ -810,7 +815,7 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
     if (sa_ptr->shsnf_len > 0)
     {
         // Check Sequence Number is in ARSNW
-        status = Crypto_window(arsn, sa_ptr->arsn, sa_ptr->shsnf_len, sa_ptr->arsnw);
+        status = Crypto_window(arsn, sa_ptr->arsn, sa_ptr->arsn_len, sa_ptr->arsnw);
 #ifdef DEBUG
         printf("Received ARSN is\n\t");
         for (int i = 0; i < sa_ptr->arsn_len; i++)
@@ -839,7 +844,16 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
     else if (sa_ptr->iv_len > 0)
     {
         // Check IV is in ARSNW
-        status = Crypto_window(iv, sa_ptr->iv, sa_ptr->iv_len, sa_ptr->arsnw);
+        if(crypto_config->crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
+        {
+            status = Crypto_window(iv, sa_ptr->iv, sa_ptr->iv_len, sa_ptr->arsnw);
+        } else // SA_INCREMENT_NONTRANSMITTED_IV_FALSE
+        {
+            // Whole IV gets checked in MAC validation previously, this only verifies transmitted portion is what we expect.
+            status = Crypto_window(iv, sa_ptr->iv + (sa_ptr->iv_len - sa_ptr->shivf_len), sa_ptr->shivf_len, sa_ptr->arsnw);
+        }
+
+
 #ifdef DEBUG
         printf("Received IV is\n\t");
         for (int i = 0; i < sa_ptr->iv_len; i++)

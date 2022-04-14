@@ -240,7 +240,7 @@ int32_t sadb_config(void)
     sa[9].abm = (uint8_t* )calloc(1, sa[9].abm_len * sizeof(uint8_t));
     sa[9].arsnw_len = 1;
     sa[9].arsnw = 5;
-    sa[9].arsn_len = (sa[9].arsnw * 2) + 1;
+    sa[9].arsn_len = 0;
     sa[9].gvcid_tc_blk.tfvn = 0;
     sa[9].gvcid_tc_blk.scid = SCID & 0x3FF;
     sa[9].gvcid_tc_blk.vcid = 0;
@@ -265,13 +265,14 @@ int32_t sadb_init(void)
         sa[x].sa_state = SA_NONE;
         sa[x].ecs_len = 0;
         sa[x].ecs = NULL;
-        sa[x].shivf_len = IV_SIZE;
+        sa[x].shivf_len = 0;
         sa[x].iv = NULL;
         sa[x].iv_len = 0;
         sa[x].abm = NULL;
         sa[x].abm_len = 0;
         sa[x].acs_len = 0;
         sa[x].acs = NULL;
+        sa[x].shsnf_len = 0;
         sa[x].arsn_len = 0;
         sa[x].arsn = NULL;
     }

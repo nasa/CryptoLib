@@ -296,14 +296,14 @@ UTEST(INVALID_SA_CONFIGS, INVALID_IV_ARSN)
     free(test_association->arsn);
     test_association->arsn = NULL;
     status = Crypto_TC_ApplySecurity(jpl_frame_pt_b, jpl_frame_pt_len, &ptr_enc_frame, &enc_frame_len);
-    ASSERT_EQ(CRYPTO_LIB_ERR_INVALID_SA_CONFIGURATION, status);
+    ASSERT_EQ(CRYPTO_LIB_ERR_NULL_ARSN, status);
 
     // Should fail, as SA will be set to use IV, but IV pointer is NULL
     free(test_association->iv);
     test_association->iv = NULL;
     test_association->shivf_len = 12;
     status = Crypto_TC_ApplySecurity(jpl_frame_pt_b, jpl_frame_pt_len, &ptr_enc_frame, &enc_frame_len);
-    ASSERT_EQ(CRYPTO_LIB_ERR_INVALID_SA_CONFIGURATION, status);
+    ASSERT_EQ(CRYPTO_LIB_ERR_NULL_IV, status);
 }
 
 /**
