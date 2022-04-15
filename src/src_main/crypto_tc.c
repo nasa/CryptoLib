@@ -23,8 +23,9 @@
 
 #include <string.h> // memcpy
 
-/* Helper validate SA function */
+/* Helper functions */
 static int32_t crypto_tc_validate_sa(SecurityAssociation_t *sa);
+static int32_t crypto_handle_incrementing_nontransmitted_counter(uint8_t* dest, uint8_t* src, int src_full_len,int transmitted_len, int window);
 
 /**
  * @brief Function: Crypto_TC_ApplySecurity
@@ -809,21 +810,53 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
         }
     }
 
-    // Retrieve non-transmitted portion of IV from SA (if applicable)
-    memcpy(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->iv_len-sa_ptr->shivf_len);
-    // Parse transmitted portion of IV
+    // Parse transmitted portion of IV from received frame (Will be Whole IV if iv_len==shivf_len)
     memcpy((tc_sdls_processed_frame->tc_sec_header.iv+(sa_ptr->iv_len-sa_ptr->shivf_len)), &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN]),
            sa_ptr->shivf_len);
+
+    // Handle non-transmitted IV increment case (transmitted-portion roll-over)
+    if(sa_ptr->shivf_len < sa_ptr->iv_len &&
+        crypto_config->ignore_anti_replay==TC_IGNORE_ANTI_REPLAY_FALSE &&
+        crypto_config->crypto_increment_nontransmitted_iv==SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
+    {
+        status = crypto_handle_incrementing_nontransmitted_counter(tc_sdls_processed_frame->tc_sec_header.iv,sa_ptr->iv,sa_ptr->iv_len,sa_ptr->shivf_len,sa_ptr->arsnw);
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+            return status;
+        }
+    }
+    else // Not checking IV ARSNW or only non-transmitted portion is static; Note, non-transmitted IV in SA must match frame or will fail MAC check.
+    {
+        // Retrieve non-transmitted portion of IV from SA (if applicable)
+        memcpy(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->iv_len-sa_ptr->shivf_len);
+    }
+
 #ifdef DEBUG
     printf("Full IV Value from Frame and SADB (if applicable):\n");
     Crypto_hexprint(tc_sdls_processed_frame->tc_sec_header.iv,sa_ptr->iv_len);
 #endif
 
-    // Parse non-transmitted portion of ARSN from SA
-    memcpy(tc_sdls_processed_frame->tc_sec_header.sn, sa_ptr->arsn, sa_ptr->arsn_len-sa_ptr->shsnf_len);
     // Parse transmitted portion of ARSN
     memcpy((tc_sdls_processed_frame->tc_sec_header.sn + (sa_ptr->arsn_len-sa_ptr->shsnf_len)),
            &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len]), sa_ptr->shsnf_len);
+
+    // Handle non-transmitted IV increment case (transmitted-portion roll-over)
+    if(sa_ptr->shsnf_len < sa_ptr->arsn_len &&
+       crypto_config->ignore_anti_replay==TC_IGNORE_ANTI_REPLAY_FALSE)
+    {
+        status = crypto_handle_incrementing_nontransmitted_counter(tc_sdls_processed_frame->tc_sec_header.sn,sa_ptr->arsn,sa_ptr->arsn_len,sa_ptr->shsnf_len,sa_ptr->arsnw);
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+            return status;
+        }
+    }
+    else // Not checking ARSN in ARSNW
+    {
+        // Parse non-transmitted portion of ARSN from SA
+        memcpy(tc_sdls_processed_frame->tc_sec_header.sn, sa_ptr->arsn, sa_ptr->arsn_len-sa_ptr->shsnf_len);
+
+    }
+
 #ifdef DEBUG
     printf("Full ARSN Value from Frame and SADB (if applicable):\n");
     Crypto_hexprint(tc_sdls_processed_frame->tc_sec_header.sn,sa_ptr->arsn_len);
@@ -939,6 +972,18 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
     if (crypto_config->ignore_anti_replay == TC_IGNORE_ANTI_REPLAY_FALSE && status == CRYPTO_LIB_SUCCESS)
     {
         status = Crypto_Check_Anti_Replay(sa_ptr, tc_sdls_processed_frame->tc_sec_header.sn, tc_sdls_processed_frame->tc_sec_header.iv);
+
+        if(status != CRYPTO_LIB_SUCCESS)
+        {
+            return status;
+        }
+
+        // Only save the SA (IV/ARSN) if checking the anti-replay counter; Otherwise we don't update.
+        status = sadb_routine->sadb_save_sa(sa_ptr);
+        if(status != CRYPTO_LIB_SUCCESS)
+        {
+            return status;
+        }
     }
 
     // Extended PDU processing, if applicable
@@ -1058,4 +1103,53 @@ static int32_t crypto_tc_validate_sa(SecurityAssociation_t *sa)
     }
 
     return CRYPTO_LIB_SUCCESS;
+}
+
+static int32_t crypto_handle_incrementing_nontransmitted_counter(uint8_t* dest, uint8_t* src, int src_full_len,int transmitted_len, int window)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    // Copy IV to temp
+    uint8_t* temp_counter = malloc(src_full_len);
+    memcpy(temp_counter,src,src_full_len);
+
+    // Increment temp_counter Until Transmitted Portion Matches Frame.
+    uint8_t counter_matches = CRYPTO_TRUE;
+    for(int i = 0; i < window; i++)
+    {
+        Crypto_increment(temp_counter,src_full_len);
+        for(int x = (src_full_len - transmitted_len); x < src_full_len; x++)
+        {
+            //This increment doesn't match the frame!
+            if(temp_counter[x] != dest[x])
+            {
+                counter_matches = CRYPTO_FALSE;
+                break;
+            }
+        }
+        if(counter_matches == CRYPTO_TRUE)
+        {
+            break;
+        }
+        else if (i < window - 1) // Only reset flag if there are more  windows to check.
+        {
+            counter_matches = CRYPTO_TRUE; // reset the flag, and continue the for loop for the next
+            continue;
+        }
+
+    }
+
+    if(counter_matches == CRYPTO_TRUE)
+    {
+        // Retrieve non-transmitted portion of incremented counter that matches (and may have rolled over/incremented)
+        memcpy(dest, temp_counter, src_full_len - transmitted_len);
+#ifdef DEBUG
+        printf("Incremented IV is:\n");
+        Crypto_hexprint(temp_counter,src_full_len);
+#endif
+    }
+    else
+    {
+        status = CRYPTO_LIB_ERR_FRAME_COUNTER_DOESNT_MATCH_SA;
+    }
+    return status;
 }
