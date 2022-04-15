@@ -840,7 +840,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
     memcpy((tc_sdls_processed_frame->tc_sec_header.sn + (sa_ptr->arsn_len-sa_ptr->shsnf_len)),
            &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len]), sa_ptr->shsnf_len);
 
-    // Handle non-transmitted IV increment case (transmitted-portion roll-over)
+    // Handle non-transmitted SN increment case (transmitted-portion roll-over)
     if(sa_ptr->shsnf_len < sa_ptr->arsn_len &&
        crypto_config->ignore_anti_replay==TC_IGNORE_ANTI_REPLAY_FALSE)
     {
