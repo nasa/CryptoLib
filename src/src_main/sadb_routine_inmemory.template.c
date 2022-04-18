@@ -147,7 +147,7 @@ int32_t sadb_config(void)
     sa[4].abm = (uint8_t* )calloc(1, sa[4].abm_len * sizeof(uint8_t));
     sa[4].arsnw_len = 1;
     sa[4].arsnw = 5;
-    sa[4].arsn_len = (sa[4].arsnw * 2) + 1;
+    sa[4].arsn_len = 0;
     sa[4].gvcid_tc_blk.tfvn = 0;
     sa[4].gvcid_tc_blk.scid = SCID & 0x3FF;
     sa[4].gvcid_tc_blk.vcid = 0;

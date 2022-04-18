@@ -302,6 +302,92 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_STATIC_IV_ROLLOVER)
     free(ptr_enc_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
 }
+
+/**
+ * @brief Unit Test: Nominal Authorized Encryption With Partial ARSN Rollover, increment static ARSN
+ **/
+UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_ARSN_ROLLOVER)
+{
+    // Setup & Initialize CryptoLib
+    Crypto_Init_Unit_Test();
+    char* raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
+    char* raw_tc_sdls_ping_b = NULL;
+
+    char* new_arsn_h = "05FFFC";
+    char* new_arsn_b = NULL;
+
+    char* expected_arsn_h = "060001";
+    char* expected_arsn_b = NULL;
+
+    int raw_tc_sdls_ping_len = 0;
+    int new_arsn_len = 0;
+    int expected_arsn_len = 0;
+
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+
+    hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
+    hex_conversion(new_arsn_h, &new_arsn_b, &new_arsn_len);
+    hex_conversion(expected_arsn_h, &expected_arsn_b, &expected_arsn_len);
+    uint8_t* ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+
+    int32_t return_val = CRYPTO_LIB_ERROR;
+
+    SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    // Expose the SADB Security Association for test edits.
+    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    test_association->sa_state = SA_NONE;
+    sadb_routine->sadb_get_sa_from_spi(4, &test_association);
+    test_association->sa_state = SA_OPERATIONAL;
+    test_association->shivf_len = 0;
+    test_association->iv_len = 0;
+    test_association->est=0;
+    test_association->ast=1;
+    test_association->ecs_len=1;
+    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
+    *test_association->ecs = CRYPTO_CIPHER_NONE;
+    test_association->acs_len=1;
+    test_association->acs = calloc(1, test_association->acs_len * sizeof(uint8_t));
+    *test_association->acs = CRYPTO_MAC_CMAC_AES256;
+    test_association->arsn_len = 3;
+    test_association->shsnf_len = 2;
+    test_association->arsn = calloc(1,test_association->arsn_len);
+    memcpy(test_association->arsn, (uint8_t *)new_arsn_b, new_arsn_len);
+
+    return_val =
+            Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS,return_val);
+    return_val =
+            Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS,return_val);
+    return_val =
+            Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS,return_val);
+    return_val =
+            Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS,return_val);
+    return_val =
+            Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS,return_val);
+
+    printf("Expected ARSN:\n");
+    Crypto_hexprint(expected_arsn_b,expected_arsn_len);
+    printf("Actual SA ARSN:\n");
+    Crypto_hexprint(test_association->arsn,test_association->arsn_len);
+
+    for (int i = 0; i < test_association->arsn_len; i++)
+    {
+        printf("[%d] Truth: %02x, Actual: %02x\n", i, expected_arsn_b[i], *(test_association->arsn + i));
+        ASSERT_EQ(expected_arsn_b[i], *(test_association->arsn + i));
+    }
+
+    //Must shutdown after checking test_association ARSN since that will get freed!
+    Crypto_Shutdown();
+    free(raw_tc_sdls_ping_b);
+    free(ptr_enc_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+}
+
 /**
  * @brief Unit Test: Bad Spacecraft ID
  * This should pass the flawed hex string, and return CRYPTO_LIB_ERR_INVALID_SCID
