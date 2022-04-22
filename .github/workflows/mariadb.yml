@@ -2,7 +2,7 @@ name: Build
 
 on: 
   push:
-    branches: [ 88-add-github-automated-build-integration-tests-for-sadb-mariadb-interface-1 ]
+    branches: [ main,dev ]
   pull_request:
 
 jobs:
