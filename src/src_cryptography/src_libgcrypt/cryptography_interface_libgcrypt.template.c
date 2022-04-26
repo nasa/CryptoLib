@@ -568,7 +568,6 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
     {
         key_ptr = &(ek_ring[sa_ptr->akid].value[0]);
     }
-
     // Need to copy the data over, since authentication won't change/move the data directly
     if(data_out != NULL)
     {
@@ -578,11 +577,10 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
     {
         return CRYPTO_LIB_ERR_NULL_BUFFER;
     }
-
     // Using to fix warning
     len_data_out = len_data_out;
     ecs = ecs;
-    
+
     // Select correct libgcrypt acs enum
     int32_t algo = cryptography_get_acs_algo(acs);
     if (algo == CRYPTO_LIB_ERR_UNSUPPORTED_ACS)
@@ -605,7 +603,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
         return status;
     }
     gcry_error = gcry_mac_setkey(tmp_mac_hd, key_ptr, len_key);
-
+    
 #ifdef SA_DEBUG
     uint32_t i;
     printf(KYEL "Auth MAC Printing Key:\n\t");
