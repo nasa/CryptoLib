@@ -431,16 +431,16 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_NONTRANSMITTED_INCREMENTING_ARSN_ROLLOVER)
     Crypto_Init_Unit_Test();
     Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+                            TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-
+    
     char* dec_test_fe_h =
-            "2003002900000004FFFE80D2C70008197F0B00310000B1FE1C9119D059698FFE5AAE811572FA678D0741";
+              "2003002900000004FFFE80D2C70008197F0B00310000B1FE7F97816F523951BAF0445DB078B502760741";
     char* dec_test_ff_h =
-            "2003002900000004FFFF80D2C70008197F0B00310000B1FE1C9119D059698FFE5AAE811572FA678D8968";
+              "2003002900000004FFFF80D2C70008197F0B00310000B1FE7F97816F523951BAF0445DB078B502768968";
     char* dec_test_00_h =
-            "2003002900000004000080D2C70008197F0B00310000B1FE1C9119D059698FFE5AAE811572FA678D7824";
+            "2003002900000004000080D2C70008197F0B00310000B1FE7F97816F523951BAF0445DB078B50276E797";
 
     uint8_t *dec_test_fe_b, *dec_test_ff_b, *dec_test_00_b = NULL;
     int dec_test_fe_len, dec_test_ff_len, dec_test_00_len = 0;
@@ -487,6 +487,9 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_NONTRANSMITTED_INCREMENTING_ARSN_ROLLOVER)
     test_association->arsn[0] = 0x05;
     test_association->arsn[1] = 0xFF;
     test_association->arsn[2] = 0xFD;
+
+    // This TA was originally setup for AESGCM, need to specify an akid so we can use it for a MAC
+    test_association->akid = 130;
 
     Crypto_saPrint(test_association);
     return_val = Crypto_TC_ProcessSecurity(dec_test_fe_b, &dec_test_fe_len, tc_sdls_processed_frame);
