@@ -864,7 +864,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     }
 
     // Check that key length to be used is atleast as long as the algo requirement
-    if (sa_ptr != NULL && len_key < ek_ring[sa_ptr->ekid].key_len)
+    if (sa_ptr != NULL && len_key > ek_ring[sa_ptr->ekid].key_len)
     {
         return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
     }
@@ -1040,7 +1040,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
     }
 
     // Check that key length to be used is atleast as long as the algo requirement
-    if (sa_ptr != NULL && len_key < ek_ring[sa_ptr->ekid].key_len)
+    if (sa_ptr != NULL && len_key > ek_ring[sa_ptr->ekid].key_len)
     {
         return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
     }
