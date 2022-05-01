@@ -34,7 +34,12 @@ typedef struct
     crypto_key_t* (*get_ek_ring)(void);
     int32_t (*cryptography_shutdown)(void);
     // Cryptography Interface Functions
-    int32_t (*cryptography_encrypt)(void);
+    int32_t (*cryptography_encrypt)(uint8_t* data_out, size_t len_data_out,
+                                         uint8_t* data_in, size_t len_data_in,
+                                         uint8_t* key, uint32_t len_key,
+                                         SecurityAssociation_t* sa_ptr,
+                                         uint8_t* iv, uint32_t iv_len,
+                                         uint8_t* ecs);
     int32_t (*cryptography_decrypt)(void);
     int32_t (*cryptography_authenticate)(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,

@@ -512,7 +512,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
                 // TODO - implement non-AEAD algorithm logic
                 if (sa_service_type == SA_ENCRYPTION)
                 {
-                    status = cryptography_if->cryptography_encrypt();
+                    //status = cryptography_if->cryptography_encrypt();
                 }
 
                 if (sa_service_type == SA_AUTHENTICATION)

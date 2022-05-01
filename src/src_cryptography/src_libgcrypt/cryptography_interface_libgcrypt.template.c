@@ -26,7 +26,12 @@ static int32_t cryptography_init(void);
 static crypto_key_t* get_ek_ring(void);
 static int32_t cryptography_shutdown(void);
 // Cryptography Interface Functions
-static int32_t cryptography_encrypt(void);
+static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
+                                         uint8_t* data_in, size_t len_data_in,
+                                         uint8_t* key, uint32_t len_key,
+                                         SecurityAssociation_t* sa_ptr,
+                                         uint8_t* iv, uint32_t iv_len,
+                                         uint8_t *ecs);
 static int32_t cryptography_decrypt(void);
 static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
@@ -548,7 +553,114 @@ static int32_t cryptography_init(void)
     return status;
 }
 static int32_t cryptography_shutdown(void){ return CRYPTO_LIB_SUCCESS; }
-static int32_t cryptography_encrypt(void){ return CRYPTO_LIB_SUCCESS; }
+static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
+                                         uint8_t* data_in, size_t len_data_in,
+                                         uint8_t* key, uint32_t len_key,
+                                         SecurityAssociation_t* sa_ptr,
+                                         uint8_t* iv, uint32_t iv_len,
+                                         uint8_t *ecs)
+{ 
+
+    gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
+    gcry_cipher_hd_t tmp_hd;
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    uint8_t* key_ptr = key;
+
+    if(sa_ptr != NULL) // Using SA key pointer
+    {
+        key_ptr = &(ek_ring[sa_ptr->ekid].value[0]);
+    }
+
+    // Select correct libgcrypt ecs enum
+    int32_t algo = -1;
+    if (ecs != NULL)
+    {
+        algo = cryptography_get_ecs_algo(*ecs);
+        if (algo == CRYPTO_LIB_ERR_UNSUPPORTED_ECS)
+        {
+            return CRYPTO_LIB_ERR_UNSUPPORTED_ECS;
+        }
+    }
+    else
+    {
+        return CRYPTO_LIB_ERR_NULL_ECS_PTR;
+    }
+
+    // Check that key length to be used is atleast as long as the algo requirement
+    if (sa_ptr != NULL && len_key < ek_ring[sa_ptr->ekid].key_len)
+    {
+        return CRYPTO_LIB_KEY_LENGTH_ERROR;
+    }
+
+    gcry_error = gcry_cipher_open(&(tmp_hd), algo, GCRY_CIPHER_MODE_NONE, GCRY_CIPHER_NONE);
+    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+    {
+        printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+        printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+        status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
+        return status;
+    }
+
+    gcry_error = gcry_cipher_setkey(tmp_hd, key_ptr, len_key);
+    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+    {
+        printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+        printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+        status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
+        gcry_cipher_close(tmp_hd);
+        return status;
+    }
+
+    gcry_error = gcry_cipher_setiv(tmp_hd, iv, iv_len);
+    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+    {
+        printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+        printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+        status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
+        gcry_cipher_close(tmp_hd);
+        return status;
+    }
+
+#ifdef TC_DEBUG
+    size_t j;
+    printf("Input payload length is %ld\n", len_data_in);
+    printf(KYEL "Printing Frame Data prior to encryption:\n\t");
+    for (j = 0; j < len_data_in; j++)
+    {
+        printf("%02X", *(data_in + j));
+    }
+    printf("\n");
+#endif
+
+    gcry_error = gcry_cipher_encrypt(tmp_hd,
+                                        data_out,              // ciphertext output
+                                        len_data_out,                // length of data
+                                        data_in, // plaintext input
+                                        len_data_in                 // in data length
+    );
+    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+    {
+        printf(KRED "ERROR: gcry_cipher_encrypt error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+        printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+        status = CRYPTO_LIB_ERR_ENCRYPTION_ERROR;
+        gcry_cipher_close(tmp_hd);
+        return status;
+    }
+
+#ifdef TC_DEBUG
+    printf("Output payload length is %ld\n", len_data_out);
+    printf(KYEL "Printing TC Frame Data after encryption:\n\t");
+    for (j = 0; j < len_data_out; j++)
+    {
+        printf("%02X", *(data_out + j));
+    }
+    printf("\n");
+#endif
+
+    gcry_cipher_close(tmp_hd);
+    return status;
+}
+
 static int32_t cryptography_decrypt(void){ return CRYPTO_LIB_SUCCESS; }
 static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
