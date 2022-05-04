@@ -568,7 +568,6 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
     {
         key_ptr = &(ek_ring[sa_ptr->akid].value[0]);
     }
-
     // Need to copy the data over, since authentication won't change/move the data directly
     if(data_out != NULL)
     {
@@ -578,11 +577,10 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
     {
         return CRYPTO_LIB_ERR_NULL_BUFFER;
     }
-
     // Using to fix warning
     len_data_out = len_data_out;
     ecs = ecs;
-    
+
     // Select correct libgcrypt acs enum
     int32_t algo = cryptography_get_acs_algo(acs);
     if (algo == CRYPTO_LIB_ERR_UNSUPPORTED_ACS)
@@ -591,13 +589,12 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
     }
 
     // Check that key length to be used is atleast as long as the algo requirement
-    if (sa_ptr != NULL && len_key < ek_ring[sa_ptr->ekid].key_len)
+    if (sa_ptr != NULL && len_key > ek_ring[sa_ptr->akid].key_len)
     {
-        return CRYPTO_LIB_KEY_LENGTH_ERROR;
+        return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
     }
 
     gcry_error = gcry_mac_open(&(tmp_mac_hd), algo, GCRY_MAC_FLAG_SECURE, NULL);
-
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "ERROR: gcry_mac_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
@@ -606,6 +603,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
         return status;
     }
     gcry_error = gcry_mac_setkey(tmp_mac_hd, key_ptr, len_key);
+    
 #ifdef SA_DEBUG
     uint32_t i;
     printf(KYEL "Auth MAC Printing Key:\n\t");
@@ -652,9 +650,10 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
         return status;
     }
 
+    uint32_t* tmac_size = &mac_size;
     gcry_error = gcry_mac_read(tmp_mac_hd,
                                mac,      // tag output
-                               (size_t* )&mac_size // tag size // TODO - use sa_ptr->abm_len instead of hardcoded mac size?
+                               (size_t* )tmac_size // tag size
     );
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
@@ -708,10 +707,11 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     }
 
     // Check that key length to be used is atleast as long as the algo requirement
-    if (sa_ptr != NULL && len_key < ek_ring[sa_ptr->ekid].key_len)
+    if (sa_ptr != NULL && len_key > ek_ring[sa_ptr->akid].key_len)
     {
-        return CRYPTO_LIB_KEY_LENGTH_ERROR;
+        return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
     }
+
     gcry_error = gcry_mac_open(&(tmp_mac_hd), algo, GCRY_MAC_FLAG_SECURE, NULL);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
@@ -768,7 +768,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
 
 #ifdef MAC_DEBUG
     uint32_t* tmac_size = &mac_size;
-    uint8_t* tmac = malloc(*tmac_size);
+    uint8_t* tmac = calloc(1,*tmac_size);
     gcry_error = gcry_mac_read(tmp_mac_hd,
                                tmac,      // tag output
                                (size_t *)tmac_size // tag size
@@ -781,7 +781,11 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     }
 
     printf("Calculated Mac Size: %d\n", *tmac_size);
-    printf("Calculated MAC (truncated to sa_ptr->stmacf_len):\n\t");
+    printf("Calculated MAC (full length):\n\t");
+    for (uint32_t i = 0; i < *tmac_size; i ++){
+        printf("%02X", tmac[i]);
+    }
+    printf("\nCalculated MAC (truncated to sa_ptr->stmacf_len):\n\t");
     for (uint32_t i = 0; i < mac_size; i ++){
         printf("%02X", tmac[i]);
     }
@@ -858,9 +862,9 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     }
 
     // Check that key length to be used is atleast as long as the algo requirement
-    if (sa_ptr != NULL && len_key < ek_ring[sa_ptr->ekid].key_len)
+    if (sa_ptr != NULL && len_key > ek_ring[sa_ptr->ekid].key_len)
     {
-        return CRYPTO_LIB_KEY_LENGTH_ERROR;
+        return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
     }
 
     gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_NONE);
@@ -1034,9 +1038,9 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
     }
 
     // Check that key length to be used is atleast as long as the algo requirement
-    if (sa_ptr != NULL && len_key < ek_ring[sa_ptr->ekid].key_len)
+    if (sa_ptr != NULL && len_key > ek_ring[sa_ptr->ekid].key_len)
     {
-        return CRYPTO_LIB_KEY_LENGTH_ERROR;
+        return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
     }
 
     gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_NONE);

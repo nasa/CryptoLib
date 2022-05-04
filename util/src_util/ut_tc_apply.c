@@ -353,6 +353,8 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_ARSN_ROLLO
     test_association->shsnf_len = 2;
     test_association->arsn = calloc(1,test_association->arsn_len);
     memcpy(test_association->arsn, (uint8_t *)new_arsn_b, new_arsn_len);
+    // This TA was originally setup for AESGCM, need to specify an akid so we can use it for a MAC
+    test_association->akid = 130;
 
     return_val =
             Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
