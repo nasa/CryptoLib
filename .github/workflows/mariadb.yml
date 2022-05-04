@@ -1,4 +1,4 @@
-name: Build
+name: MDB Build
 
 on: 
   push:
