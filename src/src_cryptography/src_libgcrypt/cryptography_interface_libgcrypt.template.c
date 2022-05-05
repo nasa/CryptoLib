@@ -592,6 +592,16 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
         return CRYPTO_LIB_KEY_LENGTH_ERROR;
     }
 
+    /*
+    ** Special case where Cipher is set to NONE
+    */
+    if (algo == GCRY_CIPHER_NONE)
+    {
+        memcpy(data_out, data_in, len_data_in);
+        status = CRYPTO_LIB_SUCCESS;
+        return status;
+    }
+
     gcry_error = gcry_cipher_open(&(tmp_hd), algo, GCRY_CIPHER_MODE_NONE, GCRY_CIPHER_NONE);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
@@ -1285,6 +1295,9 @@ int32_t cryptography_get_ecs_algo(int8_t algo_enum)
     int32_t algo = CRYPTO_LIB_ERR_UNSUPPORTED_ECS; // All valid algos will be positive
     switch (algo_enum)
     {
+        case CRYPTO_CIPHER_NONE:
+            algo =  GCRY_CIPHER_NONE;
+            break;
         case CRYPTO_CIPHER_AES256_GCM:
             algo = GCRY_CIPHER_AES256;
             break;

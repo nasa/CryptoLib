@@ -196,15 +196,16 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
                 printf(KYEL "SA Encryption Cipher: %d\n", encryption_cipher);
 #endif
             }
-            // If no pointer, must not be using ECS at all
+            // If no pointer, must not be using ECS at all so specify it here,
+            // This is NOT the same as specifying encryption is 'NONE'
             else
             {
-                encryption_cipher = CRYPTO_CIPHER_NONE;
+                encryption_cipher = CRYPTO_CIPHER_NOT_SET;
             }
             ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(encryption_cipher);
         }
 
-        if ( encryption_cipher == CRYPTO_CIPHER_NONE && sa_ptr->est == 1)
+        if ( encryption_cipher == CRYPTO_CIPHER_NOT_SET && sa_ptr->est == 1)
         {
             status = CRYPTO_LIB_ERR_NO_ECS_SET_FOR_ENCRYPTION_MODE;
             return status;
@@ -512,7 +513,17 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
                 // TODO - implement non-AEAD algorithm logic
                 if (sa_service_type == SA_ENCRYPTION)
                 {
-                    //status = cryptography_if->cryptography_encrypt();
+                    status = cryptography_if->cryptography_encrypt(&p_new_enc_frame[index],                               // ciphertext output
+                                                                    (size_t)tf_payload_len,                                        // length of data
+                                                                    (uint8_t*)(p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), // plaintext input
+                                                                    (size_t)tf_payload_len,                                         // in data length
+                                                                    NULL, // Using SA key reference, key is null
+                                                                    Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs), // Length of key derived from sa_ptr key_ref
+                                                                    sa_ptr, // SA (for key reference)
+                                                                    sa_ptr->iv, // IV
+                                                                    sa_ptr->iv_len, // IV Length);
+                                                                    sa_ptr->ecs // encryption cipher
+                    );
                 }
 
                 if (sa_service_type == SA_AUTHENTICATION)
