@@ -274,7 +274,7 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_HMAC256_AUTH_ONLY)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 8, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     int32_t status = Crypto_Init();
 
-    char* enc_tc_jpl_mmt_scid44_vcid1= "202C202E0000060000000100015B61ADE5E01FF3530590E8A868EB6E3A84629306812161C2606CD00EE5DF65C11244";
+    char* enc_tc_jpl_mmt_scid44_vcid1= "202C202E000006000000020001BF2C970335483451019AE78B4E06CA225484AED0023C4F5E35BB3616FF8B1775ED29";
     char* enc_tc_jpl_mmt_scid44_vcid1_expect = NULL;
     int enc_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
 
@@ -392,7 +392,7 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_HMAC512_AUTH_ONLY)
 
     // char* enc_tc_jpl_mmt_scid44_vcid1= "202C1C1A0000050001C50827915AEB423F054402D5DC3C67566986"; // Returns  CRYPTO_LIB_ERR_INVALID_HEADER since SN/ARC missing from header
     // char* enc_tc_jpl_mmt_scid44_vcid1= "202C1C1E000005000000050001C7BA93010000000000000000000000007ACC";  // Invalid MAC, should fail with error 510
-    char* enc_tc_jpl_mmt_scid44_vcid1= "202C244E00000700000001000128B126A96B65264A7B72ACD5B5F929A764F6FC9B09DC6BAE96352BFD52016680138434BD5372D981008D10479BF45BB7F4465B0517CCDB2AD36CBD987CAFC3A5741B";
+    char* enc_tc_jpl_mmt_scid44_vcid1= "202C244E0000070000000200019A5F6B4F207EF3489364576AD86C957440762A0BB99E17C92BEA5A74B9D2115683AA103E69E11CCE41720BFE44F5091F310FEDE2D54593CB3767D8B4CD3998C521D2";
     char* enc_tc_jpl_mmt_scid44_vcid1_expect = NULL;
     int enc_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
 
@@ -510,7 +510,7 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_HMAC512_TRUNCATED_16BYTE_MAC_AUTH_ONLY)
 
     // char* enc_tc_jpl_mmt_scid44_vcid1= "202C1C1A0000050001C50827915AEB423F054402D5DC3C67566986"; // Returns  CRYPTO_LIB_ERR_INVALID_HEADER since SN/ARC missing from header
     // char* enc_tc_jpl_mmt_scid44_vcid1= "202C1C1E000005000000050001C7BA93010000000000000000000000007ACC";  // Invalid MAC, should fail with error 510
-    char* enc_tc_jpl_mmt_scid44_vcid1= "202C281E000008000000010001A5F0B14897543A0DFF2E433E3A13F784F941";
+    char* enc_tc_jpl_mmt_scid44_vcid1= "202C281E000008000000010001ECAF0E9E1BC36A418FD5CA95DB50ECF08A74";
     char* enc_tc_jpl_mmt_scid44_vcid1_expect = NULL;
     int enc_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
 
@@ -533,12 +533,7 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_HMAC512_TRUNCATED_16BYTE_MAC_AUTH_ONLY)
     printf("\n");
 
     status = Crypto_TC_ProcessSecurity((uint8_t* )enc_tc_jpl_mmt_scid44_vcid1_expect, &enc_tc_jpl_mmt_scid44_vcid1_expect_len, tc_processed_frame);
-
-
-    //Currently, KMC Crypto Service can not handle Truncated MAC Validation: https://github.jpl.nasa.gov/ASEC/AMMOS-CryptoLib/issues/72
-    // When this is fixed, remove the error assert, and uncomment the success check.
-    // ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-    ASSERT_EQ(CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_MAC_VALIDATION_ERROR,status);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     printf("Processed PDU:\n");
     for (int i=0; i<tc_processed_frame->tc_pdu_len; i++)
