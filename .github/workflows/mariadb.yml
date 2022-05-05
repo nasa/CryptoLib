@@ -32,6 +32,7 @@ jobs:
           /etc/init.d/mysql start
           mysql --host=localhost -uroot -pitc123! < delete_sadb.sql
           mysql --host=localhost -uroot -pitc123! < create_sadb.sql
+          cd /__w/CryptoLib/CryptoLib/src/crypto_sadb/test_sadb_mariadb_sql
           mysql --host=localhost -uroot -pitc123! < create_sadb_user_grant_permissions.sql
           mysql --host=localhost -uroot -pitc123! < create_sadb_jpl_unit_test_security_associations.sql
           cd /__w/CryptoLib/CryptoLib/build/bin
