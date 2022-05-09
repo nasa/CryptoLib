@@ -85,6 +85,9 @@ install(TARGETS Crypto
 
 IF(MYSQL)
     file(GLOB MYSQL_SCRIPTS crypto_sadb/sadb_mariadb_sql/*.sql)
+    file(GLOB MYSQL_TEST_SCRIPTS crypto_sadb/test_sadb_mariadb_sql/*.sql)
     install(FILES ${MYSQL_SCRIPTS}
             DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/sadb_mariadb_sql)
+    install(FILES ${MYSQL_TEST_SCRIPTS}
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/test/test_sadb_mariadb_sql)
 endif()

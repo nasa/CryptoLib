@@ -94,11 +94,11 @@ struct curl_slist *http_headers_list;
 static char* kmc_root_uri;
 static const char* status_endpoint = "key-info?keyRef=kmc/test/KEY0";
 static const char* encrypt_endpoint = "encrypt?keyRef=%s&transformation=%s&iv=%s";
-static const char* encrypt_offset_endpoint = "encrypt?keyRef=%s&transformation=%s&iv=%s&encryptOffset=%s";
+static const char* encrypt_offset_endpoint = "encrypt?keyRef=%s&transformation=%s&iv=%s&encryptOffset=%s&macLength=%s";
 static const char* decrypt_endpoint = "decrypt?metadata=keyLength:%s,keyRef:%s,cipherTransformation:%s,initialVector:%s,cryptoAlgorithm:%s,metadataType:EncryptionMetadata";
-static const char* decrypt_offset_endpoint = "decrypt?metadata=keyLength:%s,keyRef:%s,cipherTransformation:%s,initialVector:%s,cryptoAlgorithm:%s,metadataType:EncryptionMetadata,encryptOffset:%s";
+static const char* decrypt_offset_endpoint = "decrypt?metadata=keyLength:%s,keyRef:%s,cipherTransformation:%s,initialVector:%s,cryptoAlgorithm:%s,macLength:%s,metadataType:EncryptionMetadata,encryptOffset:%s";
 static const char* icv_create_endpoint = "icv-create?keyRef=%s";
-static const char* icv_verify_endpoint = "icv-verify?metadata=integrityCheckValue:%s,keyRef:%s,cryptoAlgorithm:%s,metadataType:IntegrityCheckMetadata";
+static const char* icv_verify_endpoint = "icv-verify?metadata=integrityCheckValue:%s,keyRef:%s,cryptoAlgorithm:%s,macLength:%s,metadataType:IntegrityCheckMetadata";
 
 // Supported KMC Cipher Transformation Strings
 static const char* AES_GCM_TRANSFORMATION="AES/GCM/NoPadding";
@@ -557,10 +557,13 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     const char* auth_algorithm = NULL;
     get_auth_algorithm_from_acs(acs,&auth_algorithm);
 
+    uint32_t mac_size_str_len = 0;
+    char* mac_size_str = int_to_str(mac_size*8, &mac_size_str_len);
+
     // Prepare the Authentication Endpoint URI for KMC Crypto Service
-    int len_auth_endpoint = strlen(icv_verify_endpoint)+strlen(mac_base64)+strlen(sa_ptr->ak_ref)+strlen(auth_algorithm);
+    int len_auth_endpoint = strlen(icv_verify_endpoint)+strlen(mac_base64)+strlen(sa_ptr->ak_ref)+strlen(auth_algorithm)+mac_size_str_len;
     char* auth_endpoint_final = (char*) malloc(len_auth_endpoint);
-    snprintf(auth_endpoint_final,len_auth_endpoint,icv_verify_endpoint,mac_base64,sa_ptr->ak_ref,auth_algorithm);
+    snprintf(auth_endpoint_final,len_auth_endpoint,icv_verify_endpoint,mac_base64,sa_ptr->ak_ref,auth_algorithm,mac_size_str);
 
     char* auth_uri = (char*) malloc(strlen(kmc_root_uri)+len_auth_endpoint);
     auth_uri[0] = '\0';
@@ -748,11 +751,13 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
         printf("AAD Offset Str: %s\n",aad_offset_str);
 #endif
 
+        uint32_t mac_size_str_len = 0;
+        char* mac_size_str = int_to_str(mac_size*8, &mac_size_str_len);
 
-        int len_encrypt_endpoint = strlen(encrypt_offset_endpoint)+strlen(sa_ptr->ek_ref)+strlen(iv_base64)+strlen(AES_GCM_TRANSFORMATION)+aad_offset_str_len;
+        int len_encrypt_endpoint = strlen(encrypt_offset_endpoint)+strlen(sa_ptr->ek_ref)+strlen(iv_base64)+strlen(AES_GCM_TRANSFORMATION)+aad_offset_str_len + mac_size_str_len;
         char* encrypt_endpoint_final = (char*) malloc(len_encrypt_endpoint);
 
-        snprintf(encrypt_endpoint_final,len_encrypt_endpoint,encrypt_offset_endpoint,sa_ptr->ek_ref,AES_GCM_TRANSFORMATION, iv_base64,aad_offset_str);
+        snprintf(encrypt_endpoint_final,len_encrypt_endpoint,encrypt_offset_endpoint,sa_ptr->ek_ref,AES_GCM_TRANSFORMATION, iv_base64,aad_offset_str,mac_size_str);
 
         encrypt_uri = (char*) malloc(strlen(kmc_root_uri)+len_encrypt_endpoint);
         encrypt_uri[0] = '\0';
@@ -1005,10 +1010,13 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
         printf("AAD Offset Str: %s\n",aad_offset_str);
 #endif
 
-        int len_decrypt_endpoint = strlen(decrypt_offset_endpoint)+ key_len_in_bits_str_len + strlen(sa_ptr->ek_ref)+strlen(iv_base64)+strlen(AES_GCM_TRANSFORMATION) + strlen(AES_CRYPTO_ALGORITHM) + aad_offset_str_len;
+        uint32_t mac_size_str_len = 0;
+        char* mac_size_str = int_to_str(mac_size*8, &mac_size_str_len);
+
+        int len_decrypt_endpoint = strlen(decrypt_offset_endpoint)+ key_len_in_bits_str_len + strlen(sa_ptr->ek_ref)+strlen(iv_base64)+strlen(AES_GCM_TRANSFORMATION) + strlen(AES_CRYPTO_ALGORITHM) + mac_size_str_len + aad_offset_str_len;
         char* decrypt_endpoint_final = (char*) malloc(len_decrypt_endpoint);
 
-        snprintf(decrypt_endpoint_final,len_decrypt_endpoint,decrypt_offset_endpoint,key_len_in_bits_str,sa_ptr->ek_ref,AES_GCM_TRANSFORMATION, iv_base64, AES_CRYPTO_ALGORITHM, aad_offset_str);
+        snprintf(decrypt_endpoint_final,len_decrypt_endpoint,decrypt_offset_endpoint,key_len_in_bits_str,sa_ptr->ek_ref,AES_GCM_TRANSFORMATION, iv_base64, AES_CRYPTO_ALGORITHM, mac_size_str, aad_offset_str);
 
         decrypt_uri = (char*) malloc(strlen(kmc_root_uri)+len_decrypt_endpoint);
         decrypt_uri[0] = '\0';

@@ -33,7 +33,7 @@ void reload_db(void)
 {
     printf("Resetting Database\n");
     system("mysql --host=localhost -uroot -pitc123! < ../../src/crypto_sadb/sadb_mariadb_sql/empty_sadb.sql");
-    system("mysql --host=localhost -uroot -pitc123! < ../../src/crypto_sadb/sadb_mariadb_sql/create_sadb_ivv_unit_tests.sql");
+    system("mysql --host=localhost -uroot -pitc123! < ../../src/crypto_sadb/test_sadb_mariadb_sql/create_sadb_ivv_unit_tests.sql");
 }
 
 
