@@ -787,13 +787,15 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
         segment_hdr_len = 0;
     }
 
-    // Check FECF
+    // Parse & Check FECF
     if (current_managed_parameters->has_fecf == TC_HAS_FECF)
     {
+        tc_sdls_processed_frame->tc_sec_trailer.fecf = (((ingest[tc_sdls_processed_frame->tc_header.fl - 1] << 8) & 0xFF00) |
+                                                        (ingest[tc_sdls_processed_frame->tc_header.fl] & 0x00FF));
+
         if (crypto_config->crypto_check_fecf == TC_CHECK_FECF_TRUE)
         {
-            uint16_t received_fecf = (((ingest[tc_sdls_processed_frame->tc_header.fl - 1] << 8) & 0xFF00) |
-                                      (ingest[tc_sdls_processed_frame->tc_header.fl] & 0x00FF));
+            uint16_t received_fecf = tc_sdls_processed_frame->tc_sec_trailer.fecf;
             // Calculate our own
             uint16_t calculated_fecf = Crypto_Calc_FECF(ingest, *len_ingest - 2);
             // Compare
