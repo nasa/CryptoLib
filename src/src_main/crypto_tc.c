@@ -86,6 +86,12 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
         return status;  // return immediately so a NULL crypto_config is not dereferenced later
     }
 
+    if (in_frame_length < 5) // Frame length doesn't have enough bytes for TC TF header -- error out.
+    {
+        status = CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_TC_STANDARD;
+        return status;
+    }
+
     // Primary Header
     temp_tc_header.tfvn = ((uint8_t)p_in_frame[0] & 0xC0) >> 6;
     temp_tc_header.bypass = ((uint8_t)p_in_frame[0] & 0x20) >> 5;
@@ -97,6 +103,12 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
     temp_tc_header.fl = ((uint8_t)p_in_frame[2] & 0x03) << 8;
     temp_tc_header.fl = temp_tc_header.fl | (uint8_t)p_in_frame[3];
     temp_tc_header.fsn = (uint8_t)p_in_frame[4];
+
+    if (in_frame_length < temp_tc_header.fl) // Specified frame length larger than provided frame!
+    {
+        status = CRYPTO_LIB_ERR_INPUT_FRAME_LENGTH_SHORTER_THAN_FRAME_HEADERS_LENGTH;
+        return status;
+    }
 
     // Lookup-retrieve managed parameters for frame via gvcid:
     status = Crypto_Get_Managed_Parameters_For_Gvcid(temp_tc_header.tfvn, temp_tc_header.scid, temp_tc_header.vcid,
@@ -659,6 +671,12 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
     printf(KYEL "\n----- Crypto_TC_ProcessSecurity START -----\n" RESET);
 #endif
 
+    if (*len_ingest < 5) // Frame length doesn't even have enough bytes for header -- error out.
+    {
+        status = CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_TC_STANDARD;
+        return status;
+    }
+
     int byte_idx = 0;
     // Primary Header
     tc_sdls_processed_frame->tc_header.tfvn = ((uint8_t)ingest[byte_idx] & 0xC0) >> 6;
@@ -676,6 +694,12 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
     byte_idx++;
     tc_sdls_processed_frame->tc_header.fsn = (uint8_t)ingest[byte_idx];
     byte_idx++;
+
+    if (*len_ingest < tc_sdls_processed_frame->tc_header.fl) // Specified frame length larger than provided frame!
+    {
+        status = CRYPTO_LIB_ERR_INPUT_FRAME_LENGTH_SHORTER_THAN_FRAME_HEADERS_LENGTH;
+        return status;
+    }
 
     // Lookup-retrieve managed parameters for frame via gvcid:
     status = Crypto_Get_Managed_Parameters_For_Gvcid(
