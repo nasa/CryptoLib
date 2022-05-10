@@ -568,7 +568,7 @@ UTEST(TC_PROCESS, ERROR_TC_INPUT_FRAME_TOO_SHORT_FOR_SPECIFIED_FRAME_LENGTH_HEAD
     tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
 
-    char* test_frame_pt_h = "2003001c00000002ff";
+    char* test_frame_pt_h = "200304260000020000000000000000000000309e09deeaa375487983a89f3ed7519a230baf22";
     uint8_t *test_frame_pt_b = NULL;
     int test_frame_pt_len = 0;
 
