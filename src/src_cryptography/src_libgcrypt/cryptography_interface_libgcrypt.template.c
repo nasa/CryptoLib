@@ -74,6 +74,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t aad_bool, uint8_t* ecs, uint8_t* acs);
 static int32_t cryptography_get_acs_algo(int8_t algo_enum);
 static int32_t cryptography_get_ecs_algo(int8_t algo_enum);
+static int32_t cryptography_get_ecs_mode(int8_t algo_enum);
 /*
 ** Module Variables
 */
@@ -96,6 +97,7 @@ CryptographyInterface get_cryptography_interface_libgcrypt(void)
     cryptography_if_struct.cryptography_aead_decrypt = cryptography_aead_decrypt;
     cryptography_if_struct.cryptography_get_acs_algo = cryptography_get_acs_algo;
     cryptography_if_struct.cryptography_get_ecs_algo = cryptography_get_ecs_algo;
+    cryptography_if_struct.cryptography_get_ecs_mode = cryptography_get_ecs_mode;
     return &cryptography_if_struct;
 }
 
@@ -594,7 +596,6 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
     int32_t mode = GCRY_CIPHER_MODE_NONE;
     mode = cryptography_get_ecs_mode(*ecs);
 
-
     // Check that key length to be used is atleast as long as the algo requirement
     if (sa_ptr != NULL && len_key < ek_ring[sa_ptr->ekid].key_len)
     {
@@ -740,7 +741,7 @@ static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
         return status;
     }
 
-    gcry_error = gcry_cipher_open(&(tmp_hd), algo, GCRY_CIPHER_MODE_NONE, GCRY_CIPHER_NONE);
+    gcry_error = gcry_cipher_open(&(tmp_hd), algo, GCRY_CIPHER_MODE_NONE, 0);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "DECRYPTION ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
@@ -1122,7 +1123,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
         return CRYPTO_LIB_KEY_LENGTH_ERROR;
     }
 
-    gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_NONE);
+    gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, 0);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
@@ -1298,7 +1299,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
         return CRYPTO_LIB_KEY_LENGTH_ERROR;
     }
 
-    gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_NONE);
+    gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, 0);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
@@ -1440,7 +1441,7 @@ int32_t cryptography_get_ecs_algo(int8_t algo_enum)
             break;
         case CRYPTO_CIPHER_AES256_CBC:
             algo = GCRY_CIPHER_AES256;
-
+            break;
         default:
 #ifdef DEBUG
             printf("ECS Algo Enum not supported\n");

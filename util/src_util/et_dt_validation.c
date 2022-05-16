@@ -3051,7 +3051,7 @@ UTEST(PLAINTEXT, ENCRYPT_DECRYPT)
 */
 
 /**
- * @brief Unit Test: Encrypts a frame, the output payload shall be identifcal to the input payload (but not the headers)
+ * @brief Unit Test: Encrypts a frame, the output payload shall be identical to the input payload (but not the headers)
  **/
 UTEST(ENCRYPTION, ENCRYPT_NO_CIPHER)
 {
@@ -3091,6 +3091,83 @@ UTEST(ENCRYPTION, ENCRYPT_NO_CIPHER)
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_CIPHER_NONE;
     test_association->akid = 9;
+
+    // Convert input jpl frame
+    hex_conversion(jpl_frame_pt_h, (char**) &jpl_frame_pt_b, &jpl_frame_pt_len);
+    // Convert reference payload
+    hex_conversion(payload_pt_h, (char**) &payload_pt_b, &payload_pt_len);
+
+    // Apply, save the generated frame
+    status = Crypto_TC_ApplySecurity(jpl_frame_pt_b, jpl_frame_pt_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    printf("Old frame before apply security:\n");
+    for (int i = 0; i < jpl_frame_pt_len; i++)
+    {
+        printf("%02X", jpl_frame_pt_b[i]);
+    }
+
+    printf("\nNew frame after apply security, no encryption, and add SLS headers:\n");
+    for (int i = 0; i < enc_frame_len; i++)
+    {
+        printf("%02X", ptr_enc_frame[i]);
+    }
+    printf("\n");
+
+    // Verify no changes to payload, (ignore headers, SDLS headers, and FECF)
+    uint16_t enc_data_idx = 7;
+    Crypto_Shutdown();
+    for (int i = 0; i < 22; i++)
+    {
+        printf("[%d]: %02x -> %02x \n", i, *(ptr_enc_frame + enc_data_idx), payload_pt_b[i]);
+        ASSERT_EQ(*(ptr_enc_frame + enc_data_idx), payload_pt_b[i]);
+        enc_data_idx++;
+    }
+    
+    Crypto_Shutdown();
+}
+
+/**
+ * @brief Unit Test: Encrypts a frame, the output payload shall be identical to the input payload (but not the headers)
+ **/
+UTEST(ENCRYPTION, ENCRYPT_ONLY_AES256_CBC)
+{
+    int32_t status = CRYPTO_LIB_ERROR;
+    uint8_t* ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_TRUE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
+    Crypto_Init();
+
+    char* jpl_frame_pt_h = "2003001c00ff000100001880d03e000a197f0b000300020093d4ba21c4555555555555";
+    char* payload_pt_h = "ff000100001880d03e000a197f0b000300020093d4ba21c4";
+    uint8_t* jpl_frame_pt_b, *payload_pt_b = NULL;
+    int jpl_frame_pt_len, payload_pt_len = 0;
+
+    // Expose/setup SAs for testing
+    SecurityAssociation_t *test_association = NULL;
+    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    // Deactivate SA 1
+    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    test_association->sa_state = SA_NONE;
+    // Activate SA 9
+    sadb_routine->sadb_get_sa_from_spi(9, &test_association);
+    test_association->shivf_len = 12;
+    test_association->iv_len = 12;
+    test_association->shsnf_len = 0;
+    test_association->arsn_len = 0;
+    test_association->arsn = calloc(1, test_association->arsn_len * sizeof(uint8_t));
+    test_association->abm_len = 1024;
+    memset(test_association->abm, 0xFF, (test_association->abm_len * sizeof(uint8_t))); // Bitmask
+    test_association->stmacf_len = 16;
+    test_association->sa_state = SA_OPERATIONAL;
+    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
+    *test_association->ecs = CRYPTO_CIPHER_AES256_CBC;
+    test_association->akid = 0;
 
     // Convert input jpl frame
     hex_conversion(jpl_frame_pt_h, (char**) &jpl_frame_pt_b, &jpl_frame_pt_len);
