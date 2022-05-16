@@ -39,7 +39,12 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
                                          SecurityAssociation_t* sa_ptr,
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* ecs);
-static int32_t cryptography_decrypt(void);
+static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
+                                         uint8_t* data_in, size_t len_data_in,
+                                         uint8_t* key, uint32_t len_key,
+                                         SecurityAssociation_t* sa_ptr,
+                                         uint8_t* iv, uint32_t iv_len,
+                                         uint8_t *ecs);
 static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -265,11 +270,19 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* key, uint32_t len_key,
                                          SecurityAssociation_t* sa_ptr,
                                          uint8_t* iv, uint32_t iv_len,
-                                         uint8_t* ecs);
+                                         uint8_t* ecs)
 { 
     return CRYPTO_LIB_SUCCESS; 
 }
-static int32_t cryptography_decrypt(void){ return CRYPTO_LIB_SUCCESS; }
+static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
+                                         uint8_t* data_in, size_t len_data_in,
+                                         uint8_t* key, uint32_t len_key,
+                                         SecurityAssociation_t* sa_ptr,
+                                         uint8_t* iv, uint32_t iv_len,
+                                         uint8_t *ecs)
+{ 
+    return CRYPTO_LIB_SUCCESS; 
+}
 static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,

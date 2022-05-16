@@ -102,8 +102,9 @@ typedef enum
 typedef enum
 {
     CRYPTO_CIPHER_NOT_SET, // Becomes set when no cipher is set by user in SADB
-    CRYPTO_CIPHER_NONE,   // Set by usser to specify do no encryption, but make encryption calls
-    CRYPTO_CIPHER_AES256_GCM
+    CRYPTO_CIPHER_NONE,   // Set by user to specify do no encryption
+    CRYPTO_CIPHER_AES256_GCM,
+    CRYPTO_CIPHER_AES256_CBC
 } EncCipherSuite;
 
 /*

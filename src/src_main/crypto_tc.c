@@ -965,7 +965,17 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
         }
         if(sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
         {
-            status = cryptography_if->cryptography_decrypt();
+            status = cryptography_if->cryptography_decrypt(tc_sdls_processed_frame->tc_pdu,       // plaintext output
+                                                            (size_t)(tc_sdls_processed_frame->tc_pdu_len),   // length of data
+                                                            &(ingest[tc_enc_payload_start_index]), // ciphertext input
+                                                            (size_t)(tc_sdls_processed_frame->tc_pdu_len),    // in data length
+                                                            NULL, // Key
+                                                            Crypto_Get_ECS_Algo_Keylen(*sa_ptr->acs),
+                                                            sa_ptr, // SA for key reference
+                                                            tc_sdls_processed_frame->tc_sec_header.iv, // IV
+                                                            sa_ptr->iv_len, // IV Length
+                                                            sa_ptr->ecs // encryption cipher
+            );
         }
 
     } else if(sa_service_type == SA_PLAINTEXT)
