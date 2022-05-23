@@ -2,7 +2,7 @@ name: Build
 
 on: 
   push:
-    branches: [ collab_main ]
+    branches: [ main, dev ]
   pull_request:
 
 jobs:
@@ -14,6 +14,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+
+    - name: Update
+      run: sudo apt-get update
 
     - name: Install Dependencies
       run: sudo apt-get install -y libgpg-error-dev libgcrypt20-dev libmariadb-dev libmariadb-dev-compat
@@ -36,6 +39,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+
+    - name: Update
+      run: sudo apt-get update
 
     - name: Install Dependencies
       run: sudo apt-get install -y libgpg-error-dev libgcrypt20-dev libmariadb-dev libmariadb-dev-compat libcurl4-openssl-dev
@@ -60,6 +66,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - name: Update
+      run: sudo apt-get update
+
     - name: Install Dependencies
       run: sudo apt-get install -y libgpg-error-dev libgcrypt20-dev libmariadb-dev libmariadb-dev-compat libcurl4-openssl-dev
 
@@ -82,6 +91,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+
+    - name: Update
+      run: sudo apt-get update
 
     - name: Install Dependencies
       run: sudo apt-get install -y libgpg-error-dev libgcrypt20-dev libmariadb-dev libmariadb-dev-compat libcurl4-openssl-dev
@@ -106,6 +118,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - name: Update
+      run: sudo apt-get update
+
     - name: Install Dependencies
       run: sudo apt-get install -y libgpg-error-dev libgcrypt20-dev libmariadb-dev libmariadb-dev-compat libcurl4-openssl-dev
 
@@ -128,6 +143,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+
+    - name: Update
+      run: sudo apt-get update
 
     - name: Install Dependencies
       run: sudo apt-get install -y libgpg-error-dev libgcrypt20-dev libmariadb-dev libmariadb-dev-compat libcurl4-openssl-dev

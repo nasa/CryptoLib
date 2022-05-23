@@ -84,8 +84,8 @@
 #define SA_DELETE 0
 // SA Additional Directives
 #define SA_STATUS 8
-#define SA_SETARC 9
-#define SA_SETARCW 10
+#define SA_SETARSN 9
+#define SA_SETARSNW 10
 
 // Key State Defines
 #define KEY_PREACTIVE 0
@@ -103,7 +103,7 @@
 // Generic Defines
 #define NUM_SA 64
 #define SPI_LEN 2 /* bytes */
-#define KEY_SIZE 32
+#define KEY_SIZE 512 /* bytes */
 #define KEY_ID_SIZE 8
 #define NUM_KEYS 256
 #define DISABLED 0
@@ -111,13 +111,13 @@
 #define IV_SIZE 16   /* TM IV size bytes */
 #define IV_SIZE_TC 4 /* TC IV size bytes */
 #define OCF_SIZE 4
-#define MAC_SIZE 16 /* bytes */
+#define MAC_SIZE 16 /* bytes */ /* Deprecated, todo - remove throughout & use SA mac field specification */
 #define FECF_SIZE 2
 #define SEGMENT_HDR_SIZE 1
 #define ECS_SIZE 4    /* bytes */
 #define ABM_SIZE 1024 // 20      /* bytes */
-#define ARC_SIZE 20   /* total messages */
-#define ARCW_SIZE 1   /* bytes */
+#define ARSN_SIZE 20   /* total messages */
+#define ARSNW_SIZE 1   /* bytes */
 #define SN_SIZE 0
 #define CHALLENGE_SIZE 16     /* bytes */
 #define CHALLENGE_MAC_SIZE 16 /* bytes */
@@ -160,7 +160,7 @@
 
 // TC Defines
 #define TC_SH_SIZE 8 /* bits */
-#define TC_SN_SIZE 0
+#define TC_SN_SIZE 2
 #define TC_SN_WINDOW 10 /* +/- value */
 #define TC_PAD_SIZE 0
 #define TC_FRAME_DATA_SIZE 1740 /* bytes */

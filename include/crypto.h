@@ -54,7 +54,7 @@
 // Crypto Library Configuration functions
 extern int32_t Crypto_Config_CryptoLib(uint8_t sadb_type, uint8_t cryptography_type, uint8_t crypto_create_fecf, uint8_t process_sdls_pdus,
                                        uint8_t has_pus_hdr, uint8_t ignore_sa_state, uint8_t ignore_anti_replay,
-                                       uint8_t unique_sa_per_mapid, uint8_t crypto_check_fecf, uint8_t vcid_bitmask);
+                                       uint8_t unique_sa_per_mapid, uint8_t crypto_check_fecf, uint8_t vcid_bitmask, uint8_t crypto_increment_nontransmitted_iv);
 extern int32_t Crypto_Config_MariaDB(char* mysql_hostname, char* mysql_database, uint16_t mysql_port,
                                      uint8_t mysql_require_secure_transport, uint8_t mysql_tls_verify_server,
                                      char* mysql_tls_ca, char* mysql_tls_capath, char* mysql_mtls_cert,
@@ -66,7 +66,7 @@ extern int32_t Crypto_Config_Kmc_Crypto_Service(char* protocol, char* kmc_crypto
                                                 char* mtls_client_cert_type, char* mtls_client_key_path,
                                                 char* mtls_client_key_pass, char* mtls_issuer_cert);
 extern int32_t Crypto_Config_Add_Gvcid_Managed_Parameter(uint8_t tfvn, uint16_t scid, uint8_t vcid, uint8_t has_fecf,
-                                                         uint8_t has_segmentation_hdr);
+                                                         uint8_t has_segmentation_hdr, uint16_t max_tc_frame_size);
 
 // Initialization
 extern int32_t Crypto_Init(void); // Initialize CryptoLib After Configuration Calls
@@ -110,6 +110,9 @@ int32_t Crypto_window(uint8_t* actual, uint8_t* expected, int length, int window
 uint16_t Crypto_Calc_FECF(uint8_t* ingest, int len_ingest);
 void Crypto_Calc_CRC_Init_Table(void);
 uint16_t Crypto_Calc_CRC16(uint8_t* data, int size);
+int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, uint8_t *iv);
+int32_t Crypto_Get_ECS_Algo_Keylen(uint8_t algo);
+int32_t Crypto_Get_ACS_Algo_Keylen(uint8_t algo);
 
 // Key Management Functions
 int32_t Crypto_Key_OTAR(void);
@@ -146,6 +149,7 @@ int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uin
                                                        GvcidManagedParameters_t** managed_parameters_out);
 int32_t crypto_config_add_gvcid_managed_parameter_recursion(uint8_t tfvn, uint16_t scid, uint8_t vcid,
                                                                    uint8_t has_fecf, uint8_t has_segmentation_hdr,
+                                                                   uint16_t max_tc_frame_size,
                                                                    GvcidManagedParameters_t* managed_parameter);
 void Crypto_Free_Managed_Parameters(GvcidManagedParameters_t* managed_parameters);
 

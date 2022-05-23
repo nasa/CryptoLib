@@ -45,9 +45,9 @@ int32_t Crypto_Init_Unit_Test(void)
     int32_t status = CRYPTO_LIB_SUCCESS;
     Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS);
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     status = Crypto_Init();
     return status;
 }
@@ -238,7 +238,7 @@ int32_t Crypto_Shutdown(void)
  **/
 int32_t Crypto_Config_CryptoLib(uint8_t sadb_type, uint8_t cryptography_type, uint8_t crypto_create_fecf, uint8_t process_sdls_pdus,
                                 uint8_t has_pus_hdr, uint8_t ignore_sa_state, uint8_t ignore_anti_replay,
-                                uint8_t unique_sa_per_mapid, uint8_t crypto_check_fecf, uint8_t vcid_bitmask)
+                                uint8_t unique_sa_per_mapid, uint8_t crypto_check_fecf, uint8_t vcid_bitmask, uint8_t crypto_increment_nontransmitted_iv)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     crypto_config = (CryptoConfig_t* )calloc(1, CRYPTO_CONFIG_SIZE);
@@ -252,6 +252,7 @@ int32_t Crypto_Config_CryptoLib(uint8_t sadb_type, uint8_t cryptography_type, ui
     crypto_config->unique_sa_per_mapid = unique_sa_per_mapid;
     crypto_config->crypto_check_fecf = crypto_check_fecf;
     crypto_config->vcid_bitmask = vcid_bitmask;
+    crypto_config->crypto_increment_nontransmitted_iv = crypto_increment_nontransmitted_iv;
     return status;
 }
 
@@ -329,10 +330,11 @@ extern int32_t Crypto_Config_Kmc_Crypto_Service(char* protocol, char* kmc_crypto
  * @param vcid: uint8
  * @param has_fecf: uint8
  * @param has_segmentation_hdr: uint8
+ * @param max_tc_frame_size: uint16
  * @return int32: Success/Failure
  **/
 int32_t Crypto_Config_Add_Gvcid_Managed_Parameter(uint8_t tfvn, uint16_t scid, uint8_t vcid, uint8_t has_fecf,
-                                                  uint8_t has_segmentation_hdr)
+                                                  uint8_t has_segmentation_hdr, uint16_t max_tc_frame_size)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
@@ -346,6 +348,7 @@ int32_t Crypto_Config_Add_Gvcid_Managed_Parameter(uint8_t tfvn, uint16_t scid, u
             gvcid_managed_parameters->vcid = vcid;
             gvcid_managed_parameters->has_fecf = has_fecf;
             gvcid_managed_parameters->has_segmentation_hdr = has_segmentation_hdr;
+            gvcid_managed_parameters->max_tc_frame_size = max_tc_frame_size;
             gvcid_managed_parameters->next = NULL;
             return status;
         }
@@ -358,8 +361,8 @@ int32_t Crypto_Config_Add_Gvcid_Managed_Parameter(uint8_t tfvn, uint16_t scid, u
     }
     else
     { // Recurse through nodes and add at end
-        return crypto_config_add_gvcid_managed_parameter_recursion(tfvn, scid, vcid, has_fecf, has_segmentation_hdr,
-                                                                   gvcid_managed_parameters);
+        return crypto_config_add_gvcid_managed_parameter_recursion(tfvn, scid, vcid, has_fecf, has_segmentation_hdr, 
+                                                                    max_tc_frame_size, gvcid_managed_parameters);
     }
 }
 
@@ -370,17 +373,18 @@ int32_t Crypto_Config_Add_Gvcid_Managed_Parameter(uint8_t tfvn, uint16_t scid, u
  * @param vcid: uint8
  * @param has_fecf: uint8
  * @param has_segmentation_hdr: uint8
+ * @param max_tc_frame_size: uint16
  * @param managed_parameter: GvcidManagedParameters_t*
  * @return int32: Success/Failure
  **/
 int32_t crypto_config_add_gvcid_managed_parameter_recursion(uint8_t tfvn, uint16_t scid, uint8_t vcid, uint8_t has_fecf,
-                                                            uint8_t has_segmentation_hdr,
+                                                            uint8_t has_segmentation_hdr, uint16_t max_tc_frame_size,
                                                             GvcidManagedParameters_t* managed_parameter)
 {
     if (managed_parameter->next != NULL)
     {
         return crypto_config_add_gvcid_managed_parameter_recursion(tfvn, scid, vcid, has_fecf, has_segmentation_hdr,
-                                                                   managed_parameter->next);
+                                                                   max_tc_frame_size, managed_parameter->next);
     }
     else
     {
@@ -390,6 +394,7 @@ int32_t crypto_config_add_gvcid_managed_parameter_recursion(uint8_t tfvn, uint16
         managed_parameter->next->vcid = vcid;
         managed_parameter->next->has_fecf = has_fecf;
         managed_parameter->next->has_segmentation_hdr = has_segmentation_hdr;
+        managed_parameter->next->max_tc_frame_size = max_tc_frame_size;
         managed_parameter->next->next = NULL;
         return CRYPTO_LIB_SUCCESS;
     }

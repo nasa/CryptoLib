@@ -16,8 +16,8 @@
    jstar-development-team@mail.nasa.gov
 */
 
-#ifndef CRYPTOLIB_UT_CRYPTO_H
-#define CRYPTOLIB_UT_CRYPTO_H
+#ifndef CRYPTOLIB_UT_MARIADB_H
+#define CRYPTOLIB_UT_MARIADB_H
 
 #ifdef __cplusplus
 extern "C"
@@ -27,10 +27,9 @@ extern "C"
 #include "crypto.h"
 #include "shared_util.h"
 #include <stdio.h>
-#include "cryptography_interface.h"
 
 #ifdef __cplusplus
 } /* Close scope of 'extern "C"' declaration which encloses file. */
 #endif
 
-#endif // CRYPTOLIB_UT_CRYPTO_H
+#endif // CRYPTOLIB_UT_MARIA_DB_H

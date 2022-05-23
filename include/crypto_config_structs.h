@@ -83,20 +83,26 @@ typedef enum
     TC_CHECK_FECF_FALSE,
     TC_CHECK_FECF_TRUE
 } TcCheckFecfBool;
+typedef enum
+{
+    SA_INCREMENT_NONTRANSMITTED_IV_FALSE,
+    SA_INCREMENT_NONTRANSMITTED_IV_TRUE
+} SaIncrementNonTransmittedIvPortion;
 
 /*
 **  Used for selecting supported algorithms
 */
 typedef enum
 {
-    CRYPTO_ACS_NONE,
-    CRYPTO_AES256_CMAC,
-    CRYPTO_AES256_GMAC
+    CRYPTO_MAC_NONE,
+    CRYPTO_MAC_CMAC_AES256,
+    CRYPTO_MAC_HMAC_SHA256,
+    CRYPTO_MAC_HMAC_SHA512
 } AuthCipherSuite;
 typedef enum
 {
-    CRYPTO_ECS_NONE,
-    CRYPTO_AES256_GCM
+    CRYPTO_CIPHER_NONE,
+    CRYPTO_CIPHER_AES256_GCM
 } EncCipherSuite;
 
 /*
@@ -115,6 +121,7 @@ typedef struct
     TcUniqueSaPerMapId unique_sa_per_mapid;
     TcCheckFecfBool crypto_check_fecf;
     uint8_t vcid_bitmask;
+    uint8_t crypto_increment_nontransmitted_iv; // Whether or not CryptoLib increments the non-transmitted portion of the IV field
 } CryptoConfig_t;
 #define CRYPTO_CONFIG_SIZE (sizeof(CryptoConfig_t))
 
@@ -126,6 +133,7 @@ struct _GvcidManagedParameters_t
     uint8_t vcid : 6;   // Virtual Channel ID
     TcFecfPresent has_fecf;
     TcSegmentHdrsPresent has_segmentation_hdr;
+    uint16_t max_tc_frame_size; // Maximum TC Frame Length with headers
     GvcidManagedParameters_t* next; // Will be a list of managed parameters!
 };
 #define GVCID_MANAGED_PARAMETERS_SIZE (sizeof(GvcidManagedParameters_t))

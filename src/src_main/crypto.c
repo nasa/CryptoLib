@@ -20,7 +20,6 @@
 ** Includes
 */
 #include "crypto.h"
-
 #include <string.h>
 
 /*
@@ -68,7 +67,7 @@ uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
     // CryptoLib only supports AES-GCM, which is an AEAD (Authenticated Encryption with Associated Data) algorithm, so
     // return true/1.
     // TODO - Add cipher suite mapping to which algorithms are AEAD and which are not.
-    if(cipher_suite_id == CRYPTO_AES256_GCM)
+    if(cipher_suite_id == CRYPTO_CIPHER_AES256_GCM)
     {
         return CRYPTO_TRUE;
     }
@@ -99,14 +98,19 @@ int32_t Crypto_increment(uint8_t* num, int length)
     }
 
     if (i < 0) /* this means num[0] was incremented and overflowed */
-        return CRYPTO_LIB_ERROR;
-    else
-        return CRYPTO_LIB_SUCCESS;
+    {
+        for(i=0; i<length; i++)
+        {
+            num[i] = 0;
+        }
+    }
+
+    return CRYPTO_LIB_SUCCESS;
 }
 
 /**
  * @brief Function: Crypto_window
- * Determines if a value is within the expected window of values
+ * Determines if a value is within the expected positive window of values
  * @param actual: uint8*
  * @param expected: uint8*
  * @param length: int
@@ -115,16 +119,54 @@ int32_t Crypto_increment(uint8_t* num, int length)
  **/
 int32_t Crypto_window(uint8_t* actual, uint8_t* expected, int length, int window)
 {
-    int status = CRYPTO_LIB_ERR_BAD_ANTIREPLAY_WINDOW;
+    int status = CRYPTO_LIB_ERROR;
     int result = 0;
     uint8_t temp[length];
     int i;
     int j;
 
-    memcpy(temp, expected, length);
+    // Check Null Pointers
+    if (actual == NULL)
+    {
+#ifdef DEBUG
+        printf("Crypto_Window expected ptr is NULL\n");
+#endif
+        return status;        
+    }
+    if (expected == NULL)
+    {
+#ifdef DEBUG
+        printf("Crypto_Window expected ptr is NULL\n");
+#endif
+        return status;
+    }
+    // Check for special case where received value is all 0's and expected is all 0's (won't have -1 in sa!)
+    // Received ARSN is: 00000000, SA ARSN is: 00000000
+    uint8_t zero_case = CRYPTO_TRUE;
+    for(i = 0; i < length; i++)
+    {
+        if (actual[i] != 0 || expected[i] != 0 )
+        {
+            zero_case = CRYPTO_FALSE;
+        }
+    }
+    if(zero_case == CRYPTO_TRUE)
+    {
+        status = CRYPTO_LIB_SUCCESS;
+        return status;
+    }
 
+    memcpy(temp, expected, length);
     for (i = 0; i < window; i++)
     {
+        // Recall - the stored IV or ARSN is the last valid one received, check against next expected
+        Crypto_increment(&temp[0], length);
+
+#ifdef DEBUG
+        printf("Checking Frame Against Incremented Window:\n");
+        Crypto_hexprint(temp,length);
+#endif
+        
         result = 0;
         /* go from right (least significant) to left (most signifcant) */
         for (j = length - 1; j >= 0; --j)
@@ -139,7 +181,6 @@ int32_t Crypto_window(uint8_t* actual, uint8_t* expected, int length, int window
             status = CRYPTO_LIB_SUCCESS;
             break;
         }
-        Crypto_increment(&temp[0], length);
     }
     return status;
 }
@@ -750,3 +791,136 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, uin
 
     return status;
 } // End Process SDLS PDU
+
+/*
+** @brief: Check IVs and ARSNs to ensure within valid positive window if applicable
+*/
+int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, uint8_t *iv)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    // Check for NULL pointers
+    if (arsn == NULL)
+    {
+        return CRYPTO_LIB_ERR_NULL_ARSN;
+    }
+    if (iv == NULL)
+    {
+        return CRYPTO_LIB_ERR_NULL_IV;
+    }
+    if (sa_ptr == NULL)
+    {
+        return CRYPTO_LIB_ERR_NULL_SA;
+    }
+    // If sequence number field is greater than zero, check for replay
+    if (sa_ptr->shsnf_len > 0)
+    {
+        // Check Sequence Number is in ARSNW
+        status = Crypto_window(arsn, sa_ptr->arsn, sa_ptr->arsn_len, sa_ptr->arsnw);
+#ifdef DEBUG
+        printf("Received ARSN is\n\t");
+        for (int i = 0; i < sa_ptr->arsn_len; i++)
+        {
+            printf("%02x", *(arsn + i));
+        }
+        printf("\nSA ARSN is\n\t");
+        for (int i = 0; i < sa_ptr->arsn_len; i++)
+        {
+            printf("%02x", *(sa_ptr->arsn + i));
+        }
+        printf("\nARSNW is: %d\n", sa_ptr->arsnw);
+        printf("Status from Crypto_Window is: %d\n", status);
+#endif
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+            return CRYPTO_LIB_ERR_ARSN_OUTSIDE_WINDOW;
+        }
+        // Valid ARSN received, increment stored value
+        else
+        {
+            memcpy(sa_ptr->arsn, arsn, sa_ptr->arsn_len);
+        }
+    }
+    // If IV is greater than zero (and arsn isn't used), check for replay
+    else if (sa_ptr->iv_len > 0)
+    {
+        // Check IV is in ARSNW
+        if(crypto_config->crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
+        {
+            status = Crypto_window(iv, sa_ptr->iv, sa_ptr->iv_len, sa_ptr->arsnw);
+        } else // SA_INCREMENT_NONTRANSMITTED_IV_FALSE
+        {
+            // Whole IV gets checked in MAC validation previously, this only verifies transmitted portion is what we expect.
+            status = Crypto_window(iv, sa_ptr->iv + (sa_ptr->iv_len - sa_ptr->shivf_len), sa_ptr->shivf_len, sa_ptr->arsnw);
+        }
+
+
+#ifdef DEBUG
+        printf("Received IV is\n\t");
+        for (int i = 0; i < sa_ptr->iv_len; i++)
+        {
+            printf("%02x", *(iv + i));
+        }
+        printf("\nSA IV is\n\t");
+        for (int i = 0; i < sa_ptr->iv_len; i++)
+        {
+            printf("%02x", *(sa_ptr->iv + i));
+        }
+        printf("\nARSNW is: %d\n", sa_ptr->arsnw);
+        printf("Crypto_Window return status is: %d\n", status);
+#endif
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+            return CRYPTO_LIB_ERR_IV_OUTSIDE_WINDOW;
+        }
+        // Valid IV received, increment stored value
+        else
+        {
+            memcpy(sa_ptr->iv, iv, sa_ptr->iv_len);
+        }
+    }
+    return status;
+}
+
+/*
+** @brief: For a given algorithm, return the associated key length in bytes
+** @param: algo
+*/
+int32_t Crypto_Get_ECS_Algo_Keylen(uint8_t algo)
+{
+    int32_t retval= -1;
+
+    switch(algo){
+        case CRYPTO_CIPHER_AES256_GCM:
+            retval = 32;
+            break;
+        default:
+            break;
+    }
+
+    return retval;
+}
+
+/*
+** @brief: For a given algorithm, return the associated key length in bytes
+** @param: algo
+*/
+int32_t Crypto_Get_ACS_Algo_Keylen(uint8_t algo)
+{
+    int32_t retval= -1;
+
+    switch(algo){
+        case CRYPTO_MAC_CMAC_AES256:
+            retval = 32;
+            break;
+        case CRYPTO_MAC_HMAC_SHA256:
+            retval = 32;
+            break;
+        case CRYPTO_MAC_HMAC_SHA512:
+            retval = 64;
+            break;
+        default:
+            break;
+    }
+
+    return retval;
+}

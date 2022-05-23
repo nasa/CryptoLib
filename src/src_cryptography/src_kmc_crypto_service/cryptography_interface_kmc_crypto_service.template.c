@@ -59,7 +59,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t encrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool);
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs);
 static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -68,7 +68,12 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t decrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool);
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs);
+static int32_t cryptography_get_acs_algo(int8_t algo_enum);
+static int32_t cryptography_get_ecs_algo(int8_t algo_enum);
+
+//Local support functions
+static int32_t get_auth_algorithm_from_acs(uint8_t acs_enum, const char** algo_ptr);
 
 // libcurl call back and support function declarations
 static void configure_curl_connect_opts(CURL* curl);
@@ -89,18 +94,19 @@ struct curl_slist *http_headers_list;
 static char* kmc_root_uri;
 static const char* status_endpoint = "key-info?keyRef=kmc/test/KEY0";
 static const char* encrypt_endpoint = "encrypt?keyRef=%s&transformation=%s&iv=%s";
-static const char* encrypt_offset_endpoint = "encrypt?keyRef=%s&transformation=%s&iv=%s&encryptOffset=%s";
+static const char* encrypt_offset_endpoint = "encrypt?keyRef=%s&transformation=%s&iv=%s&encryptOffset=%s&macLength=%s";
 static const char* decrypt_endpoint = "decrypt?metadata=keyLength:%s,keyRef:%s,cipherTransformation:%s,initialVector:%s,cryptoAlgorithm:%s,metadataType:EncryptionMetadata";
-static const char* decrypt_offset_endpoint = "decrypt?metadata=keyLength:%s,keyRef:%s,cipherTransformation:%s,initialVector:%s,cryptoAlgorithm:%s,metadataType:EncryptionMetadata,encryptOffset:%s";
+static const char* decrypt_offset_endpoint = "decrypt?metadata=keyLength:%s,keyRef:%s,cipherTransformation:%s,initialVector:%s,cryptoAlgorithm:%s,macLength:%s,metadataType:EncryptionMetadata,encryptOffset:%s";
 static const char* icv_create_endpoint = "icv-create?keyRef=%s";
-static const char* icv_verify_endpoint = "icv-verify?metadata=integrityCheckValue:%s,keyRef:%s,cryptoAlgorithm:%s,metadataType:IntegrityCheckMetadata";
+static const char* icv_verify_endpoint = "icv-verify?metadata=integrityCheckValue:%s,keyRef:%s,cryptoAlgorithm:%s,macLength:%s,metadataType:IntegrityCheckMetadata";
 
 // Supported KMC Cipher Transformation Strings
 static const char* AES_GCM_TRANSFORMATION="AES/GCM/NoPadding";
 static const char* AES_CRYPTO_ALGORITHM="AES";
 //static const char* AES_CBC_TRANSFORMATION="AES/CBC/PKCS5Padding";
 static const char* AES_CMAC_TRANSFORMATION="AESCMAC";
-// static const char* HMAC_SHA256="HmacSHA256";
+static const char* HMAC_SHA256="HmacSHA256";
+static const char* HMAC_SHA512="HmacSHA512";
 //static const char* AES_DES_CMAC_TRANSFORMATION="DESedeCMAC";
 
 
@@ -129,6 +135,8 @@ CryptographyInterface get_cryptography_interface_kmc_crypto_service(void)
     cryptography_if_struct.cryptography_validate_authentication = cryptography_validate_authentication;
     cryptography_if_struct.cryptography_aead_encrypt = cryptography_aead_encrypt;
     cryptography_if_struct.cryptography_aead_decrypt = cryptography_aead_decrypt;
+    cryptography_if_struct.cryptography_get_acs_algo = cryptography_get_acs_algo;
+    cryptography_if_struct.cryptography_get_ecs_algo = cryptography_get_ecs_algo;
     return &cryptography_if_struct;
 }
 
@@ -196,6 +204,14 @@ static int32_t cryptography_config(void)
             return status;
         }
 
+        if(chunk->response == NULL) // No response, possibly because service is CAM secured.
+        {
+            status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_EMPTY_RESPONSE;
+            fprintf(stderr, "curl_easy_perform() unexpected empty response: \n%s\n",
+                    "Empty Crypto Service response can be caused by CAM security, CryptoLib doesn't support a CAM secured KMC Crypto Service.");
+            return status;
+        }
+
 #ifdef DEBUG
         printf("cURL response:\n\t %s\n",chunk->response);
 #endif
@@ -259,18 +275,25 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
     iv = iv;
     iv_len = iv_len;
     ecs = ecs;
-    acs = acs;
 
     curl_easy_reset(curl);
     configure_curl_connect_opts(curl);
 
     // Base64 URL encode IV for KMC REST Encrypt
     // Not needed for CMAC/HMAC (only supported auth ciphers now)
-//    char* iv_base64 = (char*)calloc(1,iv_len*4);
+//    char* iv_base64 = (char*)calloc(1,B64ENCODE_OUT_SAFESIZE(iv_len)+1);
 //    base64urlEncode(iv,iv_len,iv_base64,NULL);
 
     uint8_t* auth_payload = aad;
     size_t auth_payload_len = aad_len;
+
+    // Verify valid acs enum
+    int32_t algo = cryptography_get_acs_algo(acs);
+    if (algo == CRYPTO_LIB_ERR_UNSUPPORTED_ACS)
+    {
+        return CRYPTO_LIB_ERR_UNSUPPORTED_ACS;
+    }
+
 
     // Need to copy the data over, since authentication won't change/move the data directly
     if(data_out != NULL){
@@ -279,10 +302,16 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
         return CRYPTO_LIB_ERR_NULL_BUFFER;
     }
 
+    if(sa_ptr->ak_ref == NULL)
+    {
+        status = CRYPTOGRAHPY_KMC_NULL_AUTHENTICATION_KEY_REFERENCE_IN_SA;
+        return status;
+    }
+
     // Prepare the Authentication Endpoint URI for KMC Crypto Service
-    int len_auth_endpoint = strlen(icv_create_endpoint)+strlen(sa_ptr->ek_ref);
+    int len_auth_endpoint = strlen(icv_create_endpoint)+strlen(sa_ptr->ak_ref);
     char* auth_endpoint_final = (char*) malloc(len_auth_endpoint);
-    snprintf(auth_endpoint_final,len_auth_endpoint,icv_create_endpoint,sa_ptr->ek_ref);
+    snprintf(auth_endpoint_final,len_auth_endpoint,icv_create_endpoint,sa_ptr->ak_ref);
 
     char* auth_uri = (char*) malloc(strlen(kmc_root_uri)+len_auth_endpoint);
     auth_uri[0] = '\0';
@@ -337,6 +366,15 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
 #ifdef DEBUG
     printf("\ncURL Authenticate Response:\n\t %s\n",chunk_write->response);
 #endif
+
+    if(chunk_write->response == NULL) // No response, possibly because service is CAM secured.
+    {
+        status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_EMPTY_RESPONSE;
+        fprintf(stderr, "curl_easy_perform() unexpected empty response: \n%s\n",
+                "Empty Crypto Service response can be caused by CAM security, CryptoLib doesn't support a CAM secured KMC Crypto Service.");
+        return status;
+    }
+
 
     /* JSON Response Handling */
 
@@ -444,9 +482,10 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
 
     /* JSON Response Handling End */
 
-    uint8_t* icv_decoded = malloc((mac_size)*2 + 1);
+    // https://stackoverflow.com/questions/13378815/base64-length-calculation
+    uint8_t* icv_decoded = calloc(1,B64DECODE_OUT_SAFESIZE(strlen(icv_base64)) + 1);
     size_t icv_decoded_len = 0;
-    base64Decode(icv_base64,strlen(icv_base64),icv_decoded, &icv_decoded_len);
+    base64urlDecode(icv_base64,strlen(icv_base64),icv_decoded, &icv_decoded_len);
 #ifdef DEBUG
     printf("Mac size: %d\n",mac_size);
     printf("Decoded ICV Length: %ld\n",icv_decoded_len);
@@ -479,8 +518,13 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     iv = iv;
     iv_len = iv_len;
     ecs = ecs;
-    acs = acs;
 
+    // Verify valid acs enum
+    int32_t algo = cryptography_get_acs_algo(acs);
+    if (algo == CRYPTO_LIB_ERR_UNSUPPORTED_ACS)
+    {
+        return CRYPTO_LIB_ERR_UNSUPPORTED_ACS;
+    }
 
     // Need to copy the data over, since authentication won't change/move the data directly
     if(data_out != NULL){
@@ -496,16 +540,30 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     size_t auth_payload_len = aad_len;
 
     // Base64 URL encode MAC for KMC REST Encrypt
-    char* mac_base64 = (char*)calloc(1,mac_size*4);
+    char* mac_base64 = (char*)calloc(1,B64ENCODE_OUT_SAFESIZE(mac_size) + 1);
     base64urlEncode(mac,mac_size,mac_base64,NULL);
 #ifdef DEBUG
     printf("MAC Base64 URL Encoded: %s\n",mac_base64);
+    printf("Hex Mac:\n");
+    Crypto_hexprint(mac,mac_size);
 #endif
 
+    if(sa_ptr->ak_ref == NULL)
+    {
+        status = CRYPTOGRAHPY_KMC_NULL_AUTHENTICATION_KEY_REFERENCE_IN_SA;
+        return status;
+    }
+
+    const char* auth_algorithm = NULL;
+    get_auth_algorithm_from_acs(acs,&auth_algorithm);
+
+    uint32_t mac_size_str_len = 0;
+    char* mac_size_str = int_to_str(mac_size*8, &mac_size_str_len);
+
     // Prepare the Authentication Endpoint URI for KMC Crypto Service
-    int len_auth_endpoint = strlen(icv_verify_endpoint)+strlen(mac_base64)+strlen(sa_ptr->ek_ref)+strlen(AES_CMAC_TRANSFORMATION);
+    int len_auth_endpoint = strlen(icv_verify_endpoint)+strlen(mac_base64)+strlen(sa_ptr->ak_ref)+strlen(auth_algorithm)+mac_size_str_len;
     char* auth_endpoint_final = (char*) malloc(len_auth_endpoint);
-    snprintf(auth_endpoint_final,len_auth_endpoint,icv_verify_endpoint,mac_base64,sa_ptr->ek_ref,AES_CMAC_TRANSFORMATION);
+    snprintf(auth_endpoint_final,len_auth_endpoint,icv_verify_endpoint,mac_base64,sa_ptr->ak_ref,auth_algorithm,mac_size_str);
 
     char* auth_uri = (char*) malloc(strlen(kmc_root_uri)+len_auth_endpoint);
     auth_uri[0] = '\0';
@@ -562,6 +620,14 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     printf("\ncURL Authenticate Response:\n\t %s\n",chunk_write->response);
 #endif
 
+    if(chunk_write->response == NULL) // No response, possibly because service is CAM secured.
+    {
+        status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_EMPTY_RESPONSE;
+        fprintf(stderr, "curl_easy_perform() unexpected empty response: \n%s\n",
+                "Empty Crypto Service response can be caused by CAM security, CryptoLib doesn't support a CAM secured KMC Crypto Service.");
+        return status;
+    }
+
     /* JSON Response Handling */
 
     // Parse the JSON string response
@@ -591,24 +657,47 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
             char* http_code_str = malloc(len_httpcode+1);
             memcpy(http_code_str,chunk_write->response + t[json_idx + 1].start, len_httpcode);
             http_code_str[len_httpcode] = '\0';
+            http_status_found = CRYPTO_TRUE;
             int http_code = atoi(http_code_str);
 #ifdef DEBUG
             printf("Parsed http code: %d\n",http_code);
 #endif
             if(http_code != 200)
             {
-                status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_MAC_VALIDATION_ERROR;
-                fprintf(stderr,"KMC Crypto Failure Response:\n%s\n",chunk_write->response);
+                status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE;
+                fprintf(stderr,"KMC Crypto Generic Failure Response:\n%s\n",chunk_write->response);
                 return status;
             }
             json_idx++;
-            break;
+            continue;
         }
 
+        if (jsoneq(chunk_write->response, &t[json_idx], "result") == 0)
+        {
+#ifdef DEBUG
+            printf("result: %.*s\n", t[json_idx + 1].end - t[json_idx + 1].start,
+                   chunk_write->response + t[json_idx + 1].start);
+#endif
+            uint32_t len_result = t[json_idx + 1].end - t[json_idx + 1].start;
+            char* result_str = malloc(len_result+1);
+            memcpy(result_str,chunk_write->response + t[json_idx + 1].start, len_result);
+            result_str[len_result] = '\0';
+
+#ifdef DEBUG
+            printf("Parsed result string: %s\n",result_str);
+#endif
+            if(strcmp(result_str,"true")!=0) // KMC crypto service returns true string if ICV check succeeds.
+            {
+                status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_MAC_VALIDATION_ERROR;
+                fprintf(stderr,"KMC Crypto MAC Validation Failure Response:\n%s\n",chunk_write->response);
+                return status;
+            }
+            continue;
+        }
     }
     if(http_status_found == CRYPTO_FALSE){
         status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE;
-        fprintf(stderr,"KMC Crypto Failure Response:\n%s\n",chunk_write->response);
+        fprintf(stderr,"KMC Crypto Generic Failure Response:\n%s\n",chunk_write->response);
         return status;
     }
 
@@ -624,17 +713,19 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t encrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool)
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     key = key; // Direct key input is not supported in KMC interface
     len_key = len_key; // Direct key input is not supported in KMC interface
+    ecs = ecs;
+    acs = acs;
 
     curl_easy_reset(curl);
     configure_curl_connect_opts(curl);
 
     // Base64 URL encode IV for KMC REST Encrypt
-    char* iv_base64 = (char*)calloc(1,iv_len*4);
+    char* iv_base64 = (char*)calloc(1,B64ENCODE_OUT_SAFESIZE(iv_len)+1);
     base64urlEncode(iv,iv_len,iv_base64,NULL);
 
     uint8_t* encrypt_payload = data_in;
@@ -643,6 +734,13 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
 #ifdef DEBUG
     printf("IV Base64 URL Encoded: %s\n",iv_base64);
 #endif
+
+    if(sa_ptr->ek_ref == NULL)
+    {
+        status = CRYPTOGRAHPY_KMC_NULL_ENCRYPTION_KEY_REFERENCE_IN_SA;
+        return status;
+    }
+
     char* encrypt_uri;
     if(aad_bool == CRYPTO_TRUE)
     {
@@ -653,11 +751,13 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
         printf("AAD Offset Str: %s\n",aad_offset_str);
 #endif
 
+        uint32_t mac_size_str_len = 0;
+        char* mac_size_str = int_to_str(mac_size*8, &mac_size_str_len);
 
-        int len_encrypt_endpoint = strlen(encrypt_offset_endpoint)+strlen(sa_ptr->ek_ref)+strlen(iv_base64)+strlen(AES_GCM_TRANSFORMATION)+aad_offset_str_len;
+        int len_encrypt_endpoint = strlen(encrypt_offset_endpoint)+strlen(sa_ptr->ek_ref)+strlen(iv_base64)+strlen(AES_GCM_TRANSFORMATION)+aad_offset_str_len + mac_size_str_len;
         char* encrypt_endpoint_final = (char*) malloc(len_encrypt_endpoint);
 
-        snprintf(encrypt_endpoint_final,len_encrypt_endpoint,encrypt_offset_endpoint,sa_ptr->ek_ref,AES_GCM_TRANSFORMATION, iv_base64,aad_offset_str);
+        snprintf(encrypt_endpoint_final,len_encrypt_endpoint,encrypt_offset_endpoint,sa_ptr->ek_ref,AES_GCM_TRANSFORMATION, iv_base64,aad_offset_str,mac_size_str);
 
         encrypt_uri = (char*) malloc(strlen(kmc_root_uri)+len_encrypt_endpoint);
         encrypt_uri[0] = '\0';
@@ -744,6 +844,14 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
 #ifdef DEBUG
     printf("\ncURL Encrypt Response:\n\t %s\n",chunk_write->response);
 #endif
+
+    if(chunk_write->response == NULL) // No response, possibly because service is CAM secured.
+    {
+        status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_EMPTY_RESPONSE;
+        fprintf(stderr, "curl_easy_perform() unexpected empty response: \n%s\n",
+                "Empty Crypto Service response can be caused by CAM security, CryptoLib doesn't support a CAM secured KMC Crypto Service.");
+        return status;
+    }
 
     /* JSON Response Handling */
 
@@ -856,10 +964,12 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t decrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool)
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     key = key; // Direct key input is not supported in KMC interface
+    ecs = ecs;
+    acs = acs;
 
     // Get the key length in bits, in string format.
     // TODO -- Parse the key length from the keyInfo endpoint of the Crypto Service!
@@ -873,7 +983,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
     configure_curl_connect_opts(curl);
 
     // Base64 URL encode IV for KMC REST Encrypt
-    char* iv_base64 = (char*)calloc(1,iv_len*4);
+    char* iv_base64 = (char*)calloc(1,B64ENCODE_OUT_SAFESIZE(iv_len)+1);
     base64urlEncode(iv,iv_len,iv_base64,NULL);
 
     uint8_t* decrypt_payload = data_in;
@@ -882,6 +992,13 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
 #ifdef DEBUG
     printf("IV Base64 URL Encoded: %s\n",iv_base64);
 #endif
+
+
+    if(sa_ptr->ek_ref == NULL)
+    {
+        status = CRYPTOGRAHPY_KMC_NULL_ENCRYPTION_KEY_REFERENCE_IN_SA;
+        return status;
+    }
 
     char* decrypt_uri;
     if(aad_bool == CRYPTO_TRUE)
@@ -893,10 +1010,13 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
         printf("AAD Offset Str: %s\n",aad_offset_str);
 #endif
 
-        int len_decrypt_endpoint = strlen(decrypt_offset_endpoint)+ key_len_in_bits_str_len + strlen(sa_ptr->ek_ref)+strlen(iv_base64)+strlen(AES_GCM_TRANSFORMATION) + strlen(AES_CRYPTO_ALGORITHM) + aad_offset_str_len;
+        uint32_t mac_size_str_len = 0;
+        char* mac_size_str = int_to_str(mac_size*8, &mac_size_str_len);
+
+        int len_decrypt_endpoint = strlen(decrypt_offset_endpoint)+ key_len_in_bits_str_len + strlen(sa_ptr->ek_ref)+strlen(iv_base64)+strlen(AES_GCM_TRANSFORMATION) + strlen(AES_CRYPTO_ALGORITHM) + mac_size_str_len + aad_offset_str_len;
         char* decrypt_endpoint_final = (char*) malloc(len_decrypt_endpoint);
 
-        snprintf(decrypt_endpoint_final,len_decrypt_endpoint,decrypt_offset_endpoint,key_len_in_bits_str,sa_ptr->ek_ref,AES_GCM_TRANSFORMATION, iv_base64, AES_CRYPTO_ALGORITHM, aad_offset_str);
+        snprintf(decrypt_endpoint_final,len_decrypt_endpoint,decrypt_offset_endpoint,key_len_in_bits_str,sa_ptr->ek_ref,AES_GCM_TRANSFORMATION, iv_base64, AES_CRYPTO_ALGORITHM, mac_size_str, aad_offset_str);
 
         decrypt_uri = (char*) malloc(strlen(kmc_root_uri)+len_decrypt_endpoint);
         decrypt_uri[0] = '\0';
@@ -989,6 +1109,14 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
     printf("\ncURL Decrypt Response:\n\t %s\n",chunk_write->response);
 #endif
 
+    if(chunk_write->response == NULL) // No response, possibly because service is CAM secured.
+    {
+        status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_EMPTY_RESPONSE;
+        fprintf(stderr, "curl_easy_perform() unexpected empty response: \n%s\n",
+                "Empty Crypto Service response can be caused by CAM security, CryptoLib doesn't support a CAM secured KMC Crypto Service.");
+        return status;
+    }
+
     /* JSON Response Handling */
 
     // Parse the JSON string response
@@ -1080,6 +1208,35 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
         memcpy(data_out,cleartext_decoded + aad_len, len_data_out);
     }
     return status;
+}
+
+// Local support functions
+static int32_t get_auth_algorithm_from_acs(uint8_t acs_enum, const char** algo_ptr)
+{
+    int32_t status = CRYPTO_LIB_ERR_UNSUPPORTED_ACS; // All valid algo enums will be positive
+
+    switch(acs_enum)
+    {
+        case CRYPTO_MAC_CMAC_AES256:
+            status = CRYPTO_LIB_SUCCESS;
+            *algo_ptr = AES_CMAC_TRANSFORMATION;
+            break;
+        case CRYPTO_MAC_HMAC_SHA256:
+            status = CRYPTO_LIB_SUCCESS;
+            *algo_ptr = HMAC_SHA256;
+            break;
+        case CRYPTO_MAC_HMAC_SHA512:
+            status = CRYPTO_LIB_SUCCESS;
+            *algo_ptr = HMAC_SHA512;
+            break;
+        default:
+#ifdef DEBUG
+            printf("ACS Algo Enum not supported by Crypto Service\n");
+#endif
+            break;
+    }
+
+    return(status);
 }
 
 // libcurl local functions
@@ -1190,4 +1347,54 @@ static int jsoneq(const char* json, jsmntok_t* tok, const char* s)
         return 0;
     }
     return -1;
+}
+
+/**
+ * @brief Function: cryptography_get_acs_algo. Maps Cryptolib ACS enums to KMC enums 
+ * It is possible for supported algos to vary between crypto libraries
+ * @param algo_enum
+ **/
+int32_t cryptography_get_acs_algo(int8_t algo_enum)
+{
+    int32_t algo = CRYPTO_LIB_ERR_UNSUPPORTED_ACS; // All valid algo enums will be positive
+    switch (algo_enum)
+    {
+        case CRYPTO_MAC_CMAC_AES256:
+            return CRYPTO_MAC_CMAC_AES256;
+        case CRYPTO_MAC_HMAC_SHA256:
+            return CRYPTO_MAC_HMAC_SHA256;
+        case CRYPTO_MAC_HMAC_SHA512:
+            return CRYPTO_MAC_HMAC_SHA512;
+
+        default:
+#ifdef DEBUG
+            printf("ACS Algo Enum not supported\n");
+#endif
+            break;
+    }
+
+    return (int)algo;
+}
+
+/**
+ * @brief Function: cryptography_get_ecs_algo. Maps Cryptolib ECS enums to KMC enums 
+ * It is possible for supported algos to vary between crypto libraries
+ * @param algo_enum
+ **/
+int32_t cryptography_get_ecs_algo(int8_t algo_enum)
+{
+    int32_t algo = CRYPTO_LIB_ERR_UNSUPPORTED_ECS; // All valid algo enums will be positive
+    switch (algo_enum)
+    {
+        case CRYPTO_CIPHER_AES256_GCM:
+            return CRYPTO_CIPHER_AES256_GCM;
+
+        default:
+#ifdef DEBUG
+            printf("ECS Algo Enum not supported\n");
+#endif
+            break;
+    }
+
+    return (int32_t)algo;
 }

@@ -231,7 +231,9 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* ingest, int *len_ingest)
                                                            sa_ptr->abm_len, // AAD is size of ABM in this case
                                                            CRYPTO_TRUE, // Encrypt
                                                            CRYPTO_FALSE, // Authenticate // TODO -- Set to SA value, manually setting to false here so existing tests pass. Existing data was generated with authenticate then encrypt, when it should have been encrypt then authenticate.
-                                                           CRYPTO_TRUE // Use AAD
+                                                           CRYPTO_TRUE, // Use AAD
+                                                           sa_ptr->ecs, // encryption cipher
+                                                           sa_ptr->acs  // authentication cipher
                                                            );
 
 

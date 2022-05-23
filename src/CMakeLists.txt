@@ -72,11 +72,22 @@ if(MYSQL)
     target_link_libraries(Crypto ${MYSQL_LIBS})
 endif()
 
-
-#Include cmake install module - todo
-#include(GNUInstallDirs)
+set_target_properties(Crypto PROPERTIES PUBLIC_HEADER "../include/crypto.h;../include/crypto_config_structs.h;../include/crypto_error.h;../include/crypto_print.h;../include/crypto_structs.h;")
 
 add_custom_command(TARGET Crypto POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:Crypto> ${PROJECT_BINARY_DIR}/lib/libCrypto.so
         COMMENT "Created ${PROJECT_BINARY_DIR}/lib/libCrypto.so"
         )
+
+install(TARGETS Crypto
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
+
+IF(MYSQL)
+    file(GLOB MYSQL_SCRIPTS crypto_sadb/sadb_mariadb_sql/*.sql)
+    file(GLOB MYSQL_TEST_SCRIPTS crypto_sadb/test_sadb_mariadb_sql/*.sql)
+    install(FILES ${MYSQL_SCRIPTS}
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/sadb_mariadb_sql)
+    install(FILES ${MYSQL_TEST_SCRIPTS}
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/test/test_sadb_mariadb_sql)
+endif()

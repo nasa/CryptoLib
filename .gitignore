@@ -24,3 +24,5 @@ cmake-build-debug
 _deps
 
 DartConfiguration.tcl
+
+install

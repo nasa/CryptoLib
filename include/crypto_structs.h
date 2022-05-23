@@ -33,6 +33,7 @@
 typedef struct
 {
     uint8_t value[KEY_SIZE];
+    uint32_t key_len;
     uint8_t key_state : 4;
 } crypto_key_t;
 #define CRYPTO_KEY_SIZE (sizeof(crypto_key_t))
@@ -65,21 +66,22 @@ typedef struct
     // Configuration
     uint8_t est : 1;        // Encryption Service Type
     uint8_t ast : 1;        // Authentication Service Type
-    uint8_t shivf_len : 6;  // Sec. Header IV Field Length
+    uint8_t shivf_len : 6;  // Sec. Header Transmitted IV Field Length
     uint8_t shsnf_len : 6;  // Sec. Header SN Field Length
     uint8_t shplf_len : 2;  // Sec. Header PL Field Length
     uint8_t stmacf_len : 8; // Sec. Trailer MAC Field Length
     uint8_t* ecs;           // Encryption Cipher Suite (algorithm / mode ID)
     uint8_t ecs_len : 8;    // Encryption Cipher Suite Length
     uint8_t* iv;            // Initialization Vector
+    uint8_t iv_len;         // Length of entire IV
     uint8_t acs_len : 8;    // Authentication Cipher Suite Length
-    uint8_t acs : 8;        // Authentication Cipher Suite (algorithm / mode ID)
+    uint8_t* acs;        // Authentication Cipher Suite (algorithm / mode ID)
     uint16_t abm_len : 16;  // Authentication Bit Mask Length
     uint8_t* abm;           // Authentication Bit Mask (Primary Hdr. through Security Hdr.)
-    uint8_t arc_len : 8;    // Anti-Replay Counter Length
-    uint8_t* arc;           // Anti-Replay Counter
-    uint8_t arcw_len : 8;   // Anti-Replay Counter Window Length
-    uint16_t arcw;          // Anti-Replay Counter Window
+    uint8_t arsn_len : 8;    // Anti-Replay Seq Num Length
+    uint8_t* arsn;           // Anti-Replay Seq Num
+    uint8_t arsnw_len : 8;   // Anti-Replay Seq Num Window Length
+    uint16_t arsnw;          // Anti-Replay Seq Num Window
 
 } SecurityAssociation_t;
 #define SA_SIZE (sizeof(SecurityAssociation_t))
@@ -259,18 +261,19 @@ typedef struct
 {
     uint8_t sh : TC_SH_SIZE;  // Segment Header
     uint16_t spi;             // Security Parameter Index
-    uint8_t iv[IV_SIZE];      // Initialization Vector for encryption
+    uint8_t* iv;      // Initialization Vector for encryption
     uint8_t iv_field_len;
-    uint8_t sn[TC_SN_SIZE];   // Sequence Number for anti-replay
+    uint8_t* sn;   // Sequence Number for anti-replay
     uint8_t sn_field_len;
-    uint8_t pad[TC_PAD_SIZE]; // Count of the used fill Bytes
+    uint8_t* pad; // Count of the used fill Bytes
     uint8_t pad_field_len;
 } TC_FrameSecurityHeader_t;
 #define TC_FRAME_SECHEADER_SIZE (sizeof(TC_FrameSecurityHeader_t))
 
 typedef struct
 {
-    uint8_t mac[MAC_SIZE]; // Message Authentication Code
+    uint8_t* mac; // Message Authentication Code
+    uint8_t mac_field_len;
     uint16_t fecf;         // Frame Error Control Field
 } TC_FrameSecurityTrailer_t;
 #define TC_FRAME_SECTRAILER_SIZE (sizeof(TC_FrameSecurityTrailer_t))
