@@ -30,20 +30,31 @@
 
 #include <time.h>
 
-double Apply_Security_Loop(uint8_t *frame, int frame_length, uint8_t **enc_frame, uint16_t *enc_frame_len, int num_loops)
+double Apply_Security_Loop(uint8_t *frame, int frame_length, uint8_t *enc_frame, uint16_t *enc_frame_len, int num_loops)
 {
-    clock_t start, end;
-    double time_used, avg_time;
-    time_used = 0.0;
+    struct timespec begin, end;
+    double avg_time, total_time;
     avg_time = 0.0;
+    total_time = 0.0;
+
+    frame = frame;
+    frame_length = frame_length;
+    enc_frame_len = enc_frame_len;
+
     int32_t status = CRYPTO_LIB_SUCCESS;
 
     for(int i = 0; i < num_loops; i++)
     {
         printf("LOOP NUMBER: %d\n", i+1);
-        start = clock();
-        status = Crypto_TC_ApplySecurity(frame, frame_length, enc_frame, enc_frame_len);
-        end = clock();
+        clock_gettime(CLOCK_REALTIME, &begin);
+        status = Crypto_TC_ApplySecurity(frame, frame_length, &enc_frame, enc_frame_len);
+        // sleep(1);
+        clock_gettime(CLOCK_REALTIME, &end);
+        free(enc_frame);
+
+        long seconds = end.tv_sec - begin.tv_sec;
+        long nanoseconds = end.tv_nsec - begin.tv_nsec;
+        double elapsed = seconds + nanoseconds*1e-9;
 
         if (status != CRYPTO_LIB_SUCCESS)
         {
@@ -51,18 +62,19 @@ double Apply_Security_Loop(uint8_t *frame, int frame_length, uint8_t **enc_frame
             break;
         }
 
-        time_used = ((double)(end - start))/CLOCKS_PER_SEC;
+        total_time += elapsed;
 
         if( i == 0 )
         {
-            avg_time = time_used;
+            avg_time = elapsed;
         }
         else
         {
-            avg_time = (avg_time + time_used)/2.0;
+            avg_time = (avg_time + elapsed)/2.0;
         }
     }
-    return avg_time;    
+    printf("Total Time: %.20f\n",total_time);
+    return total_time;
 }
 
 /**
@@ -72,20 +84,21 @@ UTEST(PERFORMANCE, AS_MDB_KMC)
 {
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    Crypto_Config_MariaDB("client-demo-kmc.example.com","sadb", 3306,CRYPTO_TRUE,CRYPTO_TRUE, "/home/itc/Desktop/CERTS/ammos-ca-bundle.crt", NULL,  "/home/itc/Desktop/CERTS/ammos-client-cert.pem", "/home/itc/Desktop/CERTS/ammos-client-key.pem",NULL,"robert", NULL);
-    Crypto_Config_Kmc_Crypto_Service("https", "client-demo-kmc.example.com", 8443, "crypto-service","/home/itc/Desktop/CERTS/ammos-ca-bundle.crt",NULL, CRYPTO_FALSE, "/home/itc/Desktop/CERTS/ammos-client-cert.pem", "PEM","/home/itc/Desktop/CERTS/ammos-client-key.pem", NULL, NULL);
+    TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+    TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_MariaDB("localhost", "sadb", 3306, CRYPTO_FALSE, 0, NULL, NULL, NULL, NULL, NULL, "sadb_user",
+                          "sadb_password");
+    Crypto_Config_Kmc_Crypto_Service("https", "asec-cmdenc-srv1.jpl.nasa.gov", 8443, "crypto-service","/home/isaleh/git/KMC/CryptoLib-IbraheemYSaleh/util/etc/ammos-ca-bundle.crt",NULL, CRYPTO_FALSE, "/home/isaleh/git/KMC/CryptoLib-IbraheemYSaleh/util/etc/local-test-cert.pem", "PEM","/home/isaleh/git/KMC/CryptoLib-IbraheemYSaleh/util/etc/local-test-key.pem", NULL, NULL);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     int32_t status = Crypto_Init();
     char* raw_tc_jpl_mmt_scid44_vcid1_long = "202C07E100CDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF01E41B";
     //char* raw_tc_jpl_mmt_scid44_vcid1_long = "202c0408000001bd37";
     char* raw_tc_jpl_mmt_scid44_vcid1_expect = NULL;
     int raw_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
-    double avg_time_mdb_kmc_100 = 0.0;
+    float ttl_time_mdb_kmc_100 = 0.0;
     //double avg_time_mdb_kmc_1000 = 0.0;
 
-
+    int num_frames = 100;
     hex_conversion(raw_tc_jpl_mmt_scid44_vcid1_long, &raw_tc_jpl_mmt_scid44_vcid1_expect, &raw_tc_jpl_mmt_scid44_vcid1_expect_len);
 
     uint8_t* ptr_enc_frame = NULL;
@@ -93,15 +106,16 @@ UTEST(PERFORMANCE, AS_MDB_KMC)
 
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-    avg_time_mdb_kmc_100 = Apply_Security_Loop((uint8_t* )raw_tc_jpl_mmt_scid44_vcid1_expect, raw_tc_jpl_mmt_scid44_vcid1_expect_len, &ptr_enc_frame, &enc_frame_len, 7);
+
+    ttl_time_mdb_kmc_100 = Apply_Security_Loop((uint8_t* )raw_tc_jpl_mmt_scid44_vcid1_expect, raw_tc_jpl_mmt_scid44_vcid1_expect_len, ptr_enc_frame, &enc_frame_len, num_frames);
     //avg_time_mdb_kmc_1000 = Apply_Security_Loop((uint8_t* )raw_tc_jpl_mmt_scid44_vcid1_expect, raw_tc_jpl_mmt_scid44_vcid1_expect_len, &ptr_enc_frame, &enc_frame_len, 1);
 
     printf("\nMDB+KMC Apply Security");
     printf("\tLoops: 1\n");
     printf("\t\tData Sent: %d\n", raw_tc_jpl_mmt_scid44_vcid1_expect_len);
     printf("\t\tData Received: %d\n", enc_frame_len);
-    printf("\t\tAverage Time: %f\n", avg_time_mdb_kmc_100);
-    printf("\tMbps: %f\n", (((enc_frame_len * 8)/avg_time_mdb_kmc_100)/1024/1024));
+    printf("\t\tTotal Time: %f\n", ttl_time_mdb_kmc_100);
+    printf("\tMbps: %f\n", (((enc_frame_len * 8 * num_frames)/ttl_time_mdb_kmc_100)/1024/1024));
     printf("\n");
    
     // printf("\nMDB+KMC Apply Security");
