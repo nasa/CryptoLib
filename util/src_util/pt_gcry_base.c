@@ -60,16 +60,18 @@ UTEST(PERFORMANCE, GCRY_BASE)
 
     for(int i = 0; i < num_loops; i++)
     {
-        char* big_buffer = calloc(1, big_buffer_len * 2 * sizeof(char*));
-
+        char* big_buffer = calloc(1, big_buffer_len * 2 * sizeof(char));
+        uint8_t* big_buffer_b = NULL;
+        int32_t big_buffer_b_len = 0;
+        //clock_gettime(CLOCK_REALTIME, &begin);
         random_big_buffer(big_buffer, (big_buffer_len * 2));
-        
+        hex_conversion((char *)big_buffer, (char **)&big_buffer_b, &big_buffer_b_len);
         printf("\n");
-        // for (int i = 0; i < (big_buffer_len * 2); i++)
-        // {
-        //     printf("%c", big_buffer[i]);
-        // }
-        // printf("\n");
+         for (int i = 0; i < (big_buffer_b_len); i++)
+        {
+            printf("%02x", big_buffer_b[i] & 0xff);
+        }
+        printf("\nLength: %d\n", big_buffer_b_len);
 
         gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
         gcry_cipher_hd_t tmp_hd;
@@ -79,18 +81,35 @@ UTEST(PERFORMANCE, GCRY_BASE)
         int32_t key_ptr_len = 32;
 
         hex_conversion(key_ptr_h, &key_ptr, &key_ptr_len);
-        // printf("\n");
-        // for (int i = 0; i < key_ptr_len; i++)
-        // {
-        //     printf("%02x", (uint8_t)key_ptr[i]);
-        // }
-        // printf("\n");
+        printf("\nKEY: ");
+        for (int i = 0; i < key_ptr_len; i++)
+        {
+            printf("%02x", (uint8_t)key_ptr[i]);
+        }
+        printf("\n");
+
+        uint8_t* iv = (uint8_t* )calloc(1, 12 * sizeof(uint8_t));
+        int32_t iv_len = 16;
+        printf("IV: ");
+        for(int i = 0; i < iv_len; i++)
+        {
+            printf("%02x ", iv[i]);
+        }
+        printf("\n");
 
         char* aad_h = "ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF012345";
         uint8_t* aad = NULL;
         int32_t aad_len = 30;
         hex_conversion(aad_h, (char **) &aad, &aad_len);
+        printf("\nAAD: ");
+        for (int i = 0; i < aad_len; i++)
+        {
+            printf("%02x", (uint8_t)aad[i]);
+        }
+        printf("\n");
 
+        uint8_t* data_out = calloc(1, len_data_out * sizeof(uint8_t));
+        
         clock_gettime(CLOCK_REALTIME, &begin);
         gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_NONE);
         if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
@@ -113,8 +132,6 @@ UTEST(PERFORMANCE, GCRY_BASE)
             ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
         }
 
-        uint8_t* iv = (uint8_t* )calloc(1, 12 * sizeof(uint8_t));
-        uint32_t iv_len = 12;
         gcry_error = gcry_cipher_setiv(tmp_hd, iv, iv_len);
         if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
         {
@@ -142,13 +159,13 @@ UTEST(PERFORMANCE, GCRY_BASE)
         }
         
         
-        uint8_t* data_out = calloc(1, len_data_out * sizeof(uint8_t));
+        
         printf("BIG BUFFER LENGTH: %d\n", big_buffer_len);
         gcry_error = gcry_cipher_encrypt(tmp_hd,
                                             data_out,          // ciphertext output
                                             len_data_out,      // length of data
-                                            big_buffer,      // plaintext input
-                                            big_buffer_len   // in data length
+                                            big_buffer_b,      // plaintext input
+                                            big_buffer_b_len   // in data length
         );
         if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
         {
@@ -171,11 +188,10 @@ UTEST(PERFORMANCE, GCRY_BASE)
         printf(KYEL "Printing TC Frame Data after encryption:\n\t");
         for (int j = 0; j < len_data_out; j++)
         {
-            printf("%02X", *(data_out + j));
+            printf("%02x", *(data_out + j));
         }
         printf("\n");
-
-        free(big_buffer);
+        free(big_buffer_b);
         free(iv);
         free(data_out);
     }
