@@ -54,6 +54,10 @@
 #define RESET
 #endif
 
+
+// Max Frame Size
+#define TC_MAX_FRAME_SIZE 1024
+
 // Spacecraft Defines
 #define SCID 0x0003 // 0xC3D2
 

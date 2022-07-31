@@ -64,6 +64,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t aad_bool, uint8_t* ecs, uint8_t* acs);
 static int32_t cryptography_get_acs_algo(int8_t algo_enum);
 static int32_t cryptography_get_ecs_algo(int8_t algo_enum);
+static int32_t cryptography_get_ecs_mode(int8_t algo_enum);
 /*
 ** Module Variables
 */
@@ -861,13 +862,18 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
         return CRYPTO_LIB_ERR_NULL_ECS_PTR;
     }
 
+    // Verify the mode to accompany the ecs enum
+    int32_t mode = -1;
+    mode = cryptography_get_ecs_mode(*ecs);
+    if (mode == CRYPTO_LIB_ERR_UNSUPPORTED_ECS_MODE) return CRYPTO_LIB_ERR_UNSUPPORTED_ECS_MODE;
+
     // Check that key length to be used is atleast as long as the algo requirement
     if (sa_ptr != NULL && len_key > ek_ring[sa_ptr->ekid].key_len)
     {
         return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
     }
 
-    gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_NONE);
+    gcry_error = gcry_cipher_open(&(tmp_hd), algo, mode, GCRY_CIPHER_NONE);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
@@ -934,6 +940,9 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
 
     if(encrypt_bool == CRYPTO_TRUE)
     {
+        // TODO:  Add PKCS#7 padding to data_in, and increment len_data_in to match necessary block size
+        // TODO:  Remember to remove the padding.
+        // TODO:  Does this interfere with max frame size?  Does that need to be taken into account?
         gcry_error = gcry_cipher_encrypt(tmp_hd,
                                          data_out,              // ciphertext output
                                          len_data_out,                // length of data
@@ -1069,7 +1078,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
         status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
         return status;
     }
-
+    
     if (aad_bool == CRYPTO_TRUE)
     {
         gcry_error = gcry_cipher_authenticate(tmp_hd,
@@ -1180,6 +1189,9 @@ int32_t cryptography_get_ecs_algo(int8_t algo_enum)
         case CRYPTO_CIPHER_AES256_GCM:
             algo = GCRY_CIPHER_AES256;
             break;
+        case CRYPTO_CIPHER_AES256_CBC:
+            algo = GCRY_CIPHER_AES256;
+            break;
 
         default:
 #ifdef DEBUG
@@ -1189,4 +1201,31 @@ int32_t cryptography_get_ecs_algo(int8_t algo_enum)
     }
 
     return (int)algo;
+}
+
+/**
+ * @brief Function: cryptography_get_ecs_mode. Maps Cryptolib ECS enums to libgcrypt enums 
+ * It is possible for supported algos to vary between crypto libraries
+ * @param algo_enum
+ **/
+int32_t cryptography_get_ecs_mode(int8_t algo_enum)
+{
+    int32_t mode = CRYPTO_LIB_ERR_UNSUPPORTED_ECS_MODE; // All valid algos will be positive
+    switch (algo_enum)
+    {
+        case CRYPTO_CIPHER_AES256_GCM:
+            mode = GCRY_CIPHER_MODE_GCM;
+            break;
+        case CRYPTO_CIPHER_AES256_CBC:
+            mode = GCRY_CIPHER_MODE_CBC;
+            break;
+
+        default:
+#ifdef DEBUG
+            printf("ECS Mode Enum not supported\n");
+#endif
+            break;
+    }
+
+    return (int)mode;
 }
