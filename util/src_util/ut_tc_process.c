@@ -588,4 +588,48 @@ UTEST(TC_PROCESS, ERROR_TC_INPUT_FRAME_TOO_SHORT_FOR_SPECIFIED_FRAME_LENGTH_HEAD
     Crypto_Shutdown();
 }
 
+UTEST(TC_PROCESS, HAPPY_PATH_DECRYPT)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+            
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 4);
+    
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    TC_t* tc_sdls_processed_frame;
+    tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
+    memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
+
+    char* test_frame_pt_h = "200300260000000B000000000000000000000000023D6F1F1F1F4A4B892A4107A3FBB8514900D3";
+    uint8_t *test_frame_pt_b = NULL;
+    int test_frame_pt_len = 0;
+
+    // Expose/setup SAs for testing
+    SecurityAssociation_t* test_association = NULL;
+    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    test_association->arsn_len = 0;
+    test_association->shsnf_len = 0;
+
+    // Convert input test frame
+    hex_conversion(test_frame_pt_h, (char**) &test_frame_pt_b, &test_frame_pt_len);
+    
+    status = Crypto_TC_ProcessSecurity(test_frame_pt_b, &test_frame_pt_len, tc_sdls_processed_frame);
+    
+    printf("Decrypted Frame:\n");
+    for(int i = 0; i < tc_sdls_processed_frame->tc_pdu_len; i++)
+    {
+        printf("%02x", tc_sdls_processed_frame->tc_pdu[i]);
+    }
+    printf("\n");
+
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    free(test_frame_pt_b);
+    Crypto_Shutdown();       
+}
+
 UTEST_MAIN();

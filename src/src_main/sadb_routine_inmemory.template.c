@@ -259,7 +259,7 @@ int32_t sadb_config(void)
     sa[11].shivf_len = 12;
     sa[11].iv_len = 12;
     sa[11].shplf_len = 1;
-    sa[11].stmacf_len = 16;
+    sa[11].stmacf_len = 0;
     sa[11].iv = (uint8_t* )calloc(1, sa[11].shivf_len * sizeof(uint8_t));
     *(sa[11].iv + 11) = 0;
     sa[11].abm_len = ABM_SIZE; // 20

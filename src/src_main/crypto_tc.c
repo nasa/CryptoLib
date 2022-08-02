@@ -53,7 +53,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
     uint32_t encryption_cipher;
     uint8_t ecs_is_aead_algorithm;
     int i;
-    uint8_t padding_needed = 0;
+    uint32_t padding_needed = 0;
 
 #ifdef DEBUG
     printf(KYEL "\n----- Crypto_TC_ApplySecurity START -----\n" RESET);
@@ -285,20 +285,19 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
             // Handle Padding, if necessary
             if(*(sa_ptr->ecs) == CRYPTO_CIPHER_AES256_CBC)
             {
-                printf("%d\n", tf_payload_len);
                 padding_needed = tf_payload_len % 16; // Block Sizes of 16
                 
                 if(padding_needed)
                 {
                     padding_needed = 16 - padding_needed;
                     sa_ptr->shplf_len = 1; 
-                    *p_enc_frame_len += padding_needed + sa_ptr->shplf_len; // Add the necessary padding to the frame_len + new pad length field
+                    *p_enc_frame_len += padding_needed; // Add the necessary padding to the frame_len + new pad length field
                     
                     new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
 #ifdef DEBUG
-                    printf("\nModifying SHPLF_LEN\n");
-                    printf("Original: %d\n", sa_ptr->shplf_len);
-                    printf("New: %d\n", padding_needed);
+                    
+                    printf("SHPLF_LEN: %d\n", sa_ptr->shplf_len);
+                    printf("Padding Needed: %d\n", padding_needed);
                     printf("Previous data_len: %d\n", tf_payload_len);
                     printf("New data_len: %d\n", (tf_payload_len + padding_needed));
                     printf("New enc_frame_len: %d\n", (*p_enc_frame_len));
@@ -467,18 +466,33 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
         */
         // TODO: Revisit this
         // TODO: Likely SA API Call
-        // TODO: This is wrong.
-        for (i = 0; i < sa_ptr->shplf_len; i++)
-        {
-            /* 4.1.1.5.2 The Pad Length field shall contain the count of fill bytes used in the
-            ** cryptographic process, consisting of an integral number of octets. - CCSDS 3550b1
-            */
-            // TODO: Set this depending on crypto cipher used
-            sprintf((char*)(p_new_enc_frame + index), "%x", padding_needed); // How much padding is needed?
-            index++;
-        }
-        
+        /* 4.1.1.5.2 The Pad Length field shall contain the count of fill bytes used in the
+        ** cryptographic process, consisting of an integral number of octets. - CCSDS 3550b1
+        */
+        // TODO: Set this depending on crypto cipher used
 
+        if(padding_needed)
+        {
+            char hex_padding[3] = {0};  //TODO: Create #Define for the 3
+            padding_needed = padding_needed & 0x00FFFFFF; // Truncate to be maxiumum of 3 bytes in size
+            
+            // Byte Magic
+            hex_padding[0] = (padding_needed >> 16) & 0xFF;
+            hex_padding[1] = (padding_needed >> 8)  & 0xFF;
+            hex_padding[2] = (padding_needed)  & 0xFF;
+            
+
+            uint8_t padding_start = 0;
+            padding_start = 3 - sa_ptr->shplf_len;
+            
+            for (i = 0; i < sa_ptr->shplf_len; i++)
+            {
+                *(p_new_enc_frame + index)  = hex_padding[padding_start++];
+                index++;
+            }
+        }
+
+        
         /*
         ** End Security Header Fields
         */
@@ -491,7 +505,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
         
         memcpy((p_new_enc_frame + index), (p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), tf_payload_len);
         index += tf_payload_len;
-        for (i = 0; i < padding_needed; i++)
+        for (uint32_t i = 0; i < padding_needed; i++)
         {
             /* 4.1.1.5.2 The Pad Length field shall contain the count of fill bytes used in the
             ** cryptographic process, consisting of an integral number of octets. - CCSDS 3550b1
@@ -545,12 +559,6 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
             printf("Input bytes input_loc is %d\n", TC_FRAME_HEADER_SIZE + segment_hdr_len);
 #endif
 
-            printf("FRAME: ");
-            for(int j = 0; j < *p_enc_frame_len; j++)
-            {
-                printf("%02x", *(p_new_enc_frame + j));
-            }
-            printf("\n");
             if(ecs_is_aead_algorithm == CRYPTO_TRUE)
             {
                 status = cryptography_if->cryptography_aead_encrypt(&p_new_enc_frame[index],                               // ciphertext output
@@ -579,7 +587,19 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
                 // TODO - implement non-AEAD algorithm logic
                 if (sa_service_type == SA_ENCRYPTION)
                 {
-                    status = cryptography_if->cryptography_encrypt();
+                    status = cryptography_if->cryptography_encrypt(&p_new_enc_frame[index], // ciphertext output
+                                                                    (size_t)tf_payload_len, 
+                                                                    &p_new_enc_frame[index],                                      // length of data
+                                                                    //(uint8_t*)(p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), // plaintext input
+                                                                    (size_t)tf_payload_len,                                         // in data length
+                                                                    NULL, // Using SA key reference, key is null
+                                                                    Crypto_Get_Algo_Keylen(*sa_ptr->ecs), // Length of key derived from sa_ptr key_ref
+                                                                    sa_ptr, // SA (for key reference)
+                                                                    sa_ptr->iv, // IV
+                                                                    sa_ptr->iv_len, // IV Length
+                                                                    sa_ptr->ecs, // encryption cipher
+                                                                    sa_ptr->acs  // authentication cipher
+                );
                 }
 
                 if (sa_service_type == SA_AUTHENTICATION)
@@ -801,6 +821,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
     tc_sdls_processed_frame->tc_sec_header.sn_field_len = sa_ptr->arsn_len;
     tc_sdls_processed_frame->tc_sec_header.pad_field_len = sa_ptr->shplf_len;
     //sprintf(tc_sdls_processed_frame->tc_sec_header.pad, "%x", padding_needed);
+
     tc_sdls_processed_frame->tc_sec_trailer.mac_field_len = sa_ptr->stmacf_len;
 
     // Determine SA Service Type
@@ -944,10 +965,13 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
     Crypto_hexprint(tc_sdls_processed_frame->tc_sec_header.sn,sa_ptr->arsn_len);
 #endif
     
+    // TODO:  Why is this here?  IT was breaking things.
+    
     // Parse pad length
-    memcpy((tc_sdls_processed_frame->tc_sec_header.pad) + (TC_PAD_SIZE - sa_ptr->shplf_len),
-           &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len]),
-           sa_ptr->shplf_len);
+    // tc_sdls_processed_frame->tc_sec_header.pad = malloc((sa_ptr->shplf_len * sizeof(uint8_t)));
+    // memcpy((tc_sdls_processed_frame->tc_sec_header.pad) + (TC_PAD_SIZE - sa_ptr->shplf_len),
+    //        &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len]),
+    //        sa_ptr->shplf_len);
 
     // Parse MAC, prepare AAD
     if ((sa_service_type == SA_AUTHENTICATION) || (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
@@ -973,10 +997,11 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
         }
         aad = Crypto_Prepare_TC_AAD(ingest, aad_len, sa_ptr->abm);
     }
-
+    
     uint16_t tc_enc_payload_start_index = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len +
                                           sa_ptr->shsnf_len + sa_ptr->shplf_len;
 
+    
     // Todo -- if encrypt only, ignore stmacf_len entirely to avoid erroring on SA misconfiguration... Or just throw a warning/error indicating SA misconfiguration?
     tc_sdls_processed_frame->tc_pdu_len =
             tc_sdls_processed_frame->tc_header.fl + 1 - tc_enc_payload_start_index - sa_ptr->stmacf_len - fecf_len;
@@ -1036,7 +1061,31 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
         }
         if(sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
         {
-            status = cryptography_if->cryptography_decrypt();
+            status = cryptography_if->cryptography_decrypt(tc_sdls_processed_frame->tc_pdu,       // plaintext output
+                                                            (size_t)(tc_sdls_processed_frame->tc_pdu_len),   // length of data
+                                                            &(ingest[tc_enc_payload_start_index]), // ciphertext input
+                                                            (size_t)(tc_sdls_processed_frame->tc_pdu_len),    // in data length
+                                                            NULL, // Key
+                                                            Crypto_Get_Algo_Keylen(*sa_ptr->ecs),
+                                                            sa_ptr, // SA for key reference
+                                                            tc_sdls_processed_frame->tc_sec_header.iv, // IV
+                                                            sa_ptr->iv_len, // IV Length
+                                                            sa_ptr->ecs, // encryption cipher
+                                                            sa_ptr->acs  // authentication cipher
+                                                            
+            );
+
+            //Handle Padding Removal
+            if(sa_ptr->shplf_len != 0)
+            {
+                int padding_location = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len +
+                                          sa_ptr->shsnf_len;
+                uint16_t padding_amount = 0;
+                // Get Padding Amount from ingest frame
+                padding_amount = (int)ingest[padding_location];
+                // Remove Padding from final decrypted portion
+                tc_sdls_processed_frame->tc_pdu_len -= padding_amount;
+            }
         }
 
     } else if(sa_service_type == SA_PLAINTEXT)
