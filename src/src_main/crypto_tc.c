@@ -484,7 +484,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
 
             uint8_t padding_start = 0;
             padding_start = 3 - sa_ptr->shplf_len;
-            
+
             for (i = 0; i < sa_ptr->shplf_len; i++)
             {
                 *(p_new_enc_frame + index)  = hex_padding[padding_start++];
@@ -587,16 +587,23 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
                 // TODO - implement non-AEAD algorithm logic
                 if (sa_service_type == SA_ENCRYPTION)
                 {
-                    status = cryptography_if->cryptography_encrypt(&p_new_enc_frame[index], // ciphertext output
-                                                                    (size_t)tf_payload_len, 
+                    status = cryptography_if->cryptography_encrypt(&p_new_enc_frame[index],                               // ciphertext output
+                                                                    (size_t)tf_payload_len,  
                                                                     &p_new_enc_frame[index],                                      // length of data
                                                                     //(uint8_t*)(p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), // plaintext input
                                                                     (size_t)tf_payload_len,                                         // in data length
                                                                     NULL, // Using SA key reference, key is null
-                                                                    Crypto_Get_Algo_Keylen(*sa_ptr->ecs), // Length of key derived from sa_ptr key_ref
+                                                                    Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs), // Length of key derived from sa_ptr key_ref
                                                                     sa_ptr, // SA (for key reference)
                                                                     sa_ptr->iv, // IV
                                                                     sa_ptr->iv_len, // IV Length
+                                                                    mac_ptr, // tag output
+                                                                    sa_ptr->stmacf_len, // tag size
+                                                                    aad, // AAD Input
+                                                                    aad_len, // Length of AAD
+                                                                    (sa_ptr->est==1),
+                                                                    (sa_ptr->ast==1),
+                                                                    (sa_ptr->ast==1),
                                                                     sa_ptr->ecs, // encryption cipher
                                                                     sa_ptr->acs  // authentication cipher
                 );
@@ -965,8 +972,10 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
     Crypto_hexprint(tc_sdls_processed_frame->tc_sec_header.sn,sa_ptr->arsn_len);
 #endif
     
-    // TODO:  Why is this here?  IT was breaking things.
-    
+    // TODO:  I believe this is unnecessary.  There is no need to track the pading as a variable
+    //        The way it was written was also breaking code once it was in use.
+    //        RB:  I have removed this until we decide it is necessary.
+
     // Parse pad length
     // tc_sdls_processed_frame->tc_sec_header.pad = malloc((sa_ptr->shplf_len * sizeof(uint8_t)));
     // memcpy((tc_sdls_processed_frame->tc_sec_header.pad) + (TC_PAD_SIZE - sa_ptr->shplf_len),
@@ -1066,7 +1075,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
                                                             &(ingest[tc_enc_payload_start_index]), // ciphertext input
                                                             (size_t)(tc_sdls_processed_frame->tc_pdu_len),    // in data length
                                                             NULL, // Key
-                                                            Crypto_Get_Algo_Keylen(*sa_ptr->ecs),
+                                                            Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs),
                                                             sa_ptr, // SA for key reference
                                                             tc_sdls_processed_frame->tc_sec_header.iv, // IV
                                                             sa_ptr->iv_len, // IV Length

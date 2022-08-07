@@ -29,9 +29,12 @@ static int32_t cryptography_shutdown(void);
 static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
-                                         SecurityAssociation_t* sa_ptr, 
+                                         SecurityAssociation_t* sa_ptr,
                                          uint8_t* iv, uint32_t iv_len,
-                                         uint8_t* ecs, uint8_t* acs);
+                                         uint8_t* mac, uint32_t mac_size,
+                                         uint8_t* aad, uint32_t aad_len,
+                                         uint8_t encrypt_bool, uint8_t authenticate_bool,
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs);
 static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -74,10 +77,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t aad_bool, uint8_t* ecs, uint8_t* acs);
 static int32_t cryptography_get_acs_algo(int8_t algo_enum);
 static int32_t cryptography_get_ecs_algo(int8_t algo_enum);
-static int32_t cryptography_get_non_ecs_algo(int8_t algo_enum);
 static int32_t cryptography_get_ecs_mode(int8_t algo_enum);
-static int32_t cryptography_get_non_ecs_mode(int8_t algo_enum);
-static int32_t cryptography_get_non_ecs_algo(int8_t algo_enum);
 
 /*
 ** Module Variables
@@ -101,7 +101,6 @@ CryptographyInterface get_cryptography_interface_libgcrypt(void)
     cryptography_if_struct.cryptography_aead_decrypt = cryptography_aead_decrypt;
     cryptography_if_struct.cryptography_get_acs_algo = cryptography_get_acs_algo;
     cryptography_if_struct.cryptography_get_ecs_algo = cryptography_get_ecs_algo;
-    cryptography_if_struct.cryptography_get_non_ecs_algo = cryptography_get_non_ecs_algo;
     return &cryptography_if_struct;
 }
 
@@ -842,9 +841,12 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
 static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
-                                         SecurityAssociation_t* sa_ptr, 
+                                         SecurityAssociation_t* sa_ptr,
                                          uint8_t* iv, uint32_t iv_len,
-                                         uint8_t* ecs, uint8_t* acs)
+                                         uint8_t* mac, uint32_t mac_size,
+                                         uint8_t* aad, uint32_t aad_len,
+                                         uint8_t encrypt_bool, uint8_t authenticate_bool,
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs)
 {
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     gcry_cipher_hd_t tmp_hd;
@@ -852,6 +854,13 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
     uint8_t* key_ptr = key;
 
     acs = acs;
+    mac = mac;
+    aad = aad;
+    aad_len = aad_len;
+    aad_bool = aad_bool;
+    mac_size = mac_size;
+    authenticate_bool = authenticate_bool;
+    encrypt_bool = encrypt_bool;
 
     if(sa_ptr != NULL) //Using SA key pointer
     {
@@ -862,7 +871,7 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
     int32_t algo = -1;
     if (ecs != NULL)
     {
-        algo = cryptography_get_non_ecs_algo(*ecs);
+        algo = cryptography_get_ecs_algo(*ecs);
         if (algo == CRYPTO_LIB_ERR_UNSUPPORTED_MODE)
         {
             return CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
@@ -875,7 +884,7 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
 
     // Verify the mode to accompany the algorithm enum
     int32_t mode = -1;
-    mode = cryptography_get_non_ecs_mode(*ecs);
+    mode = cryptography_get_ecs_mode(*ecs);
     if (mode == CRYPTO_LIB_ERR_UNSUPPORTED_MODE) return CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
 
      // Check that key length to be used is atleast as long as the algo requirement
@@ -1174,7 +1183,7 @@ static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
     int32_t algo = -1;
     if (ecs != NULL)
     {
-        algo = cryptography_get_non_ecs_algo(*ecs);
+        algo = cryptography_get_ecs_algo(*ecs);
         if (algo == CRYPTO_LIB_ERR_UNSUPPORTED_ECS)
         {
             return CRYPTO_LIB_ERR_UNSUPPORTED_ECS;
@@ -1187,7 +1196,7 @@ static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
 
     // Verify the mode to accompany the algorithm enum
     int32_t mode = -1;
-    mode = cryptography_get_non_ecs_mode(*ecs);
+    mode = cryptography_get_ecs_mode(*ecs);
     if (mode == CRYPTO_LIB_ERR_UNSUPPORTED_MODE) return CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
 
     // Check that key length to be used is atleast as long as the algo requirement
@@ -1425,27 +1434,6 @@ int32_t cryptography_get_ecs_algo(int8_t algo_enum)
         case CRYPTO_CIPHER_AES256_GCM:
             algo = GCRY_CIPHER_AES256;
             break;
-
-        default:
-#ifdef DEBUG
-            printf("Algo Enum not supported\n");
-#endif
-            break;
-    }
-
-    return (int)algo;
-}
-
-/**
- * @brief Function: cryptography_get_non_ecs_algo. Maps Cryptolib enums to libgcrypt enums 
- * It is possible for supported algos to vary between crypto libraries
- * @param algo_enum
- **/
-int32_t cryptography_get_non_ecs_algo(int8_t algo_enum)
-{
-    int32_t algo = CRYPTO_LIB_ERR_UNSUPPORTED_MODE; // All valid algos will be positive
-    switch (algo_enum)
-    {
         case CRYPTO_CIPHER_AES256_CBC:
             algo = GCRY_CIPHER_AES256;
             break;
@@ -1487,26 +1475,3 @@ int32_t cryptography_get_ecs_mode(int8_t algo_enum)
     return (int)mode;
 }
 
-/**
- * @brief Function: cryptography_get_non_ecs_mode. Maps Cryptolib enums to libgcrypt enums 
- * It is possible for supported algos to vary between crypto libraries
- * @param algo_enum
- **/
-int32_t cryptography_get_non_ecs_mode(int8_t algo_enum)
-{
-    int32_t mode = CRYPTO_LIB_ERR_UNSUPPORTED_MODE; // All valid algos will be positive
-    switch (algo_enum)
-    {
-        case CRYPTO_CIPHER_AES256_CBC:
-            mode = GCRY_CIPHER_MODE_CBC;
-            break;
-
-        default:
-#ifdef DEBUG
-            printf("Mode Enum not supported\n");
-#endif
-            break;
-    }
-
-    return (int)mode;
-}

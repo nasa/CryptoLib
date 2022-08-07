@@ -36,9 +36,12 @@ static int32_t cryptography_shutdown(void);
 static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
-                                         SecurityAssociation_t* sa_ptr, 
+                                         SecurityAssociation_t* sa_ptr,
                                          uint8_t* iv, uint32_t iv_len,
-                                         uint8_t* ecs, uint8_t* acs);
+                                         uint8_t* mac, uint32_t mac_size,
+                                         uint8_t* aad, uint32_t aad_len,
+                                         uint8_t encrypt_bool, uint8_t authenticate_bool,
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs);
 static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -112,6 +115,7 @@ static const char* icv_verify_endpoint = "icv-verify?metadata=integrityCheckValu
 
 // Supported KMC Cipher Transformation Strings
 static const char* AES_GCM_TRANSFORMATION="AES/GCM/NoPadding";
+static const char* AES_CBC_TRANSFORMATION="AES/CBC/PKCS5Padding";
 static const char* AES_CRYPTO_ALGORITHM="AES";
 //static const char* AES_CBC_TRANSFORMATION="AES/CBC/PKCS5Padding";
 static const char* AES_CMAC_TRANSFORMATION="AESCMAC";
@@ -270,22 +274,255 @@ static int32_t cryptography_shutdown(void)
 static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
-                                         SecurityAssociation_t* sa_ptr, 
+                                         SecurityAssociation_t* sa_ptr,
                                          uint8_t* iv, uint32_t iv_len,
-                                         uint8_t* ecs, uint8_t* acs)
+                                         uint8_t* mac, uint32_t mac_size,
+                                         uint8_t* aad, uint32_t aad_len,
+                                         uint8_t encrypt_bool, uint8_t authenticate_bool,
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs)
 { 
-    data_out = data_out;
-    len_data_out = len_data_out;
-    data_in = data_in;
-    len_data_in = len_data_in;
-    key = key;
-    len_key = len_key;
-    sa_ptr = sa_ptr;
-    iv = iv;
-    iv_len = iv_len;
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    key = key; // Direct key input is not supported in KMC interface
+    len_key = len_key; // Direct key input is not supported in KMC interface
     ecs = ecs;
     acs = acs;
-    return CRYPTO_LIB_SUCCESS; 
+
+    curl_easy_reset(curl);
+    configure_curl_connect_opts(curl);
+
+    // Base64 URL encode IV for KMC REST Encrypt
+    char* iv_base64 = (char*)calloc(1,B64ENCODE_OUT_SAFESIZE(iv_len)+1);
+    base64urlEncode(iv,iv_len,iv_base64,NULL);
+
+    uint8_t* encrypt_payload = data_in;
+    size_t encrypt_payload_len = len_data_in;
+
+#ifdef DEBUG
+    printf("IV Base64 URL Encoded: %s\n",iv_base64);
+#endif
+
+    if(sa_ptr->ek_ref == NULL)
+    {
+        status = CRYPTOGRAHPY_KMC_NULL_ENCRYPTION_KEY_REFERENCE_IN_SA;
+        return status;
+    }
+
+    char* encrypt_uri;
+    if(aad_bool == CRYPTO_TRUE)
+    {
+        //Determine length of aad offset string and convert to string for use in URL
+        uint32_t aad_offset_str_len = 0;
+        char* aad_offset_str = int_to_str(aad_len, &aad_offset_str_len);
+#ifdef DEBUG
+        printf("AAD Offset Str: %s\n",aad_offset_str);
+#endif
+
+        uint32_t mac_size_str_len = 0;
+        char* mac_size_str = int_to_str(mac_size*8, &mac_size_str_len);
+        printf("\n***************\nAAD_OFFSET_STR_LEN: %d\nMAC_SIZE: %d\n", aad_offset_str_len, mac_size_str_len);
+        int len_encrypt_endpoint = strlen(encrypt_offset_endpoint)+strlen(sa_ptr->ek_ref)+strlen(iv_base64)+strlen(AES_CBC_TRANSFORMATION)+aad_offset_str_len + mac_size_str_len;
+        char* encrypt_endpoint_final = (char*) malloc(len_encrypt_endpoint);
+
+        snprintf(encrypt_endpoint_final,len_encrypt_endpoint,encrypt_offset_endpoint,sa_ptr->ek_ref,AES_CBC_TRANSFORMATION, iv_base64,aad_offset_str,mac_size_str);
+
+        encrypt_uri = (char*) malloc(strlen(kmc_root_uri)+len_encrypt_endpoint);
+        encrypt_uri[0] = '\0';
+        strcat(encrypt_uri, kmc_root_uri);
+        strcat(encrypt_uri, encrypt_endpoint_final);
+
+        // Prepare encrypt_payload with AAD at the front for KMC Crypto Service.
+        if(encrypt_bool == CRYPTO_FALSE) //Not encrypting data, only passing in AAD for TAG.
+        {
+            encrypt_payload_len = aad_len;
+        }
+        else // Encrypt & AAD
+        {
+            encrypt_payload_len = len_data_in + aad_len;
+        }
+
+#ifdef DEBUG
+        printf("Encrypt Payload Length: %ld\n",encrypt_payload_len);
+#endif
+        encrypt_payload = (uint8_t*) malloc(encrypt_payload_len);
+        memcpy(&encrypt_payload[0],aad,aad_len);
+        if(encrypt_bool == CRYPTO_TRUE)
+        {
+            memcpy(&encrypt_payload[aad_len],data_in,len_data_in);
+        }
+    }
+    else //No AAD -- just prepare the endpoint URI
+    {
+        int len_encrypt_endpoint = strlen(encrypt_endpoint)+strlen(sa_ptr->ek_ref)+strlen(iv_base64)+strlen(AES_CBC_TRANSFORMATION);
+        char* encrypt_endpoint_final = (char*) malloc(len_encrypt_endpoint);
+
+        snprintf(encrypt_endpoint_final,len_encrypt_endpoint,encrypt_endpoint,sa_ptr->ek_ref,AES_CBC_TRANSFORMATION, iv_base64);
+
+        encrypt_uri = (char*) malloc(strlen(kmc_root_uri)+len_encrypt_endpoint);
+        encrypt_uri[0] = '\0';
+        strcat(encrypt_uri, kmc_root_uri);
+        strcat(encrypt_uri, encrypt_endpoint_final);
+    }
+
+#ifdef DEBUG
+    printf("Encrypt URI: %s\n",encrypt_uri);
+#endif
+    curl_easy_setopt(curl, CURLOPT_URL, encrypt_uri);
+
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, http_headers_list);
+
+    memory_write* chunk_write = (memory_write*) calloc(1,MEMORY_WRITE_SIZE);
+    memory_read* chunk_read = (memory_read*) calloc(1,MEMORY_READ_SIZE);;
+    /* Configure CURL for POST */
+    curl_easy_setopt(curl, CURLOPT_POST, 1L);
+    /* send all data to this function  */
+    curl_easy_setopt(curl, CURLOPT_READFUNCTION, read_callback);
+    /* we pass our 'chunk' struct to the callback function */
+    curl_easy_setopt(curl, CURLOPT_READDATA, chunk_read);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+    /* we pass our 'chunk' struct to the callback function */
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, chunk_write);
+
+    /* size of the POST data */
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long) encrypt_payload_len);
+    /* binary data */
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, encrypt_payload);
+
+#ifdef DEBUG
+    printf("Data to Encrypt: \n");
+    for (uint32_t i=0; i < encrypt_payload_len; i++)
+    {
+        printf("%02x ", encrypt_payload[i]);
+    }
+    printf("\n");
+#endif
+
+    CURLcode res;
+    res = curl_easy_perform(curl);
+
+    if(res != CURLE_OK) // This is not return code, this is successful response!
+    {
+        status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_AEAD_ENCRYPT_ERROR;
+        fprintf(stderr, "curl_easy_perform() failed: %s\n",
+                curl_easy_strerror(res));
+        return status;
+    }
+
+#ifdef DEBUG
+    printf("\ncURL Encrypt Response:\n\t %s\n",chunk_write->response);
+#endif
+
+    if(chunk_write->response == NULL) // No response, possibly because service is CAM secured.
+    {
+        status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_EMPTY_RESPONSE;
+        fprintf(stderr, "curl_easy_perform() unexpected empty response: \n%s\n",
+                "Empty Crypto Service response can be caused by CAM security, CryptoLib doesn't support a CAM secured KMC Crypto Service.");
+        return status;
+    }
+
+    /* JSON Response Handling */
+
+    // Parse the JSON string response
+    jsmn_parser p;
+    jsmntok_t t[64]; /* We expect no more than 64 JSON tokens */
+    jsmn_init(&p);
+    int parse_result = jsmn_parse(&p, chunk_write->response, strlen(chunk_write->response), t, 64); // "chunk->response" is the char array holding the json content
+
+    // Find the 'base64ciphertext' token
+    if (parse_result < 0) {
+        status = CRYPTOGRAHPY_KMC_CRYPTO_JSON_PARSE_ERROR;
+        printf("Failed to parse JSON: %d\n", parse_result);
+        return status;
+    }
+
+    int json_idx = 0;
+    uint8_t ciphertext_found = CRYPTO_FALSE;
+    char* ciphertext_base64 = NULL;
+    for (json_idx = 1; json_idx < parse_result; json_idx++)
+    {
+        if (jsoneq(chunk_write->response, &t[json_idx], "base64ciphertext") == 0)
+        {
+            /* We may use strndup() to fetch string value */
+#ifdef DEBUG
+            printf("Json base64ciphertext: %.*s\n", t[json_idx + 1].end - t[json_idx + 1].start,
+                   chunk_write->response + t[json_idx + 1].start);
+#endif
+            uint32_t len_ciphertext = t[json_idx + 1].end - t[json_idx + 1].start;
+            ciphertext_base64 = malloc(len_ciphertext+1);
+            memcpy(ciphertext_base64,chunk_write->response + t[json_idx + 1].start, len_ciphertext);
+            ciphertext_base64[len_ciphertext] = '\0';
+#ifdef DEBUG
+            printf("Parsed base64ciphertext: %s\n",ciphertext_base64);
+#endif
+            json_idx++;
+            ciphertext_found = CRYPTO_TRUE;
+            continue;
+        }
+
+        if (jsoneq(chunk_write->response, &t[json_idx], "httpCode") == 0)
+        {
+            /* We may use strndup() to fetch string value */
+#ifdef DEBUG
+            printf("httpCode: %.*s\n", t[json_idx + 1].end - t[json_idx + 1].start,
+                   chunk_write->response + t[json_idx + 1].start);
+#endif
+            uint32_t len_httpcode = t[json_idx + 1].end - t[json_idx + 1].start;
+            char* http_code_str = malloc(len_httpcode+1);
+            memcpy(http_code_str,chunk_write->response + t[json_idx + 1].start, len_httpcode);
+            http_code_str[len_httpcode] = '\0';
+            int http_code = atoi(http_code_str);
+#ifdef DEBUG
+            printf("Parsed http code: %d\n",http_code);
+#endif
+            if(http_code != 200)
+            {
+                status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE;
+                fprintf(stderr,"KMC Crypto Failure Response:\n%s\n",chunk_write->response);
+                return status;
+            }
+            json_idx++;
+            continue;
+        }
+
+    }
+    if(ciphertext_found == CRYPTO_FALSE){
+        status = CRYPTOGRAHPY_KMC_CIPHER_TEXT_NOT_FOUND_IN_JSON_RESPONSE;
+        return status;
+    }
+
+    /* JSON Response Handling End */
+
+
+    uint8_t* ciphertext_decoded = malloc((len_data_out + mac_size + aad_len)*2 + 1);
+    size_t ciphertext_decoded_len = 0;
+    base64Decode(ciphertext_base64,strlen(ciphertext_base64),ciphertext_decoded, &ciphertext_decoded_len);
+#ifdef DEBUG
+    printf("Mac size: %d\n",mac_size);
+    printf("Decoded Cipher Text Length: %ld\n",ciphertext_decoded_len);
+    printf("Decoded Cipher Text: \n");
+    for (uint32_t i=0; i < ciphertext_decoded_len; i++)
+    {
+        printf("%02x ", ciphertext_decoded[i]);
+    }
+    printf("\n");
+#endif
+
+
+    // Copy the encrypted data to the output stream
+    if(encrypt_bool == CRYPTO_TRUE)
+    {
+        printf("LENGTH DATA OUT: %ld\n", len_data_out);
+        // Crypto Service returns aad - cipher_text - tag
+        memcpy(data_out,ciphertext_decoded + aad_len,len_data_out);
+    }
+
+    // If authenticate, Copy the MAC to the output stream
+    if(authenticate_bool == CRYPTO_TRUE)
+    {
+        uint32_t data_offset = len_data_out;
+        if(encrypt_bool == CRYPTO_FALSE) { data_offset = 0; }
+        memcpy(mac,ciphertext_decoded + aad_len + data_offset, mac_size);
+    }
+    return status;
 }
 
 static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
@@ -294,20 +531,200 @@ static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
                                          SecurityAssociation_t* sa_ptr, 
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* ecs, uint8_t* acs)
-{ 
-    data_out = data_out;
-    len_data_out = len_data_out;
-    data_in = data_in;
-    len_data_in = len_data_in;
-    key = key;
-    len_key = len_key;
-    sa_ptr = sa_ptr;
-    iv = iv;
-    iv_len = iv_len;
+{int32_t status = CRYPTO_LIB_SUCCESS;
+    key = key; // Direct key input is not supported in KMC interface
     ecs = ecs;
     acs = acs;
-    return CRYPTO_LIB_SUCCESS; 
+
+    // Get the key length in bits, in string format.
+    // TODO -- Parse the key length from the keyInfo endpoint of the Crypto Service!
+    uint32_t key_len_in_bits = len_key * 8; // 8 bits per byte.
+    uint32_t key_len_in_bits_str_len = 0;
+    char* key_len_in_bits_str = int_to_str(key_len_in_bits, &key_len_in_bits);
+
+
+
+    curl_easy_reset(curl);
+    configure_curl_connect_opts(curl);
+
+    // Base64 URL encode IV for KMC REST Encrypt
+    char* iv_base64 = (char*)calloc(1,B64ENCODE_OUT_SAFESIZE(iv_len)+1);
+    base64urlEncode(iv,iv_len,iv_base64,NULL);
+
+    uint8_t* decrypt_payload = data_in;
+    size_t decrypt_payload_len = len_data_in;
+
+#ifdef DEBUG
+    printf("IV Base64 URL Encoded: %s\n",iv_base64);
+#endif
+
+
+    if(sa_ptr->ek_ref == NULL)
+    {
+        status = CRYPTOGRAHPY_KMC_NULL_ENCRYPTION_KEY_REFERENCE_IN_SA;
+        return status;
+    }
+
+    char* decrypt_uri;
+    
+    int len_decrypt_endpoint = strlen(decrypt_endpoint)+ key_len_in_bits_str_len + strlen(sa_ptr->ek_ref)+strlen(iv_base64)+strlen(AES_CBC_TRANSFORMATION) + strlen(AES_CRYPTO_ALGORITHM);
+    char* decrypt_endpoint_final = (char*) malloc(len_decrypt_endpoint);
+
+    snprintf(decrypt_endpoint_final,len_decrypt_endpoint,decrypt_endpoint,key_len_in_bits_str,sa_ptr->ek_ref,AES_CBC_TRANSFORMATION, iv_base64, AES_CRYPTO_ALGORITHM);
+
+    decrypt_uri = (char*) malloc(strlen(kmc_root_uri)+len_decrypt_endpoint);
+    decrypt_uri[0] = '\0';
+    strcat(decrypt_uri, kmc_root_uri);
+    strcat(decrypt_uri, decrypt_endpoint_final);
+
+#ifdef DEBUG
+    printf("Decrypt URI: %s\n",decrypt_uri);
+#endif
+    curl_easy_setopt(curl, CURLOPT_URL, decrypt_uri);
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, http_headers_list);
+
+    memory_write* chunk_write = (memory_write*) calloc(1,MEMORY_WRITE_SIZE);
+    memory_read* chunk_read = (memory_read*) calloc(1,MEMORY_READ_SIZE);;
+
+    /* Configure CURL for POST */
+    curl_easy_setopt(curl, CURLOPT_POST, 1L);
+    /* send all data to this function  */
+    curl_easy_setopt(curl, CURLOPT_READFUNCTION, read_callback);
+    /* we pass our 'chunk' struct to the callback function */
+    curl_easy_setopt(curl, CURLOPT_READDATA, chunk_read);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+    /* we pass our 'chunk' struct to the callback function */
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, chunk_write);
+
+    /* size of the POST data */
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long) decrypt_payload_len);
+    /* binary data */
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, decrypt_payload);
+
+#ifdef DEBUG
+    printf("Len of decrypt payload: %ld\n",decrypt_payload_len);
+    printf("Data to Decrypt: \n");
+    for (uint32_t i=0; i < decrypt_payload_len; i++)
+    {
+        printf("%02x ", decrypt_payload[i]);
+    }
+    printf("\n");
+#endif
+
+    CURLcode res;
+    res = curl_easy_perform(curl);
+
+    if(res != CURLE_OK) // This is not return code, this is successful response!
+    {
+        status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_DECRYPT_ERROR;
+        fprintf(stderr, "curl_easy_perform() failed: %s\n",
+                curl_easy_strerror(res));
+        return status;
+    }
+
+#ifdef DEBUG
+    printf("\ncURL Decrypt Response:\n\t %s\n",chunk_write->response);
+#endif
+
+    if(chunk_write->response == NULL) // No response, possibly because service is CAM secured.
+    {
+        status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_EMPTY_RESPONSE;
+        fprintf(stderr, "curl_easy_perform() unexpected empty response: \n%s\n",
+                "Empty Crypto Service response can be caused by CAM security, CryptoLib doesn't support a CAM secured KMC Crypto Service.");
+        return status;
+    }
+
+    /* JSON Response Handling */
+
+    // Parse the JSON string response
+    jsmn_parser p;
+    jsmntok_t t[64]; /* We expect no more than 64 JSON tokens */
+    jsmn_init(&p);
+    int parse_result = jsmn_parse(&p, chunk_write->response, strlen(chunk_write->response), t, 64); // "chunk->response" is the char array holding the json content
+
+    // Find the 'base64ciphertext' token
+    if (parse_result < 0) {
+        status = CRYPTOGRAHPY_KMC_CRYPTO_JSON_PARSE_ERROR;
+        printf("Failed to parse JSON: %d\n", parse_result);
+        return status;
+    }
+
+    int json_idx = 0;
+    uint8_t ciphertext_found = CRYPTO_FALSE;
+    char* cleartext_base64 = NULL;
+    for (json_idx = 1; json_idx < parse_result; json_idx++)
+    {
+        // check "httpCode" field for non-200 status codes!!!
+        if (jsoneq(chunk_write->response, &t[json_idx], "base64cleartext") == 0)
+        {
+            /* We may use strndup() to fetch string value */
+#ifdef DEBUG
+            printf("Json base64cleartext: %.*s\n", t[json_idx + 1].end - t[json_idx + 1].start,
+                   chunk_write->response + t[json_idx + 1].start);
+#endif
+            uint32_t len_cleartext = t[json_idx + 1].end - t[json_idx + 1].start;
+            cleartext_base64 = malloc(len_cleartext+1);
+            memcpy(cleartext_base64,chunk_write->response + t[json_idx + 1].start, len_cleartext);
+            cleartext_base64[len_cleartext] = '\0';
+#ifdef DEBUG
+            printf("Parsed base64cleartext: %s\n",cleartext_base64);
+#endif
+            json_idx++;
+            ciphertext_found = CRYPTO_TRUE;
+            continue;
+        }
+        if (jsoneq(chunk_write->response, &t[json_idx], "httpCode") == 0)
+        {
+            /* We may use strndup() to fetch string value */
+#ifdef DEBUG
+            printf("httpCode: %.*s\n", t[json_idx + 1].end - t[json_idx + 1].start,
+                   chunk_write->response + t[json_idx + 1].start);
+#endif
+            uint32_t len_httpcode = t[json_idx + 1].end - t[json_idx + 1].start;
+            char* http_code_str = malloc(len_httpcode+1);
+            memcpy(http_code_str,chunk_write->response + t[json_idx + 1].start, len_httpcode);
+            http_code_str[len_httpcode] = '\0';
+            int http_code = atoi(http_code_str);
+#ifdef DEBUG
+            printf("Parsed http code: %d\n",http_code);
+#endif
+            if(http_code != 200)
+            {
+                status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE;
+                fprintf(stderr,"KMC Crypto Failure Response:\n%s\n",chunk_write->response);
+                return status;
+            }
+            json_idx++;
+            continue;
+        }
+    }
+    if(ciphertext_found == CRYPTO_FALSE){
+        status = CRYPTOGRAHPY_KMC_CIPHER_TEXT_NOT_FOUND_IN_JSON_RESPONSE;
+        return status;
+    }
+
+    /* JSON Response Handling End */
+
+    uint8_t* cleartext_decoded = malloc((len_data_out)*2 + 1);
+    size_t cleartext_decoded_len = 0;
+    base64Decode(cleartext_base64,strlen(cleartext_base64),cleartext_decoded, &cleartext_decoded_len);
+#ifdef DEBUG
+    printf("Decoded Cipher Text Length: %ld\n",cleartext_decoded_len);
+    printf("Decoded Cipher Text: \n");
+    for (uint32_t i=0; i < cleartext_decoded_len; i++)
+    {
+        printf("%02x ", cleartext_decoded[i]);
+    }
+    printf("\n");
+#endif
+
+    // Copy the decrypted data to the output stream
+    // Crypto Service returns aad - clear_text
+    memcpy(data_out,cleartext_decoded, len_data_out);
+    
+    return status;
 }
+
 
 static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,

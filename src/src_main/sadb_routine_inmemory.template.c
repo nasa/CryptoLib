@@ -256,12 +256,12 @@ int32_t sadb_config(void)
     sa[11].ecs_len = 1;
     sa[11].ecs = calloc(1, sa[11].ecs_len * sizeof(uint8_t));
     *sa[11].ecs = CRYPTO_CIPHER_AES256_CBC;
-    sa[11].shivf_len = 12;
-    sa[11].iv_len = 12;
+    sa[11].shivf_len = 0;
+    sa[11].iv_len = 16;
     sa[11].shplf_len = 1;
     sa[11].stmacf_len = 0;
     sa[11].iv = (uint8_t* )calloc(1, sa[11].shivf_len * sizeof(uint8_t));
-    *(sa[11].iv + 11) = 0;
+    *(sa[11].iv + (sa[11].iv_len - 1)) = 0;
     sa[11].abm_len = ABM_SIZE; // 20
     sa[11].abm = (uint8_t* )calloc(1, sa[11].abm_len * sizeof(uint8_t));
     sa[11].arsnw_len = 1;
@@ -271,6 +271,7 @@ int32_t sadb_config(void)
     sa[11].gvcid_tc_blk.scid = SCID & 0x3FF;
     sa[11].gvcid_tc_blk.vcid = 0;
     sa[11].gvcid_tc_blk.mapid = TYPE_TC;
+    sa[11].ek_ref="kmc/test/key130";
 
     return status;
 }
