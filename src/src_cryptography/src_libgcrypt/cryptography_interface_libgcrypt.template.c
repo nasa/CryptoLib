@@ -30,11 +30,7 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
                                          SecurityAssociation_t* sa_ptr,
-                                         uint8_t* iv, uint32_t iv_len,
-                                         uint8_t* mac, uint32_t mac_size,
-                                         uint8_t* aad, uint32_t aad_len,
-                                         uint8_t encrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs);
+                                         uint8_t* iv, uint32_t iv_len,uint8_t* ecs, uint8_t padding);
 static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -842,25 +838,19 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
                                          SecurityAssociation_t* sa_ptr,
-                                         uint8_t* iv, uint32_t iv_len,
-                                         uint8_t* mac, uint32_t mac_size,
-                                         uint8_t* aad, uint32_t aad_len,
-                                         uint8_t encrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs)
+                                         uint8_t* iv, uint32_t iv_len,uint8_t* ecs, uint8_t padding)
 {
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     gcry_cipher_hd_t tmp_hd;
     int32_t status = CRYPTO_LIB_SUCCESS;
     uint8_t* key_ptr = key;
 
-    acs = acs;
-    mac = mac;
-    aad = aad;
-    aad_len = aad_len;
-    aad_bool = aad_bool;
-    mac_size = mac_size;
-    authenticate_bool = authenticate_bool;
-    encrypt_bool = encrypt_bool;
+    padding = padding;
+
+    if(*ecs == CRYPTO_CIPHER_AES256_CBC && crypto_config->padding_control == KMC_PADDING)
+    {
+        // Nothing necessary Here for now
+    }
 
     if(sa_ptr != NULL) //Using SA key pointer
     {
@@ -942,15 +932,17 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
     printf("\n");
 #endif
 
+
+    gcry_error = gcry_cipher_encrypt(tmp_hd, data_in, len_data_in, NULL, 0);
     // TODO:  Add PKCS#7 padding to data_in, and increment len_data_in to match necessary block size
     // TODO:  Remember to remove the padding.
     // TODO:  Does this interfere with max frame size?  Does that need to be taken into account?
-    gcry_error = gcry_cipher_encrypt(tmp_hd,
-                                        data_out,              // ciphertext output
-                                        len_data_out,                // length of data
-                                        data_in, // plaintext input
-                                        len_data_in                 // in data length
-    );
+    // gcry_error = gcry_cipher_encrypt(tmp_hd,
+    //                                     data_out,              // ciphertext output
+    //                                     len_data_out,                // length of data
+    //                                     data_in, // plaintext input
+    //                                     len_data_in                 // in data length
+    // );
 
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {

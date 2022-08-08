@@ -604,7 +604,7 @@ UTEST(TC_PROCESS, HAPPY_PATH_DECRYPT)
     tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
 
-    char* test_frame_pt_h = "2003002A0000000B00000000000000000000000000000000023D6F1F1F1F4A4B892A4107A3FBB85149A591";
+    char* test_frame_pt_h = "2003001A0000000B025364F9BC3344AF359DA06CA886746F591C8E";
     uint8_t *test_frame_pt_b = NULL;
     int test_frame_pt_len = 0;
 
@@ -650,7 +650,7 @@ UTEST(TC_PROCESS, HAPPY_PATH_DECRYPT_KMC)
     tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
 
-    char* test_frame_pt_h = "2003002A0000000B00000000000000000000000000000000023D6F1F1F1F4A4B892A4107A3FBB85149A591";
+    char* test_frame_pt_h = "2003001A0000000B025364F9BC3344AF359DA06CA886746F591C8E";
     uint8_t *test_frame_pt_b = NULL;
     int test_frame_pt_len = 0;
 

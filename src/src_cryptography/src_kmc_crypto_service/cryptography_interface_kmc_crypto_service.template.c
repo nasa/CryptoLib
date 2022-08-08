@@ -37,11 +37,7 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
                                          SecurityAssociation_t* sa_ptr,
-                                         uint8_t* iv, uint32_t iv_len,
-                                         uint8_t* mac, uint32_t mac_size,
-                                         uint8_t* aad, uint32_t aad_len,
-                                         uint8_t encrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs);
+                                         uint8_t* iv, uint32_t iv_len,uint8_t* ecs, uint8_t padding);
 static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -275,17 +271,17 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
                                          SecurityAssociation_t* sa_ptr,
-                                         uint8_t* iv, uint32_t iv_len,
-                                         uint8_t* mac, uint32_t mac_size,
-                                         uint8_t* aad, uint32_t aad_len,
-                                         uint8_t encrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs)
+                                         uint8_t* iv, uint32_t iv_len,uint8_t* ecs, uint8_t padding)
 { 
     int32_t status = CRYPTO_LIB_SUCCESS;
     key = key; // Direct key input is not supported in KMC interface
     len_key = len_key; // Direct key input is not supported in KMC interface
-    ecs = ecs;
-    acs = acs;
+
+    // Remove pre-padding to block (KMC does not want it)
+    if(*ecs == CRYPTO_CIPHER_AES256_CBC && crypto_config->padding_control == KMC_PADDING)
+    {
+        len_data_in = len_data_in - padding;
+    }
 
     curl_easy_reset(curl);
     configure_curl_connect_opts(curl);
@@ -308,60 +304,17 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
     }
 
     char* encrypt_uri;
-    if(aad_bool == CRYPTO_TRUE)
-    {
-        //Determine length of aad offset string and convert to string for use in URL
-        uint32_t aad_offset_str_len = 0;
-        char* aad_offset_str = int_to_str(aad_len, &aad_offset_str_len);
-#ifdef DEBUG
-        printf("AAD Offset Str: %s\n",aad_offset_str);
-#endif
+    
+    int len_encrypt_endpoint = strlen(encrypt_endpoint)+strlen(sa_ptr->ek_ref)+strlen(iv_base64)+strlen(AES_CBC_TRANSFORMATION);
+    char* encrypt_endpoint_final = (char*) malloc(len_encrypt_endpoint);
 
-        uint32_t mac_size_str_len = 0;
-        char* mac_size_str = int_to_str(mac_size*8, &mac_size_str_len);
-        printf("\n***************\nAAD_OFFSET_STR_LEN: %d\nMAC_SIZE: %d\n", aad_offset_str_len, mac_size_str_len);
-        int len_encrypt_endpoint = strlen(encrypt_offset_endpoint)+strlen(sa_ptr->ek_ref)+strlen(iv_base64)+strlen(AES_CBC_TRANSFORMATION)+aad_offset_str_len + mac_size_str_len;
-        char* encrypt_endpoint_final = (char*) malloc(len_encrypt_endpoint);
+    snprintf(encrypt_endpoint_final,len_encrypt_endpoint,encrypt_endpoint,sa_ptr->ek_ref,AES_CBC_TRANSFORMATION, iv_base64);
 
-        snprintf(encrypt_endpoint_final,len_encrypt_endpoint,encrypt_offset_endpoint,sa_ptr->ek_ref,AES_CBC_TRANSFORMATION, iv_base64,aad_offset_str,mac_size_str);
-
-        encrypt_uri = (char*) malloc(strlen(kmc_root_uri)+len_encrypt_endpoint);
-        encrypt_uri[0] = '\0';
-        strcat(encrypt_uri, kmc_root_uri);
-        strcat(encrypt_uri, encrypt_endpoint_final);
-
-        // Prepare encrypt_payload with AAD at the front for KMC Crypto Service.
-        if(encrypt_bool == CRYPTO_FALSE) //Not encrypting data, only passing in AAD for TAG.
-        {
-            encrypt_payload_len = aad_len;
-        }
-        else // Encrypt & AAD
-        {
-            encrypt_payload_len = len_data_in + aad_len;
-        }
-
-#ifdef DEBUG
-        printf("Encrypt Payload Length: %ld\n",encrypt_payload_len);
-#endif
-        encrypt_payload = (uint8_t*) malloc(encrypt_payload_len);
-        memcpy(&encrypt_payload[0],aad,aad_len);
-        if(encrypt_bool == CRYPTO_TRUE)
-        {
-            memcpy(&encrypt_payload[aad_len],data_in,len_data_in);
-        }
-    }
-    else //No AAD -- just prepare the endpoint URI
-    {
-        int len_encrypt_endpoint = strlen(encrypt_endpoint)+strlen(sa_ptr->ek_ref)+strlen(iv_base64)+strlen(AES_CBC_TRANSFORMATION);
-        char* encrypt_endpoint_final = (char*) malloc(len_encrypt_endpoint);
-
-        snprintf(encrypt_endpoint_final,len_encrypt_endpoint,encrypt_endpoint,sa_ptr->ek_ref,AES_CBC_TRANSFORMATION, iv_base64);
-
-        encrypt_uri = (char*) malloc(strlen(kmc_root_uri)+len_encrypt_endpoint);
-        encrypt_uri[0] = '\0';
-        strcat(encrypt_uri, kmc_root_uri);
-        strcat(encrypt_uri, encrypt_endpoint_final);
-    }
+    encrypt_uri = (char*) malloc(strlen(kmc_root_uri)+len_encrypt_endpoint);
+    encrypt_uri[0] = '\0';
+    strcat(encrypt_uri, kmc_root_uri);
+    strcat(encrypt_uri, encrypt_endpoint_final);
+    
 
 #ifdef DEBUG
     printf("Encrypt URI: %s\n",encrypt_uri);
@@ -492,11 +445,10 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
     /* JSON Response Handling End */
 
 
-    uint8_t* ciphertext_decoded = malloc((len_data_out + mac_size + aad_len)*2 + 1);
+    uint8_t* ciphertext_decoded = malloc((len_data_out)*2 + 1);
     size_t ciphertext_decoded_len = 0;
     base64Decode(ciphertext_base64,strlen(ciphertext_base64),ciphertext_decoded, &ciphertext_decoded_len);
 #ifdef DEBUG
-    printf("Mac size: %d\n",mac_size);
     printf("Decoded Cipher Text Length: %ld\n",ciphertext_decoded_len);
     printf("Decoded Cipher Text: \n");
     for (uint32_t i=0; i < ciphertext_decoded_len; i++)
@@ -506,22 +458,8 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
     printf("\n");
 #endif
 
-
-    // Copy the encrypted data to the output stream
-    if(encrypt_bool == CRYPTO_TRUE)
-    {
-        printf("LENGTH DATA OUT: %ld\n", len_data_out);
-        // Crypto Service returns aad - cipher_text - tag
-        memcpy(data_out,ciphertext_decoded + aad_len,len_data_out);
-    }
-
-    // If authenticate, Copy the MAC to the output stream
-    if(authenticate_bool == CRYPTO_TRUE)
-    {
-        uint32_t data_offset = len_data_out;
-        if(encrypt_bool == CRYPTO_FALSE) { data_offset = 0; }
-        memcpy(mac,ciphertext_decoded + aad_len + data_offset, mac_size);
-    }
+    // Crypto Service returns aad - cipher_text - tag
+    memcpy(data_out,ciphertext_decoded,len_data_out);
     return status;
 }
 
