@@ -300,7 +300,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
                 printf("New data_len: %d\n", (tf_payload_len + padding_needed));
                 printf("New enc_frame_len: %d\n", (*p_enc_frame_len));
 #endif
-                // Don't Exceed Max Frame Size!
+                // Don't Exceed Max Frame Size! 1024
                 if(*p_enc_frame_len > TC_MAX_FRAME_SIZE)
                 {
                     return  CRYPTO_LIB_ERR_TC_FRAME_SIZE_EXCEEDS_SPEC_LIMIT;
