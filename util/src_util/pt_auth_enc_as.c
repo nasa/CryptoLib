@@ -38,7 +38,7 @@ void Write_To_File(uint16_t enc_frame_len, float total_time, char* test_name, in
 {
     if(reset == 1)
     {
-        if(access("PERFORMANCE_RESULTS.csv", F_OK) == 0)
+        if(access("PERFORMANCE_RESULTS_AEAS.csv", F_OK) == 0)
         {
             int deleted = remove("PERFORMANCE_RESULTS.csv");
             if(deleted){printf("ERROR Deleting File");}
@@ -46,7 +46,7 @@ void Write_To_File(uint16_t enc_frame_len, float total_time, char* test_name, in
     }
 
     FILE *fp = NULL;
-    fp = fopen("PERFORMANCE_RESULTS.csv", "a");
+    fp = fopen("PERFORMANCE_RESULTS_AEAS.csv", "a");
     if (fp != NULL)
     {   
         if(reset ==1) fprintf(fp, "Name of Test,Frames Sent,Bytes per Frame,Total Time,Mbps\n");
