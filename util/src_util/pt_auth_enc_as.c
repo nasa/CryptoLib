@@ -40,8 +40,8 @@ void Write_To_File(uint16_t enc_frame_len, float total_time, char* test_name, in
     {
         if(access("PERFORMANCE_RESULTS_AEAS.csv", F_OK) == 0)
         {
-            int deleted = remove("PERFORMANCE_RESULTS.csv");
-            if(deleted){printf("ERROR Deleting File");}
+            int deleted = remove("PERFORMANCE_RESULTS_AEAS.csv");
+            if(deleted){printf("ERROR Deleting File!\n");}
         }
     }
 
@@ -160,7 +160,7 @@ UTEST(PERFORMANCE, MDB_LIBG_SHORT_100)
 
     ttl_time_mdb_kmc_100 = Apply_Security_Loop((uint8_t* )raw_tc_jpl_mmt_scid44_vcid1_expect, raw_tc_jpl_mmt_scid44_vcid1_expect_len, ptr_enc_frame, &enc_frame_len, num_frames_100);
     
-    printf("\nMDB+KMC Apply Security\n");
+    printf("\nMDB+LIBG Apply Security\n");
     printf("\tNumber of Frames Sent: %d\n", num_frames_100);
     printf("\t\tEncrypted Bytes Per Frame: %d\n", enc_frame_len);
     printf("\t\tTotal Time: %f\n", ttl_time_mdb_kmc_100);
@@ -197,7 +197,7 @@ UTEST(PERFORMANCE, LSA_KMC_SHORT_100)
 
     ttl_time_mdb_kmc_100 = Apply_Security_Loop((uint8_t* )raw_tc_jpl_mmt_scid44_vcid1_expect, raw_tc_jpl_mmt_scid44_vcid1_expect_len, ptr_enc_frame, &enc_frame_len, num_frames_100);
     
-    printf("\nMDB+KMC Apply Security\n");
+    printf("\nLSA+KMC Apply Security\n");
     printf("\tNumber of Frames Sent: %d\n", num_frames_100);
     printf("\t\tEncrypted Bytes Per Frame: %d\n", enc_frame_len);
     printf("\t\tTotal Time: %f\n", ttl_time_mdb_kmc_100);
