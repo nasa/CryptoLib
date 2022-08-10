@@ -141,51 +141,6 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC)
 /**
  * @brief Unit Test: Nominal Encryption CBC
  **/
-UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_CBC_KMC)
-{
-    // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib2(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_KMCCRYPTO, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE, KMC_PADDING);
-    Crypto_Config_Kmc_Crypto_Service("https", "client-demo-kmc.example.com", 8443, "crypto-service","/home/itc/Desktop/CERTS/ammos-ca-bundle.crt",NULL, CRYPTO_FALSE, "/home/itc/Desktop/CERTS/ammos-client-cert.pem", "PEM","/home/itc/Desktop/CERTS/ammos-client-key.pem", NULL, NULL);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 2, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 3, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
-    int32_t return_val = Crypto_Init();
-    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
-
-    char* raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
-    char* raw_tc_sdls_ping_b = NULL;
-    int raw_tc_sdls_ping_len = 0;
-    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-
-    hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
-
-    uint8_t* ptr_enc_frame = NULL;
-    uint16_t enc_frame_len = 0;
-
-    SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
-    // Expose the SADB Security Association for test edits.
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
-    test_association->sa_state = SA_NONE;
-    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
-    printf("SPI: %d\n", test_association->spi);
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->ast = 0;
-    test_association->arsn_len = 0;
-    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
-    return_val =
-        Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
-    Crypto_Shutdown();
-    free(raw_tc_sdls_ping_b);
-    free(ptr_enc_frame);
-    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
-}
-
-/**
- * @brief Unit Test: Nominal Encryption CBC
- **/
 UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_CBC)
 {
     // Setup & Initialize CryptoLib
