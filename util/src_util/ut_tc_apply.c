@@ -139,7 +139,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC)
 }
 
 /**
- * @brief Unit Test: Nominal Encryption
+ * @brief Unit Test: Nominal Auth only
  **/
 UTEST(TC_APPLY_SECURITY, HAPPY_PATH_AUTH)
 {
