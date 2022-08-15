@@ -845,6 +845,8 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
     int32_t status = CRYPTO_LIB_SUCCESS;
     uint8_t* key_ptr = key;
 
+    data_out = data_out;        // TODO:  Look into tailoring these out, as they're not used or needed.
+    len_data_out = len_data_out;
     padding = padding;
 
     if(*ecs == CRYPTO_CIPHER_AES256_CBC && crypto_config->padding_control == KMC_PADDING)
