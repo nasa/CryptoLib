@@ -53,7 +53,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
     uint32_t encryption_cipher;
     uint8_t ecs_is_aead_algorithm;
     int i;
-    uint32_t padding_needed = 0;
+    uint32_t padding_length_needed = 0;
 
 #ifdef DEBUG
     printf(KYEL "\n----- Crypto_TC_ApplySecurity START -----\n" RESET);
@@ -270,34 +270,32 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
             // Ingest length + spi_index (2) + shivf_len (varies) + shsnf_len (varies)
             //   + shplf_len + arsn_len + pad_size + stmacf_len
             // TODO: If ARSN is transmitted in the SHSNF field (as in CMAC... don't double count those bytes)
-            *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len +
-                               TC_PAD_SIZE + sa_ptr->stmacf_len;
+            *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len + sa_ptr->stmacf_len;
             new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;            
             break;
         case SA_ENCRYPTION:
             // Ingest length + spi_index (2) + shivf_len (varies) + shsnf_len (varies)
             //   + shplf_len + arsn_len + pad_size
             *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len +
-                               sa_ptr->arsn_len + TC_PAD_SIZE; //should point to shplf_len
+                               sa_ptr->arsn_len; //should point to shplf_len
             new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
-            
-            tf_payload_len = temp_tc_header.fl - TC_FRAME_HEADER_SIZE - segment_hdr_len - fecf_len + 1;
+
             // Handle Padding, if necessary
             if(*(sa_ptr->ecs) == CRYPTO_CIPHER_AES256_CBC)
             {
-                padding_needed = tf_payload_len % 16; // Block Sizes of 16
+                padding_length_needed = tf_payload_len % TC_BLOCK_SIZE; // Block Sizes of 16
                
-                padding_needed = 16 - padding_needed; //Could potentially need 16 bytes of padding.
+                padding_length_needed = TC_BLOCK_SIZE - padding_length_needed; //Could potentially need 16 bytes of padding.
                 sa_ptr->shplf_len = 1; // Setting this to be sure, but this probably isn't needed her, or will need error checking
-                *p_enc_frame_len += padding_needed; // Add the necessary padding to the frame_len + new pad length field
+                *p_enc_frame_len += padding_length_needed; // Add the necessary padding to the frame_len + new pad length field
                 
                 new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
 #ifdef DEBUG
                 
                 printf("SHPLF_LEN: %d\n", sa_ptr->shplf_len);
-                printf("Padding Needed: %d\n", padding_needed);
+                printf("Padding Needed: %d\n", padding_length_needed);
                 printf("Previous data_len: %d\n", tf_payload_len);
-                printf("New data_len: %d\n", (tf_payload_len + padding_needed));
+                printf("New data_len: %d\n", (tf_payload_len + padding_length_needed));
                 printf("New enc_frame_len: %d\n", (*p_enc_frame_len));
 #endif
                 // Don't Exceed Max Frame Size! 1024
@@ -312,7 +310,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
             // Ingest length + spi_index (2) + shivf_len (varies) + shsnf_len (varies)
             //   + shplf_len + arsn_len + pad_size + stmacf_len
             *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len +
-                               sa_ptr->arsn_len + TC_PAD_SIZE + sa_ptr->stmacf_len;
+                               sa_ptr->arsn_len + sa_ptr->stmacf_len;
             new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
             break;
         default:
@@ -361,7 +359,6 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
         printf(KYEL "\tshsnf_len\t = %d\n" RESET, sa_ptr->shsnf_len);
         printf(KYEL "\tshplf len\t = %d\n" RESET, sa_ptr->shplf_len);
         printf(KYEL "\tarsn_len\t = %d\n" RESET, sa_ptr->arsn_len);
-        printf(KYEL "\tpad_size\t = %d\n" RESET, TC_PAD_SIZE);
         printf(KYEL "\tstmacf_len\t = %d\n" RESET, sa_ptr->stmacf_len);
 #endif
 
@@ -426,9 +423,10 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
         {
             return CRYPTO_LIB_ERR_NULL_CIPHERS;
         }
-
-        if(sa_ptr->acs == NULL) printf("OOPS NULL POINTER!\n");
+#ifdef DEBUG
+        if(sa_ptr->acs == NULL) printf("ACS NULL POINTER!\n");
         else printf("ACS: %02x\n", *sa_ptr->acs);
+#endif
 
         if(sa_ptr->est == 0 && sa_ptr->ast == 1 && sa_ptr->acs !=NULL && (*(sa_ptr->acs) == CRYPTO_MAC_CMAC_AES256 \
             || *(sa_ptr->acs) == CRYPTO_MAC_HMAC_SHA256 || *(sa_ptr->acs) == CRYPTO_MAC_HMAC_SHA512) &&
@@ -472,15 +470,15 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
         */
         // TODO: Set this depending on crypto cipher used
 
-        if(padding_needed)
+        if(padding_length_needed)
         {
-            char hex_padding[3] = {0};  //TODO: Create #Define for the 3
-            padding_needed = padding_needed & 0x00FFFFFF; // Truncate to be maxiumum of 3 bytes in size
+            uint8_t hex_padding[3] = {0};  //TODO: Create #Define for the 3
+            padding_length_needed = padding_length_needed & 0x00FFFFFF; // Truncate to be maxiumum of 3 bytes in size
             
             // Byte Magic
-            hex_padding[0] = (padding_needed >> 16) & 0xFF;
-            hex_padding[1] = (padding_needed >> 8)  & 0xFF;
-            hex_padding[2] = (padding_needed)  & 0xFF;
+            hex_padding[0] = (padding_length_needed >> 16) & 0xFF;
+            hex_padding[1] = (padding_length_needed >> 8)  & 0xFF;
+            hex_padding[2] = (padding_length_needed)  & 0xFF;
             
 
             uint8_t padding_start = 0;
@@ -506,17 +504,17 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
         
         memcpy((p_new_enc_frame + index), (p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), tf_payload_len);
         index += tf_payload_len;
-        for (uint32_t i = 0; i < padding_needed; i++)
+        for (uint32_t i = 0; i < padding_length_needed; i++)
         {
             /* 4.1.1.5.2 The Pad Length field shall contain the count of fill bytes used in the
             ** cryptographic process, consisting of an integral number of octets. - CCSDS 3550b1
             */
             // TODO: Set this depending on crypto cipher used
-            *(p_new_enc_frame + index + i) = (uint8_t)padding_needed; // How much padding is needed?
+            *(p_new_enc_frame + index + i) = (uint8_t)padding_length_needed; // How much padding is needed?
             // index++;
         }
         index -= tf_payload_len;
-        tf_payload_len += padding_needed;
+        tf_payload_len += padding_length_needed;
 
         /*
         ** Begin Authentication / Encryption
@@ -600,7 +598,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
                                                                     sa_ptr->iv, // IV
                                                                     sa_ptr->iv_len, // IV Length
                                                                     sa_ptr->ecs, // encryption cipher
-                                                                    padding_needed
+                                                                    padding_length_needed
                 );
                 }
 
@@ -822,7 +820,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
     tc_sdls_processed_frame->tc_sec_header.iv_field_len = sa_ptr->iv_len;
     tc_sdls_processed_frame->tc_sec_header.sn_field_len = sa_ptr->arsn_len;
     tc_sdls_processed_frame->tc_sec_header.pad_field_len = sa_ptr->shplf_len;
-    //sprintf(tc_sdls_processed_frame->tc_sec_header.pad, "%x", padding_needed);
+    //sprintf(tc_sdls_processed_frame->tc_sec_header.pad, "%x", padding_length_needed);
 
     tc_sdls_processed_frame->tc_sec_trailer.mac_field_len = sa_ptr->stmacf_len;
 

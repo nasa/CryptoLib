@@ -166,7 +166,6 @@
 #define TC_SH_SIZE 8 /* bits */
 #define TC_SN_SIZE 2
 #define TC_SN_WINDOW 10 /* +/- value */
-#define TC_PAD_SIZE 0
 #define TC_FRAME_DATA_SIZE 1740 /* bytes */
 
 // CCSDS PUS Defines

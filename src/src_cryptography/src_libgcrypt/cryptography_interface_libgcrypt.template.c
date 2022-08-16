@@ -849,11 +849,6 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
     len_data_out = len_data_out;
     padding = padding;
 
-    if(*ecs == CRYPTO_CIPHER_AES256_CBC && crypto_config->padding_control == KMC_PADDING)
-    {
-        // Nothing necessary Here for now
-    }
-
     if(sa_ptr != NULL) //Using SA key pointer
     {
         key_ptr = &(ek_ring[sa_ptr->ekid].value[0]);

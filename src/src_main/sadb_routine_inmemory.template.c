@@ -413,7 +413,6 @@ static int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, u
 
         for (i = 0; i < NUM_SA; i++)
         {
-            printf("LOOP: %d\n", i);
             // Could possibly have more than one field mismatched,
             // ordering so the 'most accurate' SA's error is returned
             // (determined by matching header fields L to R)

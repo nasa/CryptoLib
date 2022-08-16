@@ -278,7 +278,7 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
     len_key = len_key; // Direct key input is not supported in KMC interface
 
     // Remove pre-padding to block (KMC does not want it)
-    if(*ecs == CRYPTO_CIPHER_AES256_CBC && crypto_config->padding_control == KMC_PADDING)
+    if(*ecs == CRYPTO_CIPHER_AES256_CBC && padding > 0)
     {
         len_data_in = len_data_in - padding;
     }

@@ -256,28 +256,6 @@ int32_t Crypto_Config_CryptoLib(uint8_t sadb_type, uint8_t cryptography_type, ui
     return status;
 }
 
-int32_t Crypto_Config_CryptoLib2(uint8_t sadb_type, uint8_t cryptography_type, uint8_t crypto_create_fecf, uint8_t process_sdls_pdus,
-                                uint8_t has_pus_hdr, uint8_t ignore_sa_state, uint8_t ignore_anti_replay,
-                                uint8_t unique_sa_per_mapid, uint8_t crypto_check_fecf, uint8_t vcid_bitmask, uint8_t crypto_increment_nontransmitted_iv,
-                                uint8_t padding_control)
-{
-    int32_t status = CRYPTO_LIB_SUCCESS;
-    crypto_config = (CryptoConfig_t* )calloc(1, CRYPTO_CONFIG_SIZE);
-    crypto_config->sadb_type = sadb_type;
-    crypto_config->cryptography_type = cryptography_type;
-    crypto_config->crypto_create_fecf = crypto_create_fecf;
-    crypto_config->process_sdls_pdus = process_sdls_pdus;
-    crypto_config->has_pus_hdr = has_pus_hdr;
-    crypto_config->ignore_sa_state = ignore_sa_state;
-    crypto_config->ignore_anti_replay = ignore_anti_replay;
-    crypto_config->unique_sa_per_mapid = unique_sa_per_mapid;
-    crypto_config->crypto_check_fecf = crypto_check_fecf;
-    crypto_config->vcid_bitmask = vcid_bitmask;
-    crypto_config->crypto_increment_nontransmitted_iv = crypto_increment_nontransmitted_iv;
-    crypto_config->padding_control = padding_control;
-    return status;
-}
-
 /**
  * @brief Function: Crypto_Config_MariaDB
  * @param mysql_username: char*
