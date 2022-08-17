@@ -264,7 +264,7 @@ int32_t sadb_config(void)
     *(sa[11].iv + (sa[11].iv_len - 1)) = 0;
     sa[11].abm_len = ABM_SIZE; // 20
     sa[11].abm = (uint8_t* )calloc(1, sa[11].abm_len * sizeof(uint8_t));
-    sa[11].arsnw_len = 1;
+    sa[11].arsnw_len = 0;
     sa[11].arsnw = 5;
     sa[11].arsn_len = 0;
     sa[11].gvcid_tc_blk.tfvn = 0;
