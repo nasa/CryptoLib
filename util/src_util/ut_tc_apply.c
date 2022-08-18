@@ -139,6 +139,42 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC)
 }
 
 /**
+ * @brief Unit Test: Nominal Encryption CBC
+ **/
+UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_CBC)
+{
+    // Setup & Initialize CryptoLib
+    Crypto_Init_Unit_Test();
+    char* raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
+    char* raw_tc_sdls_ping_b = NULL;
+    int raw_tc_sdls_ping_len = 0;
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+
+    hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
+
+    uint8_t* ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+
+    int32_t return_val = CRYPTO_LIB_ERROR;
+
+    SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    // Expose the SADB Security Association for test edits.
+    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    test_association->sa_state = SA_NONE;
+    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    printf("SPI: %d\n", test_association->spi);
+    test_association->sa_state = SA_OPERATIONAL;
+    test_association->ast = 0;
+    test_association->arsn_len = 0;
+    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    return_val =
+        Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    Crypto_Shutdown();
+    free(raw_tc_sdls_ping_b);
+    free(ptr_enc_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+}
+/**
  * @brief Unit Test: Nominal Authorized Encryption
  **/
 UTEST(TC_APPLY_SECURITY, HAPPY_PATH_AUTH_ENC)
@@ -587,5 +623,218 @@ UTEST(TC_APPLY_SECURITY, ERROR_TC_INPUT_FRAME_TOO_SHORT_FOR_SPECIFIED_FRAME_LENG
 
     Crypto_Shutdown();
 }
+
+/**
+ * @brief Unit Test: Encryption CBC 1 Byte of padding
+ **/
+UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP)
+{
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_Kmc_Crypto_Service("https", "client-demo-kmc.example.com", 8443, "crypto-service","/home/itc/Desktop/CERTS/ammos-ca-bundle.crt",NULL, CRYPTO_FALSE, "/home/itc/Desktop/CERTS/ammos-client-cert.pem", "PEM","/home/itc/Desktop/CERTS/ammos-client-key.pem", NULL, NULL);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 2, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 3, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
+    int32_t return_val = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+
+    char* raw_tc_sdls_ping_h = "20030016000080d2c70008197f0b0031000000b1fe3128";
+    char* raw_tc_sdls_ping_b = NULL;
+    int raw_tc_sdls_ping_len = 0;
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+
+    hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
+
+    uint8_t* ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+
+    SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    // Expose the SADB Security Association for test edits.
+    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    test_association->sa_state = SA_NONE;
+    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    printf("SPI: %d\n", test_association->spi);
+    test_association->sa_state = SA_OPERATIONAL;
+    test_association->ast = 0;
+    test_association->arsn_len = 0;
+    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    return_val =
+        Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+
+    char* truth_data_h = "2003001A0000000B011C1741A95DE7EF6FCF2B20B6F09E9FD225AD";
+    uint8_t* truth_data_b = NULL;
+    int truth_data_l = 0;
+
+    hex_conversion(truth_data_h, (char **)&truth_data_b, &truth_data_l);
+    //printf("Encrypted Frame:\n");
+    for(int i = 0; i < enc_frame_len; i++)
+    {
+        //printf("%02x -> %02x ", ptr_enc_frame[i], truth_data_b[i]);
+        ASSERT_EQ(ptr_enc_frame[i], truth_data_b[i]);
+    }
+    //printf("\n");
+
+    Crypto_Shutdown();
+    free(raw_tc_sdls_ping_b);
+    free(ptr_enc_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+}
+
+/**
+ * @brief Unit Test: Encryption CBC 16 Bytes of padding
+ **/
+UTEST(TC_APPLY_SECURITY, ENC_CBC_16BP)
+{
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_Kmc_Crypto_Service("https", "client-demo-kmc.example.com", 8443, "crypto-service","/home/itc/Desktop/CERTS/ammos-ca-bundle.crt",NULL, CRYPTO_FALSE, "/home/itc/Desktop/CERTS/ammos-client-cert.pem", "PEM","/home/itc/Desktop/CERTS/ammos-client-key.pem", NULL, NULL);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 2, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 3, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
+    int32_t return_val = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+
+    char* raw_tc_sdls_ping_h = "20030017000080d2c70008197f0b003100000000b1fe3128";
+    char* raw_tc_sdls_ping_b = NULL;
+    int raw_tc_sdls_ping_len = 0;
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+
+    hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
+
+    uint8_t* ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+
+    SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    // Expose the SADB Security Association for test edits.
+    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    test_association->sa_state = SA_NONE;
+    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    printf("SPI: %d\n", test_association->spi);
+    test_association->sa_state = SA_OPERATIONAL;
+    test_association->ast = 0;
+    test_association->arsn_len = 0;
+    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    return_val =
+        Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+
+    char* truth_data_h = "2003002A0000000B103970EAE4C05ACD1B0C348FDA174DF73EF0E2D603996C4B78B992CD60918729D34FE2";
+    uint8_t* truth_data_b = NULL;
+    int truth_data_l = 0;
+
+    hex_conversion(truth_data_h, (char **)&truth_data_b, &truth_data_l);
+    //printf("Encrypted Frame:\n");
+    for(int i = 0; i < enc_frame_len; i++)
+    {
+        //printf("%02x -> %02x ", ptr_enc_frame[i], truth_data_b[i]);
+        ASSERT_EQ(ptr_enc_frame[i], truth_data_b[i]);
+    }
+    printf("\n");
+
+    Crypto_Shutdown();
+    free(raw_tc_sdls_ping_b);
+    free(ptr_enc_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+}
+
+/**
+ * @brief Unit Test: Nominal Encryption CBC
+ *                      Frame is max size for this test.  Any encrypted data of length greater than 1007 bytes, 
+ *                      will cause frame length exception.
+ **/
+UTEST(TC_APPLY_SECURITY, ENC_CBC_FRAME_MAX)
+{
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_Kmc_Crypto_Service("https", "client-demo-kmc.example.com", 8443, "crypto-service","/home/itc/Desktop/CERTS/ammos-ca-bundle.crt",NULL, CRYPTO_FALSE, "/home/itc/Desktop/CERTS/ammos-client-cert.pem", "PEM","/home/itc/Desktop/CERTS/ammos-client-key.pem", NULL, NULL);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 2, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 3, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
+    int32_t return_val = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+
+    char* raw_tc_sdls_ping_h = "200303F6000080d2c70008197f0b00310000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000b1fed255";
+    char* raw_tc_sdls_ping_b = NULL;
+    int raw_tc_sdls_ping_len = 0;
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+
+    hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
+
+    uint8_t* ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+
+    SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    // Expose the SADB Security Association for test edits.
+    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    test_association->sa_state = SA_NONE;
+    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    test_association->sa_state = SA_OPERATIONAL;
+    test_association->ast = 0;
+    test_association->arsn_len = 0;
+    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    return_val =
+        Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+
+    Crypto_Shutdown();
+    free(raw_tc_sdls_ping_b);
+    free(ptr_enc_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+}
+
+/**
+ * @brief Unit Test: Encryption CBC
+ *                      Frame is 1 byte too large for this test.  Any encrypted data of length greater than 1007 bytes, 
+ *                      will cause frame length exception.
+ **/
+UTEST(TC_APPLY_SECURITY, ENC_CBC_FRAME_TOO_BIG)
+{
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_Kmc_Crypto_Service("https", "client-demo-kmc.example.com", 8443, "crypto-service","/home/itc/Desktop/CERTS/ammos-ca-bundle.crt",NULL, CRYPTO_FALSE, "/home/itc/Desktop/CERTS/ammos-client-cert.pem", "PEM","/home/itc/Desktop/CERTS/ammos-client-key.pem", NULL, NULL);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 2, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 3, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
+    int32_t return_val = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+
+    char* raw_tc_sdls_ping_h = "200303F7000080d2c70008197f0b0031000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000b1fed255";
+    char* raw_tc_sdls_ping_b = NULL;
+    int raw_tc_sdls_ping_len = 0;
+    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+
+    hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
+
+    uint8_t* ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+
+    SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    // Expose the SADB Security Association for test edits.
+    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    test_association->sa_state = SA_NONE;
+    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    test_association->sa_state = SA_OPERATIONAL;
+    test_association->ast = 0;
+    test_association->arsn_len = 0;
+    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    return_val =
+        Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+
+    Crypto_Shutdown();
+    free(raw_tc_sdls_ping_b);
+    free(ptr_enc_frame);
+    ASSERT_EQ(CRYPTO_LIB_ERR_TC_FRAME_SIZE_EXCEEDS_SPEC_LIMIT, return_val);
+}
+
 
 UTEST_MAIN();

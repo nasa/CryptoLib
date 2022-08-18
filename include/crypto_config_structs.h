@@ -102,7 +102,8 @@ typedef enum
 typedef enum
 {
     CRYPTO_CIPHER_NONE,
-    CRYPTO_CIPHER_AES256_GCM
+    CRYPTO_CIPHER_AES256_GCM,
+    CRYPTO_CIPHER_AES256_CBC
 } EncCipherSuite;
 
 /*

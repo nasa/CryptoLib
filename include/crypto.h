@@ -48,6 +48,11 @@
 #define CRYPTO_LIB_MISSION_REV 0
 
 /*
+** TC_BLOCK_SIZE
+*/
+#define TC_BLOCK_SIZE 16
+
+/*
 ** User Prototypes
 */
 

@@ -246,6 +246,33 @@ int32_t sadb_config(void)
     sa[9].gvcid_tc_blk.vcid = 0;
     sa[9].gvcid_tc_blk.mapid = TYPE_TC;
 
+    // SA 11 - KEYED;  ARSNW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 130
+    // SA 11 VC0/1 is now 4-VC0, 7-VC1
+    sa[11].spi = 11;
+    sa[11].ekid = 130;
+    sa[11].sa_state = SA_KEYED;
+    sa[11].est = 1;
+    sa[11].ast = 0;
+    sa[11].ecs_len = 1;
+    sa[11].ecs = calloc(1, sa[11].ecs_len * sizeof(uint8_t));
+    *sa[11].ecs = CRYPTO_CIPHER_AES256_CBC;
+    sa[11].shivf_len = 0;
+    sa[11].iv_len = 16;
+    sa[11].shplf_len = 1;
+    sa[11].stmacf_len = 0;
+    sa[11].iv = (uint8_t* )calloc(1, sa[11].shivf_len * sizeof(uint8_t));
+    *(sa[11].iv + (sa[11].iv_len - 1)) = 0;
+    sa[11].abm_len = ABM_SIZE; // 20
+    sa[11].abm = (uint8_t* )calloc(1, sa[11].abm_len * sizeof(uint8_t));
+    sa[11].arsnw_len = 0;
+    sa[11].arsnw = 5;
+    sa[11].arsn_len = 0;
+    sa[11].gvcid_tc_blk.tfvn = 0;
+    sa[11].gvcid_tc_blk.scid = SCID & 0x3FF;
+    sa[11].gvcid_tc_blk.vcid = 0;
+    sa[11].gvcid_tc_blk.mapid = TYPE_TC;
+    sa[11].ek_ref="kmc/test/key130";
+
     return status;
 }
 
@@ -350,7 +377,7 @@ static int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, u
         return CRYPTO_LIB_ERR_NO_INIT;
     }
 
-    for (i = 0; i < 10; i++)
+    for (i = 0; i < NUM_SA; i++)
     {
         if ((sa[i].gvcid_tc_blk.tfvn == tfvn) && (sa[i].gvcid_tc_blk.scid == scid) &&
             (sa[i].gvcid_tc_blk.vcid == vcid) && (sa[i].sa_state == SA_OPERATIONAL) &&
@@ -430,7 +457,7 @@ static int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, u
                 (sa[i].gvcid_tc_blk.mapid == mapid && sa[i].sa_state != SA_OPERATIONAL))
             {
 #ifdef SA_DEBUG
-                printf(KRED "A valid but non-operational SA was found.\n" RESET);
+                printf(KRED "A valid but non-operational SA was found: SPI: %d.\n" RESET, sa[i].spi);
 #endif
                 status = CRYPTO_LIB_ERR_NO_OPERATIONAL_SA;
             }
