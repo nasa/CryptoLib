@@ -221,7 +221,6 @@ static int32_t sadb_save_sa(SecurityAssociation_t* sa)
     if (mysql_query(con, update_sa_query))
     {
         status = finish_with_error(&con, SADB_QUERY_FAILED);
-        return status;
     }
     // todo - if query fails, need to push failure message to error stack instead of just return code.
 
