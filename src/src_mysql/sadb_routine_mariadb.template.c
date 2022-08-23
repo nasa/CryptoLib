@@ -232,8 +232,20 @@ static int32_t sadb_save_sa(SecurityAssociation_t* sa)
         free(sa->abm);
     if (sa->arsn != NULL)
         free(sa->arsn);
+    if (sa->ek_ref != NULL)
+        free(sa->ek_ref);
+    if (sa->ecs != NULL)
+        free(sa->ecs);
+    if (sa->acs != NULL)
+        free(sa->acs);
     free(sa);
     return status;
+
+    sa->iv = (uint8_t* )calloc(1, sa->iv_len * sizeof(uint8_t));
+    sa->arsn = (uint8_t* )calloc(1, sa->arsn_len * sizeof(uint8_t));
+    sa->abm = (uint8_t* )calloc(1, sa->abm_len * sizeof(uint8_t));
+    sa->ecs = (uint8_t* )calloc(1, sa->ecs_len * sizeof(uint8_t));
+    sa->acs = (uint8_t* )calloc(1, sa->acs_len * sizeof(uint8_t));
 }
 // Security Association Utility Functions
 static int32_t sadb_sa_stop(void)
@@ -351,7 +363,8 @@ static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** se
                     sa->ekid = atoi(row[i]);
                 } else // Cryptography Type KMC Crypto Service with PKCS12 String Key References
                 {
-                    sa->ek_ref = row[i];
+                    sa->ek_ref = malloc(strlen(row[i]) * sizeof(char));
+                    memcpy(sa->ek_ref, row[i], strlen(row[i]));
                 }
                 continue;
             }
