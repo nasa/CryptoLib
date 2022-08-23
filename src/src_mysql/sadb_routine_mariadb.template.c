@@ -240,12 +240,6 @@ static int32_t sadb_save_sa(SecurityAssociation_t* sa)
         free(sa->acs);
     free(sa);
     return status;
-
-    sa->iv = (uint8_t* )calloc(1, sa->iv_len * sizeof(uint8_t));
-    sa->arsn = (uint8_t* )calloc(1, sa->arsn_len * sizeof(uint8_t));
-    sa->abm = (uint8_t* )calloc(1, sa->abm_len * sizeof(uint8_t));
-    sa->ecs = (uint8_t* )calloc(1, sa->ecs_len * sizeof(uint8_t));
-    sa->acs = (uint8_t* )calloc(1, sa->acs_len * sizeof(uint8_t));
 }
 // Security Association Utility Functions
 static int32_t sadb_sa_stop(void)
