@@ -238,6 +238,8 @@ static int32_t sadb_save_sa(SecurityAssociation_t* sa)
         free(sa->ecs);
     if (sa->acs != NULL)
         free(sa->acs);
+    if (sa->ak_ref != NULL)
+        free(sa->ak_ref);
     free(sa);
     return status;
 }
@@ -369,7 +371,8 @@ static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** se
                     sa->akid = atoi(row[i]);
                 } else // Cryptography Type KMC Crypto Service with PKCS12 String Key References
                 {
-                    sa->ak_ref = row[i];
+                    sa->ak_ref = malloc(strlen(row[i]) * sizeof(char));
+                    memcpy(sa->ak_ref, row[i], strlen(row[i]));
                 }
                 continue;
             }
