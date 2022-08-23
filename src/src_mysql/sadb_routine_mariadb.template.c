@@ -62,7 +62,7 @@ static const char* SQL_SADB_UPDATE_IV_ARC_BY_SPI =
 // sadb_routine mariaDB private helper functions
 static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** security_association);
 static int32_t convert_hexstring_to_byte_array(char* hexstr, uint8_t* byte_array);
-static char* convert_byte_array_to_hexstring(void* src_buffer, size_t buffer_length);
+static void convert_byte_array_to_hexstring(void* src_buffer, size_t buffer_length, char* dest_str);
 
 /*
 ** Global Variables
@@ -208,11 +208,18 @@ static int32_t sadb_save_sa(SecurityAssociation_t* sa)
     }
 
     char update_sa_query[2048];
-    snprintf(update_sa_query, sizeof(update_sa_query), SQL_SADB_UPDATE_IV_ARC_BY_SPI,
-             convert_byte_array_to_hexstring(sa->iv, sa->iv_len),
-             convert_byte_array_to_hexstring(sa->arsn, sa->arsn_len), sa->spi, sa->gvcid_tc_blk.tfvn,
-             sa->gvcid_tc_blk.scid, sa->gvcid_tc_blk.vcid, sa->gvcid_tc_blk.mapid);
+    
+    char* iv_h = malloc(sa->iv_len * 2 + 1);
+    convert_byte_array_to_hexstring(sa->iv, sa->iv_len, iv_h);
+    char* arsn_h = malloc(sa->arsn_len * 2 + 1);
+    convert_byte_array_to_hexstring(sa->arsn, sa->arsn_len, arsn_h);
 
+    snprintf(update_sa_query, sizeof(update_sa_query), SQL_SADB_UPDATE_IV_ARC_BY_SPI,
+             iv_h,
+             arsn_h, sa->spi, sa->gvcid_tc_blk.tfvn,
+             sa->gvcid_tc_blk.scid, sa->gvcid_tc_blk.vcid, sa->gvcid_tc_blk.mapid);
+    free(iv_h);
+    free(arsn_h);
 #ifdef SA_DEBUG
     fprintf(stderr, "MySQL Insert SA Query: %s \n", update_sa_query);
 #endif
@@ -221,7 +228,6 @@ static int32_t sadb_save_sa(SecurityAssociation_t* sa)
     if (mysql_query(con, update_sa_query))
     {
         status = finish_with_error(&con, SADB_QUERY_FAILED);
-        return status;
     }
     // todo - if query fails, need to push failure message to error stack instead of just return code.
 
@@ -232,6 +238,14 @@ static int32_t sadb_save_sa(SecurityAssociation_t* sa)
         free(sa->abm);
     if (sa->arsn != NULL)
         free(sa->arsn);
+    if (sa->ek_ref != NULL)
+        free(sa->ek_ref);
+    if (sa->ecs != NULL)
+        free(sa->ecs);
+    if (sa->acs != NULL)
+        free(sa->acs);
+    if (sa->ak_ref != NULL)
+        free(sa->ak_ref);
     free(sa);
     return status;
 }
@@ -351,7 +365,8 @@ static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** se
                     sa->ekid = atoi(row[i]);
                 } else // Cryptography Type KMC Crypto Service with PKCS12 String Key References
                 {
-                    sa->ek_ref = row[i];
+                    sa->ek_ref = malloc(strlen(row[i]) * sizeof(char));
+                    memcpy(sa->ek_ref, row[i], strlen(row[i]));
                 }
                 continue;
             }
@@ -362,7 +377,8 @@ static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** se
                     sa->akid = atoi(row[i]);
                 } else // Cryptography Type KMC Crypto Service with PKCS12 String Key References
                 {
-                    sa->ak_ref = row[i];
+                    sa->ak_ref = malloc(strlen(row[i]) * sizeof(char));
+                    memcpy(sa->ak_ref, row[i], strlen(row[i]));
                 }
                 continue;
             }
@@ -528,28 +544,21 @@ static int32_t convert_hexstring_to_byte_array(char* source_str, uint8_t* dest_b
     return data_len;
 }
 
-static char* convert_byte_array_to_hexstring(void* src_buffer, size_t buffer_length)
+static void convert_byte_array_to_hexstring(void* src_buffer, size_t buffer_length, char* dest_str)
 {
-    if (buffer_length == 0)
-    { // Return empty string (with null char!) if buffer is empty
-        return "";
-    }
-
     unsigned char* bytes = src_buffer;
-    char* hexstr = malloc(buffer_length * 2 + 1);
 
-    if (src_buffer == NULL)
-        return NULL;
-
-    for (size_t i = 0; i < buffer_length; i++)
+    if (src_buffer != NULL)
     {
-        uint8_t nib1 = (bytes[i] >> 4) & 0x0F;
-        uint8_t nib2 = (bytes[i]) & 0x0F;
-        hexstr[i * 2 + 0] = nib1 < 0xA ? '0' + nib1 : 'A' + nib1 - 0xA;
-        hexstr[i * 2 + 1] = nib2 < 0xA ? '0' + nib2 : 'A' + nib2 - 0xA;
+        for (size_t i = 0; i < buffer_length; i++)
+        {
+            uint8_t nib1 = (bytes[i] >> 4) & 0x0F;
+            uint8_t nib2 = (bytes[i]) & 0x0F;
+            dest_str[i * 2 + 0] = nib1 < 0xA ? '0' + nib1 : 'A' + nib1 - 0xA;
+            dest_str[i * 2 + 1] = nib2 < 0xA ? '0' + nib2 : 'A' + nib2 - 0xA;
+        }
+        dest_str[buffer_length * 2] = '\0';
     }
-    hexstr[buffer_length * 2] = '\0';
-    return hexstr;
 }
 
 static int32_t finish_with_error(MYSQL **con_loc, int err)
