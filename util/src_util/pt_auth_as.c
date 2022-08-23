@@ -124,6 +124,9 @@ UTEST(PERFORMANCE, LSA_LIBG_AUTH_SHORT_100)
 
     float ttl_time_lsa_libg = Apply_Security_Loop((uint8_t *) data_b, data_l, ptr_enc_frame, &enc_frame_len, num_frames_100);
     
+    if(ttl_time_lsa_libg < 0) status = CRYPTO_LIB_ERROR;
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
     printf("\nLSA+LIBG AUTH ONLY Apply Security\n");
     printf("\tNumber of Frames Sent: %d\n", num_frames_100);
     printf("\t\tEncrypted Bytes Per Frame: %d\n", enc_frame_len);
@@ -169,6 +172,9 @@ UTEST(PERFORMANCE, MDB_LIBG_AUTH_SHORT_100)
 
     float ttl_time_mdb_libg = Apply_Security_Loop((uint8_t *) data_b, data_l, ptr_enc_frame, &enc_frame_len, num_frames_100);
     
+    if(ttl_time_mdb_libg < 0) status = CRYPTO_LIB_ERROR;
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    
     printf("\nMDB+LIBG AUTH ONLY Apply Security\n");
     printf("\tNumber of Frames Sent: %d\n", num_frames_100);
     printf("\t\tEncrypted Bytes Per Frame: %d\n", enc_frame_len);
@@ -213,6 +219,9 @@ UTEST(PERFORMANCE, LSA_KMC_AUTH_SHORT_100)
 
     float ttl_time_lsa_kmc = Apply_Security_Loop((uint8_t *) data_b, data_l, ptr_enc_frame, &enc_frame_len, num_frames_100);
     
+    if(ttl_time_lsa_kmc < 0) status = CRYPTO_LIB_ERROR;
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    
     printf("\nLSA+KMC AUTH ONLY Apply Security\n");
     printf("\tNumber of Frames Sent: %d\n", num_frames_100);
     printf("\t\tEncrypted Bytes Per Frame: %d\n", enc_frame_len);
@@ -249,6 +258,9 @@ UTEST(PERFORMANCE, MDB_KMC_AUTH_SHORT_100)
 
 
     float ttl_time_lsa_kmc = Apply_Security_Loop((uint8_t *) data_b, data_l, ptr_enc_frame, &enc_frame_len, num_frames_100);
+    
+    if(ttl_time_lsa_kmc < 0) status = CRYPTO_LIB_ERROR;
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     
     printf("\nMDB+KMC AUTH ONLY Apply Security\n");
     printf("\tNumber of Frames Sent: %d\n", num_frames_100);
@@ -297,6 +309,9 @@ UTEST(PERFORMANCE, LSA_LIBG_AUTH_MED_100)
 
     float ttl_time_lsa_libg = Apply_Security_Loop((uint8_t *) data_b, data_l, ptr_enc_frame, &enc_frame_len, num_frames_100);
     
+    if(ttl_time_lsa_libg < 0) status = CRYPTO_LIB_ERROR;
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    
     printf("\nLSA+LIBG AUTH ONLY Apply Security\n");
     printf("\tNumber of Frames Sent: %d\n", num_frames_100);
     printf("\t\tEncrypted Bytes Per Frame: %d\n", enc_frame_len);
@@ -342,6 +357,9 @@ UTEST(PERFORMANCE, MDB_LIBG_AUTH_MED_100)
 
     float ttl_time_mdb_libg = Apply_Security_Loop((uint8_t *) data_b, data_l, ptr_enc_frame, &enc_frame_len, num_frames_100);
     
+    if(ttl_time_mdb_libg < 0) status = CRYPTO_LIB_ERROR;
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    
     printf("\nMDB+LIBG AUTH ONLY Apply Security\n");
     printf("\tNumber of Frames Sent: %d\n", num_frames_100);
     printf("\t\tEncrypted Bytes Per Frame: %d\n", enc_frame_len);
@@ -386,6 +404,9 @@ UTEST(PERFORMANCE, LSA_KMC_AUTH_MED_100)
 
     float ttl_time_lsa_kmc = Apply_Security_Loop((uint8_t *) data_b, data_l, ptr_enc_frame, &enc_frame_len, num_frames_100);
     
+    if(ttl_time_lsa_kmc < 0) status = CRYPTO_LIB_ERROR;
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    
     printf("\nLSA+KMC AUTH ONLY Apply Security\n");
     printf("\tNumber of Frames Sent: %d\n", num_frames_100);
     printf("\t\tEncrypted Bytes Per Frame: %d\n", enc_frame_len);
@@ -422,6 +443,9 @@ UTEST(PERFORMANCE, MDB_KMC_AUTH_MED_100)
 
 
     float ttl_time_lsa_kmc = Apply_Security_Loop((uint8_t *) data_b, data_l, ptr_enc_frame, &enc_frame_len, num_frames_100);
+    
+    if(ttl_time_lsa_kmc < 0) status = CRYPTO_LIB_ERROR;
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     
     printf("\nMDB+KMC AUTH ONLY Apply Security\n");
     printf("\tNumber of Frames Sent: %d\n", num_frames_100);
@@ -470,6 +494,9 @@ UTEST(PERFORMANCE, LSA_LIBG_AUTH_LONG_100)
 
     float ttl_time_lsa_libg = Apply_Security_Loop((uint8_t *) data_b, data_l, ptr_enc_frame, &enc_frame_len, num_frames_100);
     
+    if(ttl_time_lsa_libg < 0) status = CRYPTO_LIB_ERROR;
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    
     printf("\nLSA+LIBG AUTH ONLY Apply Security\n");
     printf("\tNumber of Frames Sent: %d\n", num_frames_100);
     printf("\t\tEncrypted Bytes Per Frame: %d\n", enc_frame_len);
@@ -515,6 +542,9 @@ UTEST(PERFORMANCE, MDB_LIBG_AUTH_LONG_100)
 
     float ttl_time_mdb_libg = Apply_Security_Loop((uint8_t *) data_b, data_l, ptr_enc_frame, &enc_frame_len, num_frames_100);
     
+    if(ttl_time_mdb_libg < 0) status = CRYPTO_LIB_ERROR;
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    
     printf("\nMDB+LIBG AUTH ONLY Apply Security\n");
     printf("\tNumber of Frames Sent: %d\n", num_frames_100);
     printf("\t\tEncrypted Bytes Per Frame: %d\n", enc_frame_len);
@@ -559,6 +589,9 @@ UTEST(PERFORMANCE, LSA_KMC_AUTH_LONG_100)
 
     float ttl_time_lsa_kmc = Apply_Security_Loop((uint8_t *) data_b, data_l, ptr_enc_frame, &enc_frame_len, num_frames_100);
     
+    if(ttl_time_lsa_kmc < 0) status = CRYPTO_LIB_ERROR;
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    
     printf("\nLSA+KMC AUTH ONLY Apply Security\n");
     printf("\tNumber of Frames Sent: %d\n", num_frames_100);
     printf("\t\tEncrypted Bytes Per Frame: %d\n", enc_frame_len);
@@ -595,6 +628,9 @@ UTEST(PERFORMANCE, MDB_KMC_AUTH_LONG_100)
 
 
     float ttl_time_lsa_kmc = Apply_Security_Loop((uint8_t *) data_b, data_l, ptr_enc_frame, &enc_frame_len, num_frames_100);
+    
+    if(ttl_time_lsa_kmc < 0) status = CRYPTO_LIB_ERROR;
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     
     printf("\nMDB+KMC AUTH ONLY Apply Security\n");
     printf("\tNumber of Frames Sent: %d\n", num_frames_100);
@@ -643,6 +679,9 @@ UTEST(PERFORMANCE, LSA_LIBG_AUTH_SHORT_1K)
 
     float ttl_time_lsa_libg = Apply_Security_Loop((uint8_t *) data_b, data_l, ptr_enc_frame, &enc_frame_len, num_frames_1K);
     
+    if(ttl_time_lsa_libg < 0) status = CRYPTO_LIB_ERROR;
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    
     printf("\nLSA+LIBG AUTH ONLY Apply Security\n");
     printf("\tNumber of Frames Sent: %d\n", num_frames_1K);
     printf("\t\tEncrypted Bytes Per Frame: %d\n", enc_frame_len);
@@ -688,6 +727,9 @@ UTEST(PERFORMANCE, MDB_LIBG_AUTH_SHORT_1K)
 
     float ttl_time_mdb_libg = Apply_Security_Loop((uint8_t *) data_b, data_l, ptr_enc_frame, &enc_frame_len, num_frames_1K);
     
+    if(ttl_time_mdb_libg < 0) status = CRYPTO_LIB_ERROR;
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    
     printf("\nMDB+LIBG AUTH ONLY Apply Security\n");
     printf("\tNumber of Frames Sent: %d\n", num_frames_1K);
     printf("\t\tEncrypted Bytes Per Frame: %d\n", enc_frame_len);
@@ -732,6 +774,9 @@ UTEST(PERFORMANCE, LSA_KMC_AUTH_SHORT_1K)
 
     float ttl_time_lsa_kmc = Apply_Security_Loop((uint8_t *) data_b, data_l, ptr_enc_frame, &enc_frame_len, num_frames_1K);
     
+    if(ttl_time_lsa_kmc < 0) status = CRYPTO_LIB_ERROR;
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    
     printf("\nLSA+KMC AUTH ONLY Apply Security\n");
     printf("\tNumber of Frames Sent: %d\n", num_frames_1K);
     printf("\t\tEncrypted Bytes Per Frame: %d\n", enc_frame_len);
@@ -768,6 +813,9 @@ UTEST(PERFORMANCE, MDB_KMC_AUTH_SHORT_1K)
 
 
     float ttl_time_lsa_kmc = Apply_Security_Loop((uint8_t *) data_b, data_l, ptr_enc_frame, &enc_frame_len, num_frames_1K);
+    
+    if(ttl_time_lsa_kmc < 0) status = CRYPTO_LIB_ERROR;
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     
     printf("\nMDB+KMC AUTH ONLY Apply Security\n");
     printf("\tNumber of Frames Sent: %d\n", num_frames_1K);
@@ -816,6 +864,9 @@ UTEST(PERFORMANCE, LSA_LIBG_AUTH_MED_1K)
 
     float ttl_time_lsa_libg = Apply_Security_Loop((uint8_t *) data_b, data_l, ptr_enc_frame, &enc_frame_len, num_frames_1K);
     
+    if(ttl_time_lsa_libg < 0) status = CRYPTO_LIB_ERROR;
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    
     printf("\nLSA+LIBG AUTH ONLY Apply Security\n");
     printf("\tNumber of Frames Sent: %d\n", num_frames_1K);
     printf("\t\tEncrypted Bytes Per Frame: %d\n", enc_frame_len);
@@ -861,6 +912,9 @@ UTEST(PERFORMANCE, MDB_LIBG_AUTH_MED_1K)
 
     float ttl_time_mdb_libg = Apply_Security_Loop((uint8_t *) data_b, data_l, ptr_enc_frame, &enc_frame_len, num_frames_1K);
     
+    if(ttl_time_mdb_libg < 0) status = CRYPTO_LIB_ERROR;
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    
     printf("\nMDB+LIBG AUTH ONLY Apply Security\n");
     printf("\tNumber of Frames Sent: %d\n", num_frames_1K);
     printf("\t\tEncrypted Bytes Per Frame: %d\n", enc_frame_len);
@@ -905,6 +959,9 @@ UTEST(PERFORMANCE, LSA_KMC_AUTH_MED_1K)
 
     float ttl_time_lsa_kmc = Apply_Security_Loop((uint8_t *) data_b, data_l, ptr_enc_frame, &enc_frame_len, num_frames_1K);
     
+    if(ttl_time_lsa_kmc < 0) status = CRYPTO_LIB_ERROR;
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    
     printf("\nLSA+KMC AUTH ONLY Apply Security\n");
     printf("\tNumber of Frames Sent: %d\n", num_frames_1K);
     printf("\t\tEncrypted Bytes Per Frame: %d\n", enc_frame_len);
@@ -941,6 +998,9 @@ UTEST(PERFORMANCE, MDB_KMC_AUTH_MED_1K)
 
 
     float ttl_time_lsa_kmc = Apply_Security_Loop((uint8_t *) data_b, data_l, ptr_enc_frame, &enc_frame_len, num_frames_1K);
+    
+    if(ttl_time_lsa_kmc < 0) status = CRYPTO_LIB_ERROR;
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     
     printf("\nMDB+KMC AUTH ONLY Apply Security\n");
     printf("\tNumber of Frames Sent: %d\n", num_frames_1K);
@@ -989,6 +1049,9 @@ UTEST(PERFORMANCE, LSA_LIBG_AUTH_LONG_1K)
 
     float ttl_time_lsa_libg = Apply_Security_Loop((uint8_t *) data_b, data_l, ptr_enc_frame, &enc_frame_len, num_frames_1K);
     
+    if(ttl_time_lsa_libg < 0) status = CRYPTO_LIB_ERROR;
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    
     printf("\nLSA+LIBG AUTH ONLY Apply Security\n");
     printf("\tNumber of Frames Sent: %d\n", num_frames_1K);
     printf("\t\tEncrypted Bytes Per Frame: %d\n", enc_frame_len);
@@ -1034,6 +1097,9 @@ UTEST(PERFORMANCE, MDB_LIBG_AUTH_LONG_1K)
 
     float ttl_time_mdb_libg = Apply_Security_Loop((uint8_t *) data_b, data_l, ptr_enc_frame, &enc_frame_len, num_frames_1K);
     
+    if(ttl_time_mdb_libg < 0) status = CRYPTO_LIB_ERROR;
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    
     printf("\nMDB+LIBG AUTH ONLY Apply Security\n");
     printf("\tNumber of Frames Sent: %d\n", num_frames_1K);
     printf("\t\tEncrypted Bytes Per Frame: %d\n", enc_frame_len);
@@ -1078,6 +1144,9 @@ UTEST(PERFORMANCE, LSA_KMC_AUTH_LONG_1K)
 
     float ttl_time_lsa_kmc = Apply_Security_Loop((uint8_t *) data_b, data_l, ptr_enc_frame, &enc_frame_len, num_frames_1K);
     
+    if(ttl_time_lsa_kmc < 0) status = CRYPTO_LIB_ERROR;
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    
     printf("\nLSA+KMC AUTH ONLY Apply Security\n");
     printf("\tNumber of Frames Sent: %d\n", num_frames_1K);
     printf("\t\tEncrypted Bytes Per Frame: %d\n", enc_frame_len);
@@ -1114,6 +1183,9 @@ UTEST(PERFORMANCE, MDB_KMC_AUTH_LONG_1K)
 
 
     float ttl_time_lsa_kmc = Apply_Security_Loop((uint8_t *) data_b, data_l, ptr_enc_frame, &enc_frame_len, num_frames_1K);
+    
+    if(ttl_time_lsa_kmc < 0) status = CRYPTO_LIB_ERROR;
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     
     printf("\nMDB+KMC AUTH ONLY Apply Security\n");
     printf("\tNumber of Frames Sent: %d\n", num_frames_1K);
