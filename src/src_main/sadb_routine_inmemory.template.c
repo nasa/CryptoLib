@@ -246,6 +246,32 @@ int32_t sadb_config(void)
     sa[9].gvcid_tc_blk.vcid = 0;
     sa[9].gvcid_tc_blk.mapid = TYPE_TC;
 
+    // SA 10 - KEYED;  ARSNW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 130
+    // SA 10 VC0/1 is now 4-VC0, 7-VC1
+    sa[10].spi = 10;
+    sa[10].ekid = 130;
+    sa[10].sa_state = SA_OPERATIONAL;
+    sa[10].est = 1;
+    sa[10].ast = 1;
+    sa[10].ecs_len = 1;
+    sa[10].ecs = calloc(1, sa[10].ecs_len * sizeof(uint8_t));
+    *sa[10].ecs = CRYPTO_CIPHER_AES256_GCM;
+    sa[10].shivf_len = 12;
+    sa[10].iv_len = 12;
+    sa[10].stmacf_len = 16;
+    sa[10].iv = (uint8_t* )calloc(1, sa[10].shivf_len * sizeof(uint8_t));
+    *(sa[10].iv + 11) = 0;
+    sa[10].abm_len = ABM_SIZE; // 20
+    sa[10].abm = (uint8_t* )calloc(1, sa[10].abm_len * sizeof(uint8_t));
+    sa[10].arsnw_len = 1;
+    sa[10].arsnw = 5;
+    sa[10].arsn_len = 0;
+    sa[10].gvcid_tc_blk.tfvn = 0x00;
+    sa[10].gvcid_tc_blk.scid = 0x002C;
+    sa[10].gvcid_tc_blk.vcid = 1;
+    sa[10].gvcid_tc_blk.mapid = 0x00;
+    sa[10].ek_ref="kmc/test/key130";
+    
     // SA 11 - KEYED;  ARSNW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 130
     // SA 11 VC0/1 is now 4-VC0, 7-VC1
     sa[11].spi = 11;
