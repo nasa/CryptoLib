@@ -97,7 +97,7 @@ int32_t sadb_config(void)
     sa[2].est = 1;
     sa[2].ast = 1;
     sa[2].ecs_len = 1;
-    sa[2].ecs = calloc(1, sa[4].ecs_len * sizeof(uint8_t));
+    sa[2].ecs = calloc(1, sa[2].ecs_len * sizeof(uint8_t));
     *sa[2].ecs = CRYPTO_CIPHER_AES256_GCM;    
     sa[2].shivf_len = 12;
     sa[2].iv_len = 12;
@@ -116,7 +116,7 @@ int32_t sadb_config(void)
     sa[3].est = 1;
     sa[3].ast = 1;
     sa[3].ecs_len = 1;
-    sa[3].ecs = calloc(1, sa[4].ecs_len * sizeof(uint8_t));
+    sa[3].ecs = calloc(1, sa[3].ecs_len * sizeof(uint8_t));
     *sa[3].ecs = CRYPTO_CIPHER_AES256_GCM;
     sa[3].shivf_len = 12;
     sa[3].iv_len = 12;
@@ -160,7 +160,7 @@ int32_t sadb_config(void)
     sa[5].est = 1;
     sa[5].ast = 1;
     sa[5].ecs_len = 1;
-    sa[5].ecs = calloc(1, sa[4].ecs_len * sizeof(uint8_t));
+    sa[5].ecs = calloc(1, sa[5].ecs_len * sizeof(uint8_t));
     *sa[5].ecs = CRYPTO_CIPHER_AES256_GCM;    
     sa[5].shivf_len = 12;
     sa[5].iv_len = 12;
@@ -178,7 +178,7 @@ int32_t sadb_config(void)
     sa[6].est = 1;
     sa[6].ast = 1;
     sa[6].ecs_len = 1;
-    sa[6].ecs = calloc(1, sa[4].ecs_len * sizeof(uint8_t));
+    sa[6].ecs = calloc(1, sa[6].ecs_len * sizeof(uint8_t));
     *sa[6].ecs = CRYPTO_CIPHER_AES256_GCM;    
     sa[6].shivf_len = 12;
     sa[6].iv_len = 12;
@@ -197,7 +197,7 @@ int32_t sadb_config(void)
     sa[7].est = 1;
     sa[7].ast = 1;
     sa[7].ecs_len = 1;
-    sa[7].ecs = calloc(1, sa[4].ecs_len * sizeof(uint8_t));
+    sa[7].ecs = calloc(1, sa[7].ecs_len * sizeof(uint8_t));
     *sa[7].ecs = CRYPTO_CIPHER_AES256_GCM;    
     sa[7].shivf_len = 12;
     sa[7].iv_len = 12;
@@ -282,11 +282,11 @@ int32_t sadb_config(void)
     sa[11].ecs_len = 1;
     sa[11].ecs = calloc(1, sa[11].ecs_len * sizeof(uint8_t));
     *sa[11].ecs = CRYPTO_CIPHER_AES256_CBC;
-    sa[11].shivf_len = 0;
+    sa[11].shivf_len = 16;
     sa[11].iv_len = 16;
     sa[11].shplf_len = 1;
     sa[11].stmacf_len = 0;
-    sa[11].iv = (uint8_t* )calloc(1, sa[11].shivf_len * sizeof(uint8_t));
+    sa[11].iv = (uint8_t* )calloc(1, sa[11].shivf_len * sizeof(uint8_t)); //TODO;  Should this be iv_len instead of shiv_len?
     *(sa[11].iv + (sa[11].iv_len - 1)) = 0;
     sa[11].abm_len = ABM_SIZE; // 20
     sa[11].abm = (uint8_t* )calloc(1, sa[11].abm_len * sizeof(uint8_t));
@@ -347,6 +347,7 @@ static int32_t sadb_close(void)
         if(sa[x].iv != NULL) free(sa[x].iv);
         if(sa[x].abm != NULL) free(sa[x].abm);
         if(sa[x].arsn != NULL) free(sa[x].arsn);
+        if(sa[x].acs != NULL) free(sa[x].acs);
     }
     return status;
 }

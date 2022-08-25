@@ -32,8 +32,8 @@
 #include <time.h>
 #include <unistd.h>
 
-int num_frames_1K = 1000;
-int num_frames_100 = 100;
+int num_frames_1K = 1;
+int num_frames_100 = 1;
 
 void Write_To_File(uint16_t enc_frame_len, float total_time, char* test_name, int num_frames, int reset)
 {

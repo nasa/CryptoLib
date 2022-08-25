@@ -242,6 +242,11 @@ UTEST(MARIA_DB, AUTH_DECRYPTION_TEST)
     }
 
     Crypto_Shutdown();
+    free(tc_sdls_processed_frame->tc_sec_header.iv);
+    free(tc_sdls_processed_frame->tc_sec_header.sn);
+    free(tc_sdls_processed_frame->tc_sec_header.pad);
+    free(tc_sdls_processed_frame->tc_sec_trailer.mac); // TODO:  Is there a method to free all of this?
+    free(tc_sdls_processed_frame);
 }
 
 /**
@@ -357,8 +362,10 @@ UTEST(MARIA_DB, HAPPY_PATH_APPLY_STATIC_IV_ROLLOVER)
 
     int32_t return_val = CRYPTO_LIB_ERROR;
 
-    SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t* test_association;
 
+    sadb_routine->sadb_get_sa_from_spi(4, &test_association);
+    memcpy(test_association->iv, new_iv_b, new_iv_len);
     sadb_routine->sadb_get_sa_from_spi(4, &test_association);
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);    
