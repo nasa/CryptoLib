@@ -172,6 +172,7 @@ static int32_t sadb_close(void)
         mysql_close(con);
         con = NULL;
     }
+    
     return CRYPTO_LIB_SUCCESS;
 }
 
@@ -365,8 +366,9 @@ static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** se
                     sa->ekid = atoi(row[i]);
                 } else // Cryptography Type KMC Crypto Service with PKCS12 String Key References
                 {
-                    sa->ek_ref = malloc(strlen(row[i]) * sizeof(char));
-                    memcpy(sa->ek_ref, row[i], strlen(row[i]));
+                    sa->ekid = 0;
+                    sa->ek_ref = malloc((strlen(row[i])+1) * sizeof(char));
+                    memcpy(sa->ek_ref, row[i], strlen(row[i])+1);
                 }
                 continue;
             }
@@ -377,8 +379,8 @@ static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** se
                     sa->akid = atoi(row[i]);
                 } else // Cryptography Type KMC Crypto Service with PKCS12 String Key References
                 {
-                    sa->ak_ref = malloc(strlen(row[i]) * sizeof(char));
-                    memcpy(sa->ak_ref, row[i], strlen(row[i]));
+                    sa->ak_ref = malloc((strlen(row[i])+1) * sizeof(char));
+                    memcpy(sa->ak_ref, row[i], strlen(row[i])+1);
                 }
                 continue;
             }
@@ -509,11 +511,11 @@ static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** se
     sa->abm = (uint8_t* )calloc(1, sa->abm_len * sizeof(uint8_t));
     sa->ecs = (uint8_t* )calloc(1, sa->ecs_len * sizeof(uint8_t));
     sa->acs = (uint8_t* )calloc(1, sa->acs_len * sizeof(uint8_t));
-    convert_hexstring_to_byte_array(iv_byte_str, sa->iv);
-    convert_hexstring_to_byte_array(arc_byte_str, sa->arsn);
-    convert_hexstring_to_byte_array(abm_byte_str, sa->abm);
-    convert_hexstring_to_byte_array(ecs_byte_str, sa->ecs);
-    convert_hexstring_to_byte_array(acs_byte_str, sa->acs);
+    if(sa->iv_len > 0)   convert_hexstring_to_byte_array(iv_byte_str, sa->iv);
+    if(sa->arsn_len > 0) convert_hexstring_to_byte_array(arc_byte_str, sa->arsn);
+    if(sa->abm_len > 0)  convert_hexstring_to_byte_array(abm_byte_str, sa->abm);
+    if(sa->ecs_len > 0)  convert_hexstring_to_byte_array(ecs_byte_str, sa->ecs);
+    if(sa->acs_len > 0)  convert_hexstring_to_byte_array(acs_byte_str, sa->acs);
 
     //arsnw_len is not necessary for mariadb interface, putty dummy/default value for prints.
     sa->arsnw_len = 1;

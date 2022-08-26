@@ -32,8 +32,8 @@
 #include <time.h>
 #include <unistd.h>
 
-int num_frames_1K = 1000;
-int num_frames_100 = 100;
+int num_frames_1K = 1;
+int num_frames_100 = 1;
 
 void Write_To_File(uint16_t enc_frame_len, float total_time, char* test_name, int num_frames, int reset)
 {
@@ -72,7 +72,10 @@ double Process_Security_Loop(char *data_b, int* data_l, TC_t* processed_frame, i
         clock_gettime(CLOCK_REALTIME, &begin);
         status = Crypto_TC_ProcessSecurity((uint8_t*) data_b, data_l, processed_frame);
         clock_gettime(CLOCK_REALTIME, &end);
-        //free(enc_frame);
+        free(processed_frame->tc_sec_header.iv);
+        free(processed_frame->tc_sec_header.sn);
+        free(processed_frame->tc_sec_header.pad);
+        free(processed_frame->tc_sec_trailer.mac);
 
         long seconds = end.tv_sec - begin.tv_sec;
         long nanoseconds = end.tv_nsec - begin.tv_nsec;
@@ -132,6 +135,7 @@ UTEST(PERFORMANCE, LSA_LIBG_SHORT_100)
 
     Crypto_Shutdown();
     free(data_b);
+    free(processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
@@ -163,6 +167,7 @@ UTEST(PERFORMANCE, MDB_LIBG_SHORT_100)
     Write_To_File(processed_frame->tc_pdu_len, ttl_time_mdb_libg_100, "MDB+LIBG Process Security SHORT", num_frames_100, 0);
     Crypto_Shutdown();
     free(data_b);
+    free(processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
@@ -243,6 +248,7 @@ UTEST(PERFORMANCE, MDB_KMC_SHORT_100)
     Write_To_File(processed_frame->tc_pdu_len, ttl_time_mdb_kmc_100, "MDB+KMC Process Security SHORT", num_frames_100, 0);
     Crypto_Shutdown();
     free(data_b);
+    free(processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
@@ -290,6 +296,7 @@ UTEST(PERFORMANCE, LSA_LIBG_MED_100)
 
     Crypto_Shutdown();
     free(data_b);
+    free(processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
@@ -323,6 +330,7 @@ UTEST(PERFORMANCE, MDB_LIBG_MED_100)
 
     Crypto_Shutdown();
     free(data_b);
+    free(processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
@@ -403,6 +411,7 @@ UTEST(PERFORMANCE, MDB_KMC_MED_100)
     Write_To_File(processed_frame->tc_pdu_len, ttl_time_mdb_kmc_100, "MDB+KMC Process Security MED", num_frames_100, 0);
     Crypto_Shutdown();
     free(data_b);
+    free(processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
@@ -450,6 +459,7 @@ UTEST(PERFORMANCE, LSA_LIBG_LONG_100)
 
     Crypto_Shutdown();
     free(data_b);
+    free(processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
@@ -483,6 +493,7 @@ UTEST(PERFORMANCE, MDB_LIBG_LONG_100)
 
     Crypto_Shutdown();
     free(data_b);
+    free(processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
@@ -563,6 +574,7 @@ UTEST(PERFORMANCE, MDB_KMC_LONG_100)
     Write_To_File(processed_frame->tc_pdu_len, ttl_time_mdb_kmc_100, "MDB+KMC Process Security LONG", num_frames_100, 0);
     Crypto_Shutdown();
     free(data_b);
+    free(processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
@@ -610,6 +622,7 @@ UTEST(PERFORMANCE, LSA_LIBG_SHORT_1K)
 
     Crypto_Shutdown();
     free(data_b);
+    free(processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
@@ -641,6 +654,7 @@ UTEST(PERFORMANCE, MDB_LIBG_SHORT_1K)
     Write_To_File(processed_frame->tc_pdu_len, ttl_time_mdb_libg_100, "MDB+LIBG Process Security SHORT", num_frames_1K, 0);
     Crypto_Shutdown();
     free(data_b);
+    free(processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
@@ -721,6 +735,7 @@ UTEST(PERFORMANCE, MDB_KMC_SHORT_1K)
     Write_To_File(processed_frame->tc_pdu_len, ttl_time_mdb_kmc_100, "MDB+KMC Process Security SHORT", num_frames_1K, 0);
     Crypto_Shutdown();
     free(data_b);
+    free(processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
@@ -768,6 +783,7 @@ UTEST(PERFORMANCE, LSA_LIBG_MED_1K)
 
     Crypto_Shutdown();
     free(data_b);
+    free(processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
@@ -801,6 +817,7 @@ UTEST(PERFORMANCE, MDB_LIBG_MED_1K)
 
     Crypto_Shutdown();
     free(data_b);
+    free(processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
@@ -881,6 +898,7 @@ UTEST(PERFORMANCE, MDB_KMC_MED_1K)
     Write_To_File(processed_frame->tc_pdu_len, ttl_time_mdb_kmc_100, "MDB+KMC Process Security MED", num_frames_1K, 0);
     Crypto_Shutdown();
     free(data_b);
+    free(processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
@@ -927,6 +945,7 @@ UTEST(PERFORMANCE, LSA_LIBG_LONG_1K)
     Write_To_File(processed_frame->tc_pdu_len, ttl_time_lsa_libg_100, "LSA+LIBG Process Security LONG", num_frames_1K, 0);
 
     Crypto_Shutdown();
+    free(processed_frame);
     free(data_b);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
@@ -960,6 +979,7 @@ UTEST(PERFORMANCE, MDB_LIBG_LONG_1K)
     Write_To_File(processed_frame->tc_pdu_len, ttl_time_lsa_libg_100, "MDB+LIBG Process Security LONG", num_frames_1K, 0);
 
     Crypto_Shutdown();
+    free(processed_frame);
     free(data_b);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
@@ -1040,6 +1060,7 @@ UTEST(PERFORMANCE, MDB_KMC_LONG_1K)
     printf("\n");
     Write_To_File(processed_frame->tc_pdu_len, ttl_time_mdb_kmc_100, "MDB+KMC Process Security LONG", num_frames_1K, 0);
     Crypto_Shutdown();
+    free(processed_frame);
     free(data_b);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }

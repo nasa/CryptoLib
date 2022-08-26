@@ -32,8 +32,8 @@
 #include <time.h>
 #include <unistd.h>
 
-int num_frames_1K = 1000;
-int num_frames_100 = 100;
+int num_frames_1K = 1;
+int num_frames_100 = 1;
 
 void Write_To_File(uint16_t enc_frame_len, float total_time, char* test_name, int num_frames, int reset)
 {
@@ -161,7 +161,7 @@ UTEST(PERFORMANCE, MDB_LIBG_AUTH_SHORT_100)
 
     hex_conversion(data_h, &data_b, &data_l);
 
-    SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t* test_association;
     // Expose the SADB Security Association for test edits.
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;

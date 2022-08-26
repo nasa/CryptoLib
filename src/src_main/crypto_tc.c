@@ -50,7 +50,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
     uint16_t new_fecf = 0x0000;
     uint8_t* aad = NULL;
     uint16_t new_enc_frame_header_field_length = 0;
-    uint32_t encryption_cipher;
+    uint32_t encryption_cipher = 0;
     uint8_t ecs_is_aead_algorithm;
     int i;
     uint32_t pkcs_padding = 0;
@@ -424,17 +424,19 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
         {
             return CRYPTO_LIB_ERR_NULL_CIPHERS;
         }
-#ifdef DEBUG
-        if(sa_ptr->acs == NULL) printf("ACS NULL POINTER!\n");
-        else printf("ACS: %02x\n", *sa_ptr->acs);
-#endif
 
-        if(sa_ptr->est == 0 && sa_ptr->ast == 1 && sa_ptr->acs !=NULL && (*(sa_ptr->acs) == CRYPTO_MAC_CMAC_AES256 \
-            || *(sa_ptr->acs) == CRYPTO_MAC_HMAC_SHA256 || *(sa_ptr->acs) == CRYPTO_MAC_HMAC_SHA512) &&
-            sa_ptr->iv_len > 0 )
+        if(sa_ptr->est == 0 && sa_ptr->ast == 1)
         {
-            return CRYPTO_LIB_ERR_IV_NOT_SUPPORTED_FOR_ACS_ALGO;
-        }
+            if(sa_ptr->acs !=NULL && sa_ptr->acs_len != 0)
+            {
+                if((*(sa_ptr->acs) == CRYPTO_MAC_CMAC_AES256 || *(sa_ptr->acs) == CRYPTO_MAC_HMAC_SHA256 || *(sa_ptr->acs) == CRYPTO_MAC_HMAC_SHA512) &&
+                    sa_ptr->iv_len > 0 )
+                    {
+                        return CRYPTO_LIB_ERR_IV_NOT_SUPPORTED_FOR_ACS_ALGO;
+                    }
+            }
+        } 
+
 
         // Start index from the transmitted portion
         for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
@@ -622,6 +624,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
             }
             if (status != CRYPTO_LIB_SUCCESS)
             {
+                free(aad);
                 return status; // Cryptography IF call failed, return.
             }
         }
@@ -709,7 +712,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
 #ifdef DEBUG
     printf(KYEL "----- Crypto_TC_ApplySecurity END -----\n" RESET);
 #endif
-
+    free(aad);
     return status;
 }
 
@@ -1092,6 +1095,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
 
     if (status != CRYPTO_LIB_SUCCESS)
     {
+        free(aad);
         return status; // Cryptography IF call failed, return.
     }
 
@@ -1102,6 +1106,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
 
         if(status != CRYPTO_LIB_SUCCESS)
         {
+            free(aad);
             return status;
         }
 
@@ -1109,7 +1114,20 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
         status = sadb_routine->sadb_save_sa(sa_ptr);
         if(status != CRYPTO_LIB_SUCCESS)
         {
+            free(aad);
             return status;
+        }
+    }
+    else
+    {   
+        if (crypto_config->sadb_type == SADB_TYPE_MARIADB)
+        {  
+            if(sa_ptr->ecs != NULL) free(sa_ptr->ecs);
+            if(sa_ptr->iv != NULL) free(sa_ptr->iv);
+            if(sa_ptr->abm != NULL) free(sa_ptr->abm);
+            if(sa_ptr->arsn != NULL) free(sa_ptr->arsn);
+            if(sa_ptr->acs != NULL) free(sa_ptr->acs);
+            free(sa_ptr);
         }
     }
 
@@ -1118,7 +1136,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
     {
         status = Crypto_Process_Extended_Procedure_Pdu(tc_sdls_processed_frame, ingest);
     }
-
+    free(aad);
     return status;
 }
 
@@ -1278,5 +1296,6 @@ static int32_t crypto_handle_incrementing_nontransmitted_counter(uint8_t* dest, 
     {
         status = CRYPTO_LIB_ERR_FRAME_COUNTER_DOESNT_MATCH_SA;
     }
+    free(temp_counter);
     return status;
 }
