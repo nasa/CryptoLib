@@ -111,7 +111,7 @@ UTEST(PERFORMANCE, LSA_LIBG_SHORT_100)
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
 
-    SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t* test_association;
     // Expose the SADB Security Association for test edits.
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
@@ -268,7 +268,7 @@ UTEST(PERFORMANCE, LSA_LIBG_MED_100)
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
 
-    SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t* test_association;
     // Expose the SADB Security Association for test edits.
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
@@ -426,7 +426,7 @@ UTEST(PERFORMANCE, LSA_LIBG_LONG_100)
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
 
-    SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t* test_association;
     // Expose the SADB Security Association for test edits.
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
@@ -587,7 +587,7 @@ UTEST(PERFORMANCE, LSA_LIBG_SHORT_1000)
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
 
-    SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t* test_association;
     // Expose the SADB Security Association for test edits.
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
@@ -744,7 +744,7 @@ UTEST(PERFORMANCE, LSA_LIBG_MED_1000)
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
 
-    SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t* test_association;
     // Expose the SADB Security Association for test edits.
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
@@ -902,7 +902,7 @@ UTEST(PERFORMANCE, LSA_LIBG_LONG_1000)
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
 
-    SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t* test_association;
     // Expose the SADB Security Association for test edits.
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
@@ -1000,6 +1000,7 @@ UTEST(PERFORMANCE, LSA_KMC_LONG_1000)
     Crypto_Shutdown();
     free(raw_tc_jpl_mmt_scid44_vcid1_expect);
     free(ptr_enc_frame);
+    //free(cryptography_kmc_crypto_config);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 

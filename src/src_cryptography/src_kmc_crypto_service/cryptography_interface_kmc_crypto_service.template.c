@@ -213,6 +213,7 @@ static int32_t cryptography_config(void)
                     curl_easy_strerror(res));
             free(status_uri);
             free(kmc_root_uri);
+            free(chunk);
             return status;
         }
 
@@ -222,6 +223,8 @@ static int32_t cryptography_config(void)
             fprintf(stderr, "curl_easy_perform() unexpected empty response: \n%s\n",
                     "Empty Crypto Service response can be caused by CAM security, CryptoLib doesn't support a CAM secured KMC Crypto Service.");
             free(status_uri);
+            free(kmc_root_uri);
+            free(chunk);
             return status;
         }
 
@@ -229,6 +232,8 @@ static int32_t cryptography_config(void)
         printf("cURL response:\n\t %s\n",chunk->response);
 #endif
     free(status_uri);
+    free(chunk->response);
+    free(chunk);
     }
     return status;
 }
@@ -1258,6 +1263,9 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                 curl_easy_strerror(res));
         free(iv_base64);
         free(encrypt_uri);
+        free(chunk_write);
+        free(chunk_read);
+        free(encrypt_payload);
         return status;
     }
 
@@ -1273,6 +1281,9 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
 
         free(iv_base64);
         free(encrypt_uri);
+        free(chunk_write);
+        free(chunk_read);
+        free(encrypt_payload);
         return status;
     }
 
@@ -1290,6 +1301,9 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
         printf("Failed to parse JSON: %d\n", parse_result);
         free(iv_base64);
         free(encrypt_uri);
+        free(chunk_write);
+        free(chunk_read);
+        free(encrypt_payload);
         return status;
     }
 
@@ -1340,6 +1354,9 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                 free(http_code_str);
                 free(encrypt_uri);
                 free(ciphertext_base64);
+                free(chunk_write);
+                free(chunk_read);
+                free(encrypt_payload);
                 return status;
             }
             json_idx++;
@@ -1353,6 +1370,9 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
         free(encrypt_uri);
         free(iv_base64);
         free(ciphertext_base64);
+        free(chunk_write);
+        free(chunk_read);
+        free(encrypt_payload);
         return status;
     }
 
@@ -1391,6 +1411,10 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     free(ciphertext_decoded);
     free(iv_base64);
     free(encrypt_uri);
+    free(encrypt_payload);
+    free(chunk_write->response);
+    free(chunk_write);
+    free(chunk_read);
     return status;
 }
 static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
@@ -1488,6 +1512,8 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
             if(decrypt_bool == CRYPTO_FALSE) { data_offset = 0; }
             memcpy(&decrypt_payload[aad_len + data_offset],mac,mac_size);
         }
+
+        free(decrypt_endpoint_final);
     }
     else //No AAD - just prepare the endpoint URI string
     {
@@ -1500,6 +1526,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
         decrypt_uri[0] = '\0';
         strcat(decrypt_uri, kmc_root_uri);
         strcat(decrypt_uri, decrypt_endpoint_final);
+        free(decrypt_endpoint_final);
     }
 #ifdef DEBUG
     printf("Decrypt URI: %s\n",decrypt_uri);
@@ -1543,6 +1570,9 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
         status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_AEAD_DECRYPT_ERROR;
         fprintf(stderr, "curl_easy_perform() failed: %s\n",
                 curl_easy_strerror(res));
+        free(decrypt_payload);
+        free(decrypt_uri);
+        free(iv_base64);
         return status;
     }
 
@@ -1555,6 +1585,9 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
         status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_EMPTY_RESPONSE;
         fprintf(stderr, "curl_easy_perform() unexpected empty response: \n%s\n",
                 "Empty Crypto Service response can be caused by CAM security, CryptoLib doesn't support a CAM secured KMC Crypto Service.");
+        free(decrypt_payload);
+        free(decrypt_uri);
+        free(iv_base64);
         return status;
     }
 
@@ -1570,6 +1603,9 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
     if (parse_result < 0) {
         status = CRYPTOGRAHPY_KMC_CRYPTO_JSON_PARSE_ERROR;
         printf("Failed to parse JSON: %d\n", parse_result);
+        free(decrypt_payload);
+        free(decrypt_uri);
+        free(iv_base64);
         return status;
     }
 
@@ -1616,6 +1652,12 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
             {
                 status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE;
                 fprintf(stderr,"KMC Crypto Failure Response:\n%s\n",chunk_write->response);
+                free(chunk_read);
+                free(chunk_write);
+                free(http_code_str);
+                free(cleartext_base64);
+                free(decrypt_uri);
+                free(iv_base64);
                 return status;
             }
             free(http_code_str);
@@ -1625,6 +1667,12 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
     }
     if(ciphertext_found == CRYPTO_FALSE){
         status = CRYPTOGRAHPY_KMC_CIPHER_TEXT_NOT_FOUND_IN_JSON_RESPONSE;
+        free(chunk_read);
+        free(chunk_write); 
+        free(cleartext_base64); 
+        free(decrypt_payload);
+        free(decrypt_uri);
+        free(iv_base64);
         return status;
     }
 
@@ -1651,7 +1699,12 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
     }
     free(cleartext_decoded);
     free(chunk_read);
+    free(chunk_write->response);
     free(chunk_write);
+    free(cleartext_base64);
+    free(decrypt_payload);
+    free(decrypt_uri);
+    free(iv_base64);
     return status;
 }
 

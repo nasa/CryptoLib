@@ -192,6 +192,9 @@ int32_t Crypto_Shutdown(void)
 
     if (crypto_config != NULL)
     {
+        if(crypto_config->cryptography_type == CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+            free(cryptography_kmc_crypto_config);
+        
         free(crypto_config);
         crypto_config = NULL;
     }
