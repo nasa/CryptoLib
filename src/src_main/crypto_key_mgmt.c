@@ -107,7 +107,8 @@ int32_t Crypto_Key_OTAR(void)
                                                         CRYPTO_TRUE,  // authenticate
                                                         CRYPTO_FALSE, // AAD Bool
                                                         &ecs, // encryption cipher
-                                                        NULL  // authentication cipher
+                                                        NULL,  // authentication cipher
+                                                        NULL // cam_cookies
                                                         );
 
     // Read in Decrypted Data
@@ -400,7 +401,8 @@ int32_t Crypto_Key_verify(uint8_t* ingest, TC_t* tc_frame)
                                                    CRYPTO_TRUE, // Authenticate
                                                    CRYPTO_FALSE, // AAD
                                                    &ecs, // encryption cipher
-                                                   NULL  // authentication cipher
+                                                   NULL,  // authentication cipher
+                                                   NULL // cam_cookies
                                                    );
 
         count += CHALLENGE_SIZE + CHALLENGE_MAC_SIZE; // Don't forget to increment count!

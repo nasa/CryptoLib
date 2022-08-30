@@ -39,6 +39,22 @@ static int32_t crypto_handle_incrementing_nontransmitted_counter(uint8_t* dest, 
 int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_frame_length, uint8_t** pp_in_frame,
                                 uint16_t* p_enc_frame_len)
 {
+    //Passthrough to maintain original function signature when CAM isn't used.
+    return Crypto_TC_ApplySecurity_Cam(p_in_frame, in_frame_length, pp_in_frame, p_enc_frame_len,NULL);
+}
+/**
+ * @brief Function: Crypto_TC_ApplySecurity_Cam
+ * Applies Security to incoming frame.  Encryption, Authentication, and Authenticated Encryption
+ * @param p_in_frame: uint8*
+ * @param in_frame_length: uint16
+ * @param pp_in_frame: uint8_t**
+ * @param p_enc_frame_len: uint16
+ * @param cam_cookies: char*
+ * @return int32: Success/Failure
+ **/
+int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in_frame_length, uint8_t** pp_in_frame,
+                                uint16_t* p_enc_frame_len, char* cam_cookies)
+{
     // Local Variables
     int32_t status = CRYPTO_LIB_SUCCESS;
     TC_FramePrimaryHeader_t temp_tc_header;
@@ -578,7 +594,8 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
                                                                     (sa_ptr->ast==1),
                                                                     (sa_ptr->ast==1),
                                                                     sa_ptr->ecs, // encryption cipher
-                                                                    sa_ptr->acs  // authentication cipher
+                                                                    sa_ptr->acs,  // authentication cipher
+                                                                    cam_cookies
                 );
 
             } else // non aead algorithm
@@ -598,7 +615,8 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
                                                                     sa_ptr->iv, // IV
                                                                     sa_ptr->iv_len, // IV Length
                                                                     sa_ptr->ecs, // encryption cipher
-                                                                    pkcs_padding
+                                                                    pkcs_padding,
+                                                                    cam_cookies
                 );
                 }
 
@@ -618,7 +636,8 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
                                                                 aad, // AAD Input
                                                                 aad_len, // Length of AAD
                                                                 *sa_ptr->ecs, // encryption cipher
-                                                                *sa_ptr->acs  // authentication cipher
+                                                                *sa_ptr->acs,  // authentication cipher
+                                                                cam_cookies
                     );
                 }
             }
@@ -725,6 +744,20 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_fra
  * @return int32: Success/Failure
  **/
 int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdls_processed_frame)
+{
+    // Pass-through to maintain original function signature when CAM isn't used.
+    return Crypto_TC_ProcessSecurity_Cam(ingest, len_ingest, tc_sdls_processed_frame, NULL);
+}
+
+/**
+ * @brief Function: Crypto_TC_ProcessSecurity
+ * Performs Authenticated decryption, decryption, and authentication
+ * @param ingest: uint8_t*
+ * @param len_ingest: int*
+ * @param tc_sdls_processed_frame: TC_t*
+ * @return int32: Success/Failure
+ **/
+int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc_sdls_processed_frame, char* cam_cookies)
 // Loads the ingest frame into the global tc_frame while performing decryption
 {
     // Local Variables
@@ -1033,7 +1066,8 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
                                                             (sa_ptr->ast), // Authentication Bool
                                                             (sa_ptr->ast), // AAD Bool
                                                             sa_ptr->ecs, // encryption cipher
-                                                            sa_ptr->acs  // authentication cipher
+                                                            sa_ptr->acs,  // authentication cipher
+                                                            cam_cookies
                                                             
         );
     }else if (sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_FALSE) // Non aead algorithm
@@ -1055,7 +1089,8 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
                                                             aad,    // additional authenticated data
                                                             aad_len, // length of AAD
                                                             CRYPTO_CIPHER_NONE, //encryption cipher
-                                                            *sa_ptr->acs  //authentication cipher
+                                                            *sa_ptr->acs,  //authentication cipher
+                                                            cam_cookies
             );
         }
         if(sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
@@ -1070,7 +1105,8 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdl
                                                             tc_sdls_processed_frame->tc_sec_header.iv, // IV
                                                             sa_ptr->iv_len, // IV Length
                                                             sa_ptr->ecs, // encryption cipher
-                                                            sa_ptr->acs  // authentication cipher
+                                                            sa_ptr->acs,  // authentication cipher
+                                                            cam_cookies
                                                             
             );
 

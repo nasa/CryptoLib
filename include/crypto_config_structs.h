@@ -89,6 +89,18 @@ typedef enum
     SA_INCREMENT_NONTRANSMITTED_IV_TRUE
 } SaIncrementNonTransmittedIvPortion;
 
+typedef enum
+{
+    CAM_ENABLED_FALSE,
+    CAM_ENABLED_TRUE
+} CamEnabledBool;
+
+typedef enum
+{
+    CAM_LOGIN_NONE, // Using already populated cam_cookie_file
+    CAM_LOGIN_KERBEROS, // Using already logged-in Kerberos to generate CAM cookies
+    CAM_LOGIN_KEYTAB_FILE // using keytab file to login and generate CAM cookies
+} CamLoginMethod;
 /*
 **  Used for selecting supported algorithms
 */
@@ -180,6 +192,20 @@ typedef struct
 
 } CryptographyKmcCryptoServiceConfig_t;
 #define CRYPTOGRAPHY_KMC_CRYPTO_SERVICE_CONFIG_SIZE (sizeof(CryptographyKmcCryptoServiceConfig_t))
+
+/*
+** Common Access Manager (CAM) Configuration Block
+*/
+typedef struct
+{
+    uint8_t cam_enabled;
+    char* cookie_file_path;
+    char* keytab_file_path;
+    char* cam_cookies;
+    uint8_t login_method;
+
+} CamConfig_t;
+#define CAM_CONFIG_SIZE (sizeof(CamConfig_t))
 
 
 #endif
