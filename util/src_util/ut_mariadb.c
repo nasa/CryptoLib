@@ -29,6 +29,26 @@
 #include <stdio.h>
 
 
+void cleanup_sa(SecurityAssociation_t* test_association)
+{
+    if (test_association->iv != NULL)
+        free(test_association->iv);
+    if (test_association->abm != NULL)
+        free(test_association->abm);
+    if (test_association->arsn != NULL)
+        free(test_association->arsn);
+    if (test_association->ek_ref != NULL)
+        free(test_association->ek_ref);
+    if (test_association->ecs != NULL)
+        free(test_association->ecs);
+    if (test_association->acs != NULL)
+        free(test_association->acs);
+    if (test_association->ak_ref != NULL)
+        free(test_association->ak_ref);
+    
+    free(test_association);
+}
+
 void reload_db(void)
 {
     printf("Resetting Database\n");
@@ -74,8 +94,7 @@ UTEST(MARIA_DB, DB_CONNECT)
 
     SadbRoutine sadb_routine = get_sadb_routine_mariadb();
     //need the sa call
-    SecurityAssociation_t* test_sa = NULL;
-    test_sa = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t* test_sa;
 
     status = sadb_routine->sadb_get_sa_from_spi(1, &test_sa);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -84,11 +103,11 @@ UTEST(MARIA_DB, DB_CONNECT)
     test_sa->iv[11] = 0xAB;
     status = sadb_routine->sadb_save_sa(test_sa);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-
     status = sadb_routine->sadb_get_sa_from_spi(1, &test_sa);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     ASSERT_EQ(test_sa->iv[11] , 0xAB); 
-    Crypto_Shutdown();  
+    Crypto_Shutdown();      
+    cleanup_sa(test_sa);
 }
 
 /**
@@ -123,21 +142,21 @@ UTEST(MARIA_DB, HAPPY_PATH_ENC)
 
     int32_t return_val = CRYPTO_LIB_ERROR;
 
-    SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t* test_association;
 
     status = sadb_routine->sadb_get_sa_from_spi(2, &test_association);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
-  
+    cleanup_sa(test_association);
     status = sadb_routine->sadb_get_sa_from_spi(2, &test_association);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     ASSERT_EQ(test_association->iv[test_association->iv_len - 1], 2);  // Verify that IV incremented.   
 
     free(raw_tc_sdls_ping_b);
-    free(ptr_enc_frame); 
-    free(test_association);
+    free(ptr_enc_frame);
+    cleanup_sa(test_association);
     Crypto_Shutdown();  
 }
 
@@ -173,7 +192,7 @@ UTEST(MARIA_DB, HAPPY_PATH_AUTH_ENC)
 
     int32_t return_val = CRYPTO_LIB_ERROR;
 
-    SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t* test_association;
     // Expose the SADB Security Association for test edits.
     sadb_routine->sadb_get_sa_from_spi(3, &test_association);
 
@@ -181,12 +200,14 @@ UTEST(MARIA_DB, HAPPY_PATH_AUTH_ENC)
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
     
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
-
+    
+    cleanup_sa(test_association);
     status = sadb_routine->sadb_get_sa_from_spi(3, &test_association);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     ASSERT_EQ(test_association->iv[test_association->iv_len - 1], 2);  // Verify that IV incremented.  
 
-    Crypto_Shutdown();
+    Crypto_Shutdown();    
+    cleanup_sa(test_association);
     free(raw_tc_sdls_ping_b);
     free(ptr_enc_frame);
 }
@@ -230,7 +251,7 @@ UTEST(MARIA_DB, AUTH_DECRYPTION_TEST)
     tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
     
-    SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t* test_association;
     sadb_routine->sadb_get_sa_from_spi(3, &test_association);
     test_association->iv[test_association->iv_len - 1] = 0;
     sadb_routine->sadb_save_sa(test_association);
@@ -242,6 +263,8 @@ UTEST(MARIA_DB, AUTH_DECRYPTION_TEST)
     }
 
     Crypto_Shutdown();
+    free(dec_test_b);
+    free(enc_test_b);
     free(tc_sdls_processed_frame->tc_sec_header.iv);
     free(tc_sdls_processed_frame->tc_sec_header.sn);
     free(tc_sdls_processed_frame->tc_sec_header.pad);
@@ -292,20 +315,30 @@ UTEST(MARIA_DB, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_IV_ROLLOVER)
 
     int32_t return_val = CRYPTO_LIB_ERROR;
 
-    SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t* test_association;
 
     sadb_routine->sadb_get_sa_from_spi(4, &test_association);
     return_val =
-        Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);    
+        Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    free(ptr_enc_frame);
+    ptr_enc_frame = NULL;    
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    free(ptr_enc_frame);
+    ptr_enc_frame = NULL;
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    free(ptr_enc_frame);
+    ptr_enc_frame = NULL;
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    free(ptr_enc_frame);
+    ptr_enc_frame = NULL;
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
     
+    
+    cleanup_sa(test_association);
     sadb_routine->sadb_get_sa_from_spi(4, &test_association);    
     for (int i = 0; i < test_association->iv_len; i++)
     {
@@ -314,6 +347,9 @@ UTEST(MARIA_DB, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_IV_ROLLOVER)
     }
 
     Crypto_Shutdown();
+    cleanup_sa(test_association);
+    free(expected_iv_b);
+    free(new_iv_b);
     free(raw_tc_sdls_ping_b);
     free(ptr_enc_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);  
@@ -366,18 +402,26 @@ UTEST(MARIA_DB, HAPPY_PATH_APPLY_STATIC_IV_ROLLOVER)
 
     sadb_routine->sadb_get_sa_from_spi(4, &test_association);
     memcpy(test_association->iv, new_iv_b, new_iv_len);
-    sadb_routine->sadb_get_sa_from_spi(4, &test_association);
     return_val =
-        Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);    
-    return_val =
-        Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
-    return_val =
-        Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+        Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);  
+    free(ptr_enc_frame);
+    ptr_enc_frame = NULL; 
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    free(ptr_enc_frame);
+    ptr_enc_frame = NULL;
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
-    
+    free(ptr_enc_frame);
+    ptr_enc_frame = NULL;
+    return_val =
+        Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    free(ptr_enc_frame);
+    ptr_enc_frame = NULL;
+    return_val =
+        Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len); 
+
+    cleanup_sa(test_association);
     sadb_routine->sadb_get_sa_from_spi(4, &test_association);    
     for (int i = 0; i < test_association->iv_len; i++)
     {
@@ -386,6 +430,9 @@ UTEST(MARIA_DB, HAPPY_PATH_APPLY_STATIC_IV_ROLLOVER)
     }
 
     Crypto_Shutdown();
+    cleanup_sa(test_association);
+    free(expected_iv_b);
+    free(new_iv_b);
     free(raw_tc_sdls_ping_b);
     free(ptr_enc_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);  
@@ -436,25 +483,43 @@ UTEST(MARIA_DB, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_ARSN_ROLLOVER)
 
     int32_t return_val = CRYPTO_LIB_ERROR;
 
-    SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t* test_association;
     // Expose the SADB Security Association for test edits.
     sadb_routine->sadb_get_sa_from_spi(5, &test_association);
 
     return_val =
             Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS,return_val);
+    free(ptr_enc_frame);
+    ptr_enc_frame = NULL;
+    cleanup_sa(test_association);
+    sadb_routine->sadb_get_sa_from_spi(5, &test_association);
     return_val =
             Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS,return_val);
+    free(ptr_enc_frame);
+    ptr_enc_frame = NULL;
+    cleanup_sa(test_association);
+    sadb_routine->sadb_get_sa_from_spi(5, &test_association);
     return_val =
             Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS,return_val);
+    free(ptr_enc_frame);
+    ptr_enc_frame = NULL;
+    cleanup_sa(test_association);
+    sadb_routine->sadb_get_sa_from_spi(5, &test_association);
     return_val =
             Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS,return_val);
+    free(ptr_enc_frame);
+    ptr_enc_frame = NULL;
+    cleanup_sa(test_association);
+    sadb_routine->sadb_get_sa_from_spi(5, &test_association);
     return_val =
             Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS,return_val);
+    
+    cleanup_sa(test_association);
 
     printf("Expected ARSN:\n");
     Crypto_hexprint(expected_arsn_b,expected_arsn_len);
@@ -469,6 +534,10 @@ UTEST(MARIA_DB, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_ARSN_ROLLOVER)
     }
 
     //Must shutdown after checking test_association ARSN since that will get freed!
+    
+    cleanup_sa(test_association);
+    free(expected_arsn_b);
+    free(new_arsn_b);
     Crypto_Shutdown();
     free(raw_tc_sdls_ping_b);
     free(ptr_enc_frame);

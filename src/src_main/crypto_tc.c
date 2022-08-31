@@ -1159,6 +1159,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
         if (crypto_config->sadb_type == SADB_TYPE_MARIADB)
         {  
             if(sa_ptr->ecs != NULL) free(sa_ptr->ecs);
+            if(sa_ptr->ek_ref != NULL) free(sa_ptr->ek_ref);
             if(sa_ptr->iv != NULL) free(sa_ptr->iv);
             if(sa_ptr->abm != NULL) free(sa_ptr->abm);
             if(sa_ptr->arsn != NULL) free(sa_ptr->arsn);

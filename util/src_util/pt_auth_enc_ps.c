@@ -109,8 +109,7 @@ UTEST(PERFORMANCE, LSA_LIBG_SHORT_100)
     TC_t* processed_frame;
     processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t* test_association;
     // Deactivate SA 1
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
@@ -118,7 +117,6 @@ UTEST(PERFORMANCE, LSA_LIBG_SHORT_100)
     sadb_routine->sadb_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     sadb_routine->sadb_get_sa_from_spi(10, &test_association);
-    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
     // Convert hex to binary
     hex_conversion(data_h, &data_b, &data_l);
@@ -187,8 +185,7 @@ UTEST(PERFORMANCE, LSA_KMC_SHORT_100)
     TC_t* processed_frame;
     processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t* test_association;
     // Deactivate SA 1
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
@@ -196,7 +193,6 @@ UTEST(PERFORMANCE, LSA_KMC_SHORT_100)
     sadb_routine->sadb_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     sadb_routine->sadb_get_sa_from_spi(10, &test_association);
-    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     // Convert hex to binary
@@ -270,8 +266,7 @@ UTEST(PERFORMANCE, LSA_LIBG_MED_100)
     TC_t* processed_frame;
     processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t* test_association;
     // Deactivate SA 1
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
@@ -279,7 +274,6 @@ UTEST(PERFORMANCE, LSA_LIBG_MED_100)
     sadb_routine->sadb_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     sadb_routine->sadb_get_sa_from_spi(10, &test_association);
-    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
     // Convert hex to binary
     hex_conversion(data_h, &data_b, &data_l);
@@ -350,8 +344,7 @@ UTEST(PERFORMANCE, LSA_KMC_MED_100)
     TC_t* processed_frame;
     processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t* test_association;
     // Deactivate SA 1
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
@@ -359,7 +352,6 @@ UTEST(PERFORMANCE, LSA_KMC_MED_100)
     sadb_routine->sadb_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     sadb_routine->sadb_get_sa_from_spi(10, &test_association);
-    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     // Convert hex to binary
@@ -433,8 +425,7 @@ UTEST(PERFORMANCE, LSA_LIBG_LONG_100)
     TC_t* processed_frame;
     processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t* test_association;
     // Deactivate SA 1
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
@@ -442,7 +433,6 @@ UTEST(PERFORMANCE, LSA_LIBG_LONG_100)
     sadb_routine->sadb_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     sadb_routine->sadb_get_sa_from_spi(10, &test_association);
-    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
     // Convert hex to binary
     hex_conversion(data_h, &data_b, &data_l);
@@ -513,8 +503,7 @@ UTEST(PERFORMANCE, LSA_KMC_LONG_100)
     TC_t* processed_frame;
     processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t* test_association;
     // Deactivate SA 1
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
@@ -522,7 +511,6 @@ UTEST(PERFORMANCE, LSA_KMC_LONG_100)
     sadb_routine->sadb_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     sadb_routine->sadb_get_sa_from_spi(10, &test_association);
-    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     // Convert hex to binary
@@ -596,8 +584,7 @@ UTEST(PERFORMANCE, LSA_LIBG_SHORT_1K)
     TC_t* processed_frame;
     processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t* test_association;
     // Deactivate SA 1
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
@@ -605,7 +592,6 @@ UTEST(PERFORMANCE, LSA_LIBG_SHORT_1K)
     sadb_routine->sadb_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     sadb_routine->sadb_get_sa_from_spi(10, &test_association);
-    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
     // Convert hex to binary
     hex_conversion(data_h, &data_b, &data_l);
@@ -674,8 +660,7 @@ UTEST(PERFORMANCE, LSA_KMC_SHORT_1K)
     TC_t* processed_frame;
     processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t* test_association;
     // Deactivate SA 1
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
@@ -683,7 +668,6 @@ UTEST(PERFORMANCE, LSA_KMC_SHORT_1K)
     sadb_routine->sadb_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     sadb_routine->sadb_get_sa_from_spi(10, &test_association);
-    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     // Convert hex to binary
@@ -757,8 +741,7 @@ UTEST(PERFORMANCE, LSA_LIBG_MED_1K)
     TC_t* processed_frame;
     processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t* test_association;
     // Deactivate SA 1
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
@@ -766,7 +749,6 @@ UTEST(PERFORMANCE, LSA_LIBG_MED_1K)
     sadb_routine->sadb_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     sadb_routine->sadb_get_sa_from_spi(10, &test_association);
-    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
     // Convert hex to binary
     hex_conversion(data_h, &data_b, &data_l);
@@ -837,8 +819,7 @@ UTEST(PERFORMANCE, LSA_KMC_MED_1K)
     TC_t* processed_frame;
     processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t* test_association;
     // Deactivate SA 1
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
@@ -846,7 +827,6 @@ UTEST(PERFORMANCE, LSA_KMC_MED_1K)
     sadb_routine->sadb_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     sadb_routine->sadb_get_sa_from_spi(10, &test_association);
-    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     // Convert hex to binary
@@ -920,8 +900,7 @@ UTEST(PERFORMANCE, LSA_LIBG_LONG_1K)
     TC_t* processed_frame;
     processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t* test_association;
     // Deactivate SA 1
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
@@ -929,7 +908,6 @@ UTEST(PERFORMANCE, LSA_LIBG_LONG_1K)
     sadb_routine->sadb_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     sadb_routine->sadb_get_sa_from_spi(10, &test_association);
-    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
     // Convert hex to binary
     hex_conversion(data_h, &data_b, &data_l);
@@ -1000,16 +978,13 @@ UTEST(PERFORMANCE, LSA_KMC_LONG_1K)
     TC_t* processed_frame;
     processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t* test_association;;
     // Deactivate SA 1
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 10
     sadb_routine->sadb_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
-    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     // Convert hex to binary
