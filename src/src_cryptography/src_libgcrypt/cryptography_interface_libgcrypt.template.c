@@ -30,13 +30,13 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
                                          SecurityAssociation_t* sa_ptr,
-                                         uint8_t* iv, uint32_t iv_len,uint8_t* ecs, uint8_t padding);
+                                         uint8_t* iv, uint32_t iv_len,uint8_t* ecs, uint8_t padding, char* cam_cookies);
 static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
                                          SecurityAssociation_t* sa_ptr, 
                                          uint8_t* iv, uint32_t iv_len,
-                                         uint8_t* ecs, uint8_t* acs);
+                                         uint8_t* ecs, uint8_t* acs, char* cam_cookies);
 static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -44,7 +44,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
-                                         uint8_t ecs, uint8_t acs);
+                                         uint8_t ecs, uint8_t acs, char* cam_cookies);
 static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -52,7 +52,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
-                                         uint8_t ecs, uint8_t acs);
+                                         uint8_t ecs, uint8_t acs, char* cam_cookies);
 static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -61,7 +61,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t encrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs);
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs, char* cam_cookies);
 static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -70,7 +70,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t decrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs);
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs, char* cam_cookies);
 static int32_t cryptography_get_acs_algo(int8_t algo_enum);
 static int32_t cryptography_get_ecs_algo(int8_t algo_enum);
 static int32_t cryptography_get_ecs_mode(int8_t algo_enum);
@@ -567,7 +567,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
-                                         uint8_t ecs, uint8_t acs)
+                                         uint8_t ecs, uint8_t acs, char* cam_cookies)
 { 
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     gcry_mac_hd_t tmp_mac_hd;
@@ -590,6 +590,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
     // Using to fix warning
     len_data_out = len_data_out;
     ecs = ecs;
+    cam_cookies = cam_cookies;
 
     // Select correct libgcrypt acs enum
     int32_t algo = cryptography_get_acs_algo(acs);
@@ -685,7 +686,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
-                                         uint8_t ecs, uint8_t acs)
+                                         uint8_t ecs, uint8_t acs, char* cam_cookies)
 { 
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     gcry_mac_hd_t tmp_mac_hd;
@@ -708,6 +709,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     // Using to fix warning
     len_data_out = len_data_out;
     ecs = ecs;
+    cam_cookies = cam_cookies;
 
     // Select correct libgcrypt acs enum
     int32_t algo = cryptography_get_acs_algo(acs);
@@ -838,7 +840,7 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
                                          SecurityAssociation_t* sa_ptr,
-                                         uint8_t* iv, uint32_t iv_len,uint8_t* ecs, uint8_t padding)
+                                         uint8_t* iv, uint32_t iv_len,uint8_t* ecs, uint8_t padding, char* cam_cookies)
 {
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     gcry_cipher_hd_t tmp_hd;
@@ -848,6 +850,7 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
     data_out = data_out;        // TODO:  Look into tailoring these out, as they're not used or needed.
     len_data_out = len_data_out;
     padding = padding;
+    cam_cookies = cam_cookies;
 
     if(sa_ptr != NULL) //Using SA key pointer
     {
@@ -972,7 +975,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t encrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs)
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs, char* cam_cookies)
 {
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     gcry_cipher_hd_t tmp_hd;
@@ -981,6 +984,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
 
     // Fix warning
     acs = acs;
+    cam_cookies = cam_cookies;
 
     if(sa_ptr != NULL) //Using SA key pointer
     {
@@ -1153,7 +1157,7 @@ static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* key, uint32_t len_key,
                                          SecurityAssociation_t* sa_ptr, 
                                          uint8_t* iv, uint32_t iv_len,
-                                         uint8_t* ecs, uint8_t* acs)
+                                         uint8_t* ecs, uint8_t* acs, char* cam_cookies)
 {
     gcry_cipher_hd_t tmp_hd;
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
@@ -1162,6 +1166,7 @@ static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
     
     // Fix warnings
     acs = acs;
+    cam_cookies = cam_cookies;
 
     if(sa_ptr != NULL) //Using SA key pointer
     {
@@ -1250,7 +1255,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t decrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs)
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs, char* cam_cookies)
 {
     gcry_cipher_hd_t tmp_hd;
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
@@ -1259,6 +1264,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
     
     // Fix warnings
     acs = acs;
+    cam_cookies = cam_cookies;
 
     if(sa_ptr != NULL) //Using SA key pointer
     {

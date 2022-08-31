@@ -37,13 +37,13 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
                                          SecurityAssociation_t* sa_ptr,
-                                         uint8_t* iv, uint32_t iv_len,uint8_t* ecs, uint8_t padding);
+                                         uint8_t* iv, uint32_t iv_len,uint8_t* ecs, uint8_t padding, char* cam_cookies);
 static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
                                          SecurityAssociation_t* sa_ptr, 
                                          uint8_t* iv, uint32_t iv_len,
-                                         uint8_t* ecs, uint8_t* acs);
+                                         uint8_t* ecs, uint8_t* acs, char* cam_cookies);
 static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -51,7 +51,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
-                                         uint8_t ecs, uint8_t acs);
+                                         uint8_t ecs, uint8_t acs, char* cam_cookies);
 static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t len_data_out,
                                                     uint8_t* data_in, size_t len_data_in,
                                                     uint8_t* key, uint32_t len_key,
@@ -59,7 +59,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
                                                     uint8_t* iv, uint32_t iv_len,
                                                     uint8_t* mac, uint32_t mac_size,
                                                     uint8_t* aad, uint32_t aad_len,
-                                                    uint8_t ecs, uint8_t acs);
+                                                    uint8_t ecs, uint8_t acs, char* cam_cookies);
 static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -68,7 +68,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t encrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs);
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs, char* cam_cookies);
 static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -77,7 +77,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t decrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs);
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs, char* cam_cookies);
 static int32_t cryptography_get_acs_algo(int8_t algo_enum);
 static int32_t cryptography_get_ecs_algo(int8_t algo_enum);
 
@@ -85,7 +85,9 @@ static int32_t cryptography_get_ecs_algo(int8_t algo_enum);
 static int32_t get_auth_algorithm_from_acs(uint8_t acs_enum, const char** algo_ptr);
 
 // libcurl call back and support function declarations
-static void configure_curl_connect_opts(CURL* curl);
+static int32_t configure_curl_connect_opts(CURL* curl, char* cam_cookies);
+static int32_t handle_cam_cookies(CURL* curl,char* cam_cookies);
+static int32_t curl_response_error_check(CURL* curl, char* response);
 static size_t write_callback(void* data, size_t size, size_t nmemb, void* userp);
 static size_t read_callback(char* dest, size_t size, size_t nmemb, void* userp);
 static char* int_to_str(uint32_t int_src, uint32_t* converted_str_length);
@@ -101,7 +103,7 @@ static CURL* curl;
 struct curl_slist *http_headers_list;
 // KMC Crypto Service Endpoints
 static char* kmc_root_uri;
-static const char* status_endpoint = "key-info?keyRef=kmc/test/KEY0";
+//static const char* status_endpoint = "/status";
 static const char* encrypt_endpoint = "encrypt?keyRef=%s&transformation=%s&iv=%s";
 static const char* encrypt_offset_endpoint = "encrypt?keyRef=%s&transformation=%s&iv=%s&encryptOffset=%s&macLength=%s";
 static const char* decrypt_endpoint = "decrypt?metadata=keyLength:%s,keyRef:%s,cipherTransformation:%s,initialVector:%s,cryptoAlgorithm:%s,metadataType:EncryptionMetadata";
@@ -181,59 +183,60 @@ static int32_t cryptography_config(void)
                  cryptography_kmc_crypto_config->kmc_crypto_app_uri);
 
         free(port_str);
-        char* status_uri = (char*) malloc(strlen(kmc_root_uri)+strlen(status_endpoint) + 1);
-        status_uri[0] = '\0';
-        strcat(status_uri, kmc_root_uri);
-        strcat(status_uri, status_endpoint);
+        //KMC Crypto Service status check is impossible in certain CAM configs, commenting it out.
+        // Also, when this library is started up (EG by SDLS service), there's no guarantee the Crypto Service is available at config time.
+        //char* status_uri = (char*) malloc(strlen(kmc_root_uri)+strlen(status_endpoint) + 1);
+        //status_uri[0] = '\0';
+        //strcat(status_uri, kmc_root_uri);
+        //strcat(status_uri, status_endpoint);
 #ifdef DEBUG
         printf("Setting up cURL connection to KMC Crypto Service with Params:\n");
         printf("\tKMC Root URI: %s\n",kmc_root_uri);
-        printf("\tKMC Status URL: %s\n",status_uri);
+        //printf("\tKMC Status URL: %s\n",status_uri);
         //printf("\tPort: %d\n",cryptography_kmc_crypto_config->kmc_crypto_port);
         printf("\tSSL Client Cert: %s\n",cryptography_kmc_crypto_config->mtls_client_cert_path);
         printf("\tSSL Client Key: %s\n",cryptography_kmc_crypto_config->mtls_client_key_path);
         printf("\tSSL CA Bundle: %s\n",cryptography_kmc_crypto_config->mtls_ca_bundle);
 #endif
-        configure_curl_connect_opts(curl);
-        curl_easy_setopt(curl, CURLOPT_URL, status_uri);
+        //status = configure_curl_connect_opts(curl, NULL);
+        //if(status != CRYPTO_LIB_SUCCESS)
+        //{
+        //    return status;
+        //}
+        //curl_easy_setopt(curl, CURLOPT_URL, status_uri);
 
-        memory_write* chunk = calloc(1,MEMORY_WRITE_SIZE);
-        /* send all data to this function  */
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
-        /* we pass our 'chunk' struct to the callback function */
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void* )chunk);
+        //memory_write* chunk = calloc(1,MEMORY_WRITE_SIZE);
+        ///* send all data to this function  */
+        //curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+        ///* we pass our 'chunk' struct to the callback function */
+        //curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void* )chunk);
 
-        CURLcode res;
-        res = curl_easy_perform(curl);
+        //CURLcode res;
+        //res = curl_easy_perform(curl);
 
-        if(res != CURLE_OK) // This is not return code, this is successful response!
-        {
-            status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_CONNECTION_ERROR;
-            fprintf(stderr, "curl_easy_perform() failed: %s\n",
-                    curl_easy_strerror(res));
-            free(status_uri);
-            free(kmc_root_uri);
-            free(chunk);
-            return status;
-        }
+        //if(res != CURLE_OK) // This is not return code, this is successful response!
+        //{
+        //    status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_CONNECTION_ERROR;
+        //    fprintf(stderr, "curl_easy_perform() failed: %s\n",
+        //            curl_easy_strerror(res));
+        //    free(status_uri);
+        //    free(kmc_root_uri);
+        //    return status;
+        //}
 
-        if(chunk->response == NULL) // No response, possibly because service is CAM secured.
-        {
-            status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_EMPTY_RESPONSE;
-            fprintf(stderr, "curl_easy_perform() unexpected empty response: \n%s\n",
-                    "Empty Crypto Service response can be caused by CAM security, CryptoLib doesn't support a CAM secured KMC Crypto Service.");
-            free(status_uri);
-            free(kmc_root_uri);
-            free(chunk);
-            return status;
-        }
+        //if(chunk->response == NULL) // No response, possibly because service is CAM secured.
+        //{
+        //    status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_EMPTY_RESPONSE;
+        //    fprintf(stderr, "curl_easy_perform() unexpected empty response: \n%s\n",
+        //            "Empty Crypto Service response can be caused by CAM security, is CAM configured?");
+        //    free(status_uri);
+        //    return status;
+        //}
 
-#ifdef DEBUG
-        printf("cURL response:\n\t %s\n",chunk->response);
-#endif
-    free(status_uri);
-    free(chunk->response);
-    free(chunk);
+//#ifdef DEBUG
+//        printf("cURL response:\n\t %s\n",chunk->response);
+//#endif
+        //free(status_uri);
     }
     return status;
 }
@@ -280,7 +283,7 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
                                          SecurityAssociation_t* sa_ptr,
-                                         uint8_t* iv, uint32_t iv_len,uint8_t* ecs, uint8_t padding)
+                                         uint8_t* iv, uint32_t iv_len,uint8_t* ecs, uint8_t padding, char* cam_cookies)
 { 
     int32_t status = CRYPTO_LIB_SUCCESS;
     key = key; // Direct key input is not supported in KMC interface
@@ -293,8 +296,11 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
     }
 
     curl_easy_reset(curl);
-    configure_curl_connect_opts(curl);
-
+    status = configure_curl_connect_opts(curl, cam_cookies);
+    if(status != CRYPTO_LIB_SUCCESS)
+    {
+        return status;
+    }
     // Base64 URL encode IV for KMC REST Encrypt
     char* iv_base64 = (char*)calloc(1,B64ENCODE_OUT_SAFESIZE(iv_len)+1);
     base64urlEncode(iv,iv_len,iv_base64,NULL);
@@ -369,15 +375,9 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
         return status;
     }
 
-#ifdef DEBUG
-    printf("\ncURL Encrypt Response:\n\t %s\n",chunk_write->response);
-#endif
-
-    if(chunk_write->response == NULL) // No response, possibly because service is CAM secured.
+    status = curl_response_error_check(curl, chunk_write->response);
+    if(status != CRYPTO_LIB_SUCCESS)
     {
-        status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_EMPTY_RESPONSE;
-        fprintf(stderr, "curl_easy_perform() unexpected empty response: \n%s\n",
-                "Empty Crypto Service response can be caused by CAM security, CryptoLib doesn't support a CAM secured KMC Crypto Service.");
         return status;
     }
 
@@ -478,7 +478,7 @@ static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* key, uint32_t len_key,
                                          SecurityAssociation_t* sa_ptr, 
                                          uint8_t* iv, uint32_t iv_len,
-                                         uint8_t* ecs, uint8_t* acs)
+                                         uint8_t* ecs, uint8_t* acs, char* cam_cookies)
 {int32_t status = CRYPTO_LIB_SUCCESS;
     key = key; // Direct key input is not supported in KMC interface
     ecs = ecs;
@@ -491,8 +491,11 @@ static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
     char* key_len_in_bits_str = int_to_str(key_len_in_bits, &key_len_in_bits);
 
     curl_easy_reset(curl);
-    configure_curl_connect_opts(curl);
-
+    status = configure_curl_connect_opts(curl, cam_cookies);
+    if(status != CRYPTO_LIB_SUCCESS)
+    {
+        return status;
+    }
     // Base64 URL encode IV for KMC REST Encrypt
     char* iv_base64 = (char*)calloc(1,B64ENCODE_OUT_SAFESIZE(iv_len)+1);
     base64urlEncode(iv,iv_len,iv_base64,NULL);
@@ -568,15 +571,9 @@ static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
         return status;
     }
 
-#ifdef DEBUG
-    printf("\ncURL Decrypt Response:\n\t %s\n",chunk_write->response);
-#endif
-
-    if(chunk_write->response == NULL) // No response, possibly because service is CAM secured.
+    status = curl_response_error_check(curl, chunk_write->response);
+    if(status != CRYPTO_LIB_SUCCESS)
     {
-        status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_EMPTY_RESPONSE;
-        fprintf(stderr, "curl_easy_perform() unexpected empty response: \n%s\n",
-                "Empty Crypto Service response can be caused by CAM security, CryptoLib doesn't support a CAM secured KMC Crypto Service.");
         return status;
     }
 
@@ -680,7 +677,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
-                                         uint8_t ecs, uint8_t acs)
+                                         uint8_t ecs, uint8_t acs, char* cam_cookies)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
@@ -693,8 +690,11 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
     ecs = ecs;
     
     curl_easy_reset(curl);
-    configure_curl_connect_opts(curl);
-
+    status = configure_curl_connect_opts(curl, cam_cookies);
+    if(status != CRYPTO_LIB_SUCCESS)
+    {
+        return status;
+    }
     // Base64 URL encode IV for KMC REST Encrypt
     // Not needed for CMAC/HMAC (only supported auth ciphers now)
 //    char* iv_base64 = (char*)calloc(1,B64ENCODE_OUT_SAFESIZE(iv_len)+1);
@@ -779,18 +779,11 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
         return status;
     }
 
-#ifdef DEBUG
-    printf("\ncURL Authenticate Response:\n\t %s\n",chunk_write->response);
-#endif
-
-    if(chunk_write->response == NULL) // No response, possibly because service is CAM secured.
+    status = curl_response_error_check(curl, chunk_write->response);
+    if(status != CRYPTO_LIB_SUCCESS)
     {
-        status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_EMPTY_RESPONSE;
-        fprintf(stderr, "curl_easy_perform() unexpected empty response: \n%s\n",
-                "Empty Crypto Service response can be caused by CAM security, CryptoLib doesn't support a CAM secured KMC Crypto Service.");
         return status;
     }
-
 
     /* JSON Response Handling */
 
@@ -924,7 +917,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
                                                     uint8_t* iv, uint32_t iv_len,
                                                     uint8_t* mac, uint32_t mac_size,
                                                     uint8_t* aad, uint32_t aad_len,
-                                                    uint8_t ecs, uint8_t acs)
+                                                    uint8_t ecs, uint8_t acs, char* cam_cookies)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
@@ -951,8 +944,11 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     }
 
     curl_easy_reset(curl);
-    configure_curl_connect_opts(curl);
-
+    status = configure_curl_connect_opts(curl, cam_cookies);
+    if(status != CRYPTO_LIB_SUCCESS)
+    {
+        return status;
+    }
     uint8_t* auth_payload = aad;
     size_t auth_payload_len = aad_len;
 
@@ -1033,15 +1029,9 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
         return status;
     }
 
-#ifdef DEBUG
-    printf("\ncURL Authenticate Response:\n\t %s\n",chunk_write->response);
-#endif
-
-    if(chunk_write->response == NULL) // No response, possibly because service is CAM secured.
+    status = curl_response_error_check(curl, chunk_write->response);
+    if(status != CRYPTO_LIB_SUCCESS)
     {
-        status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_EMPTY_RESPONSE;
-        fprintf(stderr, "curl_easy_perform() unexpected empty response: \n%s\n",
-                "Empty Crypto Service response can be caused by CAM security, CryptoLib doesn't support a CAM secured KMC Crypto Service.");
         return status;
     }
 
@@ -1131,7 +1121,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t encrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs)
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs, char* cam_cookies)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     key = key; // Direct key input is not supported in KMC interface
@@ -1140,8 +1130,11 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     acs = acs;
 
     curl_easy_reset(curl);
-    configure_curl_connect_opts(curl);
-
+    status = configure_curl_connect_opts(curl, cam_cookies);
+    if(status != CRYPTO_LIB_SUCCESS)
+    {
+        return status;
+    }
     // Base64 URL encode IV for KMC REST Encrypt
     char* iv_base64 = (char*)calloc(1,B64ENCODE_OUT_SAFESIZE(iv_len)+1);
     base64urlEncode(iv,iv_len,iv_base64,NULL);
@@ -1180,6 +1173,9 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
 
         free(aad_offset_str);
         free(mac_size_str);
+#ifdef DEBUG
+        printf("KMC ROOT URI: %s\n",kmc_root_uri);
+#endif
         encrypt_uri = (char*) malloc(strlen(kmc_root_uri)+len_encrypt_endpoint);
         encrypt_uri[0] = '\0';
         strcat(encrypt_uri, kmc_root_uri);
@@ -1269,16 +1265,9 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
         return status;
     }
 
-#ifdef DEBUG
-    printf("\ncURL Encrypt Response:\n\t %s\n",chunk_write->response);
-#endif
-
-    if(chunk_write->response == NULL) // No response, possibly because service is CAM secured.
+    status = curl_response_error_check(curl, chunk_write->response);
+    if(status != CRYPTO_LIB_SUCCESS)
     {
-        status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_EMPTY_RESPONSE;
-        fprintf(stderr, "curl_easy_perform() unexpected empty response: \n%s\n",
-                "Empty Crypto Service response can be caused by CAM security, CryptoLib doesn't support a CAM secured KMC Crypto Service.");
-
         free(iv_base64);
         free(encrypt_uri);
         free(chunk_write);
@@ -1425,7 +1414,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t decrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs)
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs, char* cam_cookies)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     key = key; // Direct key input is not supported in KMC interface
@@ -1441,7 +1430,11 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
 
 
     curl_easy_reset(curl);
-    configure_curl_connect_opts(curl);
+    status = configure_curl_connect_opts(curl, cam_cookies);
+    if(status != CRYPTO_LIB_SUCCESS)
+    {
+        return status;
+    }
 
     // Base64 URL encode IV for KMC REST Encrypt
     char* iv_base64 = (char*)calloc(1,B64ENCODE_OUT_SAFESIZE(iv_len)+1);
@@ -1576,11 +1569,8 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
         return status;
     }
 
-#ifdef DEBUG
-    printf("\ncURL Decrypt Response:\n\t %s\n",chunk_write->response);
-#endif
-
-    if(chunk_write->response == NULL) // No response, possibly because service is CAM secured.
+    status = curl_response_error_check(curl, chunk_write->response);
+    if(status != CRYPTO_LIB_SUCCESS)
     {
         status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_EMPTY_RESPONSE;
         fprintf(stderr, "curl_easy_perform() unexpected empty response: \n%s\n",
@@ -1783,8 +1773,16 @@ static size_t read_callback(char* dest, size_t size, size_t nmemb, void* userp)
     return 0; /* no more data left to deliver */
 }
 
-static void configure_curl_connect_opts(CURL* curl_handle)
+static int32_t configure_curl_connect_opts(CURL* curl_handle, char* cam_cookies)
 {
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    status = handle_cam_cookies(curl_handle, cam_cookies);
+    if(status != CRYPTO_LIB_SUCCESS)
+    {
+        return status;
+    }
+
     //curl_easy_setopt(curl_handle, CURLOPT_PROTOCOLS,CURLPROTO_HTTPS); // use default CURLPROTO_ALL
 #ifdef DEBUG
     printf("KMC Crypto Port: %d\n",cryptography_kmc_crypto_config->kmc_crypto_port);
@@ -1826,7 +1824,45 @@ static void configure_curl_connect_opts(CURL* curl_handle)
         curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYHOST, 0L);
         curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 0L);
     }
+
+    return status;
 }
+
+static int32_t handle_cam_cookies(CURL* curl_handle, char* cam_cookies)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    if(cam_config != NULL)
+    {
+        if(cam_config->cam_enabled)
+        {
+            if(cam_cookies != NULL) // cam_cookies passed in should ALWAYS take precedence in what's used
+            {
+                curl_easy_setopt(curl_handle, CURLOPT_COOKIE, cam_cookies);
+                return status;
+            }
+
+            if(cam_config->cookie_file_path == NULL) // all auth methods rely on cookie file sets/gets, error if null
+            {
+                status = CAM_INVALID_COOKIE_FILE_CONFIGURATION_NULL;
+                return status;
+            }
+            else
+            {
+                curl_easy_setopt(curl_handle, CURLOPT_COOKIEFILE, cam_config->cookie_file_path);
+            }
+
+            if(cam_config->login_method == CAM_LOGIN_KERBEROS || cam_config->login_method == CAM_LOGIN_KEYTAB_FILE)
+            {
+                // todo - implement KERBEROS & KEYTAB_FILE CAM auth token handles.
+                status = CAM_CONFIG_NOT_SUPPORTED_ERROR;
+                return status;
+            }
+        }
+    }
+    return status;
+}
+
 static char* int_to_str(uint32_t int_src, uint32_t* converted_str_length)
 {
     int int_str_len = snprintf( NULL, 0, "%d", int_src);
@@ -1845,6 +1881,51 @@ static int jsoneq(const char* json, jsmntok_t* tok, const char* s)
         return 0;
     }
     return -1;
+}
+
+int32_t curl_response_error_check(CURL* curl_handle, char* response)
+{
+    int32_t response_status = CRYPTO_LIB_SUCCESS;
+
+    long response_code;
+    curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &response_code);
+
+#ifdef DEBUG
+    printf("cURL response code: %ld\n",response_code);
+#endif
+
+    if(response_code == 302) // redirected
+    {
+        if(cam_config != NULL)
+        {
+            if(cam_config->cam_enabled) // redirect with cam enabled means auth failure
+            {
+                response_status = CAM_AUTHENTICATION_FAILURE_REDIRECT;
+                return response_status;
+            }
+        }
+    }
+
+    if(response_code != 200) // unhandled error case
+    {
+        response_status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE;
+        return response_status;
+    }
+
+#ifdef DEBUG
+    printf("\ncURL Response Body:\n\t %s\n", response);
+#endif
+
+    if(response == NULL) // No response, possibly because service is CAM secured.
+    {
+        response_status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_EMPTY_RESPONSE;
+        fprintf(stderr, "curl_easy_perform() unexpected empty response: \n%s\n",
+                "Empty Crypto Service response can be caused by CAM security, is CAM configured?");
+        return response_status;
+    }
+
+    return response_status;
+
 }
 
 /**
