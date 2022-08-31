@@ -70,7 +70,7 @@ extern int32_t Crypto_Config_Kmc_Crypto_Service(char* protocol, char* kmc_crypto
                                                 uint8_t kmc_ignore_ssl_hostname_validation, char* mtls_client_cert_path,
                                                 char* mtls_client_cert_type, char* mtls_client_key_path,
                                                 char* mtls_client_key_pass, char* mtls_issuer_cert);
-extern int32_t Crypto_Config_Cam(uint8_t cam_enabled, char* cookie_file_path, char* keytab_file_path, uint8_t login_method);
+extern int32_t Crypto_Config_Cam(uint8_t cam_enabled, char* cookie_file_path, char* keytab_file_path, uint8_t login_method, char* access_manager_uri, char* username, char* cam_home);
 extern int32_t Crypto_Config_Add_Gvcid_Managed_Parameter(uint8_t tfvn, uint16_t scid, uint8_t vcid, uint8_t has_fecf,
                                                          uint8_t has_segmentation_hdr, uint16_t max_tc_frame_size);
 

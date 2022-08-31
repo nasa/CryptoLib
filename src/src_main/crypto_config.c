@@ -326,7 +326,7 @@ int32_t Crypto_Config_Kmc_Crypto_Service(char* protocol, char* kmc_crypto_hostna
  * @param login_method: uint8_t
  * @return int32_t: Success/Failure
 **/
-int32_t Crypto_Config_Cam(uint8_t cam_enabled, char* cookie_file_path, char* keytab_file_path, uint8_t login_method)
+int32_t Crypto_Config_Cam(uint8_t cam_enabled, char* cookie_file_path, char* keytab_file_path, uint8_t login_method, char* access_manager_uri, char* username, char* cam_home)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     cam_config = (CamConfig_t*)calloc(1,CAM_CONFIG_SIZE);
@@ -334,6 +334,9 @@ int32_t Crypto_Config_Cam(uint8_t cam_enabled, char* cookie_file_path, char* key
     cam_config->cookie_file_path = crypto_deep_copy_string(cookie_file_path);
     cam_config->keytab_file_path = crypto_deep_copy_string(keytab_file_path);
     cam_config->login_method = login_method;
+    cam_config->access_manager_uri = crypto_deep_copy_string(access_manager_uri);
+    cam_config->username = crypto_deep_copy_string(username);
+    cam_config->cam_home = crypto_deep_copy_string(cam_home);
 
     return status;
 }
@@ -422,7 +425,9 @@ int32_t crypto_free_config_structs(void)
     {
         free(cam_config->cookie_file_path);
         free(cam_config->keytab_file_path);
-        free(cam_config->cam_cookies);
+        free(cam_config->access_manager_uri);
+        free(cam_config->username);
+        free(cam_config->cam_home);
         free(cam_config);
         cam_config=NULL;
     }

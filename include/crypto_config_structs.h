@@ -201,7 +201,9 @@ typedef struct
     uint8_t cam_enabled;
     char* cookie_file_path;
     char* keytab_file_path;
-    char* cam_cookies;
+    char* access_manager_uri;
+    char* username;
+    char* cam_home;
     uint8_t login_method;
 
 } CamConfig_t;
