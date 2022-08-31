@@ -1572,9 +1572,6 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
     status = curl_response_error_check(curl, chunk_write->response);
     if(status != CRYPTO_LIB_SUCCESS)
     {
-        status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_EMPTY_RESPONSE;
-        fprintf(stderr, "curl_easy_perform() unexpected empty response: \n%s\n",
-                "Empty Crypto Service response can be caused by CAM security, CryptoLib doesn't support a CAM secured KMC Crypto Service.");
         free(decrypt_payload);
         free(decrypt_uri);
         free(iv_base64);
