@@ -34,4 +34,4 @@ CREATE TABLE IF NOT EXISTS security_associations
   ,arsnw SMALLINT NOT NULL DEFAULT 0 -- ARSNW_SIZE=1
 );
 
-create unique index if not exists main_spi on security_associations (spi,scid,vcid,tfvn,mapid);
+create unique index if not exists main_spi on security_associations (spi,scid);
