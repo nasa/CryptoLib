@@ -27,6 +27,8 @@
 // JSON marshalling libraries
 #include "jsmn.h"
 
+#define CAM_MAX_AUTH_RETRIES 2
+
 // Cryptography Interface Initialization & Management Functions
 static int32_t cryptography_config(void);
 static int32_t cryptography_init(void);
@@ -83,6 +85,9 @@ static int32_t cryptography_get_ecs_algo(int8_t algo_enum);
 
 //Local support functions
 static int32_t get_auth_algorithm_from_acs(uint8_t acs_enum, const char** algo_ptr);
+static int32_t get_cam_sso_token(void);
+static int32_t initialize_kerberos_keytab_file_login(void);
+static int32_t curl_perform_with_cam_retries(CURL* curl_handle,char* response);
 
 // libcurl call back and support function declarations
 static int32_t configure_curl_connect_opts(CURL* curl, char* cam_cookies);
@@ -110,6 +115,9 @@ static const char* decrypt_endpoint = "decrypt?metadata=keyLength:%s,keyRef:%s,c
 static const char* decrypt_offset_endpoint = "decrypt?metadata=keyLength:%s,keyRef:%s,cipherTransformation:%s,initialVector:%s,cryptoAlgorithm:%s,macLength:%s,metadataType:EncryptionMetadata,encryptOffset:%s";
 static const char* icv_create_endpoint = "icv-create?keyRef=%s";
 static const char* icv_verify_endpoint = "icv-verify?metadata=integrityCheckValue:%s,keyRef:%s,cryptoAlgorithm:%s,macLength:%s,metadataType:IntegrityCheckMetadata";
+
+// CAM Security Endpoints
+static const char* cam_kerberos_uri = "%s/cam-api/ssoToken?loginMethod=kerberos";
 
 // Supported KMC Cipher Transformation Strings
 static const char* AES_GCM_TRANSFORMATION="AES/GCM/NoPadding";
@@ -278,7 +286,6 @@ static int32_t cryptography_shutdown(void)
     return CRYPTO_LIB_SUCCESS;
 }
 
-// TODO:  Set this up to work properly.
 static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -364,18 +371,7 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
     printf("\n");
 #endif
 
-    CURLcode res;
-    res = curl_easy_perform(curl);
-
-    if(res != CURLE_OK) // This is not return code, this is successful response!
-    {
-        status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_AEAD_ENCRYPT_ERROR;
-        fprintf(stderr, "curl_easy_perform() failed: %s\n",
-                curl_easy_strerror(res));
-        return status;
-    }
-
-    status = curl_response_error_check(curl, chunk_write->response);
+    status = curl_perform_with_cam_retries(curl, chunk_write->response);
     if(status != CRYPTO_LIB_SUCCESS)
     {
         return status;
@@ -560,18 +556,7 @@ static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
     printf("\n");
 #endif
 
-    CURLcode res;
-    res = curl_easy_perform(curl);
-
-    if(res != CURLE_OK) // This is not return code, this is successful response!
-    {
-        status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_DECRYPT_ERROR;
-        fprintf(stderr, "curl_easy_perform() failed: %s\n",
-                curl_easy_strerror(res));
-        return status;
-    }
-
-    status = curl_response_error_check(curl, chunk_write->response);
+    status = curl_perform_with_cam_retries(curl, chunk_write->response);
     if(status != CRYPTO_LIB_SUCCESS)
     {
         return status;
@@ -768,18 +753,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
     printf("\n");
 #endif
 
-    CURLcode res;
-    res = curl_easy_perform(curl);
-
-    if(res != CURLE_OK) // This is not return code, this is successful response!
-    {
-        status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_AUTHENTICATION_ERROR;
-        fprintf(stderr, "curl_easy_perform() failed: %s\n",
-                curl_easy_strerror(res));
-        return status;
-    }
-
-    status = curl_response_error_check(curl, chunk_write->response);
+    status = curl_perform_with_cam_retries(curl, chunk_write->response);
     if(status != CRYPTO_LIB_SUCCESS)
     {
         return status;
@@ -1018,18 +992,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     printf("\n");
 #endif
 
-    CURLcode res;
-    res = curl_easy_perform(curl);
-
-    if(res != CURLE_OK) // This is not return code, this is successful response!
-    {
-        status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_AUTHENTICATION_ERROR;
-        fprintf(stderr, "curl_easy_perform() failed: %s\n",
-                curl_easy_strerror(res));
-        return status;
-    }
-
-    status = curl_response_error_check(curl, chunk_write->response);
+    status = curl_perform_with_cam_retries(curl, chunk_write->response);
     if(status != CRYPTO_LIB_SUCCESS)
     {
         return status;
@@ -1249,23 +1212,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     printf("\n");
 #endif
 
-    CURLcode res;
-    res = curl_easy_perform(curl);
-
-    if(res != CURLE_OK) // This is not return code, this is successful response!
-    {
-        status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_AEAD_ENCRYPT_ERROR;
-        fprintf(stderr, "curl_easy_perform() failed: %s\n",
-                curl_easy_strerror(res));
-        free(iv_base64);
-        free(encrypt_uri);
-        free(chunk_write);
-        free(chunk_read);
-        free(encrypt_payload);
-        return status;
-    }
-
-    status = curl_response_error_check(curl, chunk_write->response);
+    status = curl_perform_with_cam_retries(curl,chunk_write->response);
     if(status != CRYPTO_LIB_SUCCESS)
     {
         free(iv_base64);
@@ -1555,21 +1502,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
     printf("\n");
 #endif
 
-    CURLcode res;
-    res = curl_easy_perform(curl);
-
-    if(res != CURLE_OK) // This is not return code, this is successful response!
-    {
-        status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_AEAD_DECRYPT_ERROR;
-        fprintf(stderr, "curl_easy_perform() failed: %s\n",
-                curl_easy_strerror(res));
-        free(decrypt_payload);
-        free(decrypt_uri);
-        free(iv_base64);
-        return status;
-    }
-
-    status = curl_response_error_check(curl, chunk_write->response);
+    status = curl_perform_with_cam_retries(curl, chunk_write->response);
     if(status != CRYPTO_LIB_SUCCESS)
     {
         free(decrypt_payload);
@@ -1849,14 +1782,111 @@ static int32_t handle_cam_cookies(CURL* curl_handle, char* cam_cookies)
                 curl_easy_setopt(curl_handle, CURLOPT_COOKIEFILE, cam_config->cookie_file_path);
             }
 
-            if(cam_config->login_method == CAM_LOGIN_KERBEROS || cam_config->login_method == CAM_LOGIN_KEYTAB_FILE)
+            if(cam_config->login_method == CAM_LOGIN_KEYTAB_FILE)
             {
-                // todo - implement KERBEROS & KEYTAB_FILE CAM auth token handles.
+                // todo - KEYTAB_FILE CAM auth token handles.
                 status = CAM_CONFIG_NOT_SUPPORTED_ERROR;
                 return status;
             }
         }
     }
+    return status;
+}
+
+static int32_t get_cam_sso_token()
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    CURL* curl_cam;
+    CURLcode res;
+
+    if(cam_config->login_method == CAM_LOGIN_KEYTAB_FILE)
+    {
+        status = initialize_kerberos_keytab_file_login();
+        if(status != CRYPTO_LIB_SUCCESS)
+        {
+            return status;
+        }
+    }
+
+    curl_cam = curl_easy_init();
+
+    if(curl_cam == NULL)
+    {
+        status = CRYPTOGRAPHY_KMC_CURL_INITIALIZATION_FAILURE;
+        return status;
+    }
+
+    // Set CA verification options for curl_cam handle from KMC Crypto Configs...
+    if(cryptography_kmc_crypto_config->mtls_ca_bundle != NULL){
+        curl_easy_setopt(curl_cam, CURLOPT_CAINFO, cryptography_kmc_crypto_config->mtls_ca_bundle);
+    }
+    if(cryptography_kmc_crypto_config->mtls_ca_path != NULL){
+        curl_easy_setopt(curl_cam, CURLOPT_CAPATH, cryptography_kmc_crypto_config->mtls_ca_path);
+    }
+    if(cryptography_kmc_crypto_config->mtls_issuer_cert != NULL){
+        curl_easy_setopt(curl_cam, CURLOPT_ISSUERCERT, cryptography_kmc_crypto_config->mtls_issuer_cert);
+    }
+    if(cryptography_kmc_crypto_config->ignore_ssl_hostname_validation == CRYPTO_TRUE){
+        curl_easy_setopt(curl_cam, CURLOPT_SSL_VERIFYHOST, 0L);
+        curl_easy_setopt(curl_cam, CURLOPT_SSL_VERIFYPEER, 0L);
+    }
+
+    if(cam_config->access_manager_uri == NULL)
+    {
+        status = CAM_INVALID_CONFIGURATION_ACCESS_MANAGER_URI_NULL;
+        return status;
+    }
+
+    if(cam_config->cookie_file_path == NULL)
+    {
+        status = CAM_INVALID_COOKIE_FILE_CONFIGURATION_NULL;
+        return status;
+    }
+
+    curl_easy_setopt(curl_cam,CURLOPT_HTTPAUTH,CURLAUTH_NEGOTIATE);
+
+    if(cam_config->username != NULL)
+    {
+        curl_easy_setopt(curl_cam, CURLOPT_USERNAME, cam_config->username);
+    } else
+    {
+        curl_easy_setopt(curl_cam, CURLOPT_USERNAME, ":");
+    }
+
+    // Build the CAM getSsoToken URI
+    int len_kerberos_endpoint = strlen(cam_kerberos_uri) + strlen(cam_config->access_manager_uri);
+    char* kerberos_endpoint_final = (char*) malloc(len_kerberos_endpoint) + 1;
+    snprintf(kerberos_endpoint_final,len_kerberos_endpoint,cam_kerberos_uri,cam_config->access_manager_uri);
+
+#ifdef DEBUG
+    printf("CAM Kerberos Endpoint: %s\n",kerberos_endpoint_final);
+#endif
+    curl_easy_setopt(curl_cam,CURLOPT_URL,kerberos_endpoint_final);
+
+    memory_read* chunk_read = (memory_read*) calloc(1,MEMORY_READ_SIZE);;
+
+    /* Configure CURL for POST */
+    curl_easy_setopt(curl_cam, CURLOPT_POST, 1L);
+    /* send all data to this function  */
+    curl_easy_setopt(curl_cam, CURLOPT_READFUNCTION, read_callback);
+    /* we pass our 'chunk' struct to the callback function */
+    curl_easy_setopt(curl_cam, CURLOPT_READDATA, chunk_read);
+    curl_easy_setopt(curl_cam, CURLOPT_COOKIEJAR, cam_config->cookie_file_path);
+
+    res = curl_easy_perform(curl_cam);
+
+    if(res != CURLE_OK) // This is not return code, this is successful response that's unusable!
+    {
+        status = CAM_GET_SSO_TOKEN_FAILURE;
+        fprintf(stderr, "curl_easy_perform() failed: %s\n",
+                curl_easy_strerror(res));
+
+        //return status;
+    }
+
+    // Cookies don't write to COOKIEJAR until cleanup.
+    curl_easy_cleanup(curl_cam);
+    free(chunk_read);
     return status;
 }
 
@@ -1895,9 +1925,18 @@ int32_t curl_response_error_check(CURL* curl_handle, char* response)
     {
         if(cam_config != NULL)
         {
-            if(cam_config->cam_enabled) // redirect with cam enabled means auth failure
+            if(cam_config->cam_enabled && cam_config->login_method == CAM_LOGIN_NONE) // redirect with cam enabled and no auth method means auth failure
             {
                 response_status = CAM_AUTHENTICATION_FAILURE_REDIRECT;
+                return response_status;
+            } else if (cam_config->cam_enabled && (cam_config->login_method == CAM_LOGIN_KERBEROS || cam_config->login_method == CAM_LOGIN_KEYTAB_FILE))
+            {
+                response_status = CAM_AUTHENTICATION_REQUIRED;
+                return response_status;
+            }
+            else // CAM not enabled, but cam is configured and 302 received -- likely misconfiguration!
+            {
+                response_status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE;
                 return response_status;
             }
         }
@@ -1923,6 +1962,85 @@ int32_t curl_response_error_check(CURL* curl_handle, char* response)
 
     return response_status;
 
+}
+
+int32_t curl_perform_with_cam_retries(CURL* curl_handle,char* response)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    uint8_t cam_retry = 0;
+    while(cam_retry < CAM_MAX_AUTH_RETRIES)
+    {
+        CURLcode res;
+        res = curl_easy_perform(curl);
+
+        if(res != CURLE_OK) // This is not a response w/return code, this is something breaking!
+        {
+            status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE;
+            fprintf(stderr, "curl_easy_perform() failed: %s\n",
+                    curl_easy_strerror(res));
+            break; // Go to Post retry loop cleanup and return status.
+        }
+
+        status = curl_response_error_check(curl_handle, response);
+
+        if(status == CRYPTO_LIB_SUCCESS) // Crypto Service REST call worked! Break out of retry loop.
+        {
+            break;
+        }
+
+        if(status == CAM_AUTHENTICATION_REQUIRED) // CAM_AUTHENTICATION_REQUIRED code indicates CAM config setup for authentication
+        {
+#ifdef DEBUG
+            printf("Attempting to authenticate and retrieve CAM SSO Token.\n");
+#endif
+            status = get_cam_sso_token();
+        } else // Conditions not met for CAM retry! Break out of retry loop.
+        {
+            break;
+        }
+        cam_retry++;
+    }
+    return status;
+}
+
+/**
+ * @brief Function: initialize_kerberos_keytab_file_login
+ *
+ *  This function launches the kinit kerberos utility to initialize credentials for the current user.
+ *  It may be possible to do this with the KRB5 API, but for now all we are doing is launching the kinit utility.
+ *  Consider using the KRB5 APIs in a future release: https://web.mit.edu/kerberos/krb5-devel/doc/appdev/refs/api/index.html
+ *
+ *
+**/
+int32_t initialize_kerberos_keytab_file_login(void)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    if(cam_config->keytab_file_path == NULL)
+    {
+        status = CAM_INVALID_CONFIGURATION_KEYTAB_FILE_PATH_NULL;
+        return status;
+    }
+
+    if(cam_config->username == NULL)
+    {
+        status = CAM_INVALID_CONFIGURATION_KEYTAB_FILE_USERNAME_NULL;
+        return status;
+    }
+
+    // Build the kinit shell command with keytab file path + username
+    char* kinit_shell_command_base = "kinit -kt %s %s";
+    uint32_t len_kinit_shell_command = strlen(kinit_shell_command_base) + strlen(cam_config->keytab_file_path) + strlen(cam_config->username);
+    char* kinit_shell_command = malloc(len_kinit_shell_command) + 1;
+    snprintf(kinit_shell_command,len_kinit_shell_command,kinit_shell_command_base,cam_config->keytab_file_path,cam_config->username);
+
+    int32_t kinit_status = system(kinit_shell_command);
+    if(kinit_status != CRYPTO_LIB_SUCCESS)
+    {
+        status = CAM_KEYTAB_FILE_KINIT_FAILURE;
+    }
+
+    return status;
 }
 
 /**

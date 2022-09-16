@@ -119,6 +119,12 @@ char *crypto_enum_errlist_crypto_cam[] =
         "CAM_CONFIG_NOT_SUPPORTED_ERROR"
         ,"CAM_INVALID_COOKIE_FILE_CONFIGURATION_NULL"
         ,"CAM_AUTHENTICATION_FAILURE_REDIRECT"
+        ,"CAM_AUTHENTICATION_REQUIRED"
+        ,"CAM_GET_SSO_TOKEN_FAILURE"
+        ,"CAM_INVALID_CONFIGURATION_ACCESS_MANAGER_URI_NULL"
+        ,"CAM_INVALID_CONFIGURATION_KEYTAB_FILE_PATH_NULL"
+        ,"CAM_INVALID_CONFIGURATION_KEYTAB_FILE_USERNAME_NULL"
+        ,"CAM_KEYTAB_FILE_KINIT_FAILURE"
 };
 
 /*
@@ -130,7 +136,7 @@ char* Crypto_Get_Error_Code_Enum_String(int32_t crypto_error_code)
 {
     if(crypto_error_code >= 600) // CAM Error Codes
     {
-        if(crypto_error_code > 602)
+        if(crypto_error_code > 608)
         {
             return CRYPTO_UNDEFINED_ERROR;
         }
