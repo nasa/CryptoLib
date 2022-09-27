@@ -27,7 +27,19 @@
 // JSON marshalling libraries
 #include "jsmn.h"
 
-#define CAM_MAX_AUTH_RETRIES 2
+#define CAM_MAX_AUTH_RETRIES 4
+
+// libcurl call-back response handling Structures
+typedef struct {
+    char* response;
+    size_t size;
+} memory_write;
+#define MEMORY_WRITE_SIZE (sizeof(memory_write))
+typedef struct  {
+    char* response;
+    size_t size;
+} memory_read;
+#define MEMORY_READ_SIZE (sizeof(memory_read))
 
 // Cryptography Interface Initialization & Management Functions
 static int32_t cryptography_config(void);
@@ -87,7 +99,7 @@ static int32_t cryptography_get_ecs_algo(int8_t algo_enum);
 static int32_t get_auth_algorithm_from_acs(uint8_t acs_enum, const char** algo_ptr);
 static int32_t get_cam_sso_token(void);
 static int32_t initialize_kerberos_keytab_file_login(void);
-static int32_t curl_perform_with_cam_retries(CURL* curl_handle,char* response);
+static int32_t curl_perform_with_cam_retries(CURL* curl_handle,memory_write* chunk_write, memory_read* chunk_read);
 
 // libcurl call back and support function declarations
 static int32_t configure_curl_connect_opts(CURL* curl, char* cam_cookies);
@@ -128,19 +140,6 @@ static const char* AES_CMAC_TRANSFORMATION="AESCMAC";
 static const char* HMAC_SHA256="HmacSHA256";
 static const char* HMAC_SHA512="HmacSHA512";
 //static const char* AES_DES_CMAC_TRANSFORMATION="DESedeCMAC";
-
-
-// libcurl call-back response handling Structures
-typedef struct {
-    char* response;
-    size_t size;
-} memory_write;
-#define MEMORY_WRITE_SIZE (sizeof(memory_write))
-typedef struct  {
-    char* response;
-    size_t size;
-} memory_read;
-#define MEMORY_READ_SIZE (sizeof(memory_read))
 
 
 CryptographyInterface get_cryptography_interface_kmc_crypto_service(void)
@@ -371,7 +370,7 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
     printf("\n");
 #endif
 
-    status = curl_perform_with_cam_retries(curl, chunk_write->response);
+    status = curl_perform_with_cam_retries(curl, chunk_write, chunk_read);
     if(status != CRYPTO_LIB_SUCCESS)
     {
         return status;
@@ -556,7 +555,7 @@ static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
     printf("\n");
 #endif
 
-    status = curl_perform_with_cam_retries(curl, chunk_write->response);
+    status = curl_perform_with_cam_retries(curl, chunk_write, chunk_read);
     if(status != CRYPTO_LIB_SUCCESS)
     {
         return status;
@@ -753,7 +752,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
     printf("\n");
 #endif
 
-    status = curl_perform_with_cam_retries(curl, chunk_write->response);
+    status = curl_perform_with_cam_retries(curl, chunk_write, chunk_read);
     if(status != CRYPTO_LIB_SUCCESS)
     {
         return status;
@@ -992,7 +991,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     printf("\n");
 #endif
 
-    status = curl_perform_with_cam_retries(curl, chunk_write->response);
+    status = curl_perform_with_cam_retries(curl, chunk_write, chunk_read);
     if(status != CRYPTO_LIB_SUCCESS)
     {
         return status;
@@ -1212,7 +1211,15 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     printf("\n");
 #endif
 
-    status = curl_perform_with_cam_retries(curl,chunk_write->response);
+    status = curl_perform_with_cam_retries(curl,chunk_write,chunk_read);
+#ifdef DEBUG
+    printf("Curl Perform Final Status Code: %d\n",status);
+    if(chunk_write->response != NULL)
+    {
+        printf("Chunk Write Response Length: %ld\n", strlen(chunk_write->response));
+        printf("Chunk Write Response: %s\n", chunk_write->response);
+    }
+#endif
     if(status != CRYPTO_LIB_SUCCESS)
     {
         free(iv_base64);
@@ -1502,7 +1509,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
     printf("\n");
 #endif
 
-    status = curl_perform_with_cam_retries(curl, chunk_write->response);
+    status = curl_perform_with_cam_retries(curl, chunk_write, chunk_read);
     if(status != CRYPTO_LIB_SUCCESS)
     {
         free(decrypt_payload);
@@ -1779,14 +1786,10 @@ static int32_t handle_cam_cookies(CURL* curl_handle, char* cam_cookies)
             }
             else
             {
+#ifdef DEBUG
+                printf("Setting CURLOPT_COOKIEFILE: %s\n",cam_config->cookie_file_path);
+#endif
                 curl_easy_setopt(curl_handle, CURLOPT_COOKIEFILE, cam_config->cookie_file_path);
-            }
-
-            if(cam_config->login_method == CAM_LOGIN_KEYTAB_FILE)
-            {
-                // todo - KEYTAB_FILE CAM auth token handles.
-                status = CAM_CONFIG_NOT_SUPPORTED_ERROR;
-                return status;
             }
         }
     }
@@ -1884,8 +1887,23 @@ static int32_t get_cam_sso_token()
         //return status;
     }
 
+    long response_code;
+    curl_easy_getinfo(curl_cam, CURLINFO_RESPONSE_CODE, &response_code);
+#ifdef DEBUG
+    printf("Response Code From getSsoToken: %ld\n",response_code);
+#endif
+
+    if(response_code == 408) // CAM getSsoToken timeout error
+    {
+        status = CAM_KERBEROS_REQUEST_TIME_OUT;
+    }
+    else if(response_code != 200) //getSsoToken failed!
+    {
+        status = CAM_GET_SSO_TOKEN_FAILURE;
+    }
     // Cookies don't write to COOKIEJAR until cleanup.
     curl_easy_cleanup(curl_cam);
+    free(kerberos_endpoint_final);
     free(chunk_read);
     return status;
 }
@@ -1964,14 +1982,17 @@ int32_t curl_response_error_check(CURL* curl_handle, char* response)
 
 }
 
-int32_t curl_perform_with_cam_retries(CURL* curl_handle,char* response)
+int32_t curl_perform_with_cam_retries(CURL* curl_handle,memory_write* chunk_write, memory_read* chunk_read)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     uint8_t cam_retry = 0;
     while(cam_retry < CAM_MAX_AUTH_RETRIES)
     {
+#ifdef DEBUG
+        printf("Entering CAM Authentication Retry Loop, Loop #: %d\n",cam_retry);
+#endif
         CURLcode res;
-        res = curl_easy_perform(curl);
+        res = curl_easy_perform(curl_handle);
 
         if(res != CURLE_OK) // This is not a response w/return code, this is something breaking!
         {
@@ -1981,11 +2002,17 @@ int32_t curl_perform_with_cam_retries(CURL* curl_handle,char* response)
             break; // Go to Post retry loop cleanup and return status.
         }
 
-        status = curl_response_error_check(curl_handle, response);
+        status = curl_response_error_check(curl_handle, chunk_write->response);
 
         if(status == CRYPTO_LIB_SUCCESS) // Crypto Service REST call worked! Break out of retry loop.
         {
             break;
+        }
+        else
+        {
+            // Zero out chunk_write/chunk_read for next cURL perform call
+            memset(chunk_write,0,MEMORY_WRITE_SIZE);
+            memset(chunk_read,0,MEMORY_READ_SIZE);
         }
 
         if(status == CAM_AUTHENTICATION_REQUIRED) // CAM_AUTHENTICATION_REQUIRED code indicates CAM config setup for authentication
@@ -1994,11 +2021,32 @@ int32_t curl_perform_with_cam_retries(CURL* curl_handle,char* response)
             printf("Attempting to authenticate and retrieve CAM SSO Token.\n");
 #endif
             status = get_cam_sso_token();
+            if(status == CAM_KERBEROS_REQUEST_TIME_OUT)
+            {
+                //Non-fatal getSsoToken failure... Attempt CAM retry...
+            }
+            else if(status != CRYPTO_LIB_SUCCESS)
+            {
+                return status; // Fatal getSsoToken error, break
+            }
+            else if(status == CRYPTO_LIB_SUCCESS)
+            {
+                //Re-handle CAM cookie file, when cookie file is regenerated above, the existing curl_handle doesn't recognize it
+                status = handle_cam_cookies(curl_handle,NULL);
+            }
         } else // Conditions not met for CAM retry! Break out of retry loop.
         {
             break;
         }
         cam_retry++;
+        if(cam_retry == CAM_MAX_AUTH_RETRIES)
+        {
+            status = CAM_MAX_AUTH_RETRIES_REACHED;
+        }
+    }
+    if(status == CRYPTO_LIB_SUCCESS && chunk_write->response==NULL) // no error case detected, but invalid NULL response!
+    {
+        status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_EMPTY_RESPONSE;
     }
     return status;
 }
@@ -2035,11 +2083,15 @@ int32_t initialize_kerberos_keytab_file_login(void)
     snprintf(kinit_shell_command,len_kinit_shell_command,kinit_shell_command_base,cam_config->keytab_file_path,cam_config->username);
 
     int32_t kinit_status = system(kinit_shell_command);
+#ifdef DEBUG
+    printf("Kinit Status: %d\n", kinit_status);
+#endif
     if(kinit_status != CRYPTO_LIB_SUCCESS)
     {
         status = CAM_KEYTAB_FILE_KINIT_FAILURE;
     }
 
+    free(kinit_shell_command);
     return status;
 }
 

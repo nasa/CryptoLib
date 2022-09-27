@@ -136,7 +136,7 @@ char* Crypto_Get_Error_Code_Enum_String(int32_t crypto_error_code)
 {
     if(crypto_error_code >= 600) // CAM Error Codes
     {
-        if(crypto_error_code > 608)
+        if(crypto_error_code > 610)
         {
             return CRYPTO_UNDEFINED_ERROR;
         }
