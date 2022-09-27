@@ -1858,7 +1858,7 @@ static int32_t get_cam_sso_token()
 
     // Build the CAM getSsoToken URI
     int len_kerberos_endpoint = strlen(cam_kerberos_uri) + strlen(cam_config->access_manager_uri);
-    char* kerberos_endpoint_final = (char*) malloc(len_kerberos_endpoint) + 1;
+    char* kerberos_endpoint_final = (char*) malloc(len_kerberos_endpoint + 1);
     snprintf(kerberos_endpoint_final,len_kerberos_endpoint,cam_kerberos_uri,cam_config->access_manager_uri);
 
 #ifdef DEBUG
@@ -2079,7 +2079,7 @@ int32_t initialize_kerberos_keytab_file_login(void)
     // Build the kinit shell command with keytab file path + username
     char* kinit_shell_command_base = "kinit -kt %s %s";
     uint32_t len_kinit_shell_command = strlen(kinit_shell_command_base) + strlen(cam_config->keytab_file_path) + strlen(cam_config->username);
-    char* kinit_shell_command = malloc(len_kinit_shell_command) + 1;
+    char* kinit_shell_command = malloc(len_kinit_shell_command + 1);
     snprintf(kinit_shell_command,len_kinit_shell_command,kinit_shell_command_base,cam_config->keytab_file_path,cam_config->username);
 
     int32_t kinit_status = system(kinit_shell_command);
