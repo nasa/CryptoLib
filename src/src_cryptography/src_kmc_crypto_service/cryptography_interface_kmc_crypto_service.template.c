@@ -1866,14 +1866,17 @@ static int32_t get_cam_sso_token()
 #endif
     curl_easy_setopt(curl_cam,CURLOPT_URL,kerberos_endpoint_final);
 
-    memory_read* chunk_read = (memory_read*) calloc(1,MEMORY_READ_SIZE);;
+    memory_read* chunk_read = (memory_read*) calloc(1,MEMORY_READ_SIZE);
+    memory_write* chunk_write = (memory_write*) calloc(1,MEMORY_WRITE_SIZE);
 
     /* Configure CURL for POST */
     curl_easy_setopt(curl_cam, CURLOPT_POST, 1L);
     /* send all data to this function  */
     curl_easy_setopt(curl_cam, CURLOPT_READFUNCTION, read_callback);
+    curl_easy_setopt(curl_cam,CURLOPT_WRITEFUNCTION, write_callback);
     /* we pass our 'chunk' struct to the callback function */
     curl_easy_setopt(curl_cam, CURLOPT_READDATA, chunk_read);
+    curl_easy_setopt(curl_cam,CURLOPT_WRITEDATA,chunk_write);
     curl_easy_setopt(curl_cam, CURLOPT_COOKIEJAR, cam_config->cookie_file_path);
 
     res = curl_easy_perform(curl_cam);
@@ -1905,6 +1908,7 @@ static int32_t get_cam_sso_token()
     curl_easy_cleanup(curl_cam);
     free(kerberos_endpoint_final);
     free(chunk_read);
+    free(chunk_write);
     return status;
 }
 
