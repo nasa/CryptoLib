@@ -174,9 +174,11 @@ int32_t Crypto_Init(void)
         Crypto_Calc_CRC_Init_Table();
 
         // cFS Standard Initialized Message
+#ifdef DEBUG
         printf(KBLU "Crypto Lib Intialized.  Version %d.%d.%d.%d\n" RESET, CRYPTO_LIB_MAJOR_VERSION,
                CRYPTO_LIB_MINOR_VERSION, CRYPTO_LIB_REVISION, CRYPTO_LIB_MISSION_REV);
-        }
+#endif
+    }
     else
     {
         printf(KBLU "Error, Crypto Lib NOT Intialized, sadb_init() returned error:%d.  Version .%d.%d.%d\n" RESET, CRYPTO_LIB_MAJOR_VERSION,
