@@ -26,8 +26,17 @@ static int32_t cryptography_init(void);
 static crypto_key_t* get_ek_ring(void);
 static int32_t cryptography_shutdown(void);
 // Cryptography Interface Functions
-static int32_t cryptography_encrypt(void);
-static int32_t cryptography_decrypt(void);
+static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
+                                         uint8_t* data_in, size_t len_data_in,
+                                         uint8_t* key, uint32_t len_key,
+                                         SecurityAssociation_t* sa_ptr,
+                                         uint8_t* iv, uint32_t iv_len,uint8_t* ecs, uint8_t padding, char* cam_cookies);
+static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
+                                         uint8_t* data_in, size_t len_data_in,
+                                         uint8_t* key, uint32_t len_key,
+                                         SecurityAssociation_t* sa_ptr, 
+                                         uint8_t* iv, uint32_t iv_len,
+                                         uint8_t* ecs, uint8_t* acs, char* cam_cookies);
 static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -35,7 +44,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
-                                         uint8_t ecs, uint8_t acs);
+                                         uint8_t ecs, uint8_t acs, char* cam_cookies);
 static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -43,7 +52,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
-                                         uint8_t ecs, uint8_t acs);
+                                         uint8_t ecs, uint8_t acs, char* cam_cookies);
 static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -52,7 +61,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t encrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs);
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs, char* cam_cookies);
 static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -61,9 +70,11 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t decrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs);
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs, char* cam_cookies);
 static int32_t cryptography_get_acs_algo(int8_t algo_enum);
 static int32_t cryptography_get_ecs_algo(int8_t algo_enum);
+static int32_t cryptography_get_ecs_mode(int8_t algo_enum);
+
 /*
 ** Module Variables
 */
@@ -548,8 +559,7 @@ static int32_t cryptography_init(void)
     return status;
 }
 static int32_t cryptography_shutdown(void){ return CRYPTO_LIB_SUCCESS; }
-static int32_t cryptography_encrypt(void){ return CRYPTO_LIB_SUCCESS; }
-static int32_t cryptography_decrypt(void){ return CRYPTO_LIB_SUCCESS; }
+
 static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -557,7 +567,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
-                                         uint8_t ecs, uint8_t acs)
+                                         uint8_t ecs, uint8_t acs, char* cam_cookies)
 { 
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     gcry_mac_hd_t tmp_mac_hd;
@@ -580,6 +590,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
     // Using to fix warning
     len_data_out = len_data_out;
     ecs = ecs;
+    cam_cookies = cam_cookies;
 
     // Select correct libgcrypt acs enum
     int32_t algo = cryptography_get_acs_algo(acs);
@@ -675,7 +686,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
                                          uint8_t* iv, uint32_t iv_len,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
-                                         uint8_t ecs, uint8_t acs)
+                                         uint8_t ecs, uint8_t acs, char* cam_cookies)
 { 
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     gcry_mac_hd_t tmp_mac_hd;
@@ -698,6 +709,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     // Using to fix warning
     len_data_out = len_data_out;
     ecs = ecs;
+    cam_cookies = cam_cookies;
 
     // Select correct libgcrypt acs enum
     int32_t algo = cryptography_get_acs_algo(acs);
@@ -823,6 +835,138 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     gcry_mac_close(tmp_mac_hd);
     return status; 
 }
+
+static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
+                                         uint8_t* data_in, size_t len_data_in,
+                                         uint8_t* key, uint32_t len_key,
+                                         SecurityAssociation_t* sa_ptr,
+                                         uint8_t* iv, uint32_t iv_len,uint8_t* ecs, uint8_t padding, char* cam_cookies)
+{
+    gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
+    gcry_cipher_hd_t tmp_hd;
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    uint8_t* key_ptr = key;
+
+    data_out = data_out;        // TODO:  Look into tailoring these out, as they're not used or needed.
+    len_data_out = len_data_out;
+    padding = padding;
+    cam_cookies = cam_cookies;
+
+    if(sa_ptr != NULL) //Using SA key pointer
+    {
+        key_ptr = &(ek_ring[sa_ptr->ekid].value[0]);
+    }
+
+    // Select correct libgcrypt algorith enum
+    int32_t algo = -1;
+    if (ecs != NULL)
+    {
+        algo = cryptography_get_ecs_algo(*ecs);
+        if (algo == CRYPTO_LIB_ERR_UNSUPPORTED_MODE)
+        {
+            return CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
+        }
+    }
+    else
+    {
+        return CRYPTO_LIB_ERR_NULL_MODE_PTR;
+    }
+
+    // Verify the mode to accompany the algorithm enum
+    int32_t mode = -1;
+    mode = cryptography_get_ecs_mode(*ecs);
+    if (mode == CRYPTO_LIB_ERR_UNSUPPORTED_MODE) return CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
+
+     // Check that key length to be used is atleast as long as the algo requirement
+    if (sa_ptr != NULL && len_key > ek_ring[sa_ptr->ekid].key_len)
+    {
+        return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
+    }
+
+    gcry_error = gcry_cipher_open(&(tmp_hd), algo, mode, GCRY_CIPHER_NONE);
+    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+    {
+        printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+        printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+        status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
+        return status;
+    }
+    gcry_error = gcry_cipher_setkey(tmp_hd, key_ptr, len_key);
+
+#ifdef SA_DEBUG
+    uint32_t i;
+    printf(KYEL "Printing Key:\n\t");
+    for (i = 0; i < len_key; i++)
+    {
+        printf("%02X", *(key_ptr + i));
+    }
+    printf("\n");
+#endif
+
+    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+    {
+        printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+        printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+        status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
+        gcry_cipher_close(tmp_hd);
+        return status;
+    }
+    gcry_error = gcry_cipher_setiv(tmp_hd, iv, iv_len);
+    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+    {
+        printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+        printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+        status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
+        gcry_cipher_close(tmp_hd);
+        return status;
+    }
+
+#ifdef TC_DEBUG
+    size_t j;
+    printf("Input payload length is %ld\n", len_data_in);
+    printf(KYEL "Printing Frame Data prior to encryption:\n\t");
+    for (j = 0; j < len_data_in; j++)
+    {
+        printf("%02X", *(data_in + j));
+    }
+    printf("\n");
+#endif
+
+
+    gcry_error = gcry_cipher_encrypt(tmp_hd, data_in, len_data_in, NULL, 0);
+    // TODO:  Add PKCS#7 padding to data_in, and increment len_data_in to match necessary block size
+    // TODO:  Remember to remove the padding.
+    // TODO:  Does this interfere with max frame size?  Does that need to be taken into account?
+    // gcry_error = gcry_cipher_encrypt(tmp_hd,
+    //                                     data_out,              // ciphertext output
+    //                                     len_data_out,                // length of data
+    //                                     data_in, // plaintext input
+    //                                     len_data_in                 // in data length
+    // );
+
+    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+    {
+        printf(KRED "ERROR: gcry_cipher_encrypt error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+        printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+        status = CRYPTO_LIB_ERR_ENCRYPTION_ERROR;
+        gcry_cipher_close(tmp_hd);
+        return status;
+    }
+
+#ifdef TC_DEBUG
+    printf("Output payload length is %ld\n", len_data_out);
+    printf(KYEL "Printing TC Frame Data after encryption:\n\t");
+    for (j = 0; j < len_data_out; j++)
+    {
+        printf("%02X", *(data_out + j));
+    }
+    printf("\n");
+#endif
+
+    gcry_cipher_close(tmp_hd);
+    return status;
+}
+
 static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -831,7 +975,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* mac, uint32_t mac_size,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t encrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs)
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs, char* cam_cookies)
 {
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     gcry_cipher_hd_t tmp_hd;
@@ -840,6 +984,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
 
     // Fix warning
     acs = acs;
+    cam_cookies = cam_cookies;
 
     if(sa_ptr != NULL) //Using SA key pointer
     {
@@ -861,13 +1006,18 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
         return CRYPTO_LIB_ERR_NULL_ECS_PTR;
     }
 
+    // Verify the mode to accompany the ecs enum
+    int32_t mode = -1;
+    mode = cryptography_get_ecs_mode(*ecs);
+    if (mode == CRYPTO_LIB_ERR_UNSUPPORTED_ECS_MODE) return CRYPTO_LIB_ERR_UNSUPPORTED_ECS_MODE;
+
     // Check that key length to be used is atleast as long as the algo requirement
     if (sa_ptr != NULL && len_key > ek_ring[sa_ptr->ekid].key_len)
     {
         return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
     }
 
-    gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_NONE);
+    gcry_error = gcry_cipher_open(&(tmp_hd), algo, mode, GCRY_CIPHER_NONE);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
@@ -934,6 +1084,9 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
 
     if(encrypt_bool == CRYPTO_TRUE)
     {
+        // TODO:  Add PKCS#7 padding to data_in, and increment len_data_in to match necessary block size
+        // TODO:  Remember to remove the padding.
+        // TODO:  Does this interfere with max frame size?  Does that need to be taken into account?
         gcry_error = gcry_cipher_encrypt(tmp_hd,
                                          data_out,              // ciphertext output
                                          len_data_out,                // length of data
@@ -999,15 +1152,12 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     return status;
 }
 
-static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
+static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
-                                         SecurityAssociation_t* sa_ptr,
+                                         SecurityAssociation_t* sa_ptr, 
                                          uint8_t* iv, uint32_t iv_len,
-                                         uint8_t* mac, uint32_t mac_size,
-                                         uint8_t* aad, uint32_t aad_len,
-                                         uint8_t decrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs)
+                                         uint8_t* ecs, uint8_t* acs, char* cam_cookies)
 {
     gcry_cipher_hd_t tmp_hd;
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
@@ -1016,6 +1166,105 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
     
     // Fix warnings
     acs = acs;
+    cam_cookies = cam_cookies;
+
+    if(sa_ptr != NULL) //Using SA key pointer
+    {
+        key_ptr = &(ek_ring[sa_ptr->ekid].value[0]);
+    }
+
+    // Select correct libgcrypt ecs enum
+    int32_t algo = -1;
+    if (ecs != NULL)
+    {
+        algo = cryptography_get_ecs_algo(*ecs);
+        if (algo == CRYPTO_LIB_ERR_UNSUPPORTED_ECS)
+        {
+            return CRYPTO_LIB_ERR_UNSUPPORTED_ECS;
+        }
+    }
+    else
+    {
+        return CRYPTO_LIB_ERR_NULL_ECS_PTR;
+    }
+
+    // Verify the mode to accompany the algorithm enum
+    int32_t mode = -1;
+    mode = cryptography_get_ecs_mode(*ecs);
+    if (mode == CRYPTO_LIB_ERR_UNSUPPORTED_MODE) return CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
+
+    // Check that key length to be used is atleast as long as the algo requirement
+    if (sa_ptr != NULL && len_key > ek_ring[sa_ptr->ekid].key_len)
+    {
+        return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
+    }
+
+    gcry_error = gcry_cipher_open(&(tmp_hd), algo, mode, GCRY_CIPHER_NONE);
+    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+    {
+        printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+        printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+        status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
+        return status;
+    }
+    gcry_error = gcry_cipher_setkey(tmp_hd, key_ptr, len_key);
+    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+    {
+        printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+        printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+        gcry_cipher_close(tmp_hd);
+        status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
+        return status;
+    }
+
+    gcry_error = gcry_cipher_setiv(tmp_hd, iv, iv_len);
+    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+    {
+        printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+        printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+        gcry_cipher_close(tmp_hd);
+        status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
+        return status;
+    }
+
+    gcry_error = gcry_cipher_decrypt(tmp_hd,
+                                         data_out,      // plaintext output
+                                         len_data_out,  // length of data
+                                         data_in,       // in place decryption
+                                         len_data_in    // in data length
+    );
+    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+    {
+        printf(KRED "ERROR: gcry_cipher_decrypt error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+        gcry_cipher_close(tmp_hd);
+        status = CRYPTO_LIB_ERR_DECRYPT_ERROR;
+        return status;
+    }
+
+
+    gcry_cipher_close(tmp_hd);
+    return status;
+
+}
+
+static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
+                                         uint8_t* data_in, size_t len_data_in,
+                                         uint8_t* key, uint32_t len_key,
+                                         SecurityAssociation_t* sa_ptr,
+                                         uint8_t* iv, uint32_t iv_len,
+                                         uint8_t* mac, uint32_t mac_size,
+                                         uint8_t* aad, uint32_t aad_len,
+                                         uint8_t decrypt_bool, uint8_t authenticate_bool,
+                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs, char* cam_cookies)
+{
+    gcry_cipher_hd_t tmp_hd;
+    gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    uint8_t* key_ptr = key;
+    
+    // Fix warnings
+    acs = acs;
+    cam_cookies = cam_cookies;
 
     if(sa_ptr != NULL) //Using SA key pointer
     {
@@ -1069,7 +1318,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
         status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
         return status;
     }
-
+    
     if (aad_bool == CRYPTO_TRUE)
     {
         gcry_error = gcry_cipher_authenticate(tmp_hd,
@@ -1180,13 +1429,44 @@ int32_t cryptography_get_ecs_algo(int8_t algo_enum)
         case CRYPTO_CIPHER_AES256_GCM:
             algo = GCRY_CIPHER_AES256;
             break;
+        case CRYPTO_CIPHER_AES256_CBC:
+            algo = GCRY_CIPHER_AES256;
+            break;
 
         default:
 #ifdef DEBUG
-            printf("ECS Algo Enum not supported\n");
+            printf("Algo Enum not supported\n");
 #endif
             break;
     }
 
     return (int)algo;
 }
+
+/**
+ * @brief Function: cryptography_get_ecs_mode. Maps Cryptolib ECS enums to libgcrypt enums 
+ * It is possible for supported algos to vary between crypto libraries
+ * @param algo_enum
+ **/
+int32_t cryptography_get_ecs_mode(int8_t algo_enum)
+{
+    int32_t mode = CRYPTO_LIB_ERR_UNSUPPORTED_ECS_MODE; // All valid algos will be positive
+    switch (algo_enum)
+    {
+        case CRYPTO_CIPHER_AES256_GCM:
+            mode = GCRY_CIPHER_MODE_GCM;
+            break;
+        case CRYPTO_CIPHER_AES256_CBC:
+            mode = GCRY_CIPHER_MODE_CBC;
+            break;
+
+        default:
+#ifdef DEBUG
+            printf("ECS Mode Enum not supported\n");
+#endif
+            break;
+    }
+
+    return (int)mode;
+}
+

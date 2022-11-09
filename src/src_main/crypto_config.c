@@ -19,6 +19,7 @@
 /*
 ** Includes
 */
+#include <string.h>
 #include "crypto.h"
 
 /*
@@ -29,8 +30,12 @@ CryptographyInterface cryptography_if = NULL;
 CryptoConfig_t* crypto_config = NULL;
 SadbMariaDBConfig_t* sadb_mariadb_config = NULL;
 CryptographyKmcCryptoServiceConfig_t* cryptography_kmc_crypto_config = NULL;
+CamConfig_t* cam_config = NULL;
 GvcidManagedParameters_t* gvcid_managed_parameters = NULL;
 GvcidManagedParameters_t* current_managed_parameters = NULL;
+
+// Free all configuration structs
+int32_t crypto_free_config_structs(void);
 
 /*
 ** Initialization Functions
@@ -169,9 +174,11 @@ int32_t Crypto_Init(void)
         Crypto_Calc_CRC_Init_Table();
 
         // cFS Standard Initialized Message
+#ifdef DEBUG
         printf(KBLU "Crypto Lib Intialized.  Version %d.%d.%d.%d\n" RESET, CRYPTO_LIB_MAJOR_VERSION,
                CRYPTO_LIB_MINOR_VERSION, CRYPTO_LIB_REVISION, CRYPTO_LIB_MISSION_REV);
-        }
+#endif
+    }
     else
     {
         printf(KBLU "Error, Crypto Lib NOT Intialized, sadb_init() returned error:%d.  Version .%d.%d.%d\n" RESET, CRYPTO_LIB_MAJOR_VERSION,
@@ -190,18 +197,9 @@ int32_t Crypto_Shutdown(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
-    if (crypto_config != NULL)
-    {
-        free(crypto_config);
-        crypto_config = NULL;
-    }
-    if (sadb_mariadb_config != NULL)
-    {
-        free(sadb_mariadb_config);
-        sadb_mariadb_config = NULL;
-    }
-    current_managed_parameters = NULL;
+    crypto_free_config_structs();
 
+    current_managed_parameters = NULL;
     if (gvcid_managed_parameters != NULL)
     {
         Crypto_Free_Managed_Parameters(gvcid_managed_parameters);
@@ -275,18 +273,18 @@ int32_t Crypto_Config_MariaDB(char* mysql_hostname, char* mysql_database, uint16
     sadb_mariadb_config = (SadbMariaDBConfig_t*)calloc(1, SADB_MARIADB_CONFIG_SIZE);
     if (sadb_mariadb_config != NULL)
     {
-        sadb_mariadb_config->mysql_username=mysql_username;
-        sadb_mariadb_config->mysql_password=mysql_password;
-        sadb_mariadb_config->mysql_hostname=mysql_hostname;
-        sadb_mariadb_config->mysql_database=mysql_database;
+        sadb_mariadb_config->mysql_username=crypto_deep_copy_string(mysql_username);
+        sadb_mariadb_config->mysql_password=crypto_deep_copy_string(mysql_password);
+        sadb_mariadb_config->mysql_hostname=crypto_deep_copy_string(mysql_hostname);
+        sadb_mariadb_config->mysql_database=crypto_deep_copy_string(mysql_database);
         sadb_mariadb_config->mysql_port=mysql_port;
         /*start - encrypted connection related parameters*/
-        sadb_mariadb_config->mysql_mtls_cert = mysql_mtls_cert;
-        sadb_mariadb_config->mysql_mtls_key = mysql_mtls_key;
-        sadb_mariadb_config->mysql_mtls_ca = mysql_tls_ca;
-        sadb_mariadb_config->mysql_mtls_capath = mysql_tls_capath;
+        sadb_mariadb_config->mysql_mtls_cert = crypto_deep_copy_string(mysql_mtls_cert);
+        sadb_mariadb_config->mysql_mtls_key = crypto_deep_copy_string(mysql_mtls_key);
+        sadb_mariadb_config->mysql_mtls_ca = crypto_deep_copy_string(mysql_tls_ca);
+        sadb_mariadb_config->mysql_mtls_capath = crypto_deep_copy_string(mysql_tls_capath);
         sadb_mariadb_config->mysql_tls_verify_server = mysql_tls_verify_server;
-        sadb_mariadb_config->mysql_mtls_client_key_password = mysql_mtls_client_key_password;
+        sadb_mariadb_config->mysql_mtls_client_key_password = crypto_deep_copy_string(mysql_mtls_client_key_password);
         sadb_mariadb_config->mysql_require_secure_transport = mysql_require_secure_transport;
         /*end - encrypted connection related parameters*/
         status = CRYPTO_LIB_SUCCESS; 
@@ -294,7 +292,7 @@ int32_t Crypto_Config_MariaDB(char* mysql_hostname, char* mysql_database, uint16
     return status;
 }
 
-extern int32_t Crypto_Config_Kmc_Crypto_Service(char* protocol, char* kmc_crypto_hostname, uint16_t kmc_crypto_port,
+int32_t Crypto_Config_Kmc_Crypto_Service(char* protocol, char* kmc_crypto_hostname, uint16_t kmc_crypto_port,
                                                 char* kmc_crypto_app, char* kmc_tls_ca_bundle, char* kmc_tls_ca_path,
                                                 uint8_t kmc_ignore_ssl_hostname_validation, char* mtls_client_cert_path,
                                                 char* mtls_client_cert_type, char* mtls_client_key_path,
@@ -302,26 +300,48 @@ extern int32_t Crypto_Config_Kmc_Crypto_Service(char* protocol, char* kmc_crypto
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     cryptography_kmc_crypto_config = (CryptographyKmcCryptoServiceConfig_t* )calloc(1, CRYPTOGRAPHY_KMC_CRYPTO_SERVICE_CONFIG_SIZE);
-    cryptography_kmc_crypto_config->protocol = protocol;
-    cryptography_kmc_crypto_config->kmc_crypto_hostname = kmc_crypto_hostname;
+    cryptography_kmc_crypto_config->protocol = crypto_deep_copy_string(protocol);
+    cryptography_kmc_crypto_config->kmc_crypto_hostname = crypto_deep_copy_string(kmc_crypto_hostname);
     cryptography_kmc_crypto_config->kmc_crypto_port = kmc_crypto_port;
     if(kmc_crypto_app != NULL){
-        cryptography_kmc_crypto_config->kmc_crypto_app_uri = kmc_crypto_app;
+        cryptography_kmc_crypto_config->kmc_crypto_app_uri = crypto_deep_copy_string(kmc_crypto_app);
     } else{
-        cryptography_kmc_crypto_config->kmc_crypto_app_uri = "crypto-service";
+        cryptography_kmc_crypto_config->kmc_crypto_app_uri = crypto_deep_copy_string("crypto-service");
     }
 
-    cryptography_kmc_crypto_config->mtls_client_cert_path = mtls_client_cert_path;
-    cryptography_kmc_crypto_config->mtls_client_cert_type = mtls_client_cert_type;
-    cryptography_kmc_crypto_config->mtls_client_key_path = mtls_client_key_path;
-    cryptography_kmc_crypto_config->mtls_client_key_pass = mtls_client_key_pass;
-    cryptography_kmc_crypto_config->mtls_ca_bundle = kmc_tls_ca_bundle;
-    cryptography_kmc_crypto_config->mtls_ca_path = kmc_tls_ca_path;
-    cryptography_kmc_crypto_config->mtls_issuer_cert = mtls_issuer_cert;
+    cryptography_kmc_crypto_config->mtls_client_cert_path = crypto_deep_copy_string(mtls_client_cert_path);
+    cryptography_kmc_crypto_config->mtls_client_cert_type = crypto_deep_copy_string(mtls_client_cert_type);
+    cryptography_kmc_crypto_config->mtls_client_key_path = crypto_deep_copy_string(mtls_client_key_path);
+    cryptography_kmc_crypto_config->mtls_client_key_pass = crypto_deep_copy_string(mtls_client_key_pass);
+    cryptography_kmc_crypto_config->mtls_ca_bundle = crypto_deep_copy_string(kmc_tls_ca_bundle);
+    cryptography_kmc_crypto_config->mtls_ca_path = crypto_deep_copy_string(kmc_tls_ca_path);
+    cryptography_kmc_crypto_config->mtls_issuer_cert = crypto_deep_copy_string(mtls_issuer_cert);
     cryptography_kmc_crypto_config->ignore_ssl_hostname_validation = kmc_ignore_ssl_hostname_validation;
     return status;
 }
 
+/**
+ * @brief Function: Crypto_Config_Cam
+ * @param cam_enabled: uint8_t
+ * @param cookie_file_path: char*
+ * @param keytab_file_path: char*
+ * @param login_method: uint8_t
+ * @return int32_t: Success/Failure
+**/
+int32_t Crypto_Config_Cam(uint8_t cam_enabled, char* cookie_file_path, char* keytab_file_path, uint8_t login_method, char* access_manager_uri, char* username, char* cam_home)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    cam_config = (CamConfig_t*)calloc(1,CAM_CONFIG_SIZE);
+    cam_config->cam_enabled = cam_enabled;
+    cam_config->cookie_file_path = crypto_deep_copy_string(cookie_file_path);
+    cam_config->keytab_file_path = crypto_deep_copy_string(keytab_file_path);
+    cam_config->login_method = login_method;
+    cam_config->access_manager_uri = crypto_deep_copy_string(access_manager_uri);
+    cam_config->username = crypto_deep_copy_string(username);
+    cam_config->cam_home = crypto_deep_copy_string(cam_home);
+
+    return status;
+}
 
 /**
  * @brief Function: Crypto_Config_Add_Gvcid_Managed_Parameter
@@ -364,6 +384,75 @@ int32_t Crypto_Config_Add_Gvcid_Managed_Parameter(uint8_t tfvn, uint16_t scid, u
         return crypto_config_add_gvcid_managed_parameter_recursion(tfvn, scid, vcid, has_fecf, has_segmentation_hdr, 
                                                                     max_tc_frame_size, gvcid_managed_parameters);
     }
+}
+
+int32_t crypto_free_config_structs(void)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    free(crypto_config); //no strings in this struct, just free it.
+    crypto_config=NULL;
+
+    // Config structs with char* types that are malloc'd and must be freed individually.
+    if(sadb_mariadb_config != NULL)
+    {
+        free(sadb_mariadb_config->mysql_username);
+        free(sadb_mariadb_config->mysql_password);
+        free(sadb_mariadb_config->mysql_hostname);
+        free(sadb_mariadb_config->mysql_database);
+        free(sadb_mariadb_config->mysql_mtls_cert);
+        free(sadb_mariadb_config->mysql_mtls_key);
+        free(sadb_mariadb_config->mysql_mtls_ca);
+        free(sadb_mariadb_config->mysql_mtls_capath);
+        free(sadb_mariadb_config->mysql_mtls_client_key_password);
+        free(sadb_mariadb_config);
+        sadb_mariadb_config=NULL;
+    }
+    if(cryptography_kmc_crypto_config != NULL)
+    {
+        free(cryptography_kmc_crypto_config->kmc_crypto_hostname);
+        free(cryptography_kmc_crypto_config->protocol);
+        free(cryptography_kmc_crypto_config->kmc_crypto_app_uri);
+        free(cryptography_kmc_crypto_config->mtls_client_cert_path);
+        free(cryptography_kmc_crypto_config->mtls_client_cert_type);
+        free(cryptography_kmc_crypto_config->mtls_client_key_path);
+        free(cryptography_kmc_crypto_config->mtls_client_key_pass);
+        free(cryptography_kmc_crypto_config->mtls_ca_bundle);
+        free(cryptography_kmc_crypto_config->mtls_ca_path);
+        free(cryptography_kmc_crypto_config->mtls_issuer_cert);
+        free(cryptography_kmc_crypto_config);
+        cryptography_kmc_crypto_config=NULL;
+    }
+    if(cam_config != NULL)
+    {
+        free(cam_config->cookie_file_path);
+        free(cam_config->keytab_file_path);
+        free(cam_config->access_manager_uri);
+        free(cam_config->username);
+        free(cam_config->cam_home);
+        free(cam_config);
+        cam_config=NULL;
+    }
+    return status;
+}
+
+/**
+ * @brief Function: crypto_deep_copy_string
+ *  Used to malloc a local copy of an externally referenced string. The string MUST BE null-terminated.
+ * @param src_string: Pointer to externally-memory-managed string.
+ * @return char*: Pointer to locally-memory-managed string copy.
+ **/
+
+char* crypto_deep_copy_string(char* src_string)
+{
+    if(src_string == NULL)
+    {
+        return NULL;
+    }
+    // Note that the strlen() function doesn't count the null character \0 while calculating the length.
+    char* deep_copied_str = malloc((strlen(src_string) + 1) * sizeof(char));
+    memcpy(deep_copied_str,src_string,strlen(src_string)+1);
+    return deep_copied_str;
 }
 
 /**

@@ -48,6 +48,11 @@
 #define CRYPTO_LIB_MISSION_REV 0
 
 /*
+** TC_BLOCK_SIZE
+*/
+#define TC_BLOCK_SIZE 16
+
+/*
 ** User Prototypes
 */
 
@@ -65,6 +70,7 @@ extern int32_t Crypto_Config_Kmc_Crypto_Service(char* protocol, char* kmc_crypto
                                                 uint8_t kmc_ignore_ssl_hostname_validation, char* mtls_client_cert_path,
                                                 char* mtls_client_cert_type, char* mtls_client_key_path,
                                                 char* mtls_client_key_pass, char* mtls_issuer_cert);
+extern int32_t Crypto_Config_Cam(uint8_t cam_enabled, char* cookie_file_path, char* keytab_file_path, uint8_t login_method, char* access_manager_uri, char* username, char* cam_home);
 extern int32_t Crypto_Config_Add_Gvcid_Managed_Parameter(uint8_t tfvn, uint16_t scid, uint8_t vcid, uint8_t has_fecf,
                                                          uint8_t has_segmentation_hdr, uint16_t max_tc_frame_size);
 
@@ -83,12 +89,18 @@ extern int32_t Crypto_Shutdown(void); // Free all allocated memory
 extern int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_frame_length,
                                        uint8_t** pp_enc_frame, uint16_t* p_enc_frame_len);
 extern int32_t Crypto_TC_ProcessSecurity(uint8_t* ingest, int *len_ingest, TC_t* tc_sdls_processed_frame);
+extern int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in_frame_length,
+                                       uint8_t** pp_enc_frame, uint16_t* p_enc_frame_len, char* cam_cookies);
+extern int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc_sdls_processed_frame, char* cam_cookies);
 // Telemetry (TM)
 extern int32_t Crypto_TM_ApplySecurity(uint8_t* ingest, int *len_ingest);
 extern int32_t Crypto_TM_ProcessSecurity(uint8_t* ingest, int *len_ingest);
 // Advanced Orbiting Systems (AOS)
 extern int32_t Crypto_AOS_ApplySecurity(uint8_t* ingest, int *len_ingest);
 extern int32_t Crypto_AOS_ProcessSecurity(uint8_t* ingest, int *len_ingest);
+
+// Crypo Error Support Functions
+extern char* Crypto_Get_Error_Code_Enum_String(int32_t crypto_error_code);
 
 /*
 ** Internal Prototypes
@@ -153,7 +165,8 @@ int32_t crypto_config_add_gvcid_managed_parameter_recursion(uint8_t tfvn, uint16
                                                                    GvcidManagedParameters_t* managed_parameter);
 void Crypto_Free_Managed_Parameters(GvcidManagedParameters_t* managed_parameters);
 
-
+// Project-wide support functions
+extern char* crypto_deep_copy_string(char* src_string);
 
 /*
 ** Extern Global Variables
@@ -166,6 +179,7 @@ extern TM_t tm_frame;
 extern CryptoConfig_t* crypto_config;
 extern SadbMariaDBConfig_t* sadb_mariadb_config;
 extern CryptographyKmcCryptoServiceConfig_t* cryptography_kmc_crypto_config;
+extern CamConfig_t* cam_config;
 extern GvcidManagedParameters_t* gvcid_managed_parameters;
 extern GvcidManagedParameters_t* current_managed_parameters;
 extern SadbRoutine sadb_routine;

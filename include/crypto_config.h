@@ -54,6 +54,10 @@
 #define RESET
 #endif
 
+
+// Max Frame Size
+#define TC_MAX_FRAME_SIZE 1024
+
 // Spacecraft Defines
 #define SCID 0x0003 // 0xC3D2
 
@@ -162,7 +166,6 @@
 #define TC_SH_SIZE 8 /* bits */
 #define TC_SN_SIZE 2
 #define TC_SN_WINDOW 10 /* +/- value */
-#define TC_PAD_SIZE 0
 #define TC_FRAME_DATA_SIZE 1740 /* bytes */
 
 // CCSDS PUS Defines

@@ -233,7 +233,8 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* ingest, int *len_ingest)
                                                            CRYPTO_FALSE, // Authenticate // TODO -- Set to SA value, manually setting to false here so existing tests pass. Existing data was generated with authenticate then encrypt, when it should have been encrypt then authenticate.
                                                            CRYPTO_TRUE, // Use AAD
                                                            sa_ptr->ecs, // encryption cipher
-                                                           sa_ptr->acs  // authentication cipher
+                                                           sa_ptr->acs,  // authentication cipher
+                                                           NULL // cam_cookies (not supported in TM functions yet)
                                                            );
 
 
