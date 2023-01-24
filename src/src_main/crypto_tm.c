@@ -467,8 +467,6 @@ void Crypto_TM_updatePDU(uint8_t* ingest, int len_ingest)
     }
 #endif
 #endif
-
-    return;
 }
 
 /**

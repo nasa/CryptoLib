@@ -99,7 +99,6 @@ void python_cmac(char* data, char* key, uint8_t** expected, long *expected_lengt
     char* temp_expected = PyBytes_AsString(pValue);
     *expected = (uint8_t* )malloc(sizeof(uint8_t) * (int)*expected_length);
     memcpy(*expected, temp_expected, (int)*expected_length);
-    return;
 }
 
 /**
@@ -130,7 +129,6 @@ void python_auth_encryption(char* data, char* key, char* iv, char* header, char*
     char* temp_expected = PyBytes_AsString(pValue);
     *expected = (uint8_t* )malloc(sizeof(uint8_t) * (int)*expected_length);
     memcpy(*expected, temp_expected, (int)*expected_length);
-    return;
 }
 
 /**
