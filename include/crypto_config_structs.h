@@ -88,6 +88,17 @@ typedef enum
     SA_INCREMENT_NONTRANSMITTED_IV_FALSE,
     SA_INCREMENT_NONTRANSMITTED_IV_TRUE
 } SaIncrementNonTransmittedIvPortion;
+typedef enum
+{
+    TM_NO_OCF,
+    TM_HAS_OCF
+} TmOcfPresent;
+
+typedef enum
+{
+    TM_NO_FECF,
+    TM_HAS_FECF
+} TmFecfPresent;
 
 typedef enum
 {
@@ -147,6 +158,10 @@ struct _GvcidManagedParameters_t
     TcFecfPresent has_fecf;
     TcSegmentHdrsPresent has_segmentation_hdr;
     uint16_t max_tc_frame_size; // Maximum TC Frame Length with headers
+    uint16_t tm_frame_length; // Fixed length for a TM Frame with headers
+    uint8_t tm_frame_secondary_hdr_length;
+    TmOcfPresent tm_has_ocf;
+    TmFecfPresent tm_has_fecf;
     GvcidManagedParameters_t* next; // Will be a list of managed parameters!
 };
 #define GVCID_MANAGED_PARAMETERS_SIZE (sizeof(GvcidManagedParameters_t))
