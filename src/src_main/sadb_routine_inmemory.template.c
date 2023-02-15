@@ -299,6 +299,24 @@ int32_t sadb_config(void)
     sa[11].gvcid_tc_blk.mapid = TYPE_TC;
     sa[11].ek_ref="kmc/test/key130";
 
+    // SA 12 - TM CLEAR MODE
+    // SA 12
+    sa[12].spi = 12;
+    sa[12].sa_state = SA_OPERATIONAL;
+    sa[12].est = 0;
+    sa[12].ast = 0;
+    sa[12].shivf_len = 0;
+    sa[12].shsnf_len = 0;
+    sa[12].arsn_len = 0;
+    sa[12].arsn = (uint8_t*) calloc(1, sa[1].arsn_len * sizeof(uint8_t));
+    sa[12].arsnw_len = 1;
+    sa[12].arsnw = 5;
+    sa[12].gvcid_tm_blk[0].tfvn = 0;
+    sa[12].gvcid_tm_blk[0].scid = SCID & 0x3FF;
+    sa[12].gvcid_tc_blk.scid = SCID & 0x3FF; //Testing, not sure of CONOPS for this. Up/down diff SAs normally?
+    sa[12].gvcid_tm_blk[0].vcid = 0;
+    sa[12].gvcid_tm_blk[0].mapid = TYPE_TM;
+
     return status;
 }
 
@@ -493,9 +511,10 @@ static int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, u
 #ifdef SA_DEBUG
             printf(KYEL "Incoming frame parameters:\n" RESET);
             printf(KYEL "\ttfvn %02X\n" RESET, tfvn);
-            printf(KYEL "\tscid %04X\n" RESET, scid);
-            printf(KYEL "\tvcid %02X\n" RESET, vcid);
+            printf(KYEL "\tscid %d\n" RESET, scid);
+            printf(KYEL "\tvcid %d\n" RESET, vcid);
             printf(KYEL "\tmapid %02X\n" RESET, mapid);
+            printf(KYEL "***FYI TM_SIZE set to %ld\n" RESET, TM_SIZE);
 #endif
     }
 
