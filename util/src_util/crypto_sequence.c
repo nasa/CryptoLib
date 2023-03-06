@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
         }
         else if (strcmp(security_type, "tm_a") == 0)
         {
-            Crypto_TM_ApplySecurity((uint8_t* )buffer, (int *)&buffer_size_i);
+            // Crypto_TM_ApplySecurity((uint8_t* )buffer, (int *)&buffer_size_i);
         }
         else if (strcmp(security_type, "aos_a") == 0)
         {

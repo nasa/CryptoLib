@@ -76,7 +76,7 @@ int32_t sadb_config(void)
     // SA 1 - CLEAR MODE
     // SA 1 VC0/1 is now SA 1-VC0, SA 8-VC1
     sa[1].spi = 1;
-    sa[1].sa_state = SA_OPERATIONAL;
+    sa[1].sa_state = SA_KEYED; // TEMP was Operational
     sa[1].est = 0;
     sa[1].ast = 0;
     sa[1].shivf_len = 0;
@@ -476,6 +476,7 @@ static int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, u
             {
 #ifdef SA_DEBUG
                 printf(KRED "An operational SA was found - but mismatched scid.\n" RESET);
+                printf(KRED "SA is %d\n", i);
 #endif
                 status = CRYPTO_LIB_ERR_INVALID_SCID;
             }
