@@ -41,8 +41,10 @@ typedef enum
 typedef enum
 {
     TC_NO_FECF,
-    TC_HAS_FECF
-} TcFecfPresent;
+    TC_HAS_FECF,
+    TM_NO_FECF,
+    TM_HAS_FECF
+} FecfPresent;
 typedef enum
 {
     TC_NO_SEGMENT_HDRS,
@@ -93,11 +95,6 @@ typedef enum
     TM_NO_OCF,
     TM_HAS_OCF
 } TmOcfPresent;
-typedef enum
-{
-    TM_NO_FECF,
-    TM_HAS_FECF
-} TmFecfPresent;
 typedef enum
 {
     TM_NO_SEGMENT_HDRS,
@@ -164,7 +161,7 @@ struct _GvcidManagedParameters_t
     uint8_t tfvn : 4;   // Transfer Frame Version Number
     uint16_t scid : 10; // SpacecraftID
     uint8_t vcid : 6;   // Virtual Channel ID
-    TcFecfPresent has_fecf;
+    FecfPresent has_fecf;
     TcSegmentHdrsPresent has_segmentation_hdr;
     uint16_t max_tc_frame_size; // Maximum TC Frame Length with headers
     // uint16_t tm_frame_length; // Fixed length for a TM Frame with headers
