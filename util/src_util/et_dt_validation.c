@@ -184,7 +184,7 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
     // Expose SA 4 for testing
     sadb_routine->sadb_get_sa_from_spi(4, &test_association);
     test_association->arsn_len = 0;
-    test_association->gvcid_tc_blk.vcid = 1;
+    test_association->gvcid_blk.vcid = 1;
     test_association->iv[11] = 1;
     test_association->ast = 1;
     test_association->est = 1;
@@ -264,7 +264,7 @@ UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
     // Expose SA 4 for testing
     sadb_routine->sadb_get_sa_from_spi(4, &test_association);
     test_association->arsn_len = 0;
-    test_association->gvcid_tc_blk.vcid = 1;
+    test_association->gvcid_blk.vcid = 1;
     test_association->iv = calloc(1, test_association->shivf_len * sizeof(uint8_t));
     test_association->iv[11] = 0;
     test_association->ast = 1;
