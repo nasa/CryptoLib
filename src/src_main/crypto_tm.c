@@ -189,16 +189,16 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         switch (sa_service_type)
         {
         case SA_PLAINTEXT:
-            printf(KBLU "Creating a TM - CLEAR!\n" RESET);
+            printf(KBLU "Creating a SDLS TM - CLEAR!\n" RESET);
             break;
         case SA_AUTHENTICATION:
-            printf(KBLU "Creating a TM - AUTHENTICATED!\n" RESET);
+            printf(KBLU "Creating a SDLS TM - AUTHENTICATED!\n" RESET);
             break;
         case SA_ENCRYPTION:
-            printf(KBLU "Creating a TM - ENCRYPTED!\n" RESET);
+            printf(KBLU "Creating a SDLS TM - ENCRYPTED!\n" RESET);
             break;
         case SA_AUTHENTICATED_ENCRYPTION:
-            printf(KBLU "Creating a TM - AUTHENTICATED ENCRYPTION!\n" RESET);
+            printf(KBLU "Creating a SDLS TM - AUTHENTICATED ENCRYPTION!\n" RESET);
             break;
         }
 #endif
@@ -238,10 +238,9 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
 
 #ifdef TM_DEBUG
     printf(KYEL "Printing new TM frame:\n\t");
-    printf("STUBBED OUT!\n");
     for(int i = 0; i < current_managed_parameters->max_frame_size; i++)
     {
-        printf("%d %02X \n", i, tm_frame[i]);
+        printf("%02X", tm_frame[i]);
     }
     printf("\n");
     // Crypto_tmPrint(tm_frame);
