@@ -59,8 +59,8 @@ typedef struct
     char*    ek_ref; // Encryption Key Reference (Used with string-referenced keystores,EG-PKCS12 keystores, KMC crypto)
     char*    ak_ref; // Authentication Key Reference (Used with string-referenced keystores,EG-PKCS12 keystores, KMC crypto)
     uint8_t sa_state : 2;
-    crypto_gvcid_t gvcid_tc_blk;
-    crypto_gvcid_t gvcid_tm_blk[NUM_GVCID];
+    crypto_gvcid_t gvcid_blk;
+    // crypto_gvcid_t gvcid_tm_blk[NUM_GVCID];
     uint8_t lpid;
 
     // Configuration

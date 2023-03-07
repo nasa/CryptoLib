@@ -51,8 +51,11 @@ int32_t Crypto_Init_Unit_Test(void)
     Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // TC Tests
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1786);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1786);
+    // TM Tests
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002c, 0, TM_HAS_FECF, TM_NO_SEGMENT_HDRS, 1786);
     status = Crypto_Init();
     return status;
 }
@@ -496,7 +499,7 @@ int32_t crypto_config_add_gvcid_managed_parameter_recursion(uint8_t tfvn, uint16
 void Crypto_Local_Config(void)
 {
     // Initial TM configuration
-    tm_frame.tm_sec_header.spi = 1;
+    // tm_frame.tm_sec_header.spi = 1;
 
     // Initialize Log
     log_summary.num_se = 2;
@@ -525,8 +528,12 @@ void Crypto_Local_Config(void)
  **/
 void Crypto_Local_Init(void)
 {
-    int x;
+    // int x;
 
+    // Possibly just zero out the entire frame here
+    // since copying in entire test frame
+
+    /***
     // Initialize TM Frame
     // TM Header
     tm_frame.tm_header.tfvn = 0; // Shall be 00 for TM-/TC-SDLP
@@ -561,6 +568,7 @@ void Crypto_Local_Init(void)
         tm_frame.tm_sec_trailer.ocf[x] = 0x00;
     }
     tm_frame.tm_sec_trailer.fecf = 0xFECF;
+    **/
 
     // Initialize CLCW
     clcw.cwt = 0;    // Control Word Type "0"

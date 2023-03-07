@@ -42,7 +42,7 @@
  * Security Header
  **/
 // int32_t Crypto_TM_ApplySecurity(uint8_t* ingest, int *len_ingest)
-int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t **sa_dblptr)
+int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
 // Accepts CCSDS message in ingest, and packs into TM before encryption
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -64,7 +64,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t **sa_dblptr)
     uint16_t data_loc = -1;
     uint16_t data_len = -1;
     // SecurityAssociation_t sa;
-    SecurityAssociation_t* sa_ptr = *sa_dblptr;
+    // SecurityAssociation_t* sa_ptr = *sa_dblptr;
     // uint32_t encryption_cipher;
     // uint8_t ecs_is_aead_algorithm;
 
@@ -84,13 +84,16 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t **sa_dblptr)
         return status; // Just return here, nothing can be done.
     }
 #ifdef DEBUG
-    status = Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame.tm_header.tfvn, 
-                                                    tm_frame.tm_header.scid,
-                                                    tm_frame.tm_header.vcid, 
+
+    status = Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, 
+                                                    tm_frame_pri_hdr.scid,
+                                                    tm_frame_pri_hdr.vcid, 
                                                     gvcid_managed_parameters, &current_managed_parameters);
+    printf("Tried to get MPs for TVFN %d, SCID %d and VCID %d\n", tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid);
+    printf("Status was %d\n", status);
     printf("HELP\n");
     // current_managed_parameters->tc_max_frame_length = 1786;
-    // printf("TM DEBUG - Static TM Frame, Managed Param Size of %d bytes\n", current_managed_parameters->max_tc_frame_size);
+    printf("TM DEBUG - Static TM Frame, Managed Param Size of %d bytes\n", current_managed_parameters->max_tc_frame_size);
     printf("TM DEBUG - \n");
     for (i = 0; i < current_managed_parameters->max_tc_frame_size; i++)
     {
@@ -112,7 +115,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t **sa_dblptr)
     //     status = CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_TC_STANDARD;
     //     return status;
     // }
-    printf("TESTING: Printout tm_frame scid before doing anything:    %d\n", tm_frame.tm_header.scid);
+    printf("TESTING: Printout tm_frame scid before doing anything:    %d\n", tm_frame_pri_hdr.scid);
 
     // **** TODO - THIS BLOCK MOVED INTO TO ****
     /**
@@ -235,7 +238,13 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t **sa_dblptr)
 
 #ifdef TM_DEBUG
     printf(KYEL "Printing new TM frame:\n\t");
-    Crypto_tmPrint(&tm_frame);
+    printf("STUBBED OUT!\n");
+    for(int i = 0; i < current_managed_parameters->max_tc_frame_size; i++)
+    {
+        printf("%d %02X \n", i, tm_frame[i]);
+    }
+    printf("\n");
+    // Crypto_tmPrint(tm_frame);
 #endif
 
     status = sadb_routine->sadb_save_sa(sa_ptr);
@@ -541,11 +550,12 @@ int32_t Crypto_Get_tmLength(int len)
 void Crypto_TM_updatePDU(uint8_t* ingest, int len_ingest)
 { // Copy ingest to PDU
     int x = 0;
-    int y = 0;
-    int fill_size = 0;
+    // int y = 0;
+    // int fill_size = 0;
     SecurityAssociation_t* sa_ptr;
     printf("%s, Line: %d\n", __FILE__, __LINE__);
-    if (sadb_routine->sadb_get_sa_from_spi(tm_frame.tm_sec_header.spi, &sa_ptr) != CRYPTO_LIB_SUCCESS)
+    // Consider a helper function here, or elsewhere, to do all the 'math' in one spot as a global accessible list of variables
+    if (sadb_routine->sadb_get_sa_from_spi(tm_frame[0], &sa_ptr) != CRYPTO_LIB_SUCCESS) // modify
     {
         // TODO - Error handling
         printf(KRED"Update PRU Error!\n");
@@ -554,11 +564,11 @@ void Crypto_TM_updatePDU(uint8_t* ingest, int len_ingest)
     printf("%s, Line: %d\n", __FILE__, __LINE__);
     if ((sa_ptr->est == 1) && (sa_ptr->ast == 1))
     {
-        fill_size = 1129 - MAC_SIZE - IV_SIZE + 2; // +2 for padding bytes
+        // fill_size = 1129 - MAC_SIZE - IV_SIZE + 2; // +2 for padding bytes
     }
     else
     {
-        fill_size = 1129;
+        // fill_size = 1129;
     }
     printf("%s, Line: %d\n", __FILE__, __LINE__);
 #ifdef TM_ZERO_FILL
@@ -575,36 +585,36 @@ void Crypto_TM_updatePDU(uint8_t* ingest, int len_ingest)
     }
 #else
     // Pre-append remaining packet if exist
-    if (tm_offset == 63)
-    {
-        tm_frame.tm_pdu[x++] = 0xff;
-        tm_offset--;
-    }
-    if (tm_offset == 62)
-    {
-        tm_frame.tm_pdu[x++] = 0x00;
-        tm_offset--;
-    }
-    if (tm_offset == 61)
-    {
-        tm_frame.tm_pdu[x++] = 0x00;
-        tm_offset--;
-    }
-    if (tm_offset == 60)
-    {
-        tm_frame.tm_pdu[x++] = 0x00;
-        tm_offset--;
-    }
-    if (tm_offset == 59)
-    {
-        tm_frame.tm_pdu[x++] = 0x39;
-        tm_offset--;
-    }
-    while (x < tm_offset)
-    {
-        tm_frame.tm_pdu[x] = 0x00;
-        x++;
-    }
+    // if (tm_offset == 63)
+    // {
+    //     tm_frame.tm_pdu[x++] = 0xff;
+    //     tm_offset--;
+    // }
+    // if (tm_offset == 62)
+    // {
+    //     tm_frame.tm_pdu[x++] = 0x00;
+    //     tm_offset--;
+    // }
+    // if (tm_offset == 61)
+    // {
+    //     tm_frame.tm_pdu[x++] = 0x00;
+    //     tm_offset--;
+    // }
+    // if (tm_offset == 60)
+    // {
+    //     tm_frame.tm_pdu[x++] = 0x00;
+    //     tm_offset--;
+    // }
+    // if (tm_offset == 59)
+    // {
+    //     tm_frame.tm_pdu[x++] = 0x39;
+    //     tm_offset--;
+    // }
+    // while (x < tm_offset)
+    // {
+    //     tm_frame.tm_pdu[x] = 0x00;
+    //     x++;
+    // }
     printf("%s, Line: %d\n", __FILE__, __LINE__);
     // Copy actual packet
     while (x < len_ingest + tm_offset)
@@ -612,7 +622,7 @@ void Crypto_TM_updatePDU(uint8_t* ingest, int len_ingest)
         // printf("%s, Line: %d\n", __FILE__, __LINE__);
         // printf("ingest[x - tm_offset] = 0x%02x \n", (uint8_t)ingest[x - tm_offset]);
         printf("%02X", (uint8_t)ingest[x - tm_offset]);
-        tm_frame.tm_pdu[x] = (uint8_t)ingest[x - tm_offset];
+        // tm_frame.tm_pdu[x] = (uint8_t)ingest[x - tm_offset];
         x++;
     }
     printf("%s, Line: %d\n", __FILE__, __LINE__);
@@ -625,60 +635,60 @@ void Crypto_TM_updatePDU(uint8_t* ingest, int len_ingest)
     else
     {
         printf("%s, Line: %d\n", __FILE__, __LINE__);
-        while (x < (fill_size - 64))
-        {
-            tm_frame.tm_pdu[x++] = 0x07;
-            tm_frame.tm_pdu[x++] = 0xff;
-            tm_frame.tm_pdu[x++] = 0x00;
-            tm_frame.tm_pdu[x++] = 0x00;
-            tm_frame.tm_pdu[x++] = 0x00;
-            tm_frame.tm_pdu[x++] = 0x39;
-            for (y = 0; y < 58; y++)
-            {
-                tm_frame.tm_pdu[x++] = 0x00;
-            }
-        }
+        // while (x < (fill_size - 64))
+        // {
+        //     tm_frame.tm_pdu[x++] = 0x07;
+        //     tm_frame.tm_pdu[x++] = 0xff;
+        //     tm_frame.tm_pdu[x++] = 0x00;
+        //     tm_frame.tm_pdu[x++] = 0x00;
+        //     tm_frame.tm_pdu[x++] = 0x00;
+        //     tm_frame.tm_pdu[x++] = 0x39;
+        //     for (y = 0; y < 58; y++)
+        //     {
+        //         tm_frame.tm_pdu[x++] = 0x00;
+        //     }
+        // }
         // Add partial packet, if possible, and set offset
-        if (x < fill_size)
-        {
-            tm_frame.tm_pdu[x++] = 0x07;
-            tm_offset = 63;
-        }
-        if (x < fill_size)
-        {
-            tm_frame.tm_pdu[x++] = 0xff;
-            tm_offset--;
-        }
-        if (x < fill_size)
-        {
-            tm_frame.tm_pdu[x++] = 0x00;
-            tm_offset--;
-        }
-        if (x < fill_size)
-        {
-            tm_frame.tm_pdu[x++] = 0x00;
-            tm_offset--;
-        }
-        if (x < fill_size)
-        {
-            tm_frame.tm_pdu[x++] = 0x00;
-            tm_offset--;
-        }
-        if (x < fill_size)
-        {
-            tm_frame.tm_pdu[x++] = 0x39;
-            tm_offset--;
-        }
-        for (y = 0; x < fill_size; y++)
-        {
-            tm_frame.tm_pdu[x++] = 00;
-            tm_offset--;
-        }
+        // if (x < fill_size)
+        // {
+        //     tm_frame.tm_pdu[x++] = 0x07;
+        //     tm_offset = 63;
+        // }
+        // if (x < fill_size)
+        // {
+        //     tm_frame.tm_pdu[x++] = 0xff;
+        //     tm_offset--;
+        // }
+        // if (x < fill_size)
+        // {
+        //     tm_frame.tm_pdu[x++] = 0x00;
+        //     tm_offset--;
+        // }
+        // if (x < fill_size)
+        // {
+        //     tm_frame.tm_pdu[x++] = 0x00;
+        //     tm_offset--;
+        // }
+        // if (x < fill_size)
+        // {
+        //     tm_frame.tm_pdu[x++] = 0x00;
+        //     tm_offset--;
+        // }
+        // if (x < fill_size)
+        // {
+        //     tm_frame.tm_pdu[x++] = 0x39;
+        //     tm_offset--;
+        // }
+        // for (y = 0; x < fill_size; y++)
+        // {
+        //     tm_frame.tm_pdu[x++] = 00;
+        //     tm_offset--;
+        // }
     }
-    while (x < TM_FILL_SIZE)
-    {
-        tm_frame.tm_pdu[x++] = 0x00;
-    }
+    // while (x < TM_FILL_SIZE)
+    // {
+    //     tm_frame.tm_pdu[x++] = 0x00;
+    // }
 #endif
 #endif
 
@@ -691,6 +701,8 @@ void Crypto_TM_updatePDU(uint8_t* ingest, int len_ingest)
  **/
 void Crypto_TM_updateOCF(void)
 {
+    // TODO
+    /*
     if (ocf == 0)
     { // CLCW
         clcw.vci = tm_frame.tm_header.vcid;
@@ -719,4 +731,5 @@ void Crypto_TM_updateOCF(void)
         Crypto_fsrPrint(&report);
 #endif
     }
+    **/
 }

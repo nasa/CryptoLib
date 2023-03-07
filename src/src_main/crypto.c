@@ -34,7 +34,10 @@ CFS_MODULE_DECLARE_LIB(crypto);
 */
 // crypto_key_t ak_ring[NUM_KEYS];
 CCSDS_t sdls_frame;
-TM_t tm_frame;
+// TM_t tm_frame;
+uint8_t tm_frame[1786]; // Testing
+TM_FramePrimaryHeader_t tm_frame_pri_hdr; // Used to reduce bit math duplication
+TM_FrameSecurityHeader_t tm_frame_sec_hdr; // Used to reduce bit math duplication
 // OCF
 uint8_t ocf = 0;
 SDLS_FSR_t report;
