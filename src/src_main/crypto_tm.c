@@ -93,9 +93,9 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
     printf("Status was %d\n", status);
     printf("HELP\n");
     // current_managed_parameters->tc_max_frame_length = 1786;
-    printf("TM DEBUG - Static TM Frame, Managed Param Size of %d bytes\n", current_managed_parameters->max_tc_frame_size);
+    printf("TM DEBUG - Static TM Frame, Managed Param Size of %d bytes\n", current_managed_parameters->max_frame_size);
     printf("TM DEBUG - \n");
-    for (i = 0; i < current_managed_parameters->max_tc_frame_size; i++)
+    for (i = 0; i < current_managed_parameters->max_frame_size; i++)
     {
         printf("%02X", ((uint8_t* )&tm_frame)[i]);
     }
@@ -220,7 +220,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         {
         case SA_PLAINTEXT:
             // Max frame length - data loc (includes spi and secondary header) - padding
-            data_len = current_managed_parameters->max_tc_frame_size - data_loc - sa_ptr->shplf_len;
+            data_len = current_managed_parameters->max_frame_size - data_loc - sa_ptr->shplf_len;
             break;
         default:
             printf(KRED "Unknown SA Service Type Detected!" RESET);
@@ -239,7 +239,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
 #ifdef TM_DEBUG
     printf(KYEL "Printing new TM frame:\n\t");
     printf("STUBBED OUT!\n");
-    for(int i = 0; i < current_managed_parameters->max_tc_frame_size; i++)
+    for(int i = 0; i < current_managed_parameters->max_frame_size; i++)
     {
         printf("%d %02X \n", i, tm_frame[i]);
     }

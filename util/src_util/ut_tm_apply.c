@@ -157,7 +157,7 @@ UTEST(TM_APPLY_SECURITY, HAPPY_PATH_CLEAR)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
-    for(int i=0; i < current_managed_parameters->max_tc_frame_size; i++)
+    for(int i=0; i < current_managed_parameters->max_frame_size; i++)
     {
         // printf("Checking %02x against %02X\n", tm_frame[i], (uint8_t)*(framed_tm_b + i));
         ASSERT_EQ(tm_frame[i], (uint8_t)*(framed_tm_b + i));

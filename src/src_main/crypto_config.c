@@ -353,11 +353,11 @@ int32_t Crypto_Config_Cam(uint8_t cam_enabled, char* cookie_file_path, char* key
  * @param vcid: uint8
  * @param has_fecf: uint8
  * @param has_segmentation_hdr: uint8
- * @param max_tc_frame_size: uint16
+ * @param max_frame_size: uint16
  * @return int32: Success/Failure
  **/
 int32_t Crypto_Config_Add_Gvcid_Managed_Parameter(uint8_t tfvn, uint16_t scid, uint8_t vcid, uint8_t has_fecf,
-                                                  uint8_t has_segmentation_hdr, uint16_t max_tc_frame_size)
+                                                  uint8_t has_segmentation_hdr, uint16_t max_frame_size)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
@@ -371,7 +371,7 @@ int32_t Crypto_Config_Add_Gvcid_Managed_Parameter(uint8_t tfvn, uint16_t scid, u
             gvcid_managed_parameters->vcid = vcid;
             gvcid_managed_parameters->has_fecf = has_fecf;
             gvcid_managed_parameters->has_segmentation_hdr = has_segmentation_hdr;
-            gvcid_managed_parameters->max_tc_frame_size = max_tc_frame_size;
+            gvcid_managed_parameters->max_frame_size = max_frame_size;
             gvcid_managed_parameters->next = NULL;
             return status;
         }
@@ -385,7 +385,7 @@ int32_t Crypto_Config_Add_Gvcid_Managed_Parameter(uint8_t tfvn, uint16_t scid, u
     else
     { // Recurse through nodes and add at end
         return crypto_config_add_gvcid_managed_parameter_recursion(tfvn, scid, vcid, has_fecf, has_segmentation_hdr, 
-                                                                    max_tc_frame_size, gvcid_managed_parameters);
+                                                                    max_frame_size, gvcid_managed_parameters);
     }
 }
 
@@ -465,18 +465,18 @@ char* crypto_deep_copy_string(char* src_string)
  * @param vcid: uint8
  * @param has_fecf: uint8
  * @param has_segmentation_hdr: uint8
- * @param max_tc_frame_size: uint16
+ * @param max_frame_size: uint16
  * @param managed_parameter: GvcidManagedParameters_t*
  * @return int32: Success/Failure
  **/
 int32_t crypto_config_add_gvcid_managed_parameter_recursion(uint8_t tfvn, uint16_t scid, uint8_t vcid, uint8_t has_fecf,
-                                                            uint8_t has_segmentation_hdr, uint16_t max_tc_frame_size,
+                                                            uint8_t has_segmentation_hdr, uint16_t max_frame_size,
                                                             GvcidManagedParameters_t* managed_parameter)
 {
     if (managed_parameter->next != NULL)
     {
         return crypto_config_add_gvcid_managed_parameter_recursion(tfvn, scid, vcid, has_fecf, has_segmentation_hdr,
-                                                                   max_tc_frame_size, managed_parameter->next);
+                                                                   max_frame_size, managed_parameter->next);
     }
     else
     {
@@ -486,7 +486,7 @@ int32_t crypto_config_add_gvcid_managed_parameter_recursion(uint8_t tfvn, uint16
         managed_parameter->next->vcid = vcid;
         managed_parameter->next->has_fecf = has_fecf;
         managed_parameter->next->has_segmentation_hdr = has_segmentation_hdr;
-        managed_parameter->next->max_tc_frame_size = max_tc_frame_size;
+        managed_parameter->next->max_frame_size = max_frame_size;
         managed_parameter->next->next = NULL;
         return CRYPTO_LIB_SUCCESS;
     }
