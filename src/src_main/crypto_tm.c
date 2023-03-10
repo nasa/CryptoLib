@@ -61,10 +61,10 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
     // uint8_t aad[20];
     // uint16_t spi = tm_frame.tm_sec_header.spi;
     // uint16_t spp_crc = 0x0000;
-    uint16_t data_loc = -1;
+    // uint16_t data_loc = -1;
     uint16_t data_len = -1;
-    // SecurityAssociation_t sa;
-    // SecurityAssociation_t* sa_ptr = *sa_dblptr;
+    uint32_t pkcs_padding = 0;
+    uint16_t new_fecf = 0x0000;
     // uint32_t encryption_cipher;
     // uint8_t ecs_is_aead_algorithm;
 
@@ -203,38 +203,213 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         }
 #endif
 
-        // Calculate location of data within the frame
+        // Calculate location of fields within the frame
+        // Doing all here for simplification
         // Note: Secondary headers are static only for a mission phase, not guaranteed static 
         // over the life of a mission Per CCSDS 132.0-B.3 Section 4.1.2.7.2.3
         // I'm interpeting this to mean at change of phase, it could be omitted, therefore
         // must check with the TF PriHdr to see if account for it, not necessarily the managed params
-        data_loc = TM_FRAME_PRIMARYHEADER_SIZE + TM_FRAME_SECHEADER_SIZE;
-        // if(tm_frame.tm_header.tfsh == 1)
-        // {
-        //     data_loc += current_managed_parameters->tm_frame_secondary_hdr_length;
-        // }
-
-        // Calculate length of data that will be encrypted
-        // This length starts at data_loc, and does not include security trailer (if present) and Frame Trailer (if present)
-        switch (sa_service_type)
+        
+        // uint16_t max_frame_size = current_managed_parameters->max_frame_size;
+        // Get relevant flags from header
+        // uint8_t ocf_flag = tm_frame[1] & 0x01; // Need for other calcs
+        // uint8_t tf_sec_hdr_flag = tm_frame[5] & 0x80;
+        uint8_t tm_sec_hdr_length = 0;
+        if (current_managed_parameters->has_secondary_hdr)
         {
-        case SA_PLAINTEXT:
-            // Max frame length - data loc (includes spi and secondary header) - padding
-            data_len = current_managed_parameters->max_frame_size - data_loc - sa_ptr->shplf_len;
-            break;
-        default:
-            printf(KRED "Unknown SA Service Type Detected!" RESET);
-            break;
+            tm_sec_hdr_length = current_managed_parameters->tm_secondary_hdr_len;
+        }
+
+        /*
+        ** Begin Security Header Fields
+        ** Reference CCSDS SDLP 3550b1 4.1.1.1.3
+        */
+        // Initial index after primary and optional secondary header
+        uint8_t idx = 6 + tm_sec_hdr_length;
+        // Set SPI
+        tm_frame[idx] = ((sa_ptr->spi & 0xFF00) >> 8);
+        tm_frame[idx + 1] = (sa_ptr->spi & 0x00FF);
+        idx += 2;
+
+        // Set initialization vector if specified
+#ifdef SA_DEBUG
+        if (sa_ptr->shivf_len > 0 && sa_ptr->iv != NULL)
+        {
+            printf(KYEL "Using IV value:\n\t");
+            for (i = 0; i < sa_ptr->iv_len; i++)
+            {
+                printf("%02x", *(sa_ptr->iv + i));
+            }
+            printf("\n" RESET);
+            printf(KYEL "Transmitted IV value:\n\t");
+            for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
+            {
+                printf("%02x", *(sa_ptr->iv + i));
+            }
+            printf("\n" RESET);
+        }
+#endif
+
+        if(sa_service_type != SA_PLAINTEXT && sa_ptr->ecs == NULL && sa_ptr->acs == NULL)
+        {
+            return CRYPTO_LIB_ERR_NULL_CIPHERS;
+        }
+
+        if(sa_ptr->est == 0 && sa_ptr->ast == 1)
+        {
+            if(sa_ptr->acs !=NULL && sa_ptr->acs_len != 0)
+            {
+                if((*(sa_ptr->acs) == CRYPTO_MAC_CMAC_AES256 || *(sa_ptr->acs) == CRYPTO_MAC_HMAC_SHA256 || *(sa_ptr->acs) == CRYPTO_MAC_HMAC_SHA512) &&
+                    sa_ptr->iv_len > 0 )
+                    {
+                        return CRYPTO_LIB_ERR_IV_NOT_SUPPORTED_FOR_ACS_ALGO;
+                    }
+            }
+        }
+
+        // Start index from the transmitted portion
+        for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
+        {
+            // Copy in IV from SA
+            tm_frame[idx] = *(sa_ptr->iv + i);
+            idx++;
+        }
+
+        // Set anti-replay sequence number if specified
+        /*
+        ** See also: 4.1.1.4.2
+        ** 4.1.1.4.4 If authentication or authenticated encryption is not selected
+        ** for an SA, the Sequence Number field shall be zero octets in length.
+        ** Reference CCSDS 3550b1
+        */
+        for (i = sa_ptr->arsn_len - sa_ptr->shsnf_len; i < sa_ptr->arsn_len; i++)
+        {
+            // Copy in ARSN from SA
+            tm_frame[idx] = *(sa_ptr->arsn + i);
+            idx++;
+        }
+
+        // Set security header padding if specified
+        /*
+        ** 4.2.3.4 h) if the algorithm and mode selected for the SA require the use of
+        ** fill padding, place the number of fill bytes used into the Pad Length field
+        ** of the Security Header - Reference CCSDS 3550b1
+        */
+        // TODO: Revisit this
+        // TODO: Likely SA API Call
+        /* 4.1.1.5.2 The Pad Length field shall contain the count of fill bytes used in the
+        ** cryptographic process, consisting of an integral number of octets. - CCSDS 3550b1
+        */
+        // TODO: Set this depending on crypto cipher used
+
+        if(pkcs_padding)
+        {
+            uint8_t hex_padding[3] = {0};  //TODO: Create #Define for the 3
+            pkcs_padding = pkcs_padding & 0x00FFFFFF; // Truncate to be maxiumum of 3 bytes in size
+            
+            // Byte Magic
+            hex_padding[0] = (pkcs_padding >> 16) & 0xFF;
+            hex_padding[1] = (pkcs_padding >> 8)  & 0xFF;
+            hex_padding[2] = (pkcs_padding)  & 0xFF;
+            
+            uint8_t padding_start = 0;
+            padding_start = 3 - sa_ptr->shplf_len;
+
+            for (i = 0; i < sa_ptr->shplf_len; i++)
+            {
+                tm_frame[idx] = hex_padding[padding_start++];
+                idx++;
+            }
         }
         
-        if(current_managed_parameters->has_fecf == 1) //TM_NO_OCF) //TODO change back
+        /*
+        ** End Security Header Fields
+        */
+
+        //TODO: Padding handled here, or TO?
+        // for (uint32_t i = 0; i < pkcs_padding; i++)
+        // {
+        //     /* 4.1.1.5.2 The Pad Length field shall contain the count of fill bytes used in the
+        //     ** cryptographic process, consisting of an integral number of octets. - CCSDS 3550b1
+        //     */
+        //     // TODO: Set this depending on crypto cipher used
+        //     *(p_new_enc_frame + index + i) = (uint8_t)pkcs_padding; // How much padding is needed?
+        //     // index++;
+        // }
+
+
+        // Index currently at start of data field, AKA end of security header
+        // Calculate size of data to be encrypted
+        data_len = current_managed_parameters->max_frame_size - idx - sa_ptr->stmacf_len;
+
+        // Check other managed parameter flags, subtract their lengths from data field if present
+        if(current_managed_parameters->has_ocf == TM_HAS_OCF)
         {
-            data_len += 4;
+            data_len -= 4;
         }
-        if(current_managed_parameters->has_fecf == 1) //TM_NO_FECF)
+        if(current_managed_parameters->has_fecf == TM_HAS_FECF)
         {
-            data_len += 2;
+            data_len -= 2;
         }
+
+#ifdef TM_DEBUG
+        printf(KYEL "Data location starts at: %d\n" RESET, idx);
+        printf(KYEL "Data size is: %d\n" RESET, data_len);
+        if(current_managed_parameters->has_ocf == TM_HAS_OCF)
+        {
+            // If OCF exists, comes immediately after MAC
+            printf(KYEL "OCF Location is: %d" RESET, idx + data_len + sa_ptr->stmacf_len);
+        }
+        if(current_managed_parameters->has_fecf == TM_HAS_FECF)
+        {
+            // If FECF exists, comes just before end of the frame
+            printf(KYEL "FECF Location is: %d\n" RESET, current_managed_parameters->max_frame_size - 2);
+        }
+#endif
+
+
+        // Do the encryption
+
+        // Move idx to mac location
+        idx += data_len;
+#ifdef TM_DEBUG
+        if (sa_ptr->stmacf_len > 0)
+        {
+            printf(KYEL "MAC location starts at: %d\n" RESET, idx);
+            printf(KYEL "MAC length of %d\n" RESET, sa_ptr->stmacf_len);
+        }
+        else
+        {
+            printf(KYEL "MAC NOT SET TO BE USED IN SA - LENGTH IS 0\n");
+        }
+#endif
+
+//TODO OCF - ? Here, elsewhere?
+
+        /*
+        ** End Authentication / Encryption
+        */
+
+        // Only calculate & insert FECF if CryptoLib is configured to do so & gvcid includes FECF.
+        if (current_managed_parameters->has_fecf == TM_HAS_FECF)
+        {
+#ifdef FECF_DEBUG
+            printf(KCYN "Calcing FECF over %d bytes\n" RESET, current_managed_parameters->max_frame_size - 2);
+#endif
+            if (crypto_config->crypto_create_fecf == CRYPTO_TM_CREATE_FECF_TRUE)
+            {
+                new_fecf = Crypto_Calc_FECF((uint8_t *)&tm_frame, current_managed_parameters->max_frame_size - 2);
+                tm_frame[current_managed_parameters->max_frame_size - 2] = (uint8_t)((new_fecf & 0xFF00) >> 8);
+                tm_frame[current_managed_parameters->max_frame_size - 1] = (uint8_t)(new_fecf & 0x00FF);
+            }
+            else // CRYPTO_TC_CREATE_FECF_FALSE
+            {
+                tm_frame[current_managed_parameters->max_frame_size - 2] = (uint8_t)0x00;
+                tm_frame[current_managed_parameters->max_frame_size - 1] = (uint8_t)0x00;
+            }
+            idx += 2;
+        }
+
 
 #ifdef TM_DEBUG
     printf(KYEL "Printing new TM frame:\n\t");

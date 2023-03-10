@@ -42,20 +42,34 @@ int32_t crypto_free_config_structs(void);
 */
 
 /**
- * @brief Function: Crypto_Init_Unit_test
+ * @brief Function: Crypto_Init_TC_Unit_Test
  * @return int32: status
  **/
-int32_t Crypto_Init_Unit_Test(void)
+int32_t Crypto_Init_TC_Unit_Test(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TC Tests
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1786);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1786);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
+    status = Crypto_Init();
+    return status;
+}
+
+/**
+ * @brief Function: Crypto_Init_TC_Unit_Test
+ * @return int32: status
+ **/
+int32_t Crypto_Init_TM_Unit_Test(void)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TM Tests
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002c, 0, TM_HAS_FECF, TM_NO_SEGMENT_HDRS, 1786);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, 1786);
     status = Crypto_Init();
     return status;
 }
@@ -100,9 +114,9 @@ int32_t Crypto_Init(void)
         return status; // No Managed Parameter configuration set -- return!
     }
 
-#ifdef TC_DEBUG
-    Crypto_mpPrint(gvcid_managed_parameters, 1);
-#endif
+// #ifdef TC_DEBUG
+    // Crypto_mpPrint(gvcid_managed_parameters, 1);
+// #endif
 
     // Prepare SADB type from config
     if (crypto_config->sadb_type == SADB_TYPE_INMEMORY)

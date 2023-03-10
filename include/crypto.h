@@ -80,7 +80,8 @@ extern int32_t Crypto_Init_With_Configs(
     CryptoConfig_t* crypto_config_p, GvcidManagedParameters_t* gvcid_managed_parameters_p,
     SadbMariaDBConfig_t* sadb_mariadb_config_p,
     CryptographyKmcCryptoServiceConfig_t* cryptography_kmc_crypto_config_p); // Initialize CryptoLib With Application Defined Configuration
-extern int32_t Crypto_Init_Unit_Test(void);      // Initialize CryptoLib with unit test default Configurations
+extern int32_t Crypto_Init_TC_Unit_Test(void);      // Initialize CryptoLib with unit test default Configurations
+extern int32_t Crypto_Init_TM_Unit_Test(void);      // Initialize CryptoLib with unit test default Configurations
 
 // Cleanup
 extern int32_t Crypto_Shutdown(void); // Free all allocated memory
@@ -190,7 +191,6 @@ extern CryptographyInterface cryptography_if;
 
 // extern crypto_key_t ak_ring[NUM_KEYS];
 extern CCSDS_t sdls_frame;
-extern CryptoConfig_t* crypto_config;
 extern SadbMariaDBConfig_t* sadb_mariadb_config;
 extern GvcidManagedParameters_t* gvcid_managed_parameters;
 extern GvcidManagedParameters_t* current_managed_parameters;

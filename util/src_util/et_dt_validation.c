@@ -143,7 +143,7 @@ void python_auth_encryption(char* data, char* key, char* iv, char* header, char*
 UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Init_Unit_Test();
+    Crypto_Init_TC_Unit_Test();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
 
     uint8_t* expected = NULL;
@@ -224,7 +224,7 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
 UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Init_Unit_Test();
+    Crypto_Init_TC_Unit_Test();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
 
     char* activate_sa4_h = "2003002000ff000100011880d2c9000e197f0b001b0004000400003040d95ecbc2";
@@ -312,7 +312,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    // Crypto_Init_Unit_Test();
+    // Crypto_Init_TC_Unit_Test();
     Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);

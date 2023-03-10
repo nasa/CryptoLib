@@ -47,14 +47,18 @@ typedef enum
 } FecfPresent;
 typedef enum
 {
-    TC_NO_SEGMENT_HDRS,
-    TC_HAS_SEGMENT_HDRS
-} TcSegmentHdrsPresent;
+    CRYPTO_TC_CREATE_FECF_FALSE,
+    CRYPTO_TC_CREATE_FECF_TRUE,
+    CRYPTO_TM_CREATE_FECF_FALSE,
+    CRYPTO_TM_CREATE_FECF_TRUE
+} CreateFecfBool;
+// TC specific enums
 typedef enum
 {
-    CRYPTO_TC_CREATE_FECF_FALSE,
-    CRYPTO_TC_CREATE_FECF_TRUE
-} TcCreateFecfBool;
+    TC_NO_SEGMENT_HDRS,
+    TC_HAS_SEGMENT_HDRS,
+    TM_SEGMENT_HDRS_NA
+} TcSegmentHdrsPresent;
 typedef enum
 {
     TC_PROCESS_SDLS_PDUS_FALSE,
@@ -90,22 +94,20 @@ typedef enum
     SA_INCREMENT_NONTRANSMITTED_IV_FALSE,
     SA_INCREMENT_NONTRANSMITTED_IV_TRUE
 } SaIncrementNonTransmittedIvPortion;
+// TM specific enums
 typedef enum
 {
+    AOS_NO_OCF,
+    AOS_HAS_OCF,
+    TC_OCF_NA,
     TM_NO_OCF,
     TM_HAS_OCF
-} TmOcfPresent;
+} OcfPresent;
 typedef enum
 {
-    TM_NO_SEGMENT_HDRS,
-    TM_HAS_SEGMENT_HDRS
-} TmSegmentHdrsPresent;
-typedef enum
-{
-    CRYPTO_TM_CREATE_FECF_FALSE,
-    CRYPTO_TM_CREATE_FECF_TRUE
-} TmCreateFecfBool;
-
+    TM_NO_SECONDARY_HDR,
+    TM_HAS_SECONDARY_HDR
+} TmSecondaryHdrPresent;
 typedef enum
 {
     CAM_ENABLED_FALSE,
@@ -142,7 +144,7 @@ typedef struct
 {
     SadbType sadb_type;
     CryptographyType cryptography_type;
-    TcCreateFecfBool crypto_create_fecf; // Whether or not CryptoLib is expected to calculate TC FECFs and return
+    CreateFecfBool crypto_create_fecf; // Whether or not CryptoLib is expected to calculate TC FECFs and return
                                          // payloads with the FECF
     TcProcessSdlsPdus process_sdls_pdus; // Config to process SDLS extended procedure PDUs in CryptoLib
     TcPusHdrPresent has_pus_hdr;
@@ -164,10 +166,9 @@ struct _GvcidManagedParameters_t
     FecfPresent has_fecf;
     TcSegmentHdrsPresent has_segmentation_hdr;
     uint16_t max_frame_size; // Maximum TC Frame Length with headers
-    // uint16_t tm_frame_length; // Fixed length for a TM Frame with headers
-    // uint8_t tm_frame_secondary_hdr_length;
-    // TmOcfPresent tm_has_ocf;
-    // TmFecfPresent tm_has_fecf;
+    TmSecondaryHdrPresent has_secondary_hdr;
+    uint8_t tm_secondary_hdr_len;
+    OcfPresent has_ocf;
     GvcidManagedParameters_t* next; // Will be a list of managed parameters!
 };
 #define GVCID_MANAGED_PARAMETERS_SIZE (sizeof(GvcidManagedParameters_t))

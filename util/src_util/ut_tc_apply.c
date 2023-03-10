@@ -89,7 +89,7 @@ UTEST(TC_APPLY_SECURITY, NO_CONFIG)
 UTEST(TC_APPLY_SECURITY, HAPPY_PATH_CLEAR)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Init_Unit_Test();
+    Crypto_Init_TC_Unit_Test();
     char* raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
     char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
@@ -115,7 +115,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_CLEAR)
 UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Init_Unit_Test();
+    Crypto_Init_TC_Unit_Test();
     char* raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
     char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
@@ -151,7 +151,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC)
 UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_CBC)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Init_Unit_Test();
+    Crypto_Init_TC_Unit_Test();
     char* raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
     char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
@@ -188,7 +188,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_CBC)
 UTEST(TC_APPLY_SECURITY, HAPPY_PATH_AUTH_ENC)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Init_Unit_Test();
+    Crypto_Init_TC_Unit_Test();
     char* raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
     char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
@@ -224,7 +224,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_AUTH_ENC)
 UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_IV_ROLLOVER)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Init_Unit_Test();
+    Crypto_Init_TC_Unit_Test();
     char* raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
     char* raw_tc_sdls_ping_b = NULL;
 
