@@ -54,6 +54,8 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
     // int fecf_loc = 0;
     // uint8_t map_id = 0;
     // uint8_t tempTM[TM_SIZE];
+    uint8_t* aad = NULL;
+    uint16_t aad_len = 0;
     int i = 0;
     // int x = 0;
     // int y = 0;
@@ -65,8 +67,8 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
     uint16_t data_len = -1;
     uint32_t pkcs_padding = 0;
     uint16_t new_fecf = 0x0000;
-    // uint32_t encryption_cipher;
-    // uint8_t ecs_is_aead_algorithm;
+    uint32_t encryption_cipher;
+    uint8_t ecs_is_aead_algorithm;
 
     // memset(&tempTM, 0, TM_SIZE);
     // Gotta figure out what  todo here if static is in flight
@@ -178,12 +180,12 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         }
 
 // Determine Algorithm cipher & mode. // TODO - Parse authentication_cipher, and handle AEAD cases properly
-        // if (sa_service_type != SA_PLAINTEXT)
-        // {
-        //     encryption_cipher =
-        //         (sa_ptr->ecs[0] << 24) | (sa_ptr->ecs[1] << 16) | (sa_ptr->ecs[2] << 8) | sa_ptr->ecs[3];
-        //     ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(encryption_cipher);
-        // }
+        if (sa_service_type != SA_PLAINTEXT)
+        {
+            encryption_cipher =
+                (sa_ptr->ecs[0] << 24) | (sa_ptr->ecs[1] << 16) | (sa_ptr->ecs[2] << 8) | sa_ptr->ecs[3];
+            ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(encryption_cipher);
+        }
 
 #ifdef TC_DEBUG
         switch (sa_service_type)
@@ -337,8 +339,11 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         //     // index++;
         // }
 
+        /*
+        ** ~~~Index currently at start of data field, AKA end of security header~~~
+        */
 
-        // Index currently at start of data field, AKA end of security header
+
         // Calculate size of data to be encrypted
         data_len = current_managed_parameters->max_frame_size - idx - sa_ptr->stmacf_len;
 
@@ -369,6 +374,46 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
 
 
         // Do the encryption
+        if(sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_TRUE)
+        {
+            printf(KRED "NOT SUPPORTED!!!\n");
+            status = CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
+        } 
+        else if (sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_FALSE) // Non aead algorithm
+        {
+        // TODO - implement non-AEAD algorithm logic
+        if(sa_service_type == SA_AUTHENTICATION)
+        {
+            status = cryptography_if->cryptography_authenticate(NULL,       // ciphertext output
+                                                                (size_t) 0, // length of data
+                                                                (uint8_t*)(&tm_frame[idx]), // plaintext input
+                                                                (size_t)data_len,    // in data length
+                                                                NULL, // Using SA key reference, key is null
+                                                                Crypto_Get_ACS_Algo_Keylen(*sa_ptr->acs),
+                                                                sa_ptr, // SA (for key reference)
+                                                                sa_ptr->iv, // IV
+                                                                sa_ptr->iv_len, // IV Length
+                                                                (uint8_t*)(&tm_frame[idx+data_len]), // tag output
+                                                                sa_ptr->stmacf_len, // tag size
+                                                                aad, // AAD Input
+                                                                aad_len, // Length of AAD
+                                                                *sa_ptr->ecs, // encryption cipher
+                                                                *sa_ptr->acs,  // authentication cipher
+                                                                NULL);
+        }
+        if(sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
+        {
+            printf(KRED "NOT SUPPORTED!!!\n");
+            status = CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
+        }
+        else if(sa_service_type == SA_PLAINTEXT)
+        {
+            // Do nothing, SDLS fields were already copied in
+        }
+        else{
+            status = CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
+        }
+        }
 
         // Move idx to mac location
         idx += data_len;
@@ -429,7 +474,6 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
 
     return status;
 }
-
 
 /*** Preserving for now
     // Check for idle frame trigger
