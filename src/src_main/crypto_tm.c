@@ -85,24 +85,10 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         printf(KRED "Error: Input SA NULL! \n" RESET);
         return status; // Just return here, nothing can be done.
     }
-#ifdef DEBUG
-
     status = Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, 
                                                     tm_frame_pri_hdr.scid,
                                                     tm_frame_pri_hdr.vcid, 
                                                     gvcid_managed_parameters, &current_managed_parameters);
-    printf("Tried to get MPs for TVFN %d, SCID %d and VCID %d\n", tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid);
-    printf("Status was %d\n", status);
-    printf("HELP\n");
-    // current_managed_parameters->tc_max_frame_length = 1786;
-    printf("TM DEBUG - Static TM Frame, Managed Param Size of %d bytes\n", current_managed_parameters->max_frame_size);
-    printf("TM DEBUG - \n");
-    for (i = 0; i < current_managed_parameters->max_frame_size; i++)
-    {
-        printf("%02X", ((uint8_t* )&tm_frame)[i]);
-    }
-    printf("\n");
-#endif
 
     if (crypto_config == NULL)
     {
@@ -128,7 +114,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
     // {
         // return status;
     // } // Unable to get necessary Managed Parameters for TM TF -- return with error.
-
+**/
     // Query SA DB for active SA / SDLS parameters
     if (sadb_routine == NULL) // This should not happen, but tested here for safety
     {
@@ -137,8 +123,8 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
     }
     else
     {
-        status = sadb_routine->sadb_get_operational_sa_from_gvcid(tm_frame.tm_header.tfvn, tm_frame.tm_header.scid,
-                                                                    tm_frame.tm_header.vcid, map_id, &sa_ptr);
+        status = sadb_routine->sadb_get_operational_sa_from_gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
+                                                                    tm_frame_pri_hdr.vcid, TYPE_TM, &sa_ptr);
     }
 
     // If unable to get operational SA, can return
@@ -146,7 +132,6 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
     {
         return status;
     }
-    ***************/
 
 #ifdef SA_DEBUG
         printf(KYEL "DEBUG - Printing SA Entry for current frame.\n" RESET);
@@ -386,8 +371,8 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         {
             status = cryptography_if->cryptography_authenticate(NULL,       // ciphertext output
                                                                 (size_t) 0, // length of data
-                                                                (uint8_t*)(&tm_frame[idx]), // plaintext input
-                                                                (size_t)data_len,    // in data length
+                                                                (uint8_t*)(&tm_frame[0]), // plaintext input
+                                                                (size_t)(idx+data_len),    // in data length - from start of frame to end of data
                                                                 NULL, // Using SA key reference, key is null
                                                                 Crypto_Get_ACS_Algo_Keylen(*sa_ptr->acs),
                                                                 sa_ptr, // SA (for key reference)
