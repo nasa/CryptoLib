@@ -50,11 +50,11 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
     // int pdu_loc = 0;
     // int pdu_len = *len_ingest - TM_MIN_SIZE;
     // int pad_len = 0;
-    // int mac_loc = 0;
+    int mac_loc = 0;
     // int fecf_loc = 0;
     // uint8_t map_id = 0;
     // uint8_t tempTM[TM_SIZE];
-    uint8_t* aad = NULL;
+    uint8_t aad[1786];
     uint16_t aad_len = 0;
     int i = 0;
     // int x = 0;
@@ -121,11 +121,13 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         printf(KRED "ERROR: SA DB Not initalized! -- CRYPTO_LIB_ERR_NO_INIT, Will Exit\n" RESET);
         status = CRYPTO_LIB_ERR_NO_INIT;
     }
-    else
-    {
-        status = sadb_routine->sadb_get_operational_sa_from_gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
-                                                                    tm_frame_pri_hdr.vcid, TYPE_TM, &sa_ptr);
-    }
+
+    // Handled by passing in sa
+    // else
+    // {
+    //     status = sadb_routine->sadb_get_operational_sa_from_gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
+    //                                                                 tm_frame_pri_hdr.vcid, TYPE_TM, &sa_ptr);
+    // }
 
     // If unable to get operational SA, can return
     if (status != CRYPTO_LIB_SUCCESS)
@@ -212,7 +214,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         ** Reference CCSDS SDLP 3550b1 4.1.1.1.3
         */
         // Initial index after primary and optional secondary header
-        uint8_t idx = 6 + tm_sec_hdr_length;
+        uint16_t idx = 6 + tm_sec_hdr_length;
         // Set SPI
         tm_frame[idx] = ((sa_ptr->spi & 0xFF00) >> 8);
         tm_frame[idx + 1] = (sa_ptr->spi & 0x00FF);
@@ -331,7 +333,6 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
 
         // Calculate size of data to be encrypted
         data_len = current_managed_parameters->max_frame_size - idx - sa_ptr->stmacf_len;
-
         // Check other managed parameter flags, subtract their lengths from data field if present
         if(current_managed_parameters->has_ocf == TM_HAS_OCF)
         {
@@ -345,6 +346,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
 #ifdef TM_DEBUG
         printf(KYEL "Data location starts at: %d\n" RESET, idx);
         printf(KYEL "Data size is: %d\n" RESET, data_len);
+        printf(KYEL "Index at end of SPI is: %d\n", idx);
         if(current_managed_parameters->has_ocf == TM_HAS_OCF)
         {
             // If OCF exists, comes immediately after MAC
@@ -357,6 +359,38 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         }
 #endif
 
+        /*
+        ** Begin Authentication / Encryption
+        */
+
+        if (sa_service_type != SA_PLAINTEXT)
+        {
+            aad_len = 0;
+
+            if (sa_service_type == SA_AUTHENTICATED_ENCRYPTION || sa_service_type == SA_AUTHENTICATION)
+            {
+                mac_loc = idx+data_len;
+#ifdef MAC_DEBUG
+                printf(KYEL "MAC location is: %d\n" RESET, mac_loc);
+                printf(KYEL "MAC size is: %d\n" RESET, sa_ptr->stmacf_len);
+#endif
+
+                // Prepare the Header AAD (CCSDS 335.0-B-2 4.2.3.4)
+                aad_len = idx; // At the very least AAD includes the header
+                if (sa_service_type == SA_AUTHENTICATION) // auth only, we authenticate the payload as part of the AEAD encrypt call here
+                {
+                    aad_len += data_len;
+                }
+#ifdef TM_DEBUG
+                printf("Calculated AAD Length: %d\n",aad_len);
+#endif
+                if (sa_ptr->abm_len < aad_len)
+                {
+                    return CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
+                }
+                status = Crypto_Prepare_TM_AAD(&tm_frame[0], aad_len, sa_ptr->abm, (uint8_t*)&aad);
+            }
+        }
 
         // Do the encryption
         if(sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_TRUE)
@@ -369,22 +403,26 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         // TODO - implement non-AEAD algorithm logic
         if(sa_service_type == SA_AUTHENTICATION)
         {
-            status = cryptography_if->cryptography_authenticate(NULL,       // ciphertext output
+            printf("Trying to put the mac at index %d\n", idx+data_len);
+
+            status = cryptography_if->cryptography_authenticate(//Stub out data in/out as this is done in place
+                                                                (uint8_t*)(&tm_frame[0]),       // ciphertext output
                                                                 (size_t) 0, // length of data
                                                                 (uint8_t*)(&tm_frame[0]), // plaintext input
-                                                                (size_t)(idx+data_len),    // in data length - from start of frame to end of data
+                                                                (size_t)0, // in data length - from start of frame to end of data
                                                                 NULL, // Using SA key reference, key is null
                                                                 Crypto_Get_ACS_Algo_Keylen(*sa_ptr->acs),
                                                                 sa_ptr, // SA (for key reference)
                                                                 sa_ptr->iv, // IV
                                                                 sa_ptr->iv_len, // IV Length
-                                                                (uint8_t*)(&tm_frame[idx+data_len]), // tag output
+                                                                &tm_frame[mac_loc], // tag output
                                                                 sa_ptr->stmacf_len, // tag size
                                                                 aad, // AAD Input
                                                                 aad_len, // Length of AAD
                                                                 *sa_ptr->ecs, // encryption cipher
                                                                 *sa_ptr->acs,  // authentication cipher
                                                                 NULL);
+            printf("STATUS AFTER AUTH IS %d\n", status);
         }
         if(sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
         {
@@ -405,6 +443,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
 #ifdef TM_DEBUG
         if (sa_ptr->stmacf_len > 0)
         {
+            printf(KYEL "Data length is %d\n" RESET, data_len);
             printf(KYEL "MAC location starts at: %d\n" RESET, idx);
             printf(KYEL "MAC length of %d\n" RESET, sa_ptr->stmacf_len);
         }
@@ -935,4 +974,46 @@ void Crypto_TM_updateOCF(void)
 #endif
     }
     **/
+}
+
+/**
+ * @brief Function: Crypto_Prepare_TM_AAD
+ * Bitwise ANDs buffer with abm, placing results in aad buffer
+ * Note: Function caller is responsible for freeing the returned buffer!
+ * @param buffer: uint8_t*
+ * @param len_aad: uint16_t
+ * @param abm_buffer: uint8_t*
+ * @param aad: uint8_t*
+ * @return status: uint32_t
+ **/
+uint32_t Crypto_Prepare_TM_AAD(uint8_t* buffer, uint16_t len_aad, uint8_t* abm_buffer, uint8_t* aad)
+{
+    uint32_t status = CRYPTO_LIB_SUCCESS;
+    int i;
+
+    for (i = 0; i < len_aad; i++)
+    {
+        aad[i] = buffer[i] & abm_buffer[i];
+    }
+
+#ifdef MAC_DEBUG
+    printf(KYEL "AAD before ABM Bitmask:\n\t");
+    for (i = 0; i < len_aad; i++)
+    {
+        printf("%02x", buffer[i]);
+    }
+    printf("\n" RESET);
+#endif
+
+#ifdef MAC_DEBUG
+    printf(KYEL "Preparing AAD:\n");
+    printf("\tUsing AAD Length of %d\n\t", len_aad);
+    for (i = 0; i < len_aad; i++)
+    {
+        printf("%02x", aad[i]);
+    }
+    printf("\n" RESET);
+#endif
+
+    return status;
 }
