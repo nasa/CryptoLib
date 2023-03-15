@@ -494,7 +494,7 @@ static int32_t cryptography_config(void)
     ek_ring[135].key_len = 32;
     ek_ring[135].key_state = KEY_DEACTIVATED;
 
-    // 136 - ef9f9284cf599eac3b119905a7d18851e7e374cf63aea04358586b0f757670f8
+    // 136 - ff9f9284cf599eac3b119905a7d18851e7e374cf63aea04358586b0f757670f9
     // Reference:
     // https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/mac/gcmtestvectors.zip
     ek_ring[136].value[0] = 0xff;
