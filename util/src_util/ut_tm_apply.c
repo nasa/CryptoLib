@@ -127,7 +127,7 @@ UTEST(TM_APPLY_SECURITY, NO_CONFIG)
  * and continue down the "happy Path", finally returning CRYPTO_LIB_SUCCESS
  * The static TM in memory should be unchanged
  **/
-UTEST(TM_APPLY_SECURITY, HAPPY_PATH_CLEAR)
+UTEST(TM_APPLY_SECURITY, HAPPY_PATH_CLEAR_FECF)
 {
     // Setup & Initialize CryptoLib
     Crypto_Init_TM_Unit_Test();
@@ -177,7 +177,7 @@ UTEST(TM_APPLY_SECURITY, HAPPY_PATH_CLEAR)
 
     Crypto_Shutdown();
     free(framed_tm_b);
-    
+    free(truth_tm_b);
 }
 
 /**
@@ -242,7 +242,7 @@ UTEST(TM_APPLY_SECURITY, HAPPY_PATH_CLEAR_NO_FECF)
 
     Crypto_Shutdown();
     free(framed_tm_b);
-    
+    free(truth_tm_b);
 }
 
 /**
@@ -335,7 +335,7 @@ UTEST(TM_APPLY_SECURITY, AES_CMAC_256_TEST_0)
 
     Crypto_Shutdown();
     free(framed_tm_b);
-    
+    free(truth_tm_b);
 }
 
 /**
@@ -429,6 +429,7 @@ UTEST(TM_APPLY_SECURITY, AES_CMAC_256_TEST_1)
 
     Crypto_Shutdown();
     free(framed_tm_b);    
+    free(truth_tm_b);
 }
 
 /**
@@ -520,6 +521,7 @@ UTEST(TM_APPLY_ENC_VAL, AES_HMAC_SHA_256_TEST_0)
 
     Crypto_Shutdown();
     free(framed_tm_b); 
+    free(truth_tm_b);
 }
 
 /**
@@ -611,6 +613,7 @@ UTEST(TM_APPLY_ENC_VAL, AES_HMAC_SHA_256_TEST_1)
 
     Crypto_Shutdown();
     free(framed_tm_b);
+    free(truth_tm_b);
 }
 
 /**
@@ -705,7 +708,8 @@ UTEST(TM_APPLY_ENC_VAL, AES_HMAC_SHA_512_TEST_0)
     }
 
     Crypto_Shutdown();
-    free(framed_tm_b); 
+    free(framed_tm_b);
+    free(truth_tm_b);
 }
 
 /**
@@ -801,6 +805,7 @@ UTEST(TM_APPLY_ENC_VAL, AES_HMAC_SHA_512_TEST_1)
 
     Crypto_Shutdown();
     free(framed_tm_b); 
+    free(truth_tm_b);
 }
 
 UTEST_MAIN();
