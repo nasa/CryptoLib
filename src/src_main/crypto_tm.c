@@ -180,12 +180,18 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         idx = 4;
         if((tm_frame[idx] & 0x80) == 0x80)
         {
+#ifdef TM_DEBUG
+            printf(KYEL "A TM Secondary Header flag is set!\n");
+#endif
             // Secondary header is present
             idx = 6;
             // Determine length of secondary header
             // Length coded as total length of secondary header - 1
             // Reference CCSDS 132.0-B-2 4.1.3.2.3
-            uint8_t secondary_hdr_len = ((tm_frame[idx] && 0x3F) >> 2);
+            uint8_t secondary_hdr_len = (tm_frame[idx] & 0x3F);
+#ifdef TM_DEBUG
+            printf(KYEL "Secondary Header Length is decoded as: %d\n", secondary_hdr_len);
+#endif
             // Increment from current byte (1st byte of secondary header),
             // to where the SPI would start
             idx += secondary_hdr_len + 1;
