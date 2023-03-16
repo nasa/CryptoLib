@@ -307,8 +307,6 @@ void Crypto_mpPrint(GvcidManagedParameters_t* managed_parameters, uint8_t print_
         printf("\t has_fecf: %d", managed_parameters->has_fecf);
         printf("\t has_segmentation_headers: %d\n", managed_parameters->has_segmentation_hdr);
         printf("\t max_frame_size: %d\n", managed_parameters->max_frame_size);
-        printf("\t TM has_secondary_hdr %d\n", managed_parameters->has_secondary_hdr);
-        printf("\t TM secondary hdr len %d\n", managed_parameters->tm_secondary_hdr_len);
         printf("\t TM has ocf %d\n", managed_parameters->has_ocf);
     }
     if (managed_parameters->next != NULL && print_children != 0)
