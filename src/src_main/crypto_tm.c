@@ -57,6 +57,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
     uint8_t aad[1786];
     uint16_t aad_len = 0;
     int i = 0;
+    uint16_t idx = 0;
     // int x = 0;
     // int y = 0;
     uint8_t sa_service_type = -1;
@@ -69,11 +70,6 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
     uint16_t new_fecf = 0x0000;
     uint32_t encryption_cipher;
     uint8_t ecs_is_aead_algorithm;
-
-    // memset(&tempTM, 0, TM_SIZE);
-    // Gotta figure out what  todo here if static is in flight
-    // but could be various lengths. How to cast to correct setup?
-    // tm_frame = *(TM_t *) ingest;
 
 #ifdef DEBUG
     printf(KYEL "\n----- Crypto_TM_ApplySecurity START -----\n" RESET);
@@ -96,15 +92,6 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         status = CRYPTO_LIB_ERR_NO_CONFIG;
         return status;  // return immediately so a NULL crypto_config is not dereferenced later
     }
-
-    // TODO: Check if frame shorter than TM defined length for this channel
-    // if (*len_ingest < TM_SIZE) // Frame length doesn't match managed parameter for channel -- error out.
-    // {
-    //     status = CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_TC_STANDARD;
-    //     return status;
-    // }
-    printf("TESTING: Printout tm_frame scid before doing anything:    %d\n", tm_frame_pri_hdr.scid);
-
     // **** TODO - THIS BLOCK MOVED INTO TO ****
     /**
     // Lookup-retrieve managed parameters for frame via gvcid:
@@ -121,13 +108,6 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         printf(KRED "ERROR: SA DB Not initalized! -- CRYPTO_LIB_ERR_NO_INIT, Will Exit\n" RESET);
         status = CRYPTO_LIB_ERR_NO_INIT;
     }
-
-    // Handled by passing in sa
-    // else
-    // {
-    //     status = sadb_routine->sadb_get_operational_sa_from_gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
-    //                                                                 tm_frame_pri_hdr.vcid, TYPE_TM, &sa_ptr);
-    // }
 
     // If unable to get operational SA, can return
     if (status != CRYPTO_LIB_SUCCESS)
@@ -174,7 +154,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
             ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(encryption_cipher);
         }
 
-#ifdef TC_DEBUG
+#ifdef TM_DEBUG
         switch (sa_service_type)
         {
         case SA_PLAINTEXT:
@@ -192,29 +172,34 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         }
 #endif
 
-        // Calculate location of fields within the frame
-        // Doing all here for simplification
+        // Check if secondary header is present within frame
         // Note: Secondary headers are static only for a mission phase, not guaranteed static 
         // over the life of a mission Per CCSDS 132.0-B.3 Section 4.1.2.7.2.3
-        // I'm interpeting this to mean at change of phase, it could be omitted, therefore
-        // must check with the TF PriHdr to see if account for it, not necessarily the managed params
-        
-        // uint16_t max_frame_size = current_managed_parameters->max_frame_size;
-        // Get relevant flags from header
-        // uint8_t ocf_flag = tm_frame[1] & 0x01; // Need for other calcs
-        // uint8_t tf_sec_hdr_flag = tm_frame[5] & 0x80;
-        uint8_t tm_sec_hdr_length = 0;
-        if (current_managed_parameters->has_secondary_hdr)
+
+        // Secondary Header flag is 1st bit of 5th byte (index 4)
+        idx = 4;
+        if((tm_frame[idx] & 0x80) == 0x80)
         {
-            tm_sec_hdr_length = current_managed_parameters->tm_secondary_hdr_len;
+            // Secondary header is present
+            idx = 6;
+            // Determine length of secondary header
+            // Length coded as total length of secondary header - 1
+            // Reference CCSDS 132.0-B-2 4.1.3.2.3
+            uint8_t secondary_hdr_len = ((tm_frame[idx] && 0x3F) >> 2);
+            // Increment from current byte (1st byte of secondary header),
+            // to where the SPI would start
+            idx += secondary_hdr_len + 1;
+        }
+        else
+        {
+            // No Secondary header, carry on as usual and increment to SPI start
+            idx = 6;
         }
 
         /*
         ** Begin Security Header Fields
         ** Reference CCSDS SDLP 3550b1 4.1.1.1.3
         */
-        // Initial index after primary and optional secondary header
-        uint16_t idx = 6 + tm_sec_hdr_length;
         // Set SPI
         tm_frame[idx] = ((sa_ptr->spi & 0xFF00) >> 8);
         tm_frame[idx + 1] = (sa_ptr->spi & 0x00FF);
