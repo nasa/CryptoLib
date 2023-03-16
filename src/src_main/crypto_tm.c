@@ -41,30 +41,16 @@
  * called, the Security Header field is empty; i.e., the caller has not set any values in the
  * Security Header
  **/
-// int32_t Crypto_TM_ApplySecurity(uint8_t* ingest, int *len_ingest)
 int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
 // Accepts CCSDS message in ingest, and packs into TM before encryption
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    // int count = 0;
-    // int pdu_loc = 0;
-    // int pdu_len = *len_ingest - TM_MIN_SIZE;
-    // int pad_len = 0;
     int mac_loc = 0;
-    // int fecf_loc = 0;
-    // uint8_t map_id = 0;
-    // uint8_t tempTM[TM_SIZE];
     uint8_t aad[1786];
     uint16_t aad_len = 0;
     int i = 0;
     uint16_t idx = 0;
-    // int x = 0;
-    // int y = 0;
     uint8_t sa_service_type = -1;
-    // uint8_t aad[20];
-    // uint16_t spi = tm_frame.tm_sec_header.spi;
-    // uint16_t spp_crc = 0x0000;
-    // uint16_t data_loc = -1;
     uint16_t data_len = -1;
     uint32_t pkcs_padding = 0;
     uint16_t new_fecf = 0x0000;
@@ -321,7 +307,6 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         ** ~~~Index currently at start of data field, AKA end of security header~~~
         */
 
-
         // Calculate size of data to be encrypted
         data_len = current_managed_parameters->max_frame_size - idx - sa_ptr->stmacf_len;
         // Check other managed parameter flags, subtract their lengths from data field if present
@@ -394,8 +379,6 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         // TODO - implement non-AEAD algorithm logic
         if(sa_service_type == SA_AUTHENTICATION)
         {
-            printf("Trying to put the mac at index %d\n", idx+data_len);
-
             status = cryptography_if->cryptography_authenticate(//Stub out data in/out as this is done in place
                                                                 (uint8_t*)(&tm_frame[0]),       // ciphertext output
                                                                 (size_t) 0, // length of data
@@ -413,7 +396,6 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
                                                                 *sa_ptr->ecs, // encryption cipher
                                                                 *sa_ptr->acs,  // authentication cipher
                                                                 NULL);
-            printf("STATUS AFTER AUTH IS %d\n", status);
         }
         if(sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
         {
@@ -469,7 +451,6 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
             }
             idx += 2;
         }
-
 
 #ifdef TM_DEBUG
     printf(KYEL "Printing new TM frame:\n\t");
