@@ -100,8 +100,9 @@ UTEST(CRYPTO_MC, PROCESS)
     uint8_t ingest[1024] = {0};
     int len_ingest = 0;
     int32_t status = CRYPTO_LIB_ERROR;
+    uint8_t tm_sdls_processed_frame[1786];
 
-    status = Crypto_TM_ProcessSecurity(ingest, &len_ingest);
+    status = Crypto_TM_ProcessSecurity(ingest, &len_ingest, tm_sdls_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 

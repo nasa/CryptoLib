@@ -718,11 +718,12 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
  * @param len_ingest: int*
  * @return int32: Success/Failure
  **/
-int32_t Crypto_TM_ProcessSecurity(uint8_t* ingest, int *len_ingest)
+int32_t Crypto_TM_ProcessSecurity(uint8_t* ingest, int *len_ingest, uint8_t* tm_sdls_processed_frame)
 {
     // Local Variables
     int32_t status = CRYPTO_LIB_SUCCESS;
-
+    // Temp
+    tm_sdls_processed_frame = tm_sdls_processed_frame;
 #ifdef DEBUG
     printf(KYEL "\n----- Crypto_TM_ProcessSecurity START -----\n" RESET);
 #endif

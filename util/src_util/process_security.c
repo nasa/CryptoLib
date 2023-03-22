@@ -65,7 +65,8 @@ int main(int argc, char* argv[])
     }
     else if (strcmp(security_type, "tm") == 0)
     {
-        Crypto_TM_ProcessSecurity((uint8_t* )buffer, &buffer_size_i);
+        uint8_t tm_sdls_processed_frame[1786];
+        Crypto_TM_ProcessSecurity((uint8_t* )buffer, &buffer_size_i, tm_sdls_processed_frame);
     }
     else if (strcmp(security_type, "aos") == 0)
     {
