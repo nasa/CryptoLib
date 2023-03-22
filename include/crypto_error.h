@@ -114,6 +114,7 @@
 #define CRYPTO_LIB_ERR_UNSUPPORTED_ECS_MODE (-42)
 #define CRYPTO_LIB_ERR_NULL_MODE_PTR (-43)
 #define CRYPTO_LIB_ERR_UNSUPPORTED_MODE (-44)
+#define CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_TM_STANDARD (-45)
 
 extern char *crypto_enum_errlist_core[];
 extern char *crypto_enum_errlist_config[];
