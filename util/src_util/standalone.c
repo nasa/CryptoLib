@@ -177,12 +177,16 @@ int32_t crypto_standalone_udp_init(udp_info_t* sock, int32_t port)
     return status;
 }
 
-int32_t crypto_standalone_tc_apply(udp_info_t* tc_sock)
+void* crypto_standalone_tc_apply(void* sock)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
+    udp_info_t* tc_sock = (udp_info_t*) sock;
     
     uint8_t tc_apply_in[TC_MAX_FRAME_SIZE] = {0};
-    //uint8_t tc_apply_out[TC_MAX_FRAME_SIZE] = {0};
+    int tc_in_len;
+    uint8_t tc_apply_out[TC_MAX_FRAME_SIZE] = {0};
+    uint8_t* tc_out_ptr = tc_apply_out;
+    uint16_t tc_out_len;
 
     struct sockaddr_in rcv_addr;
     int sockaddr_size = sizeof(struct sockaddr_in);
@@ -193,17 +197,46 @@ int32_t crypto_standalone_tc_apply(udp_info_t* tc_sock)
         status = recvfrom(tc_sock->sockfd, tc_apply_in, sizeof(tc_apply_in), 0, (struct sockaddr*) &rcv_addr, (socklen_t*) &sockaddr_size);
         if (status != -1)
         {
-            //bytes_recvd = status;
+            tc_in_len = status;
+            #ifdef CRYPTO_STANDALONE_TC_APPLY_DEBUG
+                printf("crypto_standalone_tc_apply - received[%d]: 0x", tc_in_len);
+                for(int i = 0; i < status; i++)
+                {
+                    printf("%02x", tc_apply_in[i]);
+                }
+                printf("\n");
+            #endif
 
             /* Process */
+            status = Crypto_TC_ApplySecurity(tc_apply_in, tc_in_len, &tc_out_ptr, &tc_out_len);
+            #ifdef CRYPTO_STANDALONE_TC_APPLY_DEBUG
+                printf("crypto_standalone_tc_apply - encrypted[%d]: 0x", tc_out_len);
+                for(int i = 0; i < status; i++)
+                {
+                    printf("%02x", tc_apply_out[i]);
+                }
+                printf("\n");
+            #endif
 
             /* Reply */
+            status = sendto(tc_sock->sockfd, tc_out_ptr, tc_out_len, 0, (struct sockaddr*) &rcv_addr, sizeof(rcv_addr));
+            if ((status == -1) || (status != tc_out_len))
+            {
+                printf("crypto_standalone_tc_apply - Reply error %d \n", status);
+            }
+
+            /* Reset */    
+            memset(tc_apply_in, 0x00, sizeof(tc_apply_in));        
+            tc_in_len = 0;
+            memset(tc_apply_out, 0x00, sizeof(tc_apply_in));
+            tc_out_len = 0;
         }
 
         /* Delay */
         usleep(100);
     }
-    return status;
+    close(tc_sock->port);
+    return tc_sock;
 }
 
 void crypto_standalone_cleanup(const int signal)
@@ -230,7 +263,7 @@ int main(int argc, char* argv[])
     char* token_ptr;
 
     udp_info_t tc_apply;
-    //pthread_t tc_apply_thread;
+    pthread_t tc_apply_thread;
 
     /* Initialize */
     printf("Starting CryptoLib in standalone mode! \n");
@@ -262,6 +295,14 @@ int main(int argc, char* argv[])
 
     /* Catch CTRL+C */
     signal(SIGINT, crypto_standalone_cleanup);
+
+    /* Start threads */
+    status = pthread_create(&tc_apply_thread, NULL, *crypto_standalone_tc_apply, &tc_apply);
+    if (status < 0)
+    {
+        perror("Failed to create read thread");
+        return status;
+    }
 
     /* Main loop */
     while(keepRunning == CRYPTO_LIB_SUCCESS)

@@ -61,6 +61,8 @@ extern "C"
 #define CRYPTO_CMD_NOOP     2
 #define CRYPTO_CMD_RESET    3
 
+#define CRYPTO_STANDALONE_TC_APPLY_DEBUG
+
 
 /*
 ** Structures
@@ -81,7 +83,7 @@ void crypto_standalone_print_help(void);
 int32_t crypto_standalone_get_command(const char* str);
 int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char* tokens);
 int32_t crypto_standalone_udp_init(udp_info_t* sock, int32_t port);
-int32_t crypto_standalone_tc_apply(udp_info_t* tc_sock);
+void* crypto_standalone_tc_apply(void* sock);
 void crypto_standalone_cleanup(const int signal);
 
 
