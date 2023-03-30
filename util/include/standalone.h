@@ -43,13 +43,22 @@ extern "C"
 
 
 /*
-** Defines
+** Configuration
 */
 #define TC_APPLY_PORT   76540
-#define TC_PROCESS_PORT 76541
-#define TM_APPLY_PORT   76542
-#define TM_PROCESS_PORT 76543
+#define TC_APPLY_FWD_PORT 5010
+#define TM_PROCESS_PORT 5011
+#define TM_PROCESS_FWD_PORT 76541
 
+#define CRYPTO_STANDALONE_TC_APPLY_DEBUG
+#define CRYPTO_STANDALONE_TM_PROCESS_DEBUG
+
+#define CRYPTO_STANDALONE_HANDLE_FRAMING
+
+
+/*
+** Defines
+*/
 #define CRYPTO_PROMPT "cryptolib> "
 #define CRYPTO_MAX_INPUT_BUF 512
 #define CRYPTO_MAX_INPUT_TOKENS 32
@@ -60,8 +69,6 @@ extern "C"
 #define CRYPTO_CMD_EXIT     1
 #define CRYPTO_CMD_NOOP     2
 #define CRYPTO_CMD_RESET    3
-
-#define CRYPTO_STANDALONE_TC_APPLY_DEBUG
 
 
 /*
@@ -81,9 +88,10 @@ int32_t crypto_standalone_check_number_arguments(int actual, int expected);
 void crypto_standalone_to_lower(char* str);
 void crypto_standalone_print_help(void);
 int32_t crypto_standalone_get_command(const char* str);
-int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char* tokens);
+int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens); //, char* tokens);
 int32_t crypto_standalone_udp_init(udp_info_t* sock, int32_t port);
 void* crypto_standalone_tc_apply(void* sock);
+void* crypto_standalone_tm_process(void* sock);
 void crypto_standalone_cleanup(const int signal);
 
 

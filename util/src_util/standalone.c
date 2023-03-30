@@ -62,7 +62,7 @@ void crypto_standalone_print_help(void)
             "help                               - Display help                    \n"
             "exit                               - Exit app                        \n"
             "noop                               - No operation command to device  \n"
-            "reset cryptolib                    - Reset CryptoLib configuration   \n"
+            "reset                              - Reset CryptoLib                 \n"
             "\n"
         );   
 }
@@ -94,10 +94,9 @@ int32_t crypto_standalone_get_command(const char* str)
     return status;
 }
 
-int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char* tokens)
+int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens) //, char* tokens)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    char lcmd[CRYPTO_MAX_INPUT_TOKEN_SIZE];
 
     /* Process command */
     switch(cc) 
@@ -120,16 +119,7 @@ int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char* 
         case CRYPTO_CMD_RESET:
             if (crypto_standalone_check_number_arguments(num_tokens, 1) == CRYPTO_LIB_SUCCESS)
             {
-                strncpy(lcmd, tokens, CRYPTO_MAX_INPUT_TOKEN_SIZE);
-                crypto_standalone_to_lower(lcmd);
-                if (strcmp(&tokens[0], "cryptolib") == 0)
-                {
-                    printf("Reset requested and confirmed!\n");
-                }
-                else
-                {
-                    printf("Need to provide additional argument \"confirm\" to reset!\n");
-                }
+                printf("Reset command received\n");
             }
             break;
         
@@ -189,7 +179,12 @@ void* crypto_standalone_tc_apply(void* sock)
     uint16_t tc_out_len;
 
     struct sockaddr_in rcv_addr;
+    struct sockaddr_in fwd_addr;
     int sockaddr_size = sizeof(struct sockaddr_in);
+
+    fwd_addr.sin_family = AF_INET;
+    fwd_addr.sin_addr.s_addr = inet_addr("0.0.0.0");
+    fwd_addr.sin_port = htons(TC_APPLY_FWD_PORT);
 
     while(keepRunning == CRYPTO_LIB_SUCCESS)
     {
@@ -219,7 +214,7 @@ void* crypto_standalone_tc_apply(void* sock)
             #endif
 
             /* Reply */
-            status = sendto(tc_sock->sockfd, tc_out_ptr, tc_out_len, 0, (struct sockaddr*) &rcv_addr, sizeof(rcv_addr));
+            status = sendto(tc_sock->sockfd, tc_out_ptr, tc_out_len, 0, (struct sockaddr*) &fwd_addr, sizeof(fwd_addr));
             if ((status == -1) || (status != tc_out_len))
             {
                 printf("crypto_standalone_tc_apply - Reply error %d \n", status);
@@ -237,6 +232,21 @@ void* crypto_standalone_tc_apply(void* sock)
     }
     close(tc_sock->port);
     return tc_sock;
+}
+
+void* crypto_standalone_tm_process(void* sock)
+{
+    udp_info_t* tm_sock = (udp_info_t*) sock;
+
+    while(keepRunning == CRYPTO_LIB_SUCCESS)
+    {
+        /* Do nothing for now */
+
+        /* Delay */
+        usleep(100);
+    }
+    close(tm_sock->port);
+    return tm_sock;
 }
 
 void crypto_standalone_cleanup(const int signal)
@@ -263,14 +273,14 @@ int main(int argc, char* argv[])
     char* token_ptr;
 
     udp_info_t tc_apply;
+    udp_info_t tm_process;
     pthread_t tc_apply_thread;
+    pthread_t tm_process_thread;
 
-    /* Initialize */
+    
     printf("Starting CryptoLib in standalone mode! \n");
     printf("  TC Apply - UDP %d \n", TC_APPLY_PORT);
-    //printf("  TC Process - UDP %d \n", TC_PROCESS_PORT);
-    //printf("  TM Apply - UDP %d \n", TM_APPLY_PORT);
-    //printf("  TM Process - UDP %d \n", TM_PROCESS_PORT);
+    printf("  TM Process - UDP %d \n", TM_PROCESS_PORT);
     printf("\n");
     if (argc != 1)
     {
@@ -278,6 +288,7 @@ int main(int argc, char* argv[])
         printf("  Expected zero but received: %s \n", argv[1]);
     }
     
+    /* Initialize CryptoLib */
     Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR, TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
@@ -287,25 +298,52 @@ int main(int argc, char* argv[])
         printf("Crypto_Init failed with error %d \n", status);
         keepRunning = CRYPTO_LIB_ERROR;
     }
-    else
+    
+    /* Initialize sockets */
+    if (keepRunning == CRYPTO_LIB_SUCCESS)
     {
-        keepRunning = crypto_standalone_udp_init(&tc_apply, TC_APPLY_PORT);
-        printf("crypto_standalone_udp_init returned %d \n", keepRunning);
+        status = crypto_standalone_udp_init(&tc_apply, TC_APPLY_PORT);
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+            printf("crypto_standalone_udp_init tc_apply failed with status %d \n", status);
+            keepRunning = CRYPTO_LIB_ERROR;
+        }
+        else
+        {
+            status = crypto_standalone_udp_init(&tm_process, TM_PROCESS_PORT);
+            if (status != CRYPTO_LIB_SUCCESS)
+            {
+                printf("crypto_standalone_udp_init tm_process failed with status %d \n", status);
+                keepRunning = CRYPTO_LIB_ERROR;
+            }
+        }
     }
 
     /* Catch CTRL+C */
     signal(SIGINT, crypto_standalone_cleanup);
 
     /* Start threads */
-    status = pthread_create(&tc_apply_thread, NULL, *crypto_standalone_tc_apply, &tc_apply);
-    if (status < 0)
+    if (keepRunning == CRYPTO_LIB_SUCCESS)
     {
-        perror("Failed to create read thread");
-        return status;
+        status = pthread_create(&tc_apply_thread, NULL, *crypto_standalone_tc_apply, &tc_apply);
+        if (status < 0)
+        {
+            perror("Failed to create tc_apply_thread thread");
+            keepRunning = CRYPTO_LIB_ERROR;
+        }
+        else
+        {
+            status = pthread_create(&tm_process_thread, NULL, *crypto_standalone_tm_process, &tm_process);
+            if (status < 0)
+            {
+                perror("Failed to create tm_process_thread thread");
+                keepRunning = CRYPTO_LIB_ERROR;
+            }
+        }
     }
 
     /* Main loop */
-    while(keepRunning == CRYPTO_LIB_SUCCESS)
+    while (keepRunning == CRYPTO_LIB_SUCCESS)
     {
         num_input_tokens = -1;
         cmd = CRYPTO_CMD_UNKNOWN;
@@ -316,9 +354,9 @@ int main(int argc, char* argv[])
 
         /* Tokenize line buffer */
         token_ptr = strtok(input_buf, " \t\n");
-        while((num_input_tokens < CRYPTO_MAX_INPUT_TOKENS) && (token_ptr != NULL)) 
+        while ((num_input_tokens < CRYPTO_MAX_INPUT_TOKENS) && (token_ptr != NULL)) 
         {
-            if(num_input_tokens == -1) 
+            if (num_input_tokens == -1) 
             {
                 /* First token is command */
                 cmd = crypto_standalone_get_command(token_ptr);
@@ -334,7 +372,7 @@ int main(int argc, char* argv[])
         /* Process command if valid */
         if(num_input_tokens >= 0)
         {
-            crypto_standalone_process_command(cmd, num_input_tokens, token_ptr);
+            crypto_standalone_process_command(cmd, num_input_tokens);
         }
     }
 
