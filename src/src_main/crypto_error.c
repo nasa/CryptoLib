@@ -66,6 +66,7 @@ char *crypto_enum_errlist_core[] =
         ,"CRYPTO_LIB_ERR_UNSUPPORTED_ECS_MODE"
         ,"CRYPTO_LIB_ERR_NULL_MODE_PTR"
         ,"CRYPTO_LIB_ERR_UNSUPPORTED_MODE"
+        ,"CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_TM_STANDARD"
 };
 
 char *crypto_enum_errlist_config[] =
@@ -209,7 +210,7 @@ char* Crypto_Get_Error_Code_Enum_String(int32_t crypto_error_code)
     }
     else if(crypto_error_code <= 0) // Cryptolib Core Error Codes
     {
-        if(crypto_error_code < -44)
+        if(crypto_error_code < -45)
         {
             return CRYPTO_UNDEFINED_ERROR;
         }
