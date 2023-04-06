@@ -174,7 +174,7 @@ void crypto_standalone_tc_frame(uint8_t* in_data, uint16_t in_length, uint8_t* o
     memset(out_data, 0x00, *out_length);
 
     /* TC Length */
-    *out_length = (uint16_t) CRYPTO_STANDALONE_FRAMING_TC_DATA_LEN + 5;
+    *out_length = (uint16_t) CRYPTO_STANDALONE_FRAMING_TC_DATA_LEN + 6;
 
     /* TC Header */
     out_data[0] = 0x20;
@@ -183,8 +183,17 @@ void crypto_standalone_tc_frame(uint8_t* in_data, uint16_t in_length, uint8_t* o
     out_data[3] = (uint16_t) CRYPTO_STANDALONE_FRAMING_TC_DATA_LEN && 0x00FF;
     out_data[4] = tc_seq_num++;
 
+    /* Segement Header */
+    out_data[5] = 0x00;
+
+    /* SDLS Header */
+
+
     /* TC Data */
-    memcpy(&out_data[5], in_data, in_length);
+    memcpy(&out_data[6], in_data, in_length);
+
+    /* SDLS Trailer */
+
 }
 
 void* crypto_standalone_tc_apply(void* sock)
@@ -237,20 +246,27 @@ void* crypto_standalone_tc_apply(void* sock)
 
             /* Process */
             status = Crypto_TC_ApplySecurity(tc_apply_in, tc_in_len, &tc_out_ptr, &tc_out_len);
-            #ifdef CRYPTO_STANDALONE_TC_APPLY_DEBUG
-                printf("crypto_standalone_tc_apply - status = %d, encrypted[%d]: 0x", status, tc_out_len);
-                for(int i = 0; i < tc_out_len; i++)
-                {
-                    printf("%02x", tc_apply_out[i]);
-                }
-                printf("\n");
-            #endif
-
-            /* Reply */
-            status = sendto(tc_sock->sockfd, tc_out_ptr, tc_out_len, 0, (struct sockaddr*) &fwd_addr, sizeof(fwd_addr));
-            if ((status == -1) || (status != tc_out_len))
+            if (status == CRYPTO_LIB_SUCCESS)
             {
-                printf("crypto_standalone_tc_apply - Reply error %d \n", status);
+                #ifdef CRYPTO_STANDALONE_TC_APPLY_DEBUG
+                    printf("crypto_standalone_tc_apply - status = %d, encrypted[%d]: 0x", status, tc_out_len);
+                    for(int i = 0; i < tc_out_len; i++)
+                    {
+                        printf("%02x", tc_apply_out[i]);
+                    }
+                    printf("\n");
+                #endif
+
+                /* Reply */
+                status = sendto(tc_sock->sockfd, tc_out_ptr, tc_out_len, 0, (struct sockaddr*) &fwd_addr, sizeof(fwd_addr));
+                if ((status == -1) || (status != tc_out_len))
+                {
+                    printf("crypto_standalone_tc_apply - Reply error %d \n", status);
+                }
+            }
+            else
+            {
+                printf("crypto_standalone_tc_apply - AppySecurity error %d \n", status);
             }
 
             /* Reset */    
@@ -310,7 +326,6 @@ int main(int argc, char* argv[])
     pthread_t tc_apply_thread;
     pthread_t tm_process_thread;
 
-    
     printf("Starting CryptoLib in standalone mode! \n");
     printf("  TC Apply - UDP %d \n", TC_APPLY_PORT);
     printf("  TM Process - UDP %d \n", TM_PROCESS_PORT);
@@ -322,11 +337,8 @@ int main(int argc, char* argv[])
     }
     
     /* Initialize CryptoLib */
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR, TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0042, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0042, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
-      // TODO: CryptoLib appears to be looking at the second byte and not specficially the SCID bits
-    status = Crypto_Init();
+    status = Crypto_Init_Unit_Test();
+    // TODO: CryptoLib appears to be looking at the second byte and not specficially the SCID bits
     if(status != CRYPTO_LIB_SUCCESS)
     {
         printf("Crypto_Init failed with error %d \n", status);
