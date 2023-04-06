@@ -95,7 +95,7 @@ extern int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint
 extern int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc_sdls_processed_frame, char* cam_cookies);
 // Telemetry (TM)
 extern int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr);
-extern int32_t Crypto_TM_ProcessSecurity(uint8_t* ingest, int *len_ingest, uint8_t* tm_sdls_processed_frame);
+extern int32_t Crypto_TM_ProcessSecurity(const uint8_t* p_ingest, const uint16_t len_ingest, uint8_t** pp_processed_frame, uint16_t *p_decrypted_length);
 // Advanced Orbiting Systems (AOS)
 extern int32_t Crypto_AOS_ApplySecurity(uint8_t* ingest, int *len_ingest);
 extern int32_t Crypto_AOS_ProcessSecurity(uint8_t* ingest, int *len_ingest);
@@ -121,7 +121,7 @@ void Crypto_Local_Init(void);
 int32_t Crypto_window(uint8_t* actual, uint8_t* expected, int length, int window);
 // int32_t Crypto_compare_less_equal(uint8_t* actual, uint8_t* expected, int length);
 // int32_t  Crypto_FECF(int fecf, uint8_t* ingest, int len_ingest,TC_t* tc_frame);
-uint16_t Crypto_Calc_FECF(uint8_t* ingest, int len_ingest);
+uint16_t Crypto_Calc_FECF(const uint8_t* ingest, int len_ingest);
 void Crypto_Calc_CRC_Init_Table(void);
 uint16_t Crypto_Calc_CRC16(uint8_t* data, int size);
 int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, uint8_t *iv);

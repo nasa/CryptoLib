@@ -51,6 +51,8 @@ int main(int argc, char* argv[])
     int arg_index = 0;
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len;
+    uint8_t* ptr_dec_frame = NULL;
+    uint16_t dec_frame_len;
 
     while (arg_index != argc - 1)
     {
@@ -87,8 +89,7 @@ int main(int argc, char* argv[])
         }
         else if (strcmp(security_type, "tm_p") == 0)
         {
-            uint8_t tm_sdls_processed_frame[1786];
-            Crypto_TM_ProcessSecurity((uint8_t* )buffer, (int *)&buffer_size_i, (uint8_t*)&tm_sdls_processed_frame);
+            Crypto_TM_ProcessSecurity((uint8_t* )buffer, buffer_size_i, &ptr_dec_frame, &dec_frame_len);
         }
         else if (strcmp(security_type, "aos_p") == 0)
         {

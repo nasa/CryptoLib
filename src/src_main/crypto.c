@@ -315,7 +315,7 @@ tc_frame->tc_sec_trailer.fecf); #endif result = CRYPTO_LIB_ERROR;
  * @param len_ingest: int
  * @return uint16: FECF
  **/
-uint16_t Crypto_Calc_FECF(uint8_t* ingest, int len_ingest)
+uint16_t Crypto_Calc_FECF(const uint8_t* ingest, int len_ingest)
 {
     uint16_t fecf = 0xFFFF;
     uint16_t poly = 0x1021; // TODO: This polynomial is (CRC-CCITT) for ESA testing, may not match standard protocol

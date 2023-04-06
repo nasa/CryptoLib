@@ -52,6 +52,13 @@ typedef enum
     CRYPTO_TM_CREATE_FECF_FALSE,
     CRYPTO_TM_CREATE_FECF_TRUE
 } CreateFecfBool;
+typedef enum
+{
+    TC_CHECK_FECF_FALSE,
+    TC_CHECK_FECF_TRUE,
+    TM_CHECK_FECF_FALSE,
+    TM_CHECK_FECF_TRUE
+} CheckFecfBool;
 // TC specific enums
 typedef enum
 {
@@ -84,11 +91,6 @@ typedef enum
     TC_UNIQUE_SA_PER_MAP_ID_FALSE,
     TC_UNIQUE_SA_PER_MAP_ID_TRUE
 } TcUniqueSaPerMapId;
-typedef enum
-{
-    TC_CHECK_FECF_FALSE,
-    TC_CHECK_FECF_TRUE
-} TcCheckFecfBool;
 typedef enum
 {
     SA_INCREMENT_NONTRANSMITTED_IV_FALSE,
@@ -151,7 +153,7 @@ typedef struct
     TcIgnoreSaState ignore_sa_state; // TODO - add logic that uses this configuration
     TcIgnoreAntiReplay ignore_anti_replay;
     TcUniqueSaPerMapId unique_sa_per_mapid;
-    TcCheckFecfBool crypto_check_fecf;
+    CheckFecfBool crypto_check_fecf;
     uint8_t vcid_bitmask;
     uint8_t crypto_increment_nontransmitted_iv; // Whether or not CryptoLib increments the non-transmitted portion of the IV field
 } CryptoConfig_t;

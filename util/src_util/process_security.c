@@ -56,6 +56,9 @@ int main(int argc, char* argv[])
     // Setup & Initialize CryptoLib
     Crypto_Init();
 
+    uint8_t* ptr_dec_frame = NULL;
+    uint16_t dec_frame_len;
+
     // Call ProcessSecurity on buffer contents depending on type.
     if (strcmp(security_type, "tc") == 0)
     {
@@ -65,8 +68,7 @@ int main(int argc, char* argv[])
     }
     else if (strcmp(security_type, "tm") == 0)
     {
-        uint8_t tm_sdls_processed_frame[1786];
-        Crypto_TM_ProcessSecurity((uint8_t* )buffer, &buffer_size_i, tm_sdls_processed_frame);
+        Crypto_TM_ProcessSecurity((uint8_t* )buffer, buffer_size_i, &ptr_dec_frame, &dec_frame_len);
     }
     else if (strcmp(security_type, "aos") == 0)
     {
