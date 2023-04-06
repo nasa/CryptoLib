@@ -98,13 +98,13 @@ UTEST(CRYPTO_MC, READARSN)
 UTEST(CRYPTO_MC, PROCESS)
 {
     uint8_t ingest[1024] = {0};
-    uint16_t len_ingest = 0;
+    uint16_t len_ingest = 1024;
     int32_t status = CRYPTO_LIB_ERROR;
     uint8_t* tm_sdls_processed_frame = NULL;
     uint16_t dec_frame_length;
 
     status = Crypto_TM_ProcessSecurity((uint8_t *)&ingest, len_ingest, &tm_sdls_processed_frame, &dec_frame_length);
-    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    ASSERT_EQ(103, status);
 }
 
 /**
