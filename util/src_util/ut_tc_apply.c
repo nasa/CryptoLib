@@ -17,7 +17,7 @@
 */
 
 /**
- *  Unit Tests that macke use of TC_ApplySecurity function on the data.
+ *  Unit Tests that make use of TC_ApplySecurity function on the data.
  **/
 #include "ut_tc_apply.h"
 #include "crypto.h"

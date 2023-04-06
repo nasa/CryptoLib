@@ -49,6 +49,10 @@ add_test(NAME UT_TM_APPLY
          COMMAND ${PROJECT_BINARY_DIR}/bin/ut_tm_apply 
          WORKING_DIRECTORY ${PROJECT_TEST_DIR})
 
+add_test(NAME UT_TM_PROCESS
+         COMMAND ${PROJECT_BINARY_DIR}/bin/ut_tm_process 
+         WORKING_DIRECTORY ${PROJECT_TEST_DIR})
+
 # add_test(NAME UT_MARIADB
 #          COMMAND ${PROJECT_BINARY_DIR}/bin/ut_mariadb
 #          WORKING_DIRECTORY ${PROJECT_TEST_DIR})
