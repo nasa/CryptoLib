@@ -895,7 +895,7 @@ int32_t Crypto_TM_ProcessSecurity(const uint8_t* p_ingest, const uint16_t len_in
             // Compare
             if (received_fecf != calculated_fecf)
             {
-#ifdef DEBUG
+#ifdef FECF_DEBUG
                 printf("Received FECF is 0x%04X\n", received_fecf);
                 printf("Calculated FECF is 0x%04X\n", calculated_fecf);
                 printf("FECF was Calced over %d bytes\n", len_ingest-2);
@@ -903,11 +903,17 @@ int32_t Crypto_TM_ProcessSecurity(const uint8_t* p_ingest, const uint16_t len_in
                 status = CRYPTO_LIB_ERR_INVALID_FECF;
                 return status;
             }
+#ifdef FECF_DEBUG
+            else
+            {
+                printf(KYEL "FECF CALC MATCHES! - GOOD\n" RESET);
+            }
+#endif
         }
     }
 
     // Accio buffer
-    p_new_dec_frame = (uint8_t* )calloc(1, (*p_decrypted_length) * sizeof(uint8_t));
+    p_new_dec_frame = (uint8_t* )calloc(1, (len_ingest) * sizeof(uint8_t));
     if (!p_new_dec_frame)
     {
         printf(KRED "Error: Calloc for decrypted output buffer failed! \n" RESET);
@@ -939,9 +945,10 @@ int32_t Crypto_TM_ProcessSecurity(const uint8_t* p_ingest, const uint16_t len_in
 
     if(sa_service_type == SA_PLAINTEXT)
     {
-        uint16_t security_trailer_len = current_managed_parameters->max_frame_size - (byte_idx + 1) \
+        uint16_t pdu_len = current_managed_parameters->max_frame_size - (byte_idx) \
                                         - sa_ptr->stmacf_len - fecf_len;
-      memcpy(p_new_dec_frame+byte_idx, &(p_ingest[byte_idx]), security_trailer_len);
+        memcpy(p_new_dec_frame+byte_idx, &(p_ingest[byte_idx]), pdu_len);
+        byte_idx += pdu_len;
     }
 
     if(sa_service_type != SA_PLAINTEXT && sa_ptr->ecs == NULL && sa_ptr->acs == NULL)
@@ -949,7 +956,23 @@ int32_t Crypto_TM_ProcessSecurity(const uint8_t* p_ingest, const uint16_t len_in
         return CRYPTO_LIB_ERR_NULL_CIPHERS;
     }
 
+#ifdef TM_DEBUG
+    printf(KYEL "Printing received frame:\n\t" RESET);
+    for( int i=0; i<current_managed_parameters->max_frame_size; i++)
+    {
+        printf(KYEL "%02X", p_ingest[i]);
+    }
+    printf(KYEL "\nPrinting PROCESSED frame:\n\t" RESET);
+        for( int i=0; i<current_managed_parameters->max_frame_size; i++)
+    {
+        printf(KYEL "%02X", p_new_dec_frame[i]);
+    }
+    printf("\n");
+#endif
+
     *pp_processed_frame = p_new_dec_frame;
+    // TODO maybe not just return this without doing the math ourselves
+    *p_decrypted_length = current_managed_parameters->max_frame_size;
 
 #ifdef DEBUG
         printf(KYEL "----- Crypto_TM_ProcessSecurity END -----\n" RESET);
