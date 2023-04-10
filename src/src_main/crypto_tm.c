@@ -1009,21 +1009,21 @@ int32_t Crypto_TM_ProcessSecurity(const uint8_t* p_ingest, const uint16_t len_in
         // TODO - implement non-AEAD algorithm logic
         if(sa_service_type == SA_AUTHENTICATION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
         {
-            status = cryptography_if->cryptography_validate_authentication(p_new_dec_frame+byte_idx,       // plaintext output
+            status = cryptography_if->cryptography_validate_authentication(p_new_dec_frame+byte_idx, // plaintext output
                                                             (size_t)(pdu_len),   // length of data
                                                             &(p_ingest[byte_idx]), // ciphertext input
-                                                            (size_t)(pdu_len),    // in data length
+                                                            (size_t)(pdu_len), // in data length
                                                             NULL, // Key
                                                             Crypto_Get_ACS_Algo_Keylen(*sa_ptr->acs),
                                                             sa_ptr, // SA for key reference
                                                             p_ingest+iv_loc, // IV
                                                             sa_ptr->iv_len, // IV Length
                                                             p_ingest+mac_loc, // Frame Expected Tag
-                                                            sa_ptr->stmacf_len,                           // tag size
-                                                            aad,    // additional authenticated data
+                                                            sa_ptr->stmacf_len, // tag size
+                                                            aad, // additional authenticated data
                                                             aad_len, // length of AAD
                                                             CRYPTO_CIPHER_NONE, // encryption cipher
-                                                            *sa_ptr->acs,  // authentication cipher
+                                                            *sa_ptr->acs, // authentication cipher
                                                             NULL); // cam cookies
         }
         if(sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
