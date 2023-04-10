@@ -881,7 +881,6 @@ int32_t Crypto_TM_ProcessSecurity(const uint8_t* p_ingest, const uint16_t len_in
     {
         fecf_len = 0;
     }
-
     // Parse & Check FECF
     if (current_managed_parameters->has_fecf == TM_HAS_FECF)
     {
@@ -910,6 +909,11 @@ int32_t Crypto_TM_ProcessSecurity(const uint8_t* p_ingest, const uint16_t len_in
             }
 #endif
         }
+    }
+    else
+    {
+        status = CRYPTO_LIB_ERR_TC_ENUM_USED_FOR_TM_CONFIG;
+        return status;
     }
 
     // Accio buffer
