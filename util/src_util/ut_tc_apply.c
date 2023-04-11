@@ -133,6 +133,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC)
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     sadb_routine->sadb_get_sa_from_spi(4, &test_association);
+    test_association->gvcid_tc_blk.vcid = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ast = 0;
     test_association->arsn_len = 0;
@@ -206,6 +207,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_AUTH_ENC)
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     sadb_routine->sadb_get_sa_from_spi(4, &test_association);
+    test_association->gvcid_tc_blk.vcid = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->arsn_len = 0;
 
@@ -253,6 +255,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_IV_ROLLOVE
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     sadb_routine->sadb_get_sa_from_spi(4, &test_association);
+    test_association->gvcid_tc_blk.vcid = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->shivf_len = 6;
     test_association->iv_len = 12;
@@ -331,6 +334,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_STATIC_IV_ROLLOVER)
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     sadb_routine->sadb_get_sa_from_spi(4, &test_association);
+    test_association->gvcid_tc_blk.vcid = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->shivf_len = 6;
     test_association->iv_len = 12;
@@ -408,6 +412,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_ARSN_ROLLO
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     sadb_routine->sadb_get_sa_from_spi(4, &test_association);
+    test_association->gvcid_tc_blk.vcid = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->shivf_len = 0;
     test_association->iv_len = 0;
