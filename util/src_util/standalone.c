@@ -29,6 +29,7 @@
 */
 static volatile uint8_t keepRunning = CRYPTO_LIB_SUCCESS;
 static volatile uint8_t tc_seq_num = 0;
+static volatile uint8_t tc_vcid = CRYPTO_STANDALONE_FRAMING_VCID;
 
 
 /* 
@@ -59,11 +60,12 @@ void crypto_standalone_to_lower(char* str)
 void crypto_standalone_print_help(void)
 {
     printf(CRYPTO_PROMPT "command [args]\n"
-            "---------------------------------------------------------------------\n"
-            "help                               - Display help                    \n"
-            "exit                               - Exit app                        \n"
-            "noop                               - No operation command to device  \n"
-            "reset                              - Reset CryptoLib                 \n"
+            "----------------------------------------------------------------------\n"
+            "help                               - Display help                     \n"
+            "exit                               - Exit app                         \n"
+            "noop                               - No operation command to device   \n"
+            "reset                              - Reset CryptoLib                  \n"
+            "vcid #                             - Change active TC virtual channel \n"
             "\n"
         );   
 }
@@ -92,10 +94,14 @@ int32_t crypto_standalone_get_command(const char* str)
     {
         status = CRYPTO_CMD_RESET;
     }
+    else if(strcmp(lcmd, "vcid") == 0) 
+    {
+        status = CRYPTO_CMD_VCID;
+    }
     return status;
 }
 
-int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens) //, char* tokens)
+int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char* tokens)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
@@ -118,9 +124,18 @@ int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens) //, ch
             break;
         
         case CRYPTO_CMD_RESET:
+            if (crypto_standalone_check_number_arguments(num_tokens, 0) == CRYPTO_LIB_SUCCESS)
+            {
+                status = crypto_reset();
+                printf("Reset command received\n");
+            }
+            break;
+
+        case CRYPTO_CMD_VCID:
             if (crypto_standalone_check_number_arguments(num_tokens, 1) == CRYPTO_LIB_SUCCESS)
             {
-                printf("Reset command received\n");
+                tc_vcid = (uint8_t) atoi(&tokens[0]);
+                printf("Changed active virtual channel (VCID) to %d \n", tc_vcid);
             }
             break;
         
@@ -168,6 +183,26 @@ int32_t crypto_standalone_udp_init(udp_info_t* sock, int32_t port)
     return status;
 }
 
+int32_t crypto_reset(void)
+{
+    int32_t status;
+
+    status = Crypto_Shutdown();
+    if(status != CRYPTO_LIB_SUCCESS)
+    {
+        printf("CryptoLib initialization failed with error %d \n", status);
+    }
+
+    status = Crypto_Init_Unit_Test();
+    // TODO: CryptoLib appears to be looking at the second byte and not specficially the SCID bits
+    if(status != CRYPTO_LIB_SUCCESS)
+    {
+        printf("CryptoLib initialization failed with error %d \n", status);
+    }
+
+    return status;
+}
+
 void crypto_standalone_tc_frame(uint8_t* in_data, uint16_t in_length, uint8_t* out_data, uint16_t* out_length)
 {
     /* Zero Frame */
@@ -179,8 +214,8 @@ void crypto_standalone_tc_frame(uint8_t* in_data, uint16_t in_length, uint8_t* o
     /* TC Header */
     out_data[0] = 0x20;
     out_data[1] = CRYPTO_STANDALONE_FRAMING_SCID;
-    out_data[2] = (CRYPTO_STANDALONE_FRAMING_VCID && 0xFC) || (((uint16_t) CRYPTO_STANDALONE_FRAMING_TC_DATA_LEN >> 8) && 0x03);
-    out_data[3] = (uint16_t) CRYPTO_STANDALONE_FRAMING_TC_DATA_LEN && 0x00FF;
+    out_data[2] = ((tc_vcid << 2) & 0xFC) | (((uint16_t) CRYPTO_STANDALONE_FRAMING_TC_DATA_LEN >> 8) & 0x03);
+    out_data[3] = (uint16_t) CRYPTO_STANDALONE_FRAMING_TC_DATA_LEN & 0x00FF;
     out_data[4] = tc_seq_num++;
 
     /* Segement Header */
@@ -201,11 +236,14 @@ void* crypto_standalone_tc_apply(void* sock)
     int32_t status = CRYPTO_LIB_SUCCESS;
     udp_info_t* tc_sock = (udp_info_t*) sock;
     
-    uint8_t tc_apply_in[TC_MAX_FRAME_SIZE] = {0};
-    int tc_in_len;
-    uint8_t tc_apply_out[TC_MAX_FRAME_SIZE] = {0};
-    uint8_t* tc_out_ptr = tc_apply_out;
-    uint16_t tc_out_len = TC_MAX_FRAME_SIZE;
+    uint8_t tc_apply_in[TC_MAX_FRAME_SIZE];
+    uint16_t tc_in_len = 0;
+    uint8_t* tc_out_ptr;
+    uint16_t tc_out_len = 0;
+    
+    #ifdef CRYPTO_STANDALONE_HANDLE_FRAMING
+        uint8_t tc_framed[TC_MAX_FRAME_SIZE];
+    #endif
 
     struct sockaddr_in rcv_addr;
     struct sockaddr_in fwd_addr;
@@ -214,6 +252,9 @@ void* crypto_standalone_tc_apply(void* sock)
     fwd_addr.sin_family = AF_INET;
     fwd_addr.sin_addr.s_addr = inet_addr("0.0.0.0");
     fwd_addr.sin_port = htons(TC_APPLY_FWD_PORT);
+
+    /* Prepare */
+    memset(tc_apply_in, 0x00, sizeof(tc_apply_in));
 
     while(keepRunning == CRYPTO_LIB_SUCCESS)
     {
@@ -233,9 +274,10 @@ void* crypto_standalone_tc_apply(void* sock)
 
             /* Frame */
             #ifdef CRYPTO_STANDALONE_HANDLE_FRAMING
-                crypto_standalone_tc_frame(tc_apply_in, tc_in_len, tc_apply_out, &tc_out_len);
-                memcpy(tc_apply_in, tc_apply_out, tc_out_len);
+                crypto_standalone_tc_frame(tc_apply_in, tc_in_len, tc_framed, &tc_out_len);
+                memcpy(tc_apply_in, tc_framed, tc_out_len);
                 tc_in_len = tc_out_len;
+                tc_out_len = 0;
                 printf("crypto_standalone_tc_apply - framed[%d]: 0x", tc_in_len);
                 for(int i = 0; i < tc_in_len; i++)
                 {
@@ -252,7 +294,7 @@ void* crypto_standalone_tc_apply(void* sock)
                     printf("crypto_standalone_tc_apply - status = %d, encrypted[%d]: 0x", status, tc_out_len);
                     for(int i = 0; i < tc_out_len; i++)
                     {
-                        printf("%02x", tc_apply_out[i]);
+                        printf("%02x", tc_out_ptr[i]);
                     }
                     printf("\n");
                 #endif
@@ -269,11 +311,11 @@ void* crypto_standalone_tc_apply(void* sock)
                 printf("crypto_standalone_tc_apply - AppySecurity error %d \n", status);
             }
 
-            /* Reset */    
-            memset(tc_apply_in, 0x00, sizeof(tc_apply_in));        
+            /* Reset */
+            memset(tc_apply_in, 0x00, sizeof(tc_apply_in));
             tc_in_len = 0;
-            memset(tc_apply_out, 0x00, sizeof(tc_apply_in));
             tc_out_len = 0;
+            free(tc_out_ptr);
         }
 
         /* Delay */
@@ -337,11 +379,10 @@ int main(int argc, char* argv[])
     }
     
     /* Initialize CryptoLib */
-    status = Crypto_Init_Unit_Test();
-    // TODO: CryptoLib appears to be looking at the second byte and not specficially the SCID bits
+    status = crypto_reset();
     if(status != CRYPTO_LIB_SUCCESS)
     {
-        printf("Crypto_Init failed with error %d \n", status);
+        printf("CryptoLib initialization failed with error %d \n", status);
         keepRunning = CRYPTO_LIB_ERROR;
     }
     
@@ -406,10 +447,12 @@ int main(int argc, char* argv[])
             {
                 /* First token is command */
                 cmd = crypto_standalone_get_command(token_ptr);
+                //printf("CMD = %s %d\n",token_ptr,cmd);
             }
             else 
             {
                 strncpy(input_tokens[num_input_tokens], token_ptr, CRYPTO_MAX_INPUT_TOKEN_SIZE);
+                //printf("Token[%d] = %s\n",num_input_tokens,token_ptr);
             }
             token_ptr = strtok(NULL, " \t\n");
             num_input_tokens++;
@@ -418,12 +461,13 @@ int main(int argc, char* argv[])
         /* Process command if valid */
         if(num_input_tokens >= 0)
         {
-            crypto_standalone_process_command(cmd, num_input_tokens);
+            crypto_standalone_process_command(cmd, num_input_tokens, &input_tokens[0][0]);
         }
     }
 
     /* Cleanup */
     close(tc_apply.port);
+    close(tm_process.port);
 
     Crypto_Shutdown();
     

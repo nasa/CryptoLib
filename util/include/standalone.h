@@ -72,6 +72,7 @@ extern "C"
 #define CRYPTO_CMD_EXIT     1
 #define CRYPTO_CMD_NOOP     2
 #define CRYPTO_CMD_RESET    3
+#define CRYPTO_CMD_VCID     4
 
 
 /*
@@ -91,8 +92,10 @@ int32_t crypto_standalone_check_number_arguments(int actual, int expected);
 void crypto_standalone_to_lower(char* str);
 void crypto_standalone_print_help(void);
 int32_t crypto_standalone_get_command(const char* str);
-int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens); //, char* tokens);
+int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char* tokens);
 int32_t crypto_standalone_udp_init(udp_info_t* sock, int32_t port);
+int32_t crypto_reset(void);
+void crypto_standalone_tc_frame(uint8_t* in_data, uint16_t in_length, uint8_t* out_data, uint16_t* out_length);
 void* crypto_standalone_tc_apply(void* sock);
 void* crypto_standalone_tm_process(void* sock);
 void crypto_standalone_cleanup(const int signal);
