@@ -29,6 +29,8 @@ endif(${ENCTEST})
 aux_source_directory(core UTIL_SRC_FILES)
 aux_source_directory(src_util APP_SRC_FILES) 
 
+find_package(Threads REQUIRED)
+
 file( GLOB SOURCE_FILES src_util/*.c )
 foreach(SOURCE_PATH ${SOURCE_FILES})
     get_filename_component(EXECUTABLE_NAME ${SOURCE_PATH} NAME_WE)
@@ -38,7 +40,7 @@ foreach(SOURCE_PATH ${SOURCE_FILES})
     else()
         add_executable(${EXECUTABLE_NAME} ${SOURCE_PATH}) 
         target_sources(${EXECUTABLE_NAME} PRIVATE core/shared_util.c)
-        target_link_libraries(${EXECUTABLE_NAME} LINK_PUBLIC Crypto)
+        target_link_libraries(${EXECUTABLE_NAME} LINK_PUBLIC Crypto pthread)
     endif()
 
     if(${ENCTEST} AND ${EXECUTABLE_NAME} STREQUAL et_dt_validation)

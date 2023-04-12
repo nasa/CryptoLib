@@ -35,6 +35,7 @@
 
 // Debug Colors
 #ifdef DEBUG
+#define CRYPTO_DEBUG printf("%s:%s: %d", __FILE__, __FUNCTION__, __LINE__);
 #define KRED "\x1B[31m"
 #define KGRN "\x1B[32m"
 #define KYEL "\x1B[33m"
@@ -43,6 +44,7 @@
 #define KCYN "\x1B[36m"
 #define RESET "\033[0m"
 #else
+#define CRYPTO_DEBUG
 #define KRED
 #define RED
 #define KGRN

@@ -48,11 +48,13 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 endif()
 
 # Create the app module
-if(DEFINED ENV{CFECORE_SOURCE_DIR}) #if ${CFECORE_SOURCE_DIR} is set, expect cFS build infrastructure to be in place.
+IF(DEFINED CFE_SYSTEM_PSPNAME)
+    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/cpu${TGTSYS_${SYSVAR}}/${INSTALL_SUBDIR}")
     add_cfe_app(Crypto ${LIB_SRC_FILES})
-else() #standalone build
+ELSE() 
+    # Standalone build
     add_library(Crypto SHARED ${LIB_SRC_FILES})
-endif()
+ENDIF()
 
 if(LIBGCRYPT)
     target_link_libraries(Crypto gcrypt)
@@ -79,9 +81,15 @@ add_custom_command(TARGET Crypto POST_BUILD
         COMMENT "Created ${PROJECT_BINARY_DIR}/lib/libCrypto.so"
         )
 
-install(TARGETS Crypto
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
+        
+IF(DEFINED CFE_SYSTEM_PSPNAME)
+    install(TARGETS Crypto 
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/cpu${TGTSYS_${SYSVAR}}/${INSTALL_SUBDIR})
+ELSE()
+    install(TARGETS Crypto
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+            PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
+ENDIF()
 
 IF(MYSQL)
     file(GLOB MYSQL_SCRIPTS crypto_sadb/sadb_mariadb_sql/*.sql)
