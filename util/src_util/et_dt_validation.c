@@ -175,6 +175,9 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_CIPHER_NONE;
+    // Expose SA 4 for testing
+    sadb_routine->sadb_get_sa_from_spi(4, &test_association);
+    test_association->sa_state = SA_KEYED;
     // Ensure that Process Security can activate SA 4
     return_val = Crypto_TC_ProcessSecurity(activate_sa4_b, &activate_sa4_len, tc_sdls_processed_frame);
     //printf("Verifying TC_Process Return Value\n");
@@ -254,6 +257,10 @@ UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_CIPHER_NONE;
+
+    // Expose SA 4 for testing
+    sadb_routine->sadb_get_sa_from_spi(4, &test_association);
+    test_association->sa_state = SA_KEYED;
 
     // Ensure that Process Security can activate SA 4
     return_val = Crypto_TC_ProcessSecurity(activate_sa4_b, &activate_sa4_len, tc_sdls_processed_frame);
