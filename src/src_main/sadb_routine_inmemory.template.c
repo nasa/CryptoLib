@@ -386,7 +386,7 @@ static int32_t sadb_get_sa_from_spi(uint16_t spi, SecurityAssociation_t** securi
         return CRYPTO_LIB_ERR_NO_INIT;
     }
     *security_association = &sa[spi];
-    if (sa[spi].iv == NULL && (sa[spi].ast == 1 || sa[spi].est == 1))
+    if (sa[spi].iv == NULL && (sa[spi].shivf_len > 0))
     {
         return CRYPTO_LIB_ERR_NULL_IV;
     } // Must have IV if doing encryption or authentication

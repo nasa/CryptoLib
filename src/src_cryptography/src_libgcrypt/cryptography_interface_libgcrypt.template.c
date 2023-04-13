@@ -692,22 +692,24 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     gcry_mac_hd_t tmp_mac_hd;
     int32_t status = CRYPTO_LIB_SUCCESS;
     uint8_t* key_ptr = key;
+    size_t len_in = len_data_in; // Unused
+    len_in = len_in;
     if(sa_ptr != NULL) //Using SA key pointer
     {
         key_ptr = &(ek_ring[sa_ptr->akid].value[0]);
     }
 
     // Need to copy the data over, since authentication won't change/move the data directly
+    // If you don't want data out, don't set a data out length
     if(data_out != NULL)
     {
-        memcpy(data_out, data_in, len_data_in);
+        memcpy(data_out, data_in, len_data_out);
     }
     else
     {
         return CRYPTO_LIB_ERR_NULL_BUFFER;
     }
     // Using to fix warning
-    len_data_out = len_data_out;
     ecs = ecs;
     cam_cookies = cam_cookies;
 

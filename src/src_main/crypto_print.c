@@ -259,9 +259,9 @@ void Crypto_saPrint(SecurityAssociation_t* sa)
  * @param c: void*, The hex to be printed.
  * @param n: size_t, The size of the array to be printed.
  **/
-void Crypto_hexprint(void* c, size_t n)
+void Crypto_hexprint(const void* c, size_t n)
 {
-    uint8_t* t = c;
+    const uint8_t* t = c;
     size_t idx = 0;
     if (c == NULL)
         return;

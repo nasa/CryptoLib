@@ -364,7 +364,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
                 {
                     return CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
                 }
-                status = Crypto_Prepare_TM_AAD(&tm_frame[0], aad_len, sa_ptr->abm, (uint8_t*)&aad);
+                status = Crypto_Prepare_TM_AAD(&tm_frame[0], aad_len, sa_ptr->abm, &aad[0]);
             }
         }
 
@@ -829,7 +829,6 @@ int32_t Crypto_TM_ProcessSecurity(const uint8_t* p_ingest, const uint16_t len_in
         printf(KYEL "DEBUG - Printing SA Entry for current frame.\n" RESET);
         Crypto_saPrint(sa_ptr);
 #endif
-
     // Determine SA Service Type
     if ((sa_ptr->est == 0) && (sa_ptr->ast == 0))
     {
@@ -946,11 +945,11 @@ int32_t Crypto_TM_ProcessSecurity(const uint8_t* p_ingest, const uint16_t len_in
         return status;
     }
 
-    // Copy over TM Primary Header (6 bytes),Secondary (if present), and SPI
+    // Copy over TM Primary Header (6 bytes),Secondary (if present)
     // If present, the TF Secondary Header will follow the TF PriHdr
     memcpy(p_new_dec_frame, &p_ingest[0], 6 + secondary_hdr_len);
 
-    // Byte_idx currently points to just past the SPI
+    // Byte_idx is still set to just past the SPI
     // If IV is present, note location
     if (sa_ptr->iv_len > 0)
     {
@@ -965,15 +964,16 @@ int32_t Crypto_TM_ProcessSecurity(const uint8_t* p_ingest, const uint16_t len_in
     printf(KYEL "IV length of %d bytes\n" RESET, sa_ptr->shivf_len);
     printf(KYEL "ARSN length of %d bytes\n" RESET, sa_ptr->arsn_len - sa_ptr->shsnf_len);
     printf(KYEL "PAD length field of %d bytes\n" RESET, sa_ptr->shplf_len);
-    printf(KYEL "Currently pointing to PDU Data at index %d\n" RESET, byte_idx);
+    printf(KYEL "First byte past Security Header is at index %d\n" RESET, byte_idx);
 #endif
 
     /*
     ** End Security Header Fields
-    ** byte_idx is now at start of encrypted data
+    ** byte_idx is now at start of pdu / encrypted data
     */
 
-   // Calculate size of data to be decrypted
+    // Calculate size of the protocol data unit
+    // NOTE: This size itself it not the length for authentication 
     pdu_len = current_managed_parameters->max_frame_size - (byte_idx) - sa_ptr->stmacf_len; // - fecf_len - ocf_len;
     if(current_managed_parameters->has_ocf == TM_HAS_OCF)
     {
@@ -984,10 +984,15 @@ int32_t Crypto_TM_ProcessSecurity(const uint8_t* p_ingest, const uint16_t len_in
         pdu_len -= 2;
     }
 
+    // If MAC exists, comes immediately after pdu
+    if (sa_ptr->stmacf_len > 0)
+    {
+        mac_loc = byte_idx + pdu_len;
+    }
+
 #ifdef TM_DEBUG
-    printf(KYEL "Data location starts at: %d\n" RESET, byte_idx);
+    printf(KYEL "Index / data location starts at: %d\n" RESET, byte_idx);
     printf(KYEL "Data size is: %d\n" RESET, pdu_len);
-    printf(KYEL "Index at end of SPI is: %d\n", byte_idx);
     if(current_managed_parameters->has_ocf == TM_HAS_OCF)
     {
         // If OCF exists, comes immediately after MAC
@@ -1000,19 +1005,45 @@ int32_t Crypto_TM_ProcessSecurity(const uint8_t* p_ingest, const uint16_t len_in
     }
 #endif
 
+    // Copy pdu into output frame
+    // this will be over-written by decryption functions if necessary,
+    // but not by authentication which requires
+
     /*
     ** Begin Authentication / Encryption
     */
 
+    if(sa_service_type != SA_PLAINTEXT && sa_ptr->ecs == NULL && sa_ptr->acs == NULL)
+    {
+        return CRYPTO_LIB_ERR_NULL_CIPHERS;
+    }
+
     if (sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_FALSE) // Non aead algorithm
     {
-        // TODO - implement non-AEAD algorithm logic
-        if(sa_service_type == SA_AUTHENTICATION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
+        // Parse MAC, prepare AAD
+        if ((sa_service_type == SA_AUTHENTICATION) || (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
         {
+    #ifdef MAC_DEBUG
+            printf("MAC Parsed from Frame:\n");
+            Crypto_hexprint(p_ingest+mac_loc,sa_ptr->stmacf_len);
+    #endif
+            aad_len = mac_loc;
+            if ((sa_service_type == SA_AUTHENTICATED_ENCRYPTION) && (ecs_is_aead_algorithm == CRYPTO_TRUE))
+            {
+                //aad_len = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len +
+                //          sa_ptr->shplf_len;
+            }
+            if (sa_ptr->abm_len < aad_len)
+            {
+                return CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
+            }
+            // Use ingest and abm to create aad
+            Crypto_Prepare_TM_AAD(p_ingest, aad_len, sa_ptr->abm, &aad[0]);
+
             status = cryptography_if->cryptography_validate_authentication(p_new_dec_frame+byte_idx, // plaintext output
-                                                            (size_t)(pdu_len),   // length of data
-                                                            &(p_ingest[byte_idx]), // ciphertext input
-                                                            (size_t)(pdu_len), // in data length
+                                                            pdu_len, // length of data
+                                                            p_ingest+byte_idx, // ciphertext input
+                                                            pdu_len, // in data length
                                                             NULL, // Key
                                                             Crypto_Get_ACS_Algo_Keylen(*sa_ptr->acs),
                                                             sa_ptr, // SA for key reference
@@ -1062,11 +1093,6 @@ int32_t Crypto_TM_ProcessSecurity(const uint8_t* p_ingest, const uint16_t len_in
     {
         memcpy(p_new_dec_frame+byte_idx, &(p_ingest[byte_idx]), pdu_len);
         byte_idx += pdu_len;
-    }
-
-    if(sa_service_type != SA_PLAINTEXT && sa_ptr->ecs == NULL && sa_ptr->acs == NULL)
-    {
-        return CRYPTO_LIB_ERR_NULL_CIPHERS;
     }
 
 #ifdef TM_DEBUG
@@ -1123,15 +1149,14 @@ void Crypto_TM_updatePDU(uint8_t* ingest, int len_ingest)
     // int y = 0;
     // int fill_size = 0;
     SecurityAssociation_t* sa_ptr;
-    printf("%s, Line: %d\n", __FILE__, __LINE__);
+
     // Consider a helper function here, or elsewhere, to do all the 'math' in one spot as a global accessible list of variables
     if (sadb_routine->sadb_get_sa_from_spi(tm_frame[0], &sa_ptr) != CRYPTO_LIB_SUCCESS) // modify
     {
         // TODO - Error handling
-        printf(KRED"Update PRU Error!\n");
+        printf(KRED"Update PDU Error!\n");
         return; // Error -- unable to get SA from SPI.
     }
-    printf("%s, Line: %d\n", __FILE__, __LINE__);
     if ((sa_ptr->est == 1) && (sa_ptr->ast == 1))
     {
         // fill_size = 1129 - MAC_SIZE - IV_SIZE + 2; // +2 for padding bytes
@@ -1140,7 +1165,6 @@ void Crypto_TM_updatePDU(uint8_t* ingest, int len_ingest)
     {
         // fill_size = 1129;
     }
-    printf("%s, Line: %d\n", __FILE__, __LINE__);
 #ifdef TM_ZERO_FILL
     for (x = 0; x < TM_FILL_SIZE; x++)
     {
@@ -1185,7 +1209,6 @@ void Crypto_TM_updatePDU(uint8_t* ingest, int len_ingest)
     //     tm_frame.tm_pdu[x] = 0x00;
     //     x++;
     // }
-    printf("%s, Line: %d\n", __FILE__, __LINE__);
     // Copy actual packet
     while (x < len_ingest + tm_offset)
     {
@@ -1195,7 +1218,6 @@ void Crypto_TM_updatePDU(uint8_t* ingest, int len_ingest)
         // tm_frame.tm_pdu[x] = (uint8_t)ingest[x - tm_offset];
         x++;
     }
-    printf("%s, Line: %d\n", __FILE__, __LINE__);
 #ifdef TM_IDLE_FILL
     // Check for idle frame trigger
     if (((uint8_t)ingest[0] == 0x08) && ((uint8_t)ingest[1] == 0x90))
@@ -1204,7 +1226,6 @@ void Crypto_TM_updatePDU(uint8_t* ingest, int len_ingest)
     }
     else
     {
-        printf("%s, Line: %d\n", __FILE__, __LINE__);
         // while (x < (fill_size - 64))
         // {
         //     tm_frame.tm_pdu[x++] = 0x07;
@@ -1307,14 +1328,13 @@ void Crypto_TM_updateOCF(void)
 /**
  * @brief Function: Crypto_Prepare_TM_AAD
  * Bitwise ANDs buffer with abm, placing results in aad buffer
- * Note: Function caller is responsible for freeing the returned buffer!
  * @param buffer: uint8_t*
  * @param len_aad: uint16_t
  * @param abm_buffer: uint8_t*
  * @param aad: uint8_t*
  * @return status: uint32_t
  **/
-uint32_t Crypto_Prepare_TM_AAD(uint8_t* buffer, uint16_t len_aad, uint8_t* abm_buffer, uint8_t* aad)
+uint32_t Crypto_Prepare_TM_AAD(const uint8_t* buffer, uint16_t len_aad, const uint8_t* abm_buffer, uint8_t* aad)
 {
     uint32_t status = CRYPTO_LIB_SUCCESS;
     int i;
