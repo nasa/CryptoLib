@@ -193,7 +193,7 @@ int32_t crypto_reset(void)
         printf("CryptoLib initialization failed with error %d \n", status);
     }
 
-    status = Crypto_Init_Unit_Test();
+    status = Crypto_Init_TC_Unit_Test();
     // TODO: CryptoLib appears to be looking at the second byte and not specficially the SCID bits
     if(status != CRYPTO_LIB_SUCCESS)
     {
@@ -343,6 +343,7 @@ void* crypto_standalone_tm_process(void* sock)
     int tm_process_len = 0;
     uint16_t spp_len = 0;
     uint8_t* tm_ptr;
+    uint16_t tm_out_len = 0;
 
     #ifdef CRYPTO_STANDALONE_HANDLE_FRAMING
         uint8_t tm_framed[TM_FRAME_DATA_SIZE];
@@ -374,7 +375,7 @@ void* crypto_standalone_tm_process(void* sock)
             #endif
             
             /* Process */
-            status = Crypto_TM_ProcessSecurity(tm_process_in, &tm_process_len);
+            status = Crypto_TM_ProcessSecurity(tm_process_in, (const uint16_t) tm_process_len, &tm_ptr, &tm_out_len);
             if (status == CRYPTO_LIB_SUCCESS)
             {
                 #ifdef CRYPTO_STANDALONE_TM_PROCESS_DEBUG

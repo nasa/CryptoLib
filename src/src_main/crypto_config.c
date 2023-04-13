@@ -60,7 +60,7 @@ int32_t Crypto_Init_TC_Unit_Test(void)
 }
 
 /**
- * @brief Function: Crypto_Init_TC_Unit_Test
+ * @brief Function: Crypto_Init_TM_Unit_Test
  * @return int32: status
  **/
 int32_t Crypto_Init_TM_Unit_Test(void)
