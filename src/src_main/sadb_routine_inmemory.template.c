@@ -148,10 +148,10 @@ int32_t sadb_config(void)
     sa[4].arsnw_len = 1;
     sa[4].arsnw = 5;
     sa[4].arsn_len = 0;
-    sa[4].gvcid_tc_blk.tfvn = 0;
-    sa[4].gvcid_tc_blk.scid = SCID & 0x3FF;
-    sa[4].gvcid_tc_blk.vcid = 4;
-    sa[4].gvcid_tc_blk.mapid = TYPE_TC;
+    sa[4].gvcid_blk.tfvn = 0;
+    sa[4].gvcid_blk.scid = SCID & 0x3FF;
+    sa[4].gvcid_blk.vcid = 4;
+    sa[4].gvcid_blk.mapid = TYPE_TC;
 
     // SA 5 - KEYED;   ARSNW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 131
     sa[5].spi = 5;
