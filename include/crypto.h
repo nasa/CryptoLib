@@ -178,7 +178,7 @@ extern CCSDS_t sdls_frame;
 // extern TM_t tm_frame;
 extern uint8_t tm_frame[1786];
 extern TM_FramePrimaryHeader_t tm_frame_pri_hdr; 
-TM_FrameSecurityHeader_t tm_frame_sec_hdr; // Used to reduce bit math duplication
+extern TM_FrameSecurityHeader_t tm_frame_sec_hdr; // Used to reduce bit math duplication
 
 // Global configuration structs
 extern CryptoConfig_t* crypto_config;
