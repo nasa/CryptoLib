@@ -214,6 +214,7 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
     EndPython();
 }
 
+
 /**
  * @brief Validation Test: Authorized Decryption
  * Makes use of truth data created from the previous AUTH_ENCRYPTION_TEST, to validate that Crypto_TC_ProcessSecurity(

@@ -925,7 +925,7 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
 
 #ifdef TC_DEBUG
     size_t j;
-    printf("Input payload length is %ld\n", len_data_in);
+    printf("Input payload length is %ld\n", (long int) len_data_in);
     printf(KYEL "Printing Frame Data prior to encryption:\n\t");
     for (j = 0; j < len_data_in; j++)
     {
@@ -956,7 +956,7 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
     }
 
 #ifdef TC_DEBUG
-    printf("Output payload length is %ld\n", len_data_out);
+    printf("Output payload length is %ld\n", (long int) len_data_out);
     printf(KYEL "Printing TC Frame Data after encryption:\n\t");
     for (j = 0; j < len_data_out; j++)
     {
@@ -1058,7 +1058,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
 
 #ifdef TC_DEBUG
     size_t j;
-    printf("Input payload length is %ld\n", len_data_in);
+    printf("Input payload length is %ld\n", (long int) len_data_in);
     printf(KYEL "Printing Frame Data prior to encryption:\n\t");
     for (j = 0; j < len_data_in; j++)
     {
@@ -1115,7 +1115,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     }
 
 #ifdef TC_DEBUG
-    printf("Output payload length is %ld\n", len_data_out);
+    printf("Output payload length is %ld\n", (long int) len_data_out);
     printf(KYEL "Printing TC Frame Data after encryption:\n\t");
     for (j = 0; j < len_data_out; j++)
     {
