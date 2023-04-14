@@ -34,7 +34,7 @@ UTEST(CRYPTO_C, CALC_CRC16)
     char* data_h = "2003002000ff000100001880d2c9000e197f0b001b0004000400003040d95e";
     uint8_t* data_b = NULL;
     int data_b_len = 0;
-    Crypto_Init_Unit_Test();
+    Crypto_Init_TC_Unit_Test();
 
     hex_conversion(data_h, (char**) &data_b, &data_b_len);
 

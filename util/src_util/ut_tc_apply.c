@@ -17,7 +17,7 @@
 */
 
 /**
- *  Unit Tests that macke use of TC_ApplySecurity function on the data.
+ *  Unit Tests that make use of TC_ApplySecurity function on the data.
  **/
 #include "ut_tc_apply.h"
 #include "crypto.h"
@@ -89,7 +89,7 @@ UTEST(TC_APPLY_SECURITY, NO_CONFIG)
 UTEST(TC_APPLY_SECURITY, HAPPY_PATH_CLEAR)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Init_Unit_Test();
+    Crypto_Init_TC_Unit_Test();
     char* raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
     char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
@@ -115,7 +115,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_CLEAR)
 UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Init_Unit_Test();
+    Crypto_Init_TC_Unit_Test();
     char* raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
     char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
@@ -133,7 +133,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC)
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     sadb_routine->sadb_get_sa_from_spi(4, &test_association);
-    test_association->gvcid_tc_blk.vcid = 0;
+    test_association->gvcid_blk.vcid = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ast = 0;
     test_association->arsn_len = 0;
@@ -152,7 +152,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC)
 UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_CBC)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Init_Unit_Test();
+    Crypto_Init_TC_Unit_Test();
     char* raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
     char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
@@ -189,7 +189,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_CBC)
 UTEST(TC_APPLY_SECURITY, HAPPY_PATH_AUTH_ENC)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Init_Unit_Test();
+    Crypto_Init_TC_Unit_Test();
     char* raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
     char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
@@ -207,7 +207,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_AUTH_ENC)
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     sadb_routine->sadb_get_sa_from_spi(4, &test_association);
-    test_association->gvcid_tc_blk.vcid = 0;
+    test_association->gvcid_blk.vcid = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->arsn_len = 0;
 
@@ -226,7 +226,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_AUTH_ENC)
 UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_IV_ROLLOVER)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Init_Unit_Test();
+    Crypto_Init_TC_Unit_Test();
     char* raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
     char* raw_tc_sdls_ping_b = NULL;
 
@@ -255,7 +255,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_IV_ROLLOVE
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     sadb_routine->sadb_get_sa_from_spi(4, &test_association);
-    test_association->gvcid_tc_blk.vcid = 0;
+    test_association->gvcid_blk.vcid = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->shivf_len = 6;
     test_association->iv_len = 12;
@@ -334,7 +334,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_STATIC_IV_ROLLOVER)
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     sadb_routine->sadb_get_sa_from_spi(4, &test_association);
-    test_association->gvcid_tc_blk.vcid = 0;
+    test_association->gvcid_blk.vcid = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->shivf_len = 6;
     test_association->iv_len = 12;
@@ -412,7 +412,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_ARSN_ROLLO
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     sadb_routine->sadb_get_sa_from_spi(4, &test_association);
-    test_association->gvcid_tc_blk.vcid = 0;
+    test_association->gvcid_blk.vcid = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->shivf_len = 0;
     test_association->iv_len = 0;

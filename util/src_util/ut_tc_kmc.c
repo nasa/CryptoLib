@@ -17,7 +17,7 @@
 */
 
 /**
- *  Unit Tests that macke use of TC Functionality with KMC Service.
+ *  Unit Tests that make use of TC Functionality with KMC Service.
  **/
 
 #include "ut_tc_apply.h"

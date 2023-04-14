@@ -17,7 +17,7 @@
 */
 
 /**
- *  Unit Tests that macke use of TC_ProcessSecurity function on the data.
+ *  Unit Tests that make use of TC_ProcessSecurity function on the data.
  **/
 #include "ut_tc_process.h"
 #include "crypto.h"
@@ -324,7 +324,7 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_STATIC_IV_ROLLOVER)
     // Expose SA 4 for testing
     sadb_routine->sadb_get_sa_from_spi(4, &test_association);
     test_association->arsn_len = 0;
-    test_association->gvcid_tc_blk.vcid = 0;
+    test_association->gvcid_blk.vcid = 0;
     test_association->shivf_len = 6;
     test_association->iv_len = 12;
     free(test_association->iv);
@@ -434,7 +434,7 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_NONTRANSMITTED_INCREMENTING_IV_ROLLOVER)
     // Expose SA 4 for testing
     sadb_routine->sadb_get_sa_from_spi(4, &test_association);
     test_association->arsn_len = 0;
-    test_association->gvcid_tc_blk.vcid = 0;
+    test_association->gvcid_blk.vcid = 0;
     test_association->shivf_len = 6;
     test_association->iv_len = 12;
     free(test_association->iv);

@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
     debug_hexprintf(buffer, buffer_size_i);
 
     // Setup & Initialize CryptoLib
-    Crypto_Init();
+    // Crypto_Init();
 
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
     }
     else if (strcmp(security_type, "tm") == 0)
     {
-        Crypto_TM_ApplySecurity((uint8_t* )buffer, (int *)&buffer_size_i);
+        //Crypto_TM_ApplySecurity();
     }
     else if (strcmp(security_type, "aos") == 0)
     {

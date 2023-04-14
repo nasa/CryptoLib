@@ -217,8 +217,8 @@ static int32_t sadb_save_sa(SecurityAssociation_t* sa)
 
     snprintf(update_sa_query, sizeof(update_sa_query), SQL_SADB_UPDATE_IV_ARC_BY_SPI,
              iv_h,
-             arsn_h, sa->spi, sa->gvcid_tc_blk.tfvn,
-             sa->gvcid_tc_blk.scid, sa->gvcid_tc_blk.vcid, sa->gvcid_tc_blk.mapid);
+             arsn_h, sa->spi, sa->gvcid_blk.tfvn,
+             sa->gvcid_blk.scid, sa->gvcid_blk.vcid, sa->gvcid_blk.mapid);
     free(iv_h);
     free(arsn_h);
 #ifdef SA_DEBUG
@@ -391,22 +391,22 @@ static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** se
             }
             if (strcmp(field_names[i], "tfvn") == 0)
             {
-                sa->gvcid_tc_blk.tfvn = atoi(row[i]);
+                sa->gvcid_blk.tfvn = atoi(row[i]);
                 continue;
             }
             if (strcmp(field_names[i], "scid") == 0)
             {
-                sa->gvcid_tc_blk.scid = atoi(row[i]);
+                sa->gvcid_blk.scid = atoi(row[i]);
                 continue;
             }
             if (strcmp(field_names[i], "vcid") == 0)
             {
-                sa->gvcid_tc_blk.vcid = atoi(row[i]);
+                sa->gvcid_blk.vcid = atoi(row[i]);
                 continue;
             }
             if (strcmp(field_names[i], "mapid") == 0)
             {
-                sa->gvcid_tc_blk.mapid = atoi(row[i]);
+                sa->gvcid_blk.mapid = atoi(row[i]);
                 continue;
             }
             if (strcmp(field_names[i], "lpid") == 0)

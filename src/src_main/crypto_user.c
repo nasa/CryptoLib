@@ -155,7 +155,8 @@ int32_t Crypto_User_ModifyKey(void)
  **/
 int32_t Crypto_User_ModifyActiveTM(void)
 {
-    tm_frame.tm_sec_header.spi = (uint8_t)sdls_frame.pdu.data[0];
+    // TODO Check this
+    tm_frame_sec_hdr.spi = (uint8_t)sdls_frame.pdu.data[0];
     return CRYPTO_LIB_SUCCESS;
 }
 
@@ -165,7 +166,9 @@ int32_t Crypto_User_ModifyActiveTM(void)
  **/
 int32_t Crypto_User_ModifyVCID(void)
 {
-    tm_frame.tm_header.vcid = (uint8_t)sdls_frame.pdu.data[0];
+    // tm_frame.tm_header.vcid = (uint8_t)sdls_frame.pdu.data[0];
+    // Check this
+    tm_frame_pri_hdr.vcid = (uint8_t)sdls_frame.pdu.data[0];
     SecurityAssociation_t* sa_ptr;
     int i;
     int j;
@@ -180,11 +183,13 @@ int32_t Crypto_User_ModifyVCID(void)
         for (j = 0; j < NUM_SA; j++)
         {
 
-            if (sa_ptr->gvcid_tm_blk[j].mapid == TYPE_TM)
+            if (sa_ptr->gvcid_blk.mapid == TYPE_TM)
             {
-                if (sa_ptr->gvcid_tm_blk[j].vcid == tm_frame.tm_header.vcid)
+                
+                if (sa_ptr->gvcid_blk.vcid == tm_frame_pri_hdr.vcid)//.tm_header.vcid)
                 {
-                    tm_frame.tm_sec_header.spi = i;
+                    // TODO Check this
+                    tm_frame_sec_hdr.spi = i;
                     printf("TM Frame SPI changed to %d \n", i);
                     break;
                 }

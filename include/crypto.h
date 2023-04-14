@@ -72,7 +72,7 @@ extern int32_t Crypto_Config_Kmc_Crypto_Service(char* protocol, char* kmc_crypto
                                                 char* mtls_client_key_pass, char* mtls_issuer_cert);
 extern int32_t Crypto_Config_Cam(uint8_t cam_enabled, char* cookie_file_path, char* keytab_file_path, uint8_t login_method, char* access_manager_uri, char* username, char* cam_home);
 extern int32_t Crypto_Config_Add_Gvcid_Managed_Parameter(uint8_t tfvn, uint16_t scid, uint8_t vcid, uint8_t has_fecf,
-                                                         uint8_t has_segmentation_hdr, uint16_t max_tc_frame_size);
+                                                         uint8_t has_segmentation_hdr, uint16_t max_frame_size);
 
 // Initialization
 extern int32_t Crypto_Init(void); // Initialize CryptoLib After Configuration Calls
@@ -80,7 +80,8 @@ extern int32_t Crypto_Init_With_Configs(
     CryptoConfig_t* crypto_config_p, GvcidManagedParameters_t* gvcid_managed_parameters_p,
     SadbMariaDBConfig_t* sadb_mariadb_config_p,
     CryptographyKmcCryptoServiceConfig_t* cryptography_kmc_crypto_config_p); // Initialize CryptoLib With Application Defined Configuration
-extern int32_t Crypto_Init_Unit_Test(void);      // Initialize CryptoLib with unit test default Configurations
+extern int32_t Crypto_Init_TC_Unit_Test(void);      // Initialize CryptoLib with unit test default Configurations
+extern int32_t Crypto_Init_TM_Unit_Test(void);      // Initialize CryptoLib with unit test default Configurations
 
 // Cleanup
 extern int32_t Crypto_Shutdown(void); // Free all allocated memory
@@ -93,8 +94,8 @@ extern int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint
                                        uint8_t** pp_enc_frame, uint16_t* p_enc_frame_len, char* cam_cookies);
 extern int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc_sdls_processed_frame, char* cam_cookies);
 // Telemetry (TM)
-extern int32_t Crypto_TM_ApplySecurity(uint8_t* ingest, int *len_ingest);
-extern int32_t Crypto_TM_ProcessSecurity(uint8_t* ingest, int *len_ingest);
+extern int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr);
+extern int32_t Crypto_TM_ProcessSecurity(const uint8_t* p_ingest, const uint16_t len_ingest, uint8_t** pp_processed_frame, uint16_t *p_decrypted_length);
 // Advanced Orbiting Systems (AOS)
 extern int32_t Crypto_AOS_ApplySecurity(uint8_t* ingest, int *len_ingest);
 extern int32_t Crypto_AOS_ProcessSecurity(uint8_t* ingest, int *len_ingest);
@@ -113,13 +114,14 @@ uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id);
 uint8_t* Crypto_Prepare_TC_AAD(uint8_t* buffer, uint16_t len_aad, uint8_t* abm_buffer);
 void Crypto_TM_updatePDU(uint8_t* ingest, int len_ingest);
 void Crypto_TM_updateOCF(void);
+uint32_t Crypto_Prepare_TM_AAD(const uint8_t* buffer, uint16_t len_aad, const uint8_t* abm_buffer, uint8_t* aad);
 void Crypto_Local_Config(void);
 void Crypto_Local_Init(void);
 // int32_t  Crypto_gcm_err(int gcm_err);
 int32_t Crypto_window(uint8_t* actual, uint8_t* expected, int length, int window);
 // int32_t Crypto_compare_less_equal(uint8_t* actual, uint8_t* expected, int length);
 // int32_t  Crypto_FECF(int fecf, uint8_t* ingest, int len_ingest,TC_t* tc_frame);
-uint16_t Crypto_Calc_FECF(uint8_t* ingest, int len_ingest);
+uint16_t Crypto_Calc_FECF(const uint8_t* ingest, int len_ingest);
 void Crypto_Calc_CRC_Init_Table(void);
 uint16_t Crypto_Calc_CRC16(uint8_t* data, int size);
 int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, uint8_t *iv);
@@ -161,7 +163,7 @@ int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uin
                                                        GvcidManagedParameters_t** managed_parameters_out);
 int32_t crypto_config_add_gvcid_managed_parameter_recursion(uint8_t tfvn, uint16_t scid, uint8_t vcid,
                                                                    uint8_t has_fecf, uint8_t has_segmentation_hdr,
-                                                                   uint16_t max_tc_frame_size,
+                                                                   uint16_t max_frame_size,
                                                                    GvcidManagedParameters_t* managed_parameter);
 void Crypto_Free_Managed_Parameters(GvcidManagedParameters_t* managed_parameters);
 
@@ -173,7 +175,10 @@ extern char* crypto_deep_copy_string(char* src_string);
 */ 
 // Data stores used in multiple components
 extern CCSDS_t sdls_frame;
-extern TM_t tm_frame;
+// extern TM_t tm_frame;
+extern uint8_t tm_frame[1786];
+extern TM_FramePrimaryHeader_t tm_frame_pri_hdr; 
+extern TM_FrameSecurityHeader_t tm_frame_sec_hdr; // Used to reduce bit math duplication
 
 // Global configuration structs
 extern CryptoConfig_t* crypto_config;
@@ -187,8 +192,6 @@ extern CryptographyInterface cryptography_if;
 
 // extern crypto_key_t ak_ring[NUM_KEYS];
 extern CCSDS_t sdls_frame;
-extern TM_t tm_frame;
-extern CryptoConfig_t* crypto_config;
 extern SadbMariaDBConfig_t* sadb_mariadb_config;
 extern GvcidManagedParameters_t* gvcid_managed_parameters;
 extern GvcidManagedParameters_t* current_managed_parameters;
@@ -210,4 +213,4 @@ extern uint8_t badFECF;
 extern uint32_t crc32Table[256];
 extern uint16_t crc16Table[256];
 
-#endif // _crypto_h_
+#endif // _crypto_h_z

@@ -67,13 +67,13 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t ecs, uint8_t acs, char* cam_cookies);
 static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t len_data_out,
-                                                    uint8_t* data_in, size_t len_data_in,
-                                                    uint8_t* key, uint32_t len_key,
-                                                    SecurityAssociation_t* sa_ptr,
-                                                    uint8_t* iv, uint32_t iv_len,
-                                                    uint8_t* mac, uint32_t mac_size,
-                                                    uint8_t* aad, uint32_t aad_len,
-                                                    uint8_t ecs, uint8_t acs, char* cam_cookies);
+                                         const uint8_t* data_in, const size_t len_data_in,
+                                         uint8_t* key, uint32_t len_key,
+                                         SecurityAssociation_t* sa_ptr,
+                                         const uint8_t* iv, uint32_t iv_len,
+                                         const uint8_t* mac, uint32_t mac_size,
+                                         const uint8_t* aad, uint32_t aad_len,
+                                         uint8_t ecs, uint8_t acs, char* cam_cookies);
 static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -653,7 +653,6 @@ static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
     return status;
 }
 
-
 static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -883,13 +882,14 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
     memcpy(mac,icv_decoded, mac_size);
     return status;
 }
+
 static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t len_data_out,
-                                                    uint8_t* data_in, size_t len_data_in,
+                                                    const uint8_t* data_in, const size_t len_data_in,
                                                     uint8_t* key, uint32_t len_key,
                                                     SecurityAssociation_t* sa_ptr,
-                                                    uint8_t* iv, uint32_t iv_len,
-                                                    uint8_t* mac, uint32_t mac_size,
-                                                    uint8_t* aad, uint32_t aad_len,
+                                                    const uint8_t* iv, uint32_t iv_len,
+                                                    const uint8_t* mac, uint32_t mac_size,
+                                                    const uint8_t* aad, uint32_t aad_len,
                                                     uint8_t ecs, uint8_t acs, char* cam_cookies)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -922,7 +922,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     {
         return status;
     }
-    uint8_t* auth_payload = aad;
+    const uint8_t* auth_payload = aad;
     size_t auth_payload_len = aad_len;
 
     // Base64 URL encode MAC for KMC REST Encrypt
@@ -1075,6 +1075,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
 
     return status;
 }
+
 static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -1360,6 +1361,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     free(chunk_read);
     return status;
 }
+
 static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,

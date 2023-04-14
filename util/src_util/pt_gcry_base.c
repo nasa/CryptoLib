@@ -49,7 +49,7 @@ void random_big_buffer(char* buffer, int32_t buffer_len)
 
 UTEST(PERFORMANCE, GCRY_BASE)
 {
-    int32_t status = Crypto_Init_Unit_Test();
+    int32_t status = Crypto_Init_TC_Unit_Test();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     int32_t big_buffer_len = 1024; 
