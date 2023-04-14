@@ -185,6 +185,7 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
 
     // Deactive SA 1
+    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
 
     // Expose SA 4 for testing
@@ -198,10 +199,12 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
-    
+
     return_val = Crypto_TC_ApplySecurity(enc_test_ping_b, enc_test_ping_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
 
+    Crypto_Shutdown();
+    
     // Get Truth Baseline
     python_auth_encryption("1880d2ca0008197f0b0031000039c5",
                            "FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210",
@@ -212,7 +215,6 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
         ASSERT_EQ(expected[i], ptr_enc_frame[i]);
     }
 
-    Crypto_Shutdown();
     // sadb_routine->sadb_close();
     free(activate_sa4_b);
     free(enc_test_ping_b);
