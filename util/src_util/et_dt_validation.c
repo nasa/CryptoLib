@@ -151,61 +151,67 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
 
     char* activate_sa4_h = "2003002000ff000100011880d2c9000e197f0b001b0004000400003040d95ecbc2";
     char* enc_test_ping_h = "2003041600ff1880d2ca0008197f0b0031000039c5082d";
-    char* previous_iv_h = "";
 
-    uint8_t* activate_sa4_b, *enc_test_ping_b, *buffer_previous_iv_b = NULL;
+    uint8_t* activate_sa4_b, *enc_test_ping_b = NULL;
     int activate_sa4_len, enc_test_ping_len = 0;
-
-    buffer_previous_iv_b = buffer_previous_iv_b;
-    previous_iv_h = previous_iv_h;
 
     hex_conversion(activate_sa4_h, (char**) &activate_sa4_b, &activate_sa4_len);
     hex_conversion(enc_test_ping_h, (char**) &enc_test_ping_b, &enc_test_ping_len);
+
     SecurityAssociation_t* test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
 
-    uint8_t* ptr_enc_frame = NULL;
-    uint16_t enc_frame_len = 0;
     int32_t return_val = -1;
+
     TC_t* tc_sdls_processed_frame;
     tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
+
+    uint8_t* ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+
     // Default SA
     // Expose SA 1 for testing
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_CIPHER_NONE;
+
     // Expose SA 4 for testing
     sadb_routine->sadb_get_sa_from_spi(4, &test_association);
     test_association->sa_state = SA_KEYED;
+    
     // Ensure that Process Security can activate SA 4
     return_val = Crypto_TC_ProcessSecurity(activate_sa4_b, &activate_sa4_len, tc_sdls_processed_frame);
-    //printf("Verifying TC_Process Return Value\n");
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+
     // Deactive SA 1
     test_association->sa_state = SA_NONE;
+
     // Expose SA 4 for testing
     sadb_routine->sadb_get_sa_from_spi(4, &test_association);
     test_association->arsn_len = 0;
     test_association->gvcid_blk.vcid = 1;
+    test_association->iv = calloc(1, test_association->shivf_len * sizeof(uint8_t));
     test_association->iv[11] = 1;
     test_association->ast = 1;
     test_association->est = 1;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
+    
     return_val = Crypto_TC_ApplySecurity(enc_test_ping_b, enc_test_ping_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+
     // Get Truth Baseline
     python_auth_encryption("1880d2ca0008197f0b0031000039c5",
                            "FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210",
                            "000000000000000000000001", "2003043400FF0004", "00", &expected, &expected_length);
-
     for (int i = 0; i < expected_length; i++)
     {
         //printf("[%d]: %02x -> %02x \n", i, expected[i], ptr_enc_frame[i]);
         ASSERT_EQ(expected[i], ptr_enc_frame[i]);
     }
+
     Crypto_Shutdown();
     // sadb_routine->sadb_close();
     free(activate_sa4_b);
