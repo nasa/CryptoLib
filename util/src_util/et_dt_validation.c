@@ -158,8 +158,10 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
     hex_conversion(activate_sa4_h, (char**) &activate_sa4_b, &activate_sa4_len);
     hex_conversion(enc_test_ping_h, (char**) &enc_test_ping_b, &enc_test_ping_len);
 
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t* test_association_1 = NULL;
+    SecurityAssociation_t* test_association_4 = NULL;
+    test_association_1 = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    test_association_4 = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
 
     int32_t return_val = -1;
 
@@ -172,33 +174,31 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
 
     // Default SA
     // Expose SA 1 for testing
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
-    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_CIPHER_NONE;
+    sadb_routine->sadb_get_sa_from_spi(1, &test_association_1);
+    test_association_1->ecs = calloc(1, test_association_1->ecs_len * sizeof(uint8_t));
+    *test_association_1->ecs = CRYPTO_CIPHER_NONE;
 
     // Expose SA 4 for testing
-    sadb_routine->sadb_get_sa_from_spi(4, &test_association);
-    test_association->sa_state = SA_KEYED;
+    sadb_routine->sadb_get_sa_from_spi(4, &test_association_4);
+    test_association_4->sa_state = SA_KEYED;
     
     // Ensure that Process Security can activate SA 4
     return_val = Crypto_TC_ProcessSecurity(activate_sa4_b, &activate_sa4_len, tc_sdls_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
 
     // Deactive SA 1
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
-    test_association->sa_state = SA_NONE;
+    test_association_1->sa_state = SA_NONE;
 
     // Expose SA 4 for testing
-    sadb_routine->sadb_get_sa_from_spi(4, &test_association);
-    test_association->arsn_len = 0;
-    test_association->gvcid_blk.vcid = 1;
-    test_association->iv = calloc(1, test_association->shivf_len * sizeof(uint8_t));
-    test_association->iv[11] = 1;
-    test_association->ast = 1;
-    test_association->est = 1;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
+    test_association_4->arsn_len = 0;
+    test_association_4->gvcid_blk.vcid = 1;
+    test_association_4->iv = calloc(1, test_association_4->shivf_len * sizeof(uint8_t));
+    test_association_4->iv[11] = 1;
+    test_association_4->ast = 1;
+    test_association_4->est = 1;
+    test_association_4->sa_state = SA_OPERATIONAL;
+    test_association_4->ecs = calloc(1, test_association_4->ecs_len * sizeof(uint8_t));
+    *test_association_4->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     return_val = Crypto_TC_ApplySecurity(enc_test_ping_b, enc_test_ping_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
