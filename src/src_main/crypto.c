@@ -843,8 +843,8 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
             memcpy(sa_ptr->arsn, arsn, sa_ptr->arsn_len);
         }
     }
-    // If IV is greater than zero (and arsn isn't used), check for replay
-    else if (sa_ptr->iv_len > 0)
+    // If IV is greater than zero and using GCM, check for replay
+    if ((sa_ptr->iv_len > 0) && (cryptography_get_ecs_algo(sa_ptr->ecs) == CRYPTO_CIPHER_AES256_GCM))
     {
         // Check IV is in ARSNW
         if(crypto_config->crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
@@ -855,8 +855,6 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
             // Whole IV gets checked in MAC validation previously, this only verifies transmitted portion is what we expect.
             status = Crypto_window(iv, sa_ptr->iv + (sa_ptr->iv_len - sa_ptr->shivf_len), sa_ptr->shivf_len, sa_ptr->arsnw);
         }
-
-
 #ifdef DEBUG
         printf("Received IV is\n\t");
         for (int i = 0; i < sa_ptr->iv_len; i++)
@@ -881,6 +879,10 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
             memcpy(sa_ptr->iv, iv, sa_ptr->iv_len);
         }
     }
+    // IV length is greater than zero, but not using an incrementing IV as in GCM
+    // we can't verify this internally as Crpytolib doesn't track previous IVs 
+    // or generate random ones
+    // else{}
     return status;
 }
 
