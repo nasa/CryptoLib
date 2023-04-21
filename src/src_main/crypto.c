@@ -806,7 +806,7 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
     {
         return CRYPTO_LIB_ERR_NULL_ARSN;
     }
-    if (iv == NULL)
+    if (iv == NULL && crypto_config->cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
         return CRYPTO_LIB_ERR_NULL_IV;
     }

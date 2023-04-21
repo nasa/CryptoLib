@@ -453,7 +453,6 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
             }
         } 
 
-
         // Copy in IV from SA if not NULL and transmitted length > 0
         if (sa_ptr->iv != NULL)
         {
@@ -1274,7 +1273,7 @@ uint8_t* Crypto_Prepare_TC_AAD(uint8_t* buffer, uint16_t len_aad, uint8_t* abm_b
  **/
 static int32_t crypto_tc_validate_sa(SecurityAssociation_t *sa)
 {
-    if (sa->shivf_len > 0 && sa->iv == NULL)
+    if (sa->shivf_len > 0 && sa->iv == NULL && crypto_config->cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
         return CRYPTO_LIB_ERR_NULL_IV;
     }
@@ -1282,7 +1281,7 @@ static int32_t crypto_tc_validate_sa(SecurityAssociation_t *sa)
     {
         return CRYPTO_LIB_ERR_IV_LEN_SHORTER_THAN_SEC_HEADER_LENGTH;
     }
-    if (sa->iv_len > 0 && sa->iv == NULL)
+    if (sa->iv_len > 0 && sa->iv == NULL && crypto_config->cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
         return CRYPTO_LIB_ERR_NULL_IV;
     }
