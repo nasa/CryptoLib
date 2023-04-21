@@ -454,12 +454,28 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
         } 
 
 
-        // Start index from the transmitted portion
-        for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
+        // Copy in IV from SA if not NULL and transmitted length > 0
+        if (sa_ptr->iv != NULL)
         {
-            // Copy in IV from SA
-            *(p_new_enc_frame + index) = *(sa_ptr->iv + i);
-            index++;
+            // Start index from the transmitted portion
+            for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
+            {
+                *(p_new_enc_frame + index) = *(sa_ptr->iv + i);
+                index++;
+            }
+        }
+        // IV is NULL 
+        else 
+        {
+            // Transmitted length > 0, AND using KMC_CRYPTO
+            if (((sa_ptr->iv_len - sa_ptr->shivf_len) > 0) && crypto_config->cryptography_type == CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+            {
+                index += sa_ptr->iv_len - (sa_ptr->iv_len - sa_ptr->shivf_len);
+            }
+            else
+            {
+                return CRYPTO_LIB_ERR_NULL_IV;
+            }
         }
 
         // Set anti-replay sequence number if specified
@@ -1252,7 +1268,7 @@ uint8_t* Crypto_Prepare_TC_AAD(uint8_t* buffer, uint16_t len_aad, uint8_t* abm_b
 
 /**
  * @brief Function: crypto_tc_validate_sa
- * Helper function to assist with ensuring sane SA condigurations
+ * Helper function to assist with ensuring sane SA configurations
  * @param sa: SecurityAssociation_t*
  * @return int32: Success/Failure
  **/
