@@ -808,6 +808,7 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
     }
     if (iv == NULL && crypto_config->cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
+        printf("%s: %d\n", __FILE__, __LINE__);
         return CRYPTO_LIB_ERR_NULL_IV;
     }
     if (sa_ptr == NULL)
@@ -844,7 +845,7 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
         }
     }
     // If IV is greater than zero and using GCM, check for replay
-    if ((sa_ptr->iv_len > 0) && (cryptography_get_ecs_algo(sa_ptr->ecs) == CRYPTO_CIPHER_AES256_GCM))
+    if ((sa_ptr->iv_len > 0) && (cryptography_if->cryptography_get_ecs_algo(*(sa_ptr->ecs)) == CRYPTO_CIPHER_AES256_GCM))
     {
         // Check IV is in ARSNW
         if(crypto_config->crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)

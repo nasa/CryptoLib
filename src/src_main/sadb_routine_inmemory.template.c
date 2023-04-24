@@ -388,6 +388,7 @@ static int32_t sadb_get_sa_from_spi(uint16_t spi, SecurityAssociation_t** securi
     *security_association = &sa[spi];
     if (sa[spi].iv == NULL && (sa[spi].shivf_len > 0) && crypto_config->cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
+        printf("%s: %d\n", __FILE__, __LINE__);
         return CRYPTO_LIB_ERR_NULL_IV;
     } // Must have IV if doing encryption or authentication
     if (sa[spi].abm == NULL && sa[spi].ast)
@@ -433,6 +434,7 @@ static int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, u
             *security_association = &sa[i];
             if (sa[i].iv == NULL && (sa[i].ast == 1 || sa[i].est == 1) && crypto_config->cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
             {
+                printf("%s: %d\n", __FILE__, __LINE__);
                 return CRYPTO_LIB_ERR_NULL_IV;
             }
             if (sa[i].abm == NULL && sa[i].ast)
