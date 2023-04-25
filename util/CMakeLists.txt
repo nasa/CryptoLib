@@ -59,7 +59,7 @@ endforeach(SOURCE_PATH ${SOURCE_FILES})
 
 target_include_directories (Crypto PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-set(OBJECT_DIR ${PROJECT_BINARY_DIR}/src/CMakeFiles/Crypto.dir/src_main)
+set(OBJECT_DIR ${PROJECT_BINARY_DIR}/src/CMakeFiles/Crypto.dir/core)
 
 if(${CODECOV})
     # Create the gcov target. Run coverage tests with 'make gcov'

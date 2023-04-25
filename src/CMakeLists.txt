@@ -17,7 +17,7 @@
 
 include_directories(../include)
 
-aux_source_directory(src_main LIB_SRC_FILES)
+aux_source_directory(core LIB_SRC_FILES)
 if(MYSQL)
     aux_source_directory(sa/mariadb MARIADB_FILES)
     list(APPEND LIB_SRC_FILES ${MARIADB_FILES})

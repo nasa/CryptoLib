@@ -8,6 +8,6 @@ ignore:
   - "util/src_util/crypto_sequence.c"
   - "util/include/utest.h"
   - "util/core/shared_util.c"
-  - "src/src_main/crypto_print.c"
+  - "src/core/crypto_print.c"
   - "src/src_feature_stubs/cryptography_kmc_stub/cryptography_interface_kmc.stub.c"
   - "src/src_feature_stubs/mysql_stub/sadb_routine_mariadb.stub.c"
