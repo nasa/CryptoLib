@@ -13,15 +13,11 @@
  */
 
 #include "sadb_routine.h"
-/**
- * @brief Function: init_parse_sadb_routine
- * @param config: uint8_t*
- * @return SadbRoutine
- **/
-/*
-SadbRoutine init_parse_sadb_routine(uint8_t* config)
+
+static SadbRoutineStruct sadb_routine;
+
+SadbRoutine get_sadb_routine_inmemory(void)
 {
-    SadbRoutine sadb_routine;
-    return sadb_routine;
+    fprintf(stderr,"ERROR: Loading internal stub source code. Rebuild CryptoLib with -DMYSQL=OFF to use proper internal implementation.\n");
+    return &sadb_routine;
 }
-*/

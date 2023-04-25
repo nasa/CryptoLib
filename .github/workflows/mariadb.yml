@@ -27,12 +27,12 @@ jobs:
         working-directory: ${{github.workspace}}/build
         #Maybe create a variable for this SQL location
         run: |
-          cd /__w/CryptoLib/CryptoLib/src/crypto_sadb/sadb_mariadb_sql
+          cd /__w/CryptoLib/CryptoLib/src/sa/sadb_mariadb_sql
           echo "----------------"
           /etc/init.d/mysql start
           mysql --host=localhost -uroot -pitc123! < delete_sadb.sql
           mysql --host=localhost -uroot -pitc123! < create_sadb.sql
-          cd /__w/CryptoLib/CryptoLib/src/crypto_sadb/test_sadb_mariadb_sql
+          cd /__w/CryptoLib/CryptoLib/src/sa/test_sadb_mariadb_sql
           mysql --host=localhost -uroot -pitc123! < create_sadb_unit_test_user_grant_permissions.sql
           mysql --host=localhost -uroot -pitc123! < create_sadb_jpl_unit_test_security_associations.sql
           cd /__w/CryptoLib/CryptoLib/build/bin

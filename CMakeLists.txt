@@ -29,6 +29,8 @@ OPTION(ENCTEST "Encryption-Tests" OFF) # Disabled by default, enable with: -DENC
 OPTION(CODECOV "Code-Coverage" OFF) # Disabled by default, enable with: -DCODECOV=ON
 OPTION(SYSTEM_INSTALL "SystemInstall" OFF) #Disabled by default, enable with: -DSYSTEM_INSTALL=ON
 
+OPTION(SA_INTERNAL "SA Internal" ON) # Enabled by default, disable with: -DSA_INTERNAL=OFF
+
 IF(NOT DEFINED CFE_SYSTEM_PSPNAME)
     # Not cFE / cFS
     set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib")
