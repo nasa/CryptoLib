@@ -20,7 +20,9 @@
 cmake_minimum_required(VERSION 3.14.0)
 project(CRYPTO C)
 
-
+#
+# Define Build Flags
+#
 OPTION(DEBUG "Debug" OFF) # Disabled by default, enable with: -DDEBUG=ON
 OPTION(MYSQL "Mysql" OFF) # Disabled by default, enable with: -DMYSQL=ON
 OPTION(LIBGCRYPT "Libgcrypt" ON) # Enabled by default, disable with: -DLIBGCRYPT=OFF
@@ -28,8 +30,8 @@ OPTION(KMCCRYPTO "KmcCrypto" OFF) # Disabled by default, enable with: -DKMCCRYPT
 OPTION(ENCTEST "Encryption-Tests" OFF) # Disabled by default, enable with: -DENCTEST=ON
 OPTION(CODECOV "Code-Coverage" OFF) # Disabled by default, enable with: -DCODECOV=ON
 OPTION(SYSTEM_INSTALL "SystemInstall" OFF) #Disabled by default, enable with: -DSYSTEM_INSTALL=ON
-
 OPTION(SA_INTERNAL "SA Internal" ON) # Enabled by default, disable with: -DSA_INTERNAL=OFF
+OPTION(SUPPORT "Support" OFF) # Disabled by default, enable with: --DSUPPORT=ON
 
 IF(NOT DEFINED CFE_SYSTEM_PSPNAME)
     # Not cFE / cFS
@@ -80,6 +82,10 @@ endif()
 if(NOT DEFINED ${PROJECT_BINARY_DIR})
     set(PROJECT_BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build)
 endif()
+
+IF(SUPPORT)
+    add_subdirectory(support)
+ENDIF()
 
 add_subdirectory(src)
 

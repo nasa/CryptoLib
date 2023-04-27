@@ -39,7 +39,6 @@ extern "C"
 #include <unistd.h>
 
 #include "crypto.h"
-#include "shared_util.h"
 
 
 /*

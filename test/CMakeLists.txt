@@ -77,9 +77,7 @@ endif(${ENCTEST})
 aux_source_directory(core UTIL_SRC_FILES)
 aux_source_directory(tests APP_SRC_FILES) 
 
-find_package(Threads REQUIRED)
-
-file( GLOB SOURCE_FILES tests/*.c )
+file( GLOB SOURCE_FILES tests/*.c)
 foreach(SOURCE_PATH ${SOURCE_FILES})
     get_filename_component(EXECUTABLE_NAME ${SOURCE_PATH} NAME_WE)
 
@@ -95,7 +93,6 @@ foreach(SOURCE_PATH ${SOURCE_FILES})
         target_link_libraries(${EXECUTABLE_NAME} PUBLIC ${Python3_LIBRARIES}) 
         target_include_directories(${EXECUTABLE_NAME} PUBLIC ${Python3_INCLUDE_DIRS}) 
         find_library(${Python3_LIBRARIES} pycryptodome)
-        
     endif()
 
     add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
@@ -130,8 +127,6 @@ if(${CODECOV})
     add_dependencies(gcov ut_tc_apply)
     # Make sure to clean up the coverage folder
     set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES coverage)
-
-
 
     # Create the gcov-clean target. This cleans the build as well as generated 
     # .gcda and .gcno files.
