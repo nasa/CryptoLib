@@ -57,7 +57,7 @@ add_test(NAME UT_TM_PROCESS
 #          COMMAND ${PROJECT_BINARY_DIR}/bin/ut_mariadb
 #          WORKING_DIRECTORY ${PROJECT_TEST_DIR})
 
-if(${ENCTEST})
+if(TEST_ENC)
     add_test(NAME ET_DT_VALIDATION
              COMMAND ${PROJECT_BINARY_DIR}/bin/et_dt_validation 
              WORKING_DIRECTORY ${PROJECT_TEST_DIR})
@@ -66,13 +66,13 @@ endif()
 include_directories(include)
 include_directories(../include) 
 
-if(${ENCTEST})
+if(TEST_ENC)
     find_package (Python3 REQUIRED COMPONENTS Interpreter Development)
     execute_process(COMMAND pip3 show pycryptodome RESULT_VARIABLE EXIT_CODE OUTPUT_QUIET)
     if(NOT ${EXIT_CODE} EQUAL 0)
-        message(FATAL_ERROR "The \"pycryptodome\" Python3 package is not installed, and is required for ENCTEST.")
+        message(FATAL_ERROR "The \"pycryptodome\" Python3 package is not installed, and is required for TEST_ENC.")
     endif()
-endif(${ENCTEST})
+endif()
 
 aux_source_directory(core UTIL_SRC_FILES)
 aux_source_directory(tests APP_SRC_FILES) 
@@ -81,7 +81,7 @@ file( GLOB SOURCE_FILES tests/*.c)
 foreach(SOURCE_PATH ${SOURCE_FILES})
     get_filename_component(EXECUTABLE_NAME ${SOURCE_PATH} NAME_WE)
 
-    if((NOT ${ENCTEST}) AND ${EXECUTABLE_NAME} STREQUAL et_dt_validation)
+    if((NOT TEST_ENC) AND ${EXECUTABLE_NAME} STREQUAL et_dt_validation)
         continue()
     else()
         add_executable(${EXECUTABLE_NAME} ${SOURCE_PATH}) 
@@ -89,7 +89,7 @@ foreach(SOURCE_PATH ${SOURCE_FILES})
         target_link_libraries(${EXECUTABLE_NAME} LINK_PUBLIC Crypto pthread)
     endif()
 
-    if(${ENCTEST} AND ${EXECUTABLE_NAME} STREQUAL et_dt_validation)
+    if(TEST_ENC AND ${EXECUTABLE_NAME} STREQUAL et_dt_validation)
         target_link_libraries(${EXECUTABLE_NAME} PUBLIC ${Python3_LIBRARIES}) 
         target_include_directories(${EXECUTABLE_NAME} PUBLIC ${Python3_INCLUDE_DIRS}) 
         find_library(${Python3_LIBRARIES} pycryptodome)

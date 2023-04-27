@@ -18,6 +18,6 @@ static SadbRoutineStruct sadb_routine;
 
 SadbRoutine get_sadb_routine_inmemory(void)
 {
-    fprintf(stderr,"ERROR: Loading internal stub source code. Rebuild CryptoLib with -DMYSQL=OFF to use proper internal implementation.\n");
+    fprintf(stderr,"ERROR: Loading internal stub source code. Rebuild CryptoLib with -DSA_MARIADB=OFF to use proper internal implementation.\n");
     return &sadb_routine;
 }

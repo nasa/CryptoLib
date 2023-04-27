@@ -15,80 +15,67 @@
 # NASA IV&V
 # jstar-development-team@mail.nasa.gov
 
-
-#cmake_minimum_required(VERSION 2.6.4)
 cmake_minimum_required(VERSION 3.14.0)
 project(CRYPTO C)
 
 #
 # Define Build Flags
+# The default value is captured in line, change with flag `-DXYZ=1`
+# For flags with the same prefix, one or more may be enabled
 #
-OPTION(DEBUG "Debug" OFF) # Disabled by default, enable with: -DDEBUG=ON
-OPTION(MYSQL "Mysql" OFF) # Disabled by default, enable with: -DMYSQL=ON
-OPTION(LIBGCRYPT "Libgcrypt" ON) # Enabled by default, disable with: -DLIBGCRYPT=OFF
-OPTION(KMCCRYPTO "KmcCrypto" OFF) # Disabled by default, enable with: -DKMCCRYPTO=ON
-OPTION(ENCTEST "Encryption-Tests" OFF) # Disabled by default, enable with: -DENCTEST=ON
-OPTION(CODECOV "Code-Coverage" OFF) # Disabled by default, enable with: -DCODECOV=ON
-OPTION(SYSTEM_INSTALL "SystemInstall" OFF) #Disabled by default, enable with: -DSYSTEM_INSTALL=ON
-OPTION(SA_INTERNAL "SA Internal" ON) # Enabled by default, disable with: -DSA_INTERNAL=OFF
-OPTION(SUPPORT "Support" OFF) # Disabled by default, enable with: --DSUPPORT=ON
+option(CODECOV "Code Coverage" OFF)
+option(CRYPTO_LIBGCRYPT "Cryptography Module - Libgcrypt" ON)
+option(CRYPTO_KMC "Cryptography Module - KMC" OFF)
+option(DEBUG "Debug" OFF)
+option(SA_INTERNAL "Security Association - Internal" ON)
+option(SA_MARIADB "Security Association - MariaDB" OFF)
+option(SUPPORT "Support" OFF)
+option(SYSTEM_INSTALL "SystemInstall" OFF)
+option(TEST "Test" OFF)
+option(TEST_ENC "Tests - Encryption" OFF)
 
-IF(NOT DEFINED CFE_SYSTEM_PSPNAME)
-    # Not cFE / cFS
-    set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib")
-    set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}/install)
-ENDIF()
-
-IF(CRYPTO_SUBMODULE_INSTALL) #If building CryptoLib as a submodule of another build system (EG, JPL KMC, Nasa NOS3, etc...)
-    set(CMAKE_INSTALL_PREFIX ${CRYPTO_SUBMODULE_INSTALL})
-ENDIF()
-
-IF(SYSTEM_INSTALL)
-    set(CMAKE_INSTALL_PREFIX /usr/local)
-ENDIF()
-
-
-IF(DEBUG)
-    ADD_DEFINITIONS(-DDEBUG -DOCF_DEBUG -DFECF_DEBUG -DSA_DEBUG -DPDU_DEBUG -DCCSDS_DEBUG -DTC_DEBUG -DMAC_DEBUG -DTM_DEBUG)
-    add_compile_options(-ggdb)
-ENDIF(DEBUG)
-
-IF(ENCTEST)
-    ADD_DEFINITIONS(-DENCTEST)
-ENDIF(ENCTEST)
-
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-    include(CTest)
-    enable_testing()
-endif()
-
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror -g -O0")
-
+#
+# Build Flag Logic
+#
 if(CODECOV)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage")
 endif()
 
+if(DEBUG)
+    add_definitions(-DDEBUG -DOCF_DEBUG -DFECF_DEBUG -DSA_DEBUG -DPDU_DEBUG -DCCSDS_DEBUG -DTC_DEBUG -DMAC_DEBUG -DTM_DEBUG)
+    add_compile_options(-ggdb)
+endif()
+
+if(SYSTEM_INSTALL)
+    set(CMAKE_INSTALL_PREFIX /usr/local)
+elseif(NOT DEFINED CFE_SYSTEM_PSPNAME)
+    # Not cFE / cFS
+    set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib")
+    set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}/install)
+endif()
+
+if(TEST_ENC)
+    # Can't run an additional set of tests without `TEST` enabled
+    set(TEST ON)
+endif()
+
+if(TEST)
+    include(CTest)
+    enable_testing()
+endif()
+
+#
+# Project Specifics
+#
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror -g -O0")
+
 include_directories(include)
-
-# The shared OSAL and cFE include directories should always be used
-# Note that this intentionally does NOT include PSP-specific includes, just the generic
-# Only include cFS/NOS3 directories if env var is defined
-IF(DEFINED CFE_SYSTEM_PSPNAME)
-    include_directories(${CFECORE_SOURCE_DIR}/src/inc)
-    include_directories(${CFEPSP_SOURCE_DIR}/fsw/inc)
-    ADD_DEFINITIONS(-DNOS3)
-endif()
-
-if(NOT DEFINED ${PROJECT_BINARY_DIR})
-    set(PROJECT_BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build)
-endif()
-
-IF(SUPPORT)
-    add_subdirectory(support)
-ENDIF()
-
 add_subdirectory(src)
 
-if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR MYPROJECT_BUILD_TESTING) AND BUILD_TESTING)
+if(SUPPORT)
+    add_subdirectory(support)
+endif()
+
+if(TEST)
     add_subdirectory(test)
 endif()

@@ -18,12 +18,21 @@
 include_directories(../include)
 
 aux_source_directory(core LIB_SRC_FILES)
-if(MYSQL)
-    aux_source_directory(sa/mariadb MARIADB_FILES)
-    list(APPEND LIB_SRC_FILES ${MARIADB_FILES})
+
+if(CRYPTO_LIBGCRYPT)
+    aux_source_directory(crypto/libgcrypt LIBGCRYPT_FILES)
+    list(APPEND LIB_SRC_FILES ${LIBGCRYPT_FILES})
 else()
-    aux_source_directory(sa/mariadb_stub MARIADB_FILES)
-    list(APPEND LIB_SRC_FILES ${MARIADB_FILES})
+    aux_source_directory(crypto/libgcrypt_stub LIBGCRYPT_FILES)
+    list(APPEND LIB_SRC_FILES ${LIBGCRYPT_FILES})
+endif()
+
+if(CRYPTO_KMC)
+    aux_source_directory(crypto/kmc KMC_FILES)
+    list(APPEND LIB_SRC_FILES ${KMC_FILES})
+else()
+    aux_source_directory(crypto/kmc_stub KMC_FILES)
+    list(APPEND LIB_SRC_FILES ${KMC_FILES})
 endif()
 
 if(SA_INTERNAL)
@@ -34,50 +43,36 @@ else()
     list(APPEND LIB_SRC_FILES ${SA_INTERNAL_FILES})
 endif()
 
-if(LIBGCRYPT)
-    aux_source_directory(crypto/libgcrypt LIBGCRYPT_FILES)
-    list(APPEND LIB_SRC_FILES ${LIBGCRYPT_FILES})
+if(SA_MARIADB)
+    aux_source_directory(sa/mariadb MARIADB_FILES)
+    list(APPEND LIB_SRC_FILES ${MARIADB_FILES})
 else()
-    aux_source_directory(crypto/libgcrypt_stub LIBGCRYPT_FILES)
-    list(APPEND LIB_SRC_FILES ${LIBGCRYPT_FILES})
-endif()
-
-if(KMCCRYPTO)
-    aux_source_directory(crypto/kmc KMC_FILES)
-    list(APPEND LIB_SRC_FILES ${KMC_FILES})
-else()
-    aux_source_directory(crypto/kmc_stub KMC_FILES)
-    list(APPEND LIB_SRC_FILES ${KMC_FILES})
-endif()
-
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-    include(CTest)
-    enable_testing()
+    aux_source_directory(sa/mariadb_stub MARIADB_FILES)
+    list(APPEND LIB_SRC_FILES ${MARIADB_FILES})
 endif()
 
 # Create the app module
-IF(DEFINED CFE_SYSTEM_PSPNAME)
+if(DEFINED CFE_SYSTEM_PSPNAME)
     set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/cpu${TGTSYS_${SYSVAR}}/${INSTALL_SUBDIR}")
     add_cfe_app(Crypto ${LIB_SRC_FILES})
-ELSE() 
+else() 
     # Standalone build
     add_library(Crypto SHARED ${LIB_SRC_FILES})
-ENDIF()
+endif()
 
-if(LIBGCRYPT)
+if(CRYPTO_LIBGCRYPT)
     target_link_libraries(Crypto gcrypt)
 endif()
 
-if(KMCCRYPTO)
+if(CRYPTO_KMC)
     target_link_libraries(Crypto curl)
 endif()
 
-if(MYSQL)
+if(SA_MARIADB)
     execute_process(COMMAND mysql_config --cflags
             OUTPUT_VARIABLE MYSQL_CFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
     execute_process(COMMAND mysql_config --libs
             OUTPUT_VARIABLE MYSQL_LIBS OUTPUT_STRIP_TRAILING_WHITESPACE)
-
     target_compile_options(Crypto PUBLIC ${MYSQL_CFLAGS})
     target_link_libraries(Crypto ${MYSQL_LIBS})
 endif()
@@ -89,17 +84,16 @@ add_custom_command(TARGET Crypto POST_BUILD
         COMMENT "Created ${PROJECT_BINARY_DIR}/lib/libCrypto.so"
         )
 
-        
-IF(DEFINED CFE_SYSTEM_PSPNAME)
+if(DEFINED CFE_SYSTEM_PSPNAME)
     install(TARGETS Crypto 
             DESTINATION ${CMAKE_INSTALL_PREFIX}/cpu${TGTSYS_${SYSVAR}}/${INSTALL_SUBDIR})
-ELSE()
+else()
     install(TARGETS Crypto
             DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
             PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
-ENDIF()
+endif()
 
-IF(MYSQL)
+if(SA_MARIADB)
     file(GLOB MYSQL_SCRIPTS sa/sadb_mariadb_sql/*.sql)
     file(GLOB MYSQL_TEST_SCRIPTS sa/test_sadb_mariadb_sql/*.sql)
     install(FILES ${MYSQL_SCRIPTS}
