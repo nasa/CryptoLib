@@ -343,7 +343,7 @@ void* crypto_standalone_tm_process(void* sock)
     int tm_process_len = 0;
     uint16_t spp_len = 0;
     uint8_t* tm_ptr;
-    uint16_t tm_out_len = 0;
+    //uint16_t tm_out_len = 0;
 
     #ifdef CRYPTO_STANDALONE_HANDLE_FRAMING
         uint8_t tm_framed[TM_FRAME_DATA_SIZE];
@@ -375,8 +375,8 @@ void* crypto_standalone_tm_process(void* sock)
             #endif
             
             /* Process */
-            status = Crypto_TM_ProcessSecurity(tm_process_in, (const uint16_t) tm_process_len, &tm_ptr, &tm_out_len);
-            if (status == CRYPTO_LIB_SUCCESS)
+            //status = Crypto_TM_ProcessSecurity(tm_process_in, (const uint16_t) tm_process_len, &tm_ptr, &tm_out_len);
+            if (1) //(status == CRYPTO_LIB_SUCCESS)
             {
                 #ifdef CRYPTO_STANDALONE_TM_PROCESS_DEBUG
                     printf("crypto_standalone_tm_process - status = %d, decrypted[%d]: 0x", status, tm_process_len);
@@ -408,7 +408,7 @@ void* crypto_standalone_tm_process(void* sock)
                 
                 while (tm_process_len > 5)
                 {
-                    if ((tm_ptr[0] == 0x08) || (tm_ptr[0] == 0x09))
+                    if ((tm_ptr[0] >= 0x08) && (tm_ptr[0] < 0x10))
                     {
                         spp_len = ((tm_ptr[4] << 8) | tm_ptr[5]) + 7;
                         #ifdef CRYPTO_STANDALONE_TM_PROCESS_DEBUG
@@ -431,7 +431,7 @@ void* crypto_standalone_tm_process(void* sock)
                     {
                         if ( ((tm_ptr[0] != 0x03) && (tm_ptr[1] != 0xFF)) && ((tm_ptr[0] != 0xFF) && (tm_ptr[1] != 0x48)) )
                         {
-                            printf("crypto_standalone_tm_process - SPP loop error, expected idle packet or frame! \n");
+                            printf("crypto_standalone_tm_process - SPP loop error, expected idle packet or frame! tm_ptr = 0x%02x%02x \n", tm_ptr[0], tm_ptr[1]);
                         }
                         tm_process_len = 0;
                     }
