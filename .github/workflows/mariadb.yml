@@ -31,6 +31,8 @@ jobs:
           cmake -B build -DDEBUG=1 -DSA_MARIADB=1 -DCRYPTO_LIBGCRYPT=1 -DCRYPTO_KMC=0 -DTEST=1
           cmake --build build 
           ls
+          echo "------***------"
+          pwd
           cd ./src/sa/sadb_mariadb_sql
           echo "----------------"
           /etc/init.d/mysql start
@@ -42,9 +44,10 @@ jobs:
           pwd
           ls
           
-          #cd /home/runner/work/CryptoLib/CryptoLib/build
+          cd /__w/CryptoLib/CryptoLib/build/
           #ls
-          #cd /home/runner/work/CryptoLib/CryptoLib/bin
+          cd /__w/CryptoLib/CryptoLib/build/bin/
+          ./ut_mariadb
          
           
     # mysql --host=localhost -uroot -pitc123! < create_sadb_unit_test_security_associations.sql
