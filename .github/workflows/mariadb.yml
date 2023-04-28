@@ -17,7 +17,7 @@ jobs:
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
         # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-        run: cmake -B /home/runner/work/CryptoLib/CryptoLib//build -DDEBUG=1 -DSA_MARIADB=1 -DCRYPTO_LIBGCRYPT=1 -DCRYPTO_KMC=0 -DTEST=1
+        run: cmake -B /home/runner/work/CryptoLib/CryptoLib/build -DDEBUG=1 -DSA_MARIADB=1 -DCRYPTO_LIBGCRYPT=1 -DCRYPTO_KMC=0 -DTEST=1
 
       - name: Build
         # Build your program with the given configuration
@@ -28,22 +28,22 @@ jobs:
         #Maybe create a variable for this SQL location
         run: |
           ls
-          cmake -B /home/runner/work/CryptoLib/CryptoLib/build -DDEBUG=1 -DSA_MARIADB=1 -DCRYPTO_LIBGCRYPT=1 -DCRYPTO_KMC=0 -DTEST=1
-          cmake --build /home/runner/work/CryptoLib/CryptoLib//build 
+          cmake -B build -DDEBUG=1 -DSA_MARIADB=1 -DCRYPTO_LIBGCRYPT=1 -DCRYPTO_KMC=0 -DTEST=1
+          cmake --build build 
           ls
-          cd /home/runner/work/CryptoLib/CryptoLib//src/sa/sadb_mariadb_sql
+          cd /src/sa/sadb_mariadb_sql
           echo "----------------"
           /etc/init.d/mysql start
           mysql --host=localhost -uroot -pitc123! < delete_sadb.sql
           mysql --host=localhost -uroot -pitc123! < create_sadb.sql
-          cd /home/runner/work/CryptoLib/CryptoLib//src/sa/test_sadb_mariadb_sql
+          cd /src/sa/test_sadb_mariadb_sql
           mysql --host=localhost -uroot -pitc123! < create_sadb_unit_test_user_grant_permissions.sql
           mysql --host=localhost -uroot -pitc123! < create_sadb_jpl_unit_test_security_associations.sql
-          cd /home/runner/work/CryptoLib/CryptoLib/
+          pwd
           ls
-          cd /home/runner/work/CryptoLib/CryptoLib/build
-          ls
-          cd /home/runner/work/CryptoLib/CryptoLib/bin
-          ./ut_mariadb
+          #cd /home/runner/work/CryptoLib/CryptoLib/build
+          #ls
+          #cd /home/runner/work/CryptoLib/CryptoLib/bin
+          #./ut_mariadb
           
     # mysql --host=localhost -uroot -pitc123! < create_sadb_unit_test_security_associations.sql
