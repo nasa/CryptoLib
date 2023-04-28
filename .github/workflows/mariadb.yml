@@ -31,7 +31,7 @@ jobs:
           cmake -B build -DDEBUG=1 -DSA_MARIADB=1 -DCRYPTO_LIBGCRYPT=1 -DCRYPTO_KMC=0 -DTEST=1
           cmake --build build 
           ls
-          cd /src/sa/sadb_mariadb_sql
+          cd ./src/sa/sadb_mariadb_sql
           echo "----------------"
           /etc/init.d/mysql start
           mysql --host=localhost -uroot -pitc123! < delete_sadb.sql
