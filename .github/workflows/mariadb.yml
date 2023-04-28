@@ -28,7 +28,9 @@ jobs:
         #Maybe create a variable for this SQL location
         run: |
           ls
+          cmake -B ${{github.workspace}}/build -DDEBUG=1 -DSA_MARIADB=1 -DCRYPTO_LIBGCRYPT=1 -DCRYPTO_KMC=0 -DTEST=1
           cmake --build ${{github.workspace}}/build 
+          ls
           cd ${{github.workspace}}/src/sa/sadb_mariadb_sql
           echo "----------------"
           /etc/init.d/mysql start
