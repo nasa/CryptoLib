@@ -24,7 +24,7 @@ jobs:
         run: cmake --build /home/runner/work/CryptoLib/CryptoLib/build 
    
       - name: Initailize SADB
-        working-directory: /home/runner/work/CryptoLib/CryptoLib/build
+        #working-directory: /home/runner/work/CryptoLib/CryptoLib/build
         #Maybe create a variable for this SQL location
         run: |
           ls
