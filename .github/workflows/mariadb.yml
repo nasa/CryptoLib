@@ -27,6 +27,7 @@ jobs:
         working-directory: ${{github.workspace}}/build
         #Maybe create a variable for this SQL location
         run: |
+          cmake --build ${{github.workspace}}/build 
           cd ${{github.workspace}}/src/sa/sadb_mariadb_sql
           echo "----------------"
           /etc/init.d/mysql start
@@ -39,6 +40,7 @@ jobs:
           ls
           cd ${{github.workspace}}/build
           ls
+          cd ${{github.workspace}}/build
           ./ut_mariadb
           
     # mysql --host=localhost -uroot -pitc123! < create_sadb_unit_test_security_associations.sql
