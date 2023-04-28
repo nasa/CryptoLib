@@ -35,7 +35,10 @@ jobs:
           cd ${{github.workspace}}/src/sa/test_sadb_mariadb_sql
           mysql --host=localhost -uroot -pitc123! < create_sadb_unit_test_user_grant_permissions.sql
           mysql --host=localhost -uroot -pitc123! < create_sadb_jpl_unit_test_security_associations.sql
-          cd ${{github.workspace}}/build/bin
+          cd ${{github.workspace}}
+          ls
+          cd ${{github.workspace}}/build
+          ls
           ./ut_mariadb
           
     # mysql --host=localhost -uroot -pitc123! < create_sadb_unit_test_security_associations.sql
