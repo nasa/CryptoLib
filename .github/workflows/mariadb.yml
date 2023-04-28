@@ -36,14 +36,15 @@ jobs:
           /etc/init.d/mysql start
           mysql --host=localhost -uroot -pitc123! < delete_sadb.sql
           mysql --host=localhost -uroot -pitc123! < create_sadb.sql
-          cd /src/sa/test_sadb_mariadb_sql
+          cd ./src/sa/test_sadb_mariadb_sql
           mysql --host=localhost -uroot -pitc123! < create_sadb_unit_test_user_grant_permissions.sql
           mysql --host=localhost -uroot -pitc123! < create_sadb_jpl_unit_test_security_associations.sql
           pwd
           ls
+          
           #cd /home/runner/work/CryptoLib/CryptoLib/build
           #ls
           #cd /home/runner/work/CryptoLib/CryptoLib/bin
-          #./ut_mariadb
+         
           
     # mysql --host=localhost -uroot -pitc123! < create_sadb_unit_test_security_associations.sql
