@@ -24,9 +24,10 @@ jobs:
         run: cmake --build ${{github.workspace}}/build 
    
       - name: Initailize SADB
-        #working-directory: ${{github.workspace}}/build
+        working-directory: ${{github.workspace}}
         #Maybe create a variable for this SQL location
         run: |
+          ls
           cmake --build ${{github.workspace}}/build 
           cd ${{github.workspace}}/src/sa/sadb_mariadb_sql
           echo "----------------"
