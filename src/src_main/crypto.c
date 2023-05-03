@@ -801,6 +801,9 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, uin
 int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, uint8_t *iv)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
+    int8_t IV_VALID = -1;
+    int8_t ARSN_VALID = -1;
+
     // Check for NULL pointers
     if (arsn == NULL && sa_ptr->arsn_len > 0)
     {
@@ -840,7 +843,8 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
         // Valid ARSN received, increment stored value
         else
         {
-            memcpy(sa_ptr->arsn, arsn, sa_ptr->arsn_len);
+            ARSN_VALID = CRYPTO_TRUE;
+            // memcpy(sa_ptr->arsn, arsn, sa_ptr->arsn_len);
         }
     }
     // If IV is greater than zero and using GCM, check for replay
@@ -876,13 +880,38 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
         // Valid IV received, increment stored value
         else
         {
-            memcpy(sa_ptr->iv, iv, sa_ptr->iv_len);
+            IV_VALID = CRYPTO_TRUE;
+            //memcpy(sa_ptr->iv, iv, sa_ptr->iv_len);
         }
     }
     // IV length is greater than zero, but not using an incrementing IV as in GCM
     // we can't verify this internally as Crpytolib doesn't track previous IVs 
     // or generate random ones
     // else{}
+
+    // For GCM specifically, if have a valid IV...
+    if (*sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM && IV_VALID == CRYPTO_TRUE)
+    {
+        // Using ARSN? Need to be valid to increment both
+        if (sa_ptr->arsn_len > 0 && ARSN_VALID == CRYPTO_TRUE)
+        {
+            memcpy(sa_ptr->iv, iv, sa_ptr->iv_len);
+            memcpy(sa_ptr->arsn, arsn, sa_ptr->arsn_len);
+        }
+        // Not using ARSN? IV Valid and good to go
+        if (sa_ptr->arsn_len == 0)
+        {
+            memcpy(sa_ptr->iv, iv, sa_ptr->iv_len);
+        }
+    }
+
+    // If not GCM, and ARSN is valid - can incrmeent it
+    if (*sa_ptr->ecs != CRYPTO_CIPHER_AES256_GCM && ARSN_VALID == CRYPTO_TRUE)
+    {
+        memcpy(sa_ptr->arsn, arsn, sa_ptr->arsn_len);
+    }
+
+
     return status;
 }
 
