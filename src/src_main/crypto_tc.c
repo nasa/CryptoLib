@@ -477,7 +477,6 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
             }
             else
             {
-                printf("%s: %d\n", __FILE__, __LINE__);
                 return CRYPTO_LIB_ERR_NULL_IV;
             }
         }
@@ -1280,7 +1279,6 @@ static int32_t crypto_tc_validate_sa(SecurityAssociation_t *sa)
 {
     if (sa->shivf_len > 0 && sa->iv == NULL && crypto_config->cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
-        printf("%s: %d\n", __FILE__, __LINE__);
         return CRYPTO_LIB_ERR_NULL_IV;
     }
     if (sa->iv_len - sa->shivf_len  < 0)
@@ -1289,7 +1287,6 @@ static int32_t crypto_tc_validate_sa(SecurityAssociation_t *sa)
     }
     if (sa->iv_len > 0 && sa->iv == NULL && crypto_config->cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
-        printf("%s: %d\n", __FILE__, __LINE__);
         return CRYPTO_LIB_ERR_NULL_IV;
     }
 

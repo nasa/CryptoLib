@@ -67,7 +67,6 @@ UTEST(TC_PROCESS, EXERCISE_IV)
     // Activate SA 9
     sadb_routine->sadb_get_sa_from_spi(9, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    sadb_routine->sadb_get_sa_from_spi(9, &test_association);
     test_association->ecs_len = 1;
     free(test_association->ecs);
     test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
