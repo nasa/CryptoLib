@@ -75,7 +75,7 @@ uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
         return CRYPTO_TRUE;
     }
     else
-    {
+    {   
         return CRYPTO_FALSE;
     }
 }

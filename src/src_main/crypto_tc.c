@@ -467,7 +467,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
         else 
         {
             // Transmitted length > 0, AND using KMC_CRYPTO
-            if (((sa_ptr->iv_len - sa_ptr->shivf_len) > 0) && crypto_config->cryptography_type == CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+            if ((sa_ptr->shivf_len > 0) && crypto_config->cryptography_type == CRYPTOGRAPHY_TYPE_KMCCRYPTO)
             {
                 index += sa_ptr->iv_len - (sa_ptr->iv_len - sa_ptr->shivf_len);
             }
@@ -595,6 +595,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
 
             if(ecs_is_aead_algorithm == CRYPTO_TRUE)
             {
+                printf("************1**************\n");
                 status = cryptography_if->cryptography_aead_encrypt(&p_new_enc_frame[index],                               // ciphertext output
                                                                     (size_t)tf_payload_len,  
                                                                     //&p_new_enc_frame[index],                                      // length of data
@@ -622,6 +623,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
                 // TODO - implement non-AEAD algorithm logic
                 if (sa_service_type == SA_ENCRYPTION)
                 {
+                    printf("************2**************\n");
                     status = cryptography_if->cryptography_encrypt(&p_new_enc_frame[index],                               // ciphertext output
                                                                     (size_t)tf_payload_len,  
                                                                     &p_new_enc_frame[index],                                      // length of data
@@ -641,6 +643,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
 
                 if (sa_service_type == SA_AUTHENTICATION)
                 {
+                    printf("************3**************\n");
                     status = cryptography_if->cryptography_authenticate(&p_new_enc_frame[index],                               // ciphertext output
                                                                 (size_t)tf_payload_len,                                        // length of data
                                                                 (uint8_t*)(p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), // plaintext input
@@ -660,6 +663,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
                     );
                 }
             }
+            
             if (status != CRYPTO_LIB_SUCCESS)
             {
                 free(aad);
@@ -672,28 +676,31 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
 #ifdef INCREMENT
             if (crypto_config->crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
             {
-                if(sa_ptr->shivf_len > 0){ Crypto_increment(sa_ptr->iv, sa_ptr->iv_len); }   
+                if(sa_ptr->shivf_len > 0  && sa_ptr->iv != NULL){ Crypto_increment(sa_ptr->iv, sa_ptr->iv_len); }   
             }
             else // SA_INCREMENT_NONTRANSMITTED_IV_FALSE
             {
                 // Only increment the transmitted portion
-                if(sa_ptr->shivf_len > 0){ Crypto_increment(sa_ptr->iv+(sa_ptr->iv_len-sa_ptr->shivf_len), sa_ptr->shivf_len); }
+                if(sa_ptr->shivf_len > 0 && sa_ptr->iv != NULL){ Crypto_increment(sa_ptr->iv+(sa_ptr->iv_len-sa_ptr->shivf_len), sa_ptr->shivf_len); }
             }
             if(sa_ptr->shsnf_len > 0){ Crypto_increment(sa_ptr->arsn, sa_ptr->arsn_len); }
         
 #ifdef SA_DEBUG
-            printf(KYEL "Next IV value is:\n\t");
-            for (i = 0; i < sa_ptr->iv_len; i++)
+            if(sa_ptr->iv != NULL)
             {
-                printf("%02x", *(sa_ptr->iv + i));
+                printf(KYEL "Next IV value is:\n\t");
+                for (i = 0; i < sa_ptr->iv_len; i++)
+                {
+                    printf("%02x", *(sa_ptr->iv + i));
+                }
+                printf("\n" RESET);
+                printf(KYEL "Next transmitted IV value is:\n\t");
+                for (i = sa_ptr->iv_len-sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
+                {
+                    printf("%02x", *(sa_ptr->iv + i));
+                }
+                printf("\n" RESET);
             }
-            printf("\n" RESET);
-            printf(KYEL "Next transmitted IV value is:\n\t");
-            for (i = sa_ptr->iv_len-sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
-            {
-                printf("%02x", *(sa_ptr->iv + i));
-            }
-            printf("\n" RESET);
             printf(KYEL "Next ARSN value is:\n\t");
             for (i = 0; i < sa_ptr->arsn_len; i++)
             {

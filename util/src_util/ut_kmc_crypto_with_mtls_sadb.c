@@ -27,6 +27,17 @@
 #include "crypto.h"
 #include "shared_util.h"
 #include <stdio.h>
+#include <mysql/mysql.h>
+
+#ifdef KMC_MDB_RH
+    #define CLIENT_CERTIFICATE "/certs/redhat-cert.pem"
+    #define CLIENT_CERTIFICATE_KEY "/certs/redhat-key.pem"
+#endif
+
+#ifdef KMC_MDB_DB
+    #define CLIENT_CERTIFICATE "/certs/debian-cert.pem"
+    #define CLIENT_CERTIFICATE_KEY "/certs/debian-key.pem"
+#endif
 
 /**
  * @brief Unit Test: Nominal Encryption with KMC Crypto Service && JPL Unit Test MariaDB
