@@ -372,7 +372,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
         printf(KYEL "\tsegment hdr len\t = %d\n" RESET, segment_hdr_len); 
         printf(KYEL "\tspi len\t\t = 2\n" RESET);
         printf(KYEL "\tshivf_len\t = %d\n" RESET, sa_ptr->shivf_len);
-        printf(KYEL "\tiv_len\t = %d\n" RESET, sa_ptr->iv_len);
+        printf(KYEL "\tiv_len\t\t = %d\n" RESET, sa_ptr->iv_len);
         printf(KYEL "\tshsnf_len\t = %d\n" RESET, sa_ptr->shsnf_len);
         printf(KYEL "\tshplf len\t = %d\n" RESET, sa_ptr->shplf_len);
         printf(KYEL "\tarsn_len\t = %d\n" RESET, sa_ptr->arsn_len);
@@ -595,7 +595,6 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
 
             if(ecs_is_aead_algorithm == CRYPTO_TRUE)
             {
-                printf("************1**************\n");
                 status = cryptography_if->cryptography_aead_encrypt(&p_new_enc_frame[index],                               // ciphertext output
                                                                     (size_t)tf_payload_len,  
                                                                     //&p_new_enc_frame[index],                                      // length of data
@@ -623,7 +622,6 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
                 // TODO - implement non-AEAD algorithm logic
                 if (sa_service_type == SA_ENCRYPTION)
                 {
-                    printf("************2**************\n");
                     status = cryptography_if->cryptography_encrypt(&p_new_enc_frame[index],                               // ciphertext output
                                                                     (size_t)tf_payload_len,  
                                                                     &p_new_enc_frame[index],                                      // length of data
@@ -643,7 +641,6 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
 
                 if (sa_service_type == SA_AUTHENTICATION)
                 {
-                    printf("************3**************\n");
                     status = cryptography_if->cryptography_authenticate(&p_new_enc_frame[index],                               // ciphertext output
                                                                 (size_t)tf_payload_len,                                        // length of data
                                                                 (uint8_t*)(p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), // plaintext input
@@ -663,14 +660,12 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
                     );
                 }
             }
-            
             if (status != CRYPTO_LIB_SUCCESS)
             {
                 free(aad);
                 return status; // Cryptography IF call failed, return.
             }
         }
-
         if (sa_service_type != SA_PLAINTEXT)
         {
 #ifdef INCREMENT

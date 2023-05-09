@@ -122,7 +122,7 @@ struct curl_slist *http_headers_list;
 static char* kmc_root_uri;
 //static const char* status_endpoint = "/status";
 static const char* encrypt_endpoint = "encrypt?keyRef=%s&transformation=%s&iv=%s";
-static const char* encrypt_endpoint_null_iv = "encrypt?keyRef=%s&transformation=%s&iv=NULL";
+static const char* encrypt_endpoint_null_iv = "encrypt?keyRef=%s&transformation=%s";
 static const char* encrypt_offset_endpoint = "encrypt?keyRef=%s&transformation=%s&iv=%s&encryptOffset=%s&macLength=%s";
 static const char* decrypt_endpoint = "decrypt?metadata=keyLength:%s,keyRef:%s,cipherTransformation:%s,initialVector:%s,cryptoAlgorithm:%s,metadataType:EncryptionMetadata";
 static const char* decrypt_offset_endpoint = "decrypt?metadata=keyLength:%s,keyRef:%s,cipherTransformation:%s,initialVector:%s,cryptoAlgorithm:%s,macLength:%s,metadataType:EncryptionMetadata,encryptOffset:%s";
@@ -403,8 +403,50 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
     int json_idx = 0;
     uint8_t ciphertext_found = CRYPTO_FALSE;
     char* ciphertext_base64 = NULL;
+    char* ciphertext_IV_base64 = NULL;
     for (json_idx = 1; json_idx < parse_result; json_idx++)
     {
+        if (jsoneq(chunk_write->response, &t[json_idx], "metadata") == 0)
+        {
+            uint32_t len_ciphertext = t[json_idx + 1].end - t[json_idx + 1].start;
+            ciphertext_IV_base64 = malloc(len_ciphertext+1);
+            memcpy(ciphertext_IV_base64,chunk_write->response + t[json_idx + 1].start, len_ciphertext);
+            ciphertext_IV_base64[len_ciphertext] = '\0';
+            printf("%s\n", ciphertext_IV_base64);
+            
+            char* line;
+            char* token;
+            char temp_buff[256];
+            char* some_string = malloc((iv_len * 2) + 1);
+            for (line = strtok (ciphertext_IV_base64, ","); line !=NULL; line = strtok(line + strlen(line) + 1, ","))
+            {
+                strncpy(temp_buff, line, sizeof(temp_buff));
+
+                for (token = strtok(temp_buff, ":"); token != NULL; token = strtok(token + strlen(token) + 1, ":"))
+                {
+                    if(strcmp(token, "initialVector") == 0){
+                        token = strtok(token + strlen(token) + 1, ":");
+                        base64Decode(token,strlen(token),some_string, (size_t *)&iv_len);
+                        printf("Some String:\n");
+                        for (uint32_t i=0; i < strlen(some_string); i++)
+                            {
+                                printf("%02x ", some_string[i]);
+                            }
+                            printf("\n");
+
+                        printf("TEST %s\n", some_string);
+                        base64Decode(token,strlen(token),data_in - sa_ptr->shsnf_len - sa_ptr->shivf_len - sa_ptr->shplf_len, (size_t *)&iv_len);
+                        break;
+                    }
+                }
+            }
+            
+
+              
+            json_idx++;
+            continue;
+        }
+
         if (jsoneq(chunk_write->response, &t[json_idx], "base64ciphertext") == 0)
         {
             /* We may use strndup() to fetch string value */
@@ -654,7 +696,6 @@ static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
     }
     printf("\n");
 #endif
-
     // Copy the decrypted data to the output stream
     // Crypto Service returns aad - clear_text
     memcpy(data_out,cleartext_decoded, len_data_out);
@@ -1325,7 +1366,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
         if(ciphertext_base64 != NULL) free(ciphertext_base64);
         if(chunk_write != NULL) free(chunk_write);
         if(chunk_read != NULL) free(chunk_read);
-        if(encrypt_payload) free(encrypt_payload);
+        if(encrypt_payload != NULL) free(encrypt_payload);
         return status;
     }
 
@@ -1345,7 +1386,6 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     printf("\n");
 #endif
 
-
     // Copy the encrypted data to the output stream
     if(encrypt_bool == CRYPTO_TRUE)
     {
@@ -1364,7 +1404,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     if (ciphertext_decoded != NULL) free(ciphertext_decoded);
     if (iv_base64 != NULL) free(iv_base64);
     if (encrypt_uri != NULL) free(encrypt_uri);
-    if (encrypt_payload != NULL) free(encrypt_payload);
+    //if (encrypt_payload != NULL) free(encrypt_payload);
     if (chunk_write->response != NULL) free(chunk_write->response);
     if (chunk_write != NULL) free(chunk_write);
     if (chunk_read != NULL) free(chunk_read);
@@ -1512,7 +1552,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
 
 #ifdef DEBUG
     printf("Len of decrypt payload: %ld\n",decrypt_payload_len);
-    printf("Data to Decrypt: \n");
+    printf("Data to Decrypt1: \n");
     for (uint32_t i=0; i < decrypt_payload_len; i++)
     {
         printf("%02x ", decrypt_payload[i]);
@@ -1523,7 +1563,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
     status = curl_perform_with_cam_retries(curl, chunk_write, chunk_read);
     if(status != CRYPTO_LIB_SUCCESS)
     {
-        free(decrypt_payload);
+        //free(decrypt_payload);
         free(decrypt_uri);
         free(iv_base64);
         return status;
