@@ -1551,7 +1551,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
 
 #ifdef DEBUG
     printf("Len of decrypt payload: %ld\n",decrypt_payload_len);
-    printf("Data to Decrypt1: \n");
+    printf("Data to Decrypt: \n");
     for (uint32_t i=0; i < decrypt_payload_len; i++)
     {
         printf("%02x ", decrypt_payload[i]);
@@ -2157,7 +2157,6 @@ int32_t initialize_kerberos_keytab_file_login(void)
 int32_t cryptography_get_acs_algo(int8_t algo_enum)
 {
     int32_t algo = CRYPTO_LIB_ERR_UNSUPPORTED_ACS; // All valid algo enums will be positive
-    printf("ALGO ENUM: 0x%02x", algo_enum);
     switch (algo_enum)
     {
         case CRYPTO_MAC_CMAC_AES256:

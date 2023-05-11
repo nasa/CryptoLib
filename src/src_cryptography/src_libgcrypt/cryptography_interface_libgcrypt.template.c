@@ -1083,7 +1083,6 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
         );
         if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
         {
-            printf("1079: INTERFACE\n");
             printf(KRED "ERROR: gcry_cipher_authenticate error code %d\n" RESET,
                    gcry_error & GPG_ERR_CODE_MASK);
             printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
