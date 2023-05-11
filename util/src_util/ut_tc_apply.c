@@ -723,8 +723,9 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP)
     sadb_routine->sadb_get_sa_from_spi(11, &test_association);
     printf("SPI: %d\n", test_association->spi);
     test_association->sa_state = SA_OPERATIONAL;
-    test_association->ast = 0;
     test_association->arsn_len = 0;
+    test_association->ast = 0;
+    test_association->stmacf_len = 0;
     sadb_routine->sadb_get_sa_from_spi(11, &test_association);
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
@@ -784,6 +785,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_16BP)
     printf("SPI: %d\n", test_association->spi);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ast = 0;
+    test_association->stmacf_len = 0;
     test_association->arsn_len = 0;
     sadb_routine->sadb_get_sa_from_spi(11, &test_association);
     return_val =

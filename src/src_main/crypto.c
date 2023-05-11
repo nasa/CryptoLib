@@ -70,7 +70,7 @@ uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
     // CryptoLib only supports AES-GCM, which is an AEAD (Authenticated Encryption with Associated Data) algorithm, so
     // return true/1.
     // TODO - Add cipher suite mapping to which algorithms are AEAD and which are not.
-    if(cipher_suite_id == CRYPTO_CIPHER_AES256_GCM)
+    if((cipher_suite_id == CRYPTO_CIPHER_AES256_GCM) || (cipher_suite_id == CRYPTO_CIPHER_AES256_CBC_MAC))
     {
         return CRYPTO_TRUE;
     }
@@ -929,6 +929,10 @@ int32_t Crypto_Get_ECS_Algo_Keylen(uint8_t algo)
             break;
         case CRYPTO_CIPHER_AES256_CBC:
             retval = 32;
+            break;
+        case CRYPTO_CIPHER_AES256_CCM:
+            retval = 32;
+            break;
         default:
             break;
     }

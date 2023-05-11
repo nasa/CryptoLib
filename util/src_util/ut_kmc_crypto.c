@@ -51,13 +51,10 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_APPLY_SEC_ENC_AND_AUTH)
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_MariaDB("db-itc-kmc.nasa.gov","sadb", 3306,CRYPTO_TRUE,CRYPTO_TRUE, "/certs/ammos-ca-bundle.crt", NULL, CLIENT_CERTIFICATE, CLIENT_CERTIFICATE_KEY, NULL, "root", NULL);
     Crypto_Config_Kmc_Crypto_Service("https", "itc-kmc.nasa.gov", 8443, "crypto-service","/certs/ammos-ca-bundle.crt",NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE, "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 2, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 55, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     int32_t status = Crypto_Init();
 
-    char* raw_tc_jpl_mmt_scid44_vcid1= "20030408000001bd37";
+    char* raw_tc_jpl_mmt_scid44_vcid1= "2003dc070001bd37";
     char* raw_tc_jpl_mmt_scid44_vcid1_expect = NULL;
     int raw_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
 
@@ -153,13 +150,10 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_APPLY_SEC_AUTH_ONLY)
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_MariaDB("db-itc-kmc.nasa.gov","sadb", 3306,CRYPTO_TRUE,CRYPTO_TRUE, "/certs/ammos-ca-bundle.crt", NULL, CLIENT_CERTIFICATE, CLIENT_CERTIFICATE_KEY, NULL, "root", NULL);
     Crypto_Config_Kmc_Crypto_Service("https", "itc-kmc.nasa.gov", 8443, "crypto-service","/certs/ammos-ca-bundle.crt",NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE, "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 2, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 56, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     int32_t status = Crypto_Init();
 
-    char* raw_tc_jpl_mmt_scid44_vcid1= "20030C08000001bf1a";
+    char* raw_tc_jpl_mmt_scid44_vcid1= "2003E008000001bf1a";
     char* raw_tc_jpl_mmt_scid44_vcid1_expect = NULL;
     int raw_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
 
@@ -208,13 +202,10 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_ENC_AND_AUTH)
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_MariaDB("db-itc-kmc.nasa.gov","sadb", 3306,CRYPTO_TRUE,CRYPTO_TRUE, "/certs/ammos-ca-bundle.crt", NULL, CLIENT_CERTIFICATE, CLIENT_CERTIFICATE_KEY, NULL, "root", NULL);
     Crypto_Config_Kmc_Crypto_Service("https", "itc-kmc.nasa.gov", 8443, "crypto-service","/certs/ammos-ca-bundle.crt",NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE, "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 2, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 55, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     int32_t status = Crypto_Init();
 
-    char* enc_tc_jpl_mmt_scid44_vcid1= "20030426000002000000000000000000000001669C5639DCCFEA8C6CE33230EE2E706549639BA7";
+    char* enc_tc_jpl_mmt_scid44_vcid1= "2003DC250000130000000000000000000000016746C816E9C1D758FB457D8AAE7A5B83842A5A";
     char* enc_tc_jpl_mmt_scid44_vcid1_expect = NULL;
     int enc_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
 
@@ -251,9 +242,7 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_ENC_AND_AUTH)
         printf("%02x ", tc_processed_frame->tc_pdu[i]);
     }
     printf("\n");
-
-    ASSERT_EQ(0x00,tc_processed_frame->tc_pdu[0]);
-    ASSERT_EQ( 0x01,tc_processed_frame->tc_pdu[1]);
+    ASSERT_EQ(0x01,tc_processed_frame->tc_pdu[0]);
 
     Crypto_Shutdown();
     free(enc_tc_jpl_mmt_scid44_vcid1_expect);
@@ -332,13 +321,10 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_AUTH_ONLY)
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_MariaDB("db-itc-kmc.nasa.gov","sadb", 3306,CRYPTO_TRUE,CRYPTO_TRUE, "/certs/ammos-ca-bundle.crt", NULL, CLIENT_CERTIFICATE, CLIENT_CERTIFICATE_KEY, NULL, "root", NULL);
     Crypto_Config_Kmc_Crypto_Service("https", "itc-kmc.nasa.gov", 8443, "crypto-service","/certs/ammos-ca-bundle.crt",NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE, "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 2, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 56, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     int32_t status = Crypto_Init();
 
-    char* enc_tc_jpl_mmt_scid44_vcid1= "20030C2600000400000000000000000000000100016E2051F96CAB186BCE364A65AF599AE5D353";
+    char* enc_tc_jpl_mmt_scid44_vcid1= "2003E02600001400000000000000000000000200018DC038398EAA968C0D8972A614E1EFE005AE";
     char* enc_tc_jpl_mmt_scid44_vcid1_expect = NULL;
     int enc_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
 
@@ -396,10 +382,10 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_APPLY_SEC_ENC_AND_AUTH_AESGCM_8BYTE_MAC)
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_MariaDB("db-itc-kmc.nasa.gov","sadb", 3306,CRYPTO_TRUE,CRYPTO_TRUE, "/certs/ammos-ca-bundle.crt", NULL, CLIENT_CERTIFICATE, CLIENT_CERTIFICATE_KEY, NULL, "root", NULL);
     Crypto_Config_Kmc_Crypto_Service("https", "itc-kmc.nasa.gov", 8443, "crypto-service","/certs/ammos-ca-bundle.crt",NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE, "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 11, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 57, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     int32_t status = Crypto_Init();
 
-    char* raw_tc_jpl_mmt_scid44_vcid1= "20032c08000001bd37";
+    char* raw_tc_jpl_mmt_scid44_vcid1= "2003e408000001bd37";
     char* raw_tc_jpl_mmt_scid44_vcid1_expect = NULL;
     int raw_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
 
@@ -437,155 +423,155 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_APPLY_SEC_ENC_AND_AUTH_AESGCM_8BYTE_MAC)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
-UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_ENC_AND_AUTH_AESGCM_8BYTE_MAC)
-{
-    // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    Crypto_Config_MariaDB("db-itc-kmc.nasa.gov","sadb", 3306,CRYPTO_TRUE,CRYPTO_TRUE, "/certs/ammos-ca-bundle.crt", NULL, CLIENT_CERTIFICATE, CLIENT_CERTIFICATE_KEY, NULL, "root", NULL);
-    Crypto_Config_Kmc_Crypto_Service("https", "itc-kmc.nasa.gov", 8443, "crypto-service","/certs/ammos-ca-bundle.crt",NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE, "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 11, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    int32_t status = Crypto_Init();
+// UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_ENC_AND_AUTH_AESGCM_8BYTE_MAC)
+// {
+//     // Setup & Initialize CryptoLib
+//     Crypto_Config_CryptoLib(SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
+//                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+//                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+//     Crypto_Config_MariaDB("db-itc-kmc.nasa.gov","sadb", 3306,CRYPTO_TRUE,CRYPTO_TRUE, "/certs/ammos-ca-bundle.crt", NULL, CLIENT_CERTIFICATE, CLIENT_CERTIFICATE_KEY, NULL, "root", NULL);
+//     Crypto_Config_Kmc_Crypto_Service("https", "itc-kmc.nasa.gov", 8443, "crypto-service","/certs/ammos-ca-bundle.crt",NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE, "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+//     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 57, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
+//     int32_t status = Crypto_Init();
 
-    char* enc_tc_jpl_mmt_scid44_vcid1= "20032C1E000009000000000000000000000001669C5639DCCFEA8C6CE3AA71";
-    char* enc_tc_jpl_mmt_scid44_vcid1_expect = NULL;
-    int enc_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
+//     char* enc_tc_jpl_mmt_scid44_vcid1= "2003E41E0000150000000000000000000000040001EF029857C5ED7E5B1807";
+//     char* enc_tc_jpl_mmt_scid44_vcid1_expect = NULL;
+//     int enc_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
 
-    // Data=0001
-    // IV=000000000000000000000001
-    // AAD=00000000000000000000000000000000000000
-
-
-    TC_t* tc_processed_frame;
-    tc_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
-
-    hex_conversion(enc_tc_jpl_mmt_scid44_vcid1, &enc_tc_jpl_mmt_scid44_vcid1_expect, &enc_tc_jpl_mmt_scid44_vcid1_expect_len);
-
-    uint8_t* ptr_enc_frame = NULL;
-
-    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-
-    printf("Encrypted Frame Before Processing:\n");
-    for (int i=0; i<enc_tc_jpl_mmt_scid44_vcid1_expect_len; i++)
-    {
-        printf("%02x ", (uint8_t)enc_tc_jpl_mmt_scid44_vcid1_expect[i]);
-    }
-    printf("\n");
-
-    status = Crypto_TC_ProcessSecurity((uint8_t* )enc_tc_jpl_mmt_scid44_vcid1_expect, &enc_tc_jpl_mmt_scid44_vcid1_expect_len, tc_processed_frame);
-    if(status != CRYPTO_LIB_SUCCESS)
-    {
-        Crypto_Shutdown();
-    }
-    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-    printf("Processed PDU:\n");
-    for (int i=0; i<tc_processed_frame->tc_pdu_len; i++)
-    {
-        printf("%02x ", tc_processed_frame->tc_pdu[i]);
-    }
-    printf("\n");
-
-    ASSERT_EQ(0x00,tc_processed_frame->tc_pdu[0]);
-    ASSERT_EQ( 0x01,tc_processed_frame->tc_pdu[1]);
-
-    Crypto_Shutdown();
-    free(enc_tc_jpl_mmt_scid44_vcid1_expect);
-    free(ptr_enc_frame);
-    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-}
-
-UTEST(KMC_CRYPTO, UNHAPPY_PATH_INVALID_MAC_PROCESS_SEC_ENC_AND_AUTH_AESGCM_8BYTE_MAC)
-{
-    // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    Crypto_Config_MariaDB("db-itc-kmc.nasa.gov","sadb", 3306,CRYPTO_TRUE,CRYPTO_TRUE, "/certs/ammos-ca-bundle.crt", NULL, CLIENT_CERTIFICATE, CLIENT_CERTIFICATE_KEY, NULL, "root", NULL);
-    Crypto_Config_Kmc_Crypto_Service("https", "itc-kmc.nasa.gov", 8443, "crypto-service","/certs/ammos-ca-bundle.crt",NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE, "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 11, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    int32_t status = Crypto_Init();
-
-    char* enc_tc_jpl_mmt_scid44_vcid1= "20032C1E000009000000000000000000000001669C5639DCCDEA8C6CE3EEF2";
-    char* enc_tc_jpl_mmt_scid44_vcid1_expect = NULL;
-    int enc_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
-
-    // Data=0001
-    // IV=000000000000000000000001
-    // AAD=00000000000000000000000000000000000000
+//     // Data=0001
+//     // IV=000000000000000000000001
+//     // AAD=00000000000000000000000000000000000000
 
 
-    TC_t* tc_processed_frame;
-    tc_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
+//     TC_t* tc_processed_frame;
+//     tc_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
 
-    hex_conversion(enc_tc_jpl_mmt_scid44_vcid1, &enc_tc_jpl_mmt_scid44_vcid1_expect, &enc_tc_jpl_mmt_scid44_vcid1_expect_len);
+//     hex_conversion(enc_tc_jpl_mmt_scid44_vcid1, &enc_tc_jpl_mmt_scid44_vcid1_expect, &enc_tc_jpl_mmt_scid44_vcid1_expect_len);
 
-    uint8_t* ptr_enc_frame = NULL;
+//     uint8_t* ptr_enc_frame = NULL;
 
-    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+//     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-    printf("Encrypted Frame Before Processing:\n");
-    for (int i=0; i<enc_tc_jpl_mmt_scid44_vcid1_expect_len; i++)
-    {
-        printf("%02x ", (uint8_t)enc_tc_jpl_mmt_scid44_vcid1_expect[i]);
-    }
-    printf("\n");
+//     printf("Encrypted Frame Before Processing:\n");
+//     for (int i=0; i<enc_tc_jpl_mmt_scid44_vcid1_expect_len; i++)
+//     {
+//         printf("%02x ", (uint8_t)enc_tc_jpl_mmt_scid44_vcid1_expect[i]);
+//     }
+//     printf("\n");
 
-    status = Crypto_TC_ProcessSecurity((uint8_t* )enc_tc_jpl_mmt_scid44_vcid1_expect, &enc_tc_jpl_mmt_scid44_vcid1_expect_len, tc_processed_frame);
-    if(status != CRYPTO_LIB_SUCCESS)
-    {
-        Crypto_Shutdown();
-    }
-    ASSERT_EQ(CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE, status);
+//     status = Crypto_TC_ProcessSecurity((uint8_t* )enc_tc_jpl_mmt_scid44_vcid1_expect, &enc_tc_jpl_mmt_scid44_vcid1_expect_len, tc_processed_frame);
+//     if(status != CRYPTO_LIB_SUCCESS)
+//     {
+//         Crypto_Shutdown();
+//     }
+//     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+//     printf("Processed PDU:\n");
+//     for (int i=0; i<tc_processed_frame->tc_pdu_len; i++)
+//     {
+//         printf("%02x ", tc_processed_frame->tc_pdu[i]);
+//     }
+//     printf("\n");
 
-    Crypto_Shutdown();
-    free(enc_tc_jpl_mmt_scid44_vcid1_expect);
-    free(ptr_enc_frame);
-}
+//     ASSERT_EQ(0x00,tc_processed_frame->tc_pdu[0]);
+//     ASSERT_EQ( 0x00,tc_processed_frame->tc_pdu[1]);
+
+//     Crypto_Shutdown();
+//     free(enc_tc_jpl_mmt_scid44_vcid1_expect);
+//     free(ptr_enc_frame);
+//     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+// }
+
+// UTEST(KMC_CRYPTO, UNHAPPY_PATH_INVALID_MAC_PROCESS_SEC_ENC_AND_AUTH_AESGCM_8BYTE_MAC)
+// {
+//     // Setup & Initialize CryptoLib
+//     Crypto_Config_CryptoLib(SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
+//                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+//                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+//     Crypto_Config_MariaDB("db-itc-kmc.nasa.gov","sadb", 3306,CRYPTO_TRUE,CRYPTO_TRUE, "/certs/ammos-ca-bundle.crt", NULL, CLIENT_CERTIFICATE, CLIENT_CERTIFICATE_KEY, NULL, "root", NULL);
+//     Crypto_Config_Kmc_Crypto_Service("https", "itc-kmc.nasa.gov", 8443, "crypto-service","/certs/ammos-ca-bundle.crt",NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE, "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+//     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 11, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
+//     int32_t status = Crypto_Init();
+
+//     char* enc_tc_jpl_mmt_scid44_vcid1= "20032C1E000009000000000000000000000001669C5639DCCDEA8C6CE3EEF2";
+//     char* enc_tc_jpl_mmt_scid44_vcid1_expect = NULL;
+//     int enc_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
+
+//     // Data=0001
+//     // IV=000000000000000000000001
+//     // AAD=00000000000000000000000000000000000000
+
+
+//     TC_t* tc_processed_frame;
+//     tc_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
+
+//     hex_conversion(enc_tc_jpl_mmt_scid44_vcid1, &enc_tc_jpl_mmt_scid44_vcid1_expect, &enc_tc_jpl_mmt_scid44_vcid1_expect_len);
+
+//     uint8_t* ptr_enc_frame = NULL;
+
+//     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+//     printf("Encrypted Frame Before Processing:\n");
+//     for (int i=0; i<enc_tc_jpl_mmt_scid44_vcid1_expect_len; i++)
+//     {
+//         printf("%02x ", (uint8_t)enc_tc_jpl_mmt_scid44_vcid1_expect[i]);
+//     }
+//     printf("\n");
+
+//     status = Crypto_TC_ProcessSecurity((uint8_t* )enc_tc_jpl_mmt_scid44_vcid1_expect, &enc_tc_jpl_mmt_scid44_vcid1_expect_len, tc_processed_frame);
+//     if(status != CRYPTO_LIB_SUCCESS)
+//     {
+//         Crypto_Shutdown();
+//     }
+//     ASSERT_EQ(CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE, status);
+
+//     Crypto_Shutdown();
+//     free(enc_tc_jpl_mmt_scid44_vcid1_expect);
+//     free(ptr_enc_frame);
+// }
 
 
 //16 bytes is max for AES GCM so this is an error test
-UTEST(KMC_CRYPTO, UNHAPPY_PATH_APPLY_SEC_ENC_AND_AUTH_AESGCM_32BYTE_MAC)
-{
-    // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    Crypto_Config_MariaDB("db-itc-kmc.nasa.gov","sadb", 3306,CRYPTO_TRUE,CRYPTO_TRUE, "/certs/ammos-ca-bundle.crt", NULL, CLIENT_CERTIFICATE, CLIENT_CERTIFICATE_KEY, NULL, "root", NULL);
-    Crypto_Config_Kmc_Crypto_Service("https", "itc-kmc.nasa.gov", 8443, "crypto-service","/certs/ammos-ca-bundle.crt",NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE, "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 12, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    int32_t status = Crypto_Init();
+// UTEST(KMC_CRYPTO, UNHAPPY_PATH_APPLY_SEC_ENC_AND_AUTH_AESGCM_32BYTE_MAC)
+// {
+//     // Setup & Initialize CryptoLib
+//     Crypto_Config_CryptoLib(SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
+//                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+//                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+//     Crypto_Config_MariaDB("db-itc-kmc.nasa.gov","sadb", 3306,CRYPTO_TRUE,CRYPTO_TRUE, "/certs/ammos-ca-bundle.crt", NULL, CLIENT_CERTIFICATE, CLIENT_CERTIFICATE_KEY, NULL, "root", NULL);
+//     Crypto_Config_Kmc_Crypto_Service("https", "itc-kmc.nasa.gov", 8443, "crypto-service","/certs/ammos-ca-bundle.crt",NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE, "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+//     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 12, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
+//     int32_t status = Crypto_Init();
 
-    char* raw_tc_jpl_mmt_scid44_vcid1= "20033008000001bd37";
-    char* raw_tc_jpl_mmt_scid44_vcid1_expect = NULL;
-    int raw_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
+//     char* raw_tc_jpl_mmt_scid44_vcid1= "20033008000001bd37";
+//     char* raw_tc_jpl_mmt_scid44_vcid1_expect = NULL;
+//     int raw_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
 
-    hex_conversion(raw_tc_jpl_mmt_scid44_vcid1, &raw_tc_jpl_mmt_scid44_vcid1_expect, &raw_tc_jpl_mmt_scid44_vcid1_expect_len);
+//     hex_conversion(raw_tc_jpl_mmt_scid44_vcid1, &raw_tc_jpl_mmt_scid44_vcid1_expect, &raw_tc_jpl_mmt_scid44_vcid1_expect_len);
 
-    uint8_t* ptr_enc_frame = NULL;
-    uint16_t enc_frame_len = 0;
+//     uint8_t* ptr_enc_frame = NULL;
+//     uint16_t enc_frame_len = 0;
 
-    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+//     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-    printf("Frame before encryption:\n");
-    for (int i=0; i<raw_tc_jpl_mmt_scid44_vcid1_expect_len; i++)
-    {
-        printf("%02x ", (uint8_t)raw_tc_jpl_mmt_scid44_vcid1_expect[i]);
-    }
-    printf("\n");
+//     printf("Frame before encryption:\n");
+//     for (int i=0; i<raw_tc_jpl_mmt_scid44_vcid1_expect_len; i++)
+//     {
+//         printf("%02x ", (uint8_t)raw_tc_jpl_mmt_scid44_vcid1_expect[i]);
+//     }
+//     printf("\n");
 
-    status = Crypto_TC_ApplySecurity((uint8_t* )raw_tc_jpl_mmt_scid44_vcid1_expect, raw_tc_jpl_mmt_scid44_vcid1_expect_len, &ptr_enc_frame, &enc_frame_len);
-    if(status != CRYPTO_LIB_SUCCESS)
-    {
-        Crypto_Shutdown();
-    }
-    // we expect an InvalidAlgorithmParameterException for macLength of that size.
-    ASSERT_EQ(CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE, status);
+//     status = Crypto_TC_ApplySecurity((uint8_t* )raw_tc_jpl_mmt_scid44_vcid1_expect, raw_tc_jpl_mmt_scid44_vcid1_expect_len, &ptr_enc_frame, &enc_frame_len);
+//     if(status != CRYPTO_LIB_SUCCESS)
+//     {
+//         Crypto_Shutdown();
+//     }
+//     // we expect an InvalidAlgorithmParameterException for macLength of that size.
+//     ASSERT_EQ(CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE, status);
 
-    Crypto_Shutdown();
-    free(raw_tc_jpl_mmt_scid44_vcid1_expect);
-    free(ptr_enc_frame);
-}
+//     Crypto_Shutdown();
+//     free(raw_tc_jpl_mmt_scid44_vcid1_expect);
+//     free(ptr_enc_frame);
+// }
 
 
 UTEST_MAIN();

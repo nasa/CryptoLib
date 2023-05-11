@@ -865,7 +865,6 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
     { 
         return status; 
     }
-
     // Allocate the necessary byte arrays within the security header + trailer given the SA
     tc_sdls_processed_frame->tc_sec_header.iv = calloc(1,sa_ptr->iv_len);
     tc_sdls_processed_frame->tc_sec_header.sn = calloc(1,sa_ptr->arsn_len);
@@ -878,7 +877,6 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
     //sprintf(tc_sdls_processed_frame->tc_sec_header.pad, "%x", pkcs_padding);
 
     tc_sdls_processed_frame->tc_sec_trailer.mac_field_len = sa_ptr->stmacf_len;
-
     // Determine SA Service Type
     if ((sa_ptr->est == 0) && (sa_ptr->ast == 0))
     {
@@ -904,14 +902,12 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
         status = CRYPTO_LIB_ERROR;
         return status;
     }
-
     // Determine Algorithm cipher & mode. // TODO - Parse authentication_cipher, and handle AEAD cases properly
     if (sa_service_type != SA_PLAINTEXT)
     {
         encryption_cipher = *sa_ptr->ecs;
         ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(encryption_cipher);
     }
-
 #ifdef TC_DEBUG
     switch (sa_service_type)
     {

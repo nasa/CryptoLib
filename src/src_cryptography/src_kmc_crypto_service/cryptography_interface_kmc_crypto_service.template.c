@@ -300,7 +300,7 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
     len_key = len_key; // Direct key input is not supported in KMC interface
 
     // Remove pre-padding to block (KMC does not want it)
-    if(*ecs == CRYPTO_CIPHER_AES256_CBC && padding > 0)
+    if(*ecs == CRYPTO_CIPHER_AES256_CCM && padding > 0)
     {
         len_data_in = len_data_in - padding;
     }
@@ -427,14 +427,13 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
                     if(strcmp(token, "initialVector") == 0){
                         token = strtok(token + strlen(token) + 1, ":");
                         base64Decode(token,strlen(token),some_string, (size_t *)&iv_len);
-                        printf("Some String:\n");
-                        for (uint32_t i=0; i < strlen(some_string); i++)
-                            {
-                                printf("%02x ", some_string[i]);
-                            }
-                            printf("\n");
+                        // printf("Some String:\n");
+                        // for (uint32_t i=0; i < strlen(some_string); i++)
+                        //     {
+                        //         printf("%02x ", (uint8_t)some_string[i]);
+                        //     }
+                        //     printf("\n");
 
-                        printf("TEST %s\n", some_string);
                         base64Decode(token,strlen(token),data_in - sa_ptr->shsnf_len - sa_ptr->shivf_len - sa_ptr->shplf_len, (size_t *)&iv_len);
                         break;
                     }
@@ -2158,6 +2157,7 @@ int32_t initialize_kerberos_keytab_file_login(void)
 int32_t cryptography_get_acs_algo(int8_t algo_enum)
 {
     int32_t algo = CRYPTO_LIB_ERR_UNSUPPORTED_ACS; // All valid algo enums will be positive
+    printf("ALGO ENUM: 0x%02x", algo_enum);
     switch (algo_enum)
     {
         case CRYPTO_MAC_CMAC_AES256:
@@ -2189,6 +2189,8 @@ int32_t cryptography_get_ecs_algo(int8_t algo_enum)
     {
         case CRYPTO_CIPHER_AES256_GCM:
             return CRYPTO_CIPHER_AES256_GCM;
+        case CRYPTO_CIPHER_AES256_CCM:
+            return CRYPTO_CIPHER_AES256_CCM;
 
         default:
 #ifdef DEBUG

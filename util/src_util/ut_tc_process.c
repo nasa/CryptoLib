@@ -713,9 +713,12 @@ UTEST(TC_PROCESS, HAPPY_PATH_DECRYPT_CBC)
 
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
     test_association->arsn_len = 0;
     test_association->shsnf_len = 0;
+    test_association->ast = 0;
+    test_association->stmacf_len = 0;
+    test_association->sa_state = SA_OPERATIONAL;
 
     // Convert input test frame
     hex_conversion(test_frame_pt_h, (char**) &test_frame_pt_b, &test_frame_pt_len);
@@ -774,9 +777,12 @@ UTEST(TC_PROCESS, DECRYPT_CBC_1B)
 
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
     test_association->arsn_len = 0;
     test_association->shsnf_len = 0;
+    test_association->ast = 0;
+    test_association->stmacf_len = 0;
+    test_association->sa_state = SA_OPERATIONAL;
 
     // Convert input test frame
     hex_conversion(test_frame_pt_h, (char**) &test_frame_pt_b, &test_frame_pt_len);
@@ -833,9 +839,12 @@ UTEST(TC_PROCESS, DECRYPT_CBC_16B)
 
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
     test_association->arsn_len = 0;
     test_association->shsnf_len = 0;
+    test_association->ast = 0;
+    test_association->stmacf_len = 0;
+    test_association->sa_state = SA_OPERATIONAL;
 
     // Convert input test frame
     hex_conversion(test_frame_pt_h, (char**) &test_frame_pt_b, &test_frame_pt_len);

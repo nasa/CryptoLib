@@ -58,6 +58,10 @@ static const char* SQL_SADB_UPDATE_IV_ARC_BY_SPI =
         "UPDATE security_associations"
         " SET iv=X'%s', arsn=X'%s'"
         " WHERE spi='%d' AND tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d'";
+static const char* SQL_SADB_UPDATE_IV_ARC_BY_SPI_NULL_IV =
+        "UPDATE security_associations"
+        " SET arsn=X'%s'"
+        " WHERE spi='%d' AND tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d'";
 
 // sadb_routine mariaDB private helper functions
 static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** security_association);
@@ -222,6 +226,15 @@ static int32_t sadb_save_sa(SecurityAssociation_t* sa)
         snprintf(update_sa_query, sizeof(update_sa_query), SQL_SADB_UPDATE_IV_ARC_BY_SPI,
              iv_h,
              arsn_h, sa->spi, sa->gvcid_blk.tfvn,
+             sa->gvcid_blk.scid, sa->gvcid_blk.vcid, sa->gvcid_blk.mapid);
+        
+        free(iv_h);
+    }
+    else
+    {
+        snprintf(update_sa_query, sizeof(update_sa_query), SQL_SADB_UPDATE_IV_ARC_BY_SPI_NULL_IV,
+             arsn_h,
+             sa->spi, sa->gvcid_blk.tfvn,
              sa->gvcid_blk.scid, sa->gvcid_blk.vcid, sa->gvcid_blk.mapid);
         free(iv_h);
     }

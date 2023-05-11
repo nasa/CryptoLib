@@ -224,7 +224,7 @@ void Crypto_saPrint(SecurityAssociation_t* sa)
         printf("\t iv        = %s \n", sa->iv);
     }
     printf("\t acs_len    = %d \n", sa->acs_len);
-    if (sa->ecs != NULL)
+    if (sa->acs != NULL)
     {
         for (i = 0; i < sa->acs_len; i++)
         {
