@@ -35,9 +35,8 @@
 #ifdef KMC_MDB_RH
     #define CLIENT_CERTIFICATE "/certs/redhat-cert.pem"
     #define CLIENT_CERTIFICATE_KEY "/certs/redhat-key.pem"
-#endif
-
-#ifdef KMC_MDB_DB
+#else
+    /* KMC_MDB_DB */
     #define CLIENT_CERTIFICATE "/certs/debian-cert.pem"
     #define CLIENT_CERTIFICATE_KEY "/certs/debian-key.pem"
 #endif
