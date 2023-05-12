@@ -292,8 +292,8 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
         case SA_ENCRYPTION:
             // Ingest length + 1 (accounts for -1 to length) + spi_index (2) + shivf_len (varies) + shsnf_len (varies)
             //   + shplf_len + arsn_len + pad_size
-            *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len +
-                               sa_ptr->arsn_len; //should point to shplf_len
+            *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;
+                                //+ sa_ptr->arsn_len; //should point to shplf_len
             
             new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
 
@@ -736,7 +736,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
         }
 
 #ifdef TC_DEBUG
-        printf(KYEL "Printing new TC Frame:\n\t");
+        printf(KYEL "Printing new TC Frame of length %d:\n\t", *p_enc_frame_len);
         for (i = 0; i < *p_enc_frame_len; i++)
         {
             printf("%02X", *(p_new_enc_frame + i));
