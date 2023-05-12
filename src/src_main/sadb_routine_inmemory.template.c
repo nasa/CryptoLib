@@ -518,7 +518,7 @@ static int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, u
             printf(KYEL "\tscid %d\n" RESET, scid);
             printf(KYEL "\tvcid %d\n" RESET, vcid);
             printf(KYEL "\tmapid %02X\n" RESET, mapid);
-            printf(KYEL "***FYI TM_SIZE set to %d\n" RESET, TM_SIZE);
+            printf(KYEL "***FYI TM_SIZE set to %ld\n" RESET, TM_SIZE);
 #endif
     }
 
