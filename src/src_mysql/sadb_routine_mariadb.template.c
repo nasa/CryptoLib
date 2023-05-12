@@ -58,6 +58,10 @@ static const char* SQL_SADB_UPDATE_IV_ARC_BY_SPI =
         "UPDATE security_associations"
         " SET iv=X'%s', arsn=X'%s'"
         " WHERE spi='%d' AND tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d'";
+static const char* SQL_SADB_UPDATE_IV_ARC_BY_SPI_NULL_IV =
+        "UPDATE security_associations"
+        " SET arsn=X'%s'"
+        " WHERE spi='%d' AND tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d'";
 
 // sadb_routine mariaDB private helper functions
 static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** security_association);
@@ -208,18 +212,33 @@ static int32_t sadb_save_sa(SecurityAssociation_t* sa)
         return SADB_NULL_SA_USED;
     }
 
-    char update_sa_query[2048];
-    
+    char update_sa_query[2048];    
     char* iv_h = malloc(sa->iv_len * 2 + 1);
-    convert_byte_array_to_hexstring(sa->iv, sa->iv_len, iv_h);
+    
+    if(sa->iv != NULL){
+        convert_byte_array_to_hexstring(sa->iv, sa->iv_len, iv_h);
+    }
+    
     char* arsn_h = malloc(sa->arsn_len * 2 + 1);
     convert_byte_array_to_hexstring(sa->arsn, sa->arsn_len, arsn_h);
 
-    snprintf(update_sa_query, sizeof(update_sa_query), SQL_SADB_UPDATE_IV_ARC_BY_SPI,
+    if(sa->iv != NULL){
+        snprintf(update_sa_query, sizeof(update_sa_query), SQL_SADB_UPDATE_IV_ARC_BY_SPI,
              iv_h,
              arsn_h, sa->spi, sa->gvcid_blk.tfvn,
              sa->gvcid_blk.scid, sa->gvcid_blk.vcid, sa->gvcid_blk.mapid);
-    free(iv_h);
+        
+        free(iv_h);
+    }
+    else
+    {
+        snprintf(update_sa_query, sizeof(update_sa_query), SQL_SADB_UPDATE_IV_ARC_BY_SPI_NULL_IV,
+             arsn_h,
+             sa->spi, sa->gvcid_blk.tfvn,
+             sa->gvcid_blk.scid, sa->gvcid_blk.vcid, sa->gvcid_blk.mapid);
+        free(iv_h);
+    }
+    
     free(arsn_h);
 #ifdef SA_DEBUG
     fprintf(stderr, "MySQL Insert SA Query: %s \n", update_sa_query);
@@ -330,11 +349,11 @@ static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** se
 
     // TODO -- Need to store mysql query hex string and then malloc sa->iv according to size.
     // TODO -- IV && arsn && abm as uint8_t* instead of uint8[]!!!
-    char* iv_byte_str;
-    char* arc_byte_str;
-    char* abm_byte_str;
-    char* ecs_byte_str;
-    char* acs_byte_str;
+    char* iv_byte_str = NULL;
+    char* arc_byte_str = NULL;
+    char* abm_byte_str = NULL;
+    char* ecs_byte_str = NULL;
+    char* acs_byte_str = NULL;
     while ((row = mysql_fetch_row(result)))
     {
         for (int i = 0; i < num_fields; i++)
@@ -506,12 +525,21 @@ static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** se
         }
         // printf("\n");
     }
-    sa->iv = (uint8_t* )calloc(1, sa->iv_len * sizeof(uint8_t));
+    if (iv_byte_str == NULL){
+        sa->iv = NULL;
+    }
+    else{
+        sa->iv = (uint8_t* )calloc(1, sa->iv_len * sizeof(uint8_t));
+    }
+    
     sa->arsn = (uint8_t* )calloc(1, sa->arsn_len * sizeof(uint8_t));
     sa->abm = (uint8_t* )calloc(1, sa->abm_len * sizeof(uint8_t));
     sa->ecs = (uint8_t* )calloc(1, sa->ecs_len * sizeof(uint8_t));
     sa->acs = (uint8_t* )calloc(1, sa->acs_len * sizeof(uint8_t));
-    if(sa->iv_len > 0)   convert_hexstring_to_byte_array(iv_byte_str, sa->iv);
+    if(iv_byte_str != NULL){
+        if(sa->iv_len > 0)   convert_hexstring_to_byte_array(iv_byte_str, sa->iv);
+    }
+    
     if(sa->arsn_len > 0) convert_hexstring_to_byte_array(arc_byte_str, sa->arsn);
     if(sa->abm_len > 0)  convert_hexstring_to_byte_array(abm_byte_str, sa->abm);
     if(sa->ecs_len > 0)  convert_hexstring_to_byte_array(ecs_byte_str, sa->ecs);

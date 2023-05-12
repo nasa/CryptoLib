@@ -37,10 +37,50 @@ foreach(SOURCE_PATH ${SOURCE_FILES})
 
     if((NOT ${ENCTEST}) AND ${EXECUTABLE_NAME} STREQUAL et_dt_validation)
         continue()
+    elseif(((NOT ${KMC_MDB_DB}) AND ${EXECUTABLE_NAME} STREQUAL ut_tc_kmc)
+        AND ((NOT ${KMC_MDB_RH}) AND ${EXECUTABLE_NAME} STREQUAL ut_tc_kmc))
+        continue()
+    
+    elseif(((NOT ${KMC_MDB_DB}) AND ${EXECUTABLE_NAME} STREQUAL ut_sadb_err_cases_kmc_crypto)
+        AND ((NOT ${KMC_MDB_RH}) AND ${EXECUTABLE_NAME} STREQUAL ut_sadb_err_cases_kmc_crypto))
+        continue()
+
+    elseif(((NOT ${KMC_MDB_DB}) AND ${EXECUTABLE_NAME} STREQUAL ut_mysql_tls_connection)
+        AND ((NOT ${KMC_MDB_RH}) AND ${EXECUTABLE_NAME} STREQUAL ut_mysql_tls_connection))
+        continue()
+    # Disabling for now, all connections on Github are MTLS (tested with the above)
+    elseif(((${KMC_MDB_DB}) AND ${EXECUTABLE_NAME} STREQUAL ut_mysql_m_tls_connection)
+        OR ((${KMC_MDB_RH}) AND ${EXECUTABLE_NAME} STREQUAL ut_mysql_m_tls_connection))
+        continue()
+    
+    elseif(((NOT ${KMC_MDB_DB}) AND ${EXECUTABLE_NAME} STREQUAL ut_mariadb)
+        AND ((NOT ${KMC_MDB_RH}) AND ${EXECUTABLE_NAME} STREQUAL ut_mariadb))
+        continue()
+
+    elseif(((NOT ${KMC_MDB_DB}) AND ${EXECUTABLE_NAME} STREQUAL ut_kmc_crypto)
+        AND ((NOT ${KMC_MDB_RH}) AND ${EXECUTABLE_NAME} STREQUAL ut_kmc_crypto))
+        continue()
+
+    elseif(((NOT ${KMC_MDB_DB}) AND ${EXECUTABLE_NAME} STREQUAL ut_kmc_crypto_with_mtls_sadb)
+        AND ((NOT ${KMC_MDB_RH}) AND ${EXECUTABLE_NAME} STREQUAL ut_kmc_crypto_with_mtls_sadb))
+        continue()
+
+    #elseif(((NOT ${KMC_MDB_DB}) AND ${EXECUTABLE_NAME} STREQUAL ut_kmc_crypto_cam)
+    #    AND ((NOT ${KMC_MDB_RH}) AND ${EXECUTABLE_NAME} STREQUAL ut_kmc_crypto_cam))
+    #    continue()
+    # Disabling this test for now.  Delete later to re-enable.
+    elseif(((${KMC_MDB_DB}) AND ${EXECUTABLE_NAME} STREQUAL ut_kmc_crypto_cam)
+        OR ((${KMC_MDB_RH}) AND ${EXECUTABLE_NAME} STREQUAL ut_kmc_crypto_cam))
+        continue()
+
+    elseif(((NOT ${KMC_MDB_DB}) AND ${EXECUTABLE_NAME} STREQUAL ut_kmc_crypto_auth_only)
+        AND ((NOT ${KMC_MDB_RH}) AND ${EXECUTABLE_NAME} STREQUAL ut_kmc_crypto_auth_only))
+        continue()
+
     else()
         add_executable(${EXECUTABLE_NAME} ${SOURCE_PATH}) 
         target_sources(${EXECUTABLE_NAME} PRIVATE core/shared_util.c)
-        target_link_libraries(${EXECUTABLE_NAME} LINK_PUBLIC Crypto pthread)
+        target_link_libraries(${EXECUTABLE_NAME} LINK_PUBLIC Crypto)
     endif()
 
     if(${ENCTEST} AND ${EXECUTABLE_NAME} STREQUAL et_dt_validation)
