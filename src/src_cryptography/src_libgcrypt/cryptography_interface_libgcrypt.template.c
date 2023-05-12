@@ -1018,8 +1018,16 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     {
         return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
     }
-
-    gcry_error = gcry_cipher_open(&(tmp_hd), algo, mode, GCRY_CIPHER_NONE);
+    
+    // TODO: Get Flag Functionality
+    if(mode == CRYPTO_CIPHER_AES256_CBC_MAC)
+    {
+        gcry_error = gcry_cipher_open(&(tmp_hd), algo, mode, GCRY_CIPHER_CBC_MAC);
+    }
+    else
+    {
+        gcry_error = gcry_cipher_open(&(tmp_hd), algo, mode, GCRY_CIPHER_NONE);
+    } 
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
@@ -1434,6 +1442,9 @@ int32_t cryptography_get_ecs_algo(int8_t algo_enum)
         case CRYPTO_CIPHER_AES256_CBC:
             algo = GCRY_CIPHER_AES256;
             break;
+        case CRYPTO_CIPHER_AES256_CCM:
+            algo = GCRY_CIPHER_AES256;
+            break;
 
         default:
 #ifdef DEBUG
@@ -1460,6 +1471,12 @@ int32_t cryptography_get_ecs_mode(int8_t algo_enum)
             break;
         case CRYPTO_CIPHER_AES256_CBC:
             mode = GCRY_CIPHER_MODE_CBC;
+            break;
+        case CRYPTO_CIPHER_AES256_CBC_MAC:
+            mode = GCRY_CIPHER_MODE_CBC;
+            break;
+        case CRYPTO_CIPHER_AES256_CCM:
+            mode = GCRY_CIPHER_MODE_CCM;
             break;
 
         default:

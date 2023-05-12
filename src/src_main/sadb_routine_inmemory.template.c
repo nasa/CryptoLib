@@ -386,14 +386,14 @@ static int32_t sadb_get_sa_from_spi(uint16_t spi, SecurityAssociation_t** securi
         return CRYPTO_LIB_ERR_NO_INIT;
     }
     *security_association = &sa[spi];
-    if (sa[spi].iv == NULL && (sa[spi].shivf_len > 0))
+    if (sa[spi].iv == NULL && (sa[spi].shivf_len > 0) && crypto_config->cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
         return CRYPTO_LIB_ERR_NULL_IV;
     } // Must have IV if doing encryption or authentication
     if (sa[spi].abm == NULL && sa[spi].ast)
     {
         return CRYPTO_LIB_ERR_NULL_ABM;
-    } // Must have IV if doing encryption or authentication
+    } // Must have abm if doing authentication
 #ifdef SA_DEBUG
     printf(KYEL "DEBUG - Printing local copy of SA Entry for current SPI.\n" RESET);
     Crypto_saPrint(*security_association);
@@ -431,14 +431,14 @@ static int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, u
              // when using segmentation hdrs)
         {
             *security_association = &sa[i];
-            if (sa[i].iv == NULL && (sa[i].ast == 1 || sa[i].est == 1))
+            if (sa[i].iv == NULL && (sa[i].ast == 1 || sa[i].est == 1) && crypto_config->cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
             {
                 return CRYPTO_LIB_ERR_NULL_IV;
             }
             if (sa[i].abm == NULL && sa[i].ast)
             {
                 return CRYPTO_LIB_ERR_NULL_ABM;
-            } // Must have IV if doing encryption or authentication
+            } // Must have ABM if doing authentication
 
 #ifdef SA_DEBUG
             printf("Valid operational SA found at index %d.\n", i);

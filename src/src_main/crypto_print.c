@@ -217,11 +217,14 @@ void Crypto_saPrint(SecurityAssociation_t* sa)
     {
         for (i = 0; i < sa->iv_len; i++)
         {
-            printf("\t iv[%d]     = 0x%02x \n", i, *(sa->iv + i));
+            printf("\t iv[%d]      = 0x%02x \n", i, *(sa->iv + i));
         }
     }
+    else{
+        printf("\t iv        = %s \n", sa->iv);
+    }
     printf("\t acs_len    = %d \n", sa->acs_len);
-    if (sa->ecs != NULL)
+    if (sa->acs != NULL)
     {
         for (i = 0; i < sa->acs_len; i++)
         {

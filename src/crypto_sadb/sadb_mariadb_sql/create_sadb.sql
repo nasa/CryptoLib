@@ -17,14 +17,14 @@ CREATE TABLE IF NOT EXISTS security_associations
   ,lpid SMALLINT
   ,est SMALLINT NOT NULL DEFAULT 0
   ,ast SMALLINT NOT NULL DEFAULT 0
-  ,shivf_len SMALLINT NOT NULL DEFAULT 12
+  ,shivf_len SMALLINT NOT NULL DEFAULT 0
   ,shsnf_len SMALLINT NOT NULL DEFAULT 0
   ,shplf_len SMALLINT NOT NULL DEFAULT 0
   ,stmacf_len SMALLINT NOT NULL DEFAULT 0
   ,ecs_len SMALLINT NOT NULL DEFAULT 1
   ,ecs VARBINARY(4) NOT NULL DEFAULT X'01' -- ECS_SIZE=4
-  ,iv_len SMALLINT NOT NULL DEFAULT 12
-  ,iv VARBINARY(20) NOT NULL DEFAULT X'000000000000000000000000' -- IV_SIZE=12
+  ,iv_len SMALLINT NOT NULL DEFAULT 0
+  ,iv VARBINARY(20) DEFAULT NULL -- IV_SIZE=12
   ,acs_len SMALLINT NOT NULL DEFAULT 0
   ,acs VARBINARY(4) NOT NULL DEFAULT X'00'
   ,abm_len MEDIUMINT
@@ -34,4 +34,4 @@ CREATE TABLE IF NOT EXISTS security_associations
   ,arsnw SMALLINT NOT NULL DEFAULT 0 -- ARSNW_SIZE=1
 );
 
-create unique index if not exists main_spi on security_associations (spi,scid);
+create unique index if not exists main_spi on security_associations (spi,scid,vcid,tfvn,mapid);
