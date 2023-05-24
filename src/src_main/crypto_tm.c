@@ -397,10 +397,24 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
                                                                 *sa_ptr->acs,  // authentication cipher
                                                                 NULL);
         }
-        if(sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
+        else if(sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
         {
-            printf(KRED "NOT SUPPORTED!!!\n");
-            status = CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
+            if (sa_service_type == SA_ENCRYPTION)
+                {
+                    status = cryptography_if->cryptography_encrypt(//Stub out data in/out as this is done in place and want to save cycles
+                                                                (uint8_t*)(&tm_frame[0]), // ciphertext output
+                                                                (size_t) 0, // length of data
+                                                                (uint8_t*)(&tm_frame[0]), // plaintext input
+                                                                (size_t)0, // in data length - from start of frame to end of data
+                                                                NULL, // Using SA key reference, key is null
+                                                                Crypto_Get_ACS_Algo_Keylen(*sa_ptr->ecs),
+                                                                sa_ptr, // SA (for key reference)
+                                                                sa_ptr->iv, // IV
+                                                                sa_ptr->iv_len, // IV Length
+                                                                sa_ptr->ecs, // encryption cipher
+                                                                pkcs_padding,  // authentication cipher
+                                                                NULL);
+            }
         }
         else if(sa_service_type == SA_PLAINTEXT)
         {
