@@ -25,7 +25,7 @@
  i) ssl_cert=/etc/pki/tls/certs/local-test-cert.pem
  ii) ssl_key=/etc/pki/tls/private/local-test-key.pem
  iii) ssl_ca=/etc/pki/tls/certs/ammos-ca-bundle.crt
-  3)IMPORTANT:Build with "cmake -DMYSQL=ON ." 
+  3)IMPORTANT:Build with "cmake -DSA_MARIADB=ON ." 
  * 
  IMPORTANT:The database must have similar configuration for this test to succeed:
 MariaDB server to use the standard host-based <your_server_hots_name>.

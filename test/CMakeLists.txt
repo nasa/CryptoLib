@@ -57,12 +57,6 @@ add_test(NAME UT_TM_PROCESS
 #          COMMAND ${PROJECT_BINARY_DIR}/bin/ut_mariadb
 #          WORKING_DIRECTORY ${PROJECT_TEST_DIR})
 
-if(${ENCTEST})
-    add_test(NAME ET_DT_VALIDATION
-             COMMAND ${PROJECT_BINARY_DIR}/bin/et_dt_validation 
-             WORKING_DIRECTORY ${PROJECT_TEST_DIR})
-endif()
-
 if(${KMC_MDB_RH} OR ${KMC_MDB_DB})
     add_test(NAME UT_TC_KMC
              COMMAND ${PROJECT_BINARY_DIR}/bin/ut_tc_kmc
@@ -101,3 +95,98 @@ if(${KMC_MDB_RH} OR ${KMC_MDB_DB})
              COMMAND ${PROJECT_BINARY_DIR}/bin/ut_kmc_crypto_auth_only
              WORKING_DIRECTORY ${PROJECT_TEST_DIR})
 endif()
+
+if(TEST_ENC)
+    add_test(NAME ET_DT_VALIDATION
+             COMMAND ${PROJECT_BINARY_DIR}/bin/et_dt_validation 
+             WORKING_DIRECTORY ${PROJECT_TEST_DIR})
+endif()
+
+include_directories(include)
+include_directories(../include) 
+
+if(TEST_ENC)
+    find_package (Python3 REQUIRED COMPONENTS Interpreter Development)
+    execute_process(COMMAND pip3 show pycryptodome RESULT_VARIABLE EXIT_CODE OUTPUT_QUIET)
+    if(NOT ${EXIT_CODE} EQUAL 0)
+        message(FATAL_ERROR "The \"pycryptodome\" Python3 package is not installed, and is required for TEST_ENC.")
+    endif()
+endif()
+
+file( GLOB UNIT_FILES unit/*.c)
+foreach(SOURCE_PATH ${UNIT_FILES})
+    get_filename_component(EXECUTABLE_NAME ${SOURCE_PATH} NAME_WE)
+
+    if((NOT TEST_ENC) AND ${EXECUTABLE_NAME} STREQUAL et_dt_validation)
+        continue()
+    else()
+        add_executable(${EXECUTABLE_NAME} ${SOURCE_PATH}) 
+        target_sources(${EXECUTABLE_NAME} PRIVATE core/shared_util.c)
+        target_link_libraries(${EXECUTABLE_NAME} LINK_PUBLIC Crypto pthread)
+    endif()
+
+    if(TEST_ENC AND ${EXECUTABLE_NAME} STREQUAL et_dt_validation)
+        target_link_libraries(${EXECUTABLE_NAME} PUBLIC ${Python3_LIBRARIES}) 
+        target_include_directories(${EXECUTABLE_NAME} PUBLIC ${Python3_INCLUDE_DIRS}) 
+        find_library(${Python3_LIBRARIES} pycryptodome)
+    endif()
+
+    add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${EXECUTABLE_NAME}> ${PROJECT_BINARY_DIR}/bin/${EXECUTABLE_NAME}
+            COMMAND ${CMAKE_COMMAND} -E remove $<TARGET_FILE:${EXECUTABLE_NAME}>
+            COMMENT "Created ${PROJECT_BINARY_DIR}/bin/${EXECUTABLE_NAME}"
+            )
+endforeach(SOURCE_PATH ${UNIT_FILES}) 
+
+if(${KMC_MDB_RH} OR ${KMC_MDB_DB})
+    file( GLOB KMC_FILES kmc/*.c)
+    foreach(SOURCE_PATH ${KMC_FILES})
+        get_filename_component(EXECUTABLE_NAME ${SOURCE_PATH} NAME_WE)
+
+        add_executable(${EXECUTABLE_NAME} ${SOURCE_PATH}) 
+        target_sources(${EXECUTABLE_NAME} PRIVATE core/shared_util.c)
+        target_link_libraries(${EXECUTABLE_NAME} LINK_PUBLIC Crypto pthread)
+
+        add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${EXECUTABLE_NAME}> ${PROJECT_BINARY_DIR}/bin/${EXECUTABLE_NAME}
+                COMMAND ${CMAKE_COMMAND} -E remove $<TARGET_FILE:${EXECUTABLE_NAME}>
+                COMMENT "Created ${PROJECT_BINARY_DIR}/bin/${EXECUTABLE_NAME}"
+                )
+    endforeach(SOURCE_PATH ${KMC_FILES}) 
+endif()
+
+target_include_directories (Crypto PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+set(OBJECT_DIR ${PROJECT_BINARY_DIR}/src/CMakeFiles/Crypto.dir/core)
+
+if(${CODECOV})
+    # Create the gcov target. Run coverage tests with 'make gcov'
+    add_custom_target(gcov
+        COMMAND mkdir -p coverage
+        COMMAND ${CMAKE_MAKE_PROGRAM} test
+        WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+        )
+    add_custom_command(TARGET gcov
+        COMMAND echo "=================== GCOV ===================="
+        #COMMAND gcov -b -o ${OBJECT_DIR} crypto_aos.c.gnco crypto_config.c.gnco crypto_key_mgmt.c.gnco crypto_mc.c.gnco crypto_print.c.gnco crypto_tc.c.gnco crypto_tm.c.gnco crypto_user.c.gnco crypto.c.gnco sadb_routine_inmemory.template.c.gnco sadb_routine.c.gnco
+        COMMAND gcov -b -o ${OBJECT_DIR} crypto_aos.c.gnco crypto_config.c.gnco crypto_key_mgmt.c.gnco crypto_mc.c.gnco crypto_tc.c.gnco crypto_tm.c.gnco crypto_user.c.gnco crypto.c.gnco sadb_routine_inmemory.template.c.gnco 
+        # | grep -A 5 "Adder.cpp" > CoverageSummary.tmp
+        #COMMAND cat CoverageSummary.tmp
+        #COMMAND echo "-- Coverage files have been output to ${PROJECT_BINARY_DIR}/coverage"
+        COMMAND lcov -c --directory ${OBJECT_DIR} --output-file ${PROJECT_BINARY_DIR}/coverage/results.info
+        COMMAND genhtml ${PROJECT_BINARY_DIR}/coverage/results.info --output-directory ${PROJECT_BINARY_DIR}/coverage/results
+        WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/coverage
+        )
+    add_dependencies(gcov ut_tc_apply)
+    # Make sure to clean up the coverage folder
+    set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES coverage)
+
+    # Create the gcov-clean target. This cleans the build as well as generated 
+    # .gcda and .gcno files.
+    add_custom_target(scrub
+    COMMAND ${CMAKE_MAKE_PROGRAM} clean
+    COMMAND rm -f ${OBJECT_DIR}/*.gcno
+    COMMAND rm -f ${OBJECT_DIR}/*.gcda
+    WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+    )
+endif(${CODECOV})
