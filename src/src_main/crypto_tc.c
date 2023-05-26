@@ -292,8 +292,8 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
         case SA_ENCRYPTION:
             // Ingest length + 1 (accounts for -1 to length) + spi_index (2) + shivf_len (varies) + shsnf_len (varies)
             //   + shplf_len + arsn_len + pad_size
-            *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len +
-                               sa_ptr->arsn_len; //should point to shplf_len
+            *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;
+                                //+ sa_ptr->arsn_len; //should point to shplf_len
             
             new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
 
@@ -336,10 +336,10 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
         }
 
         // Ensure the frame to be created will not violate managed parameter maximum length
-        if (*p_enc_frame_len > current_managed_parameters->max_tc_frame_size)
+        if (*p_enc_frame_len > current_managed_parameters->max_frame_size)
         {
 #ifdef DEBUG
-            printf("Managed length is: %d\n", current_managed_parameters->max_tc_frame_size);
+            printf("Managed length is: %d\n", current_managed_parameters->max_frame_size);
             printf("New enc frame length will be: %d\n", *p_enc_frame_len);
 #endif
             printf(KRED "Error: New frame would violate maximum tc frame managed parameter! \n" RESET);
@@ -372,7 +372,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
         printf(KYEL "\tsegment hdr len\t = %d\n" RESET, segment_hdr_len); 
         printf(KYEL "\tspi len\t\t = 2\n" RESET);
         printf(KYEL "\tshivf_len\t = %d\n" RESET, sa_ptr->shivf_len);
-        printf(KYEL "\tiv_len\t = %d\n" RESET, sa_ptr->iv_len);
+        printf(KYEL "\tiv_len\t\t = %d\n" RESET, sa_ptr->iv_len);
         printf(KYEL "\tshsnf_len\t = %d\n" RESET, sa_ptr->shsnf_len);
         printf(KYEL "\tshplf len\t = %d\n" RESET, sa_ptr->shplf_len);
         printf(KYEL "\tarsn_len\t = %d\n" RESET, sa_ptr->arsn_len);
@@ -453,13 +453,32 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
             }
         } 
 
-
-        // Start index from the transmitted portion
-        for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
+        // Copy in IV from SA if not NULL and transmitted length > 0
+        if (sa_ptr->iv != NULL)
         {
-            // Copy in IV from SA
-            *(p_new_enc_frame + index) = *(sa_ptr->iv + i);
-            index++;
+            // Start index from the transmitted portion
+            for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
+            {
+                *(p_new_enc_frame + index) = *(sa_ptr->iv + i);
+                index++;
+            }
+        }
+        // IV is NULL 
+        else 
+        {
+            // Transmitted length > 0, AND using KMC_CRYPTO
+            if ((sa_ptr->shivf_len > 0) && crypto_config->cryptography_type == CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+            {
+                index += sa_ptr->iv_len - (sa_ptr->iv_len - sa_ptr->shivf_len);
+            }
+            else if (sa_ptr->shivf_len == 0)
+            {
+                // IV isn't being used, so don't care if it's Null
+            }
+            else
+            {
+                return CRYPTO_LIB_ERR_NULL_IV;
+            }
         }
 
         // Set anti-replay sequence number if specified
@@ -647,34 +666,36 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
                 return status; // Cryptography IF call failed, return.
             }
         }
-
         if (sa_service_type != SA_PLAINTEXT)
         {
 #ifdef INCREMENT
             if (crypto_config->crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
             {
-                if(sa_ptr->shivf_len > 0){ Crypto_increment(sa_ptr->iv, sa_ptr->iv_len); }   
+                if(sa_ptr->shivf_len > 0  && sa_ptr->iv != NULL){ Crypto_increment(sa_ptr->iv, sa_ptr->iv_len); }   
             }
             else // SA_INCREMENT_NONTRANSMITTED_IV_FALSE
             {
                 // Only increment the transmitted portion
-                if(sa_ptr->shivf_len > 0){ Crypto_increment(sa_ptr->iv+(sa_ptr->iv_len-sa_ptr->shivf_len), sa_ptr->shivf_len); }
+                if(sa_ptr->shivf_len > 0 && sa_ptr->iv != NULL){ Crypto_increment(sa_ptr->iv+(sa_ptr->iv_len-sa_ptr->shivf_len), sa_ptr->shivf_len); }
             }
             if(sa_ptr->shsnf_len > 0){ Crypto_increment(sa_ptr->arsn, sa_ptr->arsn_len); }
         
 #ifdef SA_DEBUG
-            printf(KYEL "Next IV value is:\n\t");
-            for (i = 0; i < sa_ptr->iv_len; i++)
+            if(sa_ptr->iv != NULL)
             {
-                printf("%02x", *(sa_ptr->iv + i));
+                printf(KYEL "Next IV value is:\n\t");
+                for (i = 0; i < sa_ptr->iv_len; i++)
+                {
+                    printf("%02x", *(sa_ptr->iv + i));
+                }
+                printf("\n" RESET);
+                printf(KYEL "Next transmitted IV value is:\n\t");
+                for (i = sa_ptr->iv_len-sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
+                {
+                    printf("%02x", *(sa_ptr->iv + i));
+                }
+                printf("\n" RESET);
             }
-            printf("\n" RESET);
-            printf(KYEL "Next transmitted IV value is:\n\t");
-            for (i = sa_ptr->iv_len-sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
-            {
-                printf("%02x", *(sa_ptr->iv + i));
-            }
-            printf("\n" RESET);
             printf(KYEL "Next ARSN value is:\n\t");
             for (i = 0; i < sa_ptr->arsn_len; i++)
             {
@@ -715,7 +736,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
         }
 
 #ifdef TC_DEBUG
-        printf(KYEL "Printing new TC Frame:\n\t");
+        printf(KYEL "Printing new TC Frame of length %d:\n\t", *p_enc_frame_len);
         for (i = 0; i < *p_enc_frame_len; i++)
         {
             printf("%02X", *(p_new_enc_frame + i));
@@ -844,7 +865,6 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
     { 
         return status; 
     }
-
     // Allocate the necessary byte arrays within the security header + trailer given the SA
     tc_sdls_processed_frame->tc_sec_header.iv = calloc(1,sa_ptr->iv_len);
     tc_sdls_processed_frame->tc_sec_header.sn = calloc(1,sa_ptr->arsn_len);
@@ -857,7 +877,6 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
     //sprintf(tc_sdls_processed_frame->tc_sec_header.pad, "%x", pkcs_padding);
 
     tc_sdls_processed_frame->tc_sec_trailer.mac_field_len = sa_ptr->stmacf_len;
-
     // Determine SA Service Type
     if ((sa_ptr->est == 0) && (sa_ptr->ast == 0))
     {
@@ -883,14 +902,12 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
         status = CRYPTO_LIB_ERROR;
         return status;
     }
-
     // Determine Algorithm cipher & mode. // TODO - Parse authentication_cipher, and handle AEAD cases properly
     if (sa_service_type != SA_PLAINTEXT)
     {
         encryption_cipher = *sa_ptr->ecs;
         ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(encryption_cipher);
     }
-
 #ifdef TC_DEBUG
     switch (sa_service_type)
     {
@@ -1252,13 +1269,13 @@ uint8_t* Crypto_Prepare_TC_AAD(uint8_t* buffer, uint16_t len_aad, uint8_t* abm_b
 
 /**
  * @brief Function: crypto_tc_validate_sa
- * Helper function to assist with ensuring sane SA condigurations
+ * Helper function to assist with ensuring sane SA configurations
  * @param sa: SecurityAssociation_t*
  * @return int32: Success/Failure
  **/
 static int32_t crypto_tc_validate_sa(SecurityAssociation_t *sa)
 {
-    if (sa->shivf_len > 0 && sa->iv == NULL)
+    if (sa->shivf_len > 0 && sa->iv == NULL && crypto_config->cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
         return CRYPTO_LIB_ERR_NULL_IV;
     }
@@ -1266,7 +1283,7 @@ static int32_t crypto_tc_validate_sa(SecurityAssociation_t *sa)
     {
         return CRYPTO_LIB_ERR_IV_LEN_SHORTER_THAN_SEC_HEADER_LENGTH;
     }
-    if (sa->iv_len > 0 && sa->iv == NULL)
+    if (sa->iv_len > 0 && sa->iv == NULL && crypto_config->cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
         return CRYPTO_LIB_ERR_NULL_IV;
     }

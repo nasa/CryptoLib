@@ -41,18 +41,31 @@ typedef enum
 typedef enum
 {
     TC_NO_FECF,
-    TC_HAS_FECF
-} TcFecfPresent;
-typedef enum
-{
-    TC_NO_SEGMENT_HDRS,
-    TC_HAS_SEGMENT_HDRS
-} TcSegmentHdrsPresent;
+    TC_HAS_FECF,
+    TM_NO_FECF,
+    TM_HAS_FECF
+} FecfPresent;
 typedef enum
 {
     CRYPTO_TC_CREATE_FECF_FALSE,
-    CRYPTO_TC_CREATE_FECF_TRUE
-} TcCreateFecfBool;
+    CRYPTO_TC_CREATE_FECF_TRUE,
+    CRYPTO_TM_CREATE_FECF_FALSE,
+    CRYPTO_TM_CREATE_FECF_TRUE
+} CreateFecfBool;
+typedef enum
+{
+    TC_CHECK_FECF_FALSE,
+    TC_CHECK_FECF_TRUE,
+    TM_CHECK_FECF_FALSE,
+    TM_CHECK_FECF_TRUE
+} CheckFecfBool;
+// TC specific enums
+typedef enum
+{
+    TC_NO_SEGMENT_HDRS,
+    TC_HAS_SEGMENT_HDRS,
+    TM_SEGMENT_HDRS_NA
+} TcSegmentHdrsPresent;
 typedef enum
 {
     TC_PROCESS_SDLS_PDUS_FALSE,
@@ -80,15 +93,23 @@ typedef enum
 } TcUniqueSaPerMapId;
 typedef enum
 {
-    TC_CHECK_FECF_FALSE,
-    TC_CHECK_FECF_TRUE
-} TcCheckFecfBool;
-typedef enum
-{
     SA_INCREMENT_NONTRANSMITTED_IV_FALSE,
     SA_INCREMENT_NONTRANSMITTED_IV_TRUE
 } SaIncrementNonTransmittedIvPortion;
-
+// TM specific enums
+typedef enum
+{
+    AOS_NO_OCF,
+    AOS_HAS_OCF,
+    TC_OCF_NA,
+    TM_NO_OCF,
+    TM_HAS_OCF
+} OcfPresent;
+typedef enum
+{
+    TM_NO_SECONDARY_HDR,
+    TM_HAS_SECONDARY_HDR
+} TmSecondaryHdrPresent;
 typedef enum
 {
     CAM_ENABLED_FALSE,
@@ -115,7 +136,9 @@ typedef enum
 {
     CRYPTO_CIPHER_NONE,
     CRYPTO_CIPHER_AES256_GCM,
-    CRYPTO_CIPHER_AES256_CBC
+    CRYPTO_CIPHER_AES256_CBC,
+    CRYPTO_CIPHER_AES256_CBC_MAC,
+    CRYPTO_CIPHER_AES256_CCM
 } EncCipherSuite;
 
 /*
@@ -125,14 +148,14 @@ typedef struct
 {
     SadbType sadb_type;
     CryptographyType cryptography_type;
-    TcCreateFecfBool crypto_create_fecf; // Whether or not CryptoLib is expected to calculate TC FECFs and return
+    CreateFecfBool crypto_create_fecf; // Whether or not CryptoLib is expected to calculate TC FECFs and return
                                          // payloads with the FECF
     TcProcessSdlsPdus process_sdls_pdus; // Config to process SDLS extended procedure PDUs in CryptoLib
     TcPusHdrPresent has_pus_hdr;
     TcIgnoreSaState ignore_sa_state; // TODO - add logic that uses this configuration
     TcIgnoreAntiReplay ignore_anti_replay;
     TcUniqueSaPerMapId unique_sa_per_mapid;
-    TcCheckFecfBool crypto_check_fecf;
+    CheckFecfBool crypto_check_fecf;
     uint8_t vcid_bitmask;
     uint8_t crypto_increment_nontransmitted_iv; // Whether or not CryptoLib increments the non-transmitted portion of the IV field
 } CryptoConfig_t;
@@ -144,9 +167,10 @@ struct _GvcidManagedParameters_t
     uint8_t tfvn : 4;   // Transfer Frame Version Number
     uint16_t scid : 10; // SpacecraftID
     uint8_t vcid : 6;   // Virtual Channel ID
-    TcFecfPresent has_fecf;
+    FecfPresent has_fecf;
     TcSegmentHdrsPresent has_segmentation_hdr;
-    uint16_t max_tc_frame_size; // Maximum TC Frame Length with headers
+    uint16_t max_frame_size; // Maximum TC/TM Frame Length with headers
+    OcfPresent has_ocf;
     GvcidManagedParameters_t* next; // Will be a list of managed parameters!
 };
 #define GVCID_MANAGED_PARAMETERS_SIZE (sizeof(GvcidManagedParameters_t))

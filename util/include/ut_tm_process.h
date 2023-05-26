@@ -16,25 +16,20 @@
    jstar-development-team@mail.nasa.gov
 */
 
-#ifndef _crypto_print_h_
-#define _crypto_print_h_
+#ifndef CRYPTOLIB_UT_TM_PROCESS_H
+#define CRYPTOLIB_UT_TM_PROCESS_H
 
-/*
-** Includes
-*/
-#include "crypto.h"
-#include "crypto_structs.h"
-
-/*
-** Prototypes
-*/
-void Crypto_tcPrint(TC_t* tc_frame);
-void Crypto_tmPrint(TM_t* tm_frame);
-void Crypto_clcwPrint(TM_FrameCLCW_t* clcw);
-void Crypto_fsrPrint(SDLS_FSR_t* report);
-void Crypto_ccsdsPrint(CCSDS_t* sdls_frame);
-void Crypto_saPrint(SecurityAssociation_t* sa);
-void Crypto_hexprint(const void* c, size_t n);
-void Crypto_binprint(void* c, size_t n);
-void Crypto_mpPrint(GvcidManagedParameters_t* managed_parameters, uint8_t print_children);
+#ifdef __cplusplus
+extern "C"
+{
 #endif
+
+#include "crypto.h"
+#include "shared_util.h"
+#include <stdio.h>
+
+#ifdef __cplusplus
+} /* Close scope of 'extern "C"' declaration which encloses file. */
+#endif
+
+#endif // CRYPTOLIB_UT_TM_PROCESS_H

@@ -34,7 +34,10 @@ CFS_MODULE_DECLARE_LIB(crypto);
 */
 // crypto_key_t ak_ring[NUM_KEYS];
 CCSDS_t sdls_frame;
-TM_t tm_frame;
+// TM_t tm_frame;
+uint8_t tm_frame[1786]; // Testing
+TM_FramePrimaryHeader_t tm_frame_pri_hdr; // Used to reduce bit math duplication
+TM_FrameSecurityHeader_t tm_frame_sec_hdr; // Used to reduce bit math duplication
 // OCF
 uint8_t ocf = 0;
 SDLS_FSR_t report;
@@ -67,12 +70,12 @@ uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
     // CryptoLib only supports AES-GCM, which is an AEAD (Authenticated Encryption with Associated Data) algorithm, so
     // return true/1.
     // TODO - Add cipher suite mapping to which algorithms are AEAD and which are not.
-    if(cipher_suite_id == CRYPTO_CIPHER_AES256_GCM)
+    if((cipher_suite_id == CRYPTO_CIPHER_AES256_GCM) || (cipher_suite_id == CRYPTO_CIPHER_AES256_CBC_MAC))
     {
         return CRYPTO_TRUE;
     }
     else
-    {
+    {   
         return CRYPTO_FALSE;
     }
 }
@@ -312,7 +315,7 @@ tc_frame->tc_sec_trailer.fecf); #endif result = CRYPTO_LIB_ERROR;
  * @param len_ingest: int
  * @return uint16: FECF
  **/
-uint16_t Crypto_Calc_FECF(uint8_t* ingest, int len_ingest)
+uint16_t Crypto_Calc_FECF(const uint8_t* ingest, int len_ingest)
 {
     uint16_t fecf = 0xFFFF;
     uint16_t poly = 0x1021; // TODO: This polynomial is (CRC-CCITT) for ESA testing, may not match standard protocol
@@ -798,12 +801,15 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, uin
 int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, uint8_t *iv)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
+    int8_t IV_VALID = -1;
+    int8_t ARSN_VALID = -1;
+
     // Check for NULL pointers
-    if (arsn == NULL)
+    if (arsn == NULL && sa_ptr->arsn_len > 0)
     {
         return CRYPTO_LIB_ERR_NULL_ARSN;
     }
-    if (iv == NULL)
+    if (iv == NULL && sa_ptr->shivf_len > 0 && crypto_config->cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
         return CRYPTO_LIB_ERR_NULL_IV;
     }
@@ -837,11 +843,12 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
         // Valid ARSN received, increment stored value
         else
         {
-            memcpy(sa_ptr->arsn, arsn, sa_ptr->arsn_len);
+            ARSN_VALID = CRYPTO_TRUE;
+            // memcpy(sa_ptr->arsn, arsn, sa_ptr->arsn_len);
         }
     }
-    // If IV is greater than zero (and arsn isn't used), check for replay
-    else if (sa_ptr->iv_len > 0)
+    // If IV is greater than zero and using GCM, check for replay
+    if ((sa_ptr->iv_len > 0) && *sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM)
     {
         // Check IV is in ARSNW
         if(crypto_config->crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
@@ -852,8 +859,6 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
             // Whole IV gets checked in MAC validation previously, this only verifies transmitted portion is what we expect.
             status = Crypto_window(iv, sa_ptr->iv + (sa_ptr->iv_len - sa_ptr->shivf_len), sa_ptr->shivf_len, sa_ptr->arsnw);
         }
-
-
 #ifdef DEBUG
         printf("Received IV is\n\t");
         for (int i = 0; i < sa_ptr->iv_len; i++)
@@ -875,9 +880,38 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
         // Valid IV received, increment stored value
         else
         {
+            IV_VALID = CRYPTO_TRUE;
+            //memcpy(sa_ptr->iv, iv, sa_ptr->iv_len);
+        }
+    }
+    // IV length is greater than zero, but not using an incrementing IV as in GCM
+    // we can't verify this internally as Crpytolib doesn't track previous IVs 
+    // or generate random ones
+    // else{}
+
+    // For GCM specifically, if have a valid IV...
+    if (*sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM && IV_VALID == CRYPTO_TRUE)
+    {
+        // Using ARSN? Need to be valid to increment both
+        if (sa_ptr->arsn_len > 0 && ARSN_VALID == CRYPTO_TRUE)
+        {
+            memcpy(sa_ptr->iv, iv, sa_ptr->iv_len);
+            memcpy(sa_ptr->arsn, arsn, sa_ptr->arsn_len);
+        }
+        // Not using ARSN? IV Valid and good to go
+        if (sa_ptr->arsn_len == 0)
+        {
             memcpy(sa_ptr->iv, iv, sa_ptr->iv_len);
         }
     }
+
+    // If not GCM, and ARSN is valid - can incrmeent it
+    if (*sa_ptr->ecs != CRYPTO_CIPHER_AES256_GCM && ARSN_VALID == CRYPTO_TRUE)
+    {
+        memcpy(sa_ptr->arsn, arsn, sa_ptr->arsn_len);
+    }
+
+
     return status;
 }
 
@@ -895,6 +929,10 @@ int32_t Crypto_Get_ECS_Algo_Keylen(uint8_t algo)
             break;
         case CRYPTO_CIPHER_AES256_CBC:
             retval = 32;
+            break;
+        case CRYPTO_CIPHER_AES256_CCM:
+            retval = 32;
+            break;
         default:
             break;
     }

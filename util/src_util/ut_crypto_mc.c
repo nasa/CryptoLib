@@ -81,7 +81,7 @@ UTEST(CRYPTO_MC, READARSN)
 {
     int count = 0;
     uint8_t ingest[1024] = {0};
-    Crypto_Init_Unit_Test();
+    Crypto_Init_TC_Unit_Test();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
     SecurityAssociation_t* test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
@@ -98,11 +98,13 @@ UTEST(CRYPTO_MC, READARSN)
 UTEST(CRYPTO_MC, PROCESS)
 {
     uint8_t ingest[1024] = {0};
-    int len_ingest = 0;
+    uint16_t len_ingest = 1024;
     int32_t status = CRYPTO_LIB_ERROR;
+    uint8_t* tm_sdls_processed_frame = NULL;
+    uint16_t dec_frame_length;
 
-    status = Crypto_TM_ProcessSecurity(ingest, &len_ingest);
-    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    status = Crypto_TM_ProcessSecurity((uint8_t *)&ingest, len_ingest, &tm_sdls_processed_frame, &dec_frame_length);
+    ASSERT_EQ(103, status);
 }
 
 /**

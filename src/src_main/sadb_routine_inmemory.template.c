@@ -85,10 +85,10 @@ int32_t sadb_config(void)
     sa[1].arsn = (uint8_t*) calloc(1, sa[1].arsn_len * sizeof(uint8_t));
     sa[1].arsnw_len = 1;
     sa[1].arsnw = 5;
-    sa[1].gvcid_tc_blk.tfvn = 0;
-    sa[1].gvcid_tc_blk.scid = SCID & 0x3FF;
-    sa[1].gvcid_tc_blk.vcid = 0;
-    sa[1].gvcid_tc_blk.mapid = TYPE_TC;
+    sa[1].gvcid_blk.tfvn = 0;
+    sa[1].gvcid_blk.scid = SCID & 0x3FF;
+    sa[1].gvcid_blk.vcid = 0;
+    sa[1].gvcid_blk.mapid = TYPE_TC;
 
     // SA 2 - KEYED;  ARSNW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 128
     sa[2].spi = 2;
@@ -132,7 +132,7 @@ int32_t sadb_config(void)
     // SA 4 VC0/1 is now 4-VC0, 7-VC1
     sa[4].spi = 4;
     sa[4].ekid = 130;
-    sa[4].sa_state = SA_KEYED;
+    sa[4].sa_state = SA_OPERATIONAL;
     sa[4].est = 1;
     sa[4].ast = 1;
     sa[4].ecs_len = 1;
@@ -148,10 +148,10 @@ int32_t sadb_config(void)
     sa[4].arsnw_len = 1;
     sa[4].arsnw = 5;
     sa[4].arsn_len = 0;
-    sa[4].gvcid_tc_blk.tfvn = 0;
-    sa[4].gvcid_tc_blk.scid = SCID & 0x3FF;
-    sa[4].gvcid_tc_blk.vcid = 0;
-    sa[4].gvcid_tc_blk.mapid = TYPE_TC;
+    sa[4].gvcid_blk.tfvn = 0;
+    sa[4].gvcid_blk.scid = SCID & 0x3FF;
+    sa[4].gvcid_blk.vcid = 4;
+    sa[4].gvcid_blk.mapid = TYPE_TC;
 
     // SA 5 - KEYED;   ARSNW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 131
     sa[5].spi = 5;
@@ -208,10 +208,10 @@ int32_t sadb_config(void)
     sa[7].arsnw_len = 1;
     sa[7].arsnw = 5;
     sa[7].arsn_len = (sa[7].arsnw * 2) + 1;
-    sa[7].gvcid_tc_blk.tfvn = 0;
-    sa[7].gvcid_tc_blk.scid = SCID & 0x3FF;
-    sa[7].gvcid_tc_blk.vcid = 1;
-    sa[7].gvcid_tc_blk.mapid = TYPE_TC;
+    sa[7].gvcid_blk.tfvn = 0;
+    sa[7].gvcid_blk.scid = SCID & 0x3FF;
+    sa[7].gvcid_blk.vcid = 1;
+    sa[7].gvcid_blk.mapid = TYPE_TC;
 
     // SA 8 - CLEAR MODE
     sa[8].spi = 8;
@@ -221,10 +221,10 @@ int32_t sadb_config(void)
     sa[8].arsn_len = 1;
     sa[8].arsnw_len = 1;
     sa[8].arsnw = 5;
-    sa[8].gvcid_tc_blk.tfvn = 0;
-    sa[8].gvcid_tc_blk.scid = SCID & 0x3FF;
-    sa[8].gvcid_tc_blk.vcid = 1;
-    sa[8].gvcid_tc_blk.mapid = TYPE_TC;
+    sa[8].gvcid_blk.tfvn = 0;
+    sa[8].gvcid_blk.scid = SCID & 0x3FF;
+    sa[8].gvcid_blk.vcid = 1;
+    sa[8].gvcid_blk.mapid = TYPE_TC;
 
     // SA 9 - Validation Tests
     sa[9].spi = 9;
@@ -241,10 +241,10 @@ int32_t sadb_config(void)
     sa[9].arsnw_len = 1;
     sa[9].arsnw = 5;
     sa[9].arsn_len = 0;
-    sa[9].gvcid_tc_blk.tfvn = 0;
-    sa[9].gvcid_tc_blk.scid = SCID & 0x3FF;
-    sa[9].gvcid_tc_blk.vcid = 0;
-    sa[9].gvcid_tc_blk.mapid = TYPE_TC;
+    sa[9].gvcid_blk.tfvn = 0;
+    sa[9].gvcid_blk.scid = SCID & 0x3FF;
+    sa[9].gvcid_blk.vcid = 0;
+    sa[9].gvcid_blk.mapid = TYPE_TC;
 
     // SA 10 - KEYED;  ARSNW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 130
     // SA 10 VC0/1 is now 4-VC0, 7-VC1
@@ -266,10 +266,10 @@ int32_t sadb_config(void)
     sa[10].arsnw_len = 1;
     sa[10].arsnw = 5;
     sa[10].arsn_len = 0;
-    sa[10].gvcid_tc_blk.tfvn = 0x00;
-    sa[10].gvcid_tc_blk.scid = 0x002C;
-    sa[10].gvcid_tc_blk.vcid = 1;
-    sa[10].gvcid_tc_blk.mapid = 0x00;
+    sa[10].gvcid_blk.tfvn = 0x00;
+    sa[10].gvcid_blk.scid = 0x002C;
+    sa[10].gvcid_blk.vcid = 1;
+    sa[10].gvcid_blk.mapid = TYPE_TC;
     sa[10].ek_ref="kmc/test/key130";
     
     // SA 11 - KEYED;  ARSNW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 130
@@ -293,11 +293,28 @@ int32_t sadb_config(void)
     sa[11].arsnw_len = 0;
     sa[11].arsnw = 5;
     sa[11].arsn_len = 0;
-    sa[11].gvcid_tc_blk.tfvn = 0;
-    sa[11].gvcid_tc_blk.scid = SCID & 0x3FF;
-    sa[11].gvcid_tc_blk.vcid = 0;
-    sa[11].gvcid_tc_blk.mapid = TYPE_TC;
+    sa[11].gvcid_blk.tfvn = 0;
+    sa[11].gvcid_blk.scid = SCID & 0x3FF;
+    sa[11].gvcid_blk.vcid = 0;
+    sa[11].gvcid_blk.mapid = TYPE_TC;
     sa[11].ek_ref="kmc/test/key130";
+
+    // SA 12 - TM CLEAR MODE
+    // SA 12
+    sa[12].spi = 12;
+    sa[12].sa_state = SA_OPERATIONAL;
+    sa[12].est = 0;
+    sa[12].ast = 0;
+    sa[12].shivf_len = 0;
+    sa[12].shsnf_len = 0;
+    sa[12].arsn_len = 0;
+    sa[12].arsn = (uint8_t*) calloc(1, sa[1].arsn_len * sizeof(uint8_t));
+    sa[12].arsnw_len = 0;
+    sa[12].arsnw = 5;
+    sa[12].gvcid_blk.tfvn = 0;
+    sa[12].gvcid_blk.scid = 44 & 0x3FF;
+    sa[12].gvcid_blk.vcid = 0;
+    sa[12].gvcid_blk.mapid = TYPE_TM;
 
     return status;
 }
@@ -369,14 +386,14 @@ static int32_t sadb_get_sa_from_spi(uint16_t spi, SecurityAssociation_t** securi
         return CRYPTO_LIB_ERR_NO_INIT;
     }
     *security_association = &sa[spi];
-    if (sa[spi].iv == NULL && (sa[spi].ast == 1 || sa[spi].est == 1))
+    if (sa[spi].iv == NULL && (sa[spi].shivf_len > 0) && crypto_config->cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
         return CRYPTO_LIB_ERR_NULL_IV;
     } // Must have IV if doing encryption or authentication
     if (sa[spi].abm == NULL && sa[spi].ast)
     {
         return CRYPTO_LIB_ERR_NULL_ABM;
-    } // Must have IV if doing encryption or authentication
+    } // Must have abm if doing authentication
 #ifdef SA_DEBUG
     printf(KYEL "DEBUG - Printing local copy of SA Entry for current SPI.\n" RESET);
     Crypto_saPrint(*security_association);
@@ -406,21 +423,22 @@ static int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, u
 
     for (i = 0; i < NUM_SA; i++)
     {
-        if ((sa[i].gvcid_tc_blk.tfvn == tfvn) && (sa[i].gvcid_tc_blk.scid == scid) &&
-            (sa[i].gvcid_tc_blk.vcid == vcid) && (sa[i].sa_state == SA_OPERATIONAL) &&
+        if ((sa[i].gvcid_blk.tfvn == tfvn) && (sa[i].gvcid_blk.scid == scid) &&
+            (sa[i].gvcid_blk.vcid == vcid) && (sa[i].sa_state == SA_OPERATIONAL) &&
             (crypto_config->unique_sa_per_mapid == TC_UNIQUE_SA_PER_MAP_ID_FALSE ||
-             sa[i].gvcid_tc_blk.mapid == mapid)) // only require MapID match is unique SA per MapID set (only relevant
-                                                 // when using segmentation hdrs)
+             sa[i].gvcid_blk.mapid == mapid))
+             // only require MapID match is unique SA per MapID set (only relevant
+             // when using segmentation hdrs)
         {
             *security_association = &sa[i];
-            if (sa[i].iv == NULL && (sa[i].ast == 1 || sa[i].est == 1))
+            if (sa[i].iv == NULL && (sa[i].ast == 1 || sa[i].est == 1) && crypto_config->cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
             {
                 return CRYPTO_LIB_ERR_NULL_IV;
             }
             if (sa[i].abm == NULL && sa[i].ast)
             {
                 return CRYPTO_LIB_ERR_NULL_ABM;
-            } // Must have IV if doing encryption or authentication
+            } // Must have ABM if doing authentication
 
 #ifdef SA_DEBUG
             printf("Valid operational SA found at index %d.\n", i);
@@ -443,45 +461,49 @@ static int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, u
             // Could possibly have more than one field mismatched,
             // ordering so the 'most accurate' SA's error is returned
             // (determined by matching header fields L to R)
-            if ((sa[i].gvcid_tc_blk.tfvn != tfvn) && (sa[i].gvcid_tc_blk.scid == scid) &&
-                (sa[i].gvcid_tc_blk.vcid == vcid) &&
-                (sa[i].gvcid_tc_blk.mapid == mapid && sa[i].sa_state == SA_OPERATIONAL))
+            if ((sa[i].gvcid_blk.tfvn != tfvn) && (sa[i].gvcid_blk.scid == scid) &&
+                (sa[i].gvcid_blk.vcid == vcid) &&
+                (sa[i].gvcid_blk.mapid == mapid && sa[i].sa_state == SA_OPERATIONAL))
             {
 #ifdef SA_DEBUG
                 printf(KRED "An operational SA was found - but mismatched tfvn.\n" RESET);
 #endif
                 status = CRYPTO_LIB_ERR_INVALID_TFVN;
             }
-            if ((sa[i].gvcid_tc_blk.tfvn == tfvn) && (sa[i].gvcid_tc_blk.scid != scid) &&
-                (sa[i].gvcid_tc_blk.vcid == vcid) &&
-                (sa[i].gvcid_tc_blk.mapid == mapid && sa[i].sa_state == SA_OPERATIONAL))
+            if ((sa[i].gvcid_blk.tfvn == tfvn) && (sa[i].gvcid_blk.scid != scid) &&
+                (sa[i].gvcid_blk.vcid == vcid) &&
+                (sa[i].gvcid_blk.mapid == mapid && sa[i].sa_state == SA_OPERATIONAL))
             {
 #ifdef SA_DEBUG
                 printf(KRED "An operational SA was found - but mismatched scid.\n" RESET);
+                printf(KRED "SA is %d\n", i);
+                printf(KRED "SCID is %d\n", scid);
+                printf(KRED "gvcid_blk SCID is %d\n", sa[i].gvcid_blk.scid);
 #endif
                 status = CRYPTO_LIB_ERR_INVALID_SCID;
             }
-            if ((sa[i].gvcid_tc_blk.tfvn == tfvn) && (sa[i].gvcid_tc_blk.scid == scid) &&
-                (sa[i].gvcid_tc_blk.vcid != vcid) &&
-                (sa[i].gvcid_tc_blk.mapid == mapid && sa[i].sa_state == SA_OPERATIONAL))
+            if ((sa[i].gvcid_blk.tfvn == tfvn) && (sa[i].gvcid_blk.scid == scid) &&
+                (sa[i].gvcid_blk.vcid != vcid) &&
+                (sa[i].gvcid_blk.mapid == mapid && sa[i].sa_state == SA_OPERATIONAL))
             {
 #ifdef SA_DEBUG
                 printf(KRED "An operational SA was found - but mismatched vcid.\n" RESET);
+                printf(KRED "SA is %d\n", i);
 #endif
                 status = CRYPTO_LIB_ERR_INVALID_VCID;
             }
-            if ((sa[i].gvcid_tc_blk.tfvn == tfvn) && (sa[i].gvcid_tc_blk.scid == scid) &&
-                (sa[i].gvcid_tc_blk.vcid == vcid) &&
-                (sa[i].gvcid_tc_blk.mapid != mapid && sa[i].sa_state == SA_OPERATIONAL))
+            if ((sa[i].gvcid_blk.tfvn == tfvn) && (sa[i].gvcid_blk.scid == scid) &&
+                (sa[i].gvcid_blk.vcid == vcid) &&
+                (sa[i].gvcid_blk.mapid != mapid && sa[i].sa_state == SA_OPERATIONAL))
             {
 #ifdef SA_DEBUG
                 printf(KRED "An operational SA was found - but mismatched mapid.\n" RESET);
 #endif
                 status = CRYPTO_LIB_ERR_INVALID_MAPID;
             }
-            if ((sa[i].gvcid_tc_blk.tfvn == tfvn) && (sa[i].gvcid_tc_blk.scid == scid) &&
-                (sa[i].gvcid_tc_blk.vcid == vcid) &&
-                (sa[i].gvcid_tc_blk.mapid == mapid && sa[i].sa_state != SA_OPERATIONAL))
+            if ((sa[i].gvcid_blk.tfvn == tfvn) && (sa[i].gvcid_blk.scid == scid) &&
+                (sa[i].gvcid_blk.vcid == vcid) &&
+                (sa[i].gvcid_blk.mapid == mapid && sa[i].sa_state != SA_OPERATIONAL))
             {
 #ifdef SA_DEBUG
                 printf(KRED "A valid but non-operational SA was found: SPI: %d.\n" RESET, sa[i].spi);
@@ -493,9 +515,10 @@ static int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, u
 #ifdef SA_DEBUG
             printf(KYEL "Incoming frame parameters:\n" RESET);
             printf(KYEL "\ttfvn %02X\n" RESET, tfvn);
-            printf(KYEL "\tscid %04X\n" RESET, scid);
-            printf(KYEL "\tvcid %02X\n" RESET, vcid);
+            printf(KYEL "\tscid %d\n" RESET, scid);
+            printf(KYEL "\tvcid %d\n" RESET, vcid);
             printf(KYEL "\tmapid %02X\n" RESET, mapid);
+            printf(KYEL "***FYI TM_SIZE set to %ld\n" RESET, TM_SIZE);
 #endif
     }
 
@@ -570,17 +593,17 @@ static int32_t sadb_sa_start(TC_t* tc_frame)
                 { // Clear all GVCIDs for provided SPI
                     if (gvcid.mapid == TYPE_TC)
                     {
-                        sa[spi].gvcid_tc_blk.tfvn = 0;
-                        sa[spi].gvcid_tc_blk.scid = 0;
-                        sa[spi].gvcid_tc_blk.vcid = 0;
-                        sa[spi].gvcid_tc_blk.mapid = 0;
+                        sa[spi].gvcid_blk.tfvn = 0;
+                        sa[spi].gvcid_blk.scid = 0;
+                        sa[spi].gvcid_blk.vcid = 0;
+                        sa[spi].gvcid_blk.mapid = 0;
                     }
                     // Write channel to SA
                     if (gvcid.mapid != TYPE_MAP)
                     { // TC
-                        sa[spi].gvcid_tc_blk.tfvn = gvcid.tfvn;
-                        sa[spi].gvcid_tc_blk.scid = gvcid.scid;
-                        sa[spi].gvcid_tc_blk.mapid = gvcid.mapid;
+                        sa[spi].gvcid_blk.tfvn = gvcid.tfvn;
+                        sa[spi].gvcid_blk.scid = gvcid.scid;
+                        sa[spi].gvcid_blk.mapid = gvcid.mapid;
                     }
                     else
                     {
@@ -588,25 +611,25 @@ static int32_t sadb_sa_start(TC_t* tc_frame)
                     }
                 }
                 // TM
-                if (gvcid.vcid != tm_frame.tm_header.vcid)
+                if (gvcid.vcid != tm_frame_pri_hdr.vcid) // TODO Check this tm_frame.tm_header.vcid)
                 { // Clear all GVCIDs for provided SPI
                     if (gvcid.mapid == TYPE_TM)
                     {
                         for (i = 0; i < NUM_GVCID; i++)
                         { // TM
-                            sa[spi].gvcid_tm_blk[x].tfvn = 0;
-                            sa[spi].gvcid_tm_blk[x].scid = 0;
-                            sa[spi].gvcid_tm_blk[x].vcid = 0;
-                            sa[spi].gvcid_tm_blk[x].mapid = 0;
+                            sa[spi].gvcid_blk.tfvn = 0;
+                            sa[spi].gvcid_blk.scid = 0;
+                            sa[spi].gvcid_blk.vcid = 0;
+                            sa[spi].gvcid_blk.mapid = 0;
                         }
                     }
                     // Write channel to SA
                     if (gvcid.mapid != TYPE_MAP)
                     { // TM
-                        sa[spi].gvcid_tm_blk[gvcid.vcid].tfvn = gvcid.tfvn;
-                        sa[spi].gvcid_tm_blk[gvcid.vcid].scid = gvcid.scid;
-                        sa[spi].gvcid_tm_blk[gvcid.vcid].vcid = gvcid.vcid;
-                        sa[spi].gvcid_tm_blk[gvcid.vcid].mapid = gvcid.mapid;
+                        sa[spi].gvcid_blk.tfvn = gvcid.tfvn; // Hope for the best
+                        sa[spi].gvcid_blk.scid = gvcid.scid; // Hope for the best
+                        sa[spi].gvcid_blk.vcid = gvcid.vcid; // Hope for the best
+                        sa[spi].gvcid_blk.mapid = gvcid.mapid; // Hope for the best
                     }
                     else
                     {
@@ -678,17 +701,17 @@ static int32_t sadb_sa_stop(void)
         if (sa[spi].sa_state == SA_OPERATIONAL)
         {
             // Remove all GVC/GMAP IDs
-            sa[spi].gvcid_tc_blk.tfvn = 0;
-            sa[spi].gvcid_tc_blk.scid = 0;
-            sa[spi].gvcid_tc_blk.vcid = 0;
-            sa[spi].gvcid_tc_blk.mapid = 0;
+            sa[spi].gvcid_blk.tfvn = 0;
+            sa[spi].gvcid_blk.scid = 0;
+            sa[spi].gvcid_blk.vcid = 0;
+            sa[spi].gvcid_blk.mapid = 0;
             for (x = 0; x < NUM_GVCID; x++)
             {
                 // TM
-                sa[spi].gvcid_tm_blk[x].tfvn = 0;
-                sa[spi].gvcid_tm_blk[x].scid = 0;
-                sa[spi].gvcid_tm_blk[x].vcid = 0;
-                sa[spi].gvcid_tm_blk[x].mapid = 0;
+                sa[spi].gvcid_blk.tfvn = 0; // TODO REVISIT
+                sa[spi].gvcid_blk.scid = 0; // TODO REVISIT
+                sa[spi].gvcid_blk.vcid = 0; // TODO REVISIT
+                sa[spi].gvcid_blk.mapid = 0; // TODO REVISIT
             }
 
             // Change to operational state

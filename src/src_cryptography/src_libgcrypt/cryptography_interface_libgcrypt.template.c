@@ -46,12 +46,12 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* aad, uint32_t aad_len,
                                          uint8_t ecs, uint8_t acs, char* cam_cookies);
 static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t len_data_out,
-                                         uint8_t* data_in, size_t len_data_in,
+                                         const uint8_t* data_in, const size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
                                          SecurityAssociation_t* sa_ptr,
-                                         uint8_t* iv, uint32_t iv_len,
-                                         uint8_t* mac, uint32_t mac_size,
-                                         uint8_t* aad, uint32_t aad_len,
+                                         const uint8_t* iv, uint32_t iv_len,
+                                         const uint8_t* mac, uint32_t mac_size,
+                                         const uint8_t* aad, uint32_t aad_len,
                                          uint8_t ecs, uint8_t acs, char* cam_cookies);
 static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
@@ -494,7 +494,7 @@ static int32_t cryptography_config(void)
     ek_ring[135].key_len = 32;
     ek_ring[135].key_state = KEY_DEACTIVATED;
 
-    // 136 - ef9f9284cf599eac3b119905a7d18851e7e374cf63aea04358586b0f757670f8
+    // 136 - ff9f9284cf599eac3b119905a7d18851e7e374cf63aea04358586b0f757670f9
     // Reference:
     // https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/mac/gcmtestvectors.zip
     ek_ring[136].value[0] = 0xff;
@@ -680,34 +680,36 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
     return status; 
 }
 static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t len_data_out,
-                                         uint8_t* data_in, size_t len_data_in,
-                                         uint8_t* key, uint32_t len_key,
-                                         SecurityAssociation_t* sa_ptr,
-                                         uint8_t* iv, uint32_t iv_len,
-                                         uint8_t* mac, uint32_t mac_size,
-                                         uint8_t* aad, uint32_t aad_len,
-                                         uint8_t ecs, uint8_t acs, char* cam_cookies)
+                                                    const uint8_t* data_in, const size_t len_data_in,
+                                                    uint8_t* key, uint32_t len_key,
+                                                    SecurityAssociation_t* sa_ptr,
+                                                    const uint8_t* iv, uint32_t iv_len,
+                                                    const uint8_t* mac, uint32_t mac_size,
+                                                    const uint8_t* aad, uint32_t aad_len,
+                                                    uint8_t ecs, uint8_t acs, char* cam_cookies)
 { 
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
     gcry_mac_hd_t tmp_mac_hd;
     int32_t status = CRYPTO_LIB_SUCCESS;
     uint8_t* key_ptr = key;
+    size_t len_in = len_data_in; // Unused
+    len_in = len_in;
     if(sa_ptr != NULL) //Using SA key pointer
     {
         key_ptr = &(ek_ring[sa_ptr->akid].value[0]);
     }
 
     // Need to copy the data over, since authentication won't change/move the data directly
+    // If you don't want data out, don't set a data out length
     if(data_out != NULL)
     {
-        memcpy(data_out, data_in, len_data_in);
+        memcpy(data_out, data_in, len_data_out);
     }
     else
     {
         return CRYPTO_LIB_ERR_NULL_BUFFER;
     }
     // Using to fix warning
-    len_data_out = len_data_out;
     ecs = ecs;
     cam_cookies = cam_cookies;
 
@@ -923,7 +925,7 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
 
 #ifdef TC_DEBUG
     size_t j;
-    printf("Input payload length is %ld\n", len_data_in);
+    printf("Input payload length is %ld\n", (long int) len_data_in);
     printf(KYEL "Printing Frame Data prior to encryption:\n\t");
     for (j = 0; j < len_data_in; j++)
     {
@@ -954,7 +956,7 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
     }
 
 #ifdef TC_DEBUG
-    printf("Output payload length is %ld\n", len_data_out);
+    printf("Output payload length is %ld\n", (long int) len_data_out);
     printf(KYEL "Printing TC Frame Data after encryption:\n\t");
     for (j = 0; j < len_data_out; j++)
     {
@@ -1016,8 +1018,16 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     {
         return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
     }
-
-    gcry_error = gcry_cipher_open(&(tmp_hd), algo, mode, GCRY_CIPHER_NONE);
+    
+    // TODO: Get Flag Functionality
+    if(mode == CRYPTO_CIPHER_AES256_CBC_MAC)
+    {
+        gcry_error = gcry_cipher_open(&(tmp_hd), algo, mode, GCRY_CIPHER_CBC_MAC);
+    }
+    else
+    {
+        gcry_error = gcry_cipher_open(&(tmp_hd), algo, mode, GCRY_CIPHER_NONE);
+    } 
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
@@ -1056,7 +1066,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
 
 #ifdef TC_DEBUG
     size_t j;
-    printf("Input payload length is %ld\n", len_data_in);
+    printf("Input payload length is %ld\n", (long int) len_data_in);
     printf(KYEL "Printing Frame Data prior to encryption:\n\t");
     for (j = 0; j < len_data_in; j++)
     {
@@ -1113,7 +1123,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     }
 
 #ifdef TC_DEBUG
-    printf("Output payload length is %ld\n", len_data_out);
+    printf("Output payload length is %ld\n", (long int) len_data_out);
     printf(KYEL "Printing TC Frame Data after encryption:\n\t");
     for (j = 0; j < len_data_out; j++)
     {
@@ -1432,6 +1442,9 @@ int32_t cryptography_get_ecs_algo(int8_t algo_enum)
         case CRYPTO_CIPHER_AES256_CBC:
             algo = GCRY_CIPHER_AES256;
             break;
+        case CRYPTO_CIPHER_AES256_CCM:
+            algo = GCRY_CIPHER_AES256;
+            break;
 
         default:
 #ifdef DEBUG
@@ -1458,6 +1471,12 @@ int32_t cryptography_get_ecs_mode(int8_t algo_enum)
             break;
         case CRYPTO_CIPHER_AES256_CBC:
             mode = GCRY_CIPHER_MODE_CBC;
+            break;
+        case CRYPTO_CIPHER_AES256_CBC_MAC:
+            mode = GCRY_CIPHER_MODE_CBC;
+            break;
+        case CRYPTO_CIPHER_AES256_CCM:
+            mode = GCRY_CIPHER_MODE_CCM;
             break;
 
         default:

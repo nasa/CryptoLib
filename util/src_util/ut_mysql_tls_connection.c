@@ -60,8 +60,20 @@ Password: <PASSWORD>
 #include "crypto_config_structs.h"
 #include <mysql/mysql.h>
 
+#include <mysql/mysql.h>
 
-int32_t Crypto_Init_Unit_Test_For_DB(void);
+#ifdef KMC_MDB_RH
+    #define CLIENT_CERTIFICATE "/certs/redhat-cert.pem"
+    #define CLIENT_CERTIFICATE_KEY "/certs/redhat-key.pem"
+#else
+    /* KMC_MDB_DB */
+    #define CLIENT_CERTIFICATE "/certs/debian-cert.pem"
+    #define CLIENT_CERTIFICATE_KEY "/certs/debian-key.pem"
+#endif
+
+
+
+int32_t Crypto_Init_TC_Unit_Test_For_DB(void);
 /*Attempting to test a connection similar to command line authentication: 
 mysql -u testuser1 -p -h asec-cmdenc-dev2.jpl.nasa.gov --ssl-ca=/etc/pki/tls/certs/ammos-ca-bundle.crt --ssl-verify-server-cert
 However using the MySQL's C API*/
@@ -88,7 +100,7 @@ UTEST(MARIA_DB_CONNECTION_TESTS, TLS_TEST) {
                                    ssl_capath, ssl_cert, ssl_key, client_key_password, mysql_username, password);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     /*Prepare SADB type from config*/
-    status = Crypto_Init_Unit_Test_For_DB();
+    status = Crypto_Init_TC_Unit_Test_For_DB();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     printf("END mariadb connection, TLS test() status:%d \n", status);
 }
@@ -98,7 +110,7 @@ UTEST(MARIA_DB_CONNECTION_TESTS, TLS_TEST) {
 /*
  * Note: SADB_TYPE_INMEMORY was change to SADB_TYPE_MARIADB for this test only. 
  */
-int32_t Crypto_Init_Unit_Test_For_DB(void) {
+int32_t Crypto_Init_TC_Unit_Test_For_DB(void) {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
     Crypto_Config_CryptoLib(SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,

@@ -60,38 +60,41 @@ void Crypto_tcPrint(TC_t* tc_frame)
  * Prints the current TM in memory.
  * @param tm_frame: TM_t*
  **/
+// TODO - START HERE WORK ON PRINT HERE
 void Crypto_tmPrint(TM_t* tm_frame)
 {
+    tm_frame = tm_frame;
     printf("Current TM in memory is: \n");
     printf("\t Header\n");
-    printf("\t\t tfvn   = 0x%01x \n", tm_frame->tm_header.tfvn);
-    printf("\t\t scid   = 0x%02x \n", tm_frame->tm_header.scid);
-    printf("\t\t vcid   = 0x%01x \n", tm_frame->tm_header.vcid);
-    printf("\t\t ocff   = 0x%01x \n", tm_frame->tm_header.ocff);
-    printf("\t\t mcfc   = 0x%02x \n", tm_frame->tm_header.mcfc);
-    printf("\t\t vcfc   = 0x%02x \n", tm_frame->tm_header.vcfc);
-    printf("\t\t tfsh   = 0x%01x \n", tm_frame->tm_header.tfsh);
-    printf("\t\t sf     = 0x%01x \n", tm_frame->tm_header.sf);
-    printf("\t\t pof    = 0x%01x \n", tm_frame->tm_header.pof);
-    printf("\t\t slid   = 0x%01x \n", tm_frame->tm_header.slid);
-    printf("\t\t fhp    = 0x%03x \n", tm_frame->tm_header.fhp);
-    // printf("\t\t tfshvn = 0x%01x \n", tm_frame.tm_header.tfshvn);
-    // printf("\t\t tfshlen= 0x%02x \n", tm_frame.tm_header.tfshlen);
-    printf("\t SDLS Header\n");
-    printf("\t\t spi    = 0x%04x \n", tm_frame->tm_sec_header.spi);
-    printf("\t\t iv[%d]  = 0x%02x \n", (IV_SIZE - 1), tm_frame->tm_sec_header.iv[IV_SIZE - 1]);
-    printf("\t Payload \n");
-    printf("\t\t data[0]= 0x%02x \n", tm_frame->tm_pdu[0]);
-    printf("\t\t data[1]= 0x%02x \n", tm_frame->tm_pdu[1]);
-    printf("\t\t data[2]= 0x%02x \n", tm_frame->tm_pdu[2]);
-    printf("\t\t data[3]= 0x%02x \n", tm_frame->tm_pdu[3]);
-    printf("\t\t data[4]= 0x%02x \n", tm_frame->tm_pdu[4]);
-    printf("\t SDLS Trailer\n");
-    printf("\t\t OCF[0] = 0x%02x \n", tm_frame->tm_sec_trailer.ocf[0]);
-    printf("\t\t OCF[1] = 0x%02x \n", tm_frame->tm_sec_trailer.ocf[1]);
-    printf("\t\t OCF[2] = 0x%02x \n", tm_frame->tm_sec_trailer.ocf[2]);
-    printf("\t\t OCF[3] = 0x%02x \n", tm_frame->tm_sec_trailer.ocf[3]);
-    printf("\t\t FECF   = 0x%02x \n", tm_frame->tm_sec_trailer.fecf);
+    printf("\t**** THIS IS BLANKED OUT CURRENTLY!!!!!!!***\n");
+    // printf("\t\t tfvn   = 0x%01x \n", tm_frame->tm_header.tfvn);
+    // printf("\t\t scid   = 0x%02x \n", tm_frame->tm_header.scid);
+    // printf("\t\t vcid   = 0x%01x \n", tm_frame->tm_header.vcid);
+    // printf("\t\t ocff   = 0x%01x \n", tm_frame->tm_header.ocff);
+    // printf("\t\t mcfc   = 0x%02x \n", tm_frame->tm_header.mcfc);
+    // printf("\t\t vcfc   = 0x%02x \n", tm_frame->tm_header.vcfc);
+    // printf("\t\t tfsh   = 0x%01x \n", tm_frame->tm_header.tfsh);
+    // printf("\t\t sf     = 0x%01x \n", tm_frame->tm_header.sf);
+    // printf("\t\t pof    = 0x%01x \n", tm_frame->tm_header.pof);
+    // printf("\t\t slid   = 0x%01x \n", tm_frame->tm_header.slid);
+    // printf("\t\t fhp    = 0x%03x \n", tm_frame->tm_header.fhp);
+    // // // printf("\t\t tfshvn = 0x%01x \n", tm_frame.tm_header.tfshvn);
+    // // // printf("\t\t tfshlen= 0x%02x \n", tm_frame.tm_header.tfshlen);
+    // printf("\t SDLS Header\n");
+    // printf("\t\t spi    = 0x%04x \n", tm_frame->tm_sec_header.spi);
+    // printf("\t\t iv[%d]  = 0x%02x \n", (IV_SIZE - 1), tm_frame->tm_sec_header.iv[IV_SIZE - 1]);
+    // printf("\t Payload \n");
+    // printf("\t\t data[0]= 0x%02x \n", tm_frame->tm_pdu[0]);
+    // printf("\t\t data[1]= 0x%02x \n", tm_frame->tm_pdu[1]);
+    // printf("\t\t data[2]= 0x%02x \n", tm_frame->tm_pdu[2]);
+    // printf("\t\t data[3]= 0x%02x \n", tm_frame->tm_pdu[3]);
+    // printf("\t\t data[4]= 0x%02x \n", tm_frame->tm_pdu[4]);
+    // printf("\t SDLS Trailer\n");
+    // printf("\t\t OCF[0] = 0x%02x \n", tm_frame->tm_sec_trailer.ocf[0]);
+    // printf("\t\t OCF[1] = 0x%02x \n", tm_frame->tm_sec_trailer.ocf[1]);
+    // printf("\t\t OCF[2] = 0x%02x \n", tm_frame->tm_sec_trailer.ocf[2]);
+    // printf("\t\t OCF[3] = 0x%02x \n", tm_frame->tm_sec_trailer.ocf[3]);
+    // printf("\t\t FECF   = 0x%02x \n", tm_frame->tm_sec_trailer.fecf);
     printf("\n");
 }
 
@@ -214,11 +217,14 @@ void Crypto_saPrint(SecurityAssociation_t* sa)
     {
         for (i = 0; i < sa->iv_len; i++)
         {
-            printf("\t iv[%d]     = 0x%02x \n", i, *(sa->iv + i));
+            printf("\t iv[%d]      = 0x%02x \n", i, *(sa->iv + i));
         }
     }
+    else{
+        printf("\t iv        = %s \n", sa->iv);
+    }
     printf("\t acs_len    = %d \n", sa->acs_len);
-    if (sa->ecs != NULL)
+    if (sa->acs != NULL)
     {
         for (i = 0; i < sa->acs_len; i++)
         {
@@ -256,9 +262,9 @@ void Crypto_saPrint(SecurityAssociation_t* sa)
  * @param c: void*, The hex to be printed.
  * @param n: size_t, The size of the array to be printed.
  **/
-void Crypto_hexprint(void* c, size_t n)
+void Crypto_hexprint(const void* c, size_t n)
 {
-    uint8_t* t = c;
+    const uint8_t* t = c;
     size_t idx = 0;
     if (c == NULL)
         return;
@@ -303,7 +309,8 @@ void Crypto_mpPrint(GvcidManagedParameters_t* managed_parameters, uint8_t print_
         printf("\t vcid: %d", managed_parameters->vcid);
         printf("\t has_fecf: %d", managed_parameters->has_fecf);
         printf("\t has_segmentation_headers: %d\n", managed_parameters->has_segmentation_hdr);
-        printf("\t max_tc_frame_size: %d\n", managed_parameters->max_tc_frame_size);
+        printf("\t max_frame_size: %d\n", managed_parameters->max_frame_size);
+        printf("\t TM has ocf %d\n", managed_parameters->has_ocf);
     }
     if (managed_parameters->next != NULL && print_children != 0)
     {

@@ -28,6 +28,9 @@ OPTION(KMCCRYPTO "KmcCrypto" OFF) # Disabled by default, enable with: -DKMCCRYPT
 OPTION(ENCTEST "Encryption-Tests" OFF) # Disabled by default, enable with: -DENCTEST=ON
 OPTION(CODECOV "Code-Coverage" OFF) # Disabled by default, enable with: -DCODECOV=ON
 OPTION(SYSTEM_INSTALL "SystemInstall" OFF) #Disabled by default, enable with: -DSYSTEM_INSTALL=ON
+OPTION(KMC_MDB_RH "KMC-MDB-RedHat-Integration-Testing" OFF) #Disabled by default, enable with: -DKMC_MDB_RH=ON
+OPTION(KMC_MDB_DB "KMC-MDB-Debian-Integration-Testing" OFF) #Disabled by default, enable with: -DKMC_MDB_DB=ON
+
 
 set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib")
 set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}/install)
@@ -50,12 +53,20 @@ IF(ENCTEST)
     ADD_DEFINITIONS(-DENCTEST)
 ENDIF(ENCTEST)
 
+IF(KMC_MDB_RH)
+    ADD_DEFINITIONS(-DKMC_MDB_RH)
+ENDIF(KMC_MDB_RH)
+
+IF(KMC_MDB_DB)
+    ADD_DEFINITIONS(-DKMC_MDB_DB)
+ENDIF(KMC_MDB_DB)
+
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     include(CTest)
     enable_testing()
 endif()
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror -g -O0")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -Wall -Wextra -Werror -g -O0")
 
 if(CODECOV)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage")
