@@ -134,8 +134,37 @@ int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char* 
         case CRYPTO_CMD_VCID:
             if (crypto_standalone_check_number_arguments(num_tokens, 1) == CRYPTO_LIB_SUCCESS)
             {
-                tc_vcid = (uint8_t) atoi(&tokens[0]);
-                printf("Changed active virtual channel (VCID) to %d \n", tc_vcid);
+                uint8_t vcid = (uint8_t) atoi(&tokens[0]);
+                /* Confirm new VCID valid */
+                if (vcid < 64)
+                {
+                    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+                    SecurityAssociation_t* test_association = NULL;
+                    sadb_routine->sadb_get_sa_from_spi(vcid, &test_association);
+                    
+                    /* Handle special case for VCID */
+                    if(vcid == 1)
+                    {
+                        printf("Special case for VCID 1! \n");
+                        vcid = 0;
+                    }
+
+                    if ((test_association->sa_state == SA_OPERATIONAL) &&
+                        (test_association->gvcid_blk.mapid == TYPE_TC) &&
+                        (test_association->gvcid_blk.scid == SCID))
+                    {
+                        tc_vcid = vcid;
+                        printf("Changed active virtual channel (VCID) to %d \n", tc_vcid);
+                    }
+                    else
+                    {
+                        printf("Error - virtual channel (VCID) %d is invalid! Sticking with prior vcid %d \n", vcid, tc_vcid);
+                    }
+                }
+                else
+                {
+                    printf("Error - virtual channl (VCID) %d must be less than 64! Sticking with prior vcid %d \n", vcid, tc_vcid);
+                }
             }
             break;
         

@@ -34,6 +34,9 @@ option(SYSTEM_INSTALL "SystemInstall" OFF)
 option(TEST "Test" OFF)
 option(TEST_ENC "Tests - Encryption" OFF)
 
+OPTION(KMC_MDB_RH "KMC-MDB-RedHat-Integration-Testing" OFF) #Disabled by default, enable with: -DKMC_MDB_RH=ON
+OPTION(KMC_MDB_DB "KMC-MDB-Debian-Integration-Testing" OFF) #Disabled by default, enable with: -DKMC_MDB_DB=ON
+
 #
 # Build Flag Logic
 #
@@ -45,6 +48,14 @@ if(DEBUG)
     add_definitions(-DDEBUG -DOCF_DEBUG -DFECF_DEBUG -DSA_DEBUG -DPDU_DEBUG -DCCSDS_DEBUG -DTC_DEBUG -DMAC_DEBUG -DTM_DEBUG)
     add_compile_options(-ggdb)
 endif()
+
+IF(KMC_MDB_RH)
+    ADD_DEFINITIONS(-DKMC_MDB_RH)
+ENDIF(KMC_MDB_RH)
+
+IF(KMC_MDB_DB)
+    ADD_DEFINITIONS(-DKMC_MDB_DB)
+ENDIF(KMC_MDB_DB)
 
 if(SYSTEM_INSTALL)
     set(CMAKE_INSTALL_PREFIX /usr/local)

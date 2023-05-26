@@ -1,43 +1,42 @@
-name: MDB Build
-
-on: 
-  push:
-    branches: [ main,dev ]
-  pull_request:
-
-jobs:
-  mariadb_build:
-    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
-    # You can convert this to a matrix build if you need cross-platform coverage.
-    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
-    container: rbrown00/cryptolib:latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Configure CMake
-        # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-        # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-        run: cmake -B /home/runner/work/CryptoLib/CryptoLib/build -DDEBUG=1 -DSA_MARIADB=1 -DCRYPTO_LIBGCRYPT=1 -DCRYPTO_KMC=0 -DTEST=1
-
-      - name: Build
-        # Build your program with the given configuration
-        run: cmake --build /home/runner/work/CryptoLib/CryptoLib/build 
-   
-      - name: Initailize SADB
-        #working-directory: /home/runner/work/CryptoLib/CryptoLib/build
-        #Maybe create a variable for this SQL location
-        run: |
-          cmake -B build -DDEBUG=1 -DSA_MARIADB=1 -DCRYPTO_LIBGCRYPT=1 -DCRYPTO_KMC=0 -DTEST=1
-          cmake --build build 
-          cd /__w/CryptoLib/CryptoLib/src/sa/sadb_mariadb_sql
-          /etc/init.d/mysql start
-          mysql --host=localhost -uroot -pitc123! < delete_sadb.sql
-          mysql --host=localhost -uroot -pitc123! < create_sadb.sql
-          cd /__w/CryptoLib/CryptoLib/src/sa/test_sadb_mariadb_sql
-          mysql --host=localhost -uroot -pitc123! < create_sadb_unit_test_user_grant_permissions.sql
-          mysql --host=localhost -uroot -pitc123! < create_sadb_jpl_unit_test_security_associations.sql
-          cd /__w/CryptoLib/CryptoLib/build/bin/
-          ./ut_mariadb
-         
-          
-    # mysql --host=localhost -uroot -pitc123! < create_sadb_unit_test_security_associations.sql
+# Disabling this test for now, as there is no local containerization.
+#name: MDB Build
+#
+#on: 
+#  push:
+#    branches: [ main,dev ]
+#  pull_request:
+#
+#jobs:
+#  mariadb_build:
+#    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
+#    # You can convert this to a matrix build if you need cross-platform coverage.
+#    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+#    runs-on: ubuntu-latest
+#    container: rbrown00/cryptolib:latest
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: Configure CMake
+#        # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+#        # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+#        run: cmake -B ${{github.workspace}}/build -DDEBUG=1 -DMYSQL=1 -DLIBGCRYPT=1 -DKMCCRYPTO=0
+#
+#      - name: Build
+#        # Build your program with the given configuration
+#        run: cmake --build ${{github.workspace}}/build 
+#   
+#      - name: Initailize SADB
+#        working-directory: ${{github.workspace}}/build
+#        #Maybe create a variable for this SQL location
+#        run: |
+#          cd /__w/CryptoLib/CryptoLib/src/crypto_sadb/sadb_mariadb_sql
+#          echo "----------------"
+#          /etc/init.d/mysql start
+#          mysql --host=localhost -uroot -pitc123! < delete_sadb.sql
+#          mysql --host=localhost -uroot -pitc123! < create_sadb.sql
+#          cd /__w/CryptoLib/CryptoLib/src/crypto_sadb/test_sadb_mariadb_sql
+#          mysql --host=localhost -uroot -pitc123! < create_sadb_unit_test_user_grant_permissions.sql
+#          mysql --host=localhost -uroot -pitc123! < create_sadb_jpl_unit_test_security_associations.sql
+#          cd /__w/CryptoLib/CryptoLib/build/bin
+#          ./ut_mariadb
+#          
+#    # mysql --host=localhost -uroot -pitc123! < create_sadb_unit_test_security_associations.sql

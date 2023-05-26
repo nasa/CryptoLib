@@ -60,6 +60,18 @@ Password: <PASSWORD>
 #include "crypto_config_structs.h"
 #include <mysql/mysql.h>
 
+#include <mysql/mysql.h>
+
+#ifdef KMC_MDB_RH
+    #define CLIENT_CERTIFICATE "/certs/redhat-cert.pem"
+    #define CLIENT_CERTIFICATE_KEY "/certs/redhat-key.pem"
+#else
+    /* KMC_MDB_DB */
+    #define CLIENT_CERTIFICATE "/certs/debian-cert.pem"
+    #define CLIENT_CERTIFICATE_KEY "/certs/debian-key.pem"
+#endif
+
+
 
 int32_t Crypto_Init_TC_Unit_Test_For_DB(void);
 /*Attempting to test a connection similar to command line authentication: 

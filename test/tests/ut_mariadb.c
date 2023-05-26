@@ -28,6 +28,15 @@
 #include "shared_util.h"
 #include <stdio.h>
 
+#ifdef KMC_MDB_RH
+    #define CLIENT_CERTIFICATE "/certs/redhat-cert.pem"
+    #define CLIENT_CERTIFICATE_KEY "/certs/redhat-key.pem"
+#else
+    /* KMC_MDB_DB */
+    #define CLIENT_CERTIFICATE "/certs/debian-cert.pem"
+    #define CLIENT_CERTIFICATE_KEY "/certs/debian-key.pem"
+#endif
+
 
 void cleanup_sa(SecurityAssociation_t* test_association)
 {
