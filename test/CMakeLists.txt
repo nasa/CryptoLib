@@ -113,11 +113,8 @@ if(TEST_ENC)
     endif()
 endif()
 
-aux_source_directory(core UTIL_SRC_FILES)
-aux_source_directory(tests APP_SRC_FILES) 
-
-file( GLOB SOURCE_FILES tests/*.c)
-foreach(SOURCE_PATH ${SOURCE_FILES})
+file( GLOB UNIT_FILES unit/*.c)
+foreach(SOURCE_PATH ${UNIT_FILES})
     get_filename_component(EXECUTABLE_NAME ${SOURCE_PATH} NAME_WE)
 
     if((NOT TEST_ENC) AND ${EXECUTABLE_NAME} STREQUAL et_dt_validation)
@@ -139,7 +136,24 @@ foreach(SOURCE_PATH ${SOURCE_FILES})
             COMMAND ${CMAKE_COMMAND} -E remove $<TARGET_FILE:${EXECUTABLE_NAME}>
             COMMENT "Created ${PROJECT_BINARY_DIR}/bin/${EXECUTABLE_NAME}"
             )
-endforeach(SOURCE_PATH ${SOURCE_FILES}) 
+endforeach(SOURCE_PATH ${UNIT_FILES}) 
+
+if(${KMC_MDB_RH} OR ${KMC_MDB_DB})
+    file( GLOB KMC_FILES kmc/*.c)
+    foreach(SOURCE_PATH ${KMC_FILES})
+        get_filename_component(EXECUTABLE_NAME ${SOURCE_PATH} NAME_WE)
+
+        add_executable(${EXECUTABLE_NAME} ${SOURCE_PATH}) 
+        target_sources(${EXECUTABLE_NAME} PRIVATE core/shared_util.c)
+        target_link_libraries(${EXECUTABLE_NAME} LINK_PUBLIC Crypto pthread)
+
+        add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${EXECUTABLE_NAME}> ${PROJECT_BINARY_DIR}/bin/${EXECUTABLE_NAME}
+                COMMAND ${CMAKE_COMMAND} -E remove $<TARGET_FILE:${EXECUTABLE_NAME}>
+                COMMENT "Created ${PROJECT_BINARY_DIR}/bin/${EXECUTABLE_NAME}"
+                )
+    endforeach(SOURCE_PATH ${KMC_FILES}) 
+endif()
 
 target_include_directories (Crypto PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
