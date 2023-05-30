@@ -49,6 +49,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
     uint8_t aad[1786];
     uint16_t aad_len = 0;
     int i = 0;
+    uint16_t data_loc;
     uint16_t idx = 0;
     uint8_t sa_service_type = -1;
     uint16_t pdu_len = -1;
@@ -67,9 +68,9 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         printf(KRED "Error: Input SA NULL! \n" RESET);
         return status; // Just return here, nothing can be done.
     }
-    status = Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, 
-                                                    tm_frame_pri_hdr.scid,
-                                                    tm_frame_pri_hdr.vcid, 
+    status = Crypto_Get_Managed_Parameters_For_Gvcid(((uint8_t)tm_frame[0] & 0xC0) >> 6, 
+                                                    (((uint16_t)tm_frame[0] & 0x3F) << 4) | (((uint16_t)tm_frame[1] & 0xF0) >> 4),
+                                                    ((uint8_t)tm_frame[1] & 0x0E) >> 1, 
                                                     gvcid_managed_parameters, &current_managed_parameters);
 
     if (crypto_config == NULL)
@@ -306,7 +307,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         /*
         ** ~~~Index currently at start of data field, AKA end of security header~~~
         */
-
+        data_loc = idx;
         // Calculate size of data to be encrypted
         pdu_len = current_managed_parameters->max_frame_size - idx - sa_ptr->stmacf_len;
         // Check other managed parameter flags, subtract their lengths from data field if present
@@ -402,10 +403,10 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
             if (sa_service_type == SA_ENCRYPTION)
                 {
                     status = cryptography_if->cryptography_encrypt(//Stub out data in/out as this is done in place and want to save cycles
-                                                                (uint8_t*)(&tm_frame[0]), // ciphertext output
-                                                                (size_t) 0, // length of data
-                                                                (uint8_t*)(&tm_frame[0]), // plaintext input
-                                                                (size_t)0, // in data length - from start of frame to end of data
+                                                                (uint8_t*)(&tm_frame[data_loc]), // ciphertext output
+                                                                (size_t) pdu_len, // length of data
+                                                                (uint8_t*)(&tm_frame[data_loc]), // plaintext input
+                                                                (size_t) pdu_len, // in data length - from start of frame to end of data
                                                                 NULL, // Using SA key reference, key is null
                                                                 Crypto_Get_ACS_Algo_Keylen(*sa_ptr->ecs),
                                                                 sa_ptr, // SA (for key reference)
