@@ -45,7 +45,7 @@ int32_t Crypto_Key_OTAR(void)
     int y;
     int32_t status = CRYPTO_LIB_SUCCESS;
     int pdu_keys = (sdls_frame.pdu.pdu_len - 30) / (2 + KEY_SIZE);
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* ek_ring = key_if->get_ek_ring();
     int w;
 
     if ( ek_ring == NULL )
@@ -179,7 +179,7 @@ int32_t Crypto_Key_update(uint8_t state)
     SDLS_KEY_BLK_t packet;
     int count = 0;
     int pdu_keys = sdls_frame.pdu.pdu_len / 2;
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* ek_ring = key_if->get_ek_ring();
     int x;
 
     if ( ek_ring == NULL )
@@ -287,7 +287,7 @@ int32_t Crypto_Key_inventory(uint8_t* ingest)
     SDLS_KEY_INVENTORY_t packet;
     int count = 0;
     uint16_t range = 0;
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* ek_ring = key_if->get_ek_ring();
     uint16_t x;
 
     if ( ek_ring == NULL || ingest == NULL)
@@ -363,7 +363,7 @@ int32_t Crypto_Key_verify(uint8_t* ingest, TC_t* tc_frame)
     sdls_frame.pdu.pdu_len = pdu_keys * (2 + IV_SIZE + CHALLENGE_SIZE + CHALLENGE_MAC_SIZE);
     sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
     count = Crypto_Prep_Reply(ingest, 128);
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* ek_ring = key_if->get_ek_ring();
     if ( ek_ring == NULL ) // Can't verify key without a key ring, action supported for this cryptography interface!
     {
         return CRYPTOGRAPHY_UNSUPPORTED_OPERATION_FOR_KEY_RING;

@@ -31,7 +31,6 @@ typedef struct
     // Cryptography Interface Initialization & Management Functions
     int32_t (*cryptography_config)(void);
     int32_t (*cryptography_init)(void);
-    crypto_key_t* (*get_ek_ring)(void);
     int32_t (*cryptography_shutdown)(void);
     // Cryptography Interface Functions
     int32_t (*cryptography_encrypt)(uint8_t* data_out, size_t len_data_out,
