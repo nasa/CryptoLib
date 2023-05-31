@@ -598,8 +598,8 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
 
             if(ecs_is_aead_algorithm == CRYPTO_TRUE)
             {
-                // Check that key length to be used is atleast as long as the algo requirement
-                if((int32_t) local_key_ring_ptr[sa_ptr->ekid].key_len > Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs))
+                // Check that key length to be used ets the algorithm requirement
+                if((int32_t) local_key_ring_ptr[sa_ptr->ekid].key_len != Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs))
                 {
                     free(aad);
                     return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
@@ -632,8 +632,8 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
                 // TODO - implement non-AEAD algorithm logic
                 if (sa_service_type == SA_ENCRYPTION)
                 {
-                    // Check that key length to be used is atleast as long as the algo requirement
-                    if((int32_t) local_key_ring_ptr[sa_ptr->ekid].key_len > Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs))
+                    // Check that key length to be used ets the algorithm requirement
+                    if((int32_t) local_key_ring_ptr[sa_ptr->ekid].key_len != Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs))
                     {
                         free(aad);
                         return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
@@ -658,8 +658,8 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
 
                 if (sa_service_type == SA_AUTHENTICATION)
                 {
-                    // Check that key length to be used is atleast as long as the algo requirement
-                    if((int32_t) local_key_ring_ptr[sa_ptr->akid].key_len > Crypto_Get_ACS_Algo_Keylen(*sa_ptr->acs))
+                    // Check that key length to be used ets the algorithm requirement
+                    if((int32_t) local_key_ring_ptr[sa_ptr->akid].key_len != Crypto_Get_ACS_Algo_Keylen(*sa_ptr->acs))
                     {
                         free(aad);
                         return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
@@ -1093,8 +1093,8 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
 
     if(sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_TRUE)
     {
-        // Check that key length to be used is atleast as long as the algo requirement
-        if((int32_t) local_key_ring_ptr[sa_ptr->ekid].key_len > Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs))
+        // Check that key length to be used ets the algorithm requirement
+        if((int32_t) local_key_ring_ptr[sa_ptr->ekid].key_len != Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs))
         {
             free(aad);
             return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
@@ -1126,8 +1126,8 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
         // TODO - implement non-AEAD algorithm logic
         if(sa_service_type == SA_AUTHENTICATION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
         {
-            // Check that key length to be used is atleast as long as the algo requirement
-            if((int32_t) local_key_ring_ptr[sa_ptr->akid].key_len > Crypto_Get_ACS_Algo_Keylen(*sa_ptr->acs))
+            // Check that key length to be used ets the algorithm requirement
+            if((int32_t) local_key_ring_ptr[sa_ptr->akid].key_len != Crypto_Get_ACS_Algo_Keylen(*sa_ptr->acs))
             {
                 free(aad);
                 return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
@@ -1153,8 +1153,8 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
         }
         if(sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
         {
-            // Check that key length to be used is atleast as long as the algo requirement
-            if((int32_t) local_key_ring_ptr[sa_ptr->ekid].key_len > Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs))
+            // Check that key length to be used ets the algorithm requirement
+            if((int32_t) local_key_ring_ptr[sa_ptr->ekid].key_len != Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs))
             {
                 free(aad);
                 return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
