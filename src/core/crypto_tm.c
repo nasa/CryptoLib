@@ -335,6 +335,9 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         }
 #endif
 
+        /* Get Key Ring */
+        crypto_key_t* local_key_ring_ptr = (crypto_key_t*) key_if->get_ek_ring;
+
         /*
         ** Begin Authentication / Encryption
         */
@@ -384,7 +387,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
                                                                 (size_t) 0, // length of data
                                                                 (uint8_t*)(&tm_frame[0]), // plaintext input
                                                                 (size_t)0, // in data length - from start of frame to end of data
-                                                                NULL, // Using SA key reference, key is null
+                                                                &(local_key_ring_ptr[sa_ptr->ekid].value[0]), // Key
                                                                 Crypto_Get_ACS_Algo_Keylen(*sa_ptr->acs),
                                                                 sa_ptr, // SA (for key reference)
                                                                 sa_ptr->iv, // IV
@@ -651,7 +654,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
                                                            (size_t)pdu_len,            // length of data
                                                            &(tempTM[pdu_loc]), // plaintext input
                                                            (size_t)pdu_len,             // in data length
-                                                           NULL, // Key is mapped via SA
+                                                           &(local_key_ring_ptr[sa_ptr->ekid].value[0]), // Key
                                                            KEY_SIZE,
                                                            sa_ptr,
                                                            sa_ptr->iv,
@@ -1009,6 +1012,9 @@ int32_t Crypto_TM_ProcessSecurity(const uint8_t* p_ingest, const uint16_t len_in
     // this will be over-written by decryption functions if necessary,
     // but not by authentication which requires
 
+    /* Get Key Ring */
+    crypto_key_t* local_key_ring_ptr = (crypto_key_t*) key_if->get_ek_ring;
+
     /*
     ** Begin Authentication / Encryption
     */
@@ -1044,7 +1050,7 @@ int32_t Crypto_TM_ProcessSecurity(const uint8_t* p_ingest, const uint16_t len_in
                                                             pdu_len, // length of data
                                                             p_ingest+byte_idx, // ciphertext input
                                                             pdu_len, // in data length
-                                                            NULL, // Key
+                                                            &(local_key_ring_ptr[sa_ptr->ekid].value[0]), // Key
                                                             Crypto_Get_ACS_Algo_Keylen(*sa_ptr->acs),
                                                             sa_ptr, // SA for key reference
                                                             p_ingest+iv_loc, // IV
@@ -1063,7 +1069,7 @@ int32_t Crypto_TM_ProcessSecurity(const uint8_t* p_ingest, const uint16_t len_in
             //                                                 (size_t)(tc_sdls_processed_frame->tc_pdu_len),   // length of data
             //                                                 &(ingest[tc_enc_payload_start_index]), // ciphertext input
             //                                                 (size_t)(tc_sdls_processed_frame->tc_pdu_len),    // in data length
-            //                                                 NULL, // Key
+            //                                                 &(local_key_ring_ptr[sa_ptr->ekid].value[0]), // Key
             //                                                 Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs),
             //                                                 sa_ptr, // SA for key reference
             //                                                 tc_sdls_processed_frame->tc_sec_header.iv, // IV

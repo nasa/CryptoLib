@@ -137,6 +137,8 @@ int32_t Crypto_Init(void)
     {
         key_if = get_key_interface_kmc();
     }
+    key_if->key_init();
+    // TODO: Check and return status on error
 
     /* SA Interface */
     // Prepare SADB type from config
@@ -243,6 +245,11 @@ int32_t Crypto_Shutdown(void)
     {
         Crypto_Free_Managed_Parameters(gvcid_managed_parameters);
         gvcid_managed_parameters = NULL;
+    }
+
+    if(key_if != NULL)
+    {
+        key_if->key_shutdown();
     }
 
     if (sadb_routine != NULL)

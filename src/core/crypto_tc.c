@@ -551,6 +551,9 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
         index -= tf_payload_len;
         tf_payload_len += pkcs_padding;
 
+        /* Get Key Ring */
+        crypto_key_t* local_key_ring_ptr = (crypto_key_t*) key_if->get_ek_ring;
+
         /*
         ** Begin Authentication / Encryption
         */
@@ -600,7 +603,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
                                                                     //&p_new_enc_frame[index],                                      // length of data
                                                                     (uint8_t*)(p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), // plaintext input
                                                                     (size_t)tf_payload_len,                                         // in data length
-                                                                    NULL, // Using SA key reference, key is null
+                                                                    &(local_key_ring_ptr[sa_ptr->ekid].value[0]), // Key
                                                                     Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs), // Length of key derived from sa_ptr key_ref
                                                                     sa_ptr, // SA (for key reference)
                                                                     sa_ptr->iv, // IV
@@ -628,7 +631,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
                                                                     //(uint8_t*)(p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), // plaintext input
                                                                     (size_t)tf_payload_len,                                         // in data length
                                                                     //new_frame_length,
-                                                                    NULL, // Using SA key reference, key is null
+                                                                    &(local_key_ring_ptr[sa_ptr->ekid].value[0]), // Key
                                                                     Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs), // Length of key derived from sa_ptr key_ref
                                                                     sa_ptr, // SA (for key reference)
                                                                     sa_ptr->iv, // IV
@@ -636,7 +639,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
                                                                     sa_ptr->ecs, // encryption cipher
                                                                     pkcs_padding,
                                                                     cam_cookies
-                );
+                    );
                 }
 
                 if (sa_service_type == SA_AUTHENTICATION)
@@ -645,7 +648,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
                                                                 (size_t)tf_payload_len,                                        // length of data
                                                                 (uint8_t*)(p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), // plaintext input
                                                                 (size_t)tf_payload_len,                                         // in data length
-                                                                NULL, // Using SA key reference, key is null
+                                                                &(local_key_ring_ptr[sa_ptr->akid].value[0]), // Key
                                                                 Crypto_Get_ACS_Algo_Keylen(*sa_ptr->acs),
                                                                 sa_ptr, // SA (for key reference)
                                                                 sa_ptr->iv, // IV
@@ -1063,6 +1066,9 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
 #ifdef DEBUG
     printf(KYEL "TC PDU Calculated Length: %d \n" RESET, tc_sdls_processed_frame->tc_pdu_len);
 #endif
+    
+    /* Get Key Ring */
+    crypto_key_t* local_key_ring_ptr = (crypto_key_t*) key_if->get_ek_ring;
 
     if(sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_TRUE)
     {
@@ -1070,7 +1076,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
                                                             (size_t)(tc_sdls_processed_frame->tc_pdu_len),   // length of data
                                                             &(ingest[tc_enc_payload_start_index]), // ciphertext input
                                                             (size_t)(tc_sdls_processed_frame->tc_pdu_len),    // in data length
-                                                            NULL, // Key
+                                                            &(local_key_ring_ptr[sa_ptr->ekid].value[0]), // Key
                                                             Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs),
                                                             sa_ptr, // SA for key reference
                                                             tc_sdls_processed_frame->tc_sec_header.iv, // IV
@@ -1096,7 +1102,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
                                                             (size_t)(tc_sdls_processed_frame->tc_pdu_len),   // length of data
                                                             &(ingest[tc_enc_payload_start_index]), // ciphertext input
                                                             (size_t)(tc_sdls_processed_frame->tc_pdu_len),    // in data length
-                                                            NULL, // Key
+                                                            &(local_key_ring_ptr[sa_ptr->akid].value[0]), // Key
                                                             Crypto_Get_ACS_Algo_Keylen(*sa_ptr->acs),
                                                             sa_ptr, // SA for key reference
                                                             tc_sdls_processed_frame->tc_sec_header.iv, // IV
@@ -1116,7 +1122,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
                                                             (size_t)(tc_sdls_processed_frame->tc_pdu_len),   // length of data
                                                             &(ingest[tc_enc_payload_start_index]), // ciphertext input
                                                             (size_t)(tc_sdls_processed_frame->tc_pdu_len),    // in data length
-                                                            NULL, // Key
+                                                            &(local_key_ring_ptr[sa_ptr->ekid].value[0]), // Key
                                                             Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs),
                                                             sa_ptr, // SA for key reference
                                                             tc_sdls_processed_frame->tc_sec_header.iv, // IV

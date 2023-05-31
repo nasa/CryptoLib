@@ -135,6 +135,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
     int32_t status = CRYPTO_LIB_SUCCESS;
     uint8_t* key_ptr = key;
 
+    sa_ptr = sa_ptr; // Unused in this implementation
     /*
     if(sa_ptr != NULL) //Using SA key pointer
     {
@@ -259,6 +260,8 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     uint8_t* key_ptr = key;
     size_t len_in = len_data_in; // Unused
     len_in = len_in;
+
+    sa_ptr = sa_ptr; // Unused in this implementation
     /*
     if(sa_ptr != NULL) //Using SA key pointer
     {
@@ -423,6 +426,7 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
     padding = padding;
     cam_cookies = cam_cookies;
 
+    sa_ptr = sa_ptr; // Unused in this implementation
     /*
     if(sa_ptr != NULL) //Using SA key pointer
     {
@@ -561,6 +565,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     acs = acs;
     cam_cookies = cam_cookies;
 
+    sa_ptr = sa_ptr; // Unused in this implementation
     /*
     if(sa_ptr != NULL) //Using SA key pointer
     {
@@ -755,6 +760,7 @@ static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
     acs = acs;
     cam_cookies = cam_cookies;
 
+    sa_ptr = sa_ptr; // Unused in this implementation
     /*
     if(sa_ptr != NULL) //Using SA key pointer
     {
@@ -857,6 +863,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
     acs = acs;
     cam_cookies = cam_cookies;
 
+    sa_ptr = sa_ptr; // Unused in this implementation
     /*
     if(sa_ptr != NULL) //Using SA key pointer
     {
