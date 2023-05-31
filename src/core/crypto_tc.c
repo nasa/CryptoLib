@@ -552,7 +552,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
         tf_payload_len += pkcs_padding;
 
         /* Get Key Ring */
-        crypto_key_t* local_key_ring_ptr = (crypto_key_t*) key_if->get_ek_ring;
+        crypto_key_t* local_key_ring_ptr = key_if->get_ek_ring();
 
         /*
         ** Begin Authentication / Encryption
@@ -598,6 +598,13 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
 
             if(ecs_is_aead_algorithm == CRYPTO_TRUE)
             {
+                // Check that key length to be used is atleast as long as the algo requirement
+                if((int32_t) local_key_ring_ptr[sa_ptr->ekid].key_len > Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs))
+                {
+                    free(aad);
+                    return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
+                }
+
                 status = cryptography_if->cryptography_aead_encrypt(&p_new_enc_frame[index],                               // ciphertext output
                                                                     (size_t)tf_payload_len,  
                                                                     //&p_new_enc_frame[index],                                      // length of data
@@ -625,6 +632,13 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
                 // TODO - implement non-AEAD algorithm logic
                 if (sa_service_type == SA_ENCRYPTION)
                 {
+                    // Check that key length to be used is atleast as long as the algo requirement
+                    if((int32_t) local_key_ring_ptr[sa_ptr->ekid].key_len > Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs))
+                    {
+                        free(aad);
+                        return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
+                    }
+
                     status = cryptography_if->cryptography_encrypt(&p_new_enc_frame[index],                               // ciphertext output
                                                                     (size_t)tf_payload_len,  
                                                                     &p_new_enc_frame[index],                                      // length of data
@@ -644,6 +658,13 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
 
                 if (sa_service_type == SA_AUTHENTICATION)
                 {
+                    // Check that key length to be used is atleast as long as the algo requirement
+                    if((int32_t) local_key_ring_ptr[sa_ptr->akid].key_len > Crypto_Get_ACS_Algo_Keylen(*sa_ptr->acs))
+                    {
+                        free(aad);
+                        return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
+                    }
+                    
                     status = cryptography_if->cryptography_authenticate(&p_new_enc_frame[index],                               // ciphertext output
                                                                 (size_t)tf_payload_len,                                        // length of data
                                                                 (uint8_t*)(p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), // plaintext input
@@ -1068,10 +1089,17 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
 #endif
     
     /* Get Key Ring */
-    crypto_key_t* local_key_ring_ptr = (crypto_key_t*) key_if->get_ek_ring;
+    crypto_key_t* local_key_ring_ptr = key_if->get_ek_ring();
 
     if(sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_TRUE)
     {
+        // Check that key length to be used is atleast as long as the algo requirement
+        if((int32_t) local_key_ring_ptr[sa_ptr->ekid].key_len > Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs))
+        {
+            free(aad);
+            return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
+        }
+
         status = cryptography_if->cryptography_aead_decrypt(tc_sdls_processed_frame->tc_pdu,       // plaintext output
                                                             (size_t)(tc_sdls_processed_frame->tc_pdu_len),   // length of data
                                                             &(ingest[tc_enc_payload_start_index]), // ciphertext input
@@ -1098,6 +1126,13 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
         // TODO - implement non-AEAD algorithm logic
         if(sa_service_type == SA_AUTHENTICATION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
         {
+            // Check that key length to be used is atleast as long as the algo requirement
+            if((int32_t) local_key_ring_ptr[sa_ptr->akid].key_len > Crypto_Get_ACS_Algo_Keylen(*sa_ptr->acs))
+            {
+                free(aad);
+                return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
+            }
+
             status = cryptography_if->cryptography_validate_authentication(tc_sdls_processed_frame->tc_pdu,       // plaintext output
                                                             (size_t)(tc_sdls_processed_frame->tc_pdu_len),   // length of data
                                                             &(ingest[tc_enc_payload_start_index]), // ciphertext input
@@ -1118,6 +1153,13 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
         }
         if(sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
         {
+            // Check that key length to be used is atleast as long as the algo requirement
+            if((int32_t) local_key_ring_ptr[sa_ptr->ekid].key_len > Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs))
+            {
+                free(aad);
+                return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
+            }
+            
             status = cryptography_if->cryptography_decrypt(tc_sdls_processed_frame->tc_pdu,       // plaintext output
                                                             (size_t)(tc_sdls_processed_frame->tc_pdu_len),   // length of data
                                                             &(ingest[tc_enc_payload_start_index]), // ciphertext input

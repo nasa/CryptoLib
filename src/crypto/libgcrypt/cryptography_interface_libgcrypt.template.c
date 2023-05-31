@@ -136,12 +136,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
     uint8_t* key_ptr = key;
 
     sa_ptr = sa_ptr; // Unused in this implementation
-    /*
-    if(sa_ptr != NULL) //Using SA key pointer
-    {
-        key_ptr = &(ek_ring[sa_ptr->akid].value[0]);
-    }
-    */
+
     // Need to copy the data over, since authentication won't change/move the data directly
     if(data_out != NULL)
     {
@@ -162,14 +157,6 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
     {
         return CRYPTO_LIB_ERR_UNSUPPORTED_ACS;
     }
-
-    // Check that key length to be used is atleast as long as the algo requirement
-    /*
-    if (sa_ptr != NULL && len_key > ek_ring[sa_ptr->akid].key_len)
-    {
-        return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
-    }
-    */
 
     gcry_error = gcry_mac_open(&(tmp_mac_hd), algo, GCRY_MAC_FLAG_SECURE, NULL);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
@@ -262,12 +249,6 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     len_in = len_in;
 
     sa_ptr = sa_ptr; // Unused in this implementation
-    /*
-    if(sa_ptr != NULL) //Using SA key pointer
-    {
-        key_ptr = &(ek_ring[sa_ptr->akid].value[0]);
-    }
-    */
 
     // Need to copy the data over, since authentication won't change/move the data directly
     // If you don't want data out, don't set a data out length
@@ -289,14 +270,6 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     {
         return CRYPTO_LIB_ERR_UNSUPPORTED_ACS;
     }
-
-    // Check that key length to be used is atleast as long as the algo requirement
-    /*
-    if (sa_ptr != NULL && len_key > ek_ring[sa_ptr->akid].key_len)
-    {
-        return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
-    }
-    */
 
     gcry_error = gcry_mac_open(&(tmp_mac_hd), algo, GCRY_MAC_FLAG_SECURE, NULL);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
@@ -427,12 +400,6 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
     cam_cookies = cam_cookies;
 
     sa_ptr = sa_ptr; // Unused in this implementation
-    /*
-    if(sa_ptr != NULL) //Using SA key pointer
-    {
-        key_ptr = &(ek_ring[sa_ptr->ekid].value[0]);
-    }
-    */
 
     // Select correct libgcrypt algorith enum
     int32_t algo = -1;
@@ -453,14 +420,6 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
     int32_t mode = -1;
     mode = cryptography_get_ecs_mode(*ecs);
     if (mode == CRYPTO_LIB_ERR_UNSUPPORTED_MODE) return CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
-
-    // Check that key length to be used is atleast as long as the algo requirement
-    /*
-    if (sa_ptr != NULL && len_key > ek_ring[sa_ptr->ekid].key_len)
-    {
-        return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
-    }
-    */
 
     gcry_error = gcry_cipher_open(&(tmp_hd), algo, mode, GCRY_CIPHER_NONE);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
@@ -566,12 +525,6 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     cam_cookies = cam_cookies;
 
     sa_ptr = sa_ptr; // Unused in this implementation
-    /*
-    if(sa_ptr != NULL) //Using SA key pointer
-    {
-        key_ptr = &(ek_ring[sa_ptr->ekid].value[0]);
-    }
-    */
 
     // Select correct libgcrypt ecs enum
     int32_t algo = -1;
@@ -592,14 +545,6 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     int32_t mode = -1;
     mode = cryptography_get_ecs_mode(*ecs);
     if (mode == CRYPTO_LIB_ERR_UNSUPPORTED_ECS_MODE) return CRYPTO_LIB_ERR_UNSUPPORTED_ECS_MODE;
-
-    // Check that key length to be used is atleast as long as the algo requirement
-    /*
-    if (sa_ptr != NULL && len_key > ek_ring[sa_ptr->ekid].key_len)
-    {
-        return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
-    }
-    */
     
     // TODO: Get Flag Functionality
     if(mode == CRYPTO_CIPHER_AES256_CBC_MAC)
@@ -761,12 +706,6 @@ static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
     cam_cookies = cam_cookies;
 
     sa_ptr = sa_ptr; // Unused in this implementation
-    /*
-    if(sa_ptr != NULL) //Using SA key pointer
-    {
-        key_ptr = &(ek_ring[sa_ptr->ekid].value[0]);
-    }
-    */
 
     // Select correct libgcrypt ecs enum
     int32_t algo = -1;
@@ -787,14 +726,6 @@ static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
     int32_t mode = -1;
     mode = cryptography_get_ecs_mode(*ecs);
     if (mode == CRYPTO_LIB_ERR_UNSUPPORTED_MODE) return CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
-
-    // Check that key length to be used is atleast as long as the algo requirement
-    /*
-    if (sa_ptr != NULL && len_key > ek_ring[sa_ptr->ekid].key_len)
-    {
-        return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
-    }
-    */
 
     gcry_error = gcry_cipher_open(&(tmp_hd), algo, mode, GCRY_CIPHER_NONE);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
@@ -864,12 +795,6 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
     cam_cookies = cam_cookies;
 
     sa_ptr = sa_ptr; // Unused in this implementation
-    /*
-    if(sa_ptr != NULL) //Using SA key pointer
-    {
-        key_ptr = &(ek_ring[sa_ptr->ekid].value[0]);
-    }
-    */
 
     // Select correct libgcrypt ecs enum
     int32_t algo = -1;
@@ -885,14 +810,6 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
     {
         return CRYPTO_LIB_ERR_NULL_ECS_PTR;
     }
-
-    // Check that key length to be used is atleast as long as the algo requirement
-    /*
-    if (sa_ptr != NULL && len_key > ek_ring[sa_ptr->ekid].key_len)
-    {
-        return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
-    }
-    */
 
     gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_NONE);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)

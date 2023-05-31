@@ -467,6 +467,10 @@ static int32_t key_init(void)
     ek_ring[136].key_len = 32;
     ek_ring[136].key_state = KEY_DEACTIVATED;
 
+    #ifdef DEBUG
+        printf(KGRN "Key internal interface intialized \n" RESET);
+    #endif
+
     return status;
 }
 
