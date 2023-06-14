@@ -201,11 +201,11 @@ void Crypto_saPrint(SecurityAssociation_t* sa)
     printf("\t shplf_len  = %d \n", sa->shplf_len);
     printf("\t stmacf_len = %d \n", sa->stmacf_len);
     printf("\t ecs_len    = %d \n", sa->ecs_len);
-    if (sa->ecs != NULL)
+    if (sa->ecs_len > 0)
     {
         for (i = 0; i < sa->ecs_len; i++)
         {
-            printf("\t ecs[%d]     = 0x%02x \n", i, *(sa->ecs + i));
+            printf("\t ecs[%d]     = 0x%02x \n", i, (sa->ecs + i));
         }
     }
     printf("\t ekid       = %d \n", sa->ekid);
@@ -213,7 +213,7 @@ void Crypto_saPrint(SecurityAssociation_t* sa)
     printf("\t akid       = %d \n", sa->akid);
     printf("\t ak_ref     = %s \n", sa->ak_ref);
     printf("\t iv_len     = %d \n", sa->shivf_len);
-    if (sa->iv != NULL)
+    if (sa->iv_len > 0)
     {
         for (i = 0; i < sa->iv_len; i++)
         {
@@ -224,15 +224,9 @@ void Crypto_saPrint(SecurityAssociation_t* sa)
         printf("\t iv        = %s \n", sa->iv);
     }
     printf("\t acs_len    = %d \n", sa->acs_len);
-    if (sa->acs != NULL)
-    {
-        for (i = 0; i < sa->acs_len; i++)
-        {
-            printf("\t acs[%d]     = 0x%02x \n", i, *(sa->acs + i));
-        }
-    }
+    printf("\t acs        = 0x%02x \n", sa->acs);
     printf("\t abm_len    = %d \n", sa->abm_len);
-    if (sa->abm != NULL)
+    if (sa->abm_len > 0)
     {
         printf("\t abm        = ");
         for (i = 0; i < sa->abm_len; i++)
@@ -242,7 +236,7 @@ void Crypto_saPrint(SecurityAssociation_t* sa)
         printf("\n");
     }
     printf("\t arsn_len    = %d \n", sa->arsn_len);
-    if (sa->arsn != NULL)
+    if (sa->arsn_len > 0)
     {
         printf("\t arsn        = ");
         for (i = 0; i < sa->arsn_len; i++)

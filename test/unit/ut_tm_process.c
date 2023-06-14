@@ -241,18 +241,13 @@ UTEST(TM_PROCESS_SECURITY, SECONDARY_HDR_PRESENT_MAC)
     sa_ptr->shivf_len = 0;
     sa_ptr->iv_len = 0;
     sa_ptr->shsnf_len = 0;
-    sa_ptr->arsn = 0;
     sa_ptr->arsn_len = 0;
-    sa_ptr->arsn = NULL;
     sa_ptr->abm_len = 1786;
-    sa_ptr->abm = (uint8_t* )calloc(1, sa_ptr->abm_len * sizeof(uint8_t));
     memset(sa_ptr->abm, 0xFF, (sa_ptr->abm_len * sizeof(uint8_t))); // Bitmask
     sa_ptr->stmacf_len = 16;
     sa_ptr->sa_state = SA_OPERATIONAL;
-    sa_ptr->ecs = calloc(1, sa_ptr->ecs_len * sizeof(uint8_t));
-    *sa_ptr->ecs = CRYPTO_CIPHER_NONE;
-    sa_ptr->acs = calloc(1, sa_ptr->acs_len * sizeof(uint8_t));
-    *sa_ptr->acs = CRYPTO_MAC_CMAC_AES256;
+    sa_ptr->ecs = CRYPTO_CIPHER_NONE;
+    sa_ptr->acs = CRYPTO_MAC_CMAC_AES256;
     sa_ptr->ekid = 0;
     sa_ptr->akid = 136;
 
@@ -320,18 +315,13 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_0)
     sa_ptr->shivf_len = 0;
     sa_ptr->iv_len = 0;
     sa_ptr->shsnf_len = 0;
-    sa_ptr->arsn = 0;
     sa_ptr->arsn_len = 0;
-    sa_ptr->arsn = NULL;
     sa_ptr->abm_len = 1786;
-    sa_ptr->abm = (uint8_t* )calloc(1, sa_ptr->abm_len * sizeof(uint8_t));
     memset(sa_ptr->abm, 0x00, (sa_ptr->abm_len * sizeof(uint8_t))); // Bitmask
     sa_ptr->stmacf_len = 16;
     sa_ptr->sa_state = SA_OPERATIONAL;
-    sa_ptr->ecs = calloc(1, sa_ptr->ecs_len * sizeof(uint8_t));
-    *sa_ptr->ecs = CRYPTO_CIPHER_NONE;
-    sa_ptr->acs = calloc(1, sa_ptr->acs_len * sizeof(uint8_t));
-    *sa_ptr->acs = CRYPTO_MAC_CMAC_AES256;
+    sa_ptr->ecs = CRYPTO_CIPHER_NONE;
+    sa_ptr->acs = CRYPTO_MAC_CMAC_AES256;
     sa_ptr->ekid = 0;
     sa_ptr->akid = 136;
 
@@ -417,18 +407,13 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_1)
     sa_ptr->shivf_len = 0;
     sa_ptr->iv_len = 0;
     sa_ptr->shsnf_len = 0;
-    sa_ptr->arsn = 0;
     sa_ptr->arsn_len = 0;
-    sa_ptr->arsn = NULL;
     sa_ptr->abm_len = 1786;
-    sa_ptr->abm = (uint8_t* )calloc(1, sa_ptr->abm_len * sizeof(uint8_t));
     memset(sa_ptr->abm, 0xFF, (sa_ptr->abm_len * sizeof(uint8_t))); // Bitmask
     sa_ptr->stmacf_len = 16;
     sa_ptr->sa_state = SA_OPERATIONAL;
-    sa_ptr->ecs = calloc(1, sa_ptr->ecs_len * sizeof(uint8_t));
-    *sa_ptr->ecs = CRYPTO_CIPHER_NONE;
-    sa_ptr->acs = calloc(1, sa_ptr->acs_len * sizeof(uint8_t));
-    *sa_ptr->acs = CRYPTO_MAC_CMAC_AES256;
+    sa_ptr->ecs = CRYPTO_CIPHER_NONE;
+    sa_ptr->acs = CRYPTO_MAC_CMAC_AES256;
     sa_ptr->ekid = 0;
     sa_ptr->akid = 136;
 
@@ -512,18 +497,13 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_0)
     sa_ptr->shivf_len = 0;
     sa_ptr->iv_len = 0;
     sa_ptr->shsnf_len = 0;
-    sa_ptr->arsn = 0;
     sa_ptr->arsn_len = 0;
-    sa_ptr->arsn = NULL;
     sa_ptr->abm_len = 1786;
-    sa_ptr->abm = (uint8_t* )calloc(1, sa_ptr->abm_len * sizeof(uint8_t));
     memset(sa_ptr->abm, 0x00, (sa_ptr->abm_len * sizeof(uint8_t))); // Bitmask
     sa_ptr->stmacf_len = 16;
     sa_ptr->sa_state = SA_OPERATIONAL;
-    sa_ptr->ecs = calloc(1, sa_ptr->ecs_len * sizeof(uint8_t));
-    *sa_ptr->ecs = CRYPTO_CIPHER_NONE;
-    sa_ptr->acs = calloc(1, sa_ptr->acs_len * sizeof(uint8_t));
-    *sa_ptr->acs = CRYPTO_MAC_HMAC_SHA256;
+    sa_ptr->ecs = CRYPTO_CIPHER_NONE;
+    sa_ptr->acs = CRYPTO_MAC_HMAC_SHA256;
     sa_ptr->ekid = 0;
     sa_ptr->akid = 136;
 
@@ -607,18 +587,13 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_1)
     sa_ptr->shivf_len = 0;
     sa_ptr->iv_len = 0;
     sa_ptr->shsnf_len = 0;
-    sa_ptr->arsn = 0;
     sa_ptr->arsn_len = 0;
-    sa_ptr->arsn = NULL;
     sa_ptr->abm_len = 1786;
-    sa_ptr->abm = (uint8_t* )calloc(1, sa_ptr->abm_len * sizeof(uint8_t));
     memset(sa_ptr->abm, 0xFF, (sa_ptr->abm_len * sizeof(uint8_t))); // Bitmask
     sa_ptr->stmacf_len = 16;
     sa_ptr->sa_state = SA_OPERATIONAL;
-    sa_ptr->ecs = calloc(1, sa_ptr->ecs_len * sizeof(uint8_t));
-    *sa_ptr->ecs = CRYPTO_CIPHER_NONE;
-    sa_ptr->acs = calloc(1, sa_ptr->acs_len * sizeof(uint8_t));
-    *sa_ptr->acs = CRYPTO_MAC_HMAC_SHA256;
+    sa_ptr->ecs = CRYPTO_CIPHER_NONE;
+    sa_ptr->acs = CRYPTO_MAC_HMAC_SHA256;
     sa_ptr->ekid = 0;
     sa_ptr->akid = 136;
 
@@ -703,18 +678,13 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_0)
     sa_ptr->shivf_len = 0;
     sa_ptr->iv_len = 0;
     sa_ptr->shsnf_len = 0;
-    sa_ptr->arsn = 0;
     sa_ptr->arsn_len = 0;
-    sa_ptr->arsn = NULL;
     sa_ptr->abm_len = 1786;
-    sa_ptr->abm = (uint8_t* )calloc(1, sa_ptr->abm_len * sizeof(uint8_t));
     memset(sa_ptr->abm, 0x00, (sa_ptr->abm_len * sizeof(uint8_t))); // Bitmask
     sa_ptr->stmacf_len = 16;
     sa_ptr->sa_state = SA_OPERATIONAL;
-    sa_ptr->ecs = calloc(1, sa_ptr->ecs_len * sizeof(uint8_t));
-    *sa_ptr->ecs = CRYPTO_CIPHER_NONE;
-    sa_ptr->acs = calloc(1, sa_ptr->acs_len * sizeof(uint8_t));
-    *sa_ptr->acs = CRYPTO_MAC_HMAC_SHA512;
+    sa_ptr->ecs = CRYPTO_CIPHER_NONE;
+    sa_ptr->acs = CRYPTO_MAC_HMAC_SHA512;
     sa_ptr->ekid = 0;
     sa_ptr->akid = 136;
 
@@ -802,18 +772,13 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_1)
     sa_ptr->shivf_len = 0;
     sa_ptr->iv_len = 0;
     sa_ptr->shsnf_len = 0;
-    sa_ptr->arsn = 0;
     sa_ptr->arsn_len = 0;
-    sa_ptr->arsn = NULL;
     sa_ptr->abm_len = 1786;
-    sa_ptr->abm = (uint8_t* )calloc(1, sa_ptr->abm_len * sizeof(uint8_t));
     memset(sa_ptr->abm, 0xFF, (sa_ptr->abm_len * sizeof(uint8_t))); // Bitmask
     sa_ptr->stmacf_len = 16;
     sa_ptr->sa_state = SA_OPERATIONAL;
-    sa_ptr->ecs = calloc(1, sa_ptr->ecs_len * sizeof(uint8_t));
-    *sa_ptr->ecs = CRYPTO_CIPHER_NONE;
-    sa_ptr->acs = calloc(1, sa_ptr->acs_len * sizeof(uint8_t));
-    *sa_ptr->acs = CRYPTO_MAC_HMAC_SHA512;
+    sa_ptr->ecs = CRYPTO_CIPHER_NONE;
+    sa_ptr->acs = CRYPTO_MAC_HMAC_SHA512;
     sa_ptr->ekid = 0;
     sa_ptr->akid = 136;
 

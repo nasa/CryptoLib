@@ -419,16 +419,11 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_ARSN_ROLLO
     test_association->est=0;
     test_association->ast=1;
     test_association->ecs_len=1;
-    free(test_association->ecs);
-    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_CIPHER_NONE;
+    test_association->ecs = CRYPTO_CIPHER_NONE;
     test_association->acs_len=1;
-    free(test_association->acs);
-    test_association->acs = calloc(1, test_association->acs_len * sizeof(uint8_t));
-    *test_association->acs = CRYPTO_MAC_CMAC_AES256;
+    test_association->acs = CRYPTO_MAC_CMAC_AES256;
     test_association->arsn_len = 3;
     test_association->shsnf_len = 2;
-    test_association->arsn = calloc(1,test_association->arsn_len);
     memcpy(test_association->arsn, (uint8_t *)new_arsn_b, new_arsn_len);
     // This TA was originally setup for AESGCM, need to specify an akid so we can use it for a MAC
     test_association->akid = 130;
@@ -1023,7 +1018,6 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_NULL_IV)
     test_association->arsn_len = 0;
     test_association->iv_len = 0;
     test_association->shivf_len = 0;
-    test_association->iv = NULL;
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
@@ -1035,7 +1029,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_NULL_IV)
     //printf("Encrypted Frame:\n");
     for(int i = 0; i < enc_frame_len; i++)
     {
-        //printf("%02x -> %02x ", ptr_enc_frame[i], truth_data_b[i]);
+        printf("%02x -> %02x \n", ptr_enc_frame[i], truth_data_b[i]);
         ASSERT_EQ(ptr_enc_frame[i], truth_data_b[i]);
     }
     //printf("\n");
@@ -1093,7 +1087,6 @@ UTEST(TC_APPLY_SECURITY, CBC_NULL_IV_W_IVH)
     test_association->arsn_len = 0;
     test_association->iv_len = 16;
     test_association->shivf_len = 16;
-    test_association->iv = NULL;
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(CRYPTO_LIB_ERR_NULL_IV, return_val);

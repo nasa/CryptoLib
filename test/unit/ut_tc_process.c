@@ -68,9 +68,7 @@ UTEST(TC_PROCESS, EXERCISE_IV)
     sadb_routine->sadb_get_sa_from_spi(9, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs_len = 1;
-    free(test_association->ecs);
-    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
+    test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
     memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
@@ -184,15 +182,10 @@ UTEST(TC_PROCESS, EXERCISE_ARSN)
     sadb_routine->sadb_get_sa_from_spi(9, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     sadb_routine->sadb_get_sa_from_spi(9, &test_association);
-    free(test_association->ecs);
     test_association->ecs_len = 1;
-    free(test_association->ecs);
-    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_CIPHER_NONE;
-    free(test_association->acs);
+    test_association->ecs = CRYPTO_CIPHER_NONE;
     test_association->acs_len = 1;
-    test_association->acs = calloc(1, test_association->acs_len * sizeof(uint8_t));
-    *test_association->acs = CRYPTO_MAC_CMAC_AES256;
+    test_association->acs = CRYPTO_MAC_CMAC_AES256;
     test_association->est = 0;
     test_association->ast = 1;
     test_association->shivf_len = 0;
@@ -204,8 +197,6 @@ UTEST(TC_PROCESS, EXERCISE_ARSN)
     test_association->akid = 136;
     test_association->ekid = 0;
     // memset(test_association->abm, 0x00, (test_association->abm_len * sizeof(uint8_t)));
-    free(test_association->abm);
-    test_association->abm = calloc(1, test_association->abm_len * sizeof(uint8_t));
     test_association->stmacf_len = 16;
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
@@ -217,8 +208,6 @@ UTEST(TC_PROCESS, EXERCISE_ARSN)
     hex_conversion(buffer_good_arsn_with_gap_h, (char**) &buffer_good_arsn_with_gap_b, &buffer_good_arsn_with_gap_len);
     // Convert/Set input ARSN
     hex_conversion(buffer_arsn_h, (char**) &buffer_arsn_b, &buffer_arsn_len);
-    free(test_association->arsn);
-    test_association->arsn = calloc(1, test_association->arsn_len);
     memcpy(test_association->arsn, buffer_arsn_b, buffer_arsn_len);
     // Expect to fail on replay
     printf(KGRN "Checking replay - using previous received ARSN...\n" RESET);
@@ -305,17 +294,14 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_STATIC_IV_ROLLOVER)
 
     int32_t return_val = -1;
 
-    TC_t* tc_sdls_processed_frame;
-    tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
-    memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
+    TC_t tc_sdls_processed_frame;
+    memset(&tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
 
     // Default SA
     // Expose SA 1 for testing
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
-    //free(test_association->ecs);
     test_association->ecs_len = 1;
-    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_CIPHER_NONE;
+    test_association->ecs = CRYPTO_CIPHER_NONE;
 
     // Deactive SA 1
     test_association->sa_state = SA_NONE;
@@ -326,8 +312,6 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_STATIC_IV_ROLLOVER)
     test_association->gvcid_blk.vcid = 0;
     test_association->shivf_len = 6;
     test_association->iv_len = 12;
-    free(test_association->iv);
-    test_association->iv = calloc(1, test_association->iv_len * sizeof(uint8_t));
     // IV = "000000000000FFFFFFFFFFFE"
     test_association->iv[0] = 0x00;
     test_association->iv[1] = 0x00;
@@ -344,46 +328,29 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_STATIC_IV_ROLLOVER)
     test_association->ast = 1;
     test_association->est = 1;
     test_association->sa_state = SA_OPERATIONAL;
-    free(test_association->ecs);
-    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
+    test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     Crypto_saPrint(test_association);
-    return_val = Crypto_TC_ProcessSecurity(dec_test_fe_b, &dec_test_fe_len, tc_sdls_processed_frame);
+    return_val = Crypto_TC_ProcessSecurity(dec_test_fe_b, &dec_test_fe_len, &tc_sdls_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
     ASSERT_EQ(test_association->iv[11],0xFE);
-    free(tc_sdls_processed_frame->tc_sec_header.iv);
-    free(tc_sdls_processed_frame->tc_sec_header.sn);
-    free(tc_sdls_processed_frame->tc_sec_header.pad);
-    free(tc_sdls_processed_frame->tc_sec_trailer.mac); // TODO:  Is there a method to free all of this?
-    return_val = Crypto_TC_ProcessSecurity(dec_test_ff_b, &dec_test_ff_len, tc_sdls_processed_frame);
+
+    return_val = Crypto_TC_ProcessSecurity(dec_test_ff_b, &dec_test_ff_len, &tc_sdls_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
     ASSERT_EQ(test_association->iv[11],0xFF);
-    free(tc_sdls_processed_frame->tc_sec_header.iv);
-    free(tc_sdls_processed_frame->tc_sec_header.sn);
-    free(tc_sdls_processed_frame->tc_sec_header.pad);
-    free(tc_sdls_processed_frame->tc_sec_trailer.mac); // TODO:  Is there a method to free all of this?
-    return_val = Crypto_TC_ProcessSecurity(dec_test_00_b, &dec_test_00_len, tc_sdls_processed_frame);
+
+    return_val = Crypto_TC_ProcessSecurity(dec_test_00_b, &dec_test_00_len, &tc_sdls_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
     for(int i=0; i < test_association->iv_len; i++)
     {
         ASSERT_EQ(test_association->iv[i],0x00);
     }
-
     Crypto_saPrint(test_association);
 
     Crypto_Shutdown();
-
     free(dec_test_fe_b);
     free(dec_test_ff_b);
-    free(dec_test_00_b);
-    
-    free(tc_sdls_processed_frame->tc_sec_header.iv);
-    free(tc_sdls_processed_frame->tc_sec_header.sn);
-    free(tc_sdls_processed_frame->tc_sec_header.pad);
-    free(tc_sdls_processed_frame->tc_sec_trailer.mac); // TODO:  Is there a method to free all of this?
-    free(tc_sdls_processed_frame);
-    
+    free(dec_test_00_b);    
 }
 
 UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_NONTRANSMITTED_INCREMENTING_IV_ROLLOVER)
@@ -422,10 +389,8 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_NONTRANSMITTED_INCREMENTING_IV_ROLLOVER)
     // Default SA
     // Expose SA 1 for testing
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
-    free(test_association->ecs);
     test_association->ecs_len = 1;
-    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_CIPHER_NONE;
+    test_association->ecs = CRYPTO_CIPHER_NONE;
 
     // Deactive SA 1
     test_association->sa_state = SA_NONE;
@@ -436,8 +401,6 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_NONTRANSMITTED_INCREMENTING_IV_ROLLOVER)
     test_association->gvcid_blk.vcid = 0;
     test_association->shivf_len = 6;
     test_association->iv_len = 12;
-    free(test_association->iv);
-    test_association->iv = calloc(1, test_association->iv_len * sizeof(uint8_t));
     // IV = "000000000000FFFFFFFFFFFE"
     test_association->iv[0] = 0x00;
     test_association->iv[1] = 0x00;
@@ -454,9 +417,7 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_NONTRANSMITTED_INCREMENTING_IV_ROLLOVER)
     test_association->ast = 1;
     test_association->est = 1;
     test_association->sa_state = SA_OPERATIONAL;
-    free(test_association->ecs);
-    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
+    test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     Crypto_saPrint(test_association);
     return_val = Crypto_TC_ProcessSecurity(dec_test_fe_b, &dec_test_fe_len, tc_sdls_processed_frame);
@@ -533,16 +494,14 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_NONTRANSMITTED_INCREMENTING_ARSN_ROLLOVER)
 
     int32_t return_val = -1;
 
-    TC_t* tc_sdls_processed_frame;
-    tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
-    memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
+    TC_t tc_sdls_processed_frame;
+    memset(&tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
 
     // Default SA
     // Expose SA 1 for testing
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->ecs_len = 1;
-    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_CIPHER_NONE;
+    test_association->ecs = CRYPTO_CIPHER_NONE;
 
     // Deactive SA 1
     test_association->sa_state = SA_NONE;
@@ -555,17 +514,11 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_NONTRANSMITTED_INCREMENTING_ARSN_ROLLOVER)
     test_association->est=0;
     test_association->ast=1;
     test_association->ecs_len=1;
-    free(test_association->ecs);
-    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_CIPHER_NONE;
+    test_association->ecs = CRYPTO_CIPHER_NONE;
     test_association->acs_len=1;
-    free(test_association->acs);
-    test_association->acs = calloc(1, test_association->acs_len * sizeof(uint8_t));
-    *test_association->acs = CRYPTO_MAC_CMAC_AES256;
+    test_association->acs = CRYPTO_MAC_CMAC_AES256;
     test_association->arsn_len = 3;
     test_association->shsnf_len = 2;
-    free(test_association->arsn);
-    test_association->arsn = calloc(1,test_association->arsn_len);
     // ARSN = "05FFFD"
     test_association->arsn[0] = 0x05;
     test_association->arsn[1] = 0xFF;
@@ -575,22 +528,16 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_NONTRANSMITTED_INCREMENTING_ARSN_ROLLOVER)
     test_association->akid = 130;
 
     Crypto_saPrint(test_association);
-    return_val = Crypto_TC_ProcessSecurity(dec_test_fe_b, &dec_test_fe_len, tc_sdls_processed_frame);
+    return_val = Crypto_TC_ProcessSecurity(dec_test_fe_b, &dec_test_fe_len, &tc_sdls_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
     ASSERT_EQ(test_association->arsn[2],0xFE);
-    free(tc_sdls_processed_frame->tc_sec_header.iv);
-    free(tc_sdls_processed_frame->tc_sec_header.sn);
-    free(tc_sdls_processed_frame->tc_sec_header.pad);
-    free(tc_sdls_processed_frame->tc_sec_trailer.mac); // TODO:  Is there a method to free all of this?
-    return_val = Crypto_TC_ProcessSecurity(dec_test_ff_b, &dec_test_ff_len, tc_sdls_processed_frame);
+
+    return_val = Crypto_TC_ProcessSecurity(dec_test_ff_b, &dec_test_ff_len, &tc_sdls_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
     ASSERT_EQ(test_association->arsn[2],0xFF);
-    free(tc_sdls_processed_frame->tc_sec_header.iv);
-    free(tc_sdls_processed_frame->tc_sec_header.sn);
-    free(tc_sdls_processed_frame->tc_sec_header.pad);
-    free(tc_sdls_processed_frame->tc_sec_trailer.mac); // TODO:  Is there a method to free all of this?
+
     // test_association->iv[5] = 0x01;
-    return_val = Crypto_TC_ProcessSecurity(dec_test_00_b, &dec_test_00_len, tc_sdls_processed_frame);
+    return_val = Crypto_TC_ProcessSecurity(dec_test_00_b, &dec_test_00_len, &tc_sdls_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
     ASSERT_EQ(test_association->arsn[0] ,0x06);
     ASSERT_EQ(test_association->arsn[1] ,0x00);
@@ -603,11 +550,6 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_NONTRANSMITTED_INCREMENTING_ARSN_ROLLOVER)
     free(dec_test_fe_b);
     free(dec_test_ff_b);
     free(dec_test_00_b);
-    free(tc_sdls_processed_frame->tc_sec_header.iv);
-    free(tc_sdls_processed_frame->tc_sec_header.sn);
-    free(tc_sdls_processed_frame->tc_sec_header.pad);
-    free(tc_sdls_processed_frame->tc_sec_trailer.mac); // TODO:  Is there a method to free all of this?
-    free(tc_sdls_processed_frame);
 }
 
 UTEST(TC_PROCESS, ERROR_TC_INPUT_FRAME_TOO_SHORT_FOR_SPEC)
@@ -929,9 +871,7 @@ UTEST(TC_PROCESS, GCM_IV_AND_ARSN)
     sadb_routine->sadb_get_sa_from_spi(9, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs_len = 1;
-    free(test_association->ecs);
-    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
+    test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
     test_association->shsnf_len = 2;
     test_association->arsn_len = 2;
     test_association->arsnw = 5;
@@ -955,8 +895,6 @@ UTEST(TC_PROCESS, GCM_IV_AND_ARSN)
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert/Set input ARSN
     hex_conversion(buffer_arsn_h, (char**) &buffer_arsn_b, &buffer_arsn_len);
-    free(test_association->arsn);
-    test_association->arsn = calloc(1, test_association->arsn_len);
     memcpy(test_association->arsn, buffer_arsn_b, buffer_arsn_len);
 
     // Expect to fail on ARSN (Bad IV, bad ARSN)

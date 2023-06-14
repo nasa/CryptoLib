@@ -218,9 +218,9 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
         // Determine Algorithm cipher & mode. // TODO - Parse authentication_cipher, and handle AEAD cases properly
         if (sa_service_type != SA_PLAINTEXT)
         {
-            if (sa_ptr->ecs != NULL)
+            if (sa_ptr->ecs != CRYPTO_CIPHER_NONE)
             {
-                encryption_cipher = *sa_ptr->ecs;
+                encryption_cipher = sa_ptr->ecs;
 #ifdef TC_DEBUG
                 printf(KYEL "SA Encryption Cipher: %d\n", encryption_cipher);
 #endif
@@ -298,7 +298,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
             new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
 
             // Handle Padding, if necessary
-            if(*(sa_ptr->ecs) == CRYPTO_CIPHER_AES256_CBC)
+            if(sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC)
             {
                 pkcs_padding = tf_payload_len % TC_BLOCK_SIZE; // Block Sizes of 16
                
@@ -436,25 +436,24 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
             }
 #endif
 
-        if(sa_service_type != SA_PLAINTEXT && sa_ptr->ecs == NULL && sa_ptr->acs == NULL)
+        //if(sa_service_type != SA_PLAINTEXT)
+        //{
+        //    return CRYPTO_LIB_ERR_NULL_CIPHERS;
+        //}
+
+        if((sa_ptr->est == 0) && (sa_ptr->ast == 1))
         {
-            return CRYPTO_LIB_ERR_NULL_CIPHERS;
+            if(sa_ptr->acs_len != 0)
+            {
+                if((sa_ptr->acs == CRYPTO_MAC_CMAC_AES256 || sa_ptr->acs == CRYPTO_MAC_HMAC_SHA256 || sa_ptr->acs == CRYPTO_MAC_HMAC_SHA512) &&
+                    sa_ptr->iv_len > 0 )
+                {
+                    return CRYPTO_LIB_ERR_IV_NOT_SUPPORTED_FOR_ACS_ALGO;
+                }
+            }
         }
 
-        if(sa_ptr->est == 0 && sa_ptr->ast == 1)
-        {
-            if(sa_ptr->acs !=NULL && sa_ptr->acs_len != 0)
-            {
-                if((*(sa_ptr->acs) == CRYPTO_MAC_CMAC_AES256 || *(sa_ptr->acs) == CRYPTO_MAC_HMAC_SHA256 || *(sa_ptr->acs) == CRYPTO_MAC_HMAC_SHA512) &&
-                    sa_ptr->iv_len > 0 )
-                    {
-                        return CRYPTO_LIB_ERR_IV_NOT_SUPPORTED_FOR_ACS_ALGO;
-                    }
-            }
-        } 
-
-        // Copy in IV from SA if not NULL and transmitted length > 0
-        if (sa_ptr->iv != NULL)
+        if (sa_ptr->iv_len > 0)
         {
             // Start index from the transmitted portion
             for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
@@ -601,7 +600,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
                                                                     (uint8_t*)(p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), // plaintext input
                                                                     (size_t)tf_payload_len,                                         // in data length
                                                                     NULL, // Using SA key reference, key is null
-                                                                    Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs), // Length of key derived from sa_ptr key_ref
+                                                                    Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs), // Length of key derived from sa_ptr key_ref
                                                                     sa_ptr, // SA (for key reference)
                                                                     sa_ptr->iv, // IV
                                                                     sa_ptr->iv_len, // IV Length
@@ -612,8 +611,8 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
                                                                     (sa_ptr->est==1),
                                                                     (sa_ptr->ast==1),
                                                                     (sa_ptr->ast==1),
-                                                                    sa_ptr->ecs, // encryption cipher
-                                                                    sa_ptr->acs,  // authentication cipher
+                                                                    &sa_ptr->ecs, // encryption cipher
+                                                                    &sa_ptr->acs,  // authentication cipher
                                                                     cam_cookies
                 );
 
@@ -629,11 +628,11 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
                                                                     (size_t)tf_payload_len,                                         // in data length
                                                                     //new_frame_length,
                                                                     NULL, // Using SA key reference, key is null
-                                                                    Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs), // Length of key derived from sa_ptr key_ref
+                                                                    Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs), // Length of key derived from sa_ptr key_ref
                                                                     sa_ptr, // SA (for key reference)
                                                                     sa_ptr->iv, // IV
                                                                     sa_ptr->iv_len, // IV Length
-                                                                    sa_ptr->ecs, // encryption cipher
+                                                                    &sa_ptr->ecs, // encryption cipher
                                                                     pkcs_padding,
                                                                     cam_cookies
                 );
@@ -646,7 +645,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
                                                                 (uint8_t*)(p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), // plaintext input
                                                                 (size_t)tf_payload_len,                                         // in data length
                                                                 NULL, // Using SA key reference, key is null
-                                                                Crypto_Get_ACS_Algo_Keylen(*sa_ptr->acs),
+                                                                Crypto_Get_ACS_Algo_Keylen(sa_ptr->acs),
                                                                 sa_ptr, // SA (for key reference)
                                                                 sa_ptr->iv, // IV
                                                                 sa_ptr->iv_len, // IV Length
@@ -654,8 +653,8 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
                                                                 sa_ptr->stmacf_len, // tag size
                                                                 aad, // AAD Input
                                                                 aad_len, // Length of AAD
-                                                                *sa_ptr->ecs, // encryption cipher
-                                                                *sa_ptr->acs,  // authentication cipher
+                                                                sa_ptr->ecs, // encryption cipher
+                                                                sa_ptr->acs,  // authentication cipher
                                                                 cam_cookies
                     );
                 }
@@ -671,17 +670,17 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
 #ifdef INCREMENT
             if (crypto_config->crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
             {
-                if(sa_ptr->shivf_len > 0  && sa_ptr->iv != NULL){ Crypto_increment(sa_ptr->iv, sa_ptr->iv_len); }   
+                if(sa_ptr->shivf_len > 0  && sa_ptr->iv_len != 0){ Crypto_increment(sa_ptr->iv, sa_ptr->iv_len); }   
             }
             else // SA_INCREMENT_NONTRANSMITTED_IV_FALSE
             {
                 // Only increment the transmitted portion
-                if(sa_ptr->shivf_len > 0 && sa_ptr->iv != NULL){ Crypto_increment(sa_ptr->iv+(sa_ptr->iv_len-sa_ptr->shivf_len), sa_ptr->shivf_len); }
+                if(sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0){ Crypto_increment(sa_ptr->iv+(sa_ptr->iv_len-sa_ptr->shivf_len), sa_ptr->shivf_len); }
             }
             if(sa_ptr->shsnf_len > 0){ Crypto_increment(sa_ptr->arsn, sa_ptr->arsn_len); }
         
 #ifdef SA_DEBUG
-            if(sa_ptr->iv != NULL)
+            if(sa_ptr->iv_len > 0)
             {
                 printf(KYEL "Next IV value is:\n\t");
                 for (i = 0; i < sa_ptr->iv_len; i++)
@@ -905,7 +904,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
     // Determine Algorithm cipher & mode. // TODO - Parse authentication_cipher, and handle AEAD cases properly
     if (sa_service_type != SA_PLAINTEXT)
     {
-        encryption_cipher = *sa_ptr->ecs;
+        encryption_cipher = sa_ptr->ecs;
         ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(encryption_cipher);
     }
 #ifdef TC_DEBUG
@@ -1071,7 +1070,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
                                                             &(ingest[tc_enc_payload_start_index]), // ciphertext input
                                                             (size_t)(tc_sdls_processed_frame->tc_pdu_len),    // in data length
                                                             NULL, // Key
-                                                            Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs),
+                                                            Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs),
                                                             sa_ptr, // SA for key reference
                                                             tc_sdls_processed_frame->tc_sec_header.iv, // IV
                                                             sa_ptr->iv_len, // IV Length
@@ -1082,8 +1081,8 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
                                                             (sa_ptr->est), // Decryption Bool
                                                             (sa_ptr->ast), // Authentication Bool
                                                             (sa_ptr->ast), // AAD Bool
-                                                            sa_ptr->ecs, // encryption cipher
-                                                            sa_ptr->acs,  // authentication cipher
+                                                            &sa_ptr->ecs, // encryption cipher
+                                                            &sa_ptr->acs,  // authentication cipher
                                                             cam_cookies
                                                             
         );
@@ -1097,7 +1096,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
                                                             &(ingest[tc_enc_payload_start_index]), // ciphertext input
                                                             (size_t)(tc_sdls_processed_frame->tc_pdu_len),    // in data length
                                                             NULL, // Key
-                                                            Crypto_Get_ACS_Algo_Keylen(*sa_ptr->acs),
+                                                            Crypto_Get_ACS_Algo_Keylen(sa_ptr->acs),
                                                             sa_ptr, // SA for key reference
                                                             tc_sdls_processed_frame->tc_sec_header.iv, // IV
                                                             sa_ptr->iv_len, // IV Length
@@ -1106,7 +1105,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
                                                             aad,    // additional authenticated data
                                                             aad_len, // length of AAD
                                                             CRYPTO_CIPHER_NONE, //encryption cipher
-                                                            *sa_ptr->acs,  //authentication cipher
+                                                            sa_ptr->acs,  //authentication cipher
                                                             cam_cookies
             );
         }
@@ -1117,12 +1116,12 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
                                                             &(ingest[tc_enc_payload_start_index]), // ciphertext input
                                                             (size_t)(tc_sdls_processed_frame->tc_pdu_len),    // in data length
                                                             NULL, // Key
-                                                            Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs),
+                                                            Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs),
                                                             sa_ptr, // SA for key reference
                                                             tc_sdls_processed_frame->tc_sec_header.iv, // IV
                                                             sa_ptr->iv_len, // IV Length
-                                                            sa_ptr->ecs, // encryption cipher
-                                                            sa_ptr->acs,  // authentication cipher
+                                                            &sa_ptr->ecs, // encryption cipher
+                                                            &sa_ptr->acs,  // authentication cipher
                                                             cam_cookies
                                                             
             );
@@ -1175,12 +1174,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
     {   
         if (crypto_config->sadb_type == SADB_TYPE_MARIADB)
         {  
-            if(sa_ptr->ecs != NULL) free(sa_ptr->ecs);
             if(sa_ptr->ek_ref != NULL) free(sa_ptr->ek_ref);
-            if(sa_ptr->iv != NULL) free(sa_ptr->iv);
-            if(sa_ptr->abm != NULL) free(sa_ptr->abm);
-            if(sa_ptr->arsn != NULL) free(sa_ptr->arsn);
-            if(sa_ptr->acs != NULL) free(sa_ptr->acs);
             free(sa_ptr);
         }
     }
