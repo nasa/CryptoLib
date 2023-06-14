@@ -73,7 +73,7 @@ UTEST(TC_PROCESS, EXERCISE_IV)
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    key_if->get_key(test_association->ekid, ekp);
+    ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert frames that will be processed
@@ -210,7 +210,7 @@ UTEST(TC_PROCESS, EXERCISE_ARSN)
     test_association->stmacf_len = 16;
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    key_if->get_key(test_association->akid, akp);
+    akp = key_if->get_key(test_association->akid);
     memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
     // Convert frames that will be processed
     hex_conversion(buffer_replay_h, (char**) &buffer_replay_b, &buffer_replay_len);
@@ -939,7 +939,7 @@ UTEST(TC_PROCESS, GCM_IV_AND_ARSN)
     test_association->arsnw = 5;
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    key_if->get_key(test_association->ekid, ekp);
+    ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert frames that will be processed

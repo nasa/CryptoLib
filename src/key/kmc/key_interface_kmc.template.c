@@ -23,7 +23,7 @@ static crypto_key_t ek_ring[NUM_KEYS] = {0};
 static KeyInterfaceStruct key_if_struct;
 
 /* Prototypes */
-static int32_t get_key(uint32_t key_id, crypto_key_t* key_ptr);
+static crypto_key_t* get_key(uint32_t key_id);
 static int32_t key_init(void);
 static int32_t key_shutdown(void);
 
@@ -36,7 +36,7 @@ KeyInterface get_key_interface_kmc(void)
     return &key_if_struct;
 }
 
-static int32_t get_key(uint32_t key_id, crypto_key_t* key_ptr)
+static crypto_key_t* get_key(uint32_t key_id)
 {
     /* Avoid set but not used warning */
     key_id = key_id;

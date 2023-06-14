@@ -337,17 +337,17 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
 
         // Get Key
         crypto_key_t* ekp = NULL;
-        status = key_if->get_key(sa_ptr->ekid, ekp);
-        if (status != CRYPTO_LIB_SUCCESS)
+        ekp = key_if->get_key(sa_ptr->ekid);
+        if (ekp == NULL)
         {
-            return status;
+            return CRYPTO_LIB_ERR_KEY_ID_ERROR;
         }
 
         crypto_key_t* akp = NULL;
-        status = key_if->get_key(sa_ptr->akid, akp);
-        if (status != CRYPTO_LIB_SUCCESS)
+        akp = key_if->get_key(sa_ptr->akid);
+        if (akp == NULL)
         {
-            return status;
+            return CRYPTO_LIB_ERR_KEY_ID_ERROR;
         }
 
         /*
@@ -1026,17 +1026,17 @@ int32_t Crypto_TM_ProcessSecurity(const uint8_t* p_ingest, const uint16_t len_in
 
     // Get Key
     crypto_key_t* ekp = NULL;
-    status = key_if->get_key(sa_ptr->ekid, ekp);
-    if (status != CRYPTO_LIB_SUCCESS)
+    ekp = key_if->get_key(sa_ptr->ekid);
+    if (ekp == NULL)
     {
-        return status;
+        return CRYPTO_LIB_ERR_KEY_ID_ERROR;
     }
 
     crypto_key_t* akp = NULL;
-    status = key_if->get_key(sa_ptr->akid, akp);
-    if (status != CRYPTO_LIB_SUCCESS)
+    akp = key_if->get_key(sa_ptr->akid);
+    if (akp == NULL)
     {
-        return status;
+        return CRYPTO_LIB_ERR_KEY_ID_ERROR;
     }
 
     /*

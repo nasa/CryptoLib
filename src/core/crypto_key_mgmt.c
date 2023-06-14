@@ -83,16 +83,10 @@ int32_t Crypto_Key_OTAR(void)
         // printf("packet.mac[%d] = 0x%02x\n", w, packet.mac[w]);
     }
 
-    if (key_if != NULL)
+    ekp = key_if->get_key(packet.mkid);
+    if (ekp == NULL)
     {
-        status = CRYPTOGRAPHY_UNSUPPORTED_OPERATION_FOR_KEY_RING;
-        return status;
-    }
-
-    status = key_if->get_key(packet.mkid, ekp);
-    if (status != CRYPTO_LIB_SUCCESS)
-    {
-        return status;
+        return CRYPTO_LIB_ERR_KEY_ID_ERROR;
     }
 
     uint8_t ecs = CRYPTO_CIPHER_AES256_GCM;
@@ -141,10 +135,10 @@ int32_t Crypto_Key_OTAR(void)
         }
         else
         {
-            status = key_if->get_key(packet.EKB[x].ekid, ekp);
-            if (status != CRYPTO_LIB_SUCCESS)
+            ekp = key_if->get_key(packet.EKB[x].ekid);
+            if (ekp == NULL)
             {
-                return status;
+                return CRYPTO_LIB_ERR_KEY_ID_ERROR;
             }
             
             count = count + 2;
@@ -265,10 +259,10 @@ int32_t Crypto_Key_update(uint8_t state)
             // TODO: Exit
         }
 
-        status = key_if->get_key(packet.kblk[x].kid, ekp);
-        if (status != CRYPTO_LIB_SUCCESS)
+        ekp = key_if->get_key(packet.kblk[x].kid);
+        if (ekp == NULL)
         {
-            return status;
+            return CRYPTO_LIB_ERR_KEY_ID_ERROR;
         }
 
         if (ekp->key_state == (state - 1))
@@ -337,10 +331,10 @@ int32_t Crypto_Key_inventory(uint8_t* ingest)
         ingest[count++] = (x & 0xFF00) >> 8;
         ingest[count++] = (x & 0x00FF);
         // Get Key
-        status = key_if->get_key(x, ekp);
-        if (status != CRYPTO_LIB_SUCCESS)
+        ekp = key_if->get_key(x);
+        if (ekp == NULL)
         {
-            return status;
+            return CRYPTO_LIB_ERR_KEY_ID_ERROR;
         }
         // Key State
         ingest[count++] = ekp->key_state;
@@ -409,10 +403,10 @@ int32_t Crypto_Key_verify(uint8_t* ingest, TC_t* tc_frame)
         ingest[count++] = (packet.blk[x].kid & 0x00FF);
 
         // Get Key
-        status = key_if->get_key(x, ekp);
-        if (status != CRYPTO_LIB_SUCCESS)
+        ekp = key_if->get_key(x);
+        if (ekp == NULL)
         {
-            return status;
+            return CRYPTO_LIB_ERR_KEY_ID_ERROR;
         }
 
         // Initialization Vector

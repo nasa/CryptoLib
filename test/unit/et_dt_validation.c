@@ -363,7 +363,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    key_if->get_key(test_association->ekid, ekp);
+    ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
@@ -443,7 +443,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     test_association->ast =1;
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    key_if->get_key(test_association->ekid, ekp);
+    ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
@@ -517,7 +517,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    key_if->get_key(test_association->ekid, ekp);
+    ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
@@ -593,7 +593,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    key_if->get_key(test_association->ekid, ekp);
+    ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
@@ -668,7 +668,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    key_if->get_key(test_association->ekid, ekp);
+    ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
@@ -745,7 +745,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    key_if->get_key(test_association->ekid, ekp);
+    ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
@@ -817,7 +817,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    key_if->get_key(test_association->ekid, ekp);
+    ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
@@ -894,7 +894,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    key_if->get_key(test_association->ekid, ekp);
+    ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
@@ -966,7 +966,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    key_if->get_key(test_association->ekid, ekp);
+    ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
@@ -1043,7 +1043,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    key_if->get_key(test_association->ekid, ekp);
+    ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
@@ -1133,7 +1133,7 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    key_if->get_key(test_association->ekid, ekp);
+    ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
@@ -1220,7 +1220,7 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    key_if->get_key(test_association->ekid, ekp);
+    ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
@@ -1314,7 +1314,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    key_if->get_key(test_association->ekid, ekp);
+    ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
@@ -1440,7 +1440,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_DATA)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    key_if->get_key(test_association->ekid, ekp);
+    ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
@@ -1542,7 +1542,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_MAC)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    key_if->get_key(test_association->ekid, ekp);
+    ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
@@ -1648,7 +1648,7 @@ UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    key_if->get_key(test_association->akid, akp);
+    akp = key_if->get_key(test_association->akid);
     memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
@@ -1741,7 +1741,7 @@ UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    key_if->get_key(test_association->akid, akp);
+    akp = key_if->get_key(test_association->akid);
     memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
@@ -1835,7 +1835,7 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    key_if->get_key(test_association->akid, akp);
+    akp = key_if->get_key(test_association->akid);
     memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
@@ -1930,7 +1930,7 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    key_if->get_key(test_association->akid, akp);
+    akp = key_if->get_key(test_association->akid);
     memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
@@ -2023,7 +2023,7 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_256_PT_128_TEST_0)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
-    key_if->get_key(test_association->akid, akp);
+    akp = key_if->get_key(test_association->akid);
     memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
@@ -2113,7 +2113,7 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
-    key_if->get_key(test_association->akid, akp);
+    akp = key_if->get_key(test_association->akid);
     memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
     // Convert input plaintext
     hex_conversion(buffer_frame_pt_h, (char **)&buffer_frame_pt_b, &buffer_frame_pt_len);
@@ -2204,7 +2204,7 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
 
    // Insert key into keyring of SA 9
    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
-   key_if->get_key(test_association->akid, akp);
+   akp = key_if->get_key(test_association->akid);
    memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
    akp->key_len = 64;
 
@@ -2298,7 +2298,7 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
-    key_if->get_key(test_association->akid, akp);
+    akp = key_if->get_key(test_association->akid);
     memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
     akp->key_len = 64;
 
@@ -2394,7 +2394,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_0)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
-    key_if->get_key(test_association->akid, akp);
+    akp = key_if->get_key(test_association->akid);
     memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
@@ -2487,7 +2487,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
-    key_if->get_key(test_association->akid, akp);
+    akp = key_if->get_key(test_association->akid);
     memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
@@ -2579,7 +2579,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
-    key_if->get_key(test_association->akid, akp);
+    akp = key_if->get_key(test_association->akid);
     memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
     akp->key_len = 64;
 
@@ -2670,7 +2670,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
-    key_if->get_key(test_association->akid, akp);
+    akp = key_if->get_key(test_association->akid);
     memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
     akp->key_len = 64;
 
@@ -2796,7 +2796,7 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_SHORT_KEY)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
-    key_if->get_key(test_association->akid, akp);
+    akp = key_if->get_key(test_association->akid);
     memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
     akp->key_len = 32;
 
@@ -2881,7 +2881,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_SHORT_KEY)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
-    key_if->get_key(test_association->akid, akp);
+    akp = key_if->get_key(test_association->akid);
     memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
     akp->key_len = 32;
 

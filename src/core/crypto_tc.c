@@ -70,6 +70,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
     uint8_t ecs_is_aead_algorithm;
     int i;
     uint32_t pkcs_padding = 0;
+    crypto_key_t* ekp = NULL;
 
 #ifdef DEBUG
     printf(KYEL "\n----- Crypto_TC_ApplySecurity START -----\n" RESET);
@@ -594,11 +595,10 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
 #endif
 
             /* Get Key */
-            crypto_key_t* ekp = NULL;
-            status = key_if->get_key(sa_ptr->ekid, ekp);
-            if (status != CRYPTO_LIB_SUCCESS)
+            ekp = key_if->get_key(sa_ptr->ekid);
+            if (ekp == NULL)
             {
-                return status;
+                return CRYPTO_LIB_ERR_KEY_ID_ERROR;
             }
 
             if(ecs_is_aead_algorithm == CRYPTO_TRUE)
@@ -665,10 +665,10 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
                 {
                     /* Get Key */
                     crypto_key_t* akp = NULL;
-                    status = key_if->get_key(sa_ptr->akid, akp);
-                    if (status != CRYPTO_LIB_SUCCESS)
+                    akp = key_if->get_key(sa_ptr->akid);
+                    if (akp == NULL)
                     {
-                        return status;
+                        return CRYPTO_LIB_ERR_KEY_ID_ERROR;
                     }
                     
                     // Check that key length to be used ets the algorithm requirement
@@ -826,6 +826,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
     uint16_t aad_len;
     uint32_t encryption_cipher;
     uint8_t ecs_is_aead_algorithm = -1;
+    crypto_key_t* ekp = NULL;
 
     if (crypto_config == NULL)
     {
@@ -1102,18 +1103,17 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
 #endif
     
     /* Get Key */
-    crypto_key_t* ekp = NULL;
-    status = key_if->get_key(sa_ptr->ekid, ekp);
-    if (status != CRYPTO_LIB_SUCCESS)
+    ekp = key_if->get_key(sa_ptr->ekid);
+    if (ekp == NULL)
     {
-        return status;
+        return CRYPTO_LIB_ERR_KEY_ID_ERROR;
     }
     
     crypto_key_t* akp = NULL;
-    status = key_if->get_key(sa_ptr->akid, akp);
-    if (status != CRYPTO_LIB_SUCCESS)
+    akp = key_if->get_key(sa_ptr->akid);
+    if (akp == NULL)
     {
-        return status;
+        return CRYPTO_LIB_ERR_KEY_ID_ERROR;
     }
 
     if(sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_TRUE)

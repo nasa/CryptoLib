@@ -22,7 +22,7 @@ static crypto_key_t key_ring[NUM_KEYS] = {0};
 static KeyInterfaceStruct key_if_struct;
 
 /* Prototypes */
-static int32_t get_key(uint32_t key_id, crypto_key_t* key_ptr);
+static crypto_key_t* get_key(uint32_t key_id);
 static int32_t key_init(void);
 static int32_t key_shutdown(void);
 
@@ -39,20 +39,16 @@ KeyInterface get_key_interface_internal(void)
     return &key_if_struct;
 }
 
-static int32_t get_key(uint32_t key_id, crypto_key_t* key_ptr)
+static crypto_key_t* get_key(uint32_t key_id)
 {
-    int32_t status = CRYPTO_LIB_SUCCESS;
-    key_ptr = key_ptr; /* Avoid set but not used warning */
+    crypto_key_t* key_ptr = NULL;
     
     if(key_id < NUM_KEYS)
     {
         key_ptr = &key_ring[key_id];
     }
-    else
-    {
-        status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-    }
-    return status;
+    
+    return key_ptr;
 }
 
 static int32_t key_init(void)

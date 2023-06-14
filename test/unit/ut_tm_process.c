@@ -719,7 +719,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_0)
     sa_ptr->akid = 136;
 
     // Update key length for SHA512
-    key_if->get_key(sa_ptr->akid, akp);
+    akp = key_if->get_key(sa_ptr->akid);
     akp->key_len = 64;
 
     // Bit math to give concise access to values already set in the static transfer frame
@@ -819,7 +819,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_1)
     sa_ptr->akid = 136;
 
     // Update key length for SHA512
-    key_if->get_key(sa_ptr->akid, akp);
+    akp = key_if->get_key(sa_ptr->akid);
     akp->key_len = 64;
 
     // Bit math to give concise access to values already set in the static transfer frame

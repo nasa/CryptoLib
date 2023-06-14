@@ -33,7 +33,7 @@ typedef struct
 typedef struct
 {
     /* Key Interface, SDLS */
-    int32_t (*get_key)(uint32_t key_id, crypto_key_t* key_ptr);
+    crypto_key_t* (*get_key)(uint32_t key_id);
     int32_t (*key_init)(void);
     int32_t (*key_shutdown)(void);
 
