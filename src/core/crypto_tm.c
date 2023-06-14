@@ -335,8 +335,20 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         }
 #endif
 
-        /* Get Key Ring */
-        crypto_key_t* local_key_ring_ptr = key_if->get_ek_ring();
+        // Get Key
+        crypto_key_t* ekp = NULL;
+        status = key_if->get_key(sa_ptr->ekid, ekp);
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+            return status;
+        }
+
+        crypto_key_t* akp = NULL;
+        status = key_if->get_key(sa_ptr->akid, akp);
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+            return status;
+        }
 
         /*
         ** Begin Authentication / Encryption
@@ -387,7 +399,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
                                                                 (size_t) 0, // length of data
                                                                 (uint8_t*)(&tm_frame[0]), // plaintext input
                                                                 (size_t)0, // in data length - from start of frame to end of data
-                                                                &(local_key_ring_ptr[sa_ptr->akid].value[0]), // Key
+                                                                &(akp->value[0]), // Key
                                                                 Crypto_Get_ACS_Algo_Keylen(*sa_ptr->acs),
                                                                 sa_ptr, // SA (for key reference)
                                                                 sa_ptr->iv, // IV
@@ -654,7 +666,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
                                                            (size_t)pdu_len,            // length of data
                                                            &(tempTM[pdu_loc]), // plaintext input
                                                            (size_t)pdu_len,             // in data length
-                                                           &(local_key_ring_ptr[sa_ptr->ekid].value[0]), // Key
+                                                           &(ekp->value[0]), // Key
                                                            KEY_SIZE,
                                                            sa_ptr,
                                                            sa_ptr->iv,
@@ -1012,8 +1024,20 @@ int32_t Crypto_TM_ProcessSecurity(const uint8_t* p_ingest, const uint16_t len_in
     // this will be over-written by decryption functions if necessary,
     // but not by authentication which requires
 
-    /* Get Key Ring */
-    crypto_key_t* local_key_ring_ptr = key_if->get_ek_ring();
+    // Get Key
+    crypto_key_t* ekp = NULL;
+    status = key_if->get_key(sa_ptr->ekid, ekp);
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        return status;
+    }
+
+    crypto_key_t* akp = NULL;
+    status = key_if->get_key(sa_ptr->akid, akp);
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        return status;
+    }
 
     /*
     ** Begin Authentication / Encryption
@@ -1047,7 +1071,7 @@ int32_t Crypto_TM_ProcessSecurity(const uint8_t* p_ingest, const uint16_t len_in
             Crypto_Prepare_TM_AAD(p_ingest, aad_len, sa_ptr->abm, &aad[0]);
 
             // Check that key length to be used is atleast as long as the algo requirement
-            if((int32_t) local_key_ring_ptr[sa_ptr->akid].key_len > Crypto_Get_ACS_Algo_Keylen(*sa_ptr->acs))
+            if((int32_t) akp->key_len > Crypto_Get_ACS_Algo_Keylen(*sa_ptr->acs))
             {
                 return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
             }
@@ -1056,7 +1080,7 @@ int32_t Crypto_TM_ProcessSecurity(const uint8_t* p_ingest, const uint16_t len_in
                                                             pdu_len, // length of data
                                                             p_ingest+byte_idx, // ciphertext input
                                                             pdu_len, // in data length
-                                                            &(local_key_ring_ptr[sa_ptr->akid].value[0]), // Key
+                                                            &(akp->value[0]), // Key
                                                             Crypto_Get_ACS_Algo_Keylen(*sa_ptr->acs),
                                                             sa_ptr, // SA for key reference
                                                             p_ingest+iv_loc, // IV
@@ -1072,7 +1096,7 @@ int32_t Crypto_TM_ProcessSecurity(const uint8_t* p_ingest, const uint16_t len_in
         if(sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
         {
             // Check that key length to be used is atleast as long as the algo requirement
-            //if((int32_t) local_key_ring_ptr[sa_ptr->akid].key_len > Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs))
+            //if((int32_t) akp->key_len > Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs))
             //{
             //    return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
             //}
@@ -1081,7 +1105,7 @@ int32_t Crypto_TM_ProcessSecurity(const uint8_t* p_ingest, const uint16_t len_in
             //                                                 (size_t)(tc_sdls_processed_frame->tc_pdu_len),   // length of data
             //                                                 &(ingest[tc_enc_payload_start_index]), // ciphertext input
             //                                                 (size_t)(tc_sdls_processed_frame->tc_pdu_len),    // in data length
-            //                                                 &(local_key_ring_ptr[sa_ptr->ekid].value[0]), // Key
+            //                                                 &(akp->value[0]), // Key
             //                                                 Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs),
             //                                                 sa_ptr, // SA for key reference
             //                                                 tc_sdls_processed_frame->tc_sec_header.iv, // IV

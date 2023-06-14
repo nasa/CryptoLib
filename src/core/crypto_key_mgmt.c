@@ -45,14 +45,8 @@ int32_t Crypto_Key_OTAR(void)
     int y;
     int32_t status = CRYPTO_LIB_SUCCESS;
     int pdu_keys = (sdls_frame.pdu.pdu_len - 30) / (2 + KEY_SIZE);
-    crypto_key_t* ek_ring = key_if->get_ek_ring();
     int w;
-
-    if ( ek_ring == NULL )
-    {
-        status = CRYPTOGRAPHY_UNSUPPORTED_OPERATION_FOR_KEY_RING;
-        return status;
-    }
+    crypto_key_t* ekp = NULL;
 
     // Master Key ID
     packet.mkid = (sdls_frame.pdu.data[0] << 8) | (sdls_frame.pdu.data[1]);
@@ -89,12 +83,24 @@ int32_t Crypto_Key_OTAR(void)
         // printf("packet.mac[%d] = 0x%02x\n", w, packet.mac[w]);
     }
 
+    if (key_if != NULL)
+    {
+        status = CRYPTOGRAPHY_UNSUPPORTED_OPERATION_FOR_KEY_RING;
+        return status;
+    }
+
+    status = key_if->get_key(packet.mkid, ekp);
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        return status;
+    }
+
     uint8_t ecs = CRYPTO_CIPHER_AES256_GCM;
     status = cryptography_if->cryptography_aead_decrypt(&(sdls_frame.pdu.data[14]), // plaintext output
                                                         (size_t)(pdu_keys * (2 + KEY_SIZE)), // length of data
                                                         NULL,                               // in place decryption
                                                         0,                                  // in data length
-                                                        &(ek_ring[packet.mkid].value[0]), //key
+                                                        &(ekp->value[0]), //key
                                                         KEY_SIZE, //key length
                                                         NULL, //SA reference
                                                         &(packet.iv[0]), //IV
@@ -135,21 +141,27 @@ int32_t Crypto_Key_OTAR(void)
         }
         else
         {
+            status = key_if->get_key(packet.EKB[x].ekid, ekp);
+            if (status != CRYPTO_LIB_SUCCESS)
+            {
+                return status;
+            }
+            
             count = count + 2;
             for (y = count; y < (KEY_SIZE + count); y++)
-            { // Encrypted Key
+            { 
+                // Encrypted Key
                 packet.EKB[x].ek[y - count] = sdls_frame.pdu.data[y];
 #ifdef SA_DEBUG
                 printf("\t packet.EKB[%d].ek[%d] = 0x%02x\n", x, y - count, packet.EKB[x].ek[y - count]);
 #endif
-
                 // Setup Key Ring
-                ek_ring[packet.EKB[x].ekid].value[y - count] = sdls_frame.pdu.data[y];
+                ekp->value[y - count] = sdls_frame.pdu.data[y];
             }
             count = count + KEY_SIZE;
 
             // Set state to PREACTIVE
-            ek_ring[packet.EKB[x].ekid].key_state = KEY_PREACTIVE;
+            ekp->key_state = KEY_PREACTIVE;
         }
     }
 
@@ -179,13 +191,16 @@ int32_t Crypto_Key_update(uint8_t state)
     SDLS_KEY_BLK_t packet;
     int count = 0;
     int pdu_keys = sdls_frame.pdu.pdu_len / 2;
-    crypto_key_t* ek_ring = key_if->get_ek_ring();
+    int32_t status;
+    crypto_key_t* ekp = NULL;
     int x;
 
-    if ( ek_ring == NULL )
+    if (key_if == NULL)
     {
-        return CRYPTOGRAPHY_UNSUPPORTED_OPERATION_FOR_KEY_RING;
+        status = CRYPTOGRAPHY_UNSUPPORTED_OPERATION_FOR_KEY_RING;
+        return status;
     }
+
 #ifdef PDU_DEBUG
     printf("Keys ");
 #endif
@@ -250,9 +265,15 @@ int32_t Crypto_Key_update(uint8_t state)
             // TODO: Exit
         }
 
-        if (ek_ring[packet.kblk[x].kid].key_state == (state - 1))
+        status = key_if->get_key(packet.kblk[x].kid, ekp);
+        if (status != CRYPTO_LIB_SUCCESS)
         {
-            ek_ring[packet.kblk[x].kid].key_state = state;
+            return status;
+        }
+
+        if (ekp->key_state == (state - 1))
+        {
+            ekp->key_state = state;
 #ifdef PDU_DEBUG
             // printf("Key ID %d state changed to ", packet.kblk[x].kid);
 #endif
@@ -287,12 +308,14 @@ int32_t Crypto_Key_inventory(uint8_t* ingest)
     SDLS_KEY_INVENTORY_t packet;
     int count = 0;
     uint16_t range = 0;
-    crypto_key_t* ek_ring = key_if->get_ek_ring();
+    int32_t status;
+    crypto_key_t* ekp = NULL;
     uint16_t x;
 
-    if ( ek_ring == NULL || ingest == NULL)
+    if ((key_if == NULL) || (ingest == NULL))
     {
-        return CRYPTOGRAPHY_UNSUPPORTED_OPERATION_FOR_KEY_RING;
+        status = CRYPTOGRAPHY_UNSUPPORTED_OPERATION_FOR_KEY_RING;
+        return status;
     }
 
     // Read in PDU
@@ -309,11 +332,18 @@ int32_t Crypto_Key_inventory(uint8_t* ingest)
     ingest[count++] = (range & 0xFF00) >> 8;
     ingest[count++] = (range & 0x00FF);
     for (x = packet.kid_first; x < packet.kid_last; x++)
-    { // Key ID
+    { 
+        // Key ID
         ingest[count++] = (x & 0xFF00) >> 8;
         ingest[count++] = (x & 0x00FF);
+        // Get Key
+        status = key_if->get_key(x, ekp);
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+            return status;
+        }
         // Key State
-        ingest[count++] = ek_ring[x].key_state;
+        ingest[count++] = ekp->key_state;
     }
     return count;
 }
@@ -335,6 +365,14 @@ int32_t Crypto_Key_verify(uint8_t* ingest, TC_t* tc_frame)
     // uint8_t tmp_mac[MAC_SIZE];
     int x;
     int y;
+    int32_t status;
+    crypto_key_t* ekp = NULL;
+
+    if (key_if == NULL)
+    {
+        status = CRYPTOGRAPHY_UNSUPPORTED_OPERATION_FOR_KEY_RING;
+        return status;
+    }
 
 #ifdef PDU_DEBUG
     printf("Crypto_Key_verify: Requested %d key(s) to verify \n", pdu_keys);
@@ -363,16 +401,19 @@ int32_t Crypto_Key_verify(uint8_t* ingest, TC_t* tc_frame)
     sdls_frame.pdu.pdu_len = pdu_keys * (2 + IV_SIZE + CHALLENGE_SIZE + CHALLENGE_MAC_SIZE);
     sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
     count = Crypto_Prep_Reply(ingest, 128);
-    crypto_key_t* ek_ring = key_if->get_ek_ring();
-    if ( ek_ring == NULL ) // Can't verify key without a key ring, action supported for this cryptography interface!
-    {
-        return CRYPTOGRAPHY_UNSUPPORTED_OPERATION_FOR_KEY_RING;
-    }
 
     for (x = 0; x < pdu_keys; x++)
-    { // Key ID
+    {   
+        // Key ID
         ingest[count++] = (packet.blk[x].kid & 0xFF00) >> 8;
         ingest[count++] = (packet.blk[x].kid & 0x00FF);
+
+        // Get Key
+        status = key_if->get_key(x, ekp);
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+            return status;
+        }
 
         // Initialization Vector
         iv_loc = count;
@@ -388,7 +429,7 @@ int32_t Crypto_Key_verify(uint8_t* ingest, TC_t* tc_frame)
                                                    (size_t)CHALLENGE_SIZE, // length of data
                                                    &(packet.blk[x].challenge[0]), // plaintext input
                                                    (size_t)CHALLENGE_SIZE, // in data length
-                                                   &(ek_ring[packet.blk[x].kid].value[0]), // Key Index
+                                                   &(ekp->value[0]), // Key Index
                                                    KEY_SIZE, // Key Length
                                                    NULL, // SA Reference for key
                                                    &(ingest[iv_loc]), // IV

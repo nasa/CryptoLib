@@ -123,21 +123,30 @@ int32_t Crypto_User_ModifyKey(void)
     // Local variables
     uint16_t kid = ((uint8_t)sdls_frame.pdu.data[0] << 8) | ((uint8_t)sdls_frame.pdu.data[1]);
     uint8_t mod = (uint8_t)sdls_frame.pdu.data[2];
-    crypto_key_t* ek_ring = key_if->get_ek_ring();
+    int32_t status;
 
-    if ( ek_ring == NULL )
+    crypto_key_t* ekp = NULL;
+
+    if (key_if != NULL)
     {
-        return CRYPTOGRAPHY_UNSUPPORTED_OPERATION_FOR_KEY_RING;
+        status = CRYPTOGRAPHY_UNSUPPORTED_OPERATION_FOR_KEY_RING;
+        return status;
+    }
+
+    status = key_if->get_key(kid, ekp);
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        return status;
     }
 
     switch (mod)
     {
     case 1: // Invalidate Key
-        ek_ring[kid].value[KEY_SIZE - 1]++;
+        ekp->value[KEY_SIZE - 1]++;
         printf("Key %d value invalidated! \n", kid);
         break;
     case 2: // Modify key state
-        ek_ring[kid].key_state = (uint8_t)sdls_frame.pdu.data[3] & 0x0F;
+        ekp->key_state = (uint8_t)sdls_frame.pdu.data[3] & 0x0F;
         printf("Key %d state changed to %d! \n", kid, mod);
         break;
     default:

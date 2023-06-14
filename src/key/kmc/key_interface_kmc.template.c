@@ -23,17 +23,28 @@ static crypto_key_t ek_ring[NUM_KEYS] = {0};
 static KeyInterfaceStruct key_if_struct;
 
 /* Prototypes */
+static int32_t get_key(uint32_t key_id, crypto_key_t* key_ptr);
 static int32_t key_init(void);
 static int32_t key_shutdown(void);
-static crypto_key_t* get_ek_ring(void);
 
 /* Functions */
 KeyInterface get_key_interface_kmc(void)
 {
+    key_if_struct.get_key = get_key;
     key_if_struct.key_init = key_init;
-    key_if_struct.get_ek_ring = get_ek_ring;
     key_if_struct.key_shutdown = key_shutdown;
     return &key_if_struct;
+}
+
+static int32_t get_key(uint32_t key_id, crypto_key_t* key_ptr)
+{
+    /* Avoid set but not used warning */
+    key_id = key_id;
+    key_ptr = key_ptr; 
+
+    fprintf(stderr, "Attempting to access key ring with KMC Crypto Service. This shouldn't happen!\n ");
+
+    return NULL;
 }
 
 static int32_t key_init(void)
@@ -44,10 +55,4 @@ static int32_t key_init(void)
 static int32_t key_shutdown(void)
 {
     return CRYPTO_LIB_SUCCESS;
-}
-
-static crypto_key_t* get_ek_ring(void)
-{
-    fprintf(stderr, "Attempting to access key ring with KMC Crypto Service. This shouldn't happen!\n ");
-    return NULL;
 }
