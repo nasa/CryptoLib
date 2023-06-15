@@ -30,6 +30,7 @@
 static volatile uint8_t keepRunning = CRYPTO_LIB_SUCCESS;
 static volatile uint8_t tc_seq_num = 0;
 static volatile uint8_t tc_vcid = CRYPTO_STANDALONE_FRAMING_VCID;
+static volatile uint8_t tc_debug = 0;
 
 
 /* 
@@ -61,10 +62,11 @@ void crypto_standalone_print_help(void)
 {
     printf(CRYPTO_PROMPT "command [args]\n"
             "----------------------------------------------------------------------\n"
-            "help                               - Display help                     \n"
             "exit                               - Exit app                         \n"
+            "help                               - Display help                     \n"
             "noop                               - No operation command to device   \n"
             "reset                              - Reset CryptoLib                  \n"
+            "tc                                 - Toggle TC debug prints           \n"
             "vcid #                             - Change active TC virtual channel \n"
             "\n"
         );   
@@ -97,6 +99,10 @@ int32_t crypto_standalone_get_command(const char* str)
     else if(strcmp(lcmd, "vcid") == 0) 
     {
         status = CRYPTO_CMD_VCID;
+    }
+    else if(strcmp(lcmd, "tc") == 0) 
+    {
+        status = CRYPTO_CMD_TC_DEBUG;
     }
     return status;
 }
@@ -164,6 +170,22 @@ int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char* 
                 else
                 {
                     printf("Error - virtual channl (VCID) %d must be less than 64! Sticking with prior vcid %d \n", vcid, tc_vcid);
+                }
+            }
+            break;
+
+        case CRYPTO_CMD_TC_DEBUG:
+            if (crypto_standalone_check_number_arguments(num_tokens, 0) == CRYPTO_LIB_SUCCESS)
+            {
+                if (tc_debug == 0)
+                {
+                    tc_debug = 1;
+                    printf("Enabled TC debug prints! \n");
+                }
+                else
+                {
+                    tc_debug = 1;
+                    printf("Disabled TC debug prints! \n");
                 }
             }
             break;
@@ -287,14 +309,15 @@ void* crypto_standalone_tc_apply(void* sock)
         if (status != -1)
         {
             tc_in_len = status;
-            #ifdef CRYPTO_STANDALONE_TC_APPLY_DEBUG
+            if (tc_debug == 1)
+            {
                 printf("crypto_standalone_tc_apply - received[%d]: 0x", tc_in_len);
                 for(int i = 0; i < status; i++)
                 {
                     printf("%02x", tc_apply_in[i]);
                 }
                 printf("\n");
-            #endif
+            }
 
             /* Frame */
             #ifdef CRYPTO_STANDALONE_HANDLE_FRAMING
@@ -302,28 +325,30 @@ void* crypto_standalone_tc_apply(void* sock)
                 memcpy(tc_apply_in, tc_framed, tc_out_len);
                 tc_in_len = tc_out_len;
                 tc_out_len = 0;
-                #ifdef CRYPTO_STANDALONE_TC_APPLY_DEBUG
+                if (tc_debug == 1)
+                {
                     printf("crypto_standalone_tc_apply - framed[%d]: 0x", tc_in_len);
                     for(int i = 0; i < tc_in_len; i++)
                     {
                         printf("%02x", tc_apply_in[i]);
                     }
                     printf("\n");
-                #endif
+                }
             #endif
 
             /* Process */
             status = Crypto_TC_ApplySecurity(tc_apply_in, tc_in_len, &tc_out_ptr, &tc_out_len);
             if (status == CRYPTO_LIB_SUCCESS)
             {
-                #ifdef CRYPTO_STANDALONE_TC_APPLY_DEBUG
+                if (tc_debug == 1)
+                {
                     printf("crypto_standalone_tc_apply - status = %d, encrypted[%d]: 0x", status, tc_out_len);
                     for(int i = 0; i < tc_out_len; i++)
                     {
                         printf("%02x", tc_out_ptr[i]);
                     }
                     printf("\n");
-                #endif
+                }
 
                 /* Reply */
                 status = sendto(tc_sock->sockfd, tc_out_ptr, tc_out_len, 0, (struct sockaddr*) &fwd_addr, sizeof(fwd_addr));
@@ -342,9 +367,10 @@ void* crypto_standalone_tc_apply(void* sock)
             tc_in_len = 0;
             tc_out_len = 0;
             free(tc_out_ptr);
-            #ifdef CRYPTO_STANDALONE_TC_APPLY_DEBUG
+            if (tc_debug == 1)
+            {
                 printf("\n");
-            #endif
+            }
         }
 
         /* Delay */
