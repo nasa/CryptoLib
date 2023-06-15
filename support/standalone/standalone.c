@@ -458,10 +458,10 @@ void* crypto_standalone_tm_process(void* sock)
                     }
                     else
                     {
-                        if ( ((tm_ptr[0] != 0x03) && (tm_ptr[1] != 0xFF)) && ((tm_ptr[0] != 0xFF) && (tm_ptr[1] != 0x48)) )
-                        {
-                            printf("crypto_standalone_tm_process - SPP loop error, expected idle packet or frame! tm_ptr = 0x%02x%02x \n", tm_ptr[0], tm_ptr[1]);
-                        }
+                        //if ( ((tm_ptr[0] != 0x03) && (tm_ptr[1] != 0xFF)) && ((tm_ptr[0] != 0xFF) && (tm_ptr[1] != 0x48)) )
+                        //{
+                        //    printf("crypto_standalone_tm_process - SPP loop error, expected idle packet or frame! tm_ptr = 0x%02x%02x \n", tm_ptr[0], tm_ptr[1]);
+                        //}
                         tm_process_len = 0;
                     }
                 }
