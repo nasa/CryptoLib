@@ -330,14 +330,14 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
     // Crypto_Init_TC_Unit_Test();
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* ekp = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -363,7 +363,8 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
+    ekp = key_if->get_key(test_association->ekid);
+    memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
@@ -404,14 +405,14 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 {
     uint8_t* ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* ekp = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -442,7 +443,8 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     test_association->ast =1;
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
+    ekp = key_if->get_key(test_association->ekid);
+    memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
@@ -483,14 +485,14 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* ekp = NULL;
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char* buffer_nist_key_h = "e9ccd6eef27f740d1d5c70b187734e11e76a8ac0ad1702ff02180c5c1c9e5399";
@@ -515,7 +517,8 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
+    ekp = key_if->get_key(test_association->ekid);
+    memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
@@ -554,14 +557,14 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
 {
     uint8_t* ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* ekp = NULL;
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char* buffer_nist_key_h = "e9ccd6eef27f740d1d5c70b187734e11e76a8ac0ad1702ff02180c5c1c9e5399";
@@ -590,7 +593,8 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
+    ekp = key_if->get_key(test_association->ekid);
+    memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
@@ -631,14 +635,14 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* ekp = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -664,7 +668,8 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
+    ekp = key_if->get_key(test_association->ekid);
+    memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
@@ -703,14 +708,14 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
 {
     uint8_t* ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* ekp = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -740,7 +745,8 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
+    ekp = key_if->get_key(test_association->ekid);
+    memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
@@ -778,14 +784,14 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* ekp = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -811,7 +817,8 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
+    ekp = key_if->get_key(test_association->ekid);
+    memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
@@ -850,14 +857,14 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
 {
     uint8_t* ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* ekp = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -887,7 +894,8 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
+    ekp = key_if->get_key(test_association->ekid);
+    memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
@@ -925,14 +933,14 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* ekp = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -958,7 +966,8 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
+    ekp = key_if->get_key(test_association->ekid);
+    memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
@@ -997,14 +1006,14 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
 {
     uint8_t* ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* ekp = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -1034,7 +1043,8 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
+    ekp = key_if->get_key(test_association->ekid);
+    memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
@@ -1083,14 +1093,14 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* ekp = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -1123,7 +1133,8 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
+    ekp = key_if->get_key(test_association->ekid);
+    memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
@@ -1170,14 +1181,14 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* ekp = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -1209,7 +1220,8 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
+    ekp = key_if->get_key(test_association->ekid);
+    memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
@@ -1252,14 +1264,14 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 {
     // Setup & Initialize CryptoLib
     int32_t status;
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* ekp = NULL;
 
     // NIST supplied vectors
     char* buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
@@ -1302,7 +1314,8 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
+    ekp = key_if->get_key(test_association->ekid);
+    memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
     hex_conversion(buffer_nist_pt_h, (char**) &buffer_nist_pt_b, &buffer_nist_pt_len);
@@ -1376,14 +1389,14 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_DATA)
 {
     // Setup & Initialize CryptoLib
     int32_t status;
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* ekp = NULL;
 
     // NIST supplied vectors
     char* buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
@@ -1427,7 +1440,8 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_DATA)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
+    ekp = key_if->get_key(test_association->ekid);
+    memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
@@ -1477,14 +1491,14 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_MAC)
 {
     // Setup & Initialize CryptoLib
     int32_t status;
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* ekp = NULL;
 
     // NIST supplied vectors
     char* buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
@@ -1528,7 +1542,8 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_MAC)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->ekid].value, buffer_nist_key_b, buffer_nist_key_len);
+    ekp = key_if->get_key(test_association->ekid);
+    memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
@@ -1579,14 +1594,14 @@ UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* akp = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -1633,7 +1648,8 @@ UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->akid].value, buffer_nist_key_b, buffer_nist_key_len);
+    akp = key_if->get_key(test_association->akid);
+    memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     hex_conversion(buffer_frame_pt_h, (char**) &buffer_frame_pt_b, &buffer_frame_pt_len);
@@ -1671,14 +1687,14 @@ UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* akp = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -1725,7 +1741,8 @@ UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->akid].value, buffer_nist_key_b, buffer_nist_key_len);
+    akp = key_if->get_key(test_association->akid);
+    memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     hex_conversion(buffer_frame_pt_h, (char**) &buffer_frame_pt_b, &buffer_frame_pt_len);
@@ -1760,14 +1777,14 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
 {
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* akp = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -1818,7 +1835,8 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->akid].value, buffer_nist_key_b, buffer_nist_key_len);
+    akp = key_if->get_key(test_association->akid);
+    memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     hex_conversion(buffer_frame_pt_h, (char**) &buffer_frame_pt_b, &buffer_frame_pt_len);
@@ -1856,14 +1874,14 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
 {
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* akp = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -1912,7 +1930,8 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->akid].value, buffer_nist_key_b, buffer_nist_key_len);
+    akp = key_if->get_key(test_association->akid);
+    memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     hex_conversion(buffer_frame_pt_h, (char**) &buffer_frame_pt_b, &buffer_frame_pt_len);
@@ -1949,14 +1968,14 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_256_PT_128_TEST_0)
     uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* akp = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -2004,7 +2023,8 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_256_PT_128_TEST_0)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->akid].value, buffer_nist_key_b, buffer_nist_key_len);
+    akp = key_if->get_key(test_association->akid);
+    memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     hex_conversion(buffer_frame_pt_h, (char **)&buffer_frame_pt_b, &buffer_frame_pt_len);
@@ -2039,14 +2059,14 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
     uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* akp = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -2093,7 +2113,8 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->akid].value, buffer_nist_key_b, buffer_nist_key_len);
+    akp = key_if->get_key(test_association->akid);
+    memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
     // Convert input plaintext
     hex_conversion(buffer_frame_pt_h, (char **)&buffer_frame_pt_b, &buffer_frame_pt_len);
     // Convert input mac
@@ -2128,14 +2149,14 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
    uint16_t enc_frame_len = 0;
    int32_t status;
    // Setup & Initialize CryptoLib
-   Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+   Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
    Crypto_Init();
    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-   crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+   crypto_key_t* akp = NULL;
 
    // NIST supplied vectors
    // NOTE: Added Transfer Frame header to the plaintext
@@ -2183,8 +2204,9 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
 
    // Insert key into keyring of SA 9
    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
-   memcpy(ek_ring[test_association->akid].value, buffer_nist_key_b, buffer_nist_key_len);
-   ek_ring[test_association->akid].key_len = 64;
+   akp = key_if->get_key(test_association->akid);
+   memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
+   akp->key_len = 64;
 
    // Convert input plaintext
    hex_conversion(buffer_frame_pt_h, (char **)&buffer_frame_pt_b, &buffer_frame_pt_len);
@@ -2221,14 +2243,14 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
     uint16_t enc_frame_len = 0;
     int32_t status;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* akp = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -2276,8 +2298,9 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->akid].value, buffer_nist_key_b, buffer_nist_key_len);
-    ek_ring[test_association->akid].key_len = 64;
+    akp = key_if->get_key(test_association->akid);
+    memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
+    akp->key_len = 64;
 
     // Convert input plaintext
     hex_conversion(buffer_frame_pt_h, (char **)&buffer_frame_pt_b, &buffer_frame_pt_len);
@@ -2313,14 +2336,14 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_0)
     int32_t status = 0;
     uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* akp = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -2371,7 +2394,8 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_0)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->akid].value, buffer_nist_key_b, buffer_nist_key_len);
+    akp = key_if->get_key(test_association->akid);
+    memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     hex_conversion(buffer_frame_pt_h, (char **)&buffer_frame_pt_b, &buffer_frame_pt_len);
@@ -2406,14 +2430,14 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
     int32_t status = 0;
     uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* akp = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -2463,7 +2487,8 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->akid].value, buffer_nist_key_b, buffer_nist_key_len);
+    akp = key_if->get_key(test_association->akid);
+    memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     hex_conversion(buffer_frame_pt_h, (char **)&buffer_frame_pt_b, &buffer_frame_pt_len);
@@ -2496,14 +2521,14 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
 {
     int32_t status = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* akp = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -2554,8 +2579,9 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->akid].value, buffer_nist_key_b, buffer_nist_key_len);
-    ek_ring[test_association->akid].key_len = 64;
+    akp = key_if->get_key(test_association->akid);
+    memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
+    akp->key_len = 64;
 
     // Convert input plaintext
     hex_conversion(buffer_frame_pt_h, (char **)&buffer_frame_pt_b, &buffer_frame_pt_len);
@@ -2586,14 +2612,14 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
 {
     int32_t status = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* akp = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -2644,8 +2670,9 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->akid].value, buffer_nist_key_b, buffer_nist_key_len);
-    ek_ring[test_association->akid].key_len = 64;
+    akp = key_if->get_key(test_association->akid);
+    memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
+    akp->key_len = 64;
 
     // Convert input plaintext
     hex_conversion(buffer_frame_pt_h, (char **)&buffer_frame_pt_b, &buffer_frame_pt_len);
@@ -2678,7 +2705,7 @@ UTEST(PLAINTEXT, ENCRYPT_DECRYPT)
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_TRUE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
@@ -2715,14 +2742,14 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_SHORT_KEY)
     uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* akp = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -2769,8 +2796,9 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_SHORT_KEY)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->akid].value, buffer_nist_key_b, buffer_nist_key_len);
-    ek_ring[test_association->akid].key_len = 32;
+    akp = key_if->get_key(test_association->akid);
+    memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
+    akp->key_len = 32;
 
     // Convert input plaintext
     hex_conversion(buffer_frame_pt_h, (char **)&buffer_frame_pt_b, &buffer_frame_pt_len);
@@ -2796,14 +2824,14 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_SHORT_KEY)
     int32_t status = 0;
     uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Init();
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-    crypto_key_t* ek_ring = cryptography_if->get_ek_ring();
+    crypto_key_t* akp = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -2853,8 +2881,9 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_SHORT_KEY)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
-    memcpy(ek_ring[test_association->akid].value, buffer_nist_key_b, buffer_nist_key_len);
-    ek_ring[test_association->akid].key_len = 32;
+    akp = key_if->get_key(test_association->akid);
+    memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
+    akp->key_len = 32;
 
     // Convert input plaintext
     hex_conversion(buffer_frame_pt_h, (char **)&buffer_frame_pt_b, &buffer_frame_pt_len);

@@ -63,6 +63,7 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_MARIADB_NULL)
 {
     int32_t status = CRYPTO_LIB_ERROR;
     CryptoConfig_t* crypto_config_p = malloc(sizeof(CryptoConfig_t) * sizeof(uint8_t));
+    crypto_config_p->key_type=KEY_TYPE_INTERNAL;
     GvcidManagedParameters_t* gvcid_managed_paramenters_p = malloc(sizeof(GvcidManagedParameters_t));
     gvcid_managed_paramenters_p->next = NULL;
     SadbMariaDBConfig_t* sadb_mariadb_config_p = NULL;
@@ -83,6 +84,7 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_KMCCRYPTO_NULL)
 {
     int32_t status = CRYPTO_LIB_ERROR;
     CryptoConfig_t* crypto_config = malloc(sizeof(CryptoConfig_t) * sizeof(uint8_t));
+    crypto_config->key_type=KEY_TYPE_INTERNAL;
     GvcidManagedParameters_t* gvcid_managed_paramenters_p = malloc(sizeof(GvcidManagedParameters_t));
     gvcid_managed_paramenters_p->next = NULL;
     SadbMariaDBConfig_t* sadb_mariadb_config_p = malloc(sizeof(SadbMariaDBConfig_t) * sizeof(uint8_t));
@@ -105,6 +107,7 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_INVALID_INTERFACE)
 {
     int32_t status = CRYPTO_LIB_ERROR;
     CryptoConfig_t* crypto_config = malloc(sizeof(CryptoConfig_t) * sizeof(uint8_t));
+    crypto_config->key_type=KEY_TYPE_INTERNAL;
     GvcidManagedParameters_t* gvcid_managed_paramenters_p = malloc(sizeof(GvcidManagedParameters_t));
     gvcid_managed_paramenters_p->next = NULL;
     SadbMariaDBConfig_t* sadb_mariadb_config_p = malloc(sizeof(SadbMariaDBConfig_t) * sizeof(uint8_t));
@@ -127,6 +130,7 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_INVALID_SADB)
 {
     int32_t status = CRYPTO_LIB_ERROR;
     CryptoConfig_t* crypto_config_p = malloc(sizeof(CryptoConfig_t) * sizeof(uint8_t));
+    crypto_config_p->key_type=KEY_TYPE_INTERNAL;
     GvcidManagedParameters_t* gvcid_managed_paramenters_p = malloc(sizeof(GvcidManagedParameters_t) * sizeof(uint8_t));
     gvcid_managed_paramenters_p->next = NULL;
     SadbMariaDBConfig_t* sadb_mariadb_config_p = malloc(sizeof(SadbMariaDBConfig_t) * sizeof(uint8_t));
@@ -197,6 +201,7 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_KMC_OK)
 {
     int32_t status = CRYPTO_LIB_ERROR;
     CryptoConfig_t* crypto_config_p = malloc(sizeof(CryptoConfig_t) * sizeof(uint8_t));
+    crypto_config_p->key_type=KEY_TYPE_INTERNAL;
     GvcidManagedParameters_t* gvcid_managed_paramenters_p = malloc(sizeof(GvcidManagedParameters_t) * sizeof(uint8_t));
     SadbMariaDBConfig_t* sadb_mariadb_config_p = malloc(sizeof(SadbMariaDBConfig_t) * sizeof(uint8_t));
     CryptographyKmcCryptoServiceConfig_t* cryptography_kmc_crypto_config_p = malloc(sizeof(CryptographyKmcCryptoServiceConfig_t) * sizeof(uint8_t));

@@ -35,6 +35,31 @@ else()
     list(APPEND LIB_SRC_FILES ${KMC_FILES})
 endif()
 
+if(KEY_CUSTOM)
+    # Assumes CryptoLib is a Git submodule to project and custom directories and definitions exist at top level
+    aux_source_directory(../../key/custom KEY_CUSTOM_FILES)
+    list(APPEND LIB_SRC_FILES ${KEY_CUSTOM_FILES})
+else()
+    aux_source_directory(key/custom_stub KEY_CUSTOM_FILES)
+    list(APPEND LIB_SRC_FILES ${KEY_CUSTOM_FILES})
+endif()
+
+if(KEY_INTERNAL)
+    aux_source_directory(key/internal KEY_INTERNAL_FILES)
+    list(APPEND LIB_SRC_FILES ${KEY_INTERNAL_FILES})
+else()
+    aux_source_directory(key/internal_stub KEY_INTERNAL_FILES)
+    list(APPEND LIB_SRC_FILES ${KEY_INTERNAL_FILES})
+endif()
+
+if(KEY_KMC)
+    aux_source_directory(key/kmc KEY_KMC_FILES)
+    list(APPEND LIB_SRC_FILES ${KEY_KMC_FILES})
+else()
+    aux_source_directory(key/kmc_stub KEY_KMC_FILES)
+    list(APPEND LIB_SRC_FILES ${KEY_KMC_FILES})
+endif()
+
 if(SA_INTERNAL)
     aux_source_directory(sa/internal SA_INTERNAL_FILES)
     list(APPEND LIB_SRC_FILES ${SA_INTERNAL_FILES})
@@ -77,7 +102,8 @@ if(SA_MARIADB)
     target_link_libraries(Crypto ${MYSQL_LIBS})
 endif()
 
-set_target_properties(Crypto PROPERTIES PUBLIC_HEADER "../include/crypto.h;../include/crypto_config_structs.h;../include/crypto_error.h;../include/crypto_print.h;../include/crypto_structs.h;../include/crypto_config.h;")
+file(GLOB CRYPTO_INCLUDES ../include/*.h)
+set_target_properties(Crypto PROPERTIES PUBLIC_HEADER "${CRYPTO_INCLUDES}")
 
 add_custom_command(TARGET Crypto POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:Crypto> ${PROJECT_BINARY_DIR}/lib/libCrypto.so

@@ -44,7 +44,6 @@ typedef struct  {
 // Cryptography Interface Initialization & Management Functions
 static int32_t cryptography_config(void);
 static int32_t cryptography_init(void);
-static crypto_key_t* get_ek_ring(void);
 static int32_t cryptography_shutdown(void);
 // Cryptography Interface Functions
 static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
@@ -148,7 +147,6 @@ CryptographyInterface get_cryptography_interface_kmc_crypto_service(void)
 {
     cryptography_if_struct.cryptography_config = cryptography_config;
     cryptography_if_struct.cryptography_init = cryptography_init;
-    cryptography_if_struct.get_ek_ring = get_ek_ring;
     cryptography_if_struct.cryptography_shutdown = cryptography_shutdown;
     cryptography_if_struct.cryptography_encrypt = cryptography_encrypt;
     cryptography_if_struct.cryptography_decrypt = cryptography_decrypt;
@@ -266,11 +264,6 @@ static int32_t cryptography_init(void)
     }
     kmc_root_uri = NULL;
     return status;
-}
-static crypto_key_t* get_ek_ring(void)
-{
-    fprintf(stderr, "Attempting to access key ring with KMC Crypto Service. This shouldn't happen!\n ");
-    return NULL;
 }
 static int32_t cryptography_shutdown(void)
 {

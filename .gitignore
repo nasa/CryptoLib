@@ -11,6 +11,6 @@
 __pycache__
 *.dat
 *.so
-build
+build*
 venv
 vgcore*
