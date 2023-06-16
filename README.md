@@ -1,4 +1,8 @@
-![Build](https://github.com/nasa/CryptoLib/actions/workflows/build.yml/badge.svg) ![Unit Tests](https://github.com/nasa/CryptoLib/actions/workflows/utest.yml/badge.svg) ![Validation Tests](https://github.com/nasa/CryptoLib/actions/workflows/validation.yml/badge.svg) ![MariaDB Tests](https://github.com/nasa/CryptoLib/actions/workflows/mariadb.yml/badge.svg) [![CodeCov](https://codecov.io/gh/nasa/CryptoLib/branch/collab_main/graph/badge.svg?token=KCOMCQO0ZU)](https://codecov.io/gh/nasa/CryptoLib)
+![Build](https://github.com/nasa/CryptoLib/actions/workflows/build.yml/badge.svg)
+![Unit Tests](https://github.com/nasa/CryptoLib/actions/workflows/utest.yml/badge.svg)
+![Validation Tests](https://github.com/nasa/CryptoLib/actions/workflows/validation.yml/badge.svg)
+![MariaDB Tests](https://github.com/nasa/CryptoLib/actions/workflows/mariadb.yml/badge.svg)
+[![CodeCov](https://codecov.io/gh/nasa/CryptoLib/branch/main/graph/badge.svg?token=KCOMCQO0ZU)](https://codecov.io/gh/nasa/CryptoLib)
 
 # CryptoLib
 
