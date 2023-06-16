@@ -97,7 +97,7 @@ extern int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint
 extern int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc_sdls_processed_frame, char* cam_cookies);
 // Telemetry (TM)
 extern int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr);
-extern int32_t Crypto_TM_ProcessSecurity(const uint8_t* p_ingest, const uint16_t len_ingest, uint8_t** pp_processed_frame, uint16_t *p_decrypted_length);
+extern int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_t** pp_processed_frame, uint16_t *p_decrypted_length);
 // Advanced Orbiting Systems (AOS)
 extern int32_t Crypto_AOS_ApplySecurity(uint8_t* ingest, int *len_ingest);
 extern int32_t Crypto_AOS_ProcessSecurity(uint8_t* ingest, int *len_ingest);
