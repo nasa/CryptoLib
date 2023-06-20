@@ -25,19 +25,13 @@
 #include "common_types.h"
 #else // Assume build outside of NOS3/cFS infrastructure
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 #endif
 
 /*
-** Key Definitions
+** Definitions
 */
-typedef struct
-{
-    uint8_t value[KEY_SIZE];
-    uint32_t key_len;
-    uint8_t key_state : 4;
-} crypto_key_t;
-#define CRYPTO_KEY_SIZE (sizeof(crypto_key_t))
-
 typedef struct
 {                       // Global Virtual Channel ID / Global MAP ID
     uint8_t tfvn : 4;   // Transfer Frame Version Number

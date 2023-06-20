@@ -15,7 +15,7 @@
 # NASA IV&V
 # jstar-development-team@mail.nasa.gov
 
-set(PROJECT_TEST_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(PROJECT_TEST_DIR ${CMAKE_BINARY_DIR})
 
 # add_test(NAME Process_Security
 #          COMMAND ${PROJECT_BINARY_DIR}/bin/process_security tc ${PROJECT_TEST_DIR}/data/tc4.1.dat

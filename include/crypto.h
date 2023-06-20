@@ -38,6 +38,7 @@
 #include "crypto_structs.h"
 #include "sadb_routine.h"
 #include "cryptography_interface.h"
+#include "key_interface.h"
 
 /*
 ** Crypto Version
@@ -57,9 +58,10 @@
 */
 
 // Crypto Library Configuration functions
-extern int32_t Crypto_Config_CryptoLib(uint8_t sadb_type, uint8_t cryptography_type, uint8_t crypto_create_fecf, uint8_t process_sdls_pdus,
-                                       uint8_t has_pus_hdr, uint8_t ignore_sa_state, uint8_t ignore_anti_replay,
-                                       uint8_t unique_sa_per_mapid, uint8_t crypto_check_fecf, uint8_t vcid_bitmask, uint8_t crypto_increment_nontransmitted_iv);
+extern int32_t Crypto_Config_CryptoLib(uint8_t key_type, uint8_t sadb_type, uint8_t cryptography_type, uint8_t crypto_create_fecf, 
+                                       uint8_t process_sdls_pdus, uint8_t has_pus_hdr, uint8_t ignore_sa_state, uint8_t ignore_anti_replay,
+                                       uint8_t unique_sa_per_mapid, uint8_t crypto_check_fecf, uint8_t vcid_bitmask, 
+                                       uint8_t crypto_increment_nontransmitted_iv);
 extern int32_t Crypto_Config_MariaDB(char* mysql_hostname, char* mysql_database, uint16_t mysql_port,
                                      uint8_t mysql_require_secure_transport, uint8_t mysql_tls_verify_server,
                                      char* mysql_tls_ca, char* mysql_tls_capath, char* mysql_mtls_cert,
@@ -95,7 +97,7 @@ extern int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint
 extern int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc_sdls_processed_frame, char* cam_cookies);
 // Telemetry (TM)
 extern int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr);
-extern int32_t Crypto_TM_ProcessSecurity(const uint8_t* p_ingest, const uint16_t len_ingest, uint8_t** pp_processed_frame, uint16_t *p_decrypted_length);
+extern int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_t** pp_processed_frame, uint16_t *p_decrypted_length);
 // Advanced Orbiting Systems (AOS)
 extern int32_t Crypto_AOS_ApplySecurity(uint8_t* ingest, int *len_ingest);
 extern int32_t Crypto_AOS_ProcessSecurity(uint8_t* ingest, int *len_ingest);
@@ -187,6 +189,7 @@ extern CryptographyKmcCryptoServiceConfig_t* cryptography_kmc_crypto_config;
 extern CamConfig_t* cam_config;
 extern GvcidManagedParameters_t* gvcid_managed_parameters;
 extern GvcidManagedParameters_t* current_managed_parameters;
+extern KeyInterface key_if;
 extern SadbRoutine sadb_routine;
 extern CryptographyInterface cryptography_if;
 
