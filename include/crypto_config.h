@@ -121,7 +121,7 @@
 #define FECF_SIZE 2
 #define SEGMENT_HDR_SIZE 1
 #define ECS_SIZE 4    /* bytes */
-#define ABM_SIZE 1024 // 20      /* bytes */
+#define ABM_SIZE 1786 // 20      /* bytes */
 #define ARSN_SIZE 20   /* total messages */
 #define ARSNW_SIZE 1   /* bytes */
 #define SN_SIZE 0

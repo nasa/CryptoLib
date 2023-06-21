@@ -454,7 +454,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
             }
         }
 
-        if (sa_ptr->iv_len > 0)
+        if (crypto_config->iv_type == IV_INTERNAL)
         {
             // Start index from the transmitted portion
             for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
@@ -463,11 +463,11 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
                 index++;
             }
         }
-        // IV is NULL 
+        // IV is NULL / IV_CRYPTO_MODULE 
         else 
         {
             // Transmitted length > 0, AND using KMC_CRYPTO
-            if ((sa_ptr->shivf_len > 0) && crypto_config->cryptography_type == CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+            if ((sa_ptr->shivf_len > 0) && (crypto_config->cryptography_type == CRYPTOGRAPHY_TYPE_KMCCRYPTO))
             {
                 index += sa_ptr->iv_len - (sa_ptr->iv_len - sa_ptr->shivf_len);
             }
@@ -1342,7 +1342,7 @@ uint8_t* Crypto_Prepare_TC_AAD(uint8_t* buffer, uint16_t len_aad, uint8_t* abm_b
  **/
 static int32_t crypto_tc_validate_sa(SecurityAssociation_t *sa)
 {
-    if (sa->shivf_len > 0 && sa->iv == NULL && crypto_config->cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+    if (sa->shivf_len > 0 && crypto_config->iv_type == IV_CRYPTO_MODULE && crypto_config->cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
         return CRYPTO_LIB_ERR_NULL_IV;
     }
@@ -1350,22 +1350,17 @@ static int32_t crypto_tc_validate_sa(SecurityAssociation_t *sa)
     {
         return CRYPTO_LIB_ERR_IV_LEN_SHORTER_THAN_SEC_HEADER_LENGTH;
     }
-    if (sa->iv_len > 0 && sa->iv == NULL && crypto_config->cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+    if (sa->iv_len > 0 && crypto_config->iv_type == IV_CRYPTO_MODULE && crypto_config->cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
         return CRYPTO_LIB_ERR_NULL_IV;
     }
-
-    if (sa->shsnf_len > 0 && sa->arsn == NULL)
+    if (crypto_config->iv_type == IV_CRYPTO_MODULE && crypto_config->cryptography_type == CRYPTOGRAPHY_TYPE_LIBGCRYPT)
     {
-        return CRYPTO_LIB_ERR_NULL_ARSN;
+        return CRYPTO_LIB_ERR_NULL_IV;
     }
     if (sa->arsn_len - sa->shsnf_len < 0)
     {
         return CRYPTO_LIB_ERR_ARSN_LEN_SHORTER_THAN_SEC_HEADER_LENGTH;
-    }
-    if (sa->arsn_len > 0 && sa->arsn == NULL)
-    {
-        return CRYPTO_LIB_ERR_NULL_ARSN;
     }
 
     return CRYPTO_LIB_SUCCESS;
