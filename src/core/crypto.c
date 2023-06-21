@@ -72,7 +72,7 @@ uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
     // TODO - Add cipher suite mapping to which algorithms are AEAD and which are not.
     if((cipher_suite_id == CRYPTO_CIPHER_AES256_GCM) || (cipher_suite_id == CRYPTO_CIPHER_AES256_CBC_MAC))
     {
-        #ifdef CRYPTO_DEBUG
+        #ifdef DEBUG
             printf(KYEL "CRYPTO IS AEAD? : TRUE\n" RESET);
         #endif
         return CRYPTO_TRUE;
@@ -80,7 +80,7 @@ uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
     }
     else
     {   
-        #ifdef CRYPTO_DEBUG
+        #ifdef DEBUG
             printf(KYEL "CRYPTO IS AEAD? : FALSE\n" RESET);
         #endif
         return CRYPTO_FALSE;
