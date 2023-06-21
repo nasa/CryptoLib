@@ -252,18 +252,8 @@ static int32_t sadb_save_sa(SecurityAssociation_t* sa)
     // todo - if query fails, need to push failure message to error stack instead of just return code.
 
     // We free the allocated SA memory in the save function.
-    if (sa->iv != NULL)
-        free(sa->iv);
-    if (sa->abm != NULL)
-        free(sa->abm);
-    if (sa->arsn != NULL)
-        free(sa->arsn);
     if (sa->ek_ref != NULL)
         free(sa->ek_ref);
-    if (sa->ecs != NULL)
-        free(sa->ecs);
-    if (sa->acs != NULL)
-        free(sa->acs);
     if (sa->ak_ref != NULL)
         free(sa->ak_ref);
     free(sa);
@@ -525,25 +515,15 @@ static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** se
         }
         // printf("\n");
     }
-    if (iv_byte_str == NULL){
-        sa->iv = NULL;
-    }
-    else{
-        sa->iv = (uint8_t* )calloc(1, sa->iv_len * sizeof(uint8_t));
-    }
-    
-    sa->arsn = (uint8_t* )calloc(1, sa->arsn_len * sizeof(uint8_t));
-    sa->abm = (uint8_t* )calloc(1, sa->abm_len * sizeof(uint8_t));
-    sa->ecs = (uint8_t* )calloc(1, sa->ecs_len * sizeof(uint8_t));
-    sa->acs = (uint8_t* )calloc(1, sa->acs_len * sizeof(uint8_t));
+
     if(iv_byte_str != NULL){
         if(sa->iv_len > 0)   convert_hexstring_to_byte_array(iv_byte_str, sa->iv);
     }
     
     if(sa->arsn_len > 0) convert_hexstring_to_byte_array(arc_byte_str, sa->arsn);
     if(sa->abm_len > 0)  convert_hexstring_to_byte_array(abm_byte_str, sa->abm);
-    if(sa->ecs_len > 0)  convert_hexstring_to_byte_array(ecs_byte_str, sa->ecs);
-    if(sa->acs_len > 0)  convert_hexstring_to_byte_array(acs_byte_str, sa->acs);
+    if(sa->ecs_len > 0)  convert_hexstring_to_byte_array(ecs_byte_str, &sa->ecs);
+    if(sa->acs_len > 0)  convert_hexstring_to_byte_array(acs_byte_str, &sa->acs);
 
     //arsnw_len is not necessary for mariadb interface, putty dummy/default value for prints.
     sa->arsnw_len = 1;
