@@ -15,8 +15,8 @@ ITC Team
 NASA IV&V
 ivv-itc@lists.nasa.gov
 */
-#ifndef _crypto_config_structs_h_
-#define _crypto_config_structs_h_
+#ifndef CRYPTO_CONFIG_STRUCTS_H
+#define CRYPTO_CONFIG_STRUCTS_H
 
 #include "crypto_config.h"
 
@@ -246,5 +246,4 @@ typedef struct
 } CamConfig_t;
 #define CAM_CONFIG_SIZE (sizeof(CamConfig_t))
 
-
-#endif
+#endif //CRYPTO_CONFIG_STRUCTS_H

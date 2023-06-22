@@ -106,4 +106,4 @@ void crypto_standalone_cleanup(const int signal);
 } /* Close scope of 'extern "C"' declaration which encloses file. */
 #endif
 
-#endif /* CRYPTOLIB_STANDALONE_H */
+#endif //CRYPTOLIB_STANDALONE_H

@@ -16,8 +16,8 @@
    jstar-development-team@mail.nasa.gov
 */
 
-#ifndef _crypto_h_
-#define _crypto_h_
+#ifndef CRYPTO_H
+#define CRYPTO_H
 
 /*
 ** Crypto Includes
@@ -217,4 +217,4 @@ extern uint8_t badFECF;
 extern uint32_t crc32Table[256];
 extern uint16_t crc16Table[256];
 
-#endif // _crypto_h_z
+#endif //CRYPTO_H

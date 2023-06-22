@@ -30,8 +30,8 @@
 
 // https://www.oryx-embedded.com/doc/base64_8h_source.html
 
-#ifndef _BASE64URL_H
-#define _BASE64URL_H
+#ifndef BASE64URL_H
+#define BASE64URL_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -69,4 +69,4 @@ int32_t base64urlDecode(const char_t* input, size_t inputLen, void* output,
 }
 #endif
 
-#endif
+#endif //BASE64URL_H

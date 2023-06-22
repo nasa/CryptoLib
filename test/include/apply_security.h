@@ -32,4 +32,4 @@ extern "C"
 } /* Close scope of 'extern "C"' declaration which encloses file. */
 #endif
 
-#endif // CRYPTOLIB_APPLY_SECURITY_H
+#endif //CRYPTOLIB_APPLY_SECURITY_H

@@ -1153,4 +1153,4 @@ cleanup:
     return utest_main(argc, argv);                                             \
   }
 
-#endif /* SHEREDOM_UTEST_H_INCLUDED */
+#endif //SHEREDOM_UTEST_H_INCLUDED
