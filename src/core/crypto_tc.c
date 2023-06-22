@@ -276,28 +276,24 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
         // Calculate tf_payload length here to be used in other logic
         tf_payload_len = temp_tc_header.fl - TC_FRAME_HEADER_SIZE - segment_hdr_len - fecf_len + 1;
 
-        switch (sa_service_type)
-        {
-        case SA_PLAINTEXT:
-            // Ingest length + spi_index (2) + some variable length fields
-            *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shplf_len;
-            new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
-            break;
-        case SA_AUTHENTICATION:
-            // Ingest length + spi_index (2) + shivf_len (varies) + shsnf_len (varies)
-            //   + shplf_len + arsn_len + pad_size + stmacf_len
-            // TODO: If ARSN is transmitted in the SHSNF field (as in CMAC... don't double count those bytes)
-            *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len + sa_ptr->stmacf_len;
-            new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;            
-            break;
-        case SA_ENCRYPTION:
-            // Ingest length + 1 (accounts for -1 to length) + spi_index (2) + shivf_len (varies) + shsnf_len (varies)
-            //   + shplf_len + arsn_len + pad_size
-            *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;
-                                //+ sa_ptr->arsn_len; //should point to shplf_len
-            
-            new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
+        /**
+         * A note on plaintext: Take a permissive approach to allow the lengths of fields that aren't going to be used.
+         * The 355.0-B-2 (July 2022) says the following in $4.2.2.4:
+         * 'It is possible to create a ‘clear mode’ SA using one of the defined service types by
+            specifying the algorithm as a ‘no-op’ function (no actual cryptographic operation to
+            be performed). Such an SA might be used, for example, during development
+            testing of other aspects of data link processing before cryptographic capabilities are
+            available for integrated testing.In this scenario, the Security Header and Trailer
+            field lengths are kept constant across all supported configurations. For security
+            reasons, the use of such an SA is not recommended in normal operation.'
+        */
 
+        // Calculate frame lengths based on SA fields
+        *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len + sa_ptr->stmacf_len;
+        new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
+            
+        if (sa_service_type ==  SA_ENCRYPTION)
+        {
             // Handle Padding, if necessary
             if(*(sa_ptr->ecs) == CRYPTO_CIPHER_AES256_CBC)
             {
@@ -323,17 +319,11 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
                 }
                 
             }
-            break;
-        case SA_AUTHENTICATED_ENCRYPTION:
-            // Ingest length + spi_index (2) + shivf_len (varies) + shsnf_len (varies)
-            //   + shplf_len + arsn_len + pad_size + stmacf_len
-            *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len +
-                               sa_ptr->arsn_len + sa_ptr->stmacf_len;
-            new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
-            break;
-        default:
+        }
+
+        if (sa_service_type != (SA_PLAINTEXT || SA_AUTHENTICATED_ENCRYPTION || SA_ENCRYPTION || SA_AUTHENTICATION))
+        {
             printf(KRED "Unknown SA Service Type Detected!" RESET);
-            break;
         }
 
         // Ensure the frame to be created will not violate managed parameter maximum length
