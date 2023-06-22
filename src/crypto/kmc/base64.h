@@ -28,8 +28,8 @@
  * @version 2.1.2
  **/
 
-#ifndef _BASE64_H
-#define _BASE64_H
+#ifndef BASE64_H
+#define BASE64_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -60,4 +60,4 @@ int32_t base64Decode(const char_t* input, size_t inputLen, void* output,
 }
 #endif
 
-#endif
+#endif //BASE64_H

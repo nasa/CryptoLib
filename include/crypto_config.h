@@ -15,8 +15,8 @@
    NASA IV&V
    jstar-development-team@mail.nasa.gov
 */
-#ifndef _crypto_config_h_
-#define _crypto_config_h_
+#ifndef CRYPTO_CONFIG_H
+#define CRYPTO_CONFIG_H
 
 // Build Defines
 //#define BUILD_STATIC
@@ -186,4 +186,5 @@
 // Logic Behavior Defines
 #define CRYPTO_FALSE 0
 #define CRYPTO_TRUE 1
-#endif
+
+#endif //CRYPTO_CONFIG_H

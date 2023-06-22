@@ -16,8 +16,8 @@
    jstar-development-team@mail.nasa.gov
 */
 
-#ifndef _crypto_structs_h_
-#define _crypto_structs_h_
+#ifndef CRYPTO_STRUCTS_H
+#define CRYPTO_STRUCTS_H
 
 #include "crypto_config.h"
 
@@ -403,4 +403,4 @@ typedef struct
 #define TM_MIN_SIZE                                                                                                    \
     (TM_FRAME_PRIMARYHEADER_SIZE + TM_FRAME_SECHEADER_SIZE + TM_FRAME_SECTRAILER_SIZE + TM_FRAME_CLCW_SIZE)
 
-#endif
+#endif //CRYPTO_STRUCTS_H

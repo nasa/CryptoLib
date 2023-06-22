@@ -32,4 +32,4 @@ extern "C"
 } /* Close scope of 'extern "C"' declaration which encloses file. */
 #endif
 
-#endif // CRYPTOLIB_ET_DT_VALIDATION_H
+#endif //CRYPTOLIB_ET_DT_VALIDATION_H

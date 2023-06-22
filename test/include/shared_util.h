@@ -45,4 +45,4 @@ extern "C"
 } /* Close scope of 'extern "C"' declaration which encloses file. */
 #endif
 
-#endif // CRYPTOLIB_SHARED_UTIL_H
+#endif //CRYPTOLIB_SHARED_UTIL_H
