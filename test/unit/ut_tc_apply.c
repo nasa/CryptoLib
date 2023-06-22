@@ -1136,25 +1136,25 @@ UTEST(TC_APPLY_SECURITY, CBC_NULL_IV_W_IVH)
 */
 UTEST(TC_APPLY_SECURITY, PLAINTEXT_W_ARSN)
 {
- // Setup & Initialize CryptoLib
-     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Init();
- // Test string
- char* raw_tc_sdls_ping_h = "2003001F00000100011880D2C9000E197F0B001B0004000400003040D95E0000";
- char* raw_tc_sdls_ping_b = NULL;
- int raw_tc_sdls_ping_len = 0;
+    // Test string
+    char* raw_tc_sdls_ping_h = "2003001F00000100011880D2C9000E197F0B001B0004000400003040D95E0000";
+    char* raw_tc_sdls_ping_b = NULL;
+    int raw_tc_sdls_ping_len = 0;
 
- hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
+    hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
- uint8_t* ptr_enc_frame = NULL;
- uint16_t enc_frame_len = 0;
- int32_t return_val = CRYPTO_LIB_ERROR;
+    uint8_t* ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+    int32_t return_val = CRYPTO_LIB_ERROR;
 
- return_val =
-Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    return_val = Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
     char* truth_data_h = "200300230000010000000100011880D2C9000E197F0B001B0004000400003040D95E85F3";
     uint8_t* truth_data_b = NULL;
@@ -1168,11 +1168,9 @@ Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &pt
         ASSERT_EQ(ptr_enc_frame[i], truth_data_b[i]);
     }
 
-Crypto_Shutdown();
-free(raw_tc_sdls_ping_b);
-free(ptr_enc_frame);
-ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+    Crypto_Shutdown();
+    free(raw_tc_sdls_ping_b);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
 }
-
 
 UTEST_MAIN();
