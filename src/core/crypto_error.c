@@ -67,6 +67,8 @@ char *crypto_enum_errlist_core[] =
         ,"CRYPTO_LIB_ERR_NULL_MODE_PTR"
         ,"CRYPTO_LIB_ERR_UNSUPPORTED_MODE"
         ,"CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_TM_STANDARD"
+        ,"CRYPTO_LIB_ERR_TC_ENUM_USED_FOR_TM_CONFIG"
+        ,"CRYPTO_LIB_ERR_KEY_ID_ERROR"
 };
 
 char *crypto_enum_errlist_config[] =

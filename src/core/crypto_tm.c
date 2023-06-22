@@ -55,7 +55,6 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
     uint16_t pdu_len = -1;
     uint32_t pkcs_padding = 0;
     uint16_t new_fecf = 0x0000;
-    uint32_t encryption_cipher;
     uint8_t ecs_is_aead_algorithm;
 
 #ifdef DEBUG
@@ -136,11 +135,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
 // Determine Algorithm cipher & mode. // TODO - Parse authentication_cipher, and handle AEAD cases properly
         if (sa_service_type != SA_PLAINTEXT)
         {
-            printf(KRED "Checking AEAD status\n");
-            //encryption_cipher =
-            //    (sa_ptr->ecs[0] << 24) | (sa_ptr->ecs[1] << 16) | (sa_ptr->ecs[2] << 8) | sa_ptr->ecs[3];
-            encryption_cipher = *sa_ptr->ecs;
-            ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(encryption_cipher);
+            ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(sa_ptr->ecs);
         }
 
 #ifdef TM_DEBUG
@@ -219,16 +214,16 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         }
 #endif
 
-        if(sa_service_type != SA_PLAINTEXT && sa_ptr->ecs == NULL && sa_ptr->acs == NULL)
+        if(sa_service_type != SA_PLAINTEXT && sa_ptr->ecs_len == 0 && sa_ptr->acs_len == 0)
         {
             return CRYPTO_LIB_ERR_NULL_CIPHERS;
         }
 
         if(sa_ptr->est == 0 && sa_ptr->ast == 1)
         {
-            if(sa_ptr->acs !=NULL && sa_ptr->acs_len != 0)
+            if(sa_ptr->acs_len != 0)
             {
-                if((*(sa_ptr->acs) == CRYPTO_MAC_CMAC_AES256 || *(sa_ptr->acs) == CRYPTO_MAC_HMAC_SHA256 || *(sa_ptr->acs) == CRYPTO_MAC_HMAC_SHA512) &&
+                if((sa_ptr->acs == CRYPTO_MAC_CMAC_AES256 || sa_ptr->acs == CRYPTO_MAC_HMAC_SHA256 || sa_ptr->acs == CRYPTO_MAC_HMAC_SHA512) &&
                     sa_ptr->iv_len > 0 )
                     {
                         return CRYPTO_LIB_ERR_IV_NOT_SUPPORTED_FOR_ACS_ALGO;
@@ -395,11 +390,11 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
                                                         (uint8_t*)(&tm_frame[data_loc]), // plaintext input
                                                         (size_t) pdu_len, // in data length - from start of frame to end of data
                                                         &(ekp->value[0]), // Key
-                                                        Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs),
+                                                        Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs),
                                                         sa_ptr, // SA (for key reference)
                                                         sa_ptr->iv, // IV
                                                         sa_ptr->iv_len, // IV Length
-                                                        sa_ptr->ecs, // encryption cipher
+                                                        &sa_ptr->ecs, // encryption cipher
                                                         pkcs_padding,  // authentication cipher
                                                         NULL);
         } 
@@ -414,7 +409,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
                                                                     (uint8_t*)(&tm_frame[0]), // plaintext input
                                                                     (size_t)0, // in data length - from start of frame to end of data
                                                                     &(akp->value[0]), // Key
-                                                                    Crypto_Get_ACS_Algo_Keylen(*sa_ptr->acs),
+                                                                    Crypto_Get_ACS_Algo_Keylen(sa_ptr->acs),
                                                                     sa_ptr, // SA (for key reference)
                                                                     sa_ptr->iv, // IV
                                                                     sa_ptr->iv_len, // IV Length
@@ -422,8 +417,8 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
                                                                     sa_ptr->stmacf_len, // tag size
                                                                     aad, // AAD Input
                                                                     aad_len, // Length of AAD
-                                                                    *sa_ptr->ecs, // encryption cipher
-                                                                    *sa_ptr->acs,  // authentication cipher
+                                                                    sa_ptr->ecs, // encryption cipher
+                                                                    sa_ptr->acs,  // authentication cipher
                                                                     NULL);
             }
             if(sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
@@ -436,11 +431,11 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
                                                                     (uint8_t*)(&tm_frame[data_loc]), // plaintext input
                                                                     (size_t) pdu_len, // in data length - from start of frame to end of data
                                                                     &(ekp->value[0]), // Key
-                                                                    Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs),
+                                                                    Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs),
                                                                     sa_ptr, // SA (for key reference)
                                                                     sa_ptr->iv, // IV
                                                                     sa_ptr->iv_len, // IV Length
-                                                                    sa_ptr->ecs, // encryption cipher
+                                                                    &sa_ptr->ecs, // encryption cipher
                                                                     pkcs_padding,  // authentication cipher
                                                                     NULL);
                 }
@@ -901,9 +896,9 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
     // Determine Algorithm cipher & mode. // TODO - Parse authentication_cipher, and handle AEAD cases properly
     if (sa_service_type != SA_PLAINTEXT)
     {
-        if (sa_ptr->ecs != NULL)
+        if (sa_ptr->ecs != CRYPTO_CIPHER_NONE)
         {
-            encryption_cipher = *sa_ptr->ecs;
+            encryption_cipher = sa_ptr->ecs;
 #ifdef TC_DEBUG
             printf(KYEL "SA Encryption Cipher: %d\n", encryption_cipher);
 #endif
@@ -1069,10 +1064,10 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
     ** Begin Authentication / Encryption
     */
 
-    if(sa_service_type != SA_PLAINTEXT && sa_ptr->ecs == NULL && sa_ptr->acs == NULL)
-    {
-        return CRYPTO_LIB_ERR_NULL_CIPHERS;
-    }
+    // if(sa_service_type != SA_PLAINTEXT)
+    // {
+        // return CRYPTO_LIB_ERR_NULL_CIPHERS;
+    // }
 
     // Parse MAC, prepare AAD
     if ((sa_service_type == SA_AUTHENTICATION) || (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
@@ -1103,7 +1098,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
                                                             p_ingest+byte_idx, // ciphertext input
                                                             pdu_len, // in data length
                                                             &(ekp->value[0]), // Key
-                                                            Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs),
+                                                            Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs),
                                                             sa_ptr, // SA for key reference
                                                             p_ingest+iv_loc, // IV
                                                             sa_ptr->iv_len, // IV Length
@@ -1114,8 +1109,8 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
                                                             (sa_ptr->est), // Decryption Bool
                                                             (sa_ptr->ast), // Authentication Bool
                                                             (sa_ptr->ast), // AAD Bool
-                                                            sa_ptr->ecs, // encryption cipher
-                                                            sa_ptr->acs,  // authentication cipher
+                                                            &sa_ptr->ecs, // encryption cipher
+                                                            &sa_ptr->acs,  // authentication cipher
                                                             NULL);
 
     }
@@ -1130,7 +1125,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
                                                 p_ingest+byte_idx, // ciphertext input
                                                 pdu_len, // in data length
                                                 &(akp->value[0]), // Key
-                                                Crypto_Get_ACS_Algo_Keylen(*sa_ptr->acs),
+                                                Crypto_Get_ACS_Algo_Keylen(sa_ptr->acs),
                                                 sa_ptr, // SA for key reference
                                                 p_ingest+iv_loc, // IV
                                                 sa_ptr->iv_len, // IV Length
@@ -1139,7 +1134,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
                                                 aad, // additional authenticated data
                                                 aad_len, // length of AAD
                                                 CRYPTO_CIPHER_NONE, // encryption cipher
-                                                *sa_ptr->acs, // authentication cipher
+                                                sa_ptr->acs, // authentication cipher
                                                 NULL); // cam cookies
 
         }
@@ -1150,12 +1145,12 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
                                                         p_ingest+byte_idx, // ciphertext input
                                                         pdu_len,    // in data length
                                                         &(ekp->value[0]), // Key
-                                                        Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs),
+                                                        Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs),
                                                         sa_ptr, // SA for key reference
                                                         p_ingest+iv_loc, // IV
                                                         sa_ptr->iv_len, // IV Length
-                                                        sa_ptr->ecs, // encryption cipher
-                                                        sa_ptr->acs,  // authentication cipher
+                                                        &sa_ptr->ecs, // encryption cipher
+                                                        &sa_ptr->acs,  // authentication cipher
                                                         NULL);
 
         // //Handle Padding Removal

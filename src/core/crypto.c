@@ -72,7 +72,7 @@ uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
     // TODO - Add cipher suite mapping to which algorithms are AEAD and which are not.
     if((cipher_suite_id == CRYPTO_CIPHER_AES256_GCM) || (cipher_suite_id == CRYPTO_CIPHER_AES256_CBC_MAC))
     {
-        #ifdef CRYPTO_DEBUG
+        #ifdef DEBUG
             printf(KYEL "CRYPTO IS AEAD? : TRUE\n" RESET);
         #endif
         return CRYPTO_TRUE;
@@ -80,7 +80,7 @@ uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
     }
     else
     {   
-        #ifdef CRYPTO_DEBUG
+        #ifdef DEBUG
             printf(KYEL "CRYPTO IS AEAD? : FALSE\n" RESET);
         #endif
         return CRYPTO_FALSE;
@@ -855,7 +855,7 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
         }
     }
     // If IV is greater than zero and using GCM, check for replay
-    if ((sa_ptr->iv_len > 0) && *sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM)
+    if ((sa_ptr->iv_len > 0) && (sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM))
     {
         // Check IV is in ARSNW
         if(crypto_config->crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
@@ -897,7 +897,7 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
     // else{}
 
     // For GCM specifically, if have a valid IV...
-    if (*sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM && IV_VALID == CRYPTO_TRUE)
+    if ((sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM) && (IV_VALID == CRYPTO_TRUE))
     {
         // Using ARSN? Need to be valid to increment both
         if (sa_ptr->arsn_len > 0 && ARSN_VALID == CRYPTO_TRUE)
@@ -913,11 +913,10 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
     }
 
     // If not GCM, and ARSN is valid - can incrmeent it
-    if (*sa_ptr->ecs != CRYPTO_CIPHER_AES256_GCM && ARSN_VALID == CRYPTO_TRUE)
+    if (sa_ptr->ecs != CRYPTO_CIPHER_AES256_GCM && ARSN_VALID == CRYPTO_TRUE)
     {
         memcpy(sa_ptr->arsn, arsn, sa_ptr->arsn_len);
     }
-
 
     return status;
 }

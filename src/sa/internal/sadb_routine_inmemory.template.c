@@ -82,7 +82,6 @@ int32_t sadb_config(void)
     sa[1].shivf_len = 0;
     sa[1].shsnf_len = 2;
     sa[1].arsn_len = 2;
-    sa[1].arsn = (uint8_t*) calloc(1, sa[1].arsn_len * sizeof(uint8_t));
     sa[1].arsnw_len = 1;
     sa[1].arsnw = 5;
     sa[1].gvcid_blk.tfvn = 0;
@@ -97,14 +96,11 @@ int32_t sadb_config(void)
     sa[2].est = 1;
     sa[2].ast = 1;
     sa[2].ecs_len = 1;
-    sa[2].ecs = calloc(1, sa[2].ecs_len * sizeof(uint8_t));
-    *sa[2].ecs = CRYPTO_CIPHER_AES256_GCM;    
+    sa[2].ecs = CRYPTO_CIPHER_AES256_GCM;    
     sa[2].shivf_len = 12;
     sa[2].iv_len = 12;
-    sa[2].iv = (uint8_t* )calloc(1, sa[2].shivf_len * sizeof(uint8_t));
     *(sa[2].iv + sa[2].shivf_len - 1) = 0;
     sa[2].abm_len = ABM_SIZE; // 20
-    sa[2].abm = (uint8_t* )calloc(1, sa[2].abm_len * sizeof(uint8_t));
     sa[2].arsnw_len = 1;
     sa[2].arsnw = 5;
     sa[2].arsn_len = (sa[2].arsnw * 2) + 1;
@@ -116,14 +112,11 @@ int32_t sadb_config(void)
     sa[3].est = 1;
     sa[3].ast = 1;
     sa[3].ecs_len = 1;
-    sa[3].ecs = calloc(1, sa[3].ecs_len * sizeof(uint8_t));
-    *sa[3].ecs = CRYPTO_CIPHER_AES256_GCM;
+    sa[3].ecs = CRYPTO_CIPHER_AES256_GCM;
     sa[3].shivf_len = 12;
     sa[3].iv_len = 12;
-    sa[3].iv = (uint8_t* )calloc(1, sa[3].shivf_len * sizeof(uint8_t));
     *(sa[3].iv + sa[3].shivf_len - 1) = 0;
     sa[3].abm_len = ABM_SIZE; // 20
-    sa[3].abm = (uint8_t* )calloc(1, sa[3].abm_len * sizeof(uint8_t));
     sa[3].arsnw_len = 1;
     sa[3].arsnw = 5;
     sa[3].arsn_len = (sa[3].arsnw * 2) + 1;
@@ -136,15 +129,12 @@ int32_t sadb_config(void)
     sa[4].est = 1;
     sa[4].ast = 1;
     sa[4].ecs_len = 1;
-    sa[4].ecs = calloc(1, sa[4].ecs_len * sizeof(uint8_t));
-    *sa[4].ecs = CRYPTO_CIPHER_AES256_GCM;
+    sa[4].ecs = CRYPTO_CIPHER_AES256_GCM;
     sa[4].shivf_len = 12;
     sa[4].iv_len = 12;
     sa[4].stmacf_len = 16;
-    sa[4].iv = (uint8_t* )calloc(1, sa[4].shivf_len * sizeof(uint8_t));
     *(sa[4].iv + 11) = 0;
     sa[4].abm_len = ABM_SIZE; // 20
-    sa[4].abm = (uint8_t* )calloc(1, sa[4].abm_len * sizeof(uint8_t));
     sa[4].arsnw_len = 1;
     sa[4].arsnw = 5;
     sa[4].arsn_len = 0;
@@ -160,14 +150,11 @@ int32_t sadb_config(void)
     sa[5].est = 1;
     sa[5].ast = 1;
     sa[5].ecs_len = 1;
-    sa[5].ecs = calloc(1, sa[5].ecs_len * sizeof(uint8_t));
-    *sa[5].ecs = CRYPTO_CIPHER_AES256_GCM;    
+    sa[5].ecs = CRYPTO_CIPHER_AES256_GCM;    
     sa[5].shivf_len = 12;
     sa[5].iv_len = 12;
-    sa[5].iv = (uint8_t* )calloc(1, sa[5].shivf_len * sizeof(uint8_t));
     *(sa[5].iv + sa[5].shivf_len - 1) = 0;
     sa[5].abm_len = ABM_SIZE; // 20
-    sa[5].abm = (uint8_t* )calloc(1, sa[5].abm_len * sizeof(uint8_t));
     sa[5].arsnw_len = 1;
     sa[5].arsnw = 5;
     sa[5].arsn_len = (sa[5].arsnw * 2) + 1;
@@ -178,14 +165,11 @@ int32_t sadb_config(void)
     sa[6].est = 1;
     sa[6].ast = 1;
     sa[6].ecs_len = 1;
-    sa[6].ecs = calloc(1, sa[6].ecs_len * sizeof(uint8_t));
-    *sa[6].ecs = CRYPTO_CIPHER_AES256_GCM;    
+    sa[6].ecs = CRYPTO_CIPHER_AES256_GCM;    
     sa[6].shivf_len = 12;
     sa[6].iv_len = 12;
-    sa[6].iv = (uint8_t* )calloc(1, sa[6].shivf_len * sizeof(uint8_t));
     *(sa[6].iv + sa[6].shivf_len - 1) = 0;
     sa[6].abm_len = ABM_SIZE; // 20
-    sa[6].abm = (uint8_t* )calloc(1, sa[6].abm_len * sizeof(uint8_t));
     sa[6].arsnw_len = 1;
     sa[6].arsnw = 5;
     sa[6].arsn_len = (sa[6].arsnw * 2) + 1;
@@ -197,14 +181,11 @@ int32_t sadb_config(void)
     sa[7].est = 1;
     sa[7].ast = 1;
     sa[7].ecs_len = 1;
-    sa[7].ecs = calloc(1, sa[7].ecs_len * sizeof(uint8_t));
-    *sa[7].ecs = CRYPTO_CIPHER_AES256_GCM;    
+    sa[7].ecs = CRYPTO_CIPHER_AES256_GCM;    
     sa[7].shivf_len = 12;
     sa[7].iv_len = 12;
-    sa[7].iv = (uint8_t* )calloc(1, sa[7].shivf_len * sizeof(uint8_t));
     *(sa[7].iv + sa[7].shivf_len - 1) = 0;
     sa[7].abm_len = ABM_SIZE; // 20
-    sa[7].abm = (uint8_t* )calloc(1, sa[7].abm_len * sizeof(uint8_t));
     sa[7].arsnw_len = 1;
     sa[7].arsnw = 5;
     sa[7].arsn_len = (sa[7].arsnw * 2) + 1;
@@ -234,10 +215,8 @@ int32_t sadb_config(void)
     sa[9].ast = 0;
     sa[9].shivf_len = 12;
     sa[9].iv_len = 12;
-    sa[9].iv = (uint8_t* )calloc(1, sa[9].shivf_len * sizeof(uint8_t));
     *(sa[9].iv + 11) = 0;
     sa[9].abm_len = ABM_SIZE; // 20
-    sa[9].abm = (uint8_t* )calloc(1, sa[9].abm_len * sizeof(uint8_t));
     sa[9].arsnw_len = 1;
     sa[9].arsnw = 5;
     sa[9].arsn_len = 0;
@@ -254,15 +233,12 @@ int32_t sadb_config(void)
     sa[10].est = 1;
     sa[10].ast = 1;
     sa[10].ecs_len = 1;
-    sa[10].ecs = calloc(1, sa[10].ecs_len * sizeof(uint8_t));
-    *sa[10].ecs = CRYPTO_CIPHER_AES256_GCM;
+    sa[10].ecs = CRYPTO_CIPHER_AES256_GCM;
     sa[10].shivf_len = 12;
     sa[10].iv_len = 12;
     sa[10].stmacf_len = 16;
-    sa[10].iv = (uint8_t* )calloc(1, sa[10].shivf_len * sizeof(uint8_t));
     *(sa[10].iv + 11) = 0;
     sa[10].abm_len = ABM_SIZE; // 20
-    sa[10].abm = (uint8_t* )calloc(1, sa[10].abm_len * sizeof(uint8_t));
     sa[10].arsnw_len = 1;
     sa[10].arsnw = 5;
     sa[10].arsn_len = 0;
@@ -280,16 +256,13 @@ int32_t sadb_config(void)
     sa[11].est = 1;
     sa[11].ast = 0;
     sa[11].ecs_len = 1;
-    sa[11].ecs = calloc(1, sa[11].ecs_len * sizeof(uint8_t));
-    *sa[11].ecs = CRYPTO_CIPHER_AES256_CBC;
+    sa[11].ecs = CRYPTO_CIPHER_AES256_CBC;
     sa[11].shivf_len = 16;
     sa[11].iv_len = 16;
     sa[11].shplf_len = 1;
     sa[11].stmacf_len = 0;
-    sa[11].iv = (uint8_t* )calloc(1, sa[11].shivf_len * sizeof(uint8_t)); //TODO;  Should this be iv_len instead of shiv_len?
     *(sa[11].iv + (sa[11].iv_len - 1)) = 0;
     sa[11].abm_len = ABM_SIZE; // 20
-    sa[11].abm = (uint8_t* )calloc(1, sa[11].abm_len * sizeof(uint8_t));
     sa[11].arsnw_len = 0;
     sa[11].arsnw = 5;
     sa[11].arsn_len = 0;
@@ -308,7 +281,6 @@ int32_t sadb_config(void)
     sa[12].shivf_len = 0;
     sa[12].shsnf_len = 0;
     sa[12].arsn_len = 0;
-    sa[12].arsn = (uint8_t*) calloc(1, sa[1].arsn_len * sizeof(uint8_t));
     sa[12].arsnw_len = 0;
     sa[12].arsnw = 5;
     sa[12].gvcid_blk.tfvn = 0;
@@ -326,25 +298,33 @@ int32_t sadb_config(void)
 int32_t sadb_init(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    int x;
 
-    for (x = 0; x < NUM_SA; x++)
+    for (int x = 0; x < NUM_SA; x++)
     {
         sa[x].ekid = x;
         sa[x].akid = x;
         sa[x].sa_state = SA_NONE;
         sa[x].ecs_len = 0;
-        sa[x].ecs = NULL;
+        sa[x].ecs = 0;
         sa[x].shivf_len = 0;
-        sa[x].iv = NULL;
+        for (int y = 0; y < IV_SIZE; y++)
+        {
+            sa[x].iv[y] = 0;
+        }
         sa[x].iv_len = 0;
-        sa[x].abm = NULL;
+        for (int y = 0; y < ABM_SIZE; y++)
+        {
+            sa[x].abm[y] = 0;
+        }
         sa[x].abm_len = 0;
         sa[x].acs_len = 0;
-        sa[x].acs = NULL;
+        sa[x].acs = 0;
         sa[x].shsnf_len = 0;
         sa[x].arsn_len = 0;
-        sa[x].arsn = NULL;
+        for (int y = 0; y < ARSN_SIZE; y++)
+        {
+            sa[x].arsn[y] = 0;
+        }
     }
     return status;
 }
@@ -356,16 +336,6 @@ int32_t sadb_init(void)
 static int32_t sadb_close(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    int x;
-
-    for (x = 0; x < NUM_SA; x++)
-    {
-        if(sa[x].ecs != NULL) free(sa[x].ecs);
-        if(sa[x].iv != NULL) free(sa[x].iv);
-        if(sa[x].abm != NULL) free(sa[x].abm);
-        if(sa[x].arsn != NULL) free(sa[x].arsn);
-        if(sa[x].acs != NULL) free(sa[x].acs);
-    }
     return status;
 }
 
@@ -518,7 +488,6 @@ static int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, u
             printf(KYEL "\tscid %d\n" RESET, scid);
             printf(KYEL "\tvcid %d\n" RESET, vcid);
             printf(KYEL "\tmapid %02X\n" RESET, mapid);
-            printf(KYEL "***FYI TM_SIZE set to %ld\n" RESET, TM_SIZE);
 #endif
     }
 
@@ -880,28 +849,23 @@ static int32_t sadb_sa_create(void)
     sa[spi].est = ((uint8_t)sdls_frame.pdu.data[2] & 0x80) >> 7;
     sa[spi].ast = ((uint8_t)sdls_frame.pdu.data[2] & 0x40) >> 6;
     sa[spi].shivf_len = ((uint8_t)sdls_frame.pdu.data[2] & 0x3F);
-    if (sa[spi].iv != NULL)
-    {
-        free(sa[spi].iv);
-    }
-    sa[spi].iv = (uint8_t* )calloc(1, sa[spi].shivf_len * sizeof(uint8_t));
     sa[spi].shsnf_len = ((uint8_t)sdls_frame.pdu.data[3] & 0xFC) >> 2;
     sa[spi].shplf_len = ((uint8_t)sdls_frame.pdu.data[3] & 0x03);
     sa[spi].stmacf_len = ((uint8_t)sdls_frame.pdu.data[4]);
     sa[spi].ecs_len = ((uint8_t)sdls_frame.pdu.data[5]);
     for (x = 0; x < sa[spi].ecs_len; x++)
     {
-        *(sa[spi].ecs + x) = ((uint8_t)sdls_frame.pdu.data[count++]);
+        sa[spi].ecs = ((uint8_t)sdls_frame.pdu.data[count++]);
     }
     sa[spi].shivf_len = ((uint8_t)sdls_frame.pdu.data[count++]);
     for (x = 0; x < sa[spi].shivf_len; x++)
     {
-        *(sa[spi].iv + x) = ((uint8_t)sdls_frame.pdu.data[count++]);
+        sa[spi].iv[x] = ((uint8_t)sdls_frame.pdu.data[count++]);
     }
     sa[spi].acs_len = ((uint8_t)sdls_frame.pdu.data[count++]);
     for (x = 0; x < sa[spi].acs_len; x++)
     {
-        *sa[spi].acs = ((uint8_t)sdls_frame.pdu.data[count++]);
+        sa[spi].acs = ((uint8_t)sdls_frame.pdu.data[count++]);
     }
     sa[spi].abm_len = (uint8_t)((sdls_frame.pdu.data[count] << 8) | (sdls_frame.pdu.data[count + 1]));
     count = count + 2;
@@ -910,11 +874,6 @@ static int32_t sadb_sa_create(void)
         sa[spi].abm[x] = ((uint8_t)sdls_frame.pdu.data[count++]);
     }
     sa[spi].arsn_len = ((uint8_t)sdls_frame.pdu.data[count++]);
-    if (sa[spi].arsn != NULL)
-    {
-        free(sa[spi].arsn);
-    }
-    sa[spi].arsn = (uint8_t* )calloc(1, sa[spi].arsn_len * sizeof(uint8_t));
     for (x = 0; x < sa[spi].arsn_len; x++)
     {
         *(sa[spi].arsn + x) = ((uint8_t)sdls_frame.pdu.data[count++]);

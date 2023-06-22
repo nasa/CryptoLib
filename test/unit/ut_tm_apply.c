@@ -43,7 +43,8 @@ UTEST(TM_APPLY_SECURITY, NO_CRYPTO_INIT)
 
     hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);
 
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002c, 0, TM_HAS_FECF, TM_HAS_SECONDARY_HDR , 1786);
@@ -191,7 +192,8 @@ UTEST(TM_APPLY_SECURITY, HAPPY_PATH_CLEAR_FECF_LEFT_BLANK)
 
     // Setup & Initialize CryptoLib
     // Oddball setup that doesn't use TM_INIT to check FECF
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002c, 0, TM_NO_FECF, TM_SEGMENT_HDRS_NA, 1786);
@@ -346,18 +348,15 @@ UTEST(TM_APPLY_SECURITY, SECONDARY_HDR_PRESENT_MAC)
     sa_ptr->shivf_len = 0;
     sa_ptr->iv_len = 0;
     sa_ptr->shsnf_len = 0;
-    sa_ptr->arsn = 0;
     sa_ptr->arsn_len = 0;
-    sa_ptr->arsn = NULL;
     sa_ptr->abm_len = 1786;
-    sa_ptr->abm = (uint8_t* )calloc(1, sa_ptr->abm_len * sizeof(uint8_t));
     memset(sa_ptr->abm, 0xFF, (sa_ptr->abm_len * sizeof(uint8_t))); // Bitmask
     sa_ptr->stmacf_len = 16;
     sa_ptr->sa_state = SA_OPERATIONAL;
-    sa_ptr->ecs = calloc(1, sa_ptr->ecs_len * sizeof(uint8_t));
-    *sa_ptr->ecs = CRYPTO_CIPHER_NONE;
-    sa_ptr->acs = calloc(1, sa_ptr->acs_len * sizeof(uint8_t));
-    *sa_ptr->acs = CRYPTO_MAC_CMAC_AES256;
+    sa_ptr->ecs = CRYPTO_CIPHER_NONE;
+    sa_ptr->ecs_len = 1;
+    sa_ptr->acs = CRYPTO_MAC_CMAC_AES256;
+    sa_ptr->acs_len = 1;
     sa_ptr->ekid = 0;
     sa_ptr->akid = 136;
 
@@ -397,7 +396,8 @@ UTEST(TM_APPLY_SECURITY, AES_CMAC_256_TEST_0)
 
     // Setup & Initialize CryptoLib
     // Oddball setup that doesn't use TM_INIT to check FECF
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, 1786);
@@ -430,18 +430,15 @@ UTEST(TM_APPLY_SECURITY, AES_CMAC_256_TEST_0)
     sa_ptr->shivf_len = 0;
     sa_ptr->iv_len = 0;
     sa_ptr->shsnf_len = 0;
-    sa_ptr->arsn = 0;
     sa_ptr->arsn_len = 0;
-    sa_ptr->arsn = NULL;
     sa_ptr->abm_len = 1786;
-    sa_ptr->abm = (uint8_t* )calloc(1, sa_ptr->abm_len * sizeof(uint8_t));
     memset(sa_ptr->abm, 0x00, (sa_ptr->abm_len * sizeof(uint8_t))); // Bitmask
     sa_ptr->stmacf_len = 16;
     sa_ptr->sa_state = SA_OPERATIONAL;
-    sa_ptr->ecs = calloc(1, sa_ptr->ecs_len * sizeof(uint8_t));
-    *sa_ptr->ecs = CRYPTO_CIPHER_NONE;
-    sa_ptr->acs = calloc(1, sa_ptr->acs_len * sizeof(uint8_t));
-    *sa_ptr->acs = CRYPTO_MAC_CMAC_AES256;
+    sa_ptr->ecs = CRYPTO_CIPHER_NONE;
+    sa_ptr->acs = CRYPTO_MAC_CMAC_AES256;
+    sa_ptr->ecs_len = 1;
+    sa_ptr->acs_len = 1;
     sa_ptr->ekid = 0;
     sa_ptr->akid = 136;
 
@@ -490,7 +487,8 @@ UTEST(TM_APPLY_SECURITY, AES_CMAC_256_TEST_1)
 
     // Setup & Initialize CryptoLib
     // Oddball setup that doesn't use TM_INIT to check FECF
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, 1786);
@@ -524,18 +522,15 @@ UTEST(TM_APPLY_SECURITY, AES_CMAC_256_TEST_1)
     sa_ptr->shivf_len = 0;
     sa_ptr->iv_len = 0;
     sa_ptr->shsnf_len = 0;
-    sa_ptr->arsn = 0;
     sa_ptr->arsn_len = 0;
-    sa_ptr->arsn = NULL;
     sa_ptr->abm_len = 1786;
-    sa_ptr->abm = (uint8_t* )calloc(1, sa_ptr->abm_len * sizeof(uint8_t));
     memset(sa_ptr->abm, 0xFF, (sa_ptr->abm_len * sizeof(uint8_t))); // Bitmask
     sa_ptr->stmacf_len = 16;
     sa_ptr->sa_state = SA_OPERATIONAL;
-    sa_ptr->ecs = calloc(1, sa_ptr->ecs_len * sizeof(uint8_t));
-    *sa_ptr->ecs = CRYPTO_CIPHER_NONE;
-    sa_ptr->acs = calloc(1, sa_ptr->acs_len * sizeof(uint8_t));
-    *sa_ptr->acs = CRYPTO_MAC_CMAC_AES256;
+    sa_ptr->ecs = CRYPTO_CIPHER_NONE;
+    sa_ptr->acs = CRYPTO_MAC_CMAC_AES256;
+    sa_ptr->ecs_len = 1;
+    sa_ptr->acs_len = 1;
     sa_ptr->ekid = 0;
     sa_ptr->akid = 136;
 
@@ -583,7 +578,8 @@ UTEST(TM_APPLY_ENC_VAL, AES_HMAC_SHA_256_TEST_0)
 
     // Setup & Initialize CryptoLib
     // Oddball setup that doesn't use TM_INIT to check FECF
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, 1786);
@@ -616,18 +612,15 @@ UTEST(TM_APPLY_ENC_VAL, AES_HMAC_SHA_256_TEST_0)
     sa_ptr->shivf_len = 0;
     sa_ptr->iv_len = 0;
     sa_ptr->shsnf_len = 0;
-    sa_ptr->arsn = 0;
     sa_ptr->arsn_len = 0;
-    sa_ptr->arsn = NULL;
     sa_ptr->abm_len = 1786;
-    sa_ptr->abm = (uint8_t* )calloc(1, sa_ptr->abm_len * sizeof(uint8_t));
     memset(sa_ptr->abm, 0x00, (sa_ptr->abm_len * sizeof(uint8_t))); // Bitmask
     sa_ptr->stmacf_len = 16;
     sa_ptr->sa_state = SA_OPERATIONAL;
-    sa_ptr->ecs = calloc(1, sa_ptr->ecs_len * sizeof(uint8_t));
-    *sa_ptr->ecs = CRYPTO_CIPHER_NONE;
-    sa_ptr->acs = calloc(1, sa_ptr->acs_len * sizeof(uint8_t));
-    *sa_ptr->acs = CRYPTO_MAC_HMAC_SHA256;
+    sa_ptr->ecs = CRYPTO_CIPHER_NONE;
+    sa_ptr->acs = CRYPTO_MAC_HMAC_SHA256;
+    sa_ptr->ecs_len = 1;
+    sa_ptr->acs_len = 1;
     sa_ptr->ekid = 0;
     sa_ptr->akid = 136;
 
@@ -675,7 +668,8 @@ UTEST(TM_APPLY_ENC_VAL, AES_HMAC_SHA_256_TEST_1)
 
     // Setup & Initialize CryptoLib
     // Oddball setup that doesn't use TM_INIT to check FECF
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, 1786);
@@ -708,18 +702,15 @@ UTEST(TM_APPLY_ENC_VAL, AES_HMAC_SHA_256_TEST_1)
     sa_ptr->shivf_len = 0;
     sa_ptr->iv_len = 0;
     sa_ptr->shsnf_len = 0;
-    sa_ptr->arsn = 0;
     sa_ptr->arsn_len = 0;
-    sa_ptr->arsn = NULL;
     sa_ptr->abm_len = 1786;
-    sa_ptr->abm = (uint8_t* )calloc(1, sa_ptr->abm_len * sizeof(uint8_t));
     memset(sa_ptr->abm, 0xFF, (sa_ptr->abm_len * sizeof(uint8_t))); // Bitmask
     sa_ptr->stmacf_len = 16;
     sa_ptr->sa_state = SA_OPERATIONAL;
-    sa_ptr->ecs = calloc(1, sa_ptr->ecs_len * sizeof(uint8_t));
-    *sa_ptr->ecs = CRYPTO_CIPHER_NONE;
-    sa_ptr->acs = calloc(1, sa_ptr->acs_len * sizeof(uint8_t));
-    *sa_ptr->acs = CRYPTO_MAC_HMAC_SHA256;
+    sa_ptr->ecs = CRYPTO_CIPHER_NONE;
+    sa_ptr->acs = CRYPTO_MAC_HMAC_SHA256;
+    sa_ptr->ecs_len = 1;
+    sa_ptr->acs_len = 1;
     sa_ptr->ekid = 0;
     sa_ptr->akid = 136;
 
@@ -767,7 +758,8 @@ UTEST(TM_APPLY_ENC_VAL, AES_HMAC_SHA_512_TEST_0)
 
     // Setup & Initialize CryptoLib
     // Oddball setup that doesn't use TM_INIT to check FECF
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, 1786);
@@ -801,18 +793,15 @@ UTEST(TM_APPLY_ENC_VAL, AES_HMAC_SHA_512_TEST_0)
     sa_ptr->shivf_len = 0;
     sa_ptr->iv_len = 0;
     sa_ptr->shsnf_len = 0;
-    sa_ptr->arsn = 0;
     sa_ptr->arsn_len = 0;
-    sa_ptr->arsn = NULL;
     sa_ptr->abm_len = 1786;
-    sa_ptr->abm = (uint8_t* )calloc(1, sa_ptr->abm_len * sizeof(uint8_t));
     memset(sa_ptr->abm, 0x00, (sa_ptr->abm_len * sizeof(uint8_t))); // Bitmask
     sa_ptr->stmacf_len = 16;
     sa_ptr->sa_state = SA_OPERATIONAL;
-    sa_ptr->ecs = calloc(1, sa_ptr->ecs_len * sizeof(uint8_t));
-    *sa_ptr->ecs = CRYPTO_CIPHER_NONE;
-    sa_ptr->acs = calloc(1, sa_ptr->acs_len * sizeof(uint8_t));
-    *sa_ptr->acs = CRYPTO_MAC_HMAC_SHA512;
+    sa_ptr->ecs = CRYPTO_CIPHER_NONE;
+    sa_ptr->acs = CRYPTO_MAC_HMAC_SHA512;
+    sa_ptr->ecs_len = 1;
+    sa_ptr->acs_len = 1;
     sa_ptr->ekid = 0;
     sa_ptr->akid = 136;
 
@@ -864,7 +853,8 @@ UTEST(TM_APPLY_ENC_VAL, AES_HMAC_SHA_512_TEST_1)
 
     // Setup & Initialize CryptoLib
     // Oddball setup that doesn't use TM_INIT to check FECF
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, 1786);
@@ -898,18 +888,15 @@ UTEST(TM_APPLY_ENC_VAL, AES_HMAC_SHA_512_TEST_1)
     sa_ptr->shivf_len = 0;
     sa_ptr->iv_len = 0;
     sa_ptr->shsnf_len = 0;
-    sa_ptr->arsn = 0;
     sa_ptr->arsn_len = 0;
-    sa_ptr->arsn = NULL;
     sa_ptr->abm_len = 1786;
-    sa_ptr->abm = (uint8_t* )calloc(1, sa_ptr->abm_len * sizeof(uint8_t));
     memset(sa_ptr->abm, 0xFF, (sa_ptr->abm_len * sizeof(uint8_t))); // Bitmask
     sa_ptr->stmacf_len = 16;
     sa_ptr->sa_state = SA_OPERATIONAL;
-    sa_ptr->ecs = calloc(1, sa_ptr->ecs_len * sizeof(uint8_t));
-    *sa_ptr->ecs = CRYPTO_CIPHER_NONE;
-    sa_ptr->acs = calloc(1, sa_ptr->acs_len * sizeof(uint8_t));
-    *sa_ptr->acs = CRYPTO_MAC_HMAC_SHA512;
+    sa_ptr->ecs = CRYPTO_CIPHER_NONE;
+    sa_ptr->acs = CRYPTO_MAC_HMAC_SHA512;
+    sa_ptr->ecs_len = 1;
+    sa_ptr->acs_len = 1;
     sa_ptr->ekid = 0;
     sa_ptr->akid = 136;
 
@@ -957,7 +944,8 @@ UTEST(TM_APPLY_ENC_VAL, AES_HMAC_SHA_512_TEST_1)
 UTEST(TM_APPLY_ENC_VAL, AES_GCM_BITMASK_1)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, 1786);
@@ -990,17 +978,13 @@ UTEST(TM_APPLY_ENC_VAL, AES_GCM_BITMASK_1)
     sadb_routine->sadb_get_sa_from_spi(9, &test_association);
     test_association->arsn_len = 0;
     test_association->abm_len = 1786;
-    test_association->abm = (uint8_t* )calloc(1, test_association->abm_len * sizeof(uint8_t));
     memset(test_association->abm, 0xFF, (test_association->abm_len * sizeof(uint8_t))); // Bitmask
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs_len = 1;
-    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
+    test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
     test_association->acs_len = 1;
-    test_association->acs = calloc(1, test_association->acs_len * sizeof(uint8_t));
-    *test_association->acs = CRYPTO_MAC_NONE;
+    test_association->acs = CRYPTO_MAC_NONE;
     test_association->iv_len = 16;
-    test_association->iv = calloc(1, test_association->iv_len * sizeof(uint8_t));
     test_association->shivf_len = 16;   
 
     // Set a more obvious IV for test purposes
