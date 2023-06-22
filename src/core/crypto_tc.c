@@ -278,9 +278,20 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
 
         switch (sa_service_type)
         {
+        /**
+         * A note on plaintext: Take a permissive approach to allow the lengths of fields that aren't going to be used.
+         * The 355.0-B-2 (July 2022) says the following in $4.2.2.4:
+         * 'It is possible to create a ‘clear mode’ SA using one of the defined service types by
+            specifying the algorithm as a ‘no-op’ function (no actual cryptographic operation to
+            be performed). Such an SA might be used, for example, during development
+            testing of other aspects of data link processing before cryptographic capabilities are
+            available for integrated testing.In this scenario, the Security Header and Trailer
+            field lengths are kept constant across all supported configurations. For security
+            reasons, the use of such an SA is not recommended in normal operation.'
+        */
         case SA_PLAINTEXT:
             // Ingest length + spi_index (2) + some variable length fields
-            *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shsnf_len + sa_ptr->shplf_len;
+            *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len + sa_ptr->stmacf_len;
             new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
             break;
         case SA_AUTHENTICATION:

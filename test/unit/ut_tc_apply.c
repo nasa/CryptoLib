@@ -1118,7 +1118,11 @@ UTEST(TC_APPLY_SECURITY, CBC_NULL_IV_W_IVH)
     free(ptr_enc_frame);
 }
 
-UTEST(TC_APPLY_SECURITY, ISSUE_139_TEST)
+/*
+* @brief: Unit Test: Verify plaintext with an ARSN places bytes appropriately. 
+* Use a full length verification of all bytes. Exists due to found bug.
+*/
+UTEST(TC_APPLY_SECURITY, PLAINTEXT_W_ARSN)
 {
  // Setup & Initialize CryptoLib
      Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
@@ -1126,7 +1130,7 @@ UTEST(TC_APPLY_SECURITY, ISSUE_139_TEST)
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Init();
- // Ibraheem's test string
+ // Test string
  char* raw_tc_sdls_ping_h = "2003001F00000100011880D2C9000E197F0B001B0004000400003040D95E0000";
  char* raw_tc_sdls_ping_b = NULL;
  int raw_tc_sdls_ping_len = 0;
