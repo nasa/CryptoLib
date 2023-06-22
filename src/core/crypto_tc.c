@@ -280,7 +280,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
         {
         case SA_PLAINTEXT:
             // Ingest length + spi_index (2) + some variable length fields
-            *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shplf_len;
+            *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shsnf_len + sa_ptr->shplf_len;
             new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
             break;
         case SA_AUTHENTICATION:
