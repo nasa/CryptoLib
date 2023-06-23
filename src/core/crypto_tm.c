@@ -103,370 +103,368 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
     }
 
 #ifdef SA_DEBUG
-        printf(KYEL "DEBUG - Printing SA Entry for current frame.\n" RESET);
-        Crypto_saPrint(sa_ptr);
+    printf(KYEL "DEBUG - Printing SA Entry for current frame.\n" RESET);
+    Crypto_saPrint(sa_ptr);
 #endif
 
-        // Determine SA Service Type
-        if ((sa_ptr->est == 0) && (sa_ptr->ast == 0))
-        {
-            sa_service_type = SA_PLAINTEXT;
-        }
-        else if ((sa_ptr->est == 0) && (sa_ptr->ast == 1))
-        {
-            sa_service_type = SA_AUTHENTICATION;
-        }
-        else if ((sa_ptr->est == 1) && (sa_ptr->ast == 0))
-        {
-            sa_service_type = SA_ENCRYPTION;
-        }
-        else if ((sa_ptr->est == 1) && (sa_ptr->ast == 1))
-        {
-            sa_service_type = SA_AUTHENTICATED_ENCRYPTION;
-        }
-        else
-        {
-            // Probably unnecessary check
-            // Leaving for now as it would be cleaner in SA to have an association enum returned I believe
-            printf(KRED "Error: SA Service Type is not defined! \n" RESET);
-            status = CRYPTO_LIB_ERROR;
-            return status;
-        }
+    // Determine SA Service Type
+    if ((sa_ptr->est == 0) && (sa_ptr->ast == 0))
+    {
+        sa_service_type = SA_PLAINTEXT;
+    }
+    else if ((sa_ptr->est == 0) && (sa_ptr->ast == 1))
+    {
+        sa_service_type = SA_AUTHENTICATION;
+    }
+    else if ((sa_ptr->est == 1) && (sa_ptr->ast == 0))
+    {
+        sa_service_type = SA_ENCRYPTION;
+    }
+    else if ((sa_ptr->est == 1) && (sa_ptr->ast == 1))
+    {
+        sa_service_type = SA_AUTHENTICATED_ENCRYPTION;
+    }
+    else
+    {
+        // Probably unnecessary check
+        // Leaving for now as it would be cleaner in SA to have an association enum returned I believe
+        printf(KRED "Error: SA Service Type is not defined! \n" RESET);
+        status = CRYPTO_LIB_ERROR;
+        return status;
+    }
 
-// Determine Algorithm cipher & mode. // TODO - Parse authentication_cipher, and handle AEAD cases properly
-        if (sa_service_type != SA_PLAINTEXT)
-        {
-            printf(KRED "Checking AEAD status\n");
-            //encryption_cipher =
-            //    (sa_ptr->ecs[0] << 24) | (sa_ptr->ecs[1] << 16) | (sa_ptr->ecs[2] << 8) | sa_ptr->ecs[3];
-            encryption_cipher = *sa_ptr->ecs;
-            ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(encryption_cipher);
-        }
+    // Determine Algorithm cipher & mode. // TODO - Parse authentication_cipher, and handle AEAD cases properly
+    if (sa_service_type != SA_PLAINTEXT)
+    {
+        printf(KRED "Checking AEAD status\n");
+        encryption_cipher = *sa_ptr->ecs;
+        ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(encryption_cipher);
+    }
 
 #ifdef TM_DEBUG
-        switch (sa_service_type)
-        {
-        case SA_PLAINTEXT:
-            printf(KBLU "Creating a SDLS TM - CLEAR!\n" RESET);
-            break;
-        case SA_AUTHENTICATION:
-            printf(KBLU "Creating a SDLS TM - AUTHENTICATED!\n" RESET);
-            break;
-        case SA_ENCRYPTION:
-            printf(KBLU "Creating a SDLS TM - ENCRYPTED!\n" RESET);
-            break;
-        case SA_AUTHENTICATED_ENCRYPTION:
-            printf(KBLU "Creating a SDLS TM - AUTHENTICATED ENCRYPTION!\n" RESET);
-            break;
-        }
+    switch (sa_service_type)
+    {
+    case SA_PLAINTEXT:
+        printf(KBLU "Creating a SDLS TM - CLEAR!\n" RESET);
+        break;
+    case SA_AUTHENTICATION:
+        printf(KBLU "Creating a SDLS TM - AUTHENTICATED!\n" RESET);
+        break;
+    case SA_ENCRYPTION:
+        printf(KBLU "Creating a SDLS TM - ENCRYPTED!\n" RESET);
+        break;
+    case SA_AUTHENTICATED_ENCRYPTION:
+        printf(KBLU "Creating a SDLS TM - AUTHENTICATED ENCRYPTION!\n" RESET);
+        break;
+    }
 #endif
 
-        // Check if secondary header is present within frame
-        // Note: Secondary headers are static only for a mission phase, not guaranteed static 
-        // over the life of a mission Per CCSDS 132.0-B.3 Section 4.1.2.7.2.3
+    // Check if secondary header is present within frame
+    // Note: Secondary headers are static only for a mission phase, not guaranteed static 
+    // over the life of a mission Per CCSDS 132.0-B.3 Section 4.1.2.7.2.3
 
-        // Secondary Header flag is 1st bit of 5th byte (index 4)
-        idx = 4;
-        if((tm_frame[idx] & 0x80) == 0x80)
-        {
+    // Secondary Header flag is 1st bit of 5th byte (index 4)
+    idx = 4;
+    if((tm_frame[idx] & 0x80) == 0x80)
+    {
 #ifdef TM_DEBUG
-            printf(KYEL "A TM Secondary Header flag is set!\n");
+        printf(KYEL "A TM Secondary Header flag is set!\n");
 #endif
-            // Secondary header is present
-            idx = 6;
-            // Determine length of secondary header
-            // Length coded as total length of secondary header - 1
-            // Reference CCSDS 132.0-B-2 4.1.3.2.3
-            uint8_t secondary_hdr_len = (tm_frame[idx] & 0x3F);
+        // Secondary header is present
+        idx = 6;
+        // Determine length of secondary header
+        // Length coded as total length of secondary header - 1
+        // Reference CCSDS 132.0-B-2 4.1.3.2.3
+        uint8_t secondary_hdr_len = (tm_frame[idx] & 0x3F);
 #ifdef TM_DEBUG
-            printf(KYEL "Secondary Header Length is decoded as: %d\n", secondary_hdr_len);
+        printf(KYEL "Secondary Header Length is decoded as: %d\n", secondary_hdr_len);
 #endif
-            // Increment from current byte (1st byte of secondary header),
-            // to where the SPI would start
-            idx += secondary_hdr_len + 1;
-        }
-        else
-        {
-            // No Secondary header, carry on as usual and increment to SPI start
-            idx = 6;
-        }
+        // Increment from current byte (1st byte of secondary header),
+        // to where the SPI would start
+        idx += secondary_hdr_len + 1;
+    }
+    else
+    {
+        // No Secondary header, carry on as usual and increment to SPI start
+        idx = 6;
+    }
 
-        /*
-        ** Begin Security Header Fields
-        ** Reference CCSDS SDLP 3550b1 4.1.1.1.3
-        */
-        // Set SPI
-        tm_frame[idx] = ((sa_ptr->spi & 0xFF00) >> 8);
-        tm_frame[idx + 1] = (sa_ptr->spi & 0x00FF);
-        idx += 2;
+    /*
+    ** Begin Security Header Fields
+    ** Reference CCSDS SDLP 3550b1 4.1.1.1.3
+    */
+    // Set SPI
+    tm_frame[idx] = ((sa_ptr->spi & 0xFF00) >> 8);
+    tm_frame[idx + 1] = (sa_ptr->spi & 0x00FF);
+    idx += 2;
 
-        // Set initialization vector if specified
+    // Set initialization vector if specified
 #ifdef SA_DEBUG
-        if (sa_ptr->shivf_len > 0 && sa_ptr->iv != NULL)
+    if (sa_ptr->shivf_len > 0 && sa_ptr->iv != NULL)
+    {
+        printf(KYEL "Using IV value:\n\t");
+        for (i = 0; i < sa_ptr->iv_len; i++)
         {
-            printf(KYEL "Using IV value:\n\t");
-            for (i = 0; i < sa_ptr->iv_len; i++)
-            {
-                printf("%02x", *(sa_ptr->iv + i));
-            }
-            printf("\n" RESET);
-            printf(KYEL "Transmitted IV value:\n\t");
-            for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
-            {
-                printf("%02x", *(sa_ptr->iv + i));
-            }
-            printf("\n" RESET);
+            printf("%02x", *(sa_ptr->iv + i));
         }
-#endif
-
-        if(sa_service_type != SA_PLAINTEXT && sa_ptr->ecs == NULL && sa_ptr->acs == NULL)
-        {
-            return CRYPTO_LIB_ERR_NULL_CIPHERS;
-        }
-
-        if(sa_ptr->est == 0 && sa_ptr->ast == 1)
-        {
-            if(sa_ptr->acs !=NULL && sa_ptr->acs_len != 0)
-            {
-                if((*(sa_ptr->acs) == CRYPTO_MAC_CMAC_AES256 || *(sa_ptr->acs) == CRYPTO_MAC_HMAC_SHA256 || *(sa_ptr->acs) == CRYPTO_MAC_HMAC_SHA512) &&
-                    sa_ptr->iv_len > 0 )
-                    {
-                        return CRYPTO_LIB_ERR_IV_NOT_SUPPORTED_FOR_ACS_ALGO;
-                    }
-            }
-        }
-
-        // Start index from the transmitted portion
+        printf("\n" RESET);
+        printf(KYEL "Transmitted IV value:\n\t");
         for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
         {
-            // Copy in IV from SA
-            tm_frame[idx] = *(sa_ptr->iv + i);
-            idx++;
+            printf("%02x", *(sa_ptr->iv + i));
         }
+        printf("\n" RESET);
+    }
+#endif
 
-        // Set anti-replay sequence number if specified
-        /*
-        ** See also: 4.1.1.4.2
-        ** 4.1.1.4.4 If authentication or authenticated encryption is not selected
-        ** for an SA, the Sequence Number field shall be zero octets in length.
-        ** Reference CCSDS 3550b1
-        */
-        for (i = sa_ptr->arsn_len - sa_ptr->shsnf_len; i < sa_ptr->arsn_len; i++)
+    if(sa_service_type != SA_PLAINTEXT && sa_ptr->ecs == NULL && sa_ptr->acs == NULL)
+    {
+        return CRYPTO_LIB_ERR_NULL_CIPHERS;
+    }
+
+    if(sa_ptr->est == 0 && sa_ptr->ast == 1)
+    {
+        if(sa_ptr->acs !=NULL && sa_ptr->acs_len != 0)
         {
-            // Copy in ARSN from SA
-            tm_frame[idx] = *(sa_ptr->arsn + i);
-            idx++;
+            if((*(sa_ptr->acs) == CRYPTO_MAC_CMAC_AES256 || *(sa_ptr->acs) == CRYPTO_MAC_HMAC_SHA256 || *(sa_ptr->acs) == CRYPTO_MAC_HMAC_SHA512) &&
+                sa_ptr->iv_len > 0 )
+                {
+                    return CRYPTO_LIB_ERR_IV_NOT_SUPPORTED_FOR_ACS_ALGO;
+                }
         }
+    }
 
-        // Set security header padding if specified
-        /*
-        ** 4.2.3.4 h) if the algorithm and mode selected for the SA require the use of
-        ** fill padding, place the number of fill bytes used into the Pad Length field
-        ** of the Security Header - Reference CCSDS 3550b1
-        */
-        // TODO: Revisit this
-        // TODO: Likely SA API Call
-        /* 4.1.1.5.2 The Pad Length field shall contain the count of fill bytes used in the
-        ** cryptographic process, consisting of an integral number of octets. - CCSDS 3550b1
-        */
-        // TODO: Set this depending on crypto cipher used
+    // Start index from the transmitted portion
+    for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
+    {
+        // Copy in IV from SA
+        tm_frame[idx] = *(sa_ptr->iv + i);
+        idx++;
+    }
 
-        if(pkcs_padding)
-        {
-            uint8_t hex_padding[3] = {0};  //TODO: Create #Define for the 3
-            pkcs_padding = pkcs_padding & 0x00FFFFFF; // Truncate to be maxiumum of 3 bytes in size
-            
-            // Byte Magic
-            hex_padding[0] = (pkcs_padding >> 16) & 0xFF;
-            hex_padding[1] = (pkcs_padding >> 8)  & 0xFF;
-            hex_padding[2] = (pkcs_padding)  & 0xFF;
-            
-            uint8_t padding_start = 0;
-            padding_start = 3 - sa_ptr->shplf_len;
+    // Set anti-replay sequence number if specified
+    /*
+    ** See also: 4.1.1.4.2
+    ** 4.1.1.4.4 If authentication or authenticated encryption is not selected
+    ** for an SA, the Sequence Number field shall be zero octets in length.
+    ** Reference CCSDS 3550b1
+    */
+    for (i = sa_ptr->arsn_len - sa_ptr->shsnf_len; i < sa_ptr->arsn_len; i++)
+    {
+        // Copy in ARSN from SA
+        tm_frame[idx] = *(sa_ptr->arsn + i);
+        idx++;
+    }
 
-            for (i = 0; i < sa_ptr->shplf_len; i++)
-            {
-                tm_frame[idx] = hex_padding[padding_start++];
-                idx++;
-            }
-        }
+    // Set security header padding if specified
+    /*
+    ** 4.2.3.4 h) if the algorithm and mode selected for the SA require the use of
+    ** fill padding, place the number of fill bytes used into the Pad Length field
+    ** of the Security Header - Reference CCSDS 3550b1
+    */
+    // TODO: Revisit this
+    // TODO: Likely SA API Call
+    /* 4.1.1.5.2 The Pad Length field shall contain the count of fill bytes used in the
+    ** cryptographic process, consisting of an integral number of octets. - CCSDS 3550b1
+    */
+    // TODO: Set this depending on crypto cipher used
+
+    if(pkcs_padding)
+    {
+        uint8_t hex_padding[3] = {0};  //TODO: Create #Define for the 3
+        pkcs_padding = pkcs_padding & 0x00FFFFFF; // Truncate to be maxiumum of 3 bytes in size
         
-        /*
-        ** End Security Header Fields
-        */
+        // Byte Magic
+        hex_padding[0] = (pkcs_padding >> 16) & 0xFF;
+        hex_padding[1] = (pkcs_padding >> 8)  & 0xFF;
+        hex_padding[2] = (pkcs_padding)  & 0xFF;
+        
+        uint8_t padding_start = 0;
+        padding_start = 3 - sa_ptr->shplf_len;
 
-        //TODO: Padding handled here, or TO?
-        // for (uint32_t i = 0; i < pkcs_padding; i++)
-        // {
-        //     /* 4.1.1.5.2 The Pad Length field shall contain the count of fill bytes used in the
-        //     ** cryptographic process, consisting of an integral number of octets. - CCSDS 3550b1
-        //     */
-        //     // TODO: Set this depending on crypto cipher used
-        //     *(p_new_enc_frame + index + i) = (uint8_t)pkcs_padding; // How much padding is needed?
-        //     // index++;
-        // }
+        for (i = 0; i < sa_ptr->shplf_len; i++)
+        {
+            tm_frame[idx] = hex_padding[padding_start++];
+            idx++;
+        }
+    }
+        
+    /*
+    ** End Security Header Fields
+    */
 
-        /*
-        ** ~~~Index currently at start of data field, AKA end of security header~~~
-        */
-        data_loc = idx;
-        // Calculate size of data to be encrypted
-        pdu_len = current_managed_parameters->max_frame_size - idx - sa_ptr->stmacf_len;
-        // Check other managed parameter flags, subtract their lengths from data field if present
-        if(current_managed_parameters->has_ocf == TM_HAS_OCF)
-        {
-            pdu_len -= 4;
-        }
-        if(current_managed_parameters->has_fecf == TM_HAS_FECF)
-        {
-            pdu_len -= 2;
-        }
+    //TODO: Padding handled here, or TO?
+    // for (uint32_t i = 0; i < pkcs_padding; i++)
+    // {
+    //     /* 4.1.1.5.2 The Pad Length field shall contain the count of fill bytes used in the
+    //     ** cryptographic process, consisting of an integral number of octets. - CCSDS 3550b1
+    //     */
+    //     // TODO: Set this depending on crypto cipher used
+    //     *(p_new_enc_frame + index + i) = (uint8_t)pkcs_padding; // How much padding is needed?
+    //     // index++;
+    // }
+
+    /*
+    ** ~~~Index currently at start of data field, AKA end of security header~~~
+    */
+    data_loc = idx;
+    // Calculate size of data to be encrypted
+    pdu_len = current_managed_parameters->max_frame_size - idx - sa_ptr->stmacf_len;
+    // Check other managed parameter flags, subtract their lengths from data field if present
+    if(current_managed_parameters->has_ocf == TM_HAS_OCF)
+    {
+        pdu_len -= 4;
+    }
+    if(current_managed_parameters->has_fecf == TM_HAS_FECF)
+    {
+        pdu_len -= 2;
+    }
 
 #ifdef TM_DEBUG
-        printf(KYEL "Data location starts at: %d\n" RESET, idx);
-        printf(KYEL "Data size is: %d\n" RESET, pdu_len);
-        printf(KYEL "Index at end of SPI is: %d\n", idx);
-        if(current_managed_parameters->has_ocf == TM_HAS_OCF)
-        {
-            // If OCF exists, comes immediately after MAC
-            printf(KYEL "OCF Location is: %d" RESET, idx + pdu_len + sa_ptr->stmacf_len);
-        }
-        if(current_managed_parameters->has_fecf == TM_HAS_FECF)
-        {
-            // If FECF exists, comes just before end of the frame
-            printf(KYEL "FECF Location is: %d\n" RESET, current_managed_parameters->max_frame_size - 2);
-        }
+    printf(KYEL "Data location starts at: %d\n" RESET, idx);
+    printf(KYEL "Data size is: %d\n" RESET, pdu_len);
+    printf(KYEL "Index at end of SPI is: %d\n", idx);
+    if(current_managed_parameters->has_ocf == TM_HAS_OCF)
+    {
+        // If OCF exists, comes immediately after MAC
+        printf(KYEL "OCF Location is: %d" RESET, idx + pdu_len + sa_ptr->stmacf_len);
+    }
+    if(current_managed_parameters->has_fecf == TM_HAS_FECF)
+    {
+        // If FECF exists, comes just before end of the frame
+        printf(KYEL "FECF Location is: %d\n" RESET, current_managed_parameters->max_frame_size - 2);
+    }
 #endif
 
-        // Get Key
-        crypto_key_t* ekp = NULL;
-        ekp = key_if->get_key(sa_ptr->ekid);
-        if (ekp == NULL)
+    // Get Key
+    crypto_key_t* ekp = NULL;
+    ekp = key_if->get_key(sa_ptr->ekid);
+    if (ekp == NULL)
+    {
+        return CRYPTO_LIB_ERR_KEY_ID_ERROR;
+    }
+
+    crypto_key_t* akp = NULL;
+    akp = key_if->get_key(sa_ptr->akid);
+    if (akp == NULL)
+    {
+        return CRYPTO_LIB_ERR_KEY_ID_ERROR;
+    }
+
+    /*
+    ** Begin Authentication / Encryption
+    */
+
+    if (sa_service_type != SA_PLAINTEXT)
+    {
+        aad_len = 0;
+
+        if (sa_service_type == SA_AUTHENTICATED_ENCRYPTION || sa_service_type == SA_AUTHENTICATION)
         {
-            return CRYPTO_LIB_ERR_KEY_ID_ERROR;
-        }
-
-        crypto_key_t* akp = NULL;
-        akp = key_if->get_key(sa_ptr->akid);
-        if (akp == NULL)
-        {
-            return CRYPTO_LIB_ERR_KEY_ID_ERROR;
-        }
-
-        /*
-        ** Begin Authentication / Encryption
-        */
-
-        if (sa_service_type != SA_PLAINTEXT)
-        {
-            aad_len = 0;
-
-            if (sa_service_type == SA_AUTHENTICATED_ENCRYPTION || sa_service_type == SA_AUTHENTICATION)
-            {
-                mac_loc = idx+pdu_len;
+            mac_loc = idx+pdu_len;
 #ifdef MAC_DEBUG
-                printf(KYEL "MAC location is: %d\n" RESET, mac_loc);
-                printf(KYEL "MAC size is: %d\n" RESET, sa_ptr->stmacf_len);
+            printf(KYEL "MAC location is: %d\n" RESET, mac_loc);
+            printf(KYEL "MAC size is: %d\n" RESET, sa_ptr->stmacf_len);
 #endif
 
-                // Prepare the Header AAD (CCSDS 335.0-B-2 4.2.3.4)
-                aad_len = idx; // At the very least AAD includes the header
-                if (sa_service_type == SA_AUTHENTICATION) // auth only, we authenticate the payload as part of the AEAD encrypt call here
-                {
-                    aad_len += pdu_len;
-                }
+            // Prepare the Header AAD (CCSDS 335.0-B-2 4.2.3.4)
+            aad_len = idx; // At the very least AAD includes the header
+            if (sa_service_type == SA_AUTHENTICATION) // auth only, we authenticate the payload as part of the AEAD encrypt call here
+            {
+                aad_len += pdu_len;
+            }
 #ifdef TM_DEBUG
-                printf("Calculated AAD Length: %d\n",aad_len);
+            printf("Calculated AAD Length: %d\n",aad_len);
 #endif
-                if (sa_ptr->abm_len < aad_len)
+            if (sa_ptr->abm_len < aad_len)
+            {
+                return CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
+            }
+            status = Crypto_Prepare_TM_AAD(&tm_frame[0], aad_len, sa_ptr->abm, &aad[0]);
+        }
+    }
+
+    // Do the encryption
+    if(sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_TRUE)
+    {
+        status = cryptography_if->cryptography_encrypt(//Stub out data in/out as this is done in place and want to save cycles
+                                                    (uint8_t*)(&tm_frame[data_loc]), // ciphertext output
+                                                    (size_t) pdu_len, // length of data
+                                                    (uint8_t*)(&tm_frame[data_loc]), // plaintext input
+                                                    (size_t) pdu_len, // in data length - from start of frame to end of data
+                                                    &(ekp->value[0]), // Key
+                                                    Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs),
+                                                    sa_ptr, // SA (for key reference)
+                                                    sa_ptr->iv, // IV
+                                                    sa_ptr->iv_len, // IV Length
+                                                    sa_ptr->ecs, // encryption cipher
+                                                    pkcs_padding,  // authentication cipher
+                                                    NULL);
+    } 
+    else if (sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_FALSE) // Non aead algorithm
+    {
+        // TODO - implement non-AEAD algorithm logic
+        if(sa_service_type == SA_AUTHENTICATION)
+        {
+            status = cryptography_if->cryptography_authenticate(//Stub out data in/out as this is done in place and want to save cycles
+                                                                (uint8_t*)(&tm_frame[0]), // ciphertext output
+                                                                (size_t) 0, // length of data
+                                                                (uint8_t*)(&tm_frame[0]), // plaintext input
+                                                                (size_t)0, // in data length - from start of frame to end of data
+                                                                &(akp->value[0]), // Key
+                                                                Crypto_Get_ACS_Algo_Keylen(*sa_ptr->acs),
+                                                                sa_ptr, // SA (for key reference)
+                                                                sa_ptr->iv, // IV
+                                                                sa_ptr->iv_len, // IV Length
+                                                                &tm_frame[mac_loc], // tag output
+                                                                sa_ptr->stmacf_len, // tag size
+                                                                aad, // AAD Input
+                                                                aad_len, // Length of AAD
+                                                                *sa_ptr->ecs, // encryption cipher
+                                                                *sa_ptr->acs,  // authentication cipher
+                                                                NULL);
+        }
+        if(sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
+        {
+            if (sa_service_type == SA_ENCRYPTION)
                 {
-                    return CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
-                }
-                status = Crypto_Prepare_TM_AAD(&tm_frame[0], aad_len, sa_ptr->abm, &aad[0]);
+                    status = cryptography_if->cryptography_encrypt(//Stub out data in/out as this is done in place and want to save cycles
+                                                                (uint8_t*)(&tm_frame[data_loc]), // ciphertext output
+                                                                (size_t) pdu_len, // length of data
+                                                                (uint8_t*)(&tm_frame[data_loc]), // plaintext input
+                                                                (size_t) pdu_len, // in data length - from start of frame to end of data
+                                                                &(ekp->value[0]), // Key
+                                                                Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs),
+                                                                sa_ptr, // SA (for key reference)
+                                                                sa_ptr->iv, // IV
+                                                                sa_ptr->iv_len, // IV Length
+                                                                sa_ptr->ecs, // encryption cipher
+                                                                pkcs_padding,  // authentication cipher
+                                                                NULL);
             }
         }
-
-        // Do the encryption
-        if(sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_TRUE)
+        else if(sa_service_type == SA_PLAINTEXT)
         {
-            status = cryptography_if->cryptography_encrypt(//Stub out data in/out as this is done in place and want to save cycles
-                                                        (uint8_t*)(&tm_frame[data_loc]), // ciphertext output
-                                                        (size_t) pdu_len, // length of data
-                                                        (uint8_t*)(&tm_frame[data_loc]), // plaintext input
-                                                        (size_t) pdu_len, // in data length - from start of frame to end of data
-                                                        &(ekp->value[0]), // Key
-                                                        Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs),
-                                                        sa_ptr, // SA (for key reference)
-                                                        sa_ptr->iv, // IV
-                                                        sa_ptr->iv_len, // IV Length
-                                                        sa_ptr->ecs, // encryption cipher
-                                                        pkcs_padding,  // authentication cipher
-                                                        NULL);
-        } 
-        else if (sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_FALSE) // Non aead algorithm
-        {
-            // TODO - implement non-AEAD algorithm logic
-            if(sa_service_type == SA_AUTHENTICATION)
-            {
-                status = cryptography_if->cryptography_authenticate(//Stub out data in/out as this is done in place and want to save cycles
-                                                                    (uint8_t*)(&tm_frame[0]), // ciphertext output
-                                                                    (size_t) 0, // length of data
-                                                                    (uint8_t*)(&tm_frame[0]), // plaintext input
-                                                                    (size_t)0, // in data length - from start of frame to end of data
-                                                                    &(akp->value[0]), // Key
-                                                                    Crypto_Get_ACS_Algo_Keylen(*sa_ptr->acs),
-                                                                    sa_ptr, // SA (for key reference)
-                                                                    sa_ptr->iv, // IV
-                                                                    sa_ptr->iv_len, // IV Length
-                                                                    &tm_frame[mac_loc], // tag output
-                                                                    sa_ptr->stmacf_len, // tag size
-                                                                    aad, // AAD Input
-                                                                    aad_len, // Length of AAD
-                                                                    *sa_ptr->ecs, // encryption cipher
-                                                                    *sa_ptr->acs,  // authentication cipher
-                                                                    NULL);
-            }
-            if(sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
-            {
-                if (sa_service_type == SA_ENCRYPTION)
-                    {
-                        status = cryptography_if->cryptography_encrypt(//Stub out data in/out as this is done in place and want to save cycles
-                                                                    (uint8_t*)(&tm_frame[data_loc]), // ciphertext output
-                                                                    (size_t) pdu_len, // length of data
-                                                                    (uint8_t*)(&tm_frame[data_loc]), // plaintext input
-                                                                    (size_t) pdu_len, // in data length - from start of frame to end of data
-                                                                    &(ekp->value[0]), // Key
-                                                                    Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs),
-                                                                    sa_ptr, // SA (for key reference)
-                                                                    sa_ptr->iv, // IV
-                                                                    sa_ptr->iv_len, // IV Length
-                                                                    sa_ptr->ecs, // encryption cipher
-                                                                    pkcs_padding,  // authentication cipher
-                                                                    NULL);
-                }
-            }
-            else if(sa_service_type == SA_PLAINTEXT)
-            {
-                // Do nothing, SDLS fields were already copied into static frame in memory
-            }
-            else{
-                status = CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
-            }
+            // Do nothing, SDLS fields were already copied into static frame in memory
         }
+        else{
+            status = CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
+        }
+    }
 
-        // Move idx to mac location
-        idx += pdu_len;
+    // Move idx to mac location
+    idx += pdu_len;
 #ifdef TM_DEBUG
-        if (sa_ptr->stmacf_len > 0)
-        {
-            printf(KYEL "Data length is %d\n" RESET, pdu_len);
-            printf(KYEL "MAC location starts at: %d\n" RESET, idx);
-            printf(KYEL "MAC length of %d\n" RESET, sa_ptr->stmacf_len);
-        }
-        else
-        {
-            printf(KYEL "MAC NOT SET TO BE USED IN SA - LENGTH IS 0\n");
-        }
+    if (sa_ptr->stmacf_len > 0)
+    {
+        printf(KYEL "Data length is %d\n" RESET, pdu_len);
+        printf(KYEL "MAC location starts at: %d\n" RESET, idx);
+        printf(KYEL "MAC length of %d\n" RESET, sa_ptr->stmacf_len);
+    }
+    else
+    {
+        printf(KYEL "MAC NOT SET TO BE USED IN SA - LENGTH IS 0\n");
+    }
 #endif
 
 //TODO OCF - ? Here, elsewhere?
@@ -476,24 +474,24 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         */
 
         // Only calculate & insert FECF if CryptoLib is configured to do so & gvcid includes FECF.
-        if (current_managed_parameters->has_fecf == TM_HAS_FECF)
-        {
+    if (current_managed_parameters->has_fecf == TM_HAS_FECF)
+    {
 #ifdef FECF_DEBUG
-            printf(KCYN "Calcing FECF over %d bytes\n" RESET, current_managed_parameters->max_frame_size - 2);
+        printf(KCYN "Calcing FECF over %d bytes\n" RESET, current_managed_parameters->max_frame_size - 2);
 #endif
-            if (crypto_config->crypto_create_fecf == CRYPTO_TM_CREATE_FECF_TRUE)
-            {
-                new_fecf = Crypto_Calc_FECF((uint8_t *)&tm_frame, current_managed_parameters->max_frame_size - 2);
-                tm_frame[current_managed_parameters->max_frame_size - 2] = (uint8_t)((new_fecf & 0xFF00) >> 8);
-                tm_frame[current_managed_parameters->max_frame_size - 1] = (uint8_t)(new_fecf & 0x00FF);
-            }
-            else // CRYPTO_TC_CREATE_FECF_FALSE
-            {
-                tm_frame[current_managed_parameters->max_frame_size - 2] = (uint8_t)0x00;
-                tm_frame[current_managed_parameters->max_frame_size - 1] = (uint8_t)0x00;
-            }
-            idx += 2;
+        if (crypto_config->crypto_create_fecf == CRYPTO_TM_CREATE_FECF_TRUE)
+        {
+            new_fecf = Crypto_Calc_FECF((uint8_t *)&tm_frame, current_managed_parameters->max_frame_size - 2);
+            tm_frame[current_managed_parameters->max_frame_size - 2] = (uint8_t)((new_fecf & 0xFF00) >> 8);
+            tm_frame[current_managed_parameters->max_frame_size - 1] = (uint8_t)(new_fecf & 0x00FF);
         }
+        else // CRYPTO_TC_CREATE_FECF_FALSE
+        {
+            tm_frame[current_managed_parameters->max_frame_size - 2] = (uint8_t)0x00;
+            tm_frame[current_managed_parameters->max_frame_size - 1] = (uint8_t)0x00;
+        }
+        idx += 2;
+    }
 
 #ifdef TM_DEBUG
     printf(KYEL "Printing new TM frame:\n\t");
