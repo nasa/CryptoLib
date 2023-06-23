@@ -603,16 +603,15 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
 
             if(ecs_is_aead_algorithm == CRYPTO_TRUE)
             {
-                // Check that key length to be used ets the algorithm requirement
+                // Check that key length to be used meets the algorithm requirement
                 if((int32_t) ekp->key_len != Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs))
                 {
                     free(aad);
                     return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
                 }
 
-                status = cryptography_if->cryptography_aead_encrypt(&p_new_enc_frame[index],                               // ciphertext output
-                                                                    (size_t)tf_payload_len,  
-                                                                    //&p_new_enc_frame[index],                                      // length of data
+                status = cryptography_if->cryptography_aead_encrypt(&p_new_enc_frame[index], // ciphertext output
+                                                                    (size_t)tf_payload_len,  // length of data
                                                                     (uint8_t*)(p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), // plaintext input
                                                                     (size_t)tf_payload_len,                                         // in data length
                                                                     &(ekp->value[0]), // Key

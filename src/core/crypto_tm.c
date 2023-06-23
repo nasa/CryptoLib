@@ -384,24 +384,56 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         }
     }
 
-    // Do the encryption
+    // AEAD Algorithm Logic
     if(sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_TRUE)
     {
-        status = cryptography_if->cryptography_encrypt(//Stub out data in/out as this is done in place and want to save cycles
-                                                    (uint8_t*)(&tm_frame[data_loc]), // ciphertext output
-                                                    (size_t) pdu_len, // length of data
-                                                    (uint8_t*)(&tm_frame[data_loc]), // plaintext input
-                                                    (size_t) pdu_len, // in data length - from start of frame to end of data
-                                                    &(ekp->value[0]), // Key
-                                                    Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs),
-                                                    sa_ptr, // SA (for key reference)
-                                                    sa_ptr->iv, // IV
-                                                    sa_ptr->iv_len, // IV Length
-                                                    sa_ptr->ecs, // encryption cipher
-                                                    pkcs_padding,  // authentication cipher
-                                                    NULL);
+        if(sa_service_type == SA_ENCRYPTION)
+        {
+            status = cryptography_if->cryptography_encrypt(//Stub out data in/out as this is done in place and want to save cycles
+                                                        (uint8_t*)(&tm_frame[data_loc]), // ciphertext output
+                                                        (size_t) pdu_len, // length of data
+                                                        (uint8_t*)(&tm_frame[data_loc]), // plaintext input
+                                                        (size_t) pdu_len, // in data length - from start of frame to end of data
+                                                        &(ekp->value[0]), // Key
+                                                        Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs),
+                                                        sa_ptr, // SA (for key reference)
+                                                        sa_ptr->iv, // IV
+                                                        sa_ptr->iv_len, // IV Length
+                                                        sa_ptr->ecs, // encryption cipher
+                                                        pkcs_padding,  // authentication cipher
+                                                        NULL);
+        }
+        if(sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
+        {
+            // Check that key length to be used meets the algorithm requirement
+            if((int32_t) ekp->key_len != Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs))
+            {
+                return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
+            }
+
+            status = cryptography_if->cryptography_aead_encrypt((uint8_t*)(&tm_frame[data_loc]), // ciphertext output
+                                                                (size_t) pdu_len,  // length of data
+                                                                (uint8_t*)(&tm_frame[data_loc]), // plaintext input
+                                                                (size_t) pdu_len, // in data length
+                                                                &(ekp->value[0]), // Key
+                                                                Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs), // Length of key derived from sa_ptr key_ref
+                                                                sa_ptr, // SA (for key reference)
+                                                                sa_ptr->iv, // IV
+                                                                sa_ptr->iv_len, // IV Length
+                                                                &tm_frame[mac_loc], // tag output
+                                                                sa_ptr->stmacf_len, // tag size
+                                                                aad, // AAD Input
+                                                                aad_len, // Length of AAD
+                                                                (sa_ptr->est==1),
+                                                                (sa_ptr->ast==1),
+                                                                (sa_ptr->ast==1),
+                                                                sa_ptr->ecs, // encryption cipher
+                                                                sa_ptr->acs,  // authentication cipher
+                                                                NULL);
+        }
     } 
-    else if (sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_FALSE) // Non aead algorithm
+    // Non AEAD Algorithm Logic
+    else if (sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_FALSE)
     {
         // TODO - implement non-AEAD algorithm logic
         if(sa_service_type == SA_AUTHENTICATION)
@@ -427,20 +459,20 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         if(sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
         {
             if (sa_service_type == SA_ENCRYPTION)
-                {
-                    status = cryptography_if->cryptography_encrypt(//Stub out data in/out as this is done in place and want to save cycles
-                                                                (uint8_t*)(&tm_frame[data_loc]), // ciphertext output
-                                                                (size_t) pdu_len, // length of data
-                                                                (uint8_t*)(&tm_frame[data_loc]), // plaintext input
-                                                                (size_t) pdu_len, // in data length - from start of frame to end of data
-                                                                &(ekp->value[0]), // Key
-                                                                Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs),
-                                                                sa_ptr, // SA (for key reference)
-                                                                sa_ptr->iv, // IV
-                                                                sa_ptr->iv_len, // IV Length
-                                                                sa_ptr->ecs, // encryption cipher
-                                                                pkcs_padding,  // authentication cipher
-                                                                NULL);
+            {
+                status = cryptography_if->cryptography_encrypt(//Stub out data in/out as this is done in place and want to save cycles
+                                                            (uint8_t*)(&tm_frame[data_loc]), // ciphertext output
+                                                            (size_t) pdu_len, // length of data
+                                                            (uint8_t*)(&tm_frame[data_loc]), // plaintext input
+                                                            (size_t) pdu_len, // in data length - from start of frame to end of data
+                                                            &(ekp->value[0]), // Key
+                                                            Crypto_Get_ECS_Algo_Keylen(*sa_ptr->ecs),
+                                                            sa_ptr, // SA (for key reference)
+                                                            sa_ptr->iv, // IV
+                                                            sa_ptr->iv_len, // IV Length
+                                                            sa_ptr->ecs, // encryption cipher
+                                                            pkcs_padding,  // authentication cipher
+                                                            NULL);
             }
         }
         else if(sa_service_type == SA_PLAINTEXT)
