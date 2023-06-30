@@ -17,22 +17,7 @@ jobs:
     - name: Update
       run: sudo apt-get update
     - name: Install Dependencies
-      run: sudo apt-get install -y \
-           autoconf \
-           cmake \
-           g++-multilib \
-           gcc-multilib \
-           gettext \
-           git \
-           gdb \
-           lcov \
-           libcurl4-openssl-dev \
-           libmariadb-dev \
-           libmariadb-dev-compat \
-           libgcrypt20-dev \
-           libtool \
-           python3-dev \
-           python3-pip
+      run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat libgcrypt20-dev python3
     - name: Install Python Libraries
       run: sudo pip install pycryptodome
     # End Container Setup
@@ -51,22 +36,7 @@ jobs:
     - name: Update
       run: sudo apt-get update
     - name: Install Dependencies
-      run: sudo apt-get install -y \
-           autoconf \
-           cmake \
-           g++-multilib \
-           gcc-multilib \
-           gettext \
-           git \
-           gdb \
-           lcov \
-           libcurl4-openssl-dev \
-           libmariadb-dev \
-           libmariadb-dev-compat \
-           libgcrypt20-dev \
-           libtool \
-           python3-dev \
-           python3-pip
+      run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat libgcrypt20-dev python3
     - name: Install Python Libraries
       run: sudo pip install pycryptodome
     # End Container Setup
@@ -94,22 +64,7 @@ jobs:
     - name: Update
       run: sudo apt-get update
     - name: Install Dependencies
-      run: sudo apt-get install -y \
-           autoconf \
-           cmake \
-           g++-multilib \
-           gcc-multilib \
-           gettext \
-           git \
-           gdb \
-           lcov \
-           libcurl4-openssl-dev \
-           libmariadb-dev \
-           libmariadb-dev-compat \
-           libgcrypt20-dev \
-           libtool \
-           python3-dev \
-           python3-pip
+      run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat libgcrypt20-dev python3
     - name: Install Python Libraries
       run: sudo pip install pycryptodome
     # End Container Setup
