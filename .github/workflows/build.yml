@@ -23,6 +23,7 @@ jobs:
     # End Container Setup
     
     - name: Minimal Build Script
+      working-directory: ${{github.workspace}}
       run: bash ${GITHUB_WORKSPACE}/support/scripts/build_minimal.sh
 
   #
@@ -42,10 +43,11 @@ jobs:
     # End Container Setup
     
     - name: Internal Build Script
+      working-directory: ${{github.workspace}}
       run: bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
 
     - name: Code-Coverage
-      working-directory: ${{github.workspace}}/build
+      working-directory: ${{github.workspace}}
       run: make gcov
 
     - name: Upload 
@@ -70,4 +72,5 @@ jobs:
     # End Container Setup
     
     - name: KMC Build Script
+      working-directory: ${{github.workspace}}
       run: bash ${GITHUB_WORKSPACE}/support/scripts/build_kmc.sh
