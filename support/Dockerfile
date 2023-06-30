@@ -23,7 +23,6 @@ RUN apt-get update -y \
         libmariadb-dev-compat \
         libgcrypt20-dev \
         libtool \
-        python-apt \
         python3-dev \
         python3-pip \
     && rm -rf /var/lib/apt/lists/*
