@@ -398,7 +398,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_KMC_NULL_IV)
 {
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_KMC, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            IV_CRYPTO_MODULE, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Kmc_Crypto_Service("https", "itc-kmc.nasa.gov", 8443, "crypto-service","/certs/ammos-ca-bundle.crt",NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE, "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
@@ -429,12 +429,10 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_KMC_NULL_IV)
     test_association->ast = 0;
     test_association->est = 1;
     test_association->stmacf_len = 0;
-    *test_association->ecs = CRYPTO_CIPHER_AES256_CBC;
+    test_association->ecs = CRYPTO_CIPHER_AES256_CBC;
     test_association->acs_len = 1;
-    test_association->acs = calloc(1, test_association->acs_len * sizeof(uint8_t));
-    *test_association->acs = 0;
+    test_association->acs = 0;
     test_association->arsn_len = 0;
-    test_association->iv = NULL;
     sadb_routine->sadb_get_sa_from_spi(11, &test_association);
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
@@ -482,15 +480,13 @@ UTEST(TC_APPLY_SECURITY, ENC_GCM_KMC_NULL_IV)
     test_association->est = 1;
     test_association->stmacf_len = 16;
     test_association->shplf_len = 0;
-    *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
+    test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
     test_association->acs_len = 1;
-    test_association->acs = calloc(1, test_association->acs_len * sizeof(uint8_t));
-    *test_association->acs = 0;
+    test_association->acs = 0;
     test_association->arsn_len = 0;
     test_association->iv_len = 12;
     test_association->shivf_len = 12;
-    test_association->ecs[0] = 0x01;
-    test_association->iv = NULL;
+    test_association->ecs = 0x01;
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
@@ -736,7 +732,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_MDB_KMC_NULL_IV)
 {
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_KMC, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            IV_CRYPTO_MODULE, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_MariaDB("db-itc-kmc.nasa.gov","sadb", 3306,CRYPTO_TRUE,CRYPTO_TRUE, "/certs/ammos-ca-bundle.crt", NULL, CLIENT_CERTIFICATE, CLIENT_CERTIFICATE_KEY, NULL, "root", NULL);
@@ -951,7 +947,7 @@ UTEST(TC_PROCESS, DECRYPT_CBC_KMC_16B)
 UTEST(TC_PROCESS, DECRYPT_CBC_KMC_NULL_IV)
 {
     Crypto_Config_CryptoLib(KEY_TYPE_KMC, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
+                            IV_CRYPTO_MODULE, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Kmc_Crypto_Service("https", "itc-kmc.nasa.gov", 8443, "crypto-service","/certs/ammos-ca-bundle.crt",NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE, "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
@@ -973,7 +969,6 @@ UTEST(TC_PROCESS, DECRYPT_CBC_KMC_NULL_IV)
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     sadb_routine->sadb_get_sa_from_spi(11, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    test_association->iv = NULL;
     test_association->ast = 0;
 
     // Convert input test frame
@@ -993,7 +988,7 @@ UTEST(TC_PROCESS, DECRYPT_GCM_KMC_NULL_IV)
 {
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_KMC, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            IV_CRYPTO_MODULE, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Kmc_Crypto_Service("https", "itc-kmc.nasa.gov", 8443, "crypto-service","/certs/ammos-ca-bundle.crt",NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE, "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
@@ -1023,14 +1018,12 @@ UTEST(TC_PROCESS, DECRYPT_GCM_KMC_NULL_IV)
     test_association->est = 1;
     test_association->stmacf_len = 16;
     test_association->shplf_len = 0;
-    *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
+    test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
     test_association->acs_len = 1;
-    test_association->acs = calloc(1, test_association->acs_len * sizeof(uint8_t));
-    *test_association->acs = 0;
+    test_association->acs = 0;
     test_association->arsn_len = 0;
     test_association->iv_len = 12;
     test_association->shivf_len = 12;
-    test_association->iv = NULL;
     return_val = Crypto_TC_ProcessSecurity(raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len, tc_sdls_processed_frame);
 
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
@@ -1190,7 +1183,7 @@ UTEST(TC_PROCESS, DECRYPT_CBC_MDB_KMC_16B)
 UTEST(TC_PROCESS, DECRYPT_CBC_MDB_KMC_NULL_IV)
 {
     Crypto_Config_CryptoLib(KEY_TYPE_KMC, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
+                            IV_CRYPTO_MODULE, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_MariaDB("db-itc-kmc.nasa.gov","sadb", 3306,CRYPTO_TRUE,CRYPTO_TRUE, "/certs/ammos-ca-bundle.crt", NULL, CLIENT_CERTIFICATE, CLIENT_CERTIFICATE_KEY, NULL, "root", NULL);
@@ -1214,7 +1207,6 @@ UTEST(TC_PROCESS, DECRYPT_CBC_MDB_KMC_NULL_IV)
     sadb_routine->sadb_get_sa_from_spi(1, &test_association);
     test_association->arsn_len = 0;
     test_association->shsnf_len = 0;
-    test_association->iv = NULL;
 
     // Convert input test frame
     hex_conversion(test_frame_pt_h, (char**) &test_frame_pt_b, &test_frame_pt_len);

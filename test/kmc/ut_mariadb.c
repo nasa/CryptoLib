@@ -40,18 +40,8 @@
 
 void cleanup_sa(SecurityAssociation_t* test_association)
 {
-    if (test_association->iv != NULL)
-        free(test_association->iv);
-    if (test_association->abm != NULL)
-        free(test_association->abm);
-    if (test_association->arsn != NULL)
-        free(test_association->arsn);
     if (test_association->ek_ref != NULL)
         free(test_association->ek_ref);
-    if (test_association->ecs != NULL)
-        free(test_association->ecs);
-    if (test_association->acs != NULL)
-        free(test_association->acs);
     if (test_association->ak_ref != NULL)
         free(test_association->ak_ref);
     

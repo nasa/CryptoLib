@@ -19,7 +19,6 @@
 #include "key_interface.h"
 
 /* Variables */
-static crypto_key_t ek_ring[NUM_KEYS] = {0};
 static KeyInterfaceStruct key_if_struct;
 
 /* Prototypes */
@@ -40,7 +39,6 @@ static crypto_key_t* get_key(uint32_t key_id)
 {
     /* Avoid set but not used warning */
     key_id = key_id;
-    key_ptr = key_ptr; 
 
     fprintf(stderr, "Attempting to access key ring with KMC Crypto Service. This shouldn't happen!\n ");
 
