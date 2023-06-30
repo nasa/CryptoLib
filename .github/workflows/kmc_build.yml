@@ -1,0 +1,15 @@
+name: KMC Build
+
+on: 
+  push:
+    branches: [ main, dev ]
+  pull_request:
+
+jobs:
+  kmc_build:
+    runs-on: ivvitc/cryptolib:latest
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: KMC Build Script
+      run: bash ${GITHUB_WORKSPACE}/support/scripts/build_kmc.sh
