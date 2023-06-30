@@ -1,4 +1,4 @@
-name: Minimal Build
+name: CryptoLib
 
 on: 
   push:
@@ -10,32 +10,31 @@ jobs:
   # Minimal Build
   #
   minimal_build:
+    # Container Setup
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
-
-    # Container Setup
-    - name: Container Setup
-      run: |
-        sudo apt update;
-        sudo apt install -y \
-          autoconf \
-          cmake \
-          g++-multilib \
-          gcc-multilib \
-          gettext \
-          git \
-          gdb \
-          lcov \
-          libcurl4-openssl-dev \
-          libmariadb-dev \
-          libmariadb-dev-compat \
-          libgcrypt20-dev \
-          libtool \
-          python3-dev \
-          python3-pip
-        sudo pip3 install pycryptodome
+    - name: Update
+      run: sudo apt-get update
+    - name: Install Dependencies
+      run: sudo apt install -y \
+           autoconf \
+           cmake \
+           g++-multilib \
+           gcc-multilib \
+           gettext \
+           git \
+           gdb \
+           lcov \
+           libcurl4-openssl-dev \
+           libmariadb-dev \
+           libmariadb-dev-compat \
+           libgcrypt20-dev \
+           libtool \
+           python3-dev \
+           python3-pip
+    - name: Install Python Libraries
+      run: sudo pip install pycryptodome
     # End Container Setup
     
     - name: Minimal Build Script
@@ -45,31 +44,31 @@ jobs:
   # Internal Build
   #
   internal_build:
+    # Container Setup
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
-
-    # Container Setup
-    - name: Container Setup
-      run: sudo apt update; \
-        sudo apt install -y \
-          autoconf \
-          cmake \
-          g++-multilib \
-          gcc-multilib \
-          gettext \
-          git \
-          gdb \
-          lcov \
-          libcurl4-openssl-dev \
-          libmariadb-dev \
-          libmariadb-dev-compat \
-          libgcrypt20-dev \
-          libtool \
-          python3-dev \
-          python3-pip \
-        sudo pip3 install pycryptodome
+    - name: Update
+      run: sudo apt-get update
+    - name: Install Dependencies
+      run: sudo apt install -y \
+           autoconf \
+           cmake \
+           g++-multilib \
+           gcc-multilib \
+           gettext \
+           git \
+           gdb \
+           lcov \
+           libcurl4-openssl-dev \
+           libmariadb-dev \
+           libmariadb-dev-compat \
+           libgcrypt20-dev \
+           libtool \
+           python3-dev \
+           python3-pip
+    - name: Install Python Libraries
+      run: sudo pip install pycryptodome
     # End Container Setup
     
     - name: Internal Build Script
@@ -88,31 +87,31 @@ jobs:
   # KMC Build
   #
   kmc_build:
+    # Container Setup
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
-
-    # Container Setup
-    - name: Container Setup
-      run: sudo apt update; \
-        sudo apt install -y \
-          autoconf \
-          cmake \
-          g++-multilib \
-          gcc-multilib \
-          gettext \
-          git \
-          gdb \
-          lcov \
-          libcurl4-openssl-dev \
-          libmariadb-dev \
-          libmariadb-dev-compat \
-          libgcrypt20-dev \
-          libtool \
-          python3-dev \
-          python3-pip \
-        sudo pip3 install pycryptodome
+    - name: Update
+      run: sudo apt-get update
+    - name: Install Dependencies
+      run: sudo apt install -y \
+           autoconf \
+           cmake \
+           g++-multilib \
+           gcc-multilib \
+           gettext \
+           git \
+           gdb \
+           lcov \
+           libcurl4-openssl-dev \
+           libmariadb-dev \
+           libmariadb-dev-compat \
+           libgcrypt20-dev \
+           libtool \
+           python3-dev \
+           python3-pip
+    - name: Install Python Libraries
+      run: sudo pip install pycryptodome
     # End Container Setup
     
     - name: KMC Build Script
