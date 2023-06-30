@@ -7,9 +7,21 @@ on:
 
 jobs:
   kmc_build:
-    runs-on: ivvitc/cryptolib:latest
+    runs-on: ubuntu-latest
+
     steps:
     - uses: actions/checkout@v2
+
+    # Container Setup
+    - name: Update
+      run: sudo apt-get update
+
+    - name: Install Dependencies
+      run: sudo apt-get install -y libgpg-error-dev libgcrypt20-dev python3 lcov
+
+    - name: Install Python Libraries
+      run: sudo pip install pycryptodome
+    # End Container Setup
     
     - name: KMC Build Script
       run: bash ${GITHUB_WORKSPACE}/support/scripts/build_kmc.sh
