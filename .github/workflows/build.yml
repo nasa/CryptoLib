@@ -17,7 +17,7 @@ jobs:
     - name: Update
       run: sudo apt-get update
     - name: Install Dependencies
-      run: sudo apt install -y \
+      run: sudo apt-get install -y \
            autoconf \
            cmake \
            g++-multilib \
@@ -51,7 +51,7 @@ jobs:
     - name: Update
       run: sudo apt-get update
     - name: Install Dependencies
-      run: sudo apt install -y \
+      run: sudo apt-get install -y \
            autoconf \
            cmake \
            g++-multilib \
@@ -94,7 +94,7 @@ jobs:
     - name: Update
       run: sudo apt-get update
     - name: Install Dependencies
-      run: sudo apt install -y \
+      run: sudo apt-get install -y \
            autoconf \
            cmake \
            g++-multilib \
