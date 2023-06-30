@@ -6,4 +6,7 @@
 #  ./build_internal.sh
 #
 
-cmake ../.. && make && make test
+SCRIPT_DIR=$(cd `dirname $0` && pwd)
+BASE_DIR=$(cd `dirname $SCRIPT_DIR`/.. && pwd)
+
+cmake $BASE_DIR && make && make test
