@@ -1,6 +1,7 @@
 # CryptoLib Dockerfile
 #
 # docker build -t ivvitc/cryptolib:latest .
+# docker push ivvitc/cryptolib:latest
 #
 
 FROM ubuntu:20.04 AS cl0
@@ -16,6 +17,7 @@ RUN apt-get update -y \
         gettext \
         git \
 		gdb \
+        lcov \
         libcurl4-openssl-dev \
         libmariadb-dev \
         libmariadb-dev-compat \

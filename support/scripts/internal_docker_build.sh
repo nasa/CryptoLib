@@ -15,7 +15,7 @@ mkdir $BASE_DIR/build > /dev/null 2>&1
 rm -r $BASE_DIR/build/default/* > /dev/null 2>&1
 mkdir $BASE_DIR/build/default > /dev/null 2>&1
 
-#$DFLAGS -v $BASE_DIR:$BASE_DIR -w $BASE_DIR/build cryptolib /bin/bash
+#$DFLAGS -v $BASE_DIR:$BASE_DIR -w $BASE_DIR/build/default cryptolib /bin/bash
 
 echo "Default build and test..."
 $DFLAGS -v $BASE_DIR:$BASE_DIR -w $BASE_DIR/build/default ivvitc/cryptolib bash -c \
