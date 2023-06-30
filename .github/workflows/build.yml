@@ -18,8 +18,8 @@ jobs:
     # Container Setup
     - name: Container Setup
       run: |
-        apt update;
-        apt install -y \
+        sudo apt update;
+        sudo apt install -y \
           autoconf \
           cmake \
           g++-multilib \
@@ -35,7 +35,7 @@ jobs:
           libtool \
           python3-dev \
           python3-pip
-        pip3 install pycryptodome
+        sudo pip3 install pycryptodome
     # End Container Setup
     
     - name: Minimal Build Script
@@ -52,8 +52,8 @@ jobs:
 
     # Container Setup
     - name: Container Setup
-      run: apt update; \
-        apt install -y \
+      run: sudo apt update; \
+        sudo apt install -y \
           autoconf \
           cmake \
           g++-multilib \
@@ -69,7 +69,7 @@ jobs:
           libtool \
           python3-dev \
           python3-pip \
-        pip3 install pycryptodome
+        sudo pip3 install pycryptodome
     # End Container Setup
     
     - name: Internal Build Script
@@ -95,8 +95,8 @@ jobs:
 
     # Container Setup
     - name: Container Setup
-      run: apt update; \
-        apt install -y \
+      run: sudo apt update; \
+        sudo apt install -y \
           autoconf \
           cmake \
           g++-multilib \
@@ -112,7 +112,7 @@ jobs:
           libtool \
           python3-dev \
           python3-pip \
-        pip3 install pycryptodome
+        sudo pip3 install pycryptodome
     # End Container Setup
     
     - name: KMC Build Script
