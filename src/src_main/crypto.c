@@ -805,6 +805,10 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
     int8_t ARSN_VALID = -1;
 
     // Check for NULL pointers
+    if (sa_ptr == NULL)
+    {
+        return CRYPTO_LIB_ERR_NULL_SA;
+    }
     if (arsn == NULL && sa_ptr->arsn_len > 0)
     {
         return CRYPTO_LIB_ERR_NULL_ARSN;
@@ -812,10 +816,6 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
     if (iv == NULL && sa_ptr->shivf_len > 0 && crypto_config->cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
         return CRYPTO_LIB_ERR_NULL_IV;
-    }
-    if (sa_ptr == NULL)
-    {
-        return CRYPTO_LIB_ERR_NULL_SA;
     }
     // If sequence number field is greater than zero, check for replay
     if (sa_ptr->shsnf_len > 0)
