@@ -27,8 +27,13 @@ import socket
 import struct
 import sys
 
+try:
+    input = raw_input
+except NameError:
+    pass
+
 def signal_term_handler(signale,frame):
-    print '\nExiting gracefully...\n'
+    print('\nExiting gracefully...\n')
     ci.close()
     to.close()
     sys.exit(0)
@@ -68,52 +73,52 @@ python_files = [
                 pwd+"sdls_ep_interop/tc6.txt",
                ]
 
-print color.BOLD + '\nBegin Testing the Cryptography Library...' + color.END
+print(color.BOLD + '\nBegin Testing the Cryptography Library...' + color.END)
 
 for file_name in python_files:
     with open(file_name) as f:
-        print file_name + " has been loaded!"
-        print color.YELLOW + "Typically flight software must be rebooted now!\n" + color.END
+        print(file_name + " has been loaded!")
+        print(color.YELLOW + "Typically flight software must be rebooted now!\n" + color.END)
         for line in f:	
             # Determine line
             if line.startswith("Number = "):
                 number = line[9:]
                 #sys.stdout.write(line[9:len(line)] + ") ")
-                #print line[9:] + " "
+                #print(line[9:] + " ")
             if line.startswith("Description = "):
                 description = line[14:]
                 #sys.stdout.write(line[14:len(line)])
-                #print line[14:] + " "
+                #print(line[14:] + " ")
             if line.startswith("TC = "):
                 tc = line[5:]
             if line.startswith("TM = "):
                 tm = line[5:]
-                print number.replace("\n","\t") + description
-                raw_input("Press ENTER to proceed...\n")
+                print(number.replace("\n","\t") + description)
+                input("Press ENTER to proceed...\n")
                 if len(tc) > 2:
                     # Send TC to CI_Lab
-                    print tc
+                    print(tc)
                     ci.sendto(binascii.unhexlify(tc[0:len(tc)-1]), (UDP_IP_CI,UDP_PORT_CI))
                 if len(tm) > 2:
                     # Receive TM from TO_Lab
-                    #print tm
+                    #print(tm)
                     try:
                         data, addr = to.recvfrom(10000);
                     except socket.timeout:
-                        print color.RED + 'ERROR: TO_Lab timeout exceeded!' + color.END
+                        print(color.RED + 'ERROR: TO_Lab timeout exceeded!' + color.END)
                         os.kill(os.getpid(), signal.SIGINT)
                     if len(data) == 0:
-                        print color.RED + 'ERROR: received no data from TO_Lab when response expected!' + color.END
+                        print(color.RED + 'ERROR: received no data from TO_Lab when response expected!' + color.END)
                         os.kill(os.getpid(), signal.SIGINT)
                     else:
                         if tm[0:len(tm)-1] != binascii.hexlify(data[0:len(tm)-1]):
-                            print color.RED + 'ERROR: received TM data did not match expected!' + color.END
-                            print len(binascii.hexlify(data))
-                            print '\t received TM: ' + binascii.hexlify(data)
-                            print len(tm)
-                            print '\t expected TM: ' + tm
+                            print(color.RED + 'ERROR: received TM data did not match expected!' + color.END)
+                            print(len(binascii.hexlify(data)))
+                            print('\t received TM: ' + binascii.hexlify(data))
+                            print(len(tm))
+                            print('\t expected TM: ' + tm)
                             os.kill(os.getpid(), signal.SIGINT)
 
-print >> sys.stderr, "Out of data, exiting gracefully..."
+sys.stderr.write("Out of data, exiting gracefully...")
 ci.close()
 to.close()
