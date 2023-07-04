@@ -27,6 +27,7 @@ import socket
 import struct
 import sys
 
+# for python3 and python2 compatability
 try:
     input = raw_input
 except NameError:
