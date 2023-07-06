@@ -124,7 +124,7 @@
 #define ABM_SIZE 1786 // 20      /* bytes */
 #define ARSN_SIZE 20   /* total messages */
 #define ARSNW_SIZE 1   /* bytes */
-#define SN_SIZE 0
+#define SN_SIZE 16
 #define CHALLENGE_SIZE 16     /* bytes */
 #define CHALLENGE_MAC_SIZE 16 /* bytes */
 
