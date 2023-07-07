@@ -53,9 +53,11 @@ int32_t crypto_free_config_structs(void);
 int32_t Crypto_Init_TC_Unit_Test(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, 
+                            TC_HAS_PUS_HDR, TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, 
+                            TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F, 
+                            SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TC Tests
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
@@ -71,7 +73,8 @@ int32_t Crypto_Init_TC_Unit_Test(void)
 int32_t Crypto_Init_TM_Unit_Test(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TM_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TM Tests
@@ -271,6 +274,7 @@ int32_t Crypto_Shutdown(void)
  * @brief Function: Crypto_Config_CryptoLib
  * @param key_type: uint8
  * @param sadb_type: uint8
+ * @param iv_type: uint8
  * @param crypto_create_fecf: uint8
  * @param process_sdls_pdus: uint8
  * @param has_pus_hdr: uint8
@@ -281,7 +285,8 @@ int32_t Crypto_Shutdown(void)
  * @param vcid_bitmask: uint8
  * @return int32: Success/Failure
  **/
-int32_t Crypto_Config_CryptoLib(uint8_t key_type, uint8_t sadb_type, uint8_t cryptography_type, uint8_t crypto_create_fecf, uint8_t process_sdls_pdus,
+int32_t Crypto_Config_CryptoLib(uint8_t key_type, uint8_t sadb_type, uint8_t cryptography_type, 
+                                uint8_t iv_type, uint8_t crypto_create_fecf, uint8_t process_sdls_pdus,
                                 uint8_t has_pus_hdr, uint8_t ignore_sa_state, uint8_t ignore_anti_replay,
                                 uint8_t unique_sa_per_mapid, uint8_t crypto_check_fecf, uint8_t vcid_bitmask, uint8_t crypto_increment_nontransmitted_iv)
 {
@@ -290,6 +295,7 @@ int32_t Crypto_Config_CryptoLib(uint8_t key_type, uint8_t sadb_type, uint8_t cry
     crypto_config->key_type = key_type;
     crypto_config->sadb_type = sadb_type;
     crypto_config->cryptography_type = cryptography_type;
+    crypto_config->iv_type = iv_type;
     crypto_config->crypto_create_fecf = crypto_create_fecf;
     crypto_config->process_sdls_pdus = process_sdls_pdus;
     crypto_config->has_pus_hdr = has_pus_hdr;

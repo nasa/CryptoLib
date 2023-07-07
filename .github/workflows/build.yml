@@ -24,7 +24,7 @@ jobs:
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DDEBUG=1 -DSA_MARIADB=0 -DCRYPTO_LIBGCRYPT=1 -DCRYPTO_KMC=0
+      run: cmake -B ${{github.workspace}}/build -DDEBUG=1 -DSA_MARIADB=0 -DCRYPTO_LIBGCRYPT=1 -DCRYPTO_KMC=0 -DTEST=1
 
     - name: Build
       # Build your program with the given configuration
@@ -49,7 +49,7 @@ jobs:
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DDEBUG=0 -DSA_MARIADB=0 -DCRYPTO_LIBGCRYPT=1 -DCRYPTO_KMC=0
+      run: cmake -B ${{github.workspace}}/build -DDEBUG=0 -DSA_MARIADB=0 -DCRYPTO_LIBGCRYPT=1 -DCRYPTO_KMC=0 -DTEST=1
 
     - name: Build
       # Build your program with the given configuration
@@ -75,7 +75,7 @@ jobs:
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DDEBUG=1 -DSA_MARIADB=1 -DCRYPTO_LIBGCRYPT=1 -DCRYPTO_KMC=0
+      run: cmake -B ${{github.workspace}}/build -DDEBUG=1 -DSA_MARIADB=1 -DCRYPTO_LIBGCRYPT=1 -DCRYPTO_KMC=0 -DTEST=1
 
     - name: Build
       # Build your program with the given configuration
@@ -101,7 +101,7 @@ jobs:
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DDEBUG=0 -DSA_MARIADB=1 -DCRYPTO_LIBGCRYPT=1 -DCRYPTO_KMC=0
+      run: cmake -B ${{github.workspace}}/build -DDEBUG=0 -DSA_MARIADB=1 -DCRYPTO_LIBGCRYPT=1 -DCRYPTO_KMC=0 -DTEST=1
 
     - name: Build
       # Build your program with the given configuration
@@ -127,7 +127,7 @@ jobs:
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DDEBUG=1 -DSA_MARIADB=1 -DCRYPTO_LIBGCRYPT=1 -DCRYPTO_KMC=1
+      run: cmake -B ${{github.workspace}}/build -DDEBUG=1 -DSA_MARIADB=1 -DCRYPTO_LIBGCRYPT=1 -DCRYPTO_KMC=1 -DTEST=1
 
     - name: Build
       # Build your program with the given configuration
@@ -153,7 +153,7 @@ jobs:
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DDEBUG=0 -DSA_MARIADB=1 -DCRYPTO_LIBGCRYPT=1 -DCRYPTO_KMC=1
+      run: cmake -B ${{github.workspace}}/build -DDEBUG=0 -DSA_MARIADB=1 -DCRYPTO_LIBGCRYPT=1 -DCRYPTO_KMC=1 -DTEST=1
 
     - name: Build
       # Build your program with the given configuration

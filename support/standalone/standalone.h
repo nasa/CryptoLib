@@ -72,6 +72,7 @@ extern "C"
 #define CRYPTO_CMD_NOOP     2
 #define CRYPTO_CMD_RESET    3
 #define CRYPTO_CMD_VCID     4
+#define CRYPTO_CMD_TC_DEBUG 5
 
 
 /*
@@ -105,4 +106,4 @@ void crypto_standalone_cleanup(const int signal);
 } /* Close scope of 'extern "C"' declaration which encloses file. */
 #endif
 
-#endif /* CRYPTOLIB_STANDALONE_H */
+#endif //CRYPTOLIB_STANDALONE_H

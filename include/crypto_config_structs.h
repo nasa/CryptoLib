@@ -15,8 +15,8 @@ ITC Team
 NASA IV&V
 ivv-itc@lists.nasa.gov
 */
-#ifndef _crypto_config_structs_h_
-#define _crypto_config_structs_h_
+#ifndef CRYPTO_CONFIG_STRUCTS_H
+#define CRYPTO_CONFIG_STRUCTS_H
 
 #include "crypto_config.h"
 
@@ -44,6 +44,11 @@ typedef enum
     CRYPTOGRAPHY_TYPE_KMCCRYPTO
 } CryptographyType;
 // gvcid managed parameter enums
+typedef enum
+{
+    IV_INTERNAL,
+    IV_CRYPTO_MODULE
+} IvType;
 typedef enum
 {
     TC_NO_FECF,
@@ -155,6 +160,7 @@ typedef struct
     KeyType key_type;
     SadbType sadb_type;
     CryptographyType cryptography_type;
+    IvType iv_type; // Whether or not CryptoLib should generate the IV
     CreateFecfBool crypto_create_fecf; // Whether or not CryptoLib is expected to calculate TC FECFs and return
                                          // payloads with the FECF
     TcProcessSdlsPdus process_sdls_pdus; // Config to process SDLS extended procedure PDUs in CryptoLib
@@ -240,5 +246,4 @@ typedef struct
 } CamConfig_t;
 #define CAM_CONFIG_SIZE (sizeof(CamConfig_t))
 
-
-#endif
+#endif //CRYPTO_CONFIG_STRUCTS_H

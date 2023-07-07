@@ -15,8 +15,8 @@
    NASA IV&V
    jstar-development-team@mail.nasa.gov
 */
-#ifndef _crypto_events_h_
-#define _crypto_events_h_
+#ifndef CRYPTO_EVENTS_H
+#define CRYPTO_EVENTS_H
 
 #define FECF_ERR_EID 0
 #define MKID_INVALID_EID 1
@@ -29,4 +29,4 @@
 
 #define STARTUP 10
 
-#endif
+#endif //CRYPTO_EVENTS_H

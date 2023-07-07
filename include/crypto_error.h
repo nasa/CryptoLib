@@ -15,8 +15,8 @@
    NASA IV&V
    jstar-development-team@mail.nasa.gov
 */
-#ifndef _crypto_error_h_
-#define _crypto_error_h_
+#ifndef CRYPTO_ERROR_H
+#define CRYPTO_ERROR_H
 
 /*
  * If error codes are added to this header file, their enum string must be added to the error lists (in crypto_error.c)
@@ -129,4 +129,4 @@ extern char *crypto_enum_errlist_crypto_cam[];
 #define CRYPTO_UNDEFINED_ERROR "CRYPTO_UNDEFINED_ERROR_CODE"
 
 
-#endif //_crypto_error_h_
+#endif //CRYPTO_ERROR_H

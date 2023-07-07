@@ -15,8 +15,8 @@
    NASA IV&V
    jstar-development-team@mail.nasa.gov
 */
-#ifndef _key_interface_h_
-#define _key_interface_h_
+#ifndef KEY_INTERFACE_H
+#define KEY_INTERFACE_H
 
 #include "crypto_error.h"
 #include "crypto_structs.h"
@@ -46,4 +46,4 @@ KeyInterface get_key_interface_custom(void);
 KeyInterface get_key_interface_internal(void);
 KeyInterface get_key_interface_kmc(void);
 
-#endif /* _key_interface_h_ */
+#endif // KEY_INTERFACE_H

@@ -38,8 +38,8 @@ UTEST(TC_APPLY_SECURITY, NO_CRYPTO_INIT)
     int raw_tc_sdls_ping_len = 0;
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
-    
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
@@ -301,7 +301,8 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_IV_ROLLOVE
 UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_STATIC_IV_ROLLOVER)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
@@ -380,7 +381,8 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_STATIC_IV_ROLLOVER)
 UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_ARSN_ROLLOVER)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
@@ -420,16 +422,11 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_ARSN_ROLLO
     test_association->est=0;
     test_association->ast=1;
     test_association->ecs_len=1;
-    free(test_association->ecs);
-    test_association->ecs = calloc(1, test_association->ecs_len * sizeof(uint8_t));
-    *test_association->ecs = CRYPTO_CIPHER_NONE;
+    test_association->ecs = CRYPTO_CIPHER_NONE;
     test_association->acs_len=1;
-    free(test_association->acs);
-    test_association->acs = calloc(1, test_association->acs_len * sizeof(uint8_t));
-    *test_association->acs = CRYPTO_MAC_CMAC_AES256;
+    test_association->acs = CRYPTO_MAC_CMAC_AES256;
     test_association->arsn_len = 3;
     test_association->shsnf_len = 2;
-    test_association->arsn = calloc(1,test_association->arsn_len);
     memcpy(test_association->arsn, (uint8_t *)new_arsn_b, new_arsn_len);
     // This TA was originally setup for AESGCM, need to specify an akid so we can use it for a MAC
     test_association->akid = 130;
@@ -485,7 +482,8 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_ARSN_ROLLO
 UTEST(TC_APPLY_SECURITY, BAD_SPACE_CRAFT_ID)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
@@ -516,7 +514,8 @@ UTEST(TC_APPLY_SECURITY, BAD_SPACE_CRAFT_ID)
 UTEST(TC_APPLY_SECURITY, BAD_VIRTUAL_CHANNEL_ID)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
@@ -548,7 +547,8 @@ UTEST(TC_APPLY_SECURITY, BAD_VIRTUAL_CHANNEL_ID)
 UTEST(TC_APPLY_SECURITY, NULL_BUFFER)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
@@ -583,7 +583,8 @@ UTEST(TC_APPLY_SECURITY, INVALID_FRAME_SIZE)
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 4);
@@ -630,7 +631,8 @@ UTEST(TC_APPLY_SECURITY, ERROR_TC_INPUT_FRAME_TOO_SHORT_FOR_SPEC)
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 4);
@@ -663,7 +665,8 @@ UTEST(TC_APPLY_SECURITY, ERROR_TC_INPUT_FRAME_TOO_SHORT_FOR_SPECIFIED_FRAME_LENG
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 4);
@@ -696,7 +699,8 @@ UTEST(TC_APPLY_SECURITY, ERROR_TC_INPUT_FRAME_TOO_SHORT_FOR_SPECIFIED_FRAME_LENG
 UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     
@@ -757,7 +761,8 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP)
 UTEST(TC_APPLY_SECURITY, ENC_CBC_16BP)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     
@@ -820,7 +825,8 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_16BP)
 UTEST(TC_APPLY_SECURITY, ENC_CBC_FRAME_MAX)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     
@@ -867,7 +873,8 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_FRAME_MAX)
 UTEST(TC_APPLY_SECURITY, ENC_CBC_FRAME_TOO_BIG)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     
@@ -910,7 +917,8 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_FRAME_TOO_BIG)
 UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP_1)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     
@@ -982,9 +990,11 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP_1)
 UTEST(TC_APPLY_SECURITY, ENC_CBC_NULL_IV)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_CRYPTO_MODULE, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE,
+                            TC_HAS_PUS_HDR, TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, 
+                            TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F, 
+                            SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
@@ -1024,7 +1034,6 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_NULL_IV)
     test_association->arsn_len = 0;
     test_association->iv_len = 0;
     test_association->shivf_len = 0;
-    test_association->iv = NULL;
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
@@ -1036,7 +1045,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_NULL_IV)
     //printf("Encrypted Frame:\n");
     for(int i = 0; i < enc_frame_len; i++)
     {
-        //printf("%02x -> %02x ", ptr_enc_frame[i], truth_data_b[i]);
+        printf("%02x -> %02x \n", ptr_enc_frame[i], truth_data_b[i]);
         ASSERT_EQ(ptr_enc_frame[i], truth_data_b[i]);
     }
     //printf("\n");
@@ -1052,9 +1061,11 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_NULL_IV)
 UTEST(TC_APPLY_SECURITY, CBC_NULL_IV_W_IVH)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_CRYPTO_MODULE, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, 
+                            TC_HAS_PUS_HDR, TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, 
+                            TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F, 
+                            SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
@@ -1080,7 +1091,8 @@ UTEST(TC_APPLY_SECURITY, CBC_NULL_IV_W_IVH)
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
     hex_conversion(new_iv_h, &new_iv_b, &new_iv_len);
 
-    uint8_t* ptr_enc_frame = NULL;
+    uint8_t  enc_frame[2048];
+    uint8_t* ptr_enc_frame = &enc_frame[0];
     uint16_t enc_frame_len = 0;
 
     SecurityAssociation_t* test_association;
@@ -1094,9 +1106,9 @@ UTEST(TC_APPLY_SECURITY, CBC_NULL_IV_W_IVH)
     test_association->arsn_len = 0;
     test_association->iv_len = 16;
     test_association->shivf_len = 16;
-    test_association->iv = NULL;
-    return_val =
-        Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    return_val = Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, 
+                                         &ptr_enc_frame, &enc_frame_len);
+
     ASSERT_EQ(CRYPTO_LIB_ERR_NULL_IV, return_val);
 
     char* truth_data_h = "200300260000000BFFEEDDCCBBAA00000000000001BD8722C9D22E0CB109AC402748F672067D37";
@@ -1104,6 +1116,7 @@ UTEST(TC_APPLY_SECURITY, CBC_NULL_IV_W_IVH)
     int truth_data_l = 0;
 
     hex_conversion(truth_data_h, (char **)&truth_data_b, &truth_data_l);
+
     printf("Received Encrypted Frame of length %d bytes:\n\t", enc_frame_len);
     for(int i = 0; i < enc_frame_len; i++)
     {
@@ -1115,7 +1128,6 @@ UTEST(TC_APPLY_SECURITY, CBC_NULL_IV_W_IVH)
     Crypto_Shutdown();
     free(truth_data_b);
     free(raw_tc_sdls_ping_b);
-    free(ptr_enc_frame);
 }
 
 /*
@@ -1124,25 +1136,25 @@ UTEST(TC_APPLY_SECURITY, CBC_NULL_IV_W_IVH)
 */
 UTEST(TC_APPLY_SECURITY, PLAINTEXT_W_ARSN)
 {
- // Setup & Initialize CryptoLib
-     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
     Crypto_Init();
- // Test string
- char* raw_tc_sdls_ping_h = "2003001F00000100011880D2C9000E197F0B001B0004000400003040D95E0000";
- char* raw_tc_sdls_ping_b = NULL;
- int raw_tc_sdls_ping_len = 0;
+    // Test string
+    char* raw_tc_sdls_ping_h = "2003001F00000100011880D2C9000E197F0B001B0004000400003040D95E0000";
+    char* raw_tc_sdls_ping_b = NULL;
+    int raw_tc_sdls_ping_len = 0;
 
- hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
+    hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
- uint8_t* ptr_enc_frame = NULL;
- uint16_t enc_frame_len = 0;
- int32_t return_val = CRYPTO_LIB_ERROR;
+    uint8_t* ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+    int32_t return_val = CRYPTO_LIB_ERROR;
 
- return_val =
-Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    return_val = Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
     char* truth_data_h = "200300230000010000000100011880D2C9000E197F0B001B0004000400003040D95E85F3";
     uint8_t* truth_data_b = NULL;
@@ -1156,11 +1168,9 @@ Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &pt
         ASSERT_EQ(ptr_enc_frame[i], truth_data_b[i]);
     }
 
-Crypto_Shutdown();
-free(raw_tc_sdls_ping_b);
-free(ptr_enc_frame);
-ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+    Crypto_Shutdown();
+    free(raw_tc_sdls_ping_b);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
 }
-
 
 UTEST_MAIN();
