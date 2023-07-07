@@ -214,26 +214,22 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
     }
 #endif
 
-    if(sa_service_type != SA_PLAINTEXT && sa_ptr->ecs == NULL && sa_ptr->acs == NULL)
+    if(sa_service_type != SA_PLAINTEXT && sa_ptr->ecs_len == CRYPTO_CIPHER_NONE && sa_ptr->acs_len == CRYPTO_MAC_NONE)
     {
         return CRYPTO_LIB_ERR_NULL_CIPHERS;
     }
-        if(sa_service_type != SA_PLAINTEXT && sa_ptr->ecs_len == 0 && sa_ptr->acs_len == 0)
-        {
-            return CRYPTO_LIB_ERR_NULL_CIPHERS;
-        }
 
-        if(sa_ptr->est == 0 && sa_ptr->ast == 1)
+    if(sa_ptr->est == 0 && sa_ptr->ast == 1)
+    {
+        if(sa_ptr->acs_len != 0)
         {
-            if(sa_ptr->acs_len != 0)
-            {
-                if((sa_ptr->acs == CRYPTO_MAC_CMAC_AES256 || sa_ptr->acs == CRYPTO_MAC_HMAC_SHA256 || sa_ptr->acs == CRYPTO_MAC_HMAC_SHA512) &&
-                    sa_ptr->iv_len > 0 )
-                    {
-                        return CRYPTO_LIB_ERR_IV_NOT_SUPPORTED_FOR_ACS_ALGO;
-                    }
-            }
+            if((sa_ptr->acs == CRYPTO_MAC_CMAC_AES256 || sa_ptr->acs == CRYPTO_MAC_HMAC_SHA256 || sa_ptr->acs == CRYPTO_MAC_HMAC_SHA512) &&
+                sa_ptr->iv_len > 0 )
+                {
+                    return CRYPTO_LIB_ERR_IV_NOT_SUPPORTED_FOR_ACS_ALGO;
+                }
         }
+    }
 
     // Start index from the transmitted portion
     for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
@@ -454,7 +450,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
                 status = CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
             }
         }
-
+    }
     // Move idx to mac location
     idx += pdu_len;
 #ifdef TM_DEBUG
@@ -1228,6 +1224,7 @@ int32_t Crypto_Get_tmLength(int len)
  * @param ingest: uint8_t*
  * @param len_ingest: int
  **/
+/***
 void Crypto_TM_updatePDU(uint8_t* ingest, int len_ingest)
 { // Copy ingest to PDU
     int x = 0;
@@ -1370,15 +1367,15 @@ void Crypto_TM_updatePDU(uint8_t* ingest, int len_ingest)
 
     return;
 }
-
+**/
 /**
  * @brief Function: Crypto_TM_updateOCF
  * Update the TM OCF
  **/
+/**
 void Crypto_TM_updateOCF(void)
 {
     // TODO
-    /*
     if (ocf == 0)
     { // CLCW
         clcw.vci = tm_frame.tm_header.vcid;
@@ -1407,8 +1404,8 @@ void Crypto_TM_updateOCF(void)
         Crypto_fsrPrint(&report);
 #endif
     }
-    **/
 }
+**/
 
 /**
  * @brief Function: Crypto_Prepare_TM_AAD
