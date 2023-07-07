@@ -246,7 +246,7 @@ int32_t sadb_config(void)
     sa[10].gvcid_blk.scid = 0x002C;
     sa[10].gvcid_blk.vcid = 1;
     sa[10].gvcid_blk.mapid = TYPE_TC;
-    sa[10].ek_ref="kmc/test/key130";
+    sa[10].ek_ref = (char*) "kmc/test/key130";
     
     // SA 11 - KEYED;  ARSNW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 130
     // SA 11 VC0/1 is now 4-VC0, 7-VC1
@@ -270,7 +270,7 @@ int32_t sadb_config(void)
     sa[11].gvcid_blk.scid = SCID & 0x3FF;
     sa[11].gvcid_blk.vcid = 0;
     sa[11].gvcid_blk.mapid = TYPE_TC;
-    sa[11].ek_ref="kmc/test/key130";
+    sa[11].ek_ref = (char*) "kmc/test/key130";
 
     // SA 12 - TM CLEAR MODE
     // SA 12

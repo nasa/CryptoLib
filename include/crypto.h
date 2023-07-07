@@ -83,6 +83,7 @@ extern int32_t Crypto_Init_With_Configs(
     CryptoConfig_t* crypto_config_p, GvcidManagedParameters_t* gvcid_managed_parameters_p,
     SadbMariaDBConfig_t* sadb_mariadb_config_p,
     CryptographyKmcCryptoServiceConfig_t* cryptography_kmc_crypto_config_p); // Initialize CryptoLib With Application Defined Configuration
+extern int32_t Crypto_TC_Init(void);
 extern int32_t Crypto_Init_TC_Unit_Test(void);      // Initialize CryptoLib with unit test default Configurations
 extern int32_t Crypto_Init_TM_Unit_Test(void);      // Initialize CryptoLib with unit test default Configurations
 

@@ -79,18 +79,18 @@ endif()
 # Create the app module
 if(DEFINED CFE_SYSTEM_PSPNAME)
     set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/cpu${TGTSYS_${SYSVAR}}/${INSTALL_SUBDIR}")
-    add_cfe_app(Crypto ${LIB_SRC_FILES})
+    add_cfe_app(crypto ${LIB_SRC_FILES})
 else() 
     # Standalone build
-    add_library(Crypto SHARED ${LIB_SRC_FILES})
+    add_library(crypto SHARED ${LIB_SRC_FILES})
 endif()
 
 if(CRYPTO_LIBGCRYPT)
-    target_link_libraries(Crypto gcrypt)
+    target_link_libraries(crypto gcrypt)
 endif()
 
 if(CRYPTO_KMC)
-    target_link_libraries(Crypto curl)
+    target_link_libraries(crypto curl)
 endif()
 
 if(SA_MARIADB)
@@ -98,23 +98,24 @@ if(SA_MARIADB)
             OUTPUT_VARIABLE MYSQL_CFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
     execute_process(COMMAND mysql_config --libs
             OUTPUT_VARIABLE MYSQL_LIBS OUTPUT_STRIP_TRAILING_WHITESPACE)
-    target_compile_options(Crypto PUBLIC ${MYSQL_CFLAGS})
-    target_link_libraries(Crypto ${MYSQL_LIBS})
+    target_compile_options(crypto PUBLIC ${MYSQL_CFLAGS})
+    target_link_libraries(crypto ${MYSQL_LIBS})
 endif()
 
 file(GLOB CRYPTO_INCLUDES ../include/*.h)
-set_target_properties(Crypto PROPERTIES PUBLIC_HEADER "${CRYPTO_INCLUDES}")
+set_target_properties(crypto PROPERTIES PUBLIC_HEADER "${CRYPTO_INCLUDES}")
 
-add_custom_command(TARGET Crypto POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:Crypto> ${PROJECT_BINARY_DIR}/lib/libCrypto.so
+add_custom_command(TARGET crypto POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:crypto> ${PROJECT_BINARY_DIR}/lib/libcrypto.so
         COMMENT "Created ${PROJECT_BINARY_DIR}/lib/libCrypto.so"
         )
 
 if(DEFINED CFE_SYSTEM_PSPNAME)
-    install(TARGETS Crypto 
-            DESTINATION ${CMAKE_INSTALL_PREFIX}/cpu${TGTSYS_${SYSVAR}}/${INSTALL_SUBDIR})
+    install(TARGETS crypto 
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/${TGTSYS_${SYSVAR}}/${INSTALL_SUBDIR}
+            PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/host)
 else()
-    install(TARGETS Crypto
+    install(TARGETS crypto
             DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
             PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 endif()

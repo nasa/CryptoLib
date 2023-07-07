@@ -21,4 +21,4 @@ find_package(Threads REQUIRED)
 include_directories("./standalone")
 add_executable(standalone 
                ./standalone/standalone.c)
-target_link_libraries(standalone Crypto pthread)
+target_link_libraries(standalone crypto pthread)
