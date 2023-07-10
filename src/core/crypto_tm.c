@@ -400,6 +400,30 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
                                                         pkcs_padding,  // authentication cipher
                                                         NULL);
         } 
+        if(sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
+        {
+            status = cryptography_if->cryptography_aead_encrypt((uint8_t*)(&tm_frame[data_loc]), // ciphertext output
+                                                                (size_t) pdu_len,  // length of data
+                                                                (uint8_t*)(&tm_frame[data_loc]), // plaintext input
+                                                                (size_t) pdu_len, // in data length
+                                                                &(ekp->value[0]), // Key
+                                                                Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs), // Length of key derived from sa_ptr key_ref
+                                                                sa_ptr, // SA (for key reference)
+                                                                sa_ptr->iv, // IV
+                                                                sa_ptr->iv_len, // IV Length
+                                                                &tm_frame[mac_loc], // tag output
+                                                                sa_ptr->stmacf_len, // tag size
+                                                                aad, // AAD Input
+                                                                aad_len, // Length of AAD
+                                                                (sa_ptr->est==1),
+                                                                (sa_ptr->ast==1),
+                                                                (sa_ptr->ast==1),
+                                                                &sa_ptr->ecs, // encryption cipher
+                                                                &sa_ptr->acs,  // authentication cipher
+                                                                NULL);
+        }
+    }
+
         else if (sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_FALSE) // Non aead algorithm
         {
             // TODO - implement non-AEAD algorithm logic
@@ -450,7 +474,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
                 status = CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
             }
         }
-    }
+        
     // Move idx to mac location
     idx += pdu_len;
 #ifdef TM_DEBUG
