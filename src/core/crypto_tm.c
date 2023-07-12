@@ -132,7 +132,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         return status;
     }
 
-// Determine Algorithm cipher & mode. // TODO - Parse authentication_cipher, and handle AEAD cases properly
+        // Determine Algorithm cipher & mode. // TODO - Parse authentication_cipher, and handle AEAD cases properly
         if (sa_service_type != SA_PLAINTEXT)
         {
             ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(sa_ptr->ecs);
@@ -474,7 +474,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
                 status = CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
             }
         }
-        
+
     // Move idx to mac location
     idx += pdu_len;
 #ifdef TM_DEBUG
@@ -957,7 +957,6 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
         break;
     case SA_AUTHENTICATED_ENCRYPTION:
         printf(KBLU "Processing a TM - AUTHENTICATED ENCRYPTION!\n" RESET);
-        printf(KRED "*****NOT IMPLEMENTED!!!!!\n");
         break;
     }
 #endif
@@ -1102,42 +1101,72 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
         printf("MAC Parsed from Frame:\n");
         Crypto_hexprint(p_ingest+mac_loc,sa_ptr->stmacf_len);
 #endif
-        aad_len = mac_loc;
-        // if ((sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
-        // {
-        //     //aad_len = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len +
-        //     //          sa_ptr->shplf_len;
-        //     printf(KRED "*****NOT IMPLEMENTED!!!!!\n");
-        // }
+        if (sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
+        {
+            aad_len = byte_idx;
+        }
+        else
+        {
+            aad_len = mac_loc;
+        }
         if (sa_ptr->abm_len < aad_len)
         {
             return CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
         }
         // Use ingest and abm to create aad
         Crypto_Prepare_TM_AAD(p_ingest, aad_len, sa_ptr->abm, &aad[0]);
+
+#ifdef MAC_DEBUG
+        printf("AAD Debug:\n\tAAD Length is %d\n\t AAD is: ", aad_len);
+        for (int i = 0; i<aad_len; i++)
+        {
+            printf("%02X", aad[i]);
+        }
+        printf("\n");
+#endif
+
     }
 
     if(sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_TRUE)
     {
-        status = cryptography_if->cryptography_aead_decrypt(p_new_dec_frame+byte_idx, // plaintext output
-                                                            pdu_len, // length of data
-                                                            p_ingest+byte_idx, // ciphertext input
-                                                            pdu_len, // in data length
-                                                            &(ekp->value[0]), // Key
-                                                            Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs),
-                                                            sa_ptr, // SA for key reference
-                                                            p_ingest+iv_loc, // IV
-                                                            sa_ptr->iv_len, // IV Length
-                                                            p_ingest+mac_loc, // Frame Expected Tag
-                                                            sa_ptr->stmacf_len, // tag size
-                                                            aad, // additional authenticated data
-                                                            aad_len, // length of AAD
-                                                            (sa_ptr->est), // Decryption Bool
-                                                            (sa_ptr->ast), // Authentication Bool
-                                                            (sa_ptr->ast), // AAD Bool
-                                                            &sa_ptr->ecs, // encryption cipher
-                                                            &sa_ptr->acs,  // authentication cipher
-                                                            NULL);
+
+        if(sa_service_type == SA_ENCRYPTION)
+        {
+            status = cryptography_if->cryptography_decrypt(p_new_dec_frame+byte_idx, // plaintext output
+                                                        pdu_len,   // length of data
+                                                        p_ingest+byte_idx, // ciphertext input
+                                                        pdu_len,    // in data length
+                                                        &(ekp->value[0]), // Key
+                                                        Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs),
+                                                        sa_ptr, // SA for key reference
+                                                        p_ingest+iv_loc, // IV
+                                                        sa_ptr->iv_len, // IV Length
+                                                        &sa_ptr->ecs, // encryption cipher
+                                                        &sa_ptr->acs,  // authentication cipher
+                                                        NULL);
+        }
+        if(sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
+        {
+            status = cryptography_if->cryptography_aead_decrypt(p_new_dec_frame+byte_idx, // plaintext output
+                                                                pdu_len, // length of data
+                                                                p_ingest+byte_idx, // ciphertext input
+                                                                pdu_len, // in data length
+                                                                &(ekp->value[0]), // Key
+                                                                Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs),
+                                                                sa_ptr, // SA for key reference
+                                                                p_ingest+iv_loc, // IV
+                                                                sa_ptr->iv_len, // IV Length
+                                                                p_ingest+mac_loc, // Frame Expected Tag
+                                                                sa_ptr->stmacf_len, // tag size
+                                                                aad, // additional authenticated data
+                                                                aad_len, // length of AAD
+                                                                (sa_ptr->est), // Decryption Bool
+                                                                (sa_ptr->ast), // Authentication Bool
+                                                                (sa_ptr->ast), // AAD Bool
+                                                                &sa_ptr->ecs, // encryption cipher
+                                                                &sa_ptr->acs,  // authentication cipher
+                                                                NULL);
+        }
 
     }
 
@@ -1166,6 +1195,13 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
         }
         if(sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
         {
+            // Check that key length to be used emets the algorithm requirement
+            if((int32_t) ekp->key_len != Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs))
+            {
+                // free(aad); - non-heap object
+                return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
+            }
+
             status = cryptography_if->cryptography_decrypt(p_new_dec_frame+byte_idx, // plaintext output
                                                         pdu_len,   // length of data
                                                         p_ingest+byte_idx, // ciphertext input
