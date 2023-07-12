@@ -539,7 +539,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t* sa_ptr)
     // Check for idle frame trigger
     if (((uint8_t)ingest[0] == 0x08) && ((uint8_t)ingest[1] == 0x90))
     { // Zero ingest
-        for (x = 0; x <* len_ingest; x++)
+        for (x = 0; x <*len_ingest; x++)
         {
             ingest[x] = 0;
         }
@@ -548,7 +548,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t* sa_ptr)
     }
     else
     { // Update the length of the ingest from the CCSDS header
-       * len_ingest = (ingest[4] << 8) | ingest[5];
+       *len_ingest = (ingest[4] << 8) | ingest[5];
         ingest[5] = ingest[5] - 5;
         // Remove outgoing secondary space packet header flag
         ingest[0] = 0x00;
@@ -556,10 +556,10 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t* sa_ptr)
         ingest[2] = 0xFF;
         ingest[3] = 0xFF;
         // Add 2 bytes of CRC to space packet
-        spp_crc = Crypto_Calc_CRC16((uint8_t*)ingest,* len_ingest);
+        spp_crc = Crypto_Calc_CRC16((uint8_t*)ingest,*len_ingest);
         ingest[*len_ingest] = (spp_crc & 0xFF00) >> 8;
         ingest[*len_ingest + 1] = (spp_crc & 0x00FF);
-       * len_ingest =* len_ingest + 2;
+       *len_ingest =*len_ingest + 2;
         // Update TM First Header Pointer
         tm_frame.tm_header.fhp = tm_offset;
 #ifdef TM_DEBUG
@@ -576,7 +576,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t* sa_ptr)
     Crypto_TM_updateOCF();
     printf("LINE: %d\n",__LINE__);
     // Payload Data Unit
-    Crypto_TM_updatePDU(ingest,* len_ingest);
+    Crypto_TM_updatePDU(ingest,*len_ingest);
     printf("LINE: %d\n",__LINE__);
     if (sadb_routine->sadb_get_sa_from_spi(spi, &sa_ptr) != CRYPTO_LIB_SUCCESS)
     {
@@ -622,7 +622,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t* sa_ptr)
     printf("LINE: %d\n",__LINE__);
     // TODO: Troubleshoot
     // Padding Length
-    // pad_len = Crypto_Get_tmLength(*len_ingest) - TM_MIN_SIZE + IV_SIZE + TM_PAD_SIZE -* len_ingest;
+    // pad_len = Crypto_Get_tmLength(*len_ingest) - TM_MIN_SIZE + IV_SIZE + TM_PAD_SIZE -*len_ingest;
     printf("LINE: %d\n",__LINE__);
     // Only add IV for authenticated encryption
     if ((sa_ptr->est == 1) && (sa_ptr->ast == 1))
@@ -641,7 +641,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t* sa_ptr)
         }
         pdu_loc = count;
         pad_len = pad_len - IV_SIZE - TM_PAD_SIZE + OCF_SIZE;
-        pdu_len =* len_ingest + pad_len;
+        pdu_len =*len_ingest + pad_len;
     }
     else
     {                           // Include padding length bytes - hard coded per ESA testing
@@ -649,7 +649,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t* sa_ptr)
         tempTM[count++] = 0x00; // pad_len >> 8;
         tempTM[count++] = 0x1A; // pad_len
         pdu_loc = count;
-        pdu_len =* len_ingest + pad_len;
+        pdu_len =*len_ingest + pad_len;
     }
     printf("LINE: %d\n",__LINE__);
     // Payload Data Unit
@@ -772,7 +772,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t* sa_ptr)
     printf(KYEL "----- Crypto_TM_ApplySecurity END -----\n" RESET);
 #endif
 
-   * len_ingest = count;
+   *len_ingest = count;
     return status;
 }  **/
 
