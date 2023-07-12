@@ -1,4 +1,4 @@
-/* Copyright (C) 2009 - 2022 National Aeronautics and Space Administration.
+/** Copyright (C) 2009 - 2022 National Aeronautics and Space Administration.
    All Foreign Rights are Reserved to the U.S. Government.
 
    This software is provided "as is" without any warranty of any kind, either expressed, implied, or statutory,
@@ -14,11 +14,11 @@
    ITC Team
    NASA IV&V
    jstar-development-team@mail.nasa.gov
-*/
+ **/
 
-/*
-** Includes
-*/
+/**
+ * Includes
+ **/
 #include "crypto.h"
 
 #include <string.h> // memcpy/memset
@@ -40,8 +40,8 @@
  * parameter includes the Security Header field. When the ApplySecurity Function is
  * called, the Security Header field is empty; i.e., the caller has not set any values in the
  * Security Header
- **/
-int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
+   **/
+int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t* sa_ptr)
 // Accepts CCSDS message in ingest, and packs into TM before encryption
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -78,7 +78,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         status = CRYPTO_LIB_ERR_NO_CONFIG;
         return status;  // return immediately so a NULL crypto_config is not dereferenced later
     }
-    // **** TODO - THIS BLOCK MOVED INTO TO ****
+    //  * * TODO - THIS BLOCK MOVED INTO TO  * *
     /**
     // Lookup-retrieve managed parameters for frame via gvcid:
     // status = Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame.tm_header.tfvn, tm_frame.tm_header.scid, tm_frame.tm_header.vcid,
@@ -87,7 +87,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
     // {
         // return status;
     // } // Unable to get necessary Managed Parameters for TM TF -- return with error.
-**/
+  **/
     // Query SA DB for active SA / SDLS parameters
     if (sadb_routine == NULL) // This should not happen, but tested here for safety
     {
@@ -186,10 +186,10 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         idx = 6;
     }
 
-    /*
-    ** Begin Security Header Fields
-    ** Reference CCSDS SDLP 3550b1 4.1.1.1.3
-    */
+    /**
+     * Begin Security Header Fields
+     * Reference CCSDS SDLP 3550b1 4.1.1.1.3
+     **/
     // Set SPI
     tm_frame[idx] = ((sa_ptr->spi & 0xFF00) >> 8);
     tm_frame[idx + 1] = (sa_ptr->spi & 0x00FF);
@@ -240,12 +240,12 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
     }
 
     // Set anti-replay sequence number if specified
-    /*
-    ** See also: 4.1.1.4.2
-    ** 4.1.1.4.4 If authentication or authenticated encryption is not selected
-    ** for an SA, the Sequence Number field shall be zero octets in length.
-    ** Reference CCSDS 3550b1
-    */
+    /**
+     * See also: 4.1.1.4.2
+     * 4.1.1.4.4 If authentication or authenticated encryption is not selected
+     * for an SA, the Sequence Number field shall be zero octets in length.
+     * Reference CCSDS 3550b1
+     **/
     for (i = sa_ptr->arsn_len - sa_ptr->shsnf_len; i < sa_ptr->arsn_len; i++)
     {
         // Copy in ARSN from SA
@@ -254,16 +254,16 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
     }
 
     // Set security header padding if specified
-    /*
-    ** 4.2.3.4 h) if the algorithm and mode selected for the SA require the use of
-    ** fill padding, place the number of fill bytes used into the Pad Length field
-    ** of the Security Header - Reference CCSDS 3550b1
-    */
+    /**
+     * 4.2.3.4 h) if the algorithm and mode selected for the SA require the use of
+     * fill padding, place the number of fill bytes used into the Pad Length field
+     * of the Security Header - Reference CCSDS 3550b1
+     **/
     // TODO: Revisit this
     // TODO: Likely SA API Call
-    /* 4.1.1.5.2 The Pad Length field shall contain the count of fill bytes used in the
-    ** cryptographic process, consisting of an integral number of octets. - CCSDS 3550b1
-    */
+    /** 4.1.1.5.2 The Pad Length field shall contain the count of fill bytes used in the
+     * cryptographic process, consisting of an integral number of octets. - CCSDS 3550b1
+     **/
     // TODO: Set this depending on crypto cipher used
 
     if(pkcs_padding)
@@ -286,24 +286,24 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         }
     }
         
-    /*
-    ** End Security Header Fields
-    */
+    /**
+     * End Security Header Fields
+     **/
 
     //TODO: Padding handled here, or TO?
     // for (uint32_t i = 0; i < pkcs_padding; i++)
     // {
-    //     /* 4.1.1.5.2 The Pad Length field shall contain the count of fill bytes used in the
-    //     ** cryptographic process, consisting of an integral number of octets. - CCSDS 3550b1
-    //     */
+    //     /** 4.1.1.5.2 The Pad Length field shall contain the count of fill bytes used in the
+    //      * cryptographic process, consisting of an integral number of octets. - CCSDS 3550b1
+    //      **/
     //     // TODO: Set this depending on crypto cipher used
-    //     *(p_new_enc_frame + index + i) = (uint8_t)pkcs_padding; // How much padding is needed?
+    //    * (p_new_enc_frame + index + i) = (uint8_t)pkcs_padding; // How much padding is needed?
     //     // index++;
     // }
 
-    /*
-    ** ~~~Index currently at start of data field, AKA end of security header~~~
-    */
+    /**
+     * ~~~Index currently at start of data field, AKA end of security header~~~
+     **/
     data_loc = idx;
     // Calculate size of data to be encrypted
     pdu_len = current_managed_parameters->max_frame_size - idx - sa_ptr->stmacf_len;
@@ -348,9 +348,9 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         return CRYPTO_LIB_ERR_KEY_ID_ERROR;
     }
 
-    /*
-    ** Begin Authentication / Encryption
-    */
+    /**
+     * Begin Authentication / Encryption
+     **/
 
     if (sa_service_type != SA_PLAINTEXT)
     {
@@ -492,9 +492,9 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
 
 //TODO OCF - ? Here, elsewhere?
 
-        /*
-        ** End Authentication / Encryption
-        */
+        /**
+         * End Authentication / Encryption
+         **/
 
         // Only calculate & insert FECF if CryptoLib is configured to do so & gvcid includes FECF.
     if (current_managed_parameters->has_fecf == TM_HAS_FECF)
@@ -504,7 +504,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
 #endif
         if (crypto_config->crypto_create_fecf == CRYPTO_TM_CREATE_FECF_TRUE)
         {
-            new_fecf = Crypto_Calc_FECF((uint8_t *)&tm_frame, current_managed_parameters->max_frame_size - 2);
+            new_fecf = Crypto_Calc_FECF((uint8_t*)&tm_frame, current_managed_parameters->max_frame_size - 2);
             tm_frame[current_managed_parameters->max_frame_size - 2] = (uint8_t)((new_fecf & 0xFF00) >> 8);
             tm_frame[current_managed_parameters->max_frame_size - 1] = (uint8_t)(new_fecf & 0x00FF);
         }
@@ -535,11 +535,11 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
     return status;
 }
 
-/*** Preserving for now
+/** Preserving for now
     // Check for idle frame trigger
     if (((uint8_t)ingest[0] == 0x08) && ((uint8_t)ingest[1] == 0x90))
     { // Zero ingest
-        for (x = 0; x < *len_ingest; x++)
+        for (x = 0; x <* len_ingest; x++)
         {
             ingest[x] = 0;
         }
@@ -548,7 +548,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
     }
     else
     { // Update the length of the ingest from the CCSDS header
-        *len_ingest = (ingest[4] << 8) | ingest[5];
+       * len_ingest = (ingest[4] << 8) | ingest[5];
         ingest[5] = ingest[5] - 5;
         // Remove outgoing secondary space packet header flag
         ingest[0] = 0x00;
@@ -556,10 +556,10 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         ingest[2] = 0xFF;
         ingest[3] = 0xFF;
         // Add 2 bytes of CRC to space packet
-        spp_crc = Crypto_Calc_CRC16((uint8_t* )ingest, *len_ingest);
+        spp_crc = Crypto_Calc_CRC16((uint8_t*)ingest,* len_ingest);
         ingest[*len_ingest] = (spp_crc & 0xFF00) >> 8;
         ingest[*len_ingest + 1] = (spp_crc & 0x00FF);
-        *len_ingest = *len_ingest + 2;
+       * len_ingest =* len_ingest + 2;
         // Update TM First Header Pointer
         tm_frame.tm_header.fhp = tm_offset;
 #ifdef TM_DEBUG
@@ -576,7 +576,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
     Crypto_TM_updateOCF();
     printf("LINE: %d\n",__LINE__);
     // Payload Data Unit
-    Crypto_TM_updatePDU(ingest, *len_ingest);
+    Crypto_TM_updatePDU(ingest,* len_ingest);
     printf("LINE: %d\n",__LINE__);
     if (sadb_routine->sadb_get_sa_from_spi(spi, &sa_ptr) != CRYPTO_LIB_SUCCESS)
     {
@@ -591,7 +591,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
     }
     if (badIV == 1)
     {
-        *(sa_ptr->iv + sa_ptr->shivf_len - 1) = *(sa_ptr->iv + sa_ptr->shivf_len - 1) + 1;
+       * (sa_ptr->iv + sa_ptr->shivf_len - 1) =* (sa_ptr->iv + sa_ptr->shivf_len - 1) + 1;
     }
     if (badMAC == 1)
     {
@@ -622,7 +622,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
     printf("LINE: %d\n",__LINE__);
     // TODO: Troubleshoot
     // Padding Length
-    // pad_len = Crypto_Get_tmLength(*len_ingest) - TM_MIN_SIZE + IV_SIZE + TM_PAD_SIZE - *len_ingest;
+    // pad_len = Crypto_Get_tmLength(*len_ingest) - TM_MIN_SIZE + IV_SIZE + TM_PAD_SIZE -* len_ingest;
     printf("LINE: %d\n",__LINE__);
     // Only add IV for authenticated encryption
     if ((sa_ptr->est == 1) && (sa_ptr->ast == 1))
@@ -636,12 +636,12 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
             printf("LINE: %d\n",__LINE__);
             for (x = 0; x < IV_SIZE; x++)
             {
-                tempTM[count++] = *(sa_ptr->iv + x);
+                tempTM[count++] =* (sa_ptr->iv + x);
             }
         }
         pdu_loc = count;
         pad_len = pad_len - IV_SIZE - TM_PAD_SIZE + OCF_SIZE;
-        pdu_len = *len_ingest + pad_len;
+        pdu_len =* len_ingest + pad_len;
     }
     else
     {                           // Include padding length bytes - hard coded per ESA testing
@@ -649,7 +649,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         tempTM[count++] = 0x00; // pad_len >> 8;
         tempTM[count++] = 0x1A; // pad_len
         pdu_loc = count;
-        pdu_len = *len_ingest + pad_len;
+        pdu_len =* len_ingest + pad_len;
     }
     printf("LINE: %d\n",__LINE__);
     // Payload Data Unit
@@ -672,7 +672,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
     printf("LINE: %d\n",__LINE__);
     // Frame Error Control Field
     fecf_loc = count;
-    tm_frame.tm_sec_trailer.fecf = Crypto_Calc_FECF((uint8_t* )tempTM, count);
+    tm_frame.tm_sec_trailer.fecf = Crypto_Calc_FECF((uint8_t*)tempTM, count);
     tempTM[count++] = (uint8_t)((tm_frame.tm_sec_trailer.fecf & 0xFF00) >> 8);
     tempTM[count++] = (uint8_t)(tm_frame.tm_sec_trailer.fecf & 0x00FF);
 
@@ -702,7 +702,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         // Prepare additional authenticated data
         for (y = 0; y < sa_ptr->abm_len; y++)
         {
-            aad[y] = ingest[y] & *(sa_ptr->abm + y);
+            aad[y] = ingest[y] &* (sa_ptr->abm + y);
 #ifdef MAC_DEBUG
             printf("%02x", aad[y]);
 #endif
@@ -741,7 +741,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
         }
 
         // Update FECF
-        tm_frame.tm_sec_trailer.fecf = Crypto_Calc_FECF((uint8_t* )ingest, fecf_loc - 1);
+        tm_frame.tm_sec_trailer.fecf = Crypto_Calc_FECF((uint8_t*)ingest, fecf_loc - 1);
         ingest[fecf_loc] = (uint8_t)((tm_frame.tm_sec_trailer.fecf & 0xFF00) >> 8);
         ingest[fecf_loc + 1] = (uint8_t)(tm_frame.tm_sec_trailer.fecf & 0x00FF);
     }
@@ -772,17 +772,17 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t *sa_ptr)
     printf(KYEL "----- Crypto_TM_ApplySecurity END -----\n" RESET);
 #endif
 
-    *len_ingest = count;
+   * len_ingest = count;
     return status;
-}**/
+}  **/
 
 /**
  * @brief Function: Crypto_TM_ProcessSecurity
  * @param ingest: uint8_t*
  * @param len_ingest: int*
  * @return int32: Success/Failure
- **/
-int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_t** pp_processed_frame, uint16_t *p_decrypted_length)
+   **/
+int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_t** pp_processed_frame, uint16_t* p_decrypted_length)
 {
     // Local Variables
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -873,10 +873,10 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
         byte_idx = 6;
     }
 
-    /*
-    ** Begin Security Header Fields
-    ** Reference CCSDS SDLP 3550b1 4.1.1.1.3
-    */
+    /**
+     * Begin Security Header Fields
+     * Reference CCSDS SDLP 3550b1 4.1.1.1.3
+     **/
     // Get SPI
     spi = (uint8_t)p_ingest[byte_idx] << 8 | (uint8_t)p_ingest[byte_idx + 1];
     // Move index to past the SPI
@@ -998,7 +998,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
     }
 
     // Accio buffer
-    p_new_dec_frame = (uint8_t* )calloc(1, (len_ingest) * sizeof(uint8_t));
+    p_new_dec_frame = (uint8_t*)calloc(1, (len_ingest) * sizeof(uint8_t));
     if (!p_new_dec_frame)
     {
         printf(KRED "Error: Calloc for decrypted output buffer failed! \n" RESET);
@@ -1028,10 +1028,10 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
     printf(KYEL "First byte past Security Header is at index %d\n" RESET, byte_idx);
 #endif
 
-    /*
-    ** End Security Header Fields
-    ** byte_idx is now at start of pdu / encrypted data
-    */
+    /**
+     * End Security Header Fields
+     * byte_idx is now at start of pdu / encrypted data
+     **/
 
     // Calculate size of the protocol data unit
     // NOTE: This size itself is not the length for authentication 
@@ -1085,9 +1085,9 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
         return CRYPTO_LIB_ERR_KEY_ID_ERROR;
     }
 
-    /*
-    ** Begin Authentication / Encryption
-    */
+    /**
+     * Begin Authentication / Encryption
+     **/
 
     // if(sa_service_type != SA_PLAINTEXT)
     // {
@@ -1266,7 +1266,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
  * Returns the total length of the current tm_frame in BYTES!
  * @param len: int
  * @return int32_t Length of TM
- **/
+   **/
 int32_t Crypto_Get_tmLength(int len)
 {
 #ifdef FILL
@@ -1283,8 +1283,8 @@ int32_t Crypto_Get_tmLength(int len)
  * Update the Telemetry Payload Data Unit
  * @param ingest: uint8_t*
  * @param len_ingest: int
- **/
-/***
+   **/
+/**
 void Crypto_TM_updatePDU(uint8_t* ingest, int len_ingest)
 { // Copy ingest to PDU
     int x = 0;
@@ -1427,11 +1427,11 @@ void Crypto_TM_updatePDU(uint8_t* ingest, int len_ingest)
 
     return;
 }
-**/
+  **/
 /**
  * @brief Function: Crypto_TM_updateOCF
  * Update the TM OCF
- **/
+   **/
 /**
 void Crypto_TM_updateOCF(void)
 {
@@ -1465,7 +1465,7 @@ void Crypto_TM_updateOCF(void)
 #endif
     }
 }
-**/
+  **/
 
 /**
  * @brief Function: Crypto_Prepare_TM_AAD
@@ -1475,7 +1475,7 @@ void Crypto_TM_updateOCF(void)
  * @param abm_buffer: uint8_t*
  * @param aad: uint8_t*
  * @return status: uint32_t
- **/
+   **/
 uint32_t Crypto_Prepare_TM_AAD(const uint8_t* buffer, uint16_t len_aad, const uint8_t* abm_buffer, uint8_t* aad)
 {
     uint32_t status = CRYPTO_LIB_SUCCESS;
