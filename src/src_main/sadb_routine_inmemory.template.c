@@ -308,8 +308,6 @@ int32_t sadb_config(void)
     sa[12].shivf_len = 0;
     sa[12].shsnf_len = 0;
     sa[12].arsn_len = 0;
-    //sa[12].arsn = (uint8_t*) calloc(1, sa[1].arsn_len * sizeof(uint8_t));
-	sa[12].arsn = NULL;
     sa[12].arsnw_len = 0;
     sa[12].arsnw = 5;
     sa[12].gvcid_blk.tfvn = 0;
