@@ -38,7 +38,7 @@ static int32_t sadb_sa_delete(void);
 */
 // Security
 static SadbRoutineStruct sadb_routine_struct;
-static SecurityAssociation_t sa[NUM_SA];
+static SecurityAssociation_t *sa;
 
 /**
  * @brief Function: get_sadb_routine_inmemory
@@ -308,7 +308,8 @@ int32_t sadb_config(void)
     sa[12].shivf_len = 0;
     sa[12].shsnf_len = 0;
     sa[12].arsn_len = 0;
-    sa[12].arsn = (uint8_t*) calloc(1, sa[1].arsn_len * sizeof(uint8_t));
+    //sa[12].arsn = (uint8_t*) calloc(1, sa[1].arsn_len * sizeof(uint8_t));
+	sa[12].arsn = NULL;
     sa[12].arsnw_len = 0;
     sa[12].arsnw = 5;
     sa[12].gvcid_blk.tfvn = 0;
@@ -327,6 +328,7 @@ int32_t sadb_init(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     int x;
+	sa = (SecurityAssociation_t*)calloc(1,NUM_SA*SA_SIZE);
 
     for (x = 0; x < NUM_SA; x++)
     {
@@ -366,6 +368,7 @@ static int32_t sadb_close(void)
         if(sa[x].arsn != NULL) free(sa[x].arsn);
         if(sa[x].acs != NULL) free(sa[x].acs);
     }
+	free(sa);
     return status;
 }
 
