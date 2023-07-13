@@ -45,6 +45,7 @@ UTEST(CRYPTO_C, CALC_CRC16)
     
     //printf("CRC = 0x%04x\n", crc);
     ASSERT_EQ(crc, validated_crc);
+    Crypto_Shutdown();
 }
 
 /**
@@ -245,6 +246,7 @@ UTEST(CRYPTO_C, PDU_SWITCH)
     sdls_frame.pdu.pid = 8;
     status = Crypto_PDU(ingest, tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+	free(tc_frame);
 }
 
 /**
@@ -262,6 +264,8 @@ UTEST(CRYPTO_C, EXT_PROC_PDU)
 
     status = Crypto_Process_Extended_Procedure_Pdu(tc_frame, ingest);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+	free(tc_frame);
+	Crypto_Shutdown();
 }
 
 /*
