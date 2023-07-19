@@ -73,11 +73,15 @@ static void mc_log(int32_t error_code)
     /* Write to log if error code is valid */
     if (error_code != CRYPTO_LIB_SUCCESS)
     {
-        fprintf(mc_file_ptr, "%s - %d\n", asctime(timeinfo), error_code);
+        fprintf(mc_file_ptr, "[%d%d%d,%d:%d:%d], %d\n", 
+            timeinfo->tm_year + 1900, timeinfo->tm_mon + 1,  timeinfo->tm_mday, 
+            timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec, error_code);
         
         /* Also print error if debug enabled */
         #ifdef DEBUG
-            printf("MC_Log: Error, %s %d \n", asctime(timeinfo), error_code);
+            printf("MC_Log: Error, [%d%d%d,%d:%d:%d], %d\n", 
+            timeinfo->tm_year + 1900, timeinfo->tm_mon + 1,  timeinfo->tm_mday, 
+            timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec, error_code);
         #endif
     }
 

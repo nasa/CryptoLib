@@ -66,10 +66,10 @@ UTEST(TM_APPLY_SECURITY, NO_CRYPTO_INIT)
     // e.g. so TO doesn't make the call, and then it's doubled within ApplySecurity
     //manager_parameters are a global, don't need passed
     status = Crypto_TM_ApplySecurity(&sa);
-    ASSERT_EQ(CRYPTO_LIB_ERR_NO_INIT, status);
+    ASSERT_EQ(CRYPTO_LIB_ERR_NO_CONFIG, status);
 
     char* error_enum = Crypto_Get_Error_Code_Enum_String(status);
-    ASSERT_STREQ("CRYPTO_LIB_ERR_NO_INIT",error_enum);
+    ASSERT_STREQ("CRYPTO_LIB_ERR_NO_CONFIG",error_enum);
     free(framed_tm_b);
     Crypto_Shutdown();
 }

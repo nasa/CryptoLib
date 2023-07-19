@@ -49,10 +49,10 @@ UTEST(TC_APPLY_SECURITY, NO_CRYPTO_INIT)
     int32_t return_val = CRYPTO_LIB_ERROR;
 
     return_val = Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
-    ASSERT_EQ(CRYPTO_LIB_ERR_NO_INIT, return_val);
+    ASSERT_EQ(CRYPTO_LIB_ERR_NO_CONFIG, return_val);
 
     char* error_enum = Crypto_Get_Error_Code_Enum_String(return_val);
-    ASSERT_STREQ("CRYPTO_LIB_ERR_NO_INIT",error_enum);
+    ASSERT_STREQ("CRYPTO_LIB_ERR_NO_CONFIG",error_enum);
     free(raw_tc_sdls_ping_b);
     Crypto_Shutdown();
 }

@@ -73,11 +73,11 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t* sa_ptr)
                                                     ((uint8_t)tm_frame[1] & 0x0E) >> 1, 
                                                     gvcid_managed_parameters, &current_managed_parameters);
 
-    if (crypto_config == NULL)
+    if ((crypto_config == NULL) || (mc_if == NULL) || (sadb_routine == NULL))
     {
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
         status = CRYPTO_LIB_ERR_NO_CONFIG;
-        mc_if->mc_log(status);
+        // Can't mc_log since it's not configured
         return status;  // return immediately so a NULL crypto_config is not dereferenced later
     }
     //  * * TODO - THIS BLOCK MOVED INTO TO  * *
@@ -91,12 +91,6 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t* sa_ptr)
         // return status;
     // } // Unable to get necessary Managed Parameters for TM TF -- return with error.
   **/
-    // Query SA DB for active SA / SDLS parameters
-    if (sadb_routine == NULL) // This should not happen, but tested here for safety
-    {
-        printf(KRED "ERROR: SA DB Not initalized! -- CRYPTO_LIB_ERR_NO_INIT, Will Exit\n" RESET);
-        status = CRYPTO_LIB_ERR_NO_INIT;
-    }
 
     // If unable to get operational SA, can return
     if (status != CRYPTO_LIB_SUCCESS)
@@ -838,20 +832,11 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
         return status;
     }
 
-    if (crypto_config == NULL)
+    if ((crypto_config == NULL) || (mc_if == NULL) || (sadb_routine == NULL))
     {
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
         status = CRYPTO_LIB_ERR_NO_CONFIG;
-        mc_if->mc_log(status);
-        return status;
-    }
-
-    // Query SA DB for active SA / SDLS parameters
-    if (sadb_routine == NULL) // This should not happen, but tested here for safety
-    {
-        printf(KRED "ERROR: SA DB Not initalized! -- CRYPTO_LIB_ERR_NO_INIT, Will Exit\n" RESET);
-        status = CRYPTO_LIB_ERR_NO_INIT;
-        mc_if->mc_log(status);
+        // Can't mc_log since it's not configured
         return status;
     }
 

@@ -59,10 +59,10 @@ UTEST(TM_PROCESS_SECURITY, NO_CRYPTO_INIT)
     //                                                 (((uint8_t)framed_tm_b[2] & 0xFC) >> 2), map_id, &sa);
 
     status = Crypto_TM_ProcessSecurity((uint8_t* )framed_tm_h, framed_tm_len, &ptr_processed_frame, &processed_tm_len);
-    ASSERT_EQ(CRYPTO_LIB_ERR_NO_INIT, status);
+    ASSERT_EQ(CRYPTO_LIB_ERR_NO_CONFIG, status);
 
     char* error_enum = Crypto_Get_Error_Code_Enum_String(status);
-    ASSERT_STREQ("CRYPTO_LIB_ERR_NO_INIT",error_enum);
+    ASSERT_STREQ("CRYPTO_LIB_ERR_NO_CONFIG",error_enum);
     free(framed_tm_b);
     Crypto_Shutdown();
 }

@@ -98,11 +98,11 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
     tmp = tmp;
 #endif
 
-    if (crypto_config == NULL)
+    if ((crypto_config == NULL) || (mc_if == NULL) || (sadb_routine == NULL))
     {
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
         status = CRYPTO_LIB_ERR_NO_CONFIG;
-        mc_if->mc_log(status);
+        // Can't mc_log since it's not configured
         return status; // return immediately so a NULL crypto_config is not dereferenced later
     }
 
@@ -167,17 +167,8 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
 
     if (status == CRYPTO_LIB_SUCCESS)
     {
-        // Query SA DB for active SA / SDLS parameters
-        if (sadb_routine == NULL) // This should not happen, but tested here for safety
-        {
-            printf(KRED "ERROR: SA DB Not initalized! -- CRYPTO_LIB_ERR_NO_INIT, Will Exit\n" RESET);
-            status = CRYPTO_LIB_ERR_NO_INIT;
-        }
-        else
-        {
-            status = sadb_routine->sadb_get_operational_sa_from_gvcid(temp_tc_header.tfvn, temp_tc_header.scid,
+        status = sadb_routine->sadb_get_operational_sa_from_gvcid(temp_tc_header.tfvn, temp_tc_header.scid,
                                                                       temp_tc_header.vcid, map_id, &sa_ptr);
-        }
         // If unable to get operational SA, can return
         if (status != CRYPTO_LIB_SUCCESS)
         {
@@ -843,7 +834,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
     uint8_t ecs_is_aead_algorithm = -1;
     crypto_key_t* ekp = NULL;
 
-    if (crypto_config == NULL)
+    if ((mc_if == NULL) || (crypto_config == NULL))
     {
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
         status = CRYPTO_LIB_ERR_NO_CONFIG;
