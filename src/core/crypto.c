@@ -459,49 +459,49 @@ int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
 #ifdef PDU_DEBUG
                     printf(KGRN "SA Create\n" RESET);
 #endif
-                    status = sadb_routine->sadb_sa_create();
+                    status = sa_routine->sa_create();
                     break;
                 case PID_DELETE_SA:
 #ifdef PDU_DEBUG
                     printf(KGRN "SA Delete\n" RESET);
 #endif
-                    status = sadb_routine->sadb_sa_delete();
+                    status = sa_routine->sa_delete();
                     break;
                 case PID_SET_ARSNW:
 #ifdef PDU_DEBUG
                     printf(KGRN "SA setARSNW\n" RESET);
 #endif
-                    status = sadb_routine->sadb_sa_setARSNW();
+                    status = sa_routine->sa_setARSNW();
                     break;
                 case PID_REKEY_SA:
 #ifdef PDU_DEBUG
                     printf(KGRN "SA Rekey\n" RESET);
 #endif
-                    status = sadb_routine->sadb_sa_rekey();
+                    status = sa_routine->sa_rekey();
                     break;
                 case PID_EXPIRE_SA:
 #ifdef PDU_DEBUG
                     printf(KGRN "SA Expire\n" RESET);
 #endif
-                    status = sadb_routine->sadb_sa_expire();
+                    status = sa_routine->sa_expire();
                     break;
                 case PID_SET_ARSN:
 #ifdef PDU_DEBUG
                     printf(KGRN "SA SetARSN\n" RESET);
 #endif
-                    status = sadb_routine->sadb_sa_setARSN();
+                    status = sa_routine->sa_setARSN();
                     break;
                 case PID_START_SA:
 #ifdef PDU_DEBUG
                     printf(KGRN "SA Start\n" RESET);
 #endif
-                    status = sadb_routine->sadb_sa_start(tc_frame);
+                    status = sa_routine->sa_start(tc_frame);
                     break;
                 case PID_STOP_SA:
 #ifdef PDU_DEBUG
                     printf(KGRN "SA Stop\n" RESET);
 #endif
-                    status = sadb_routine->sadb_sa_stop();
+                    status = sa_routine->sa_stop();
                     break;
                 case PID_READ_ARSN:
 #ifdef PDU_DEBUG
@@ -513,7 +513,7 @@ int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
 #ifdef PDU_DEBUG
                     printf(KGRN "SA Status\n" RESET);
 #endif
-                    status = sadb_routine->sadb_sa_status(ingest);
+                    status = sa_routine->sa_status(ingest);
                     break;
                 default:
                     printf(KRED "Error: Crypto_PDU failed interpreting SA Procedure Identification Field! \n" RESET);

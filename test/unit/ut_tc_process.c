@@ -23,7 +23,7 @@
 #include "crypto.h"
 #include "crypto_error.h"
 #include "crypto_print.h"
-#include "sadb_routine.h"
+#include "sa_interface.h"
 #include "utest.h"
 
 /**
@@ -41,7 +41,7 @@ UTEST(TC_PROCESS, EXERCISE_IV)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Init();
-    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    SadbRoutine sa_routine = get_sa_routine_inmemory();
     crypto_key_t* ekp = NULL;
     int status = 0;
 
@@ -63,10 +63,10 @@ UTEST(TC_PROCESS, EXERCISE_IV)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
     // Deactivate SA 1
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
-    sadb_routine->sadb_get_sa_from_spi(9, &test_association);
+    sa_routine->sa_get_sa_from_spi(9, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs_len = 1;
     test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
@@ -156,7 +156,7 @@ UTEST(TC_PROCESS, EXERCISE_ARSN)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Init();
-    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    SadbRoutine sa_routine = get_sa_routine_inmemory();
     crypto_key_t* akp = NULL;
     int status = 0;
 
@@ -179,12 +179,12 @@ UTEST(TC_PROCESS, EXERCISE_ARSN)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
     // Deactivate SA 1
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
-    sadb_routine->sadb_get_sa_from_spi(9, &test_association);
+    sa_routine->sa_get_sa_from_spi(9, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    sadb_routine->sadb_get_sa_from_spi(9, &test_association);
+    sa_routine->sa_get_sa_from_spi(9, &test_association);
     test_association->ecs_len = 1;
     test_association->ecs = CRYPTO_CIPHER_NONE;
     test_association->acs_len = 1;
@@ -279,7 +279,7 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_STATIC_IV_ROLLOVER)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Init();
-    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    SadbRoutine sa_routine = get_sa_routine_inmemory();
 
     char* dec_test_fe_h =
             "2003002D00000004FFFFFFFFFFFE610B082EA91C8AA93F08EAA642EA3189128D87159B2354AA753248F050022FD9";
@@ -304,7 +304,7 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_STATIC_IV_ROLLOVER)
 
     // Default SA
     // Expose SA 1 for testing
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->ecs_len = 1;
     test_association->ecs = CRYPTO_CIPHER_NONE;
 
@@ -312,7 +312,7 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_STATIC_IV_ROLLOVER)
     test_association->sa_state = SA_NONE;
 
     // Expose SA 4 for testing
-    sadb_routine->sadb_get_sa_from_spi(4, &test_association);
+    sa_routine->sa_get_sa_from_spi(4, &test_association);
     test_association->arsn_len = 0;
     test_association->gvcid_blk.vcid = 0;
     test_association->shivf_len = 6;
@@ -368,7 +368,7 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_NONTRANSMITTED_INCREMENTING_IV_ROLLOVER)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Init();
-    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    SadbRoutine sa_routine = get_sa_routine_inmemory();
 
     char* dec_test_fe_h =
             "2003002D00000004FFFFFFFFFFFE610B082EA91C8AA93F08EAA642EA3189128D87159B2354AA753248F050022FD9";
@@ -394,7 +394,7 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_NONTRANSMITTED_INCREMENTING_IV_ROLLOVER)
 
     // Default SA
     // Expose SA 1 for testing
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->ecs_len = 1;
     test_association->ecs = CRYPTO_CIPHER_NONE;
 
@@ -402,7 +402,7 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_NONTRANSMITTED_INCREMENTING_IV_ROLLOVER)
     test_association->sa_state = SA_NONE;
 
     // Expose SA 4 for testing
-    sadb_routine->sadb_get_sa_from_spi(4, &test_association);
+    sa_routine->sa_get_sa_from_spi(4, &test_association);
     test_association->arsn_len = 0;
     test_association->gvcid_blk.vcid = 0;
     test_association->shivf_len = 6;
@@ -481,7 +481,7 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_NONTRANSMITTED_INCREMENTING_ARSN_ROLLOVER)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Init();
 
-    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    SadbRoutine sa_routine = get_sa_routine_inmemory();
     
     char* dec_test_fe_h =
               "2003002900000004FFFE80D2C70008197F0B00310000B1FE7F97816F523951BAF0445DB078B502760741";
@@ -506,7 +506,7 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_NONTRANSMITTED_INCREMENTING_ARSN_ROLLOVER)
 
     // Default SA
     // Expose SA 1 for testing
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->ecs_len = 1;
     test_association->ecs = CRYPTO_CIPHER_NONE;
 
@@ -514,7 +514,7 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_NONTRANSMITTED_INCREMENTING_ARSN_ROLLOVER)
     test_association->sa_state = SA_NONE;
 
     // Expose SA 4 for testing
-    sadb_routine->sadb_get_sa_from_spi(4, &test_association);
+    sa_routine->sa_get_sa_from_spi(4, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->shivf_len = 0;
     test_association->iv_len = 0;
@@ -582,7 +582,7 @@ UTEST(TC_PROCESS, ERROR_TC_INPUT_FRAME_TOO_SHORT_FOR_SPEC)
 
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->arsn_len = 0;
     test_association->shsnf_len = 0;
 
@@ -623,7 +623,7 @@ UTEST(TC_PROCESS, ERROR_TC_INPUT_FRAME_TOO_SHORT_FOR_SPECIFIED_FRAME_LENGTH_HEAD
 
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->arsn_len = 0;
     test_association->shsnf_len = 0;
 
@@ -665,7 +665,7 @@ UTEST(TC_PROCESS, HAPPY_PATH_DECRYPT_CBC)
 
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
-    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    sa_routine->sa_get_sa_from_spi(11, &test_association);
     test_association->arsn_len = 0;
     test_association->shsnf_len = 0;
     test_association->ast = 0;
@@ -730,7 +730,7 @@ UTEST(TC_PROCESS, DECRYPT_CBC_1B)
 
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
-    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    sa_routine->sa_get_sa_from_spi(11, &test_association);
     test_association->arsn_len = 0;
     test_association->shsnf_len = 0;
     test_association->ast = 0;
@@ -793,7 +793,7 @@ UTEST(TC_PROCESS, DECRYPT_CBC_16B)
 
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
-    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    sa_routine->sa_get_sa_from_spi(11, &test_association);
     test_association->arsn_len = 0;
     test_association->shsnf_len = 0;
     test_association->ast = 0;
@@ -844,7 +844,7 @@ UTEST(TC_PROCESS, GCM_IV_AND_ARSN)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Init();
-    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    SadbRoutine sa_routine = get_sa_routine_inmemory();
     crypto_key_t* ekp = NULL;
     int status = 0;
 
@@ -878,10 +878,10 @@ UTEST(TC_PROCESS, GCM_IV_AND_ARSN)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
     // Deactivate SA 1
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
-    sadb_routine->sadb_get_sa_from_spi(9, &test_association);
+    sa_routine->sa_get_sa_from_spi(9, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs_len = 1;
     test_association->ecs = CRYPTO_CIPHER_AES256_GCM;

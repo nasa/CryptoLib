@@ -22,7 +22,7 @@
  **/
 #include "crypto.h"
 #include "crypto_error.h"
-#include "sadb_routine.h"
+#include "sa_interface.h"
 #include "utest.h"
 
 #include "crypto.h"
@@ -119,15 +119,15 @@ UTEST(PERFORMANCE, LSA_LIBG_AUTH_SHORT_100)
 
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
-    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    SadbRoutine sa_routine = get_sa_routine_inmemory();
 
     hex_conversion(data_h, &data_b, &data_l);
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -168,15 +168,15 @@ UTEST(PERFORMANCE, MDB_LIBG_AUTH_SHORT_100)
 
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
-    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    SadbRoutine sa_routine = get_sa_routine_inmemory();
 
     hex_conversion(data_h, &data_b, &data_l);
 
     SecurityAssociation_t* test_association;
     // Expose the SADB Security Association for test edits.
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -222,9 +222,9 @@ UTEST(PERFORMANCE, LSA_KMC_AUTH_SHORT_100)
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -308,15 +308,15 @@ UTEST(PERFORMANCE, LSA_LIBG_AUTH_MED_100)
 
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
-    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    SadbRoutine sa_routine = get_sa_routine_inmemory();
 
     hex_conversion(data_h, &data_b, &data_l);
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -357,15 +357,15 @@ UTEST(PERFORMANCE, MDB_LIBG_AUTH_MED_100)
 
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
-    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    SadbRoutine sa_routine = get_sa_routine_inmemory();
 
     hex_conversion(data_h, &data_b, &data_l);
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -411,9 +411,9 @@ UTEST(PERFORMANCE, LSA_KMC_AUTH_MED_100)
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -497,15 +497,15 @@ UTEST(PERFORMANCE, LSA_LIBG_AUTH_LONG_100)
 
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
-    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    SadbRoutine sa_routine = get_sa_routine_inmemory();
 
     hex_conversion(data_h, &data_b, &data_l);
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -546,15 +546,15 @@ UTEST(PERFORMANCE, MDB_LIBG_AUTH_LONG_100)
 
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
-    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    SadbRoutine sa_routine = get_sa_routine_inmemory();
 
     hex_conversion(data_h, &data_b, &data_l);
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -600,9 +600,9 @@ UTEST(PERFORMANCE, LSA_KMC_AUTH_LONG_100)
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -686,15 +686,15 @@ UTEST(PERFORMANCE, LSA_LIBG_AUTH_SHORT_1K)
 
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
-    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    SadbRoutine sa_routine = get_sa_routine_inmemory();
 
     hex_conversion(data_h, &data_b, &data_l);
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -735,15 +735,15 @@ UTEST(PERFORMANCE, MDB_LIBG_AUTH_SHORT_1K)
 
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
-    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    SadbRoutine sa_routine = get_sa_routine_inmemory();
 
     hex_conversion(data_h, &data_b, &data_l);
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -789,9 +789,9 @@ UTEST(PERFORMANCE, LSA_KMC_AUTH_SHORT_1K)
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -875,15 +875,15 @@ UTEST(PERFORMANCE, LSA_LIBG_AUTH_MED_1K)
 
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
-    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    SadbRoutine sa_routine = get_sa_routine_inmemory();
 
     hex_conversion(data_h, &data_b, &data_l);
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -924,15 +924,15 @@ UTEST(PERFORMANCE, MDB_LIBG_AUTH_MED_1K)
 
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
-    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    SadbRoutine sa_routine = get_sa_routine_inmemory();
 
     hex_conversion(data_h, &data_b, &data_l);
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -978,9 +978,9 @@ UTEST(PERFORMANCE, LSA_KMC_AUTH_MED_1K)
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -1064,15 +1064,15 @@ UTEST(PERFORMANCE, LSA_LIBG_AUTH_LONG_1K)
 
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
-    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    SadbRoutine sa_routine = get_sa_routine_inmemory();
 
     hex_conversion(data_h, &data_b, &data_l);
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -1113,15 +1113,15 @@ UTEST(PERFORMANCE, MDB_LIBG_AUTH_LONG_1K)
 
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
-    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    SadbRoutine sa_routine = get_sa_routine_inmemory();
 
     hex_conversion(data_h, &data_b, &data_l);
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -1167,9 +1167,9 @@ UTEST(PERFORMANCE, LSA_KMC_AUTH_LONG_1K)
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;

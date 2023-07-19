@@ -158,7 +158,7 @@ typedef enum
 typedef struct
 {
     KeyType key_type;
-    SadbType sadb_type;
+    SadbType sa_type;
     CryptographyType cryptography_type;
     IvType iv_type; // Whether or not CryptoLib should generate the IV
     CreateFecfBool crypto_create_fecf; // Whether or not CryptoLib is expected to calculate TC FECFs and return

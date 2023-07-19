@@ -120,8 +120,8 @@
 
 extern char *crypto_enum_errlist_core[];
 extern char *crypto_enum_errlist_config[];
-extern char *crypto_enum_errlist_sadb_if[];
-extern char *crypto_enum_errlist_sadb_mariadb[];
+extern char *crypto_enum_errlist_sa_if[];
+extern char *crypto_enum_errlist_sa_mariadb[];
 extern char *crypto_enum_errlist_crypto_if[];
 extern char *crypto_enum_errlist_crypto_kmc[];
 extern char *crypto_enum_errlist_crypto_cam[];

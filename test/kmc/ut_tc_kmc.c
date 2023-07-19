@@ -24,7 +24,7 @@
 #include "ut_tc_process.h"
 #include "crypto.h"
 #include "crypto_error.h"
-#include "sadb_routine.h"
+#include "sa_interface.h"
 #include "utest.h"
 
 #include <mysql/mysql.h>
@@ -59,40 +59,40 @@ void finish_with_error(MYSQL *con)
 void MDB_DB_RESET()
 {
     MYSQL *con = mysql_init(NULL);
-    if(sadb_mariadb_config->mysql_mtls_key != NULL)
+    if(sa_mariadb_config->mysql_mtls_key != NULL)
             {
-                mysql_optionsv(con, MYSQL_OPT_SSL_KEY, sadb_mariadb_config->mysql_mtls_key);
+                mysql_optionsv(con, MYSQL_OPT_SSL_KEY, sa_mariadb_config->mysql_mtls_key);
             }
-            if(sadb_mariadb_config->mysql_mtls_cert != NULL)
+            if(sa_mariadb_config->mysql_mtls_cert != NULL)
             {
-                mysql_optionsv(con, MYSQL_OPT_SSL_CERT, sadb_mariadb_config->mysql_mtls_cert);
+                mysql_optionsv(con, MYSQL_OPT_SSL_CERT, sa_mariadb_config->mysql_mtls_cert);
             }
-            if(sadb_mariadb_config->mysql_mtls_ca != NULL)
+            if(sa_mariadb_config->mysql_mtls_ca != NULL)
             {
-                mysql_optionsv(con, MYSQL_OPT_SSL_CA, sadb_mariadb_config->mysql_mtls_ca);
+                mysql_optionsv(con, MYSQL_OPT_SSL_CA, sa_mariadb_config->mysql_mtls_ca);
             }
-            if(sadb_mariadb_config->mysql_mtls_capath != NULL)
+            if(sa_mariadb_config->mysql_mtls_capath != NULL)
             {
-                mysql_optionsv(con, MYSQL_OPT_SSL_CAPATH, sadb_mariadb_config->mysql_mtls_capath);
+                mysql_optionsv(con, MYSQL_OPT_SSL_CAPATH, sa_mariadb_config->mysql_mtls_capath);
             }
-            if (sadb_mariadb_config->mysql_tls_verify_server != CRYPTO_FALSE)
+            if (sa_mariadb_config->mysql_tls_verify_server != CRYPTO_FALSE)
             {
-                mysql_optionsv(con, MYSQL_OPT_SSL_VERIFY_SERVER_CERT, &(sadb_mariadb_config->mysql_tls_verify_server));
+                mysql_optionsv(con, MYSQL_OPT_SSL_VERIFY_SERVER_CERT, &(sa_mariadb_config->mysql_tls_verify_server));
             }
-            if (sadb_mariadb_config->mysql_mtls_client_key_password != NULL)
+            if (sa_mariadb_config->mysql_mtls_client_key_password != NULL)
             {
-                mysql_optionsv(con, MARIADB_OPT_TLS_PASSPHRASE, sadb_mariadb_config->mysql_mtls_client_key_password);
+                mysql_optionsv(con, MARIADB_OPT_TLS_PASSPHRASE, sa_mariadb_config->mysql_mtls_client_key_password);
             }
-            if (sadb_mariadb_config->mysql_require_secure_transport == CRYPTO_TRUE)
+            if (sa_mariadb_config->mysql_require_secure_transport == CRYPTO_TRUE)
             {
-                mysql_optionsv(con, MYSQL_OPT_SSL_ENFORCE,&(sadb_mariadb_config->mysql_require_secure_transport));
+                mysql_optionsv(con, MYSQL_OPT_SSL_ENFORCE,&(sa_mariadb_config->mysql_require_secure_transport));
             }
             //if encrypted connection (TLS) connection. No need for SSL Key
-            if (mysql_real_connect(con, sadb_mariadb_config->mysql_hostname,
-                    sadb_mariadb_config->mysql_username,
-                    sadb_mariadb_config->mysql_password,
-                    sadb_mariadb_config->mysql_database,
-                    sadb_mariadb_config->mysql_port, NULL, 0) == NULL)
+            if (mysql_real_connect(con, sa_mariadb_config->mysql_hostname,
+                    sa_mariadb_config->mysql_username,
+                    sa_mariadb_config->mysql_password,
+                    sa_mariadb_config->mysql_database,
+                    sa_mariadb_config->mysql_port, NULL, 0) == NULL)
             {
                 //0,NULL,0 are port number, unix socket, client flag
                 finish_with_error(con);
@@ -135,7 +135,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_CBC_KMC)
     char* raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
     char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
-    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    SadbRoutine sa_routine = get_sa_routine_inmemory();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
@@ -144,15 +144,15 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_CBC_KMC)
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    sa_routine->sa_get_sa_from_spi(11, &test_association);
     test_association->arsn_len = 0;
     test_association->shsnf_len = 0;
     test_association->ast = 0;
     test_association->stmacf_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
-    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    sa_routine->sa_get_sa_from_spi(11, &test_association);
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
@@ -196,7 +196,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_KMC_1BP)
     char* raw_tc_sdls_ping_h = "20030016000080d2c70008197f0b0031000000b1fe3128";
     char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
-    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    SadbRoutine sa_routine = get_sa_routine_inmemory();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
@@ -205,14 +205,14 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_KMC_1BP)
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    sa_routine->sa_get_sa_from_spi(11, &test_association);
     printf("SPI: %d\n", test_association->spi);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ast = 0;
     test_association->arsn_len = 0;
-    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    sa_routine->sa_get_sa_from_spi(11, &test_association);
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
@@ -256,7 +256,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_KMC_16BP)
     char* raw_tc_sdls_ping_h = "20030017000080d2c70008197f0b003100000000b1fe3128";
     char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
-    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    SadbRoutine sa_routine = get_sa_routine_inmemory();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
@@ -265,14 +265,14 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_KMC_16BP)
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    sa_routine->sa_get_sa_from_spi(11, &test_association);
     printf("SPI: %d\n", test_association->spi);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ast = 0;
     test_association->arsn_len = 0;
-    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    sa_routine->sa_get_sa_from_spi(11, &test_association);
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
@@ -318,7 +318,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_KMC_FRAME_MAX)
     char* raw_tc_sdls_ping_h = "200303E6000080d2c70008197f0b00310000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000b1fed255";
     char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
-    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    SadbRoutine sa_routine = get_sa_routine_inmemory();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
@@ -327,13 +327,13 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_KMC_FRAME_MAX)
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    sa_routine->sa_get_sa_from_spi(11, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ast = 0;
     test_association->arsn_len = 0;
-    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    sa_routine->sa_get_sa_from_spi(11, &test_association);
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
@@ -366,7 +366,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_KMC_FRAME_TOO_BIG)
     char* raw_tc_sdls_ping_h = "200303F7000080d2c70008197f0b0031000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000b1fed255";
     char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
-    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    SadbRoutine sa_routine = get_sa_routine_inmemory();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
@@ -375,13 +375,13 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_KMC_FRAME_TOO_BIG)
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    sa_routine->sa_get_sa_from_spi(11, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ast = 0;
     test_association->arsn_len = 0;
-    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    sa_routine->sa_get_sa_from_spi(11, &test_association);
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
@@ -412,7 +412,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_KMC_NULL_IV)
     char* raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
     char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
-    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    SadbRoutine sa_routine = get_sa_routine_inmemory();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
@@ -421,9 +421,9 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_KMC_NULL_IV)
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    sa_routine->sa_get_sa_from_spi(11, &test_association);
     printf("SPI: %d\n", test_association->spi);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ast = 0;
@@ -433,7 +433,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_KMC_NULL_IV)
     test_association->acs_len = 1;
     test_association->acs = 0;
     test_association->arsn_len = 0;
-    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    sa_routine->sa_get_sa_from_spi(11, &test_association);
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
@@ -462,7 +462,7 @@ UTEST(TC_APPLY_SECURITY, ENC_GCM_KMC_NULL_IV)
     char* raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
     char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
-    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    SadbRoutine sa_routine = get_sa_routine_inmemory();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
@@ -471,9 +471,9 @@ UTEST(TC_APPLY_SECURITY, ENC_GCM_KMC_NULL_IV)
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    sa_routine->sa_get_sa_from_spi(11, &test_association);
     printf("SPI: %d\n", test_association->spi);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ast = 1;
@@ -518,7 +518,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_CBC_MDB_KMC)
     char* raw_tc_sdls_ping_h = "20031815000080d2c70008197f0b00310000b1fe3128";
     char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
-    //SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    //SadbRoutine sa_routine = get_sa_routine_inmemory();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
@@ -651,7 +651,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_MDB_KMC_FRAME_MAX)
     char* raw_tc_sdls_ping_h = "20031BE0000080d2c70008197f0b003100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000b1fed255";
     char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
-    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    SadbRoutine sa_routine = get_sa_routine_inmemory();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
@@ -660,13 +660,13 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_MDB_KMC_FRAME_MAX)
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    sa_routine->sa_get_sa_from_spi(11, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ast = 0;
     test_association->arsn_len = 0;
-    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    sa_routine->sa_get_sa_from_spi(11, &test_association);
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
@@ -700,7 +700,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_MDB_KMC_FRAME_TOO_BIG)
     char* raw_tc_sdls_ping_h = "200303F2000080d2c70008197f0b003100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000b1fed255";
     char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
-    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    SadbRoutine sa_routine = get_sa_routine_inmemory();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
@@ -709,13 +709,13 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_MDB_KMC_FRAME_TOO_BIG)
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    sa_routine->sa_get_sa_from_spi(11, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ast = 0;
     test_association->arsn_len = 0;
-    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    sa_routine->sa_get_sa_from_spi(11, &test_association);
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
@@ -793,7 +793,7 @@ UTEST(TC_PROCESS, HAPPY_PATH_DECRYPT_CBC_KMC)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
-    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    sa_routine->sa_get_sa_from_spi(11, &test_association);
     test_association->arsn_len = 0;
     test_association->shsnf_len = 0;
     test_association->ast = 0;
@@ -852,7 +852,7 @@ UTEST(TC_PROCESS, DECRYPT_CBC_KMC_1B)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
-    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    sa_routine->sa_get_sa_from_spi(11, &test_association);
     test_association->arsn_len = 0;
     test_association->shsnf_len = 0;
     test_association->ast = 0;
@@ -911,7 +911,7 @@ UTEST(TC_PROCESS, DECRYPT_CBC_KMC_16B)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
-    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    sa_routine->sa_get_sa_from_spi(11, &test_association);
     test_association->arsn_len = 0;
     test_association->shsnf_len = 0;
     test_association->ast = 0;
@@ -967,7 +967,7 @@ UTEST(TC_PROCESS, DECRYPT_CBC_KMC_NULL_IV)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
-    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    sa_routine->sa_get_sa_from_spi(11, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ast = 0;
 
@@ -1003,15 +1003,15 @@ UTEST(TC_PROCESS, DECRYPT_GCM_KMC_NULL_IV)
     char* raw_tc_sdls_ping_h = "200300330000000B5C7D0E687B4ACC8978CEB8F9F1713AC7E65FAA6845BF9607A6D2B89B7AF55C4463B9068F344242AAFAEBE298";
     uint8_t* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
-    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    SadbRoutine sa_routine = get_sa_routine_inmemory();
 
     hex_conversion(raw_tc_sdls_ping_h, (char **) &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sadb_routine->sadb_get_sa_from_spi(11, &test_association);
+    sa_routine->sa_get_sa_from_spi(11, &test_association);
     printf("SPI: %d\n", test_association->spi);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ast = 1;
@@ -1204,7 +1204,7 @@ UTEST(TC_PROCESS, DECRYPT_CBC_MDB_KMC_NULL_IV)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->arsn_len = 0;
     test_association->shsnf_len = 0;
 

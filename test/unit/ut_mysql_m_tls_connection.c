@@ -56,7 +56,7 @@ Password: mTLS does not require a password.
 #include "crypto_error.h"
 #include "crypto.h"
 #include "crypto_error.h"
-#include "sadb_routine.h"
+#include "sa_interface.h"
 #include "crypto_config_structs.h"
 #include <mysql/mysql.h>
 
@@ -90,13 +90,13 @@ UTEST(MARIA_DB_CONNECTION_TESTS, TLS_TEST) {
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     /*Prepare SADB type from config*/
     status = Crypto_Init_TC_Unit_Test_For_DB();
-    SadbRoutine sadb_routine = get_sadb_routine_mariadb();
+    SadbRoutine sa_routine = get_sa_routine_mariadb();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     printf("END mariadb connection, TLS test() status:%d \n", status);
     printf("START mariadb connection, mTLS test() \n");
     status = 0;
     //close the connection to avoid a duplicate connection error when running the test multiple times. 
-    sadb_routine->sadb_close(); 
+    sa_routine->sa_close(); 
     /*connection input parameters. 
      Note: username, pass, and paths may differ on your system*/
     mysql_username = "testuser2";
@@ -117,7 +117,7 @@ UTEST(MARIA_DB_CONNECTION_TESTS, TLS_TEST) {
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     printf("END mariadb connection, mTLS test() status:%d \n", status);
     //close the connection to avoid a duplicate connection error when running the test multiple times. 
-    sadb_routine->sadb_close(); 
+    sa_routine->sa_close(); 
     
 }
 

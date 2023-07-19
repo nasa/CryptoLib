@@ -21,7 +21,7 @@
  **/
 #include "crypto.h"
 #include "crypto_error.h"
-#include "sadb_routine.h"
+#include "sa_interface.h"
 #include "utest.h"
 
 #include "crypto.h"

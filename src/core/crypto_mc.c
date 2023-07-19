@@ -200,7 +200,7 @@ int32_t Crypto_SA_readARSN(uint8_t* ingest)
     ingest[count++] = (spi & 0xFF00) >> 8;
     ingest[count++] = (spi & 0x00FF);
 
-    if (sadb_routine->sadb_get_sa_from_spi(spi, &sa_ptr) != CRYPTO_LIB_SUCCESS)
+    if (sa_routine->sa_get_sa_from_spi(spi, &sa_ptr) != CRYPTO_LIB_SUCCESS)
     {
         // TODO - Error handling
         return CRYPTO_LIB_ERROR; // Error -- unable to get SA from SPI.

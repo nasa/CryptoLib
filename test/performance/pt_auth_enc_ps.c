@@ -22,7 +22,7 @@
  **/
 #include "crypto.h"
 #include "crypto_error.h"
-#include "sadb_routine.h"
+#include "sa_interface.h"
 #include "utest.h"
 
 #include "crypto.h"
@@ -122,12 +122,12 @@ UTEST(PERFORMANCE, LSA_LIBG_SHORT_100)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
     // Deactivate SA 1
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 10
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
     // Convert hex to binary
     hex_conversion(data_h, &data_b, &data_l);
@@ -200,12 +200,12 @@ UTEST(PERFORMANCE, LSA_KMC_SHORT_100)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
     // Deactivate SA 1
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 10
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     // Convert hex to binary
@@ -283,12 +283,12 @@ UTEST(PERFORMANCE, LSA_LIBG_MED_100)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
     // Deactivate SA 1
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 10
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
     // Convert hex to binary
     hex_conversion(data_h, &data_b, &data_l);
@@ -363,12 +363,12 @@ UTEST(PERFORMANCE, LSA_KMC_MED_100)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
     // Deactivate SA 1
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 10
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     // Convert hex to binary
@@ -446,12 +446,12 @@ UTEST(PERFORMANCE, LSA_LIBG_LONG_100)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
     // Deactivate SA 1
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 10
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
     // Convert hex to binary
     hex_conversion(data_h, &data_b, &data_l);
@@ -526,12 +526,12 @@ UTEST(PERFORMANCE, LSA_KMC_LONG_100)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
     // Deactivate SA 1
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 10
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     // Convert hex to binary
@@ -609,12 +609,12 @@ UTEST(PERFORMANCE, LSA_LIBG_SHORT_1K)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
     // Deactivate SA 1
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 10
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
     // Convert hex to binary
     hex_conversion(data_h, &data_b, &data_l);
@@ -687,12 +687,12 @@ UTEST(PERFORMANCE, LSA_KMC_SHORT_1K)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
     // Deactivate SA 1
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 10
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     // Convert hex to binary
@@ -770,12 +770,12 @@ UTEST(PERFORMANCE, LSA_LIBG_MED_1K)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
     // Deactivate SA 1
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 10
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
     // Convert hex to binary
     hex_conversion(data_h, &data_b, &data_l);
@@ -850,12 +850,12 @@ UTEST(PERFORMANCE, LSA_KMC_MED_1K)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
     // Deactivate SA 1
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 10
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     // Convert hex to binary
@@ -933,12 +933,12 @@ UTEST(PERFORMANCE, LSA_LIBG_LONG_1K)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
     // Deactivate SA 1
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 10
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
     // Convert hex to binary
     hex_conversion(data_h, &data_b, &data_l);
@@ -1013,10 +1013,10 @@ UTEST(PERFORMANCE, LSA_KMC_LONG_1K)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;;
     // Deactivate SA 1
-    sadb_routine->sadb_get_sa_from_spi(1, &test_association);
+    sa_routine->sa_get_sa_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 10
-    sadb_routine->sadb_get_sa_from_spi(10, &test_association);
+    sa_routine->sa_get_sa_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 

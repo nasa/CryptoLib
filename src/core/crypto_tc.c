@@ -162,14 +162,14 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
     if (status == CRYPTO_LIB_SUCCESS)
     {
         // Query SA DB for active SA / SDLS parameters
-        if (sadb_routine == NULL) // This should not happen, but tested here for safety
+        if (sa_routine == NULL) // This should not happen, but tested here for safety
         {
             printf(KRED "ERROR: SA DB Not initalized! -- CRYPTO_LIB_ERR_NO_INIT, Will Exit\n" RESET);
             status = CRYPTO_LIB_ERR_NO_INIT;
         }
         else
         {
-            status = sadb_routine->sadb_get_operational_sa_from_gvcid(temp_tc_header.tfvn, temp_tc_header.scid,
+            status = sa_routine->sa_get_operational_sa_from_gvcid(temp_tc_header.tfvn, temp_tc_header.scid,
                                                                       temp_tc_header.vcid, map_id, &sa_ptr);
         }
         // If unable to get operational SA, can return
@@ -772,7 +772,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
        *pp_in_frame = p_new_enc_frame;
     }
 
-    status = sadb_routine->sadb_save_sa(sa_ptr);
+    status = sa_routine->sa_save_sa(sa_ptr);
 
 #ifdef DEBUG
     printf(KYEL "----- Crypto_TC_ApplySecurity END -----\n" RESET);
@@ -879,7 +879,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
     printf("vcid = %d \n", tc_sdls_processed_frame->tc_header.vcid);
     printf("spi  = %d \n", tc_sdls_processed_frame->tc_sec_header.spi);
 #endif
-    status = sadb_routine->sadb_get_sa_from_spi(tc_sdls_processed_frame->tc_sec_header.spi, &sa_ptr);
+    status = sa_routine->sa_get_sa_from_spi(tc_sdls_processed_frame->tc_sec_header.spi, &sa_ptr);
     // If no valid SPI, return
     if (status != CRYPTO_LIB_SUCCESS)
     {
@@ -1223,7 +1223,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
         }
 
         // Only save the SA (IV/ARSN) if checking the anti-replay counter; Otherwise we don't update.
-        status = sadb_routine->sadb_save_sa(sa_ptr);
+        status = sa_routine->sa_save_sa(sa_ptr);
         if (status != CRYPTO_LIB_SUCCESS)
         {
             free(aad);
@@ -1232,7 +1232,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
     }
     else
     {
-        if (crypto_config->sadb_type == SADB_TYPE_MARIADB)
+        if (crypto_config->sa_type == SADB_TYPE_MARIADB)
         {
             if (sa_ptr->ek_ref != NULL)
                 free(sa_ptr->ek_ref);
