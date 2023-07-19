@@ -35,6 +35,11 @@ typedef enum
 } KeyType;
 typedef enum
 {
+    MC_TYPE_CUSTOM,
+    MC_TYPE_INTERNAL
+} McType;
+typedef enum
+{
     SADB_TYPE_INMEMORY,
     SADB_TYPE_MARIADB
 } SadbType;
@@ -158,6 +163,7 @@ typedef enum
 typedef struct
 {
     KeyType key_type;
+    McType mc_type;
     SadbType sadb_type;
     CryptographyType cryptography_type;
     IvType iv_type; // Whether or not CryptoLib should generate the IV
