@@ -177,7 +177,7 @@ int32_t Crypto_User_ModifyVCID(void)
 
     for (i = 0; i < NUM_GVCID; i++)
     {
-        if (sa_routine->sa_get_sa_from_spi(i, &sa_ptr) != CRYPTO_LIB_SUCCESS)
+        if (sa_if->sa_get_from_spi(i, &sa_ptr) != CRYPTO_LIB_SUCCESS)
         {
             // TODO - Error handling
             return CRYPTO_LIB_ERROR; // Error -- unable to get SA from SPI.

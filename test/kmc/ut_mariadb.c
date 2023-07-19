@@ -83,7 +83,7 @@ UTEST(MARIA_DB, DB_CONNECT)
                                 ssl_capath, ssl_cert, ssl_key, client_key_password, mysql_username, mysql_password);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                         IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                         TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
                         TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -92,18 +92,18 @@ UTEST(MARIA_DB, DB_CONNECT)
 
     status = Crypto_Init();
 
-    SadbRoutine sa_routine = get_sa_routine_mariadb();
+    SaInterface sa_if = get_sa_interface_mariadb();
     //need the sa call
     SecurityAssociation_t* test_sa;
 
-    status = sa_routine->sa_get_sa_from_spi(1, &test_sa);
+    status = sa_if->sa_get_from_spi(1, &test_sa);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     ASSERT_EQ(test_sa->iv[11] , 0x01);
 
     test_sa->iv[11] = 0xAB;
-    status = sa_routine->sa_save_sa(test_sa);
+    status = sa_if->sa_save_sa(test_sa);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-    status = sa_routine->sa_get_sa_from_spi(1, &test_sa);
+    status = sa_if->sa_get_from_spi(1, &test_sa);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     ASSERT_EQ(test_sa->iv[11] , 0xAB); 
     Crypto_Shutdown();      
@@ -122,7 +122,7 @@ UTEST(MARIA_DB, HAPPY_PATH_ENC)
                                 ssl_capath, ssl_cert, ssl_key, client_key_password, mysql_username, mysql_password);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                         IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                         TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
                         TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -134,7 +134,7 @@ UTEST(MARIA_DB, HAPPY_PATH_ENC)
     char* raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
     char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
-    SadbRoutine sa_routine = get_sa_routine_mariadb();
+    SaInterface sa_if = get_sa_interface_mariadb();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
@@ -145,13 +145,13 @@ UTEST(MARIA_DB, HAPPY_PATH_ENC)
 
     SecurityAssociation_t* test_association;
 
-    status = sa_routine->sa_get_sa_from_spi(2, &test_association);
+    status = sa_if->sa_get_from_spi(2, &test_association);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
     cleanup_sa(test_association);
-    status = sa_routine->sa_get_sa_from_spi(2, &test_association);
+    status = sa_if->sa_get_from_spi(2, &test_association);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     ASSERT_EQ(test_association->iv[test_association->iv_len - 1], 2);  // Verify that IV incremented.   
 
@@ -174,7 +174,7 @@ UTEST(MARIA_DB, HAPPY_PATH_AUTH_ENC)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
 
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                         IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                         TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
                         TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -186,7 +186,7 @@ UTEST(MARIA_DB, HAPPY_PATH_AUTH_ENC)
     char* raw_tc_sdls_ping_h = "20030415000080d2c70008197f0b00310000b1fe3128";
     char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
-    SadbRoutine sa_routine = get_sa_routine_mariadb();
+    SaInterface sa_if = get_sa_interface_mariadb();
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
     uint8_t* ptr_enc_frame = NULL;
@@ -196,7 +196,7 @@ UTEST(MARIA_DB, HAPPY_PATH_AUTH_ENC)
 
     SecurityAssociation_t* test_association;
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(3, &test_association);
+    sa_if->sa_get_from_spi(3, &test_association);
 
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
@@ -204,7 +204,7 @@ UTEST(MARIA_DB, HAPPY_PATH_AUTH_ENC)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
     
     cleanup_sa(test_association);
-    status = sa_routine->sa_get_sa_from_spi(3, &test_association);
+    status = sa_if->sa_get_from_spi(3, &test_association);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     ASSERT_EQ(test_association->iv[test_association->iv_len - 1], 2);  // Verify that IV incremented.  
 
@@ -235,7 +235,7 @@ UTEST(MARIA_DB, AUTH_DECRYPTION_TEST)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
 
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                         IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                         TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
                         TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -244,7 +244,7 @@ UTEST(MARIA_DB, AUTH_DECRYPTION_TEST)
 
     status = Crypto_Init();
 
-    SadbRoutine sa_routine = get_sa_routine_mariadb();
+    SaInterface sa_if = get_sa_interface_mariadb();
 
     hex_conversion(dec_test_h, (char**) &dec_test_b, &dec_test_len);
     hex_conversion(enc_test_h, (char**) &enc_test_b, &enc_test_len);
@@ -255,9 +255,9 @@ UTEST(MARIA_DB, AUTH_DECRYPTION_TEST)
     memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
     
     SecurityAssociation_t* test_association;
-    sa_routine->sa_get_sa_from_spi(3, &test_association);
+    sa_if->sa_get_from_spi(3, &test_association);
     test_association->iv[test_association->iv_len - 1] = 0;
-    sa_routine->sa_save_sa(test_association);
+    sa_if->sa_save_sa(test_association);
 
     Crypto_TC_ProcessSecurity(dec_test_b, &dec_test_len, tc_sdls_processed_frame);
     for (int i = 0; i < tc_sdls_processed_frame->tc_pdu_len; i++)
@@ -288,7 +288,7 @@ UTEST(MARIA_DB, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_IV_ROLLOVER)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
 
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                         IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                         TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
                         TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -310,7 +310,7 @@ UTEST(MARIA_DB, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_IV_ROLLOVER)
     int new_iv_len = 0;
     int expected_iv_len = 0;
 
-    SadbRoutine sa_routine = get_sa_routine_mariadb();
+    SaInterface sa_if = get_sa_interface_mariadb();
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
     hex_conversion(new_iv_h, &new_iv_b, &new_iv_len);
     hex_conversion(expected_iv_h, &expected_iv_b, &expected_iv_len);
@@ -321,7 +321,7 @@ UTEST(MARIA_DB, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_IV_ROLLOVER)
 
     SecurityAssociation_t* test_association;
 
-    sa_routine->sa_get_sa_from_spi(4, &test_association);
+    sa_if->sa_get_from_spi(4, &test_association);
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
     free(ptr_enc_frame);
@@ -343,7 +343,7 @@ UTEST(MARIA_DB, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_IV_ROLLOVER)
     
     
     cleanup_sa(test_association);
-    sa_routine->sa_get_sa_from_spi(4, &test_association);    
+    sa_if->sa_get_from_spi(4, &test_association);    
     for (int i = 0; i < test_association->iv_len; i++)
     {
         printf("[%d] Truth: %02x, Actual: %02x\n", i, expected_iv_b[i], *(test_association->iv + i)); 
@@ -372,7 +372,7 @@ UTEST(MARIA_DB, HAPPY_PATH_APPLY_STATIC_IV_ROLLOVER)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
 
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                         IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                         TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
                         TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -394,7 +394,7 @@ UTEST(MARIA_DB, HAPPY_PATH_APPLY_STATIC_IV_ROLLOVER)
     int new_iv_len = 0;
     int expected_iv_len = 0;
 
-    SadbRoutine sa_routine = get_sa_routine_mariadb();
+    SaInterface sa_if = get_sa_interface_mariadb();
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
     hex_conversion(new_iv_h, &new_iv_b, &new_iv_len);
     hex_conversion(expected_iv_h, &expected_iv_b, &expected_iv_len);
@@ -405,7 +405,7 @@ UTEST(MARIA_DB, HAPPY_PATH_APPLY_STATIC_IV_ROLLOVER)
 
     SecurityAssociation_t* test_association;
 
-    sa_routine->sa_get_sa_from_spi(4, &test_association);
+    sa_if->sa_get_from_spi(4, &test_association);
     memcpy(test_association->iv, new_iv_b, new_iv_len);
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);  
@@ -427,7 +427,7 @@ UTEST(MARIA_DB, HAPPY_PATH_APPLY_STATIC_IV_ROLLOVER)
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len); 
 
     cleanup_sa(test_association);
-    sa_routine->sa_get_sa_from_spi(4, &test_association);    
+    sa_if->sa_get_from_spi(4, &test_association);    
     for (int i = 0; i < test_association->iv_len; i++)
     {
         printf("[%d] Truth: %02x, Actual: %02x\n", i, expected_iv_b[i], *(test_association->iv + i)); 
@@ -457,7 +457,7 @@ UTEST(MARIA_DB, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_ARSN_ROLLOVER)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
 
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                         IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                         TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
                         TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -479,7 +479,7 @@ UTEST(MARIA_DB, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_ARSN_ROLLOVER)
     int new_arsn_len = 0;
     int expected_arsn_len = 0;
 
-    SadbRoutine sa_routine = get_sa_routine_mariadb();
+    SaInterface sa_if = get_sa_interface_mariadb();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
     hex_conversion(new_arsn_h, &new_arsn_b, &new_arsn_len);
@@ -491,7 +491,7 @@ UTEST(MARIA_DB, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_ARSN_ROLLOVER)
 
     SecurityAssociation_t* test_association;
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(5, &test_association);
+    sa_if->sa_get_from_spi(5, &test_association);
 
     return_val =
             Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
@@ -499,28 +499,28 @@ UTEST(MARIA_DB, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_ARSN_ROLLOVER)
     free(ptr_enc_frame);
     ptr_enc_frame = NULL;
     cleanup_sa(test_association);
-    sa_routine->sa_get_sa_from_spi(5, &test_association);
+    sa_if->sa_get_from_spi(5, &test_association);
     return_val =
             Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS,return_val);
     free(ptr_enc_frame);
     ptr_enc_frame = NULL;
     cleanup_sa(test_association);
-    sa_routine->sa_get_sa_from_spi(5, &test_association);
+    sa_if->sa_get_from_spi(5, &test_association);
     return_val =
             Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS,return_val);
     free(ptr_enc_frame);
     ptr_enc_frame = NULL;
     cleanup_sa(test_association);
-    sa_routine->sa_get_sa_from_spi(5, &test_association);
+    sa_if->sa_get_from_spi(5, &test_association);
     return_val =
             Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS,return_val);
     free(ptr_enc_frame);
     ptr_enc_frame = NULL;
     cleanup_sa(test_association);
-    sa_routine->sa_get_sa_from_spi(5, &test_association);
+    sa_if->sa_get_from_spi(5, &test_association);
     return_val =
             Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS,return_val);
@@ -530,7 +530,7 @@ UTEST(MARIA_DB, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_ARSN_ROLLOVER)
     printf("Expected ARSN:\n");
     Crypto_hexprint(expected_arsn_b,expected_arsn_len);
     printf("Actual SA ARSN:\n");
-    sa_routine->sa_get_sa_from_spi(5, &test_association);
+    sa_if->sa_get_from_spi(5, &test_association);
     Crypto_hexprint(test_association->arsn,test_association->arsn_len);
 
     for (int i = 0; i < test_association->arsn_len; i++)
@@ -564,7 +564,7 @@ UTEST(MARIA_DB, BAD_SPACE_CRAFT_ID)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
 
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                         IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                         TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
                         TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);

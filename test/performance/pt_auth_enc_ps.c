@@ -105,7 +105,7 @@ double Process_Security_Loop(char *data_b, int* data_l, TC_t* processed_frame, i
 
 UTEST(PERFORMANCE, LSA_LIBG_SHORT_100)
 {
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -122,12 +122,12 @@ UTEST(PERFORMANCE, LSA_LIBG_SHORT_100)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
     // Deactivate SA 1
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 10
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
     // Convert hex to binary
     hex_conversion(data_h, &data_b, &data_l);
@@ -150,7 +150,7 @@ UTEST(PERFORMANCE, LSA_LIBG_SHORT_100)
 
 UTEST(PERFORMANCE, MDB_LIBG_SHORT_100)
 {
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -183,7 +183,7 @@ UTEST(PERFORMANCE, MDB_LIBG_SHORT_100)
 
 UTEST(PERFORMANCE, LSA_KMC_SHORT_100)
 {
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -200,12 +200,12 @@ UTEST(PERFORMANCE, LSA_KMC_SHORT_100)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
     // Deactivate SA 1
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 10
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     // Convert hex to binary
@@ -228,7 +228,7 @@ UTEST(PERFORMANCE, LSA_KMC_SHORT_100)
 
 UTEST(PERFORMANCE, MDB_KMC_SHORT_100)
 {
-    Crypto_Config_CryptoLib(KEY_TYPE_KMC, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
+    Crypto_Config_CryptoLib(KEY_TYPE_KMC, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -266,7 +266,7 @@ UTEST(PERFORMANCE, MDB_KMC_SHORT_100)
 
 UTEST(PERFORMANCE, LSA_LIBG_MED_100)
 {
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -283,12 +283,12 @@ UTEST(PERFORMANCE, LSA_LIBG_MED_100)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
     // Deactivate SA 1
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 10
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
     // Convert hex to binary
     hex_conversion(data_h, &data_b, &data_l);
@@ -311,7 +311,7 @@ UTEST(PERFORMANCE, LSA_LIBG_MED_100)
 
 UTEST(PERFORMANCE, MDB_LIBG_MED_100)
 {
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -346,7 +346,7 @@ UTEST(PERFORMANCE, MDB_LIBG_MED_100)
 
 UTEST(PERFORMANCE, LSA_KMC_MED_100)
 {
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -363,12 +363,12 @@ UTEST(PERFORMANCE, LSA_KMC_MED_100)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
     // Deactivate SA 1
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 10
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     // Convert hex to binary
@@ -391,7 +391,7 @@ UTEST(PERFORMANCE, LSA_KMC_MED_100)
 
 UTEST(PERFORMANCE, MDB_KMC_MED_100)
 {
-    Crypto_Config_CryptoLib(KEY_TYPE_KMC, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
+    Crypto_Config_CryptoLib(KEY_TYPE_KMC, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -429,7 +429,7 @@ UTEST(PERFORMANCE, MDB_KMC_MED_100)
 
 UTEST(PERFORMANCE, LSA_LIBG_LONG_100)
 {
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -446,12 +446,12 @@ UTEST(PERFORMANCE, LSA_LIBG_LONG_100)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
     // Deactivate SA 1
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 10
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
     // Convert hex to binary
     hex_conversion(data_h, &data_b, &data_l);
@@ -474,7 +474,7 @@ UTEST(PERFORMANCE, LSA_LIBG_LONG_100)
 
 UTEST(PERFORMANCE, MDB_LIBG_LONG_100)
 {
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -509,7 +509,7 @@ UTEST(PERFORMANCE, MDB_LIBG_LONG_100)
 
 UTEST(PERFORMANCE, LSA_KMC_LONG_100)
 {
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -526,12 +526,12 @@ UTEST(PERFORMANCE, LSA_KMC_LONG_100)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
     // Deactivate SA 1
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 10
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     // Convert hex to binary
@@ -554,7 +554,7 @@ UTEST(PERFORMANCE, LSA_KMC_LONG_100)
 
 UTEST(PERFORMANCE, MDB_KMC_LONG_100)
 {
-    Crypto_Config_CryptoLib(KEY_TYPE_KMC, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
+    Crypto_Config_CryptoLib(KEY_TYPE_KMC, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -592,7 +592,7 @@ UTEST(PERFORMANCE, MDB_KMC_LONG_100)
 
 UTEST(PERFORMANCE, LSA_LIBG_SHORT_1K)
 {
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -609,12 +609,12 @@ UTEST(PERFORMANCE, LSA_LIBG_SHORT_1K)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
     // Deactivate SA 1
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 10
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
     // Convert hex to binary
     hex_conversion(data_h, &data_b, &data_l);
@@ -637,7 +637,7 @@ UTEST(PERFORMANCE, LSA_LIBG_SHORT_1K)
 
 UTEST(PERFORMANCE, MDB_LIBG_SHORT_1K)
 {
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -670,7 +670,7 @@ UTEST(PERFORMANCE, MDB_LIBG_SHORT_1K)
 
 UTEST(PERFORMANCE, LSA_KMC_SHORT_1K)
 {
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -687,12 +687,12 @@ UTEST(PERFORMANCE, LSA_KMC_SHORT_1K)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
     // Deactivate SA 1
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 10
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     // Convert hex to binary
@@ -715,7 +715,7 @@ UTEST(PERFORMANCE, LSA_KMC_SHORT_1K)
 
 UTEST(PERFORMANCE, MDB_KMC_SHORT_1K)
 {
-    Crypto_Config_CryptoLib(KEY_TYPE_KMC, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
+    Crypto_Config_CryptoLib(KEY_TYPE_KMC, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -753,7 +753,7 @@ UTEST(PERFORMANCE, MDB_KMC_SHORT_1K)
 
 UTEST(PERFORMANCE, LSA_LIBG_MED_1K)
 {
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -770,12 +770,12 @@ UTEST(PERFORMANCE, LSA_LIBG_MED_1K)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
     // Deactivate SA 1
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 10
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
     // Convert hex to binary
     hex_conversion(data_h, &data_b, &data_l);
@@ -798,7 +798,7 @@ UTEST(PERFORMANCE, LSA_LIBG_MED_1K)
 
 UTEST(PERFORMANCE, MDB_LIBG_MED_1K)
 {
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -833,7 +833,7 @@ UTEST(PERFORMANCE, MDB_LIBG_MED_1K)
 
 UTEST(PERFORMANCE, LSA_KMC_MED_1K)
 {
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -850,12 +850,12 @@ UTEST(PERFORMANCE, LSA_KMC_MED_1K)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
     // Deactivate SA 1
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 10
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     // Convert hex to binary
@@ -878,7 +878,7 @@ UTEST(PERFORMANCE, LSA_KMC_MED_1K)
 
 UTEST(PERFORMANCE, MDB_KMC_MED_1K)
 {
-    Crypto_Config_CryptoLib(KEY_TYPE_KMC, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
+    Crypto_Config_CryptoLib(KEY_TYPE_KMC, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -916,7 +916,7 @@ UTEST(PERFORMANCE, MDB_KMC_MED_1K)
 
 UTEST(PERFORMANCE, LSA_LIBG_LONG_1K)
 {
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -933,12 +933,12 @@ UTEST(PERFORMANCE, LSA_LIBG_LONG_1K)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
     // Deactivate SA 1
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 10
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
     // Convert hex to binary
     hex_conversion(data_h, &data_b, &data_l);
@@ -961,7 +961,7 @@ UTEST(PERFORMANCE, LSA_LIBG_LONG_1K)
 
 UTEST(PERFORMANCE, MDB_LIBG_LONG_1K)
 {
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -996,7 +996,7 @@ UTEST(PERFORMANCE, MDB_LIBG_LONG_1K)
 
 UTEST(PERFORMANCE, LSA_KMC_LONG_1K)
 {
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -1013,10 +1013,10 @@ UTEST(PERFORMANCE, LSA_KMC_LONG_1K)
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;;
     // Deactivate SA 1
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 10
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     *test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
 
@@ -1040,7 +1040,7 @@ UTEST(PERFORMANCE, LSA_KMC_LONG_1K)
 
 UTEST(PERFORMANCE, MDB_KMC_LONG_1K)
 {
-    Crypto_Config_CryptoLib(KEY_TYPE_KMC, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
+    Crypto_Config_CryptoLib(KEY_TYPE_KMC, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);

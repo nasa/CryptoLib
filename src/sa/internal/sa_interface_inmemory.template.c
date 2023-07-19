@@ -19,7 +19,7 @@ static int32_t sa_config(void);
 static int32_t sa_init(void);
 static int32_t sa_close(void);
 // Security Association Interaction Functions
-static int32_t sa_get_sa_from_spi(uint16_t, SecurityAssociation_t**);
+static int32_t sa_get_from_spi(uint16_t, SecurityAssociation_t**);
 static int32_t sa_get_operational_sa_from_gvcid(uint8_t, uint16_t, uint16_t, uint8_t, SecurityAssociation_t**);
 static int32_t sa_save_sa(SecurityAssociation_t* sa);
 // Security Association Utility Functions
@@ -41,15 +41,15 @@ static SaInterfaceStruct sa_if_struct;
 static SecurityAssociation_t sa[NUM_SA];
 
 /**
- * @brief Function: get_sa_routine_inmemory
- * @return SadbRoutine
+ * @brief Function: get_sa_interface_inmemory
+ * @return SaInterface
  **/
-SadbRoutine get_sa_routine_inmemory(void)
+SaInterface get_sa_interface_inmemory(void)
 {
     sa_if_struct.sa_config = sa_config;
     sa_if_struct.sa_init = sa_init;
     sa_if_struct.sa_close = sa_close;
-    sa_if_struct.sa_get_sa_from_spi = sa_get_sa_from_spi;
+    sa_if_struct.sa_get_from_spi = sa_get_from_spi;
     sa_if_struct.sa_get_operational_sa_from_gvcid = sa_get_operational_sa_from_gvcid;
     sa_if_struct.sa_stop = sa_stop;
     sa_if_struct.sa_save_sa = sa_save_sa;
@@ -343,12 +343,12 @@ static int32_t sa_close(void)
 ** Security Association Interaction Functions
 */
 /**
- * @brief Function: sa_get_sa_from_spi
+ * @brief Function: sa_get_from_spi
  * @param spi: uint16
  * @param security_association: SecurityAssociation_t**
  * @return int32: Success/Failure
  **/
-static int32_t sa_get_sa_from_spi(uint16_t spi, SecurityAssociation_t** security_association)
+static int32_t sa_get_from_spi(uint16_t spi, SecurityAssociation_t** security_association)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     if (sa == NULL)

@@ -60,6 +60,15 @@ else()
     list(APPEND LIB_SRC_FILES ${KEY_KMC_FILES})
 endif()
 
+if(SA_CUSTOM)
+    # Assumes CryptoLib is a Git submodule to project and custom directories and definitions exist at top level
+    aux_source_directory(../../sa/custom SA_CUSTOM_FILES)
+    list(APPEND LIB_SRC_FILES ${SA_CUSTOM_FILES})
+else()
+    aux_source_directory(sa/custom_stub SA_CUSTOM_FILES)
+    list(APPEND LIB_SRC_FILES ${SA_CUSTOM_FILES})
+endif()
+
 if(SA_INTERNAL)
     aux_source_directory(sa/internal SA_INTERNAL_FILES)
     list(APPEND LIB_SRC_FILES ${SA_INTERNAL_FILES})

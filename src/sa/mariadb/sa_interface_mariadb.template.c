@@ -28,7 +28,7 @@ static int32_t sa_config(void);
 static int32_t sa_init(void);
 static int32_t sa_close(void);
 // Security Association Interaction Functions
-static int32_t sa_get_sa_from_spi(uint16_t, SecurityAssociation_t**);
+static int32_t sa_get_from_spi(uint16_t, SecurityAssociation_t**);
 static int32_t sa_get_operational_sa_from_gvcid(uint8_t, uint16_t, uint16_t, uint8_t, SecurityAssociation_t**);
 static int32_t sa_save_sa(SecurityAssociation_t* sa);
 // Security Association Utility Functions
@@ -63,7 +63,7 @@ static const char* SQL_SADB_UPDATE_IV_ARC_BY_SPI_NULL_IV =
         " SET arsn=X'%s'"
         " WHERE spi='%d' AND tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d'";
 
-// sa_routine mariaDB private helper functions
+// sa_if mariaDB private helper functions
 static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** security_association);
 static int32_t convert_hexstring_to_byte_array(char* hexstr, uint8_t* byte_array);
 static void convert_byte_array_to_hexstring(void* src_buffer, size_t buffer_length, char* dest_str);
@@ -75,12 +75,12 @@ static void convert_byte_array_to_hexstring(void* src_buffer, size_t buffer_leng
 static SaInterfaceStruct sa_if_struct;
 static MYSQL *con;
 
-SadbRoutine get_sa_routine_mariadb(void)
+SaInterface get_sa_interface_mariadb(void)
 {
     sa_if_struct.sa_config = sa_config;
     sa_if_struct.sa_init = sa_init;
     sa_if_struct.sa_close = sa_close;
-    sa_if_struct.sa_get_sa_from_spi = sa_get_sa_from_spi;
+    sa_if_struct.sa_get_from_spi = sa_get_from_spi;
     sa_if_struct.sa_get_operational_sa_from_gvcid = sa_get_operational_sa_from_gvcid;
     sa_if_struct.sa_stop = sa_stop;
     sa_if_struct.sa_save_sa = sa_save_sa;
@@ -181,7 +181,7 @@ static int32_t sa_close(void)
 }
 
 // Security Association Interaction Functions
-static int32_t sa_get_sa_from_spi(uint16_t spi, SecurityAssociation_t** security_association)
+static int32_t sa_get_from_spi(uint16_t spi, SecurityAssociation_t** security_association)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
@@ -299,7 +299,7 @@ static int32_t sa_delete(void)
     return CRYPTO_LIB_SUCCESS;
 }
 
-// sa_routine private helper functions
+// sa_if private helper functions
 static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** security_association)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;

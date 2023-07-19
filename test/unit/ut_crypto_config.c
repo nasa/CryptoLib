@@ -69,7 +69,7 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_MARIADB_NULL)
     SadbMariaDBConfig_t* sa_mariadb_config_p = NULL;
     CryptographyKmcCryptoServiceConfig_t* cryptography_kmc_crypto_config_p = NULL;
 
-    crypto_config->sa_type = SADB_TYPE_MARIADB;
+    crypto_config->sa_type = SA_TYPE_MARIADB;
     status = Crypto_Init_With_Configs(crypto_config_p, gvcid_managed_paramenters_p, sa_mariadb_config_p, cryptography_kmc_crypto_config_p);
  
     free(crypto_config_p);
@@ -90,7 +90,7 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_KMCCRYPTO_NULL)
     SadbMariaDBConfig_t* sa_mariadb_config_p = malloc(sizeof(SadbMariaDBConfig_t) * sizeof(uint8_t));
     CryptographyKmcCryptoServiceConfig_t* cryptography_kmc_crypto_config_p = NULL;
 
-    crypto_config->sa_type = SADB_TYPE_MARIADB;
+    crypto_config->sa_type = SA_TYPE_MARIADB;
     crypto_config->cryptography_type = CRYPTOGRAPHY_TYPE_KMCCRYPTO;
 
     status = Crypto_Init_With_Configs(crypto_config, gvcid_managed_paramenters_p, sa_mariadb_config_p, cryptography_kmc_crypto_config_p);
@@ -113,7 +113,7 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_INVALID_INTERFACE)
     SadbMariaDBConfig_t* sa_mariadb_config_p = malloc(sizeof(SadbMariaDBConfig_t) * sizeof(uint8_t));
     CryptographyKmcCryptoServiceConfig_t* cryptography_kmc_crypto_config_p = NULL;
 
-    crypto_config->sa_type = SADB_TYPE_MARIADB;
+    crypto_config->sa_type = SA_TYPE_MARIADB;
     crypto_config->cryptography_type = 2; // Currently an invalid ENUM
 
     status = Crypto_Init_With_Configs(crypto_config, gvcid_managed_paramenters_p, sa_mariadb_config_p, cryptography_kmc_crypto_config_p);
@@ -136,8 +136,8 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_INVALID_SADB)
     SadbMariaDBConfig_t* sa_mariadb_config_p = malloc(sizeof(SadbMariaDBConfig_t) * sizeof(uint8_t));
     CryptographyKmcCryptoServiceConfig_t* cryptography_kmc_crypto_config_p = NULL;
 
-    crypto_config->sa_type = 2; // Currently an invalid ENUM
-    crypto_config->cryptography_type = 2; // Currently an invalid ENUM
+    crypto_config->sa_type = 99; // Currently an invalid ENUM
+    crypto_config->cryptography_type = 99; // Currently an invalid ENUM
 
     status = Crypto_Init_With_Configs(crypto_config_p, gvcid_managed_paramenters_p, sa_mariadb_config_p, cryptography_kmc_crypto_config_p);
     free(crypto_config_p);
@@ -206,7 +206,7 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_KMC_OK)
     SadbMariaDBConfig_t* sa_mariadb_config_p = malloc(sizeof(SadbMariaDBConfig_t) * sizeof(uint8_t));
     CryptographyKmcCryptoServiceConfig_t* cryptography_kmc_crypto_config_p = malloc(sizeof(CryptographyKmcCryptoServiceConfig_t) * sizeof(uint8_t));
 
-    crypto_config->sa_type = SADB_TYPE_MARIADB;
+    crypto_config->sa_type = SA_TYPE_MARIADB;
     crypto_config->cryptography_type = CRYPTOGRAPHY_TYPE_KMCCRYPTO;
 
     status = Crypto_Init_With_Configs(crypto_config_p, gvcid_managed_paramenters_p, sa_mariadb_config_p, cryptography_kmc_crypto_config_p);

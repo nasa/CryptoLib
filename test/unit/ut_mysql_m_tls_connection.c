@@ -90,13 +90,13 @@ UTEST(MARIA_DB_CONNECTION_TESTS, TLS_TEST) {
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     /*Prepare SADB type from config*/
     status = Crypto_Init_TC_Unit_Test_For_DB();
-    SadbRoutine sa_routine = get_sa_routine_mariadb();
+    SaInterface sa_if = get_sa_interface_mariadb();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     printf("END mariadb connection, TLS test() status:%d \n", status);
     printf("START mariadb connection, mTLS test() \n");
     status = 0;
     //close the connection to avoid a duplicate connection error when running the test multiple times. 
-    sa_routine->sa_close(); 
+    sa_if->sa_close(); 
     /*connection input parameters. 
      Note: username, pass, and paths may differ on your system*/
     mysql_username = "testuser2";
@@ -117,19 +117,19 @@ UTEST(MARIA_DB_CONNECTION_TESTS, TLS_TEST) {
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     printf("END mariadb connection, mTLS test() status:%d \n", status);
     //close the connection to avoid a duplicate connection error when running the test multiple times. 
-    sa_routine->sa_close(); 
+    sa_if->sa_close(); 
     
 }
 
 /*Helper Functions:*/
 
 /*
- * Note: SADB_TYPE_INMEMORY was change to SADB_TYPE_MARIADB for this test only. 
+ * Note: SA_TYPE_INMEMORY was change to SA_TYPE_MARIADB for this test only. 
  */
 int32_t Crypto_Init_TC_Unit_Test_For_DB(void) {
     int32_t status = CRYPTO_LIB_SUCCESS;
    
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);

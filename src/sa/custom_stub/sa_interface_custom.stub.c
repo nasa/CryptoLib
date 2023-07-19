@@ -14,10 +14,12 @@
 
 #include "sa_interface.h"
 
-static SaInterfaceStruct sa_routine;
+/* Variables */
+static SaInterfaceStruct sa_if_struct;
 
-SaInterface get_sa_interface_mariadb(void)
+/* Functions */
+SaInterface get_sa_interface_custom(void)
 {
-    fprintf(stderr,"ERROR: Loading mariadb stub source code. Rebuild CryptoLib with -DSA_MARIADB=ON to use proper MariaDB implementation.\n");
-    return &sa_routine;
+    fprintf(stderr,"ERROR: Loading custom SA interface stub source code. Rebuild CryptoLib with -DSA_CUSTOM=ON to use proper internal implementation.\n");
+    return &sa_if_struct;
 }

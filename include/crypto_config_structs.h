@@ -35,8 +35,9 @@ typedef enum
 } KeyType;
 typedef enum
 {
-    SADB_TYPE_INMEMORY,
-    SADB_TYPE_MARIADB
+    SA_TYPE_CUSTOM,
+    SA_TYPE_INMEMORY,
+    SA_TYPE_MARIADB
 } SadbType;
 typedef enum
 {

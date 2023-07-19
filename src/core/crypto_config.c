@@ -27,7 +27,7 @@
 */
 KeyInterface key_if = NULL;
 
-SadbRoutine sa_routine = NULL;
+SaInterface sa_if = NULL;
 SadbMariaDBConfig_t* sa_mariadb_config = NULL;
 
 CryptographyInterface cryptography_if = NULL;
@@ -53,7 +53,7 @@ int32_t crypto_free_config_structs(void);
 int32_t Crypto_Init_TC_Unit_Test(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, 
                             TC_HAS_PUS_HDR, TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, 
                             TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F, 
@@ -73,7 +73,7 @@ int32_t Crypto_Init_TC_Unit_Test(void)
 int32_t Crypto_Init_TM_Unit_Test(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TM_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -144,12 +144,16 @@ int32_t Crypto_Init(void)
     // TODO: Check and return status on error
 
     /* SA Interface */
-    // Prepare SADB type from config
-    if (crypto_config->sa_type == SADB_TYPE_INMEMORY)
+    // Prepare SA type from config
+    if (crypto_config->sa_type == SA_TYPE_CUSTOM)
     {
-        sa_routine = get_sa_routine_inmemory();
+        sa_if = get_sa_interface_custom();
     }
-    else if (crypto_config->sa_type == SADB_TYPE_MARIADB)
+    else if (crypto_config->sa_type == SA_TYPE_INMEMORY)
+    {
+        sa_if = get_sa_interface_inmemory();
+    }
+    else if (crypto_config->sa_type == SA_TYPE_MARIADB)
     {
         if (sa_mariadb_config == NULL)
         {
@@ -157,7 +161,7 @@ int32_t Crypto_Init(void)
             printf(KRED "ERROR: CryptoLib MariaDB must be configured before intializing!\n" RESET);
             return status; // MariaDB connection specified but no configuration exists, return!
         }
-        sa_routine = get_sa_routine_mariadb();
+        sa_if = get_sa_interface_mariadb();
     }
     else
     {
@@ -204,10 +208,10 @@ int32_t Crypto_Init(void)
 
 
     // Init Security Associations
-    status = sa_routine->sa_init();
+    status = sa_if->sa_init();
     if (status==CRYPTO_LIB_SUCCESS)
     {
-        status = sa_routine->sa_config();
+        status = sa_if->sa_config();
 
         Crypto_Local_Init();
         Crypto_Local_Config();
@@ -255,10 +259,10 @@ int32_t Crypto_Shutdown(void)
         key_if->key_shutdown();
     }
 
-    if (sa_routine != NULL)
+    if (sa_if != NULL)
     {
-        sa_routine->sa_close();
-        sa_routine = NULL;
+        sa_if->sa_close();
+        sa_if = NULL;
     }
 
     if (cryptography_if != NULL)

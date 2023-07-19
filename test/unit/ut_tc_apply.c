@@ -38,7 +38,7 @@ UTEST(TC_APPLY_SECURITY, NO_CRYPTO_INIT)
     int raw_tc_sdls_ping_len = 0;
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -120,7 +120,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC)
     char* raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
     char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
-    SadbRoutine sa_routine = get_sa_routine_inmemory();
+    SaInterface sa_if = get_sa_interface_inmemory();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
@@ -131,9 +131,9 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC)
 
     SecurityAssociation_t* test_association;
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(4, &test_association);
+    sa_if->sa_get_from_spi(4, &test_association);
     test_association->gvcid_blk.vcid = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ast = 0;
@@ -157,7 +157,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_CBC)
     char* raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
     char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
-    SadbRoutine sa_routine = get_sa_routine_inmemory();
+    SaInterface sa_if = get_sa_interface_inmemory();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
@@ -168,14 +168,14 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_CBC)
 
     SecurityAssociation_t* test_association;
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(11, &test_association);
+    sa_if->sa_get_from_spi(11, &test_association);
     printf("SPI: %d\n", test_association->spi);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ast = 0;
     test_association->arsn_len = 0;
-    sa_routine->sa_get_sa_from_spi(11, &test_association);
+    sa_if->sa_get_from_spi(11, &test_association);
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
     
@@ -194,7 +194,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_AUTH_ENC)
     char* raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
     char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
-    SadbRoutine sa_routine = get_sa_routine_inmemory();
+    SaInterface sa_if = get_sa_interface_inmemory();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
@@ -205,9 +205,9 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_AUTH_ENC)
 
     SecurityAssociation_t* test_association;
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(4, &test_association);
+    sa_if->sa_get_from_spi(4, &test_association);
     test_association->gvcid_blk.vcid = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->arsn_len = 0;
@@ -241,7 +241,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_IV_ROLLOVE
     int new_iv_len = 0;
     int expected_iv_len = 0;
 
-    SadbRoutine sa_routine = get_sa_routine_inmemory();
+    SaInterface sa_if = get_sa_interface_inmemory();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
     hex_conversion(new_iv_h, &new_iv_b, &new_iv_len);
@@ -253,9 +253,9 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_IV_ROLLOVE
 
     SecurityAssociation_t* test_association;
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(4, &test_association);
+    sa_if->sa_get_from_spi(4, &test_association);
     test_association->gvcid_blk.vcid = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->shivf_len = 6;
@@ -301,7 +301,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_IV_ROLLOVE
 UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_STATIC_IV_ROLLOVER)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -321,7 +321,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_STATIC_IV_ROLLOVER)
     int new_iv_len = 0;
     int expected_iv_len = 0;
 
-    SadbRoutine sa_routine = get_sa_routine_inmemory();
+    SaInterface sa_if = get_sa_interface_inmemory();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
     hex_conversion(new_iv_h, &new_iv_b, &new_iv_len);
@@ -333,9 +333,9 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_STATIC_IV_ROLLOVER)
 
     SecurityAssociation_t* test_association;
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(4, &test_association);
+    sa_if->sa_get_from_spi(4, &test_association);
     test_association->gvcid_blk.vcid = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->shivf_len = 6;
@@ -381,7 +381,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_STATIC_IV_ROLLOVER)
 UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_ARSN_ROLLOVER)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -400,7 +400,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_ARSN_ROLLO
     int new_arsn_len = 0;
     int expected_arsn_len = 0;
 
-    SadbRoutine sa_routine = get_sa_routine_inmemory();
+    SaInterface sa_if = get_sa_interface_inmemory();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
     hex_conversion(new_arsn_h, &new_arsn_b, &new_arsn_len);
@@ -412,9 +412,9 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_ARSN_ROLLO
 
     SecurityAssociation_t* test_association;
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(4, &test_association);
+    sa_if->sa_get_from_spi(4, &test_association);
     test_association->gvcid_blk.vcid = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->shivf_len = 0;
@@ -482,7 +482,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_ARSN_ROLLO
 UTEST(TC_APPLY_SECURITY, BAD_SPACE_CRAFT_ID)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -514,7 +514,7 @@ UTEST(TC_APPLY_SECURITY, BAD_SPACE_CRAFT_ID)
 UTEST(TC_APPLY_SECURITY, BAD_VIRTUAL_CHANNEL_ID)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -547,7 +547,7 @@ UTEST(TC_APPLY_SECURITY, BAD_VIRTUAL_CHANNEL_ID)
 UTEST(TC_APPLY_SECURITY, NULL_BUFFER)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -583,7 +583,7 @@ UTEST(TC_APPLY_SECURITY, INVALID_FRAME_SIZE)
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -597,7 +597,7 @@ UTEST(TC_APPLY_SECURITY, INVALID_FRAME_SIZE)
 
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->arsn_len = 0;
     test_association->shsnf_len = 0;
 
@@ -609,7 +609,7 @@ UTEST(TC_APPLY_SECURITY, INVALID_FRAME_SIZE)
 
     // Expose/setup SAs for testing
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(8, &test_association);
+    sa_if->sa_get_from_spi(8, &test_association);
     test_association->arsn_len = 0;
     test_association->shsnf_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
@@ -631,7 +631,7 @@ UTEST(TC_APPLY_SECURITY, ERROR_TC_INPUT_FRAME_TOO_SHORT_FOR_SPEC)
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -646,7 +646,7 @@ UTEST(TC_APPLY_SECURITY, ERROR_TC_INPUT_FRAME_TOO_SHORT_FOR_SPEC)
 
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->arsn_len = 0;
     test_association->shsnf_len = 0;
 
@@ -665,7 +665,7 @@ UTEST(TC_APPLY_SECURITY, ERROR_TC_INPUT_FRAME_TOO_SHORT_FOR_SPECIFIED_FRAME_LENG
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -680,7 +680,7 @@ UTEST(TC_APPLY_SECURITY, ERROR_TC_INPUT_FRAME_TOO_SHORT_FOR_SPECIFIED_FRAME_LENG
 
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->arsn_len = 0;
     test_association->shsnf_len = 0;
 
@@ -699,7 +699,7 @@ UTEST(TC_APPLY_SECURITY, ERROR_TC_INPUT_FRAME_TOO_SHORT_FOR_SPECIFIED_FRAME_LENG
 UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -714,7 +714,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP)
     char* raw_tc_sdls_ping_h = "20030016000080d2c70008197f0b0031000000b1fe3128";
     char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
-    SadbRoutine sa_routine = get_sa_routine_inmemory();
+    SaInterface sa_if = get_sa_interface_inmemory();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
@@ -723,15 +723,15 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP)
 
     SecurityAssociation_t* test_association;
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(11, &test_association);
+    sa_if->sa_get_from_spi(11, &test_association);
     printf("SPI: %d\n", test_association->spi);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->arsn_len = 0;
     test_association->ast = 0;
     test_association->stmacf_len = 0;
-    sa_routine->sa_get_sa_from_spi(11, &test_association);
+    sa_if->sa_get_from_spi(11, &test_association);
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
@@ -761,7 +761,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP)
 UTEST(TC_APPLY_SECURITY, ENC_CBC_16BP)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -776,7 +776,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_16BP)
     char* raw_tc_sdls_ping_h = "20030017000080d2c70008197f0b003100000000b1fe3128";
     char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
-    SadbRoutine sa_routine = get_sa_routine_inmemory();
+    SaInterface sa_if = get_sa_interface_inmemory();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
@@ -785,15 +785,15 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_16BP)
 
     SecurityAssociation_t* test_association;
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(11, &test_association);
+    sa_if->sa_get_from_spi(11, &test_association);
     printf("SPI: %d\n", test_association->spi);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ast = 0;
     test_association->stmacf_len = 0;
     test_association->arsn_len = 0;
-    sa_routine->sa_get_sa_from_spi(11, &test_association);
+    sa_if->sa_get_from_spi(11, &test_association);
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
@@ -825,7 +825,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_16BP)
 UTEST(TC_APPLY_SECURITY, ENC_CBC_FRAME_MAX)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -840,7 +840,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_FRAME_MAX)
     char* raw_tc_sdls_ping_h = "200303E3000080d2c70008197f0b003100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000b1fed255";
     char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
-    SadbRoutine sa_routine = get_sa_routine_inmemory();
+    SaInterface sa_if = get_sa_interface_inmemory();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
@@ -849,13 +849,13 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_FRAME_MAX)
 
     SecurityAssociation_t* test_association;
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(11, &test_association);
+    sa_if->sa_get_from_spi(11, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ast = 0;
     test_association->arsn_len = 0;
-    sa_routine->sa_get_sa_from_spi(11, &test_association);
+    sa_if->sa_get_from_spi(11, &test_association);
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
@@ -873,7 +873,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_FRAME_MAX)
 UTEST(TC_APPLY_SECURITY, ENC_CBC_FRAME_TOO_BIG)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -888,7 +888,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_FRAME_TOO_BIG)
     char* raw_tc_sdls_ping_h = "200303F7000080d2c70008197f0b0031000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000b1fed255";
     char* raw_tc_sdls_ping_b = NULL;
     int raw_tc_sdls_ping_len = 0;
-    SadbRoutine sa_routine = get_sa_routine_inmemory();
+    SaInterface sa_if = get_sa_interface_inmemory();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
@@ -897,13 +897,13 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_FRAME_TOO_BIG)
 
     SecurityAssociation_t* test_association;
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(11, &test_association);
+    sa_if->sa_get_from_spi(11, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ast = 0;
     test_association->arsn_len = 0;
-    sa_routine->sa_get_sa_from_spi(11, &test_association);
+    sa_if->sa_get_from_spi(11, &test_association);
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
@@ -917,7 +917,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_FRAME_TOO_BIG)
 UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP_1)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -941,7 +941,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP_1)
 
     int new_iv_len = 12;
     // int expected_iv_len = 0;
-    SadbRoutine sa_routine = get_sa_routine_inmemory();
+    SaInterface sa_if = get_sa_interface_inmemory();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
     hex_conversion(new_iv_h, &new_iv_b, &new_iv_len);
@@ -951,9 +951,9 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP_1)
 
     SecurityAssociation_t* test_association;
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(11, &test_association);
+    sa_if->sa_get_from_spi(11, &test_association);
     printf("SPI: %d\n", test_association->spi);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ast = 0;
@@ -961,7 +961,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP_1)
     test_association->iv_len = 12;
     test_association->shivf_len = 12;
     memcpy(test_association->iv + (test_association->iv_len - test_association->shivf_len), new_iv_b, new_iv_len);
-    sa_routine->sa_get_sa_from_spi(11, &test_association);
+    sa_if->sa_get_from_spi(11, &test_association);
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
@@ -990,7 +990,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP_1)
 UTEST(TC_APPLY_SECURITY, ENC_CBC_NULL_IV)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_CRYPTO_MODULE, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE,
                             TC_HAS_PUS_HDR, TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, 
                             TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F, 
@@ -1015,7 +1015,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_NULL_IV)
 
     int new_iv_len = 12;
     // int expected_iv_len = 0;
-    SadbRoutine sa_routine = get_sa_routine_inmemory();
+    SaInterface sa_if = get_sa_interface_inmemory();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
     hex_conversion(new_iv_h, &new_iv_b, &new_iv_len);
@@ -1025,9 +1025,9 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_NULL_IV)
 
     SecurityAssociation_t* test_association;
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(11, &test_association);
+    sa_if->sa_get_from_spi(11, &test_association);
     printf("SPI: %d\n", test_association->spi);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ast = 0;
@@ -1061,7 +1061,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_NULL_IV)
 UTEST(TC_APPLY_SECURITY, CBC_NULL_IV_W_IVH)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_CRYPTO_MODULE, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, 
                             TC_HAS_PUS_HDR, TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, 
                             TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F, 
@@ -1086,7 +1086,7 @@ UTEST(TC_APPLY_SECURITY, CBC_NULL_IV_W_IVH)
 
     int new_iv_len = 12;
     // int expected_iv_len = 0;
-    SadbRoutine sa_routine = get_sa_routine_inmemory();
+    SaInterface sa_if = get_sa_interface_inmemory();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
     hex_conversion(new_iv_h, &new_iv_b, &new_iv_len);
@@ -1097,9 +1097,9 @@ UTEST(TC_APPLY_SECURITY, CBC_NULL_IV_W_IVH)
 
     SecurityAssociation_t* test_association;
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(11, &test_association);
+    sa_if->sa_get_from_spi(11, &test_association);
     printf("SPI: %d\n", test_association->spi);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ast = 0;
@@ -1137,7 +1137,7 @@ UTEST(TC_APPLY_SECURITY, CBC_NULL_IV_W_IVH)
 UTEST(TC_APPLY_SECURITY, PLAINTEXT_W_ARSN)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);

@@ -144,9 +144,9 @@ int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char* 
                 /* Confirm new VCID valid */
                 if (vcid < 64)
                 {
-                    SadbRoutine sa_routine = get_sa_routine_inmemory();
+                    SaInterface sa_if = get_sa_interface_inmemory();
                     SecurityAssociation_t* test_association = NULL;
-                    sa_routine->sa_get_sa_from_spi(vcid, &test_association);
+                    sa_if->sa_get_from_spi(vcid, &test_association);
                     
                     /* Handle special case for VCID */
                     if(vcid == 1)

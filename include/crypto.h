@@ -39,6 +39,7 @@
 #include "sa_interface.h"
 #include "cryptography_interface.h"
 #include "key_interface.h"
+#include "sa_interface.h"
 
 /*
 ** Crypto Version
@@ -191,7 +192,7 @@ extern CamConfig_t* cam_config;
 extern GvcidManagedParameters_t* gvcid_managed_parameters;
 extern GvcidManagedParameters_t* current_managed_parameters;
 extern KeyInterface key_if;
-extern SadbRoutine sa_routine;
+extern SaInterface sa_if;
 extern CryptographyInterface cryptography_if;
 
 // extern crypto_key_t ak_ring[NUM_KEYS];

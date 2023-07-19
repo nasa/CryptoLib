@@ -105,7 +105,7 @@ double Apply_Security_Loop(uint8_t *frame, int frame_length, uint8_t *enc_frame,
 UTEST(PERFORMANCE, LSA_LIBG_AUTH_SHORT_100)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -119,15 +119,15 @@ UTEST(PERFORMANCE, LSA_LIBG_AUTH_SHORT_100)
 
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
-    SadbRoutine sa_routine = get_sa_routine_inmemory();
+    SaInterface sa_if = get_sa_interface_inmemory();
 
     hex_conversion(data_h, &data_b, &data_l);
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -154,7 +154,7 @@ UTEST(PERFORMANCE, LSA_LIBG_AUTH_SHORT_100)
 UTEST(PERFORMANCE, MDB_LIBG_AUTH_SHORT_100)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -168,15 +168,15 @@ UTEST(PERFORMANCE, MDB_LIBG_AUTH_SHORT_100)
 
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
-    SadbRoutine sa_routine = get_sa_routine_inmemory();
+    SaInterface sa_if = get_sa_interface_inmemory();
 
     hex_conversion(data_h, &data_b, &data_l);
 
     SecurityAssociation_t* test_association;
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -203,7 +203,7 @@ UTEST(PERFORMANCE, MDB_LIBG_AUTH_SHORT_100)
 UTEST(PERFORMANCE, LSA_KMC_AUTH_SHORT_100)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -222,9 +222,9 @@ UTEST(PERFORMANCE, LSA_KMC_AUTH_SHORT_100)
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -251,7 +251,7 @@ UTEST(PERFORMANCE, LSA_KMC_AUTH_SHORT_100)
 UTEST(PERFORMANCE, MDB_KMC_AUTH_SHORT_100)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_KMC, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
+    Crypto_Config_CryptoLib(KEY_TYPE_KMC, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -294,7 +294,7 @@ UTEST(PERFORMANCE, MDB_KMC_AUTH_SHORT_100)
 UTEST(PERFORMANCE, LSA_LIBG_AUTH_MED_100)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -308,15 +308,15 @@ UTEST(PERFORMANCE, LSA_LIBG_AUTH_MED_100)
 
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
-    SadbRoutine sa_routine = get_sa_routine_inmemory();
+    SaInterface sa_if = get_sa_interface_inmemory();
 
     hex_conversion(data_h, &data_b, &data_l);
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -343,7 +343,7 @@ UTEST(PERFORMANCE, LSA_LIBG_AUTH_MED_100)
 UTEST(PERFORMANCE, MDB_LIBG_AUTH_MED_100)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -357,15 +357,15 @@ UTEST(PERFORMANCE, MDB_LIBG_AUTH_MED_100)
 
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
-    SadbRoutine sa_routine = get_sa_routine_inmemory();
+    SaInterface sa_if = get_sa_interface_inmemory();
 
     hex_conversion(data_h, &data_b, &data_l);
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -392,7 +392,7 @@ UTEST(PERFORMANCE, MDB_LIBG_AUTH_MED_100)
 UTEST(PERFORMANCE, LSA_KMC_AUTH_MED_100)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -411,9 +411,9 @@ UTEST(PERFORMANCE, LSA_KMC_AUTH_MED_100)
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -440,7 +440,7 @@ UTEST(PERFORMANCE, LSA_KMC_AUTH_MED_100)
 UTEST(PERFORMANCE, MDB_KMC_AUTH_MED_100)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_KMC, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
+    Crypto_Config_CryptoLib(KEY_TYPE_KMC, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -483,7 +483,7 @@ UTEST(PERFORMANCE, MDB_KMC_AUTH_MED_100)
 UTEST(PERFORMANCE, LSA_LIBG_AUTH_LONG_100)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -497,15 +497,15 @@ UTEST(PERFORMANCE, LSA_LIBG_AUTH_LONG_100)
 
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
-    SadbRoutine sa_routine = get_sa_routine_inmemory();
+    SaInterface sa_if = get_sa_interface_inmemory();
 
     hex_conversion(data_h, &data_b, &data_l);
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -532,7 +532,7 @@ UTEST(PERFORMANCE, LSA_LIBG_AUTH_LONG_100)
 UTEST(PERFORMANCE, MDB_LIBG_AUTH_LONG_100)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -546,15 +546,15 @@ UTEST(PERFORMANCE, MDB_LIBG_AUTH_LONG_100)
 
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
-    SadbRoutine sa_routine = get_sa_routine_inmemory();
+    SaInterface sa_if = get_sa_interface_inmemory();
 
     hex_conversion(data_h, &data_b, &data_l);
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -581,7 +581,7 @@ UTEST(PERFORMANCE, MDB_LIBG_AUTH_LONG_100)
 UTEST(PERFORMANCE, LSA_KMC_AUTH_LONG_100)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -600,9 +600,9 @@ UTEST(PERFORMANCE, LSA_KMC_AUTH_LONG_100)
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -629,7 +629,7 @@ UTEST(PERFORMANCE, LSA_KMC_AUTH_LONG_100)
 UTEST(PERFORMANCE, MDB_KMC_AUTH_LONG_100)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_KMC, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
+    Crypto_Config_CryptoLib(KEY_TYPE_KMC, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -672,7 +672,7 @@ UTEST(PERFORMANCE, MDB_KMC_AUTH_LONG_100)
 UTEST(PERFORMANCE, LSA_LIBG_AUTH_SHORT_1K)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -686,15 +686,15 @@ UTEST(PERFORMANCE, LSA_LIBG_AUTH_SHORT_1K)
 
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
-    SadbRoutine sa_routine = get_sa_routine_inmemory();
+    SaInterface sa_if = get_sa_interface_inmemory();
 
     hex_conversion(data_h, &data_b, &data_l);
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -721,7 +721,7 @@ UTEST(PERFORMANCE, LSA_LIBG_AUTH_SHORT_1K)
 UTEST(PERFORMANCE, MDB_LIBG_AUTH_SHORT_1K)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -735,15 +735,15 @@ UTEST(PERFORMANCE, MDB_LIBG_AUTH_SHORT_1K)
 
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
-    SadbRoutine sa_routine = get_sa_routine_inmemory();
+    SaInterface sa_if = get_sa_interface_inmemory();
 
     hex_conversion(data_h, &data_b, &data_l);
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -770,7 +770,7 @@ UTEST(PERFORMANCE, MDB_LIBG_AUTH_SHORT_1K)
 UTEST(PERFORMANCE, LSA_KMC_AUTH_SHORT_1K)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -789,9 +789,9 @@ UTEST(PERFORMANCE, LSA_KMC_AUTH_SHORT_1K)
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -818,7 +818,7 @@ UTEST(PERFORMANCE, LSA_KMC_AUTH_SHORT_1K)
 UTEST(PERFORMANCE, MDB_KMC_AUTH_SHORT_1K)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_KMC, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
+    Crypto_Config_CryptoLib(KEY_TYPE_KMC, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -861,7 +861,7 @@ UTEST(PERFORMANCE, MDB_KMC_AUTH_SHORT_1K)
 UTEST(PERFORMANCE, LSA_LIBG_AUTH_MED_1K)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -875,15 +875,15 @@ UTEST(PERFORMANCE, LSA_LIBG_AUTH_MED_1K)
 
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
-    SadbRoutine sa_routine = get_sa_routine_inmemory();
+    SaInterface sa_if = get_sa_interface_inmemory();
 
     hex_conversion(data_h, &data_b, &data_l);
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -910,7 +910,7 @@ UTEST(PERFORMANCE, LSA_LIBG_AUTH_MED_1K)
 UTEST(PERFORMANCE, MDB_LIBG_AUTH_MED_1K)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -924,15 +924,15 @@ UTEST(PERFORMANCE, MDB_LIBG_AUTH_MED_1K)
 
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
-    SadbRoutine sa_routine = get_sa_routine_inmemory();
+    SaInterface sa_if = get_sa_interface_inmemory();
 
     hex_conversion(data_h, &data_b, &data_l);
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -959,7 +959,7 @@ UTEST(PERFORMANCE, MDB_LIBG_AUTH_MED_1K)
 UTEST(PERFORMANCE, LSA_KMC_AUTH_MED_1K)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -978,9 +978,9 @@ UTEST(PERFORMANCE, LSA_KMC_AUTH_MED_1K)
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -1007,7 +1007,7 @@ UTEST(PERFORMANCE, LSA_KMC_AUTH_MED_1K)
 UTEST(PERFORMANCE, MDB_KMC_AUTH_MED_1K)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_KMC, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
+    Crypto_Config_CryptoLib(KEY_TYPE_KMC, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -1050,7 +1050,7 @@ UTEST(PERFORMANCE, MDB_KMC_AUTH_MED_1K)
 UTEST(PERFORMANCE, LSA_LIBG_AUTH_LONG_1K)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -1064,15 +1064,15 @@ UTEST(PERFORMANCE, LSA_LIBG_AUTH_LONG_1K)
 
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
-    SadbRoutine sa_routine = get_sa_routine_inmemory();
+    SaInterface sa_if = get_sa_interface_inmemory();
 
     hex_conversion(data_h, &data_b, &data_l);
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -1099,7 +1099,7 @@ UTEST(PERFORMANCE, LSA_LIBG_AUTH_LONG_1K)
 UTEST(PERFORMANCE, MDB_LIBG_AUTH_LONG_1K)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -1113,15 +1113,15 @@ UTEST(PERFORMANCE, MDB_LIBG_AUTH_LONG_1K)
 
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
-    SadbRoutine sa_routine = get_sa_routine_inmemory();
+    SaInterface sa_if = get_sa_interface_inmemory();
 
     hex_conversion(data_h, &data_b, &data_l);
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -1148,7 +1148,7 @@ UTEST(PERFORMANCE, MDB_LIBG_AUTH_LONG_1K)
 UTEST(PERFORMANCE, LSA_KMC_AUTH_LONG_1K)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -1167,9 +1167,9 @@ UTEST(PERFORMANCE, LSA_KMC_AUTH_LONG_1K)
 
     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
-    sa_routine->sa_get_sa_from_spi(1, &test_association);
+    sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_routine->sa_get_sa_from_spi(10, &test_association);
+    sa_if->sa_get_from_spi(10, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->est = 0;
     test_association->arsn_len = 0;
@@ -1196,7 +1196,7 @@ UTEST(PERFORMANCE, LSA_KMC_AUTH_LONG_1K)
 UTEST(PERFORMANCE, MDB_KMC_AUTH_LONG_1K)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_KMC, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
+    Crypto_Config_CryptoLib(KEY_TYPE_KMC, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_FALSE, TC_NO_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
