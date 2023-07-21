@@ -26,8 +26,9 @@
 ** Global Variables
 */
 KeyInterface key_if = NULL;
-
+McInterface mc_if = NULL;
 SaInterface sa_if = NULL;
+
 SadbMariaDBConfig_t* sa_mariadb_config = NULL;
 
 CryptographyInterface cryptography_if = NULL;
@@ -53,7 +54,7 @@ int32_t crypto_free_config_structs(void);
 int32_t Crypto_Init_TC_Unit_Test(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, 
                             TC_HAS_PUS_HDR, TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, 
                             TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F, 
@@ -73,7 +74,7 @@ int32_t Crypto_Init_TC_Unit_Test(void)
 int32_t Crypto_Init_TM_Unit_Test(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TM_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -141,6 +142,18 @@ int32_t Crypto_Init(void)
         key_if = get_key_interface_kmc();
     }
     key_if->key_init();
+    // TODO: Check and return status on error
+
+    /* MC Interface */
+    if (crypto_config->mc_type == MC_TYPE_CUSTOM)
+    {
+        mc_if = get_mc_interface_custom();
+    }
+    else // MC_TYPE_INTERNAL
+    {
+        mc_if = get_mc_interface_internal();
+    }
+    mc_if->mc_initialize();
     // TODO: Check and return status on error
 
     /* SA Interface */
@@ -259,7 +272,12 @@ int32_t Crypto_Shutdown(void)
         key_if->key_shutdown();
     }
 
-    if (sa_if != NULL)
+    if(mc_if != NULL)
+    {
+        mc_if->mc_shutdown();
+    }
+
+    if (sa_if != NULL)    
     {
         sa_if->sa_close();
         sa_if = NULL;
@@ -289,7 +307,7 @@ int32_t Crypto_Shutdown(void)
  * @param vcid_bitmask: uint8
  * @return int32: Success/Failure
  **/
-int32_t Crypto_Config_CryptoLib(uint8_t key_type, uint8_t sa_type, uint8_t cryptography_type, 
+int32_t Crypto_Config_CryptoLib(uint8_t key_type, uint8_t mc_type, uint8_t sa_type, uint8_t cryptography_type, 
                                 uint8_t iv_type, uint8_t crypto_create_fecf, uint8_t process_sdls_pdus,
                                 uint8_t has_pus_hdr, uint8_t ignore_sa_state, uint8_t ignore_anti_replay,
                                 uint8_t unique_sa_per_mapid, uint8_t crypto_check_fecf, uint8_t vcid_bitmask, uint8_t crypto_increment_nontransmitted_iv)
@@ -297,6 +315,7 @@ int32_t Crypto_Config_CryptoLib(uint8_t key_type, uint8_t sa_type, uint8_t crypt
     int32_t status = CRYPTO_LIB_SUCCESS;
     crypto_config = (CryptoConfig_t* )calloc(1, CRYPTO_CONFIG_SIZE);
     crypto_config->key_type = key_type;
+    crypto_config->mc_type = mc_type;
     crypto_config->sa_type = sa_type;
     crypto_config->cryptography_type = cryptography_type;
     crypto_config->iv_type = iv_type;

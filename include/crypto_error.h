@@ -117,6 +117,7 @@
 #define CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_TM_STANDARD (-45)
 #define CRYPTO_LIB_ERR_TC_ENUM_USED_FOR_TM_CONFIG (-46)
 #define CRYPTO_LIB_ERR_KEY_ID_ERROR (-47)
+#define CRYPTO_LIB_ERR_MC_INIT (-48)
 
 extern char *crypto_enum_errlist_core[];
 extern char *crypto_enum_errlist_config[];
