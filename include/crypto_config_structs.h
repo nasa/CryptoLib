@@ -40,8 +40,9 @@ typedef enum
 } McType;
 typedef enum
 {
-    SADB_TYPE_INMEMORY,
-    SADB_TYPE_MARIADB
+    SA_TYPE_CUSTOM,
+    SA_TYPE_INMEMORY,
+    SA_TYPE_MARIADB
 } SadbType;
 typedef enum
 {
@@ -164,7 +165,7 @@ typedef struct
 {
     KeyType key_type;
     McType mc_type;
-    SadbType sadb_type;
+    SadbType sa_type;
     CryptographyType cryptography_type;
     IvType iv_type; // Whether or not CryptoLib should generate the IV
     CreateFecfBool crypto_create_fecf; // Whether or not CryptoLib is expected to calculate TC FECFs and return

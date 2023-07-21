@@ -56,7 +56,7 @@ Password: <PASSWORD>
 #include "crypto_error.h"
 #include "crypto.h"
 #include "crypto_error.h"
-#include "sadb_routine.h"
+#include "sa_interface.h"
 #include "crypto_config_structs.h"
 #include <mysql/mysql.h>
 
@@ -108,12 +108,12 @@ UTEST(MARIA_DB_CONNECTION_TESTS, TLS_TEST) {
 /*Helper Functions:*/
 
 /*
- * Note: SADB_TYPE_INMEMORY was change to SADB_TYPE_MARIADB for this test only. 
+ * Note: SA_TYPE_INMEMORY was change to SA_TYPE_MARIADB for this test only. 
  */
 int32_t Crypto_Init_TC_Unit_Test_For_DB(void) {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SADB_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);

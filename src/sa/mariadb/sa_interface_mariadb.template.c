@@ -16,7 +16,7 @@
 #include "crypto_error.h"
 #include "crypto_print.h"
 #include "crypto_structs.h"
-#include "sadb_routine.h"
+#include "sa_interface.h"
 
 #include <mysql/mysql.h>
 #include <stdio.h>
@@ -24,23 +24,23 @@
 #include <string.h>
 
 // Security Association Initialization Functions
-static int32_t sadb_config(void);
-static int32_t sadb_init(void);
-static int32_t sadb_close(void);
+static int32_t sa_config(void);
+static int32_t sa_init(void);
+static int32_t sa_close(void);
 // Security Association Interaction Functions
-static int32_t sadb_get_sa_from_spi(uint16_t, SecurityAssociation_t**);
-static int32_t sadb_get_operational_sa_from_gvcid(uint8_t, uint16_t, uint16_t, uint8_t, SecurityAssociation_t**);
-static int32_t sadb_save_sa(SecurityAssociation_t* sa);
+static int32_t sa_get_from_spi(uint16_t, SecurityAssociation_t**);
+static int32_t sa_get_operational_sa_from_gvcid(uint8_t, uint16_t, uint16_t, uint8_t, SecurityAssociation_t**);
+static int32_t sa_save_sa(SecurityAssociation_t* sa);
 // Security Association Utility Functions
-static int32_t sadb_sa_stop(void);
-static int32_t sadb_sa_start(TC_t* tc_frame);
-static int32_t sadb_sa_expire(void);
-static int32_t sadb_sa_rekey(void);
-static int32_t sadb_sa_status(uint8_t* );
-static int32_t sadb_sa_create(void);
-static int32_t sadb_sa_setARSN(void);
-static int32_t sadb_sa_setARSNW(void);
-static int32_t sadb_sa_delete(void);
+static int32_t sa_stop(void);
+static int32_t sa_start(TC_t* tc_frame);
+static int32_t sa_expire(void);
+static int32_t sa_rekey(void);
+static int32_t sa_status(uint8_t* );
+static int32_t sa_create(void);
+static int32_t sa_setARSN(void);
+static int32_t sa_setARSNW(void);
+static int32_t sa_delete(void);
 // MySQL local functions
 static int32_t finish_with_error(MYSQL **con_loc, int err);
 // MySQL Queries
@@ -63,7 +63,7 @@ static const char* SQL_SADB_UPDATE_IV_ARC_BY_SPI_NULL_IV =
         " SET arsn=X'%s'"
         " WHERE spi='%d' AND tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d'";
 
-// sadb_routine mariaDB private helper functions
+// sa_if mariaDB private helper functions
 static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** security_association);
 static int32_t convert_hexstring_to_byte_array(char* hexstr, uint8_t* byte_array);
 static void convert_byte_array_to_hexstring(void* src_buffer, size_t buffer_length, char* dest_str);
@@ -72,38 +72,38 @@ static void convert_byte_array_to_hexstring(void* src_buffer, size_t buffer_leng
 ** Global Variables
 */
 // Security
-static SadbRoutineStruct sadb_routine_struct;
+static SaInterfaceStruct sa_if_struct;
 static MYSQL *con;
 
-SadbRoutine get_sadb_routine_mariadb(void)
+SaInterface get_sa_interface_mariadb(void)
 {
-    sadb_routine_struct.sadb_config = sadb_config;
-    sadb_routine_struct.sadb_init = sadb_init;
-    sadb_routine_struct.sadb_close = sadb_close;
-    sadb_routine_struct.sadb_get_sa_from_spi = sadb_get_sa_from_spi;
-    sadb_routine_struct.sadb_get_operational_sa_from_gvcid = sadb_get_operational_sa_from_gvcid;
-    sadb_routine_struct.sadb_sa_stop = sadb_sa_stop;
-    sadb_routine_struct.sadb_save_sa = sadb_save_sa;
-    sadb_routine_struct.sadb_sa_start = sadb_sa_start;
-    sadb_routine_struct.sadb_sa_expire = sadb_sa_expire;
-    sadb_routine_struct.sadb_sa_rekey = sadb_sa_rekey;
-    sadb_routine_struct.sadb_sa_status = sadb_sa_status;
-    sadb_routine_struct.sadb_sa_create = sadb_sa_create;
-    sadb_routine_struct.sadb_sa_setARSN = sadb_sa_setARSN;
-    sadb_routine_struct.sadb_sa_setARSNW = sadb_sa_setARSNW;
-    sadb_routine_struct.sadb_sa_delete = sadb_sa_delete;
-    return &sadb_routine_struct;
+    sa_if_struct.sa_config = sa_config;
+    sa_if_struct.sa_init = sa_init;
+    sa_if_struct.sa_close = sa_close;
+    sa_if_struct.sa_get_from_spi = sa_get_from_spi;
+    sa_if_struct.sa_get_operational_sa_from_gvcid = sa_get_operational_sa_from_gvcid;
+    sa_if_struct.sa_stop = sa_stop;
+    sa_if_struct.sa_save_sa = sa_save_sa;
+    sa_if_struct.sa_start = sa_start;
+    sa_if_struct.sa_expire = sa_expire;
+    sa_if_struct.sa_rekey = sa_rekey;
+    sa_if_struct.sa_status = sa_status;
+    sa_if_struct.sa_create = sa_create;
+    sa_if_struct.sa_setARSN = sa_setARSN;
+    sa_if_struct.sa_setARSNW = sa_setARSNW;
+    sa_if_struct.sa_delete = sa_delete;
+    return &sa_if_struct;
 }
 
-static int32_t sadb_config(void)
+static int32_t sa_config(void)
 {
     return CRYPTO_LIB_SUCCESS;
 }
 
-static int32_t sadb_init(void)
+static int32_t sa_init(void)
 {
     int32_t status = CRYPTO_LIB_ERROR;
-    if (sadb_mariadb_config != NULL)
+    if (sa_mariadb_config != NULL)
     {
         con = mysql_init(con);
         if (con != NULL)
@@ -112,40 +112,40 @@ static int32_t sadb_init(void)
             // Lots of small configuration differences between MySQL connector & MariaDB Connector
             // Only MariaDB Connector is implemented here:
             // https://wikidev.in/wiki/C/mysql_mysql_h/mysql_options | https://mariadb.com/kb/en/mysql_optionsv/
-            if(sadb_mariadb_config->mysql_mtls_key != NULL)
+            if(sa_mariadb_config->mysql_mtls_key != NULL)
             {
-                mysql_optionsv(con, MYSQL_OPT_SSL_KEY, sadb_mariadb_config->mysql_mtls_key);
+                mysql_optionsv(con, MYSQL_OPT_SSL_KEY, sa_mariadb_config->mysql_mtls_key);
             }
-            if(sadb_mariadb_config->mysql_mtls_cert != NULL)
+            if(sa_mariadb_config->mysql_mtls_cert != NULL)
             {
-                mysql_optionsv(con, MYSQL_OPT_SSL_CERT, sadb_mariadb_config->mysql_mtls_cert);
+                mysql_optionsv(con, MYSQL_OPT_SSL_CERT, sa_mariadb_config->mysql_mtls_cert);
             }
-            if(sadb_mariadb_config->mysql_mtls_ca != NULL)
+            if(sa_mariadb_config->mysql_mtls_ca != NULL)
             {
-                mysql_optionsv(con, MYSQL_OPT_SSL_CA, sadb_mariadb_config->mysql_mtls_ca);
+                mysql_optionsv(con, MYSQL_OPT_SSL_CA, sa_mariadb_config->mysql_mtls_ca);
             }
-            if(sadb_mariadb_config->mysql_mtls_capath != NULL)
+            if(sa_mariadb_config->mysql_mtls_capath != NULL)
             {
-                mysql_optionsv(con, MYSQL_OPT_SSL_CAPATH, sadb_mariadb_config->mysql_mtls_capath);
+                mysql_optionsv(con, MYSQL_OPT_SSL_CAPATH, sa_mariadb_config->mysql_mtls_capath);
             }
-            if (sadb_mariadb_config->mysql_tls_verify_server != CRYPTO_FALSE)
+            if (sa_mariadb_config->mysql_tls_verify_server != CRYPTO_FALSE)
             {
-                mysql_optionsv(con, MYSQL_OPT_SSL_VERIFY_SERVER_CERT, &(sadb_mariadb_config->mysql_tls_verify_server));
+                mysql_optionsv(con, MYSQL_OPT_SSL_VERIFY_SERVER_CERT, &(sa_mariadb_config->mysql_tls_verify_server));
             }
-            if (sadb_mariadb_config->mysql_mtls_client_key_password != NULL)
+            if (sa_mariadb_config->mysql_mtls_client_key_password != NULL)
             {
-                mysql_optionsv(con, MARIADB_OPT_TLS_PASSPHRASE, sadb_mariadb_config->mysql_mtls_client_key_password);
+                mysql_optionsv(con, MARIADB_OPT_TLS_PASSPHRASE, sa_mariadb_config->mysql_mtls_client_key_password);
             }
-            if (sadb_mariadb_config->mysql_require_secure_transport == CRYPTO_TRUE)
+            if (sa_mariadb_config->mysql_require_secure_transport == CRYPTO_TRUE)
             {
-                mysql_optionsv(con, MYSQL_OPT_SSL_ENFORCE,&(sadb_mariadb_config->mysql_require_secure_transport));
+                mysql_optionsv(con, MYSQL_OPT_SSL_ENFORCE,&(sa_mariadb_config->mysql_require_secure_transport));
             }
             //if encrypted connection (TLS) connection. No need for SSL Key
-            if (mysql_real_connect(con, sadb_mariadb_config->mysql_hostname,
-                    sadb_mariadb_config->mysql_username,
-                    sadb_mariadb_config->mysql_password,
-                    sadb_mariadb_config->mysql_database,
-                    sadb_mariadb_config->mysql_port, NULL, 0) == NULL)
+            if (mysql_real_connect(con, sa_mariadb_config->mysql_hostname,
+                    sa_mariadb_config->mysql_username,
+                    sa_mariadb_config->mysql_password,
+                    sa_mariadb_config->mysql_database,
+                    sa_mariadb_config->mysql_port, NULL, 0) == NULL)
             {
                 //0,NULL,0 are port number, unix socket, client flag
                 finish_with_error(&con, SADB_MARIADB_CONNECTION_FAILED);
@@ -154,7 +154,7 @@ static int32_t sadb_init(void)
                 status = CRYPTO_LIB_SUCCESS;
                 if (status == CRYPTO_LIB_SUCCESS) {
 #ifdef DEBUG
-                    printf("sadb_init created mysql connection successfully. \n");
+                    printf("sa_init created mysql connection successfully. \n");
 #endif
                 }
             }
@@ -162,14 +162,14 @@ static int32_t sadb_init(void)
         else
         {
             //error
-            fprintf(stderr, "Error: sadb_init() MySQL API function mysql_init() returned a connection object that is NULL\n");
+            fprintf(stderr, "Error: sa_init() MySQL API function mysql_init() returned a connection object that is NULL\n");
         }
 
     }
     return status;
-}//end int32_t sadb_init()
+}//end int32_t sa_init()
 
-static int32_t sadb_close(void)
+static int32_t sa_close(void)
 {
     if(con)
     {
@@ -181,7 +181,7 @@ static int32_t sadb_close(void)
 }
 
 // Security Association Interaction Functions
-static int32_t sadb_get_sa_from_spi(uint16_t spi, SecurityAssociation_t** security_association)
+static int32_t sa_get_from_spi(uint16_t spi, SecurityAssociation_t** security_association)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
@@ -192,7 +192,7 @@ static int32_t sadb_get_sa_from_spi(uint16_t spi, SecurityAssociation_t** securi
 
     return status;
 }
-static int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uint16_t vcid, uint8_t mapid,
+static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uint16_t vcid, uint8_t mapid,
                                                   SecurityAssociation_t** security_association)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -204,7 +204,7 @@ static int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, u
 
     return status;
 }
-static int32_t sadb_save_sa(SecurityAssociation_t* sa)
+static int32_t sa_save_sa(SecurityAssociation_t* sa)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     if (sa == NULL)
@@ -260,46 +260,46 @@ static int32_t sadb_save_sa(SecurityAssociation_t* sa)
     return status;
 }
 // Security Association Utility Functions
-static int32_t sadb_sa_stop(void)
+static int32_t sa_stop(void)
 {
     return CRYPTO_LIB_SUCCESS;
 }
-static int32_t sadb_sa_start(TC_t* tc_frame)
+static int32_t sa_start(TC_t* tc_frame)
 {
     tc_frame = tc_frame;
     return CRYPTO_LIB_SUCCESS;
 }
-static int32_t sadb_sa_expire(void)
+static int32_t sa_expire(void)
 {
     return CRYPTO_LIB_SUCCESS;
 }
-static int32_t sadb_sa_rekey(void)
+static int32_t sa_rekey(void)
 {
     return CRYPTO_LIB_SUCCESS;
 }
-static int32_t sadb_sa_status(uint8_t* ingest)
+static int32_t sa_status(uint8_t* ingest)
 {
     ingest = ingest;
     return CRYPTO_LIB_SUCCESS;
 }
-static int32_t sadb_sa_create(void)
+static int32_t sa_create(void)
 {
     return CRYPTO_LIB_SUCCESS;
 }
-static int32_t sadb_sa_setARSN(void)
+static int32_t sa_setARSN(void)
 {
     return CRYPTO_LIB_SUCCESS;
 }
-static int32_t sadb_sa_setARSNW(void)
+static int32_t sa_setARSNW(void)
 {
     return CRYPTO_LIB_SUCCESS;
 }
-static int32_t sadb_sa_delete(void)
+static int32_t sa_delete(void)
 {
     return CRYPTO_LIB_SUCCESS;
 }
 
-// sadb_routine private helper functions
+// sa_if private helper functions
 static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** security_association)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;

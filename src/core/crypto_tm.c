@@ -73,7 +73,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t* sa_ptr)
                                                     ((uint8_t)tm_frame[1] & 0x0E) >> 1, 
                                                     gvcid_managed_parameters, &current_managed_parameters);
 
-    if ((crypto_config == NULL) || (mc_if == NULL) || (sadb_routine == NULL))
+    if ((crypto_config == NULL) || (mc_if == NULL) || (sa_if == NULL))
     {
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
         status = CRYPTO_LIB_ERR_NO_CONFIG;
@@ -535,7 +535,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t* sa_ptr)
     // Crypto_tmPrint(tm_frame);
 #endif
 
-    status = sadb_routine->sadb_save_sa(sa_ptr);
+    status = sa_if->sa_save_sa(sa_ptr);
 
 #ifdef DEBUG
     printf(KYEL "----- Crypto_TM_ApplySecurity END -----\n" RESET);
@@ -588,7 +588,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t* sa_ptr)
     // Payload Data Unit
     Crypto_TM_updatePDU(ingest,*len_ingest);
     printf("LINE: %d\n",__LINE__);
-    if (sadb_routine->sadb_get_sa_from_spi(spi, &sa_ptr) != CRYPTO_LIB_SUCCESS)
+    if (sa_if->sa_get_from_spi(spi, &sa_ptr) != CRYPTO_LIB_SUCCESS)
     {
         // TODO - Error handling
         status = CRYPTO_LIB_ERROR;
@@ -832,7 +832,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
         return status;
     }
 
-    if ((crypto_config == NULL) || (mc_if == NULL) || (sadb_routine == NULL))
+    if ((crypto_config == NULL) || (mc_if == NULL) || (sa_if == NULL))
     {
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
         status = CRYPTO_LIB_ERR_NO_CONFIG;
@@ -890,7 +890,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
     // Move index to past the SPI
     byte_idx += 2;
 
-    status = sadb_routine->sadb_get_sa_from_spi(spi, &sa_ptr);
+    status = sa_if->sa_get_from_spi(spi, &sa_ptr);
     // If no valid SPI, return
     if (status != CRYPTO_LIB_SUCCESS)
     {
@@ -1318,7 +1318,7 @@ void Crypto_TM_updatePDU(uint8_t* ingest, int len_ingest)
     SecurityAssociation_t* sa_ptr;
 
     // Consider a helper function here, or elsewhere, to do all the 'math' in one spot as a global accessible list of variables
-    if (sadb_routine->sadb_get_sa_from_spi(tm_frame[0], &sa_ptr) != CRYPTO_LIB_SUCCESS) // modify
+    if (sa_if->sa_get_from_spi(tm_frame[0], &sa_ptr) != CRYPTO_LIB_SUCCESS) // modify
     {
         // TODO - Error handling
         printf(KRED"Update PDU Error!\n");

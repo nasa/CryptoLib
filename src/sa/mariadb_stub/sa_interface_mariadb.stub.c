@@ -12,12 +12,12 @@
  * foreign persons.
  */
 
-#include "sadb_routine.h"
+#include "sa_interface.h"
 
-static SadbRoutineStruct sadb_routine;
+static SaInterfaceStruct sa_routine;
 
-SadbRoutine get_sadb_routine_mariadb(void)
+SaInterface get_sa_interface_mariadb(void)
 {
     fprintf(stderr,"ERROR: Loading mariadb stub source code. Rebuild CryptoLib with -DSA_MARIADB=ON to use proper MariaDB implementation.\n");
-    return &sadb_routine;
+    return &sa_routine;
 }
