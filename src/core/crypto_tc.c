@@ -80,6 +80,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
     {
         status = CRYPTO_LIB_ERR_NULL_BUFFER;
         printf(KRED "Error: Input Buffer NULL! \n" RESET);
+        mc_if->mc_log(status);
         return status; // Just return here, nothing can be done.
     }
 
@@ -97,16 +98,18 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
     tmp = tmp;
 #endif
 
-    if (crypto_config == NULL)
+    if ((crypto_config == NULL) || (mc_if == NULL) || (sadb_routine == NULL))
     {
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
         status = CRYPTO_LIB_ERR_NO_CONFIG;
+        // Can't mc_log since it's not configured
         return status; // return immediately so a NULL crypto_config is not dereferenced later
     }
 
     if (in_frame_length < 5) // Frame length doesn't have enough bytes for TC TF header -- error out.
     {
         status = CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_TC_STANDARD;
+        mc_if->mc_log(status);
         return status;
     }
 
@@ -125,6 +128,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
     if (in_frame_length < temp_tc_header.fl + 1) // Specified frame length larger than provided frame!
     {
         status = CRYPTO_LIB_ERR_INPUT_FRAME_LENGTH_SHORTER_THAN_FRAME_HEADERS_LENGTH;
+        mc_if->mc_log(status);
         return status;
     }
 
@@ -133,6 +137,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
                                                      gvcid_managed_parameters, &current_managed_parameters);
     if (status != CRYPTO_LIB_SUCCESS)
     {
+        mc_if->mc_log(status);
         return status;
     } // Unable to get necessary Managed Parameters for TC TF -- return with error.
 
@@ -156,25 +161,18 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
         printf(KYEL "DEBUG - Received Control/Command frame - nothing to do.\n" RESET);
 #endif
         status = CRYPTO_LIB_ERR_INVALID_CC_FLAG;
+        mc_if->mc_log(status);
         return status;
     }
 
     if (status == CRYPTO_LIB_SUCCESS)
     {
-        // Query SA DB for active SA / SDLS parameters
-        if (sadb_routine == NULL) // This should not happen, but tested here for safety
-        {
-            printf(KRED "ERROR: SA DB Not initalized! -- CRYPTO_LIB_ERR_NO_INIT, Will Exit\n" RESET);
-            status = CRYPTO_LIB_ERR_NO_INIT;
-        }
-        else
-        {
-            status = sadb_routine->sadb_get_operational_sa_from_gvcid(temp_tc_header.tfvn, temp_tc_header.scid,
+        status = sadb_routine->sadb_get_operational_sa_from_gvcid(temp_tc_header.tfvn, temp_tc_header.scid,
                                                                       temp_tc_header.vcid, map_id, &sa_ptr);
-        }
         // If unable to get operational SA, can return
         if (status != CRYPTO_LIB_SUCCESS)
         {
+            mc_if->mc_log(status);
             return status;
         }
 
@@ -182,6 +180,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
         status = crypto_tc_validate_sa(sa_ptr);
         if (status != CRYPTO_LIB_SUCCESS)
         {
+            mc_if->mc_log(status);
             return status;
         }
 
@@ -213,6 +212,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
             // Leaving for now as it would be cleaner in SA to have an association enum returned I believe
             printf(KRED "Error: SA Service Type is not defined! \n" RESET);
             status = CRYPTO_LIB_ERROR;
+            mc_if->mc_log(status);
             return status;
         }
 
@@ -237,6 +237,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
         if (encryption_cipher == CRYPTO_CIPHER_NONE && sa_ptr->est == 1)
         {
             status = CRYPTO_LIB_ERR_NO_ECS_SET_FOR_ENCRYPTION_MODE;
+            mc_if->mc_log(status);
             return status;
         }
 
@@ -314,7 +315,9 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
                 // Don't Exceed Max Frame Size! 1024
                 if (*p_enc_frame_len > TC_MAX_FRAME_SIZE)
                 {
-                    return CRYPTO_LIB_ERR_TC_FRAME_SIZE_EXCEEDS_SPEC_LIMIT;
+                    status = CRYPTO_LIB_ERR_TC_FRAME_SIZE_EXCEEDS_SPEC_LIMIT;
+                    mc_if->mc_log(status);
+                    return status;
                 }
             }
         }
@@ -333,6 +336,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
 #endif
             printf(KRED "Error: New frame would violate maximum tc frame managed parameter! \n" RESET);
             status = CRYPTO_LIB_ERR_TC_FRAME_SIZE_EXCEEDS_MANAGED_PARAM_MAX_LIMIT;
+            mc_if->mc_log(status);
             return status;
         }
         // Ensure the frame to be created will not violate spec max length
@@ -340,6 +344,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
         {
             printf(KRED "Error: New frame would violate specification max TC frame size! \n" RESET);
             status = CRYPTO_LIB_ERR_TC_FRAME_SIZE_EXCEEDS_SPEC_LIMIT;
+            mc_if->mc_log(status);
             return status;
         }
 
@@ -349,6 +354,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
         {
             printf(KRED "Error: Malloc for encrypted output buffer failed! \n" RESET);
             status = CRYPTO_LIB_ERROR;
+            mc_if->mc_log(status);
             return status;
         }
         memset(p_new_enc_frame, 0, *p_enc_frame_len);
@@ -435,7 +441,9 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
                 if ((sa_ptr->acs == CRYPTO_MAC_CMAC_AES256 || sa_ptr->acs == CRYPTO_MAC_HMAC_SHA256 || sa_ptr->acs == CRYPTO_MAC_HMAC_SHA512) &&
                     sa_ptr->iv_len > 0)
                 {
-                    return CRYPTO_LIB_ERR_IV_NOT_SUPPORTED_FOR_ACS_ALGO;
+                    status = CRYPTO_LIB_ERR_IV_NOT_SUPPORTED_FOR_ACS_ALGO;
+                    mc_if->mc_log(status);
+                    return status;
                 }
             }
         }
@@ -463,7 +471,9 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
             }
             else
             {
-                return CRYPTO_LIB_ERR_NULL_IV;
+                status = CRYPTO_LIB_ERR_NULL_IV;
+                mc_if->mc_log(status);
+                return status;
             }
         }
 
@@ -567,7 +577,9 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
 #endif
                 if (sa_ptr->abm_len < aad_len)
                 {
-                    return CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
+                    status = CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
+                    mc_if->mc_log(status);
+                    return status;
                 }
                 aad = Crypto_Prepare_TC_AAD(p_new_enc_frame, aad_len, sa_ptr->abm);
             }
@@ -581,7 +593,9 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
             ekp = key_if->get_key(sa_ptr->ekid);
             if (ekp == NULL)
             {
-                return CRYPTO_LIB_ERR_KEY_ID_ERROR;
+                status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+                mc_if->mc_log(status);
+                return status;
             }
 
             if (ecs_is_aead_algorithm == CRYPTO_TRUE)
@@ -590,7 +604,9 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
                 if ((int32_t)ekp->key_len != Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs))
                 {
                     free(aad);
-                    return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
+                    status = CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
+                    mc_if->mc_log(status);
+                    return status;
                 }
 
                 status = cryptography_if->cryptography_aead_encrypt(&p_new_enc_frame[index],                                          // ciphertext output
@@ -679,6 +695,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
             if (status != CRYPTO_LIB_SUCCESS)
             {
                 free(aad);
+                mc_if->mc_log(status);
                 return status; // Cryptography IF call failed, return.
             }
         }
@@ -778,6 +795,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
     printf(KYEL "----- Crypto_TC_ApplySecurity END -----\n" RESET);
 #endif
     free(aad);
+    mc_if->mc_log(status);
     return status;
 }
 
@@ -816,10 +834,11 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
     uint8_t ecs_is_aead_algorithm = -1;
     crypto_key_t* ekp = NULL;
 
-    if (crypto_config == NULL)
+    if ((mc_if == NULL) || (crypto_config == NULL))
     {
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
         status = CRYPTO_LIB_ERR_NO_CONFIG;
+        mc_if->mc_log(status);
         return status;
     }
 
@@ -830,6 +849,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
     if (*len_ingest < 5) // Frame length doesn't even have enough bytes for header -- error out.
     {
         status = CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_TC_STANDARD;
+        mc_if->mc_log(status);
         return status;
     }
 
@@ -854,6 +874,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
     if (*len_ingest < tc_sdls_processed_frame->tc_header.fl + 1) // Specified frame length larger than provided frame!
     {
         status = CRYPTO_LIB_ERR_INPUT_FRAME_LENGTH_SHORTER_THAN_FRAME_HEADERS_LENGTH;
+        mc_if->mc_log(status);
         return status;
     }
 
@@ -864,6 +885,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
 
     if (status != CRYPTO_LIB_SUCCESS)
     {
+        mc_if->mc_log(status);
         return status;
     } // Unable to get necessary Managed Parameters for TC TF -- return with error.
     // Segment Header
@@ -883,12 +905,14 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
     // If no valid SPI, return
     if (status != CRYPTO_LIB_SUCCESS)
     {
+        mc_if->mc_log(status);
         return status;
     }
     // Try to assure SA is sane
     status = crypto_tc_validate_sa(sa_ptr);
     if (status != CRYPTO_LIB_SUCCESS)
     {
+        mc_if->mc_log(status);
         return status;
     }
     // Allocate the necessary byte arrays within the security header + trailer given the SA
@@ -926,6 +950,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
         // Leaving for now as it would be cleaner in SA to have an association enum returned I believe
         printf(KRED "Error: SA Service Type is not defined! \n" RESET);
         status = CRYPTO_LIB_ERROR;
+        mc_if->mc_log(status);
         return status;
     }
     // Determine Algorithm cipher & mode. // TODO - Parse authentication_cipher, and handle AEAD cases properly
@@ -985,6 +1010,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
                 printf("FECF was Calced over %d bytes\n", *len_ingest - 2);
 #endif
                 status = CRYPTO_LIB_ERR_INVALID_FECF;
+                mc_if->mc_log(status);
                 return status;
             }
         }
@@ -1002,6 +1028,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
         status = crypto_handle_incrementing_nontransmitted_counter(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->iv_len, sa_ptr->shivf_len, sa_ptr->arsnw);
         if (status != CRYPTO_LIB_SUCCESS)
         {
+            mc_if->mc_log(status);
             return status;
         }
     }
@@ -1027,6 +1054,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
         status = crypto_handle_incrementing_nontransmitted_counter(tc_sdls_processed_frame->tc_sec_header.sn, sa_ptr->arsn, sa_ptr->arsn_len, sa_ptr->shsnf_len, sa_ptr->arsnw);
         if (status != CRYPTO_LIB_SUCCESS)
         {
+            mc_if->mc_log(status);
             return status;
         }
     }
@@ -1067,7 +1095,9 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
         }
         if (sa_ptr->abm_len < aad_len)
         {
-            return CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
+            status = CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
+            mc_if->mc_log(status);
+            return status;
         }
         aad = Crypto_Prepare_TC_AAD(ingest, aad_len, sa_ptr->abm);
     }
@@ -1081,7 +1111,9 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
 
     if (tc_sdls_processed_frame->tc_pdu_len > tc_sdls_processed_frame->tc_header.fl) // invalid header parsed, sizes overflowed & make no sense!
     {
-        return CRYPTO_LIB_ERR_INVALID_HEADER;
+        status = CRYPTO_LIB_ERR_INVALID_HEADER;
+        mc_if->mc_log(status);
+        return status;
     }
 
 #ifdef DEBUG
@@ -1092,14 +1124,18 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
     ekp = key_if->get_key(sa_ptr->ekid);
     if (ekp == NULL)
     {
-        return CRYPTO_LIB_ERR_KEY_ID_ERROR;
+        status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+        mc_if->mc_log(status);
+        return status;
     }
 
     crypto_key_t* akp = NULL;
     akp = key_if->get_key(sa_ptr->akid);
     if (akp == NULL)
     {
-        return CRYPTO_LIB_ERR_KEY_ID_ERROR;
+        status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+        mc_if->mc_log(status);
+        return status;
     }
 
     if (sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_TRUE)
@@ -1108,7 +1144,9 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
         if ((int32_t)ekp->key_len != Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs))
         {
             free(aad);
-            return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
+            status = CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
+            mc_if->mc_log(status);
+            return status;
         }
 
         status = cryptography_if->cryptography_aead_decrypt(tc_sdls_processed_frame->tc_pdu,               // plaintext output
@@ -1142,7 +1180,9 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
             if ((int32_t)akp->key_len != Crypto_Get_ACS_Algo_Keylen(sa_ptr->acs))
             {
                 free(aad);
-                return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
+                status = CRYPTO_LIB_ERR_KEY_LENGTH_ERROR; 
+                mc_if->mc_log(status);
+                return status;
             }
 
             status = cryptography_if->cryptography_validate_authentication(tc_sdls_processed_frame->tc_pdu,               // plaintext output
@@ -1168,7 +1208,9 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
             if ((int32_t)ekp->key_len != Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs))
             {
                 free(aad);
-                return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
+                status = CRYPTO_LIB_ERR_KEY_LENGTH_ERROR; 
+                mc_if->mc_log(status);
+                return status;
             }
 
             status = cryptography_if->cryptography_decrypt(tc_sdls_processed_frame->tc_pdu,               // plaintext output
@@ -1208,6 +1250,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
     if (status != CRYPTO_LIB_SUCCESS)
     {
         free(aad);
+        mc_if->mc_log(status);
         return status; // Cryptography IF call failed, return.
     }
 
@@ -1219,6 +1262,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
         if (status != CRYPTO_LIB_SUCCESS)
         {
             free(aad);
+            mc_if->mc_log(status);
             return status;
         }
 
@@ -1227,6 +1271,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
         if (status != CRYPTO_LIB_SUCCESS)
         {
             free(aad);
+            mc_if->mc_log(status);
             return status;
         }
     }
@@ -1246,6 +1291,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
         status = Crypto_Process_Extended_Procedure_Pdu(tc_sdls_processed_frame, ingest);
     }
     free(aad);
+    mc_if->mc_log(status);
     return status;
 }
 

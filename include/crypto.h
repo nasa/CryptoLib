@@ -39,6 +39,7 @@
 #include "sadb_routine.h"
 #include "cryptography_interface.h"
 #include "key_interface.h"
+#include "mc_interface.h"
 
 /*
 ** Crypto Version
@@ -58,7 +59,7 @@
 */
 
 // Crypto Library Configuration functions
-extern int32_t Crypto_Config_CryptoLib(uint8_t key_type, uint8_t sadb_type, uint8_t cryptography_type, 
+extern int32_t Crypto_Config_CryptoLib(uint8_t key_type, uint8_t mc_type, uint8_t sadb_type, uint8_t cryptography_type, 
                                        uint8_t iv_type, uint8_t crypto_create_fecf, uint8_t process_sdls_pdus, 
                                        uint8_t has_pus_hdr, uint8_t ignore_sa_state, uint8_t ignore_anti_replay,
                                        uint8_t unique_sa_per_mapid, uint8_t crypto_check_fecf, uint8_t vcid_bitmask, 
@@ -191,6 +192,7 @@ extern CamConfig_t* cam_config;
 extern GvcidManagedParameters_t* gvcid_managed_parameters;
 extern GvcidManagedParameters_t* current_managed_parameters;
 extern KeyInterface key_if;
+extern McInterface mc_if;
 extern SadbRoutine sadb_routine;
 extern CryptographyInterface cryptography_if;
 
