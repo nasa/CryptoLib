@@ -89,6 +89,6 @@ int main(int argc, char* argv[])
     printf("\n");
 #endif
 
-    free(buffer);
-    free(ptr_enc_frame);
+    if (!buffer) free(buffer);
+    if (!ptr_enc_frame) free(ptr_enc_frame);
 }

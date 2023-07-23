@@ -880,10 +880,7 @@ static int32_t sadb_sa_create(void)
     sa[spi].est = ((uint8_t)sdls_frame.pdu.data[2] & 0x80) >> 7;
     sa[spi].ast = ((uint8_t)sdls_frame.pdu.data[2] & 0x40) >> 6;
     sa[spi].shivf_len = ((uint8_t)sdls_frame.pdu.data[2] & 0x3F);
-    if (sa[spi].iv != NULL)
-    {
-        free(sa[spi].iv);
-    }
+    if (!sa[spi].iv) free(sa[spi].iv);
     sa[spi].iv = (uint8_t* )calloc(1, sa[spi].shivf_len * sizeof(uint8_t));
     sa[spi].shsnf_len = ((uint8_t)sdls_frame.pdu.data[3] & 0xFC) >> 2;
     sa[spi].shplf_len = ((uint8_t)sdls_frame.pdu.data[3] & 0x03);
@@ -910,10 +907,7 @@ static int32_t sadb_sa_create(void)
         sa[spi].abm[x] = ((uint8_t)sdls_frame.pdu.data[count++]);
     }
     sa[spi].arsn_len = ((uint8_t)sdls_frame.pdu.data[count++]);
-    if (sa[spi].arsn != NULL)
-    {
-        free(sa[spi].arsn);
-    }
+    if (!sa[spi].arsn) free(sa[spi].arsn);
     sa[spi].arsn = (uint8_t* )calloc(1, sa[spi].arsn_len * sizeof(uint8_t));
     for (x = 0; x < sa[spi].arsn_len; x++)
     {

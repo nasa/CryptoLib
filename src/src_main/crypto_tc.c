@@ -662,7 +662,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
             }
             if (status != CRYPTO_LIB_SUCCESS)
             {
-                free(aad);
+                if(!aad) free(aad);
                 return status; // Cryptography IF call failed, return.
             }
         }
@@ -752,7 +752,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
 #ifdef DEBUG
     printf(KYEL "----- Crypto_TC_ApplySecurity END -----\n" RESET);
 #endif
-    free(aad);
+    if(!aad) free(aad);
     return status;
 }
 
@@ -1148,7 +1148,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
 
     if (status != CRYPTO_LIB_SUCCESS)
     {
-        free(aad);
+        if(!aad) free(aad);
         return status; // Cryptography IF call failed, return.
     }
 
@@ -1159,7 +1159,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
 
         if(status != CRYPTO_LIB_SUCCESS)
         {
-            free(aad);
+            if(!aad) free(aad);
             return status;
         }
 
@@ -1167,7 +1167,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
         status = sadb_routine->sadb_save_sa(sa_ptr);
         if(status != CRYPTO_LIB_SUCCESS)
         {
-            free(aad);
+            if(!aad) free(aad);
             return status;
         }
     }
@@ -1175,12 +1175,12 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
     {   
         if (crypto_config->sadb_type == SADB_TYPE_MARIADB)
         {  
-            if(sa_ptr->ecs != NULL) free(sa_ptr->ecs);
-            if(sa_ptr->ek_ref != NULL) free(sa_ptr->ek_ref);
-            if(sa_ptr->iv != NULL) free(sa_ptr->iv);
-            if(sa_ptr->abm != NULL) free(sa_ptr->abm);
-            if(sa_ptr->arsn != NULL) free(sa_ptr->arsn);
-            if(sa_ptr->acs != NULL) free(sa_ptr->acs);
+            if(!sa_ptr->ecs) free(sa_ptr->ecs);
+            if(!sa_ptr->ek_ref) free(sa_ptr->ek_ref);
+            if(!sa_ptr->iv) free(sa_ptr->iv);
+            if(!sa_ptr->abm) free(sa_ptr->abm);
+            if(!sa_ptr->arsn) free(sa_ptr->arsn);
+            if(!sa_ptr->acs) free(sa_ptr->acs);
             free(sa_ptr);
         }
     }
@@ -1190,7 +1190,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
     {
         status = Crypto_Process_Extended_Procedure_Pdu(tc_sdls_processed_frame, ingest);
     }
-    free(aad);
+    if(!aad) free(aad);
     return status;
 }
 
@@ -1350,6 +1350,6 @@ static int32_t crypto_handle_incrementing_nontransmitted_counter(uint8_t* dest, 
     {
         status = CRYPTO_LIB_ERR_FRAME_COUNTER_DOESNT_MATCH_SA;
     }
-    free(temp_counter);
+    if(!temp_counter) free(temp_counter);
     return status;
 }

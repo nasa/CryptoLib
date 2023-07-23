@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
     {
         TC_t* tc_sdls_processed_frame = malloc(sizeof(TC_t));
         Crypto_TC_ProcessSecurity((uint8_t* )buffer, &buffer_size_i, tc_sdls_processed_frame);
-        free(tc_sdls_processed_frame);
+        if (!tc_sdls_processed_frame) free(tc_sdls_processed_frame);
     }
     else if (strcmp(security_type, "tm") == 0)
     {
@@ -75,5 +75,5 @@ int main(int argc, char* argv[])
         Crypto_AOS_ProcessSecurity((uint8_t* )buffer, &buffer_size_i);
     }
 
-    free(buffer);
+    if (!buffer) free(buffer);
 }
