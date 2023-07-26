@@ -662,7 +662,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
             }
             if (status != CRYPTO_LIB_SUCCESS)
             {
-                free(aad);
+                if (!aad) free (aad);
                 return status; // Cryptography IF call failed, return.
             }
         }
@@ -752,7 +752,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
 #ifdef DEBUG
     printf(KYEL "----- Crypto_TC_ApplySecurity END -----\n" RESET);
 #endif
-    free(aad);
+    if (!aad) free (aad);
     return status;
 }
 
@@ -1148,7 +1148,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
 
     if (status != CRYPTO_LIB_SUCCESS)
     {
-        free(aad);
+        if (!aad) free (aad);
         return status; // Cryptography IF call failed, return.
     }
 
@@ -1159,7 +1159,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
 
         if(status != CRYPTO_LIB_SUCCESS)
         {
-            free(aad);
+            if (!aad) free (aad);
             return status;
         }
 
@@ -1167,7 +1167,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
         status = sadb_routine->sadb_save_sa(sa_ptr);
         if(status != CRYPTO_LIB_SUCCESS)
         {
-            free(aad);
+            if (!aad) free (aad);
             return status;
         }
     }
@@ -1190,7 +1190,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, TC_t* tc
     {
         status = Crypto_Process_Extended_Procedure_Pdu(tc_sdls_processed_frame, ingest);
     }
-    free(aad);
+    if (!aad) free (aad);
     return status;
 }
 
