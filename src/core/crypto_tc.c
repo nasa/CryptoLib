@@ -603,7 +603,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
                 // Check that key length to be used ets the algorithm requirement
                 if ((int32_t)ekp->key_len != Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs))
                 {
-                    free(aad);
+                    if (!aad) free(aad);
                     status = CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
                     mc_if->mc_log(status);
                     return status;
@@ -637,7 +637,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
                     // Check that key length to be used ets the algorithm requirement
                     if ((int32_t)ekp->key_len != Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs))
                     {
-                        free(aad);
+                        if (!aad) free(aad);
                         return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
                     }
 
@@ -670,7 +670,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
                     // Check that key length to be used ets the algorithm requirement
                     if ((int32_t)akp->key_len != Crypto_Get_ACS_Algo_Keylen(sa_ptr->acs))
                     {
-                        free(aad);
+                        if (!aad) free(aad);
                         return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
                     }
 
@@ -694,7 +694,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
             }
             if (status != CRYPTO_LIB_SUCCESS)
             {
-                free(aad);
+                if (!aad) free(aad);
                 mc_if->mc_log(status);
                 return status; // Cryptography IF call failed, return.
             }
@@ -794,7 +794,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
 #ifdef DEBUG
     printf(KYEL "----- Crypto_TC_ApplySecurity END -----\n" RESET);
 #endif
-    free(aad);
+    if (!aad) free(aad);
     mc_if->mc_log(status);
     return status;
 }
@@ -1143,7 +1143,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
         // Check that key length to be used ets the algorithm requirement
         if ((int32_t)ekp->key_len != Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs))
         {
-            free(aad);
+            if (!aad) free(aad);
             status = CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
             mc_if->mc_log(status);
             return status;
@@ -1179,7 +1179,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
             // Check that key length to be used ets the algorithm requirement
             if ((int32_t)akp->key_len != Crypto_Get_ACS_Algo_Keylen(sa_ptr->acs))
             {
-                free(aad);
+                if (!aad) free(aad);
                 status = CRYPTO_LIB_ERR_KEY_LENGTH_ERROR; 
                 mc_if->mc_log(status);
                 return status;
@@ -1207,7 +1207,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
             // Check that key length to be used emets the algorithm requirement
             if ((int32_t)ekp->key_len != Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs))
             {
-                free(aad);
+                if (!aad) free(aad);
                 status = CRYPTO_LIB_ERR_KEY_LENGTH_ERROR; 
                 mc_if->mc_log(status);
                 return status;
@@ -1249,7 +1249,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
 
     if (status != CRYPTO_LIB_SUCCESS)
     {
-        free(aad);
+        if (!aad) free(aad);
         mc_if->mc_log(status);
         return status; // Cryptography IF call failed, return.
     }
@@ -1261,7 +1261,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
 
         if (status != CRYPTO_LIB_SUCCESS)
         {
-            free(aad);
+            if (!aad) free(aad);
             mc_if->mc_log(status);
             return status;
         }
@@ -1270,7 +1270,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
         status = sa_if->sa_save_sa(sa_ptr);
         if (status != CRYPTO_LIB_SUCCESS)
         {
-            free(aad);
+            if (!aad) free(aad);
             mc_if->mc_log(status);
             return status;
         }
@@ -1290,7 +1290,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
     {
         status = Crypto_Process_Extended_Procedure_Pdu(tc_sdls_processed_frame, ingest);
     }
-    free(aad);
+    if (!aad) free(aad);
     mc_if->mc_log(status);
     return status;
 }
@@ -1445,6 +1445,6 @@ static int32_t crypto_handle_incrementing_nontransmitted_counter(uint8_t* dest, 
     {
         status = CRYPTO_LIB_ERR_FRAME_COUNTER_DOESNT_MATCH_SA;
     }
-    free(temp_counter);
+    if (!temp_counter) free(temp_counter);
     return status;
 }
