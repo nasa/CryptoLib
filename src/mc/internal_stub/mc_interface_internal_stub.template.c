@@ -16,41 +16,14 @@
    jstar-development-team@mail.nasa.gov
 */
 
-#include "key_interface.h"
+#include "mc_interface.h"
 
 /* Variables */
-static KeyInterfaceStruct key_if_struct;
-
-/* Prototypes */
-static crypto_key_t* get_key(uint32_t key_id);
-static int32_t key_init(void);
-static int32_t key_shutdown(void);
+static McInterfaceStruct mc_if_struct;
 
 /* Functions */
-KeyInterface get_key_interface_kmc(void)
+McInterface get_mc_interface_internal(void)
 {
-    key_if_struct.get_key = get_key;
-    key_if_struct.key_init = key_init;
-    key_if_struct.key_shutdown = key_shutdown;
-    return &key_if_struct;
-}
-
-static crypto_key_t* get_key(uint32_t key_id)
-{
-    /* Avoid set but not used warning */
-    key_id = key_id;
-
-    fprintf(stderr, "Attempting to access key ring with KMC Crypto Service. This shouldn't happen!\n ");
-
-    return NULL;
-}
-
-static int32_t key_init(void)
-{
-    return CRYPTO_LIB_SUCCESS;
-}
-
-static int32_t key_shutdown(void)
-{
-    return CRYPTO_LIB_SUCCESS;
+    fprintf(stderr,"ERROR: Loading internal monitoring and control interface stub source code. Rebuild CryptoLib with -DMC_INTERNAL=ON to use implementation.\n");
+    return &mc_if_struct;
 }

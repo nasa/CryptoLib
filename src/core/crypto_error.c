@@ -79,12 +79,12 @@ char *crypto_enum_errlist_config[] =
         (char*) "MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND",
 };
 
-char *crypto_enum_errlist_sadb_if[] =
+char *crypto_enum_errlist_sa_if[] =
 {
         (char*) "SADB_INVALID_SADB_TYPE",
         (char*) "SADB_NULL_SA_USED",
 };
-char *crypto_enum_errlist_sadb_mariadb[] =
+char *crypto_enum_errlist_sa_mariadb[] =
 {
         (char*) "SADB_MARIADB_CONNECTION_FAILED",
         (char*) "SADB_QUERY_FAILED",
@@ -180,7 +180,7 @@ char* Crypto_Get_Error_Code_Enum_String(int32_t crypto_error_code)
         }
         else
         {
-            return crypto_enum_errlist_sadb_mariadb[crypto_error_code % 300];
+            return crypto_enum_errlist_sa_mariadb[crypto_error_code % 300];
         }
 
     }
@@ -192,7 +192,7 @@ char* Crypto_Get_Error_Code_Enum_String(int32_t crypto_error_code)
         }
         else
         {
-            return crypto_enum_errlist_sadb_if[crypto_error_code % 200];
+            return crypto_enum_errlist_sa_if[crypto_error_code % 200];
         }
     }
     else if(crypto_error_code >= 100) // Configuration Error Codes

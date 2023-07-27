@@ -349,7 +349,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
         printf("%02X", tmac[i]);
     }
     printf("\n");
-    free(tmac);
+    if (!tmac) free(tmac);
 
     printf("Received MAC:\n\t");
     for (uint32_t i = 0; i < mac_size; i ++){
@@ -493,7 +493,7 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
 
 #ifdef TC_DEBUG
     printf("Output payload length is %ld\n", (long int) len_data_out);
-    printf(KYEL "Printing TC Frame Data after encryption:\n\t");
+    printf(KYEL "Printing Frame Data after encryption:\n\t");
     for (j = 0; j < len_data_out; j++)
     {
         printf("%02X", *(data_out + j));
@@ -591,7 +591,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
         return status;
     }
 
-#ifdef TC_DEBUG
+#ifdef DEBUG
     size_t j;
     printf("Input payload length is %ld\n", (long int) len_data_in);
     printf(KYEL "Printing Frame Data prior to encryption:\n\t");
@@ -651,7 +651,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
 
 #ifdef TC_DEBUG
     printf("Output payload length is %ld\n", (long int) len_data_out);
-    printf(KYEL "Printing TC Frame Data after encryption:\n\t");
+    printf(KYEL "Printing Frame Data after encryption:\n\t");
     for (j = 0; j < len_data_out; j++)
     {
         printf("%02X", *(data_out + j));
@@ -811,6 +811,14 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
         return CRYPTO_LIB_ERR_NULL_ECS_PTR;
     }
 
+    // Sanity check for future developers
+    if (algo != GCRY_CIPHER_AES256)
+    {
+        printf(KRED "Warning - only  AES256 supported for AEAD decrypt - exiting!\n" RESET);
+        status = CRYPTO_LIB_ERR_UNSUPPORTED_ECS;
+        return status;
+    }
+
     gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_NONE);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
@@ -887,10 +895,37 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
     }
     if (authenticate_bool == CRYPTO_TRUE)
     {
+/*
+** *** This Debug block cannot be enabled during normal use, gettag fundamentally changes the
+** *** gettag output
+*/
+// #ifdef MAC_DEBUG
+//         printf("Received MAC is: \n\t0x:");
+//         for (uint32_t i =0; i<mac_size; i++)
+//         {
+//             printf("%02X", mac[i]);
+//         }
+// #endif
+//         gcry_error = gcry_cipher_gettag(tmp_hd,
+//                                 mac,  // tag output
+//                                 mac_size // tag size
+//         );
+// #ifdef MAC_DEBUG
+//         printf("\nCalculated MAC is: \n\t0x:");
+//         for (uint32_t i =0; i<mac_size; i++)
+//         {
+//             printf("%02X", mac[i]);
+//         }
+// #endif
+/*
+** *** End debug block
+*/
         gcry_error = gcry_cipher_checktag(tmp_hd,
                                           mac,       // tag input
                                           mac_size   // tag size
         );
+
+        printf("\n\nGCRY ERROR IS %d\n", gcry_error);
         if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
         {
             printf(KRED "ERROR: gcry_cipher_checktag error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);

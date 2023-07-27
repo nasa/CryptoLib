@@ -60,6 +60,32 @@ else()
     list(APPEND LIB_SRC_FILES ${KEY_KMC_FILES})
 endif()
 
+if(MC_CUSTOM)
+    # Assumes CryptoLib is a Git submodule to project and custom directories and definitions exist at top level
+    aux_source_directory(../../mc/custom MC_CUSTOM_FILES)
+    list(APPEND LIB_SRC_FILES ${MC_CUSTOM_FILES})
+else()
+    aux_source_directory(mc/custom_stub MC_CUSTOM_FILES)
+    list(APPEND LIB_SRC_FILES ${MC_CUSTOM_FILES})
+endif()
+
+if(MC_INTERNAL)
+    aux_source_directory(mc/internal MC_INTERNAL_FILES)
+    list(APPEND LIB_SRC_FILES ${MC_INTERNAL_FILES})
+else()
+    aux_source_directory(mc/internal_stub MC_INTERNAL_FILES)
+    list(APPEND LIB_SRC_FILES ${MC_INTERNAL_FILES})
+endif()
+
+if(SA_CUSTOM)
+    # Assumes CryptoLib is a Git submodule to project and custom directories and definitions exist at top level
+    aux_source_directory(../../sa/custom SA_CUSTOM_FILES)
+    list(APPEND LIB_SRC_FILES ${SA_CUSTOM_FILES})
+else()
+    aux_source_directory(sa/custom_stub SA_CUSTOM_FILES)
+    list(APPEND LIB_SRC_FILES ${SA_CUSTOM_FILES})
+endif()
+
 if(SA_INTERNAL)
     aux_source_directory(sa/internal SA_INTERNAL_FILES)
     list(APPEND LIB_SRC_FILES ${SA_INTERNAL_FILES})
@@ -121,10 +147,10 @@ else()
 endif()
 
 if(SA_MARIADB)
-    file(GLOB MYSQL_SCRIPTS sa/sadb_mariadb_sql/*.sql)
-    file(GLOB MYSQL_TEST_SCRIPTS sa/test_sadb_mariadb_sql/*.sql)
+    file(GLOB MYSQL_SCRIPTS sa/sa_mariadb_sql/*.sql)
+    file(GLOB MYSQL_TEST_SCRIPTS sa/test_sa_mariadb_sql/*.sql)
     install(FILES ${MYSQL_SCRIPTS}
-            DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/sadb_mariadb_sql)
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/sa_mariadb_sql)
     install(FILES ${MYSQL_TEST_SCRIPTS}
-            DESTINATION ${CMAKE_INSTALL_PREFIX}/test/test_sadb_mariadb_sql)
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/test/test_sa_mariadb_sql)
 endif()

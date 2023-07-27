@@ -15,42 +15,34 @@
    NASA IV&V
    jstar-development-team@mail.nasa.gov
 */
+#ifndef MONITORING_AND_CONTROL_INTERFACE_H
+#define MONITORING_AND_CONTROL_INTERFACE_H
 
-#include "key_interface.h"
+#include "crypto_error.h"
+#include "crypto_structs.h"
 
-/* Variables */
-static KeyInterfaceStruct key_if_struct;
+/* Structures */
+typedef struct
+{
+    /* MC Interface, SDLS */
+    int32_t (*mc_initialize)(void);
+    void (*mc_log)(int32_t error_code);
+    int32_t (*mc_shutdown)(void);
+    
+    /* MC Interface, SDLS-EP */
+    /*
+    int32_t (*mc_ping)();
+    int32_t (*mc_log_status)(void);
+    int32_t (*mc_dump_log)(void);
+    int32_t (*mc_erase_log)(void);
+    int32_t (*mc_self_test)(void);
+    int32_t (*mc_alarm_reset_flag)(void);
+    */
+   
+}  McInterfaceStruct, *McInterface;
 
 /* Prototypes */
-static crypto_key_t* get_key(uint32_t key_id);
-static int32_t key_init(void);
-static int32_t key_shutdown(void);
+McInterface get_mc_interface_custom(void);
+McInterface get_mc_interface_internal(void);
 
-/* Functions */
-KeyInterface get_key_interface_kmc(void)
-{
-    key_if_struct.get_key = get_key;
-    key_if_struct.key_init = key_init;
-    key_if_struct.key_shutdown = key_shutdown;
-    return &key_if_struct;
-}
-
-static crypto_key_t* get_key(uint32_t key_id)
-{
-    /* Avoid set but not used warning */
-    key_id = key_id;
-
-    fprintf(stderr, "Attempting to access key ring with KMC Crypto Service. This shouldn't happen!\n ");
-
-    return NULL;
-}
-
-static int32_t key_init(void)
-{
-    return CRYPTO_LIB_SUCCESS;
-}
-
-static int32_t key_shutdown(void)
-{
-    return CRYPTO_LIB_SUCCESS;
-}
+#endif // MONITORING_AND_CONTROL_INTERFACE_H
