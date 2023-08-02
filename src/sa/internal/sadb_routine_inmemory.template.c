@@ -376,7 +376,7 @@ static int32_t sadb_get_sa_from_spi(uint16_t spi, SecurityAssociation_t** securi
  * @param tfvn: uint8
  * @param scid: uint16
  * @param vcid: uint16
- * @param mapid: uint8
+ * @param mapid: uint8 // tc only
  * @param security_association: SecurityAssociation_t**
  * @return int32: Success/Failure
  **/

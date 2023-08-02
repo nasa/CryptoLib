@@ -42,7 +42,6 @@
  * Security Header
    **/
 int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t* sa_ptr)
-// Accepts CCSDS message in ingest, and packs into TM before encryption
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     int mac_loc = 0;

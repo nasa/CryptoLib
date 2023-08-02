@@ -63,6 +63,7 @@ int32_t Crypto_Init_TC_Unit_Test(void)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 4, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024);
     status = Crypto_Init();
+    printf("Crypto_Init TC Called.\n");
     return status;
 }
 

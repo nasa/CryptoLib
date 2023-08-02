@@ -35,8 +35,8 @@ CFS_MODULE_DECLARE_LIB(crypto);
 // crypto_key_t ak_ring[NUM_KEYS];
 CCSDS_t sdls_frame;
 // TM_t tm_frame;
-uint8_t tm_frame[1786]; // Testing
-TM_FramePrimaryHeader_t tm_frame_pri_hdr; // Used to reduce bit math duplication
+uint8_t tm_frame[1786];                    // Testing
+TM_FramePrimaryHeader_t tm_frame_pri_hdr;  // Used to reduce bit math duplication
 TM_FrameSecurityHeader_t tm_frame_sec_hdr; // Used to reduce bit math duplication
 // OCF
 uint8_t ocf = 0;
@@ -70,19 +70,18 @@ uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
     // CryptoLib only supports AES-GCM, which is an AEAD (Authenticated Encryption with Associated Data) algorithm, so
     // return true/1.
     // TODO - Add cipher suite mapping to which algorithms are AEAD and which are not.
-    if((cipher_suite_id == CRYPTO_CIPHER_AES256_GCM) || (cipher_suite_id == CRYPTO_CIPHER_AES256_CBC_MAC))
+    if ((cipher_suite_id == CRYPTO_CIPHER_AES256_GCM) || (cipher_suite_id == CRYPTO_CIPHER_AES256_CBC_MAC))
     {
-        #ifdef DEBUG
-            printf(KYEL "CRYPTO IS AEAD? : TRUE\n" RESET);
-        #endif
+#ifdef DEBUG
+        printf(KYEL "CRYPTO IS AEAD? : TRUE\n" RESET);
+#endif
         return CRYPTO_TRUE;
-        
     }
     else
-    {   
-        #ifdef DEBUG
-            printf(KYEL "CRYPTO IS AEAD? : FALSE\n" RESET);
-        #endif
+    {
+#ifdef DEBUG
+        printf(KYEL "CRYPTO IS AEAD? : FALSE\n" RESET);
+#endif
         return CRYPTO_FALSE;
     }
 }
@@ -109,7 +108,7 @@ int32_t Crypto_increment(uint8_t* num, int length)
 
     if (i < 0) /* this means num[0] was incremented and overflowed */
     {
-        for(i=0; i<length; i++)
+        for (i = 0; i < length; i++)
         {
             num[i] = 0;
         }
@@ -141,7 +140,7 @@ int32_t Crypto_window(uint8_t* actual, uint8_t* expected, int length, int window
 #ifdef DEBUG
         printf("Crypto_Window expected ptr is NULL\n");
 #endif
-        return status;        
+        return status;
     }
     if (expected == NULL)
     {
@@ -153,14 +152,14 @@ int32_t Crypto_window(uint8_t* actual, uint8_t* expected, int length, int window
     // Check for special case where received value is all 0's and expected is all 0's (won't have -1 in sa!)
     // Received ARSN is: 00000000, SA ARSN is: 00000000
     uint8_t zero_case = CRYPTO_TRUE;
-    for(i = 0; i < length; i++)
+    for (i = 0; i < length; i++)
     {
-        if (actual[i] != 0 || expected[i] != 0 )
+        if (actual[i] != 0 || expected[i] != 0)
         {
             zero_case = CRYPTO_FALSE;
         }
     }
-    if(zero_case == CRYPTO_TRUE)
+    if (zero_case == CRYPTO_TRUE)
     {
         status = CRYPTO_LIB_SUCCESS;
         return status;
@@ -174,9 +173,9 @@ int32_t Crypto_window(uint8_t* actual, uint8_t* expected, int length, int window
 
 #ifdef DEBUG
         printf("Checking Frame Against Incremented Window:\n");
-        Crypto_hexprint(temp,length);
+        Crypto_hexprint(temp, length);
 #endif
-        
+
         result = 0;
         /* go from right (least significant) to left (most signifcant) */
         for (j = length - 1; j >= 0; --j)
@@ -235,8 +234,9 @@ int32_t Crypto_compare_less_equal(uint8_t* actual, uint8_t* expected, int length
 uint8_t Crypto_Prep_Reply(uint8_t* ingest, uint8_t appID)
 {
     uint8_t count = 0;
-    if(ingest == NULL) return count;
-    
+    if (ingest == NULL)
+        return count;
+
     // Prepare CCSDS for reply
     sdls_frame.hdr.pvn = 0;
     sdls_frame.hdr.type = 0;
@@ -805,7 +805,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, uin
 /*
 ** @brief: Check IVs and ARSNs to ensure within valid positive window if applicable
 */
-int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, uint8_t *iv)
+int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t* sa_ptr, uint8_t* arsn, uint8_t* iv)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     int8_t IV_VALID = -1;
@@ -858,10 +858,11 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
     if ((sa_ptr->iv_len > 0) && (sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM))
     {
         // Check IV is in ARSNW
-        if(crypto_config->crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
+        if (crypto_config->crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
         {
             status = Crypto_window(iv, sa_ptr->iv, sa_ptr->iv_len, sa_ptr->arsnw);
-        } else // SA_INCREMENT_NONTRANSMITTED_IV_FALSE
+        }
+        else // SA_INCREMENT_NONTRANSMITTED_IV_FALSE
         {
             // Whole IV gets checked in MAC validation previously, this only verifies transmitted portion is what we expect.
             status = Crypto_window(iv, sa_ptr->iv + (sa_ptr->iv_len - sa_ptr->shivf_len), sa_ptr->shivf_len, sa_ptr->arsnw);
@@ -888,11 +889,11 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
         else
         {
             IV_VALID = CRYPTO_TRUE;
-            //memcpy(sa_ptr->iv, iv, sa_ptr->iv_len);
+            // memcpy(sa_ptr->iv, iv, sa_ptr->iv_len);
         }
     }
     // IV length is greater than zero, but not using an incrementing IV as in GCM
-    // we can't verify this internally as Crpytolib doesn't track previous IVs 
+    // we can't verify this internally as Crpytolib doesn't track previous IVs
     // or generate random ones
     // else{}
 
@@ -927,25 +928,25 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
 */
 int32_t Crypto_Get_ECS_Algo_Keylen(uint8_t algo)
 {
-    int32_t retval= -1;
+    int32_t retval = -1;
 
-    switch(algo){
-        case CRYPTO_CIPHER_AES256_GCM:
-            retval = 32;
-            break;
-        case CRYPTO_CIPHER_AES256_CBC:
-            retval = 32;
-            break;
-        case CRYPTO_CIPHER_AES256_CCM:
-            retval = 32;
-            break;
-        default:
-            break;
+    switch (algo)
+    {
+    case CRYPTO_CIPHER_AES256_GCM:
+        retval = 32;
+        break;
+    case CRYPTO_CIPHER_AES256_CBC:
+        retval = 32;
+        break;
+    case CRYPTO_CIPHER_AES256_CCM:
+        retval = 32;
+        break;
+    default:
+        break;
     }
 
     return retval;
 }
-
 
 /*
 ** @brief: For a given algorithm, return the associated key length in bytes
@@ -953,21 +954,49 @@ int32_t Crypto_Get_ECS_Algo_Keylen(uint8_t algo)
 */
 int32_t Crypto_Get_ACS_Algo_Keylen(uint8_t algo)
 {
-    int32_t retval= -1;
+    int32_t retval = -1;
 
-    switch(algo){
-        case CRYPTO_MAC_CMAC_AES256:
-            retval = 32;
-            break;
-        case CRYPTO_MAC_HMAC_SHA256:
-            retval = 32;
-            break;
-        case CRYPTO_MAC_HMAC_SHA512:
-            retval = 64;
-            break;
-        default:
-            break;
+    switch (algo)
+    {
+    case CRYPTO_MAC_CMAC_AES256:
+        retval = 32;
+        break;
+    case CRYPTO_MAC_HMAC_SHA256:
+        retval = 32;
+        break;
+    case CRYPTO_MAC_HMAC_SHA512:
+        retval = 64;
+        break;
+    default:
+        break;
     }
 
     return retval;
+}
+
+int32_t Crypto_Get_Security_Header_Length(SecurityAssociation_t* sa_ptr)
+{
+    /* Narrator's Note: Leaving this here for future work
+    ** eventually we need a way to reconcile cryptolib managed parameters with TO managed parameters
+    GvcidManagedParameters_t* temp_current_managed_parameters = NULL;
+    Crypto_Get_Managed_Parameters_For_Gvcid(tfvn, scid, vcid,
+                                            gvcid_managed_parameters, temp_current_managed_parameters);
+    */
+    // DEBUG
+    if (!sa_ptr) { printf("%s %d SA_PTR IS NULL!!!!\n", __FILE__, __LINE__);}
+    uint16_t securityHeaderLength = 2; // Start with SPI
+
+    securityHeaderLength += sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;
+
+    return securityHeaderLength;
+}
+
+int32_t Crypto_Get_Security_Trailer_Length(SecurityAssociation_t* sa_ptr)
+{
+    uint16_t securityTrailerLength = 0;
+
+    securityTrailerLength = sa_ptr->stmacf_len;
+
+    return securityTrailerLength;
+
 }

@@ -192,6 +192,8 @@ static int32_t sadb_get_sa_from_spi(uint16_t spi, SecurityAssociation_t** securi
 
     return status;
 }
+
+// map id specifically used for tc only
 static int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uint16_t vcid, uint8_t mapid,
                                                   SecurityAssociation_t** security_association)
 {
