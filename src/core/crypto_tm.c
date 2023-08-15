@@ -41,7 +41,7 @@
  * called, the Security Header field is empty; i.e., the caller has not set any values in the
  * Security Header
    **/
-int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t* sa_ptr)
+int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     int mac_loc = 0;
