@@ -412,6 +412,9 @@ static int32_t sadb_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, u
 
 #ifdef SA_DEBUG
             printf("Valid operational SA found at index %d.\n", i);
+            printf("\t Tfvn: %d\n", tfvn);
+            printf("\t Scid: %d\n", scid);
+            printf("\t Vcid: %d\n", vcid);
 #endif
 
             status = CRYPTO_LIB_SUCCESS;

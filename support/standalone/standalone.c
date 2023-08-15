@@ -421,7 +421,7 @@ void *crypto_standalone_tm_process(void *sock)
     uint16_t tm_out_len = 0;
 
 #ifdef CRYPTO_STANDALONE_HANDLE_FRAMING
-    uint8_t tm_framed[TM_FRAME_DATA_SIZE];
+    uint8_t tm_framed[TM_CADU_SIZE];
     uint16_t tm_framed_len = 0;
 #endif
 
@@ -451,7 +451,27 @@ void *crypto_standalone_tm_process(void *sock)
             }
 
             /* Process */
+#ifdef TM_CADU_HAS_ASM
+                // Process Security skipping prepended ASM
+            if(tm_debug ==1)
+            {
+                printf("Printing first bytes of Tf Pri Hdr:\n\t");
+                for(int i=0; i < 6 ; i ++)
+                {
+                    printf("%02X", *(tm_process_in + 4 + i));
+                }
+                printf("\n");
+                printf("Processing frame WITH ASM...\n");
+            }
+                // Account for ASM length
+                status = Crypto_TM_ProcessSecurity(tm_process_in+4, (const uint16_t) tm_process_len-4, &tm_ptr, &tm_out_len);
+#else
+            if(tm_debug ==1)
+            {
+                printf("Processing frame without ASM...\n");
+            }
             status = Crypto_TM_ProcessSecurity(tm_process_in, (const uint16_t) tm_process_len, &tm_ptr, &tm_out_len);
+#endif
             if (status == CRYPTO_LIB_SUCCESS)
             {
                 if (tm_debug == 1)
@@ -471,7 +491,7 @@ void *crypto_standalone_tm_process(void *sock)
                 tm_process_len = tm_framed_len;
                 tm_framed_len = 0;
                 if (tm_debug == 1)
-                {   printf("crypto_standalone_tm_process - deframed[%d]: 0x", tm_process_len);
+                {   printf("crypto_standalone_tm_process - beginning after first header pointer - deframed[%d]: 0x", tm_process_len);
                     for (int i = 0; i < tm_process_len; i++)
                     {
                         printf("%02x", tm_process_in[i]);
