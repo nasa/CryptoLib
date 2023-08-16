@@ -73,7 +73,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t* sa_ptr)
                                                     ((uint8_t)tm_frame[1] & 0x0E) >> 1, 
                                                     gvcid_managed_parameters, &current_managed_parameters);
 
-    if ((crypto_config == NULL) || (mc_if == NULL) || (sa_if == NULL))
+    if ((crypto_config.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
     {
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
         status = CRYPTO_LIB_ERR_NO_CONFIG;
@@ -511,7 +511,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t* sa_ptr)
 #ifdef FECF_DEBUG
         printf(KCYN "Calcing FECF over %d bytes\n" RESET, current_managed_parameters->max_frame_size - 2);
 #endif
-        if (crypto_config->crypto_create_fecf == CRYPTO_TM_CREATE_FECF_TRUE)
+        if (crypto_config.crypto_create_fecf == CRYPTO_TM_CREATE_FECF_TRUE)
         {
             new_fecf = Crypto_Calc_FECF((uint8_t*)&tm_frame, current_managed_parameters->max_frame_size - 2);
             tm_frame[current_managed_parameters->max_frame_size - 2] = (uint8_t)((new_fecf & 0xFF00) >> 8);
@@ -832,7 +832,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
         return status;
     }
 
-    if ((crypto_config == NULL) || (mc_if == NULL) || (sa_if == NULL))
+    if ((crypto_config.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
     {
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
         status = CRYPTO_LIB_ERR_NO_CONFIG;
@@ -979,7 +979,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
         uint16_t received_fecf = (((p_ingest[current_managed_parameters->max_frame_size - 2] << 8) & 0xFF00) |
                                                         (p_ingest[current_managed_parameters->max_frame_size - 1] & 0x00FF));
 
-        if (crypto_config->crypto_check_fecf == TM_CHECK_FECF_TRUE)
+        if (crypto_config.crypto_check_fecf == TM_CHECK_FECF_TRUE)
         {
             // Calculate our own
             uint16_t calculated_fecf = Crypto_Calc_FECF(p_ingest, len_ingest - 2);

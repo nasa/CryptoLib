@@ -356,7 +356,7 @@ static int32_t sa_get_from_spi(uint16_t spi, SecurityAssociation_t** security_as
         return CRYPTO_LIB_ERR_NO_INIT;
     }
     *security_association = &sa[spi];
-    if (sa[spi].iv == NULL && (sa[spi].shivf_len > 0) && crypto_config->cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+    if (sa[spi].iv == NULL && (sa[spi].shivf_len > 0) && crypto_config.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
         return CRYPTO_LIB_ERR_NULL_IV;
     } // Must have IV if doing encryption or authentication
@@ -395,13 +395,13 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
     {
         if ((sa[i].gvcid_blk.tfvn == tfvn) && (sa[i].gvcid_blk.scid == scid) &&
             (sa[i].gvcid_blk.vcid == vcid) && (sa[i].sa_state == SA_OPERATIONAL) &&
-            (crypto_config->unique_sa_per_mapid == TC_UNIQUE_SA_PER_MAP_ID_FALSE ||
+            (crypto_config.unique_sa_per_mapid == TC_UNIQUE_SA_PER_MAP_ID_FALSE ||
              sa[i].gvcid_blk.mapid == mapid))
              // only require MapID match is unique SA per MapID set (only relevant
              // when using segmentation hdrs)
         {
             *security_association = &sa[i];
-            if (sa[i].iv == NULL && (sa[i].ast == 1 || sa[i].est == 1) && crypto_config->cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+            if (sa[i].iv == NULL && (sa[i].ast == 1 || sa[i].est == 1) && crypto_config.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
             {
                 return CRYPTO_LIB_ERR_NULL_IV;
             }
