@@ -122,7 +122,7 @@ foreach(SOURCE_PATH ${UNIT_FILES})
     else()
         add_executable(${EXECUTABLE_NAME} ${SOURCE_PATH}) 
         target_sources(${EXECUTABLE_NAME} PRIVATE core/shared_util.c)
-        target_link_libraries(${EXECUTABLE_NAME} LINK_PUBLIC Crypto pthread)
+        target_link_libraries(${EXECUTABLE_NAME} LINK_PUBLIC crypto pthread)
     endif()
 
     if(TEST_ENC AND ${EXECUTABLE_NAME} STREQUAL et_dt_validation)
@@ -145,7 +145,7 @@ if(${KMC_MDB_RH} OR ${KMC_MDB_DB})
 
         add_executable(${EXECUTABLE_NAME} ${SOURCE_PATH}) 
         target_sources(${EXECUTABLE_NAME} PRIVATE core/shared_util.c)
-        target_link_libraries(${EXECUTABLE_NAME} LINK_PUBLIC Crypto pthread)
+        target_link_libraries(${EXECUTABLE_NAME} LINK_PUBLIC crypto pthread)
 
         add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${EXECUTABLE_NAME}> ${PROJECT_BINARY_DIR}/bin/${EXECUTABLE_NAME}
@@ -155,9 +155,9 @@ if(${KMC_MDB_RH} OR ${KMC_MDB_DB})
     endforeach(SOURCE_PATH ${KMC_FILES}) 
 endif()
 
-target_include_directories (Crypto PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories (crypto PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-set(OBJECT_DIR ${PROJECT_BINARY_DIR}/src/CMakeFiles/Crypto.dir/core)
+set(OBJECT_DIR ${PROJECT_BINARY_DIR}/src/CMakeFiles/crypto.dir/core)
 
 if(${CODECOV})
     # Create the gcov target. Run coverage tests with 'make gcov'

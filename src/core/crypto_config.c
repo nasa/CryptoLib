@@ -51,6 +51,17 @@ int32_t crypto_free_config_structs(void);
  * @brief Function: Crypto_Init_TC_Unit_Test
  * @return int32: status
  **/
+int32_t Crypto_TC_Init(void)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    status = Crypto_Init_TC_Unit_Test();
+    return status;
+}
+
+/**
+ * @brief Function: Crypto_Init_TC_Unit_Test
+ * @return int32: status
+ **/
 int32_t Crypto_Init_TC_Unit_Test(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -383,7 +394,8 @@ int32_t Crypto_Config_Kmc_Crypto_Service(char* protocol, char* kmc_crypto_hostna
     if(kmc_crypto_app != NULL){
         cryptography_kmc_crypto_config->kmc_crypto_app_uri = crypto_deep_copy_string(kmc_crypto_app);
     } else{
-        cryptography_kmc_crypto_config->kmc_crypto_app_uri = crypto_deep_copy_string("crypto-service");
+        char* crypto_service_tmp = (char*) "crypto-service";
+        cryptography_kmc_crypto_config->kmc_crypto_app_uri = crypto_deep_copy_string(crypto_service_tmp);
     }
 
     cryptography_kmc_crypto_config->mtls_client_cert_path = crypto_deep_copy_string(mtls_client_cert_path);
