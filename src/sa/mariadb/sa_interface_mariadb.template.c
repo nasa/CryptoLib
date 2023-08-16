@@ -370,7 +370,7 @@ static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** se
             }
             if (strcmp(field_names[i], "ekid") == 0)
             {
-                if(crypto_config->cryptography_type==CRYPTOGRAPHY_TYPE_LIBGCRYPT)
+                if(crypto_config.cryptography_type==CRYPTOGRAPHY_TYPE_LIBGCRYPT)
                 {
                     sa->ekid = atoi(row[i]);
                 } else // Cryptography Type KMC Crypto Service with PKCS12 String Key References
@@ -383,7 +383,7 @@ static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** se
             }
             if (strcmp(field_names[i], "akid") == 0)
             {
-                if(crypto_config->cryptography_type==CRYPTOGRAPHY_TYPE_LIBGCRYPT)
+                if(crypto_config.cryptography_type==CRYPTOGRAPHY_TYPE_LIBGCRYPT)
                 {
                     sa->akid = atoi(row[i]);
                 } else // Cryptography Type KMC Crypto Service with PKCS12 String Key References
