@@ -341,7 +341,7 @@ void* crypto_standalone_tc_apply(void* sock)
             memset(tc_apply_in, 0x00, sizeof(tc_apply_in));
             tc_in_len = 0;
             tc_out_len = 0;
-            free(tc_out_ptr);
+            if (!tc_out_ptr) free(tc_out_ptr);
             #ifdef CRYPTO_STANDALONE_TC_APPLY_DEBUG
                 printf("\n");
             #endif

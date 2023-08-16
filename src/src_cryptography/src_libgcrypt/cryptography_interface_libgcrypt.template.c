@@ -804,7 +804,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
         printf("%02X", tmac[i]);
     }
     printf("\n");
-    free(tmac);
+    if (!tmac) free(tmac);
 
     printf("Received MAC:\n\t");
     for (uint32_t i = 0; i < mac_size; i ++){
