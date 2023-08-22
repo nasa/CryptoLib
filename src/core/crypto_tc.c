@@ -916,10 +916,10 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
         return status;
     }
     // Allocate the necessary byte arrays within the security header + trailer given the SA
-    tc_sdls_processed_frame->tc_sec_header.iv = calloc(1, sa_ptr->iv_len);
-    tc_sdls_processed_frame->tc_sec_header.sn = calloc(1, sa_ptr->arsn_len);
-    tc_sdls_processed_frame->tc_sec_header.pad = calloc(1, sa_ptr->shplf_len);
-    tc_sdls_processed_frame->tc_sec_trailer.mac = calloc(1, sa_ptr->stmacf_len);
+    //tc_sdls_processed_frame->tc_sec_header.iv = calloc(1, sa_ptr->iv_len);
+    //tc_sdls_processed_frame->tc_sec_header.sn = calloc(1, sa_ptr->arsn_len);
+    //tc_sdls_processed_frame->tc_sec_header.pad = calloc(1, sa_ptr->shplf_len);
+    //tc_sdls_processed_frame->tc_sec_trailer.mac = calloc(1, sa_ptr->stmacf_len);
     // Set tc_sec_header + trailer fields for actual lengths from the SA (downstream apps won't know this length otherwise since they don't access the SADB!).
     tc_sdls_processed_frame->tc_sec_header.iv_field_len = sa_ptr->iv_len;
     tc_sdls_processed_frame->tc_sec_header.sn_field_len = sa_ptr->arsn_len;
