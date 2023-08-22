@@ -188,7 +188,7 @@ int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char *
             }
             else
             {
-                tc_debug = 1;
+                tc_debug = 0;
                 printf("Disabled TC debug prints! \n");
             }
         }
@@ -204,7 +204,7 @@ int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char *
             }
             else
             {
-                tm_debug = 1;
+                tm_debug = 0;
                 printf("Disabled TM debug prints! \n");
             }
         }
@@ -264,7 +264,7 @@ int32_t crypto_reset(void)
         printf("CryptoLib initialization failed with error %d \n", status);
     }
 
-    status = Crypto_Init_TC_Unit_Test();
+    status = Crypto_Init_TM_Unit_Test();
     // TODO: CryptoLib appears to be looking at the second byte and not specficially the SCID bits
     if (status != CRYPTO_LIB_SUCCESS)
     {
