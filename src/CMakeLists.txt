@@ -35,6 +35,14 @@ else()
     list(APPEND LIB_SRC_FILES ${KMC_FILES})
 endif()
 
+if(CRYPTO_WOLFSSL)
+    aux_source_directory(crypto/wolfssl WOLFSSL_FILES)
+    list(APPEND LIB_SRC_FILES ${WOLFSSL_FILES})
+else()
+    aux_source_directory(crypto/wolfssl_stub WOLFSSL_FILES)
+    list(APPEND LIB_SRC_FILES ${WOLFSSL_FILES})
+endif()
+
 if(KEY_CUSTOM)
     # Assumes CryptoLib is a Git submodule to project and custom directories and definitions exist at top level
     aux_source_directory(../../key/custom KEY_CUSTOM_FILES)

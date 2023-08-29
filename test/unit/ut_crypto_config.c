@@ -117,7 +117,7 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_INVALID_INTERFACE)
     CryptographyKmcCryptoServiceConfig_t* cryptography_kmc_crypto_config_p = NULL;
 
     crypto_config_p->sa_type = SA_TYPE_MARIADB;
-    crypto_config_p->cryptography_type = 2; // Currently an invalid ENUM
+    crypto_config_p->cryptography_type = 99; // Currently an invalid ENUM
 
     status = Crypto_Init_With_Configs(crypto_config_p, gvcid_managed_paramenters_p, sa_mariadb_config_p, cryptography_kmc_crypto_config_p);
     free(crypto_config_p);

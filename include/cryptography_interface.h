@@ -86,5 +86,6 @@ typedef struct
 
 CryptographyInterface get_cryptography_interface_libgcrypt(void);
 CryptographyInterface get_cryptography_interface_kmc_crypto_service(void);
+CryptographyInterface get_cryptography_interface_wolfssl(void);
 
 #endif //CRYPTOLIB_CRYPTOGRAPHY_INTERFACE_H

@@ -203,7 +203,7 @@ int32_t Crypto_Init(void)
     {
         cryptography_if = get_cryptography_interface_libgcrypt();
     }
-    else if (crypto_config.cryptography_type == CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+    else if(crypto_config.cryptography_type == CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
         if (cryptography_kmc_crypto_config == NULL)
         {
@@ -212,6 +212,10 @@ int32_t Crypto_Init(void)
             return status;
         }
         cryptography_if = get_cryptography_interface_kmc_crypto_service();
+    }
+    else if(crypto_config.cryptography_type == CRYPTOGRAPHY_TYPE_WOLFSSL)
+    {
+        cryptography_if = get_cryptography_interface_wolfssl();
     }
     else
     {
