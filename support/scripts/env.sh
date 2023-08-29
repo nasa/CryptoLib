@@ -5,6 +5,6 @@
 #  source ./env.sh
 #
 
-export SCRIPT_DIR=$(cd `dirname $0` && pwd)
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 export BASE_DIR=$(cd `dirname $SCRIPT_DIR`/.. && pwd)
 export DFLAGS="docker run --rm -it"

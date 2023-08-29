@@ -15,7 +15,7 @@ mkdir $BASE_DIR/build/internal > /dev/null 2>&1
 
 #$DFLAGS -v $BASE_DIR:$BASE_DIR -w $BASE_DIR/build/internal ivvitc/cryptolib /bin/bash
 
-echo "Internal build and test..."
+echo "Wolf build and test..."
 $DFLAGS -v $BASE_DIR:$BASE_DIR -w $BASE_DIR/build/internal ivvitc/cryptolib bash -c \
-    "../../support/scripts/build_support.sh"
+    "../../support/scripts/build_wolf.sh"
 echo ""
