@@ -721,7 +721,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, uin
     int32_t status = CRYPTO_LIB_SUCCESS;
     int x;
 
-    if (crypto_config->has_pus_hdr == TC_HAS_PUS_HDR)
+    if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
     {
         if ((tc_sdls_processed_frame->tc_pdu[0] == 0x18) && (tc_sdls_processed_frame->tc_pdu[1] == 0x80))
         // Crypto Lib Application ID
@@ -816,7 +816,7 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
     {
         return CRYPTO_LIB_ERR_NULL_ARSN;
     }
-    if (iv == NULL && sa_ptr->shivf_len > 0 && crypto_config->cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+    if (iv == NULL && sa_ptr->shivf_len > 0 && crypto_config.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
         return CRYPTO_LIB_ERR_NULL_IV;
     }
@@ -858,7 +858,7 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
     if ((sa_ptr->iv_len > 0) && (sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM))
     {
         // Check IV is in ARSNW
-        if(crypto_config->crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
+        if(crypto_config.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
         {
             status = Crypto_window(iv, sa_ptr->iv, sa_ptr->iv_len, sa_ptr->arsnw);
         } else // SA_INCREMENT_NONTRANSMITTED_IV_FALSE

@@ -98,7 +98,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
     tmp = tmp;
 #endif
 
-    if ((crypto_config == NULL) || (mc_if == NULL) || (sa_if == NULL))
+    if ((crypto_config.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
     {
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
         status = CRYPTO_LIB_ERR_NO_CONFIG;
@@ -120,7 +120,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
     temp_tc_header.spare = ((uint8_t)p_in_frame[0] & 0x0C) >> 2;
     temp_tc_header.scid = ((uint8_t)p_in_frame[0] & 0x03) << 8;
     temp_tc_header.scid = temp_tc_header.scid | (uint8_t)p_in_frame[1];
-    temp_tc_header.vcid = ((uint8_t)p_in_frame[2] & 0xFC) >> 2 & crypto_config->vcid_bitmask;
+    temp_tc_header.vcid = ((uint8_t)p_in_frame[2] & 0xFC) >> 2 & crypto_config.vcid_bitmask;
     temp_tc_header.fl = ((uint8_t)p_in_frame[2] & 0x03) << 8;
     temp_tc_header.fl = temp_tc_header.fl | (uint8_t)p_in_frame[3];
     temp_tc_header.fsn = (uint8_t)p_in_frame[4];
@@ -448,7 +448,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
             }
         }
 
-        if (crypto_config->iv_type == IV_INTERNAL)
+        if (crypto_config.iv_type == IV_INTERNAL)
         {
             // Start index from the transmitted portion
             for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
@@ -461,7 +461,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
         else
         {
             // Transmitted length > 0, AND using KMC_CRYPTO
-            if ((sa_ptr->shivf_len > 0) && (crypto_config->cryptography_type == CRYPTOGRAPHY_TYPE_KMCCRYPTO))
+            if ((sa_ptr->shivf_len > 0) && (crypto_config.cryptography_type == CRYPTOGRAPHY_TYPE_KMCCRYPTO))
             {
                 index += sa_ptr->iv_len - (sa_ptr->iv_len - sa_ptr->shivf_len);
             }
@@ -702,7 +702,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
         if (sa_service_type != SA_PLAINTEXT)
         {
 #ifdef INCREMENT
-            if (crypto_config->crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
+            if (crypto_config.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
             {
                 if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0)
                 {
@@ -763,7 +763,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
 #ifdef FECF_DEBUG
             printf(KCYN "Calcing FECF over %d bytes\n" RESET, new_enc_frame_header_field_length - 1);
 #endif
-            if (crypto_config->crypto_create_fecf == CRYPTO_TC_CREATE_FECF_TRUE)
+            if (crypto_config.crypto_create_fecf == CRYPTO_TC_CREATE_FECF_TRUE)
             {
                 new_fecf = Crypto_Calc_FECF(p_new_enc_frame, new_enc_frame_header_field_length - 1);
                 *(p_new_enc_frame + new_enc_frame_header_field_length - 1) = (uint8_t)((new_fecf & 0xFF00) >> 8);
@@ -834,7 +834,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
     uint8_t ecs_is_aead_algorithm = -1;
     crypto_key_t* ekp = NULL;
 
-    if ((mc_if == NULL) || (crypto_config == NULL))
+    if ((mc_if == NULL) || (crypto_config.init_status == UNITIALIZED))
     {
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
         status = CRYPTO_LIB_ERR_NO_CONFIG;
@@ -863,7 +863,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
     byte_idx++;
     tc_sdls_processed_frame->tc_header.scid = tc_sdls_processed_frame->tc_header.scid | (uint8_t)ingest[byte_idx];
     byte_idx++;
-    tc_sdls_processed_frame->tc_header.vcid = (((uint8_t)ingest[byte_idx] & 0xFC) >> 2) & crypto_config->vcid_bitmask;
+    tc_sdls_processed_frame->tc_header.vcid = (((uint8_t)ingest[byte_idx] & 0xFC) >> 2) & crypto_config.vcid_bitmask;
     tc_sdls_processed_frame->tc_header.fl = ((uint8_t)ingest[byte_idx] & 0x03) << 8;
     byte_idx++;
     tc_sdls_processed_frame->tc_header.fl = tc_sdls_processed_frame->tc_header.fl | (uint8_t)ingest[byte_idx];
@@ -916,10 +916,10 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
         return status;
     }
     // Allocate the necessary byte arrays within the security header + trailer given the SA
-    tc_sdls_processed_frame->tc_sec_header.iv = calloc(1, sa_ptr->iv_len);
-    tc_sdls_processed_frame->tc_sec_header.sn = calloc(1, sa_ptr->arsn_len);
-    tc_sdls_processed_frame->tc_sec_header.pad = calloc(1, sa_ptr->shplf_len);
-    tc_sdls_processed_frame->tc_sec_trailer.mac = calloc(1, sa_ptr->stmacf_len);
+    //tc_sdls_processed_frame->tc_sec_header.iv = calloc(1, sa_ptr->iv_len);
+    //tc_sdls_processed_frame->tc_sec_header.sn = calloc(1, sa_ptr->arsn_len);
+    //tc_sdls_processed_frame->tc_sec_header.pad = calloc(1, sa_ptr->shplf_len);
+    //tc_sdls_processed_frame->tc_sec_trailer.mac = calloc(1, sa_ptr->stmacf_len);
     // Set tc_sec_header + trailer fields for actual lengths from the SA (downstream apps won't know this length otherwise since they don't access the SADB!).
     tc_sdls_processed_frame->tc_sec_header.iv_field_len = sa_ptr->iv_len;
     tc_sdls_processed_frame->tc_sec_header.sn_field_len = sa_ptr->arsn_len;
@@ -996,7 +996,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
         tc_sdls_processed_frame->tc_sec_trailer.fecf = (((ingest[tc_sdls_processed_frame->tc_header.fl - 1] << 8) & 0xFF00) |
                                                         (ingest[tc_sdls_processed_frame->tc_header.fl] & 0x00FF));
 
-        if (crypto_config->crypto_check_fecf == TC_CHECK_FECF_TRUE)
+        if (crypto_config.crypto_check_fecf == TC_CHECK_FECF_TRUE)
         {
             uint16_t received_fecf = tc_sdls_processed_frame->tc_sec_trailer.fecf;
             // Calculate our own
@@ -1022,8 +1022,8 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
 
     // Handle non-transmitted IV increment case (transmitted-portion roll-over)
     if (sa_ptr->shivf_len < sa_ptr->iv_len &&
-        crypto_config->ignore_anti_replay == TC_IGNORE_ANTI_REPLAY_FALSE &&
-        crypto_config->crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
+        crypto_config.ignore_anti_replay == TC_IGNORE_ANTI_REPLAY_FALSE &&
+        crypto_config.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
     {
         status = crypto_handle_incrementing_nontransmitted_counter(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->iv_len, sa_ptr->shivf_len, sa_ptr->arsnw);
         if (status != CRYPTO_LIB_SUCCESS)
@@ -1049,7 +1049,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
 
     // Handle non-transmitted SN increment case (transmitted-portion roll-over)
     if (sa_ptr->shsnf_len < sa_ptr->arsn_len &&
-        crypto_config->ignore_anti_replay == TC_IGNORE_ANTI_REPLAY_FALSE)
+        crypto_config.ignore_anti_replay == TC_IGNORE_ANTI_REPLAY_FALSE)
     {
         status = crypto_handle_incrementing_nontransmitted_counter(tc_sdls_processed_frame->tc_sec_header.sn, sa_ptr->arsn, sa_ptr->arsn_len, sa_ptr->shsnf_len, sa_ptr->arsnw);
         if (status != CRYPTO_LIB_SUCCESS)
@@ -1255,7 +1255,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
     }
 
     // Now that MAC has been verified, check IV & ARSN if applicable
-    if (crypto_config->ignore_anti_replay == TC_IGNORE_ANTI_REPLAY_FALSE && status == CRYPTO_LIB_SUCCESS)
+    if (crypto_config.ignore_anti_replay == TC_IGNORE_ANTI_REPLAY_FALSE && status == CRYPTO_LIB_SUCCESS)
     {
         status = Crypto_Check_Anti_Replay(sa_ptr, tc_sdls_processed_frame->tc_sec_header.sn, tc_sdls_processed_frame->tc_sec_header.iv);
 
@@ -1277,7 +1277,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
     }
     else
     {
-        if (crypto_config->sa_type == SA_TYPE_MARIADB)
+        if (crypto_config.sa_type == SA_TYPE_MARIADB)
         {
             if (sa_ptr->ek_ref != NULL)
                 free(sa_ptr->ek_ref);
@@ -1286,7 +1286,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
     }
 
     // Extended PDU processing, if applicable
-    if (status == CRYPTO_LIB_SUCCESS && crypto_config->process_sdls_pdus == TC_PROCESS_SDLS_PDUS_TRUE)
+    if (status == CRYPTO_LIB_SUCCESS && crypto_config.process_sdls_pdus == TC_PROCESS_SDLS_PDUS_TRUE)
     {
         status = Crypto_Process_Extended_Procedure_Pdu(tc_sdls_processed_frame, ingest);
     }
@@ -1376,7 +1376,7 @@ uint8_t* Crypto_Prepare_TC_AAD(uint8_t* buffer, uint16_t len_aad, uint8_t* abm_b
 **/
 static int32_t crypto_tc_validate_sa(SecurityAssociation_t* sa)
 {
-    if (sa->shivf_len > 0 && crypto_config->iv_type == IV_CRYPTO_MODULE && crypto_config->cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+    if (sa->shivf_len > 0 && crypto_config.iv_type == IV_CRYPTO_MODULE && crypto_config.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
         return CRYPTO_LIB_ERR_NULL_IV;
     }
@@ -1384,11 +1384,11 @@ static int32_t crypto_tc_validate_sa(SecurityAssociation_t* sa)
     {
         return CRYPTO_LIB_ERR_IV_LEN_SHORTER_THAN_SEC_HEADER_LENGTH;
     }
-    if (sa->iv_len > 0 && crypto_config->iv_type == IV_CRYPTO_MODULE && crypto_config->cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+    if (sa->iv_len > 0 && crypto_config.iv_type == IV_CRYPTO_MODULE && crypto_config.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
         return CRYPTO_LIB_ERR_NULL_IV;
     }
-    if (crypto_config->iv_type == IV_CRYPTO_MODULE && crypto_config->cryptography_type == CRYPTOGRAPHY_TYPE_LIBGCRYPT)
+    if (crypto_config.iv_type == IV_CRYPTO_MODULE && crypto_config.cryptography_type == CRYPTOGRAPHY_TYPE_LIBGCRYPT)
     {
         return CRYPTO_LIB_ERR_NULL_IV;
     }

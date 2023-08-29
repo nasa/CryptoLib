@@ -187,7 +187,7 @@ extern TM_FramePrimaryHeader_t tm_frame_pri_hdr;
 extern TM_FrameSecurityHeader_t tm_frame_sec_hdr; // Used to reduce bit math duplication
 
 // Global configuration structs
-extern CryptoConfig_t* crypto_config;
+extern CryptoConfig_t crypto_config;
 extern SadbMariaDBConfig_t* sa_mariadb_config;
 extern CryptographyKmcCryptoServiceConfig_t* cryptography_kmc_crypto_config;
 extern CamConfig_t* cam_config;

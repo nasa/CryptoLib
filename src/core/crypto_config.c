@@ -25,14 +25,14 @@
 /*
 ** Global Variables
 */
+CryptographyInterface cryptography_if = NULL;
 KeyInterface key_if = NULL;
 McInterface mc_if = NULL;
 SaInterface sa_if = NULL;
 
 SadbMariaDBConfig_t* sa_mariadb_config = NULL;
 
-CryptographyInterface cryptography_if = NULL;
-CryptoConfig_t* crypto_config = NULL;
+CryptoConfig_t crypto_config;
 
 CryptographyKmcCryptoServiceConfig_t* cryptography_kmc_crypto_config = NULL;
 CamConfig_t* cam_config = NULL;
@@ -106,7 +106,11 @@ int32_t Crypto_Init_With_Configs(CryptoConfig_t* crypto_config_p, GvcidManagedPa
                                  SadbMariaDBConfig_t* sa_mariadb_config_p, CryptographyKmcCryptoServiceConfig_t* cryptography_kmc_crypto_config_p)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    crypto_config = crypto_config_p;
+    if(crypto_config_p != NULL)
+    {
+        memcpy(&crypto_config, crypto_config_p, CRYPTO_CONFIG_SIZE);
+        crypto_config.init_status = INITIALIZED;
+    }
     gvcid_managed_parameters = gvcid_managed_parameters_p;
     sa_mariadb_config = sa_mariadb_config_p;
     cryptography_kmc_crypto_config = cryptography_kmc_crypto_config_p;
@@ -122,7 +126,7 @@ int32_t Crypto_Init(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
-    if (crypto_config == NULL)
+    if (crypto_config.init_status == UNITIALIZED)
     {
         status = CRYPTO_CONFIGURATION_NOT_COMPLETE;
         printf(KRED "ERROR: CryptoLib must be configured before intializing!\n" RESET);
@@ -140,11 +144,11 @@ int32_t Crypto_Init(void)
 // #endif
 
     /* Key Interface */
-    if (crypto_config->key_type == KEY_TYPE_CUSTOM)
+    if (crypto_config.key_type == KEY_TYPE_CUSTOM)
     {
         key_if = get_key_interface_custom();
     }
-    else if (crypto_config->key_type == KEY_TYPE_INTERNAL)
+    else if (crypto_config.key_type == KEY_TYPE_INTERNAL)
     {
         key_if = get_key_interface_internal();
     }
@@ -156,7 +160,7 @@ int32_t Crypto_Init(void)
     // TODO: Check and return status on error
 
     /* MC Interface */
-    if (crypto_config->mc_type == MC_TYPE_CUSTOM)
+    if (crypto_config.mc_type == MC_TYPE_CUSTOM)
     {
         mc_if = get_mc_interface_custom();
     }
@@ -169,15 +173,15 @@ int32_t Crypto_Init(void)
 
     /* SA Interface */
     // Prepare SA type from config
-    if (crypto_config->sa_type == SA_TYPE_CUSTOM)
+    if (crypto_config.sa_type == SA_TYPE_CUSTOM)
     {
         sa_if = get_sa_interface_custom();
     }
-    else if (crypto_config->sa_type == SA_TYPE_INMEMORY)
+    else if (crypto_config.sa_type == SA_TYPE_INMEMORY)
     {
         sa_if = get_sa_interface_inmemory();
     }
-    else if (crypto_config->sa_type == SA_TYPE_MARIADB)
+    else if (crypto_config.sa_type == SA_TYPE_MARIADB)
     {
         if (sa_mariadb_config == NULL)
         {
@@ -195,11 +199,11 @@ int32_t Crypto_Init(void)
 
     /* Crypto Interface */
     // Prepare Cryptographic Library from config
-    if(crypto_config->cryptography_type == CRYPTOGRAPHY_TYPE_LIBGCRYPT)
+    if(crypto_config.cryptography_type == CRYPTOGRAPHY_TYPE_LIBGCRYPT)
     {
         cryptography_if = get_cryptography_interface_libgcrypt();
     }
-    else if (crypto_config->cryptography_type == CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+    else if (crypto_config.cryptography_type == CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
         if (cryptography_kmc_crypto_config == NULL)
         {
@@ -324,21 +328,21 @@ int32_t Crypto_Config_CryptoLib(uint8_t key_type, uint8_t mc_type, uint8_t sa_ty
                                 uint8_t unique_sa_per_mapid, uint8_t crypto_check_fecf, uint8_t vcid_bitmask, uint8_t crypto_increment_nontransmitted_iv)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    crypto_config = (CryptoConfig_t* )calloc(1, CRYPTO_CONFIG_SIZE);
-    crypto_config->key_type = key_type;
-    crypto_config->mc_type = mc_type;
-    crypto_config->sa_type = sa_type;
-    crypto_config->cryptography_type = cryptography_type;
-    crypto_config->iv_type = iv_type;
-    crypto_config->crypto_create_fecf = crypto_create_fecf;
-    crypto_config->process_sdls_pdus = process_sdls_pdus;
-    crypto_config->has_pus_hdr = has_pus_hdr;
-    crypto_config->ignore_sa_state = ignore_sa_state;
-    crypto_config->ignore_anti_replay = ignore_anti_replay;
-    crypto_config->unique_sa_per_mapid = unique_sa_per_mapid;
-    crypto_config->crypto_check_fecf = crypto_check_fecf;
-    crypto_config->vcid_bitmask = vcid_bitmask;
-    crypto_config->crypto_increment_nontransmitted_iv = crypto_increment_nontransmitted_iv;
+    crypto_config.init_status = INITIALIZED;
+    crypto_config.key_type = key_type;
+    crypto_config.mc_type = mc_type;
+    crypto_config.sa_type = sa_type;
+    crypto_config.cryptography_type = cryptography_type;
+    crypto_config.iv_type = iv_type;
+    crypto_config.crypto_create_fecf = crypto_create_fecf;
+    crypto_config.process_sdls_pdus = process_sdls_pdus;
+    crypto_config.has_pus_hdr = has_pus_hdr;
+    crypto_config.ignore_sa_state = ignore_sa_state;
+    crypto_config.ignore_anti_replay = ignore_anti_replay;
+    crypto_config.unique_sa_per_mapid = unique_sa_per_mapid;
+    crypto_config.crypto_check_fecf = crypto_check_fecf;
+    crypto_config.vcid_bitmask = vcid_bitmask;
+    crypto_config.crypto_increment_nontransmitted_iv = crypto_increment_nontransmitted_iv;
     return status;
 }
 
@@ -479,8 +483,8 @@ int32_t crypto_free_config_structs(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
-    free(crypto_config); //no strings in this struct, just free it.
-    crypto_config=NULL;
+    //free(crypto_config); //no strings in this struct, just free it.
+    crypto_config.init_status = UNITIALIZED;
 
     // Config structs with char* types that are malloc'd and must be freed individually.
     if(sa_mariadb_config != NULL)

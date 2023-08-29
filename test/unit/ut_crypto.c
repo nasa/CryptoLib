@@ -257,7 +257,7 @@ UTEST(CRYPTO_C, EXT_PROC_PDU)
     TC_t* tc_frame = NULL;
     tc_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     int32_t status = CRYPTO_LIB_ERROR;
-    crypto_config->has_pus_hdr = TC_NO_PUS_HDR;
+    crypto_config.has_pus_hdr = TC_NO_PUS_HDR;
     tc_frame->tc_header.vcid = TC_SDLS_EP_VCID;
     tc_frame->tc_header.fl = 1;
 

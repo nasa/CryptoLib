@@ -29,6 +29,11 @@ ivv-itc@lists.nasa.gov
 // main config enums
 typedef enum
 {
+    UNITIALIZED = 0,
+    INITIALIZED
+} InitStatus;
+typedef enum
+{
     KEY_TYPE_CUSTOM,
     KEY_TYPE_INTERNAL,
     KEY_TYPE_KMC
@@ -163,6 +168,7 @@ typedef enum
 */
 typedef struct
 {
+    InitStatus init_status;
     KeyType key_type;
     McType mc_type;
     SadbType sa_type;

@@ -117,14 +117,15 @@
 #define IV_SIZE 16   /* TM IV size bytes */
 #define IV_SIZE_TC 4 /* TC IV size bytes */
 #define OCF_SIZE 4
-#define MAC_SIZE 16 /* bytes */ /* Deprecated, todo - remove throughout & use SA mac field specification */
+#define MAC_SIZE 16           /* bytes */
 #define FECF_SIZE 2
 #define SEGMENT_HDR_SIZE 1
-#define ECS_SIZE 4    /* bytes */
-#define ABM_SIZE 1786 // 20      /* bytes */
-#define ARSN_SIZE 20   /* total messages */
-#define ARSNW_SIZE 1   /* bytes */
-#define SN_SIZE 16
+#define ECS_SIZE 4            /* bytes */
+#define ABM_SIZE 1786         /* bytes */
+#define ARSN_SIZE 20          /* total messages */
+#define ARSNW_SIZE 1          /* bytes */
+#define SN_SIZE 16            /* bytes */
+#define PAD_SIZE 32           /* bytes */
 #define CHALLENGE_SIZE 16     /* bytes */
 #define CHALLENGE_MAC_SIZE 16 /* bytes */
 

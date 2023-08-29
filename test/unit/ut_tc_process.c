@@ -88,28 +88,16 @@ UTEST(TC_PROCESS, EXERCISE_IV)
     printf(KGRN "Checking replay - using previous received IV...\n" RESET);
     status = Crypto_TC_ProcessSecurity(buffer_replay_b, &buffer_replay_len, tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_ERR_IV_OUTSIDE_WINDOW, status);
-    free(tc_nist_processed_frame->tc_sec_header.iv);
-    free(tc_nist_processed_frame->tc_sec_header.sn);
-    free(tc_nist_processed_frame->tc_sec_header.pad);
-    free(tc_nist_processed_frame->tc_sec_trailer.mac); // TODO:  Is there a method to free all of this?
 
     // Expect to fail on counter being too high
     printf(KGRN "Checking replay - using IV outside the window...\n" RESET);
     status = Crypto_TC_ProcessSecurity(buffer_outside_window_b, &buffer_outside_window_len, tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_ERR_IV_OUTSIDE_WINDOW, status);
-    free(tc_nist_processed_frame->tc_sec_header.iv);
-    free(tc_nist_processed_frame->tc_sec_header.sn);
-    free(tc_nist_processed_frame->tc_sec_header.pad);
-    free(tc_nist_processed_frame->tc_sec_trailer.mac); // TODO:  Is there a method to free all of this?
 
     // Expect success on valid IV
     printf(KGRN "Checking valid IV... should be able to receive it... \n" RESET);
     status = Crypto_TC_ProcessSecurity(buffer_good_iv_b, &buffer_good_iv_len, tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-    free(tc_nist_processed_frame->tc_sec_header.iv);
-    free(tc_nist_processed_frame->tc_sec_header.sn);
-    free(tc_nist_processed_frame->tc_sec_header.pad);
-    free(tc_nist_processed_frame->tc_sec_trailer.mac); // TODO:  Is there a method to free all of this?
 
     // Expect success on valid IV within window, but has a gap
     printf(KGRN "Checking valid IV within window... should be able to receive it... \n" RESET);
@@ -134,10 +122,6 @@ UTEST(TC_PROCESS, EXERCISE_IV)
     free(ptr_enc_frame);
     free(buffer_nist_iv_b);
     free(buffer_nist_key_b);
-    free(tc_nist_processed_frame->tc_sec_header.iv);
-    free(tc_nist_processed_frame->tc_sec_header.sn);
-    free(tc_nist_processed_frame->tc_sec_header.pad);
-    free(tc_nist_processed_frame->tc_sec_trailer.mac); // TODO:  Is there a method to free all of this?
     free(tc_nist_processed_frame);
 }
 
@@ -217,27 +201,15 @@ UTEST(TC_PROCESS, EXERCISE_ARSN)
     printf(KGRN "Checking replay - using previous received ARSN...\n" RESET);
     status = Crypto_TC_ProcessSecurity(buffer_replay_b, &buffer_replay_len, tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_ERR_ARSN_OUTSIDE_WINDOW, status);
-    free(tc_nist_processed_frame->tc_sec_header.iv);
-    free(tc_nist_processed_frame->tc_sec_header.sn);
-    free(tc_nist_processed_frame->tc_sec_header.pad);
-    free(tc_nist_processed_frame->tc_sec_trailer.mac); // TODO:  Is there a method to free all of this?
     // Expect to fail on counter being too high
     printf(KGRN "Checking replay - using ARSN outside the window...\n" RESET);
     status = Crypto_TC_ProcessSecurity(buffer_outside_window_b, &buffer_outside_window_len, tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_ERR_ARSN_OUTSIDE_WINDOW, status);
-    free(tc_nist_processed_frame->tc_sec_header.iv);
-    free(tc_nist_processed_frame->tc_sec_header.sn);
-    free(tc_nist_processed_frame->tc_sec_header.pad);
-    free(tc_nist_processed_frame->tc_sec_trailer.mac); // TODO:  Is there a method to free all of this?
 
     // Expect success on valid ARSN
     printf(KGRN "Checking next valid ARSN... should be able to receive it... \n" RESET);
     status = Crypto_TC_ProcessSecurity(buffer_good_arsn_b, &buffer_good_arsn_len, tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-    free(tc_nist_processed_frame->tc_sec_header.iv);
-    free(tc_nist_processed_frame->tc_sec_header.sn);
-    free(tc_nist_processed_frame->tc_sec_header.pad);
-    free(tc_nist_processed_frame->tc_sec_trailer.mac); // TODO:  Is there a method to free all of this?
 
     // Expect success on valid ARSN within window, but has a gap
     printf(KGRN "Checking valid ARSN within window... should be able to receive it... \n" RESET);
@@ -255,10 +227,6 @@ UTEST(TC_PROCESS, EXERCISE_ARSN)
         }
     printf("\n");
     Crypto_Shutdown();
-    free(tc_nist_processed_frame->tc_sec_header.iv);
-    free(tc_nist_processed_frame->tc_sec_header.sn);
-    free(tc_nist_processed_frame->tc_sec_header.pad);
-    free(tc_nist_processed_frame->tc_sec_trailer.mac); // TODO:  Is there a method to free all of this?
     free(tc_nist_processed_frame);
     free(ptr_enc_frame);
     free(buffer_nist_key_b);
@@ -429,17 +397,9 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_NONTRANSMITTED_INCREMENTING_IV_ROLLOVER)
     return_val = Crypto_TC_ProcessSecurity(dec_test_fe_b, &dec_test_fe_len, tc_sdls_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
     ASSERT_EQ(test_association->iv[11],0xFE);
-    free(tc_sdls_processed_frame->tc_sec_header.iv);
-    free(tc_sdls_processed_frame->tc_sec_header.sn);
-    free(tc_sdls_processed_frame->tc_sec_header.pad);
-    free(tc_sdls_processed_frame->tc_sec_trailer.mac); // TODO:  Is there a method to free all of this?
     return_val = Crypto_TC_ProcessSecurity(dec_test_ff_b, &dec_test_ff_len, tc_sdls_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
     ASSERT_EQ(test_association->iv[11],0xFF);
-    free(tc_sdls_processed_frame->tc_sec_header.iv);
-    free(tc_sdls_processed_frame->tc_sec_header.sn);
-    free(tc_sdls_processed_frame->tc_sec_header.pad);
-    free(tc_sdls_processed_frame->tc_sec_trailer.mac); // TODO:  Is there a method to free all of this?
     // test_association->iv[5] = 0x01;
     return_val = Crypto_TC_ProcessSecurity(dec_test_00_b, &dec_test_00_len, tc_sdls_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
@@ -463,10 +423,6 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_NONTRANSMITTED_INCREMENTING_IV_ROLLOVER)
     free(dec_test_fe_b);
     free(dec_test_ff_b);
     free(dec_test_00_b);
-    free(tc_sdls_processed_frame->tc_sec_header.iv);
-    free(tc_sdls_processed_frame->tc_sec_header.sn);
-    free(tc_sdls_processed_frame->tc_sec_header.pad);
-    free(tc_sdls_processed_frame->tc_sec_trailer.mac); // TODO:  Is there a method to free all of this?
     free(tc_sdls_processed_frame);
 }
 
@@ -593,10 +549,6 @@ UTEST(TC_PROCESS, ERROR_TC_INPUT_FRAME_TOO_SHORT_FOR_SPEC)
     ASSERT_EQ(CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_TC_STANDARD, status);
 
     Crypto_Shutdown();
-    free(tc_sdls_processed_frame->tc_sec_header.iv);
-    free(tc_sdls_processed_frame->tc_sec_header.sn);
-    free(tc_sdls_processed_frame->tc_sec_header.pad);
-    free(tc_sdls_processed_frame->tc_sec_trailer.mac); // TODO:  Is there a method to free all of this?
     free(tc_sdls_processed_frame);
     free(test_frame_pt_b);
 }
@@ -635,10 +587,6 @@ UTEST(TC_PROCESS, ERROR_TC_INPUT_FRAME_TOO_SHORT_FOR_SPECIFIED_FRAME_LENGTH_HEAD
 
     Crypto_Shutdown();
     free(test_frame_pt_b);
-    free(tc_sdls_processed_frame->tc_sec_header.iv);
-    free(tc_sdls_processed_frame->tc_sec_header.sn);
-    free(tc_sdls_processed_frame->tc_sec_header.pad);
-    free(tc_sdls_processed_frame->tc_sec_trailer.mac); // TODO:  Is there a method to free all of this?
     free(tc_sdls_processed_frame);
 }
 
@@ -691,10 +639,6 @@ UTEST(TC_PROCESS, HAPPY_PATH_DECRYPT_CBC)
     //printf("\n");
 
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-    free(tc_sdls_processed_frame->tc_sec_header.iv);
-    free(tc_sdls_processed_frame->tc_sec_header.sn);
-    free(tc_sdls_processed_frame->tc_sec_header.pad);
-    free(tc_sdls_processed_frame->tc_sec_trailer.mac); // TODO:  Is there a method to free all of this?
     free(tc_sdls_processed_frame);
     free(test_frame_pt_b);
     free(truth_data_b);
@@ -757,10 +701,6 @@ UTEST(TC_PROCESS, DECRYPT_CBC_1B)
 
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     free(test_frame_pt_b);
-    free(tc_sdls_processed_frame->tc_sec_header.iv);
-    free(tc_sdls_processed_frame->tc_sec_header.sn);
-    free(tc_sdls_processed_frame->tc_sec_header.pad);
-    free(tc_sdls_processed_frame->tc_sec_trailer.mac); // TODO:  Is there a method to free all of this?
     free(tc_sdls_processed_frame);
     free(truth_data_b);
     Crypto_Shutdown();       
@@ -820,10 +760,6 @@ UTEST(TC_PROCESS, DECRYPT_CBC_16B)
 
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     free(test_frame_pt_b);
-    free(tc_sdls_processed_frame->tc_sec_header.iv);
-    free(tc_sdls_processed_frame->tc_sec_header.sn);
-    free(tc_sdls_processed_frame->tc_sec_header.pad);
-    free(tc_sdls_processed_frame->tc_sec_trailer.mac); // TODO:  Is there a method to free all of this?
     free(tc_sdls_processed_frame);
     free(truth_data_b);
     Crypto_Shutdown();       
@@ -915,10 +851,6 @@ UTEST(TC_PROCESS, GCM_IV_AND_ARSN)
     printf(KGRN "Checking replay - using previous received ARSN and previous IV...\n" RESET);
     status = Crypto_TC_ProcessSecurity(buffer_bad_iv_bad_arsn_b, &buffer_bad_iv_bad_arsn_len, tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_ERR_ARSN_OUTSIDE_WINDOW, status);
-    free(tc_nist_processed_frame->tc_sec_header.iv);
-    free(tc_nist_processed_frame->tc_sec_header.sn);
-    free(tc_nist_processed_frame->tc_sec_header.pad);
-    free(tc_nist_processed_frame->tc_sec_trailer.mac); // TODO:  Is there a method to free all of this?
 
     // Expect to fail on ARSN (Good IV, bad ARSN)
     printf(KGRN "Checking replay - using previous received ARSN...\n" RESET);
@@ -929,10 +861,6 @@ UTEST(TC_PROCESS, GCM_IV_AND_ARSN)
     {
         ASSERT_EQ(test_association->iv[i], buffer_nist_iv_b[i]);
     }
-    free(tc_nist_processed_frame->tc_sec_header.iv);
-    free(tc_nist_processed_frame->tc_sec_header.sn);
-    free(tc_nist_processed_frame->tc_sec_header.pad);
-    free(tc_nist_processed_frame->tc_sec_trailer.mac); // TODO:  Is there a method to free all of this?
 
     // Expect to fail on IV (Bad IV, Good ARSN)
     printf(KGRN "Checking replay - using previous received IV...\n" RESET);
@@ -943,30 +871,18 @@ UTEST(TC_PROCESS, GCM_IV_AND_ARSN)
     {
         ASSERT_EQ(test_association->arsn[i], buffer_arsn_b[i]);
     }
-    free(tc_nist_processed_frame->tc_sec_header.iv);
-    free(tc_nist_processed_frame->tc_sec_header.sn);
-    free(tc_nist_processed_frame->tc_sec_header.pad);
-    free(tc_nist_processed_frame->tc_sec_trailer.mac); // TODO:  Is there a method to free all of this?
 
     // Expect to fail on IV counter being too high
     // Check w/ Mike
     printf(KGRN "Checking replay - using IV outside (above) the window...\n" RESET);
     status = Crypto_TC_ProcessSecurity(buffer_high_iv_good_arsn_b, &buffer_high_iv_good_arsn_len, tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_ERR_IV_OUTSIDE_WINDOW, status);
-    free(tc_nist_processed_frame->tc_sec_header.iv);
-    free(tc_nist_processed_frame->tc_sec_header.sn);
-    free(tc_nist_processed_frame->tc_sec_header.pad);
-    free(tc_nist_processed_frame->tc_sec_trailer.mac); // TODO:  Is there a method to free all of this?
 
     // Expect to fail on ARSN counter being too high
     // Check w/ Mike
     printf(KGRN "Checking replay - using ARSN outside (above) the window...\n" RESET);
     status = Crypto_TC_ProcessSecurity(buffer_good_iv_high_arsn_b, &buffer_good_iv_high_arsn_len, tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_ERR_ARSN_OUTSIDE_WINDOW, status);
-    free(tc_nist_processed_frame->tc_sec_header.iv);
-    free(tc_nist_processed_frame->tc_sec_header.sn);
-    free(tc_nist_processed_frame->tc_sec_header.pad);
-    free(tc_nist_processed_frame->tc_sec_trailer.mac); // TODO:  Is there a method to free all of this?
 
     // Expect success on next valid IV && ARSN
     printf(KGRN "Checking  next valid IV && valid ARSN... should be able to receive it... \n" RESET);
@@ -977,19 +893,10 @@ UTEST(TC_PROCESS, GCM_IV_AND_ARSN)
     // Verify ARSN LSB incremented
     ASSERT_EQ(test_association->arsn[test_association->arsn_len-1], 0x24);
 
-    free(tc_nist_processed_frame->tc_sec_header.iv);
-    free(tc_nist_processed_frame->tc_sec_header.sn);
-    free(tc_nist_processed_frame->tc_sec_header.pad);
-    free(tc_nist_processed_frame->tc_sec_trailer.mac); // TODO:  Is there a method to free all of this?
-
     // Expect success on valid IV and ARSNs within window, but have a gap
     printf(KGRN "Checking valid IV and ARSN within window... should be able to receive it... \n" RESET);
     status = Crypto_TC_ProcessSecurity(buffer_good_iv_gap_good_arsn_gap_b, &buffer_good_iv_gap_good_arsn_gap_len, tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-    free(tc_nist_processed_frame->tc_sec_header.iv);
-    free(tc_nist_processed_frame->tc_sec_header.sn);
-    free(tc_nist_processed_frame->tc_sec_header.pad);
-    free(tc_nist_processed_frame->tc_sec_trailer.mac); // TODO:  Is there a method to free all of this?
 
     // Validate that the SA IV is updated to the most recently received IV
     // IV length in this testing is 12 bytes
