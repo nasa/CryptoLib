@@ -13,6 +13,7 @@
  */
 
 #include "crypto.h"
+#include <string.h>
 
 // Security Association Initialization Functions
 static int32_t sadb_config(void);
@@ -76,7 +77,7 @@ int32_t sadb_config(void)
     // SA 1 - CLEAR MODE
     // SA 1 VC0/1 is now SA 1-VC0, SA 8-VC1
     sa[1].spi = 1;
-    sa[1].sa_state = SA_OPERATIONAL;
+    sa[1].sa_state = SA_KEYED;
     sa[1].est = 0;
     sa[1].ast = 0;
     sa[1].shivf_len = 0;
@@ -87,7 +88,7 @@ int32_t sadb_config(void)
     sa[1].gvcid_blk.tfvn = 0;
     sa[1].gvcid_blk.scid = SCID & 0x3FF;
     sa[1].gvcid_blk.vcid = 0;
-    sa[1].gvcid_blk.mapid = TYPE_TC;
+    sa[1].gvcid_blk.mapid = TYPE_TM;
 
     // SA 2 - KEYED;  ARSNW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 128
     sa[2].spi = 2;
@@ -229,7 +230,7 @@ int32_t sadb_config(void)
     // SA 10 VC0/1 is now 4-VC0, 7-VC1
     sa[10].spi = 10;
     sa[10].ekid = 130;
-    sa[10].sa_state = SA_OPERATIONAL;
+    sa[10].sa_state = SA_KEYED;
     sa[10].est = 1;
     sa[10].ast = 1;
     sa[10].ecs_len = 1;
@@ -275,7 +276,7 @@ int32_t sadb_config(void)
     // SA 12 - TM CLEAR MODE
     // SA 12
     sa[12].spi = 12;
-    sa[12].sa_state = SA_OPERATIONAL;
+    sa[12].sa_state = SA_KEYED;
     sa[12].est = 0;
     sa[12].ast = 0;
     sa[12].shivf_len = 0;
@@ -284,9 +285,33 @@ int32_t sadb_config(void)
     sa[12].arsnw_len = 0;
     sa[12].arsnw = 5;
     sa[12].gvcid_blk.tfvn = 0;
-    sa[12].gvcid_blk.scid = 44 & 0x3FF;
+    sa[12].gvcid_blk.scid = SCID & 0x3FF;
     sa[12].gvcid_blk.vcid = 0;
     sa[12].gvcid_blk.mapid = TYPE_TM;
+
+    // SA 13 - TM Authentication Only
+    // SA 13
+    sa[13].spi = 13;
+    sa[13].akid = 130;
+    sa[13].ekid = 0;
+    sa[13].sa_state = SA_OPERATIONAL;
+    sa[13].est = 0;
+    sa[13].ast = 1;
+    sa[13].acs_len =1;
+    sa[13].acs = CRYPTO_MAC_CMAC_AES256;
+    sa[13].shivf_len = 0;
+    sa[13].iv_len = 0;
+    sa[13].stmacf_len = 16;
+    sa[13].shsnf_len = 2;
+    sa[13].abm_len = ABM_SIZE;
+    memset(sa[13].abm, 0xFF, (sa[13].abm_len * sizeof(uint8_t))); // Bitmask 
+    sa[13].arsn_len = 2;
+    sa[13].arsnw_len = 1;
+    sa[13].arsnw = 5;
+    sa[13].gvcid_blk.tfvn = 0;
+    sa[13].gvcid_blk.scid = SCID & 0x3FF;
+    sa[13].gvcid_blk.vcid = 0;
+    sa[13].gvcid_blk.mapid = TYPE_TM;
 
     return status;
 }

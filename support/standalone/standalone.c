@@ -22,6 +22,7 @@
 *******************************************************************************/
 
 #include "standalone.h"
+#include "crypto_config.h"
 
 /*
 ** Global Variables
@@ -414,7 +415,7 @@ void *crypto_standalone_tm_process(void *sock)
     int32_t status = CRYPTO_LIB_SUCCESS;
     udp_info_t *tm_sock = (udp_info_t *)sock;
 
-    uint8_t tm_process_in[TM_FRAME_DATA_SIZE];
+    uint8_t tm_process_in[TM_CADU_SIZE]; // Accounts for ASM automatically based on #def
     int tm_process_len = 0;
     uint16_t spp_len = 0;
     uint8_t *tm_ptr;
@@ -449,7 +450,6 @@ void *crypto_standalone_tm_process(void *sock)
                 }
                 printf("\n");
             }
-
             /* Process */
 #ifdef TM_CADU_HAS_ASM
                 // Process Security skipping prepended ASM

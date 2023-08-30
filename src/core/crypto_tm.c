@@ -236,7 +236,9 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
 #endif
 
     if(sa_service_type != SA_PLAINTEXT && sa_ptr->ecs_len == CRYPTO_CIPHER_NONE && sa_ptr->acs_len == CRYPTO_MAC_NONE)
+    if(sa_service_type != SA_PLAINTEXT && sa_ptr->ecs_len == 0 && sa_ptr->acs_len ==0)
     {
+        printf("CRYPTO_LIB_ERR_NULL_CIPHERS, Invalid cipher lengths, %d\n", CRYPTO_LIB_ERR_NULL_CIPHERS);
         return CRYPTO_LIB_ERR_NULL_CIPHERS;
     }
 
@@ -396,6 +398,9 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
 #endif
             if (sa_ptr->abm_len < aad_len)
             {
+#ifdef TM_DEBUG
+                printf(KRED "Error: abm_len of %d < aad_len of %d\n" RESET, sa_ptr->abm_len, aad_len);
+#endif
                 return CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
             }
             status = Crypto_Prepare_TM_AAD(&pTfBuffer[0], aad_len, sa_ptr->abm, &aad[0]);
@@ -1019,8 +1024,14 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
 #endif
         }
     }
-    else if (current_managed_parameters->has_fecf != (TM_NO_FECF || TM_HAS_FECF))
+    // Need to be TM_HAS_FECF (checked above_ or TM_NO_FECF)
+    else if (current_managed_parameters->has_fecf != TM_NO_FECF)
     {
+// #ifdef DEBUG
+        printf(KRED "TM_Process Error...tfvn: %d scid: 0x%04X vcid: 0x%02X fecf_enum: %d\n" RESET, 
+            current_managed_parameters->tfvn, current_managed_parameters->scid, 
+            current_managed_parameters->vcid, current_managed_parameters->has_fecf);
+// #endif
         status = CRYPTO_LIB_ERR_TC_ENUM_USED_FOR_TM_CONFIG;
         return status;
     }
