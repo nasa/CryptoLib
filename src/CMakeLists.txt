@@ -127,6 +127,10 @@ if(CRYPTO_KMC)
     target_link_libraries(crypto curl)
 endif()
 
+if(CRYPTO_WOLFSSL)
+    target_link_libraries(crypto wolfssl)
+endif()
+
 if(SA_MARIADB)
     execute_process(COMMAND mysql_config --cflags
             OUTPUT_VARIABLE MYSQL_CFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
