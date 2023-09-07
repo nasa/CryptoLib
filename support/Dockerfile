@@ -28,3 +28,16 @@ RUN apt-get update -y \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install pycryptodome
+
+# WolfSSL
+FROM cl0 AS cl1
+RUN cd /tmp \
+    && git clone https://github.com/wolfSSL/wolfssl.git \
+    && cd /tmp/wolfssl \
+    && git checkout v5.6.0-stable
+    
+RUN mkdir /tmp/wolfssl/build \
+    && cd /tmp/wolfssl/build \
+    && cmake -DCMAKE_C_FLAGS="-DWOLFSSL_AESGCM_STREAM" .. \
+    && make install \
+    && rm -rf /tmp/wolfssl

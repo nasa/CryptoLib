@@ -14,6 +14,7 @@
 
 // Reference: https://www.wolfssl.com/documentation/manuals/wolfssl/
 
+#include <wolfssl/options.h>
 #include <wolfssl/wolfcrypt/aes.h>
 #include <wolfssl/wolfcrypt/ecc.h>
 #include <wolfssl/wolfcrypt/cmac.h>
@@ -402,20 +403,11 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     switch (*ecs)
     {
         case CRYPTO_CIPHER_AES256_GCM:
-            status = wc_AesGcmEncryptInit(&enc, key, len_key, iv, iv_len);
+            status = wc_AesGcmSetKey(&enc, key, len_key);
             if (status == 0)
             {
-                wc_AesGcmEncryptUpdate(&enc, data_out, data_in, len_data_in, aad, aad_len);
+                status = wc_AesGcmEncrypt(&enc, data_out, data_in, len_data_in, iv, iv_len, mac, mac_size, aad, aad_len);
             }
-            if (status == 0)
-            {
-                wc_AesGcmEncryptFinal(&enc, mac, mac_size);
-            }
-            //status = wc_AesGcmSetKey(&enc, key, len_key);
-            //if (status == 0)
-            //{
-            //    status = wc_AesGcmEncrypt(enc, data_out, data_in, len_data_in, iv, iv_len, mac, mac_size, NULL, 0);
-            //}
             break;
 
         case CRYPTO_CIPHER_AES256_CCM:
@@ -499,7 +491,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
             status = wc_AesGcmSetKey(&enc, key, len_key);
             if (status == 0)
             {
-                status = wc_AesGcmDecrypt(enc, data_out, data_in, len_data_in, iv, iv_len, mac, mac_size, NULL, 0);
+                status = wc_AesGcmDecrypt(&enc, data_out, data_in, len_data_in, iv, iv_len, mac, mac_size, NULL, 0);
             }
             break;
 
