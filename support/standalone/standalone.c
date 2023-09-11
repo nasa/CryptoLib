@@ -405,7 +405,7 @@ void crypto_standalone_tm_frame(uint8_t *in_data, uint16_t in_length, uint8_t *o
 {
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
     SecurityAssociation_t *sa_ptr = NULL;
-    
+
     sadb_routine->sadb_get_sa_from_spi(spi, &sa_ptr);
     if (!sa_ptr)
     {
@@ -538,6 +538,7 @@ void *crypto_standalone_tm_process(void *sock)
                 tm_ptr = &tm_process_in[0];
                 while (tm_process_len > 5)
                 {
+                    // SPP Telemetry OR SPP Idle Packet
                     if ((tm_ptr[0] == 0x08) || ((tm_ptr[0] == 0x03) && tm_ptr[1] == 0xff))
                     {
                         spp_len = (((0xFFFF & tm_ptr[4]) << 8) | tm_ptr[5]) + 7;
@@ -549,7 +550,23 @@ void *crypto_standalone_tm_process(void *sock)
                         }
                         printf("\n");
 #endif
-                        status = sendto(tm_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr *)&fwd_addr, sizeof(fwd_addr));
+                        // Send all SPP telemetry packets
+                        if (tm_ptr[0] == 0x08)  
+                        {
+                            status = sendto(tm_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr *)&fwd_addr, sizeof(fwd_addr));
+                        }
+                        // Only send idle packets if configured to do so
+                        else
+                        {
+#ifdef CRYPTO_STANDALONE_DISCARD_IDLE_PACKETS
+                            // Don't forward idle packets
+                            status = spp_len;
+#else
+                            status = sendto(tm_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr *)&fwd_addr, sizeof(fwd_addr));
+#endif
+                        }
+
+                        // Check status
                         if ((status == -1) || (status != spp_len))
                         {
                             printf("crypto_standalone_tm_process - Reply error %d \n", status);
@@ -561,12 +578,17 @@ void *crypto_standalone_tm_process(void *sock)
                     {
                         // Idle Frame
                         // Idle Frame is entire length of remaining data
+#ifdef CRYPTO_STANDALONE_DISCARD_IDLE_FRAMES
+                        // Don't forward idle frame
+                        status = spp_len;
+#else
                         status = sendto(tm_sock->sockfd, tm_ptr, tm_process_len, 0, (struct sockaddr *)&fwd_addr, sizeof(fwd_addr));
                         if ((status == -1) || (status != spp_len))
                         {
                             printf("crypto_standalone_tm_process - Reply error %d \n", status);
                         }
                         tm_ptr = &tm_ptr[spp_len];
+#endif
                         tm_process_len = 0;
                     }
                     else
