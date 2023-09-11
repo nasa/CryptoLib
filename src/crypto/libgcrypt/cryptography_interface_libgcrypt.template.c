@@ -925,7 +925,6 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                           mac_size   // tag size
         );
 
-        printf("\n\nGCRY ERROR IS %d\n", gcry_error);
         if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
         {
             printf(KRED "ERROR: gcry_cipher_checktag error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);

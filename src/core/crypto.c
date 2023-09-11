@@ -982,8 +982,8 @@ int32_t Crypto_Get_Security_Header_Length(SecurityAssociation_t* sa_ptr)
     Crypto_Get_Managed_Parameters_For_Gvcid(tfvn, scid, vcid,
                                             gvcid_managed_parameters, temp_current_managed_parameters);
     */
-    // DEBUG
-    if (!sa_ptr) { printf("%s %d SA_PTR IS NULL!!!!\n", __FILE__, __LINE__);}
+
+    if (!sa_ptr) { printf("SA_PTR IS NULL!!!!\n");}
     uint16_t securityHeaderLength = 2; // Start with SPI
 
     securityHeaderLength += sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;

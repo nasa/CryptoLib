@@ -60,10 +60,10 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
 #ifdef DEBUG
     printf(KYEL "\n----- Crypto_TM_ApplySecurity START -----\n" RESET);
     printf("The following GVCID parameters will be used:\n");
-    printf("\tTVFN: \t 0x%04X", ((uint8_t)pTfBuffer[0] & 0xC0) >> 6);
-    printf("\tSCID:\t 0x%04X", (((uint16_t)pTfBuffer[0] & 0x3F) << 4) | (((uint16_t)pTfBuffer[1] & 0xF0) >> 4));
-    printf("\tVCID:\t 0x%04X", ((uint8_t) pTfBuffer[1] & 0x0E) >> 1);
-    printf("\tMAP:\t %d\n", 0);
+    printf("\tTVFN: 0x%04X\t", ((uint8_t)pTfBuffer[0] & 0xC0) >> 6);
+    printf("\tSCID: 0x%04X", (((uint16_t)pTfBuffer[0] & 0x3F) << 4) | (((uint16_t)pTfBuffer[1] & 0xF0) >> 4));
+    printf("\tVCID: 0x%04X", ((uint8_t) pTfBuffer[1] & 0x0E) >> 1);
+    printf("\tMAP: %d\n", 0);
     printf("\tPriHdr as follows:\n\t\t");
     for (int i =0; i<6; i++)
     {
@@ -180,7 +180,6 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
     // Check if secondary header is present within frame
     // Note: Secondary headers are static only for a mission phase, not guaranteed static 
     // over the life of a mission Per CCSDS 132.0-B.3 Section 4.1.2.7.2.3
-
     // Secondary Header flag is 1st bit of 5th byte (index 4)
     idx = 4;
     if((pTfBuffer[idx] & 0x80) == 0x80)
@@ -206,11 +205,11 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
         // No Secondary header, carry on as usual and increment to SPI start
         idx = 6;
     }
-
     /**
      * Begin Security Header Fields
      * Reference CCSDS SDLP 3550b1 4.1.1.1.3
      **/
+
     // Set SPI
     pTfBuffer[idx] = ((sa_ptr->spi & 0xFF00) >> 8);
     pTfBuffer[idx + 1] = (sa_ptr->spi & 0x00FF);
@@ -234,8 +233,6 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
         printf("\n" RESET);
     }
 #endif
-
-    if(sa_service_type != SA_PLAINTEXT && sa_ptr->ecs_len == CRYPTO_CIPHER_NONE && sa_ptr->acs_len == CRYPTO_MAC_NONE)
     if(sa_service_type != SA_PLAINTEXT && sa_ptr->ecs_len == 0 && sa_ptr->acs_len ==0)
     {
         printf("CRYPTO_LIB_ERR_NULL_CIPHERS, Invalid cipher lengths, %d\n", CRYPTO_LIB_ERR_NULL_CIPHERS);
@@ -253,7 +250,6 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
                 }
         }
     }
-
     // Start index from the transmitted portion
     for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
     {
@@ -499,6 +495,66 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
             else{
                 status = CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
             }
+        }
+
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+            return status; // Cryptography IF call failed, return.
+        }
+
+        if (sa_service_type != SA_PLAINTEXT)
+        {
+#ifdef INCREMENT
+            if (crypto_config->crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
+            {
+                if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0)
+                {
+                    Crypto_increment(sa_ptr->iv, sa_ptr->iv_len);
+                }
+            }
+            else // SA_INCREMENT_NONTRANSMITTED_IV_FALSE
+            {
+                // Only increment the transmitted portion
+                if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0)
+                {
+                    Crypto_increment(sa_ptr->iv + (sa_ptr->iv_len - sa_ptr->shivf_len), sa_ptr->shivf_len);
+                }
+            }
+            if (sa_ptr->shsnf_len > 0)
+            {
+                Crypto_increment(sa_ptr->arsn, sa_ptr->arsn_len);
+            }
+
+#ifdef SA_DEBUG
+            if (sa_ptr->iv_len > 0)
+            {
+                printf(KYEL "Next IV value is:\n\t");
+                for (i = 0; i < sa_ptr->iv_len; i++)
+                {
+                    printf("%02x", *(sa_ptr->iv + i));
+                }
+                printf("\n" RESET);
+                printf(KYEL "Next transmitted IV value is:\n\t");
+                for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
+                {
+                    printf("%02x", *(sa_ptr->iv + i));
+                }
+                printf("\n" RESET);
+            }
+            printf(KYEL "Next ARSN value is:\n\t");
+            for (i = 0; i < sa_ptr->arsn_len; i++)
+            {
+                printf("%02x", *(sa_ptr->arsn + i));
+            }
+            printf("\n" RESET);
+            printf(KYEL "Next transmitted ARSN value is:\n\t");
+            for (i = sa_ptr->arsn_len - sa_ptr->shsnf_len; i < sa_ptr->arsn_len; i++)
+            {
+                printf("%02x", *(sa_ptr->arsn + i));
+            }
+            printf("\n" RESET);
+#endif
+#endif
         }
 
     // Move idx to mac location

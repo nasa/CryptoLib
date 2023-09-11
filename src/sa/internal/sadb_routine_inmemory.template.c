@@ -293,20 +293,23 @@ int32_t sadb_config(void)
     // SA 13
     sa[13].spi = 13;
     sa[13].akid = 130;
-    sa[13].ekid = 0;
+    sa[13].ekid = 130;
     sa[13].sa_state = SA_OPERATIONAL;
-    sa[13].est = 0;
+    sa[13].est = 1;
     sa[13].ast = 1;
-    sa[13].acs_len =1;
-    sa[13].acs = CRYPTO_MAC_CMAC_AES256;
-    sa[13].shivf_len = 0;
-    sa[13].iv_len = 0;
+    sa[13].acs_len = 0;
+    sa[13].acs = CRYPTO_MAC_NONE;
+    sa[13].ecs_len = 1;
+    sa[13].ecs = CRYPTO_CIPHER_AES256_GCM;
+    sa[13].shivf_len = 16;
+    sa[13].iv_len = 16;
+    *(sa[13].iv + sa[13].shivf_len - 1) = 0;
     sa[13].stmacf_len = 16;
-    sa[13].shsnf_len = 2;
+    sa[13].shsnf_len = 0;
     sa[13].abm_len = ABM_SIZE;
     memset(sa[13].abm, 0xFF, (sa[13].abm_len * sizeof(uint8_t))); // Bitmask 
-    sa[13].arsn_len = 2;
-    sa[13].arsnw_len = 1;
+    sa[13].arsn_len = 0;
+    sa[13].arsnw_len = 0;
     sa[13].arsnw = 5;
     sa[13].gvcid_blk.tfvn = 0;
     sa[13].gvcid_blk.scid = SCID & 0x3FF;

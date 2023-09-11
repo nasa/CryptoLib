@@ -98,7 +98,7 @@ int32_t crypto_standalone_udp_init(udp_info_t* sock, int32_t port);
 int32_t crypto_reset(void);
 void crypto_standalone_tc_frame(uint8_t* in_data, uint16_t in_length, uint8_t* out_data, uint16_t* out_length);
 void* crypto_standalone_tc_apply(void* sock);
-void crypto_standalone_tm_frame(uint8_t* in_data, uint16_t in_length, uint8_t* out_data, uint16_t* out_length);
+void crypto_standalone_tm_frame(uint8_t* in_data, uint16_t in_length, uint8_t* out_data, uint16_t* out_length, uint16_t spi);
 void* crypto_standalone_tm_process(void* sock);
 void crypto_standalone_cleanup(const int signal);
 
