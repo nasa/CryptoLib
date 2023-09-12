@@ -25,13 +25,14 @@
 /*
 ** Global Variables
 */
-KeyInterface key_if = NULL;
-
-SadbRoutine sadb_routine = NULL;
-SadbMariaDBConfig_t* sadb_mariadb_config = NULL;
-
 CryptographyInterface cryptography_if = NULL;
-CryptoConfig_t* crypto_config = NULL;
+KeyInterface key_if = NULL;
+McInterface mc_if = NULL;
+SaInterface sa_if = NULL;
+
+SadbMariaDBConfig_t* sa_mariadb_config = NULL;
+
+CryptoConfig_t crypto_config;
 
 CryptographyKmcCryptoServiceConfig_t* cryptography_kmc_crypto_config = NULL;
 CamConfig_t* cam_config = NULL;
@@ -50,10 +51,21 @@ int32_t crypto_free_config_structs(void);
  * @brief Function: Crypto_Init_TC_Unit_Test
  * @return int32: status
  **/
+int32_t Crypto_TC_Init(void)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    status = Crypto_Init_TC_Unit_Test();
+    return status;
+}
+
+/**
+ * @brief Function: Crypto_Init_TC_Unit_Test
+ * @return int32: status
+ **/
 int32_t Crypto_Init_TC_Unit_Test(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, 
                             TC_HAS_PUS_HDR, TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, 
                             TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F, 
@@ -74,8 +86,8 @@ int32_t Crypto_Init_TC_Unit_Test(void)
 int32_t Crypto_Init_TM_Unit_Test(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
-                            IV_INTERNAL, CRYPTO_TM_CREATE_FECF_FALSE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TM_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TM Tests
@@ -89,16 +101,20 @@ int32_t Crypto_Init_TM_Unit_Test(void)
  * @brief Function: Crypto_Init_With_Configs
  * @param crypto_config_p: CryptoConfig_t*
  * @param gvcid_managed_parameters_p: GvcidManagedParameters_t*
- * @param sadb_mariadb_config_p: SadbMariaDBConfig_t*
+ * @param sa_mariadb_config_p: SadbMariaDBConfig_t*
  * @return int32: Success/Failure
  **/
 int32_t Crypto_Init_With_Configs(CryptoConfig_t* crypto_config_p, GvcidManagedParameters_t* gvcid_managed_parameters_p,
-                                 SadbMariaDBConfig_t* sadb_mariadb_config_p, CryptographyKmcCryptoServiceConfig_t* cryptography_kmc_crypto_config_p)
+                                 SadbMariaDBConfig_t* sa_mariadb_config_p, CryptographyKmcCryptoServiceConfig_t* cryptography_kmc_crypto_config_p)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    crypto_config = crypto_config_p;
+    if(crypto_config_p != NULL)
+    {
+        memcpy(&crypto_config, crypto_config_p, CRYPTO_CONFIG_SIZE);
+        crypto_config.init_status = INITIALIZED;
+    }
     gvcid_managed_parameters = gvcid_managed_parameters_p;
-    sadb_mariadb_config = sadb_mariadb_config_p;
+    sa_mariadb_config = sa_mariadb_config_p;
     cryptography_kmc_crypto_config = cryptography_kmc_crypto_config_p;
     status = Crypto_Init();
     return status;
@@ -112,7 +128,7 @@ int32_t Crypto_Init(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
-    if (crypto_config == NULL)
+    if (crypto_config.init_status == UNITIALIZED)
     {
         status = CRYPTO_CONFIGURATION_NOT_COMPLETE;
         printf(KRED "ERROR: CryptoLib must be configured before intializing!\n" RESET);
@@ -130,11 +146,11 @@ int32_t Crypto_Init(void)
 // #endif
 
     /* Key Interface */
-    if (crypto_config->key_type == KEY_TYPE_CUSTOM)
+    if (crypto_config.key_type == KEY_TYPE_CUSTOM)
     {
         key_if = get_key_interface_custom();
     }
-    else if (crypto_config->key_type == KEY_TYPE_INTERNAL)
+    else if (crypto_config.key_type == KEY_TYPE_INTERNAL)
     {
         key_if = get_key_interface_internal();
     }
@@ -145,21 +161,37 @@ int32_t Crypto_Init(void)
     key_if->key_init();
     // TODO: Check and return status on error
 
-    /* SA Interface */
-    // Prepare SADB type from config
-    if (crypto_config->sadb_type == SADB_TYPE_INMEMORY)
+    /* MC Interface */
+    if (crypto_config.mc_type == MC_TYPE_CUSTOM)
     {
-        sadb_routine = get_sadb_routine_inmemory();
+        mc_if = get_mc_interface_custom();
     }
-    else if (crypto_config->sadb_type == SADB_TYPE_MARIADB)
+    else // MC_TYPE_INTERNAL
     {
-        if (sadb_mariadb_config == NULL)
+        mc_if = get_mc_interface_internal();
+    }
+    mc_if->mc_initialize();
+    // TODO: Check and return status on error
+
+    /* SA Interface */
+    // Prepare SA type from config
+    if (crypto_config.sa_type == SA_TYPE_CUSTOM)
+    {
+        sa_if = get_sa_interface_custom();
+    }
+    else if (crypto_config.sa_type == SA_TYPE_INMEMORY)
+    {
+        sa_if = get_sa_interface_inmemory();
+    }
+    else if (crypto_config.sa_type == SA_TYPE_MARIADB)
+    {
+        if (sa_mariadb_config == NULL)
         {
             status = CRYPTO_MARIADB_CONFIGURATION_NOT_COMPLETE;
             printf(KRED "ERROR: CryptoLib MariaDB must be configured before intializing!\n" RESET);
             return status; // MariaDB connection specified but no configuration exists, return!
         }
-        sadb_routine = get_sadb_routine_mariadb();
+        sa_if = get_sa_interface_mariadb();
     }
     else
     {
@@ -169,11 +201,11 @@ int32_t Crypto_Init(void)
 
     /* Crypto Interface */
     // Prepare Cryptographic Library from config
-    if(crypto_config->cryptography_type == CRYPTOGRAPHY_TYPE_LIBGCRYPT)
+    if(crypto_config.cryptography_type == CRYPTOGRAPHY_TYPE_LIBGCRYPT)
     {
         cryptography_if = get_cryptography_interface_libgcrypt();
     }
-    else if (crypto_config->cryptography_type == CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+    else if (crypto_config.cryptography_type == CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
         if (cryptography_kmc_crypto_config == NULL)
         {
@@ -206,10 +238,10 @@ int32_t Crypto_Init(void)
 
 
     // Init Security Associations
-    status = sadb_routine->sadb_init();
+    status = sa_if->sa_init();
     if (status==CRYPTO_LIB_SUCCESS)
     {
-        status = sadb_routine->sadb_config();
+        status = sa_if->sa_config();
 
         Crypto_Local_Init();
         Crypto_Local_Config();
@@ -227,7 +259,7 @@ int32_t Crypto_Init(void)
     }
     else
     {
-        printf(KBLU "Error, Crypto Lib NOT Intialized, sadb_init() returned error:%d.  Version .%d.%d.%d\n" RESET, CRYPTO_LIB_MAJOR_VERSION,
+        printf(KBLU "Error, Crypto Lib NOT Intialized, sa_init() returned error:%d.  Version .%d.%d.%d\n" RESET, CRYPTO_LIB_MAJOR_VERSION,
            CRYPTO_LIB_MINOR_VERSION, CRYPTO_LIB_REVISION, CRYPTO_LIB_MISSION_REV); 
     }
 
@@ -257,10 +289,15 @@ int32_t Crypto_Shutdown(void)
         key_if->key_shutdown();
     }
 
-    if (sadb_routine != NULL)
+    if(mc_if != NULL)
     {
-        sadb_routine->sadb_close();
-        sadb_routine = NULL;
+        mc_if->mc_shutdown();
+    }
+
+    if (sa_if != NULL)    
+    {
+        sa_if->sa_close();
+        sa_if = NULL;
     }
 
     if (cryptography_if != NULL)
@@ -275,7 +312,7 @@ int32_t Crypto_Shutdown(void)
 /**
  * @brief Function: Crypto_Config_CryptoLib
  * @param key_type: uint8
- * @param sadb_type: uint8
+ * @param sa_type: uint8
  * @param iv_type: uint8
  * @param crypto_create_fecf: uint8
  * @param process_sdls_pdus: uint8
@@ -287,26 +324,27 @@ int32_t Crypto_Shutdown(void)
  * @param vcid_bitmask: uint8
  * @return int32: Success/Failure
  **/
-int32_t Crypto_Config_CryptoLib(uint8_t key_type, uint8_t sadb_type, uint8_t cryptography_type, 
+int32_t Crypto_Config_CryptoLib(uint8_t key_type, uint8_t mc_type, uint8_t sa_type, uint8_t cryptography_type, 
                                 uint8_t iv_type, uint8_t crypto_create_fecf, uint8_t process_sdls_pdus,
                                 uint8_t has_pus_hdr, uint8_t ignore_sa_state, uint8_t ignore_anti_replay,
                                 uint8_t unique_sa_per_mapid, uint8_t crypto_check_fecf, uint8_t vcid_bitmask, uint8_t crypto_increment_nontransmitted_iv)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    crypto_config = (CryptoConfig_t* )calloc(1, CRYPTO_CONFIG_SIZE);
-    crypto_config->key_type = key_type;
-    crypto_config->sadb_type = sadb_type;
-    crypto_config->cryptography_type = cryptography_type;
-    crypto_config->iv_type = iv_type;
-    crypto_config->crypto_create_fecf = crypto_create_fecf;
-    crypto_config->process_sdls_pdus = process_sdls_pdus;
-    crypto_config->has_pus_hdr = has_pus_hdr;
-    crypto_config->ignore_sa_state = ignore_sa_state;
-    crypto_config->ignore_anti_replay = ignore_anti_replay;
-    crypto_config->unique_sa_per_mapid = unique_sa_per_mapid;
-    crypto_config->crypto_check_fecf = crypto_check_fecf;
-    crypto_config->vcid_bitmask = vcid_bitmask;
-    crypto_config->crypto_increment_nontransmitted_iv = crypto_increment_nontransmitted_iv;
+    crypto_config.init_status = INITIALIZED;
+    crypto_config.key_type = key_type;
+    crypto_config.mc_type = mc_type;
+    crypto_config.sa_type = sa_type;
+    crypto_config.cryptography_type = cryptography_type;
+    crypto_config.iv_type = iv_type;
+    crypto_config.crypto_create_fecf = crypto_create_fecf;
+    crypto_config.process_sdls_pdus = process_sdls_pdus;
+    crypto_config.has_pus_hdr = has_pus_hdr;
+    crypto_config.ignore_sa_state = ignore_sa_state;
+    crypto_config.ignore_anti_replay = ignore_anti_replay;
+    crypto_config.unique_sa_per_mapid = unique_sa_per_mapid;
+    crypto_config.crypto_check_fecf = crypto_check_fecf;
+    crypto_config.vcid_bitmask = vcid_bitmask;
+    crypto_config.crypto_increment_nontransmitted_iv = crypto_increment_nontransmitted_iv;
     return status;
 }
 
@@ -326,22 +364,22 @@ int32_t Crypto_Config_MariaDB(char* mysql_hostname, char* mysql_database, uint16
                               char* mysql_mtls_client_key_password, char* mysql_username, char* mysql_password)
 {
     int32_t status = CRYPTO_LIB_ERROR;
-    sadb_mariadb_config = (SadbMariaDBConfig_t*)calloc(1, SADB_MARIADB_CONFIG_SIZE);
-    if (sadb_mariadb_config != NULL)
+    sa_mariadb_config = (SadbMariaDBConfig_t*)calloc(1, SADB_MARIADB_CONFIG_SIZE);
+    if (sa_mariadb_config != NULL)
     {
-        sadb_mariadb_config->mysql_username=crypto_deep_copy_string(mysql_username);
-        sadb_mariadb_config->mysql_password=crypto_deep_copy_string(mysql_password);
-        sadb_mariadb_config->mysql_hostname=crypto_deep_copy_string(mysql_hostname);
-        sadb_mariadb_config->mysql_database=crypto_deep_copy_string(mysql_database);
-        sadb_mariadb_config->mysql_port=mysql_port;
+        sa_mariadb_config->mysql_username=crypto_deep_copy_string(mysql_username);
+        sa_mariadb_config->mysql_password=crypto_deep_copy_string(mysql_password);
+        sa_mariadb_config->mysql_hostname=crypto_deep_copy_string(mysql_hostname);
+        sa_mariadb_config->mysql_database=crypto_deep_copy_string(mysql_database);
+        sa_mariadb_config->mysql_port=mysql_port;
         /*start - encrypted connection related parameters*/
-        sadb_mariadb_config->mysql_mtls_cert = crypto_deep_copy_string(mysql_mtls_cert);
-        sadb_mariadb_config->mysql_mtls_key = crypto_deep_copy_string(mysql_mtls_key);
-        sadb_mariadb_config->mysql_mtls_ca = crypto_deep_copy_string(mysql_tls_ca);
-        sadb_mariadb_config->mysql_mtls_capath = crypto_deep_copy_string(mysql_tls_capath);
-        sadb_mariadb_config->mysql_tls_verify_server = mysql_tls_verify_server;
-        sadb_mariadb_config->mysql_mtls_client_key_password = crypto_deep_copy_string(mysql_mtls_client_key_password);
-        sadb_mariadb_config->mysql_require_secure_transport = mysql_require_secure_transport;
+        sa_mariadb_config->mysql_mtls_cert = crypto_deep_copy_string(mysql_mtls_cert);
+        sa_mariadb_config->mysql_mtls_key = crypto_deep_copy_string(mysql_mtls_key);
+        sa_mariadb_config->mysql_mtls_ca = crypto_deep_copy_string(mysql_tls_ca);
+        sa_mariadb_config->mysql_mtls_capath = crypto_deep_copy_string(mysql_tls_capath);
+        sa_mariadb_config->mysql_tls_verify_server = mysql_tls_verify_server;
+        sa_mariadb_config->mysql_mtls_client_key_password = crypto_deep_copy_string(mysql_mtls_client_key_password);
+        sa_mariadb_config->mysql_require_secure_transport = mysql_require_secure_transport;
         /*end - encrypted connection related parameters*/
         status = CRYPTO_LIB_SUCCESS; 
     }
@@ -362,7 +400,8 @@ int32_t Crypto_Config_Kmc_Crypto_Service(char* protocol, char* kmc_crypto_hostna
     if(kmc_crypto_app != NULL){
         cryptography_kmc_crypto_config->kmc_crypto_app_uri = crypto_deep_copy_string(kmc_crypto_app);
     } else{
-        cryptography_kmc_crypto_config->kmc_crypto_app_uri = crypto_deep_copy_string("crypto-service");
+        char* crypto_service_tmp = (char*) "crypto-service";
+        cryptography_kmc_crypto_config->kmc_crypto_app_uri = crypto_deep_copy_string(crypto_service_tmp);
     }
 
     cryptography_kmc_crypto_config->mtls_client_cert_path = crypto_deep_copy_string(mtls_client_cert_path);
@@ -446,23 +485,23 @@ int32_t crypto_free_config_structs(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
-    free(crypto_config); //no strings in this struct, just free it.
-    crypto_config=NULL;
+    //free(crypto_config); //no strings in this struct, just free it.
+    crypto_config.init_status = UNITIALIZED;
 
     // Config structs with char* types that are malloc'd and must be freed individually.
-    if(sadb_mariadb_config != NULL)
+    if(sa_mariadb_config != NULL)
     {
-        free(sadb_mariadb_config->mysql_username);
-        free(sadb_mariadb_config->mysql_password);
-        free(sadb_mariadb_config->mysql_hostname);
-        free(sadb_mariadb_config->mysql_database);
-        free(sadb_mariadb_config->mysql_mtls_cert);
-        free(sadb_mariadb_config->mysql_mtls_key);
-        free(sadb_mariadb_config->mysql_mtls_ca);
-        free(sadb_mariadb_config->mysql_mtls_capath);
-        free(sadb_mariadb_config->mysql_mtls_client_key_password);
-        free(sadb_mariadb_config);
-        sadb_mariadb_config=NULL;
+        free(sa_mariadb_config->mysql_username);
+        free(sa_mariadb_config->mysql_password);
+        free(sa_mariadb_config->mysql_hostname);
+        free(sa_mariadb_config->mysql_database);
+        free(sa_mariadb_config->mysql_mtls_cert);
+        free(sa_mariadb_config->mysql_mtls_key);
+        free(sa_mariadb_config->mysql_mtls_ca);
+        free(sa_mariadb_config->mysql_mtls_capath);
+        free(sa_mariadb_config->mysql_mtls_client_key_password);
+        free(sa_mariadb_config);
+        sa_mariadb_config=NULL;
     }
     if(cryptography_kmc_crypto_config != NULL)
     {

@@ -29,14 +29,25 @@ ivv-itc@lists.nasa.gov
 // main config enums
 typedef enum
 {
+    UNITIALIZED = 0,
+    INITIALIZED
+} InitStatus;
+typedef enum
+{
     KEY_TYPE_CUSTOM,
     KEY_TYPE_INTERNAL,
     KEY_TYPE_KMC
 } KeyType;
 typedef enum
 {
-    SADB_TYPE_INMEMORY,
-    SADB_TYPE_MARIADB
+    MC_TYPE_CUSTOM,
+    MC_TYPE_INTERNAL
+} McType;
+typedef enum
+{
+    SA_TYPE_CUSTOM,
+    SA_TYPE_INMEMORY,
+    SA_TYPE_MARIADB
 } SadbType;
 typedef enum
 {
@@ -157,8 +168,10 @@ typedef enum
 */
 typedef struct
 {
+    InitStatus init_status;
     KeyType key_type;
-    SadbType sadb_type;
+    McType mc_type;
+    SadbType sa_type;
     CryptographyType cryptography_type;
     IvType iv_type; // Whether or not CryptoLib should generate the IV
     CreateFecfBool crypto_create_fecf; // Whether or not CryptoLib is expected to calculate TC FECFs and return

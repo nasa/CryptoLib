@@ -60,6 +60,32 @@ else()
     list(APPEND LIB_SRC_FILES ${KEY_KMC_FILES})
 endif()
 
+if(MC_CUSTOM)
+    # Assumes CryptoLib is a Git submodule to project and custom directories and definitions exist at top level
+    aux_source_directory(../../mc/custom MC_CUSTOM_FILES)
+    list(APPEND LIB_SRC_FILES ${MC_CUSTOM_FILES})
+else()
+    aux_source_directory(mc/custom_stub MC_CUSTOM_FILES)
+    list(APPEND LIB_SRC_FILES ${MC_CUSTOM_FILES})
+endif()
+
+if(MC_INTERNAL)
+    aux_source_directory(mc/internal MC_INTERNAL_FILES)
+    list(APPEND LIB_SRC_FILES ${MC_INTERNAL_FILES})
+else()
+    aux_source_directory(mc/internal_stub MC_INTERNAL_FILES)
+    list(APPEND LIB_SRC_FILES ${MC_INTERNAL_FILES})
+endif()
+
+if(SA_CUSTOM)
+    # Assumes CryptoLib is a Git submodule to project and custom directories and definitions exist at top level
+    aux_source_directory(../../sa/custom SA_CUSTOM_FILES)
+    list(APPEND LIB_SRC_FILES ${SA_CUSTOM_FILES})
+else()
+    aux_source_directory(sa/custom_stub SA_CUSTOM_FILES)
+    list(APPEND LIB_SRC_FILES ${SA_CUSTOM_FILES})
+endif()
+
 if(SA_INTERNAL)
     aux_source_directory(sa/internal SA_INTERNAL_FILES)
     list(APPEND LIB_SRC_FILES ${SA_INTERNAL_FILES})
@@ -79,18 +105,18 @@ endif()
 # Create the app module
 if(DEFINED CFE_SYSTEM_PSPNAME)
     set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/cpu${TGTSYS_${SYSVAR}}/${INSTALL_SUBDIR}")
-    add_cfe_app(Crypto ${LIB_SRC_FILES})
+    add_cfe_app(crypto ${LIB_SRC_FILES})
 else() 
     # Standalone build
-    add_library(Crypto SHARED ${LIB_SRC_FILES})
+    add_library(crypto SHARED ${LIB_SRC_FILES})
 endif()
 
 if(CRYPTO_LIBGCRYPT)
-    target_link_libraries(Crypto gcrypt)
+    target_link_libraries(crypto gcrypt)
 endif()
 
 if(CRYPTO_KMC)
-    target_link_libraries(Crypto curl)
+    target_link_libraries(crypto curl)
 endif()
 
 if(SA_MARIADB)
@@ -98,32 +124,33 @@ if(SA_MARIADB)
             OUTPUT_VARIABLE MYSQL_CFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
     execute_process(COMMAND mysql_config --libs
             OUTPUT_VARIABLE MYSQL_LIBS OUTPUT_STRIP_TRAILING_WHITESPACE)
-    target_compile_options(Crypto PUBLIC ${MYSQL_CFLAGS})
-    target_link_libraries(Crypto ${MYSQL_LIBS})
+    target_compile_options(crypto PUBLIC ${MYSQL_CFLAGS})
+    target_link_libraries(crypto ${MYSQL_LIBS})
 endif()
 
 file(GLOB CRYPTO_INCLUDES ../include/*.h)
-set_target_properties(Crypto PROPERTIES PUBLIC_HEADER "${CRYPTO_INCLUDES}")
+set_target_properties(crypto PROPERTIES PUBLIC_HEADER "${CRYPTO_INCLUDES}")
 
-add_custom_command(TARGET Crypto POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:Crypto> ${PROJECT_BINARY_DIR}/lib/libCrypto.so
+add_custom_command(TARGET crypto POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:crypto> ${PROJECT_BINARY_DIR}/lib/libcrypto.so
         COMMENT "Created ${PROJECT_BINARY_DIR}/lib/libCrypto.so"
         )
 
 if(DEFINED CFE_SYSTEM_PSPNAME)
-    install(TARGETS Crypto 
-            DESTINATION ${CMAKE_INSTALL_PREFIX}/cpu${TGTSYS_${SYSVAR}}/${INSTALL_SUBDIR})
+    install(TARGETS crypto 
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/${TGTSYS_${SYSVAR}}/${INSTALL_SUBDIR}
+            PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/host)
 else()
-    install(TARGETS Crypto
+    install(TARGETS crypto
             DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
             PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 endif()
 
 if(SA_MARIADB)
-    file(GLOB MYSQL_SCRIPTS sa/sadb_mariadb_sql/*.sql)
-    file(GLOB MYSQL_TEST_SCRIPTS sa/test_sadb_mariadb_sql/*.sql)
+    file(GLOB MYSQL_SCRIPTS sa/sa_mariadb_sql/*.sql)
+    file(GLOB MYSQL_TEST_SCRIPTS sa/test_sa_mariadb_sql/*.sql)
     install(FILES ${MYSQL_SCRIPTS}
-            DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/sadb_mariadb_sql)
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/sa_mariadb_sql)
     install(FILES ${MYSQL_TEST_SCRIPTS}
-            DESTINATION ${CMAKE_INSTALL_PREFIX}/test/test_sadb_mariadb_sql)
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/test/test_sa_mariadb_sql)
 endif()

@@ -12,12 +12,14 @@
  * foreign persons.
  */
 
-#include "sadb_routine.h"
+#include "sa_interface.h"
 
-static SadbRoutineStruct sadb_routine;
+/* Variables */
+static SaInterfaceStruct sa_if_struct;
 
-SadbRoutine get_sadb_routine_inmemory(void)
+/* Functions */
+SaInterface get_sa_interface_custom(void)
 {
-    fprintf(stderr,"ERROR: Loading internal stub source code. Rebuild CryptoLib with -DSA_MARIADB=OFF to use proper internal implementation.\n");
-    return &sadb_routine;
+    fprintf(stderr,"ERROR: Loading custom SA interface stub source code. Rebuild CryptoLib with -DSA_CUSTOM=ON to use proper internal implementation.\n");
+    return &sa_if_struct;
 }

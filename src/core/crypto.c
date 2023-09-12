@@ -459,49 +459,49 @@ int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
 #ifdef PDU_DEBUG
                     printf(KGRN "SA Create\n" RESET);
 #endif
-                    status = sadb_routine->sadb_sa_create();
+                    status = sa_if->sa_create();
                     break;
                 case PID_DELETE_SA:
 #ifdef PDU_DEBUG
                     printf(KGRN "SA Delete\n" RESET);
 #endif
-                    status = sadb_routine->sadb_sa_delete();
+                    status = sa_if->sa_delete();
                     break;
                 case PID_SET_ARSNW:
 #ifdef PDU_DEBUG
                     printf(KGRN "SA setARSNW\n" RESET);
 #endif
-                    status = sadb_routine->sadb_sa_setARSNW();
+                    status = sa_if->sa_setARSNW();
                     break;
                 case PID_REKEY_SA:
 #ifdef PDU_DEBUG
                     printf(KGRN "SA Rekey\n" RESET);
 #endif
-                    status = sadb_routine->sadb_sa_rekey();
+                    status = sa_if->sa_rekey();
                     break;
                 case PID_EXPIRE_SA:
 #ifdef PDU_DEBUG
                     printf(KGRN "SA Expire\n" RESET);
 #endif
-                    status = sadb_routine->sadb_sa_expire();
+                    status = sa_if->sa_expire();
                     break;
                 case PID_SET_ARSN:
 #ifdef PDU_DEBUG
                     printf(KGRN "SA SetARSN\n" RESET);
 #endif
-                    status = sadb_routine->sadb_sa_setARSN();
+                    status = sa_if->sa_setARSN();
                     break;
                 case PID_START_SA:
 #ifdef PDU_DEBUG
                     printf(KGRN "SA Start\n" RESET);
 #endif
-                    status = sadb_routine->sadb_sa_start(tc_frame);
+                    status = sa_if->sa_start(tc_frame);
                     break;
                 case PID_STOP_SA:
 #ifdef PDU_DEBUG
                     printf(KGRN "SA Stop\n" RESET);
 #endif
-                    status = sadb_routine->sadb_sa_stop();
+                    status = sa_if->sa_stop();
                     break;
                 case PID_READ_ARSN:
 #ifdef PDU_DEBUG
@@ -513,7 +513,7 @@ int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
 #ifdef PDU_DEBUG
                     printf(KGRN "SA Status\n" RESET);
 #endif
-                    status = sadb_routine->sadb_sa_status(ingest);
+                    status = sa_if->sa_status(ingest);
                     break;
                 default:
                     printf(KRED "Error: Crypto_PDU failed interpreting SA Procedure Identification Field! \n" RESET);
@@ -721,7 +721,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, uin
     int32_t status = CRYPTO_LIB_SUCCESS;
     int x;
 
-    if (crypto_config->has_pus_hdr == TC_HAS_PUS_HDR)
+    if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
     {
         if ((tc_sdls_processed_frame->tc_pdu[0] == 0x18) && (tc_sdls_processed_frame->tc_pdu[1] == 0x80))
         // Crypto Lib Application ID
@@ -816,7 +816,7 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t* sa_ptr, uint8_t* arsn, u
     {
         return CRYPTO_LIB_ERR_NULL_ARSN;
     }
-    if (iv == NULL && sa_ptr->shivf_len > 0 && crypto_config->cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+    if (iv == NULL && sa_ptr->shivf_len > 0 && crypto_config.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
         return CRYPTO_LIB_ERR_NULL_IV;
     }
@@ -858,7 +858,7 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t* sa_ptr, uint8_t* arsn, u
     if ((sa_ptr->iv_len > 0) && (sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM))
     {
         // Check IV is in ARSNW
-        if (crypto_config->crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
+        if(crypto_config.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
         {
             status = Crypto_window(iv, sa_ptr->iv, sa_ptr->iv_len, sa_ptr->arsnw);
         }

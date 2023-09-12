@@ -63,7 +63,7 @@ if(${KMC_MDB_RH} OR ${KMC_MDB_DB})
              WORKING_DIRECTORY ${PROJECT_TEST_DIR})
              
     add_test(NAME UT_SADB_ERR_CASES_KMC_CRYPTO
-             COMMAND ${PROJECT_BINARY_DIR}/bin/ut_sadb_err_cases_kmc_crypto
+             COMMAND ${PROJECT_BINARY_DIR}/bin/ut_sa_err_cases_kmc_crypto
              WORKING_DIRECTORY ${PROJECT_TEST_DIR})
     
     # add_test(NAME UT_MYSQL_TLS_CONNECTION
@@ -122,7 +122,7 @@ foreach(SOURCE_PATH ${UNIT_FILES})
     else()
         add_executable(${EXECUTABLE_NAME} ${SOURCE_PATH}) 
         target_sources(${EXECUTABLE_NAME} PRIVATE core/shared_util.c)
-        target_link_libraries(${EXECUTABLE_NAME} LINK_PUBLIC Crypto pthread)
+        target_link_libraries(${EXECUTABLE_NAME} LINK_PUBLIC crypto pthread)
     endif()
 
     if(TEST_ENC AND ${EXECUTABLE_NAME} STREQUAL et_dt_validation)
@@ -145,7 +145,7 @@ if(${KMC_MDB_RH} OR ${KMC_MDB_DB})
 
         add_executable(${EXECUTABLE_NAME} ${SOURCE_PATH}) 
         target_sources(${EXECUTABLE_NAME} PRIVATE core/shared_util.c)
-        target_link_libraries(${EXECUTABLE_NAME} LINK_PUBLIC Crypto pthread)
+        target_link_libraries(${EXECUTABLE_NAME} LINK_PUBLIC crypto pthread)
 
         add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${EXECUTABLE_NAME}> ${PROJECT_BINARY_DIR}/bin/${EXECUTABLE_NAME}
@@ -155,9 +155,9 @@ if(${KMC_MDB_RH} OR ${KMC_MDB_DB})
     endforeach(SOURCE_PATH ${KMC_FILES}) 
 endif()
 
-target_include_directories (Crypto PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories (crypto PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-set(OBJECT_DIR ${PROJECT_BINARY_DIR}/src/CMakeFiles/Crypto.dir/core)
+set(OBJECT_DIR ${PROJECT_BINARY_DIR}/src/CMakeFiles/crypto.dir/core)
 
 if(${CODECOV})
     # Create the gcov target. Run coverage tests with 'make gcov'
@@ -168,8 +168,8 @@ if(${CODECOV})
         )
     add_custom_command(TARGET gcov
         COMMAND echo "=================== GCOV ===================="
-        #COMMAND gcov -b -o ${OBJECT_DIR} crypto_aos.c.gnco crypto_config.c.gnco crypto_key_mgmt.c.gnco crypto_mc.c.gnco crypto_print.c.gnco crypto_tc.c.gnco crypto_tm.c.gnco crypto_user.c.gnco crypto.c.gnco sadb_routine_inmemory.template.c.gnco sadb_routine.c.gnco
-        COMMAND gcov -b -o ${OBJECT_DIR} crypto_aos.c.gnco crypto_config.c.gnco crypto_key_mgmt.c.gnco crypto_mc.c.gnco crypto_tc.c.gnco crypto_tm.c.gnco crypto_user.c.gnco crypto.c.gnco sadb_routine_inmemory.template.c.gnco 
+        #COMMAND gcov -b -o ${OBJECT_DIR} crypto_aos.c.gnco crypto_config.c.gnco crypto_key_mgmt.c.gnco crypto_mc.c.gnco crypto_print.c.gnco crypto_tc.c.gnco crypto_tm.c.gnco crypto_user.c.gnco crypto.c.gnco sa_routine_inmemory.template.c.gnco sa_routine.c.gnco
+        COMMAND gcov -b -o ${OBJECT_DIR} crypto_aos.c.gnco crypto_config.c.gnco crypto_key_mgmt.c.gnco crypto_mc.c.gnco crypto_tc.c.gnco crypto_tm.c.gnco crypto_user.c.gnco crypto.c.gnco sa_routine_inmemory.template.c.gnco 
         # | grep -A 5 "Adder.cpp" > CoverageSummary.tmp
         #COMMAND cat CoverageSummary.tmp
         #COMMAND echo "-- Coverage files have been output to ${PROJECT_BINARY_DIR}/coverage"

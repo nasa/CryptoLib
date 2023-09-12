@@ -16,7 +16,7 @@
 # jstar-development-team@mail.nasa.gov
 
 cmake_minimum_required(VERSION 3.14.0)
-project(CRYPTO C)
+project(crypto C)
 
 #
 # Define Build Flags
@@ -30,6 +30,9 @@ option(DEBUG "Debug" ON)
 option(KEY_CUSTOM "Key Module - Custom" OFF)
 option(KEY_INTERNAL "Key Module - Internal" ON)
 option(KEY_KMC "Key Module - KMC OFF")
+option(SA_CUSTOM "Security Association - Custom" OFF)
+option(MC_CUSTOM "Monitoring and Control - Custom" OFF)
+option(MC_INTERNAL "Monitoring and Control - Internal" ON)
 option(SA_INTERNAL "Security Association - Internal" ON)
 option(SA_MARIADB "Security Association - MariaDB" OFF)
 option(SUPPORT "Support" OFF)

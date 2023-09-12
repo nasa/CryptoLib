@@ -22,7 +22,7 @@
 #include "ut_crypto.h"
 #include "crypto.h"
 #include "crypto_error.h"
-#include "sadb_routine.h"
+#include "sa_interface.h"
 #include "utest.h"
 #include "gcrypt.h"
 
@@ -53,7 +53,7 @@ UTEST(CRYPTO_C, CALC_CRC16)
 UTEST(CRYPTO_C, BAD_CC_FLAG)
 {
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -87,7 +87,7 @@ UTEST(CRYPTO_C, PDU_SWITCH)
 {
     int32_t status = CRYPTO_LIB_ERROR;
 
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, SADB_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -257,7 +257,7 @@ UTEST(CRYPTO_C, EXT_PROC_PDU)
     TC_t* tc_frame = NULL;
     tc_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     int32_t status = CRYPTO_LIB_ERROR;
-    crypto_config->has_pus_hdr = TC_NO_PUS_HDR;
+    crypto_config.has_pus_hdr = TC_NO_PUS_HDR;
     tc_frame->tc_header.vcid = TC_SDLS_EP_VCID;
     tc_frame->tc_header.fl = 1;
 

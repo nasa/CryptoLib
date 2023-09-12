@@ -72,7 +72,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
     printf("\n");
 #endif
 
-    status = sadb_routine->sadb_get_operational_sa_from_gvcid(((uint8_t)pTfBuffer[0] & 0xC0) >> 6, 
+    status = sa_if->sa_get_operational_sa_from_gvcid(((uint8_t)pTfBuffer[0] & 0xC0) >> 6, 
                                                 (((uint16_t)pTfBuffer[0] & 0x3F) << 4) | (((uint16_t)pTfBuffer[1] & 0xF0) >> 4),
                                                 ((uint8_t)pTfBuffer[1] & 0x0E) >> 1, 0, &sa_ptr);
 
@@ -80,6 +80,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
     {
         status = CRYPTO_LIB_ERR_NULL_SA;
         printf(KRED "Error: Input SA NULL! \n" RESET);
+        mc_if->mc_log(status);
         return status; // Just return here, nothing can be done.
     }
 
@@ -88,19 +89,26 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
                                                 ((uint8_t)pTfBuffer[1] & 0x0E) >> 1, 
                                                 gvcid_managed_parameters, &current_managed_parameters);
 
-    if (status != CRYPTO_LIB_SUCCESS)
-    {
-        return status;
-    } // Unable to get necessary Managed Parameters for TM TF -- return with error.
-    
-    if (crypto_config == NULL)
+    if ((crypto_config.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
     {
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
         status = CRYPTO_LIB_ERR_NO_CONFIG;
+        // Can't mc_log since it's not configured
         return status;  // return immediately so a NULL crypto_config is not dereferenced later
     }
+    //  * * TODO - THIS BLOCK MOVED INTO TO  * *
+    /**
+    // Lookup-retrieve managed parameters for frame via gvcid:
+    // status = Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame.tm_header.tfvn, tm_frame.tm_header.scid, tm_frame.tm_header.vcid,
+                                                    //  gvcid_managed_parameters, &current_managed_parameters);
+    // if (status != CRYPTO_LIB_SUCCESS)
+    // {
+        // mc_if->mc_log(status);
+        // return status;
+    // } // Unable to get necessary Managed Parameters for TM TF -- return with error.
+  **/
 
-#ifdef TM_DEBUG
+ #ifdef TM_DEBUG
     printf(KYEL "TM BEFORE Apply Sec:\n\t" RESET);
     for (int16_t i =0; i < current_managed_parameters->max_frame_size; i++)
     {
@@ -109,16 +117,10 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
     printf("\n");
 #endif
 
-    // Query SA DB for active SA / SDLS parameters
-    if (sadb_routine == NULL) // This should not happen, but tested here for safety
-    {
-        printf(KRED "ERROR: SA DB Not initalized! -- CRYPTO_LIB_ERR_NO_INIT, Will Exit\n" RESET);
-        status = CRYPTO_LIB_ERR_NO_INIT;
-    }
-
     // If unable to get operational SA, can return
     if (status != CRYPTO_LIB_SUCCESS)
     {
+        mc_if->mc_log(status);
         return status;
     }
 
@@ -150,6 +152,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
         // Leaving for now as it would be cleaner in SA to have an association enum returned I believe
         printf(KRED "Error: SA Service Type is not defined! \n" RESET);
         status = CRYPTO_LIB_ERROR;
+        mc_if->mc_log(status);
         return status;
     }
 
@@ -235,8 +238,10 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
 #endif
     if(sa_service_type != SA_PLAINTEXT && sa_ptr->ecs_len == 0 && sa_ptr->acs_len ==0)
     {
+        status = CRYPTO_LIB_ERR_NULL_CIPHERS;
         printf("CRYPTO_LIB_ERR_NULL_CIPHERS, Invalid cipher lengths, %d\n", CRYPTO_LIB_ERR_NULL_CIPHERS);
-        return CRYPTO_LIB_ERR_NULL_CIPHERS;
+        mc_if->mc_log(status);
+        return status;
     }
 
     if(sa_ptr->est == 0 && sa_ptr->ast == 1)
@@ -246,7 +251,9 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
             if((sa_ptr->acs == CRYPTO_MAC_CMAC_AES256 || sa_ptr->acs == CRYPTO_MAC_HMAC_SHA256 || sa_ptr->acs == CRYPTO_MAC_HMAC_SHA512) &&
                 sa_ptr->iv_len > 0 )
                 {
-                    return CRYPTO_LIB_ERR_IV_NOT_SUPPORTED_FOR_ACS_ALGO;
+                    status = CRYPTO_LIB_ERR_IV_NOT_SUPPORTED_FOR_ACS_ALGO;
+                    mc_if->mc_log(status);
+                    return status;
                 }
         }
     }
@@ -357,14 +364,18 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
     ekp = key_if->get_key(sa_ptr->ekid);
     if (ekp == NULL)
     {
-        return CRYPTO_LIB_ERR_KEY_ID_ERROR;
+        status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+        mc_if->mc_log(status);
+        return status;
     }
 
     crypto_key_t* akp = NULL;
     akp = key_if->get_key(sa_ptr->akid);
     if (akp == NULL)
     {
-        return CRYPTO_LIB_ERR_KEY_ID_ERROR;
+        status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+        mc_if->mc_log(status);
+        return status;
     }
 
     /**
@@ -394,10 +405,10 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
 #endif
             if (sa_ptr->abm_len < aad_len)
             {
-#ifdef TM_DEBUG
+                status = CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
                 printf(KRED "Error: abm_len of %d < aad_len of %d\n" RESET, sa_ptr->abm_len, aad_len);
-#endif
-                return CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
+                mc_if->mc_log(status);
+                return status;
             }
             status = Crypto_Prepare_TM_AAD(&pTfBuffer[0], aad_len, sa_ptr->abm, &aad[0]);
         }
@@ -505,7 +516,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
         if (sa_service_type != SA_PLAINTEXT)
         {
 #ifdef INCREMENT
-            if (crypto_config->crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
+            if (crypto_config.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
             {
                 if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0)
                 {
@@ -584,7 +595,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
 #ifdef FECF_DEBUG
         printf(KCYN "Calcing FECF over %d bytes\n" RESET, current_managed_parameters->max_frame_size - 2);
 #endif
-        if (crypto_config->crypto_create_fecf == CRYPTO_TM_CREATE_FECF_TRUE)
+        if (crypto_config.crypto_create_fecf == CRYPTO_TM_CREATE_FECF_TRUE)
         {
             new_fecf = Crypto_Calc_FECF((uint8_t*)&pTfBuffer, current_managed_parameters->max_frame_size - 2);
             pTfBuffer[current_managed_parameters->max_frame_size - 2] = (uint8_t)((new_fecf & 0xFF00) >> 8);
@@ -607,12 +618,13 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
     printf("\n");
 #endif
 
-    status = sadb_routine->sadb_save_sa(sa_ptr);
+    status = sa_if->sa_save_sa(sa_ptr);
 
 #ifdef DEBUG
     printf(KYEL "----- Crypto_TM_ApplySecurity END -----\n" RESET);
 #endif
 
+    mc_if->mc_log(status);
     return status;
 }
 
@@ -659,10 +671,12 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
     // Payload Data Unit
     Crypto_TM_updatePDU(ingest,*len_ingest);
     printf("LINE: %d\n",__LINE__);
-    if (sadb_routine->sadb_get_sa_from_spi(spi, &sa_ptr) != CRYPTO_LIB_SUCCESS)
+    if (sa_if->sa_get_from_spi(spi, &sa_ptr) != CRYPTO_LIB_SUCCESS)
     {
         // TODO - Error handling
-        return CRYPTO_LIB_ERROR; // Error -- unable to get SA from SPI.
+        status = CRYPTO_LIB_ERROR;
+        mc_if->mc_log(status);
+        return status; // Error -- unable to get SA from SPI.
     }
     printf("LINE: %d\n",__LINE__);
     // Check test flags
@@ -854,6 +868,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
 #endif
 
    *len_ingest = count;
+    mc_if->mc_log(status);
     return status;
 }  **/
 
@@ -896,18 +911,20 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
     if (len_ingest < 6) // Frame length doesn't even have enough bytes for header -- error out.
     {
         status = CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_TM_STANDARD;
+        mc_if->mc_log(status);
         return status;
     }
 
-    if (crypto_config == NULL)
+    if ((crypto_config.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
     {
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
         status = CRYPTO_LIB_ERR_NO_CONFIG;
+        // Can't mc_log since it's not configured
         return status;
     }
 
     // Query SA DB for active SA / SDLS parameters
-    if (sadb_routine == NULL) // This should not happen, but tested here for safety
+    if (sa_if == NULL) // This should not happen, but tested here for safety
     {
         printf(KRED "ERROR: SA DB Not initalized! -- CRYPTO_LIB_ERR_NO_INIT, Will Exit\n" RESET);
         status = CRYPTO_LIB_ERR_NO_INIT;
@@ -929,6 +946,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
 #ifdef TM_DEBUG
         printf(KRED "**NO LUCK WITH GVCID!\n" RESET);
 #endif
+        mc_if->mc_log(status);
         return status;
     } // Unable to get necessary Managed Parameters for TM TF -- return with error.
 
@@ -971,10 +989,11 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
     // Move index to past the SPI
     byte_idx += 2;
 
-    status = sadb_routine->sadb_get_sa_from_spi(spi, &sa_ptr);
+    status = sa_if->sa_get_from_spi(spi, &sa_ptr);
     // If no valid SPI, return
     if (status != CRYPTO_LIB_SUCCESS)
     {
+        mc_if->mc_log(status);
         return status;
     }
 
@@ -1005,6 +1024,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
         // Leaving for now as it would be cleaner in SA to have an association enum returned I believe
         printf(KRED "Error: SA Service Type is not defined! \n" RESET);
         status = CRYPTO_LIB_ERROR;
+        mc_if->mc_log(status);
         return status;
     }
 
@@ -1029,6 +1049,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
     if ( encryption_cipher == CRYPTO_CIPHER_NONE && sa_ptr->est == 1)
     {
         status = CRYPTO_LIB_ERR_NO_ECS_SET_FOR_ENCRYPTION_MODE;
+        mc_if->mc_log(status);
         return status;
     }
 
@@ -1057,7 +1078,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
         uint16_t received_fecf = (((p_ingest[current_managed_parameters->max_frame_size - 2] << 8) & 0xFF00) |
                                                         (p_ingest[current_managed_parameters->max_frame_size - 1] & 0x00FF));
 
-        if (crypto_config->crypto_check_fecf == TM_CHECK_FECF_TRUE)
+        if (crypto_config.crypto_check_fecf == TM_CHECK_FECF_TRUE)
         {
             // Calculate our own
             uint16_t calculated_fecf = Crypto_Calc_FECF(p_ingest, len_ingest - 2);
@@ -1070,6 +1091,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
                 printf("FECF was Calced over %d bytes\n", len_ingest-2);
 #endif
                 status = CRYPTO_LIB_ERR_INVALID_FECF;
+                mc_if->mc_log(status);
                 return status;
             }
 #ifdef FECF_DEBUG
@@ -1089,6 +1111,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
             current_managed_parameters->vcid, current_managed_parameters->has_fecf);
 // #endif
         status = CRYPTO_LIB_ERR_TC_ENUM_USED_FOR_TM_CONFIG;
+        mc_if->mc_log(status);
         return status;
     }
 
@@ -1098,6 +1121,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
     {
         printf(KRED "Error: Calloc for decrypted output buffer failed! \n" RESET);
         status = CRYPTO_LIB_ERROR;
+        mc_if->mc_log(status);
         return status;
     }
 
@@ -1170,14 +1194,18 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
     ekp = key_if->get_key(sa_ptr->ekid);
     if (ekp == NULL)
     {
-        return CRYPTO_LIB_ERR_KEY_ID_ERROR;
+        status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+        mc_if->mc_log(status);
+        return status;
     }
 
     crypto_key_t* akp = NULL;
     akp = key_if->get_key(sa_ptr->akid);
     if (akp == NULL)
     {
-        return CRYPTO_LIB_ERR_KEY_ID_ERROR;
+        status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+        mc_if->mc_log(status);
+        return status;
     }
 
     /**
@@ -1186,7 +1214,9 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
 
     // if(sa_service_type != SA_PLAINTEXT)
     // {
-        // return CRYPTO_LIB_ERR_NULL_CIPHERS;
+        // status = CRYPTO_LIB_ERR_NULL_CIPHERS;
+        // mc_if->mc_log(status);
+        // return status;
     // }
 
     // Parse MAC, prepare AAD
@@ -1206,7 +1236,9 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
         }
         if (sa_ptr->abm_len < aad_len)
         {
-            return CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
+            status = CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
+            mc_if->mc_log(status);
+            return status;
         }
         // Use ingest and abm to create aad
         Crypto_Prepare_TM_AAD(p_ingest, aad_len, sa_ptr->abm, &aad[0]);
@@ -1294,7 +1326,9 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
             if((int32_t) ekp->key_len != Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs))
             {
                 // free(aad); - non-heap object
-                return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
+                status = CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
+                mc_if->mc_log(status);
+                return status;
             }
 
             status = cryptography_if->cryptography_decrypt(p_new_dec_frame+byte_idx, // plaintext output
@@ -1353,6 +1387,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
         printf(KYEL "----- Crypto_TM_ProcessSecurity END -----\n" RESET);
 #endif
 
+        mc_if->mc_log(status);
         return status;
     }
 
@@ -1388,7 +1423,7 @@ void Crypto_TM_updatePDU(uint8_t* ingest, int len_ingest)
     SecurityAssociation_t* sa_ptr;
 
     // Consider a helper function here, or elsewhere, to do all the 'math' in one spot as a global accessible list of variables
-    if (sadb_routine->sadb_get_sa_from_spi(tm_frame[0], &sa_ptr) != CRYPTO_LIB_SUCCESS) // modify
+    if (sa_if->sa_get_from_spi(tm_frame[0], &sa_ptr) != CRYPTO_LIB_SUCCESS) // modify
     {
         // TODO - Error handling
         printf(KRED"Update PDU Error!\n");

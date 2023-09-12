@@ -36,9 +36,11 @@
 #include "crypto_events.h"
 #include "crypto_print.h"
 #include "crypto_structs.h"
-#include "sadb_routine.h"
+#include "sa_interface.h"
 #include "cryptography_interface.h"
 #include "key_interface.h"
+#include "mc_interface.h"
+#include "sa_interface.h"
 
 /*
 ** Crypto Version
@@ -58,7 +60,7 @@
 */
 
 // Crypto Library Configuration functions
-extern int32_t Crypto_Config_CryptoLib(uint8_t key_type, uint8_t sadb_type, uint8_t cryptography_type, 
+extern int32_t Crypto_Config_CryptoLib(uint8_t key_type, uint8_t mc_type, uint8_t sa_type, uint8_t cryptography_type, 
                                        uint8_t iv_type, uint8_t crypto_create_fecf, uint8_t process_sdls_pdus, 
                                        uint8_t has_pus_hdr, uint8_t ignore_sa_state, uint8_t ignore_anti_replay,
                                        uint8_t unique_sa_per_mapid, uint8_t crypto_check_fecf, uint8_t vcid_bitmask, 
@@ -81,8 +83,9 @@ extern int32_t Crypto_Config_Add_Gvcid_Managed_Parameter(uint8_t tfvn, uint16_t 
 extern int32_t Crypto_Init(void); // Initialize CryptoLib After Configuration Calls
 extern int32_t Crypto_Init_With_Configs(
     CryptoConfig_t* crypto_config_p, GvcidManagedParameters_t* gvcid_managed_parameters_p,
-    SadbMariaDBConfig_t* sadb_mariadb_config_p,
+    SadbMariaDBConfig_t* sa_mariadb_config_p,
     CryptographyKmcCryptoServiceConfig_t* cryptography_kmc_crypto_config_p); // Initialize CryptoLib With Application Defined Configuration
+extern int32_t Crypto_TC_Init(void);
 extern int32_t Crypto_Init_TC_Unit_Test(void);      // Initialize CryptoLib with unit test default Configurations
 extern int32_t Crypto_Init_TM_Unit_Test(void);      // Initialize CryptoLib with unit test default Configurations
 
@@ -188,19 +191,20 @@ extern TM_FramePrimaryHeader_t tm_frame_pri_hdr;
 extern TM_FrameSecurityHeader_t tm_frame_sec_hdr; // Used to reduce bit math duplication
 
 // Global configuration structs
-extern CryptoConfig_t* crypto_config;
-extern SadbMariaDBConfig_t* sadb_mariadb_config;
+extern CryptoConfig_t crypto_config;
+extern SadbMariaDBConfig_t* sa_mariadb_config;
 extern CryptographyKmcCryptoServiceConfig_t* cryptography_kmc_crypto_config;
 extern CamConfig_t* cam_config;
 extern GvcidManagedParameters_t* gvcid_managed_parameters;
 extern GvcidManagedParameters_t* current_managed_parameters;
 extern KeyInterface key_if;
-extern SadbRoutine sadb_routine;
+extern McInterface mc_if;
+extern SaInterface sa_if;
 extern CryptographyInterface cryptography_if;
 
 // extern crypto_key_t ak_ring[NUM_KEYS];
 extern CCSDS_t sdls_frame;
-extern SadbMariaDBConfig_t* sadb_mariadb_config;
+extern SadbMariaDBConfig_t* sa_mariadb_config;
 extern GvcidManagedParameters_t* gvcid_managed_parameters;
 extern GvcidManagedParameters_t* current_managed_parameters;
 // OCF

@@ -15,43 +15,34 @@
    NASA IV&V
    jstar-development-team@mail.nasa.gov
 */
+#ifndef MONITORING_AND_CONTROL_INTERFACE_H
+#define MONITORING_AND_CONTROL_INTERFACE_H
 
-/**
- *  Unit Tests that macke use of CRYPTO_AOS functionality on the data.
- **/
-#include "ut_crypto_aos.h"
-#include "crypto.h"
 #include "crypto_error.h"
-#include "sa_interface.h"
-#include "utest.h"
+#include "crypto_structs.h"
 
-/**
- * @brief Unit Test: Crypto Init with invalid SADB
- * @note: TODO:  This test will need to be reworked when this functionality exists.
- **/
-UTEST(CRYPTO_AOS, APPLY_SECURITY)
+/* Structures */
+typedef struct
 {
-    int32_t status = CRYPTO_LIB_ERROR;
-    uint8_t ingest[1024] = {0};
-    int len_ingest = 0;
+    /* MC Interface, SDLS */
+    int32_t (*mc_initialize)(void);
+    void (*mc_log)(int32_t error_code);
+    int32_t (*mc_shutdown)(void);
+    
+    /* MC Interface, SDLS-EP */
+    /*
+    int32_t (*mc_ping)();
+    int32_t (*mc_log_status)(void);
+    int32_t (*mc_dump_log)(void);
+    int32_t (*mc_erase_log)(void);
+    int32_t (*mc_self_test)(void);
+    int32_t (*mc_alarm_reset_flag)(void);
+    */
+   
+}  McInterfaceStruct, *McInterface;
 
-    status = Crypto_AOS_ApplySecurity(&ingest[0], &len_ingest);
+/* Prototypes */
+McInterface get_mc_interface_custom(void);
+McInterface get_mc_interface_internal(void);
 
-    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-}
-
-/**
- * @brief Unit Test: Crypto AOS Process Security
- **/
-UTEST(CRYPTO_AOS, PROCESS_SECURITY)
-{
-    int32_t status = CRYPTO_LIB_ERROR;
-    uint8_t ingest[1024] = {0};
-    int len_ingest = 0;
-
-    status = Crypto_AOS_ProcessSecurity(&ingest[0], &len_ingest);
-
-    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-}
-
-UTEST_MAIN();
+#endif // MONITORING_AND_CONTROL_INTERFACE_H

@@ -142,23 +142,23 @@ int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char* 
         }
         break;
 
-    case CRYPTO_CMD_VCID:
-        if (crypto_standalone_check_number_arguments(num_tokens, 1) == CRYPTO_LIB_SUCCESS)
-        {
-            uint8_t vcid = (uint8_t)atoi(&tokens[0]);
-            /* Confirm new VCID valid */
-            if (vcid < 64)
+        case CRYPTO_CMD_VCID:
+            if (crypto_standalone_check_number_arguments(num_tokens, 1) == CRYPTO_LIB_SUCCESS)
             {
-                SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-                SecurityAssociation_t* test_association = NULL;
-                sadb_routine->sadb_get_sa_from_spi(vcid, &test_association);
-
-                /* Handle special case for VCID */
-                if (vcid == 1)
+                uint8_t vcid = (uint8_t) atoi(&tokens[0]);
+                /* Confirm new VCID valid */
+                if (vcid < 64)
                 {
-                    printf("Special case for VCID 1! \n");
-                    vcid = 0;
-                }
+                    SaInterface sa_if = get_sa_interface_inmemory();
+                    SecurityAssociation_t* test_association = NULL;
+                    sa_if->sa_get_from_spi(vcid, &test_association);
+                    
+                    /* Handle special case for VCID */
+                    if(vcid == 1)
+                    {
+                        printf("Special case for VCID 1! \n");
+                        vcid = 0;
+                    }
 
                 if ((test_association->sa_state == SA_OPERATIONAL) &&
                     (test_association->gvcid_blk.mapid == TYPE_TC) &&
@@ -387,7 +387,7 @@ void *crypto_standalone_tc_apply(void* sock)
             memset(tc_apply_in, 0x00, sizeof(tc_apply_in));
             tc_in_len = 0;
             tc_out_len = 0;
-            free(tc_out_ptr);
+            if (!tc_out_ptr) free(tc_out_ptr);
             if (tc_debug == 1)
             {
                 printf("\n");
@@ -403,10 +403,10 @@ void *crypto_standalone_tc_apply(void* sock)
 
 void crypto_standalone_tm_frame(uint8_t* in_data, uint16_t in_length, uint8_t* out_data, uint16_t* out_length, uint16_t spi)
 {
-    SadbRoutine sadb_routine = get_sadb_routine_inmemory();
+    SaInterface sa_if = get_sa_interface_inmemory();
     SecurityAssociation_t* sa_ptr = NULL;
 
-    sadb_routine->sadb_get_sa_from_spi(spi, &sa_ptr);
+    sa_if->sa_get_from_spi(spi, &sa_ptr);
     if (!sa_ptr)
     {
         printf("WARNING - SA IS NULL!\n");

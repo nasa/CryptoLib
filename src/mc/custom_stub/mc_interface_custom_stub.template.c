@@ -16,42 +16,14 @@
    jstar-development-team@mail.nasa.gov
 */
 
-/**
- *  Unit Tests that macke use of CRYPTO_AOS functionality on the data.
- **/
-#include "ut_crypto_aos.h"
-#include "crypto.h"
-#include "crypto_error.h"
-#include "sa_interface.h"
-#include "utest.h"
+#include "mc_interface.h"
 
-/**
- * @brief Unit Test: Crypto Init with invalid SADB
- * @note: TODO:  This test will need to be reworked when this functionality exists.
- **/
-UTEST(CRYPTO_AOS, APPLY_SECURITY)
+/* Variables */
+static McInterfaceStruct mc_if_struct;
+
+/* Functions */
+McInterface get_mc_interface_custom(void)
 {
-    int32_t status = CRYPTO_LIB_ERROR;
-    uint8_t ingest[1024] = {0};
-    int len_ingest = 0;
-
-    status = Crypto_AOS_ApplySecurity(&ingest[0], &len_ingest);
-
-    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    fprintf(stderr,"ERROR: Loading custom monitoring and control interface stub source code. Rebuild CryptoLib with -DMC_CUSTOM=ON to use implementation.\n");
+    return &mc_if_struct;
 }
-
-/**
- * @brief Unit Test: Crypto AOS Process Security
- **/
-UTEST(CRYPTO_AOS, PROCESS_SECURITY)
-{
-    int32_t status = CRYPTO_LIB_ERROR;
-    uint8_t ingest[1024] = {0};
-    int len_ingest = 0;
-
-    status = Crypto_AOS_ProcessSecurity(&ingest[0], &len_ingest);
-
-    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-}
-
-UTEST_MAIN();
