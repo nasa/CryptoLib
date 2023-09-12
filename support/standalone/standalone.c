@@ -48,9 +48,9 @@ int32_t crypto_standalone_check_number_arguments(int actual, int expected)
     return status;
 }
 
-void crypto_standalone_to_lower(char *str)
+void crypto_standalone_to_lower(char* str)
 {
-    char *ptr = str;
+    char* ptr = str;
     while (*ptr)
     {
         *ptr = tolower((unsigned char)*ptr);
@@ -73,7 +73,7 @@ void crypto_standalone_print_help(void)
                          "\n");
 }
 
-int32_t crypto_standalone_get_command(const char *str)
+int32_t crypto_standalone_get_command(const char* str)
 {
     int32_t status = CRYPTO_CMD_UNKNOWN;
     char lcmd[CRYPTO_MAX_INPUT_TOKEN_SIZE];
@@ -112,7 +112,7 @@ int32_t crypto_standalone_get_command(const char *str)
     return status;
 }
 
-int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char *tokens)
+int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char* tokens)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
@@ -150,7 +150,7 @@ int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char *
             if (vcid < 64)
             {
                 SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-                SecurityAssociation_t *test_association = NULL;
+                SecurityAssociation_t* test_association = NULL;
                 sadb_routine->sadb_get_sa_from_spi(vcid, &test_association);
 
                 /* Handle special case for VCID */
@@ -220,7 +220,7 @@ int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char *
     return status;
 }
 
-int32_t crypto_standalone_udp_init(udp_info_t *sock, int32_t port)
+int32_t crypto_standalone_udp_init(udp_info_t* sock, int32_t port)
 {
     int status = CRYPTO_LIB_SUCCESS;
     int optval;
@@ -240,7 +240,7 @@ int32_t crypto_standalone_udp_init(udp_info_t *sock, int32_t port)
     saddr.sin_family = AF_INET;
     saddr.sin_addr.s_addr = inet_addr("0.0.0.0");
     saddr.sin_port = htons(sock->port);
-    status = bind(sock->sockfd, (struct sockaddr *)&saddr, sizeof(saddr));
+    status = bind(sock->sockfd, (struct sockaddr*)&saddr, sizeof(saddr));
     if (status != 0)
     {
         printf(" udp_init:  Socker bind error with port %d", sock->port);
@@ -275,7 +275,7 @@ int32_t crypto_reset(void)
     return status;
 }
 
-void crypto_standalone_tc_frame(uint8_t *in_data, uint16_t in_length, uint8_t *out_data, uint16_t *out_length)
+void crypto_standalone_tc_frame(uint8_t* in_data, uint16_t in_length, uint8_t* out_data, uint16_t* out_length)
 {
     /* TC Length */
     *out_length = (uint16_t)CRYPTO_STANDALONE_FRAMING_TC_DATA_LEN + 6;
@@ -298,14 +298,14 @@ void crypto_standalone_tc_frame(uint8_t *in_data, uint16_t in_length, uint8_t *o
     /* SDLS Trailer */
 }
 
-void *crypto_standalone_tc_apply(void *sock)
+void *crypto_standalone_tc_apply(void* sock)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    udp_info_t *tc_sock = (udp_info_t *)sock;
+    udp_info_t* tc_sock = (udp_info_t* )sock;
 
     uint8_t tc_apply_in[TC_MAX_FRAME_SIZE];
     uint16_t tc_in_len = 0;
-    uint8_t *tc_out_ptr;
+    uint8_t* tc_out_ptr;
     uint16_t tc_out_len = 0;
 
 #ifdef CRYPTO_STANDALONE_HANDLE_FRAMING
@@ -326,7 +326,7 @@ void *crypto_standalone_tc_apply(void *sock)
     while (keepRunning == CRYPTO_LIB_SUCCESS)
     {
         /* Receive */
-        status = recvfrom(tc_sock->sockfd, tc_apply_in, sizeof(tc_apply_in), 0, (struct sockaddr *)&rcv_addr, (socklen_t *)&sockaddr_size);
+        status = recvfrom(tc_sock->sockfd, tc_apply_in, sizeof(tc_apply_in), 0, (struct sockaddr*)&rcv_addr, (socklen_t*)&sockaddr_size);
         if (status != -1)
         {
             tc_in_len = status;
@@ -372,7 +372,7 @@ void *crypto_standalone_tc_apply(void *sock)
                 }
 
                 /* Reply */
-                status = sendto(tc_sock->sockfd, tc_out_ptr, tc_out_len, 0, (struct sockaddr *)&fwd_addr, sizeof(fwd_addr));
+                status = sendto(tc_sock->sockfd, tc_out_ptr, tc_out_len, 0, (struct sockaddr*)&fwd_addr, sizeof(fwd_addr));
                 if ((status == -1) || (status != tc_out_len))
                 {
                     printf("crypto_standalone_tc_apply - Reply error %d \n", status);
@@ -401,10 +401,10 @@ void *crypto_standalone_tc_apply(void *sock)
     return tc_sock;
 }
 
-void crypto_standalone_tm_frame(uint8_t *in_data, uint16_t in_length, uint8_t *out_data, uint16_t *out_length, uint16_t spi)
+void crypto_standalone_tm_frame(uint8_t* in_data, uint16_t in_length, uint8_t* out_data, uint16_t* out_length, uint16_t spi)
 {
     SadbRoutine sadb_routine = get_sadb_routine_inmemory();
-    SecurityAssociation_t *sa_ptr = NULL;
+    SecurityAssociation_t* sa_ptr = NULL;
 
     sadb_routine->sadb_get_sa_from_spi(spi, &sa_ptr);
     if (!sa_ptr)
@@ -427,15 +427,15 @@ void crypto_standalone_tm_frame(uint8_t *in_data, uint16_t in_length, uint8_t *o
     memcpy(out_data, &in_data[header_length], in_length - header_length - trailer_length);
 }
 
-void *crypto_standalone_tm_process(void *sock)
+void* crypto_standalone_tm_process(void* sock)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    udp_info_t *tm_sock = (udp_info_t *)sock;
+    udp_info_t* tm_sock = (udp_info_t*)sock;
 
     uint8_t tm_process_in[TM_CADU_SIZE]; // Accounts for ASM automatically based on #def
     int tm_process_len = 0;
     uint16_t spp_len = 0;
-    uint8_t *tm_ptr;
+    uint8_t* tm_ptr;
     uint16_t tm_out_len = 0;
 
 #ifdef CRYPTO_STANDALONE_HANDLE_FRAMING
@@ -454,7 +454,7 @@ void *crypto_standalone_tm_process(void *sock)
     while (keepRunning == CRYPTO_LIB_SUCCESS)
     {
         /* Receive */
-        status = recvfrom(tm_sock->sockfd, tm_process_in, sizeof(tm_process_in), 0, (struct sockaddr *)&rcv_addr, (socklen_t *)&sockaddr_size);
+        status = recvfrom(tm_sock->sockfd, tm_process_in, sizeof(tm_process_in), 0, (struct sockaddr*)&rcv_addr, (socklen_t*)&sockaddr_size);
         if (status != -1)
         {
             tm_process_len = status;
@@ -553,7 +553,7 @@ void *crypto_standalone_tm_process(void *sock)
                         // Send all SPP telemetry packets
                         if (tm_ptr[0] == 0x08)  
                         {
-                            status = sendto(tm_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr *)&fwd_addr, sizeof(fwd_addr));
+                            status = sendto(tm_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr*)&fwd_addr, sizeof(fwd_addr));
                         }
                         // Only send idle packets if configured to do so
                         else
@@ -562,7 +562,7 @@ void *crypto_standalone_tm_process(void *sock)
                             // Don't forward idle packets
                             status = spp_len;
 #else
-                            status = sendto(tm_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr *)&fwd_addr, sizeof(fwd_addr));
+                            status = sendto(tm_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr*)&fwd_addr, sizeof(fwd_addr));
 #endif
                         }
 
@@ -582,7 +582,7 @@ void *crypto_standalone_tm_process(void *sock)
                         // Don't forward idle frame
                         status = spp_len;
 #else
-                        status = sendto(tm_sock->sockfd, tm_ptr, tm_process_len, 0, (struct sockaddr *)&fwd_addr, sizeof(fwd_addr));
+                        status = sendto(tm_sock->sockfd, tm_ptr, tm_process_len, 0, (struct sockaddr*)&fwd_addr, sizeof(fwd_addr));
                         if ((status == -1) || (status != spp_len))
                         {
                             printf("crypto_standalone_tm_process - Reply error %d \n", status);
@@ -631,7 +631,7 @@ void crypto_standalone_cleanup(const int signal)
     return;
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
@@ -639,7 +639,7 @@ int main(int argc, char *argv[])
     char input_tokens[CRYPTO_MAX_INPUT_TOKENS][CRYPTO_MAX_INPUT_TOKEN_SIZE];
     int num_input_tokens;
     int cmd;
-    char *token_ptr;
+    char* token_ptr;
 
     udp_info_t tc_apply;
     udp_info_t tm_process;
