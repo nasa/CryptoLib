@@ -41,3 +41,5 @@ RUN mkdir /tmp/wolfssl/build \
     && cmake -DCMAKE_C_FLAGS="-DWOLFSSL_AESGCM_STREAM" .. \
     && make install \
     && rm -rf /tmp/wolfssl
+
+ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/local/lib"

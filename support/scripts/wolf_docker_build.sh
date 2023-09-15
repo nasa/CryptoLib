@@ -2,7 +2,7 @@
 #
 # Convenience script for CryptoLib development
 #
-#  ./internal_docker_build.sh
+#  ./wolf_docker_build.sh
 #
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )

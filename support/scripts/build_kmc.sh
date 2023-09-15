@@ -3,7 +3,7 @@
 # Convenience script for CryptoLib development
 # Will build in current directory
 #
-#  ./build_internal.sh
+#  ./build_kmc.sh
 #
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
