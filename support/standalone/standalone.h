@@ -39,6 +39,7 @@ extern "C"
 #include <unistd.h>
 
 #include "crypto.h"
+#include "crypto_config.h"
 
 
 /*
@@ -57,6 +58,12 @@ extern "C"
 #define CRYPTO_STANDALONE_FRAMING_VCID 0x00
 #define CRYPTO_STANDALONE_FRAMING_TC_DATA_LEN 512
 
+/*
+** Can be used to reduce ground system error messages
+*/
+#define CRYPTO_STANDALONE_DISCARD_IDLE_PACKETS
+#define CRYPTO_STANDALONE_DISCARD_IDLE_FRAMES
+
 
 /*
 ** Defines
@@ -73,6 +80,7 @@ extern "C"
 #define CRYPTO_CMD_RESET    3
 #define CRYPTO_CMD_VCID     4
 #define CRYPTO_CMD_TC_DEBUG 5
+#define CRYPTO_CMD_TM_DEBUG 6
 
 
 /*
@@ -97,7 +105,7 @@ int32_t crypto_standalone_udp_init(udp_info_t* sock, int32_t port);
 int32_t crypto_reset(void);
 void crypto_standalone_tc_frame(uint8_t* in_data, uint16_t in_length, uint8_t* out_data, uint16_t* out_length);
 void* crypto_standalone_tc_apply(void* sock);
-void crypto_standalone_tm_frame(uint8_t* in_data, uint16_t in_length, uint8_t* out_data, uint16_t* out_length);
+void crypto_standalone_tm_frame(uint8_t* in_data, uint16_t in_length, uint8_t* out_data, uint16_t* out_length, uint16_t spi);
 void* crypto_standalone_tm_process(void* sock);
 void crypto_standalone_cleanup(const int signal);
 

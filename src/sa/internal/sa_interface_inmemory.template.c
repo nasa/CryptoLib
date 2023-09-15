@@ -229,7 +229,7 @@ int32_t sa_config(void)
     // SA 10 VC0/1 is now 4-VC0, 7-VC1
     sa[10].spi = 10;
     sa[10].ekid = 130;
-    sa[10].sa_state = SA_OPERATIONAL;
+    sa[10].sa_state = SA_KEYED;
     sa[10].est = 1;
     sa[10].ast = 1;
     sa[10].ecs_len = 1;
@@ -284,9 +284,36 @@ int32_t sa_config(void)
     sa[12].arsnw_len = 0;
     sa[12].arsnw = 5;
     sa[12].gvcid_blk.tfvn = 0;
-    sa[12].gvcid_blk.scid = 44 & 0x3FF;
+    sa[12].gvcid_blk.scid = SCID & 0x3FF;
     sa[12].gvcid_blk.vcid = 0;
     sa[12].gvcid_blk.mapid = TYPE_TM;
+
+    // SA 13 - TM Authentication Only
+    // SA 13
+    sa[13].spi = 13;
+    sa[13].akid = 130;
+    sa[13].ekid = 130;
+    sa[13].sa_state = SA_OPERATIONAL;
+    sa[13].est = 1;
+    sa[13].ast = 1;
+    sa[13].acs_len = 0;
+    sa[13].acs = CRYPTO_MAC_NONE;
+    sa[13].ecs_len = 1;
+    sa[13].ecs = CRYPTO_CIPHER_AES256_GCM;
+    sa[13].shivf_len = 16;
+    sa[13].iv_len = 16;
+    *(sa[13].iv + sa[13].shivf_len - 1) = 0;
+    sa[13].stmacf_len = 16;
+    sa[13].shsnf_len = 0;
+    sa[13].abm_len = ABM_SIZE;
+    memset(sa[13].abm, 0xFF, (sa[13].abm_len * sizeof(uint8_t))); // Bitmask 
+    sa[13].arsn_len = 0;
+    sa[13].arsnw_len = 0;
+    sa[13].arsnw = 5;
+    sa[13].gvcid_blk.tfvn = 0;
+    sa[13].gvcid_blk.scid = SCID & 0x3FF;
+    sa[13].gvcid_blk.vcid = 0;
+    sa[13].gvcid_blk.mapid = TYPE_TM;
 
     return status;
 }
@@ -376,7 +403,7 @@ static int32_t sa_get_from_spi(uint16_t spi, SecurityAssociation_t** security_as
  * @param tfvn: uint8
  * @param scid: uint16
  * @param vcid: uint16
- * @param mapid: uint8
+ * @param mapid: uint8 // tc only
  * @param security_association: SecurityAssociation_t**
  * @return int32: Success/Failure
  **/
@@ -385,7 +412,6 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
 {
     int32_t status = CRYPTO_LIB_ERR_NO_OPERATIONAL_SA;
     int i;
-
     if (sa == NULL)
     {
         return CRYPTO_LIB_ERR_NO_INIT;
@@ -393,6 +419,7 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
 
     for (i = 0; i < NUM_SA; i++)
     {
+        // If valid match found
         if ((sa[i].gvcid_blk.tfvn == tfvn) && (sa[i].gvcid_blk.scid == scid) &&
             (sa[i].gvcid_blk.vcid == vcid) && (sa[i].sa_state == SA_OPERATIONAL) &&
             (crypto_config.unique_sa_per_mapid == TC_UNIQUE_SA_PER_MAP_ID_FALSE ||
@@ -401,17 +428,23 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
              // when using segmentation hdrs)
         {
             *security_association = &sa[i];
+
+            // Must have IV if using libgcrypt and auth/enc
             if (sa[i].iv == NULL && (sa[i].ast == 1 || sa[i].est == 1) && crypto_config.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
             {
                 return CRYPTO_LIB_ERR_NULL_IV;
             }
+            // Must have ABM if doing authentication
             if (sa[i].abm == NULL && sa[i].ast)
             {
                 return CRYPTO_LIB_ERR_NULL_ABM;
-            } // Must have ABM if doing authentication
+            } 
 
 #ifdef SA_DEBUG
             printf("Valid operational SA found at index %d.\n", i);
+            printf("\t Tfvn: %d\n", tfvn);
+            printf("\t Scid: %d\n", scid);
+            printf("\t Vcid: %d\n", vcid);
 #endif
 
             status = CRYPTO_LIB_SUCCESS;
@@ -425,7 +458,6 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
 #ifdef SA_DEBUG
         printf(KRED "Error - Making best attempt at a useful error code:\n\t" RESET);
 #endif
-
         for (i = 0; i < NUM_SA; i++)
         {
             // Could possibly have more than one field mismatched,
@@ -440,7 +472,7 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
 #endif
                 status = CRYPTO_LIB_ERR_INVALID_TFVN;
             }
-            if ((sa[i].gvcid_blk.tfvn == tfvn) && (sa[i].gvcid_blk.scid != scid) &&
+            else if ((sa[i].gvcid_blk.tfvn == tfvn) && (sa[i].gvcid_blk.scid != scid) &&
                 (sa[i].gvcid_blk.vcid == vcid) &&
                 (sa[i].gvcid_blk.mapid == mapid && sa[i].sa_state == SA_OPERATIONAL))
             {
@@ -452,7 +484,7 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
 #endif
                 status = CRYPTO_LIB_ERR_INVALID_SCID;
             }
-            if ((sa[i].gvcid_blk.tfvn == tfvn) && (sa[i].gvcid_blk.scid == scid) &&
+            else if ((sa[i].gvcid_blk.tfvn == tfvn) && (sa[i].gvcid_blk.scid == scid) &&
                 (sa[i].gvcid_blk.vcid != vcid) &&
                 (sa[i].gvcid_blk.mapid == mapid && sa[i].sa_state == SA_OPERATIONAL))
             {
@@ -462,7 +494,7 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
 #endif
                 status = CRYPTO_LIB_ERR_INVALID_VCID;
             }
-            if ((sa[i].gvcid_blk.tfvn == tfvn) && (sa[i].gvcid_blk.scid == scid) &&
+            else if ((sa[i].gvcid_blk.tfvn == tfvn) && (sa[i].gvcid_blk.scid == scid) &&
                 (sa[i].gvcid_blk.vcid == vcid) &&
                 (sa[i].gvcid_blk.mapid != mapid && sa[i].sa_state == SA_OPERATIONAL))
             {
@@ -471,7 +503,7 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
 #endif
                 status = CRYPTO_LIB_ERR_INVALID_MAPID;
             }
-            if ((sa[i].gvcid_blk.tfvn == tfvn) && (sa[i].gvcid_blk.scid == scid) &&
+            else if ((sa[i].gvcid_blk.tfvn == tfvn) && (sa[i].gvcid_blk.scid == scid) &&
                 (sa[i].gvcid_blk.vcid == vcid) &&
                 (sa[i].gvcid_blk.mapid == mapid && sa[i].sa_state != SA_OPERATIONAL))
             {
@@ -479,6 +511,10 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
                 printf(KRED "A valid but non-operational SA was found: SPI: %d.\n" RESET, sa[i].spi);
 #endif
                 status = CRYPTO_LIB_ERR_NO_OPERATIONAL_SA;
+            }
+            else
+            {
+                // Don't set status, could overwrite useful error message above
             }
         }
             // Detailed debug block
