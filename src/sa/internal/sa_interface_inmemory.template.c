@@ -13,7 +13,6 @@
  */
 
 #include "crypto.h"
-#include <string.h>
 
 // Security Association Initialization Functions
 static int32_t sa_config(void);

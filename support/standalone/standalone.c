@@ -22,7 +22,6 @@
 *******************************************************************************/
 
 #include "standalone.h"
-#include "crypto_config.h"
 
 /*
 ** Global Variables

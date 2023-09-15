@@ -983,7 +983,13 @@ int32_t Crypto_Get_Security_Header_Length(SecurityAssociation_t* sa_ptr)
                                             gvcid_managed_parameters, temp_current_managed_parameters);
     */
 
-    if (!sa_ptr) { printf("SA_PTR IS NULL!!!!\n");}
+    if (!sa_ptr) 
+    { 
+#ifdef DEBUG
+        printf(KRED "Get_Security_Header_Length passed Null SA!\n" RESET);
+#endif
+        return CRYPTO_LIB_ERR_NULL_SA;
+    }
     uint16_t securityHeaderLength = 2; // Start with SPI
 
     securityHeaderLength += sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;
@@ -993,6 +999,13 @@ int32_t Crypto_Get_Security_Header_Length(SecurityAssociation_t* sa_ptr)
 
 int32_t Crypto_Get_Security_Trailer_Length(SecurityAssociation_t* sa_ptr)
 {
+    if (!sa_ptr) 
+    { 
+#ifdef DEBUG
+        printf(KRED "Get_Trailer_Header_Length passed Null SA!\n" RESET);
+#endif
+        return CRYPTO_LIB_ERR_NULL_SA;
+    }
     uint16_t securityTrailerLength = 0;
 
     securityTrailerLength = sa_ptr->stmacf_len;

@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #endif
 
+#include <string.h>
 #include "crypto_config.h"
 #include "crypto_config_structs.h"
 #include "crypto_error.h"

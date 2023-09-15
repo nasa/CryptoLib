@@ -237,7 +237,9 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
     if(sa_service_type != SA_PLAINTEXT && sa_ptr->ecs_len == 0 && sa_ptr->acs_len ==0)
     {
         status = CRYPTO_LIB_ERR_NULL_CIPHERS;
-        printf("CRYPTO_LIB_ERR_NULL_CIPHERS, Invalid cipher lengths, %d\n", CRYPTO_LIB_ERR_NULL_CIPHERS);
+#ifdef TM_DEBUG
+        printf(KRED "CRYPTO_LIB_ERR_NULL_CIPHERS, Invalid cipher lengths, %d\n" RESET, CRYPTO_LIB_ERR_NULL_CIPHERS);
+#endif
         mc_if->mc_log(status);
         return status;
     }
@@ -919,9 +921,15 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
 
     if ((crypto_config.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
     {
+#ifdef TM_DEBUG
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
+#endif
         status = CRYPTO_LIB_ERR_NO_CONFIG;
-        // Can't mc_log since it's not configured
+        // Can't mc_log if it's not configured
+        if (mc_if != NULL)
+        {
+            mc_if->mc_log(status);
+        }
         return status;
     }
 
