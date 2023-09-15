@@ -77,7 +77,7 @@ int32_t sa_config(void)
     // SA 1 - CLEAR MODE
     // SA 1 VC0/1 is now SA 1-VC0, SA 8-VC1
     sa[1].spi = 1;
-    sa[1].sa_state = SA_KEYED;
+    sa[1].sa_state = SA_OPERATIONAL;
     sa[1].est = 0;
     sa[1].ast = 0;
     sa[1].shivf_len = 0;
@@ -88,7 +88,7 @@ int32_t sa_config(void)
     sa[1].gvcid_blk.tfvn = 0;
     sa[1].gvcid_blk.scid = SCID & 0x3FF;
     sa[1].gvcid_blk.vcid = 0;
-    sa[1].gvcid_blk.mapid = TYPE_TM;
+    sa[1].gvcid_blk.mapid = TYPE_TC;
 
     // SA 2 - KEYED;  ARSNW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 128
     sa[2].spi = 2;
@@ -276,7 +276,7 @@ int32_t sa_config(void)
     // SA 12 - TM CLEAR MODE
     // SA 12
     sa[12].spi = 12;
-    sa[12].sa_state = SA_KEYED;
+    sa[12].sa_state = SA_OPERATIONAL;
     sa[12].est = 0;
     sa[12].ast = 0;
     sa[12].shivf_len = 0;
@@ -413,7 +413,6 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
 {
     int32_t status = CRYPTO_LIB_ERR_NO_OPERATIONAL_SA;
     int i;
-
     if (sa == NULL)
     {
         return CRYPTO_LIB_ERR_NO_INIT;
@@ -421,6 +420,7 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
 
     for (i = 0; i < NUM_SA; i++)
     {
+        // If valid match found
         if ((sa[i].gvcid_blk.tfvn == tfvn) && (sa[i].gvcid_blk.scid == scid) &&
             (sa[i].gvcid_blk.vcid == vcid) && (sa[i].sa_state == SA_OPERATIONAL) &&
             (crypto_config.unique_sa_per_mapid == TC_UNIQUE_SA_PER_MAP_ID_FALSE ||
@@ -429,14 +429,17 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
              // when using segmentation hdrs)
         {
             *security_association = &sa[i];
+
+            // Must have IV if using libgcrypt and auth/enc
             if (sa[i].iv == NULL && (sa[i].ast == 1 || sa[i].est == 1) && crypto_config.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
             {
                 return CRYPTO_LIB_ERR_NULL_IV;
             }
+            // Must have ABM if doing authentication
             if (sa[i].abm == NULL && sa[i].ast)
             {
                 return CRYPTO_LIB_ERR_NULL_ABM;
-            } // Must have ABM if doing authentication
+            } 
 
 #ifdef SA_DEBUG
             printf("Valid operational SA found at index %d.\n", i);
@@ -456,7 +459,6 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
 #ifdef SA_DEBUG
         printf(KRED "Error - Making best attempt at a useful error code:\n\t" RESET);
 #endif
-
         for (i = 0; i < NUM_SA; i++)
         {
             // Could possibly have more than one field mismatched,
@@ -471,7 +473,7 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
 #endif
                 status = CRYPTO_LIB_ERR_INVALID_TFVN;
             }
-            if ((sa[i].gvcid_blk.tfvn == tfvn) && (sa[i].gvcid_blk.scid != scid) &&
+            else if ((sa[i].gvcid_blk.tfvn == tfvn) && (sa[i].gvcid_blk.scid != scid) &&
                 (sa[i].gvcid_blk.vcid == vcid) &&
                 (sa[i].gvcid_blk.mapid == mapid && sa[i].sa_state == SA_OPERATIONAL))
             {
@@ -483,7 +485,7 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
 #endif
                 status = CRYPTO_LIB_ERR_INVALID_SCID;
             }
-            if ((sa[i].gvcid_blk.tfvn == tfvn) && (sa[i].gvcid_blk.scid == scid) &&
+            else if ((sa[i].gvcid_blk.tfvn == tfvn) && (sa[i].gvcid_blk.scid == scid) &&
                 (sa[i].gvcid_blk.vcid != vcid) &&
                 (sa[i].gvcid_blk.mapid == mapid && sa[i].sa_state == SA_OPERATIONAL))
             {
@@ -493,7 +495,7 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
 #endif
                 status = CRYPTO_LIB_ERR_INVALID_VCID;
             }
-            if ((sa[i].gvcid_blk.tfvn == tfvn) && (sa[i].gvcid_blk.scid == scid) &&
+            else if ((sa[i].gvcid_blk.tfvn == tfvn) && (sa[i].gvcid_blk.scid == scid) &&
                 (sa[i].gvcid_blk.vcid == vcid) &&
                 (sa[i].gvcid_blk.mapid != mapid && sa[i].sa_state == SA_OPERATIONAL))
             {
@@ -502,7 +504,7 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
 #endif
                 status = CRYPTO_LIB_ERR_INVALID_MAPID;
             }
-            if ((sa[i].gvcid_blk.tfvn == tfvn) && (sa[i].gvcid_blk.scid == scid) &&
+            else if ((sa[i].gvcid_blk.tfvn == tfvn) && (sa[i].gvcid_blk.scid == scid) &&
                 (sa[i].gvcid_blk.vcid == vcid) &&
                 (sa[i].gvcid_blk.mapid == mapid && sa[i].sa_state != SA_OPERATIONAL))
             {
@@ -510,6 +512,10 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
                 printf(KRED "A valid but non-operational SA was found: SPI: %d.\n" RESET, sa[i].spi);
 #endif
                 status = CRYPTO_LIB_ERR_NO_OPERATIONAL_SA;
+            }
+            else
+            {
+                // Don't set status, could overwrite useful error message above
             }
         }
             // Detailed debug block

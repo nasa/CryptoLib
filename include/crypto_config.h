@@ -61,7 +61,7 @@
 #define TC_MAX_FRAME_SIZE 1024
 
 // Spacecraft Defines
-#define SCID 0x0042
+#define SCID 0x0003
 
 // Functionality Defines
 #define INCREMENT

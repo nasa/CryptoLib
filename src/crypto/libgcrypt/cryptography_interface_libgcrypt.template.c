@@ -252,6 +252,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
 
     // Need to copy the data over, since authentication won't change/move the data directly
     // If you don't want data out, don't set a data out length
+
     if(data_out != NULL)
     {
         memcpy(data_out, data_in, len_data_out);
@@ -419,7 +420,10 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
     // Verify the mode to accompany the algorithm enum
     int32_t mode = -1;
     mode = cryptography_get_ecs_mode(*ecs);
-    if (mode == CRYPTO_LIB_ERR_UNSUPPORTED_MODE) return CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
+    if (mode == CRYPTO_LIB_ERR_UNSUPPORTED_MODE)
+    {
+        return CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
+    }
 
     gcry_error = gcry_cipher_open(&(tmp_hd), algo, mode, GCRY_CIPHER_NONE);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
@@ -725,7 +729,10 @@ static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
     // Verify the mode to accompany the algorithm enum
     int32_t mode = -1;
     mode = cryptography_get_ecs_mode(*ecs);
-    if (mode == CRYPTO_LIB_ERR_UNSUPPORTED_MODE) return CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
+    if (mode == CRYPTO_LIB_ERR_UNSUPPORTED_MODE)
+    {
+        return CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
+    } 
 
     gcry_error = gcry_cipher_open(&(tmp_hd), algo, mode, GCRY_CIPHER_NONE);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)

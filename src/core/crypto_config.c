@@ -91,7 +91,8 @@ int32_t Crypto_Init_TM_Unit_Test(void)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TM_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TM Tests
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, 1786);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, 1786);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002c, 0, TM_NO_FECF, TM_SEGMENT_HDRS_NA, 1786);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0042, 0, TM_NO_FECF, TM_SEGMENT_HDRS_NA, 1786);
     status = Crypto_Init();
     return status;

@@ -57,7 +57,13 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
     uint8_t ecs_is_aead_algorithm;
     SecurityAssociation_t* sa_ptr = NULL;
 
-#ifdef DEBUG
+    // Passed a null, return an error
+    if (!pTfBuffer)
+    {
+        return CRYPTO_LIB_ERR_NULL_BUFFER;
+    }
+
+#ifdef TM_DEBUG
     printf(KYEL "\n----- Crypto_TM_ApplySecurity START -----\n" RESET);
     printf("The following GVCID parameters will be used:\n");
     printf("\tTVFN: 0x%04X\t", ((uint8_t)pTfBuffer[0] & 0xC0) >> 6);
@@ -72,23 +78,6 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
     printf("\n");
 #endif
 
-    status = sa_if->sa_get_operational_sa_from_gvcid(((uint8_t)pTfBuffer[0] & 0xC0) >> 6, 
-                                                (((uint16_t)pTfBuffer[0] & 0x3F) << 4) | (((uint16_t)pTfBuffer[1] & 0xF0) >> 4),
-                                                ((uint8_t)pTfBuffer[1] & 0x0E) >> 1, 0, &sa_ptr);
-
-    if (sa_ptr == NULL)
-    {
-        status = CRYPTO_LIB_ERR_NULL_SA;
-        printf(KRED "Error: Input SA NULL! \n" RESET);
-        mc_if->mc_log(status);
-        return status; // Just return here, nothing can be done.
-    }
-
-    status = Crypto_Get_Managed_Parameters_For_Gvcid(((uint8_t)pTfBuffer[0] & 0xC0) >> 6, 
-                                                (((uint16_t)pTfBuffer[0] & 0x3F) << 4) | (((uint16_t)pTfBuffer[1] & 0xF0) >> 4),
-                                                ((uint8_t)pTfBuffer[1] & 0x0E) >> 1, 
-                                                gvcid_managed_parameters, &current_managed_parameters);
-
     if ((crypto_config.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
     {
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
@@ -96,17 +85,33 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
         // Can't mc_log since it's not configured
         return status;  // return immediately so a NULL crypto_config is not dereferenced later
     }
-    //  * * TODO - THIS BLOCK MOVED INTO TO  * *
-    /**
-    // Lookup-retrieve managed parameters for frame via gvcid:
-    // status = Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame.tm_header.tfvn, tm_frame.tm_header.scid, tm_frame.tm_header.vcid,
-                                                    //  gvcid_managed_parameters, &current_managed_parameters);
-    // if (status != CRYPTO_LIB_SUCCESS)
-    // {
-        // mc_if->mc_log(status);
-        // return status;
-    // } // Unable to get necessary Managed Parameters for TM TF -- return with error.
-  **/
+
+    status = sa_if->sa_get_operational_sa_from_gvcid(((uint8_t)pTfBuffer[0] & 0xC0) >> 6, 
+                                                (((uint16_t)pTfBuffer[0] & 0x3F) << 4) | (((uint16_t)pTfBuffer[1] & 0xF0) >> 4),
+                                                ((uint8_t)pTfBuffer[1] & 0x0E) >> 1, 0, &sa_ptr);
+    // No operational/valid SA found
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+#ifdef TM_DEBUG
+        printf(KRED "Error: Could not retrieve an SA!\n" RESET);
+#endif
+        mc_if->mc_log(status);
+        return status;
+    }
+
+    status = Crypto_Get_Managed_Parameters_For_Gvcid(((uint8_t)pTfBuffer[0] & 0xC0) >> 6, 
+                                                (((uint16_t)pTfBuffer[0] & 0x3F) << 4) | (((uint16_t)pTfBuffer[1] & 0xF0) >> 4),
+                                                ((uint8_t)pTfBuffer[1] & 0x0E) >> 1, 
+                                                gvcid_managed_parameters, &current_managed_parameters);
+    // No managed parameters found
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+#ifdef TM_DEBUG
+        printf(KRED "Error: No managed parameters found!\n" RESET);
+#endif
+        mc_if->mc_log(status);
+        return status;
+    }
 
  #ifdef TM_DEBUG
     printf(KYEL "TM BEFORE Apply Sec:\n\t" RESET);
@@ -116,13 +121,6 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
     }
     printf("\n");
 #endif
-
-    // If unable to get operational SA, can return
-    if (status != CRYPTO_LIB_SUCCESS)
-    {
-        mc_if->mc_log(status);
-        return status;
-    }
 
 #ifdef SA_DEBUG
     printf(KYEL "DEBUG - Printing SA Entry for current frame.\n" RESET);
@@ -480,7 +478,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
                                                                     sa_ptr->acs,  // authentication cipher
                                                                     NULL);
             }
-            if(sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
+            else if(sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
             {
                 if (sa_service_type == SA_ENCRYPTION)
                     {
@@ -504,6 +502,10 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
                 // Do nothing, SDLS fields were already copied into static frame in memory
             }
             else{
+#ifdef TM_DEBUG
+                printf(KRED "Service type reported as: %d\n" RESET, sa_service_type);
+                printf(KRED "ECS IS AEAD Value: %d\n" RESET, ecs_is_aead_algorithm);
+#endif
                 status = CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
             }
         }
@@ -597,7 +599,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
 #endif
         if (crypto_config.crypto_create_fecf == CRYPTO_TM_CREATE_FECF_TRUE)
         {
-            new_fecf = Crypto_Calc_FECF((uint8_t*)&pTfBuffer, current_managed_parameters->max_frame_size - 2);
+            new_fecf = Crypto_Calc_FECF((uint8_t*)pTfBuffer, current_managed_parameters->max_frame_size - 2);
             pTfBuffer[current_managed_parameters->max_frame_size - 2] = (uint8_t)((new_fecf & 0xFF00) >> 8);
             pTfBuffer[current_managed_parameters->max_frame_size - 1] = (uint8_t)(new_fecf & 0x00FF);
         }
@@ -932,8 +934,8 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
     }
 
 #ifdef TM_DEBUG
-    printf(KRED "TM Process Using following parameters:\n\t" RESET);
-    printf(KRED "tvfn: %d\t scid: %d\t vcid: %d\n" RESET,  tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid );
+    printf(KGRN "TM Process Using following parameters:\n\t" RESET);
+    printf(KGRN "tvfn: %d\t scid: %d\t vcid: %d\n" RESET,  tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid );
 #endif
 
     // Lookup-retrieve managed parameters for frame via gvcid:
@@ -1074,7 +1076,6 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
     // Parse & Check FECF, if present, and update fecf length
     if (current_managed_parameters->has_fecf == TM_HAS_FECF)
     {
-        // fecf_len = 2;
         uint16_t received_fecf = (((p_ingest[current_managed_parameters->max_frame_size - 2] << 8) & 0xFF00) |
                                                         (p_ingest[current_managed_parameters->max_frame_size - 1] & 0x00FF));
 
@@ -1082,7 +1083,8 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
         {
             // Calculate our own
             uint16_t calculated_fecf = Crypto_Calc_FECF(p_ingest, len_ingest - 2);
-            // Compare
+            // Compare FECFs
+            // Invalid FECF
             if (received_fecf != calculated_fecf)
             {
 #ifdef FECF_DEBUG
@@ -1094,22 +1096,24 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
                 mc_if->mc_log(status);
                 return status;
             }
-#ifdef FECF_DEBUG
+            // Valid FECF, zero out the field
             else
             {
+#ifdef FECF_DEBUG
                 printf(KYEL "FECF CALC MATCHES! - GOOD\n" RESET);
-            }
 #endif
+                ;
+            }
         }
     }
-    // Need to be TM_HAS_FECF (checked above_ or TM_NO_FECF)
+    // Needs to be TM_HAS_FECF (checked above_ or TM_NO_FECF)
     else if (current_managed_parameters->has_fecf != TM_NO_FECF)
     {
-// #ifdef DEBUG
+#ifdef TM_DEBUG
         printf(KRED "TM_Process Error...tfvn: %d scid: 0x%04X vcid: 0x%02X fecf_enum: %d\n" RESET, 
             current_managed_parameters->tfvn, current_managed_parameters->scid, 
             current_managed_parameters->vcid, current_managed_parameters->has_fecf);
-// #endif
+#endif
         status = CRYPTO_LIB_ERR_TC_ENUM_USED_FOR_TM_CONFIG;
         mc_if->mc_log(status);
         return status;
