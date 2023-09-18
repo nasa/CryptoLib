@@ -260,7 +260,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
 #endif
 
         // Determine if segment header exists
-        uint8_t segment_hdr_len = SEGMENT_HDR_SIZE;
+        uint8_t segment_hdr_len = TC_SEGMENT_HDR_SIZE;
         if (current_managed_parameters->has_segmentation_hdr == TC_NO_SEGMENT_HDRS)
         {
             segment_hdr_len = 0;
@@ -984,7 +984,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
         fecf_len = 0;
     }
 
-    uint8_t segment_hdr_len = SEGMENT_HDR_SIZE;
+    uint8_t segment_hdr_len = TC_SEGMENT_HDR_SIZE;
     if (current_managed_parameters->has_segmentation_hdr == TC_NO_SEGMENT_HDRS)
     {
         segment_hdr_len = 0;

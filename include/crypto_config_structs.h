@@ -54,7 +54,9 @@ typedef enum
     CRYPTOGRAPHY_TYPE_LIBGCRYPT,
     CRYPTOGRAPHY_TYPE_KMCCRYPTO
 } CryptographyType;
-// gvcid managed parameter enums
+/***************************************
+** GVCID Managed Parameter enums
+****************************************/
 typedef enum
 {
     IV_INTERNAL,
@@ -65,28 +67,45 @@ typedef enum
     TC_NO_FECF,
     TC_HAS_FECF,
     TM_NO_FECF,
-    TM_HAS_FECF
+    TM_HAS_FECF,
+    AOS_NO_FECF,
+    AOS_HAS_FECF
 } FecfPresent;
 typedef enum
 {
     CRYPTO_TC_CREATE_FECF_FALSE,
     CRYPTO_TC_CREATE_FECF_TRUE,
     CRYPTO_TM_CREATE_FECF_FALSE,
-    CRYPTO_TM_CREATE_FECF_TRUE
+    CRYPTO_TM_CREATE_FECF_TRUE,
+    CRYPTO_AOS_CREATE_FECF_FALSE,
+    CRYPTO_AOS_CRETE_FECF_TRUE
 } CreateFecfBool;
 typedef enum
 {
     TC_CHECK_FECF_FALSE,
     TC_CHECK_FECF_TRUE,
     TM_CHECK_FECF_FALSE,
-    TM_CHECK_FECF_TRUE
+    TM_CHECK_FECF_TRUE,
+    AOS_CHECK_FECF_FALSE,
+    AOS_CHECK_FECF_TRUE
 } CheckFecfBool;
-// TC specific enums
+typedef enum
+{
+    AOS_NO_OCF,
+    AOS_HAS_OCF,
+    TC_OCF_NA,
+    TM_NO_OCF,
+    TM_HAS_OCF
+} OcfPresent;
+/***************************************
+** TC specific enums
+****************************************/
 typedef enum
 {
     TC_NO_SEGMENT_HDRS,
     TC_HAS_SEGMENT_HDRS,
-    TM_SEGMENT_HDRS_NA
+    TM_SEGMENT_HDRS_NA, // Invalid for TM
+    AOS_SEGMENT_HDRS_NA // Invalid for AOS
 } TcSegmentHdrsPresent;
 typedef enum
 {
@@ -118,15 +137,9 @@ typedef enum
     SA_INCREMENT_NONTRANSMITTED_IV_FALSE,
     SA_INCREMENT_NONTRANSMITTED_IV_TRUE
 } SaIncrementNonTransmittedIvPortion;
-// TM specific enums
-typedef enum
-{
-    AOS_NO_OCF,
-    AOS_HAS_OCF,
-    TC_OCF_NA,
-    TM_NO_OCF,
-    TM_HAS_OCF
-} OcfPresent;
+/***************************************
+** Telemetry specific enums
+****************************************/
 typedef enum
 {
     TM_NO_SECONDARY_HDR,
