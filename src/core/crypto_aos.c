@@ -24,24 +24,24 @@
 #include <string.h> // memcpy/memset
 
 /**
- * @brief Function: Crypto_TM_ApplySecurity
+ * @brief Function: Crypto_AOS_ApplySecurity
  * @param ingest: uint8_t*
  * @param len_ingest: int*
  * @return int32: Success/Failure
  * 
- * The TM ApplySecurity Payload shall consist of the portion of the TM Transfer Frame (see
+ * The AOS ApplySecurity Payload shall consist of the portion of the AOS Transfer Frame (see
  * reference [1]) from the first octet of the Transfer Frame Primary Header to the last octet of
  * the Transfer Frame Data Field. 
  * NOTES
- * 1 The TM Transfer Frame is the fixed-length protocol data unit of the TM Space Data
+ * 1 The AOS Transfer Frame is the fixed-length protocol data unit of the AOS Space Data
  * Link Protocol. The length of any Transfer Frame transferred on a physical channel is
  * constant, and is established by management.
- * 2 The portion of the TM Transfer Frame contained in the TM ApplySecurity Payload
+ * 2 The portion of the AOS Transfer Frame contained in the AOS ApplySecurity Payload
  * parameter includes the Security Header field. When the ApplySecurity Function is
  * called, the Security Header field is empty; i.e., the caller has not set any values in the
  * Security Header
    **/
-int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
+int32_t Crypto_AOS_ApplySecurity(uint8_t* pTfBuffer)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     int mac_loc = 0;
@@ -63,8 +63,8 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
         return CRYPTO_LIB_ERR_NULL_BUFFER;
     }
 
-#ifdef TM_DEBUG
-    printf(KYEL "\n----- Crypto_TM_ApplySecurity START -----\n" RESET);
+#ifdef AOS_DEBUG
+    printf(KYEL "\n----- Crypto_AOS_ApplySecurity START -----\n" RESET);
     printf("The following GVCID parameters will be used:\n");
     printf("\tTVFN: 0x%04X\t", ((uint8_t)pTfBuffer[0] & 0xC0) >> 6);
     printf("\tSCID: 0x%04X", (((uint16_t)pTfBuffer[0] & 0x3F) << 4) | (((uint16_t)pTfBuffer[1] & 0xF0) >> 4));
@@ -92,7 +92,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
     // No operational/valid SA found
     if (status != CRYPTO_LIB_SUCCESS)
     {
-#ifdef TM_DEBUG
+#ifdef AOS_DEBUG
         printf(KRED "Error: Could not retrieve an SA!\n" RESET);
 #endif
         mc_if->mc_log(status);
@@ -106,15 +106,15 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
     // No managed parameters found
     if (status != CRYPTO_LIB_SUCCESS)
     {
-#ifdef TM_DEBUG
+#ifdef AOS_DEBUG
         printf(KRED "Error: No managed parameters found!\n" RESET);
 #endif
         mc_if->mc_log(status);
         return status;
     }
 
- #ifdef TM_DEBUG
-    printf(KYEL "TM BEFORE Apply Sec:\n\t" RESET);
+ #ifdef AOS_DEBUG
+    printf(KYEL "AOS BEFORE Apply Sec:\n\t" RESET);
     for (int16_t i =0; i < current_managed_parameters->max_frame_size; i++)
     {
         printf("%02X", pTfBuffer[i]);
@@ -160,20 +160,20 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
             ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(sa_ptr->ecs);
         }
 
-#ifdef TM_DEBUG
+#ifdef AOS_DEBUG
     switch (sa_service_type)
     {
     case SA_PLAINTEXT:
-        printf(KBLU "Creating a SDLS TM - CLEAR!\n" RESET);
+        printf(KBLU "Creating a SDLS AOS - CLEAR!\n" RESET);
         break;
     case SA_AUTHENTICATION:
-        printf(KBLU "Creating a SDLS TM - AUTHENTICATED!\n" RESET);
+        printf(KBLU "Creating a SDLS AOS - AUTHENTICATED!\n" RESET);
         break;
     case SA_ENCRYPTION:
-        printf(KBLU "Creating a SDLS TM - ENCRYPTED!\n" RESET);
+        printf(KBLU "Creating a SDLS AOS - ENCRYPTED!\n" RESET);
         break;
     case SA_AUTHENTICATED_ENCRYPTION:
-        printf(KBLU "Creating a SDLS TM - AUTHENTICATED ENCRYPTION!\n" RESET);
+        printf(KBLU "Creating a SDLS AOS - AUTHENTICATED ENCRYPTION!\n" RESET);
         break;
     }
 #endif
@@ -185,8 +185,8 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
     idx = 4;
     if((pTfBuffer[idx] & 0x80) == 0x80)
     {
-#ifdef TM_DEBUG
-        printf(KYEL "A TM Secondary Header flag is set!\n");
+#ifdef AOS_DEBUG
+        printf(KYEL "A AOS Secondary Header flag is set!\n");
 #endif
         // Secondary header is present
         idx = 6;
@@ -194,7 +194,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
         // Length coded as total length of secondary header - 1
         // Reference CCSDS 132.0-B-2 4.1.3.2.3
         uint8_t secondary_hdr_len = (pTfBuffer[idx] & 0x3F);
-#ifdef TM_DEBUG
+#ifdef AOS_DEBUG
         printf(KYEL "Secondary Header Length is decoded as: %d\n", secondary_hdr_len);
 #endif
         // Increment from current byte (1st byte of secondary header),
@@ -237,7 +237,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
     if(sa_service_type != SA_PLAINTEXT && sa_ptr->ecs_len == 0 && sa_ptr->acs_len ==0)
     {
         status = CRYPTO_LIB_ERR_NULL_CIPHERS;
-#ifdef TM_DEBUG
+#ifdef AOS_DEBUG
         printf(KRED "CRYPTO_LIB_ERR_NULL_CIPHERS, Invalid cipher lengths, %d\n" RESET, CRYPTO_LIB_ERR_NULL_CIPHERS);
 #endif
         mc_if->mc_log(status);
@@ -334,25 +334,25 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
     // Calculate size of data to be encrypted
     pdu_len = current_managed_parameters->max_frame_size - idx - sa_ptr->stmacf_len;
     // Check other managed parameter flags, subtract their lengths from data field if present
-    if(current_managed_parameters->has_ocf == TM_HAS_OCF)
+    if(current_managed_parameters->has_ocf == AOS_HAS_OCF)
     {
         pdu_len -= 4;
     }
-    if(current_managed_parameters->has_fecf == TM_HAS_FECF)
+    if(current_managed_parameters->has_fecf == AOS_HAS_FECF)
     {
         pdu_len -= 2;
     }
 
-#ifdef TM_DEBUG
+#ifdef AOS_DEBUG
     printf(KYEL "Data location starts at: %d\n" RESET, idx);
     printf(KYEL "Data size is: %d\n" RESET, pdu_len);
     printf(KYEL "Index at end of SPI is: %d\n", idx);
-    if(current_managed_parameters->has_ocf == TM_HAS_OCF)
+    if(current_managed_parameters->has_ocf == AOS_HAS_OCF)
     {
         // If OCF exists, comes immediately after MAC
         printf(KYEL "OCF Location is: %d" RESET, idx + pdu_len + sa_ptr->stmacf_len);
     }
-    if(current_managed_parameters->has_fecf == TM_HAS_FECF)
+    if(current_managed_parameters->has_fecf == AOS_HAS_FECF)
     {
         // If FECF exists, comes just before end of the frame
         printf(KYEL "FECF Location is: %d\n" RESET, current_managed_parameters->max_frame_size - 2);
@@ -400,7 +400,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
             {
                 aad_len += pdu_len;
             }
-#ifdef TM_DEBUG
+#ifdef AOS_DEBUG
             printf("Calculated AAD Length: %d\n",aad_len);
 #endif
             if (sa_ptr->abm_len < aad_len)
@@ -410,7 +410,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
                 mc_if->mc_log(status);
                 return status;
             }
-            status = Crypto_Prepare_TM_AAD(&pTfBuffer[0], aad_len, sa_ptr->abm, &aad[0]);
+            status = Crypto_Prepare_AOS_AAD(&pTfBuffer[0], aad_len, sa_ptr->abm, &aad[0]);
         }
     }
 
@@ -504,7 +504,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
                 // Do nothing, SDLS fields were already copied into static frame in memory
             }
             else{
-#ifdef TM_DEBUG
+#ifdef AOS_DEBUG
                 printf(KRED "Service type reported as: %d\n" RESET, sa_service_type);
                 printf(KRED "ECS IS AEAD Value: %d\n" RESET, ecs_is_aead_algorithm);
 #endif
@@ -574,7 +574,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
 
     // Move idx to mac location
     idx += pdu_len;
-#ifdef TM_DEBUG
+#ifdef AOS_DEBUG
     if (sa_ptr->stmacf_len > 0)
     {
         printf(KYEL "Data length is %d\n" RESET, pdu_len);
@@ -594,12 +594,12 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
          **/
 
         // Only calculate & insert FECF if CryptoLib is configured to do so & gvcid includes FECF.
-    if (current_managed_parameters->has_fecf == TM_HAS_FECF)
+    if (current_managed_parameters->has_fecf == AOS_HAS_FECF)
     {
 #ifdef FECF_DEBUG
         printf(KCYN "Calcing FECF over %d bytes\n" RESET, current_managed_parameters->max_frame_size - 2);
 #endif
-        if (crypto_config.crypto_create_fecf == CRYPTO_TM_CREATE_FECF_TRUE)
+        if (crypto_config.crypto_create_fecf == CRYPTO_AOS_CREATE_FECF_TRUE)
         {
             new_fecf = Crypto_Calc_FECF((uint8_t*)pTfBuffer, current_managed_parameters->max_frame_size - 2);
             pTfBuffer[current_managed_parameters->max_frame_size - 2] = (uint8_t)((new_fecf & 0xFF00) >> 8);
@@ -613,8 +613,8 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
         idx += 2;
     }
 
-#ifdef TM_DEBUG
-    printf(KYEL "Printing new TM frame:\n\t");
+#ifdef AOS_DEBUG
+    printf(KYEL "Printing new AOS frame:\n\t");
     for(int i = 0; i < current_managed_parameters->max_frame_size; i++)
     {
         printf("%02X", pTfBuffer[i]);
@@ -625,7 +625,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
     status = sa_if->sa_save_sa(sa_ptr);
 
 #ifdef DEBUG
-    printf(KYEL "----- Crypto_TM_ApplySecurity END -----\n" RESET);
+    printf(KYEL "----- Crypto_AOS_ApplySecurity END -----\n" RESET);
 #endif
 
     mc_if->mc_log(status);
@@ -640,8 +640,8 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
         {
             ingest[x] = 0;
         }
-        // Update TM First Header Pointer
-        tm_frame.tm_header.fhp = 0xFE;
+        // Update AOS First Header Pointer
+        aos_frame.tm_header.fhp = 0xFE;
     }
     else
     { // Update the length of the ingest from the CCSDS header
@@ -657,23 +657,23 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
         ingest[*len_ingest] = (spp_crc & 0xFF00) >> 8;
         ingest[*len_ingest + 1] = (spp_crc & 0x00FF);
        *len_ingest =*len_ingest + 2;
-        // Update TM First Header Pointer
-        tm_frame.tm_header.fhp = tm_offset;
-#ifdef TM_DEBUG
-        printf("tm_offset = %d \n", tm_offset);
+        // Update AOS First Header Pointer
+        aos_frame.tm_header.fhp = aos_offset;
+#ifdef AOS_DEBUG
+        printf("tm_offset = %d \n", aos_offset);
 #endif
     }
     printf("LINE: %d\n",__LINE__);
     // Update Current Telemetry Frame in Memory
     // Counters
-    tm_frame.tm_header.mcfc++;
-    tm_frame.tm_header.vcfc++;
+    aos_frame.tm_header.mcfc++;
+    aos_frame.tm_header.vcfc++;
     printf("LINE: %d\n",__LINE__);
     // Operational Control Field
-    Crypto_TM_updateOCF();
+    Crypto_AOS_updateOCF();
     printf("LINE: %d\n",__LINE__);
     // Payload Data Unit
-    Crypto_TM_updatePDU(ingest,*len_ingest);
+    Crypto_AOS_updatePDU(ingest,*len_ingest);
     printf("LINE: %d\n",__LINE__);
     if (sa_if->sa_get_from_spi(spi, &sa_ptr) != CRYPTO_LIB_SUCCESS)
     {
@@ -686,7 +686,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
     // Check test flags
     if (badSPI == 1)
     {
-        tm_frame.tm_sec_header.spi++;
+        aos_frame.tm_sec_header.spi++;
     }
     if (badIV == 1)
     {
@@ -694,26 +694,26 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
     }
     if (badMAC == 1)
     {
-        tm_frame.tm_sec_trailer.mac[MAC_SIZE - 1]++;
+        aos_frame.tm_sec_trailer.mac[MAC_SIZE - 1]++;
     }
     printf("LINE: %d\n",__LINE__);
-    // Initialize the temporary TM frame
+    // Initialize the temporary AOS frame
     // Header
-    tempTM[count++] = (uint8_t)((tm_frame.tm_header.tfvn << 6) | ((tm_frame.tm_header.scid & 0x3F0) >> 4));
+    tempAOS[count++] = (uint8_t)((tm_frame.tm_header.tfvn << 6) | ((tm_frame.tm_header.scid & 0x3F0) >> 4));
     printf("LINE: %d\n",__LINE__);
-    tempTM[count++] = (uint8_t)(((tm_frame.tm_header.scid & 0x00F) << 4) | (tm_frame.tm_header.vcid << 1) |
+    tempAOS[count++] = (uint8_t)(((tm_frame.tm_header.scid & 0x00F) << 4) | (tm_frame.tm_header.vcid << 1) |
                                 (tm_frame.tm_header.ocff));
-    tempTM[count++] = (uint8_t)(tm_frame.tm_header.mcfc);
-    tempTM[count++] = (uint8_t)(tm_frame.tm_header.vcfc);
-    tempTM[count++] =
+    tempAOS[count++] = (uint8_t)(tm_frame.tm_header.mcfc);
+    tempAOS[count++] = (uint8_t)(tm_frame.tm_header.vcfc);
+    tempAOS[count++] =
         (uint8_t)((tm_frame.tm_header.tfsh << 7) | (tm_frame.tm_header.sf << 6) | (tm_frame.tm_header.pof << 5) |
                   (tm_frame.tm_header.slid << 3) | ((tm_frame.tm_header.fhp & 0x700) >> 8));
-    tempTM[count++] = (uint8_t)(tm_frame.tm_header.fhp & 0x0FF);
-    //	tempTM[count++] = (uint8_t) ((tm_frame.tm_header.tfshvn << 6) | tm_frame.tm_header.tfshlen);
+    tempAOS[count++] = (uint8_t)(tm_frame.tm_header.fhp & 0x0FF);
+    //	tempAOS[count++] = (uint8_t) ((tm_frame.tm_header.tfshvn << 6) | aos_frame.tm_header.tfshlen);
     // Security Header
     printf("LINE: %d\n",__LINE__);
-    tempTM[count++] = (uint8_t)((spi & 0xFF00) >> 8);
-    tempTM[count++] = (uint8_t)((spi & 0x00FF));
+    tempAOS[count++] = (uint8_t)((spi & 0xFF00) >> 8);
+    tempAOS[count++] = (uint8_t)((spi & 0x00FF));
     if(sa_ptr->shivf_len > 0)
     {
         memcpy(tm_frame.tm_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len);
@@ -721,7 +721,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
     printf("LINE: %d\n",__LINE__);
     // TODO: Troubleshoot
     // Padding Length
-    // pad_len = Crypto_Get_tmLength(*len_ingest) - TM_MIN_SIZE + IV_SIZE + TM_PAD_SIZE -*len_ingest;
+    // pad_len = Crypto_Get_tmLength(*len_ingest) - AOS_MIN_SIZE + IV_SIZE + AOS_PAD_SIZE -*len_ingest;
     printf("LINE: %d\n",__LINE__);
     // Only add IV for authenticated encryption
     if ((sa_ptr->est == 1) && (sa_ptr->ast == 1))
@@ -735,18 +735,18 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
             printf("LINE: %d\n",__LINE__);
             for (x = 0; x < IV_SIZE; x++)
             {
-                tempTM[count++] =* (sa_ptr->iv + x);
+                tempAOS[count++] =* (sa_ptr->iv + x);
             }
         }
         pdu_loc = count;
-        pad_len = pad_len - IV_SIZE - TM_PAD_SIZE + OCF_SIZE;
+        pad_len = pad_len - IV_SIZE - AOS_PAD_SIZE + OCF_SIZE;
         pdu_len =*len_ingest + pad_len;
     }
     else
     {                           // Include padding length bytes - hard coded per ESA testing
         printf("LINE: %d\n",__LINE__);
-        tempTM[count++] = 0x00; // pad_len >> 8;
-        tempTM[count++] = 0x1A; // pad_len
+        tempAOS[count++] = 0x00; // pad_len >> 8;
+        tempAOS[count++] = 0x1A; // pad_len
         pdu_loc = count;
         pdu_len =*len_ingest + pad_len;
     }
@@ -754,46 +754,46 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
     // Payload Data Unit
     for (x = 0; x < (pdu_len); x++)
     {
-        tempTM[count++] = (uint8_t)tm_frame.tm_pdu[x];
+        tempAOS[count++] = (uint8_t)tm_frame.tm_pdu[x];
     }
     // Message Authentication Code
     mac_loc = count;
     for (x = 0; x < MAC_SIZE; x++)
     {
-        tempTM[count++] = 0x00;
+        tempAOS[count++] = 0x00;
     }
     printf("LINE: %d\n",__LINE__);
     // Operational Control Field
     for (x = 0; x < OCF_SIZE; x++)
     {
-        tempTM[count++] = (uint8_t)tm_frame.tm_sec_trailer.ocf[x];
+        tempAOS[count++] = (uint8_t)tm_frame.tm_sec_trailer.ocf[x];
     }
     printf("LINE: %d\n",__LINE__);
     // Frame Error Control Field
     fecf_loc = count;
-    tm_frame.tm_sec_trailer.fecf = Crypto_Calc_FECF((uint8_t*)tempTM, count);
-    tempTM[count++] = (uint8_t)((tm_frame.tm_sec_trailer.fecf & 0xFF00) >> 8);
-    tempTM[count++] = (uint8_t)(tm_frame.tm_sec_trailer.fecf & 0x00FF);
+    aos_frame.tm_sec_trailer.fecf = Crypto_Calc_FECF((uint8_t*)tempAOS, count);
+    tempAOS[count++] = (uint8_t)((tm_frame.tm_sec_trailer.fecf & 0xFF00) >> 8);
+    tempAOS[count++] = (uint8_t)(tm_frame.tm_sec_trailer.fecf & 0x00FF);
 
     // Determine Mode
     // Clear
     if ((sa_ptr->est == 0) && (sa_ptr->ast == 0))
     {
 #ifdef DEBUG
-        printf(KBLU "Creating a TM - CLEAR! \n" RESET);
+        printf(KBLU "Creating a AOS - CLEAR! \n" RESET);
 #endif
         // Copy temporary frame to ingest
-        memcpy(ingest, tempTM, count);
+        memcpy(ingest, tempAOS, count);
     }
     // Authenticated Encryption
     else if ((sa_ptr->est == 1) && (sa_ptr->ast == 1))
     {
 #ifdef DEBUG
-        printf(KBLU "Creating a TM - AUTHENTICATED ENCRYPTION! \n" RESET);
+        printf(KBLU "Creating a AOS - AUTHENTICATED ENCRYPTION! \n" RESET);
 #endif
 
-        // Copy TM to ingest
-        memcpy(ingest, tempTM, pdu_loc);
+        // Copy AOS to ingest
+        memcpy(ingest, tempAOS, pdu_loc);
 
 #ifdef MAC_DEBUG
         printf("AAD = 0x");
@@ -812,7 +812,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
 
         status = cryptography_if->cryptography_aead_encrypt(&(ingest[pdu_loc]), // ciphertext output
                                                            (size_t)pdu_len,            // length of data
-                                                           &(tempTM[pdu_loc]), // plaintext input
+                                                           &(tempAOS[pdu_loc]), // plaintext input
                                                            (size_t)pdu_len,             // in data length
                                                            &(ekp->value[0]), // Key
                                                            KEY_SIZE,
@@ -828,7 +828,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
                                                            CRYPTO_TRUE, // Use AAD
                                                            sa_ptr->ecs, // encryption cipher
                                                            sa_ptr->acs,  // authentication cipher
-                                                           NULL // cam_cookies (not supported in TM functions yet)
+                                                           NULL // cam_cookies (not supported in AOS functions yet)
                                                            );
 
 
@@ -836,11 +836,11 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
         y = 0;
         for (x = OCF_SIZE; x > 0; x--)
         {
-            ingest[fecf_loc - x] = tm_frame.tm_sec_trailer.ocf[y++];
+            ingest[fecf_loc - x] = aos_frame.tm_sec_trailer.ocf[y++];
         }
 
         // Update FECF
-        tm_frame.tm_sec_trailer.fecf = Crypto_Calc_FECF((uint8_t*)ingest, fecf_loc - 1);
+        aos_frame.tm_sec_trailer.fecf = Crypto_Calc_FECF((uint8_t*)ingest, fecf_loc - 1);
         ingest[fecf_loc] = (uint8_t)((tm_frame.tm_sec_trailer.fecf & 0xFF00) >> 8);
         ingest[fecf_loc + 1] = (uint8_t)(tm_frame.tm_sec_trailer.fecf & 0x00FF);
     }
@@ -848,27 +848,27 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
     else if ((sa_ptr->est == 0) && (sa_ptr->ast == 1))
     {
 #ifdef DEBUG
-        printf(KBLU "Creating a TM - AUTHENTICATED! \n" RESET);
+        printf(KBLU "Creating a AOS - AUTHENTICATED! \n" RESET);
 #endif
         // TODO: Future work. Operationally same as clear.
-        memcpy(ingest, tempTM, count);
+        memcpy(ingest, tempAOS, count);
     }
     // Encryption
     else if ((sa_ptr->est == 1) && (sa_ptr->ast == 0))
     {
 #ifdef DEBUG
-        printf(KBLU "Creating a TM - ENCRYPTED! \n" RESET);
+        printf(KBLU "Creating a AOS - ENCRYPTED! \n" RESET);
 #endif
         // TODO: Future work. Operationally same as clear.
-        memcpy(ingest, tempTM, count);
+        memcpy(ingest, tempAOS, count);
     }
 
-#ifdef TM_DEBUG
+#ifdef AOS_DEBUG
     Crypto_tmPrint(&tm_frame);
 #endif
 
 #ifdef DEBUG
-    printf(KYEL "----- Crypto_TM_ApplySecurity END -----\n" RESET);
+    printf(KYEL "----- Crypto_AOS_ApplySecurity END -----\n" RESET);
 #endif
 
    *len_ingest = count;
@@ -877,12 +877,12 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
 }  **/
 
 /**
- * @brief Function: Crypto_TM_ProcessSecurity
+ * @brief Function: Crypto_AOS_ProcessSecurity
  * @param ingest: uint8_t*
  * @param len_ingest: int*
  * @return int32: Success/Failure
    **/
-int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_t** pp_processed_frame, uint16_t* p_decrypted_length)
+int32_t Crypto_AOS_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_t** pp_processed_frame, uint16_t* p_decrypted_length)
 {
     // Local Variables
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -904,24 +904,24 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
     
 
     // Bit math to give concise access to values in the ingest
-    tm_frame_pri_hdr.tfvn = ((uint8_t)p_ingest[0] & 0xC0) >> 6;
-    tm_frame_pri_hdr.scid = (((uint16_t)p_ingest[0] & 0x3F) << 4) | (((uint16_t)p_ingest[1] & 0xF0) >> 4);
-    tm_frame_pri_hdr.vcid = ((uint8_t)p_ingest[1] & 0x0E) >> 1;
+    aos_frame_pri_hdr.tfvn = ((uint8_t)p_ingest[0] & 0xC0) >> 6;
+    aos_frame_pri_hdr.scid = (((uint16_t)p_ingest[0] & 0x3F) << 4) | (((uint16_t)p_ingest[1] & 0xF0) >> 4);
+    aos_frame_pri_hdr.vcid = ((uint8_t)p_ingest[1] & 0x0E) >> 1;
 
 #ifdef DEBUG
-    printf(KYEL "\n----- Crypto_TM_ProcessSecurity START -----\n" RESET);
+    printf(KYEL "\n----- Crypto_AOS_ProcessSecurity START -----\n" RESET);
 #endif
 
     if (len_ingest < 6) // Frame length doesn't even have enough bytes for header -- error out.
     {
-        status = CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_TM_STANDARD;
+        status = CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_AOS_STANDARD;
         mc_if->mc_log(status);
         return status;
     }
 
     if ((crypto_config.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
     {
-#ifdef TM_DEBUG
+#ifdef AOS_DEBUG
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
 #endif
         status = CRYPTO_LIB_ERR_NO_CONFIG;
@@ -941,24 +941,24 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
         return status;
     }
 
-#ifdef TM_DEBUG
-    printf(KGRN "TM Process Using following parameters:\n\t" RESET);
-    printf(KGRN "tvfn: %d\t scid: %d\t vcid: %d\n" RESET,  tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid );
+#ifdef AOS_DEBUG
+    printf(KGRN "AOS Process Using following parameters:\n\t" RESET);
+    printf(KGRN "tvfn: %d\t scid: %d\t vcid: %d\n" RESET,  aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid );
 #endif
 
     // Lookup-retrieve managed parameters for frame via gvcid:
     status = Crypto_Get_Managed_Parameters_For_Gvcid(
-        tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid, 
+        aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid, 
         gvcid_managed_parameters, &current_managed_parameters);
 
     if (status != CRYPTO_LIB_SUCCESS)
     {
-#ifdef TM_DEBUG
+#ifdef AOS_DEBUG
         printf(KRED "**NO LUCK WITH GVCID!\n" RESET);
 #endif
         mc_if->mc_log(status);
         return status;
-    } // Unable to get necessary Managed Parameters for TM TF -- return with error.
+    } // Unable to get necessary Managed Parameters for AOS TF -- return with error.
 
     // Check if secondary header is present within frame
     // Note: Secondary headers are static only for a mission phase, not guaranteed static 
@@ -968,8 +968,8 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
     byte_idx = 4;
     if((p_ingest[byte_idx] & 0x80) == 0x80)
     {
-#ifdef TM_DEBUG
-        printf(KYEL "A TM Secondary Header flag is set!\n");
+#ifdef AOS_DEBUG
+        printf(KYEL "A AOS Secondary Header flag is set!\n");
 #endif
         // Secondary header is present
         byte_idx = 6;
@@ -977,7 +977,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
         // Length coded as total length of secondary header - 1
         // Reference CCSDS 132.0-B-2 4.1.3.2.3
         secondary_hdr_len = (p_ingest[byte_idx] & 0x3F) + 1;
-#ifdef TM_DEBUG
+#ifdef AOS_DEBUG
         printf(KYEL "Secondary Header Length is decoded as: %d\n", secondary_hdr_len);
 #endif
         // Increment from current byte (1st byte of secondary header),
@@ -1063,31 +1063,31 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
         return status;
     }
 
-#ifdef TM_DEBUG
+#ifdef AOS_DEBUG
     switch (sa_service_type)
     {
     case SA_PLAINTEXT:
-        printf(KBLU "Processing a TM - CLEAR!\n" RESET);
+        printf(KBLU "Processing a AOS - CLEAR!\n" RESET);
         break;
     case SA_AUTHENTICATION:
-        printf(KBLU "Processing a TM - AUTHENTICATED!\n" RESET);
+        printf(KBLU "Processing a AOS - AUTHENTICATED!\n" RESET);
         break;
     case SA_ENCRYPTION:
-        printf(KBLU "Processing a TM - ENCRYPTED!\n" RESET);
+        printf(KBLU "Processing a AOS - ENCRYPTED!\n" RESET);
         break;
     case SA_AUTHENTICATED_ENCRYPTION:
-        printf(KBLU "Processing a TM - AUTHENTICATED ENCRYPTION!\n" RESET);
+        printf(KBLU "Processing a AOS - AUTHENTICATED ENCRYPTION!\n" RESET);
         break;
     }
 #endif
 
     // Parse & Check FECF, if present, and update fecf length
-    if (current_managed_parameters->has_fecf == TM_HAS_FECF)
+    if (current_managed_parameters->has_fecf == AOS_HAS_FECF)
     {
         uint16_t received_fecf = (((p_ingest[current_managed_parameters->max_frame_size - 2] << 8) & 0xFF00) |
                                                         (p_ingest[current_managed_parameters->max_frame_size - 1] & 0x00FF));
 
-        if (crypto_config.crypto_check_fecf == TM_CHECK_FECF_TRUE)
+        if (crypto_config.crypto_check_fecf == AOS_CHECK_FECF_TRUE)
         {
             // Calculate our own
             uint16_t calculated_fecf = Crypto_Calc_FECF(p_ingest, len_ingest - 2);
@@ -1114,15 +1114,15 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
             }
         }
     }
-    // Needs to be TM_HAS_FECF (checked above_ or TM_NO_FECF)
-    else if (current_managed_parameters->has_fecf != TM_NO_FECF)
+    // Needs to be AOS_HAS_FECF (checked above_ or AOS_NO_FECF)
+    else if (current_managed_parameters->has_fecf != AOS_NO_FECF)
     {
-#ifdef TM_DEBUG
-        printf(KRED "TM_Process Error...tfvn: %d scid: 0x%04X vcid: 0x%02X fecf_enum: %d\n" RESET, 
+#ifdef AOS_DEBUG
+        printf(KRED "AOS_Process Error...tfvn: %d scid: 0x%04X vcid: 0x%02X fecf_enum: %d\n" RESET, 
             current_managed_parameters->tfvn, current_managed_parameters->scid, 
             current_managed_parameters->vcid, current_managed_parameters->has_fecf);
 #endif
-        status = CRYPTO_LIB_ERR_TC_ENUM_USED_FOR_TM_CONFIG;
+        status = CRYPTO_LIB_ERR_TC_ENUM_USED_FOR_AOS_CONFIG;
         mc_if->mc_log(status);
         return status;
     }
@@ -1137,7 +1137,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
         return status;
     }
 
-    // Copy over TM Primary Header (6 bytes),Secondary (if present)
+    // Copy over AOS Primary Header (6 bytes),Secondary (if present)
     // If present, the TF Secondary Header will follow the TF PriHdr
     memcpy(p_new_dec_frame, &p_ingest[0], 6 + secondary_hdr_len);
 
@@ -1167,11 +1167,11 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
     // Calculate size of the protocol data unit
     // NOTE: This size itself is not the length for authentication 
     pdu_len = current_managed_parameters->max_frame_size - (byte_idx) - sa_ptr->stmacf_len;
-    if(current_managed_parameters->has_ocf == TM_HAS_OCF)
+    if(current_managed_parameters->has_ocf == AOS_HAS_OCF)
     {
         pdu_len -= 4;
     }
-    if(current_managed_parameters->has_fecf == TM_HAS_FECF)
+    if(current_managed_parameters->has_fecf == AOS_HAS_FECF)
     {
         pdu_len -= 2;
     }
@@ -1182,15 +1182,15 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
         mac_loc = byte_idx + pdu_len;
     }
 
-#ifdef TM_DEBUG
+#ifdef AOS_DEBUG
     printf(KYEL "Index / data location starts at: %d\n" RESET, byte_idx);
     printf(KYEL "Data size is: %d\n" RESET, pdu_len);
-    if(current_managed_parameters->has_ocf == TM_HAS_OCF)
+    if(current_managed_parameters->has_ocf == AOS_HAS_OCF)
     {
         // If OCF exists, comes immediately after MAC
         printf(KYEL "OCF Location is: %d" RESET, byte_idx + pdu_len + sa_ptr->stmacf_len);
     }
-    if(current_managed_parameters->has_fecf == TM_HAS_FECF)
+    if(current_managed_parameters->has_fecf == AOS_HAS_FECF)
     {
         // If FECF exists, comes just before end of the frame
         printf(KYEL "FECF Location is: %d\n" RESET, current_managed_parameters->max_frame_size - 2);
@@ -1253,7 +1253,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
             return status;
         }
         // Use ingest and abm to create aad
-        Crypto_Prepare_TM_AAD(p_ingest, aad_len, sa_ptr->abm, &aad[0]);
+        Crypto_Prepare_AOS_AAD(p_ingest, aad_len, sa_ptr->abm, &aad[0]);
 
 #ifdef MAC_DEBUG
         printf("AAD Debug:\n\tAAD Length is %d\n\t AAD is: ", aad_len);
@@ -1377,7 +1377,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
         byte_idx += pdu_len;
     }
 
-#ifdef TM_DEBUG
+#ifdef AOS_DEBUG
     printf(KYEL "Printing received frame:\n\t" RESET);
     for( int i=0; i<current_managed_parameters->max_frame_size; i++)
     {
@@ -1396,7 +1396,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
     *p_decrypted_length = current_managed_parameters->max_frame_size;
 
 #ifdef DEBUG
-        printf(KYEL "----- Crypto_TM_ProcessSecurity END -----\n" RESET);
+        printf(KYEL "----- Crypto_AOS_ProcessSecurity END -----\n" RESET);
 #endif
 
         mc_if->mc_log(status);
@@ -1405,29 +1405,29 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
 
 /**
  * @brief Function: Crypto_Get_tmLength
- * Returns the total length of the current tm_frame in BYTES!
+ * Returns the total length of the current aos_frame in BYTES!
  * @param len: int
- * @return int32_t Length of TM
+ * @return int32_t Length of AOS
    **/
 int32_t Crypto_Get_tmLength(int len)
 {
 #ifdef FILL
-    len = TM_FILL_SIZE;
+    len = AOS_FILL_SIZE;
 #else
-    len = TM_FRAME_PRIMARYHEADER_SIZE + TM_FRAME_SECHEADER_SIZE + len + TM_FRAME_SECTRAILER_SIZE + TM_FRAME_CLCW_SIZE;
+    len = AOS_FRAME_PRIMARYHEADER_SIZE + AOS_FRAME_SECHEADER_SIZE + len + AOS_FRAME_SECTRAILER_SIZE + AOS_FRAME_CLCW_SIZE;
 #endif
 
     return len;
 }
 
 /**
- * @brief Function: Crypto_TM_updatePDU
+ * @brief Function: Crypto_AOS_updatePDU
  * Update the Telemetry Payload Data Unit
  * @param ingest: uint8_t*
  * @param len_ingest: int
    **/
 /**
-void Crypto_TM_updatePDU(uint8_t* ingest, int len_ingest)
+void Crypto_AOS_updatePDU(uint8_t* ingest, int len_ingest)
 { // Copy ingest to PDU
     int x = 0;
     // int y = 0;
@@ -1449,60 +1449,60 @@ void Crypto_TM_updatePDU(uint8_t* ingest, int len_ingest)
     {
         // fill_size = 1129;
     }
-#ifdef TM_ZERO_FILL
-    for (x = 0; x < TM_FILL_SIZE; x++)
+#ifdef AOS_ZERO_FILL
+    for (x = 0; x < AOS_FILL_SIZE; x++)
     {
         if (x < len_ingest)
         { // Fill
-            tm_frame.tm_pdu[x] = (uint8_t)ingest[x];
+            aos_frame.tm_pdu[x] = (uint8_t)ingest[x];
         }
         else
         { // Zero
-            tm_frame.tm_pdu[x] = 0x00;
+            aos_frame.tm_pdu[x] = 0x00;
         }
     }
 #else
     // Pre-append remaining packet if exist
     // if (tm_offset == 63)
     // {
-    //     tm_frame.tm_pdu[x++] = 0xff;
-    //     tm_offset--;
+    //     aos_frame.tm_pdu[x++] = 0xff;
+    //     aos_offset--;
     // }
     // if (tm_offset == 62)
     // {
-    //     tm_frame.tm_pdu[x++] = 0x00;
-    //     tm_offset--;
+    //     aos_frame.tm_pdu[x++] = 0x00;
+    //     aos_offset--;
     // }
     // if (tm_offset == 61)
     // {
-    //     tm_frame.tm_pdu[x++] = 0x00;
-    //     tm_offset--;
+    //     aos_frame.tm_pdu[x++] = 0x00;
+    //     aos_offset--;
     // }
     // if (tm_offset == 60)
     // {
-    //     tm_frame.tm_pdu[x++] = 0x00;
-    //     tm_offset--;
+    //     aos_frame.tm_pdu[x++] = 0x00;
+    //     aos_offset--;
     // }
     // if (tm_offset == 59)
     // {
-    //     tm_frame.tm_pdu[x++] = 0x39;
-    //     tm_offset--;
+    //     aos_frame.tm_pdu[x++] = 0x39;
+    //     aos_offset--;
     // }
-    // while (x < tm_offset)
+    // while (x < aos_offset)
     // {
-    //     tm_frame.tm_pdu[x] = 0x00;
+    //     aos_frame.tm_pdu[x] = 0x00;
     //     x++;
     // }
     // Copy actual packet
-    while (x < len_ingest + tm_offset)
+    while (x < len_ingest + aos_offset)
     {
         // printf("%s, Line: %d\n", __FILE__, __LINE__);
-        // printf("ingest[x - tm_offset] = 0x%02x \n", (uint8_t)ingest[x - tm_offset]);
-        printf("%02X", (uint8_t)ingest[x - tm_offset]);
-        // tm_frame.tm_pdu[x] = (uint8_t)ingest[x - tm_offset];
+        // printf("ingest[x - aos_offset] = 0x%02x \n", (uint8_t)ingest[x - aos_offset]);
+        printf("%02X", (uint8_t)ingest[x - aos_offset]);
+        // aos_frame.tm_pdu[x] = (uint8_t)ingest[x - aos_offset];
         x++;
     }
-#ifdef TM_IDLE_FILL
+#ifdef AOS_IDLE_FILL
     // Check for idle frame trigger
     if (((uint8_t)ingest[0] == 0x08) && ((uint8_t)ingest[1] == 0x90))
     {
@@ -1512,57 +1512,57 @@ void Crypto_TM_updatePDU(uint8_t* ingest, int len_ingest)
     {
         // while (x < (fill_size - 64))
         // {
-        //     tm_frame.tm_pdu[x++] = 0x07;
-        //     tm_frame.tm_pdu[x++] = 0xff;
-        //     tm_frame.tm_pdu[x++] = 0x00;
-        //     tm_frame.tm_pdu[x++] = 0x00;
-        //     tm_frame.tm_pdu[x++] = 0x00;
-        //     tm_frame.tm_pdu[x++] = 0x39;
+        //     aos_frame.tm_pdu[x++] = 0x07;
+        //     aos_frame.tm_pdu[x++] = 0xff;
+        //     aos_frame.tm_pdu[x++] = 0x00;
+        //     aos_frame.tm_pdu[x++] = 0x00;
+        //     aos_frame.tm_pdu[x++] = 0x00;
+        //     aos_frame.tm_pdu[x++] = 0x39;
         //     for (y = 0; y < 58; y++)
         //     {
-        //         tm_frame.tm_pdu[x++] = 0x00;
+        //         aos_frame.tm_pdu[x++] = 0x00;
         //     }
         // }
         // Add partial packet, if possible, and set offset
         // if (x < fill_size)
         // {
-        //     tm_frame.tm_pdu[x++] = 0x07;
-        //     tm_offset = 63;
+        //     aos_frame.tm_pdu[x++] = 0x07;
+        //     aos_offset = 63;
         // }
         // if (x < fill_size)
         // {
-        //     tm_frame.tm_pdu[x++] = 0xff;
-        //     tm_offset--;
+        //     aos_frame.tm_pdu[x++] = 0xff;
+        //     aos_offset--;
         // }
         // if (x < fill_size)
         // {
-        //     tm_frame.tm_pdu[x++] = 0x00;
-        //     tm_offset--;
+        //     aos_frame.tm_pdu[x++] = 0x00;
+        //     aos_offset--;
         // }
         // if (x < fill_size)
         // {
-        //     tm_frame.tm_pdu[x++] = 0x00;
-        //     tm_offset--;
+        //     aos_frame.tm_pdu[x++] = 0x00;
+        //     aos_offset--;
         // }
         // if (x < fill_size)
         // {
-        //     tm_frame.tm_pdu[x++] = 0x00;
-        //     tm_offset--;
+        //     aos_frame.tm_pdu[x++] = 0x00;
+        //     aos_offset--;
         // }
         // if (x < fill_size)
         // {
-        //     tm_frame.tm_pdu[x++] = 0x39;
-        //     tm_offset--;
+        //     aos_frame.tm_pdu[x++] = 0x39;
+        //     aos_offset--;
         // }
         // for (y = 0; x < fill_size; y++)
         // {
-        //     tm_frame.tm_pdu[x++] = 00;
-        //     tm_offset--;
+        //     aos_frame.tm_pdu[x++] = 00;
+        //     aos_offset--;
         // }
     }
-    // while (x < TM_FILL_SIZE)
+    // while (x < AOS_FILL_SIZE)
     // {
-    //     tm_frame.tm_pdu[x++] = 0x00;
+    //     aos_frame.tm_pdu[x++] = 0x00;
     // }
 #endif
 #endif
@@ -1571,22 +1571,22 @@ void Crypto_TM_updatePDU(uint8_t* ingest, int len_ingest)
 }
   **/
 /**
- * @brief Function: Crypto_TM_updateOCF
- * Update the TM OCF
+ * @brief Function: Crypto_AOS_updateOCF
+ * Update the AOS OCF
    **/
 /**
-void Crypto_TM_updateOCF(void)
+void Crypto_AOS_updateOCF(void)
 {
     // TODO
     if (ocf == 0)
     { // CLCW
-        clcw.vci = tm_frame.tm_header.vcid;
+        clcw.vci = aos_frame.tm_header.vcid;
 
-        tm_frame.tm_sec_trailer.ocf[0] = (clcw.cwt << 7) | (clcw.cvn << 5) | (clcw.sf << 2) | (clcw.cie);
-        tm_frame.tm_sec_trailer.ocf[1] = (clcw.vci << 2) | (clcw.spare0);
-        tm_frame.tm_sec_trailer.ocf[2] = (clcw.nrfa << 7) | (clcw.nbl << 6) | (clcw.lo << 5) | (clcw.wait << 4) |
+        aos_frame.tm_sec_trailer.ocf[0] = (clcw.cwt << 7) | (clcw.cvn << 5) | (clcw.sf << 2) | (clcw.cie);
+        aos_frame.tm_sec_trailer.ocf[1] = (clcw.vci << 2) | (clcw.spare0);
+        aos_frame.tm_sec_trailer.ocf[2] = (clcw.nrfa << 7) | (clcw.nbl << 6) | (clcw.lo << 5) | (clcw.wait << 4) |
                                          (clcw.rt << 3) | (clcw.fbc << 1) | (clcw.spare1);
-        tm_frame.tm_sec_trailer.ocf[3] = (clcw.rv);
+        aos_frame.tm_sec_trailer.ocf[3] = (clcw.rv);
         // Alternate OCF
         ocf = 1;
 #ifdef OCF_DEBUG
@@ -1595,11 +1595,11 @@ void Crypto_TM_updateOCF(void)
     }
     else
     { // FSR
-        tm_frame.tm_sec_trailer.ocf[0] = (report.cwt << 7) | (report.vnum << 4) | (report.af << 3) |
+        aos_frame.tm_sec_trailer.ocf[0] = (report.cwt << 7) | (report.vnum << 4) | (report.af << 3) |
                                          (report.bsnf << 2) | (report.bmacf << 1) | (report.ispif);
-        tm_frame.tm_sec_trailer.ocf[1] = (report.lspiu & 0xFF00) >> 8;
-        tm_frame.tm_sec_trailer.ocf[2] = (report.lspiu & 0x00FF);
-        tm_frame.tm_sec_trailer.ocf[3] = (report.snval);
+        aos_frame.tm_sec_trailer.ocf[1] = (report.lspiu & 0xFF00) >> 8;
+        aos_frame.tm_sec_trailer.ocf[2] = (report.lspiu & 0x00FF);
+        aos_frame.tm_sec_trailer.ocf[3] = (report.snval);
         // Alternate OCF
         ocf = 0;
 #ifdef OCF_DEBUG
@@ -1610,7 +1610,7 @@ void Crypto_TM_updateOCF(void)
   **/
 
 /**
- * @brief Function: Crypto_Prepare_TM_AAD
+ * @brief Function: Crypto_Prepare_AOS_AAD
  * Bitwise ANDs buffer with abm, placing results in aad buffer
  * @param buffer: uint8_t*
  * @param len_aad: uint16_t
@@ -1618,7 +1618,7 @@ void Crypto_TM_updateOCF(void)
  * @param aad: uint8_t*
  * @return status: uint32_t
    **/
-uint32_t Crypto_Prepare_TM_AAD(const uint8_t* buffer, uint16_t len_aad, const uint8_t* abm_buffer, uint8_t* aad)
+uint32_t Crypto_Prepare_AOS_AAD(const uint8_t* buffer, uint16_t len_aad, const uint8_t* abm_buffer, uint8_t* aad)
 {
     uint32_t status = CRYPTO_LIB_SUCCESS;
     int i;
