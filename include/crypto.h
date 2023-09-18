@@ -104,8 +104,8 @@ extern int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int *len_ingest, T
 extern int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer);
 extern int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_t** pp_processed_frame, uint16_t *p_decrypted_length);
 // Advanced Orbiting Systems (AOS)
-extern int32_t Crypto_AOS_ApplySecurity(uint8_t* ingest, int *len_ingest);
-extern int32_t Crypto_AOS_ProcessSecurity(uint8_t* ingest, int *len_ingest);
+extern int32_t Crypto_AOS_ApplySecurity(uint8_t* pTfBuffer);
+extern int32_t Crypto_AOS_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_t** pp_processed_frame, uint16_t* p_decrypted_length);
 
 // Crypo Error Support Functions
 extern char* Crypto_Get_Error_Code_Enum_String(int32_t crypto_error_code);
@@ -118,10 +118,11 @@ extern int32_t Crypto_increment(uint8_t* num, int length);
 // int32_t  Crypto_Get_tcPayloadLength(TC_t* tc_frame, SecurityAssociation_t* sa_ptr);
 int32_t Crypto_Get_tmLength(int len);
 uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id);
-uint8_t* Crypto_Prepare_TC_AAD(uint8_t* buffer, uint16_t len_aad, uint8_t* abm_buffer);
 void Crypto_TM_updatePDU(uint8_t* ingest, int len_ingest);
 void Crypto_TM_updateOCF(void);
+uint8_t* Crypto_Prepare_TC_AAD(uint8_t* buffer, uint16_t len_aad, uint8_t* abm_buffer);
 uint32_t Crypto_Prepare_TM_AAD(const uint8_t* buffer, uint16_t len_aad, const uint8_t* abm_buffer, uint8_t* aad);
+uint32_t Crypto_Prepare_AOS_AAD(const uint8_t* buffer, uint16_t len_aad, const uint8_t* abm_buffer, uint8_t* aad);
 void Crypto_Local_Config(void);
 void Crypto_Local_Init(void);
 // int32_t  Crypto_gcm_err(int gcm_err);
@@ -190,6 +191,9 @@ extern CCSDS_t sdls_frame;
 extern uint8_t tm_frame[1786];
 extern TM_FramePrimaryHeader_t tm_frame_pri_hdr; 
 extern TM_FrameSecurityHeader_t tm_frame_sec_hdr; // Used to reduce bit math duplication
+// exterm AOS_t aos_frame
+extern AOS_FramePrimaryHeader_t aos_frame_pri_hdr; 
+extern AOS_FrameSecurityHeader_t aos_frame_sec_hdr; // Used to reduce bit math duplication
 
 // Global configuration structs
 extern CryptoConfig_t crypto_config;

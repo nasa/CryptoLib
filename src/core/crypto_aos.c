@@ -1404,12 +1404,12 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8
     }
 
 /**
- * @brief Function: Crypto_Get_tmLength
+ * @brief Function: Crypto_Get_aosLength
  * Returns the total length of the current aos_frame in BYTES!
  * @param len: int
  * @return int32_t Length of AOS
    **/
-int32_t Crypto_Get_tmLength(int len)
+int32_t Crypto_Get_aosLength(int len)
 {
 #ifdef FILL
     len = AOS_FILL_SIZE;

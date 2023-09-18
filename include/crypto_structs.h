@@ -334,7 +334,7 @@ typedef struct
     uint8_t tfvn : 2;   // Transfer Frame Version Number
     uint16_t scid : 10; // Spacecraft ID
     uint8_t vcid : 3;   // Virtual Channel ID
-    uint8_t ocff : 1;   // Describes wether OCF is present or not
+    uint8_t ocff : 1;   // Describes whether OCF is present or not
     uint8_t mcfc : 8;   // Master Channel Frame Count (modulo-256)
     uint8_t vcfc : 8;   // Virtual Channel Frame Count (modulo-256)
     uint8_t tfsh : 1;   // Transfer Frame Secondary Header
@@ -402,5 +402,84 @@ typedef struct
 
 #define TM_MIN_SIZE                                                                                                    \
     (TM_FRAME_PRIMARYHEADER_SIZE + TM_FRAME_SECHEADER_SIZE + TM_FRAME_SECTRAILER_SIZE + TM_FRAME_CLCW_SIZE)
+
+/*
+** Advanced Orbiting Systems (AOS) Definitions
+*/
+typedef struct
+{
+    uint8_t tfvn : 2;   // Transfer Frame Version Number
+                        // Shall be set to '01' (732.0b4 Section 4.1.2.2.2)
+    uint16_t scid : 8;  // Spacecraft ID
+    uint8_t vcid : 6;   // Virtual Channel ID
+                        // To be all zeros if only one VC used (732.0b4 Section 4.1.2.3)
+    long vcfc : 24;  // Virtual Channel Frame Count (modulo-16,777,216)
+    /* Begin TF Signalling Field */
+    uint8_t rf : 1;     // Replay Flag
+    uint8_t sf : 1;     // VC Frame Count Usgae Flag
+                        // 0 = Payload is either idle data or octet synchronized forward-ordered packets
+                        // 1 = Data is a virtual channel access data unit
+    uint8_t spare : 2;  // Reserved Spare
+                        // 0 = Shall be set to 0
+                        // Sync Flag 1 = Undefined
+    uint8_t vfcc : 2;   // VC Frame Count cycle
+                        // Sync Flag 0 = Shall be 11
+                        // Sync Flag 1 = Undefined
+    uint16_t fhp : 11;  // First Header Pointer
+                        // Sync Flag 0 = Contains position of the first byte of the first packet in the data field
+                        // Sync Flag 1 = undefined
+} AOS_FramePrimaryHeader_t;
+#define AOS_FRAME_PRIMARYHEADER_SIZE (sizeof(AOS_FramePrimaryHeader_t))
+
+typedef struct
+{
+    uint16_t spi;        // Security Parameter Index
+    uint8_t iv[IV_SIZE]; // Initialization Vector for encryption
+    // uint8_t	sn[TM_SN_SIZE]; 	// Sequence Number for anti-replay
+    // uint8_t	pad[TM_PAD_SIZE]; 	// Count of the used fill Bytes
+} AOS_FrameSecurityHeader_t;
+#define AOS_FRAME_SECHEADER_SIZE (sizeof(AOS_FrameSecurityHeader_t))
+
+typedef struct
+{
+    uint8_t mac[MAC_SIZE]; // Message Authentication Code
+    uint8_t ocf[OCF_SIZE]; // Operational Control Field
+    uint16_t fecf;         // Frame Error Control Field
+} AOS_FrameSecurityTrailer_t;
+#define AOS_FRAME_SECTRAILER_SIZE (sizeof(AOS_FrameSecurityTrailer_t))
+
+
+// REVIEW THIS.. conflicting info in two docs?
+typedef struct
+{
+    uint8_t tf : 1;     // Type Flag
+                        // "0" - OCF field is a Type-1-Report (CLCW)
+                        // "1" - OCT field is a Type-2-Report 
+    uint8_t uf: 1;      // Use Flag
+                        // If Type-2 Report: '0' means contents of report are project specific
+                        // If Type=2 Report, '1' Report contains an SDLS FSR
+    // Frame Security Report
+    uint8_t cwt : 1;    // Control Word Type "1"
+    uint8_t fvn : 3;    // FSR Version Number "100"
+    uint8_t af : 1;     // Alarm Flag
+    uint8_t bsnf : 1;   // Bad Sequence Number Flag
+    uint8_t bmf : 1;    // Bad Mac Flag
+    uint8_t bsaf : 1;   // Bad Security Association Flag
+    uint16_t lspi : 16;  // Last SPI Used
+    uint8_t snv : 8;    // Sequence Number Value (LSB)
+} AOS_FrameOcf_t;
+#define AOS_FRAME_OCF_SIZE (sizeof(AOS_Frame_Ocf_t))
+
+typedef struct
+{
+    AOS_FramePrimaryHeader_t tm_header;
+    AOS_FrameSecurityHeader_t tm_sec_header;
+    uint8_t aos_pdu[AOS_FRAME_DATA_SIZE];
+    AOS_FrameSecurityTrailer_t aos_sec_trailer;
+} AOS_t;
+#define AOS_SIZE (sizeof(AOS_t))
+
+#define AOS_MIN_SIZE                                                                                                    \
+    (AOS_FRAME_PRIMARYHEADER_SIZE + AOS_FRAME_SECHEADER_SIZE + AOS_FRAME_SECTRAILER_SIZE + AOS_FRAME_OCF_SIZE)
 
 #endif //CRYPTO_STRUCTS_H

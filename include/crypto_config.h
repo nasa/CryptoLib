@@ -179,6 +179,10 @@
 #define TM_FILL_SIZE 1145       /* bytes */
 #define TM_PAD_SIZE 2           /* bytes */
 
+// AOS Defines
+#define AOS_FRAME_DATA_SIZE 1786 /* bytes */
+#define AOS_FILL_SIZE 1145       /* bytes */
+
 // TC Behavior Defines
 #define TC_SDLS_EP_VCID                                                                                                \
     4 // VCID which has SDLS PDUs (JPL uses VCIDs to determine TC type, there is no space packet layer with APIDs). Set
