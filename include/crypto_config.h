@@ -61,7 +61,7 @@
 #define TC_MAX_FRAME_SIZE 1024
 
 // Spacecraft Defines
-#define SCID 0x0003 //44 //0x0003 // 0xC3D2
+#define SCID 0x0003
 
 // Functionality Defines
 #define INCREMENT
@@ -175,7 +175,7 @@
 #define TLV_DATA_SIZE 494 /* bytes */
 
 // TM Defines
-#define TM_FRAME_DATA_SIZE 1740 /* bytes */
+#define TM_FRAME_DATA_SIZE 1786 /* bytes */
 #define TM_FILL_SIZE 1145       /* bytes */
 #define TM_PAD_SIZE 2           /* bytes */
 
@@ -183,6 +183,15 @@
 #define TC_SDLS_EP_VCID                                                                                                \
     4 // VCID which has SDLS PDUs (JPL uses VCIDs to determine TC type, there is no space packet layer with APIDs). Set
       // to -1 if uses SP APIDs.
+
+// TM Behavior Defines
+#define TM_CADU_HAS_ASM 1 // Skip 0x1acffc1d at beginning of each frame
+// TM CADU based on ASM, currently only holds non-turbo ASM
+#ifdef TM_CADU_HAS_ASM
+   #define TM_CADU_SIZE (TM_FRAME_DATA_SIZE + 6)
+#else
+   #define TM_CADU_SIZE TM_FRAME_DATA_SIZE
+#endif
 
 // Logic Behavior Defines
 #define CRYPTO_FALSE 0
