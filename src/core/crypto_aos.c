@@ -76,7 +76,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t* pTfBuffer)
 
     tfvn = ((uint8_t)pTfBuffer[0] & 0xC0) >> 6;
     scid = (((uint16_t)pTfBuffer[0] & 0x3F) << 2) | (((uint16_t)pTfBuffer[1] & 0xC0) >> 6);
-    vcid = ((uint8_t) pTfBuffer[1] & 0x3F);
+    vcid = ((uint8_t)pTfBuffer[1] & 0x3F);
 
 #ifdef AOS_DEBUG
     printf(KYEL "\n----- Crypto_AOS_ApplySecurity START -----\n" RESET);
@@ -106,7 +106,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t* pTfBuffer)
     }
 
     status = Crypto_Get_Managed_Parameters_For_Gvcid(tfvn, scid, vcid, gvcid_managed_parameters, &current_managed_parameters);
-    
+
     // No managed parameters found
     if (status != CRYPTO_LIB_SUCCESS)
     {
@@ -117,7 +117,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t* pTfBuffer)
         return status;
     }
 
- #ifdef AOS_DEBUG
+#ifdef AOS_DEBUG
     printf(KYEL "AOS BEFORE Apply Sec:\n\t" RESET);
     for (int16_t i =0; i < current_managed_parameters->max_frame_size; i++)
     {
@@ -158,11 +158,11 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t* pTfBuffer)
         return status;
     }
 
-        // Determine Algorithm cipher & mode. // TODO - Parse authentication_cipher, and handle AEAD cases properly
-        if (sa_service_type != SA_PLAINTEXT)
-        {
-            ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(sa_ptr->ecs);
-        }
+    // Determine Algorithm cipher & mode. // TODO - Parse authentication_cipher, and handle AEAD cases properly
+    if (sa_service_type != SA_PLAINTEXT)
+    {
+        ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(sa_ptr->ecs);
+    }
 
 #ifdef AOS_DEBUG
     switch (sa_service_type)
@@ -182,34 +182,9 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t* pTfBuffer)
     }
 #endif
 
-    // Check if secondary header is present within frame
-    // Note: Secondary headers are static only for a mission phase, not guaranteed static 
-    // over the life of a mission Per CCSDS 132.0-B.3 Section 4.1.2.7.2.3
-    // Secondary Header flag is 1st bit of 5th byte (index 4)
-    idx = 4;
-    if((pTfBuffer[idx] & 0x80) == 0x80)
-    {
-#ifdef AOS_DEBUG
-        printf(KYEL "A AOS Secondary Header flag is set!\n");
-#endif
-        // Secondary header is present
-        idx = 6;
-        // Determine length of secondary header
-        // Length coded as total length of secondary header - 1
-        // Reference CCSDS 132.0-B-2 4.1.3.2.3
-        uint8_t secondary_hdr_len = (pTfBuffer[idx] & 0x3F);
-#ifdef AOS_DEBUG
-        printf(KYEL "Secondary Header Length is decoded as: %d\n", secondary_hdr_len);
-#endif
-        // Increment from current byte (1st byte of secondary header),
-        // to where the SPI would start
-        idx += secondary_hdr_len + 1;
-    }
-    else
-    {
-        // No Secondary header, carry on as usual and increment to SPI start
-        idx = 6;
-    }
+    // Increment to SPI start
+    idx = 6;
+
     /**
      * Begin Security Header Fields
      * Reference CCSDS SDLP 3550b1 4.1.1.1.3
@@ -593,11 +568,11 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t* pTfBuffer)
 
 //TODO OCF - ? Here, elsewhere?
 
-        /**
-         * End Authentication / Encryption
-         **/
+    /**
+     * End Authentication / Encryption
+     **/
 
-        // Only calculate & insert FECF if CryptoLib is configured to do so & gvcid includes FECF.
+    // Only calculate & insert FECF if CryptoLib is configured to do so & gvcid includes FECF.
     if (current_managed_parameters->has_fecf == AOS_HAS_FECF)
     {
 #ifdef FECF_DEBUG
@@ -903,9 +878,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8
     uint8_t* p_new_dec_frame = NULL;
     SecurityAssociation_t* sa_ptr = NULL;
     uint8_t sa_service_type = -1;
-    uint8_t secondary_hdr_len = 0;
     uint8_t spi = -1;
-    
 
     // Bit math to give concise access to values in the ingest
     aos_frame_pri_hdr.tfvn = ((uint8_t)p_ingest[0] & 0xC0) >> 6;
@@ -964,35 +937,8 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8
         return status;
     } // Unable to get necessary Managed Parameters for AOS TF -- return with error.
 
-    // Check if secondary header is present within frame
-    // Note: Secondary headers are static only for a mission phase, not guaranteed static 
-    // over the life of a mission Per CCSDS 132.0-B.3 Section 4.1.2.7.2.3
-
-    // Secondary Header flag is 1st bit of 5th byte (index 4)
-    byte_idx = 4;
-    if((p_ingest[byte_idx] & 0x80) == 0x80)
-    {
-#ifdef AOS_DEBUG
-        printf(KYEL "A AOS Secondary Header flag is set!\n");
-#endif
-        // Secondary header is present
-        byte_idx = 6;
-        // Determine length of secondary header
-        // Length coded as total length of secondary header - 1
-        // Reference CCSDS 132.0-B-2 4.1.3.2.3
-        secondary_hdr_len = (p_ingest[byte_idx] & 0x3F) + 1;
-#ifdef AOS_DEBUG
-        printf(KYEL "Secondary Header Length is decoded as: %d\n", secondary_hdr_len);
-#endif
-        // Increment from current byte (1st byte of secondary header),
-        // to where the SPI would start
-        byte_idx += secondary_hdr_len;
-    }
-    else
-    {
-        // No Secondary header, carry on as usual and increment to SPI start
-        byte_idx = 6;
-    }
+    // Increment to SPI start
+    byte_idx = 6;
 
     /**
      * Begin Security Header Fields
@@ -1141,9 +1087,8 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8
         return status;
     }
 
-    // Copy over AOS Primary Header (6 bytes),Secondary (if present)
-    // If present, the TF Secondary Header will follow the TF PriHdr
-    memcpy(p_new_dec_frame, &p_ingest[0], 6 + secondary_hdr_len);
+    // Copy over AOS Primary Header (6 bytes)
+    memcpy(p_new_dec_frame, &p_ingest[0], 6);
 
     // Byte_idx is still set to just past the SPI
     // If IV is present, note location

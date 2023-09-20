@@ -158,11 +158,11 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
         return status;
     }
 
-        // Determine Algorithm cipher & mode. // TODO - Parse authentication_cipher, and handle AEAD cases properly
-        if (sa_service_type != SA_PLAINTEXT)
-        {
-            ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(sa_ptr->ecs);
-        }
+    // Determine Algorithm cipher & mode. // TODO - Parse authentication_cipher, and handle AEAD cases properly
+    if (sa_service_type != SA_PLAINTEXT)
+    {
+        ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(sa_ptr->ecs);
+    }
 
 #ifdef TM_DEBUG
     switch (sa_service_type)
@@ -593,11 +593,11 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
 
 //TODO OCF - ? Here, elsewhere?
 
-        /**
-         * End Authentication / Encryption
-         **/
+    /**
+     * End Authentication / Encryption
+     **/
 
-        // Only calculate & insert FECF if CryptoLib is configured to do so & gvcid includes FECF.
+    // Only calculate & insert FECF if CryptoLib is configured to do so & gvcid includes FECF.
     if (current_managed_parameters->has_fecf == TM_HAS_FECF)
     {
 #ifdef FECF_DEBUG
