@@ -215,7 +215,7 @@ extern GvcidManagedParameters_t* current_managed_parameters;
 // OCF
 extern uint8_t ocf;
 extern SDLS_FSR_t report;
-extern TM_FrameCLCW_t clcw;
+extern Telemetry_Frame_Clcw_t clcw;
 // Flags
 extern SDLS_MC_LOG_RPLY_t log_summary;
 extern SDLS_MC_DUMP_BLK_RPLY_t mc_log;

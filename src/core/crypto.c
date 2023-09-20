@@ -45,7 +45,7 @@ AOS_FrameSecurityHeader_t aos_frame_sec_hdr; // Used to reduce bit math duplicat
 // OCF
 uint8_t ocf = 0;
 SDLS_FSR_t report;
-TM_FrameCLCW_t clcw;
+Telemetry_Frame_Clcw_t clcw;
 // Flags
 SDLS_MC_LOG_RPLY_t log_summary;
 SDLS_MC_DUMP_BLK_RPLY_t mc_log;

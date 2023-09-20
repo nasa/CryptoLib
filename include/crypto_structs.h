@@ -327,6 +327,49 @@ typedef struct
 #define CCSDS_SIZE (sizeof(CCSDS_t))
 
 /*
+** Operational Control Field definition
+** Telemetry frames can reply with either of these in their OCF field:
+** 1) A Communications Control Link Word -or- 
+** 2) A Frame Security Report
+*/
+
+// INFO: This is the Communications Link Control Word register format
+typedef struct
+{
+    uint8_t cwt : 1;    // Control Word Type "0"
+    uint8_t cvn : 2;    // CLCW Version Number "00"
+    uint8_t sf : 3;     // Status Field
+    uint8_t cie : 2;    // COP In Effect
+    uint8_t vci : 6;    // Virtual Channel Identification
+    uint8_t spare0 : 2; // Reserved Spare
+    uint8_t nrfa : 1;   // No RF Avaliable Flag
+    uint8_t nbl : 1;    // No Bit Lock Flag
+    uint8_t lo : 1;     // Lock-Out Flag
+    uint8_t wait : 1;   // Wait Flag
+    uint8_t rt : 1;     // Retransmit Flag
+    uint8_t fbc : 2;    // FARM-B Counter
+    uint8_t spare1 : 1; // Reserved Spare
+    uint8_t rv : 8;     // Report Value
+} Telemetry_Frame_Clcw_t;
+
+#define TM_FRAME_CLCW_SIZE (sizeof(Telemetry_Frame_Clcw_t))
+
+// INFO: This is the Frame Security Report register format
+typedef struct
+{
+    uint8_t cwt : 1;    // Control Word Type "1"
+    uint8_t fvn : 3;    // FSR Version Number "100"
+    uint8_t af : 1;     // Alarm Flag
+    uint8_t bsnf : 1;   // Bad Sequence Number Flag
+    uint8_t bmf : 1;    // Bad Mac Flag
+    uint8_t bsaf : 1;   // Bad Security Association Flag
+    uint16_t lspi : 16; // Last SPI Used
+    uint8_t snv : 8;    // Sequence Number Value (LSB)
+} Telemetry_Frame_Fsr_t;
+
+#define TELEMETRY_FRAME_OCF_SIZE (sizeof(Telemetry_Frame_Fsr_t))
+
+/*
 ** Telemetry (TM) Definitions
 */
 typedef struct
@@ -371,25 +414,6 @@ typedef struct
     uint16_t fecf;         // Frame Error Control Field
 } TM_FrameSecurityTrailer_t;
 #define TM_FRAME_SECTRAILER_SIZE (sizeof(TM_FrameSecurityTrailer_t))
-
-typedef struct
-{
-    uint8_t cwt : 1;    // Control Word Type "0"
-    uint8_t cvn : 2;    // CLCW Version Number "00"
-    uint8_t sf : 3;     // Status Field
-    uint8_t cie : 2;    // COP In Effect
-    uint8_t vci : 6;    // Virtual Channel Identification
-    uint8_t spare0 : 2; // Reserved Spare
-    uint8_t nrfa : 1;   // No RF Avaliable Flag
-    uint8_t nbl : 1;    // No Bit Lock Flag
-    uint8_t lo : 1;     // Lock-Out Flag
-    uint8_t wait : 1;   // Wait Flag
-    uint8_t rt : 1;     // Retransmit Flag
-    uint8_t fbc : 2;    // FARM-B Counter
-    uint8_t spare1 : 1; // Reserved Spare
-    uint8_t rv : 8;     // Report Value
-} TM_FrameCLCW_t;
-#define TM_FRAME_CLCW_SIZE (sizeof(TM_FrameCLCW_t))
 
 typedef struct
 {
@@ -447,21 +471,6 @@ typedef struct
     uint16_t fecf;         // Frame Error Control Field
 } AOS_FrameSecurityTrailer_t;
 #define AOS_FRAME_SECTRAILER_SIZE (sizeof(AOS_FrameSecurityTrailer_t))
-
-
-// INFO: This is a Frame Sequence Report
-typedef struct
-{
-    uint8_t cwt : 1;    // Control Word Type "1"
-    uint8_t fvn : 3;    // FSR Version Number "100"
-    uint8_t af : 1;     // Alarm Flag
-    uint8_t bsnf : 1;   // Bad Sequence Number Flag
-    uint8_t bmf : 1;    // Bad Mac Flag
-    uint8_t bsaf : 1;   // Bad Security Association Flag
-    uint16_t lspi : 16;  // Last SPI Used
-    uint8_t snv : 8;    // Sequence Number Value (LSB)
-} AOS_FrameFsr_t;
-#define AOS_FRAME_OCF_SIZE (sizeof(AOS_Frame_Ocf_t))
 
 typedef struct
 {
