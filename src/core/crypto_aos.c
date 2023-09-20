@@ -67,8 +67,8 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t* pTfBuffer)
     printf(KYEL "\n----- Crypto_AOS_ApplySecurity START -----\n" RESET);
     printf("The following GVCID parameters will be used:\n");
     printf("\tTVFN: 0x%04X\t", ((uint8_t)pTfBuffer[0] & 0xC0) >> 6);
-    printf("\tSCID: 0x%04X", (((uint16_t)pTfBuffer[0] & 0x3F) << 4) | (((uint16_t)pTfBuffer[1] & 0xF0) >> 4));
-    printf("\tVCID: 0x%04X", ((uint8_t) pTfBuffer[1] & 0x0E) >> 1);
+    printf("\tSCID: 0x%04X", (((uint16_t)pTfBuffer[0] & 0x3F) << 2) | (((uint16_t)pTfBuffer[1] & 0xC0) >> 6));
+    printf("\tVCID: 0x%04X", ((uint8_t) pTfBuffer[1] & 0x3F));
     printf("\tMAP: %d\n", 0);
     printf("\tPriHdr as follows:\n\t\t");
     for (int i =0; i<6; i++)
