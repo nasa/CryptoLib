@@ -56,27 +56,15 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
     uint16_t new_fecf = 0x0000;
     uint8_t ecs_is_aead_algorithm;
     SecurityAssociation_t* sa_ptr = NULL;
+    uint8_t tfvn = 0;
+    uint16_t scid = 0; 
+    uint16_t vcid = 0;
 
     // Passed a null, return an error
     if (!pTfBuffer)
     {
         return CRYPTO_LIB_ERR_NULL_BUFFER;
     }
-
-#ifdef TM_DEBUG
-    printf(KYEL "\n----- Crypto_TM_ApplySecurity START -----\n" RESET);
-    printf("The following GVCID parameters will be used:\n");
-    printf("\tTVFN: 0x%04X\t", ((uint8_t)pTfBuffer[0] & 0xC0) >> 6);
-    printf("\tSCID: 0x%04X", (((uint16_t)pTfBuffer[0] & 0x3F) << 4) | (((uint16_t)pTfBuffer[1] & 0xF0) >> 4));
-    printf("\tVCID: 0x%04X", ((uint8_t) pTfBuffer[1] & 0x0E) >> 1);
-    printf("\tMAP: %d\n", 0);
-    printf("\tPriHdr as follows:\n\t\t");
-    for (int i =0; i<6; i++)
-    {
-        printf("%02X", (uint8_t)pTfBuffer[i]);
-    }
-    printf("\n");
-#endif
 
     if ((crypto_config.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
     {
@@ -86,9 +74,27 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
         return status;  // return immediately so a NULL crypto_config is not dereferenced later
     }
 
-    status = sa_if->sa_get_operational_sa_from_gvcid(((uint8_t)pTfBuffer[0] & 0xC0) >> 6, 
-                                                (((uint16_t)pTfBuffer[0] & 0x3F) << 4) | (((uint16_t)pTfBuffer[1] & 0xF0) >> 4),
-                                                ((uint8_t)pTfBuffer[1] & 0x0E) >> 1, 0, &sa_ptr);
+    tfvn = ((uint8_t)pTfBuffer[0] & 0xC0) >> 6;
+    scid = (((uint16_t)pTfBuffer[0] & 0x3F) << 4) | (((uint16_t)pTfBuffer[1] & 0xF0) >> 4);
+    vcid =  ((uint8_t) pTfBuffer[1] & 0x0E) >> 1;
+
+#ifdef TM_DEBUG
+    printf(KYEL "\n----- Crypto_TM_ApplySecurity START -----\n" RESET);
+    printf("The following GVCID parameters will be used:\n");
+    printf("\tTVFN: 0x%04X\t", tfvn);
+    printf("\tSCID: 0x%04X", scid);
+    printf("\tVCID: 0x%04X",vcid);
+    printf("\tMAP: %d\n", 0);
+    printf("\tPriHdr as follows:\n\t\t");
+    for (int i =0; i<6; i++)
+    {
+        printf("%02X", (uint8_t)pTfBuffer[i]);
+    }
+    printf("\n");
+#endif
+
+    status = sa_if->sa_get_operational_sa_from_gvcid(tfvn, scid, vcid, 0, &sa_ptr);
+
     // No operational/valid SA found
     if (status != CRYPTO_LIB_SUCCESS)
     {
@@ -99,10 +105,8 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
         return status;
     }
 
-    status = Crypto_Get_Managed_Parameters_For_Gvcid(((uint8_t)pTfBuffer[0] & 0xC0) >> 6, 
-                                                (((uint16_t)pTfBuffer[0] & 0x3F) << 4) | (((uint16_t)pTfBuffer[1] & 0xF0) >> 4),
-                                                ((uint8_t)pTfBuffer[1] & 0x0E) >> 1, 
-                                                gvcid_managed_parameters, &current_managed_parameters);
+    status = Crypto_Get_Managed_Parameters_For_Gvcid(tfvn, scid, vcid, gvcid_managed_parameters, &current_managed_parameters);
+
     // No managed parameters found
     if (status != CRYPTO_LIB_SUCCESS)
     {
@@ -905,7 +909,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
 
     // Bit math to give concise access to values in the ingest
     tm_frame_pri_hdr.tfvn = ((uint8_t)p_ingest[0] & 0xC0) >> 6;
-    tm_frame_pri_hdr.scid = (((uint16_t)p_ingest[0] & 0x3F) << 2) | (((uint16_t)p_ingest[1] & 0xF0) >> 4);
+    tm_frame_pri_hdr.scid = (((uint16_t)p_ingest[0] & 0x3F) << 4) | (((uint16_t)p_ingest[1] & 0xF0) >> 4);
     tm_frame_pri_hdr.vcid = ((uint8_t)p_ingest[1] & 0x0E) >> 1;
 
 #ifdef DEBUG
