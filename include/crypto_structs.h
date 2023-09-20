@@ -449,16 +449,9 @@ typedef struct
 #define AOS_FRAME_SECTRAILER_SIZE (sizeof(AOS_FrameSecurityTrailer_t))
 
 
-// REVIEW THIS.. conflicting info in two docs?
+// INFO: This is a Frame Sequence Report
 typedef struct
 {
-    uint8_t tf : 1;     // Type Flag
-                        // "0" - OCF field is a Type-1-Report (CLCW)
-                        // "1" - OCT field is a Type-2-Report 
-    uint8_t uf: 1;      // Use Flag
-                        // If Type-2 Report: '0' means contents of report are project specific
-                        // If Type=2 Report, '1' Report contains an SDLS FSR
-    // Frame Security Report
     uint8_t cwt : 1;    // Control Word Type "1"
     uint8_t fvn : 3;    // FSR Version Number "100"
     uint8_t af : 1;     // Alarm Flag
@@ -467,7 +460,7 @@ typedef struct
     uint8_t bsaf : 1;   // Bad Security Association Flag
     uint16_t lspi : 16;  // Last SPI Used
     uint8_t snv : 8;    // Sequence Number Value (LSB)
-} AOS_FrameOcf_t;
+} AOS_FrameFsr_t;
 #define AOS_FRAME_OCF_SIZE (sizeof(AOS_Frame_Ocf_t))
 
 typedef struct
