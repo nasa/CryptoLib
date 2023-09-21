@@ -14,10 +14,7 @@
 
 #include "cryptography_interface.h"
 
-static CryptographyInterfaceStruct cryptography_if;
-
 CryptographyInterface get_cryptography_interface_wolfssl(void)
 {
-    fprintf(stderr,"ERROR: Loading WolfSSL cryptography interface stub source code. Rebuild CryptoLib with -DCRYPTO_WOLFSSL=ON to use proper WolfSSL implementation.\n");
-    return &cryptography_if;
+    return NULL;
 }

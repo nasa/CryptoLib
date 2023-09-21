@@ -144,7 +144,8 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                                          uint8_t ecs, uint8_t acs, char* cam_cookies)
 { 
     int32_t status = CRYPTO_LIB_SUCCESS;
-    //int32_t tmp;
+    uint32_t tmp;
+    Cmac cmac;
     Hmac hmac;
 
     // Unused in this implementation
@@ -170,8 +171,6 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
     {
         // Reference: https://www.wolfssl.com/documentation/manuals/wolfssl/group__CMAC.html
         case CRYPTO_MAC_CMAC_AES256:
-            /*
-            Cmac cmac;
             status = wc_InitCmac(&cmac, key, len_key, WC_CMAC_AES, NULL);
             if (status == 0)
             {
@@ -185,8 +184,6 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
             {
                 status = wc_CmacFinal(&cmac, mac, &tmp);
             }
-            */
-            status = CRYPTO_LIB_ERR_UNSUPPORTED_ACS;
             break;
 
         // Reference: https://www.wolfssl.com/documentation/manuals/wolfssl/group__HMAC.html

@@ -14,10 +14,7 @@
 
 #include "cryptography_interface.h"
 
-static CryptographyInterfaceStruct cryptography_if;
-
 CryptographyInterface get_cryptography_interface_kmc_crypto_service(void)
 {
-    fprintf(stderr,"ERROR: Loading KMC Crypto Service cryptography interface stub source code. Rebuild CryptoLib with -DKMCCRYPTO=ON to use proper KMC Crytpo Service implementation.\n");
-    return &cryptography_if;
+    return NULL;
 }

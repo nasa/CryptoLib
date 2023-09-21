@@ -14,10 +14,7 @@
 
 #include "cryptography_interface.h"
 
-static CryptographyInterfaceStruct cryptography_if;
-
 CryptographyInterface get_cryptography_interface_libgcrypt(void)
 {
-    fprintf(stderr,"ERROR: Loading libgcrypt cryptography interface stub source code. Rebuild CryptoLib with -DCRYPTO_LIBGCRYPT=ON to use proper libgcrypt implementation.\n");
-    return &cryptography_if;
+    return NULL;
 }

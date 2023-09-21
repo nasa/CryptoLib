@@ -38,7 +38,7 @@ RUN cd /tmp \
     
 RUN mkdir /tmp/wolfssl/build \
     && cd /tmp/wolfssl/build \
-    && cmake -DCMAKE_C_FLAGS="-DWOLFSSL_AESGCM_STREAM" .. \
+    && cmake -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes .. \
     && make install \
     && rm -rf /tmp/wolfssl
 
