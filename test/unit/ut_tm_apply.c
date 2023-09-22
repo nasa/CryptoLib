@@ -979,7 +979,7 @@ UTEST(TM_APPLY_ENC_VAL, AES_GCM_BITMASK_1)
     // }
     // printf("\n");
 
-for (int i = 0; i < 1786; i++)
+    for (int i = 0; i < 1786; i++)
     {
         // printf("[%d]: %02x -> %02x \n", i, *((uint8_t)framed_tm_b+ i), (uint8_t)truth_tm_b[i]);
         // printf("%02x", (uint8_t)*(truth_tm_b+i));
@@ -987,6 +987,7 @@ for (int i = 0; i < 1786; i++)
     }
     printf("\n");
 
+    Crypto_Shutdown();
     free(truth_tm_b);
     free(framed_tm_b);
     free(iv_b);
@@ -1077,6 +1078,7 @@ for (int i = 0; i < 1786; i++)
     }
     printf("\n");
 
+    Crypto_Shutdown();
     free(truth_tm_b);
     free(framed_tm_b);
     free(iv_b);

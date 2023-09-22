@@ -15,6 +15,7 @@
 // Reference: https://www.wolfssl.com/documentation/manuals/wolfssl/
 
 #include <wolfssl/options.h>
+#include <wolfssl/ssl.h>
 #include <wolfssl/wolfcrypt/aes.h>
 #include <wolfssl/wolfcrypt/ecc.h>
 #include <wolfssl/wolfcrypt/cmac.h>
@@ -88,7 +89,6 @@ static int32_t cryptography_get_ecs_algo(int8_t algo_enum);
 ** Module Variables
 */
 // Cryptography Interface
-static Aes enc;
 static CryptographyInterfaceStruct cryptography_if_struct;
 
 CryptographyInterface get_cryptography_interface_wolfssl(void)
@@ -117,12 +117,10 @@ static int32_t cryptography_init(void)
     int32_t status = CRYPTO_LIB_SUCCESS;
     
     // Initialize WolfSSL
-    memset(&enc, 0, sizeof(Aes));
-    status = wc_AesInit(&enc, NULL, -2);
-    if (status < 0)
+    if (LIBWOLFSSL_VERSION_HEX != wolfSSL_lib_version_hex())
     {
         status = CRYPTOGRAPHY_LIBRARY_INITIALIZIATION_ERROR;
-        printf(KRED "ERROR: wolfssl initialization failed\n" RESET);
+        printf(KRED "ERROR: wolfssl version mismatch!\n" RESET);
     }
 
     return status;
@@ -130,7 +128,6 @@ static int32_t cryptography_init(void)
 
 static int32_t cryptography_shutdown(void)
 { 
-    wc_AesFree(&enc);    
     return CRYPTO_LIB_SUCCESS; 
 }
 
@@ -144,7 +141,6 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                                          uint8_t ecs, uint8_t acs, char* cam_cookies)
 { 
     int32_t status = CRYPTO_LIB_SUCCESS;
-    uint32_t tmp;
     Cmac cmac;
     Hmac hmac;
 
@@ -182,7 +178,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
             }
             if (status == 0)
             {
-                status = wc_CmacFinal(&cmac, mac, &tmp);
+                status = wc_CmacFinal(&cmac, mac, &mac_size);
             }
             break;
 
@@ -236,9 +232,9 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
                                                     uint8_t ecs, uint8_t acs, char* cam_cookies)
 { 
     int32_t status = CRYPTO_LIB_SUCCESS;
+    Cmac cmac;
     Hmac hmac;
-    uint8_t calc_mac[mac_size];
-
+    uint8_t calc_mac[MAC_SIZE];
 
     // Unused in this implementation
     cam_cookies = cam_cookies;
@@ -262,23 +258,19 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     {
         // Reference: https://www.wolfssl.com/documentation/manuals/wolfssl/group__CMAC.html
         case CRYPTO_MAC_CMAC_AES256:
-            /*
-            Cmac cmac[1];
-            status = wc_InitCmac(cmac, key, len_key, WC_CMAC_AES, NULL);
+            status = wc_InitCmac(&cmac, key, len_key, WC_CMAC_AES, NULL);
             if (status == 0)
             {
-                status = wc_CmacUpdate(cmac, aad, aad_len);
+                status = wc_CmacUpdate(&cmac, aad, aad_len);
             }
             if (status == 0)
             {
-                status = wc_CmacUpdate(cmac, data_in, len_data_in);
+                status = wc_CmacUpdate(&cmac, data_in, len_data_in);
             }
             if (status == 0)
             {
-                status = wc_CmacFinal(cmac, calc_mac, &tmp);
+                status = wc_CmacFinal(&cmac, calc_mac, &mac_size);
             }
-            */
-            status = CRYPTO_LIB_ERR_UNSUPPORTED_ACS;
             break;
 
         // Reference: https://www.wolfssl.com/documentation/manuals/wolfssl/group__HMAC.html
@@ -326,6 +318,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
             if(calc_mac[i] != mac[i])
             {
                 status = CRYPTO_LIB_ERR_MAC_VALIDATION_ERROR;
+                break;
             }
         }
     }
@@ -340,6 +333,7 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* iv, uint32_t iv_len,uint8_t* ecs, uint8_t padding, char* cam_cookies)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
+    Aes enc;
 
     // Unused in this implementation
     cam_cookies = cam_cookies;
@@ -384,6 +378,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t aad_bool, uint8_t* ecs, uint8_t* acs, char* cam_cookies)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
+    Aes enc;
 
     // Unused in this implementation
     acs = acs;
@@ -427,6 +422,7 @@ static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* ecs, uint8_t* acs, char* cam_cookies)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
+    Aes dec;
     
     // Unused in this implementation
     acs = acs;
@@ -439,14 +435,14 @@ static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
     switch (*ecs)
     {
         case CRYPTO_CIPHER_AES256_CBC:
-            status = wc_AesSetKey(&enc, key, len_key, iv, AES_DECRYPTION);
+            status = wc_AesSetKey(&dec, key, len_key, iv, AES_DECRYPTION);
             if (status == 0)
             {
-                status = wc_AesSetIV(&enc, iv);
+                status = wc_AesSetIV(&dec, iv);
             }
             if (status == 0)
             {
-                status = wc_AesCbcDecrypt(&enc, data_out, data_in, len_data_in);
+                status = wc_AesCbcDecrypt(&dec, data_out, data_in, len_data_in);
             }
             break;
 
@@ -469,13 +465,12 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t aad_bool, uint8_t* ecs, uint8_t* acs, char* cam_cookies)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
+    Aes dec;
     
     // Fix warnings
     acs = acs;
     cam_cookies = cam_cookies;
     len_data_out = len_data_out;
-    aad = aad;
-    aad_len = aad_len;
     decrypt_bool = decrypt_bool;
     authenticate_bool = authenticate_bool;
     aad_bool = aad_bool;
@@ -485,15 +480,16 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
     switch (*ecs)
     {
         case CRYPTO_CIPHER_AES256_GCM:
-            status = wc_AesGcmSetKey(&enc, key, len_key);
+            status = wc_AesGcmSetKey(&dec, key, len_key);
             if (status == 0)
             {
-                status = wc_AesGcmDecrypt(&enc, data_out, data_in, len_data_in, iv, iv_len, mac, mac_size, NULL, 0);
+                status = wc_AesGcmDecrypt(&dec, data_out, data_in, len_data_in, iv, iv_len, mac, mac_size, aad, aad_len);
             }
             break;
 
         case CRYPTO_CIPHER_AES256_CCM:
-            // Intentional fall through to unsupported
+            status = CRYPTO_LIB_ERR_UNSUPPORTED_ECS;
+            break;
 
         default:
             status = CRYPTO_LIB_ERR_UNSUPPORTED_ECS;
