@@ -96,8 +96,7 @@ jobs:
       run: mkdir /tmp/wolfssl/build;
            cd /tmp/wolfssl/build;
            cmake  -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
-           make install;
-           export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/local/lib"
+           export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/tmp/wolfssl/build"
     # End Container Setup
     
     - name: Wolf Build Script
