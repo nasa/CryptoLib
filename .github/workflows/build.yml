@@ -94,9 +94,10 @@ jobs:
       run: git clone --depth 1 --branch v5.6.0-stable https://github.com/wolfSSL/wolfssl.git /tmp/wolfssl
     - name: Build WolfSSL
       run: mkdir /tmp/wolfssl/build;
-           cd mkdir /tmp/wolfssl/build;
+           cd /tmp/wolfssl/build;
            cmake  -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
-           make install
+           make install;
+           export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/local/lib"
     # End Container Setup
     
     - name: Wolf Build Script
