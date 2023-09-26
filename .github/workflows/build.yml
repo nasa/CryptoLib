@@ -102,3 +102,5 @@ jobs:
     - name: Wolf Build Script
       working-directory: ${{github.workspace}}
       run: bash ${GITHUB_WORKSPACE}/support/scripts/build_wolf.sh
+      env:
+        LD_LIBRARY_PATH: /tmp/wolfssl/build
