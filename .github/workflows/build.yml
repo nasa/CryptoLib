@@ -75,3 +75,30 @@ jobs:
     - name: KMC Build Script
       working-directory: ${{github.workspace}}
       run: bash ${GITHUB_WORKSPACE}/support/scripts/build_kmc.sh
+
+  #
+  # Wolf Build
+  #
+  wolf_build:
+    # Container Setup
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Update
+      run: sudo apt-get update
+    - name: Install Dependencies
+      run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat libgcrypt20-dev python3
+    - name: Install Python Libraries
+      run: sudo pip install pycryptodome
+    - name: Clone WolfSSL
+      run: git clone --depth 1 --branch v5.6.0-stable https://github.com/wolfSSL/wolfssl.git /tmp/wolfssl
+    - name: Build WolfSSL
+      run: mkdir /tmp/wolfssl/build;
+           cd mkdir /tmp/wolfssl/build;
+           cmake  -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
+           make install
+    # End Container Setup
+    
+    - name: Wolf Build Script
+      working-directory: ${{github.workspace}}
+      run: bash ${GITHUB_WORKSPACE}/support/scripts/build_wolf.sh
