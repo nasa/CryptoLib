@@ -802,8 +802,11 @@ UTEST(TM_APPLY_ENC_VAL, AES_HMAC_SHA_512_TEST_0)
     // 4) FECF is re-calculated and updated
     for (int i = 0; i < current_managed_parameters->max_frame_size; i++)
     {
-        // printf("Index %d: Checking %02x against %02X\n", i, (uint8_t)framed_tm_b[i], (uint8_t)*(truth_tm_b + i));
-        ASSERT_EQ((uint8_t)framed_tm_b[i], (uint8_t)*(truth_tm_b + i));
+        if (framed_tm_b[i] != truth_tm_b[i])
+        {
+            printf("Error at index %d: checking frame %02x against truth %02X\n", i, (uint8_t) framed_tm_b[i], (uint8_t) truth_tm_b[i]);
+        }
+        ASSERT_EQ((uint8_t) framed_tm_b[i], (uint8_t) truth_tm_b[i]);
     }
 
     Crypto_Shutdown();
@@ -960,30 +963,34 @@ UTEST(TM_APPLY_ENC_VAL, AES_GCM_BITMASK_1)
 
     Crypto_TM_ApplySecurity((uint8_t*)framed_tm_b);
 
-    // printf("Static frame contents:\n\t");
-    // for (int i = 0; i < 1786; i++)
-    // {
-    //     // printf("[%d]: %02x -> %02x \n", i, (uint8_t)framed_tm_b[i], truth_tm_b[i]);
-    //     printf("%02x", (uint8_t)framed_tm_b[i]);
-    //     // ASSERT_EQ(*(ptr_enc_frame + enc_data_idx), buffer_nist_ct_b[i]);
-    //     // enc_data_idx++;
-    // }
-    // printf("\n Truth Contents\n\t");
-
-    // for (int i = 0; i < 1786; i++)
-    // {
-    //     // printf("[%d]: %02x -> %02x \n", i, (uint8_t)framed_tm_b[i], truth_tm_b[i]);
-    //     printf("%02x", (uint8_t)*(truth_tm_b+i));
-    //     // ASSERT_EQ(*(ptr_enc_frame + enc_data_idx), buffer_nist_ct_b[i]);
-    //     // enc_data_idx++;
-    // }
-    // printf("\n");
+    printf("Static frame contents:\n\t");
+    for (int i = 0; i < 1786; i++)
+    {
+        // printf("[%d]: %02x -> %02x \n", i, (uint8_t)framed_tm_b[i], truth_tm_b[i]);
+        printf("%02x", (uint8_t)framed_tm_b[i]);
+        // ASSERT_EQ(*(ptr_enc_frame + enc_data_idx), buffer_nist_ct_b[i]);
+        // enc_data_idx++;
+    }
+    printf("\n");
+    printf("Truth Contents\n\t");
+    for (int i = 0; i < 1786; i++)
+    {
+        // printf("[%d]: %02x -> %02x \n", i, (uint8_t)framed_tm_b[i], truth_tm_b[i]);
+        printf("%02x", (uint8_t)*(truth_tm_b+i));
+        // ASSERT_EQ(*(ptr_enc_frame + enc_data_idx), buffer_nist_ct_b[i]);
+        // enc_data_idx++;
+    }
+    printf("\n");
 
     for (int i = 0; i < 1786; i++)
     {
         // printf("[%d]: %02x -> %02x \n", i, *((uint8_t)framed_tm_b+ i), (uint8_t)truth_tm_b[i]);
         // printf("%02x", (uint8_t)*(truth_tm_b+i));
-        ASSERT_EQ((uint8_t)*(framed_tm_b+ i), (uint8_t)truth_tm_b[i]);
+        if (framed_tm_b[i] != truth_tm_b[i])
+        {
+            printf("Error at index %d: checking frame %02x against truth %02X\n", i, (uint8_t) framed_tm_b[i], (uint8_t) truth_tm_b[i]);
+        }
+        ASSERT_EQ((uint8_t)framed_tm_b[i], (uint8_t)truth_tm_b[i]);
     }
     printf("\n");
 
@@ -1051,30 +1058,34 @@ UTEST(TM_APPLY_ENC_VAL, AEAD_AES_GCM_BITMASK_1)
 
     Crypto_TM_ApplySecurity((uint8_t*)framed_tm_b);
 
-    // printf("Static frame contents:\n\t");
-    // for (int i = 0; i < 1786; i++)
-    // {
-    //     // printf("[%d]: %02x -> %02x \n", i, (uint8_t)framed_tm_b[i], truth_tm_b[i]);
-    //     printf("%02x", (uint8_t)framed_tm_b[i]);
-    //     // ASSERT_EQ(*(ptr_enc_frame + enc_data_idx), buffer_nist_ct_b[i]);
-    //     // enc_data_idx++;
-    // }
-    // printf("\n Truth Contents\n\t");
+    printf("Static frame contents:\n\t");
+    for (int i = 0; i < 1786; i++)
+    {
+        // printf("[%d]: %02x -> %02x \n", i, (uint8_t)framed_tm_b[i], truth_tm_b[i]);
+        printf("%02x", (uint8_t)framed_tm_b[i]);
+        // ASSERT_EQ(*(ptr_enc_frame + enc_data_idx), buffer_nist_ct_b[i]);
+        // enc_data_idx++;
+    }
+    printf("\n");
+    printf("Truth Contents\n\t");
+    for (int i = 0; i < 1786; i++)
+    {
+        // printf("[%d]: %02x -> %02x \n", i, (uint8_t)framed_tm_b[i], truth_tm_b[i]);
+        printf("%02x", (uint8_t)truth_tm_b[i]);
+        // ASSERT_EQ(*(ptr_enc_frame + enc_data_idx), buffer_nist_ct_b[i]);
+        // enc_data_idx++;
+    }
+    printf("\n");
 
-    // for (int i = 0; i < 1786; i++)
-    // {
-    //     // printf("[%d]: %02x -> %02x \n", i, (uint8_t)framed_tm_b[i], truth_tm_b[i]);
-    //     printf("%02x", (uint8_t)*(truth_tm_b+i));
-    //     // ASSERT_EQ(*(ptr_enc_frame + enc_data_idx), buffer_nist_ct_b[i]);
-    //     // enc_data_idx++;
-    // }
-    // printf("\n");
-
-for (int i = 0; i < 1786; i++)
+    for (int i = 0; i < 1786; i++)
     {
         // printf("[%d]: %02x -> %02x \n", i, *((uint8_t)framed_tm_b+ i), (uint8_t)truth_tm_b[i]);
         // printf("%02x", (uint8_t)*(truth_tm_b+i));
-        ASSERT_EQ((uint8_t)*(framed_tm_b+ i), (uint8_t)truth_tm_b[i]);
+        if (framed_tm_b[i] != truth_tm_b[i])
+        {
+            printf("Error at index %d: checking frame %02x against truth %02X\n", i, (uint8_t) framed_tm_b[i], (uint8_t) truth_tm_b[i]);
+        }
+        ASSERT_EQ((uint8_t)framed_tm_b[i], (uint8_t)truth_tm_b[i]);
     }
     printf("\n");
 

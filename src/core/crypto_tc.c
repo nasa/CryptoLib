@@ -1149,26 +1149,26 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
             return status;
         }
 
-        status = cryptography_if->cryptography_aead_decrypt(tc_sdls_processed_frame->tc_pdu,               // plaintext output
-                                                            (size_t)(tc_sdls_processed_frame->tc_pdu_len), // length of data
-                                                            &(ingest[tc_enc_payload_start_index]),         // ciphertext input
-                                                            (size_t)(tc_sdls_processed_frame->tc_pdu_len), // in data length
-                                                            &(ekp->value[0]),                              // Key
-                                                            Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs),
-                                                            sa_ptr,                                      // SA for key reference
-                                                            tc_sdls_processed_frame->tc_sec_header.iv,   // IV
-                                                            sa_ptr->iv_len,                              // IV Length
-                                                            tc_sdls_processed_frame->tc_sec_trailer.mac, // Frame Expected Tag
-                                                            sa_ptr->stmacf_len,                          // tag size
-                                                            aad,                                         // additional authenticated data
-                                                            aad_len,                                     // length of AAD
-                                                            (sa_ptr->est),                               // Decryption Bool
-                                                            (sa_ptr->ast),                               // Authentication Bool
-                                                            (sa_ptr->ast),                               // AAD Bool
-                                                            &sa_ptr->ecs,                                // encryption cipher
-                                                            &sa_ptr->acs,                                // authentication cipher
-                                                            cam_cookies
-
+        status = cryptography_if->cryptography_aead_decrypt(
+            tc_sdls_processed_frame->tc_pdu,               // plaintext output
+            (size_t)(tc_sdls_processed_frame->tc_pdu_len), // length of data
+            &(ingest[tc_enc_payload_start_index]),         // ciphertext input
+            (size_t)(tc_sdls_processed_frame->tc_pdu_len), // in data length
+            &(ekp->value[0]),                              // Key
+            Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs),       // 
+            sa_ptr,                                        // SA for key reference
+            tc_sdls_processed_frame->tc_sec_header.iv,     // IV
+            sa_ptr->iv_len,                                // IV Length
+            tc_sdls_processed_frame->tc_sec_trailer.mac,   // Frame Expected Tag
+            sa_ptr->stmacf_len,                            // tag size
+            aad,                                           // additional authenticated data
+            aad_len,                                       // length of AAD
+            (sa_ptr->est),                                 // Decryption Bool
+            (sa_ptr->ast),                                 // Authentication Bool
+            (sa_ptr->ast),                                 // AAD Bool
+            &sa_ptr->ecs,                                  // encryption cipher
+            &sa_ptr->acs,                                  // authentication cipher
+            cam_cookies                                    // 
         );
     }
     else if (sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_FALSE) // Non aead algorithm
@@ -1185,22 +1185,24 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
                 return status;
             }
 
-            status = cryptography_if->cryptography_validate_authentication(tc_sdls_processed_frame->tc_pdu,               // plaintext output
-                                                                           (size_t)(tc_sdls_processed_frame->tc_pdu_len), // length of data
-                                                                           &(ingest[tc_enc_payload_start_index]),         // ciphertext input
-                                                                           (size_t)(tc_sdls_processed_frame->tc_pdu_len), // in data length
-                                                                           &(akp->value[0]),                              // Key
-                                                                           Crypto_Get_ACS_Algo_Keylen(sa_ptr->acs),
-                                                                           sa_ptr,                                      // SA for key reference
-                                                                           tc_sdls_processed_frame->tc_sec_header.iv,   // IV
-                                                                           sa_ptr->iv_len,                              // IV Length
-                                                                           tc_sdls_processed_frame->tc_sec_trailer.mac, // Frame Expected Tag
-                                                                           sa_ptr->stmacf_len,                          // tag size
-                                                                           aad,                                         // additional authenticated data
-                                                                           aad_len,                                     // length of AAD
-                                                                           CRYPTO_CIPHER_NONE,                          // encryption cipher
-                                                                           sa_ptr->acs,                                 // authentication cipher
-                                                                           cam_cookies);
+            status = cryptography_if->cryptography_validate_authentication(
+                tc_sdls_processed_frame->tc_pdu,               // plaintext output
+                (size_t)(tc_sdls_processed_frame->tc_pdu_len), // length of data
+                &(ingest[tc_enc_payload_start_index]),         // ciphertext input
+                (size_t)(tc_sdls_processed_frame->tc_pdu_len), // in data length
+                &(akp->value[0]),                              // Key
+                Crypto_Get_ACS_Algo_Keylen(sa_ptr->acs),       // 
+                sa_ptr,                                        // SA for key reference
+                tc_sdls_processed_frame->tc_sec_header.iv,     // IV
+                sa_ptr->iv_len,                                // IV Length
+                tc_sdls_processed_frame->tc_sec_trailer.mac,   // Frame Expected Tag
+                sa_ptr->stmacf_len,                            // tag size
+                aad,                                           // additional authenticated data
+                aad_len,                                       // length of AAD
+                CRYPTO_CIPHER_NONE,                            // encryption cipher
+                sa_ptr->acs,                                   // authentication cipher
+                cam_cookies                                    // 
+            );
         }
         if (sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
         {
@@ -1213,19 +1215,19 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
                 return status;
             }
 
-            status = cryptography_if->cryptography_decrypt(tc_sdls_processed_frame->tc_pdu,               // plaintext output
-                                                           (size_t)(tc_sdls_processed_frame->tc_pdu_len), // length of data
-                                                           &(ingest[tc_enc_payload_start_index]),         // ciphertext input
-                                                           (size_t)(tc_sdls_processed_frame->tc_pdu_len), // in data length
-                                                           &(ekp->value[0]),                              // Key
-                                                           Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs),
-                                                           sa_ptr,                                    // SA for key reference
-                                                           tc_sdls_processed_frame->tc_sec_header.iv, // IV
-                                                           sa_ptr->iv_len,                            // IV Length
-                                                           &sa_ptr->ecs,                              // encryption cipher
-                                                           &sa_ptr->acs,                              // authentication cipher
-                                                           cam_cookies
-
+            status = cryptography_if->cryptography_decrypt(
+                tc_sdls_processed_frame->tc_pdu,               // plaintext output
+                (size_t)(tc_sdls_processed_frame->tc_pdu_len), // length of data
+                &(ingest[tc_enc_payload_start_index]),         // ciphertext input
+                (size_t)(tc_sdls_processed_frame->tc_pdu_len), // in data length
+                &(ekp->value[0]),                              // Key
+                Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs),       // 
+                sa_ptr,                                        // SA for key reference
+                tc_sdls_processed_frame->tc_sec_header.iv,     // IV
+                sa_ptr->iv_len,                                // IV Length
+                &sa_ptr->ecs,                                  // encryption cipher
+                &sa_ptr->acs,                                  // authentication cipher
+                cam_cookies                                    // 
             );
 
             // Handle Padding Removal
