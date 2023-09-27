@@ -95,12 +95,12 @@ jobs:
     - name: Build WolfSSL
       run: mkdir /tmp/wolfssl/build;
            cd /tmp/wolfssl/build;
-           cmake  -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
-           export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/tmp/wolfssl/build"
+           cmake -DCMAKE_INSTALL_PREFIX=$HOME/wolfssl -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
+           make install;
+           echo "$HOME/wolfssl" >> $GITHUB_PATH;
+           echo $GITHUB_PATH
     # End Container Setup
     
     - name: Wolf Build Script
       working-directory: ${{github.workspace}}
       run: bash ${GITHUB_WORKSPACE}/support/scripts/build_wolf.sh
-      env:
-        LD_LIBRARY_PATH: /tmp/wolfssl/build
