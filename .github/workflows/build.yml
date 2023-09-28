@@ -95,10 +95,8 @@ jobs:
     - name: Build WolfSSL
       run: mkdir /tmp/wolfssl/build;
            cd /tmp/wolfssl/build;
-           cmake -DCMAKE_INSTALL_PREFIX=$HOME/wolfssl -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
+           cmake -DCMAKE_INSTALL_PREFIX=/home/runner/.local -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
            make install;
-           echo "$HOME/wolfssl" >> $GITHUB_PATH;
-           echo $GITHUB_PATH
     # End Container Setup
     
     - name: Wolf Build Script
