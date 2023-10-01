@@ -325,6 +325,21 @@ int32_t sa_config(void)
     sa[14].gvcid_blk.scid = SCID & 0x3FF;
     sa[14].gvcid_blk.vcid = 0;
 
+    // SA 15 - AOS Authentication Only
+    sa[15].spi = 15;
+    sa[15].akid = 130;
+    sa[15].sa_state = SA_KEYED;
+    sa[15].est = 0;
+    sa[15].ast = 1;
+    sa[15].acs_len = 1;
+    sa[15].acs = CRYPTO_MAC_CMAC_AES256;
+    sa[15].stmacf_len = 16;
+    sa[15].abm_len = ABM_SIZE;
+    memset(sa[15].abm, 0xFF, (sa[15].abm_len * sizeof(uint8_t))); // Bitmask 
+    sa[15].gvcid_blk.tfvn = 0x01;
+    sa[15].gvcid_blk.scid = SCID & 0x3FF;
+    sa[15].gvcid_blk.vcid = 0;
+
     return status;
 }
 
