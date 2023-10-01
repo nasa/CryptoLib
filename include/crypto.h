@@ -89,6 +89,7 @@ extern int32_t Crypto_Init_With_Configs(
 extern int32_t Crypto_TC_Init(void);
 extern int32_t Crypto_Init_TC_Unit_Test(void);      // Initialize CryptoLib with unit test default Configurations
 extern int32_t Crypto_Init_TM_Unit_Test(void);      // Initialize CryptoLib with unit test default Configurations
+extern int32_t Crypto_Init_AOS_Unit_Test(void);      // Initialize CryptoLib with unit test default Configurations
 
 // Cleanup
 extern int32_t Crypto_Shutdown(void); // Free all allocated memory

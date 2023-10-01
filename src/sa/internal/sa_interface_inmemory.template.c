@@ -315,6 +315,16 @@ int32_t sa_config(void)
     sa[13].gvcid_blk.vcid = 0;
     sa[13].gvcid_blk.mapid = TYPE_TM;
 
+    // SA 14 - AOS Clear Mode
+    sa[14].spi = 14;
+    sa[14].sa_state = SA_OPERATIONAL;
+    sa[14].est = 0;
+    sa[14].ast = 0;
+    sa[14].shivf_len = 0;
+    sa[14].gvcid_blk.tfvn = 0x01;
+    sa[14].gvcid_blk.scid = SCID & 0x3FF;
+    sa[14].gvcid_blk.vcid = 0;
+
     return status;
 }
 
@@ -469,6 +479,9 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
             {
 #ifdef SA_DEBUG
                 printf(KRED "An operational SA was found - but mismatched tfvn.\n" RESET);
+                printf(KRED "SA is %d\n", i);
+                printf(KRED "Incoming tfvn is %d\n", tfvn);
+                printf(KRED "SA tfvn is %d\n", sa[i].gvcid_blk.tfvn);
 #endif
                 status = CRYPTO_LIB_ERR_INVALID_TFVN;
             }

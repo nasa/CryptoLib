@@ -99,6 +99,25 @@ int32_t Crypto_Init_TM_Unit_Test(void)
 }
 
 /**
+ * @brief Function: Crypto_Init_AOS_Unit_Test
+ * @return int32: status
+ **/
+int32_t Crypto_Init_AOS_Unit_Test(void)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_AOS_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            AOS_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // AOS Tests
+    Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0003, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, 1786);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x002c, 0, AOS_NO_FECF, AOS_SEGMENT_HDRS_NA, 1786);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0042, 0, AOS_NO_FECF, AOS_SEGMENT_HDRS_NA, 1786);
+    status = Crypto_Init();
+    return status;
+}
+
+/**
  * @brief Function: Crypto_Init_With_Configs
  * @param crypto_config_p: CryptoConfig_t*
  * @param gvcid_managed_parameters_p: GvcidManagedParameters_t*
