@@ -186,7 +186,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t* pTfBuffer)
     idx = 6;
 
     // Detect if optional 2 byte FHEC is present
-    if(current_managed_parameters->has_fhec == AOS_HAS_FHEC)
+    if(current_managed_parameters->aos_has_fhec == AOS_HAS_FHEC)
     {
         idx += 2;
     }
