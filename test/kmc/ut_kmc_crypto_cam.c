@@ -48,10 +48,10 @@ UTEST(KMC_CRYPTO_CAM, HAPPY_PATH_APPLY_SEC_ENC_AND_AUTH_KERBEROS_KEYTAB_FILE)
 //    Crypto_Config_Cam(CAM_ENABLED_TRUE,"/home/isaleh/.cam_cookie_file",NULL,CAM_LOGIN_NONE,"https://asec-dev-vm10.jpl.nasa.gov:443", NULL, NULL);
     Crypto_Config_Cam(CAM_ENABLED_TRUE,"/home/isaleh/.cam_cookie_file","/home/isaleh/secret/testuser3300.kt",CAM_LOGIN_KEYTAB_FILE,"https://asec-dev-vm10.jpl.nasa.gov:443", "testuser3300", NULL);
 //    Crypto_Config_Cam(CAM_ENABLED_TRUE,"/home/isaleh/.cam_cookie_file",NULL,CAM_LOGIN_KERBEROS,"https://asec-dev-vm10.jpl.nasa.gov:443", NULL, NULL);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 2, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 2, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA);
     int32_t status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
@@ -108,10 +108,10 @@ UTEST(KMC_CRYPTO_CAM, HAPPY_PATH_APPLY_SEC_ENC_AND_AUTH_KERBEROS)
 //    Crypto_Config_Cam(CAM_ENABLED_TRUE,"/home/isaleh/.cam_cookie_file",NULL,CAM_LOGIN_NONE,"https://asec-dev-vm10.jpl.nasa.gov:443", NULL, NULL);
 //    Crypto_Config_Cam(CAM_ENABLED_TRUE,"/home/isaleh/.cam_cookie_file","/home/isaleh/secret/testuser3300.kt",CAM_LOGIN_KEYTAB_FILE,"https://asec-dev-vm10.jpl.nasa.gov:443", "testuser3300", NULL);
     Crypto_Config_Cam(CAM_ENABLED_TRUE,"/home/isaleh/.cam_cookie_file",NULL,CAM_LOGIN_KERBEROS,"https://asec-dev-vm10.jpl.nasa.gov:443", NULL, NULL);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 2, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 2, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA);
     int32_t status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
@@ -169,10 +169,10 @@ UTEST(KMC_CRYPTO_CAM, HAPPY_PATH_APPLY_SEC_ENC_AND_AUTH)
                                      "PEM", "/home/isaleh/git/KMC/CryptoLib-IbraheemYSaleh/util/etc/local-test-key.pem",
                                      NULL, NULL);
     Crypto_Config_Cam(CAM_ENABLED_TRUE,"/home/isaleh/.cam_cookie_file",NULL,CAM_LOGIN_NONE,NULL, NULL, NULL);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 2, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 2, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA);
     int32_t status = Crypto_Init();
 
     char* raw_tc_jpl_mmt_scid44_vcid1= "202c0408000001bd37";
@@ -231,10 +231,10 @@ UTEST(KMC_CRYPTO_CAM, HAPPY_PATH_APPLY_SEC_AUTH_ONLY)
                                      "PEM", "/home/isaleh/git/KMC/CryptoLib-IbraheemYSaleh/util/etc/local-test-key.pem",
                                      NULL, NULL);
     Crypto_Config_Cam(CAM_ENABLED_TRUE,"/home/isaleh/.cam_cookie_file",NULL,CAM_LOGIN_NONE,NULL, NULL, NULL);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 2, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 2, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA);
     int32_t status = Crypto_Init();
 
     char* raw_tc_jpl_mmt_scid44_vcid1= "202c0C08000001bf1a";
@@ -294,10 +294,10 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_ENC_AND_AUTH)
                                      "PEM", "/home/isaleh/git/KMC/CryptoLib-IbraheemYSaleh/util/etc/local-test-key.pem",
                                      NULL, NULL);
     Crypto_Config_Cam(CAM_ENABLED_TRUE,"/home/isaleh/.cam_cookie_file",NULL,CAM_LOGIN_NONE,NULL, NULL, NULL);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 2, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 2, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA);
     int32_t status = Crypto_Init();
 
     char* enc_tc_jpl_mmt_scid44_vcid1= "202C0426000002000000000000000000000001669C5639DCCFEA8C6CE33230EE2E7065496367CC";
@@ -366,10 +366,10 @@ UTEST(KMC_CRYPTO_CAM, HAPPY_PATH_PROCESS_SEC_AUTH_ONLY)
                                      "PEM", "/home/isaleh/git/KMC/CryptoLib-IbraheemYSaleh/util/etc/local-test-key.pem",
                                      NULL, NULL);
     Crypto_Config_Cam(CAM_ENABLED_TRUE,"/home/isaleh/.cam_cookie_file",NULL,CAM_LOGIN_NONE,NULL, NULL, NULL);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 2, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 2, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA);
     int32_t status = Crypto_Init();
 
     char* enc_tc_jpl_mmt_scid44_vcid1= "202C0C2600000400000000000000000000000100016E2051F96CAB186BCE364A65AF599AE52F38";
@@ -438,7 +438,7 @@ UTEST(KMC_CRYPTO_CAM, HAPPY_PATH_APPLY_SEC_ENC_AND_AUTH_AESGCM_8BYTE_MAC)
                                      "PEM", "/home/isaleh/git/KMC/CryptoLib-IbraheemYSaleh/util/etc/local-test-key.pem",
                                      NULL, NULL);
     Crypto_Config_Cam(CAM_ENABLED_TRUE,"/home/isaleh/.cam_cookie_file",NULL,CAM_LOGIN_NONE,NULL, NULL, NULL);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 11, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 11, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA);
     int32_t status = Crypto_Init();
 
     char* raw_tc_jpl_mmt_scid44_vcid1= "202c2c08000001bd37";
@@ -495,7 +495,7 @@ UTEST(KMC_CRYPTO_CAM, HAPPY_PATH_PROCESS_SEC_ENC_AND_AUTH_AESGCM_8BYTE_MAC)
                                      "PEM", "/home/isaleh/git/KMC/CryptoLib-IbraheemYSaleh/util/etc/local-test-key.pem",
                                      NULL, NULL);
     Crypto_Config_Cam(CAM_ENABLED_TRUE,"/home/isaleh/.cam_cookie_file",NULL,CAM_LOGIN_NONE,NULL, NULL, NULL);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 11, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 11, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA);
     int32_t status = Crypto_Init();
 
     char* enc_tc_jpl_mmt_scid44_vcid1= "202C2C1E000009000000000000000000000001669C5639DCCFEA8C6CE3AA71";
@@ -561,7 +561,7 @@ UTEST(KMC_CRYPTO_CAM, UNHAPPY_PATH_INVALID_MAC_PROCESS_SEC_ENC_AND_AUTH_AESGCM_8
                                      "PEM", "/home/isaleh/git/KMC/CryptoLib-IbraheemYSaleh/util/etc/local-test-key.pem",
                                      NULL, NULL);
     Crypto_Config_Cam(CAM_ENABLED_TRUE,"/home/isaleh/.cam_cookie_file",NULL,CAM_LOGIN_NONE,NULL, NULL, NULL);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 11, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 11, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA);
     int32_t status = Crypto_Init();
 
     char* enc_tc_jpl_mmt_scid44_vcid1= "202C2C1E000009000000000000000000000001669C5639DCCDEA8C6CE3EEF2";
@@ -619,7 +619,7 @@ UTEST(KMC_CRYPTO_CAM, UNHAPPY_PATH_APPLY_SEC_ENC_AND_AUTH_AESGCM_32BYTE_MAC)
                                      "PEM", "/home/isaleh/git/KMC/CryptoLib-IbraheemYSaleh/util/etc/local-test-key.pem",
                                      NULL, NULL);
     Crypto_Config_Cam(CAM_ENABLED_TRUE,"/home/isaleh/.cam_cookie_file",NULL,CAM_LOGIN_NONE,NULL, NULL, NULL);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 12, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 12, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA);
     int32_t status = Crypto_Init();
 
     char* raw_tc_jpl_mmt_scid44_vcid1= "202c3008000001bd37";

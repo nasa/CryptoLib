@@ -82,6 +82,12 @@ typedef enum
 } CreateFecfBool;
 typedef enum
 {
+    AOS_FHEC_NA,
+    AOS_NO_FHEC,
+    AOS_HAS_FHEC
+} FhecPresent;
+typedef enum
+{
     TC_CHECK_FECF_FALSE,
     TC_CHECK_FECF_TRUE,
     TM_CHECK_FECF_FALSE,
@@ -207,6 +213,7 @@ struct _GvcidManagedParameters_t
     uint16_t scid : 10; // SpacecraftID
     uint8_t vcid : 6;   // Virtual Channel ID
     FecfPresent has_fecf;
+    FhecPresent has_fhec;
     TcSegmentHdrsPresent has_segmentation_hdr;
     uint16_t max_frame_size; // Maximum TC/TM Frame Length with headers
     OcfPresent has_ocf;

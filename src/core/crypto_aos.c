@@ -185,6 +185,12 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t* pTfBuffer)
     // Increment to SPI start
     idx = 6;
 
+    // Detect if optional 2 byte FHEC is present
+    if(current_managed_parameters->has_fhec == AOS_HAS_FHEC)
+    {
+        idx += 2;
+    }
+
     /**
      * Begin Security Header Fields
      * Reference CCSDS SDLP 3550b1 4.1.1.1.3
