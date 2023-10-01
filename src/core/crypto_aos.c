@@ -182,7 +182,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t* pTfBuffer)
     }
 #endif
 
-    // Increment to SPI start
+    // Increment to end of mandatory 6 byte AOS Pri Hdr
     idx = 6;
 
     // Detect if optional 2 byte FHEC is present
@@ -190,6 +190,14 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t* pTfBuffer)
     {
         idx += 2;
     }
+
+    // Detect if optional variable length Insert Zone is present
+    if(current_managed_parameters->aos_has_iz == AOS_HAS_IZ)
+    {
+        idx += current_managed_parameters->aos_iz_len;
+    }
+
+    // Idx is now at SPI location
 
     /**
      * Begin Security Header Fields
