@@ -227,11 +227,14 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t* pTfBuffer)
         printf("\n" RESET);
     }
 #endif
-    if(sa_service_type != SA_PLAINTEXT && sa_ptr->ecs_len == 0 && sa_ptr->acs_len ==0)
+    if(sa_service_type != SA_PLAINTEXT && sa_ptr->ecs_len == 0 && sa_ptr->acs_len == 0)
     {
         status = CRYPTO_LIB_ERR_NULL_CIPHERS;
 #ifdef AOS_DEBUG
         printf(KRED "CRYPTO_LIB_ERR_NULL_CIPHERS, Invalid cipher lengths, %d\n" RESET, CRYPTO_LIB_ERR_NULL_CIPHERS);
+        printf(KRED "\tservice type is: %d\n", sa_service_type);
+        printf(KRED "\tsa_ptr->ecs_len is: %d\n", sa_ptr->ecs_len);
+        printf(KRED "\tsa_ptr->acs_len is: %d\n", sa_ptr->acs_len);
 #endif
         mc_if->mc_log(status);
         return status;
