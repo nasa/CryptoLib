@@ -349,9 +349,9 @@ int32_t sa_config(void)
     sa[16].ecs_len = 1;
     sa[16].ecs = CRYPTO_CIPHER_AES256_GCM;
     sa[16].iv_len = 16;
-    *(sa[16].iv + sa[16].shivf_len - 1) = 0;
     sa[16].shivf_len = 16;
-    sa[16].stmacf_len = 16;
+    *(sa[16].iv + sa[16].shivf_len - 1) = 0;
+    sa[16].stmacf_len = 0;
     sa[16].abm_len = ABM_SIZE;
     memset(sa[16].abm, 0xFF, (sa[16].abm_len * sizeof(uint8_t))); // Bitmask 
     sa[16].gvcid_blk.tfvn = 0x01;
