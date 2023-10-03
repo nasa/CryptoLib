@@ -102,11 +102,13 @@ jobs:
       #     ./configure --enable-aesccm --enable-aessiv --enable-cmac;
       #     make;
       #     make install;
-      run: sudo chown -R runner /usr/local;
-           mkdir /tmp/wolfssl/build;
+      #sudo chown -R runner /usr/local;
+      run: mkdir /tmp/wolfssl/build;
            cd /tmp/wolfssl/build;
            cmake -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
-           make install;
+           cmake --build .;
+           sudo make install;
+           ldconfig;
     # End Container Setup
     
     - name: Wolf Build Script
