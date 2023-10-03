@@ -95,11 +95,11 @@ jobs:
    
      #      cmake -DCMAKE_INSTALL_PREFIX=/home/runner/.local -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
     - name: Build WolfSSL
+      #  -DCMAKE_INSTALL_PREFIX=/home/runner/.local
       run: mkdir /tmp/wolfssl/build;
            cd /tmp/wolfssl/build;
-           cmake -DCMAKE_INSTALL_PREFIX=/home/runner/.local -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
+           cmake -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
            cmake --build .;
-           export PATH=$PATH:/home/runner/.local/include/wolfssl;
            make install;
     # End Container Setup
     
