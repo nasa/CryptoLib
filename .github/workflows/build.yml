@@ -97,12 +97,9 @@ jobs:
     - name: Build WolfSSL
       #  -DCMAKE_INSTALL_PREFIX=/home/runner/.local
       run: cd /tmp/wolfssl/;
-           whoami;
-           sudo chown -R runner /usr/local/;
            ./autogen.sh;
            ./configure --enable-aesccm --enable-aessiv --enable-cmac;
            make;
-           make check;
            make install;
     #  run: mkdir /tmp/wolfssl/build;
     #       cd /tmp/wolfssl/build;
