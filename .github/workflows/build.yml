@@ -18,7 +18,7 @@ jobs:
     - name: Update
       run: sudo apt-get update
     - name: Install Dependencies
-      run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat libgcrypt20-dev python3
+      run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat libgcrypt20-dev python3 
     - name: Install Python Libraries
       run: sudo pip install pycryptodome
     # End Container Setup
@@ -87,7 +87,7 @@ jobs:
     - name: Update
       run: sudo apt-get update
     - name: Install Dependencies
-      run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat libgcrypt20-dev python3
+      run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat libgcrypt20-dev python3 autoconf libtool
     - name: Install Python Libraries
       run: sudo pip install pycryptodome
     - name: Clone WolfSSL
@@ -96,10 +96,15 @@ jobs:
      #      cmake -DCMAKE_INSTALL_PREFIX=/home/runner/.local -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
     - name: Build WolfSSL
       #  -DCMAKE_INSTALL_PREFIX=/home/runner/.local
-      run: mkdir /tmp/wolfssl/build;
-           cd /tmp/wolfssl/build;
-           cmake -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
-           cmake --build .;
+      run: ./autogen.sh;
+           ./configure;
+           make
+           make check
+           make install
+    #  run: mkdir /tmp/wolfssl/build;
+    #       cd /tmp/wolfssl/build;
+    #       cmake -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
+    #       cmake --build .;
     # End Container Setup
     
     - name: Wolf Build Script
