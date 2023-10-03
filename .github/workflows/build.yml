@@ -108,7 +108,7 @@ jobs:
            cmake -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
            cmake --build .;
            sudo make install;
-           ldconfig;
+           sudo ldconfig;
     # End Container Setup
     
     - name: Wolf Build Script
