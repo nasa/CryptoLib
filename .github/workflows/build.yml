@@ -100,7 +100,7 @@ jobs:
            whoami;
            
            sudo mkdir -p /usr/local/share/doc/wolfssl;
-           sudo chown -R runner /usr/local/share/doc
+           sudo chown -R runner /usr/local/share/doc;
            ./autogen.sh;
            ./configure;
            make;
