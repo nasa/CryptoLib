@@ -100,7 +100,7 @@ jobs:
            whoami;
            sudo chown -R runner /usr/local/;
            ./autogen.sh;
-           ./configure;
+           ./configure --enable-aesccm --enable-aessiv --enable-cmac;
            make;
            make check;
            make install;
