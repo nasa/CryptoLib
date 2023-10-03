@@ -81,7 +81,7 @@ jobs:
   #
   wolf_build:
     # Container Setup
-    runs-on: wolfssl/wolfssl
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - name: Update
@@ -90,12 +90,13 @@ jobs:
       run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat libgcrypt20-dev python3
     - name: Install Python Libraries
       run: sudo pip install pycryptodome
-    #- name: Clone WolfSSL
-    #  run: git clone --depth 1 --branch v5.6.0-stable https://github.com/wolfSSL/wolfssl.git /tmp/wolfssl
-    #- name: Build WolfSSL
-    #  run: mkdir /tmp/wolfssl/build;
-    #       cd /tmp/wolfssl/build;
-    #       cmake -DCMAKE_INSTALL_PREFIX=/home/runner/.local -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
+    - name: Clone WolfSSL
+      run: git clone --depth 1 --branch v5.6.0-stable https://github.com/wolfSSL/wolfssl.git /tmp/wolfssl
+    - name: Build WolfSSL
+      run: mkdir /tmp/wolfssl/build;
+           cd /tmp/wolfssl/build;
+           cmake -DCMAKE_INSTALL_PREFIX=/home/runner/.local -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
+           cmake --build .
     #       make install;
     # End Container Setup
     
