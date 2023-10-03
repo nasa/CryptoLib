@@ -96,7 +96,8 @@ jobs:
      #      cmake -DCMAKE_INSTALL_PREFIX=/home/runner/.local -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
     - name: Build WolfSSL
       #  -DCMAKE_INSTALL_PREFIX=/home/runner/.local
-      run: ./autogen.sh;
+      run: cd /tmp/wolfssl/;
+           ./autogen.sh;
            ./configure;
            make;
            make check;
