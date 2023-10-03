@@ -92,12 +92,14 @@ jobs:
       run: sudo pip install pycryptodome
     - name: Clone WolfSSL
       run: git clone --depth 1 --branch v5.6.0-stable https://github.com/wolfSSL/wolfssl.git /tmp/wolfssl
+   
+     #      cmake -DCMAKE_INSTALL_PREFIX=/home/runner/.local -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
     - name: Build WolfSSL
       run: mkdir /tmp/wolfssl/build;
            cd /tmp/wolfssl/build;
-           cmake -DCMAKE_INSTALL_PREFIX=/home/runner/.local -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
+           cmake -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..
            cmake --build .
-    #       make install;
+           make install;
     # End Container Setup
     
     - name: Wolf Build Script
