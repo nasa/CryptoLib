@@ -81,7 +81,7 @@ jobs:
   #
   wolf_build:
     # Container Setup
-    runs-on: wolfssl/wolfssl:ubuntu-test
+    runs-on: wolfssl/wolfssl
     steps:
     - uses: actions/checkout@v2
     - name: Update
