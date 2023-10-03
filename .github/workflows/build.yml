@@ -98,7 +98,9 @@ jobs:
       #  -DCMAKE_INSTALL_PREFIX=/home/runner/.local
       run: cd /tmp/wolfssl/;
            whoami;
-           mkdir -p /usr/local/share/doc/wolfssl;
+           
+           sudo mkdir -p /usr/local/share/doc/wolfssl;
+           sudo chown -R runner /usr/local/share/doc
            ./autogen.sh;
            ./configure;
            make;
