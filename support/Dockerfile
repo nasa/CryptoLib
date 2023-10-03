@@ -4,42 +4,58 @@
 # docker push ivvitc/cryptolib:latest
 #
 
-FROM ubuntu:20.04 AS cl0
+ARG WOLFSSL_VERSION=5.6.0-stable
+FROM ubuntu
 
-# Install required packages
-ARG DEBIAN_FRONTEND=noninteractive
-RUN apt-get update -y \
-    && apt-get install -y \
+ARG WOLFSSL_VERSION
+
+RUN set -eux \
+    # install deps
+    && buildDeps=' \
         autoconf \
+        automake \
+        ca-certificates \
         cmake \
+        curl \
         g++-multilib \
         gcc-multilib \
         gettext \
         git \
-		gdb \
+        gdb\
         lcov \
         libcurl4-openssl-dev \
         libmariadb-dev \
         libmariadb-dev-compat \
         libgcrypt20-dev \
         libtool \
+        make \
         python3-dev \
         python3-pip \
-    && rm -rf /var/lib/apt/lists/*
+        unzip \
+    ' \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends $buildDeps \
+    && rm -r /var/lib/apt/lists/* \
+
+    # download source files
+    && curl \
+        -LS https://github.com/wolfSSL/wolfssl/archive/v${WOLFSSL_VERSION}.zip \
+        -o v${WOLFSSL_VERSION}.zip \
+    && unzip v${WOLFSSL_VERSION}.zip \
+    && rm v${WOLFSSL_VERSION}.zip \
+
+    # build and install wolfssl
+    && cd wolfssl-${WOLFSSL_VERSION} \
+    && mkdir -p build \
+    && cd build \
+    && cmake -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes .. \
+    && cmake --build . \
+    && make install \
+    && ldconfig 
+
+    # cleanup
+    #&& cd .. \
+    #&& rm -r wolfssl-${WOLFSSL_VERSION} 
+    #&& apt-get purge -y --auto-remove $buildDeps
 
 RUN pip3 install pycryptodome
-
-# WolfSSL
-FROM cl0 AS cl1
-RUN cd /tmp \
-    && git clone https://github.com/wolfSSL/wolfssl.git \
-    && cd /tmp/wolfssl \
-    && git checkout v5.6.0-stable
-    
-RUN mkdir /tmp/wolfssl/build \
-    && cd /tmp/wolfssl/build \
-    && cmake -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes .. \
-    && make install \
-    && rm -rf /tmp/wolfssl
-
-ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/local/lib"
