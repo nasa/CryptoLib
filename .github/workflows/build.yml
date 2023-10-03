@@ -97,8 +97,9 @@ jobs:
     - name: Build WolfSSL
       run: mkdir /tmp/wolfssl/build;
            cd /tmp/wolfssl/build;
-           cmake -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
+           cmake -DCMAKE_INSTALL_PREFIX=/home/runner/.local -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
            cmake --build .;
+           echo $PATH
            make install;
     # End Container Setup
     
