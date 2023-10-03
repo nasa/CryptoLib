@@ -99,7 +99,9 @@ jobs:
            cd /tmp/wolfssl/build;
            cmake -DCMAKE_INSTALL_PREFIX=/home/runner/.local -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
            cmake --build .;
-           echo $PATH
+           echo $PATH;
+           ls /home/runner/.local
+           export PATH=$PATH:/home/runner/.local
            make install;
     # End Container Setup
     
