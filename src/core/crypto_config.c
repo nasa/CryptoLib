@@ -201,23 +201,22 @@ int32_t Crypto_Init(void)
     } // TODO: Error stack
 
     /* Crypto Interface */
-    // Prepare Cryptographic Library from config
-    if(crypto_config.cryptography_type == CRYPTOGRAPHY_TYPE_LIBGCRYPT)
+    // Determine which cryptographic module is in use
+    cryptography_if = get_cryptography_interface_libgcrypt();
+    if (cryptography_if == NULL)
     {
-        cryptography_if = get_cryptography_interface_libgcrypt();
+        cryptography_if = get_cryptography_interface_wolfssl();
     }
-    else if (crypto_config.cryptography_type == CRYPTOGRAPHY_TYPE_KMCCRYPTO)
-    {
-        if (cryptography_kmc_crypto_config == NULL)
+    if (cryptography_if == NULL)
+    {   // Note this needs to be the last option in the chain due to addition configuration required
+        if (cryptography_kmc_crypto_config != NULL)
         {
-            status = CRYPTOGRAPHY_KMC_CRYPTO_SERVICE_CONFIGURATION_NOT_COMPLETE;
-            printf(KRED "ERROR: CryptoLib KMC Crypto Service Interface must be configured before intializing!\n" RESET);
-            return status;
+            cryptography_if = get_cryptography_interface_kmc_crypto_service();
         }
-        cryptography_if = get_cryptography_interface_kmc_crypto_service();
     }
-    else
+    if (cryptography_if == NULL)
     {
+        printf("Fatal Error: Unable to identify Cryptography Interface!\n");
         status = CRYPTOGRAPHY_INVALID_CRYPTO_INTERFACE_TYPE;
         return status;
     }
@@ -236,7 +235,6 @@ int32_t Crypto_Init(void)
         fprintf(stderr, "Fatal Error: Unable to configure Cryptography Interface.\n");
         return status;
     }
-
 
     // Init Security Associations
     status = sa_if->sa_init();

@@ -5,9 +5,8 @@
 #  ./internal_docker_build.sh
 #
 
-SCRIPT_DIR=$(cd `dirname $0` && pwd)
-BASE_DIR=$(cd `dirname $SCRIPT_DIR`/.. && pwd)
-DFLAGS="docker run --rm -it"
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+source $SCRIPT_DIR/env.sh
 
 # Prepare build directory
 mkdir $BASE_DIR/build > /dev/null 2>&1

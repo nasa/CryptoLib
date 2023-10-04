@@ -14,7 +14,7 @@
 
 #include "cryptography_interface.h"
 
-CryptographyInterface get_cryptography_interface_libgcrypt(void)
+CryptographyInterface get_cryptography_interface_wolfssl(void)
 {
     return NULL;
 }
