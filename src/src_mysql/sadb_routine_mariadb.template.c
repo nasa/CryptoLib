@@ -482,6 +482,7 @@ static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** se
             if (strcmp(field_names[i], "HEX(iv)") == 0)
             {
                 iv_byte_str = row[i];
+                printf("Fault here?\n");
                 if(iv_byte_str == NULL){
                     printf("IV STRING IS NULL\n");
                 }
