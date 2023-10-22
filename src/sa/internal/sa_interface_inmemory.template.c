@@ -358,6 +358,24 @@ int32_t sa_config(void)
     sa[16].gvcid_blk.scid = SCID & 0x3FF;
     sa[16].gvcid_blk.vcid = 0;
 
+    // SA 17 - AOS AEAD
+    sa[17].spi = 17;
+    sa[17].ekid = 130;
+    sa[17].sa_state = SA_KEYED;
+    sa[17].est = 1;
+    sa[17].ast = 1;
+    sa[17].ecs_len = 1;
+    sa[17].ecs = CRYPTO_CIPHER_AES256_GCM;
+    sa[17].iv_len = 16;
+    sa[17].shivf_len = 16;
+    *(sa[17].iv + sa[17].shivf_len - 1) = 0;
+    sa[17].stmacf_len = 16;
+    sa[17].abm_len = ABM_SIZE;
+    memset(sa[17].abm, 0xFF, (sa[17].abm_len * sizeof(uint8_t))); // Bitmask 
+    sa[17].gvcid_blk.tfvn = 0x01;
+    sa[17].gvcid_blk.scid = SCID & 0x3FF;
+    sa[17].gvcid_blk.vcid = 0;
+
     return status;
 }
 
