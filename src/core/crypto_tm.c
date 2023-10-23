@@ -893,8 +893,6 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
     uint8_t aad[1786];
     uint16_t aad_len = 0;
     uint16_t byte_idx = 0;
-    // uint8_t fecf_len = 0;
-    // uint8_t ocf_len = 0;
     uint8_t ecs_is_aead_algorithm;
     uint32_t encryption_cipher = 0;
     uint8_t iv_loc;

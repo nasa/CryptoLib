@@ -885,8 +885,6 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8
     uint8_t aad[1786];
     uint16_t aad_len = 0;
     uint16_t byte_idx = 0;
-    // uint8_t fecf_len = 0;
-    // uint8_t ocf_len = 0;
     uint8_t ecs_is_aead_algorithm;
     uint32_t encryption_cipher = 0;
     uint8_t iv_loc;
@@ -954,8 +952,18 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8
         return status;
     } // Unable to get necessary Managed Parameters for AOS TF -- return with error.
 
-    // Increment to SPI start
+    // Increment to end of Primary Header start, depends on FHECF presence
     byte_idx = 6;
+    if (current_managed_parameters->aos_has_fhec == AOS_HAS_FHEC)
+    {
+        byte_idx = 8;
+    }
+
+    // Determine if Insert Zone exists, increment past it if so
+    if (current_managed_parameters->aos_has_iz)
+    {
+        byte_idx += current_managed_parameters->aos_iz_len;
+    }
 
     /**
      * Begin Security Header Fields
