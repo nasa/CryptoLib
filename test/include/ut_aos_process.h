@@ -16,8 +16,8 @@
    jstar-development-team@mail.nasa.gov
 */
 
-#ifndef CRYPTOLIB_UT_CRYPTO_AOS_H
-#define CRYPTOLIB_UT_CRYPTO_AOS_H
+#ifndef CRYPTOLIB_UT_AOS_PROCESS_H
+#define CRYPTOLIB_UT_AOS_PROCESS_H
 
 #ifdef __cplusplus
 extern "C"
@@ -32,4 +32,4 @@ extern "C"
 } /* Close scope of 'extern "C"' declaration which encloses file. */
 #endif
 
-#endif //CRYPTOLIB_UT_CRYPTO_AOS_H
+#endif //CRYPTOLIB_UT_AOS_PROCESS_H

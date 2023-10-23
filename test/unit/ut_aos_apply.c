@@ -19,7 +19,7 @@
 // /**
 //  *  Unit Tests that macke use of CRYPTO_AOS functionality on the data.
 //  **/
-#include "ut_crypto_aos.h"
+#include "ut_aos_apply.h"
 #include "crypto.h"
 #include "crypto_error.h"
 #include "sa_interface.h"
