@@ -1089,7 +1089,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8
             }
         }
     }
-    // Needs to be AOS_HAS_FECF (checked above_ or AOS_NO_FECF)
+    // Needs to be AOS_HAS_FECF (checked above, or AOS_NO_FECF)
     else if (current_managed_parameters->has_fecf != AOS_NO_FECF)
     {
 #ifdef AOS_DEBUG
@@ -1114,6 +1114,20 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8
 
     // Copy over AOS Primary Header (6 bytes)
     memcpy(p_new_dec_frame, &p_ingest[0], 6);
+
+    // Copy over insert zone data, if it exists
+    if (current_managed_parameters->aos_has_iz == AOS_HAS_IZ)
+    {
+        memcpy(p_new_dec_frame+6, &p_ingest[6], current_managed_parameters->aos_iz_len);
+#ifdef AOS_DEBUG
+        printf("Copied over the following:\n\t");
+        for (int i=0; i < current_managed_parameters->aos_iz_len;i++)
+        {
+            printf("%02X",p_ingest[6+i]);
+        }
+        printf("\n");
+#endif
+    }
 
     // Byte_idx is still set to just past the SPI
     // If IV is present, note location

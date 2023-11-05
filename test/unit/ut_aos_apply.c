@@ -26,7 +26,7 @@
 #include "utest.h"
 
 /**
- * @brief Unit Test: AOS Apply: Null Buffer. CrpyotLib should immediately recognize the null buffer and return
+ * @brief Unit Test: AOS Apply: Null Buffer. CryptoLib should immediately recognize the null buffer and return
  **/
 UTEST(AOS_APPLY, NULL_BUFFER)
 {
