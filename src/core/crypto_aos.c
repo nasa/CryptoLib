@@ -1185,10 +1185,6 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8
     }
 #endif
 
-    // Copy pdu into output frame
-    // this will be over-written by decryption functions if necessary,
-    // but not by authentication which requires
-
     // Get Key
     crypto_key_t* ekp = NULL;
     ekp = key_if->get_key(sa_ptr->ekid);
@@ -1223,7 +1219,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8
     if ((sa_service_type == SA_AUTHENTICATION) || (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
     {
 #ifdef MAC_DEBUG
-        printf("MAC Parsed from Frame:\n");
+        printf("MAC Parsed from Frame:\n\t");
         Crypto_hexprint(p_ingest+mac_loc,sa_ptr->stmacf_len);
 #endif
         if (sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
@@ -1281,7 +1277,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8
                                                                 &(ekp->value[0]), // Key
                                                                 Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs),
                                                                 sa_ptr, // SA for key reference
-                                                                p_ingest+iv_loc, // IV
+                                                                p_ingest+iv_loc, // IV.
                                                                 sa_ptr->iv_len, // IV Length
                                                                 p_ingest+mac_loc, // Frame Expected Tag
                                                                 sa_ptr->stmacf_len, // tag size
@@ -1366,7 +1362,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8
     }
 
 #ifdef AOS_DEBUG
-    printf(KYEL "Printing received frame:\n\t" RESET);
+    printf(KYEL "\nPrinting received frame:\n\t" RESET);
     for( int i=0; i<current_managed_parameters->max_frame_size; i++)
     {
         printf(KYEL "%02X", p_ingest[i]);

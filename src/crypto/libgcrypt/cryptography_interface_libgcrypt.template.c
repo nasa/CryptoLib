@@ -900,9 +900,11 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
             return status;
         }
     }
+
     if (authenticate_bool == CRYPTO_TRUE)
     {
 /*
+** *** !!!WARNING!!! 
 ** *** This Debug block cannot be enabled during normal use, gettag fundamentally changes the
 ** *** gettag output
 */
