@@ -34,25 +34,30 @@ typedef enum
 } InitStatus;
 typedef enum
 {
+    KEY_TYPE_UNITIALIZED = 0,
     KEY_TYPE_CUSTOM,
     KEY_TYPE_INTERNAL,
     KEY_TYPE_KMC
 } KeyType;
 typedef enum
 {
+    MC_TYPE_UNITIALIZED = 0,
     MC_TYPE_CUSTOM,
     MC_TYPE_INTERNAL
 } McType;
 typedef enum
 {
+    SA_TYPE_UNITIALIZED = 0,
     SA_TYPE_CUSTOM,
     SA_TYPE_INMEMORY,
     SA_TYPE_MARIADB
 } SadbType;
 typedef enum
 {
+    CRYPTOGRAPHY_TYPE_UNITIALIZED = 0,
     CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-    CRYPTOGRAPHY_TYPE_KMCCRYPTO
+    CRYPTOGRAPHY_TYPE_KMCCRYPTO,
+    CRYPTOGRAPHY_TYPE_WOLFSSL
 } CryptographyType;
 /***************************************
 ** GVCID Managed Parameter enums

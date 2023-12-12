@@ -397,6 +397,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 {
     uint8_t* ptr_enc_frame = NULL;
+
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
@@ -451,14 +452,16 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 
     Crypto_TC_ProcessSecurity(buffer_nist_et_b, &buffer_nist_et_len, tc_nist_processed_frame);
 
-    Crypto_Shutdown();
-
     for (int i = 0; i < tc_nist_processed_frame->tc_pdu_len; i++)
     {
-        //printf("[%d]: %02x -> %02x \n", i, buffer_nist_pt_b[i + 5], tc_nist_processed_frame->tc_pdu[i]);
+        if (buffer_nist_pt_b[i + 5] != tc_nist_processed_frame->tc_pdu[i])
+        {
+            printf("[%d]: %02x -> %02x \n", i, buffer_nist_pt_b[i + 5], tc_nist_processed_frame->tc_pdu[i]);
+        }
         ASSERT_EQ(buffer_nist_pt_b[i + 5], tc_nist_processed_frame->tc_pdu[i]);
     }
 
+    Crypto_Shutdown();
     free(ptr_enc_frame);
     free(buffer_nist_pt_b);
     free(buffer_nist_iv_b);
@@ -1256,7 +1259,6 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
 UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 {
     // Setup & Initialize CryptoLib
-    int32_t status;
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
@@ -1320,8 +1322,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     // Convert mac frame
     hex_conversion(buffer_nist_mac_frame_h, (char**) &buffer_nist_mac_frame_b, &buffer_nist_mac_frame_len);
 
-    status = Crypto_TC_ProcessSecurity(buffer_nist_mac_frame_b, &buffer_nist_mac_frame_len, tc_nist_processed_frame);
-    //printf("TC_Process returned status %d\n", status);
+    Crypto_TC_ProcessSecurity(buffer_nist_mac_frame_b, &buffer_nist_mac_frame_len, tc_nist_processed_frame);
 
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
     // Calc payload index: total length - pt length
@@ -1354,18 +1355,17 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
          printf("\n");
 #endif
 
-    Crypto_Shutdown();
     // Verify the MAC
     for (int i = 0; i < test_association->stmacf_len; i++)
     {
         ASSERT_EQ(tc_nist_processed_frame->tc_sec_trailer.mac[i], buffer_cyber_chef_mac_b[i]);
     }
     for (int i = 0; i < tc_nist_processed_frame->tc_pdu_len; i++)
-    // Verify the PDU Data is present and not stomped
-    {
+    {   // Verify the PDU Data is present and not stomped
         ASSERT_EQ(tc_nist_processed_frame->tc_pdu[i], buffer_nist_pt_b[i]);
     }
-    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    Crypto_Shutdown();    
     free(buffer_nist_iv_b);
     free(buffer_nist_key_b);
     free(buffer_cyber_chef_mac_b);
@@ -1655,8 +1655,11 @@ UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
 
     for (int i = 0; i < buffer_python_mac_len; i++)
     {
-        printf("[%d] Truth: %02x, Actual: %02x\n", enc_data_idx, buffer_python_mac_b[i], *(ptr_enc_frame + enc_data_idx));
-        ASSERT_EQ(*(ptr_enc_frame + enc_data_idx), buffer_python_mac_b[i]);
+        if (ptr_enc_frame[enc_data_idx] != buffer_python_mac_b[i])
+        {
+            printf("[%d] Truth: %02x, Actual: %02x\n", enc_data_idx, buffer_python_mac_b[i], ptr_enc_frame[enc_data_idx]);
+        }
+        ASSERT_EQ(ptr_enc_frame[enc_data_idx], buffer_python_mac_b[i]);
         enc_data_idx++;
     }
 
@@ -2016,15 +2019,18 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_256_PT_128_TEST_0)
     // Note: For comparison, primarily interested in the MAC
     // Calc payload index: total length - pt length
     uint16_t enc_data_idx = enc_frame_len - buffer_python_mac_len - 2;
-    Crypto_Shutdown();
 
     for (int i = 0; i < buffer_python_mac_len; i++)
     {
-        printf("[%d] Truth: %02x, Actual: %02x \n", enc_data_idx, buffer_python_mac_b[i], *(ptr_enc_frame + enc_data_idx));
-        ASSERT_EQ(*(ptr_enc_frame + enc_data_idx), buffer_python_mac_b[i]);
+        if (ptr_enc_frame[enc_data_idx] != buffer_python_mac_b[i])
+        {
+            printf("[%d] Truth: %02x, Actual: %02x \n", enc_data_idx, buffer_python_mac_b[i], ptr_enc_frame[enc_data_idx]);
+        }
+        ASSERT_EQ(ptr_enc_frame[enc_data_idx], buffer_python_mac_b[i]);
         enc_data_idx++;
     }
 
+    Crypto_Shutdown();
     free(ptr_enc_frame);
     free(buffer_frame_pt_b);
     free(buffer_nist_key_b);
@@ -2038,6 +2044,8 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
 {
     uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
+    int32_t status;
+
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
@@ -2098,7 +2106,8 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
     // Convert input mac
     hex_conversion(buffer_python_mac_h, (char **)&buffer_python_mac_b, &buffer_python_mac_len);
 
-    Crypto_TC_ApplySecurity(buffer_frame_pt_b, buffer_frame_pt_len, &ptr_enc_frame, &enc_frame_len);
+    status = Crypto_TC_ApplySecurity(buffer_frame_pt_b, buffer_frame_pt_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
     // Note: For comparison, primarily interested in the MAC
     // Calc payload index: total length - pt length
@@ -2107,8 +2116,11 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
 
     for (int i = 0; i < buffer_python_mac_len; i++)
     {
-        printf("[%d] Truth: %02x, Actual: %02x\n", enc_data_idx, buffer_python_mac_b[i], *(ptr_enc_frame + enc_data_idx));
-        ASSERT_EQ(*(ptr_enc_frame + enc_data_idx), buffer_python_mac_b[i]);
+        if (ptr_enc_frame[enc_data_idx] != buffer_python_mac_b[i])
+        {
+            printf("[%d] Truth: %02x, Actual: %02x\n", enc_data_idx, buffer_python_mac_b[i], *(ptr_enc_frame + enc_data_idx));
+        }
+        ASSERT_EQ(ptr_enc_frame[enc_data_idx], buffer_python_mac_b[i]);
         enc_data_idx++;
     }
 
@@ -2123,14 +2135,15 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
  **/
 UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
 {
-   uint8_t *ptr_enc_frame = NULL;
-   uint16_t enc_frame_len = 0;
-   int32_t status;
-   // Setup & Initialize CryptoLib
-   Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    uint8_t *ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+    int32_t status;
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+
    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
    Crypto_Init();
@@ -2380,7 +2393,10 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_0)
 
     for (int i = 0; i < buffer_python_mac_len; i++)
     {
-        printf("[%d] Truth: %02x, Actual: %02x\n", i, buffer_python_mac_b[i], *(tc_sdls_processed_frame->tc_sec_trailer.mac + i));
+        if (*(tc_sdls_processed_frame->tc_sec_trailer.mac + i) != buffer_python_mac_b[i])
+        {
+            printf("[%d] Truth: %02x, Actual: %02x\n", i, buffer_python_mac_b[i], *(tc_sdls_processed_frame->tc_sec_trailer.mac + i));
+        }
         ASSERT_EQ(*(tc_sdls_processed_frame->tc_sec_trailer.mac + i), buffer_python_mac_b[i]);
     }
 
