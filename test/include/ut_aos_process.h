@@ -16,42 +16,20 @@
    jstar-development-team@mail.nasa.gov
 */
 
-/**
- *  Unit Tests that macke use of CRYPTO_AOS functionality on the data.
- **/
-#include "ut_crypto_aos.h"
+#ifndef CRYPTOLIB_UT_AOS_PROCESS_H
+#define CRYPTOLIB_UT_AOS_PROCESS_H
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include "crypto.h"
-#include "crypto_error.h"
-#include "sa_interface.h"
-#include "utest.h"
+#include "shared_util.h"
+#include <stdio.h>
 
-/**
- * @brief Unit Test: Crypto Init with invalid SADB
- * @note: TODO:  This test will need to be reworked when this functionality exists.
- **/
-UTEST(CRYPTO_AOS, APPLY_SECURITY)
-{
-    int32_t status = CRYPTO_LIB_ERROR;
-    uint8_t ingest[1024] = {0};
-    int len_ingest = 0;
+#ifdef __cplusplus
+} /* Close scope of 'extern "C"' declaration which encloses file. */
+#endif
 
-    status = Crypto_AOS_ApplySecurity(&ingest[0], &len_ingest);
-
-    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-}
-
-/**
- * @brief Unit Test: Crypto AOS Process Security
- **/
-UTEST(CRYPTO_AOS, PROCESS_SECURITY)
-{
-    int32_t status = CRYPTO_LIB_ERROR;
-    uint8_t ingest[1024] = {0};
-    int len_ingest = 0;
-
-    status = Crypto_AOS_ProcessSecurity(&ingest[0], &len_ingest);
-
-    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-}
-
-UTEST_MAIN();
+#endif //CRYPTOLIB_UT_AOS_PROCESS_H

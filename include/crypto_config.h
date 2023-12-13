@@ -119,7 +119,7 @@
 #define OCF_SIZE 4
 #define MAC_SIZE 16           /* bytes */
 #define FECF_SIZE 2
-#define SEGMENT_HDR_SIZE 1
+#define TC_SEGMENT_HDR_SIZE 1
 #define ECS_SIZE 4            /* bytes */
 #define ABM_SIZE 1786         /* bytes */
 #define ARSN_SIZE 20          /* total messages */
@@ -178,6 +178,10 @@
 #define TM_FRAME_DATA_SIZE 1786 /* bytes */
 #define TM_FILL_SIZE 1145       /* bytes */
 #define TM_PAD_SIZE 2           /* bytes */
+
+// AOS Defines
+#define AOS_FRAME_DATA_SIZE 1786 /* bytes */
+#define AOS_FILL_SIZE 1145       /* bytes */
 
 // TC Behavior Defines
 #define TC_SDLS_EP_VCID                                                                                                \

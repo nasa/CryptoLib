@@ -315,6 +315,67 @@ int32_t sa_config(void)
     sa[13].gvcid_blk.vcid = 0;
     sa[13].gvcid_blk.mapid = TYPE_TM;
 
+    // SA 14 - AOS Clear Mode
+    sa[14].spi = 14;
+    sa[14].sa_state = SA_OPERATIONAL;
+    sa[14].est = 0;
+    sa[14].ast = 0;
+    sa[14].shivf_len = 0;
+    sa[14].gvcid_blk.tfvn = 0x01;
+    sa[14].gvcid_blk.scid = SCID & 0x3FF;
+    sa[14].gvcid_blk.vcid = 0;
+
+    // SA 15 - AOS Authentication Only
+    sa[15].spi = 15;
+    sa[15].akid = 130;
+    sa[15].sa_state = SA_KEYED;
+    sa[15].est = 0;
+    sa[15].ast = 1;
+    sa[15].acs_len = 1;
+    sa[15].acs = CRYPTO_MAC_CMAC_AES256;
+    sa[15].stmacf_len = 16;
+    sa[15].abm_len = ABM_SIZE;
+    memset(sa[15].abm, 0xFF, (sa[15].abm_len * sizeof(uint8_t))); // Bitmask 
+    sa[15].gvcid_blk.tfvn = 0x01;
+    sa[15].gvcid_blk.scid = SCID & 0x3FF;
+    sa[15].gvcid_blk.vcid = 0;
+
+    // SA 16 - AOS Encryption Only
+    sa[16].spi = 16;
+    sa[16].ekid = 130;
+    sa[16].sa_state = SA_KEYED;
+    sa[16].est = 1;
+    sa[16].ast = 0;
+    sa[16].ecs_len = 1;
+    sa[16].ecs = CRYPTO_CIPHER_AES256_GCM;
+    sa[16].iv_len = 16;
+    sa[16].shivf_len = 16;
+    *(sa[16].iv + sa[16].shivf_len - 1) = 0;
+    sa[16].stmacf_len = 0;
+    sa[16].abm_len = ABM_SIZE;
+    memset(sa[16].abm, 0xFF, (sa[16].abm_len * sizeof(uint8_t))); // Bitmask 
+    sa[16].gvcid_blk.tfvn = 0x01;
+    sa[16].gvcid_blk.scid = SCID & 0x3FF;
+    sa[16].gvcid_blk.vcid = 0;
+
+    // SA 17 - AOS AEAD
+    sa[17].spi = 17;
+    sa[17].ekid = 130;
+    sa[17].sa_state = SA_KEYED;
+    sa[17].est = 1;
+    sa[17].ast = 1;
+    sa[17].ecs_len = 1;
+    sa[17].ecs = CRYPTO_CIPHER_AES256_GCM;
+    sa[17].iv_len = 16;
+    sa[17].shivf_len = 16;
+    *(sa[17].iv + sa[17].shivf_len - 1) = 0;
+    sa[17].stmacf_len = 16;
+    sa[17].abm_len = ABM_SIZE;
+    memset(sa[17].abm, 0xFF, (sa[17].abm_len * sizeof(uint8_t))); // Bitmask 
+    sa[17].gvcid_blk.tfvn = 0x01;
+    sa[17].gvcid_blk.scid = SCID & 0x3FF;
+    sa[17].gvcid_blk.vcid = 0;
+
     return status;
 }
 
@@ -469,6 +530,9 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
             {
 #ifdef SA_DEBUG
                 printf(KRED "An operational SA was found - but mismatched tfvn.\n" RESET);
+                printf(KRED "SA is %d\n", i);
+                printf(KRED "Incoming tfvn is %d\n", tfvn);
+                printf(KRED "SA tfvn is %d\n", sa[i].gvcid_blk.tfvn);
 #endif
                 status = CRYPTO_LIB_ERR_INVALID_TFVN;
             }

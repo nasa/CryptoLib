@@ -38,10 +38,14 @@ CCSDS_t sdls_frame;
 uint8_t tm_frame[1786];                    // Testing
 TM_FramePrimaryHeader_t tm_frame_pri_hdr;  // Used to reduce bit math duplication
 TM_FrameSecurityHeader_t tm_frame_sec_hdr; // Used to reduce bit math duplication
+// AOS_t aos_frame
+uint8_t aos_frame[1786];                    // Testing
+AOS_FramePrimaryHeader_t aos_frame_pri_hdr;  // Used to reduce bit math duplication
+AOS_FrameSecurityHeader_t aos_frame_sec_hdr; // Used to reduce bit math duplication
 // OCF
 uint8_t ocf = 0;
 SDLS_FSR_t report;
-TM_FrameCLCW_t clcw;
+Telemetry_Frame_Clcw_t clcw;
 // Flags
 SDLS_MC_LOG_RPLY_t log_summary;
 SDLS_MC_DUMP_BLK_RPLY_t mc_log;

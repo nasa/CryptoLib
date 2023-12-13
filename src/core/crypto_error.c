@@ -69,6 +69,9 @@ char *crypto_enum_errlist_core[] =
         (char*) "CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_TM_STANDARD",
         (char*) "CRYPTO_LIB_ERR_TC_ENUM_USED_FOR_TM_CONFIG",
         (char*) "CRYPTO_LIB_ERR_KEY_ID_ERROR",
+        (char*) "CRYPTO_LIB_ERR_MC_INIT",
+        (char*) "CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_AOS_STANDARD",
+        (char*) "CRYPTO_LIB_ERR_TC_ENUM_USED_FOR_AOS_CONFIG",
 };
 
 char *crypto_enum_errlist_config[] =

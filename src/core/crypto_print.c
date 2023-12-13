@@ -101,9 +101,9 @@ void Crypto_tmPrint(TM_t* tm_frame)
 /**
  * @brief Function: Crypto_clcwPrint
  * Prints the current CLCW in memory.
- * @param clcw: TM_FrameCLCW_t*
+ * @param clcw: Telemetry_Frame_Clcw_t*
  **/
-void Crypto_clcwPrint(TM_FrameCLCW_t* clcw)
+void Crypto_clcwPrint(Telemetry_Frame_Clcw_t* clcw)
 {
     printf("Current CLCW in memory is: \n");
     printf("\t cwt    = 0x%01x \n", clcw->cwt);
