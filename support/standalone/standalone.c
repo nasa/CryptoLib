@@ -389,7 +389,9 @@ void *crypto_standalone_tc_apply(void* sock)
             if (!tc_out_ptr) free(tc_out_ptr);
             if (tc_debug == 1)
             {
+            #ifdef CRYPTO_STANDALONE_TC_APPLY_DEBUG
                 printf("\n");
+            #endif
             }
         }
 
