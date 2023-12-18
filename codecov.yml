@@ -1,5 +1,3 @@
-codecov:
-  strict_yaml_branch: dev
 ignore:
   - "src/crypto/kmc/*"
   - "src/crypto/kmc_stub/*"
