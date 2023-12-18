@@ -2,9 +2,9 @@ name: CryptoLib
 
 on: 
   push:
-    branches: [ main, dev, update-code-coverage ]
+    branches: [ main, dev ]
   pull_request:
-    branches: [ main, dev, update-code-coverage ]
+    branches: [ main, dev ]
 
 jobs:
   #
