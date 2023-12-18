@@ -1,5 +1,5 @@
 codecov:
-  strict_yaml_branch: dev
+  strict_yaml_branch: test_ci_update
   require_ci_to_pass: no
 ignore:
   - "src/crypto/kmc/*"
