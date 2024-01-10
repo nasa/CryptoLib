@@ -43,6 +43,7 @@ typedef enum
 {
     MC_TYPE_UNITIALIZED = 0,
     MC_TYPE_CUSTOM,
+    MC_TYPE_DISABLED,
     MC_TYPE_INTERNAL
 } McType;
 typedef enum
