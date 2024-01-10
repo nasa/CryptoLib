@@ -186,13 +186,13 @@ int32_t Crypto_Init(void)
     {
         mc_if = get_mc_interface_custom();
     }
-    else if (crypto_config.mc_type == MC_TYPE_INTERNAL)
-    {
-        mc_if = get_mc_interface_internal();
-    }
-    else // MC_TYPE_DISABLED
+    else if (crypto_config.mc_type == MC_TYPE_DISABLED)
     {
         mc_if = get_mc_interface_disabled();
+    }
+    else // MC_TYPE_INTERNAL
+    {
+        mc_if = get_mc_interface_internal();
     }
     mc_if->mc_initialize();
     // TODO: Check and return status on error
