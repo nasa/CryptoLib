@@ -15,35 +15,15 @@
    NASA IV&V
    jstar-development-team@mail.nasa.gov
 */
-#ifndef MONITORING_AND_CONTROL_INTERFACE_H
-#define MONITORING_AND_CONTROL_INTERFACE_H
 
-#include "crypto_error.h"
-#include "crypto_structs.h"
+#include "mc_interface.h"
 
-/* Structures */
-typedef struct
+/* Variables */
+static McInterfaceStruct mc_if_struct;
+
+/* Functions */
+McInterface get_mc_interface_disabled(void)
 {
-    /* MC Interface, SDLS */
-    int32_t (*mc_initialize)(void);
-    void (*mc_log)(int32_t error_code);
-    int32_t (*mc_shutdown)(void);
-    
-    /* MC Interface, SDLS-EP */
-    /*
-    int32_t (*mc_ping)();
-    int32_t (*mc_log_status)(void);
-    int32_t (*mc_dump_log)(void);
-    int32_t (*mc_erase_log)(void);
-    int32_t (*mc_self_test)(void);
-    int32_t (*mc_alarm_reset_flag)(void);
-    */
-   
-}  McInterfaceStruct, *McInterface;
-
-/* Prototypes */
-McInterface get_mc_interface_custom(void);
-McInterface get_mc_interface_disabled(void);
-McInterface get_mc_interface_internal(void);
-
-#endif // MONITORING_AND_CONTROL_INTERFACE_H
+    fprintf(stderr,"ERROR: Loading disabled monitoring and control interface stub source code. Rebuild CryptoLib with -DMC_DISABLED=ON to use implementation.\n");
+    return &mc_if_struct;
+}

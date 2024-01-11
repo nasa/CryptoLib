@@ -15,35 +15,49 @@
    NASA IV&V
    jstar-development-team@mail.nasa.gov
 */
-#ifndef MONITORING_AND_CONTROL_INTERFACE_H
-#define MONITORING_AND_CONTROL_INTERFACE_H
+#include "mc_interface.h"
 
-#include "crypto_error.h"
-#include "crypto_structs.h"
-
-/* Structures */
-typedef struct
-{
-    /* MC Interface, SDLS */
-    int32_t (*mc_initialize)(void);
-    void (*mc_log)(int32_t error_code);
-    int32_t (*mc_shutdown)(void);
-    
-    /* MC Interface, SDLS-EP */
-    /*
-    int32_t (*mc_ping)();
-    int32_t (*mc_log_status)(void);
-    int32_t (*mc_dump_log)(void);
-    int32_t (*mc_erase_log)(void);
-    int32_t (*mc_self_test)(void);
-    int32_t (*mc_alarm_reset_flag)(void);
-    */
-   
-}  McInterfaceStruct, *McInterface;
+/* Variables */
+static McInterfaceStruct mc_if_struct;
 
 /* Prototypes */
-McInterface get_mc_interface_custom(void);
-McInterface get_mc_interface_disabled(void);
-McInterface get_mc_interface_internal(void);
+static int32_t mc_initialize(void);
+static void mc_log(int32_t error_code);
+static int32_t mc_shutdown(void);
 
-#endif // MONITORING_AND_CONTROL_INTERFACE_H
+/* Functions */
+McInterface get_mc_interface_disabled(void)
+{
+    /* MC Interface, SDLS */
+    mc_if_struct.mc_initialize = mc_initialize;
+    mc_if_struct.mc_log = mc_log;
+    mc_if_struct.mc_shutdown = mc_shutdown;
+
+    /* MC Interface, SDLS-EP */
+    /*
+    mc_if_struct.mc_ping = mc_ping;
+    mc_if_struct.mc_log_status = mc_log_status;
+    mc_if_struct.mc_dump_log = mc_dump_log;
+    mc_if_struct.mc_erase_log = mc_erase_log;
+    mc_if_struct.mc_self_test = mc_self_test;
+    mc_if_struct.mc_alarm_reset_flag = mc_alarm_reset_flag;
+    */
+
+    return &mc_if_struct;
+}
+
+static int32_t mc_initialize(void)
+{
+    return CRYPTO_LIB_SUCCESS;
+}
+
+static void mc_log(int32_t error_code)
+{
+    error_code = error_code;
+    return;
+}
+
+static int32_t mc_shutdown(void)
+{
+    return CRYPTO_LIB_SUCCESS;
+}
