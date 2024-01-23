@@ -30,8 +30,8 @@
 */
 void Crypto_tcPrint(TC_t* tc_frame);
 void Crypto_tmPrint(TM_t* tm_frame);
-void Crypto_clcwPrint(Telemetry_Frame_Clcw_t* clcw);
-void Crypto_fsrPrint(SDLS_FSR_t* report);
+void Crypto_clcwPrint(Telemetry_Frame_Ocf_Clcw_t* clcw);
+void Crypto_fsrPrint(Telemetry_Frame_Ocf_Fsr_t* report);
 void Crypto_ccsdsPrint(CCSDS_t* sdls_frame);
 void Crypto_saPrint(SecurityAssociation_t* sa);
 void Crypto_hexprint(const void* c, size_t n);
