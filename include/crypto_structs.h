@@ -25,8 +25,10 @@
 #include "common_types.h"
 #else // Assume build outside of NOS3/cFS infrastructure
 #include <stdint.h>
+#ifndef KMC_CFFI_EXCLUDE // Exclude libraries that CFFI parser can’t process
 #include <stdio.h>
 #include <stdlib.h>
+#endif
 #endif
 
 /*

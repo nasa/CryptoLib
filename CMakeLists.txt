@@ -44,6 +44,7 @@ option(TEST_ENC "Tests - Encryption" OFF)
 
 OPTION(KMC_MDB_RH "KMC-MDB-RedHat-Integration-Testing" OFF) #Disabled by default, enable with: -DKMC_MDB_RH=ON
 OPTION(KMC_MDB_DB "KMC-MDB-Debian-Integration-Testing" OFF) #Disabled by default, enable with: -DKMC_MDB_DB=ON
+OPTION(KMC_CFFI_EXCLUDE "KMC-Exclude-Problematic-CFFI-Code" OFF) #Disabled by default, enable with: -DKMC_CFFI_EXCLUDE=ON
 
 #
 # Build Flag Logic
@@ -59,10 +60,12 @@ endif()
 
 IF(KMC_MDB_RH)
     ADD_DEFINITIONS(-DKMC_MDB_RH)
+    ADD_DEFINITIONS(-DKMC_CFFI_EXCLUDE)
 ENDIF(KMC_MDB_RH)
 
 IF(KMC_MDB_DB)
     ADD_DEFINITIONS(-DKMC_MDB_DB)
+    ADD_DEFINITIONS(-DKMC_CFFI_EXCLUDE)
 ENDIF(KMC_MDB_DB)
 
 if(SYSTEM_INSTALL)
