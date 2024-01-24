@@ -17,85 +17,160 @@
 
 include_directories(../include)
 
-aux_source_directory(src_main LIB_SRC_FILES)
-if(MYSQL)
-    aux_source_directory(src_mysql LIB_SRC_MYSQL_FILES)
-    list(APPEND LIB_SRC_FILES ${LIB_SRC_MYSQL_FILES})
+aux_source_directory(core LIB_SRC_FILES)
+
+if(CRYPTO_LIBGCRYPT)
+    aux_source_directory(crypto/libgcrypt LIBGCRYPT_FILES)
+    list(APPEND LIB_SRC_FILES ${LIBGCRYPT_FILES})
 else()
-    aux_source_directory(src_feature_stubs/mysql_stub LIB_SRC_MYSQL_FILES)
-    list(APPEND LIB_SRC_FILES ${LIB_SRC_MYSQL_FILES})
+    aux_source_directory(crypto/libgcrypt_stub LIBGCRYPT_FILES)
+    list(APPEND LIB_SRC_FILES ${LIBGCRYPT_FILES})
 endif()
 
-if(LIBGCRYPT)
-    aux_source_directory(src_cryptography/src_libgcrypt LIB_SRC_LIBGCRYPT_FILES)
-    list(APPEND LIB_SRC_FILES ${LIB_SRC_LIBGCRYPT_FILES})
+if(CRYPTO_KMC)
+    aux_source_directory(crypto/kmc KMC_FILES)
+    list(APPEND LIB_SRC_FILES ${KMC_FILES})
 else()
-    aux_source_directory(src_feature_stubs/cryptography_libgcrypt_stub LIB_SRC_LIBGCRYPT_FILES)
-    list(APPEND LIB_SRC_FILES ${LIB_SRC_LIBGCRYPT_FILES})
+    aux_source_directory(crypto/kmc_stub KMC_FILES)
+    list(APPEND LIB_SRC_FILES ${KMC_FILES})
 endif()
 
-if(KMCCRYPTO)
-    aux_source_directory(src_cryptography/src_kmc_crypto_service LIB_SRC_KMC_CRYPTO_FILES)
-    list(APPEND LIB_SRC_FILES ${LIB_SRC_KMC_CRYPTO_FILES})
+if(CRYPTO_WOLFSSL)
+    aux_source_directory(crypto/wolfssl WOLFSSL_FILES)
+    list(APPEND LIB_SRC_FILES ${WOLFSSL_FILES})
 else()
-    aux_source_directory(src_feature_stubs/cryptography_kmc_stub LIB_SRC_KMC_CRYPTO_FILES)
-    list(APPEND LIB_SRC_FILES ${LIB_SRC_KMC_CRYPTO_FILES})
+    aux_source_directory(crypto/wolfssl_stub WOLFSSL_FILES)
+    list(APPEND LIB_SRC_FILES ${WOLFSSL_FILES})
 endif()
 
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-    include(CTest)
-    enable_testing()
+if(KEY_CUSTOM)
+    # Assumes CryptoLib is a Git submodule to project and custom directories and definitions exist at top level
+    aux_source_directory(../../key/custom KEY_CUSTOM_FILES)
+    list(APPEND LIB_SRC_FILES ${KEY_CUSTOM_FILES})
+else()
+    aux_source_directory(key/custom_stub KEY_CUSTOM_FILES)
+    list(APPEND LIB_SRC_FILES ${KEY_CUSTOM_FILES})
+endif()
+
+if(KEY_INTERNAL)
+    aux_source_directory(key/internal KEY_INTERNAL_FILES)
+    list(APPEND LIB_SRC_FILES ${KEY_INTERNAL_FILES})
+else()
+    aux_source_directory(key/internal_stub KEY_INTERNAL_FILES)
+    list(APPEND LIB_SRC_FILES ${KEY_INTERNAL_FILES})
+endif()
+
+if(KEY_KMC)
+    aux_source_directory(key/kmc KEY_KMC_FILES)
+    list(APPEND LIB_SRC_FILES ${KEY_KMC_FILES})
+else()
+    aux_source_directory(key/kmc_stub KEY_KMC_FILES)
+    list(APPEND LIB_SRC_FILES ${KEY_KMC_FILES})
+endif()
+
+if(MC_CUSTOM)
+    # Assumes CryptoLib is a Git submodule to project and custom directories and definitions exist at top level
+    aux_source_directory(../../mc/custom MC_CUSTOM_FILES)
+    list(APPEND LIB_SRC_FILES ${MC_CUSTOM_FILES})
+else()
+    aux_source_directory(mc/custom_stub MC_CUSTOM_FILES)
+    list(APPEND LIB_SRC_FILES ${MC_CUSTOM_FILES})
+endif()
+
+if(MC_DISABLED)
+    aux_source_directory(mc/disabled MC_DISABLED_FILES)
+    list(APPEND LIB_SRC_FILES ${MC_DISABLED_FILES})
+else()
+    aux_source_directory(mc/disabled_stub MC_DISABLED_FILES)
+    list(APPEND LIB_SRC_FILES ${MC_DISABLED_FILES})
+endif()
+
+if(MC_INTERNAL)
+    aux_source_directory(mc/internal MC_INTERNAL_FILES)
+    list(APPEND LIB_SRC_FILES ${MC_INTERNAL_FILES})
+else()
+    aux_source_directory(mc/internal_stub MC_INTERNAL_FILES)
+    list(APPEND LIB_SRC_FILES ${MC_INTERNAL_FILES})
+endif()
+
+if(SA_CUSTOM)
+    # Assumes CryptoLib is a Git submodule to project and custom directories and definitions exist at top level
+    aux_source_directory(../../sa/custom SA_CUSTOM_FILES)
+    list(APPEND LIB_SRC_FILES ${SA_CUSTOM_FILES})
+else()
+    aux_source_directory(sa/custom_stub SA_CUSTOM_FILES)
+    list(APPEND LIB_SRC_FILES ${SA_CUSTOM_FILES})
+endif()
+
+if(SA_INTERNAL)
+    aux_source_directory(sa/internal SA_INTERNAL_FILES)
+    list(APPEND LIB_SRC_FILES ${SA_INTERNAL_FILES})
+else()
+    aux_source_directory(sa/internal_stub SA_INTERNAL_FILES)
+    list(APPEND LIB_SRC_FILES ${SA_INTERNAL_FILES})
+endif()
+
+if(SA_MARIADB)
+    aux_source_directory(sa/mariadb MARIADB_FILES)
+    list(APPEND LIB_SRC_FILES ${MARIADB_FILES})
+else()
+    aux_source_directory(sa/mariadb_stub MARIADB_FILES)
+    list(APPEND LIB_SRC_FILES ${MARIADB_FILES})
 endif()
 
 # Create the app module
-IF(DEFINED CFE_SYSTEM_PSPNAME)
+if(DEFINED CFE_SYSTEM_PSPNAME)
     set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/cpu${TGTSYS_${SYSVAR}}/${INSTALL_SUBDIR}")
-    add_cfe_app(Crypto ${LIB_SRC_FILES})
-ELSE() 
+    add_cfe_app(crypto ${LIB_SRC_FILES})
+else() 
     # Standalone build
-    add_library(Crypto SHARED ${LIB_SRC_FILES})
-ENDIF()
-
-if(LIBGCRYPT)
-    target_link_libraries(Crypto gcrypt)
+    add_library(crypto SHARED ${LIB_SRC_FILES})
 endif()
 
-if(KMCCRYPTO)
-    target_link_libraries(Crypto curl)
+if(CRYPTO_LIBGCRYPT)
+    target_link_libraries(crypto gcrypt)
 endif()
 
-if(MYSQL)
+if(CRYPTO_KMC)
+    target_link_libraries(crypto curl)
+endif()
+
+if(CRYPTO_WOLFSSL)
+    target_link_libraries(crypto wolfssl)
+endif()
+
+if(SA_MARIADB)
     execute_process(COMMAND mysql_config --cflags
             OUTPUT_VARIABLE MYSQL_CFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
     execute_process(COMMAND mysql_config --libs
             OUTPUT_VARIABLE MYSQL_LIBS OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-    target_compile_options(Crypto PUBLIC ${MYSQL_CFLAGS})
-    target_link_libraries(Crypto ${MYSQL_LIBS})
+    target_compile_options(crypto PUBLIC ${MYSQL_CFLAGS})
+    target_link_libraries(crypto ${MYSQL_LIBS})
 endif()
 
-set_target_properties(Crypto PROPERTIES PUBLIC_HEADER "../include/crypto.h;../include/crypto_config_structs.h;../include/crypto_error.h;../include/crypto_print.h;../include/crypto_structs.h;../include/crypto_config.h;")
+file(GLOB CRYPTO_INCLUDES ../include/*.h)
+set_target_properties(crypto PROPERTIES PUBLIC_HEADER "${CRYPTO_INCLUDES}")
 
-add_custom_command(TARGET Crypto POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:Crypto> ${PROJECT_BINARY_DIR}/lib/libCrypto.so
+add_custom_command(TARGET crypto POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:crypto> ${PROJECT_BINARY_DIR}/lib/libcrypto.so
         COMMENT "Created ${PROJECT_BINARY_DIR}/lib/libCrypto.so"
         )
 
-        
-IF(DEFINED CFE_SYSTEM_PSPNAME)
-    install(TARGETS Crypto 
-            DESTINATION ${CMAKE_INSTALL_PREFIX}/cpu${TGTSYS_${SYSVAR}}/${INSTALL_SUBDIR})
-ELSE()
-    install(TARGETS Crypto
+if(DEFINED CFE_SYSTEM_PSPNAME)
+    install(TARGETS crypto 
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/${TGTSYS_${SYSVAR}}/${INSTALL_SUBDIR}
+            PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/host)
+else()
+    install(TARGETS crypto
             DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
             PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
-ENDIF()
+endif()
 
-IF(MYSQL)
-    file(GLOB MYSQL_SCRIPTS crypto_sadb/sadb_mariadb_sql/*.sql)
-    file(GLOB MYSQL_TEST_SCRIPTS crypto_sadb/test_sadb_mariadb_sql/*.sql)
+if(SA_MARIADB)
+    file(GLOB MYSQL_SCRIPTS sa/sa_mariadb_sql/*.sql)
+    file(GLOB MYSQL_TEST_SCRIPTS sa/test_sa_mariadb_sql/*.sql)
     install(FILES ${MYSQL_SCRIPTS}
-            DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/sadb_mariadb_sql)
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/sa_mariadb_sql)
     install(FILES ${MYSQL_TEST_SCRIPTS}
-            DESTINATION ${CMAKE_INSTALL_PREFIX}/test/test_sadb_mariadb_sql)
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/test/test_sa_mariadb_sql)
 endif()

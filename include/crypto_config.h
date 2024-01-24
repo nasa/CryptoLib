@@ -15,8 +15,8 @@
    NASA IV&V
    jstar-development-team@mail.nasa.gov
 */
-#ifndef _crypto_config_h_
-#define _crypto_config_h_
+#ifndef CRYPTO_CONFIG_H
+#define CRYPTO_CONFIG_H
 
 // Build Defines
 //#define BUILD_STATIC
@@ -61,7 +61,7 @@
 #define TC_MAX_FRAME_SIZE 1024
 
 // Spacecraft Defines
-#define SCID 0x0003 //44 //0x0003 // 0xC3D2
+#define SCID 0x0003
 
 // Functionality Defines
 #define INCREMENT
@@ -117,14 +117,15 @@
 #define IV_SIZE 16   /* TM IV size bytes */
 #define IV_SIZE_TC 4 /* TC IV size bytes */
 #define OCF_SIZE 4
-#define MAC_SIZE 16 /* bytes */ /* Deprecated, todo - remove throughout & use SA mac field specification */
+#define MAC_SIZE 16           /* bytes */
 #define FECF_SIZE 2
-#define SEGMENT_HDR_SIZE 1
-#define ECS_SIZE 4    /* bytes */
-#define ABM_SIZE 1024 // 20      /* bytes */
-#define ARSN_SIZE 20   /* total messages */
-#define ARSNW_SIZE 1   /* bytes */
-#define SN_SIZE 0
+#define TC_SEGMENT_HDR_SIZE 1
+#define ECS_SIZE 4            /* bytes */
+#define ABM_SIZE 1786         /* bytes */
+#define ARSN_SIZE 20          /* total messages */
+#define ARSNW_SIZE 1          /* bytes */
+#define SN_SIZE 16            /* bytes */
+#define PAD_SIZE 32           /* bytes */
 #define CHALLENGE_SIZE 16     /* bytes */
 #define CHALLENGE_MAC_SIZE 16 /* bytes */
 
@@ -136,33 +137,33 @@
 
 // Procedure Identification (PID)
 // Service Group - Key Management
-#define SG_KEY_MGMT 0b00
-#define PID_OTAR 0b0001
-#define PID_KEY_ACTIVATION 0b0010
-#define PID_KEY_DEACTIVATION 0b0011
-#define PID_KEY_VERIFICATION 0b0100
-#define PID_KEY_DESTRUCTION 0b0110
-#define PID_KEY_INVENTORY 0b0111
+#define SG_KEY_MGMT 0x00 // 0b00
+#define PID_OTAR 0x01 // 0b0001
+#define PID_KEY_ACTIVATION 0x02 // 0b0010
+#define PID_KEY_DEACTIVATION 0x03 //0b0011
+#define PID_KEY_VERIFICATION 0x04 // 0b0100
+#define PID_KEY_DESTRUCTION 0x06 // 0b0110
+#define PID_KEY_INVENTORY 0x07 // 0b0111
 // Service Group - Security Association Management
-#define SG_SA_MGMT 0b01
-#define PID_CREATE_SA 0b0001
-#define PID_REKEY_SA 0b0110
-#define PID_START_SA 0b1011
-#define PID_STOP_SA 0b1110
-#define PID_EXPIRE_SA 0b1001
-#define PID_DELETE_SA 0b0100
-#define PID_SET_ARSN 0b1010
-#define PID_SET_ARSNW 0b0101
-#define PID_READ_ARSN 0b0000
-#define PID_SA_STATUS 0b1111
+#define SG_SA_MGMT 0x01 // 0b01
+#define PID_CREATE_SA 0x01 //0b0001
+#define PID_REKEY_SA 0x05 //0b0110
+#define PID_START_SA 0x0B //0b1011
+#define PID_STOP_SA 0x0E // 0b1110
+#define PID_EXPIRE_SA 0x09 // 0b1001
+#define PID_DELETE_SA 0x04 // 0b0100
+#define PID_SET_ARSN 0x0A //0b1010
+#define PID_SET_ARSNW 0x06 // 0b0101
+#define PID_READ_ARSN 0x00 // 0b0000
+#define PID_SA_STATUS 0x0F // 0b1111
 // Service Group - Security Monitoring & Control
-#define SG_SEC_MON_CTRL 0b11
-#define PID_PING 0b0001
-#define PID_LOG_STATUS 0b0010
-#define PID_DUMP_LOG 0b0011
-#define PID_ERASE_LOG 0b0100
-#define PID_SELF_TEST 0b0101
-#define PID_ALARM_FLAG 0b0111
+#define SG_SEC_MON_CTRL 0x03 // 0b11
+#define PID_PING 0x01 // 0b0001
+#define PID_LOG_STATUS 0x02 //0b0010
+#define PID_DUMP_LOG 0x03 // 0b0011
+#define PID_ERASE_LOG 0x04 // 0b0100
+#define PID_SELF_TEST 0x05 // 0b0101
+#define PID_ALARM_FLAG 0x07 // 0b0111
 
 // TC Defines
 #define TC_SH_SIZE 8 /* bits */
@@ -174,16 +175,30 @@
 #define TLV_DATA_SIZE 494 /* bytes */
 
 // TM Defines
-#define TM_FRAME_DATA_SIZE 1740 /* bytes */
+#define TM_FRAME_DATA_SIZE 1786 /* bytes */
 #define TM_FILL_SIZE 1145       /* bytes */
 #define TM_PAD_SIZE 2           /* bytes */
+
+// AOS Defines
+#define AOS_FRAME_DATA_SIZE 1786 /* bytes */
+#define AOS_FILL_SIZE 1145       /* bytes */
 
 // TC Behavior Defines
 #define TC_SDLS_EP_VCID                                                                                                \
     4 // VCID which has SDLS PDUs (JPL uses VCIDs to determine TC type, there is no space packet layer with APIDs). Set
       // to -1 if uses SP APIDs.
 
+// TM Behavior Defines
+#define TM_CADU_HAS_ASM 1 // Skip 0x1acffc1d at beginning of each frame
+// TM CADU based on ASM, currently only holds non-turbo ASM
+#ifdef TM_CADU_HAS_ASM
+   #define TM_CADU_SIZE (TM_FRAME_DATA_SIZE + 6)
+#else
+   #define TM_CADU_SIZE TM_FRAME_DATA_SIZE
+#endif
+
 // Logic Behavior Defines
 #define CRYPTO_FALSE 0
 #define CRYPTO_TRUE 1
-#endif
+
+#endif //CRYPTO_CONFIG_H

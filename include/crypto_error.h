@@ -15,8 +15,8 @@
    NASA IV&V
    jstar-development-team@mail.nasa.gov
 */
-#ifndef _crypto_error_h_
-#define _crypto_error_h_
+#ifndef CRYPTO_ERROR_H
+#define CRYPTO_ERROR_H
 
 /*
  * If error codes are added to this header file, their enum string must be added to the error lists (in crypto_error.c)
@@ -116,16 +116,20 @@
 #define CRYPTO_LIB_ERR_UNSUPPORTED_MODE (-44)
 #define CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_TM_STANDARD (-45)
 #define CRYPTO_LIB_ERR_TC_ENUM_USED_FOR_TM_CONFIG (-46)
+#define CRYPTO_LIB_ERR_KEY_ID_ERROR (-47)
+#define CRYPTO_LIB_ERR_MC_INIT (-48)
+#define CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_AOS_STANDARD (-49)
+#define CRYPTO_LIB_ERR_TC_ENUM_USED_FOR_AOS_CONFIG (-50)
 
 extern char *crypto_enum_errlist_core[];
 extern char *crypto_enum_errlist_config[];
-extern char *crypto_enum_errlist_sadb_if[];
-extern char *crypto_enum_errlist_sadb_mariadb[];
+extern char *crypto_enum_errlist_sa_if[];
+extern char *crypto_enum_errlist_sa_mariadb[];
 extern char *crypto_enum_errlist_crypto_if[];
 extern char *crypto_enum_errlist_crypto_kmc[];
 extern char *crypto_enum_errlist_crypto_cam[];
 
-#define CRYPTO_UNDEFINED_ERROR "CRYPTO_UNDEFINED_ERROR_CODE"
+#define CRYPTO_UNDEFINED_ERROR (char*) "CRYPTO_UNDEFINED_ERROR_CODE"
 
 
-#endif //_crypto_error_h_
+#endif //CRYPTO_ERROR_H

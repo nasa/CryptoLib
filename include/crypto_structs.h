@@ -16,8 +16,8 @@
    jstar-development-team@mail.nasa.gov
 */
 
-#ifndef _crypto_structs_h_
-#define _crypto_structs_h_
+#ifndef CRYPTO_STRUCTS_H
+#define CRYPTO_STRUCTS_H
 
 #include "crypto_config.h"
 
@@ -25,19 +25,15 @@
 #include "common_types.h"
 #else // Assume build outside of NOS3/cFS infrastructure
 #include <stdint.h>
+#ifndef KMC_CFFI_EXCLUDE // Exclude libraries that CFFI parser can’t process
+#include <stdio.h>
+#include <stdlib.h>
+#endif
 #endif
 
 /*
-** Key Definitions
+** Definitions
 */
-typedef struct
-{
-    uint8_t value[KEY_SIZE];
-    uint32_t key_len;
-    uint8_t key_state : 4;
-} crypto_key_t;
-#define CRYPTO_KEY_SIZE (sizeof(crypto_key_t))
-
 typedef struct
 {                       // Global Virtual Channel ID / Global MAP ID
     uint8_t tfvn : 4;   // Transfer Frame Version Number
@@ -70,18 +66,18 @@ typedef struct
     uint8_t shsnf_len : 6;  // Sec. Header SN Field Length
     uint8_t shplf_len : 2;  // Sec. Header PL Field Length
     uint8_t stmacf_len : 8; // Sec. Trailer MAC Field Length
-    uint8_t* ecs;           // Encryption Cipher Suite (algorithm / mode ID)
+    uint8_t ecs;            // Encryption Cipher Suite (algorithm / mode ID)
     uint8_t ecs_len : 8;    // Encryption Cipher Suite Length
-    uint8_t* iv;            // Initialization Vector
+    uint8_t iv[IV_SIZE];    // Initialization Vector
     uint8_t iv_len;         // Length of entire IV
     uint8_t acs_len : 8;    // Authentication Cipher Suite Length
-    uint8_t* acs;        // Authentication Cipher Suite (algorithm / mode ID)
+    uint8_t acs;            // Authentication Cipher Suite (algorithm / mode ID)
     uint16_t abm_len : 16;  // Authentication Bit Mask Length
-    uint8_t* abm;           // Authentication Bit Mask (Primary Hdr. through Security Hdr.)
-    uint8_t arsn_len : 8;    // Anti-Replay Seq Num Length
-    uint8_t* arsn;           // Anti-Replay Seq Num
-    uint8_t arsnw_len : 8;   // Anti-Replay Seq Num Window Length
-    uint16_t arsnw;          // Anti-Replay Seq Num Window
+    uint8_t abm[ABM_SIZE];  // Authentication Bit Mask (Primary Hdr. through Security Hdr.)
+    uint8_t arsn_len : 8;   // Anti-Replay Seq Num Length
+    uint8_t arsn[ARSN_SIZE];// Anti-Replay Seq Num
+    uint8_t arsnw_len : 8;  // Anti-Replay Seq Num Window Length
+    uint16_t arsnw;         // Anti-Replay Seq Num Window
 
 } SecurityAssociation_t;
 #define SA_SIZE (sizeof(SecurityAssociation_t))
@@ -261,18 +257,18 @@ typedef struct
 {
     uint8_t sh : TC_SH_SIZE;  // Segment Header
     uint16_t spi;             // Security Parameter Index
-    uint8_t* iv;      // Initialization Vector for encryption
+    uint8_t iv[IV_SIZE];      // Initialization Vector for encryption
     uint8_t iv_field_len;
-    uint8_t* sn;   // Sequence Number for anti-replay
+    uint8_t sn[SN_SIZE];      // Sequence Number for anti-replay
     uint8_t sn_field_len;
-    uint8_t* pad; // Count of the used fill Bytes
+    uint8_t pad[PAD_SIZE];    // Count of the used fill Bytes
     uint8_t pad_field_len;
 } TC_FrameSecurityHeader_t;
 #define TC_FRAME_SECHEADER_SIZE (sizeof(TC_FrameSecurityHeader_t))
 
 typedef struct
 {
-    uint8_t* mac; // Message Authentication Code
+    uint8_t mac[MAC_SIZE]; // Message Authentication Code
     uint8_t mac_field_len;
     uint16_t fecf;         // Frame Error Control Field
 } TC_FrameSecurityTrailer_t;
@@ -333,6 +329,49 @@ typedef struct
 #define CCSDS_SIZE (sizeof(CCSDS_t))
 
 /*
+** Operational Control Field definition
+** Telemetry frames can reply with either of these in their OCF field:
+** 1) A Communications Control Link Word -or- 
+** 2) A Frame Security Report
+*/
+
+// INFO: This is the Communications Link Control Word register format
+typedef struct
+{
+    uint8_t cwt : 1;    // Control Word Type "0"
+    uint8_t cvn : 2;    // CLCW Version Number "00"
+    uint8_t sf : 3;     // Status Field
+    uint8_t cie : 2;    // COP In Effect
+    uint8_t vci : 6;    // Virtual Channel Identification
+    uint8_t spare0 : 2; // Reserved Spare
+    uint8_t nrfa : 1;   // No RF Avaliable Flag
+    uint8_t nbl : 1;    // No Bit Lock Flag
+    uint8_t lo : 1;     // Lock-Out Flag
+    uint8_t wait : 1;   // Wait Flag
+    uint8_t rt : 1;     // Retransmit Flag
+    uint8_t fbc : 2;    // FARM-B Counter
+    uint8_t spare1 : 1; // Reserved Spare
+    uint8_t rv : 8;     // Report Value
+} Telemetry_Frame_Clcw_t;
+
+#define TM_FRAME_CLCW_SIZE (sizeof(Telemetry_Frame_Clcw_t))
+
+// INFO: This is the Frame Security Report register format
+typedef struct
+{
+    uint8_t cwt : 1;    // Control Word Type "1"
+    uint8_t fvn : 3;    // FSR Version Number "100"
+    uint8_t af : 1;     // Alarm Flag
+    uint8_t bsnf : 1;   // Bad Sequence Number Flag
+    uint8_t bmf : 1;    // Bad Mac Flag
+    uint8_t bsaf : 1;   // Bad Security Association Flag
+    uint16_t lspi : 16; // Last SPI Used
+    uint8_t snv : 8;    // Sequence Number Value (LSB)
+} Telemetry_Frame_Fsr_t;
+
+#define TELEMETRY_FRAME_OCF_SIZE (sizeof(Telemetry_Frame_Fsr_t))
+
+/*
 ** Telemetry (TM) Definitions
 */
 typedef struct
@@ -340,7 +379,7 @@ typedef struct
     uint8_t tfvn : 2;   // Transfer Frame Version Number
     uint16_t scid : 10; // Spacecraft ID
     uint8_t vcid : 3;   // Virtual Channel ID
-    uint8_t ocff : 1;   // Describes wether OCF is present or not
+    uint8_t ocff : 1;   // Describes whether OCF is present or not
     uint8_t mcfc : 8;   // Master Channel Frame Count (modulo-256)
     uint8_t vcfc : 8;   // Virtual Channel Frame Count (modulo-256)
     uint8_t tfsh : 1;   // Transfer Frame Secondary Header
@@ -380,25 +419,6 @@ typedef struct
 
 typedef struct
 {
-    uint8_t cwt : 1;    // Control Word Type "0"
-    uint8_t cvn : 2;    // CLCW Version Number "00"
-    uint8_t sf : 3;     // Status Field
-    uint8_t cie : 2;    // COP In Effect
-    uint8_t vci : 6;    // Virtual Channel Identification
-    uint8_t spare0 : 2; // Reserved Spare
-    uint8_t nrfa : 1;   // No RF Avaliable Flag
-    uint8_t nbl : 1;    // No Bit Lock Flag
-    uint8_t lo : 1;     // Lock-Out Flag
-    uint8_t wait : 1;   // Wait Flag
-    uint8_t rt : 1;     // Retransmit Flag
-    uint8_t fbc : 2;    // FARM-B Counter
-    uint8_t spare1 : 1; // Reserved Spare
-    uint8_t rv : 8;     // Report Value
-} TM_FrameCLCW_t;
-#define TM_FRAME_CLCW_SIZE (sizeof(TM_FrameCLCW_t))
-
-typedef struct
-{
     TM_FramePrimaryHeader_t tm_header;
     TM_FrameSecurityHeader_t tm_sec_header;
     uint8_t tm_pdu[TM_FRAME_DATA_SIZE];
@@ -409,4 +429,61 @@ typedef struct
 #define TM_MIN_SIZE                                                                                                    \
     (TM_FRAME_PRIMARYHEADER_SIZE + TM_FRAME_SECHEADER_SIZE + TM_FRAME_SECTRAILER_SIZE + TM_FRAME_CLCW_SIZE)
 
-#endif
+/*
+** Advanced Orbiting Systems (AOS) Definitions
+*/
+typedef struct
+{
+    uint8_t tfvn : 2;   // Transfer Frame Version Number
+                        // Shall be set to '01' (732.0b4 Section 4.1.2.2.2)
+    uint16_t scid : 8;  // Spacecraft ID
+    uint8_t vcid : 6;   // Virtual Channel ID
+                        // To be all zeros if only one VC used (732.0b4 Section 4.1.2.3)
+    long vcfc : 24;  // Virtual Channel Frame Count (modulo-16,777,216)
+    /* Begin TF Signalling Field */
+    uint8_t rf : 1;     // Replay Flag
+    uint8_t sf : 1;     // VC Frame Count Usgae Flag
+                        // 0 = Payload is either idle data or octet synchronized forward-ordered packets
+                        // 1 = Data is a virtual channel access data unit
+    uint8_t spare : 2;  // Reserved Spare
+                        // 0 = Shall be set to 0
+                        // Sync Flag 1 = Undefined
+    uint8_t vfcc : 2;   // VC Frame Count cycle
+                        // Sync Flag 0 = Shall be 11
+                        // Sync Flag 1 = Undefined
+    uint16_t fhp : 11;  // First Header Pointer
+                        // Sync Flag 0 = Contains position of the first byte of the first packet in the data field
+                        // Sync Flag 1 = undefined
+} AOS_FramePrimaryHeader_t;
+#define AOS_FRAME_PRIMARYHEADER_SIZE (sizeof(AOS_FramePrimaryHeader_t))
+
+typedef struct
+{
+    uint16_t spi;        // Security Parameter Index
+    uint8_t iv[IV_SIZE]; // Initialization Vector for encryption
+    // uint8_t	sn[TM_SN_SIZE]; 	// Sequence Number for anti-replay
+    // uint8_t	pad[TM_PAD_SIZE]; 	// Count of the used fill Bytes
+} AOS_FrameSecurityHeader_t;
+#define AOS_FRAME_SECHEADER_SIZE (sizeof(AOS_FrameSecurityHeader_t))
+
+typedef struct
+{
+    uint8_t mac[MAC_SIZE]; // Message Authentication Code
+    uint8_t ocf[OCF_SIZE]; // Operational Control Field
+    uint16_t fecf;         // Frame Error Control Field
+} AOS_FrameSecurityTrailer_t;
+#define AOS_FRAME_SECTRAILER_SIZE (sizeof(AOS_FrameSecurityTrailer_t))
+
+typedef struct
+{
+    AOS_FramePrimaryHeader_t tm_header;
+    AOS_FrameSecurityHeader_t tm_sec_header;
+    uint8_t aos_pdu[AOS_FRAME_DATA_SIZE];
+    AOS_FrameSecurityTrailer_t aos_sec_trailer;
+} AOS_t;
+#define AOS_SIZE (sizeof(AOS_t))
+
+#define AOS_MIN_SIZE                                                                                                    \
+    (AOS_FRAME_PRIMARYHEADER_SIZE + AOS_FRAME_SECHEADER_SIZE + AOS_FRAME_SECTRAILER_SIZE + AOS_FRAME_OCF_SIZE)
+
+#endif //CRYPTO_STRUCTS_H

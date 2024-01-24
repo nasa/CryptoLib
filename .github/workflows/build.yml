@@ -1,166 +1,118 @@
-name: Build
+name: CryptoLib
 
 on: 
   push:
     branches: [ main, dev ]
   pull_request:
+    branches: [ main, dev ]
 
 jobs:
-  debug_libgcrypt_build:
-    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
-    # You can convert this to a matrix build if you need cross-platform coverage.
-    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v2
-
-    - name: Update
-      run: sudo apt-get update
-
-    - name: Install Dependencies
-      run: sudo apt-get install -y libgpg-error-dev libgcrypt20-dev libmariadb-dev libmariadb-dev-compat
-
-    - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DDEBUG=1 -DMYSQL=0 -DLIBGCRYPT=1 -DKMCCRYPTO=0
-
-    - name: Build
-      # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build 
-   
-    - name: Test
-      working-directory: ${{github.workspace}}/build
-      # Execute tests defined by the CMake configuration.  
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ctest -C ${{env.BUILD_TYPE}}
-  libgcrypt_build:
+  #
+  # Minimal Build
+  #
+  minimal_build:
+    # Container Setup
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-
     - name: Update
       run: sudo apt-get update
-
     - name: Install Dependencies
-      run: sudo apt-get install -y libgpg-error-dev libgcrypt20-dev libmariadb-dev libmariadb-dev-compat libcurl4-openssl-dev
-
-    - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DDEBUG=0 -DMYSQL=0 -DLIBGCRYPT=1 -DKMCCRYPTO=0
-
-    - name: Build
-      # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build 
-   
-    - name: Test
-      working-directory: ${{github.workspace}}/build
-      # Execute tests defined by the CMake configuration.  
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ctest -C ${{env.BUILD_TYPE}}
-      
-  sql_libgcrypt_debug_build:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-
-    - name: Update
-      run: sudo apt-get update
-
-    - name: Install Dependencies
-      run: sudo apt-get install -y libgpg-error-dev libgcrypt20-dev libmariadb-dev libmariadb-dev-compat libcurl4-openssl-dev
-
-    - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DDEBUG=1 -DMYSQL=1 -DLIBGCRYPT=1 -DKMCCRYPTO=0
-
-    - name: Build
-      # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build 
-   
-    - name: Test
-      working-directory: ${{github.workspace}}/build
-      # Execute tests defined by the CMake configuration.  
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ctest -C ${{env.BUILD_TYPE}}
+      run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat libgcrypt20-dev python3 
+    - name: Install Python Libraries
+      run: sudo pip install pycryptodome
+    # End Container Setup
     
-  sql_libgcrypt_build:
+    - name: Minimal Build Script
+      working-directory: ${{github.workspace}}
+      run: bash ${GITHUB_WORKSPACE}/support/scripts/build_minimal.sh
+
+  #
+  # Internal Build
+  #
+  internal_build:
+    # Container Setup
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-
     - name: Update
       run: sudo apt-get update
-
     - name: Install Dependencies
-      run: sudo apt-get install -y libgpg-error-dev libgcrypt20-dev libmariadb-dev libmariadb-dev-compat libcurl4-openssl-dev
+      run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat libgcrypt20-dev python3
+    - name: Install Python Libraries
+      run: sudo pip install pycryptodome
+    # End Container Setup
+    
+    - name: Internal Build Script
+      working-directory: ${{github.workspace}}
+      run: bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
 
-    - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DDEBUG=0 -DMYSQL=1 -DLIBGCRYPT=1 -DKMCCRYPTO=0
+    - name: Code-Coverage
+      working-directory: ${{github.workspace}}
+      run: make gcov
 
-    - name: Build
-      # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build  
-   
-    - name: Test
-      working-directory: ${{github.workspace}}/build
-      # Execute tests defined by the CMake configuration.  
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ctest -C ${{env.BUILD_TYPE}}
+    - name: Upload 
+      uses: codecov/codecov-action@v3
+      env:
+        CODECOV_TOKEN: 71699f25-12a3-44a4-8a83-be777b9e577a
+      with:
+        files: 'coverage/*.c.gcov'
 
-  sql_libgcrypt_kmc_debug_build:
+  #
+  # KMC Build
+  #
+  kmc_build:
+    # Container Setup
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-
     - name: Update
       run: sudo apt-get update
-
     - name: Install Dependencies
-      run: sudo apt-get install -y libgpg-error-dev libgcrypt20-dev libmariadb-dev libmariadb-dev-compat libcurl4-openssl-dev
+      run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat libgcrypt20-dev python3
+    - name: Install Python Libraries
+      run: sudo pip install pycryptodome
+    # End Container Setup
+    
+    - name: KMC Build Script
+      working-directory: ${{github.workspace}}
+      run: bash ${GITHUB_WORKSPACE}/support/scripts/build_kmc.sh
 
-    - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DDEBUG=1 -DMYSQL=1 -DLIBGCRYPT=1 -DKMCCRYPTO=1
-
-    - name: Build
-      # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build 
-   
-    - name: Test
-      working-directory: ${{github.workspace}}/build
-      # Execute tests defined by the CMake configuration.  
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ctest -C ${{env.BUILD_TYPE}}
-
-  sql_libgcrypt_kmc_build:
+  #
+  # Wolf Build
+  #
+  wolf_build:
+    # Container Setup
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-
     - name: Update
       run: sudo apt-get update
-
     - name: Install Dependencies
-      run: sudo apt-get install -y libgpg-error-dev libgcrypt20-dev libmariadb-dev libmariadb-dev-compat libcurl4-openssl-dev
-
-    - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DDEBUG=0 -DMYSQL=1 -DLIBGCRYPT=1 -DKMCCRYPTO=1
-
-    - name: Build
-      # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build 
+      run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat libgcrypt20-dev python3 autoconf libtool
+    - name: Install Python Libraries
+      run: sudo pip install pycryptodome
+    - name: Clone WolfSSL
+      run: git clone --depth 1 --branch v5.6.0-stable https://github.com/wolfSSL/wolfssl.git /tmp/wolfssl
    
-    - name: Test
-      working-directory: ${{github.workspace}}/build
-      # Execute tests defined by the CMake configuration.  
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ctest -C ${{env.BUILD_TYPE}}
+     #      cmake -DCMAKE_INSTALL_PREFIX=/home/runner/.local -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
+    - name: Build WolfSSL
+      #  -DCMAKE_INSTALL_PREFIX=/home/runner/.local
+      #run: cd /tmp/wolfssl/;
+      #     sudo chown -R runner /usr/local; 
+      #     ./autogen.sh;
+      #     ./configure --enable-aesccm --enable-aessiv --enable-cmac;
+      #     make;
+      #     make install;
+      #sudo chown -R runner /usr/local;
+      run: mkdir /tmp/wolfssl/build;
+           cd /tmp/wolfssl/build;
+           cmake -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
+           cmake --build .;
+           sudo make install;
+           sudo ldconfig;
+    # End Container Setup
+    
+    - name: Wolf Build Script
+      working-directory: ${{github.workspace}}
+      run: bash ${GITHUB_WORKSPACE}/support/scripts/build_wolf.sh

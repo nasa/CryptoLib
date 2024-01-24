@@ -16,8 +16,8 @@
    jstar-development-team@mail.nasa.gov
 */
 
-#ifndef _crypto_print_h_
-#define _crypto_print_h_
+#ifndef CRYPTO_PRINT_H
+#define CRYPTO_PRINT_H
 
 /*
 ** Includes
@@ -30,11 +30,12 @@
 */
 void Crypto_tcPrint(TC_t* tc_frame);
 void Crypto_tmPrint(TM_t* tm_frame);
-void Crypto_clcwPrint(TM_FrameCLCW_t* clcw);
+void Crypto_clcwPrint(Telemetry_Frame_Clcw_t* clcw);
 void Crypto_fsrPrint(SDLS_FSR_t* report);
 void Crypto_ccsdsPrint(CCSDS_t* sdls_frame);
 void Crypto_saPrint(SecurityAssociation_t* sa);
 void Crypto_hexprint(const void* c, size_t n);
 void Crypto_binprint(void* c, size_t n);
 void Crypto_mpPrint(GvcidManagedParameters_t* managed_parameters, uint8_t print_children);
-#endif
+
+#endif //CRYPTO_PRINT_H

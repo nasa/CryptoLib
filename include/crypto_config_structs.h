@@ -15,8 +15,8 @@ ITC Team
 NASA IV&V
 ivv-itc@lists.nasa.gov
 */
-#ifndef _crypto_config_structs_h_
-#define _crypto_config_structs_h_
+#ifndef CRYPTO_CONFIG_STRUCTS_H
+#define CRYPTO_CONFIG_STRUCTS_H
 
 #include "crypto_config.h"
 
@@ -29,42 +29,101 @@ ivv-itc@lists.nasa.gov
 // main config enums
 typedef enum
 {
-    SADB_TYPE_INMEMORY,
-    SADB_TYPE_MARIADB
+    UNITIALIZED = 0,
+    INITIALIZED
+} InitStatus;
+typedef enum
+{
+    KEY_TYPE_UNITIALIZED = 0,
+    KEY_TYPE_CUSTOM,
+    KEY_TYPE_INTERNAL,
+    KEY_TYPE_KMC
+} KeyType;
+typedef enum
+{
+    MC_TYPE_UNITIALIZED = 0,
+    MC_TYPE_CUSTOM,
+    MC_TYPE_DISABLED,
+    MC_TYPE_INTERNAL
+} McType;
+typedef enum
+{
+    SA_TYPE_UNITIALIZED = 0,
+    SA_TYPE_CUSTOM,
+    SA_TYPE_INMEMORY,
+    SA_TYPE_MARIADB
 } SadbType;
 typedef enum
 {
+    CRYPTOGRAPHY_TYPE_UNITIALIZED = 0,
     CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-    CRYPTOGRAPHY_TYPE_KMCCRYPTO
+    CRYPTOGRAPHY_TYPE_KMCCRYPTO,
+    CRYPTOGRAPHY_TYPE_WOLFSSL
 } CryptographyType;
-// gvcid managed parameter enums
+/***************************************
+** GVCID Managed Parameter enums
+****************************************/
+typedef enum
+{
+    IV_INTERNAL,
+    IV_CRYPTO_MODULE
+} IvType;
 typedef enum
 {
     TC_NO_FECF,
     TC_HAS_FECF,
     TM_NO_FECF,
-    TM_HAS_FECF
+    TM_HAS_FECF,
+    AOS_NO_FECF,
+    AOS_HAS_FECF
 } FecfPresent;
 typedef enum
 {
     CRYPTO_TC_CREATE_FECF_FALSE,
     CRYPTO_TC_CREATE_FECF_TRUE,
     CRYPTO_TM_CREATE_FECF_FALSE,
-    CRYPTO_TM_CREATE_FECF_TRUE
+    CRYPTO_TM_CREATE_FECF_TRUE,
+    CRYPTO_AOS_CREATE_FECF_FALSE,
+    CRYPTO_AOS_CREATE_FECF_TRUE
 } CreateFecfBool;
+typedef enum
+{
+    AOS_FHEC_NA,
+    AOS_NO_FHEC,
+    AOS_HAS_FHEC
+} AosFhecPresent;
+typedef enum
+{
+    AOS_IZ_NA,
+    AOS_NO_IZ,
+    AOS_HAS_IZ
+} AosInsertZonePresent;
 typedef enum
 {
     TC_CHECK_FECF_FALSE,
     TC_CHECK_FECF_TRUE,
     TM_CHECK_FECF_FALSE,
-    TM_CHECK_FECF_TRUE
+    TM_CHECK_FECF_TRUE,
+    AOS_CHECK_FECF_FALSE,
+    AOS_CHECK_FECF_TRUE
 } CheckFecfBool;
-// TC specific enums
+typedef enum
+{
+    AOS_NO_OCF,
+    AOS_HAS_OCF,
+    TC_OCF_NA,
+    TM_NO_OCF,
+    TM_HAS_OCF
+} OcfPresent;
+/***************************************
+** TC specific enums
+****************************************/
 typedef enum
 {
     TC_NO_SEGMENT_HDRS,
     TC_HAS_SEGMENT_HDRS,
-    TM_SEGMENT_HDRS_NA
+    TM_SEGMENT_HDRS_NA, // Invalid for TM
+    AOS_SEGMENT_HDRS_NA // Invalid for AOS
 } TcSegmentHdrsPresent;
 typedef enum
 {
@@ -96,15 +155,9 @@ typedef enum
     SA_INCREMENT_NONTRANSMITTED_IV_FALSE,
     SA_INCREMENT_NONTRANSMITTED_IV_TRUE
 } SaIncrementNonTransmittedIvPortion;
-// TM specific enums
-typedef enum
-{
-    AOS_NO_OCF,
-    AOS_HAS_OCF,
-    TC_OCF_NA,
-    TM_NO_OCF,
-    TM_HAS_OCF
-} OcfPresent;
+/***************************************
+** Telemetry specific enums
+****************************************/
 typedef enum
 {
     TM_NO_SECONDARY_HDR,
@@ -146,8 +199,12 @@ typedef enum
 */
 typedef struct
 {
-    SadbType sadb_type;
+    InitStatus init_status;
+    KeyType key_type;
+    McType mc_type;
+    SadbType sa_type;
     CryptographyType cryptography_type;
+    IvType iv_type; // Whether or not CryptoLib should generate the IV
     CreateFecfBool crypto_create_fecf; // Whether or not CryptoLib is expected to calculate TC FECFs and return
                                          // payloads with the FECF
     TcProcessSdlsPdus process_sdls_pdus; // Config to process SDLS extended procedure PDUs in CryptoLib
@@ -168,6 +225,9 @@ struct _GvcidManagedParameters_t
     uint16_t scid : 10; // SpacecraftID
     uint8_t vcid : 6;   // Virtual Channel ID
     FecfPresent has_fecf;
+    AosFhecPresent aos_has_fhec;
+    AosInsertZonePresent aos_has_iz;
+    uint16_t aos_iz_len;
     TcSegmentHdrsPresent has_segmentation_hdr;
     uint16_t max_frame_size; // Maximum TC/TM Frame Length with headers
     OcfPresent has_ocf;
@@ -233,5 +293,4 @@ typedef struct
 } CamConfig_t;
 #define CAM_CONFIG_SIZE (sizeof(CamConfig_t))
 
-
-#endif
+#endif //CRYPTO_CONFIG_STRUCTS_H
