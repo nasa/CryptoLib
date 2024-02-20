@@ -127,7 +127,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Update
-      run: yum update
+      run: yum update -y
     - name: Install Dependencies
       run: yum install -y python38-devel libcurl-devel libgpg-error-devel libgcrypt-devel git cmake gcc java-11-openjdk-devel openssl wget mariadb-devel mariadb-common mariadb-connector-c mariadb-connector-c-config mariadb-errmsg mariadb-gssapi-server 
       # Might want to trim this down, but these dependencies should work for KMC
