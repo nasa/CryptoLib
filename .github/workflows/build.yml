@@ -124,17 +124,17 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: rockylinux/rockylinux:8
-  steps:
-  - uses: actions/checkout@v2
-  - name: Update
-    run: sudo yum update
-  - name: Install Dependencies
-    run: sudo yum install -y python38-devel libcurl-devel libgpg-error-devel libgcrypt-devel git cmake gcc java-11-openjdk-devel openssl wget mariadb-devel mariadb-common mariadb-connector-c mariadb-connector-c-config mariadb-errmsg mariadb-gssapi-server 
-    # Might want to trim this down, but these dependencies should work for KMC
-  - name: Install Python Dependencies
-    run: sudo pip3 install pycryptodome
-  # End Container Setup
+    steps:
+    - uses: actions/checkout@v2
+    - name: Update
+      run: sudo yum update
+    - name: Install Dependencies
+      run: sudo yum install -y python38-devel libcurl-devel libgpg-error-devel libgcrypt-devel git cmake gcc java-11-openjdk-devel openssl wget mariadb-devel mariadb-common mariadb-connector-c mariadb-connector-c-config mariadb-errmsg mariadb-gssapi-server 
+      # Might want to trim this down, but these dependencies should work for KMC
+    - name: Install Python Dependencies
+      run: sudo pip3 install pycryptodome
+    # End Container Setup
 
-  - name: RHEL Build Script
-    working-directory: ${{github.workspace}}
-    run: bash ${GITHUB_WORKSPACE}/support/scripts/build_rhel.sh
+    - name: RHEL Build Script
+      working-directory: ${{github.workspace}}
+      run: bash ${GITHUB_WORKSPACE}/support/scripts/build_rhel.sh
