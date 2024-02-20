@@ -120,11 +120,11 @@ jobs:
   # RHEL Build
   #
   rhel_build:
+    # Container Setup
     runs-on: ubuntu-latest
     container:
       image: rockylinux/rockylinux:8
   steps:
-    # Container Setup
     - uses: actions/checkout@v2
     - name: Update
       run: sudo yum update
