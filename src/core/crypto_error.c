@@ -134,98 +134,68 @@ char *crypto_enum_errlist_crypto_cam[] =
 };
 
 /*
+** @brief: Helper Function. Get specific error code, given code, allowable max, and valid string expansion
+** @param: int32_t, int32_t, char*
+ * @return: char*
+*/
+char* Crypto_Get_Crypto_Error_Code_String(int32_t crypto_error_code, int32_t crypto_error_code_max, char* valid_output_string)
+{
+    if(crypto_error_code < crypto_error_code_max)
+    {
+        return CRYPTO_UNDEFINED_ERROR;
+    }
+    return valid_output_string; 
+}
+
+/*
+** @brief: Helper Function. Get specific error code, given code, allowable max, and valid string expansion
+** @param: int32_t, int32_t, char*
+ * @return: char*
+*/
+char* Crypto_Get_Error_Code_String(int32_t crypto_error_code, int32_t crypto_error_code_max, char* valid_output_string)
+{
+    if(crypto_error_code > crypto_error_code_max)
+    {
+        return CRYPTO_UNDEFINED_ERROR;
+    }
+    return valid_output_string;
+}
+
+/*
 ** @brief: For a given crypto error code, return the associated error code enum string
 ** @param: int32_t
  * @return: char*
 */
 char* Crypto_Get_Error_Code_Enum_String(int32_t crypto_error_code)
 {
+    char* return_string = CRYPTO_UNDEFINED_ERROR;
     if(crypto_error_code >= 600) // CAM Error Codes
     {
-        if(crypto_error_code > 610)
-        {
-            return CRYPTO_UNDEFINED_ERROR;
-        }
-        else
-        {
-            return crypto_enum_errlist_crypto_cam[crypto_error_code % 600];
-        }
-
+        return_string = Crypto_Get_Error_Code_String(crypto_error_code, 610, crypto_enum_errlist_crypto_cam[crypto_error_code % 600]);
     }
     else if(crypto_error_code >= 500) // KMC Error Codes
     {
-        if(crypto_error_code > 515)
-        {
-            return CRYPTO_UNDEFINED_ERROR;
-        }
-        else
-        {
-            return crypto_enum_errlist_crypto_kmc[crypto_error_code % 500];
-        }
+        return_string = Crypto_Get_Error_Code_String(crypto_error_code, 515, crypto_enum_errlist_crypto_kmc[crypto_error_code % 500]);
     }
     else if(crypto_error_code >= 400) // Crypto Interface Error Codes
     {
-        if(crypto_error_code > 402)
-        {
-            return CRYPTO_UNDEFINED_ERROR;
-        }
-        else
-        {
-            return crypto_enum_errlist_crypto_if[crypto_error_code % 400];
-        }
-
+        return_string = Crypto_Get_Error_Code_String(crypto_error_code, 402, crypto_enum_errlist_crypto_if[crypto_error_code % 400]);
     }
     else if(crypto_error_code >= 300) // SADB MariadDB Error Codes
     {
-        if(crypto_error_code > 303)
-        {
-            return CRYPTO_UNDEFINED_ERROR;
-        }
-        else
-        {
-            return crypto_enum_errlist_sa_mariadb[crypto_error_code % 300];
-        }
-
+        return_string = Crypto_Get_Error_Code_String(crypto_error_code, 303, crypto_enum_errlist_sa_mariadb[crypto_error_code % 300]);
     }
     else if(crypto_error_code >= 200) // SADB Interface Error Codes
     {
-        if(crypto_error_code > 201)
-        {
-            return CRYPTO_UNDEFINED_ERROR;
-        }
-        else
-        {
-            return crypto_enum_errlist_sa_if[crypto_error_code % 200];
-        }
+        return_string = Crypto_Get_Error_Code_String(crypto_error_code, 201, crypto_enum_errlist_sa_if[crypto_error_code % 200]);
     }
     else if(crypto_error_code >= 100) // Configuration Error Codes
     {
-        if(crypto_error_code > 103)
-        {
-            return CRYPTO_UNDEFINED_ERROR;
-        }
-        else
-        {
-            return crypto_enum_errlist_config[crypto_error_code % 100];
-        }
-    }
-    else if(crypto_error_code > 0) // Unused Error Codes 1-100
-    {
-        return CRYPTO_UNDEFINED_ERROR;
+        return_string = Crypto_Get_Error_Code_String(crypto_error_code, 103, crypto_enum_errlist_config[crypto_error_code % 100]);
     }
     else if(crypto_error_code <= 0) // Cryptolib Core Error Codes
     {
-        if(crypto_error_code < -45)
-        {
-            return CRYPTO_UNDEFINED_ERROR;
-        }
-        else
-        {
-            return crypto_enum_errlist_core[(crypto_error_code * (-1))];
-        }
+        return_string = Crypto_Get_Crypto_Error_Code_String(crypto_error_code, -45, crypto_enum_errlist_core[(crypto_error_code * (-1))]);
     }
-    else
-    {
-        return CRYPTO_UNDEFINED_ERROR;
-    }
+    return return_string;
 }
