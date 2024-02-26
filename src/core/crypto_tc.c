@@ -961,31 +961,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
     tc_sdls_processed_frame->tc_sec_trailer.mac_field_len = sa_ptr->stmacf_len;
     // Determine SA Service Type
     Crypto_TC_Get_SA_Service_Type(&sa_service_type, sa_ptr);
-    // if ((sa_ptr->est == 0) && (sa_ptr->ast == 0))
-    // {
-    //     sa_service_type = SA_PLAINTEXT;
-    // }
-    // else if ((sa_ptr->est == 0) && (sa_ptr->ast == 1))
-    // {
-    //     sa_service_type = SA_AUTHENTICATION;
-    // }
-    // else if ((sa_ptr->est == 1) && (sa_ptr->ast == 0))
-    // {
-    //     sa_service_type = SA_ENCRYPTION;
-    // }
-    // else if ((sa_ptr->est == 1) && (sa_ptr->ast == 1))
-    // {
-    //     sa_service_type = SA_AUTHENTICATED_ENCRYPTION;
-    // }
-    // else
-    // {
-    //     // Probably unnecessary check
-    //     // Leaving for now as it would be cleaner in SA to have an association enum returned I believe
-    //     printf(KRED "Error: SA Service Type is not defined! \n" RESET);
-    //     status = CRYPTO_LIB_ERROR;
-    //     mc_if->mc_log(status);
-    //     return status;
-    // }
+   
     // Determine Algorithm cipher & mode. // TODO - Parse authentication_cipher, and handle AEAD cases properly
     if (sa_service_type != SA_PLAINTEXT)
     {
