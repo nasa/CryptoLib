@@ -108,7 +108,6 @@ extern int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest,
 // Advanced Orbiting Systems (AOS)
 extern int32_t Crypto_AOS_ApplySecurity(uint8_t* pTfBuffer);
 extern int32_t Crypto_AOS_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_t** pp_processed_frame, uint16_t* p_decrypted_length);
-int32_t Crytpo_TC_Parse_MAC_Prep_AAD(uint8_t sa_service_type, TC_t* tc_sdls_processed_frame, uint8_t fecf_len, SecurityAssociation_t* sa_ptr, uint8_t* ingest, uint16_t* aad_len_p, uint8_t ecs_is_aead_algorithm, uint8_t segment_hdr_len, uint8_t* aad);
 
 
 // Crypo Error Support Functions
