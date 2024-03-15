@@ -60,7 +60,6 @@ int32_t Crypto_TC_Get_SA_Service_Type(uint8_t* sa_service_type, SecurityAssociat
     return status;
 }
 
-
 int32_t Crypto_TC_Get_Ciper_Mode_TCA(uint8_t sa_service_type, uint32_t* encryption_cipher, uint8_t* ecs_is_aead_algorithm, SecurityAssociation_t* sa_ptr)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -168,6 +167,8 @@ int32_t Crypto_TC_Frame_Validation(uint16_t* p_enc_frame_len)
         printf(KRED "Error: New frame would violate maximum tc frame managed parameter! \n" RESET);
         status = CRYPTO_LIB_ERR_TC_FRAME_SIZE_EXCEEDS_MANAGED_PARAM_MAX_LIMIT;
         mc_if->mc_log(status);
+        printf("STATUS=%d\n", status);
+        return status;
     }
     // Ensure the frame to be created will not violate spec max length
     if ((*p_enc_frame_len > 1024) && status == CRYPTO_LIB_SUCCESS)
@@ -249,13 +250,10 @@ int32_t Crypto_TC_Check_IV_Setup(SecurityAssociation_t* sa_ptr, uint8_t* p_new_e
     return status;
 }
 
-
-//TODO:  Reduce Complexity
-int32_t Crypto_TC_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t* sa_ptr, uint16_t* mac_loc, uint16_t tf_payload_len, uint8_t segment_hdr_len, uint8_t* p_new_enc_frame, crypto_key_t* ekp, uint8_t** aad, uint8_t ecs_is_aead_algorithm, uint16_t *index_p, const uint8_t* p_in_frame, char* cam_cookies, uint32_t pkcs_padding, uint16_t new_enc_frame_header_field_length, uint16_t* new_fecf)
+int32_t Crypto_TC_Do_Encrypt_PLAINTEXT(uint8_t sa_service_type, SecurityAssociation_t* sa_ptr, uint16_t* mac_loc, uint16_t tf_payload_len, uint8_t segment_hdr_len, uint8_t* p_new_enc_frame, crypto_key_t* ekp, uint8_t** aad, uint8_t ecs_is_aead_algorithm, uint16_t *index_p, const uint8_t* p_in_frame, char* cam_cookies, uint32_t pkcs_padding)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     uint16_t index = *index_p;
-    int i;
     if (sa_service_type != SA_PLAINTEXT)
     {
         uint8_t* mac_ptr = NULL;
@@ -397,7 +395,9 @@ int32_t Crypto_TC_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t* sa_
                                                                     sa_ptr->acs,        // authentication cipher
                                                                     cam_cookies);
             }
-        }
+            
+        }        
+        *index_p = index;
         if (status != CRYPTO_LIB_SUCCESS)
         {
             Crypto_TC_Safe_Free_Ptr(*aad);
@@ -405,6 +405,12 @@ int32_t Crypto_TC_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t* sa_
             return status; // Cryptography IF call failed, return.
         }
     }
+    return status;
+}
+
+void Crypto_TC_Do_Encrypt_NONPLAINTEXT(uint8_t sa_service_type, SecurityAssociation_t* sa_ptr)
+{
+    int i = 0;
     if (sa_service_type != SA_PLAINTEXT)
     {
 #ifdef INCREMENT
@@ -459,6 +465,23 @@ int32_t Crypto_TC_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t* sa_
 #endif
 #endif
     }
+}
+
+int32_t Crypto_TC_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t* sa_ptr, uint16_t* mac_loc, uint16_t tf_payload_len, uint8_t segment_hdr_len, uint8_t* p_new_enc_frame, crypto_key_t* ekp, uint8_t** aad, uint8_t ecs_is_aead_algorithm, uint16_t *index_p, const uint8_t* p_in_frame, char* cam_cookies, uint32_t pkcs_padding, uint16_t new_enc_frame_header_field_length, uint16_t* new_fecf)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    uint16_t index = *index_p;
+    status = Crypto_TC_Do_Encrypt_PLAINTEXT(sa_service_type, sa_ptr, mac_loc, tf_payload_len, segment_hdr_len, p_new_enc_frame, ekp, aad, ecs_is_aead_algorithm, index_p, p_in_frame, cam_cookies, pkcs_padding);
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        Crypto_TC_Safe_Free_Ptr(*aad);
+        mc_if->mc_log(status);
+        return status; 
+    }
+
+    //TODO:  Status?
+    Crypto_TC_Do_Encrypt_NONPLAINTEXT(sa_service_type, sa_ptr);
+
     /*
     ** End Authentication / Encryption
     */
@@ -508,6 +531,194 @@ int32_t Crypto_TC_Check_Init_Setup(uint16_t in_frame_length)
     return status;
 }
 
+int32_t Crypto_TC_Sanity_Setup(const uint8_t* p_in_frame, const uint16_t in_frame_length)
+{   
+    int i;
+    uint32_t status = CRYPTO_LIB_SUCCESS;
+    if (p_in_frame == NULL)
+    {
+        status = CRYPTO_LIB_ERR_NULL_BUFFER;
+        printf(KRED "Error: Input Buffer NULL! \n" RESET);
+        mc_if->mc_log(status);
+        return status; // Just return here, nothing can be done.
+    }
+
+#ifdef DEBUG
+    printf("%d TF Bytes received\n", in_frame_length);
+    printf("DEBUG - ");
+    for (i = 0; i < in_frame_length; i++)
+    {
+        printf("%02X", ((uint8_t*)&*p_in_frame)[i]);
+    }
+    printf("\nPrinted %d bytes\n", in_frame_length);
+#else
+    // TODO - Find another way to know this and remove this argument
+    uint16_t tmp = in_frame_length;
+    tmp = tmp;
+#endif
+    
+    status = Crypto_TC_Check_Init_Setup(in_frame_length);
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        // No Logging - as MC might not be initialized
+        return status;
+    }
+    return status;
+}
+
+int32_t Crytpo_TC_Validate_TC_Temp_Header(const uint16_t in_frame_length, TC_FramePrimaryHeader_t temp_tc_header, const uint8_t* p_in_frame, uint8_t* map_id, uint8_t* segmentation_hdr, SecurityAssociation_t** sa_ptr)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    if (in_frame_length < temp_tc_header.fl + 1) // Specified frame length larger than provided frame!
+    {
+        status = CRYPTO_LIB_ERR_INPUT_FRAME_LENGTH_SHORTER_THAN_FRAME_HEADERS_LENGTH;
+        mc_if->mc_log(status);
+        return status;
+    }
+
+    // Lookup-retrieve managed parameters for frame via gvcid:
+    status = Crypto_Get_Managed_Parameters_For_Gvcid(temp_tc_header.tfvn, temp_tc_header.scid, temp_tc_header.vcid,
+                                                     gvcid_managed_parameters, &current_managed_parameters);
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        mc_if->mc_log(status);
+        return status;
+    } // Unable to get necessary Managed Parameters for TC TF -- return with error.
+
+    if (current_managed_parameters->has_segmentation_hdr == TC_HAS_SEGMENT_HDRS)
+    {
+        *segmentation_hdr = p_in_frame[5];
+        *map_id = *segmentation_hdr & 0x3F;
+    }
+
+    // Check if command frame flag set
+    status = Crypto_TC_Check_CMD_Frame_Flag(temp_tc_header.cc);
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        mc_if->mc_log(status);
+        return status;
+    }
+
+    status = sa_if->sa_get_operational_sa_from_gvcid(temp_tc_header.tfvn, temp_tc_header.scid,
+                                                        temp_tc_header.vcid, *map_id, sa_ptr);
+    // If unable to get operational SA, can return
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        mc_if->mc_log(status);
+        return status;
+    }
+
+    // Try to assure SA is sane
+    status = crypto_tc_validate_sa(*sa_ptr);
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        mc_if->mc_log(status);
+        return status;
+    }
+
+    return status;
+}
+
+
+int32_t Crypto_TC_Finalize_Frame_Setup(uint8_t sa_service_type, uint32_t* pkcs_padding, uint16_t* p_enc_frame_len, uint16_t* new_enc_frame_header_field_length, uint16_t tf_payload_len, SecurityAssociation_t** sa_ptr, uint8_t** p_new_enc_frame)
+{
+    uint32_t status = CRYPTO_LIB_SUCCESS;
+    status = Crypto_TC_Handle_Enc_Padding(sa_service_type, pkcs_padding, p_enc_frame_len, new_enc_frame_header_field_length, tf_payload_len, *sa_ptr);
+    if(status != CRYPTO_LIB_SUCCESS)
+    {
+        mc_if->mc_log(status);
+        return status;
+    }
+
+    status = Crypto_TC_Validate_SA_Service_Type(sa_service_type);
+    if(status != CRYPTO_LIB_SUCCESS)
+    {
+        mc_if->mc_log(status);
+        return status;
+    }
+
+    // Ensure the frame to be created will not violate managed parameter maximum length
+    status = Crypto_TC_Frame_Validation(p_enc_frame_len);
+    if(status != CRYPTO_LIB_SUCCESS)
+    {
+        mc_if->mc_log(status);
+        return status;
+    }
+
+    // Accio buffer
+    status = Crypto_TC_Accio_Buffer(p_new_enc_frame, p_enc_frame_len);
+    if(status != CRYPTO_LIB_SUCCESS)
+    {
+        mc_if->mc_log(status);
+        return status;
+    }
+
+    return status;
+}
+
+void Crypto_TC_Handle_Padding(uint32_t pkcs_padding, SecurityAssociation_t* sa_ptr, uint8_t* p_new_enc_frame, uint16_t* index)
+{
+    int i = 0;
+    uint16_t temp_index = *index;
+    if (pkcs_padding)
+    {
+        uint8_t hex_padding[3] = {0};             // TODO: Create #Define for the 3
+        pkcs_padding = pkcs_padding & 0x00FFFFFF; // Truncate to be maxiumum of 3 bytes in size
+
+        // Byte Magic
+        hex_padding[0] = (pkcs_padding >> 16) & 0xFF;
+        hex_padding[1] = (pkcs_padding >> 8) & 0xFF;
+        hex_padding[2] = (pkcs_padding)&0xFF;
+
+        uint8_t padding_start = 0;
+        padding_start = 3 - sa_ptr->shplf_len;
+
+        for (i = 0; i < sa_ptr->shplf_len; i++)
+        {
+            *(p_new_enc_frame + temp_index) = hex_padding[padding_start++];
+            temp_index++;
+        }
+        *index = temp_index;
+    }
+}
+
+int32_t Crypto_TC_Set_IV(SecurityAssociation_t* sa_ptr, uint8_t* p_new_enc_frame, uint16_t* index)
+{
+    uint32_t status = CRYPTO_LIB_SUCCESS;
+    int i = 0;
+    #ifdef SA_DEBUG
+    if (sa_ptr->shivf_len > 0 && sa_ptr->iv != NULL)
+    {
+        printf(KYEL "Using IV value:\n\t");
+        for (i = 0; i < sa_ptr->iv_len; i++)
+        {
+            printf("%02x", *(sa_ptr->iv + i));
+        }
+        printf("\n" RESET);
+        printf(KYEL "Transmitted IV value:\n\t");
+        for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
+        {
+            printf("%02x", *(sa_ptr->iv + i));
+        }
+        printf("\n" RESET);
+    }
+#endif
+    status = Crypto_TC_ACS_Algo_Check(sa_ptr);
+    if(status != CRYPTO_LIB_SUCCESS)
+    {
+        mc_if->mc_log(status);
+        return status;   
+    }
+
+    status = Crypto_TC_Check_IV_Setup(sa_ptr, p_new_enc_frame, index);
+    if(status != CRYPTO_LIB_SUCCESS)
+    {
+        mc_if->mc_log(status);
+        return status;   
+    }
+    return status;
+}
+
 /**
  * @brief Function: Crypto_TC_ApplySecurity
  * Applies Security to incoming frame.  Encryption, Authentication, and Authenticated Encryption
@@ -552,37 +763,17 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
     int i;
     uint32_t pkcs_padding = 0;
     crypto_key_t* ekp = NULL;
+    uint8_t map_id = 0;
+    uint8_t segmentation_hdr = 0x00;
 
 #ifdef DEBUG
     printf(KYEL "\n----- Crypto_TC_ApplySecurity START -----\n" RESET);
 #endif
 
-    if (p_in_frame == NULL)
-    {
-        status = CRYPTO_LIB_ERR_NULL_BUFFER;
-        printf(KRED "Error: Input Buffer NULL! \n" RESET);
-        mc_if->mc_log(status);
-        return status; // Just return here, nothing can be done.
-    }
-
-#ifdef DEBUG
-    printf("%d TF Bytes received\n", in_frame_length);
-    printf("DEBUG - ");
-    for (i = 0; i < in_frame_length; i++)
-    {
-        printf("%02X", ((uint8_t*)&*p_in_frame)[i]);
-    }
-    printf("\nPrinted %d bytes\n", in_frame_length);
-#else
-    // TODO - Find another way to know this and remove this argument
-    uint16_t tmp = in_frame_length;
-    tmp = tmp;
-#endif
-    
-    status = Crypto_TC_Check_Init_Setup(in_frame_length);
+    status = Crypto_TC_Sanity_Setup(p_in_frame, in_frame_length);
     if (status != CRYPTO_LIB_SUCCESS)
     {
-        // No Logging - as MC might not be initialized
+        // Logging handled inside sanity setup functionality
         return status;
     }
     
@@ -598,54 +789,12 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
     temp_tc_header.fl = temp_tc_header.fl | (uint8_t)p_in_frame[3];
     temp_tc_header.fsn = (uint8_t)p_in_frame[4];
 
-    if (in_frame_length < temp_tc_header.fl + 1) // Specified frame length larger than provided frame!
-    {
-        status = CRYPTO_LIB_ERR_INPUT_FRAME_LENGTH_SHORTER_THAN_FRAME_HEADERS_LENGTH;
-        mc_if->mc_log(status);
-        return status;
-    }
-
-    // Lookup-retrieve managed parameters for frame via gvcid:
-    status = Crypto_Get_Managed_Parameters_For_Gvcid(temp_tc_header.tfvn, temp_tc_header.scid, temp_tc_header.vcid,
-                                                     gvcid_managed_parameters, &current_managed_parameters);
+    status = Crytpo_TC_Validate_TC_Temp_Header(in_frame_length, temp_tc_header, p_in_frame, &map_id, &segmentation_hdr, &sa_ptr);
     if (status != CRYPTO_LIB_SUCCESS)
     {
-        mc_if->mc_log(status);
-        return status;
-    } // Unable to get necessary Managed Parameters for TC TF -- return with error.
-
-    uint8_t segmentation_hdr = 0x00;
-    uint8_t map_id = 0;
-    if (current_managed_parameters->has_segmentation_hdr == TC_HAS_SEGMENT_HDRS)
-    {
-        segmentation_hdr = p_in_frame[5];
-        map_id = segmentation_hdr & 0x3F;
-    }
-
-    // Check if command frame flag set
-    status = Crypto_TC_Check_CMD_Frame_Flag(temp_tc_header.cc);
-    if (status != CRYPTO_LIB_SUCCESS)
-    {
-        mc_if->mc_log(status);
         return status;
     }
 
-    status = sa_if->sa_get_operational_sa_from_gvcid(temp_tc_header.tfvn, temp_tc_header.scid,
-                                                        temp_tc_header.vcid, map_id, &sa_ptr);
-    // If unable to get operational SA, can return
-    if (status != CRYPTO_LIB_SUCCESS)
-    {
-        mc_if->mc_log(status);
-        return status;
-    }
-
-    // Try to assure SA is sane
-    status = crypto_tc_validate_sa(sa_ptr);
-    if (status != CRYPTO_LIB_SUCCESS)
-    {
-        mc_if->mc_log(status);
-        return status;
-    }
 
 #ifdef SA_DEBUG
     printf(KYEL "DEBUG - Printing SA Entry for current frame.\n" RESET);
@@ -711,30 +860,8 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
     *p_enc_frame_len = temp_tc_header.fl + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len + sa_ptr->stmacf_len;
     new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
 
-    status = Crypto_TC_Handle_Enc_Padding(sa_service_type, &pkcs_padding, p_enc_frame_len, &new_enc_frame_header_field_length, tf_payload_len, sa_ptr);
-    if(status != CRYPTO_LIB_SUCCESS)
-    {
-        mc_if->mc_log(status);
-        return status;
-    }
-
-    status = Crypto_TC_Validate_SA_Service_Type(sa_service_type);
-    if(status != CRYPTO_LIB_SUCCESS)
-    {
-        mc_if->mc_log(status);
-        return status;
-    }
-
-    // Ensure the frame to be created will not violate managed parameter maximum length
-    status = Crypto_TC_Frame_Validation(p_enc_frame_len);
-    if(status != CRYPTO_LIB_SUCCESS)
-    {
-        mc_if->mc_log(status);
-        return status;
-    }
-
-    // Accio buffer
-    status = Crypto_TC_Accio_Buffer(&p_new_enc_frame, p_enc_frame_len);
+    // Finalize frame setup
+    status = Crypto_TC_Finalize_Frame_Setup(sa_service_type, &pkcs_padding, p_enc_frame_len, &new_enc_frame_header_field_length, tf_payload_len, &sa_ptr, &p_new_enc_frame);
     if(status != CRYPTO_LIB_SUCCESS)
     {
         mc_if->mc_log(status);
@@ -794,31 +921,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
     index += 2;
 
     // Set initialization vector if specified
-#ifdef SA_DEBUG
-    if (sa_ptr->shivf_len > 0 && sa_ptr->iv != NULL)
-    {
-        printf(KYEL "Using IV value:\n\t");
-        for (i = 0; i < sa_ptr->iv_len; i++)
-        {
-            printf("%02x", *(sa_ptr->iv + i));
-        }
-        printf("\n" RESET);
-        printf(KYEL "Transmitted IV value:\n\t");
-        for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
-        {
-            printf("%02x", *(sa_ptr->iv + i));
-        }
-        printf("\n" RESET);
-    }
-#endif
-    status = Crypto_TC_ACS_Algo_Check(sa_ptr);
-    if(status != CRYPTO_LIB_SUCCESS)
-    {
-        mc_if->mc_log(status);
-        return status;   
-    }
-
-    status = Crypto_TC_Check_IV_Setup(sa_ptr, p_new_enc_frame, &index);
+    status = Crypto_TC_Set_IV(sa_ptr, p_new_enc_frame, &index);
     if(status != CRYPTO_LIB_SUCCESS)
     {
         mc_if->mc_log(status);
@@ -851,26 +954,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
     ** cryptographic process, consisting of an integral number of octets. - CCSDS 3550b1
     */
     // TODO: Set this depending on crypto cipher used
-
-    if (pkcs_padding)
-    {
-        uint8_t hex_padding[3] = {0};             // TODO: Create #Define for the 3
-        pkcs_padding = pkcs_padding & 0x00FFFFFF; // Truncate to be maxiumum of 3 bytes in size
-
-        // Byte Magic
-        hex_padding[0] = (pkcs_padding >> 16) & 0xFF;
-        hex_padding[1] = (pkcs_padding >> 8) & 0xFF;
-        hex_padding[2] = (pkcs_padding)&0xFF;
-
-        uint8_t padding_start = 0;
-        padding_start = 3 - sa_ptr->shplf_len;
-
-        for (i = 0; i < sa_ptr->shplf_len; i++)
-        {
-            *(p_new_enc_frame + index) = hex_padding[padding_start++];
-            index++;
-        }
-    }
+    Crypto_TC_Handle_Padding(pkcs_padding, sa_ptr, p_new_enc_frame, &index);
 
     /*
     ** End Security Header Fields
