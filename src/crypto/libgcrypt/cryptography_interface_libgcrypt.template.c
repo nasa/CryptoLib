@@ -509,6 +509,84 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
     return status;
 }
 
+int32_t cryptography_verify_ecs_enum_algo(uint8_t* ecs, int32_t* algo, int32_t* mode)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    if (ecs != NULL)
+    {
+        *algo = cryptography_get_ecs_algo(*ecs);
+        if (*algo == CRYPTO_LIB_ERR_UNSUPPORTED_ECS)
+        {
+            status = CRYPTO_LIB_ERR_UNSUPPORTED_ECS;
+            return status;
+        }
+    }
+    else
+    {
+        status = CRYPTO_LIB_ERR_NULL_ECS_PTR;
+        return status;
+    }
+
+    // Verify the mode to accompany the ecs enum
+    *mode = cryptography_get_ecs_mode(*ecs);
+    if (*mode == CRYPTO_LIB_ERR_UNSUPPORTED_ECS_MODE) 
+    {
+        status = CRYPTO_LIB_ERR_UNSUPPORTED_ECS_MODE;
+        return status;
+    }
+    return status;
+}
+
+int32_t cryptography_gcry_setup(int32_t mode, int32_t algo, gcry_cipher_hd_t* tmp_hd, uint8_t* key_ptr, uint32_t len_key, uint8_t* iv, uint32_t iv_len, gcry_error_t* gcry_error)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    if(mode == CRYPTO_CIPHER_AES256_CBC_MAC)
+    {
+        *gcry_error = gcry_cipher_open(tmp_hd, algo, mode, GCRY_CIPHER_CBC_MAC);
+    }
+    else
+    {
+        *gcry_error = gcry_cipher_open(tmp_hd, algo, mode, GCRY_CIPHER_NONE);
+    } 
+    if ((*gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+    {
+        printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, *gcry_error & GPG_ERR_CODE_MASK);
+        printf(KRED "Failure: %s/%s\n", gcry_strsource(*gcry_error), gcry_strerror(*gcry_error));
+        status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
+        return status;
+    }
+    *gcry_error = gcry_cipher_setkey(*tmp_hd, key_ptr, len_key);
+#ifdef SA_DEBUG
+    uint32_t i;
+    printf(KYEL "AEAD MAC: Printing Key:\n\t");
+    for (i = 0; i < len_key; i++)
+    {
+        printf("%02X", *(key_ptr + i));
+    }
+    printf("\n");
+#endif
+
+    if ((*gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+    {
+        printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET, *gcry_error & GPG_ERR_CODE_MASK);
+        printf(KRED "Failure: %s/%s\n", gcry_strsource(*gcry_error), gcry_strerror(*gcry_error));
+        status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
+        gcry_cipher_close(*tmp_hd);
+        return status;
+    }
+    *gcry_error = gcry_cipher_setiv(*tmp_hd, iv, iv_len);
+    if ((*gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+    {
+        printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET, *gcry_error & GPG_ERR_CODE_MASK);
+        printf(KRED "Failure: %s/%s\n", gcry_strsource(*gcry_error), gcry_strerror(*gcry_error));
+        status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
+        gcry_cipher_close(*tmp_hd);
+        return status;
+    }
+    return status;
+}
+
 static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
                                          uint8_t* key, uint32_t len_key,
@@ -520,7 +598,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
                                          uint8_t aad_bool, uint8_t* ecs, uint8_t* acs, char* cam_cookies)
 {
     gcry_error_t gcry_error = GPG_ERR_NO_ERROR;
-    gcry_cipher_hd_t tmp_hd;
+    gcry_cipher_hd_t tmp_hd = 0;
     int32_t status = CRYPTO_LIB_SUCCESS;
     uint8_t* key_ptr = key;
 
@@ -532,67 +610,20 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
 
     // Select correct libgcrypt ecs enum
     int32_t algo = -1;
-    if (ecs != NULL)
-    {
-        algo = cryptography_get_ecs_algo(*ecs);
-        if (algo == CRYPTO_LIB_ERR_UNSUPPORTED_ECS)
-        {
-            return CRYPTO_LIB_ERR_UNSUPPORTED_ECS;
-        }
-    }
-    else
-    {
-        return CRYPTO_LIB_ERR_NULL_ECS_PTR;
-    }
-
-    // Verify the mode to accompany the ecs enum
     int32_t mode = -1;
-    mode = cryptography_get_ecs_mode(*ecs);
-    if (mode == CRYPTO_LIB_ERR_UNSUPPORTED_ECS_MODE) return CRYPTO_LIB_ERR_UNSUPPORTED_ECS_MODE;
-    
+    status = cryptography_verify_ecs_enum_algo(ecs, &algo, &mode);
+    if(status != CRYPTO_LIB_SUCCESS)
+    {
+        mc_if->mc_log(status);
+        return status;   
+    }
+   
     // TODO: Get Flag Functionality
-    if(mode == CRYPTO_CIPHER_AES256_CBC_MAC)
+    status = cryptography_gcry_setup(mode, algo, &tmp_hd, key_ptr, len_key, iv, iv_len, &gcry_error);
+    if(status != CRYPTO_LIB_SUCCESS)
     {
-        gcry_error = gcry_cipher_open(&(tmp_hd), algo, mode, GCRY_CIPHER_CBC_MAC);
-    }
-    else
-    {
-        gcry_error = gcry_cipher_open(&(tmp_hd), algo, mode, GCRY_CIPHER_NONE);
-    } 
-    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-    {
-        printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
-        status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
-        return status;
-    }
-    gcry_error = gcry_cipher_setkey(tmp_hd, key_ptr, len_key);
-#ifdef SA_DEBUG
-    uint32_t i;
-    printf(KYEL "AEAD MAC: Printing Key:\n\t");
-    for (i = 0; i < len_key; i++)
-    {
-        printf("%02X", *(key_ptr + i));
-    }
-    printf("\n");
-#endif
-
-    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-    {
-        printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
-        status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
-        gcry_cipher_close(tmp_hd);
-        return status;
-    }
-    gcry_error = gcry_cipher_setiv(tmp_hd, iv, iv_len);
-    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-    {
-        printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
-        status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
-        gcry_cipher_close(tmp_hd);
-        return status;
+        mc_if->mc_log(status);
+        return status;   
     }
 
 #ifdef DEBUG
@@ -680,6 +711,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
         }
 
 #ifdef MAC_DEBUG
+        uint32_t i = 0;
         printf("MAC = 0x");
         for (i = 0; i < mac_size; i++)
         {
