@@ -806,30 +806,30 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, uin
     return status;
 } // End Process SDLS PDU
 
-/*
-** @brief: Check IVs and ARSNs to ensure within valid positive window if applicable
-*/
-int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t* sa_ptr, uint8_t* arsn, uint8_t* iv)
+int32_t Crypto_Check_Anti_Replay_Verify_Pointers(SecurityAssociation_t* sa_ptr, uint8_t* arsn, uint8_t* iv)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    int8_t IV_VALID = -1;
-    int8_t ARSN_VALID = -1;
-
-    // Check for NULL pointers
     if (sa_ptr == NULL) // #177 - Modification made per suggestion of 'Spicydll' - prevents null dereference
     {
-        return CRYPTO_LIB_ERR_NULL_SA;
+        status = CRYPTO_LIB_ERR_NULL_SA;
+        return status;
     }
     if (arsn == NULL && sa_ptr->arsn_len > 0)
     {
-        return CRYPTO_LIB_ERR_NULL_ARSN;
+        status = CRYPTO_LIB_ERR_NULL_ARSN;
+        return status;
     }
     if (iv == NULL && sa_ptr->shivf_len > 0 && crypto_config.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
-        return CRYPTO_LIB_ERR_NULL_IV;
+        status = CRYPTO_LIB_ERR_NULL_IV;
+        return status;
     }
-    
-    // If sequence number field is greater than zero, check for replay
+    return status;
+}
+
+int32_t Crypto_Check_Anti_Replay_ARSNW(SecurityAssociation_t* sa_ptr, uint8_t* arsn, int8_t* ARSN_VALID)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
     if (sa_ptr->shsnf_len > 0)
     {
         // Check Sequence Number is in ARSNW
@@ -855,11 +855,16 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t* sa_ptr, uint8_t* arsn, u
         // Valid ARSN received, increment stored value
         else
         {
-            ARSN_VALID = CRYPTO_TRUE;
+            *ARSN_VALID = CRYPTO_TRUE;
             // memcpy(sa_ptr->arsn, arsn, sa_ptr->arsn_len);
         }
     }
-    // If IV is greater than zero and using GCM, check for replay
+    return status;
+}
+
+int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t* sa_ptr, uint8_t* iv, int8_t* IV_VALID)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
     if ((sa_ptr->iv_len > 0) && (sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM))
     {
         // Check IV is in ARSNW
@@ -893,14 +898,45 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t* sa_ptr, uint8_t* arsn, u
         // Valid IV received, increment stored value
         else
         {
-            IV_VALID = CRYPTO_TRUE;
+            *IV_VALID = CRYPTO_TRUE;
             // memcpy(sa_ptr->iv, iv, sa_ptr->iv_len);
         }
     }
-    // IV length is greater than zero, but not using an incrementing IV as in GCM
-    // we can't verify this internally as Crpytolib doesn't track previous IVs
-    // or generate random ones
-    // else{}
+    return status;
+}
+
+/*
+** @brief: Check IVs and ARSNs to ensure within valid positive window if applicable
+*/
+int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t* sa_ptr, uint8_t* arsn, uint8_t* iv)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    int8_t IV_VALID = -1;
+    int8_t ARSN_VALID = -1;
+
+    // Check for NULL pointers
+    status = Crypto_Check_Anti_Replay_Verify_Pointers(sa_ptr, arsn, iv);
+    if(status != CRYPTO_LIB_SUCCESS)
+    {
+        mc_if->mc_log(status);
+        return status;   
+    }
+    
+    // If sequence number field is greater than zero, check for replay
+    status = Crypto_Check_Anti_Replay_ARSNW(sa_ptr, arsn, &ARSN_VALID);
+    if(status != CRYPTO_LIB_SUCCESS)
+    {
+        mc_if->mc_log(status);
+        return status;   
+    }
+
+    // If IV is greater than zero and using GCM, check for replay
+    status = Crypto_Check_Anti_Replay_GCM(sa_ptr, iv, &IV_VALID);
+    if(status != CRYPTO_LIB_SUCCESS)
+    {
+        mc_if->mc_log(status);
+        return status;   
+    }
 
     // For GCM specifically, if have a valid IV...
     if ((sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM) && (IV_VALID == CRYPTO_TRUE))
