@@ -344,6 +344,7 @@ void *crypto_standalone_tc_apply(void* socks)
     uint16_t tc_in_len = 0;
     uint8_t* tc_out_ptr;
     uint16_t tc_out_len = 0;
+    uint16_t fecf;
 
 #ifdef CRYPTO_STANDALONE_HANDLE_FRAMING
     uint8_t tc_framed[TC_MAX_FRAME_SIZE];
@@ -392,6 +393,11 @@ void *crypto_standalone_tc_apply(void* socks)
             status = Crypto_TC_ApplySecurity(tc_apply_in, tc_in_len, &tc_out_ptr, &tc_out_len);
             if (status == CRYPTO_LIB_SUCCESS)
             {
+                /* Calculate FECF */
+                fecf = Crypto_Calc_FECF(tc_out_ptr, tc_out_len - 2);
+                tc_out_ptr[tc_out_len - 2] = (uint8_t)((fecf & 0xFF00) >> 8);
+                tc_out_ptr[tc_out_len - 1] =  (uint8_t)(fecf & 0x00FF);
+                
                 if (tc_debug == 1)
                 {
                     printf("crypto_standalone_tc_apply - status = %d, encrypted[%d]: 0x", status, tc_out_len);

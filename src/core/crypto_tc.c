@@ -322,7 +322,10 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t* p_in_frame, const uint16_t in
             }
         }
 
-        if (sa_service_type != (SA_PLAINTEXT || SA_AUTHENTICATED_ENCRYPTION || SA_ENCRYPTION || SA_AUTHENTICATION))
+        if ((sa_service_type != SA_PLAINTEXT) &&
+            (sa_service_type != SA_AUTHENTICATED_ENCRYPTION) &&
+            (sa_service_type != SA_ENCRYPTION) &&
+            (sa_service_type != SA_AUTHENTICATION))
         {
             printf(KRED "Unknown SA Service Type Detected!" RESET);
         }
