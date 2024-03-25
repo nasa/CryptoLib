@@ -94,7 +94,7 @@ extern int32_t Crypto_Init_AOS_Unit_Test(void);      // Initialize CryptoLib wit
 
 // Cleanup
 extern int32_t Crypto_Shutdown(void); // Free all allocated memory
- 
+
 // Telecommand (TC)
 extern int32_t Crypto_TC_ApplySecurity(const uint8_t* p_in_frame, const uint16_t in_frame_length,
                                        uint8_t** pp_enc_frame, uint16_t* p_enc_frame_len);
