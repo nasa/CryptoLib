@@ -412,7 +412,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
         printf(KYEL "FECF Location is: %d\n" RESET, current_managed_parameters->max_frame_size - 2);
     }
 #endif
- 
+
     // Get Key
     crypto_key_t* ekp = NULL;
     ekp = key_if->get_key(sa_ptr->ekid);
