@@ -157,6 +157,10 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
 int32_t Crypto_Get_ECS_Algo_Keylen(uint8_t algo);
 int32_t Crypto_Get_ACS_Algo_Keylen(uint8_t algo);
 
+int32_t Crypto_Check_Anti_Replay_Verify_Pointers(SecurityAssociation_t* sa_ptr, uint8_t* arsn, uint8_t* iv);
+int32_t Crypto_Check_Anti_Replay_ARSNW(SecurityAssociation_t* sa_ptr, uint8_t* arsn, int8_t* arsn_valid);
+int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t* sa_ptr, uint8_t* iv, int8_t* iv_valid);
+
 // Key Management Functions
 int32_t Crypto_Key_OTAR(void);
 int32_t Crypto_Key_update(uint8_t state);

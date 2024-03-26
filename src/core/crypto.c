@@ -806,6 +806,14 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, uin
     return status;
 } // End Process SDLS PDU
 
+
+/**
+ * @brief Function: Crypto_Check_Anti_Replay_Verify_Pointers
+ * Sanity Check, validates pointers, verifies non-null
+ * @param sa_ptr: SecurityAssociation_t*
+ * @param arsn: uint8_t*
+ * @param iv: uint8_t*
+ **/
 int32_t Crypto_Check_Anti_Replay_Verify_Pointers(SecurityAssociation_t* sa_ptr, uint8_t* arsn, uint8_t* iv)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -827,6 +835,13 @@ int32_t Crypto_Check_Anti_Replay_Verify_Pointers(SecurityAssociation_t* sa_ptr, 
     return status;
 }
 
+/**
+ * @brief Function: Crypto_Check_Anti_Replay_ARSNW
+ * Sanity Check, validates ARSN within window
+ * @param sa_ptr: SecurityAssociation_t*
+ * @param arsn: uint8_t*
+ * @param arsn_valid: uint8_t*
+ **/
 int32_t Crypto_Check_Anti_Replay_ARSNW(SecurityAssociation_t* sa_ptr, uint8_t* arsn, int8_t* arsn_valid)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -862,6 +877,13 @@ int32_t Crypto_Check_Anti_Replay_ARSNW(SecurityAssociation_t* sa_ptr, uint8_t* a
     return status;
 }
 
+/**
+ * @brief Function: Crypto_Check_Anti_Replay_GCM
+ * Sanity Check, validates IV within window
+ * @param sa_ptr: SecurityAssociation_t*
+ * @param iv: uint8_t*
+ * @param iv_valid: uint8_t*
+ **/
 int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t* sa_ptr, uint8_t* iv, int8_t* iv_valid)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -905,9 +927,13 @@ int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t* sa_ptr, uint8_t* iv,
     return status;
 }
 
-/*
-** @brief: Check IVs and ARSNs to ensure within valid positive window if applicable
-*/
+/**
+ * @brief Function: Crypto_Check_Anti_Replay
+ * Verifies data within window.
+ * @param sa_ptr: SecurityAssociation_t*
+ * @param arsn: uint8_t*
+ * @param iv: uint8_t*
+ **/
 int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t* sa_ptr, uint8_t* arsn, uint8_t* iv)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -960,10 +986,11 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t* sa_ptr, uint8_t* arsn, u
     return status;
 }
 
-/*
-** @brief: For a given algorithm, return the associated key length in bytes
-** @param: algo
-*/
+/**
+* @brief: Function: Crypto_Get_ECS_Algo_Keylen
+* For a given algorithm, return the associated key length in bytes
+* @param algo: uint8_t
+**/
 int32_t Crypto_Get_ECS_Algo_Keylen(uint8_t algo)
 {
     int32_t retval = -1;
@@ -986,10 +1013,11 @@ int32_t Crypto_Get_ECS_Algo_Keylen(uint8_t algo)
     return retval;
 }
 
-/*
-** @brief: For a given algorithm, return the associated key length in bytes
-** @param: algo
-*/
+/**
+* @brief: Function: Crypto_Get_ACS_Algo_Keylen
+* For a given algorithm, return the associated key length in bytes
+* @param algo: uint8_t
+**/
 int32_t Crypto_Get_ACS_Algo_Keylen(uint8_t algo)
 {
     int32_t retval = -1;
@@ -1012,6 +1040,11 @@ int32_t Crypto_Get_ACS_Algo_Keylen(uint8_t algo)
     return retval;
 }
 
+/**
+* @brief: Function: Crypto_Get_Security_Header_Length
+* Return Security Header Length
+* @param sa_ptr: SecurityAssociation_t*
+**/
 int32_t Crypto_Get_Security_Header_Length(SecurityAssociation_t* sa_ptr)
 {
     /* Narrator's Note: Leaving this here for future work
@@ -1035,6 +1068,11 @@ int32_t Crypto_Get_Security_Header_Length(SecurityAssociation_t* sa_ptr)
     return securityHeaderLength;
 }
 
+/**
+* @brief: Function: Crypto_Get_Security_Trailer_Length
+* Return Security Header Length
+* @param sa_ptr: SecurityAssociation_t*
+**/
 int32_t Crypto_Get_Security_Trailer_Length(SecurityAssociation_t* sa_ptr)
 {
     if (!sa_ptr) 
