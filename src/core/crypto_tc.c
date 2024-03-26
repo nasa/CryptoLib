@@ -434,9 +434,9 @@ void Crypto_TC_Do_Encrypt_NONPLAINTEXT(uint8_t sa_service_type, SecurityAssociat
         }
 
 #ifdef SA_DEBUG
+        int i = 0;
         if (sa_ptr->iv_len > 0)
         {
-            int i = 0;
             printf(KYEL "Next IV value is:\n\t");
             for (i = 0; i < sa_ptr->iv_len; i++)
             {
