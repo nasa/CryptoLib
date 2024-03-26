@@ -595,6 +595,11 @@ void sa_debug_block(uint8_t tfvn, uint16_t scid, uint16_t vcid, uint8_t mapid)
     printf(KYEL "\tvcid %d\n" RESET, vcid);
     printf(KYEL "\tmapid %02X\n" RESET, mapid);
 #endif
+// Ignore Unused Variables
+    (void) tfvn;
+    (void) scid;
+    (void) vcid;
+    (void) mapid;
 }
 
 int32_t sa_get_operational_sa_from_gvcid_generate_error(int32_t* status, uint8_t tfvn, uint16_t scid, uint16_t vcid, uint8_t mapid)

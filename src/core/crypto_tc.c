@@ -410,7 +410,6 @@ int32_t Crypto_TC_Do_Encrypt_PLAINTEXT(uint8_t sa_service_type, SecurityAssociat
 
 void Crypto_TC_Do_Encrypt_NONPLAINTEXT(uint8_t sa_service_type, SecurityAssociation_t* sa_ptr)
 {
-    int i = 0;
     if (sa_service_type != SA_PLAINTEXT)
     {
 #ifdef INCREMENT
@@ -437,6 +436,7 @@ void Crypto_TC_Do_Encrypt_NONPLAINTEXT(uint8_t sa_service_type, SecurityAssociat
 #ifdef SA_DEBUG
         if (sa_ptr->iv_len > 0)
         {
+            int i = 0;
             printf(KYEL "Next IV value is:\n\t");
             for (i = 0; i < sa_ptr->iv_len; i++)
             {
@@ -533,7 +533,6 @@ int32_t Crypto_TC_Check_Init_Setup(uint16_t in_frame_length)
 
 int32_t Crypto_TC_Sanity_Setup(const uint8_t* p_in_frame, const uint16_t in_frame_length)
 {   
-    int i;
     uint32_t status = CRYPTO_LIB_SUCCESS;
     if (p_in_frame == NULL)
     {
@@ -544,6 +543,7 @@ int32_t Crypto_TC_Sanity_Setup(const uint8_t* p_in_frame, const uint16_t in_fram
     }
 
 #ifdef DEBUG
+    int i;
     printf("%d TF Bytes received\n", in_frame_length);
     printf("DEBUG - ");
     for (i = 0; i < in_frame_length; i++)
@@ -685,10 +685,10 @@ void Crypto_TC_Handle_Padding(uint32_t pkcs_padding, SecurityAssociation_t* sa_p
 int32_t Crypto_TC_Set_IV(SecurityAssociation_t* sa_ptr, uint8_t* p_new_enc_frame, uint16_t* index)
 {
     uint32_t status = CRYPTO_LIB_SUCCESS;
-    int i = 0;
     #ifdef SA_DEBUG
     if (sa_ptr->shivf_len > 0 && sa_ptr->iv != NULL)
     {
+        int i = 0;
         printf(KYEL "Using IV value:\n\t");
         for (i = 0; i < sa_ptr->iv_len; i++)
         {
