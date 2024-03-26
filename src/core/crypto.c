@@ -916,27 +916,42 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t* sa_ptr, uint8_t* arsn, u
 
     // Check for NULL pointers
     status = Crypto_Check_Anti_Replay_Verify_Pointers(sa_ptr, arsn, iv);
-    if(status != CRYPTO_LIB_SUCCESS)
-    {
-        mc_if->mc_log(status);
-        return status;   
-    }
-    
+
     // If sequence number field is greater than zero, check for replay
-    status = Crypto_Check_Anti_Replay_ARSNW(sa_ptr, arsn, &arsn_valid);
-    if(status != CRYPTO_LIB_SUCCESS)
+    if(status == CRYPTO_LIB_SUCCESS)
     {
-        mc_if->mc_log(status);
-        return status;   
+        status = Crypto_Check_Anti_Replay_ARSNW(sa_ptr, arsn, &arsn_valid);
     }
 
     // If IV is greater than zero and using GCM, check for replay
-    status = Crypto_Check_Anti_Replay_GCM(sa_ptr, iv, &iv_valid);
-    if(status != CRYPTO_LIB_SUCCESS)
+    if(status == CRYPTO_LIB_SUCCESS)
     {
-        mc_if->mc_log(status);
-        return status;   
+        status = Crypto_Check_Anti_Replay_GCM(sa_ptr, iv, &iv_valid);
     }
+
+    // Check for NULL pointers
+    // status = Crypto_Check_Anti_Replay_Verify_Pointers(sa_ptr, arsn, iv);
+    // if(status != CRYPTO_LIB_SUCCESS)
+    // {
+    //     mc_if->mc_log(status);
+    //     return status;   
+    // }
+    
+    // // If sequence number field is greater than zero, check for replay
+    // status = Crypto_Check_Anti_Replay_ARSNW(sa_ptr, arsn, &arsn_valid);
+    // if(status != CRYPTO_LIB_SUCCESS)
+    // {
+    //     mc_if->mc_log(status);
+    //     return status;   
+    // }
+
+    // // If IV is greater than zero and using GCM, check for replay
+    // status = Crypto_Check_Anti_Replay_GCM(sa_ptr, iv, &iv_valid);
+    // if(status != CRYPTO_LIB_SUCCESS)
+    // {
+    //     mc_if->mc_log(status);
+    //     return status;   
+    // }
 
     // For GCM specifically, if have a valid IV...
     if ((sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM) && (iv_valid == CRYPTO_TRUE))
@@ -958,6 +973,12 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t* sa_ptr, uint8_t* arsn, u
     if (sa_ptr->ecs != CRYPTO_CIPHER_AES256_GCM && arsn_valid == CRYPTO_TRUE)
     {
         memcpy(sa_ptr->arsn, arsn, sa_ptr->arsn_len);
+    }
+
+    if(status != CRYPTO_LIB_SUCCESS)
+    {
+        // Log error if it happened
+        mc_if->mc_log(status);
     }
 
     return status;
