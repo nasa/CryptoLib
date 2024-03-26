@@ -827,7 +827,7 @@ int32_t Crypto_Check_Anti_Replay_Verify_Pointers(SecurityAssociation_t* sa_ptr, 
     return status;
 }
 
-int32_t Crypto_Check_Anti_Replay_ARSNW(SecurityAssociation_t* sa_ptr, uint8_t* arsn, int8_t* ARSN_VALID)
+int32_t Crypto_Check_Anti_Replay_ARSNW(SecurityAssociation_t* sa_ptr, uint8_t* arsn, int8_t* arsn_valid)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     if (sa_ptr->shsnf_len > 0)
@@ -855,14 +855,14 @@ int32_t Crypto_Check_Anti_Replay_ARSNW(SecurityAssociation_t* sa_ptr, uint8_t* a
         // Valid ARSN received, increment stored value
         else
         {
-            *ARSN_VALID = CRYPTO_TRUE;
+            *arsn_valid = CRYPTO_TRUE;
             // memcpy(sa_ptr->arsn, arsn, sa_ptr->arsn_len);
         }
     }
     return status;
 }
 
-int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t* sa_ptr, uint8_t* iv, int8_t* IV_VALID)
+int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t* sa_ptr, uint8_t* iv, int8_t* iv_valid)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     if ((sa_ptr->iv_len > 0) && (sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM))
@@ -898,7 +898,7 @@ int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t* sa_ptr, uint8_t* iv,
         // Valid IV received, increment stored value
         else
         {
-            *IV_VALID = CRYPTO_TRUE;
+            *iv_valid = CRYPTO_TRUE;
             // memcpy(sa_ptr->iv, iv, sa_ptr->iv_len);
         }
     }
@@ -911,8 +911,8 @@ int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t* sa_ptr, uint8_t* iv,
 int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t* sa_ptr, uint8_t* arsn, uint8_t* iv)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    int8_t IV_VALID = -1;
-    int8_t ARSN_VALID = -1;
+    int8_t iv_valid = -1;
+    int8_t arsn_valid = -1;
 
     // Check for NULL pointers
     status = Crypto_Check_Anti_Replay_Verify_Pointers(sa_ptr, arsn, iv);
@@ -923,7 +923,7 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t* sa_ptr, uint8_t* arsn, u
     }
     
     // If sequence number field is greater than zero, check for replay
-    status = Crypto_Check_Anti_Replay_ARSNW(sa_ptr, arsn, &ARSN_VALID);
+    status = Crypto_Check_Anti_Replay_ARSNW(sa_ptr, arsn, &arsn_valid);
     if(status != CRYPTO_LIB_SUCCESS)
     {
         mc_if->mc_log(status);
@@ -931,7 +931,7 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t* sa_ptr, uint8_t* arsn, u
     }
 
     // If IV is greater than zero and using GCM, check for replay
-    status = Crypto_Check_Anti_Replay_GCM(sa_ptr, iv, &IV_VALID);
+    status = Crypto_Check_Anti_Replay_GCM(sa_ptr, iv, &iv_valid);
     if(status != CRYPTO_LIB_SUCCESS)
     {
         mc_if->mc_log(status);
@@ -939,10 +939,10 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t* sa_ptr, uint8_t* arsn, u
     }
 
     // For GCM specifically, if have a valid IV...
-    if ((sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM) && (IV_VALID == CRYPTO_TRUE))
+    if ((sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM) && (iv_valid == CRYPTO_TRUE))
     {
         // Using ARSN? Need to be valid to increment both
-        if (sa_ptr->arsn_len > 0 && ARSN_VALID == CRYPTO_TRUE)
+        if (sa_ptr->arsn_len > 0 && arsn_valid == CRYPTO_TRUE)
         {
             memcpy(sa_ptr->iv, iv, sa_ptr->iv_len);
             memcpy(sa_ptr->arsn, arsn, sa_ptr->arsn_len);
@@ -955,7 +955,7 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t* sa_ptr, uint8_t* arsn, u
     }
 
     // If not GCM, and ARSN is valid - can incrmeent it
-    if (sa_ptr->ecs != CRYPTO_CIPHER_AES256_GCM && ARSN_VALID == CRYPTO_TRUE)
+    if (sa_ptr->ecs != CRYPTO_CIPHER_AES256_GCM && arsn_valid == CRYPTO_TRUE)
     {
         memcpy(sa_ptr->arsn, arsn, sa_ptr->arsn_len);
     }
