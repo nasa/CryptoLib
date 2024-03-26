@@ -23,6 +23,190 @@
 
 #include <string.h> // memcpy/memset
 
+int32_t Crypto_TM_Sanity_Check(uint8_t* pTfBuffer)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    // Passed a null, return an error
+    if (!pTfBuffer)
+    {
+        return CRYPTO_LIB_ERR_NULL_BUFFER;
+        return status;
+    }
+
+    if ((crypto_config.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
+    {
+        printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
+        status = CRYPTO_LIB_ERR_NO_CONFIG;
+        // Can't mc_log since it's not configured
+        return status;  // return immediately so a NULL crypto_config is not dereferenced later
+    }
+    return status;
+}
+
+int32_t Crypto_TM_Determine_SA_Service_Type(uint8_t* sa_service_type, SecurityAssociation_t* sa_ptr)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    if ((sa_ptr->est == 0) && (sa_ptr->ast == 0))
+    {
+        *sa_service_type = SA_PLAINTEXT;
+    }
+    else if ((sa_ptr->est == 0) && (sa_ptr->ast == 1))
+    {
+        *sa_service_type = SA_AUTHENTICATION;
+    }
+    else if ((sa_ptr->est == 1) && (sa_ptr->ast == 0))
+    {
+        *sa_service_type = SA_ENCRYPTION;
+    }
+    else if ((sa_ptr->est == 1) && (sa_ptr->ast == 1))
+    {
+        *sa_service_type = SA_AUTHENTICATED_ENCRYPTION;
+    }
+    else
+    {
+        // Probably unnecessary check
+        // Leaving for now as it would be cleaner in SA to have an association enum returned I believe
+        printf(KRED "Error: SA Service Type is not defined! \n" RESET);
+        status = CRYPTO_LIB_ERROR;
+        mc_if->mc_log(status);
+        return status;
+    }
+    return status;
+}
+
+void Crypto_TM_Check_For_Secondary_Header(uint8_t* pTfBuffer, uint16_t* idx)
+{
+    *idx = 4;
+    if((pTfBuffer[*idx] & 0x80) == 0x80)
+    {
+#ifdef TM_DEBUG
+        printf(KYEL "A TM Secondary Header flag is set!\n");
+#endif
+        // Secondary header is present
+        *idx = 6;
+        // Determine length of secondary header
+        // Length coded as total length of secondary header - 1
+        // Reference CCSDS 132.0-B-2 4.1.3.2.3
+        uint8_t secondary_hdr_len = (pTfBuffer[*idx] & 0x3F);
+#ifdef TM_DEBUG
+        printf(KYEL "Secondary Header Length is decoded as: %d\n", secondary_hdr_len);
+#endif
+        // Increment from current byte (1st byte of secondary header),
+        // to where the SPI would start
+        *idx += secondary_hdr_len + 1;
+    }
+    else
+    {
+        // No Secondary header, carry on as usual and increment to SPI start
+        *idx = 6;
+    }
+}
+
+int32_t Crypto_TM_IV_Sanity_Check(uint8_t* sa_service_type, SecurityAssociation_t* sa_ptr)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    #ifdef SA_DEBUG
+    if (sa_ptr->shivf_len > 0 && sa_ptr->iv != NULL)
+    {
+        printf(KYEL "Using IV value:\n\t");
+        for (int i = 0; i < sa_ptr->iv_len; i++)
+        {
+            printf("%02x", *(sa_ptr->iv + i));
+        }
+        printf("\n" RESET);
+        printf(KYEL "Transmitted IV value:\n\t");
+        for (int i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
+        {
+            printf("%02x", *(sa_ptr->iv + i));
+        }
+        printf("\n" RESET);
+    }
+#endif
+    if(*sa_service_type != SA_PLAINTEXT && sa_ptr->ecs_len == 0 && sa_ptr->acs_len ==0)
+    {
+        status = CRYPTO_LIB_ERR_NULL_CIPHERS;
+#ifdef TM_DEBUG
+        printf(KRED "CRYPTO_LIB_ERR_NULL_CIPHERS, Invalid cipher lengths, %d\n" RESET, CRYPTO_LIB_ERR_NULL_CIPHERS);
+#endif
+        mc_if->mc_log(status);
+        return status;
+    }
+
+    if(sa_ptr->est == 0 && sa_ptr->ast == 1)
+    {
+        if(sa_ptr->acs_len != 0)
+        {
+            if((sa_ptr->acs == CRYPTO_MAC_CMAC_AES256 || sa_ptr->acs == CRYPTO_MAC_HMAC_SHA256 || sa_ptr->acs == CRYPTO_MAC_HMAC_SHA512) &&
+                sa_ptr->iv_len > 0 )
+                {
+                    status = CRYPTO_LIB_ERR_IV_NOT_SUPPORTED_FOR_ACS_ALGO;
+                    mc_if->mc_log(status);
+                    return status;
+                }
+        }
+    }
+    return status;
+}
+
+void Crypto_TM_PKCS_Padding(uint32_t* pkcs_padding, SecurityAssociation_t* sa_ptr, uint8_t* pTfBuffer, uint16_t* idx_p)
+{
+    uint16_t idx = *idx_p;
+    if(*pkcs_padding)
+    {
+        uint8_t hex_padding[3] = {0};  //TODO: Create #Define for the 3
+        *pkcs_padding = *pkcs_padding & 0x00FFFFFF; // Truncate to be maxiumum of 3 bytes in size
+
+        // Byte Magic
+        hex_padding[0] = (*pkcs_padding >> 16) & 0xFF;
+        hex_padding[1] = (*pkcs_padding >> 8)  & 0xFF;
+        hex_padding[2] = (*pkcs_padding)  & 0xFF;
+
+        uint8_t padding_start = 0;
+        padding_start = 3 - sa_ptr->shplf_len;
+
+        for (int i = 0; i < sa_ptr->shplf_len; i++)
+        {
+            pTfBuffer[idx] = hex_padding[padding_start++];
+            idx++;
+        }
+    }
+    *idx_p = idx;
+}
+
+void Crypto_TM_Handle_Managed_Parameter_Flags(uint16_t* pdu_len)
+{
+    if(current_managed_parameters->has_ocf == TM_HAS_OCF)
+    {
+        *pdu_len -= 4;
+    }
+    if(current_managed_parameters->has_fecf == TM_HAS_FECF)
+    {
+        *pdu_len -= 2;
+    }
+}
+
+int32_t Crypto_TM_Get_Keys(crypto_key_t** ekp, crypto_key_t** akp, SecurityAssociation_t* sa_ptr)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    *ekp = key_if->get_key(sa_ptr->ekid);
+    if (ekp == NULL)
+    {
+        status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+        mc_if->mc_log(status);
+        return status;
+    }
+
+    
+    *akp = key_if->get_key(sa_ptr->akid);
+    if (akp == NULL)
+    {
+        status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+        mc_if->mc_log(status);
+        return status;
+    }
+    return status;
+}
+
 /**
  * @brief Function: Crypto_TM_ApplySecurity
  * @param ingest: uint8_t*
@@ -60,18 +244,10 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
     uint16_t scid = 0; 
     uint16_t vcid = 0;
 
-    // Passed a null, return an error
-    if (!pTfBuffer)
+    status = Crypto_TM_Sanity_Check(pTfBuffer);
+    if(status != CRYPTO_LIB_SUCCESS)
     {
-        return CRYPTO_LIB_ERR_NULL_BUFFER;
-    }
-
-    if ((crypto_config.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
-    {
-        printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
-        status = CRYPTO_LIB_ERR_NO_CONFIG;
-        // Can't mc_log since it's not configured
-        return status;  // return immediately so a NULL crypto_config is not dereferenced later
+        return status;
     }
 
     tfvn = ((uint8_t)pTfBuffer[0] & 0xC0) >> 6;
@@ -132,31 +308,8 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
 #endif
 
     // Determine SA Service Type
-    if ((sa_ptr->est == 0) && (sa_ptr->ast == 0))
-    {
-        sa_service_type = SA_PLAINTEXT;
-    }
-    else if ((sa_ptr->est == 0) && (sa_ptr->ast == 1))
-    {
-        sa_service_type = SA_AUTHENTICATION;
-    }
-    else if ((sa_ptr->est == 1) && (sa_ptr->ast == 0))
-    {
-        sa_service_type = SA_ENCRYPTION;
-    }
-    else if ((sa_ptr->est == 1) && (sa_ptr->ast == 1))
-    {
-        sa_service_type = SA_AUTHENTICATED_ENCRYPTION;
-    }
-    else
-    {
-        // Probably unnecessary check
-        // Leaving for now as it would be cleaner in SA to have an association enum returned I believe
-        printf(KRED "Error: SA Service Type is not defined! \n" RESET);
-        status = CRYPTO_LIB_ERROR;
-        mc_if->mc_log(status);
-        return status;
-    }
+    status = Crypto_TM_Determine_SA_Service_Type(&sa_service_type, sa_ptr);
+    if(status != CRYPTO_LIB_SUCCESS) return status;
 
     // Determine Algorithm cipher & mode. // TODO - Parse authentication_cipher, and handle AEAD cases properly
     if (sa_service_type != SA_PLAINTEXT)
@@ -186,30 +339,9 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
     // Note: Secondary headers are static only for a mission phase, not guaranteed static 
     // over the life of a mission Per CCSDS 132.0-B.3 Section 4.1.2.7.2.3
     // Secondary Header flag is 1st bit of 5th byte (index 4)
-    idx = 4;
-    if((pTfBuffer[idx] & 0x80) == 0x80)
-    {
-#ifdef TM_DEBUG
-        printf(KYEL "A TM Secondary Header flag is set!\n");
-#endif
-        // Secondary header is present
-        idx = 6;
-        // Determine length of secondary header
-        // Length coded as total length of secondary header - 1
-        // Reference CCSDS 132.0-B-2 4.1.3.2.3
-        uint8_t secondary_hdr_len = (pTfBuffer[idx] & 0x3F);
-#ifdef TM_DEBUG
-        printf(KYEL "Secondary Header Length is decoded as: %d\n", secondary_hdr_len);
-#endif
-        // Increment from current byte (1st byte of secondary header),
-        // to where the SPI would start
-        idx += secondary_hdr_len + 1;
-    }
-    else
-    {
-        // No Secondary header, carry on as usual and increment to SPI start
-        idx = 6;
-    }
+
+    Crypto_TM_Check_For_Secondary_Header(pTfBuffer, &idx);
+
     /**
      * Begin Security Header Fields
      * Reference CCSDS SDLP 3550b1 4.1.1.1.3
@@ -221,46 +353,9 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
     idx += 2;
 
     // Set initialization vector if specified
-#ifdef SA_DEBUG
-    if (sa_ptr->shivf_len > 0 && sa_ptr->iv != NULL)
-    {
-        printf(KYEL "Using IV value:\n\t");
-        for (i = 0; i < sa_ptr->iv_len; i++)
-        {
-            printf("%02x", *(sa_ptr->iv + i));
-        }
-        printf("\n" RESET);
-        printf(KYEL "Transmitted IV value:\n\t");
-        for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
-        {
-            printf("%02x", *(sa_ptr->iv + i));
-        }
-        printf("\n" RESET);
-    }
-#endif
-    if(sa_service_type != SA_PLAINTEXT && sa_ptr->ecs_len == 0 && sa_ptr->acs_len ==0)
-    {
-        status = CRYPTO_LIB_ERR_NULL_CIPHERS;
-#ifdef TM_DEBUG
-        printf(KRED "CRYPTO_LIB_ERR_NULL_CIPHERS, Invalid cipher lengths, %d\n" RESET, CRYPTO_LIB_ERR_NULL_CIPHERS);
-#endif
-        mc_if->mc_log(status);
-        return status;
-    }
+    status = Crypto_TM_IV_Sanity_Check(&sa_service_type, sa_ptr);
+    if(status != CRYPTO_LIB_SUCCESS) return status;
 
-    if(sa_ptr->est == 0 && sa_ptr->ast == 1)
-    {
-        if(sa_ptr->acs_len != 0)
-        {
-            if((sa_ptr->acs == CRYPTO_MAC_CMAC_AES256 || sa_ptr->acs == CRYPTO_MAC_HMAC_SHA256 || sa_ptr->acs == CRYPTO_MAC_HMAC_SHA512) &&
-                sa_ptr->iv_len > 0 )
-                {
-                    status = CRYPTO_LIB_ERR_IV_NOT_SUPPORTED_FOR_ACS_ALGO;
-                    mc_if->mc_log(status);
-                    return status;
-                }
-        }
-    }
     // Start index from the transmitted portion
     for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
     {
@@ -295,26 +390,8 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
      * cryptographic process, consisting of an integral number of octets. - CCSDS 3550b1
      **/
     // TODO: Set this depending on crypto cipher used
+    Crypto_TM_PKCS_Padding(&pkcs_padding, sa_ptr, pTfBuffer, &idx);
 
-    if(pkcs_padding)
-    {
-        uint8_t hex_padding[3] = {0};  //TODO: Create #Define for the 3
-        pkcs_padding = pkcs_padding & 0x00FFFFFF; // Truncate to be maxiumum of 3 bytes in size
-        
-        // Byte Magic
-        hex_padding[0] = (pkcs_padding >> 16) & 0xFF;
-        hex_padding[1] = (pkcs_padding >> 8)  & 0xFF;
-        hex_padding[2] = (pkcs_padding)  & 0xFF;
-        
-        uint8_t padding_start = 0;
-        padding_start = 3 - sa_ptr->shplf_len;
-
-        for (i = 0; i < sa_ptr->shplf_len; i++)
-        {
-            pTfBuffer[idx] = hex_padding[padding_start++];
-            idx++;
-        }
-    }
         
     /**
      * End Security Header Fields
@@ -338,14 +415,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
     // Calculate size of data to be encrypted
     pdu_len = current_managed_parameters->max_frame_size - idx - sa_ptr->stmacf_len;
     // Check other managed parameter flags, subtract their lengths from data field if present
-    if(current_managed_parameters->has_ocf == TM_HAS_OCF)
-    {
-        pdu_len -= 4;
-    }
-    if(current_managed_parameters->has_fecf == TM_HAS_FECF)
-    {
-        pdu_len -= 2;
-    }
+    Crypto_TM_Handle_Managed_Parameter_Flags(&pdu_len);
 
 #ifdef TM_DEBUG
     printf(KYEL "Data location starts at: %d\n" RESET, idx);
@@ -365,20 +435,10 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
 
     // Get Key
     crypto_key_t* ekp = NULL;
-    ekp = key_if->get_key(sa_ptr->ekid);
-    if (ekp == NULL)
-    {
-        status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-        mc_if->mc_log(status);
-        return status;
-    }
-
     crypto_key_t* akp = NULL;
-    akp = key_if->get_key(sa_ptr->akid);
-    if (akp == NULL)
+    status = Crypto_TM_Get_Keys(&ekp, &akp, sa_ptr);
+    if(status != CRYPTO_LIB_SUCCESS)
     {
-        status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-        mc_if->mc_log(status);
         return status;
     }
 
