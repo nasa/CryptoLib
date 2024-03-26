@@ -286,7 +286,7 @@ int32_t base64urlDecode(const char_t* input, size_t inputLen, void* output,
     //Check status code
     if(!error)
     {
-        base64urlDecode_rempadding(inputLen,value, n, p);
+        base64urlDecode_rempadding(inputLen,value, &n, p);
     }
 
     //Total number of bytes that have been written
