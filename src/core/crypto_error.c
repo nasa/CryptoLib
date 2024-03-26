@@ -196,7 +196,7 @@ char* Crypto_Get_Error_Code_Enum_String(int32_t crypto_error_code)
     }
     else if(crypto_error_code <= 0) // Cryptolib Core Error Codes
     {
-        return_string = Crypto_Get_Crypto_Error_Code_String(crypto_error_code, -45, crypto_enum_errlist_core[(crypto_error_code * (-1))]);
+        return_string = Crypto_Get_Crypto_Error_Code_String(crypto_error_code, -51, crypto_enum_errlist_core[(crypto_error_code * (-1))]);
     }
     return return_string;
 }
