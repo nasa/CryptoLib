@@ -27,7 +27,13 @@
 static int32_t crypto_tc_validate_sa(SecurityAssociation_t* sa);
 static int32_t crypto_handle_incrementing_nontransmitted_counter(uint8_t* dest, uint8_t* src, int src_full_len, int transmitted_len, int window);
 
-
+/**
+ * @brief Function: Crypto_TC_Get_SA_Service_Type
+ * Determines the SA service type
+ * @param sa_service_type: uint8*
+ * @param sa_ptr: SecurityAssociation_t*
+ * @return int32: ENUM - Service type
+ **/
 int32_t Crypto_TC_Get_SA_Service_Type(uint8_t* sa_service_type, SecurityAssociation_t* sa_ptr)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -60,6 +66,15 @@ int32_t Crypto_TC_Get_SA_Service_Type(uint8_t* sa_service_type, SecurityAssociat
     return status;
 }
 
+/**
+ * @brief Function: Crypto_TC_Get_Ciper_Mode_TCA
+ * Validates Cipher Mode
+ * @param sa_service_type: uint8_t
+ * @param encryption_cipher: uint32_t*
+ * @param ecs_is_aead_algorithm: uint8_t*
+ * @param sa_ptr: SecurityAssociation_t*
+ * @return int32: Cipher Mode or Error Enum
+ **/
 int32_t Crypto_TC_Get_Ciper_Mode_TCA(uint8_t sa_service_type, uint32_t* encryption_cipher, uint8_t* ecs_is_aead_algorithm, SecurityAssociation_t* sa_ptr)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -89,6 +104,12 @@ int32_t Crypto_TC_Get_Ciper_Mode_TCA(uint8_t sa_service_type, uint32_t* encrypti
     return status;
 }
 
+/**
+ * @brief Function: Crypto_TC_Check_CMD_Frame_Flag
+ * Validates the Command Frame Flag
+ * @param header_cc: uint8_t
+ * @return int32: Success/Failure
+ **/
 int32_t Crypto_TC_Check_CMD_Frame_Flag(uint8_t header_cc)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -109,6 +130,12 @@ int32_t Crypto_TC_Check_CMD_Frame_Flag(uint8_t header_cc)
     return status;
 }
 
+/**
+ * @brief Function: Crypto_TC_Validate_SA_Service_Type
+ * Validates the SA service type
+ * @param sa_service_type: uint8_t
+ * @return int32: Success/Failure
+ **/
 int32_t Crypto_TC_Validate_SA_Service_Type(uint8_t sa_service_type)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -121,6 +148,17 @@ int32_t Crypto_TC_Validate_SA_Service_Type(uint8_t sa_service_type)
     return status;
 }
 
+/**
+ * @brief Function: Crypto_TC_Handle_Enc_Padding
+ * Handles Padding as necessary, returns success/failure
+ * @param sa_service_type: uint8_t
+ * @param pkcs_padding: uint32_t*
+ * @param p_enc_frame_len: uint16_t*
+ * @param new_enc_frame_header_field_length: uint16_t* 
+ * @param tf_payload_len: uint16_t 
+ * @param sa_ptr: SecurityAssociation_t* 
+ * @return int32: Success/Failure
+ **/
 int32_t Crypto_TC_Handle_Enc_Padding(uint8_t sa_service_type, uint32_t* pkcs_padding, uint16_t* p_enc_frame_len, uint16_t* new_enc_frame_header_field_length, uint16_t tf_payload_len, SecurityAssociation_t* sa_ptr)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -155,6 +193,12 @@ int32_t Crypto_TC_Handle_Enc_Padding(uint8_t sa_service_type, uint32_t* pkcs_pad
     return status;
 }
 
+/**
+ * @brief Function: Crypto_TC_Frame_Validation
+ * Frame validation - sanity check
+ * @param p_enc_frame_len: uint16_t*
+ * @return int32: Success/Failure
+ **/
 int32_t Crypto_TC_Frame_Validation(uint16_t* p_enc_frame_len)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -180,6 +224,14 @@ int32_t Crypto_TC_Frame_Validation(uint16_t* p_enc_frame_len)
     return status;
 }
 
+/**
+ * TODO: Should this be pre-allocated in the library?
+ * @brief Function: Crypto_TC_Accio_Buffer
+ * Buffer creation for KMC
+ * @param p_new_enc_frame: uint8_t**
+ * @param p_enc_frame_len: uint16_t*
+ * @return int32: Creates Buffer, Returns Success/Failure
+ **/
 int32_t Crypto_TC_Accio_Buffer(uint8_t** p_new_enc_frame, uint16_t* p_enc_frame_len)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -195,6 +247,12 @@ int32_t Crypto_TC_Accio_Buffer(uint8_t** p_new_enc_frame, uint16_t* p_enc_frame_
     return status;
 }
 
+/**
+ * @brief Function: Crypto_TC_ACS_Algo_Check
+ * Verifies ACS Algorithm - Sanity Check
+ * @param sa_ptr: SecurityAssociation_t*
+ * @return int32: Success/Failure
+ **/
 int32_t Crypto_TC_ACS_Algo_Check(SecurityAssociation_t* sa_ptr)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -213,6 +271,14 @@ int32_t Crypto_TC_ACS_Algo_Check(SecurityAssociation_t* sa_ptr)
     return status;
 }
 
+/**
+ * @brief Function: Crypto_TC_Check_IV_Setup
+ * Verifies IV - Sanity Check
+ * @param sa_ptr: SecurityAssociation_t*
+ * @param p_new_enc_frame: uint8_t*
+ * @param index: uint16_t*
+ * @return int32: Success/Failure
+ **/
 int32_t Crypto_TC_Check_IV_Setup(SecurityAssociation_t* sa_ptr, uint8_t* p_new_enc_frame, uint16_t *index)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -249,6 +315,7 @@ int32_t Crypto_TC_Check_IV_Setup(SecurityAssociation_t* sa_ptr, uint8_t* p_new_e
     *index = index_temp;
     return status;
 }
+
 
 int32_t Crypto_TC_Do_Encrypt_PLAINTEXT(uint8_t sa_service_type, SecurityAssociation_t* sa_ptr, uint16_t* mac_loc, uint16_t tf_payload_len, uint8_t segment_hdr_len, uint8_t* p_new_enc_frame, crypto_key_t* ekp, uint8_t** aad, uint8_t ecs_is_aead_algorithm, uint16_t *index_p, const uint8_t* p_in_frame, char* cam_cookies, uint32_t pkcs_padding)
 {

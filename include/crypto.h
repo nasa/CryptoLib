@@ -117,8 +117,17 @@ int32_t Crypto_TC_Get_Keys(crypto_key_t** ekp, crypto_key_t** akp, SecurityAssoc
 int32_t Crypto_TC_Check_IV_ARSN(SecurityAssociation_t* sa_ptr,TC_t* tc_sdls_processed_frame);
 uint32_t Crypto_TC_Sanity_Validations(TC_t* tc_sdls_processed_frame, SecurityAssociation_t** sa_ptr);
 void Crypto_TC_Get_Ciper_Mode_TCP(uint8_t sa_service_type, uint32_t* encryption_cipher, uint8_t* ecs_is_aead_algorithm, SecurityAssociation_t* sa_ptr);
+int32_t Crypto_TC_Get_Ciper_Mode_TCA(uint8_t sa_service_type, uint32_t* encryption_cipher, uint8_t* ecs_is_aead_algorithm, SecurityAssociation_t* sa_ptr);
 void Crypto_TC_Calc_Lengths(uint8_t* fecf_len, uint8_t* segment_hdr_len);
 void Crypto_TC_Set_Segment_Header(TC_t* tc_sdls_processed_frame, uint8_t* ingest, int* byte_idx);
+int32_t Crypto_TC_Check_CMD_Frame_Flag(uint8_t header_cc);
+int32_t Crypto_TC_Validate_SA_Service_Type(uint8_t sa_service_type);
+int32_t Crypto_TC_Handle_Enc_Padding(uint8_t sa_service_type, uint32_t* pkcs_padding, uint16_t* p_enc_frame_len, uint16_t* new_enc_frame_header_field_length, uint16_t tf_payload_len, SecurityAssociation_t* sa_ptr);
+int32_t Crypto_TC_Frame_Validation(uint16_t* p_enc_frame_len);
+int32_t Crypto_TC_Accio_Buffer(uint8_t** p_new_enc_frame, uint16_t* p_enc_frame_len);
+int32_t Crypto_TC_ACS_Algo_Check(SecurityAssociation_t* sa_ptr);
+int32_t Crypto_TC_Check_IV_Setup(SecurityAssociation_t* sa_ptr, uint8_t* p_new_enc_frame, uint16_t *index);
+
 
 // Telemetry (TM)
 extern int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer);
