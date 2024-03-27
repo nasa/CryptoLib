@@ -127,6 +127,17 @@ int32_t Crypto_TC_Frame_Validation(uint16_t* p_enc_frame_len);
 int32_t Crypto_TC_Accio_Buffer(uint8_t** p_new_enc_frame, uint16_t* p_enc_frame_len);
 int32_t Crypto_TC_ACS_Algo_Check(SecurityAssociation_t* sa_ptr);
 int32_t Crypto_TC_Check_IV_Setup(SecurityAssociation_t* sa_ptr, uint8_t* p_new_enc_frame, uint16_t *index);
+int32_t Crypto_TC_Do_Encrypt_PLAINTEXT(uint8_t sa_service_type, SecurityAssociation_t* sa_ptr, uint16_t* mac_loc, uint16_t tf_payload_len, uint8_t segment_hdr_len, uint8_t* p_new_enc_frame, crypto_key_t* ekp, uint8_t** aad, uint8_t ecs_is_aead_algorithm, uint16_t *index_p, const uint8_t* p_in_frame, char* cam_cookies, uint32_t pkcs_padding);
+void Crypto_TC_Do_Encrypt_NONPLAINTEXT(uint8_t sa_service_type, SecurityAssociation_t* sa_ptr);
+int32_t Crypto_TC_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t* sa_ptr, uint16_t* mac_loc, uint16_t tf_payload_len, uint8_t segment_hdr_len, uint8_t* p_new_enc_frame, crypto_key_t* ekp, uint8_t** aad, uint8_t ecs_is_aead_algorithm, uint16_t *index_p, const uint8_t* p_in_frame, char* cam_cookies, uint32_t pkcs_padding, uint16_t new_enc_frame_header_field_length, uint16_t* new_fecf);
+int32_t Crypto_TC_Check_Init_Setup(uint16_t in_frame_length);
+int32_t Crypto_TC_Sanity_Setup(const uint8_t* p_in_frame, const uint16_t in_frame_length);
+int32_t Crytpo_TC_Validate_TC_Temp_Header(const uint16_t in_frame_length, TC_FramePrimaryHeader_t temp_tc_header, const uint8_t* p_in_frame, uint8_t* map_id, uint8_t* segmentation_hdr, SecurityAssociation_t** sa_ptr);
+int32_t Crypto_TC_Finalize_Frame_Setup(uint8_t sa_service_type, uint32_t* pkcs_padding, uint16_t* p_enc_frame_len, uint16_t* new_enc_frame_header_field_length, uint16_t tf_payload_len, SecurityAssociation_t** sa_ptr, uint8_t** p_new_enc_frame);
+void Crypto_TC_Handle_Padding(uint32_t pkcs_padding, SecurityAssociation_t* sa_ptr, uint8_t* p_new_enc_frame, uint16_t* index);
+int32_t Crypto_TC_Set_IV(SecurityAssociation_t* sa_ptr, uint8_t* p_new_enc_frame, uint16_t* index);
+
+
 
 
 // Telemetry (TM)
