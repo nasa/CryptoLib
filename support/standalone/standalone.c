@@ -141,23 +141,23 @@ int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char* 
         }
         break;
 
-        case CRYPTO_CMD_VCID:
-            if (crypto_standalone_check_number_arguments(num_tokens, 1) == CRYPTO_LIB_SUCCESS)
+    case CRYPTO_CMD_VCID:
+        if (crypto_standalone_check_number_arguments(num_tokens, 1) == CRYPTO_LIB_SUCCESS)
+        {
+            uint8_t vcid = (uint8_t) atoi(&tokens[0]);
+            /* Confirm new VCID valid */
+            if (vcid < 64)
             {
-                uint8_t vcid = (uint8_t) atoi(&tokens[0]);
-                /* Confirm new VCID valid */
-                if (vcid < 64)
+                SaInterface sa_if = get_sa_interface_inmemory();
+                SecurityAssociation_t* test_association = NULL;
+                sa_if->sa_get_from_spi(vcid, &test_association);
+                
+                /* Handle special case for VCID */
+                if(vcid == 1)
                 {
-                    SaInterface sa_if = get_sa_interface_inmemory();
-                    SecurityAssociation_t* test_association = NULL;
-                    sa_if->sa_get_from_spi(vcid, &test_association);
-                    
-                    /* Handle special case for VCID */
-                    if(vcid == 1)
-                    {
-                        printf("Special case for VCID 1! \n");
-                        vcid = 0;
-                    }
+                    printf("Special case for VCID 1! \n");
+                    vcid = 0;
+                }
 
                 if ((test_association->sa_state == SA_OPERATIONAL) &&
                     (test_association->gvcid_blk.mapid == TYPE_TC) &&
@@ -300,8 +300,9 @@ int32_t crypto_reset(void)
         printf("CryptoLib initialization failed with error %d \n", status);
     }
 
-    status = Crypto_Init_TM_Unit_Test();
-    // TODO: CryptoLib appears to be looking at the second byte and not specficially the SCID bits
+    status = Crypto_Init_TC_Unit_Test();
+    // TODO: Crypto_Init_TM_Unit_Test() appears to be looking at the second byte and not specifically the SCID bits
+    // TODO: How to initialize for both TC and TM?
     if (status != CRYPTO_LIB_SUCCESS)
     {
         printf("CryptoLib initialization failed with error %d \n", status);
