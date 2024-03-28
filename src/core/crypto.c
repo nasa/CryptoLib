@@ -1070,7 +1070,7 @@ int32_t Crypto_Get_Security_Header_Length(SecurityAssociation_t* sa_ptr)
 
 /**
 * @brief: Function: Crypto_Get_Security_Trailer_Length
-* Return Security Header Length
+* Return Security Trailer Length
 * @param sa_ptr: SecurityAssociation_t*
 **/
 int32_t Crypto_Get_Security_Trailer_Length(SecurityAssociation_t* sa_ptr)
@@ -1078,7 +1078,7 @@ int32_t Crypto_Get_Security_Trailer_Length(SecurityAssociation_t* sa_ptr)
     if (!sa_ptr) 
     { 
 #ifdef DEBUG
-        printf(KRED "Get_Trailer_Header_Length passed Null SA!\n" RESET);
+        printf(KRED "Get_Trailer_Trailer_Length passed Null SA!\n" RESET);
 #endif
         return CRYPTO_LIB_ERR_NULL_SA;
     }
