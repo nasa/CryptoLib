@@ -300,9 +300,7 @@ int32_t crypto_reset(void)
         printf("CryptoLib initialization failed with error %d \n", status);
     }
 
-    status = Crypto_Init_TC_Unit_Test();
-    // TODO: Crypto_Init_TM_Unit_Test() appears to be looking at the second byte and not specifically the SCID bits
-    // TODO: How to initialize for both TC and TM?
+    status = Crypto_SC_Init();
     if (status != CRYPTO_LIB_SUCCESS)
     {
         printf("CryptoLib initialization failed with error %d \n", status);
@@ -700,6 +698,9 @@ int main(int argc, char* argv[])
         printf("Invalid number of arguments! \n");
         printf("  Expected zero but received: %s \n", argv[1]);
     }
+
+    /* Startup delay */
+    sleep(5);
 
     /* Initialize CryptoLib */
     status = crypto_reset();

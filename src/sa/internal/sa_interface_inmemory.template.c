@@ -73,8 +73,7 @@ int32_t sa_config(void)
     int32_t status = CRYPTO_LIB_SUCCESS;
 
     // Security Associations
-    // SA 1 - CLEAR MODE
-    // SA 1 VC0/1 is now SA 1-VC0, SA 8-VC1
+    // SA 1 - TC CLEAR MODE
     sa[1].spi = 1;
     sa[1].sa_state = SA_OPERATIONAL;
     sa[1].est = 0;
@@ -89,21 +88,18 @@ int32_t sa_config(void)
     sa[1].gvcid_blk.vcid = 0;
     sa[1].gvcid_blk.mapid = TYPE_TC;
 
-    // SA 2 - KEYED;  ARSNW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 128
-    sa[2].spi = 2;
-    sa[2].ekid = 128;
-    sa[2].sa_state = SA_KEYED;
-    sa[2].est = 1;
-    sa[2].ast = 1;
-    sa[2].ecs_len = 1;
-    sa[2].ecs = CRYPTO_CIPHER_AES256_GCM;    
-    sa[2].shivf_len = 12;
-    sa[2].iv_len = 12;
-    *(sa[2].iv + sa[2].shivf_len - 1) = 0;
-    sa[2].abm_len = ABM_SIZE; // 20
+    // SA 2 - TM CLEAR MODE
+    sa[2].spi = 8;
+    sa[2].sa_state = SA_OPERATIONAL;
+    sa[2].est = 0;
+    sa[2].ast = 0;
+    sa[2].arsn_len = 1;
     sa[2].arsnw_len = 1;
     sa[2].arsnw = 5;
-    sa[2].arsn_len = (sa[2].arsnw * 2) + 1;
+    sa[2].gvcid_blk.tfvn = 0;
+    sa[2].gvcid_blk.scid = SCID & 0x3FF;
+    sa[2].gvcid_blk.vcid = 1;
+    sa[2].gvcid_blk.mapid = TYPE_TM;
 
     // SA 3 - KEYED;   ARSNW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 129
     sa[3].spi = 3;

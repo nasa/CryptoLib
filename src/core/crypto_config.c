@@ -61,11 +61,10 @@ int32_t Crypto_SC_Init(void)
                             SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TC
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 4, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
 
     // TM
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, 1786, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, 1786, AOS_FHEC_NA, AOS_IZ_NA, 0);
     status = Crypto_Init();
     return status;
 }
