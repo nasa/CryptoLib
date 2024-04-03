@@ -23,6 +23,12 @@
 
 #include <string.h> // memcpy/memset
 
+/**
+ * @brief Function: Crypto_TM_Sanity_Check
+ * Verify that needed buffers and settings are not null
+ * @param pTfBuffer: uint8_t*
+ * @return int32: Success/Failure
+**/
 int32_t Crypto_TM_Sanity_Check(uint8_t* pTfBuffer)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -43,6 +49,13 @@ int32_t Crypto_TM_Sanity_Check(uint8_t* pTfBuffer)
     return status;
 }
 
+/**
+ * @brief Function: Crypto_TM_Determine_SA_Service_Type
+ * Determines the service type for Security Association
+ * @param sa_service_type: uint8_t*
+ * @param sa_ptr: SecurityAssociation_t*
+ * @return int32_t: Success/Failure
+**/
 int32_t Crypto_TM_Determine_SA_Service_Type(uint8_t* sa_service_type, SecurityAssociation_t* sa_ptr)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -74,6 +87,12 @@ int32_t Crypto_TM_Determine_SA_Service_Type(uint8_t* sa_service_type, SecurityAs
     return status;
 }
 
+/**
+ * @brief Function: Crypto_TM_Check_For_Secondary_Header
+ * Determines if a secondary header exists
+ * @param pTfBuffer: uint8_t*
+ * @param idx: uint16_t*
+**/
 void Crypto_TM_Check_For_Secondary_Header(uint8_t* pTfBuffer, uint16_t* idx)
 {
     *idx = 4;
@@ -102,6 +121,13 @@ void Crypto_TM_Check_For_Secondary_Header(uint8_t* pTfBuffer, uint16_t* idx)
     }
 }
 
+/**
+ * @brief Function: Crypto_TM_IV_Sanity_Check
+ * Verifies sanity of IV.  Validates IV Values, Ciphers, and Algorithms
+ * @param sa_service_type: uint8_t*
+ * @param sa_ptr: SecurityAssociation_t*
+ * @return int32_t: Success/Failure
+**/
 int32_t Crypto_TM_IV_Sanity_Check(uint8_t* sa_service_type, SecurityAssociation_t* sa_ptr)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -148,6 +174,14 @@ int32_t Crypto_TM_IV_Sanity_Check(uint8_t* sa_service_type, SecurityAssociation_
     return status;
 }
 
+/**
+ * @brief Function: Crypto_TM_PKCS_Padding
+ * Handles pkcs padding as necessary
+ * @param pkcs_padding: uint32_t*
+ * @param sa_ptr: SecurityAssociation_t*
+ * @param pTfBuffer: uint8_t*
+ * @param idx_p: uint16_t*
+**/
 void Crypto_TM_PKCS_Padding(uint32_t* pkcs_padding, SecurityAssociation_t* sa_ptr, uint8_t* pTfBuffer, uint16_t* idx_p)
 {
     uint16_t idx = *idx_p;
@@ -173,6 +207,11 @@ void Crypto_TM_PKCS_Padding(uint32_t* pkcs_padding, SecurityAssociation_t* sa_pt
     *idx_p = idx;
 }
 
+/**
+ * @brief Function: Crypto_TM_Handle_Managed_Parameter_Flags
+ * Handles pdu length while dealing with ocf/fecf
+ * @param pdu_len: uint16_t*
+**/
 void Crypto_TM_Handle_Managed_Parameter_Flags(uint16_t* pdu_len)
 {
     if(current_managed_parameters->has_ocf == TM_HAS_OCF)
@@ -185,6 +224,14 @@ void Crypto_TM_Handle_Managed_Parameter_Flags(uint16_t* pdu_len)
     }
 }
 
+/**
+ * @brief Function: Crypto_TM_Get_Keys
+ * Retrieves keys from SA based on ekid/akid.
+ * @param ekp: crypto_key_t**
+ * @param akp: crypto_key_t**
+ * @param sa_ptr: SecurityAssociation_t*
+ * @return int32_t: Success/Failure
+**/
 int32_t Crypto_TM_Get_Keys(crypto_key_t** ekp, crypto_key_t** akp, SecurityAssociation_t* sa_ptr)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -204,6 +251,19 @@ int32_t Crypto_TM_Get_Keys(crypto_key_t** ekp, crypto_key_t** akp, SecurityAssoc
     return status;
 }
 
+/**
+ * @brief Function: Crypto_TM_Do_Encrypt_NONPLAINTEXT
+ * Preps Encryption for Non-plain-text Authentication and Authenticated Encryption
+ * @param sa_service_type: uint8_t
+ * @param aad_len: uint16_t*
+ * @param mac_loc: int*
+ * @param idx_p: uint16_t*
+ * @param pdu_len: uint16_t
+ * @param pTfBuffer: uint8_t*
+ * @param aad: uint8_t*
+ * @param sa_ptr: SecurityAssociation_t*
+ * @return int32_t: Success/Failure
+**/
 int32_t Crypto_TM_Do_Encrypt_NONPLAINTEXT(uint8_t sa_service_type, uint16_t* aad_len, int* mac_loc, uint16_t* idx_p, uint16_t pdu_len, uint8_t* pTfBuffer, uint8_t* aad, SecurityAssociation_t* sa_ptr)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -247,6 +307,23 @@ int32_t Crypto_TM_Do_Encrypt_NONPLAINTEXT(uint8_t sa_service_type, uint16_t* aad
     return status;
 }
 
+/**
+ * @brief Function: Crypto_TM_Do_Encrypt_NONPLAINTEXT_AEAD_Logic
+ * Preps Encryption for Non-plain-text Encryption and Authenticated Encryption for AEAD Algorithms
+ * @param sa_service_type: uint8_t
+ * @param ecs_is_aead_algorithm: uint8_t
+ * @param pTfBuffer: uint8_t*
+ * @param pdu_len: uint16_t
+ * @param data_loc: uint16_t
+ * @param ekp: crypto_key_t*
+ * @param akp: crypto_key_t*
+ * @param pkcs_padding: uint32_t
+ * @param mac_loc: int*
+ * @param aad_len: uint16_t*
+ * @param aad: uint8_t*
+ * @param sa_ptr: SecurityAssociation_t*
+ * @return int32_t: Success/Failure
+**/
 int32_t Crypto_TM_Do_Encrypt_NONPLAINTEXT_AEAD_Logic(uint8_t sa_service_type, uint8_t ecs_is_aead_algorithm, uint8_t* pTfBuffer, uint16_t pdu_len, uint16_t data_loc, crypto_key_t* ekp, crypto_key_t* akp, uint32_t pkcs_padding, int* mac_loc, uint16_t* aad_len, uint8_t* aad, SecurityAssociation_t* sa_ptr)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -350,6 +427,13 @@ int32_t Crypto_TM_Do_Encrypt_NONPLAINTEXT_AEAD_Logic(uint8_t sa_service_type, ui
     return status;
 }
 
+/**
+ * @brief Function: Crypto_TM_Do_Encrypt_Handle_Increment
+ * Handles the incrementing of IV and ARSN as necessary
+ * @param sa_service_type: uint8_t
+ * @param sa_ptr: SecurityAssociation_t*
+ * @return int32_t: Success/Failure
+**/
 int32_t Crypto_TM_Do_Encrypt_Handle_Increment(uint8_t sa_service_type, SecurityAssociation_t* sa_ptr)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -410,6 +494,25 @@ int32_t Crypto_TM_Do_Encrypt_Handle_Increment(uint8_t sa_service_type, SecurityA
     return status;
 }
 
+/**
+ * @brief Function: Crypto_TM_Do_Encrypt
+ * Parent function for performing TM Encryption
+ * @param sa_service_type: uint8_t
+ * @param sa_ptr: SecurityAssociation_t*
+ * @param aad_len: uint16_t*
+ * @param mac_loc: int*
+ * @param idx_p: uint16_t*
+ * @param pdu_len: uint16_t
+ * @param pTfBuffer: uint8_t*
+ * @param aad: uint8_t*
+ * @param ecs_is_aead_algorithm: uint8_t
+ * @param data_loc: uint16_t
+ * @param ekp: crypto_key_t*
+ * @param akp: crypto_key_t*
+ * @param pkcs_padding: uint32_t
+ * @param new_fecf: uint16_t*
+ * @return int32_t: Success/Failure
+**/
 int32_t Crypto_TM_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t* sa_ptr, uint16_t* aad_len, int* mac_loc, uint16_t* idx_p, uint16_t pdu_len, uint8_t* pTfBuffer, uint8_t* aad, uint8_t ecs_is_aead_algorithm, uint16_t data_loc, crypto_key_t* ekp, crypto_key_t* akp, uint32_t pkcs_padding, uint16_t* new_fecf)
 {
 /**
@@ -493,6 +596,15 @@ int32_t Crypto_TM_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t* sa_
     return status;
 }
 
+
+/**
+ * @brief Function: Crypto_TM_ApplySecurity_Debug_Print
+ * Simple Debug Print function for TM.  Displays
+ * Data Location, size, and index at end of SPI.  OCF Location, FECF Location
+ * @param idx: uint16_t
+ * @param pdu_len: uint16_t
+ * @param sa_ptr: SecurityAssociation_t*
+**/
 void Crypto_TM_ApplySecurity_Debug_Print(uint16_t idx, uint16_t pdu_len, SecurityAssociation_t* sa_ptr)
 {
     #ifdef TM_DEBUG
@@ -986,6 +1098,17 @@ int32_t Crypto_TM_ApplySecurity(uint8_t* pTfBuffer)
     return status;
 }  **/
 
+
+/**
+ * @brief Function: Crypto_TM_Process_Setup
+ * Sets up TM Process Security.  Verifies ingest length, verifies pointers are not null, 
+ * Retreives managed parameters,  validates GVCID, and verifies the presence of Secondary Header
+ * @param len_ingest: uint16_t
+ * @param byte_idx: uint16_t*
+ * @param p_ingest: uint8_t*
+ * @param secondary_hdr_len: uint8_t*
+ * @return int32_t: Success/Failure
+**/
 int32_t Crypto_TM_Process_Setup(uint16_t len_ingest, uint16_t* byte_idx, uint8_t* p_ingest, uint8_t* secondary_hdr_len)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -1080,6 +1203,15 @@ int32_t Crypto_TM_Process_Setup(uint16_t len_ingest, uint16_t* byte_idx, uint8_t
     return status;
 }
 
+/**
+ * @brief Function: Crypto_TM_Determine_Cipher_Mode
+ * Determines Cipher mode and Algorithm type 
+ * @param sa_service_type: uint8_t
+ * @param sa_ptr: SecurityAssociation_t*
+ * @param encryption_cipher: uint32_t*
+ * @param ecs_is_aead_algorithm: uint8_t*
+ * @return int32_t: Success/Failure
+**/
 int32_t Crypto_TM_Determine_Cipher_Mode(uint8_t sa_service_type, SecurityAssociation_t* sa_ptr, uint32_t* encryption_cipher, uint8_t* ecs_is_aead_algorithm)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -1110,6 +1242,13 @@ int32_t Crypto_TM_Determine_Cipher_Mode(uint8_t sa_service_type, SecurityAssocia
     return status;
 }
 
+/**
+ * @brief Function: Crypto_TM_FECF_Setup
+ * Handles FECF Calculations, Verification, and Setup
+ * @param p_ingest: uint8_t*
+ * @param len_ingest: uint16_t
+ * @return int32_t: Success/Failure
+**/
 int32_t Crypto_TM_FECF_Setup(uint8_t* p_ingest, uint16_t len_ingest)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -1159,6 +1298,18 @@ int32_t Crypto_TM_FECF_Setup(uint8_t* p_ingest, uint16_t len_ingest)
     return status;
 }
 
+/**
+ * @brief Function: Crypto_TM_Parse_Mac_Prep_AAD
+ * Parses TM MAC, and calls AAD Prep functionality
+ * @param sa_service_type: uint8_t
+ * @param p_ingest: uint8_t*
+ * @param mac_loc: int
+ * @param sa_ptr: SecurityAssociation_t*
+ * @param aad_len: uint16_t*
+ * @param byte_idx: uint16_t
+ * @param aad: uint8_t*
+ * @return int32_t: Success/Failure
+**/
 int32_t Crypto_TM_Parse_Mac_Prep_AAD(uint8_t sa_service_type, uint8_t* p_ingest, int mac_loc, SecurityAssociation_t* sa_ptr, uint16_t* aad_len, uint16_t byte_idx, uint8_t* aad)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -1203,6 +1354,22 @@ int32_t Crypto_TM_Parse_Mac_Prep_AAD(uint8_t sa_service_type, uint8_t* p_ingest,
     return status;
 }
 
+/**
+ * @brief Function: Crypto_TM_Do_Decrypt_AEAD
+ * Performs decryption on AEAD Authentication, Encryption, and Authenticated Encryption
+ * @param sa_service_type: uint8_t
+ * @param p_ingest: uint8_t*
+ * @param p_new_dec_frame: uint8_t*
+ * @param byte_idx: uint16_t
+ * @param pdu_len: uint16_t
+ * @param ekp: crypto_key_t*
+ * @param sa_ptr: SecurityAssociation_t*
+ * @param iv_loc: uint8_t
+ * @param mac_loc: int
+ * @param aad_len: uint16_t
+ * @param aad:  uint8_t*
+ * @return int32_t: Success/Failure
+*/
 int32_t Crypto_TM_Do_Decrypt_AEAD(uint8_t sa_service_type, uint8_t* p_ingest, uint8_t* p_new_dec_frame, uint16_t byte_idx, uint16_t pdu_len, crypto_key_t* ekp, SecurityAssociation_t* sa_ptr, uint8_t iv_loc, int mac_loc, uint16_t aad_len, uint8_t* aad)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -1246,6 +1413,23 @@ int32_t Crypto_TM_Do_Decrypt_AEAD(uint8_t sa_service_type, uint8_t* p_ingest, ui
     return status;
 }
 
+/**
+ * @brief Function: Crypto_TM_Do_Decrypt_NONAEAD
+ * Performs decryption on NON AEAD Encryption and Authenticated Encryption
+ * @param sa_service_type: uint8_t
+ * @param pdu_len: uint16_t
+ * @param p_new_dec_frame: uint8_t*
+ * @param byte_idx: uint16_t
+ * @param p_ingest: uint8_t*
+ * @param akp: crypto_key_t*
+ * @param ekp: crypto_key_t*
+ * @param sa_ptr: SecurityAssociation_t*
+ * @param iv_loc: uint8_t
+ * @param mac_loc: int
+ * @param aad_len: uint16_t
+ * @param aad: uint8_t
+ * @return int32_t: Success/Failure
+*/
 int32_t Crypto_TM_Do_Decrypt_NONAEAD(uint8_t sa_service_type, uint16_t pdu_len, uint8_t* p_new_dec_frame, uint16_t byte_idx, uint8_t* p_ingest, crypto_key_t* akp, crypto_key_t* ekp, SecurityAssociation_t* sa_ptr, uint8_t iv_loc, int mac_loc, uint16_t aad_len, uint8_t* aad)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -1312,6 +1496,15 @@ int32_t Crypto_TM_Do_Decrypt_NONAEAD(uint8_t sa_service_type, uint16_t pdu_len, 
     return status;
 }
 
+/**
+ * @brief Function: Crypto_TM_Calc_PDU_MAC
+ * Calculates the PDU MAC
+ * @param pdu_len: uint16_t*
+ * @param byte_idx: uint16_t
+ * @param sa_ptr: SecurityAssociation_t*
+ * @param mac_loc: int*
+ * @return int32_t: Success/Failure
+*/
 void Crypto_TM_Calc_PDU_MAC(uint16_t* pdu_len, uint16_t byte_idx, SecurityAssociation_t* sa_ptr, int* mac_loc)
 {
     *pdu_len = current_managed_parameters->max_frame_size - (byte_idx) - sa_ptr->stmacf_len;
@@ -1331,6 +1524,26 @@ void Crypto_TM_Calc_PDU_MAC(uint16_t* pdu_len, uint16_t byte_idx, SecurityAssoci
     }
 }
 
+/**
+ * @brief Function: Crypto_TM_Do_Decrypt
+ * Parent TM Decryption Functionality
+ * @param sa_service_type: uint8_t
+ * @param sa_ptr: SecurityAssociation_t*
+ * @param ecs_is_aead_algorithm: uint8_t
+ * @param byte_idx: uint16_t
+ * @param p_new_dec_frame: uint8_t*
+ * @param pdu_len: uint16_t
+ * @param p_ingest: uint8_t*
+ * @param ekp: crypto_key_t*
+ * @param akp: crypto_key_t*
+ * @param iv_loc: uint8_t
+ * @param mac_loc: int
+ * @param aad_len: uint16_t
+ * @param aad: uint8_t*
+ * @param pp_processed_frame: uint8_t**
+ * @param p_decrypted_length: uint16_t*
+ * @return int32_t: Success/Failure
+*/
 int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t* sa_ptr, uint8_t ecs_is_aead_algorithm, uint16_t byte_idx, uint8_t* p_new_dec_frame, uint16_t pdu_len, uint8_t* p_ingest, crypto_key_t* ekp, crypto_key_t* akp, uint8_t iv_loc, int mac_loc, uint16_t aad_len, uint8_t* aad, uint8_t** pp_processed_frame, uint16_t* p_decrypted_length)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -1381,6 +1594,14 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t* sa_
     return status;
 }
 
+/**
+ * @brief Function: Crypto_TM_Process_Debug_Print
+ * TM Process Helper Debug Print
+ * Displays Index/data location start, Data Size, OCF Location, FECF Location
+ * @param byte_idx: uint16_t
+ * @param pdu_len: uint16_t
+ * @param sa_ptr: SecurityAssociation_t*
+*/
 void Crypto_TM_Process_Debug_Print(uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t* sa_ptr)
 {
     #ifdef TM_DEBUG
