@@ -607,6 +607,11 @@ int32_t Crypto_TM_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t* sa_
 **/
 void Crypto_TM_ApplySecurity_Debug_Print(uint16_t idx, uint16_t pdu_len, SecurityAssociation_t* sa_ptr)
 {
+    // Fix to ignore warnings
+    idx = idx;
+    pdu_len = pdu_len;
+    sa_ptr = sa_ptr;
+
     #ifdef TM_DEBUG
     printf(KYEL "Data location starts at: %d\n" RESET, idx);
     printf(KYEL "Data size is: %d\n" RESET, pdu_len);
@@ -1604,6 +1609,10 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t* sa_
 */
 void Crypto_TM_Process_Debug_Print(uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t* sa_ptr)
 {
+    // Fix for variable warnings
+    byte_idx = byte_idx;
+    pdu_len = pdu_len;
+    sa_ptr = sa_ptr; 
     #ifdef TM_DEBUG
     printf(KYEL "Index / data location starts at: %d\n" RESET, byte_idx);
     printf(KYEL "Data size is: %d\n" RESET, pdu_len);
