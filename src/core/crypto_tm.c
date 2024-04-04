@@ -35,16 +35,14 @@ int32_t Crypto_TM_Sanity_Check(uint8_t* pTfBuffer)
     // Passed a null, return an error
     if (!pTfBuffer)
     {
-        return CRYPTO_LIB_ERR_NULL_BUFFER;
-        return status;
+        status = CRYPTO_LIB_ERR_NULL_BUFFER;
     }
 
-    if ((crypto_config.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
+    if ((status == CRYPTO_LIB_SUCCESS) && ((crypto_config.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL)))
     {
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
         status = CRYPTO_LIB_ERR_NO_CONFIG;
         // Can't mc_log since it's not configured
-        return status;  // return immediately so a NULL crypto_config is not dereferenced later
     }
     return status;
 }
@@ -81,8 +79,10 @@ int32_t Crypto_TM_Determine_SA_Service_Type(uint8_t* sa_service_type, SecurityAs
         // Leaving for now as it would be cleaner in SA to have an association enum returned I believe
         printf(KRED "Error: SA Service Type is not defined! \n" RESET);
         status = CRYPTO_LIB_ERROR;
+    }
+    if(status != CRYPTO_LIB_SUCCESS)
+    {
         mc_if->mc_log(status);
-        return status;
     }
     return status;
 }
