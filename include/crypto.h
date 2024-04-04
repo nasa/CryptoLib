@@ -154,6 +154,30 @@ extern char* Crypto_Get_Error_Code_Enum_String(int32_t crypto_error_code);
 /*
 ** Internal Prototypes
 */
+// Telemetry (TM)
+int32_t Crypto_TM_Sanity_Check(uint8_t* pTfBuffer);
+int32_t Crypto_TM_Determine_SA_Service_Type(uint8_t* sa_service_type, SecurityAssociation_t* sa_ptr);
+void Crypto_TM_Check_For_Secondary_Header(uint8_t* pTfBuffer, uint16_t* idx);
+int32_t Crypto_TM_IV_Sanity_Check(uint8_t* sa_service_type, SecurityAssociation_t* sa_ptr);
+void Crypto_TM_PKCS_Padding(uint32_t* pkcs_padding, SecurityAssociation_t* sa_ptr, uint8_t* pTfBuffer, uint16_t* idx_p);
+void Crypto_TM_Handle_Managed_Parameter_Flags(uint16_t* pdu_len);
+int32_t Crypto_TM_Get_Keys(crypto_key_t** ekp, crypto_key_t** akp, SecurityAssociation_t* sa_ptr);
+int32_t Crypto_TM_Do_Encrypt_NONPLAINTEXT(uint8_t sa_service_type, uint16_t* aad_len, int* mac_loc, uint16_t* idx_p, uint16_t pdu_len, uint8_t* pTfBuffer, uint8_t* aad, SecurityAssociation_t* sa_ptr);
+int32_t Crypto_TM_Do_Encrypt_NONPLAINTEXT_AEAD_Logic(uint8_t sa_service_type, uint8_t ecs_is_aead_algorithm, uint8_t* pTfBuffer, uint16_t pdu_len, uint16_t data_loc, crypto_key_t* ekp, crypto_key_t* akp, uint32_t pkcs_padding, int* mac_loc, uint16_t* aad_len, uint8_t* aad, SecurityAssociation_t* sa_ptr);
+int32_t Crypto_TM_Do_Encrypt_Handle_Increment(uint8_t sa_service_type, SecurityAssociation_t* sa_ptr);
+int32_t Crypto_TM_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t* sa_ptr, uint16_t* aad_len, int* mac_loc, uint16_t* idx_p, uint16_t pdu_len, uint8_t* pTfBuffer, uint8_t* aad, uint8_t ecs_is_aead_algorithm, uint16_t data_loc, crypto_key_t* ekp, crypto_key_t* akp, uint32_t pkcs_padding, uint16_t* new_fecf);
+void Crypto_TM_ApplySecurity_Debug_Print(uint16_t idx, uint16_t pdu_len, SecurityAssociation_t* sa_ptr);
+int32_t Crypto_TM_Process_Setup(uint16_t len_ingest, uint16_t* byte_idx, uint8_t* p_ingest, uint8_t* secondary_hdr_len);
+int32_t Crypto_TM_Determine_Cipher_Mode(uint8_t sa_service_type, SecurityAssociation_t* sa_ptr, uint32_t* encryption_cipher, uint8_t* ecs_is_aead_algorithm);
+int32_t Crypto_TM_FECF_Setup(uint8_t* p_ingest, uint16_t len_ingest);
+int32_t Crypto_TM_Parse_Mac_Prep_AAD(uint8_t sa_service_type, uint8_t* p_ingest, int mac_loc, SecurityAssociation_t* sa_ptr, uint16_t* aad_len, uint16_t byte_idx, uint8_t* aad);
+int32_t Crypto_TM_Do_Decrypt_AEAD(uint8_t sa_service_type, uint8_t* p_ingest, uint8_t* p_new_dec_frame, uint16_t byte_idx, uint16_t pdu_len, crypto_key_t* ekp, SecurityAssociation_t* sa_ptr, uint8_t iv_loc, int mac_loc, uint16_t aad_len, uint8_t* aad);
+int32_t Crypto_TM_Do_Decrypt_NONAEAD(uint8_t sa_service_type, uint16_t pdu_len, uint8_t* p_new_dec_frame, uint16_t byte_idx, uint8_t* p_ingest, crypto_key_t* akp, crypto_key_t* ekp, SecurityAssociation_t* sa_ptr, uint8_t iv_loc, int mac_loc, uint16_t aad_len, uint8_t* aad);
+void Crypto_TM_Calc_PDU_MAC(uint16_t* pdu_len, uint16_t byte_idx, SecurityAssociation_t* sa_ptr, int* mac_loc);
+int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t* sa_ptr, uint8_t ecs_is_aead_algorithm, uint16_t byte_idx, uint8_t* p_new_dec_frame, uint16_t pdu_len, uint8_t* p_ingest, crypto_key_t* ekp, crypto_key_t* akp, uint8_t iv_loc, int mac_loc, uint16_t aad_len, uint8_t* aad, uint8_t** pp_processed_frame, uint16_t* p_decrypted_length);
+void Crypto_TM_Process_Debug_Print(uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t* sa_ptr);
+
+
 extern uint8_t Crypto_Prep_Reply(uint8_t* ingest, uint8_t appID);
 extern int32_t Crypto_increment(uint8_t* num, int length);
 // int32_t  Crypto_Get_tcPayloadLength(TC_t* tc_frame, SecurityAssociation_t* sa_ptr);
