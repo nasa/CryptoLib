@@ -452,7 +452,7 @@ void crypto_standalone_tm_frame(uint8_t* in_data, uint16_t in_length, uint8_t* o
     }
 
     // Calculate security headers and trailers
-    uint8_t header_length = 6 + 2 + sa_ptr->shivf_len + sa_ptr->shplf_len + sa_ptr->shsnf_len;
+    uint8_t header_length = 6 + 2 + sa_ptr->shivf_len + sa_ptr->shplf_len + sa_ptr->shsnf_len + 40; // TODO: Why +40?
     uint8_t trailer_length = sa_ptr->stmacf_len;
     if (current_managed_parameters->has_fecf == TM_HAS_FECF)
     {
@@ -495,7 +495,7 @@ void* crypto_standalone_tm_process(void* socks)
             tm_process_len = status;
             if (tm_debug == 1)
             {
-                printf("crypto_standalone_tm_process - received[%d]: 0x", tm_process_len);
+                printf("crypto_standalone_tm_process: 0 - received[%d]: 0x", tm_process_len);
                 for (int i = 0; i < status; i++)
                 {
                     printf("%02x", tm_process_in[i]);
@@ -534,7 +534,7 @@ void* crypto_standalone_tm_process(void* socks)
                     }
                     else
                     {
-                        printf("crypto_standalone_tm_process - status = %d, decrypted[%d]: 0x", status, tm_out_len);
+                        printf("crypto_standalone_tm_process: 1 - status = %d, decrypted[%d]: 0x", status, tm_out_len);
                         for (int i = 0; i < tm_out_len; i++)
                         {
                             printf("%02x", tm_ptr[i]);
@@ -560,7 +560,7 @@ void* crypto_standalone_tm_process(void* socks)
                 if (tm_debug == 1)
                 // Note: Need logic to allow broken packet assembly
                 {
-                    printf("crypto_standalone_tm_process - beginning after first header pointer - deframed[%d]: 0x", tm_process_len);
+                    printf("crypto_standalone_tm_process: 2 - beginning after first header pointer - deframed[%d]: 0x", tm_process_len);
                     for (int i = 0; i < tm_process_len; i++)
                     {
                         printf("%02x", tm_framed[i]);
@@ -588,7 +588,7 @@ void* crypto_standalone_tm_process(void* socks)
                         // Send all SPP telemetry packets
                         if (tm_ptr[0] == 0x08)  
                         {
-                            status = sendto(tm_write_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr*)&tm_write_sock->ip_address, sockaddr_size);
+                            status = sendto(tm_write_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr*)&tm_write_sock->saddr, sizeof(tm_write_sock->saddr));
                         }
                         // Only send idle packets if configured to do so
                         else
@@ -597,7 +597,7 @@ void* crypto_standalone_tm_process(void* socks)
                             // Don't forward idle packets
                             status = spp_len;
 #else
-                            status = sendto(tm_write_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr*)&m_write_sock->ip_address, sockaddr_size);
+                            status = sendto(tm_write_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr*)&tm_write_sock->saddr, sizeof(tm_write_sock->saddr));
 #endif
                         }
 
@@ -609,7 +609,11 @@ void* crypto_standalone_tm_process(void* socks)
                         tm_ptr = &tm_ptr[spp_len];
                         tm_process_len = tm_process_len - spp_len;
                     }
-                    else if (tm_ptr[0] == 0xff && tm_ptr[1] == 0x48)
+                    else if ((tm_ptr[0] == 0xFF && tm_ptr[1] == 0x48) ||
+                             (tm_ptr[0] == 0x00 && tm_ptr[1] == 0x00) ||
+                             (tm_ptr[0] == 0x02 && tm_ptr[1] == 0x00) ||
+                             (tm_ptr[0] == 0xFF && tm_ptr[1] == 0xFF))
+                             // TODO: Why 0x0200?
                     {
                         // Idle Frame
                         // Idle Frame is entire length of remaining data
@@ -617,7 +621,7 @@ void* crypto_standalone_tm_process(void* socks)
                         // Don't forward idle frame
                         status = spp_len;
 #else
-                        status = sendto(tm_write_sock->sockfd, tm_ptr, tm_process_len, 0, (struct sockaddr*)&tm_write_sock->ip_address, sockaddr_size);
+                        status = sendto(tm_write_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr*)&tm_write_sock->saddr, sizeof(tm_write_sock->saddr));
                         if ((status == -1) || (status != spp_len))
                         {
                             printf("crypto_standalone_tm_process - Reply error %d \n", status);
@@ -699,8 +703,13 @@ int main(int argc, char* argv[])
         printf("  Expected zero but received: %s \n", argv[1]);
     }
 
+    /* Catch CTRL+C */
+    signal(SIGINT, crypto_standalone_cleanup);
+
     /* Startup delay */
-    sleep(5);
+    sleep(10);
+    //printf("Press enter once ground software has finished initializing...\n");
+    //fgets(input_buf, CRYPTO_MAX_INPUT_BUF, stdin);
 
     /* Initialize CryptoLib */
     status = crypto_reset();
@@ -748,9 +757,6 @@ int main(int argc, char* argv[])
             }
         }
     }
-
-    /* Catch CTRL+C */
-    signal(SIGINT, crypto_standalone_cleanup);
 
     /* Start threads */
     if (keepRunning == CRYPTO_LIB_SUCCESS)
