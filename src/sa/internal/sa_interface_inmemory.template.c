@@ -13,6 +13,8 @@
  */
 
 #include "crypto.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 // Security Association Initialization Functions
 static int32_t sa_config(void);
@@ -64,17 +66,74 @@ SaInterface get_sa_interface_inmemory(void)
     return &sa_if_struct;
 }
 
-/**
- * @brief Function; sa_config
- * @return int32: Success/Failure
- **/
-int32_t sa_config(void)
+int32_t sa_load_file()
 {
+    FILE *sa_save_file;
     int32_t status = CRYPTO_LIB_SUCCESS;
+    int success_flag = 0;
 
-    // Security Associations
-    // SA 1 - CLEAR MODE
-    // SA 1 VC0/1 is now SA 1-VC0, SA 8-VC1
+    sa_save_file = fopen("sa_save_file.bin", "rb+");  // Should this be rb instead of wb+
+
+    if (sa_save_file == NULL)
+    {
+        printf("Unable to open sa_save_file!\n");
+        status = CRYPTO_LIB_ERR_FAIL_SA_LOAD;
+    }
+    else{
+        printf("Opened sa_save_file successfully!\n");
+    }
+    if( status == CRYPTO_LIB_SUCCESS)
+    {
+        //sa[0].spi = 999;
+        //sa[1].spi = 888;
+        printf("TEST: SA: SPI0: %d\n", sa[0].spi);
+        printf("TEST: SA: SPI1: %d\n", sa[1].spi);
+        printf("TEST: SA: SPI2: %d\n", sa[2].spi);
+        printf("TEST: SA: SPI3: %d\n", sa[3].spi);
+        printf("TEST: SA: SPI17: %d\n", sa[17].spi);
+        success_flag = fread(sa, SA_SIZE, NUM_SA, sa_save_file);
+        printf("TEST: SA: SPI0: %d\n", sa[0].spi);
+        printf("TEST: SA: SPI1: %d\n", sa[1].spi);
+        printf("TEST: SA: SPI2: %d\n", sa[2].spi);
+        printf("TEST: SA: SPI3: %d\n", sa[3].spi);
+        printf("TEST: SA: SPI17: %d\n", sa[17].spi);
+        if(success_flag)
+        {
+            status = CRYPTO_LIB_SUCCESS;
+//#ifdef SA_DEBUG
+            printf("SA Load Successfull!\n");
+//#endif
+        }
+        else
+        {
+            printf("Status Flag: %d\n", success_flag);
+            status = CRYPTO_LIB_ERR_FAIL_SA_LOAD;
+//#ifdef SA_DEBUG
+            printf("SA Load Failure!\n");
+//#endif
+        }
+    }
+
+    if(sa_save_file != NULL) fclose(sa_save_file);
+    return status;
+}
+
+void sa_populate(void)
+{
+    sa[0].spi = 0;
+    sa[0].sa_state = SA_OPERATIONAL;
+    sa[0].est = 0;
+    sa[0].ast = 0;
+    sa[0].shivf_len = 0;
+    sa[0].shsnf_len = 2;
+    sa[0].arsn_len = 2;
+    sa[0].arsnw_len = 1;
+    sa[0].arsnw = 5;
+    sa[0].gvcid_blk.tfvn = 0;
+    sa[0].gvcid_blk.scid = SCID & 0x3FF;
+    sa[0].gvcid_blk.vcid = 0;
+    sa[0].gvcid_blk.mapid = TYPE_TC;
+
     sa[1].spi = 1;
     sa[1].sa_state = SA_OPERATIONAL;
     sa[1].est = 0;
@@ -247,7 +306,7 @@ int32_t sa_config(void)
     sa[10].gvcid_blk.vcid = 1;
     sa[10].gvcid_blk.mapid = TYPE_TC;
     sa[10].ek_ref = (char*) "kmc/test/key130";
-    
+
     // SA 11 - KEYED;  ARSNW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 130
     // SA 11 VC0/1 is now 4-VC0, 7-VC1
     sa[11].spi = 11;
@@ -375,7 +434,41 @@ int32_t sa_config(void)
     sa[17].gvcid_blk.tfvn = 0x01;
     sa[17].gvcid_blk.scid = SCID & 0x3FF;
     sa[17].gvcid_blk.vcid = 0;
+}
 
+
+/**
+ * @brief Function; sa_config
+ * @return int32: Success/Failure
+ **/
+int32_t sa_config(void)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    int use_internal = 1;
+
+#ifdef SA_FILE
+    use_internal = 0;
+    status = sa_load_file();
+    if (status != CRYPTO_LIB_SUCCESS)  //Do we error out here, or is it ok to do as below and populate with internal on failure.
+    {
+    #ifdef DEBUG
+        printf("SA Load Failure!\n");
+        printf("Falling back to in-memory SA!\n");
+        sa_populate(); 
+        status = CRYPTO_LIB_SUCCESS;
+    #endif 
+    }
+#endif
+
+    if(use_internal)
+    {
+        sa_populate();
+    }
+    
+
+        // Security Associations
+        // SA 1 - CLEAR MODE
+        // SA 1 VC0/1 is now SA 1-VC0, SA 8-VC1
     return status;
 }
 
@@ -677,17 +770,75 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
     return status;
 }
 
-// TODO: Nothing actually happens here
+
+int32_t sa_perform_save(SecurityAssociation_t* sa)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    FILE* sa_save_file;
+    int success_flag = 0;
+    //SecurityAssociation_t sa_temp[NUM_SA];
+
+    // sa_temp[1].spi = 5;
+    // memcpy(sa_temp, sa, sizeof(*sa));
+
+    // printf("*******************TEST:  SA2: %d\n", sa_temp[1].spi);
+
+    sa_save_file = fopen("sa_save_file.bin", "wb");
+
+    if (sa_save_file == NULL)
+    {
+        status = CRYPTO_LIB_ERR_FAIL_SA_SAVE;
+    }
+
+    if(status == CRYPTO_LIB_SUCCESS)
+    {
+        success_flag = fwrite(sa, SA_SIZE, NUM_SA, sa_save_file); 
+
+        if(success_flag)
+        {
+            status = CRYPTO_LIB_SUCCESS;
+
+//#ifdef DEBUG
+            printf("SA Written Successfull to file!\n");
+//#endif
+
+
+        }       
+        else
+        {
+            status = CRYPTO_LIB_ERR_FAIL_SA_SAVE;
+//#ifdef DEBUG
+            printf("ERROR: SA Write FAILED!\n");
+//#endif
+        }
+    }
+    fclose(sa_save_file);
+
+    return status;
+}
+
 /**
  * @brief Function: sa_save_sa
  * @param sa: SecurityAssociation_t*
  * @return int32: Success/Failure
- * @note Nothing currently actually happens in this function
  **/
 static int32_t sa_save_sa(SecurityAssociation_t* sa)
 {
+    // if locked - wait.
+    // else  get lock - lock, and do the below
+    // if immediate:  always do TC_SH_SIZE
+    // if deferred:  counter > X ?  Reset Counter, perform save.
+    // size_t fwrite(variable, sizeof(variable), num elements, outfile);
+    // size_t fread(variable, sizeof(variable), num elements, infile)
     int32_t status = CRYPTO_LIB_SUCCESS;
-    sa = sa; // TODO - use argument
+    int ignore_save = 1;
+
+#ifdef SA_FILE
+    status = sa_perform_save(sa);
+    ignore_save = 0;
+#endif
+    if (ignore_save) sa = sa; // TODO - use argument
+
     // We could do a memory copy of the SA into the sa[NUM_SA] array at the given SPI, however, the inmemory code
     // currently updates in place so no need for that.
     //  If we change the in-place update logic, we should update this function to actually update the SA.

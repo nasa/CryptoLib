@@ -121,6 +121,8 @@
 #define CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_AOS_STANDARD (-49)
 #define CRYPTO_LIB_ERR_TC_ENUM_USED_FOR_AOS_CONFIG (-50)
 #define CRYPTO_LIB_ERR_INVALID_SA_SERVICE_TYPE (-51)
+#define CRYPTO_LIB_ERR_FAIL_SA_SAVE (-52)
+#define CRYPTO_LIB_ERR_FAIL_SA_LOAD (-53)
 
 extern char *crypto_enum_errlist_core[];
 extern char *crypto_enum_errlist_config[];
