@@ -349,10 +349,10 @@ uint16_t Crypto_Calc_FECF(const uint8_t* ingest, int len_ingest)
         }
     }
     // Check if Testing
-    if (badFECF == 1)
-    {
-        fecf++;
-    }
+    //if (badFECF == 1)
+    //{
+    //    fecf++;
+    //}
 
 #ifdef FECF_DEBUG
     int x;
