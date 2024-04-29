@@ -57,7 +57,7 @@ add_test(NAME UT_TM_PROCESS
          COMMAND ${PROJECT_BINARY_DIR}/bin/ut_tm_process 
          WORKING_DIRECTORY ${PROJECT_TEST_DIR})
 
-if(${SA_FILE})
+if(SA_FILE)
     add_test(NAME UT_SA_SAVE
             COMMAND ${PROJECT_BINARY_DIR}/bin/ut_sa_save 
             WORKING_DIRECTORY ${PROJECT_TEST_DIR})
