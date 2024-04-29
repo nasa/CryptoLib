@@ -66,6 +66,10 @@ SaInterface get_sa_interface_inmemory(void)
     return &sa_if_struct;
 }
 
+/**
+ * @brief Function: sa_load_file
+ * Loads saved sa_file
+ **/
 int32_t sa_load_file()
 {
     FILE *sa_save_file;
@@ -76,11 +80,15 @@ int32_t sa_load_file()
 
     if (sa_save_file == NULL)
     {
+#ifdef SA_DEBUG
         printf("Unable to open sa_save_file!\n");
+#endif
         status = CRYPTO_LIB_ERR_FAIL_SA_LOAD;
     }
     else{
+#ifdef SA_DEBUG
         printf("Opened sa_save_file successfully!\n");
+#endif
     }
     if( status == CRYPTO_LIB_SUCCESS)
     {
@@ -88,17 +96,16 @@ int32_t sa_load_file()
         if(success_flag)
         {
             status = CRYPTO_LIB_SUCCESS;
-//#ifdef SA_DEBUG
+#ifdef SA_DEBUG
             printf("SA Load Successfull!\n");
-//#endif
+#endif
         }
         else
         {
-            printf("Status Flag: %d\n", success_flag);
             status = CRYPTO_LIB_ERR_FAIL_SA_LOAD;
-//#ifdef SA_DEBUG
+#ifdef SA_DEBUG
             printf("SA Load Failure!\n");
-//#endif
+#endif
         }
     }
 
@@ -106,7 +113,10 @@ int32_t sa_load_file()
     return status;
 }
 
-
+/**
+ * @brief Function: update_sa_from_ptr
+ * Updates SA Array with individual SA pointer.
+ **/
 void update_sa_from_ptr(SecurityAssociation_t* sa_ptr)
 {
     int location = sa_ptr->spi;
@@ -150,6 +160,10 @@ void update_sa_from_ptr(SecurityAssociation_t* sa_ptr)
     sa[location].arsnw = sa_ptr->arsnw;
 }
 
+/**
+ * @brief Function: sa_perform_save
+ * Saves SA Array to file
+ **/
 int32_t sa_perform_save(SecurityAssociation_t* sa_ptr)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -212,6 +226,10 @@ static int32_t sa_save_sa(SecurityAssociation_t* sa)
     return status;
 }
 
+/**
+ * @brief Function: sa_populate
+ * Populates in-memory SA
+ **/
 void sa_populate(void)
 {
     sa[0].spi = 0;
