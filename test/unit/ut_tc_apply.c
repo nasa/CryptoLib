@@ -32,6 +32,7 @@
  **/
 UTEST(TC_APPLY_SECURITY, NO_CRYPTO_INIT)
 {
+    remove("sa_save_file.bin");
     // No Crypto_Init(), but we still Configure It;
     char* raw_tc_sdls_ping_h = "20030015001880d2c70008197f0b00310000b1fe3128";
     char* raw_tc_sdls_ping_b = NULL;
@@ -62,6 +63,7 @@ UTEST(TC_APPLY_SECURITY, NO_CRYPTO_INIT)
  **/
 UTEST(TC_APPLY_SECURITY, NO_CONFIG)
 {
+    remove("sa_save_file.bin");
     // No Crypto_Init(), but we still Configure It;
     char* raw_tc_sdls_ping_h = "20030015001880d2c70008197f0b00310000b1fe3128";
     char* raw_tc_sdls_ping_b = NULL;
@@ -89,6 +91,7 @@ UTEST(TC_APPLY_SECURITY, NO_CONFIG)
  **/
 UTEST(TC_APPLY_SECURITY, HAPPY_PATH_CLEAR)
 {
+    remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     Crypto_Init_TC_Unit_Test();
     char* raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
@@ -115,6 +118,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_CLEAR)
  **/
 UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC)
 {
+    remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     Crypto_Init_TC_Unit_Test();
     char* raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
@@ -152,6 +156,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC)
  **/
 UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_CBC)
 {
+    remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     Crypto_Init_TC_Unit_Test();
     char* raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
@@ -189,6 +194,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_CBC)
  **/
 UTEST(TC_APPLY_SECURITY, HAPPY_PATH_AUTH_ENC)
 {
+    remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     Crypto_Init_TC_Unit_Test();
     char* raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
@@ -226,6 +232,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_AUTH_ENC)
  **/
 UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_IV_ROLLOVER)
 {
+    remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     Crypto_Init_TC_Unit_Test();
     char* raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
@@ -300,6 +307,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_IV_ROLLOVE
  **/
 UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_STATIC_IV_ROLLOVER)
 {
+    remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
@@ -341,7 +349,15 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_STATIC_IV_ROLLOVER)
     test_association->shivf_len = 6;
     test_association->iv_len = 12;
     test_association->arsn_len = 0;
+    printf("TEST ASSOCIATION IV_LEN: %d\n", test_association->iv_len);
+    sa_if->sa_get_from_spi(4, &test_association);
     memcpy(test_association->iv + (test_association->iv_len - test_association->shivf_len), new_iv_b, new_iv_len);
+    printf("IV:\n");
+    for(int i = 0; i<test_association->iv_len; i++)
+    {
+        printf("%02x ", *(test_association->iv + i));
+    }
+    printf("\n");
 
     return_val =
         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);  
@@ -380,6 +396,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_STATIC_IV_ROLLOVER)
  **/
 UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_ARSN_ROLLOVER)
 {
+    remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
@@ -481,6 +498,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_ARSN_ROLLO
  **/
 UTEST(TC_APPLY_SECURITY, BAD_SPACE_CRAFT_ID)
 {
+    remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
@@ -513,6 +531,7 @@ UTEST(TC_APPLY_SECURITY, BAD_SPACE_CRAFT_ID)
  **/
 UTEST(TC_APPLY_SECURITY, BAD_VIRTUAL_CHANNEL_ID)
 {
+    remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
@@ -546,6 +565,7 @@ UTEST(TC_APPLY_SECURITY, BAD_VIRTUAL_CHANNEL_ID)
  **/
 UTEST(TC_APPLY_SECURITY, NULL_BUFFER)
 {
+    remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
@@ -579,6 +599,7 @@ UTEST(TC_APPLY_SECURITY, NULL_BUFFER)
  **/
 UTEST(TC_APPLY_SECURITY, INVALID_FRAME_SIZE)
 {
+    remove("sa_save_file.bin");
     int32_t status = CRYPTO_LIB_ERROR;
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
@@ -627,6 +648,7 @@ UTEST(TC_APPLY_SECURITY, INVALID_FRAME_SIZE)
 
 UTEST(TC_APPLY_SECURITY, ERROR_TC_INPUT_FRAME_TOO_SHORT_FOR_SPEC)
 {
+    remove("sa_save_file.bin");
     int32_t status = CRYPTO_LIB_SUCCESS;
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
@@ -661,6 +683,7 @@ UTEST(TC_APPLY_SECURITY, ERROR_TC_INPUT_FRAME_TOO_SHORT_FOR_SPEC)
 
 UTEST(TC_APPLY_SECURITY, ERROR_TC_INPUT_FRAME_TOO_SHORT_FOR_SPECIFIED_FRAME_LENGTH_HEADER)
 {
+    remove("sa_save_file.bin");
     int32_t status = CRYPTO_LIB_SUCCESS;
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
@@ -698,6 +721,7 @@ UTEST(TC_APPLY_SECURITY, ERROR_TC_INPUT_FRAME_TOO_SHORT_FOR_SPECIFIED_FRAME_LENG
  **/
 UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP)
 {
+    remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
@@ -743,7 +767,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP)
     //printf("Encrypted Frame:\n");
     for(int i = 0; i < enc_frame_len; i++)
     {
-        //printf("%02x -> %02x ", ptr_enc_frame[i], truth_data_b[i]);
+        printf("%02x -> %02x ", ptr_enc_frame[i], truth_data_b[i]);
         ASSERT_EQ(ptr_enc_frame[i], truth_data_b[i]);
     }
     //printf("\n");
@@ -760,6 +784,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP)
  **/
 UTEST(TC_APPLY_SECURITY, ENC_CBC_16BP)
 {
+    remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
@@ -824,6 +849,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_16BP)
  **/
 UTEST(TC_APPLY_SECURITY, ENC_CBC_FRAME_MAX)
 {
+    remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
@@ -872,6 +898,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_FRAME_MAX)
  **/
 UTEST(TC_APPLY_SECURITY, ENC_CBC_FRAME_TOO_BIG)
 {
+    remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
@@ -916,6 +943,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_FRAME_TOO_BIG)
 // Verify Payload against truth data, not just return val of methods
 UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP_1)
 {
+    remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
@@ -973,10 +1001,10 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP_1)
     //printf("Encrypted Frame:\n");
     for(int i = 0; i < enc_frame_len; i++)
     {
-        //printf("%02x -> %02x ", ptr_enc_frame[i], truth_data_b[i]);
+        printf("%02x -> %02x ", ptr_enc_frame[i], truth_data_b[i]);
         ASSERT_EQ(ptr_enc_frame[i], truth_data_b[i]);
     }
-    //printf("\n");
+    printf("\n");
 
     Crypto_Shutdown();
     free(truth_data_b);
@@ -989,6 +1017,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP_1)
 // expect CBC to fail if NULL IV
 UTEST(TC_APPLY_SECURITY, ENC_CBC_NULL_IV)
 {
+    remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_CRYPTO_MODULE, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE,
@@ -1060,6 +1089,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_NULL_IV)
 // IV not NULL, but SHIVF len>0
 UTEST(TC_APPLY_SECURITY, CBC_NULL_IV_W_IVH)
 {
+    remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_CRYPTO_MODULE, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, 
@@ -1136,6 +1166,7 @@ UTEST(TC_APPLY_SECURITY, CBC_NULL_IV_W_IVH)
 */
 UTEST(TC_APPLY_SECURITY, PLAINTEXT_W_ARSN)
 {
+    remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
@@ -1155,7 +1186,7 @@ UTEST(TC_APPLY_SECURITY, PLAINTEXT_W_ARSN)
     int32_t return_val = CRYPTO_LIB_ERROR;
 
     return_val = Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
-
+    //200300230000010000000100011880D2C9000E197F0B001B0004000400003040D95E85F3
     char* truth_data_h = "200300230000010000000100011880D2C9000E197F0B001B0004000400003040D95E85F3";
     uint8_t* truth_data_b = NULL;
     int truth_data_l = 0;

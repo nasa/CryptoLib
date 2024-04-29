@@ -30,6 +30,7 @@
  **/
 UTEST(CRYPTO_CONFIG, CRYPTO_INIT_WITH_INCOMPLETE_CONFIG)
 {
+    remove("sa_save_file.bin");
     int32_t status = CRYPTO_LIB_ERROR;
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_CONFIGURATION_NOT_COMPLETE, status);
@@ -40,6 +41,7 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_WITH_INCOMPLETE_CONFIG)
  **/
 UTEST(CRYPTO_CONFIG, CRYPTO_INIT_NO_MANAGED_PARAM_CONFIG)
 {
+    remove("sa_save_file.bin");
     int32_t status = CRYPTO_LIB_ERROR;
     CryptoConfig_t* crypto_config_p = malloc(CRYPTO_CONFIG_SIZE);
     GvcidManagedParameters_t* gvcid_managed_paramenters_p = NULL;
@@ -55,6 +57,7 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_NO_MANAGED_PARAM_CONFIG)
  **/
 UTEST(CRYPTO_CONFIG, CRYPTO_INIT_MARIADB_NULL)
 {
+    remove("sa_save_file.bin");
     int32_t status = CRYPTO_LIB_ERROR;
     CryptoConfig_t* crypto_config_p = malloc(CRYPTO_CONFIG_SIZE);
     crypto_config_p->key_type=KEY_TYPE_INTERNAL;
@@ -118,6 +121,7 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_MARIADB_NULL)
  **/
 UTEST(CRYPTO_CONFIG, CRYPTO_INIT_INVALID_SADB)
 {
+    remove("sa_save_file.bin");
     int32_t status = CRYPTO_LIB_ERROR;
     CryptoConfig_t* crypto_config_p = malloc(CRYPTO_CONFIG_SIZE);
     crypto_config_p->key_type=KEY_TYPE_INTERNAL;
@@ -143,6 +147,7 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_INVALID_SADB)
  **/
 UTEST(CRYPTO_CONFIG, CRYPTO_CONFIG_MDB)
 {
+    remove("sa_save_file.bin");
     int32_t status = CRYPTO_LIB_ERROR;
     char* mysql_username = "ITC_JPL";
     char* mysql_password = "ITC_JPL";
@@ -165,6 +170,7 @@ UTEST(CRYPTO_CONFIG, CRYPTO_CONFIG_MDB)
  **/
 UTEST(CRYPTO_CONFIG, CRYPTO_CONFIG_KMC)
 {
+    remove("sa_save_file.bin");
     int32_t status = CRYPTO_LIB_ERROR;
     char* protocol = "https";
     char* hostname = "ITC_JPL";

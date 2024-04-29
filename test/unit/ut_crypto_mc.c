@@ -31,6 +31,7 @@
  **/
 UTEST(CRYPTO_MC, STATUS)
 {
+    remove("sa_save_file.bin");
     int count = 0;
     uint8_t ingest[1024] = {0};
 
@@ -43,6 +44,7 @@ UTEST(CRYPTO_MC, STATUS)
  **/
 UTEST(CRYPTO_MC, DUMP)
 {
+    remove("sa_save_file.bin");
     int count = 0;
     uint8_t ingest[1024] = {0};
 
@@ -55,6 +57,7 @@ UTEST(CRYPTO_MC, DUMP)
  **/
 UTEST(CRYPTO_MC, ERASE)
 {
+    remove("sa_save_file.bin");
     int count = 0;
     uint8_t ingest[1024] = {0};
 
@@ -67,6 +70,7 @@ UTEST(CRYPTO_MC, ERASE)
  **/
 UTEST(CRYPTO_MC, SELFTEST)
 {
+    remove("sa_save_file.bin");
     int count = 0;
     uint8_t ingest[1024] = {0};
 
@@ -79,6 +83,7 @@ UTEST(CRYPTO_MC, SELFTEST)
  **/
 UTEST(CRYPTO_MC, READARSN)
 {
+    remove("sa_save_file.bin");
     int count = 0;
     uint8_t ingest[1024] = {0};
     Crypto_Init_TC_Unit_Test();
@@ -97,6 +102,7 @@ UTEST(CRYPTO_MC, READARSN)
  **/
 UTEST(CRYPTO_MC, PROCESS)
 {
+    remove("sa_save_file.bin");
     uint8_t ingest[1024] = {0};
     uint16_t len_ingest = 1024;
     int32_t status = CRYPTO_LIB_ERROR;
@@ -112,6 +118,7 @@ UTEST(CRYPTO_MC, PROCESS)
  **/
 UTEST(CRYPTO_MC, TMLENGTH)
 {
+    remove("sa_save_file.bin");
     int length = 0;
 
     length = Crypto_Get_tmLength(length);

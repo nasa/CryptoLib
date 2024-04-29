@@ -32,6 +32,7 @@
  **/
 UTEST(TM_PROCESS_SECURITY, NO_CRYPTO_INIT)
 {
+    remove("sa_save_file.bin");
     // Local variables
     int32_t status = CRYPTO_LIB_ERROR;
     int framed_tm_len = 0;
@@ -72,6 +73,7 @@ UTEST(TM_PROCESS_SECURITY, NO_CRYPTO_INIT)
  **/
 UTEST(TM_PROCESS_SECURITY, NO_CONFIG)
 {
+    remove("sa_save_file.bin");
     // Local variables
     int32_t status = CRYPTO_LIB_ERROR;
     int framed_tm_len = 0;
@@ -112,6 +114,7 @@ UTEST(TM_PROCESS_SECURITY, NO_CONFIG)
  **/
 UTEST(TM_PROCESS_SECURITY, HAPPY_PATH_CLEAR_FECF)
 {
+    remove("sa_save_file.bin");
     // Local Variables
     int32_t status = CRYPTO_LIB_SUCCESS;
     uint8_t* ptr_processed_frame = NULL;
@@ -165,6 +168,7 @@ UTEST(TM_PROCESS_SECURITY, HAPPY_PATH_CLEAR_FECF)
  **/
 UTEST(TM_PROCESS_SECURITY, SECONDARY_HDR_PRESENT_PLAINTEXT)
 {
+    remove("sa_save_file.bin");
         // Local Variables
     int32_t status = CRYPTO_LIB_SUCCESS;
     uint8_t* ptr_processed_frame = NULL;
@@ -218,6 +222,7 @@ UTEST(TM_PROCESS_SECURITY, SECONDARY_HDR_PRESENT_PLAINTEXT)
  **/
 UTEST(TM_PROCESS_SECURITY, SECONDARY_HDR_PRESENT_MAC)
 {
+    remove("sa_save_file.bin");
     // Local Variables
     int32_t status = CRYPTO_LIB_SUCCESS;
     uint8_t* ptr_processed_frame = NULL;
@@ -297,6 +302,7 @@ UTEST(TM_PROCESS_SECURITY, SECONDARY_HDR_PRESENT_MAC)
  **/
 UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_0)
 {
+    remove("sa_save_file.bin");
     // Local Variables
     int32_t status = CRYPTO_LIB_SUCCESS;
     uint8_t* ptr_processed_frame = NULL;
@@ -389,6 +395,7 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_0)
  **/
 UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_1)
 {
+    remove("sa_save_file.bin");
     // Local Variables
     int32_t status = CRYPTO_LIB_SUCCESS;
     uint8_t* ptr_processed_frame = NULL;
@@ -484,6 +491,7 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_1)
  **/
 UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_0)
 {
+    remove("sa_save_file.bin");
     // Local Variables
     int32_t status = CRYPTO_LIB_SUCCESS;
     uint8_t* ptr_processed_frame = NULL;
@@ -577,6 +585,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_0)
  **/
 UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_1)
 {
+    remove("sa_save_file.bin");
     // Local Variables
     int32_t status = CRYPTO_LIB_SUCCESS;
     uint8_t* ptr_processed_frame = NULL;
@@ -670,6 +679,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_1)
  **/
 UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_0)
 {
+    remove("sa_save_file.bin");
     // Local Variables
     int32_t status = CRYPTO_LIB_SUCCESS;
     uint8_t* ptr_processed_frame = NULL;
@@ -768,6 +778,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_0)
  **/
 UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_1)
 {
+    remove("sa_save_file.bin");
     // Local Variables
     int32_t status = CRYPTO_LIB_SUCCESS;
     uint8_t* ptr_processed_frame = NULL;
@@ -867,6 +878,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_1)
  **/
 UTEST(TM_PROCESS_ENC_VAL, AES_GCM_BITMASK_1)
 {
+    remove("sa_save_file.bin");
     // Local Variables
     int32_t status = CRYPTO_LIB_SUCCESS;
     uint8_t* ptr_processed_frame = NULL;
@@ -970,6 +982,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_GCM_BITMASK_1)
  **/
 UTEST(TM_PROCESS_ENC_VAL, AEAD_AES_GCM_BITMASK_1)
 {
+    remove("sa_save_file.bin");
     // Local Variables
     int32_t status = CRYPTO_LIB_SUCCESS;
     uint8_t* ptr_processed_frame = NULL;

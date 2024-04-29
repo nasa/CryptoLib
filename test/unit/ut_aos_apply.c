@@ -30,6 +30,7 @@
  **/
 UTEST(AOS_APPLY, NULL_BUFFER)
 {
+    remove("sa_save_file.bin");
     int32_t status = CRYPTO_LIB_ERROR;
     uint8_t *ingest = NULL;
 
@@ -53,6 +54,7 @@ UTEST(AOS_APPLY, NULL_BUFFER)
  **/
 UTEST(AOS_APPLY, NO_CONFIG)
 {
+    remove("sa_save_file.bin");
     int32_t status = CRYPTO_LIB_ERROR;
     uint8_t ingest[1786] = {0};
 
@@ -71,6 +73,7 @@ UTEST(AOS_APPLY, NO_CONFIG)
  **/
 UTEST(AOS_APPLY, NO_INIT)
 {
+    remove("sa_save_file.bin");
     // Local variables
     int32_t status = CRYPTO_LIB_ERROR;
 
@@ -119,6 +122,7 @@ UTEST(AOS_APPLY, NO_INIT)
  **/
 UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FECF)
 {
+    remove("sa_save_file.bin");
     // Local variables
     int32_t status = CRYPTO_LIB_ERROR;
 
@@ -169,6 +173,7 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FECF)
  **/
 UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FECF_LEFT_BLANK)
 {
+    remove("sa_save_file.bin");
     // Local variables
     int32_t status = CRYPTO_LIB_ERROR;
 
@@ -225,6 +230,7 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FECF_LEFT_BLANK)
  **/
 UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FHEC_FECF)
 {
+    remove("sa_save_file.bin");
     // Configure, Add Managed Params, and Init
     int32_t status = CRYPTO_LIB_SUCCESS;
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
@@ -281,6 +287,7 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FHEC_FECF)
  **/
 UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FHEC_OID_FECF)
 {
+    remove("sa_save_file.bin");
     // Configure, Add Managed Params, and Init
     int32_t status = CRYPTO_LIB_SUCCESS;
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
@@ -335,6 +342,7 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FHEC_OID_FECF)
  **/
 UTEST(AOS_APPLY, AES_CMAC_256_TEST_BITMASK_1)
 {
+    remove("sa_save_file.bin");
     // Local variables
     int32_t status = CRYPTO_LIB_SUCCESS;
     SecurityAssociation_t *sa_ptr = NULL;
@@ -401,6 +409,7 @@ UTEST(AOS_APPLY, AES_CMAC_256_TEST_BITMASK_1)
  **/
 UTEST(AOS_APPLY, AES_CMAC_256_TEST_BITMASK_0)
 {
+    remove("sa_save_file.bin");
     // Local variables
     int32_t status = CRYPTO_LIB_SUCCESS;
     SecurityAssociation_t *sa_ptr = NULL;
@@ -468,6 +477,7 @@ UTEST(AOS_APPLY, AES_CMAC_256_TEST_BITMASK_0)
  **/
 UTEST(AOS_APPLY, AES_GCM)
 {
+    remove("sa_save_file.bin");
     // Local variables
     int32_t status = CRYPTO_LIB_SUCCESS;
     SecurityAssociation_t *sa_ptr = NULL;
@@ -536,6 +546,7 @@ UTEST(AOS_APPLY, AES_GCM)
  **/
 UTEST(AOS_APPLY, AEAD_GCM_BITMASK_1)
 {
+    remove("sa_save_file.bin");
     // Local variables
     int32_t status = CRYPTO_LIB_SUCCESS;
     SecurityAssociation_t *sa_ptr = NULL;
