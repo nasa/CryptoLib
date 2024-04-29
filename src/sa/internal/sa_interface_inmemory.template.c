@@ -187,16 +187,16 @@ int32_t sa_perform_save(SecurityAssociation_t* sa_ptr)
         {
             status = CRYPTO_LIB_SUCCESS;
 
-//#ifdef DEBUG
+#ifdef SA_DEBUG
             printf("SA Written Successfull to file!\n");
-//#endif
+#endif
         }       
         else
         {
             status = CRYPTO_LIB_ERR_FAIL_SA_SAVE;
-//#ifdef DEBUG
+#ifdef SA_DEBUG
             printf("ERROR: SA Write FAILED!\n");
-//#endif
+#endif
         }
     }
     fclose(sa_save_file);
