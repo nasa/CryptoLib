@@ -167,6 +167,40 @@ void base64urlEncode(const void* input, size_t inputLen, char_t* output,
 }
 
 
+void base64urlDecode_rempadding(size_t inputLen, uint32_t value, size_t *n, uint8_t* p)
+{
+    //All trailing pad characters are omitted in Base64url
+    if((inputLen % 4) == 2)
+    {
+        //The last block contains only 1 byte
+        if(p != NULL)
+        {
+            //Decode the last byte
+            p[*n] = (value >> 4) & 0xFF;
+        }
+
+        //Adjust the length of the decoded data
+        *n = *n + 1;
+    }
+    else if((inputLen % 4) == 3)
+    {
+        //The last block contains only 2 bytes
+        if(p != NULL)
+        {
+            //Decode the last two bytes
+            p[*n] = (value >> 10) & 0xFF;
+            p[*n + 1] = (value >> 2) & 0xFF;
+        }
+
+        //Adjust the length of the decoded data
+        *n = *n + 2;
+    }
+    else
+    {
+        //No pad characters in this case
+    }
+}
+
 /**
  * @brief Base64url decoding algorithm
  * @param[in] input Base64url-encoded string
@@ -252,36 +286,7 @@ int32_t base64urlDecode(const char_t* input, size_t inputLen, void* output,
     //Check status code
     if(!error)
     {
-        //All trailing pad characters are omitted in Base64url
-        if((inputLen % 4) == 2)
-        {
-            //The last block contains only 1 byte
-            if(p != NULL)
-            {
-                //Decode the last byte
-                p[n] = (value >> 4) & 0xFF;
-            }
-
-            //Adjust the length of the decoded data
-            n++;
-        }
-        else if((inputLen % 4) == 3)
-        {
-            //The last block contains only 2 bytes
-            if(p != NULL)
-            {
-                //Decode the last two bytes
-                p[n] = (value >> 10) & 0xFF;
-                p[n + 1] = (value >> 2) & 0xFF;
-            }
-
-            //Adjust the length of the decoded data
-            n += 2;
-        }
-        else
-        {
-            //No pad characters in this case
-        }
+        base64urlDecode_rempadding(inputLen,value, &n, p);
     }
 
     //Total number of bytes that have been written
