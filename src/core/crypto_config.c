@@ -51,10 +51,21 @@ int32_t crypto_free_config_structs(void);
  * @brief Function: Crypto_Init_TC_Unit_Test
  * @return int32: status
  **/
-int32_t Crypto_TC_Init(void)
+int32_t Crypto_SC_Init(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    status = Crypto_Init_TC_Unit_Test();
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, 
+                            TC_HAS_PUS_HDR, TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, 
+                            TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F, 
+                            SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // TC
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 4, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+
+    // TM
+    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, 1786, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    status = Crypto_Init();
     return status;
 }
 
@@ -75,7 +86,6 @@ int32_t Crypto_Init_TC_Unit_Test(void)
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 4, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
     status = Crypto_Init();
-    printf("Crypto_Init TC Called.\n");
     return status;
 }
 

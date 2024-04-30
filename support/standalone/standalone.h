@@ -32,10 +32,12 @@ extern "C"
 #include <stdlib.h>
 #include <arpa/inet.h>
 #include <ctype.h>
+#include <netdb.h>	//hostent
 #include <netinet/in.h>
 #include <pthread.h>
 #include <signal.h>
 #include <string.h>
+#include <sys/socket.h>
 #include <unistd.h>
 
 #include "crypto.h"
@@ -45,6 +47,9 @@ extern "C"
 /*
 ** Configuration
 */
+#define CRYPTOLIB_HOSTNAME "cryptolib"
+#define GSW_HOSTNAME "cosmos"
+#define SC_HOSTNAME "radio_sim"
 #define TC_APPLY_PORT   6010
 #define TC_APPLY_FWD_PORT 8010
 #define TM_PROCESS_PORT 8011
@@ -89,8 +94,16 @@ extern "C"
 typedef struct 
 {
    int sockfd;
+   char* ip_address;
    int port;
+   struct sockaddr_in saddr;
 } udp_info_t;
+
+typedef struct
+{
+   udp_info_t read;
+   udp_info_t write;
+} udp_interface_t;
 
 
 /*
@@ -101,12 +114,13 @@ void crypto_standalone_to_lower(char* str);
 void crypto_standalone_print_help(void);
 int32_t crypto_standalone_get_command(const char* str);
 int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char* tokens);
-int32_t crypto_standalone_udp_init(udp_info_t* sock, int32_t port);
+int32_t crypto_host_to_ip(const char * hostname, char* ip);
+int32_t crypto_standalone_udp_init(udp_info_t* sock, int32_t port, uint8_t bind_sock);
 int32_t crypto_reset(void);
 void crypto_standalone_tc_frame(uint8_t* in_data, uint16_t in_length, uint8_t* out_data, uint16_t* out_length);
-void* crypto_standalone_tc_apply(void* sock);
+void* crypto_standalone_tc_apply(void* socks);
 void crypto_standalone_tm_frame(uint8_t* in_data, uint16_t in_length, uint8_t* out_data, uint16_t* out_length, uint16_t spi);
-void* crypto_standalone_tm_process(void* sock);
+void* crypto_standalone_tm_process(void* socks);
 void crypto_standalone_cleanup(const int signal);
 
 
