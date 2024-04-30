@@ -52,6 +52,11 @@
 #define CRYPTO_LIB_MISSION_REV 0
 
 /*
+** SAVE FILE NAME/LOCATION
+*/
+#define CRYPTO_SA_SAVE "sa_save_file.bin"
+
+/*
 ** TC_BLOCK_SIZE
 */
 #define TC_BLOCK_SIZE 16

@@ -76,7 +76,7 @@ int32_t sa_load_file()
     int32_t status = CRYPTO_LIB_SUCCESS;
     int success_flag = 0;
 
-    sa_save_file = fopen("sa_save_file.bin", "rb+");  // Should this be rb instead of wb+
+    sa_save_file = fopen(CRYPTO_SA_SAVE, "rb+");  // Should this be rb instead of wb+
 
     if (sa_save_file == NULL)
     {
@@ -172,7 +172,7 @@ int32_t sa_perform_save(SecurityAssociation_t* sa_ptr)
 
     update_sa_from_ptr(sa_ptr);
 
-    sa_save_file = fopen("sa_save_file.bin", "wb");
+    sa_save_file = fopen(CRYPTO_SA_SAVE, "wb");
 
     if (sa_save_file == NULL)
     {
@@ -218,11 +218,7 @@ static int32_t sa_save_sa(SecurityAssociation_t* sa)
     status = sa_perform_save(sa);
     ignore_save = 0;
 #endif
-    if (ignore_save) sa = sa; // TODO - use argument
-
-    // We could do a memory copy of the SA into the sa[NUM_SA] array at the given SPI, however, the inmemory code
-    // currently updates in place so no need for that.
-    //  If we change the in-place update logic, we should update this function to actually update the SA.
+    if (ignore_save) sa = sa; 
     return status;
 }
 
@@ -586,7 +582,7 @@ int32_t sa_init(void)
     #ifdef SA_FILE
         use_internal = 0;
         status = sa_load_file();
-        if (status != CRYPTO_LIB_SUCCESS)  //Do we error out here, or is it ok to do as below and populate with internal on failure.
+        if (status != CRYPTO_LIB_SUCCESS)  
         {
         #ifdef DEBUG
             printf("SA Load Failure!\n");
