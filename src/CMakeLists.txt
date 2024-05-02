@@ -45,7 +45,7 @@ endif()
 
 if(KEY_CUSTOM)
     # Assumes CryptoLib is a Git submodule to project and custom directories and definitions exist at top level
-    aux_source_directory(../../key/custom KEY_CUSTOM_FILES)
+    aux_source_directory(KEY_CUSTOM_PATH KEY_CUSTOM_FILES)
     list(APPEND LIB_SRC_FILES ${KEY_CUSTOM_FILES})
 else()
     aux_source_directory(key/custom_stub KEY_CUSTOM_FILES)
@@ -70,7 +70,7 @@ endif()
 
 if(MC_CUSTOM)
     # Assumes CryptoLib is a Git submodule to project and custom directories and definitions exist at top level
-    aux_source_directory(../../mc/custom MC_CUSTOM_FILES)
+    aux_source_directory(MC_CUSTOM_PATH MC_CUSTOM_FILES)
     list(APPEND LIB_SRC_FILES ${MC_CUSTOM_FILES})
 else()
     aux_source_directory(mc/custom_stub MC_CUSTOM_FILES)
@@ -95,7 +95,7 @@ endif()
 
 if(SA_CUSTOM)
     # Assumes CryptoLib is a Git submodule to project and custom directories and definitions exist at top level
-    aux_source_directory(../../sa/custom SA_CUSTOM_FILES)
+    aux_source_directory(SA_CUSTOM_PATH SA_CUSTOM_FILES)
     list(APPEND LIB_SRC_FILES ${SA_CUSTOM_FILES})
 else()
     aux_source_directory(sa/custom_stub SA_CUSTOM_FILES)
