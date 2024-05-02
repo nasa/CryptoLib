@@ -22,8 +22,8 @@ project(crypto C)
 # CUSTOM PATH Definiton
 #
 set(SA_CUSTOM_PATH_DEFAULT "../../sa/custom")
-set(SA_CUSTOM_KEY_DEFAULT "../../key/custom")
-set(SA_CUSTOM_MC_DEFAULT "../../mc/custom")
+set(KEY_CUSTOM_PATH_DEFAULT "../../key/custom")
+set(MC_CUSTOM_PATH_DEFAULT "../../mc/custom")
 
 
 
