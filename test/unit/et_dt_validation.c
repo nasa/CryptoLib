@@ -233,6 +233,7 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
  **/
 UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
 {
+    remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     Crypto_Init_TC_Unit_Test();
     SaInterface sa_if = get_sa_interface_inmemory();
@@ -320,6 +321,7 @@ UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
  **/
 UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 {
+    remove("sa_save_file.bin");
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
@@ -396,6 +398,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
  **/
 UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 {
+    remove("sa_save_file.bin");
     uint8_t* ptr_enc_frame = NULL;
 
     // Setup & Initialize CryptoLib
@@ -478,6 +481,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
  **/
 UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
 {
+    remove("sa_save_file.bin");
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
@@ -551,6 +555,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
  **/
 UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
 {
+    remove("sa_save_file.bin");
     uint8_t* ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
@@ -628,6 +633,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
  **/
 UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
 {
+    remove("sa_save_file.bin");
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
@@ -702,6 +708,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
  **/
 UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
 {
+    remove("sa_save_file.bin");
     uint8_t* ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
@@ -777,6 +784,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
  **/
 UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
 {
+    remove("sa_save_file.bin");
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
@@ -851,6 +859,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
  **/
 UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
 {
+    remove("sa_save_file.bin");
     uint8_t* ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
@@ -926,6 +935,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
  **/
 UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
 {
+    remove("sa_save_file.bin");
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
@@ -1000,6 +1010,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
  **/
 UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
 {
+    remove("sa_save_file.bin");
     uint8_t* ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
@@ -1086,6 +1097,7 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
  **/
 UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 {
+    remove("sa_save_file.bin");
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
@@ -1174,6 +1186,7 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
  **/
 UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
 {
+    remove("sa_save_file.bin");
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
@@ -1258,6 +1271,7 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
  **/
 UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 {
+    remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
@@ -1380,6 +1394,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
  **/
 UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_DATA)
 {
+    remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     int32_t status;
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
@@ -1482,6 +1497,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_DATA)
  **/
 UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_MAC)
 {
+    remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     int32_t status;
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
@@ -1584,6 +1600,7 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_MAC)
  **/
 UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
 {
+    remove("sa_save_file.bin");
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
@@ -1677,6 +1694,7 @@ UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
  **/
 UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
 {
+    remove("sa_save_file.bin");
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
@@ -1765,6 +1783,7 @@ UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
  **/
 UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
 {
+    remove("sa_save_file.bin");
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
@@ -1859,6 +1878,7 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
  **/
 UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
 {
+    remove("sa_save_file.bin");
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
@@ -1950,6 +1970,7 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
  **/
 UTEST(NIST_ENC_HMAC_VALIDATION, SHA_256_PT_128_TEST_0)
 {
+    remove("sa_save_file.bin");
     uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
@@ -2042,6 +2063,7 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_256_PT_128_TEST_0)
  **/
 UTEST(NIST_ENC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
 {
+    remove("sa_save_file.bin");
     uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     int32_t status;
@@ -2135,6 +2157,7 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
  **/
 UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
 {
+    remove("sa_save_file.bin");
     uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     int32_t status;
@@ -2228,6 +2251,7 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
 **/
 UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
 {
+    remove("sa_save_file.bin");
     uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     int32_t status;
@@ -2319,6 +2343,7 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
  **/
 UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_0)
 {
+    remove("sa_save_file.bin");
     int32_t status = 0;
     uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
@@ -2414,6 +2439,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_0)
  **/
 UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
 {
+    remove("sa_save_file.bin");
     int32_t status = 0;
     uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
@@ -2504,6 +2530,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
  **/
 UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
 {
+    remove("sa_save_file.bin");
     int32_t status = 0;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
@@ -2593,6 +2620,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
  **/
 UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
 {
+    remove("sa_save_file.bin");
     int32_t status = 0;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
@@ -2682,6 +2710,7 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
  **/
 UTEST(PLAINTEXT, ENCRYPT_DECRYPT)
 {
+    remove("sa_save_file.bin");
     int32_t status = CRYPTO_LIB_ERROR;
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
@@ -2720,6 +2749,7 @@ UTEST(PLAINTEXT, ENCRYPT_DECRYPT)
  **/
 UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_SHORT_KEY)
 {
+    remove("sa_save_file.bin");
     int32_t status = 0;
     uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
@@ -2801,6 +2831,7 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_SHORT_KEY)
  **/
 UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_SHORT_KEY)
 {
+    remove("sa_save_file.bin");
     int32_t status = 0;
     uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib

@@ -13,6 +13,8 @@
  */
 
 #include "crypto.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 // Security Association Initialization Functions
 static int32_t sa_config(void);
@@ -65,12 +67,180 @@ SaInterface get_sa_interface_inmemory(void)
 }
 
 /**
- * @brief Function; sa_config
- * @return int32: Success/Failure
+ * @brief Function: sa_load_file
+ * Loads saved sa_file
  **/
-int32_t sa_config(void)
+int32_t sa_load_file()
+{
+    FILE *sa_save_file;
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    int success_flag = 0;
+
+    sa_save_file = fopen(CRYPTO_SA_SAVE, "rb+");  // Should this be rb instead of wb+
+
+    if (sa_save_file == NULL)
+    {
+#ifdef SA_DEBUG
+        printf("Unable to open sa_save_file!\n");
+#endif
+        status = CRYPTO_LIB_ERR_FAIL_SA_LOAD;
+    }
+    else{
+#ifdef SA_DEBUG
+        printf("Opened sa_save_file successfully!\n");
+#endif
+    }
+    if( status == CRYPTO_LIB_SUCCESS)
+    {
+        success_flag = fread(&sa[0], SA_SIZE, NUM_SA, sa_save_file);
+        if(success_flag)
+        {
+            status = CRYPTO_LIB_SUCCESS;
+#ifdef SA_DEBUG
+            printf("SA Load Successfull!\n");
+#endif
+        }
+        else
+        {
+            status = CRYPTO_LIB_ERR_FAIL_SA_LOAD;
+#ifdef SA_DEBUG
+            printf("SA Load Failure!\n");
+#endif
+        }
+    }
+
+    if(sa_save_file != NULL) fclose(sa_save_file);
+    return status;
+}
+
+/**
+ * @brief Function: update_sa_from_ptr
+ * Updates SA Array with individual SA pointer.
+ **/
+void update_sa_from_ptr(SecurityAssociation_t* sa_ptr)
+{
+    int location = sa_ptr->spi;
+    sa[location].spi = sa_ptr->spi;
+    sa[location].ekid = sa_ptr->ekid;
+    sa[location].akid = sa_ptr->akid;
+    sa[location].ek_ref = sa_ptr->ek_ref;
+    sa[location].ak_ref = sa_ptr->ak_ref;
+    sa[location].sa_state = sa_ptr->sa_state;
+    sa[location].gvcid_blk = sa_ptr->gvcid_blk;
+    sa[location].lpid = sa_ptr->lpid;
+    sa[location].est = sa_ptr->est;
+    sa[location].ast = sa_ptr->ast;
+    sa[location].shivf_len = sa_ptr->shivf_len;
+    sa[location].shsnf_len = sa_ptr->shsnf_len;
+    sa[location].shplf_len = sa_ptr->shplf_len;
+    sa[location].stmacf_len = sa_ptr->stmacf_len;
+    sa[location].ecs = sa_ptr->ecs;
+    sa[location].ecs_len = sa_ptr->ecs_len;
+    for(int i = 0; i<sa_ptr->iv_len; i++)
+    {
+        sa[location].iv[i] = sa_ptr->iv[i];
+    }
+    //sa[location].iv[0] = sa_ptr->iv;
+    sa[location].iv_len = sa_ptr->iv_len;
+    sa[location].acs_len = sa_ptr->acs_len;
+    sa[location].acs = sa_ptr->acs;
+    sa[location].abm_len = sa_ptr->abm_len;
+    for(int i = 0; i<sa_ptr->abm_len; i++)
+    {
+        sa[location].abm[i] = sa_ptr->abm[i];
+    }
+    //sa[location].abm[0] = sa_ptr->abm;
+    sa[location].arsn_len = sa_ptr->arsn_len;
+    for(int i = 0; i<sa_ptr->arsn_len; i++)
+    {
+        sa[location].arsn[i] = sa_ptr->arsn[i];
+    }
+    //sa[location].arsn[0] = sa_ptr->arsn;
+    sa[location].arsnw_len = sa_ptr->arsnw_len;
+    sa[location].arsnw = sa_ptr->arsnw;
+}
+
+/**
+ * @brief Function: sa_perform_save
+ * Saves SA Array to file
+ **/
+int32_t sa_perform_save(SecurityAssociation_t* sa_ptr)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
+    FILE* sa_save_file;
+    int success_flag = 0;
+
+    update_sa_from_ptr(sa_ptr);
+
+    sa_save_file = fopen(CRYPTO_SA_SAVE, "wb");
+
+    if (sa_save_file == NULL)
+    {
+        status = CRYPTO_LIB_ERR_FAIL_SA_SAVE;
+    }
+
+    if(status == CRYPTO_LIB_SUCCESS)
+    {
+        success_flag = fwrite(sa, SA_SIZE, NUM_SA, sa_save_file); 
+
+        if(success_flag)
+        {
+            status = CRYPTO_LIB_SUCCESS;
+
+#ifdef SA_DEBUG
+            printf("SA Written Successfull to file!\n");
+#endif
+        }       
+        else
+        {
+            status = CRYPTO_LIB_ERR_FAIL_SA_SAVE;
+#ifdef SA_DEBUG
+            printf("ERROR: SA Write FAILED!\n");
+#endif
+        }
+    }
+    fclose(sa_save_file);
+
+    return status;
+}
+
+/**
+ * @brief Function: sa_save_sa
+ * @param sa: SecurityAssociation_t*
+ * @return int32: Success/Failure
+ **/
+static int32_t sa_save_sa(SecurityAssociation_t* sa)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    int ignore_save = 1;
+
+#ifdef SA_FILE
+    status = sa_perform_save(sa);
+    ignore_save = 0;
+#endif
+    if (ignore_save) sa = sa; 
+    return status;
+}
+
+/**
+ * @brief Function: sa_populate
+ * Populates in-memory SA
+ **/
+void sa_populate(void)
+{
+    sa[0].spi = 0;
+    sa[0].sa_state = SA_NONE;
+    sa[0].est = 0;
+    sa[0].ast = 0;
+    sa[0].shivf_len = 0;
+    sa[0].shsnf_len = 0;
+    sa[0].arsn_len = 0;
+    sa[0].arsnw_len = 0;
+    sa[0].arsnw = 0;
+    sa[0].gvcid_blk.tfvn = 3;
+    sa[0].gvcid_blk.scid = 3;
+    sa[0].gvcid_blk.vcid = 3;
+    sa[0].gvcid_blk.mapid = TYPE_TC;
 
     // Security Associations
     // SA 1 - TC CLEAR MODE
@@ -230,9 +400,9 @@ int32_t sa_config(void)
     sa[10].ast = 1;
     sa[10].ecs_len = 1;
     sa[10].ecs = CRYPTO_CIPHER_AES256_GCM;
-    sa[10].shivf_len = 12;
-    sa[10].iv_len = 12;
-    sa[10].stmacf_len = 16;
+    sa[10].shivf_len = 0;
+    sa[10].iv_len = 0;
+    sa[10].stmacf_len = 0;
     *(sa[10].iv + 11) = 0;
     sa[10].abm_len = ABM_SIZE; // 20
     sa[10].arsnw_len = 1;
@@ -243,7 +413,7 @@ int32_t sa_config(void)
     sa[10].gvcid_blk.vcid = 1;
     sa[10].gvcid_blk.mapid = TYPE_TC;
     sa[10].ek_ref = (char*) "kmc/test/key130";
-    
+
     // SA 11 - KEYED;  ARSNW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 130
     // SA 11 VC0/1 is now 4-VC0, 7-VC1
     sa[11].spi = 11;
@@ -372,6 +542,29 @@ int32_t sa_config(void)
     sa[17].gvcid_blk.scid = SCID & 0x3FF;
     sa[17].gvcid_blk.vcid = 0;
 
+
+    sa_perform_save(&sa[0]);
+}
+
+
+/**
+ * @brief Function; sa_config
+ * @return int32: Success/Failure
+ **/
+int32_t sa_config(void)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    int use_internal = 1;
+
+#ifdef SA_FILE
+     use_internal = 0;
+#endif
+
+    if(use_internal)
+    {
+        sa_populate();
+    }
+
     return status;
 }
 
@@ -383,33 +576,55 @@ int32_t sa_init(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
-    for (int x = 0; x < NUM_SA; x++)
+    int use_internal = 1;
+
+    #ifdef SA_FILE
+        use_internal = 0;
+        status = sa_load_file();
+        if (status != CRYPTO_LIB_SUCCESS)  
+        {
+        #ifdef DEBUG
+            printf("SA Load Failure!\n");
+            printf("Falling back to in-memory SA!\n");
+            use_internal = 1;
+            status = CRYPTO_LIB_SUCCESS;
+        #endif 
+        }
+    #endif
+
+    if(use_internal)
     {
-        sa[x].ekid = x;
-        sa[x].akid = x;
-        sa[x].sa_state = SA_NONE;
-        sa[x].ecs_len = 0;
-        sa[x].ecs = 0;
-        sa[x].shivf_len = 0;
-        for (int y = 0; y < IV_SIZE; y++)
+        for (int x = 0; x < NUM_SA; x++)
         {
-            sa[x].iv[y] = 0;
+            sa[x].spi = x;
+            sa[x].ekid = x;
+            sa[x].akid = x;
+            sa[x].sa_state = SA_NONE;
+            sa[x].ecs_len = 0;
+            sa[x].ecs = 0;
+            sa[x].shivf_len = 0;
+            for (int y = 0; y < IV_SIZE; y++)
+            {
+                sa[x].iv[y] = 0;
+            }
+            sa[x].iv_len = 0;
+            for (int y = 0; y < ABM_SIZE; y++)
+            {
+                sa[x].abm[y] = 0;
+            }
+            sa[x].abm_len = 0;
+            sa[x].acs_len = 0;
+            sa[x].acs = 0;
+            sa[x].shsnf_len = 0;
+            sa[x].arsn_len = 0;
+            for (int y = 0; y < ARSN_SIZE; y++)
+            {
+                sa[x].arsn[y] = 0;
+            }
         }
-        sa[x].iv_len = 0;
-        for (int y = 0; y < ABM_SIZE; y++)
-        {
-            sa[x].abm[y] = 0;
-        }
-        sa[x].abm_len = 0;
-        sa[x].acs_len = 0;
-        sa[x].acs = 0;
-        sa[x].shsnf_len = 0;
-        sa[x].arsn_len = 0;
-        for (int y = 0; y < ARSN_SIZE; y++)
-        {
-            sa[x].arsn[y] = 0;
-        }
-    }
+
+        sa_populate();
+    }    
     return status;
 }
 
@@ -670,22 +885,6 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
     return status;
 }
 
-// TODO: Nothing actually happens here
-/**
- * @brief Function: sa_save_sa
- * @param sa: SecurityAssociation_t*
- * @return int32: Success/Failure
- * @note Nothing currently actually happens in this function
- **/
-static int32_t sa_save_sa(SecurityAssociation_t* sa)
-{
-    int32_t status = CRYPTO_LIB_SUCCESS;
-    sa = sa; // TODO - use argument
-    // We could do a memory copy of the SA into the sa[NUM_SA] array at the given SPI, however, the inmemory code
-    // currently updates in place so no need for that.
-    //  If we change the in-place update logic, we should update this function to actually update the SA.
-    return status;
-}
 
 /*
 ** Security Association Management Services
