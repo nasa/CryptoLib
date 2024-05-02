@@ -19,6 +19,14 @@ include_directories(../include)
 
 aux_source_directory(core LIB_SRC_FILES)
 
+if(CRYPTO_CUSTOM)
+    aux_source_directory(CRYPTO_CUSTOM_PATH CRYPTO_FILES)
+    list(APPEND LIB_SRC_FILES ${CRYPTO_FILES})
+else()
+    aux_source_directory(crypto/custom_stub CRYPTO_FILES)
+    list(APPEND LIB_SRC_FILES ${CRYPTO_FILES})
+endif()
+
 if(CRYPTO_LIBGCRYPT)
     aux_source_directory(crypto/libgcrypt LIBGCRYPT_FILES)
     list(APPEND LIB_SRC_FILES ${LIBGCRYPT_FILES})

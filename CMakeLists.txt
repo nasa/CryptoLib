@@ -24,6 +24,7 @@ project(crypto C)
 set(SA_CUSTOM_PATH_DEFAULT "../../sa/custom")
 set(KEY_CUSTOM_PATH_DEFAULT "../../key/custom")
 set(MC_CUSTOM_PATH_DEFAULT "../../mc/custom")
+set(CRYPTO_CUSTOM_PATH_DEFAULT "../../crypto/custom")
 
 
 
@@ -36,6 +37,8 @@ option(CODECOV "Code Coverage" OFF)
 option(CRYPTO_LIBGCRYPT "Cryptography Module - Libgcrypt" ON)
 option(CRYPTO_KMC "Cryptography Module - KMC" OFF)
 option(CRYPTO_WOLFSSL "Cryptography Module - WolfSSL" OFF)
+option(CRYPTO_CUSTOM "Cryptography Module - CUSTOM" OFF)
+option(CRYPTO_CUSTOM_PATH "Cryptography Module - CUSTOM PATH" OFF)
 option(DEBUG "Debug" OFF)
 option(KEY_CUSTOM "Key Module - Custom" OFF)
 option(KEY_CUSTOM_PATH "Custom Key Path" OFF)
@@ -81,6 +84,13 @@ if(SA_CUSTOM)
         set(SA_CUSTOM_PATH ${SA_CUSTOM_PATH_DEFAULT})
     endif()
     message(STATUS "SA_CUSTOM being utilized.  Path set to: ${SA_CUSTOM_PATH}")
+endif()
+
+if(CRYPTO_CUSTOM)
+    if(NOT DEFINED ${CRYPTO_CUSTOM_PATH})
+        set(CRYPTO_CUSTOM_PATH ${CRYPTO_CUSTOM_PATH_DEFAULT})
+    endif()
+    message(STATUS "CRYPTO_CUSTOM being utilized.  Path set to: ${CRYPTO_CUSTOM_PATH}")
 endif()
 
 
