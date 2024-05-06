@@ -19,6 +19,16 @@ cmake_minimum_required(VERSION 3.14.0)
 project(crypto C)
 
 #
+# CUSTOM PATH Definiton
+#
+set(SA_CUSTOM_PATH_DEFAULT "../../sa/custom")
+set(KEY_CUSTOM_PATH_DEFAULT "../../key/custom")
+set(MC_CUSTOM_PATH_DEFAULT "../../mc/custom")
+set(CRYPTO_CUSTOM_PATH_DEFAULT "../../crypto/custom")
+
+
+
+#
 # Define Build Flags
 # The default value is captured in line, change with flag `-DXYZ=1`
 # For flags with the same prefix, one or more may be enabled
@@ -27,14 +37,19 @@ option(CODECOV "Code Coverage" OFF)
 option(CRYPTO_LIBGCRYPT "Cryptography Module - Libgcrypt" ON)
 option(CRYPTO_KMC "Cryptography Module - KMC" OFF)
 option(CRYPTO_WOLFSSL "Cryptography Module - WolfSSL" OFF)
+option(CRYPTO_CUSTOM "Cryptography Module - CUSTOM" OFF)
+option(CRYPTO_CUSTOM_PATH "Cryptography Module - CUSTOM PATH" OFF)
 option(DEBUG "Debug" OFF)
 option(KEY_CUSTOM "Key Module - Custom" OFF)
+option(KEY_CUSTOM_PATH "Custom Key Path" OFF)
 option(KEY_INTERNAL "Key Module - Internal" ON)
 option(KEY_KMC "Key Module - KMC" OFF)
 option(MC_CUSTOM "Monitoring and Control - Custom" OFF)
+option(MC_CUSTOM_PATH "Custom Monitoring and Control path" OFF)
 option(MC_DISABLED "Monitoring and Control - Disabled" OFF)
 option(MC_INTERNAL "Monitoring and Control - Internal" ON)
 option(SA_CUSTOM "Security Association - Custom" OFF)
+option(SA_CUSTOM_PATH "Custion Security Association Path" OFF)
 option(SA_INTERNAL "Security Association - Internal" ON)
 option(SA_MARIADB "Security Association - MariaDB" OFF)
 option(SUPPORT "Support" OFF)
@@ -46,6 +61,39 @@ option(SA_FILE "Save Security Association to File" OFF)
 OPTION(KMC_MDB_RH "KMC-MDB-RedHat-Integration-Testing" OFF) #Disabled by default, enable with: -DKMC_MDB_RH=ON
 OPTION(KMC_MDB_DB "KMC-MDB-Debian-Integration-Testing" OFF) #Disabled by default, enable with: -DKMC_MDB_DB=ON
 OPTION(KMC_CFFI_EXCLUDE "KMC-Exclude-Problematic-CFFI-Code" OFF) #Disabled by default, enable with: -DKMC_CFFI_EXCLUDE=ON
+
+
+#
+# Custom Module Paths
+#
+if(KEY_CUSTOM)
+    if(NOT DEFINED ${KEY_CUSTOM_PATH})
+        set(KEY_CUSTOM_PATH ${KEY_CUSTOM_PATH_DEFAULT})
+    endif()
+    message(STATUS "KEY_CUSTOM being utilized.  Path set to: ${KEY_CUSTOM_PATH}")
+endif()
+
+if(MC_CUSTOM)
+    if(NOT DEFINED ${KEY_CUSTOM_PATH})
+        set(MC_CUSTOM_PATH ${MC_CUSTOM_PATH_DEFAULT})
+    endif()
+    message(STATUS "MC_CUSTOM being utilized.  Path set to: ${MC_CUSTOM_PATH}")
+endif()
+
+if(SA_CUSTOM)
+    if(NOT DEFINED ${SA_CUSTOM_PATH})
+        set(SA_CUSTOM_PATH ${SA_CUSTOM_PATH_DEFAULT})
+    endif()
+    message(STATUS "SA_CUSTOM being utilized.  Path set to: ${SA_CUSTOM_PATH}")
+endif()
+
+if(CRYPTO_CUSTOM)
+    if(NOT DEFINED ${CRYPTO_CUSTOM_PATH})
+        set(CRYPTO_CUSTOM_PATH ${CRYPTO_CUSTOM_PATH_DEFAULT})
+    endif()
+    message(STATUS "CRYPTO_CUSTOM being utilized.  Path set to: ${CRYPTO_CUSTOM_PATH}")
+endif()
+
 
 #
 # Build Flag Logic
