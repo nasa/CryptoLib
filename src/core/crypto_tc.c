@@ -1593,8 +1593,10 @@ int32_t Crypto_TC_Check_IV_ARSN(SecurityAssociation_t* sa_ptr,TC_t* tc_sdls_proc
     {
         if (crypto_config.sa_type == SA_TYPE_MARIADB)
         {
-            //if (sa_ptr->ek_ref != NULL)
-            //    free(sa_ptr->ek_ref);
+            if (sa_ptr->ek_ref[0] != '\0')
+                clean_ekref(sa_ptr);
+            if (sa_ptr->ak_ref[0] != '\0')
+                clean_akref(sa_ptr);
             free(sa_ptr);
         }
     }

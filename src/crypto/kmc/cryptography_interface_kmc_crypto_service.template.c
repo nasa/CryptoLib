@@ -762,7 +762,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
         return CRYPTO_LIB_ERR_NULL_BUFFER;
     }
 
-    if(sa_ptr->ak_ref == NULL)
+    if(sa_ptr->ak_ref[0] == '\0')
     {
         status = CRYPTOGRAHPY_KMC_NULL_AUTHENTICATION_KEY_REFERENCE_IN_SA;
         return status;
@@ -995,7 +995,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
     Crypto_hexprint(mac,mac_size);
 #endif
 
-    if(sa_ptr->ak_ref == NULL)
+    if(sa_ptr->ak_ref[0] == '\0')
     {
         status = CRYPTOGRAHPY_KMC_NULL_AUTHENTICATION_KEY_REFERENCE_IN_SA;
         return status;
