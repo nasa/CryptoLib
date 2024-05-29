@@ -66,7 +66,7 @@ uint16_t crc16Table[256];
 
 /**
  * @brief Function: clean_ekref
- * Looks up cipher suite ID and determines if it's an AEAD algorithm. Returns 1 if true, 0 if false;
+ * Null terminates the entire array for EKREF
  * @param sa: SecurityAssocation_t*
  **/
 void clean_ekref(SecurityAssociation_t* sa)
@@ -79,7 +79,7 @@ void clean_ekref(SecurityAssociation_t* sa)
 
 /**
  * @brief Function: clean_akref
- * Looks up cipher suite ID and determines if it's an AEAD algorithm. Returns 1 if true, 0 if false;
+ * Null terminates the entire array for AKREF
  * @param sa: SecurityAssocation_t*
  **/
 void clean_akref(SecurityAssociation_t* sa)
