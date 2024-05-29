@@ -252,11 +252,14 @@ static int32_t sa_save_sa(SecurityAssociation_t* sa)
     // todo - if query fails, need to push failure message to error stack instead of just return code.
 
     // We free the allocated SA memory in the save function.
-    if (sa->ek_ref != NULL)
-        free(sa->ek_ref);
-    if (sa->ak_ref != NULL)
-        free(sa->ak_ref);
+    if (sa->ek_ref[0] != '\0')
+        clean_ekref(sa);
+        //free(sa->ek_ref);
+    if (sa->ak_ref[0] != '\0')
+        clean_akref(sa);
+        //free(sa->ak_ref);
     free(sa);
+
     return status;
 }
 // Security Association Utility Functions
@@ -376,7 +379,7 @@ static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** se
                 } else // Cryptography Type KMC Crypto Service with PKCS12 String Key References
                 {
                     sa->ekid = 0;
-                    sa->ek_ref = malloc((strlen(row[i])+1) * sizeof(char));
+                    //sa->ek_ref = malloc((strlen(row[i])+1) * sizeof(char));
                     memcpy(sa->ek_ref, row[i], strlen(row[i])+1);
                 }
                 continue;
@@ -388,7 +391,7 @@ static int32_t parse_sa_from_mysql_query(char* query, SecurityAssociation_t** se
                     sa->akid = atoi(row[i]);
                 } else // Cryptography Type KMC Crypto Service with PKCS12 String Key References
                 {
-                    sa->ak_ref = malloc((strlen(row[i])+1) * sizeof(char));
+                    //sa->ak_ref = malloc((strlen(row[i])+1) * sizeof(char));
                     memcpy(sa->ak_ref, row[i], strlen(row[i])+1);
                 }
                 continue;

@@ -123,8 +123,10 @@ void update_sa_from_ptr(SecurityAssociation_t* sa_ptr)
     sa[location].spi = sa_ptr->spi;
     sa[location].ekid = sa_ptr->ekid;
     sa[location].akid = sa_ptr->akid;
-    sa[location].ek_ref = sa_ptr->ek_ref;
-    sa[location].ak_ref = sa_ptr->ak_ref;
+    memcpy(sa[location].ek_ref, sa_ptr->ek_ref, REF_SIZE);
+    //sa[location].ek_ref = sa_ptr->ek_ref;
+    memcpy(sa[location].ak_ref, sa_ptr->ak_ref, REF_SIZE);
+    //sa[location].ak_ref = sa_ptr->ak_ref;
     sa[location].sa_state = sa_ptr->sa_state;
     sa[location].gvcid_blk = sa_ptr->gvcid_blk;
     sa[location].lpid = sa_ptr->lpid;
@@ -412,7 +414,9 @@ void sa_populate(void)
     sa[10].gvcid_blk.scid = 0x002C;
     sa[10].gvcid_blk.vcid = 1;
     sa[10].gvcid_blk.mapid = TYPE_TC;
-    sa[10].ek_ref = (char*) "kmc/test/key130";
+    char ek_ref_string[20] = "kmc/test/key130";
+    memcpy(sa[10].ek_ref, ek_ref_string, strlen(ek_ref_string)); 
+    //sa[10].ek_ref = (char*) "kmc/test/key130";
 
     // SA 11 - KEYED;  ARSNW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 130
     // SA 11 VC0/1 is now 4-VC0, 7-VC1
@@ -436,7 +440,8 @@ void sa_populate(void)
     sa[11].gvcid_blk.scid = SCID & 0x3FF;
     sa[11].gvcid_blk.vcid = 0;
     sa[11].gvcid_blk.mapid = TYPE_TC;
-    sa[11].ek_ref = (char*) "kmc/test/key130";
+    //sa[11].ek_ref = (char*) "kmc/test/key130";
+    memcpy(sa[11].ek_ref, ek_ref_string, strlen(ek_ref_string));
 
     // SA 12 - TM CLEAR MODE
     // SA 12
@@ -611,6 +616,11 @@ int32_t sa_init(void)
             for (int y = 0; y < ABM_SIZE; y++)
             {
                 sa[x].abm[y] = 0;
+            }
+            for( int y = 0; y < REF_SIZE; y++)
+            {
+                sa[x].ek_ref[y] = '\0';
+                sa[x].ak_ref[y] = '\0';
             }
             sa[x].abm_len = 0;
             sa[x].acs_len = 0;

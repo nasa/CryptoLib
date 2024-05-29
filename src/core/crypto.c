@@ -65,6 +65,32 @@ uint16_t crc16Table[256];
 */
 
 /**
+ * @brief Function: clean_ekref
+ * Looks up cipher suite ID and determines if it's an AEAD algorithm. Returns 1 if true, 0 if false;
+ * @param sa: SecurityAssocation_t*
+ **/
+void clean_ekref(SecurityAssociation_t* sa)
+{
+    for(int y = 0; y < REF_SIZE; y++)
+    {
+        sa->ek_ref[y] = '\0';
+    }
+}
+
+/**
+ * @brief Function: clean_akref
+ * Looks up cipher suite ID and determines if it's an AEAD algorithm. Returns 1 if true, 0 if false;
+ * @param sa: SecurityAssocation_t*
+ **/
+void clean_akref(SecurityAssociation_t* sa)
+{
+    for(int y = 0; y < REF_SIZE; y++)
+    {
+        sa->ak_ref[y] = '\0';
+    }
+}
+
+/**
  * @brief Function: Crypto_Is_AEAD_Algorithm
  * Looks up cipher suite ID and determines if it's an AEAD algorithm. Returns 1 if true, 0 if false;
  * @param cipher_suite_id: uint32

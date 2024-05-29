@@ -46,8 +46,11 @@ UTEST(SA_SAVE, VERIFY_INTERNAL)
     ASSERT_EQ(test_association->spi, 4);
     ASSERT_EQ(test_association->ekid, 130);
     ASSERT_EQ(test_association->akid, 4);
-    //test_association->ek_ref = sa_ptr->ek_ref;
-    //test_association->ak_ref = sa_ptr->ak_ref;
+    int str_cmp_output = 0;
+    str_cmp_output = strcmp(test_association->ek_ref, "");
+    ASSERT_EQ(0, str_cmp_output);
+    str_cmp_output = strcmp(test_association->ak_ref, "");
+    ASSERT_EQ(0, str_cmp_output);
     ASSERT_EQ(test_association->sa_state, SA_OPERATIONAL);
     ASSERT_EQ(test_association->gvcid_blk.tfvn, 0);
     ASSERT_EQ(test_association->gvcid_blk.scid, (SCID & 0x3FF));
@@ -122,6 +125,8 @@ UTEST(SA_SAVE, INTERNAL_DEFAULT_PASS_1)
     test_association->shivf_len = 6;
     test_association->iv_len = 12;
     test_association->arsn_len = 0;
+    strcpy(test_association->ek_ref, "TEST_EK_REF");
+    strcpy(test_association->ak_ref, "TEST_AK_REF");
     memcpy(test_association->iv + (test_association->iv_len - test_association->shivf_len), new_iv_b, new_iv_len);
 
     return_val =
@@ -168,8 +173,16 @@ UTEST(SA_SAVE, VERIFY_DEFAULT_PASS_1_SAVE)
     ASSERT_EQ(test_association->spi, 4);
     ASSERT_EQ(test_association->ekid, 130);
     ASSERT_EQ(test_association->akid, 4);
-    //test_association->ek_ref = sa_ptr->ek_ref;
-    //test_association->ak_ref = sa_ptr->ak_ref;
+    int str_cmp_output = 0;
+    str_cmp_output = strcmp(test_association->ek_ref, "TEST_EK_REF");
+    ASSERT_EQ(0, str_cmp_output);
+    str_cmp_output = strcmp(test_association->ek_ref, "TEST_EK_REF_BAD");
+    ASSERT_NE(0, str_cmp_output);
+    str_cmp_output = strcmp(test_association->ak_ref, "TEST_AK_REF");
+    ASSERT_EQ(0, str_cmp_output);
+    str_cmp_output = strcmp(test_association->ak_ref, "TEST_AK_REF_BAD");
+    ASSERT_NE(0, str_cmp_output);
+    
     ASSERT_EQ(test_association->sa_state, SA_OPERATIONAL);
     ASSERT_EQ(test_association->gvcid_blk.tfvn, 0);
     ASSERT_EQ(test_association->gvcid_blk.scid, (SCID & 0x3FF));
@@ -254,6 +267,8 @@ UTEST(SA_SAVE, SAVE_PASS_1)
     test_association->shivf_len = 6;
     test_association->iv_len = 12;
     test_association->arsn_len = 0;
+    clean_akref(test_association);
+    clean_ekref(test_association);
     memcpy(test_association->iv + (test_association->iv_len - test_association->shivf_len), new_iv_b, new_iv_len);
 
     return_val =
@@ -300,8 +315,15 @@ UTEST(SA_SAVE, VERIFY_SAVE_PASS_1_SAVE)
     ASSERT_EQ(test_association->spi, 4);
     ASSERT_EQ(test_association->ekid, 130);
     ASSERT_EQ(test_association->akid, 4);
-    //test_association->ek_ref = sa_ptr->ek_ref;
-    //test_association->ak_ref = sa_ptr->ak_ref;
+    int str_cmp_output = 0;
+    str_cmp_output = strcmp(test_association->ek_ref, "");
+    ASSERT_EQ(0, str_cmp_output);
+    str_cmp_output = strcmp(test_association->ek_ref, "TEST_EK_REF_BAD");
+    ASSERT_NE(0, str_cmp_output);
+    str_cmp_output = strcmp(test_association->ak_ref, "");
+    ASSERT_EQ(0, str_cmp_output);
+    str_cmp_output = strcmp(test_association->ak_ref, "TEST_AK_REF_BAD");
+    ASSERT_NE(0, str_cmp_output);
     ASSERT_EQ(test_association->sa_state, SA_OPERATIONAL);
     ASSERT_EQ(test_association->gvcid_blk.tfvn, 0);
     ASSERT_EQ(test_association->gvcid_blk.scid, (SCID & 0x3FF));
