@@ -42,10 +42,8 @@ void cleanup_sa(SecurityAssociation_t* test_association)
 {
     if (test_association->ek_ref[0] != '\0')
         clean_ek_ref(test_association);
-        // free(test_association->ek_ref);
     if (test_association->ak_ref[0] != '\0')
         clean_ak_ref(test_association);
-        // free(test_association->ak_ref);
     
     free(test_association);
 }
