@@ -254,10 +254,8 @@ static int32_t sa_save_sa(SecurityAssociation_t* sa)
     // We free the allocated SA memory in the save function.
     if (sa->ek_ref[0] != '\0')
         clean_ekref(sa);
-        //free(sa->ek_ref);
     if (sa->ak_ref[0] != '\0')
         clean_akref(sa);
-        //free(sa->ak_ref);
     free(sa);
 
     return status;
