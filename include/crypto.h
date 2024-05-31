@@ -238,6 +238,10 @@ int32_t Crypto_User_ModifyVCID(void);
 // SA Save Functions
 int32_t sa_perform_save(SecurityAssociation_t* sa);
 
+// Clean REF
+void clean_ekref(SecurityAssociation_t* sa);
+void clean_akref(SecurityAssociation_t* sa);
+
 // Determine Payload Data Unit
 int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, uint8_t* ingest);
 int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame);
