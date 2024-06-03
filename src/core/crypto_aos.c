@@ -211,7 +211,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t* pTfBuffer)
 
     // Set initialization vector if specified
 #ifdef SA_DEBUG
-    if (sa_ptr->shivf_len > 0 && sa_ptr->iv != NULL)
+    if (sa_ptr->shivf_len > 0)
     {
         printf(KYEL "Using IV value:\n\t");
         for (i = 0; i < sa_ptr->iv_len; i++)

@@ -843,7 +843,7 @@ int32_t Crypto_TC_Set_IV(SecurityAssociation_t* sa_ptr, uint8_t* p_new_enc_frame
 {
     uint32_t status = CRYPTO_LIB_SUCCESS;
     #ifdef SA_DEBUG
-    if (sa_ptr->shivf_len > 0 && sa_ptr->iv != NULL)
+    if (sa_ptr->shivf_len > 0)
     {
         int i = 0;
         printf(KYEL "Using IV value:\n\t");
