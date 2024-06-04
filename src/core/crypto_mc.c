@@ -209,10 +209,6 @@ int32_t Crypto_SA_readARSN(uint8_t* ingest)
     { // Set IV - authenticated encryption
         for (x = 0; x < sa_ptr->shivf_len - 1; x++)
         {
-            if(sa_ptr->iv == NULL)
-            {
-                return CRYPTO_LIB_ERROR;
-            }
             ingest[count++] = *(sa_ptr->iv + x);
         }
 

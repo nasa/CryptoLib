@@ -132,7 +132,7 @@ int32_t Crypto_TM_IV_Sanity_Check(uint8_t* sa_service_type, SecurityAssociation_
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     #ifdef SA_DEBUG
-    if (sa_ptr->shivf_len > 0 && sa_ptr->iv != NULL)
+    if (sa_ptr->shivf_len > 0)
     {
         printf(KYEL "Using IV value:\n\t");
         for (int i = 0; i < sa_ptr->iv_len; i++)

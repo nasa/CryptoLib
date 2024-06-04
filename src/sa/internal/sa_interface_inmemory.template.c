@@ -654,10 +654,10 @@ static int32_t sa_get_from_spi(uint16_t spi, SecurityAssociation_t** security_as
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     *security_association = &sa[spi];
-    if ((sa[spi].iv == NULL) && (sa[spi].shivf_len > 0) && crypto_config.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
-    {
-        return CRYPTO_LIB_ERR_NULL_IV;
-    } // Must have IV if doing encryption or authentication
+    // if (sa[spi].shivf_len > 0 && crypto_config.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+    // {
+    //     return CRYPTO_LIB_ERR_NULL_IV;
+    // } // Must have IV if doing encryption or authentication
 
     if ((sa[spi].abm_len == 0) && sa[spi].ast)
     {
@@ -688,13 +688,13 @@ int32_t sa_get_operational_sa_from_gvcid_find_iv(uint8_t tfvn, uint16_t scid, ui
             *security_association = &sa[i];
 
             // Must have IV if using libgcrypt and auth/enc
-            if (sa[i].iv == NULL && (sa[i].ast == 1 || sa[i].est == 1) && crypto_config.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
-            {
-                status =  CRYPTO_LIB_ERR_NULL_IV;
-                return status;
-            }
+            // if (sa[i].iv == NULL && (sa[i].ast == 1 || sa[i].est == 1) && crypto_config.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+            // {
+            //     //status =  CRYPTO_LIB_ERR_NULL_IV;
+            //     //return status;
+            // }
             // Must have ABM if doing authentication
-            if (sa[i].abm == NULL && sa[i].ast)
+            if (sa[i].ast && sa[i].abm_len <= 0)
             {
                 status = CRYPTO_LIB_ERR_NULL_ABM;
                 return status;
@@ -875,10 +875,6 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
                                            SecurityAssociation_t** security_association)
 {
     int32_t status = CRYPTO_LIB_ERR_NO_OPERATIONAL_SA;
-    if (sa == NULL)
-    {
-        return CRYPTO_LIB_ERR_NO_INIT;
-    }
 
     status = sa_get_operational_sa_from_gvcid_find_iv(tfvn, scid, vcid, mapid, security_association);
 
