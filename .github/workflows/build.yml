@@ -2,7 +2,7 @@ name: CryptoLib
 
 on: 
   push:
-    branches: [ main, dev, 215-re-evaluate-codecov-app-being-used-in-ci ]
+    branches: [ main, dev ]
   pull_request:
     branches: [ main, dev ]
 
@@ -26,17 +26,6 @@ jobs:
     - name: Minimal Build Script
       working-directory: ${{github.workspace}}
       run: bash ${GITHUB_WORKSPACE}/support/scripts/build_minimal.sh
-
-    - name: Code-Coverage
-      working-directory: ${{github.workspace}}
-      run: make gcov
-
-    - name: Upload 
-      uses: codecov/codecov-action@v3
-      env:
-        CODECOV_TOKEN: 71699f25-12a3-44a4-8a83-be777b9e577a
-      with:
-        files: 'coverage/*.c.gcov'
 
   #
   # Internal Build
@@ -63,11 +52,12 @@ jobs:
       run: make gcov
 
     - name: Upload 
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       env:
         CODECOV_TOKEN: 71699f25-12a3-44a4-8a83-be777b9e577a
       with:
         files: 'coverage/*.c.gcov'
+        verbose: true
 
   #
   # KMC Build
@@ -94,11 +84,12 @@ jobs:
       run: make gcov
 
     - name: Upload 
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       env:
         CODECOV_TOKEN: 71699f25-12a3-44a4-8a83-be777b9e577a
       with:
         files: 'coverage/*.c.gcov'
+        verbose: true
 
   #
   # Wolf Build
@@ -144,11 +135,12 @@ jobs:
       run: make gcov
 
     - name: Upload 
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       env:
         CODECOV_TOKEN: 71699f25-12a3-44a4-8a83-be777b9e577a
       with:
         files: 'coverage/*.c.gcov'
+        verbose: true
       
   #
   # RHEL Build
@@ -163,8 +155,10 @@ jobs:
     - name: Update
       run: yum update -y
     - name: Install Dependencies
-      run: yum install -y lcov python38-devel libcurl-devel libgpg-error-devel libgcrypt-devel git cmake gcc java-11-openjdk-devel openssl wget mariadb-devel mariadb-common mariadb-connector-c mariadb-connector-c-config mariadb-errmsg mariadb-gssapi-server 
+      run: yum install -y epel-release python38-devel libcurl-devel libgpg-error-devel libgcrypt-devel git cmake gcc java-11-openjdk-devel openssl wget mariadb-devel mariadb-common mariadb-connector-c mariadb-connector-c-config mariadb-errmsg mariadb-gssapi-server
       # Might want to trim this down, but these dependencies should work for KMC
+    - name: install lcov
+      run: yum install -y --enablerepo=epel lcov
     - name: Install Python Dependencies
       run: pip3 install pycryptodome
     # End Container Setup
@@ -178,8 +172,9 @@ jobs:
       run: make gcov
 
     - name: Upload 
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       env:
         CODECOV_TOKEN: 71699f25-12a3-44a4-8a83-be777b9e577a
       with:
         files: 'coverage/*.c.gcov'
+        verbose: true
