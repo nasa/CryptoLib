@@ -58,7 +58,8 @@ typedef enum
     CRYPTOGRAPHY_TYPE_UNITIALIZED = 0,
     CRYPTOGRAPHY_TYPE_LIBGCRYPT,
     CRYPTOGRAPHY_TYPE_KMCCRYPTO,
-    CRYPTOGRAPHY_TYPE_WOLFSSL
+    CRYPTOGRAPHY_TYPE_WOLFSSL,
+    CRYPTOGRAPHY_TYPE_CUSTOM
 } CryptographyType;
 /***************************************
 ** GVCID Managed Parameter enums
