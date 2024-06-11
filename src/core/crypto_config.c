@@ -241,6 +241,10 @@ int32_t Crypto_Init(void)
         cryptography_if = get_cryptography_interface_wolfssl();
     }
     if (cryptography_if == NULL)
+    {
+        cryptography_if = get_cryptography_interface_custom();
+    }
+    if (cryptography_if == NULL)
     {   // Note this needs to be the last option in the chain due to addition configuration required
         if (cryptography_kmc_crypto_config != NULL)
         {
