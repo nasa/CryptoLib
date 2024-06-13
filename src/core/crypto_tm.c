@@ -162,13 +162,12 @@ int32_t Crypto_TM_IV_Sanity_Check(uint8_t* sa_service_type, SecurityAssociation_
     {
         if(sa_ptr->acs_len != 0)
         {
-            if((sa_ptr->acs == CRYPTO_MAC_CMAC_AES256 || sa_ptr->acs == CRYPTO_MAC_HMAC_SHA256 || sa_ptr->acs == CRYPTO_MAC_HMAC_SHA512) &&
-                sa_ptr->iv_len > 0 )
-                {
-                    status = CRYPTO_LIB_ERR_IV_NOT_SUPPORTED_FOR_ACS_ALGO;
-                    mc_if->mc_log(status);
-                    return status;
-                }
+            if(sa_ptr->acs > 0 && sa_ptr->iv_len > 0)
+            {
+                status = CRYPTO_LIB_ERR_IV_NOT_SUPPORTED_FOR_ACS_ALGO;
+                mc_if->mc_log(status);
+                return status;
+            }
         }
     }
     return status;
