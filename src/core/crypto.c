@@ -100,7 +100,7 @@ uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
     // CryptoLib only supports AES-GCM, which is an AEAD (Authenticated Encryption with Associated Data) algorithm, so
     // return true/1.
     // TODO - Add cipher suite mapping to which algorithms are AEAD and which are not.
-    if ((cipher_suite_id == CRYPTO_CIPHER_AES256_GCM) || (cipher_suite_id == CRYPTO_CIPHER_AES256_CBC_MAC))
+    if ((cipher_suite_id == CRYPTO_CIPHER_AES256_GCM) || (cipher_suite_id == CRYPTO_CIPHER_AES256_CBC_MAC) || (cipher_suite_id == CRYPTO_CIPHER_AES256_GCM_SIV))
     {
 #ifdef DEBUG
         printf(KYEL "CRYPTO IS AEAD? : TRUE\n" RESET);
@@ -913,7 +913,7 @@ int32_t Crypto_Check_Anti_Replay_ARSNW(SecurityAssociation_t* sa_ptr, uint8_t* a
 int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t* sa_ptr, uint8_t* iv, int8_t* iv_valid)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    if ((sa_ptr->iv_len > 0) && (sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM))
+    if ((sa_ptr->iv_len > 0) && (sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM || sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM_SIV))
     {
         // Check IV is in ARSNW
         if(crypto_config.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
@@ -982,7 +982,7 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t* sa_ptr, uint8_t* arsn, u
     }
 
     // For GCM specifically, if have a valid IV...
-    if ((sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM) && (iv_valid == CRYPTO_TRUE))
+    if ((sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM || sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM_SIV) && (iv_valid == CRYPTO_TRUE))
     {
         // Using ARSN? Need to be valid to increment both
         if (sa_ptr->arsn_len > 0 && arsn_valid == CRYPTO_TRUE)
@@ -998,7 +998,7 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t* sa_ptr, uint8_t* arsn, u
     }
 
     // If not GCM, and ARSN is valid - can incrmeent it
-    if (sa_ptr->ecs != CRYPTO_CIPHER_AES256_GCM && arsn_valid == CRYPTO_TRUE)
+    if ((sa_ptr->ecs != CRYPTO_CIPHER_AES256_GCM && sa_ptr->ecs != CRYPTO_CIPHER_AES256_GCM_SIV) && arsn_valid == CRYPTO_TRUE)
     {
         memcpy(sa_ptr->arsn, arsn, sa_ptr->arsn_len);
     }
@@ -1024,6 +1024,9 @@ int32_t Crypto_Get_ECS_Algo_Keylen(uint8_t algo)
     switch (algo)
     {
     case CRYPTO_CIPHER_AES256_GCM:
+        retval = 32;
+        break;
+    case CRYPTO_CIPHER_AES256_GCM_SIV:
         retval = 32;
         break;
     case CRYPTO_CIPHER_AES256_CBC:

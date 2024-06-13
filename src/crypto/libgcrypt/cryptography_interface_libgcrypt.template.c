@@ -1023,6 +1023,9 @@ int32_t cryptography_get_ecs_algo(int8_t algo_enum)
         case CRYPTO_CIPHER_AES256_GCM:
             algo = GCRY_CIPHER_AES256;
             break;
+        case CRYPTO_CIPHER_AES256_GCM_SIV:
+            algo = GCRY_CIPHER_AES256;
+            break;
         case CRYPTO_CIPHER_AES256_CBC:
             algo = GCRY_CIPHER_AES256;
             break;
@@ -1051,6 +1054,9 @@ int32_t cryptography_get_ecs_mode(int8_t algo_enum)
     switch (algo_enum)
     {
         case CRYPTO_CIPHER_AES256_GCM:
+            mode = GCRY_CIPHER_MODE_GCM;
+            break;
+        case CRYPTO_CIPHER_AES256_GCM_SIV:
             mode = GCRY_CIPHER_MODE_GCM;
             break;
         case CRYPTO_CIPHER_AES256_CBC:
