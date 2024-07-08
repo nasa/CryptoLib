@@ -24,6 +24,7 @@ project(crypto C)
 set(SA_CUSTOM_PATH_DEFAULT "../../sa/custom")
 set(KEY_CUSTOM_PATH_DEFAULT "../../key/custom")
 set(MC_CUSTOM_PATH_DEFAULT "../../mc/custom")
+set(MC_LOG_PATH_DEFAULT "../../../log.txt")
 set(CRYPTO_CUSTOM_PATH_DEFAULT "../../crypto/custom")
 
 
@@ -113,6 +114,12 @@ endif()
 if(DEBUG)
     add_definitions(-DDEBUG -DOCF_DEBUG -DFECF_DEBUG -DSA_DEBUG -DPDU_DEBUG -DCCSDS_DEBUG -DTC_DEBUG -DMAC_DEBUG -DTM_DEBUG -DAOS_DEBUG)
     add_compile_options(-ggdb)
+endif()
+
+if(NOT DEFINED MC_LOG_CUSTOM_PATH)
+    add_definitions(-DMC_LOG_PATH=${MC_LOG_PATH_DEFAULT})
+else()
+    add_definitions(-DMC_LOG_PATH=${MC_LOG_CUSTOM_PATH})
 endif()
 
 IF(KMC_MDB_RH)
