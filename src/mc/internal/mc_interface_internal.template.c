@@ -57,7 +57,7 @@ static int32_t mc_initialize(void)
     if (mc_file_ptr == NULL)
     {
         status = CRYPTO_LIB_ERR_MC_INIT;
-        printf(KRED "ERROR: Monitoring andcontrol initialization - internal failed\n" RESET);
+        printf(KRED "ERROR: Monitoring and control initialization - internal failed\n" RESET);
     }
     
     return status;

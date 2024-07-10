@@ -9,4 +9,6 @@
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 source $SCRIPT_DIR/env.sh
 
+rm $BASE_DIR/CMakeCache.txt
+
 cmake $BASE_DIR && make && make test
