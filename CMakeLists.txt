@@ -57,6 +57,7 @@ option(SYSTEM_INSTALL "SystemInstall" OFF)
 option(TEST "Test" OFF)
 option(TEST_ENC "Tests - Encryption" OFF)
 option(SA_FILE "Save Security Association to File" OFF)
+option(KEY_VALIDATION "Validate existance of key duplication" OFF)
 
 OPTION(KMC_MDB_RH "KMC-MDB-RedHat-Integration-Testing" OFF) #Disabled by default, enable with: -DKMC_MDB_RH=ON
 OPTION(KMC_MDB_DB "KMC-MDB-Debian-Integration-Testing" OFF) #Disabled by default, enable with: -DKMC_MDB_DB=ON
@@ -108,6 +109,10 @@ endif()
 
 if(SA_FILE)
     add_definitions(-DSA_FILE)
+endif()
+
+if(KEY_VALIDATION)
+    add_definitions(-DKEY_VALIDATION)
 endif()
 
 if(DEBUG)
