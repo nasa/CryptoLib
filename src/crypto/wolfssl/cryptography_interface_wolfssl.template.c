@@ -529,28 +529,28 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
             break;
 
         // TODO: Confirm same process will be used
-        case CRYPTO_CIPHER_AES256_GCM_SIV:
-            status = wc_AesGcmSetKey(&enc, key, len_key);
-            if (status == 0)
-            {
-                if ((encrypt_bool == CRYPTO_TRUE) && (authenticate_bool == CRYPTO_TRUE))
-                {
-                    status = wc_AesGcmEncrypt(&enc, data_out, data_in, len_data_in, iv, iv_len, mac, mac_size, aad, aad_len);
-                }
-                else if (encrypt_bool == CRYPTO_TRUE)
-                {
-                    status = wc_AesGcmEncrypt(&enc, data_out, data_in, len_data_in, iv, iv_len, mac, 16, aad, aad_len);
-                    if (status == -180)
-                    {   // Special error case as Wolf will not accept a zero value for MAC size
-                        status = CRYPTO_LIB_SUCCESS;
-                    }
-                }
-                else if (authenticate_bool == CRYPTO_TRUE)
-                {
-                    status = wc_AesGcmEncrypt(&enc, data_out, data_in, 0, iv, iv_len, mac, mac_size, aad, aad_len);
-                }
-            }
-            break;
+        // case CRYPTO_CIPHER_AES256_GCM_SIV:
+        //     status = wc_AesGcmSetKey(&enc, key, len_key);
+        //     if (status == 0)
+        //     {
+        //         if ((encrypt_bool == CRYPTO_TRUE) && (authenticate_bool == CRYPTO_TRUE))
+        //         {
+        //             status = wc_AesGcmEncrypt(&enc, data_out, data_in, len_data_in, iv, iv_len, mac, mac_size, aad, aad_len);
+        //         }
+        //         else if (encrypt_bool == CRYPTO_TRUE)
+        //         {
+        //             status = wc_AesGcmEncrypt(&enc, data_out, data_in, len_data_in, iv, iv_len, mac, 16, aad, aad_len);
+        //             if (status == -180)
+        //             {   // Special error case as Wolf will not accept a zero value for MAC size
+        //                 status = CRYPTO_LIB_SUCCESS;
+        //             }
+        //         }
+        //         else if (authenticate_bool == CRYPTO_TRUE)
+        //         {
+        //             status = wc_AesGcmEncrypt(&enc, data_out, data_in, 0, iv, iv_len, mac, mac_size, aad, aad_len);
+        //         }
+        //     }
+        //     break;
 
         case CRYPTO_CIPHER_AES256_CCM:
             status = CRYPTO_LIB_ERR_UNSUPPORTED_ACS;
@@ -611,17 +611,17 @@ static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
             }
             break;
 
-        case CRYPTO_CIPHER_AES256_GCM_SIV:
-            status = wc_AesGcmSetKey(&dec, key, len_key);
-            if (status == 0)
-            {
-                status = wc_AesGcmDecrypt(&dec, data_out, data_in, len_data_in, iv, iv_len, calc_mac, 16, NULL, 0);
-                if (status == -180)
-                {   // Special error case as Wolf will not accept a zero value for MAC size
-                    status = CRYPTO_LIB_SUCCESS;
-                }
-            }
-            break;
+        // case CRYPTO_CIPHER_AES256_GCM_SIV:
+        //     status = wc_AesGcmSetKey(&dec, key, len_key);
+        //     if (status == 0)
+        //     {
+        //         status = wc_AesGcmDecrypt(&dec, data_out, data_in, len_data_in, iv, iv_len, calc_mac, 16, NULL, 0);
+        //         if (status == -180)
+        //         {   // Special error case as Wolf will not accept a zero value for MAC size
+        //             status = CRYPTO_LIB_SUCCESS;
+        //         }
+        //     }
+        //     break;
 
         case CRYPTO_CIPHER_AES256_CBC:
             status = wc_AesSetKey(&dec, key, len_key, iv, AES_DECRYPTION);
@@ -709,42 +709,42 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
             }
             break;
 
-        case CRYPTO_CIPHER_AES256_GCM_SIV:
-            status = wc_AesGcmSetKey(&dec, key, len_key);
-            if (status == 0)
-            {
-                if ((decrypt_bool == CRYPTO_TRUE) && (authenticate_bool == CRYPTO_TRUE))
-                {
-                    // Added for now while assessing unit tests and requirements
-                    if (mac_size > 0)
-                    {
-                        status = wc_AesGcmDecrypt(&dec, data_out, data_in, len_data_in, iv, iv_len, mac, mac_size, aad, aad_len);
-                    }
-                    else
-                    {
-                        status = wc_AesGcmDecrypt(&dec, data_out, data_in, len_data_in, iv, iv_len, mac, 16, aad, aad_len);
-                        if (status == -180)
-                        {   // Special error case as Wolf will not accept a zero value for MAC size
-                            status = CRYPTO_LIB_SUCCESS;
-                        }
-                    }
-                }
-                else if (decrypt_bool == CRYPTO_TRUE)
-                {
-                    status = wc_AesGcmDecrypt(&dec, data_out, data_in, len_data_in, iv, iv_len, mac, 16, aad, aad_len);
-                    if (status == -180)
-                    {   // Special error case as Wolf will not accept a zero value for MAC size
-                        status = CRYPTO_LIB_SUCCESS;
-                    }
-                }
-                else if (authenticate_bool == CRYPTO_TRUE)
-                {
-                    status = wc_AesGcmDecrypt(&dec, data_out, data_in, len_data_in, iv, iv_len, mac, mac_size, aad, aad_len);
-                    // If authentication only, don't decrypt the data. Just pass the data PDU through.
-                    memcpy(data_out, data_in, len_data_in);
-                }
-            }
-            break;
+        // case CRYPTO_CIPHER_AES256_GCM_SIV:
+        //     status = wc_AesGcmSetKey(&dec, key, len_key);
+        //     if (status == 0)
+        //     {
+        //         if ((decrypt_bool == CRYPTO_TRUE) && (authenticate_bool == CRYPTO_TRUE))
+        //         {
+        //             // Added for now while assessing unit tests and requirements
+        //             if (mac_size > 0)
+        //             {
+        //                 status = wc_AesGcmDecrypt(&dec, data_out, data_in, len_data_in, iv, iv_len, mac, mac_size, aad, aad_len);
+        //             }
+        //             else
+        //             {
+        //                 status = wc_AesGcmDecrypt(&dec, data_out, data_in, len_data_in, iv, iv_len, mac, 16, aad, aad_len);
+        //                 if (status == -180)
+        //                 {   // Special error case as Wolf will not accept a zero value for MAC size
+        //                     status = CRYPTO_LIB_SUCCESS;
+        //                 }
+        //             }
+        //         }
+        //         else if (decrypt_bool == CRYPTO_TRUE)
+        //         {
+        //             status = wc_AesGcmDecrypt(&dec, data_out, data_in, len_data_in, iv, iv_len, mac, 16, aad, aad_len);
+        //             if (status == -180)
+        //             {   // Special error case as Wolf will not accept a zero value for MAC size
+        //                 status = CRYPTO_LIB_SUCCESS;
+        //             }
+        //         }
+        //         else if (authenticate_bool == CRYPTO_TRUE)
+        //         {
+        //             status = wc_AesGcmDecrypt(&dec, data_out, data_in, len_data_in, iv, iv_len, mac, mac_size, aad, aad_len);
+        //             // If authentication only, don't decrypt the data. Just pass the data PDU through.
+        //             memcpy(data_out, data_in, len_data_in);
+        //         }
+        //     }
+        //     break;
 
         case CRYPTO_CIPHER_AES256_CCM:
             status = CRYPTO_LIB_ERR_UNSUPPORTED_ECS;
