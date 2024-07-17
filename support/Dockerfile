@@ -5,13 +5,11 @@
 #
 
 ARG WOLFSSL_VERSION=5.6.0-stable
-FROM ubuntu
+FROM ubuntu:jammy-20240212 AS CL0
 
-ARG WOLFSSL_VERSION
-
-RUN set -eux \
-    # install deps
-    && buildDeps=' \
+ARG DEBIAN_FRONTEND=noninteractive
+RUN apt-get update -y \
+    && apt-get install -y \
         autoconf \
         automake \
         ca-certificates \
@@ -26,25 +24,39 @@ RUN set -eux \
         libcurl4-openssl-dev \
         libmariadb-dev \
         libmariadb-dev-compat \
-        libgcrypt20-dev \
         libtool \
         make \
         python3-dev \
         python3-pip \
         unzip \
-    ' \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends $buildDeps \
-    && rm -r /var/lib/apt/lists/* \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip3 install pycryptodome
 
-    # download source files
-    && curl \
+FROM CL0 AS CL1
+ARG GPG_ERROR_VERSION=1.50
+ARG GCRYPT_VERSION=1.11.0
+RUN curl \ 
+    -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-${GPG_ERROR_VERSION}.tar.bz2 \
+    -o /tmp/libgpg-error-${GPG_ERROR_VERSION}.tar.bz2 \
+    && tar -xjf /tmp/libgpg-error-${GPG_ERROR_VERSION}.tar.bz2 -C /tmp/ \
+    && cd /tmp/libgpg-error-${GPG_ERROR_VERSION} \
+    && ./configure \
+    && make install \
+    && curl \ 
+        -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-${GCRYPT_VERSION}.tar.bz2 \
+        -o /tmp/libgcrypt-${GCRYPT_VERSION}.tar.bz2 \
+    && tar -xjf /tmp/libgcrypt-${GCRYPT_VERSION}.tar.bz2 -C /tmp/ \
+    && cd /tmp/libgcrypt-${GCRYPT_VERSION} \
+    && ./configure \
+    && make install
+
+FROM CL1 AS CL2
+ARG WOLFSSL_VERSION=5.6.0-stable
+RUN curl \
         -LS https://github.com/wolfSSL/wolfssl/archive/v${WOLFSSL_VERSION}.zip \
         -o v${WOLFSSL_VERSION}.zip \
     && unzip v${WOLFSSL_VERSION}.zip \
     && rm v${WOLFSSL_VERSION}.zip \
-
-    # build and install wolfssl
     && cd wolfssl-${WOLFSSL_VERSION} \
     && mkdir -p build \
     && cd build \
@@ -52,10 +64,3 @@ RUN set -eux \
     && cmake --build . \
     && make install \
     && ldconfig 
-
-    # cleanup
-    #&& cd .. \
-    #&& rm -r wolfssl-${WOLFSSL_VERSION} 
-    #&& apt-get purge -y --auto-remove $buildDeps
-
-RUN pip3 install pycryptodome
