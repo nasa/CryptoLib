@@ -1057,7 +1057,7 @@ int32_t cryptography_get_ecs_mode(int8_t algo_enum)
             mode = GCRY_CIPHER_MODE_GCM;
             break;
         case CRYPTO_CIPHER_AES256_GCM_SIV:
-            mode = GCRY_CIPHER_MODE_GCM;
+            mode = GCRY_CIPHER_MODE_GCM_SIV;
             break;
         case CRYPTO_CIPHER_AES256_CBC:
             mode = GCRY_CIPHER_MODE_CBC;
