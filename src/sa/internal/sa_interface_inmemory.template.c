@@ -544,6 +544,51 @@ void sa_populate(void)
     sa_perform_save(&sa[0]);
 }
 
+/**
+ * @brief Function Key_Validation()
+ * Validates the use of a single key per encryption type per SA
+ * At most an SA can contain 2 unique Keys.  These my not be utilized in another SA
+ */
+int32_t key_validation(void)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    int i = 0;
+    int j = 0;
+    for(i = 0; i < NUM_SA; i++)
+    {
+        uint16_t i_ekid = sa[i].ekid;
+        uint16_t i_akid = sa[i].akid;
+        
+        if(i_ekid == i_akid)
+        {
+            status = CRYPTO_LIB_ERR_KEY_VALIDATION;
+#ifdef DEBUG
+            printf(KRED "SA Key Validation FAILURE!\n");
+            printf("Key Duplication: SA #%d, EKID: %d, AKID: %d\n", i, i_ekid, i_akid);
+            printf("\n"RESET);
+#endif 
+            break;
+        }
+
+        for(j = i+1; j < NUM_SA; j++)
+        {
+            uint16_t j_ekid = sa[j].ekid;
+            uint16_t j_akid = sa[j].akid;
+        
+            if((i_ekid == j_ekid) || (i_ekid == j_akid) || (i_akid == j_ekid) || (i_akid == j_akid) || (j_ekid == j_akid))
+            {
+                status = CRYPTO_LIB_ERR_KEY_VALIDATION;
+#ifdef DEBUG
+                printf(KRED "SA Key Validation FAILURE!\n");
+                printf("Key Duplication SA: %d, EKID: %d, AKID: %d\n\tSA: %d, EKID: %d, AKID: %d\n", i, i_ekid, i_akid, j, j_ekid, j_akid);
+                printf("\n"RESET);
+#endif
+                break;
+            }
+        }
+    }
+    return status;
+}
 
 /**
  * @brief Function; sa_config
@@ -561,6 +606,9 @@ int32_t sa_config(void)
     if(use_internal)
     {
         sa_populate();
+#ifdef KEY_VALIDATION
+        status = key_validation();
+#endif
     }
 
     return status;
@@ -627,6 +675,9 @@ int32_t sa_init(void)
         }
 
         sa_populate();
+#ifdef KEY_VALIDATION
+        status = key_validation();
+#endif
     }    
     return status;
 }

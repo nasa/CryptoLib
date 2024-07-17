@@ -176,62 +176,68 @@ int32_t Crypto_Init(void)
 // #endif
 
     /* Key Interface */
-    if (crypto_config.key_type == KEY_TYPE_CUSTOM)
-    {
-        key_if = get_key_interface_custom();
-    }
-    else if (crypto_config.key_type == KEY_TYPE_INTERNAL)
-    {
-        key_if = get_key_interface_internal();
-    }
-    else // KEY_TYPE_KMC
-    {
-        key_if = get_key_interface_kmc();
+    if (key_if == NULL) {
+        if (crypto_config.key_type == KEY_TYPE_CUSTOM)
+        {
+            key_if = get_key_interface_custom();
+        }
+        else if (crypto_config.key_type == KEY_TYPE_INTERNAL)
+        {
+            key_if = get_key_interface_internal();
+        }
+        else // KEY_TYPE_KMC
+        {
+            key_if = get_key_interface_kmc();
+        }
     }
     key_if->key_init();
     // TODO: Check and return status on error
 
     /* MC Interface */
-    if (crypto_config.mc_type == MC_TYPE_CUSTOM)
-    {
-        mc_if = get_mc_interface_custom();
-    }
-    else if (crypto_config.mc_type == MC_TYPE_DISABLED)
-    {
-        mc_if = get_mc_interface_disabled();
-    }
-    else // MC_TYPE_INTERNAL
-    {
-        mc_if = get_mc_interface_internal();
+    if (mc_if == NULL) {
+        if (crypto_config.mc_type == MC_TYPE_CUSTOM)
+        {
+            mc_if = get_mc_interface_custom();
+        }
+        else if (crypto_config.mc_type == MC_TYPE_DISABLED)
+        {
+            mc_if = get_mc_interface_disabled();
+        }
+        else // MC_TYPE_INTERNAL
+        {
+            mc_if = get_mc_interface_internal();
+        }
     }
     mc_if->mc_initialize();
     // TODO: Check and return status on error
 
     /* SA Interface */
-    // Prepare SA type from config
-    if (crypto_config.sa_type == SA_TYPE_CUSTOM)
-    {
-        sa_if = get_sa_interface_custom();
-    }
-    else if (crypto_config.sa_type == SA_TYPE_INMEMORY)
-    {
-        sa_if = get_sa_interface_inmemory();
-    }
-    else if (crypto_config.sa_type == SA_TYPE_MARIADB)
-    {
-        if (sa_mariadb_config == NULL)
+    if (sa_if == NULL) {
+        // Prepare SA type from config
+        if (crypto_config.sa_type == SA_TYPE_CUSTOM)
         {
-            status = CRYPTO_MARIADB_CONFIGURATION_NOT_COMPLETE;
-            printf(KRED "ERROR: CryptoLib MariaDB must be configured before intializing!\n" RESET);
-            return status; // MariaDB connection specified but no configuration exists, return!
+            sa_if = get_sa_interface_custom();
         }
-        sa_if = get_sa_interface_mariadb();
+        else if (crypto_config.sa_type == SA_TYPE_INMEMORY)
+        {
+            sa_if = get_sa_interface_inmemory();
+        }
+        else if (crypto_config.sa_type == SA_TYPE_MARIADB)
+        {
+            if (sa_mariadb_config == NULL)
+            {
+                status = CRYPTO_MARIADB_CONFIGURATION_NOT_COMPLETE;
+                printf(KRED "ERROR: CryptoLib MariaDB must be configured before intializing!\n" RESET);
+                return status; // MariaDB connection specified but no configuration exists, return!
+            }
+            sa_if = get_sa_interface_mariadb();
+        }
+        else
+        {
+            status = SADB_INVALID_SADB_TYPE;
+            return status;
+        } // TODO: Error stack
     }
-    else
-    {
-        status = SADB_INVALID_SADB_TYPE;
-        return status;
-    } // TODO: Error stack
 
     /* Crypto Interface */
     // Determine which cryptographic module is in use
