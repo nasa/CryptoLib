@@ -21,6 +21,10 @@ set(PROJECT_TEST_DIR ${CMAKE_BINARY_DIR})
 #          COMMAND ${PROJECT_BINARY_DIR}/bin/process_security tc ${PROJECT_TEST_DIR}/data/tc4.1.dat
 #          WORKING_DIRECTORY ${PROJECT_TEST_DIR})
 
+add_test(NAME UT_AES_GCM_SIV
+        COMMAND ${PROJECT_BINARY_DIR}/bin/ut_aes_gcm_siv
+        WORKING_DIRECTORY ${PROJECT_TEST_DIR})
+
 add_test(NAME UT_TC_APPLY
          COMMAND ${PROJECT_BINARY_DIR}/bin/ut_tc_apply 
          WORKING_DIRECTORY ${PROJECT_TEST_DIR})
