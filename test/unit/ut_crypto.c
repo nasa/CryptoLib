@@ -274,6 +274,7 @@ UTEST(CRYPTO_C, EXT_PROC_PDU)
 UTEST(CRYPTO_C, GET_ACS_ALGO)
 {
     remove("sa_save_file.bin");
+    Crypto_Init_TC_Unit_Test();
     int32_t libgcrypt_algo = -1;
     uint8_t crypto_algo = CRYPTO_MAC_CMAC_AES256;
     
@@ -312,6 +313,7 @@ UTEST(CRYPTO_C, GET_ACS_ALGO_KEY_LEN)
 UTEST(CRYPTO_C, GET_ECS_ALGO)
 {
     remove("sa_save_file.bin");
+    Crypto_Init_TC_Unit_Test();
     int32_t libgcrypt_algo = -1;
     int8_t crypto_algo = CRYPTO_CIPHER_AES256_GCM;
     

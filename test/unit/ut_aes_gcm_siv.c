@@ -23,23 +23,6 @@
 #include "utest.h"
 
 /**
- * @brief Unit Test: Crypto ECS Get Algorithm response for AES-GCM-SIV
- **/
-UTEST(AES_GCM_SIV, GET_ECS_ALGO_SIV)
-{
-    remove("sa_save_file.bin");
-    int32_t libgcrypt_algo = -1;
-    int8_t crypto_algo = CRYPTO_CIPHER_AES256_GCM_SIV;
-    
-    // Convert CRYPTOAES enum to GCRY_CIPHER_AES256
-    //libgcrypt_algo = cryptography_if->cryptography_get_ecs_algo(crypto_algo);
-    //ASSERT_EQ(libgcrypt_algo, GCRY_CIPHER_AES256);
-
-    libgcrypt_algo = cryptography_if->cryptography_get_ecs_algo(crypto_algo);
-    ASSERT_EQ(libgcrypt_algo, 9);
-}
-
-/**
  * @brief Unit Test: Crypto ECS Get Algorithm key length response for AES-GCM-SIV
  **/
 UTEST(AES_GCM_SIV, GET_ECS_ALGO_KEY_LEN_SIV)
@@ -49,6 +32,20 @@ UTEST(AES_GCM_SIV, GET_ECS_ALGO_KEY_LEN_SIV)
     uint8_t crypto_algo = CRYPTO_CIPHER_AES256_GCM_SIV;
     algo_keylen = Crypto_Get_ACS_Algo_Keylen(crypto_algo);
     ASSERT_EQ(algo_keylen, 32);
+}
+
+/**
+ * @brief Unit Test: Crypto ECS Get Algorithm response for AES-GCM-SIV
+ **/
+UTEST(AES_GCM_SIV, GET_ECS_ALGO_SIV)
+{
+    remove("sa_save_file.bin");
+    Crypto_Init_TC_Unit_Test();
+    int32_t libgcrypt_algo = -1;
+    int8_t crypto_algo = CRYPTO_CIPHER_AES256_GCM_SIV;
+
+    libgcrypt_algo = cryptography_if->cryptography_get_ecs_algo(crypto_algo);
+    ASSERT_EQ(libgcrypt_algo, 9);
 }
 
 UTEST_MAIN();
