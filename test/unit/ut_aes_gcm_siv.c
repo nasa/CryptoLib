@@ -50,3 +50,5 @@ UTEST(AES_GCM_SIV, GET_ECS_ALGO_KEY_LEN_SIV)
     algo_keylen = Crypto_Get_ACS_Algo_Keylen(crypto_algo);
     ASSERT_EQ(algo_keylen, 32);
 }
+
+UTEST_MAIN();
