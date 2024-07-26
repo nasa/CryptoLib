@@ -837,10 +837,16 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
 
     // Select correct libgcrypt ecs enum
     int32_t algo = -1;
+    int32_t mode = -1;
     if (ecs != NULL)
     {
         algo = cryptography_get_ecs_algo(*ecs);
         if (algo == CRYPTO_LIB_ERR_UNSUPPORTED_ECS)
+        {
+            return CRYPTO_LIB_ERR_UNSUPPORTED_ECS;
+        }
+        mode = cryptography_get_ecs_mode(*ecs);
+        if (mode == CRYPTO_LIB_ERR_UNSUPPORTED_ECS)
         {
             return CRYPTO_LIB_ERR_UNSUPPORTED_ECS;
         }
@@ -858,7 +864,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
         return status;
     }
 
-    gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, GCRY_CIPHER_MODE_GCM, GCRY_CIPHER_NONE);
+    gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, mode, GCRY_CIPHER_NONE);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
@@ -903,6 +909,10 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
 
     if (decrypt_bool == CRYPTO_TRUE)
     {
+        if (mode == GCRY_CIPHER_MODE_GCM_SIV || mode == GCRY_CIPHER_MODE_SIV)
+        {
+            gcry_cipher_set_decryption_tag(tmp_hd, mac, mac_size);
+        }
         gcry_error = gcry_cipher_decrypt(tmp_hd,
                                          data_out,      // plaintext output
                                          len_data_out,  // length of data
@@ -912,6 +922,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
         if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
         {
             printf(KRED "ERROR: gcry_cipher_decrypt error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+            printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
             gcry_cipher_close(tmp_hd);
             status = CRYPTO_LIB_ERR_DECRYPT_ERROR;
             return status;
@@ -927,6 +938,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
         if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
         {
             printf(KRED "ERROR: gcry_cipher_decrypt error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+            printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
             gcry_cipher_close(tmp_hd);
             status = CRYPTO_LIB_ERR_DECRYPT_ERROR;
             return status;
@@ -969,7 +981,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
         if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
         {
             printf(KRED "ERROR: gcry_cipher_checktag error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-            fprintf(stderr, "gcry_cipher_decrypt failed: %s\n", gpg_strerror(gcry_error));
+            printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
             gcry_cipher_close(tmp_hd);
             status = CRYPTO_LIB_ERR_MAC_VALIDATION_ERROR;
             return status;
