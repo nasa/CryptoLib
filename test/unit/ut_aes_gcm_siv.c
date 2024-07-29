@@ -48,22 +48,7 @@ UTEST(AES_GCM_SIV, GET_ECS_ALGO_SIV)
     libgcrypt_algo = cryptography_if->cryptography_get_ecs_algo(crypto_algo);
     ASSERT_EQ(libgcrypt_algo, 9);
     Crypto_Shutdown();
-}
-
-//     char* raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
-//     //                          02003001500 = Primary Header
-//     //                          0010 0000 0000 0011 0000 0000 0001 0101 0000 0000 = Header in Bits
-//     //                          [0-1]   = TFVN                  = 00
-//     //                          [2]     = Bypass Flag           = 1
-//     //                          [3]     = Control Command Flag  = 0
-//     //                          [4-5]   = RSVD Spare            = 00
-//     //                          [6-15]  = SCID                  = 00 0000 0011 = 3
-//     //                          [16-21] = VCID                  = 0000 00
-//     //                          [22-31] = Frame Length          = 00 0001 0101 = 21
-//     //                          [32-39] = Frame Sequence Number = 0000 0000
-//     //                          0080d2c70008197f0b00310000b1fe3128 = data
-//     //                          0000 0000 1000 0000 1101 0010 1100 0111 0000 0000 0000 1000 0001 1001 0111 1111 0000 1011 0000 0000 0011 0001 0000 0000 0000 0000 1011 0001 1111 1110 0011 0001 0010 1000
-//     //                          
+}                        
 
 /**
  * @brief Validation Test: AEAD_AES_256_GCM_SIV Test Vectors
@@ -77,7 +62,6 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_1)
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    // Crypto_Init_TC_Unit_Test();
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
@@ -174,19 +158,19 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_DEC_TEST_1)
     SaInterface sa_if = get_sa_interface_inmemory();
     crypto_key_t* ekp = NULL;
 
-    // NIST supplied vectors
+    // rfc supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char* buffer_nist_key_h = "0100000000000000000000000000000000000000000000000000000000000000";
-    char* buffer_nist_pt_h = "2003000c000100000000000000";
-    char* buffer_nist_aad_h = "";
-    char* buffer_nist_nonce_h = "030000000000000000000000";
-    char* buffer_nist_et_h = "2003002a0000090300000000000000000000004fa7a4cb7d3434f8a2855b40016daccb62a454551878fc26";
-    uint8_t* buffer_nist_pt_b, *buffer_nist_nonce_b, *buffer_nist_et_b, *buffer_nist_key_b, *buffer_nist_aad_b = NULL;
-    int buffer_nist_pt_len, buffer_nist_nonce_len, buffer_nist_et_len, buffer_nist_key_len, buffer_nist_aad_len = 0;
+    char* buffer_rfc_key_h = "0100000000000000000000000000000000000000000000000000000000000000";
+    char* buffer_rfc_pt_h = "2003000c000100000000000000";
+    char* buffer_rfc_aad_h = "";
+    char* buffer_rfc_nonce_h = "030000000000000000000000";
+    char* buffer_rfc_et_h = "2003002a0000090300000000000000000000004fa7a4cb7d3434f8a2855b40016daccb62a454551878fc26";
+    uint8_t* buffer_rfc_pt_b, *buffer_rfc_nonce_b, *buffer_rfc_et_b, *buffer_rfc_key_b, *buffer_rfc_aad_b = NULL;
+    int buffer_rfc_pt_len, buffer_rfc_nonce_len, buffer_rfc_et_len, buffer_rfc_key_len, buffer_rfc_aad_len = 0;
 
     // Setup Processed Frame For Decryption
-    TC_t* tc_nist_processed_frame;
-    tc_nist_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
+    TC_t* tc_rfc_processed_frame;
+    tc_rfc_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
 
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association = NULL;
@@ -202,46 +186,41 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_DEC_TEST_1)
     test_association->est = 1;
     test_association->ecs_len = 1;
     test_association->ecs = CRYPTO_CIPHER_AES256_GCM_SIV;
-    //test_association->acs_len = 1;
-    //test_association->acs = CRYPTO_MAC_CMAC_AES256;
     test_association->stmacf_len = 16;
+
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_rfc_key_h, (char**) &buffer_rfc_key_b, &buffer_rfc_key_len);
     ekp = key_if->get_key(test_association->ekid);
-    memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
+    memcpy(ekp->value, buffer_rfc_key_b, buffer_rfc_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char**) &buffer_nist_pt_b, &buffer_nist_pt_len);
+    hex_conversion(buffer_rfc_pt_h, (char**) &buffer_rfc_pt_b, &buffer_rfc_pt_len);
     // Convert/Set input nonce
-    hex_conversion(buffer_nist_nonce_h, (char**) &buffer_nist_nonce_b, &buffer_nist_nonce_len);
-    memcpy(test_association->iv, buffer_nist_nonce_b, buffer_nist_nonce_len);
-    printf("NIST nonce LEN: %d\n", buffer_nist_nonce_len);
-    hex_conversion(buffer_nist_aad_h, (char**) &buffer_nist_aad_b, &buffer_nist_aad_len);
-    //memcpy(test_association->abm, buffer_nist_aad_b, buffer_nist_aad_len);
+    hex_conversion(buffer_rfc_nonce_h, (char**) &buffer_rfc_nonce_b, &buffer_rfc_nonce_len);
+    memcpy(test_association->iv, buffer_rfc_nonce_b, buffer_rfc_nonce_len);
+    hex_conversion(buffer_rfc_aad_h, (char**) &buffer_rfc_aad_b, &buffer_rfc_aad_len);
     // Convert input encryptedtext
-    hex_conversion(buffer_nist_et_h, (char**) &buffer_nist_et_b, &buffer_nist_et_len);
+    hex_conversion(buffer_rfc_et_h, (char**) &buffer_rfc_et_b, &buffer_rfc_et_len);
 
-    Crypto_TC_ProcessSecurity(buffer_nist_et_b, &buffer_nist_et_len, tc_nist_processed_frame);
+    Crypto_TC_ProcessSecurity(buffer_rfc_et_b, &buffer_rfc_et_len, tc_rfc_processed_frame);
 
-    for (int i = 0; i < tc_nist_processed_frame->tc_pdu_len; i++)
+    for (int i = 0; i < tc_rfc_processed_frame->tc_pdu_len; i++)
     {
         
-        if (buffer_nist_pt_b[i + 5] != tc_nist_processed_frame->tc_pdu[i])
+        if (buffer_rfc_pt_b[i + 5] != tc_rfc_processed_frame->tc_pdu[i])
         {
-            printf("[%d]: %02x -> %02x \n", i, buffer_nist_pt_b[i + 5], tc_nist_processed_frame->tc_pdu[i]);
+            printf("[%d]: %02x -> %02x \n", i, buffer_rfc_pt_b[i + 5], tc_rfc_processed_frame->tc_pdu[i]);
         }
-        ASSERT_EQ(buffer_nist_pt_b[i + 5], tc_nist_processed_frame->tc_pdu[i]);
+        ASSERT_EQ(buffer_rfc_pt_b[i + 5], tc_rfc_processed_frame->tc_pdu[i]);
     }
     Crypto_Shutdown();
     free(ptr_enc_frame);
-    free(buffer_nist_pt_b);
-    free(buffer_nist_nonce_b);
-    free(buffer_nist_aad_b);
-    free(buffer_nist_et_b);
-    free(buffer_nist_key_b);
-    // free(test_association->ecs);
-    // sa_if->sa_close();
+    free(buffer_rfc_pt_b);
+    free(buffer_rfc_nonce_b);
+    free(buffer_rfc_aad_b);
+    free(buffer_rfc_et_b);
+    free(buffer_rfc_key_b);
 }
 
 /**
@@ -256,7 +235,6 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_2)
     uint8_t* ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    // Crypto_Init_TC_Unit_Test();
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_NO_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
@@ -322,7 +300,6 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_2)
         ASSERT_EQ(*(ptr_enc_frame + enc_data_idx), buffer_rfc_ct_b[i]);
         enc_data_idx++;
     }
-    //ASSERT_EQ(1,0);
     free(ptr_enc_frame);
     free(buffer_rfc_pt_b);
     free(buffer_rfc_aad_b);
@@ -361,7 +338,6 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_20_WITH_AAD_ENC_TEST_1)
     char* buffer_rfc_key_h = "0100000000000000000000000000000000000000000000000000000000000000";
     char* buffer_rfc_nonce_h = "030000000000000000000000";
     char* buffer_rfc_ct_h = "e6e883db43a9ef98fa6271cb7d4834139acf479e3b910775e769286f3f59d2e588f69b06";
-    // 030000000000000000000000
     uint8_t* buffer_rfc_pt_b, *buffer_rfc_aad_b, *buffer_rfc_key_b, *buffer_rfc_nonce_b, *buffer_rfc_ct_b = NULL;
     int buffer_rfc_pt_len, buffer_rfc_aad_len, buffer_rfc_key_len, buffer_rfc_nonce_len, buffer_rfc_ct_len = 0;
 
@@ -393,9 +369,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_20_WITH_AAD_ENC_TEST_1)
     hex_conversion(buffer_rfc_pt_h, (char**) &buffer_rfc_pt_b, &buffer_rfc_pt_len);
     // Convert/Set input AAD
     hex_conversion(buffer_rfc_aad_h, (char**) &buffer_rfc_aad_b, &buffer_rfc_aad_len);
-    //printf("Buffer_rfc_aad_b = %i", &buffer_rfc_aad_b);
     memcpy(test_association->abm, buffer_rfc_aad_b, buffer_rfc_aad_len);
-    //test_association->abm_len = buffer_rfc_aad_len;
     hex_conversion(buffer_rfc_nonce_h, (char**) &buffer_rfc_nonce_b, &buffer_rfc_nonce_len);
     memcpy(test_association->iv, buffer_rfc_nonce_b, buffer_rfc_nonce_len);
     // Convert input ciphertext
@@ -442,19 +416,17 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_20_WITH_AAD_DEC_TEST_1)
     SaInterface sa_if = get_sa_interface_inmemory();
     crypto_key_t* ekp = NULL;
 
-    // NIST supplied vectors
+    // rfc supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char* buffer_nist_pt_h = "20030018000300000000000000000000000000000004000000";
-    char* buffer_nist_aad_h = "010000000000000000000000000000000200";
-    char* buffer_nist_key_h = "0100000000000000000000000000000000000000000000000000000000000000";
-    char* buffer_nist_nonce_h = "030000000000000000000000";
-    char* buffer_nist_et_h = "20030036000009030000000000000000000000e6e883db43a9ef98fa6271cb7d4834139acf479e3b910775e769286f3f59d2e588f69b06";
-    uint8_t* buffer_nist_pt_b, *buffer_nist_nonce_b, *buffer_nist_et_b, *buffer_nist_key_b, *buffer_nist_aad_b = NULL;
-    int buffer_nist_pt_len, buffer_nist_nonce_len, buffer_nist_et_len, buffer_nist_key_len, buffer_nist_aad_len = 0;
+    char* buffer_rfc_pt_h = "20030018000300000000000000000000000000000004000000";
+    char* buffer_rfc_key_h = "0100000000000000000000000000000000000000000000000000000000000000";
+    char* buffer_rfc_et_h = "20030036000009030000000000000000000000e6e883db43a9ef98fa6271cb7d4834139acf479e3b910775e769286f3f59d2e588f69b06";
+    uint8_t* buffer_rfc_pt_b, *buffer_rfc_et_b, *buffer_rfc_key_b = NULL;
+    int buffer_rfc_pt_len, buffer_rfc_et_len, buffer_rfc_key_len = 0;
 
     // Setup Processed Frame For Decryption
-    TC_t* tc_nist_processed_frame;
-    tc_nist_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
+    TC_t* tc_rfc_processed_frame;
+    tc_rfc_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
 
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association = NULL;
@@ -470,47 +442,33 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_20_WITH_AAD_DEC_TEST_1)
     test_association->est = 1;
     test_association->ecs_len = 1;
     test_association->ecs = CRYPTO_CIPHER_AES256_GCM_SIV;
-    //test_association->acs_len = 1;
-    //test_association->acs = CRYPTO_MAC_CMAC_AES256;
     test_association->stmacf_len = 16;
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_rfc_key_h, (char**) &buffer_rfc_key_b, &buffer_rfc_key_len);
     ekp = key_if->get_key(test_association->ekid);
-    memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
+    memcpy(ekp->value, buffer_rfc_key_b, buffer_rfc_key_len);
 
     // Convert input plaintext
-    // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char**) &buffer_nist_pt_b, &buffer_nist_pt_len);
-    // Convert/Set input nonce
-    hex_conversion(buffer_nist_nonce_h, (char**) &buffer_nist_nonce_b, &buffer_nist_nonce_len);
-    memcpy(test_association->iv, buffer_nist_nonce_b, buffer_nist_nonce_len);
-    printf("NIST nonce LEN: %d\n", buffer_nist_nonce_len);
-    hex_conversion(buffer_nist_aad_h, (char**) &buffer_nist_aad_b, &buffer_nist_aad_len);
-    //memcpy(test_association->abm, buffer_nist_aad_b, buffer_nist_aad_len);
+    hex_conversion(buffer_rfc_pt_h, (char**) &buffer_rfc_pt_b, &buffer_rfc_pt_len);
     // Convert input encryptedtext
-    hex_conversion(buffer_nist_et_h, (char**) &buffer_nist_et_b, &buffer_nist_et_len);
+    hex_conversion(buffer_rfc_et_h, (char**) &buffer_rfc_et_b, &buffer_rfc_et_len);
 
-    Crypto_TC_ProcessSecurity(buffer_nist_et_b, &buffer_nist_et_len, tc_nist_processed_frame);
+    Crypto_TC_ProcessSecurity(buffer_rfc_et_b, &buffer_rfc_et_len, tc_rfc_processed_frame);
 
-    for (int i = 0; i < tc_nist_processed_frame->tc_pdu_len; i++)
+    for (int i = 0; i < tc_rfc_processed_frame->tc_pdu_len; i++)
     {
-        
-        if (buffer_nist_pt_b[i + 5] != tc_nist_processed_frame->tc_pdu[i])
+        if (buffer_rfc_pt_b[i + 5] != tc_rfc_processed_frame->tc_pdu[i])
         {
-            printf("[%d]: %02x -> %02x \n", i, buffer_nist_pt_b[i + 5], tc_nist_processed_frame->tc_pdu[i]);
+            printf("[%d]: %02x -> %02x \n", i, buffer_rfc_pt_b[i + 5], tc_rfc_processed_frame->tc_pdu[i]);
         }
-        ASSERT_EQ(buffer_nist_pt_b[i + 5], tc_nist_processed_frame->tc_pdu[i]);
+        ASSERT_EQ(buffer_rfc_pt_b[i + 5], tc_rfc_processed_frame->tc_pdu[i]);
     }
     
     Crypto_Shutdown();
     free(ptr_enc_frame);
-    free(buffer_nist_pt_b);
-    free(buffer_nist_nonce_b);
-    free(buffer_nist_aad_b);
-    free(buffer_nist_et_b);
-    free(buffer_nist_key_b);
-    // free(test_association->ecs);
-    // sa_if->sa_close();
+    free(buffer_rfc_pt_b);
+    free(buffer_rfc_et_b);
+    free(buffer_rfc_key_b);
 }
 
 UTEST_MAIN();
