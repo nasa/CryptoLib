@@ -232,7 +232,7 @@ struct _GvcidManagedParameters_t
     TcSegmentHdrsPresent has_segmentation_hdr;
     uint16_t max_frame_size; // Maximum TC/TM Frame Length with headers
     OcfPresent has_ocf;
-    GvcidManagedParameters_t* next; // Will be a list of managed parameters!
+    int set_flag; // Will be a list of managed parameters!
 };
 #define GVCID_MANAGED_PARAMETERS_SIZE (sizeof(GvcidManagedParameters_t))
 

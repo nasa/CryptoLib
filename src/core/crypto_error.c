@@ -75,6 +75,7 @@ char *crypto_enum_errlist_core[] =
         (char*) "CRYPTO_LIB_ERR_INVALID_SA_SERVICE_TYPE",
         (char*) "CRYPTO_LIB_ERR_FAIL_SA_SAVE",
         (char*) "CRYPTO_LIB_ERR_FAIL_SA_LOAD", 
+        (char*) "CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT",
 };
 
 char *crypto_enum_errlist_config[] =

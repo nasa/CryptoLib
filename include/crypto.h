@@ -42,6 +42,7 @@
 #include "key_interface.h"
 #include "mc_interface.h"
 #include "sa_interface.h"
+#include "crypto.h"
 
 /*
 ** Crypto Version
@@ -82,10 +83,10 @@ extern int32_t Crypto_Config_Kmc_Crypto_Service(char* protocol, char* kmc_crypto
                                                 char* mtls_client_cert_type, char* mtls_client_key_path,
                                                 char* mtls_client_key_pass, char* mtls_issuer_cert);
 extern int32_t Crypto_Config_Cam(uint8_t cam_enabled, char* cookie_file_path, char* keytab_file_path, uint8_t login_method, char* access_manager_uri, char* username, char* cam_home);
-extern int32_t Crypto_Config_Add_Gvcid_Managed_Parameter(uint8_t tfvn, uint16_t scid, uint8_t vcid, uint8_t has_fecf,
-                                                         uint8_t has_segmentation_hdr, uint8_t has_ocf, uint16_t max_frame_size, uint8_t aos_has_fhec,
-                                                         uint8_t aos_has_iz, uint16_t aos_iz_len);
-
+// extern int32_t Crypto_Config_Add_Gvcid_Managed_Parameter(uint8_t tfvn, uint16_t scid, uint8_t vcid, uint8_t has_fecf,
+//                                                          uint8_t has_segmentation_hdr, uint8_t has_ocf, uint16_t max_frame_size, uint8_t aos_has_fhec,
+//                                                          uint8_t aos_has_iz, uint16_t aos_iz_len);
+extern int32_t Crypto_Config_Add_Gvcid_Managed_Parameters(GvcidManagedParameters_t mp_struct);
 // Initialization
 extern int32_t Crypto_Init(void); // Initialize CryptoLib After Configuration Calls
 extern int32_t Crypto_Init_With_Configs(
@@ -253,13 +254,13 @@ int32_t Crypto_Get_Security_Trailer_Length(SecurityAssociation_t* sa_ptr);
 // Managed Parameter Functions
 int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
                                                        GvcidManagedParameters_t* managed_parameters_in,
-                                                       GvcidManagedParameters_t** managed_parameters_out);
-int32_t crypto_config_add_gvcid_managed_parameter_recursion(uint8_t tfvn, uint16_t scid, uint8_t vcid,
-                                                                   uint8_t has_fecf, uint8_t has_segmentation_hdr, uint8_t has_ocf,
-                                                                   uint16_t max_frame_size, uint8_t aos_has_fhec,
-                                                                   uint8_t aos_has_iz, uint16_t aos_iz_len,
-                                                                   GvcidManagedParameters_t* managed_parameter);
-void Crypto_Free_Managed_Parameters(GvcidManagedParameters_t* managed_parameters);
+                                                       GvcidManagedParameters_t* managed_parameters_out);
+// int32_t crypto_config_add_gvcid_managed_parameter_recursion(uint8_t tfvn, uint16_t scid, uint8_t vcid,
+//                                                                    uint8_t has_fecf, uint8_t has_segmentation_hdr, uint8_t has_ocf,
+//                                                                    uint16_t max_frame_size, uint8_t aos_has_fhec,
+//                                                                    uint8_t aos_has_iz, uint16_t aos_iz_len,
+//                                                                    GvcidManagedParameters_t* managed_parameter);
+// void Crypto_Free_Managed_Parameters(GvcidManagedParameters_t* managed_parameters);
 
 // Project-wide support functions
 extern char* crypto_deep_copy_string(char* src_string);
@@ -284,6 +285,9 @@ extern CryptographyKmcCryptoServiceConfig_t* cryptography_kmc_crypto_config;
 extern CamConfig_t* cam_config;
 extern GvcidManagedParameters_t* gvcid_managed_parameters;
 extern GvcidManagedParameters_t* current_managed_parameters;
+extern GvcidManagedParameters_t gvcid_managed_parameters_array[250];
+extern GvcidManagedParameters_t current_managed_parameters_struct;
+extern int gvcid_counter;
 extern KeyInterface key_if;
 extern McInterface mc_if;
 extern SaInterface sa_if;

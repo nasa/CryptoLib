@@ -185,7 +185,7 @@ int32_t sa_perform_save(SecurityAssociation_t* sa_ptr)
             status = CRYPTO_LIB_SUCCESS;
 
 #ifdef SA_DEBUG
-            printf("SA Written Successfull to file!\n");
+            printf("SA Written Successfully to file!\n");
 #endif
         }       
         else
@@ -922,7 +922,7 @@ static int32_t sa_start(TC_t* tc_frame)
                 gvcid.scid = (sdls_frame.pdu.data[count] << 12) | (sdls_frame.pdu.data[count + 1] << 4) |
                              (sdls_frame.pdu.data[count + 2] >> 4);
                 gvcid.vcid = (sdls_frame.pdu.data[count + 2] << 4) | (sdls_frame.pdu.data[count + 3] && 0x3F);
-                if (current_managed_parameters->has_segmentation_hdr == TC_HAS_SEGMENT_HDRS)
+                if (current_managed_parameters_struct.has_segmentation_hdr == TC_HAS_SEGMENT_HDRS)
                 {
                     gvcid.mapid = (sdls_frame.pdu.data[count + 3]);
                 }

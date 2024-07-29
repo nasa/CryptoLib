@@ -684,6 +684,33 @@ int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
     return status;
 }
 
+
+int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
+                                                GvcidManagedParameters_t* managed_parameters_in,
+                                                GvcidManagedParameters_t* managed_parameters_out)
+{
+    int32_t status = MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND;
+    for(int i = 0; i < gvcid_counter; i++)
+    {
+        if (managed_parameters_in[i].tfvn == tfvn && managed_parameters_in[i].scid == scid &&
+            managed_parameters_in[i].vcid == vcid)
+        {
+            *managed_parameters_out = managed_parameters_in[i];
+            status = CRYPTO_LIB_SUCCESS;
+            break;
+        }
+    }
+
+    if(status != CRYPTO_LIB_SUCCESS)
+    {
+        printf(KRED "Error: Managed Parameters for GVCID(TFVN: %d, SCID: %d, VCID: %d) not found. \n" RESET, tfvn, scid,
+               vcid);
+    }
+
+    return status;
+}
+
+
 /**
  * @brief Function: Crypto_Get_Managed_Parameters_For_Gvcid
  * @param tfvn: uint8
@@ -693,52 +720,52 @@ int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
  * @param managed_parameters_out: GvcidManagedParameters_t**
  * @return int32: Success/Failure
  **/
-int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
-                                                GvcidManagedParameters_t* managed_parameters_in,
-                                                GvcidManagedParameters_t** managed_parameters_out)
-{
-    int32_t status = MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND;
+// int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
+//                                                 GvcidManagedParameters_t* managed_parameters_in,
+//                                                 GvcidManagedParameters_t** managed_parameters_out)
+// {
+//     int32_t status = MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND;
 
-    if (managed_parameters_in != NULL)
-    {
-        if (managed_parameters_in->tfvn == tfvn && managed_parameters_in->scid == scid &&
-            managed_parameters_in->vcid == vcid)
-        {
-            *managed_parameters_out = managed_parameters_in;
-            status = CRYPTO_LIB_SUCCESS;
-            return status;
-        }
-        else
-        {
-            return Crypto_Get_Managed_Parameters_For_Gvcid(tfvn, scid, vcid, managed_parameters_in->next,
-                                                           managed_parameters_out);
-        }
-    }
-    else
-    {
-        printf(KRED "Error: Managed Parameters for GVCID(TFVN: %d, SCID: %d, VCID: %d) not found. \n" RESET, tfvn, scid,
-               vcid);
-        return status;
-    }
-}
+//     if (managed_parameters_in != NULL)
+//     {
+//         if (managed_parameters_in->tfvn == tfvn && managed_parameters_in->scid == scid &&
+//             managed_parameters_in->vcid == vcid)
+//         {
+//             *managed_parameters_out = managed_parameters_in;
+//             status = CRYPTO_LIB_SUCCESS;
+//             return status;
+//         }
+//         else
+//         {
+//             return Crypto_Get_Managed_Parameters_For_Gvcid(tfvn, scid, vcid, managed_parameters_in->next,
+//                                                            managed_parameters_out);
+//         }
+//     }
+//     else
+//     {
+//         printf(KRED "Error: Managed Parameters for GVCID(TFVN: %d, SCID: %d, VCID: %d) not found. \n" RESET, tfvn, scid,
+//                vcid);
+//         return status;
+//     }
+// }
 
 /**
  * @brief Function: Crypto_Free_Managed_Parameters
  * Managed parameters are expected to live the duration of the program, this may not be necessary.
  * @param managed_parameters: GvcidManagedParameters_t*
  **/
-void Crypto_Free_Managed_Parameters(GvcidManagedParameters_t* managed_parameters)
-{
-    if (managed_parameters == NULL)
-    {
-        return; // Nothing to free, just return!
-    }
-    if (managed_parameters->next != NULL)
-    {
-        Crypto_Free_Managed_Parameters(managed_parameters->next);
-    }
-    free(managed_parameters);
-}
+// void Crypto_Free_Managed_Parameters(GvcidManagedParameters_t* managed_parameters)
+// {
+//     if (managed_parameters == NULL)
+//     {
+//         return; // Nothing to free, just return!
+//     }
+//     if (managed_parameters->next != NULL)
+//     {
+//         Crypto_Free_Managed_Parameters(managed_parameters->next);
+//     }
+//     free(managed_parameters);
+// }
 
 /**
  * @brief Function: Crypto_Process_Extended_Procedure_Pdu
