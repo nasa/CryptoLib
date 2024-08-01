@@ -123,6 +123,7 @@
 #define CRYPTO_LIB_ERR_INVALID_SA_SERVICE_TYPE (-51)
 #define CRYPTO_LIB_ERR_FAIL_SA_SAVE (-52)
 #define CRYPTO_LIB_ERR_FAIL_SA_LOAD (-53)
+#define CRYPTO_LIB_ERR_KEY_VALIDATION (-54)
 
 extern char *crypto_enum_errlist_core[];
 extern char *crypto_enum_errlist_config[];

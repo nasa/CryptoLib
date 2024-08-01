@@ -74,7 +74,8 @@ char *crypto_enum_errlist_core[] =
         (char*) "CRYPTO_LIB_ERR_TC_ENUM_USED_FOR_AOS_CONFIG",
         (char*) "CRYPTO_LIB_ERR_INVALID_SA_SERVICE_TYPE",
         (char*) "CRYPTO_LIB_ERR_FAIL_SA_SAVE",
-        (char*) "CRYPTO_LIB_ERR_FAIL_SA_LOAD", 
+        (char*) "CRYPTO_LIB_ERR_FAIL_SA_LOAD",
+        (char*) "CRYPTO_LIB_ERR_KEY_VALIDATION", 
 };
 
 char *crypto_enum_errlist_config[] =

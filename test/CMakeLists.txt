@@ -57,9 +57,11 @@ add_test(NAME UT_TM_PROCESS
          COMMAND ${PROJECT_BINARY_DIR}/bin/ut_tm_process 
          WORKING_DIRECTORY ${PROJECT_TEST_DIR})
 
-add_test(NAME UT_AES_GCM_SIV
-         COMMAND ${PROJECT_BINARY_DIR}/bin/ut_aes_gcm_siv
-         WORKING_DIRECTORY ${PROJECT_TEST_DIR})
+if(NOT ${CRYPTO_WOLFSSL})
+    add_test(NAME UT_AES_GCM_SIV
+            COMMAND ${PROJECT_BINARY_DIR}/bin/ut_aes_gcm_siv
+            WORKING_DIRECTORY ${PROJECT_TEST_DIR})
+endif()
 
 if(SA_FILE)
     add_test(NAME UT_SA_SAVE
