@@ -256,7 +256,7 @@ jobs:
     
     - name: Code-Coverage
       working-directory: ${{github.workspace}}
-      run: make gcov
+      run: source ~/.bashrc && make gcov
 
     - name: Upload 
       uses: codecov/codecov-action@v4
