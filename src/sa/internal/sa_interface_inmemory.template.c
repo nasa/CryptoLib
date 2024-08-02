@@ -225,6 +225,8 @@ static int32_t sa_save_sa(SecurityAssociation_t* sa)
  **/
 void sa_populate(void)
 {
+// Security Associations
+    // EMPTY SA - Not Used (SA_NONE)
     sa[0].spi = 0;
     sa[0].sa_state = SA_NONE;
     sa[0].est = 0;
@@ -234,312 +236,328 @@ void sa_populate(void)
     sa[0].arsn_len = 0;
     sa[0].arsnw_len = 0;
     sa[0].arsnw = 0;
-    sa[0].gvcid_blk.tfvn = 3;
-    sa[0].gvcid_blk.scid = 3;
-    sa[0].gvcid_blk.vcid = 3;
+    sa[0].gvcid_blk.tfvn = 0;
+    sa[0].gvcid_blk.scid = 0;
+    sa[0].gvcid_blk.vcid = 0;
     sa[0].gvcid_blk.mapid = TYPE_TC;
 
-    // Security Associations
-    // SA 1 - TC CLEAR MODE
+    // TC - CLEAR MODE (Operational)
+    // IV = 0 ... 0, IV-Len = 12, TFVN = 0, VCID = 0, MAC-Len = 0, ARSNW = 5
+    // EKID = 1
     sa[1].spi = 1;
     sa[1].sa_state = SA_OPERATIONAL;
     sa[1].est = 0;
     sa[1].ast = 0;
-    sa[1].shivf_len = 0;
+    sa[1].shivf_len = 12;
+    sa[1].iv_len = 12;
     sa[1].shsnf_len = 2;
-    sa[1].arsn_len = 2;
-    sa[1].arsnw_len = 1;
     sa[1].arsnw = 5;
+    sa[1].arsnw_len = 1;
+    sa[1].arsn_len = 2;
     sa[1].gvcid_blk.tfvn = 0;
     sa[1].gvcid_blk.scid = SCID & 0x3FF;
     sa[1].gvcid_blk.vcid = 0;
     sa[1].gvcid_blk.mapid = TYPE_TC;
-
-    // SA 2 - TM CLEAR MODE
-    sa[2].spi = 8;
-    sa[2].sa_state = SA_OPERATIONAL;
-    sa[2].est = 0;
+    
+    // TC - Encryption Only - AES-GCM-256 (Keyed)
+    // IV = 0...0, IV-Len = 12, TFVN = 0, VCID = 0; MAC-Len = 0, ARSNW = 5
+    // EKID = 2
+    sa[2].spi = 2;
+    sa[2].ekid = 2;
+    sa[2].sa_state = SA_KEYED;
+    sa[2].ecs_len = 1;
+    sa[2].ecs = CRYPTO_CIPHER_AES256_GCM;
+    sa[2].est = 1;
     sa[2].ast = 0;
-    sa[2].arsn_len = 1;
+    sa[2].shivf_len = 12;
+    sa[2].iv_len = 12;
+    sa[2].shsnf_len = 2;
+    sa[2].arsn_len = 2;
     sa[2].arsnw_len = 1;
     sa[2].arsnw = 5;
     sa[2].gvcid_blk.tfvn = 0;
     sa[2].gvcid_blk.scid = SCID & 0x3FF;
-    sa[2].gvcid_blk.vcid = 1;
-    sa[2].gvcid_blk.mapid = TYPE_TM;
+    sa[2].gvcid_blk.vcid = 0;
+    sa[2].gvcid_blk.mapid = TYPE_TC;
 
-    // SA 3 - KEYED;   ARSNW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 129
+    // TC - Authentication Only - HMAC_SHA512 (Keyed)
+    // IV = 0...0, IV-Len = 12, MAC-Len = 16, TFVN = 0, VCID = 0, ARSNW = 5
+    // AKID = 3
     sa[3].spi = 3;
-    sa[3].ekid = 129;
+    sa[3].akid = 3;
     sa[3].sa_state = SA_KEYED;
-    sa[3].est = 1;
+    sa[3].acs_len = 1;
+    sa[3].acs = CRYPTO_MAC_HMAC_SHA512;
+    sa[3].est = 0;
     sa[3].ast = 1;
-    sa[3].ecs_len = 1;
-    sa[3].ecs = CRYPTO_CIPHER_AES256_GCM;
     sa[3].shivf_len = 12;
     sa[3].iv_len = 12;
-    *(sa[3].iv + sa[3].shivf_len - 1) = 0;
-    sa[3].abm_len = ABM_SIZE; // 20
+    sa[3].shsnf_len = 2;
+    sa[3].arsn_len = 2;
     sa[3].arsnw_len = 1;
     sa[3].arsnw = 5;
-    sa[3].arsn_len = (sa[3].arsnw * 2) + 1;
+    sa[3].stmacf_len = 16;
+    sa[3].gvcid_blk.tfvn = 0;
+    sa[3].gvcid_blk.scid = SCID & 0x3FF;
+    sa[3].gvcid_blk.vcid = 0;
+    sa[3].gvcid_blk.mapid = TYPE_TC;
 
-    // SA 4 - KEYED;  ARSNW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 130
-    // SA 4 VC0/1 is now 4-VC0, 7-VC1
+    // TC - Authenticated Encryption - AES-GCM-256 (Keyed)
+    // IV = 0 ... 0, IV-Len = 12, MAC-Len = 16, TFVN = 0, VCID = 0, ARSNW = 5
+    // EKID = 4
     sa[4].spi = 4;
-    sa[4].ekid = 130;
-    sa[4].sa_state = SA_OPERATIONAL;
-    sa[4].est = 1;
-    sa[4].ast = 1;
+    sa[4].ekid = 4;
+    sa[4].sa_state = SA_KEYED;
     sa[4].ecs_len = 1;
     sa[4].ecs = CRYPTO_CIPHER_AES256_GCM;
+    sa[4].est = 1;
+    sa[4].ast = 1;
     sa[4].shivf_len = 12;
     sa[4].iv_len = 12;
-    sa[4].stmacf_len = 16;
-    *(sa[4].iv + 11) = 0;
-    sa[4].abm_len = ABM_SIZE; // 20
+    sa[4].shsnf_len = 2;
     sa[4].arsnw_len = 1;
     sa[4].arsnw = 5;
-    sa[4].arsn_len = 0;
+    sa[4].arsn_len = 2;
+    sa[4].stmacf_len = 16;
     sa[4].gvcid_blk.tfvn = 0;
     sa[4].gvcid_blk.scid = SCID & 0x3FF;
-    sa[4].gvcid_blk.vcid = 4;
+    sa[4].gvcid_blk.vcid = 0;
     sa[4].gvcid_blk.mapid = TYPE_TC;
 
-    // SA 5 - KEYED;   ARSNW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 131
+    // TM - CLEAR MODE (Keyed)
+    // IV = 0...0, IV-Len = 12, MAC-Len = 0, TFVN = 0, VCID = 0, ARSNW = 5
+    // EKID = 5
     sa[5].spi = 5;
-    sa[5].ekid = 131;
     sa[5].sa_state = SA_KEYED;
-    sa[5].est = 1;
-    sa[5].ast = 1;
-    sa[5].ecs_len = 1;
-    sa[5].ecs = CRYPTO_CIPHER_AES256_GCM;    
+    sa[5].est = 0;
+    sa[5].ast = 0;
     sa[5].shivf_len = 12;
     sa[5].iv_len = 12;
-    *(sa[5].iv + sa[5].shivf_len - 1) = 0;
-    sa[5].abm_len = ABM_SIZE; // 20
-    sa[5].arsnw_len = 1;
+    sa[5].shsnf_len = 2;
     sa[5].arsnw = 5;
-    sa[5].arsn_len = (sa[5].arsnw * 2) + 1;
+    sa[5].arsnw_len = 1;
+    sa[5].arsn_len = 2;
+    sa[5].gvcid_blk.tfvn = 0;
+    sa[5].gvcid_blk.scid = SCID & 0x3FF;
+    sa[5].gvcid_blk.vcid = 1;
+    sa[5].gvcid_blk.mapid = TYPE_TM;
 
-    // SA 6 - UNKEYED; ARSNW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: -
+    // TM - Encryption Only - AES-CBC-256 (Keyed)
+    // IV = 0...0, IV-Len = 16, TFVN = 0, VCID = 0; MAC-Len = 0, ARSNW = 5
+    // EKID = 6
     sa[6].spi = 6;
-    sa[6].sa_state = SA_UNKEYED;
-    sa[6].est = 1;
-    sa[6].ast = 1;
+    sa[6].ekid = 6;
+    sa[6].sa_state = SA_KEYED;
     sa[6].ecs_len = 1;
-    sa[6].ecs = CRYPTO_CIPHER_AES256_GCM;    
-    sa[6].shivf_len = 12;
-    sa[6].iv_len = 12;
-    *(sa[6].iv + sa[6].shivf_len - 1) = 0;
-    sa[6].abm_len = ABM_SIZE; // 20
+    sa[6].ecs = CRYPTO_CIPHER_AES256_CBC;
+    sa[6].est = 1;
+    sa[6].ast = 0;
+    sa[6].shivf_len = 16;
+    sa[6].iv_len = 16;
+    sa[6].shplf_len = 1;
+    sa[6].stmacf_len = 0;
+    sa[6].arsn_len = 2;
     sa[6].arsnw_len = 1;
     sa[6].arsnw = 5;
-    sa[6].arsn_len = (sa[6].arsnw * 2) + 1;
+    sa[6].gvcid_blk.tfvn = 0;
+    sa[6].gvcid_blk.scid = SCID & 0x3FF;
+    sa[6].gvcid_blk.vcid = 0;
+    sa[6].gvcid_blk.mapid = TYPE_TM;
 
-    // SA 7 - KEYED;  ARSNW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 130
+    // TM - Authentication Only HMAC_SHA512 (Keyed)
+    // IV = 0...0, IV-Len = 12, MAC-Len = 16, TFVN = 0, VCID = 0, ARSNW = 5
+    // AKID = 7
     sa[7].spi = 7;
-    sa[7].ekid = 130;
+    sa[7].akid = 7;
     sa[7].sa_state = SA_KEYED;
-    sa[7].est = 1;
+    sa[7].acs_len = 1;
+    sa[7].acs = CRYPTO_MAC_HMAC_SHA512;
+    sa[7].est = 0;
     sa[7].ast = 1;
-    sa[7].ecs_len = 1;
-    sa[7].ecs = CRYPTO_CIPHER_AES256_GCM;    
     sa[7].shivf_len = 12;
     sa[7].iv_len = 12;
-    *(sa[7].iv + sa[7].shivf_len - 1) = 0;
-    sa[7].abm_len = ABM_SIZE; // 20
+    sa[7].shsnf_len = 2;
+    sa[7].arsn_len = 2;
     sa[7].arsnw_len = 1;
     sa[7].arsnw = 5;
-    sa[7].arsn_len = (sa[7].arsnw * 2) + 1;
+    sa[7].stmacf_len = 16;
     sa[7].gvcid_blk.tfvn = 0;
     sa[7].gvcid_blk.scid = SCID & 0x3FF;
-    sa[7].gvcid_blk.vcid = 1;
-    sa[7].gvcid_blk.mapid = TYPE_TC;
+    sa[7].gvcid_blk.vcid = 0;
+    sa[7].gvcid_blk.mapid = TYPE_TM;
 
-    // SA 8 - CLEAR MODE
+    // TM - Authenticated Encryption AES-CBC-256 (Keyed)
+    // IV = 0...0, IV-Len = 16, MAC-Len = 16, TFVN = 0, VCID = 0, ARSNW = 5
+    // EKID = 8
     sa[8].spi = 8;
-    sa[8].sa_state = SA_NONE;
-    sa[8].est = 0;
-    sa[8].ast = 0;
-    sa[8].arsn_len = 1;
+    sa[8].ekid = 8;
+    sa[8].sa_state = SA_KEYED;
+    sa[8].ecs_len = 1;
+    sa[8].ecs = CRYPTO_CIPHER_AES256_CBC;
+    sa[8].est = 1;
+    sa[8].ast = 1;
+    sa[8].shplf_len = 1;
+    sa[8].shivf_len = 16;
+    sa[8].iv_len = 16;
+    sa[8].shsnf_len = 2;
+    sa[8].arsn_len = 2;
     sa[8].arsnw_len = 1;
     sa[8].arsnw = 5;
+    sa[8].stmacf_len = 16;
     sa[8].gvcid_blk.tfvn = 0;
     sa[8].gvcid_blk.scid = SCID & 0x3FF;
-    sa[8].gvcid_blk.vcid = 1;
-    sa[8].gvcid_blk.mapid = TYPE_TC;
-
-    // SA 9 - Validation Tests
+    sa[8].gvcid_blk.vcid = 0;
+    sa[8].gvcid_blk.mapid = TYPE_TM;    
+   
+    // AOS - Clear Mode
+    // IV = 0...0, IV-Len = 12, MAC-Len = 0, TFVN = 1, VCID = 0, ARSNW = 5
+    // EKID = 9
     sa[9].spi = 9;
-    sa[9].ekid = 136;
     sa[9].sa_state = SA_KEYED;
-    sa[9].est = 1;
+    sa[9].est = 0;
     sa[9].ast = 0;
     sa[9].shivf_len = 12;
     sa[9].iv_len = 12;
-    *(sa[9].iv + 11) = 0;
-    sa[9].abm_len = ABM_SIZE; // 20
-    sa[9].arsnw_len = 1;
+    sa[9].shsnf_len = 2;
     sa[9].arsnw = 5;
-    sa[9].arsn_len = 0;
-    sa[9].gvcid_blk.tfvn = 0;
+    sa[9].arsnw_len = 1;
+    sa[9].arsn_len = 2;
+    sa[9].gvcid_blk.tfvn = 0x01;
     sa[9].gvcid_blk.scid = SCID & 0x3FF;
     sa[9].gvcid_blk.vcid = 0;
-    sa[9].gvcid_blk.mapid = TYPE_TC;
+    sa[9].gvcid_blk.mapid = TYPE_AOS;
 
-    // SA 10 - KEYED;  ARSNW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 130
-    // SA 10 VC0/1 is now 4-VC0, 7-VC1
+    // AOS - Authentication Only, HMAC_SHA512 (Keyed)
+    // IV = 0...0, IV-Len = 16, MAC-Len = 16, TFVN = 1, VCID = 0, ARSNW = 5
+    // AKID = 10
     sa[10].spi = 10;
-    sa[10].ekid = 130;
+    sa[10].akid = 10;
     sa[10].sa_state = SA_KEYED;
-    sa[10].est = 1;
+    sa[10].est = 0;
     sa[10].ast = 1;
-    sa[10].ecs_len = 1;
-    sa[10].ecs = CRYPTO_CIPHER_AES256_GCM;
-    sa[10].shivf_len = 0;
-    sa[10].iv_len = 0;
-    sa[10].stmacf_len = 0;
-    *(sa[10].iv + 11) = 0;
-    sa[10].abm_len = ABM_SIZE; // 20
-    sa[10].arsnw_len = 1;
+    sa[10].acs_len = 1;
+    sa[10].acs = CRYPTO_MAC_HMAC_SHA512;
+    sa[10].stmacf_len = 16;
     sa[10].arsnw = 5;
-    sa[10].arsn_len = 0;
-    sa[10].gvcid_blk.tfvn = 0x00;
-    sa[10].gvcid_blk.scid = 0x002C;
-    sa[10].gvcid_blk.vcid = 1;
-    sa[10].gvcid_blk.mapid = TYPE_TC;
-    char ek_ref_string[20] = "kmc/test/key130";
-    memcpy(sa[10].ek_ref, ek_ref_string, strlen(ek_ref_string)); 
+    sa[10].arsnw_len = 1;
+    sa[10].arsn_len = 2;
+    sa[10].gvcid_blk.tfvn = 0x01;
+    sa[10].gvcid_blk.scid = SCID & 0x3FF;
+    sa[10].gvcid_blk.vcid = 0;
+    sa[10].gvcid_blk.mapid = TYPE_AOS;
 
-    // SA 11 - KEYED;  ARSNW:5; AES-GCM; IV:00...00; IV-len:12; MAC-len:16; Key-ID: 130
-    // SA 11 VC0/1 is now 4-VC0, 7-VC1
+    // AOS  - Encryption Only, AES-GCM-256 (Keyed)
+    // IV = 0...0, IV-Len = 16, MAC-Len = 0, TFVN = 1, VCID = 0, ARSNW = 5
+    // EKID = 11
     sa[11].spi = 11;
-    sa[11].ekid = 130;
+    sa[11].ekid = 11;
     sa[11].sa_state = SA_KEYED;
     sa[11].est = 1;
     sa[11].ast = 0;
     sa[11].ecs_len = 1;
-    sa[11].ecs = CRYPTO_CIPHER_AES256_CBC;
-    sa[11].shivf_len = 16;
-    sa[11].iv_len = 16;
     sa[11].shplf_len = 1;
+    sa[11].ecs = CRYPTO_CIPHER_AES256_CBC;
+    sa[11].iv_len = 16;
+    sa[11].shivf_len = 16;
     sa[11].stmacf_len = 0;
-    *(sa[11].iv + (sa[11].iv_len - 1)) = 0;
-    sa[11].abm_len = ABM_SIZE; // 20
-    sa[11].arsnw_len = 0;
+    sa[11].shsnf_len = 2;
+    sa[11].arsn_len = 2;
+    sa[11].arsnw_len = 1;
     sa[11].arsnw = 5;
-    sa[11].arsn_len = 0;
-    sa[11].gvcid_blk.tfvn = 0;
+    sa[11].gvcid_blk.tfvn = 0x01;
     sa[11].gvcid_blk.scid = SCID & 0x3FF;
     sa[11].gvcid_blk.vcid = 0;
-    sa[11].gvcid_blk.mapid = TYPE_TC;
-    memcpy(sa[11].ek_ref, ek_ref_string, strlen(ek_ref_string));
+    sa[11].gvcid_blk.mapid = TYPE_AOS;
 
-    // SA 12 - TM CLEAR MODE
-    // SA 12
+    // AOS - Authenticated Encryption, AES-CBC-256 (Keyed)
+    // IV = 0...0, IV-Len = 16, MAC-Len = 16, TFVN = 1, VCID = 0, ARSNW = 5
     sa[12].spi = 12;
-    sa[12].sa_state = SA_OPERATIONAL;
-    sa[12].est = 0;
-    sa[12].ast = 0;
-    sa[12].shivf_len = 0;
-    sa[12].shsnf_len = 0;
-    sa[12].arsn_len = 0;
-    sa[12].arsnw_len = 0;
+    sa[12].ekid = 12;
+    sa[12].sa_state = SA_KEYED;
+    sa[12].est = 1;
+    sa[12].ast = 1;
+    sa[12].ecs_len = 1;
+    sa[12].ecs = CRYPTO_CIPHER_AES256_GCM;
+    sa[12].iv_len = 16;
+    sa[12].shivf_len = 16;
+    sa[12].stmacf_len = 16;
+    sa[12].shsnf_len = 2;
+    sa[12].arsn_len = 2;
+    sa[12].arsnw_len = 1;
     sa[12].arsnw = 5;
-    sa[12].gvcid_blk.tfvn = 0;
+    sa[12].gvcid_blk.tfvn = 0x01;
     sa[12].gvcid_blk.scid = SCID & 0x3FF;
     sa[12].gvcid_blk.vcid = 0;
-    sa[12].gvcid_blk.mapid = TYPE_TM;
 
-    // SA 13 - TM Authentication Only
-    // SA 13
+
+// EP - Testing SAs
+
+    // TC - NULL (SA_None)
     sa[13].spi = 13;
-    sa[13].akid = 130;
-    sa[13].ekid = 130;
-    sa[13].sa_state = SA_OPERATIONAL;
-    sa[13].est = 1;
-    sa[13].ast = 1;
-    sa[13].acs_len = 0;
-    sa[13].acs = CRYPTO_MAC_NONE;
-    sa[13].ecs_len = 1;
-    sa[13].ecs = CRYPTO_CIPHER_AES256_GCM;
-    sa[13].shivf_len = 16;
-    sa[13].iv_len = 16;
-    *(sa[13].iv + sa[13].shivf_len - 1) = 0;
-    sa[13].stmacf_len = 16;
-    sa[13].shsnf_len = 0;
-    sa[13].abm_len = ABM_SIZE;
-    memset(sa[13].abm, 0xFF, (sa[13].abm_len * sizeof(uint8_t))); // Bitmask 
-    sa[13].arsn_len = 0;
-    sa[13].arsnw_len = 0;
+    sa[13].sa_state = SA_NONE;
+    sa[13].est = 0;
+    sa[13].ast = 0;
+    sa[13].shivf_len = 12;
+    sa[13].iv_len = 12;
+    sa[13].shsnf_len = 2;
     sa[13].arsnw = 5;
-    sa[13].gvcid_blk.tfvn = 0;
+    sa[13].arsnw_len = 1;
+    sa[13].arsn_len = 2;
+    sa[13].gvcid_blk.tfvn = 2;
     sa[13].gvcid_blk.scid = SCID & 0x3FF;
     sa[13].gvcid_blk.vcid = 0;
-    sa[13].gvcid_blk.mapid = TYPE_TM;
+    sa[13].gvcid_blk.mapid = TYPE_TC;
 
-    // SA 14 - AOS Clear Mode
+    // TC - Keyed
     sa[14].spi = 14;
-    sa[14].sa_state = SA_OPERATIONAL;
+    sa[14].ekid = 14;
+    sa[14].sa_state = SA_KEYED;
     sa[14].est = 0;
     sa[14].ast = 0;
-    sa[14].shivf_len = 0;
-    sa[14].gvcid_blk.tfvn = 0x01;
+    sa[14].shivf_len = 12;
+    sa[14].iv_len = 12;
+    sa[14].shsnf_len = 2;
+    sa[14].arsnw = 5;
+    sa[14].arsnw_len = 1;
+    sa[14].arsn_len = 2;
+    sa[14].gvcid_blk.tfvn = 2;
     sa[14].gvcid_blk.scid = SCID & 0x3FF;
-    sa[14].gvcid_blk.vcid = 0;
+    sa[14].gvcid_blk.vcid = 1;
+    sa[14].gvcid_blk.mapid = TYPE_TC;
 
-    // SA 15 - AOS Authentication Only
+    // TC - Unkeyed
+    sa[14].spi = 14;
+    sa[14].ekid = 14;
+    sa[14].sa_state = SA_UNKEYED;
+    sa[14].est = 0;
+    sa[14].ast = 0;
+    sa[14].shivf_len = 12;
+    sa[14].iv_len = 12;
+    sa[14].shsnf_len = 2;
+    sa[14].arsnw = 5;
+    sa[14].arsnw_len = 1;
+    sa[14].arsn_len = 2;
+    sa[14].gvcid_blk.tfvn = 2;
+    sa[14].gvcid_blk.scid = SCID & 0x3FF;
+    sa[14].gvcid_blk.vcid = 2;
+    sa[14].gvcid_blk.mapid = TYPE_TC;
+
+    // TC - Operational
     sa[15].spi = 15;
-    sa[15].akid = 130;
-    sa[15].sa_state = SA_KEYED;
+    sa[15].ekid = 15;
+    sa[15].sa_state = SA_OPERATIONAL;
     sa[15].est = 0;
-    sa[15].ast = 1;
-    sa[15].acs_len = 1;
-    sa[15].acs = CRYPTO_MAC_CMAC_AES256;
-    sa[15].stmacf_len = 16;
-    sa[15].abm_len = ABM_SIZE;
-    memset(sa[15].abm, 0xFF, (sa[15].abm_len * sizeof(uint8_t))); // Bitmask 
-    sa[15].gvcid_blk.tfvn = 0x01;
+    sa[15].ast = 0;
+    sa[15].shivf_len = 12;
+    sa[15].iv_len = 12;
+    sa[15].shsnf_len = 2;
+    sa[15].arsnw = 5;
+    sa[15].arsnw_len = 1;
+    sa[15].arsn_len = 2;
+    sa[15].gvcid_blk.tfvn = 2;
     sa[15].gvcid_blk.scid = SCID & 0x3FF;
-    sa[15].gvcid_blk.vcid = 0;
-
-    // SA 16 - AOS Encryption Only
-    sa[16].spi = 16;
-    sa[16].ekid = 130;
-    sa[16].sa_state = SA_KEYED;
-    sa[16].est = 1;
-    sa[16].ast = 0;
-    sa[16].ecs_len = 1;
-    sa[16].ecs = CRYPTO_CIPHER_AES256_GCM;
-    sa[16].iv_len = 16;
-    sa[16].shivf_len = 16;
-    *(sa[16].iv + sa[16].shivf_len - 1) = 0;
-    sa[16].stmacf_len = 0;
-    sa[16].abm_len = ABM_SIZE;
-    memset(sa[16].abm, 0xFF, (sa[16].abm_len * sizeof(uint8_t))); // Bitmask 
-    sa[16].gvcid_blk.tfvn = 0x01;
-    sa[16].gvcid_blk.scid = SCID & 0x3FF;
-    sa[16].gvcid_blk.vcid = 0;
-
-    // SA 17 - AOS AEAD
-    sa[17].spi = 17;
-    sa[17].ekid = 130;
-    sa[17].sa_state = SA_KEYED;
-    sa[17].est = 1;
-    sa[17].ast = 1;
-    sa[17].ecs_len = 1;
-    sa[17].ecs = CRYPTO_CIPHER_AES256_GCM;
-    sa[17].iv_len = 16;
-    sa[17].shivf_len = 16;
-    *(sa[17].iv + sa[17].shivf_len - 1) = 0;
-    sa[17].stmacf_len = 16;
-    sa[17].abm_len = ABM_SIZE;
-    memset(sa[17].abm, 0xFF, (sa[17].abm_len * sizeof(uint8_t))); // Bitmask 
-    sa[17].gvcid_blk.tfvn = 0x01;
-    sa[17].gvcid_blk.scid = SCID & 0x3FF;
-    sa[17].gvcid_blk.vcid = 0;
-
+    sa[15].gvcid_blk.vcid = 3;
+    sa[15].gvcid_blk.mapid = TYPE_TC;
 
     sa_perform_save(&sa[0]);
 }

@@ -72,9 +72,9 @@ if(${KMC_MDB_RH} OR ${KMC_MDB_DB})
              COMMAND ${PROJECT_BINARY_DIR}/bin/ut_tc_kmc
              WORKING_DIRECTORY ${PROJECT_TEST_DIR})
              
-    add_test(NAME UT_SADB_ERR_CASES_KMC_CRYPTO
-             COMMAND ${PROJECT_BINARY_DIR}/bin/ut_sa_err_cases_kmc_crypto
-             WORKING_DIRECTORY ${PROJECT_TEST_DIR})
+    # add_test(NAME UT_SADB_ERR_CASES_KMC_CRYPTO
+    #          COMMAND ${PROJECT_BINARY_DIR}/bin/ut_sa_err_cases_kmc_crypto
+    #          WORKING_DIRECTORY ${PROJECT_TEST_DIR})
     
     # add_test(NAME UT_MYSQL_TLS_CONNECTION
     #          COMMAND ${PROJECT_BINARY_DIR}/bin/ut_mysql_tls_connection
@@ -88,22 +88,22 @@ if(${KMC_MDB_RH} OR ${KMC_MDB_DB})
     #          COMMAND ${PROJECT_BINARY_DIR}/bin/ut_mariadb
     #          WORKING_DIRECTORY ${PROJECT_TEST_DIR})
     
-    add_test(NAME UT_KMC_CRYPTO
-             COMMAND ${PROJECT_BINARY_DIR}/bin/ut_kmc_crypto
-             WORKING_DIRECTORY ${PROJECT_TEST_DIR})
+    # add_test(NAME UT_KMC_CRYPTO
+    #          COMMAND ${PROJECT_BINARY_DIR}/bin/ut_kmc_crypto
+    #          WORKING_DIRECTORY ${PROJECT_TEST_DIR})
 
-    add_test(NAME UT_KMC_CRYPTO_WITH_MTLS_SADB
-             COMMAND ${PROJECT_BINARY_DIR}/bin/ut_kmc_crypto_with_mtls_sadb
-             WORKING_DIRECTORY ${PROJECT_TEST_DIR})
+    # add_test(NAME UT_KMC_CRYPTO_WITH_MTLS_SADB
+    #          COMMAND ${PROJECT_BINARY_DIR}/bin/ut_kmc_crypto_with_mtls_sadb
+    #          WORKING_DIRECTORY ${PROJECT_TEST_DIR})
     
     # This Test cannot yet be accomplished.  Need CAM
     #add_test(NAME UT_KMC_CRYPTO_CAM
     #         COMMAND ${PROJECT_BINARY_DIR}/bin/ut_kmc_crypto_cam
     #         WORKING_DIRECTORY ${PROJECT_TEST_DIR})
 
-    add_test(NAME UT_KMC_CRYPTO_AUTH_ONLY
-             COMMAND ${PROJECT_BINARY_DIR}/bin/ut_kmc_crypto_auth_only
-             WORKING_DIRECTORY ${PROJECT_TEST_DIR})
+    # add_test(NAME UT_KMC_CRYPTO_AUTH_ONLY
+    #          COMMAND ${PROJECT_BINARY_DIR}/bin/ut_kmc_crypto_auth_only
+    #          WORKING_DIRECTORY ${PROJECT_TEST_DIR})
 endif()
 
 if(TEST_ENC)

@@ -89,7 +89,7 @@ typedef enum
 } CreateFecfBool;
 typedef enum
 {
-    AOS_FHEC_NA,
+    AOS_FHEC_NA=0,
     AOS_NO_FHEC,
     AOS_HAS_FHEC
 } AosFhecPresent;

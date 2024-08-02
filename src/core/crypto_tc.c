@@ -386,7 +386,6 @@ int32_t Crypto_TC_Do_Encrypt_PLAINTEXT(uint8_t sa_service_type, SecurityAssociat
             mc_if->mc_log(status);
             return status;
         }
-
         if (ecs_is_aead_algorithm == CRYPTO_TRUE)
         {
             // Check that key length to be used ets the algorithm requirement

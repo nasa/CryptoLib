@@ -155,7 +155,7 @@ int32_t Crypto_Init_AOS_Unit_Test(void)
 
     //Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x002c, 0, AOS_NO_FECF, AOS_SEGMENT_HDRS_NA, AOS_NO_OCF, 1786, AOS_FHEC_NA, AOS_IZ_NA, 0);
     AOS_UT_Managed_Parameters.scid = 0x002c;
-    AOS_UT_Managed_Parameters.aos_has_fhec = AOS_NO_FECF;
+    AOS_UT_Managed_Parameters.has_fecf = AOS_NO_FECF;
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
 
     //Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0042, 0, AOS_NO_FECF, AOS_SEGMENT_HDRS_NA, AOS_HAS_OCF, 1786, AOS_FHEC_NA, AOS_IZ_NA, 0);

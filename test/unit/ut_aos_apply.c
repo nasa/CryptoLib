@@ -302,7 +302,7 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FHEC_OID_FECF)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             AOS_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    GvcidManagedParameters_t AOS_UT_Managed_Parameters = {1, 0x0003, 0, AOS_HAS_FECF, AOS_HAS_FECF, AOS_HAS_IZ, 6, AOS_SEGMENT_HDRS_NA, 1786, AOS_HAS_OCF, 1};  
+    GvcidManagedParameters_t AOS_UT_Managed_Parameters = {1, 0x0003, 0, AOS_HAS_FECF, AOS_HAS_FHEC, AOS_HAS_IZ, 6, AOS_SEGMENT_HDRS_NA, 1786, AOS_HAS_OCF, 1};  
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);  
     //Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0003, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_HAS_OCF, 1786, AOS_HAS_FHEC, AOS_HAS_IZ, 6);
     status = Crypto_Init();
