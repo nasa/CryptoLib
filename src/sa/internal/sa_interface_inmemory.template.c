@@ -471,6 +471,7 @@ void sa_populate(void)
 
     // AOS - Authenticated Encryption, AES-CBC-256 (Keyed)
     // IV = 0...0, IV-Len = 16, MAC-Len = 16, TFVN = 1, VCID = 0, ARSNW = 5
+    // EKID = 12
     sa[12].spi = 12;
     sa[12].ekid = 12;
     sa[12].sa_state = SA_KEYED;
