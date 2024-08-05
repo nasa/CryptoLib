@@ -704,6 +704,11 @@ static int32_t sa_close(void)
 static int32_t sa_get_from_spi(uint16_t spi, SecurityAssociation_t** security_association)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
+    // Check if spi index in sa array
+    if (spi > NUM_SA)
+    {
+        return CRYPTO_LIB_ERR_SPI_INDEX_OOB;
+    }
     *security_association = &sa[spi];
     // if (sa[spi].shivf_len > 0 && crypto_config.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     // {
