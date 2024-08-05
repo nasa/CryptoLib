@@ -12,3 +12,4 @@ source $SCRIPT_DIR/env.sh
 rm $BASE_DIR/CMakeCache.txt
 
 cmake $BASE_DIR -DCODECOV=1 -DDEBUG=1 -DMC_INTERNAL=1 -DTEST=1 -DTEST_ENC=1 -DSA_FILE=1 && make && make test
+

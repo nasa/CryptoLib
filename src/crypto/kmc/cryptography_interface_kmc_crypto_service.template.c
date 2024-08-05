@@ -2291,6 +2291,8 @@ int32_t cryptography_get_ecs_algo(int8_t algo_enum)
             return CRYPTO_CIPHER_AES256_GCM;
         case CRYPTO_CIPHER_AES256_CCM:
             return CRYPTO_CIPHER_AES256_CCM;
+        case CRYPTO_CIPHER_AES256_GCM_SIV:
+            return CRYPTO_CIPHER_AES256_GCM_SIV;
 
         default:
 #ifdef DEBUG

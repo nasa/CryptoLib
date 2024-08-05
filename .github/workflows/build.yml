@@ -18,9 +18,26 @@ jobs:
     - name: Update
       run: sudo apt-get update
     - name: Install Dependencies
-      run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat libgcrypt20-dev python3 
+      run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 
     - name: Install Python Libraries
       run: sudo pip install pycryptodome
+    - name: Install Libgcrypt
+      run: >
+        curl  
+        -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 
+        -o /tmp/libgpg-error-1.50.tar.bz2 
+        && tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/ 
+        && cd /tmp/libgpg-error-1.50 
+        && sudo ./configure 
+        && sudo make install 
+        && curl  
+        -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 
+        -o /tmp/libgcrypt-1.11.0.tar.bz2 
+        && tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ 
+        && cd /tmp/libgcrypt-1.11.0 
+        && sudo ./configure 
+        && sudo make install
+        && sudo ldconfig
     # End Container Setup
     
     - name: Minimal Build Script
@@ -38,9 +55,26 @@ jobs:
     - name: Update
       run: sudo apt-get update
     - name: Install Dependencies
-      run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat libgcrypt20-dev python3
+      run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3
     - name: Install Python Libraries
       run: sudo pip install pycryptodome
+    - name: Install Libgcrypt
+      run: >
+        curl  
+        -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 
+        -o /tmp/libgpg-error-1.50.tar.bz2 
+        && tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/ 
+        && cd /tmp/libgpg-error-1.50 
+        && sudo ./configure 
+        && sudo make install 
+        && curl  
+        -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 
+        -o /tmp/libgcrypt-1.11.0.tar.bz2 
+        && tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ 
+        && cd /tmp/libgcrypt-1.11.0 
+        && sudo ./configure 
+        && sudo make install
+        && sudo ldconfig
     # End Container Setup
     
     - name: Internal Build Script
@@ -70,9 +104,26 @@ jobs:
     - name: Update
       run: sudo apt-get update
     - name: Install Dependencies
-      run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat libgcrypt20-dev python3
+      run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3
     - name: Install Python Libraries
       run: sudo pip install pycryptodome
+    - name: Install Libgcrypt
+      run: >
+        curl  
+        -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 
+        -o /tmp/libgpg-error-1.50.tar.bz2 
+        && tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/ 
+        && cd /tmp/libgpg-error-1.50 
+        && sudo ./configure 
+        && sudo make install 
+        && curl  
+        -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 
+        -o /tmp/libgcrypt-1.11.0.tar.bz2 
+        && tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ 
+        && cd /tmp/libgcrypt-1.11.0 
+        && sudo ./configure 
+        && sudo make install
+        && sudo ldconfig
     # End Container Setup
     
     - name: KMC Build Script
@@ -102,9 +153,26 @@ jobs:
     - name: Update
       run: sudo apt-get update
     - name: Install Dependencies
-      run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat libgcrypt20-dev python3 autoconf libtool
+      run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 autoconf libtool
     - name: Install Python Libraries
       run: sudo pip install pycryptodome
+    - name: Install Libgcrypt
+      run: >
+        curl  
+        -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 
+        -o /tmp/libgpg-error-1.50.tar.bz2 
+        && tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/ 
+        && cd /tmp/libgpg-error-1.50 
+        && sudo ./configure 
+        && sudo make install 
+        && curl  
+        -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 
+        -o /tmp/libgcrypt-1.11.0.tar.bz2 
+        && tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ 
+        && cd /tmp/libgcrypt-1.11.0 
+        && sudo ./configure 
+        && sudo make install
+        && sudo ldconfig
     - name: Clone WolfSSL
       run: git clone --depth 1 --branch v5.6.0-stable https://github.com/wolfSSL/wolfssl.git /tmp/wolfssl
    
@@ -114,7 +182,7 @@ jobs:
       #run: cd /tmp/wolfssl/;
       #     sudo chown -R runner /usr/local; 
       #     ./autogen.sh;
-      #     ./configure --enable-aesccm --enable-aessiv --enable-cmac;
+      #     sudo ./configure --enable-aesccm --enable-aessiv --enable-cmac;
       #     make;
       #     make install;
       #sudo chown -R runner /usr/local;
@@ -155,21 +223,40 @@ jobs:
     - name: Update
       run: yum update -y
     - name: Install Dependencies
-      run: yum install -y epel-release python38-devel libcurl-devel libgpg-error-devel libgcrypt-devel git cmake gcc java-11-openjdk-devel openssl wget mariadb-devel mariadb-common mariadb-connector-c mariadb-connector-c-config mariadb-errmsg mariadb-gssapi-server
+      run: yum install -y epel-release python38-devel libcurl-devel git cmake gcc java-11-openjdk-devel openssl wget bzip2 ldconfig mariadb-devel mariadb-common mariadb-connector-c mariadb-connector-c-config mariadb-errmsg mariadb-gssapi-server
       # Might want to trim this down, but these dependencies should work for KMC
     - name: install lcov
       run: yum install -y --enablerepo=epel lcov
     - name: Install Python Dependencies
       run: pip3 install pycryptodome
+    - name: Install Libgcrypt
+      run: >
+        curl 
+        -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 
+        -o /tmp/libgpg-error-1.50.tar.bz2 
+        && tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/ 
+        && cd /tmp/libgpg-error-1.50 
+        && ./configure 
+        && make install 
+        && curl  
+        -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 
+        -o /tmp/libgcrypt-1.11.0.tar.bz2 
+        && tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ 
+        && cd /tmp/libgcrypt-1.11.0 
+        && ./configure 
+        && make install  
+        && echo "export LD_LIBRARY_PATH=/usr/local/lib/:/usr/local/include:$LD_LIBRARY_PATH" >> ~/.bashrc 
+        && source ~/.bashrc 
+        && ldconfig
     # End Container Setup
 
     - name: RHEL Build Script
       working-directory: ${{github.workspace}}
-      run: bash ${GITHUB_WORKSPACE}/support/scripts/build_rhel.sh
+      run: source ~/.bashrc && ${GITHUB_WORKSPACE}/support/scripts/build_rhel.sh
     
     - name: Code-Coverage
       working-directory: ${{github.workspace}}
-      run: make gcov
+      run: source ~/.bashrc && make gcov
 
     - name: Upload 
       uses: codecov/codecov-action@v4
