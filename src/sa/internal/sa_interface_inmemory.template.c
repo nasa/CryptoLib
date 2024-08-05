@@ -705,7 +705,7 @@ static int32_t sa_get_from_spi(uint16_t spi, SecurityAssociation_t** security_as
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     // Check if spi index in sa array
-    if (spi > NUM_SA)
+    if (spi >= NUM_SA)
     {
         return CRYPTO_LIB_ERR_SPI_INDEX_OOB;
     }
