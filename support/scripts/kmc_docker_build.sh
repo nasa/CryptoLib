@@ -13,10 +13,10 @@ mkdir $BASE_DIR/build > /dev/null 2>&1
 rm -r $BASE_DIR/build/kmc/* > /dev/null 2>&1
 mkdir $BASE_DIR/build/kmc > /dev/null 2>&1
 
-#$DFLAGS -v $BASE_DIR:$BASE_DIR -w $BASE_DIR/build/kmc ivvitc/cryptolib /bin/bash
+#$DFLAGS -v $BASE_DIR:$BASE_DIR -w $BASE_DIR/build/kmc $DBOX /bin/bash
 
 echo "KMC build and test..."
 # Note that the `KMC_MDB_DB` flag is not in use as docker compose will need configured to enable these tests
-$DFLAGS -v $BASE_DIR:$BASE_DIR -w $BASE_DIR/build/kmc ivvitc/cryptolib bash -c \
+$DFLAGS -v $BASE_DIR:$BASE_DIR -w $BASE_DIR/build/kmc $DBOX bash -c \
     "../../support/scripts/build_kmc.sh"
 echo ""
