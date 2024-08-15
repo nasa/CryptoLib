@@ -25,11 +25,15 @@ UTEST(EP_KEY_VALIDATION, OTAR_0_140_142)
     char* buffer_nist_iv_h = "b6ac8e4963f49207ffd6374b"; // The last valid IV that was seen by the SA
     char* buffer_OTAR_h = "2003009e00ff000100001880d037008c197f0b000100840000344892bbc54f5395297d4c37172f2a3c46f6a81c1349e9e26ac80985d8bbd55a5814c662e49fba52f99ba09558cd21cf268b8e50b2184137e80f76122034c580464e2f06d2659a50508bdfe9e9a55990ba4148af896d8a6eebe8b5d2258685d4ce217a20174fdd4f0efac62758c51b04e55710a47209c923b641d19a39001f9e986166f5ffd95555";
     //                    |2003009e00| = Primary Header
-    //                              |ff00010000| = ???
+    //                              |ff| = SPI
+    //                                |00010000| = ???
     //                                        |1880| = CryptoLib App ID
-    //                                            |d037008c197f0b| = ???
+    //                                            |d037| = seq, pktid
+    //                                                |008c| = pkt_length
+    //                                                    |197f| = pusv, ack, st
+    //                                                        |0b| = sst, sid, spare
     //                                                          |0001| = PDU Tag
-    //                                                              |0084| = Length
+    //                                                              |0084| = PDU Length
     //                                                                  |0000| = Master Key ID
     //                                                                      |344892bbc54f5395297d4c37| = IV
     //                                                                                              |172f| = Encrypted Key ID
@@ -38,8 +42,8 @@ UTEST(EP_KEY_VALIDATION, OTAR_0_140_142)
     //                                                                                                                                                                      |268b8e50b2184137e80f76122034c580464e2f06d2659a50508bdfe9e9a55990| = Encrypted Key
     //                                                                                                                                                                                                                                      |ba41| = EKID
     //                                                                                                                                                                                                                                          |48af896d8a6eebe8b5d2258685d4ce217a20174fdd4f0efac62758c51b04e557| = EK
-    //                                                                                                                                                                                                                                                                                                          |10a47209c923b641d19a39001f9e9861| = MAC???
-    //                                                                                                                                                                                                                                                                                                                                          |66f5ffd95555| = Trailer???
+    //                                                                                                                                                                                                                                                                                                          |10a47209c923b641d19a39001f9e9861| = MAC
+    //                                                                                                                                                                                                                                                                                                                                          |66f5ffd95555| = Trailer or Padding???
     
     uint8_t *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_OTAR_b = NULL;
     int buffer_nist_iv_len, buffer_nist_key_len, buffer_OTAR_len = 0;
@@ -108,21 +112,19 @@ UTEST(EP_KEY_VALIDATION, ACTIVATE_141_142)
     // NOTE: Added Transfer Frame header to the plaintext
     char* buffer_nist_key_h = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
     char* buffer_nist_iv_h = "b6ac8e4963f49207ffd6374b"; // The last valid IV that was seen by the SA
-    // char* buffer_ACTIVATE_h = "2003001e00ff000100001880d038000c197f0b00020004008d008e82ebe4fc55555555";
     char* buffer_ACTIVATE_h = "2003001e0000000100001880d038000c197f0b00020004008d008e82ebe4fc55555555";
     //                        |2003001e00| = Primary Header
     //                                  |ff| = SPI
-    //                                    |00010000| = Security Header or Sequence #???
+    //                                    |00010000| = Security Header
     //                                            |1880| = CryptoLib App ID
-    //                                                |d038000c197f0b00| = ???
-    //                                                |d| = seq/start of pktid
-    //                                                 |038| = end of pktid
+    //                                                |d038| = seq, pktid
     //                                                    |000c| = pkt_length
-    //                                                        |197f0b00| = PUS Header
-    //                                                                |02| = PDU Tag
-    //                                                                  |0004| = Length
-    //                                                                      |008d| = Key ID
-    //                                                                          |008e| = Key ID
+    //                                                        |197f| = pusv, ack, st
+    //                                                            |0b| = sst, sid, spare
+    //                                                              |0002| = PDU Tag
+    //                                                                  |0004| = PDU Length
+    //                                                                      |008d| = Key ID (141)
+    //                                                                          |008e| = Key ID (142)
     //                                                                              |82ebe4fc55555555| = Trailer???
     
     uint8_t *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_ACTIVATE_b = NULL;
@@ -195,12 +197,15 @@ UTEST(EP_KEY_VALIDATION, DEACTIVATE_142)
     char* buffer_DEACTIVATE_h = "2003001c00ff000100001880d039000a197f0b00030002008e1f6d21c4555555555555";
     //                          |2003001c00| = Primary Header
     //                                    |ff| = SPI
-    //                                      |00010000| = ???
+    //                                      |00010000| = security Header
     //                                              |1880| = CryptoLib App ID
-    //                                                  |d039000a197f0b| = ???
+    //                                                  |d039| = seq, packet id
+    //                                                      |000a| = Packet Length
+    //                                                          |197f| = pusv, ack, st
+    //                                                              |0b| = sst
     //                                                                |0003| = PDU Tag
-    //                                                                    |0002| = Length
-    //                                                                        |008e| = Key ID
+    //                                                                    |0002| = PDU Length
+    //                                                                        |008e| = Key ID (142)
     //                                                                            |1f6d82ebe4fc55555555| = Trailer???
     
     uint8_t *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_DEACTIVATE_b = NULL;
@@ -275,13 +280,17 @@ UTEST(EP_KEY_VALIDATION, VERIFY_132_134)
     //                                |ff| = SPI
     //                                  |00010000| = Security header
     //                                          |1880| = CryptoLib App ID
-    //                                              |d03a002c197f0b| = ???
+    //                                              |d03a| = ???
+    //                                                  |002c| = Packet Length
+    //                                                      |197f| = pusv, ack, st
+    //                                                          |0b| = sst
     //                                                            |0004| = PDU Tag
-    //                                                                |0024| = Length
-    //                                                                    |0084| = Key ID
-    //                                                                        |71fc3ad5b1c36ad56bd5a543| = IV
-    //                                                                                                |2315cdab008675c06302465bc6d5091a| = ENC Challenge
-    //                                                                                                                                |
+    //                                                                |0024| = PDU Length
+    //                                                                    |0084| = Key ID (132)
+    //                                                                        |71fc3ad5b1c36ad56bd5a5432315cdab| = Challenge
+    //                                                                                                        |0086| = Key ID (134)
+    //                                                                                                            |75c06302465bc6d5091a29957eebed35| = Challenge
+    //                                                                                                                                            |c00a6ed8| = Trailer  
     
     uint8_t *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_VERIFY_b = NULL;
     int buffer_nist_iv_len, buffer_nist_key_len, buffer_VERIFY_len = 0;
