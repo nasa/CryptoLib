@@ -98,6 +98,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_1)
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
     test_association->arsn_len = 0;
+    test_association->shsnf_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ast = 1;
     test_association->est = 1;
@@ -106,6 +107,8 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_1)
     test_association->acs_len = 1;
     test_association->acs = CRYPTO_MAC_CMAC_AES256;
     test_association->stmacf_len = 16;
+    test_association->gvcid_blk.tfvn = 0;
+    test_association->abm_len = 1024;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_rfc_key_h, (char**) &buffer_rfc_key_b, &buffer_rfc_key_len);
@@ -201,6 +204,9 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_DEC_TEST_1)
     test_association->ecs_len = 1;
     test_association->ecs = CRYPTO_CIPHER_AES256_GCM_SIV;
     test_association->stmacf_len = 16;
+    test_association->shsnf_len = 0;
+    test_association->gvcid_blk.tfvn = 0;
+    test_association->abm_len = 1024;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_rfc_key_h, (char**) &buffer_rfc_key_b, &buffer_rfc_key_len);
@@ -217,7 +223,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_DEC_TEST_1)
     // Convert input encryptedtext
     hex_conversion(buffer_rfc_et_h, (char**) &buffer_rfc_et_b, &buffer_rfc_et_len);
 
-    Crypto_TC_ProcessSecurity(buffer_rfc_et_b, &buffer_rfc_et_len, tc_rfc_processed_frame);
+    ASSERT_EQ(0, Crypto_TC_ProcessSecurity(buffer_rfc_et_b, &buffer_rfc_et_len, tc_rfc_processed_frame));
 
     for (int i = 0; i < tc_rfc_processed_frame->tc_pdu_len; i++)
     {
@@ -293,6 +299,9 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_2)
     test_association->acs_len = 1;
     test_association->acs = CRYPTO_MAC_CMAC_AES256;
     test_association->stmacf_len = 16;
+    test_association->shsnf_len = 0;
+    test_association->gvcid_blk.tfvn = 0;
+    test_association->abm_len = 1024;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_rfc_key_h, (char**) &buffer_rfc_key_b, &buffer_rfc_key_len);
@@ -386,6 +395,9 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_20_WITH_AAD_ENC_TEST_1)
     test_association->acs_len = 1;
     test_association->acs = CRYPTO_MAC_CMAC_AES256;
     test_association->stmacf_len = 16;
+    test_association->shsnf_len = 0;
+    test_association->gvcid_blk.tfvn = 0;
+    test_association->abm_len = 1024;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_rfc_key_h, (char**) &buffer_rfc_key_b, &buffer_rfc_key_len);
@@ -478,6 +490,9 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_20_WITH_AAD_DEC_TEST_1)
     test_association->ecs_len = 1;
     test_association->ecs = CRYPTO_CIPHER_AES256_GCM_SIV;
     test_association->stmacf_len = 16;
+    test_association->shsnf_len = 0;
+    test_association->gvcid_blk.tfvn = 0;
+    test_association->abm_len = 1024;
     // Insert key into keyring of SA 9
     hex_conversion(buffer_rfc_key_h, (char**) &buffer_rfc_key_b, &buffer_rfc_key_len);
     ekp = key_if->get_key(test_association->ekid);
