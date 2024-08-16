@@ -75,7 +75,18 @@ UTEST(TC_PROCESS, EXERCISE_IV)
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
+    test_association->est = 1;
+    test_association->ast = 0;
+    test_association->ekid = 136;
+    test_association->shivf_len = 12;
+    test_association->iv_len = 12;
     test_association->ecs_len = 1;
+    test_association->shplf_len = 1;
+    test_association->arsnw_len = 1;
+    test_association->arsnw = 5;
+    test_association->arsn_len = 0;
+    test_association->shsnf_len = 0;
+    test_association->abm_len = ABM_SIZE;
     test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
@@ -302,6 +313,7 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_STATIC_IV_ROLLOVER)
     test_association->gvcid_blk.vcid = 0;
     test_association->shivf_len = 6;
     test_association->iv_len = 12;
+    test_association->ekid = 130;
     // IV = "000000000000FFFFFFFFFFFE"
     test_association->iv[0] = 0x00;
     test_association->iv[1] = 0x00;
@@ -397,6 +409,7 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_NONTRANSMITTED_INCREMENTING_IV_ROLLOVER)
     test_association->gvcid_blk.vcid = 0;
     test_association->shivf_len = 6;
     test_association->iv_len = 12;
+    test_association->ekid = 130;
     // IV = "000000000000FFFFFFFFFFFE"
     test_association->iv[0] = 0x00;
     test_association->iv[1] = 0x00;
@@ -652,6 +665,7 @@ UTEST(TC_PROCESS, HAPPY_PATH_DECRYPT_CBC)
     test_association->shsnf_len = 0;
     test_association->ast = 0;
     test_association->stmacf_len = 0;
+    test_association->ekid = 130;
     test_association->sa_state = SA_OPERATIONAL;
 
     // Convert input test frame
@@ -723,6 +737,7 @@ UTEST(TC_PROCESS, DECRYPT_CBC_1B)
     test_association->shsnf_len = 0;
     test_association->ast = 0;
     test_association->stmacf_len = 0;
+    test_association->ekid = 130;
     test_association->sa_state = SA_OPERATIONAL;
 
     // Convert input test frame
@@ -793,6 +808,7 @@ UTEST(TC_PROCESS, DECRYPT_CBC_16B)
     test_association->ast = 0;
     test_association->stmacf_len = 0;
     test_association->sa_state = SA_OPERATIONAL;
+    test_association->ekid = 130;
 
     // Convert input test frame
     hex_conversion(test_frame_pt_h, (char**) &test_frame_pt_b, &test_frame_pt_len);
@@ -807,7 +823,7 @@ UTEST(TC_PROCESS, DECRYPT_CBC_16B)
     //printf("Decrypted Frame:\n");
     for(int i = 0; i < tc_sdls_processed_frame->tc_pdu_len; i++)
     {
-        //printf("%02x -> %02x ", tc_sdls_processed_frame->tc_pdu[i], truth_data_b[i]);
+        printf("%02x -> %02x ", tc_sdls_processed_frame->tc_pdu[i], truth_data_b[i]);
         ASSERT_EQ(tc_sdls_processed_frame->tc_pdu[i], truth_data_b[i]);
     }
     //printf("\n");
@@ -885,9 +901,22 @@ UTEST(TC_PROCESS, GCM_IV_AND_ARSN)
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ecs_len = 1;
     test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
+    test_association->acs = 0;
     test_association->shsnf_len = 2;
     test_association->arsn_len = 2;
     test_association->arsnw = 5;
+    test_association->est = 1;
+    test_association->ast = 0;
+    test_association->ekid = 136;
+    test_association->akid = 0;
+    test_association->shivf_len = 12;
+    test_association->iv_len = 12;
+    test_association->shplf_len = 1;
+    test_association->arsnw_len = 1;
+    test_association->stmacf_len = 0;
+    test_association->abm_len = 1024;
+
+
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
     ekp = key_if->get_key(test_association->ekid);

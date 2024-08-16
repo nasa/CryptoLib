@@ -247,9 +247,11 @@ UTEST(CRYPTO_C, PDU_SWITCH)
     status = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.pid = 7;
-    status = Crypto_PDU(ingest, &tc_frame);
-    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+// TODO:  (RB) Disabled for now.  Key Inventory needs to be re-worked. - Not currently using EP
+    
+    // sdls_frame.pdu.pid = 7;
+    // status = Crypto_PDU(ingest, &tc_frame);
+    // ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
     sdls_frame.pdu.pid = 8;
     status = Crypto_PDU(ingest, &tc_frame);

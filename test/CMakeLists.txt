@@ -67,11 +67,12 @@ endif()
 #          COMMAND ${PROJECT_BINARY_DIR}/bin/ut_mariadb
 #          WORKING_DIRECTORY ${PROJECT_TEST_DIR})
 
-if(${KMC_MDB_RH} OR ${KMC_MDB_DB})
+if((KMC_MDB_DB OR KMC_MDB_RH))
     add_test(NAME UT_TC_KMC
              COMMAND ${PROJECT_BINARY_DIR}/bin/ut_tc_kmc
              WORKING_DIRECTORY ${PROJECT_TEST_DIR})
-             
+          
+endif()
     # add_test(NAME UT_SADB_ERR_CASES_KMC_CRYPTO
     #          COMMAND ${PROJECT_BINARY_DIR}/bin/ut_sa_err_cases_kmc_crypto
     #          WORKING_DIRECTORY ${PROJECT_TEST_DIR})
@@ -104,7 +105,7 @@ if(${KMC_MDB_RH} OR ${KMC_MDB_DB})
     # add_test(NAME UT_KMC_CRYPTO_AUTH_ONLY
     #          COMMAND ${PROJECT_BINARY_DIR}/bin/ut_kmc_crypto_auth_only
     #          WORKING_DIRECTORY ${PROJECT_TEST_DIR})
-endif()
+#endif()
 
 if(TEST_ENC)
     add_test(NAME ET_DT_VALIDATION
