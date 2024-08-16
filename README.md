@@ -1,6 +1,8 @@
 ![Build](https://github.com/nasa/CryptoLib/actions/workflows/build.yml/badge.svg)
 [![CodeCov](https://codecov.io/gh/nasa/CryptoLib/branch/main/graph/badge.svg?token=KCOMCQO0ZU)](https://codecov.io/gh/nasa/CryptoLib)
 
+![CryptoLib logo Final All orange](https://github.com/user-attachments/assets/fc02870b-e2d2-4577-83c2-78985d5fbdd6)
+
 # CryptoLib
 
 Provide a software-only solution using the CCSDS Space Data Link Security Protocol - Extended Procedures (SDLS-EP) to secure communications between a spacecraft running the core Flight System (cFS) and a ground station.

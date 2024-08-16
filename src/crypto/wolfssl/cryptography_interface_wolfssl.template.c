@@ -422,6 +422,7 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
             }
             break;
 
+
         case CRYPTO_CIPHER_AES256_CBC:
             status = wc_AesSetKey(&enc, key, len_key, iv, AES_ENCRYPTION);
             if (status == 0)

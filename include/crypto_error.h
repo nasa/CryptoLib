@@ -124,6 +124,8 @@
 #define CRYPTO_LIB_ERR_FAIL_SA_SAVE (-52)
 #define CRYPTO_LIB_ERR_FAIL_SA_LOAD (-53)
 #define CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT (-54)
+#define CRYPTO_LIB_ERR_KEY_VALIDATION (-55)
+#define CRYPTO_LIB_ERR_SPI_INDEX_OOB (-56)
 
 extern char *crypto_enum_errlist_core[];
 extern char *crypto_enum_errlist_config[];

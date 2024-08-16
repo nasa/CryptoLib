@@ -1740,6 +1740,11 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
 #endif
 
     status = Crypto_TC_Sanity_Validations(tc_sdls_processed_frame, &sa_ptr);
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        mc_if->mc_log(status);
+        return status;
+    }
 
     // Allocate the necessary byte arrays within the security header + trailer given the SA
     //tc_sdls_processed_frame->tc_sec_header.iv = calloc(1, sa_ptr->iv_len);
