@@ -79,7 +79,9 @@ int main(int argc, char* argv[])
         }
         else if (strcmp(security_type, "aos_a") == 0)
         {
+            printf("!!1\n");
             Crypto_AOS_ApplySecurity((uint8_t* )buffer, (int *)&buffer_size_i);
+            printf("!!2\n");
         }
         else if (strcmp(security_type, "tc_p") == 0)
         {

@@ -44,10 +44,10 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_NO_MANAGED_PARAM_CONFIG)
     remove("sa_save_file.bin");
     int32_t status = CRYPTO_LIB_ERROR;
     CryptoConfig_t* crypto_config_p = malloc(CRYPTO_CONFIG_SIZE);
-    GvcidManagedParameters_t* gvcid_managed_paramenters_p = NULL;
+    GvcidManagedParameters_t gvcid_managed_paramenters_p = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     SadbMariaDBConfig_t* sa_mariadb_config_p = NULL;
     CryptographyKmcCryptoServiceConfig_t* cryptography_kmc_crypto_config_p = NULL;
-    status = Crypto_Init_With_Configs(crypto_config_p, gvcid_managed_paramenters_p, sa_mariadb_config_p, cryptography_kmc_crypto_config_p);
+    status = Crypto_Init_With_Configs(crypto_config_p, &gvcid_managed_paramenters_p, sa_mariadb_config_p, cryptography_kmc_crypto_config_p);
     free(crypto_config_p);
     ASSERT_EQ(CRYPTO_MANAGED_PARAM_CONFIGURATION_NOT_COMPLETE, status);
 }
@@ -62,16 +62,15 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_MARIADB_NULL)
     CryptoConfig_t* crypto_config_p = malloc(CRYPTO_CONFIG_SIZE);
     crypto_config_p->key_type=KEY_TYPE_INTERNAL;
     crypto_config_p->mc_type=MC_TYPE_INTERNAL;
-    GvcidManagedParameters_t* gvcid_managed_paramenters_p = malloc(sizeof(GvcidManagedParameters_t));
-    gvcid_managed_paramenters_p->next = NULL;
+    GvcidManagedParameters_t gvcid_managed_paramenters_p = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};// = malloc(sizeof(GvcidManagedParameters_t));
+    //gvcid_managed_paramenters_p->next = NULL;
     SadbMariaDBConfig_t* sa_mariadb_config_p = NULL;
     CryptographyKmcCryptoServiceConfig_t* cryptography_kmc_crypto_config_p = NULL;
 
     crypto_config_p->sa_type = SA_TYPE_MARIADB;
-    status = Crypto_Init_With_Configs(crypto_config_p, gvcid_managed_paramenters_p, sa_mariadb_config_p, cryptography_kmc_crypto_config_p);
+    status = Crypto_Init_With_Configs(crypto_config_p, &gvcid_managed_paramenters_p, sa_mariadb_config_p, cryptography_kmc_crypto_config_p);
  
     free(crypto_config_p);
-    free(gvcid_managed_paramenters_p);
     ASSERT_EQ(CRYPTO_MARIADB_CONFIGURATION_NOT_COMPLETE, status);
 }
 
@@ -126,17 +125,16 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_INVALID_SADB)
     CryptoConfig_t* crypto_config_p = malloc(CRYPTO_CONFIG_SIZE);
     crypto_config_p->key_type=KEY_TYPE_INTERNAL;
     crypto_config_p->mc_type=MC_TYPE_INTERNAL;
-    GvcidManagedParameters_t* gvcid_managed_paramenters_p = malloc(sizeof(GvcidManagedParameters_t) * sizeof(uint8_t));
-    gvcid_managed_paramenters_p->next = NULL;
+    GvcidManagedParameters_t gvcid_managed_paramenters_p = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};// = malloc(sizeof(GvcidManagedParameters_t) * sizeof(uint8_t));
+    //gvcid_managed_paramenters_p->next = NULL;
     SadbMariaDBConfig_t* sa_mariadb_config_p = malloc(sizeof(SadbMariaDBConfig_t) * sizeof(uint8_t));
     CryptographyKmcCryptoServiceConfig_t* cryptography_kmc_crypto_config_p = NULL;
 
     crypto_config_p->sa_type = 99; // Currently an invalid ENUM
     crypto_config_p->cryptography_type = 99; // Currently an invalid ENUM
 
-    status = Crypto_Init_With_Configs(crypto_config_p, gvcid_managed_paramenters_p, sa_mariadb_config_p, cryptography_kmc_crypto_config_p);
+    status = Crypto_Init_With_Configs(crypto_config_p, &gvcid_managed_paramenters_p, sa_mariadb_config_p, cryptography_kmc_crypto_config_p);
     free(crypto_config_p);
-    free(gvcid_managed_paramenters_p);
     free(sa_mariadb_config_p);
     ASSERT_EQ(SADB_INVALID_SADB_TYPE, status);
 }

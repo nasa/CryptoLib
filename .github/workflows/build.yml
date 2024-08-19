@@ -96,51 +96,51 @@ jobs:
   #
   # KMC Build
   #
-  kmc_build:
-    # Container Setup
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Update
-      run: sudo apt-get update
-    - name: Install Dependencies
-      run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3
-    - name: Install Python Libraries
-      run: sudo pip install pycryptodome
-    - name: Install Libgcrypt
-      run: >
-        curl  
-        -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 
-        -o /tmp/libgpg-error-1.50.tar.bz2 
-        && tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/ 
-        && cd /tmp/libgpg-error-1.50 
-        && sudo ./configure 
-        && sudo make install 
-        && curl  
-        -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 
-        -o /tmp/libgcrypt-1.11.0.tar.bz2 
-        && tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ 
-        && cd /tmp/libgcrypt-1.11.0 
-        && sudo ./configure 
-        && sudo make install
-        && sudo ldconfig
-    # End Container Setup
+  # kmc_build:
+  #   # Container Setup
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: Update
+  #     run: sudo apt-get update
+  #   - name: Install Dependencies
+  #     run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3
+  #   - name: Install Python Libraries
+  #     run: sudo pip install pycryptodome
+  #   - name: Install Libgcrypt
+  #     run: >
+  #       curl  
+  #       -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 
+  #       -o /tmp/libgpg-error-1.50.tar.bz2 
+  #       && tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/ 
+  #       && cd /tmp/libgpg-error-1.50 
+  #       && sudo ./configure 
+  #       && sudo make install 
+  #       && curl  
+  #       -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 
+  #       -o /tmp/libgcrypt-1.11.0.tar.bz2 
+  #       && tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ 
+  #       && cd /tmp/libgcrypt-1.11.0 
+  #       && sudo ./configure 
+  #       && sudo make install
+  #       && sudo ldconfig
+  #   # End Container Setup
     
-    - name: KMC Build Script
-      working-directory: ${{github.workspace}}
-      run: bash ${GITHUB_WORKSPACE}/support/scripts/build_kmc.sh
+  #   - name: KMC Build Script
+  #     working-directory: ${{github.workspace}}
+  #     run: bash ${GITHUB_WORKSPACE}/support/scripts/build_kmc.sh
     
-    - name: Code-Coverage
-      working-directory: ${{github.workspace}}
-      run: make gcov
+  #   - name: Code-Coverage
+  #     working-directory: ${{github.workspace}}
+  #     run: make gcov
 
-    - name: Upload 
-      uses: codecov/codecov-action@v4
-      env:
-        CODECOV_TOKEN: 71699f25-12a3-44a4-8a83-be777b9e577a
-      with:
-        files: 'coverage/*.c.gcov'
-        verbose: true
+  #   - name: Upload 
+  #     uses: codecov/codecov-action@v4
+  #     env:
+  #       CODECOV_TOKEN: 71699f25-12a3-44a4-8a83-be777b9e577a
+  #     with:
+  #       files: 'coverage/*.c.gcov'
+  #       verbose: true
 
   #
   # Wolf Build

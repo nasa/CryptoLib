@@ -75,6 +75,7 @@
 #define TYPE_TC 0
 #define TYPE_MAP 1
 #define TYPE_TM 2
+#define TYPE_AOS 3
 
 // Specific to Authentication
 #define SA_NONE 0
