@@ -428,6 +428,8 @@ uint16_t Crypto_Calc_CRC16(uint8_t* data, int size)
 int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
+    int count = 0;
+    int* count_ptr = &count;
 
     switch (sdls_frame.pdu.type)
     {
@@ -462,7 +464,7 @@ int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
 #ifdef PDU_DEBUG
                     printf(KGRN "Key Verify\n" RESET);
 #endif
-                    status = Crypto_Key_verify(ingest, tc_frame);
+                    status = Crypto_Key_verify(ingest, tc_frame, count_ptr);
                     break;
                 case PID_KEY_DESTRUCTION:
 #ifdef PDU_DEBUG
@@ -474,7 +476,7 @@ int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
 #ifdef PDU_DEBUG
                     printf(KGRN "Key Inventory\n" RESET);
 #endif
-                    status = Crypto_Key_inventory(ingest);
+                    status = Crypto_Key_inventory(ingest, count_ptr);
                     break;
                 default:
                     printf(KRED "Error: Crypto_PDU failed interpreting Key Management Procedure Identification Field! "
@@ -670,10 +672,10 @@ int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
 
 #ifdef CCSDS_DEBUG
     int x;
-    if ((status > 0) && (ingest != NULL))
+    if ((status == 0) && (*count_ptr > 0) && (ingest != NULL))
     {
         printf(KMAG "CCSDS message put on software bus: 0x" RESET);
-        for (x = 0; x < status; x++)
+        for (x = 0; x < *count_ptr; x++)
         {
             printf(KMAG "%02x" RESET, (uint8_t)ingest[x]);
         }

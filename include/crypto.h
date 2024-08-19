@@ -214,8 +214,8 @@ int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t* sa_ptr, uint8_t* iv,
 // Key Management Functions
 int32_t Crypto_Key_OTAR(void);
 int32_t Crypto_Key_update(uint8_t state);
-int32_t Crypto_Key_inventory(uint8_t* );
-int32_t Crypto_Key_verify(uint8_t* , TC_t* tc_frame);
+int32_t Crypto_Key_inventory(uint8_t* , int*);
+int32_t Crypto_Key_verify(uint8_t* , TC_t* tc_frame, int*);
 
 // Security Monitoring & Control Procedure
 int32_t Crypto_MC_ping(uint8_t* ingest);

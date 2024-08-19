@@ -54,7 +54,7 @@ static crypto_key_t* get_key(uint32_t key_id)
 static int32_t key_init(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-
+    printf("Fail start key_init\n");
     // Initialize all to zero
     for(uint32_t i = 0; i < NUM_KEYS; i++)
     {
@@ -65,6 +65,7 @@ static int32_t key_init(void)
         key_ring[i].key_len = 0;
         key_ring[i].key_state = 0;
     }
+    printf("Fail after key_init\n");
 
     // Master Keys
     // 0 - 000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F -> ACTIVE
@@ -602,7 +603,7 @@ static int32_t key_init(void)
     #ifdef DEBUG
         printf(KGRN "Key internal interface intialized \n" RESET);
     #endif
-
+    printf("%d\n", status);
     return status;
 }
 

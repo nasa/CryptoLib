@@ -16,3 +16,4 @@ venv
 vgcore*
 core.*
 log.txt
+Makefile

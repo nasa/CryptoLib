@@ -213,7 +213,7 @@ int32_t Crypto_Init(void)
 // #ifdef TC_DEBUG
     // Crypto_mpPrint(gvcid_managed_parameters, 1);
 // #endif
-
+    printf("Fail b4 KEY\n");
     /* Key Interface */
     if (key_if == NULL) {
         if (crypto_config.key_type == KEY_TYPE_CUSTOM)
@@ -223,15 +223,17 @@ int32_t Crypto_Init(void)
         else if (crypto_config.key_type == KEY_TYPE_INTERNAL)
         {
             key_if = get_key_interface_internal();
+            printf("Fail after key\n");
         }
         else // KEY_TYPE_KMC
         {
             key_if = get_key_interface_kmc();
         }
     }
+    printf("Fail b4 key_init\n");
     key_if->key_init();
     // TODO: Check and return status on error
-
+    printf("Fail b4 MC");
     /* MC Interface */
     if (mc_if == NULL) {
         if (crypto_config.mc_type == MC_TYPE_CUSTOM)
@@ -249,7 +251,7 @@ int32_t Crypto_Init(void)
     }
     mc_if->mc_initialize();
     // TODO: Check and return status on error
-
+    printf("Fail b4 SA");
     /* SA Interface */
     if (sa_if == NULL) {
         // Prepare SA type from config
@@ -259,6 +261,7 @@ int32_t Crypto_Init(void)
         }
         else if (crypto_config.sa_type == SA_TYPE_INMEMORY)
         {
+            printf("Fail SA");
             sa_if = get_sa_interface_inmemory();
         }
         else if (crypto_config.sa_type == SA_TYPE_MARIADB)
