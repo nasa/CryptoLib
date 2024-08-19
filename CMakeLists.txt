@@ -139,7 +139,9 @@ IF(KMC_MDB_DB)
 ENDIF(KMC_MDB_DB)
 
 if(SYSTEM_INSTALL)
-    set(CMAKE_INSTALL_PREFIX /usr/local)
+    # The library will be installed to /usr/local unless overridden with
+    # -DCMAKE_INSTALL_PREFIX=/some/path
+    # See https://cmake.org/cmake/help/latest/variable/CMAKE_INSTALL_PREFIX.html
 elseif(NOT DEFINED CFE_SYSTEM_PSPNAME)
     # Not cFE / cFS
     set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib")
