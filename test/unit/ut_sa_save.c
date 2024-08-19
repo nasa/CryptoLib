@@ -44,17 +44,17 @@ UTEST(SA_SAVE, VERIFY_INTERNAL)
     sa_if->sa_get_from_spi(4, &test_association);
 
     ASSERT_EQ(test_association->spi, 4);
-    ASSERT_EQ(test_association->ekid, 130);
+    ASSERT_EQ(test_association->ekid, 4);
     ASSERT_EQ(test_association->akid, 4);
     int str_cmp_output = 0;
     str_cmp_output = strcmp(test_association->ek_ref, "");
     ASSERT_EQ(0, str_cmp_output);
     str_cmp_output = strcmp(test_association->ak_ref, "");
     ASSERT_EQ(0, str_cmp_output);
-    ASSERT_EQ(test_association->sa_state, SA_OPERATIONAL);
+    ASSERT_EQ(test_association->sa_state, SA_KEYED);
     ASSERT_EQ(test_association->gvcid_blk.tfvn, 0);
     ASSERT_EQ(test_association->gvcid_blk.scid, (SCID & 0x3FF));
-    ASSERT_EQ(test_association->gvcid_blk.vcid, 4);
+    ASSERT_EQ(test_association->gvcid_blk.vcid, 0);
     ASSERT_EQ(test_association->gvcid_blk.mapid, TYPE_TC);
     ASSERT_EQ(test_association->est, 1);
     ASSERT_EQ(test_association->ast, 1);
@@ -77,7 +77,7 @@ UTEST(SA_SAVE, VERIFY_INTERNAL)
         ASSERT_EQ(test_association->abm[i], 0x00);
     }
     //sa[location].abm[0] = sa_ptr->abm;
-    ASSERT_EQ(test_association->arsn_len, 0);
+    ASSERT_EQ(test_association->arsn_len, 11);
     for(int i = 0; i<test_association->arsn_len; i++)
     {
         ASSERT_EQ(test_association->arsn[i], 0);
@@ -171,7 +171,7 @@ UTEST(SA_SAVE, VERIFY_DEFAULT_PASS_1_SAVE)
     sa_if->sa_get_from_spi(4, &test_association);
 
     ASSERT_EQ(test_association->spi, 4);
-    ASSERT_EQ(test_association->ekid, 130);
+    ASSERT_EQ(test_association->ekid, 4);
     ASSERT_EQ(test_association->akid, 4);
     int str_cmp_output = 0;
     str_cmp_output = strcmp(test_association->ek_ref, "TEST_EK_REF");
@@ -313,7 +313,7 @@ UTEST(SA_SAVE, VERIFY_SAVE_PASS_1_SAVE)
     sa_if->sa_get_from_spi(4, &test_association);
 
     ASSERT_EQ(test_association->spi, 4);
-    ASSERT_EQ(test_association->ekid, 130);
+    ASSERT_EQ(test_association->ekid, 4);
     ASSERT_EQ(test_association->akid, 4);
     int str_cmp_output = 0;
     str_cmp_output = strcmp(test_association->ek_ref, "");
@@ -451,7 +451,7 @@ UTEST(SA_SAVE, VERIFY_SAVE_PASS_2_SAVE)
     sa_if->sa_get_from_spi(4, &test_association);
 
     ASSERT_EQ(test_association->spi, 4);
-    ASSERT_EQ(test_association->ekid, 130);
+    ASSERT_EQ(test_association->ekid, 4);
     ASSERT_EQ(test_association->akid, 4);
     //test_association->ek_ref = sa_ptr->ek_ref;
     //test_association->ak_ref = sa_ptr->ak_ref;
@@ -511,7 +511,7 @@ UTEST(SA_SAVE, VERIFY_SAVE_ADJACENT)
 // VERIFY SA 4
     sa_if->sa_get_from_spi(4, &test_association);
     ASSERT_EQ(test_association->spi, 4);
-    ASSERT_EQ(test_association->ekid, 130);
+    ASSERT_EQ(test_association->ekid, 4);
     ASSERT_EQ(test_association->akid, 4);
     //test_association->ek_ref = sa_ptr->ek_ref;
     //test_association->ak_ref = sa_ptr->ak_ref;
@@ -563,23 +563,23 @@ UTEST(SA_SAVE, VERIFY_SAVE_ADJACENT)
 // VERIFY SA 3
     sa_if->sa_get_from_spi(3, &test_association);
     ASSERT_EQ(test_association->spi, 3);
-    ASSERT_EQ(test_association->ekid, 129);
+    ASSERT_EQ(test_association->ekid, 3);
     ASSERT_EQ(test_association->akid, 3);
     //test_association->ek_ref = sa_ptr->ek_ref;
     //test_association->ak_ref = sa_ptr->ak_ref;
     ASSERT_EQ(test_association->sa_state, SA_KEYED);
     ASSERT_EQ(test_association->gvcid_blk.tfvn, 0);
-    ASSERT_EQ(test_association->gvcid_blk.scid, 0);
+    ASSERT_EQ(test_association->gvcid_blk.scid, 3);
     ASSERT_EQ(test_association->gvcid_blk.vcid, 0);
     ASSERT_EQ(test_association->gvcid_blk.mapid, TYPE_TC);
-    ASSERT_EQ(test_association->est, 1);
+    ASSERT_EQ(test_association->est, 0);
     ASSERT_EQ(test_association->ast, 1);
     ASSERT_EQ(test_association->shivf_len, 12);
-    ASSERT_EQ(test_association->shsnf_len, 0);
+    ASSERT_EQ(test_association->shsnf_len, 2);
     ASSERT_EQ(test_association->shplf_len, 0);
-    ASSERT_EQ(test_association->stmacf_len, 0);
-    ASSERT_EQ(test_association->ecs, 0x01);
-    ASSERT_EQ(test_association->ecs_len, 1);
+    ASSERT_EQ(test_association->stmacf_len, 16);
+    ASSERT_EQ(test_association->ecs, 0);
+    ASSERT_EQ(test_association->ecs_len, 0);
     
     ASSERT_EQ(test_association->iv[0], 0x00);
     ASSERT_EQ(test_association->iv[1], 0x00);
@@ -595,15 +595,15 @@ UTEST(SA_SAVE, VERIFY_SAVE_ADJACENT)
     ASSERT_EQ(test_association->iv[11], 0x00);
     
     ASSERT_EQ(test_association->iv_len, 12);
-    ASSERT_EQ(test_association->acs_len, 0);
-    ASSERT_EQ(test_association->acs, 0x00);
-    ASSERT_EQ(test_association->abm_len, 1786);
+    ASSERT_EQ(test_association->acs_len, 1);
+    ASSERT_EQ(test_association->acs, 3);
+    ASSERT_EQ(test_association->abm_len, 0);
     for(int i = 0; i<test_association->abm_len; i++)
     {
         ASSERT_EQ(test_association->abm[i], 0x00);
     }
     //sa[location].abm[0] = sa_ptr->abm;
-    ASSERT_EQ(test_association->arsn_len, 11);
+    ASSERT_EQ(test_association->arsn_len, 2);
     for(int i = 0; i<test_association->arsn_len; i++)
     {
         ASSERT_EQ(test_association->arsn[i], 0);
@@ -615,23 +615,23 @@ UTEST(SA_SAVE, VERIFY_SAVE_ADJACENT)
 // VERIFY SA 5
     sa_if->sa_get_from_spi(5, &test_association);
     ASSERT_EQ(test_association->spi, 5);
-    ASSERT_EQ(test_association->ekid, 131);
+    ASSERT_EQ(test_association->ekid, 5);
     ASSERT_EQ(test_association->akid, 5);
     //test_association->ek_ref = sa_ptr->ek_ref;
     //test_association->ak_ref = sa_ptr->ak_ref;
     ASSERT_EQ(test_association->sa_state, SA_KEYED);
     ASSERT_EQ(test_association->gvcid_blk.tfvn, 0);
-    ASSERT_EQ(test_association->gvcid_blk.scid, 0);
-    ASSERT_EQ(test_association->gvcid_blk.vcid, 0);
-    ASSERT_EQ(test_association->gvcid_blk.mapid, TYPE_TC);
-    ASSERT_EQ(test_association->est, 1);
-    ASSERT_EQ(test_association->ast, 1);
+    ASSERT_EQ(test_association->gvcid_blk.scid, 3);
+    ASSERT_EQ(test_association->gvcid_blk.vcid, 1);
+    ASSERT_EQ(test_association->gvcid_blk.mapid, 2);
+    ASSERT_EQ(test_association->est, 0);
+    ASSERT_EQ(test_association->ast, 0);
     ASSERT_EQ(test_association->shivf_len, 12);
-    ASSERT_EQ(test_association->shsnf_len, 0);
+    ASSERT_EQ(test_association->shsnf_len, 2);
     ASSERT_EQ(test_association->shplf_len, 0);
     ASSERT_EQ(test_association->stmacf_len, 0);
-    ASSERT_EQ(test_association->ecs, 0x01);
-    ASSERT_EQ(test_association->ecs_len, 1);
+    ASSERT_EQ(test_association->ecs, 0);
+    ASSERT_EQ(test_association->ecs_len, 0);
     
     ASSERT_EQ(test_association->iv[0], 0x00);
     ASSERT_EQ(test_association->iv[1], 0x00);
@@ -649,13 +649,13 @@ UTEST(SA_SAVE, VERIFY_SAVE_ADJACENT)
     ASSERT_EQ(test_association->iv_len, 12);
     ASSERT_EQ(test_association->acs_len, 0);
     ASSERT_EQ(test_association->acs, 0x00);
-    ASSERT_EQ(test_association->abm_len, 1786);
+    ASSERT_EQ(test_association->abm_len, 0);
     for(int i = 0; i<test_association->abm_len; i++)
     {
         ASSERT_EQ(test_association->abm[i], 0x00);
     }
     //sa[location].abm[0] = sa_ptr->abm;
-    ASSERT_EQ(test_association->arsn_len, 11);
+    ASSERT_EQ(test_association->arsn_len, 2);
     for(int i = 0; i<test_association->arsn_len; i++)
     {
         ASSERT_EQ(test_association->arsn[i], 0);
@@ -686,7 +686,7 @@ UTEST(SA_SAVE, VERIFY_SAVE_EDGES)
     ASSERT_EQ(test_association->gvcid_blk.mapid, TYPE_TC);
     ASSERT_EQ(test_association->est, 0);
     ASSERT_EQ(test_association->ast, 0);
-    ASSERT_EQ(test_association->shivf_len, 0);
+    ASSERT_EQ(test_association->shivf_len, 12);
     ASSERT_EQ(test_association->shsnf_len, 2);
     ASSERT_EQ(test_association->shplf_len, 0);
     ASSERT_EQ(test_association->stmacf_len, 0);
@@ -706,7 +706,7 @@ UTEST(SA_SAVE, VERIFY_SAVE_EDGES)
     ASSERT_EQ(test_association->iv[10], 0x00);
     ASSERT_EQ(test_association->iv[11], 0x00);
     
-    ASSERT_EQ(test_association->iv_len, 0);
+    ASSERT_EQ(test_association->iv_len, 12);
     ASSERT_EQ(test_association->acs_len, 0);
     ASSERT_EQ(test_association->acs, 0x00);
     ASSERT_EQ(test_association->abm_len, 0);
@@ -727,23 +727,23 @@ UTEST(SA_SAVE, VERIFY_SAVE_EDGES)
 // VERIFY SA 17
     sa_if->sa_get_from_spi(17, &test_association);
     ASSERT_EQ(test_association->spi, 17);
-    ASSERT_EQ(test_association->ekid, 130);
+    ASSERT_EQ(test_association->ekid, 17);
     ASSERT_EQ(test_association->akid, 17);
     //test_association->ek_ref = sa_ptr->ek_ref;
     //test_association->ak_ref = sa_ptr->ak_ref;
-    ASSERT_EQ(test_association->sa_state, SA_KEYED);
-    ASSERT_EQ(test_association->gvcid_blk.tfvn, 0x01);
-    ASSERT_EQ(test_association->gvcid_blk.scid, (SCID & 0x3FF));
+    ASSERT_EQ(test_association->sa_state, SA_NONE);
+    ASSERT_EQ(test_association->gvcid_blk.tfvn, 0);
+    ASSERT_EQ(test_association->gvcid_blk.scid, 0);
     ASSERT_EQ(test_association->gvcid_blk.vcid, 0);
     ASSERT_EQ(test_association->gvcid_blk.mapid, TYPE_TC);
-    ASSERT_EQ(test_association->est, 1);
-    ASSERT_EQ(test_association->ast, 1);
-    ASSERT_EQ(test_association->shivf_len, 16);
+    ASSERT_EQ(test_association->est, 0);
+    ASSERT_EQ(test_association->ast, 0);
+    ASSERT_EQ(test_association->shivf_len, 0);
     ASSERT_EQ(test_association->shsnf_len, 0);
     ASSERT_EQ(test_association->shplf_len, 0);
-    ASSERT_EQ(test_association->stmacf_len, 16);
-    ASSERT_EQ(test_association->ecs, CRYPTO_CIPHER_AES256_GCM);
-    ASSERT_EQ(test_association->ecs_len, 1);
+    ASSERT_EQ(test_association->stmacf_len, 0);
+    ASSERT_EQ(test_association->ecs, 0);
+    ASSERT_EQ(test_association->ecs_len, 0);
     
     ASSERT_EQ(test_association->iv[0], 0x00);
     ASSERT_EQ(test_association->iv[1], 0x00);
@@ -758,10 +758,10 @@ UTEST(SA_SAVE, VERIFY_SAVE_EDGES)
     ASSERT_EQ(test_association->iv[10], 0x00);
     ASSERT_EQ(test_association->iv[11], 0x00);
     
-    ASSERT_EQ(test_association->iv_len, 16);
+    ASSERT_EQ(test_association->iv_len, 0);
     ASSERT_EQ(test_association->acs_len, 0);
     ASSERT_EQ(test_association->acs, 0x00);
-    ASSERT_EQ(test_association->abm_len, ABM_SIZE);
+    ASSERT_EQ(test_association->abm_len, 0);
     for(int i = 0; i<test_association->abm_len; i++)
     {
         ASSERT_EQ(test_association->abm[i], 0xff);

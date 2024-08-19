@@ -89,7 +89,7 @@ typedef enum
 } CreateFecfBool;
 typedef enum
 {
-    AOS_FHEC_NA,
+    AOS_FHEC_NA=0,
     AOS_NO_FHEC,
     AOS_HAS_FHEC
 } AosFhecPresent;
@@ -233,7 +233,7 @@ struct _GvcidManagedParameters_t
     TcSegmentHdrsPresent has_segmentation_hdr;
     uint16_t max_frame_size; // Maximum TC/TM Frame Length with headers
     OcfPresent has_ocf;
-    GvcidManagedParameters_t* next; // Will be a list of managed parameters!
+    int set_flag; // Will be a list of managed parameters!
 };
 #define GVCID_MANAGED_PARAMETERS_SIZE (sizeof(GvcidManagedParameters_t))
 

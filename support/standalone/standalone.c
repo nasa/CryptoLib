@@ -448,7 +448,7 @@ void crypto_standalone_tm_frame(uint8_t* in_data, uint16_t in_length, uint8_t* o
     // Calculate security headers and trailers
     uint8_t header_length = 6 + 2 + sa_ptr->shivf_len + sa_ptr->shplf_len + sa_ptr->shsnf_len + 40; // TODO: Why +40?
     uint8_t trailer_length = sa_ptr->stmacf_len;
-    if (current_managed_parameters->has_fecf == TM_HAS_FECF)
+    if (current_managed_parameters_struct.has_fecf == TM_HAS_FECF)
     {
         trailer_length += 4;
     }
