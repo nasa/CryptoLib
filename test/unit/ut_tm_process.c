@@ -1072,4 +1072,34 @@ UTEST(TM_PROCESS_ENC_VAL, AEAD_AES_GCM_BITMASK_1)
     free(iv_b);
 }
 
+UTEST(TM_PROCESS, TM_SA_SEGFAULT_TEST)
+{
+    // Local Variables
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    uint8_t* ptr_processed_frame = NULL;
+    uint16_t processed_tm_len;
+
+    // Configure Parameters
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // AOS Tests
+    Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x002c, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_NO_OCF, 1786, AOS_NO_FHEC, AOS_HAS_IZ, 10);
+    status = Crypto_Init();
+
+    // Test frame setup
+    char* framed_tm_h = "02c000001800FFFF";
+    char* framed_tm_b = NULL;
+    int framed_tm_len = 0;
+    hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);
+
+    status = Crypto_TM_ProcessSecurity((uint8_t* )framed_tm_b, framed_tm_len, &ptr_processed_frame, &processed_tm_len);
+    ASSERT_EQ(CRYPTO_LIB_ERR_SPI_INDEX_OOB, status);
+
+    Crypto_Shutdown();
+    free(framed_tm_b);
+    free(ptr_processed_frame);
+}
+
 UTEST_MAIN();

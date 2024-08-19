@@ -1,11 +1,23 @@
 # CryptoLib Dockerfile
 #
-# docker build -t ivvitc/cryptolib:latest .
-# docker push ivvitc/cryptolib:latest
+# Install latest docker from PPA: https://docs.docker.com/engine/install/ubuntu/
+# 
+# Debugging
+#   docker build -t ivvitc/cryptolib:dev .
+#   docker run -it ivvitc/cryptolib:dev /bin/bash
 #
+# Follow multi-arch instructions: https://www.docker.com/blog/multi-arch-images/
+#   docker login
+#   docker buildx create --name clbuilder
+#   docker buildx use clbuilder
+#   docker buildx build --platform linux/amd64 -t ivvitc/cryptolib:dev --push .
+#
+# TODO:
+#   docker buildx build --platform linux/amd64,linux/arm64 -t ivvitc/cryptolib:dev --push .
+# 
 
 ARG WOLFSSL_VERSION=5.6.0-stable
-FROM ubuntu:jammy-20240212 AS CL0
+FROM ubuntu:jammy-20240530 AS cl0
 
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -y \
@@ -15,8 +27,6 @@ RUN apt-get update -y \
         ca-certificates \
         cmake \
         curl \
-        g++-multilib \
-        gcc-multilib \
         gettext \
         git \
         gdb\
@@ -32,7 +42,7 @@ RUN apt-get update -y \
     && rm -rf /var/lib/apt/lists/* \
     && pip3 install pycryptodome
 
-FROM CL0 AS CL1
+FROM cl0 AS cl1
 ARG GPG_ERROR_VERSION=1.50
 ARG GCRYPT_VERSION=1.11.0
 RUN curl \ 
@@ -50,7 +60,7 @@ RUN curl \
     && ./configure \
     && make install
 
-FROM CL1 AS CL2
+FROM cl1 AS cl2
 ARG WOLFSSL_VERSION=5.6.0-stable
 RUN curl \
         -LS https://github.com/wolfSSL/wolfssl/archive/v${WOLFSSL_VERSION}.zip \
