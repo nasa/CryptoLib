@@ -42,8 +42,8 @@ int gvcid_counter = 0;
 GvcidManagedParameters_t gvcid_null_struct = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 GvcidManagedParameters_t current_managed_parameters_struct = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-GvcidManagedParameters_t* gvcid_managed_parameters = NULL;
-GvcidManagedParameters_t* current_managed_parameters = NULL;
+//GvcidManagedParameters_t* gvcid_managed_parameters = NULL;
+// GvcidManagedParameters_t* current_managed_parameters = NULL;
 
 // Free all configuration structs
 int32_t crypto_free_config_structs(void);
@@ -213,7 +213,6 @@ int32_t Crypto_Init(void)
 // #ifdef TC_DEBUG
     // Crypto_mpPrint(gvcid_managed_parameters, 1);
 // #endif
-    printf("Fail b4 KEY\n");
     /* Key Interface */
     if (key_if == NULL) {
         if (crypto_config.key_type == KEY_TYPE_CUSTOM)
@@ -223,17 +222,14 @@ int32_t Crypto_Init(void)
         else if (crypto_config.key_type == KEY_TYPE_INTERNAL)
         {
             key_if = get_key_interface_internal();
-            printf("Fail after key\n");
         }
         else // KEY_TYPE_KMC
         {
             key_if = get_key_interface_kmc();
         }
     }
-    printf("Fail b4 key_init\n");
     key_if->key_init();
     // TODO: Check and return status on error
-    printf("Fail b4 MC");
     /* MC Interface */
     if (mc_if == NULL) {
         if (crypto_config.mc_type == MC_TYPE_CUSTOM)
@@ -251,7 +247,6 @@ int32_t Crypto_Init(void)
     }
     mc_if->mc_initialize();
     // TODO: Check and return status on error
-    printf("Fail b4 SA");
     /* SA Interface */
     if (sa_if == NULL) {
         // Prepare SA type from config
@@ -261,7 +256,6 @@ int32_t Crypto_Init(void)
         }
         else if (crypto_config.sa_type == SA_TYPE_INMEMORY)
         {
-            printf("Fail SA");
             sa_if = get_sa_interface_inmemory();
         }
         else if (crypto_config.sa_type == SA_TYPE_MARIADB)
@@ -361,29 +355,25 @@ int32_t Crypto_Shutdown(void)
 
     crypto_free_config_structs();
 
-    current_managed_parameters = NULL;
+    //current_managed_parameters = NULL;
     current_managed_parameters_struct = gvcid_null_struct;
-    for(int i = 0; i < gvcid_counter; i++)
+    for(int i = 0; i <= gvcid_counter; i++)
     {
         gvcid_managed_parameters_array[i] = gvcid_null_struct;
     }
     
     gvcid_counter = 0;
 
-    // if (gvcid_managed_parameters != NULL)
-    // {
-    //     Crypto_Free_Managed_Parameters(gvcid_managed_parameters);
-    //     gvcid_managed_parameters = NULL;
-    // }
-
     if(key_if != NULL)
     {
         key_if->key_shutdown();
+        key_if=NULL;
     }
 
     if(mc_if != NULL)
     {
         mc_if->mc_shutdown();
+        mc_if=NULL;
     }
 
     if (sa_if != NULL)    

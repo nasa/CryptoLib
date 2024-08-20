@@ -7,7 +7,6 @@
 UTEST(EP_KEY_VALIDATION, OTAR_0_140_142)
 {
     remove("sa_save_file.bin");
-    uint8_t* ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
@@ -57,8 +56,7 @@ UTEST(EP_KEY_VALIDATION, OTAR_0_140_142)
     int buffer_nist_iv_len, buffer_nist_key_len, buffer_OTAR_len = 0;
 
     // Setup Processed Frame For Decryption
-    TC_t* tc_nist_processed_frame;
-    tc_nist_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
+    TC_t tc_nist_processed_frame;
 
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
@@ -77,6 +75,7 @@ UTEST(EP_KEY_VALIDATION, OTAR_0_140_142)
     test_association->shsnf_len = 2;
     test_association->arsn_len = 2;
     test_association->arsnw = 5;
+    test_association->iv_len = 12;
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
     ekp = key_if->get_key(test_association->ekid);
@@ -90,15 +89,14 @@ UTEST(EP_KEY_VALIDATION, OTAR_0_140_142)
 
     // Expect success on next valid IV && ARSN
     printf(KGRN "Checking  next valid IV && valid ARSN... should be able to receive it... \n" RESET);
-    status = Crypto_TC_ProcessSecurity(buffer_OTAR_b, &buffer_OTAR_len, tc_nist_processed_frame);
+    status = Crypto_TC_ProcessSecurity(buffer_OTAR_b, &buffer_OTAR_len, &tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     printf("\n");
     Crypto_Shutdown();
-    free(ptr_enc_frame);
     free(buffer_nist_iv_b);
     free(buffer_nist_key_b);
-    free(tc_nist_processed_frame);
+    free(buffer_OTAR_b);
 }
 
 UTEST(EP_KEY_VALIDATION, ACTIVATE_141_142)
@@ -146,8 +144,7 @@ UTEST(EP_KEY_VALIDATION, ACTIVATE_141_142)
     int buffer_nist_iv_len, buffer_nist_key_len, buffer_ACTIVATE_len = 0;
 
     // Setup Processed Frame For Decryption
-    TC_t* tc_nist_processed_frame;
-    tc_nist_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
+    TC_t tc_nist_processed_frame;
 
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
@@ -179,15 +176,15 @@ UTEST(EP_KEY_VALIDATION, ACTIVATE_141_142)
 
     // Expect success on next valid IV && ARSN
     printf(KGRN "Checking  next valid IV && valid ARSN... should be able to receive it... \n" RESET);
-    status = Crypto_TC_ProcessSecurity(buffer_ACTIVATE_b, &buffer_ACTIVATE_len, tc_nist_processed_frame);
+    status = Crypto_TC_ProcessSecurity(buffer_ACTIVATE_b, &buffer_ACTIVATE_len, &tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     printf("\n");
     Crypto_Shutdown();
     free(ptr_enc_frame);
-    //free(buffer_nist_iv_b);
+    free(buffer_nist_iv_b);
     free(buffer_nist_key_b);
-    free(tc_nist_processed_frame);
+    free(buffer_ACTIVATE_b);
 }
 
 UTEST(EP_KEY_VALIDATION, DEACTIVATE_142)
@@ -234,8 +231,7 @@ UTEST(EP_KEY_VALIDATION, DEACTIVATE_142)
     int buffer_nist_iv_len, buffer_nist_key_len, buffer_DEACTIVATE_len = 0;
 
     // Setup Processed Frame For Decryption
-    TC_t* tc_nist_processed_frame;
-    tc_nist_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
+    TC_t tc_nist_processed_frame;
 
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
@@ -271,7 +267,7 @@ UTEST(EP_KEY_VALIDATION, DEACTIVATE_142)
 
     // Expect success on next valid IV && ARSN
     printf(KGRN "Checking  next valid IV && valid ARSN... should be able to receive it... \n" RESET);
-    status = Crypto_TC_ProcessSecurity(buffer_DEACTIVATE_b, &buffer_DEACTIVATE_len, tc_nist_processed_frame);
+    status = Crypto_TC_ProcessSecurity(buffer_DEACTIVATE_b, &buffer_DEACTIVATE_len, &tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     printf("\n");
@@ -279,7 +275,98 @@ UTEST(EP_KEY_VALIDATION, DEACTIVATE_142)
     free(ptr_enc_frame);
     free(buffer_nist_iv_b);
     free(buffer_nist_key_b);
-    free(tc_nist_processed_frame);
+    free(buffer_DEACTIVATE_b);
+}
+
+UTEST(EP_KEY_VALIDATION, INVENTORY_132_134)
+{
+    remove("sa_save_file.bin");
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_0_Managed_Parameters = {0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
+    
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    //GvcidManagedParameters_t TC_1_Managed_Parameters = {0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+    //Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
+    
+    int status = CRYPTO_LIB_SUCCESS;
+    printf("HERE1\n");
+    status = Crypto_Init();
+    printf("HERE2\n");
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    SaInterface sa_if = get_sa_interface_inmemory();
+    crypto_key_t* ekp = NULL;
+    
+
+    // NOTE: Added Transfer Frame header to the plaintext
+    char* buffer_nist_key_h = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
+    char* buffer_nist_iv_h = "b6ac8e4963f49207ffd6374b"; // The last valid IV that was seen by the SA
+    char* buffer_INVENTORY_h = "2003001e00ff000000001880d03b000a197f0b00070004008400861f6d82ebe4fc55555555";
+                            // |2003001c00| = Primary Header
+                            //           |ff| = SPI
+                            //             |00000000| = security Header
+                            //                     |1880| = CryptoLib App ID
+                            //                         |d03b| = seq, packet id
+                            //                             |000a| = Packet Length
+                            //                                 |197f| = pusv, ack, st
+                            //                                     |0b| = sst
+                            //                                       |0007| = PDU Tag
+                            //                                           |0004| = PDU Length
+                            //                                               |0084| = Key ID (132)
+                            //                                                   |0086| = Key ID (134)
+                            //                                                       |1f6d82ebe4fc55555555| = Trailer???
+
+    uint8_t *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_INVENTORY_b = NULL;
+    int buffer_nist_iv_len, buffer_nist_key_len, buffer_INVENTORY_len = 0;
+    printf("Fail 5\n");
+    // Setup Processed Frame For Decryption
+    TC_t tc_nist_processed_frame;
+
+    // Expose/setup SAs for testing
+    SecurityAssociation_t* test_association;
+
+    // Deactivate SA 1
+    sa_if->sa_get_from_spi(1, &test_association);
+    test_association->sa_state = SA_NONE;
+
+    // Activate SA 9
+    sa_if->sa_get_from_spi(0, &test_association);
+    test_association->sa_state = SA_OPERATIONAL;
+    test_association->ecs_len = 1;
+    test_association->ecs = CRYPTO_CIPHER_NONE;
+    test_association->est = 0;
+    test_association->ast = 0;
+    test_association->shsnf_len = 2;
+    test_association->arsn_len = 2;
+    test_association->arsnw = 5;
+    test_association->iv_len = 12;
+    printf("Fail 6\n");
+    // Insert key into keyring of SA 9
+    hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
+    ekp = key_if->get_key(test_association->ekid);
+    memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
+    printf("Fail 7\n");
+    // Convert frames that will be processed
+    hex_conversion(buffer_INVENTORY_h, (char**) &buffer_INVENTORY_b, &buffer_INVENTORY_len);
+    // Convert/Set input IV
+    hex_conversion(buffer_nist_iv_h, (char**) &buffer_nist_iv_b, &buffer_nist_iv_len);
+    memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
+    printf("Fail 8\n");
+    // Expect success on next valid IV && ARSN
+    printf(KGRN "Checking  next valid IV && valid ARSN... should be able to receive it... \n" RESET);
+    status = Crypto_TC_ProcessSecurity(buffer_INVENTORY_b, &buffer_INVENTORY_len, &tc_nist_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    printf("\n");
+    Crypto_Shutdown();
+    free(buffer_nist_iv_b);
+    free(buffer_nist_key_b);
+    ASSERT_EQ(0,0);
 }
 
 UTEST(EP_KEY_VALIDATION, VERIFY_132_134)
@@ -329,8 +416,7 @@ UTEST(EP_KEY_VALIDATION, VERIFY_132_134)
     int buffer_nist_iv_len, buffer_nist_key_len, buffer_VERIFY_len = 0;
 
     // Setup Processed Frame For Decryption
-    TC_t* tc_nist_processed_frame;
-    tc_nist_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
+    TC_t tc_nist_processed_frame;
 
     // Expose/setup SAs for testing
     SecurityAssociation_t* test_association;
@@ -363,104 +449,13 @@ UTEST(EP_KEY_VALIDATION, VERIFY_132_134)
 
     // Expect success on next valid IV && ARSN
     printf(KGRN "Checking  next valid IV && valid ARSN... should be able to receive it... \n" RESET);
-    status = Crypto_TC_ProcessSecurity(buffer_VERIFY_b, &buffer_VERIFY_len, tc_nist_processed_frame);
+    status = Crypto_TC_ProcessSecurity(buffer_VERIFY_b, &buffer_VERIFY_len, &tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     printf("\n");
     Crypto_Shutdown();
     free(buffer_nist_iv_b);
     free(buffer_nist_key_b);
-    free(tc_nist_processed_frame);
+    free(buffer_VERIFY_b);
 }
-
-UTEST(EP_KEY_VALIDATION, INVENTORY_132_134)
-{
-    remove("sa_save_file.bin");
-    // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_0_Managed_Parameters = {0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
-    
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_1_Managed_Parameters = {0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
-    
-    int status = CRYPTO_LIB_SUCCESS;
-    status = Crypto_Init();
-    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-    // SaInterface sa_if = get_sa_interface_inmemory();
-    // crypto_key_t* ekp = NULL;
-    
-
-    // NOTE: Added Transfer Frame header to the plaintext
-    // char* buffer_nist_key_h = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
-    // char* buffer_nist_iv_h = "b6ac8e4963f49207ffd6374b"; // The last valid IV that was seen by the SA
-    // char* buffer_INVENTORY_h = "2003001e00ff000000001880d03b000a197f0b00070004008400861f6d82ebe4fc55555555";
-    //                         |2003001c00| = Primary Header
-    //                                   |ff| = SPI
-    //                                     |00000000| = security Header
-    //                                             |1880| = CryptoLib App ID
-    //                                                 |d03b| = seq, packet id
-    //                                                     |000a| = Packet Length
-    //                                                         |197f| = pusv, ack, st
-    //                                                             |0b| = sst
-    //                                                               |0007| = PDU Tag
-    //                                                                   |0004| = PDU Length
-    //                                                                       |0084| = Key ID (132)
-    //                                                                           |0086| = Key ID (134)
-    //                                                                               |1f6d82ebe4fc55555555| = Trailer???
-
-    // uint8_t *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_INVENTORY_b = NULL;
-    // int buffer_nist_iv_len, buffer_nist_key_len, buffer_INVENTORY_len = 0;
-    // printf("Fail 5\n");
-    // // Setup Processed Frame For Decryption
-    // TC_t* tc_nist_processed_frame;
-    // tc_nist_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
-
-    // // Expose/setup SAs for testing
-    // SecurityAssociation_t* test_association;
-
-    // // Deactivate SA 1
-    // sa_if->sa_get_from_spi(1, &test_association);
-    // test_association->sa_state = SA_NONE;
-
-    // // Activate SA 9
-    // sa_if->sa_get_from_spi(0, &test_association);
-    // test_association->sa_state = SA_OPERATIONAL;
-    // test_association->ecs_len = 1;
-    // test_association->ecs = CRYPTO_CIPHER_NONE;
-    // test_association->est = 0;
-    // test_association->ast = 0;
-    // test_association->shsnf_len = 2;
-    // test_association->arsn_len = 2;
-    // test_association->arsnw = 5;
-    // printf("Fail 6\n");
-    // // Insert key into keyring of SA 9
-    // hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    // ekp = key_if->get_key(test_association->ekid);
-    // memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
-    // printf("Fail 7\n");
-    // // Convert frames that will be processed
-    // hex_conversion(buffer_INVENTORY_h, (char**) &buffer_INVENTORY_b, &buffer_INVENTORY_len);
-    // // Convert/Set input IV
-    // hex_conversion(buffer_nist_iv_h, (char**) &buffer_nist_iv_b, &buffer_nist_iv_len);
-    // memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
-    // printf("Fail 8\n");
-    // // Expect success on next valid IV && ARSN
-    // printf(KGRN "Checking  next valid IV && valid ARSN... should be able to receive it... \n" RESET);
-    // status = Crypto_TC_ProcessSecurity(buffer_INVENTORY_b, &buffer_INVENTORY_len, tc_nist_processed_frame);
-    // ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-
-    // printf("\n");
-    // Crypto_Shutdown();
-    // free(buffer_nist_iv_b);
-    // free(buffer_nist_key_b);
-    // free(tc_nist_processed_frame);
-    ASSERT_EQ(0,0);
-}
-
 UTEST_MAIN();

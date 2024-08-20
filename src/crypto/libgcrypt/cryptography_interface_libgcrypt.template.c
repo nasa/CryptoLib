@@ -119,7 +119,33 @@ static int32_t cryptography_init(void)
 
     return status;
 }
-static int32_t cryptography_shutdown(void){ return CRYPTO_LIB_SUCCESS; }
+static int32_t cryptography_shutdown(void){ 
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    
+    gvcid_counter = 0;
+
+    if(key_if != NULL)
+    {
+        key_if=NULL;
+    }
+
+    if(mc_if != NULL)
+    {
+        mc_if=NULL;
+    }
+
+    if (sa_if != NULL)    
+    {
+        sa_if = NULL;
+    }
+
+    if (cryptography_if != NULL)
+    {
+        cryptography_if = NULL;
+    }
+
+    return status;
+ }
 
 static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                                          uint8_t* data_in, size_t len_data_in,
