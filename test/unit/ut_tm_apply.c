@@ -1109,6 +1109,13 @@ UTEST(TM_APPLY_ENC_VAL, AEAD_AES_GCM_BITMASK_1)
     hex_conversion(iv_h, &iv_b, &iv_len);
     memcpy(sa_ptr->iv, iv_b, iv_len);
 
+    // Expected IV after increment
+    char* next_iv_h = "DEADBEEFDEADBEEFDEADBEEFDEADBEF0";
+    char* next_iv_b = NULL;
+    int next_iv_len =  0;
+    hex_conversion(next_iv_h, &next_iv_b, &next_iv_len);
+    ASSERT_EQ(next_iv_len, iv_len);
+
     Crypto_TM_ApplySecurity((uint8_t*)framed_tm_b);
 
     printf("Static frame contents:\n\t");
@@ -1142,10 +1149,17 @@ UTEST(TM_APPLY_ENC_VAL, AEAD_AES_GCM_BITMASK_1)
     }
     printf("\n");
 
+    // Ensure IV has been incremented
+    for (int i = 0; i < iv_len; i++)
+    {
+        ASSERT_EQ((uint8_t)next_iv_b[i], (uint8_t)sa_ptr->iv[i]);
+    }
+
     Crypto_Shutdown();
     free(truth_tm_b);
     free(framed_tm_b);
     free(iv_b);
+    free(next_iv_b);
 }
 
 UTEST_MAIN();
