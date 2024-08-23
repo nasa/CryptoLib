@@ -529,7 +529,7 @@ int32_t Crypto_TM_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t* sa_
     }
 
 
-    if (status != CRYPTO_LIB_SUCCESS)
+    if (status == CRYPTO_LIB_SUCCESS)
     {
         status = Crypto_TM_Do_Encrypt_Handle_Increment(sa_service_type, sa_ptr);
     }
