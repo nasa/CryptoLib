@@ -534,65 +534,68 @@ int32_t Crypto_TM_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t* sa_
         status = Crypto_TM_Do_Encrypt_Handle_Increment(sa_service_type, sa_ptr);
     }
 
-
-    // Move idx to mac location
-    idx += pdu_len;
+    if (status == CRYPTO_LIB_SUCCESS)
+    {
+        // Move idx to mac location
+        idx += pdu_len;
 #ifdef TM_DEBUG
-    if (sa_ptr->stmacf_len > 0)
-    {
-        printf(KYEL "Data length is %d\n" RESET, pdu_len);
-        printf(KYEL "MAC location starts at: %d\n" RESET, idx);
-        printf(KYEL "MAC length of %d\n" RESET, sa_ptr->stmacf_len);
-    }
-    else
-    {
-        printf(KYEL "MAC NOT SET TO BE USED IN SA - LENGTH IS 0\n");
-    }
+        if (sa_ptr->stmacf_len > 0)
+        {
+            printf(KYEL "Data length is %d\n" RESET, pdu_len);
+            printf(KYEL "MAC location starts at: %d\n" RESET, idx);
+            printf(KYEL "MAC length of %d\n" RESET, sa_ptr->stmacf_len);
+        }
+        else
+        {
+            printf(KYEL "MAC NOT SET TO BE USED IN SA - LENGTH IS 0\n");
+        }
 #endif
 
-//TODO OCF - ? Here, elsewhere?
+    //TODO OCF - ? Here, elsewhere?
 
-    /**
-     * End Authentication / Encryption
-     **/
+        /**
+         * End Authentication / Encryption
+         **/
 
-    // Only calculate & insert FECF if CryptoLib is configured to do so & gvcid includes FECF.
-    if (current_managed_parameters_struct.has_fecf == TM_HAS_FECF)
-    {
+        // Only calculate & insert FECF if CryptoLib is configured to do so & gvcid includes FECF.
+        if (current_managed_parameters_struct.has_fecf == TM_HAS_FECF)
+        {
 #ifdef FECF_DEBUG
-        printf(KCYN "Calcing FECF over %d bytes\n" RESET, current_managed_parameters_struct.max_frame_size - 2);
+            printf(KCYN "Calcing FECF over %d bytes\n" RESET, current_managed_parameters_struct.max_frame_size - 2);
 #endif
-        if (crypto_config.crypto_create_fecf == CRYPTO_TM_CREATE_FECF_TRUE)
-        {
-            *new_fecf = Crypto_Calc_FECF((uint8_t*)pTfBuffer, current_managed_parameters_struct.max_frame_size - 2);
-            pTfBuffer[current_managed_parameters_struct.max_frame_size - 2] = (uint8_t)((*new_fecf & 0xFF00) >> 8);
-            pTfBuffer[current_managed_parameters_struct.max_frame_size - 1] = (uint8_t)(*new_fecf & 0x00FF);
+            if (crypto_config.crypto_create_fecf == CRYPTO_TM_CREATE_FECF_TRUE)
+            {
+                *new_fecf = Crypto_Calc_FECF((uint8_t*)pTfBuffer, current_managed_parameters_struct.max_frame_size - 2);
+                pTfBuffer[current_managed_parameters_struct.max_frame_size - 2] = (uint8_t)((*new_fecf & 0xFF00) >> 8);
+                pTfBuffer[current_managed_parameters_struct.max_frame_size - 1] = (uint8_t)(*new_fecf & 0x00FF);
+            }
+            else // CRYPTO_TC_CREATE_FECF_FALSE
+            {
+                pTfBuffer[current_managed_parameters_struct.max_frame_size - 2] = (uint8_t)0x00;
+                pTfBuffer[current_managed_parameters_struct.max_frame_size - 1] = (uint8_t)0x00;
+            }
+            idx += 2;
         }
-        else // CRYPTO_TC_CREATE_FECF_FALSE
-        {
-            pTfBuffer[current_managed_parameters_struct.max_frame_size - 2] = (uint8_t)0x00;
-            pTfBuffer[current_managed_parameters_struct.max_frame_size - 1] = (uint8_t)0x00;
-        }
-        idx += 2;
-    }
 
 #ifdef TM_DEBUG
-    printf(KYEL "Printing new TM frame:\n\t");
-    for(int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
-    {
-        printf("%02X", pTfBuffer[i]);
-    }
-    printf("\n");
+        printf(KYEL "Printing new TM frame:\n\t");
+        for(int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+        {
+            printf("%02X", pTfBuffer[i]);
+        }
+        printf("\n");
 #endif
-
-    status = sa_if->sa_save_sa(sa_ptr);
+    }
+    if (status == CRYPTO_LIB_SUCCESS)
+    {
+        status = sa_if->sa_save_sa(sa_ptr);
 
 #ifdef DEBUG
-    printf(KYEL "----- Crypto_TM_ApplySecurity END -----\n" RESET);
+        printf(KYEL "----- Crypto_TM_ApplySecurity END -----\n" RESET);
 #endif
 
-    *idx_p = idx;
-
+        *idx_p = idx;
+    }
     return status;
 }
 
