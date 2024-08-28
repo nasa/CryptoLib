@@ -56,6 +56,8 @@
 #define RESET
 #endif
 
+// Managed Parameters Size
+#define GVCID_MAN_PARAM_SIZE 250
 
 // Max Frame Size
 #define TC_MAX_FRAME_SIZE 1024

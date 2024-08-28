@@ -37,7 +37,7 @@ CryptoConfig_t crypto_config;
 CryptographyKmcCryptoServiceConfig_t* cryptography_kmc_crypto_config = NULL;
 CamConfig_t* cam_config = NULL;
 
-GvcidManagedParameters_t gvcid_managed_parameters_array[250];  //Arbitrary 250 for now.
+GvcidManagedParameters_t gvcid_managed_parameters_array[GVCID_MAN_PARAM_SIZE];  
 int gvcid_counter = 0;
 GvcidManagedParameters_t gvcid_null_struct = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 GvcidManagedParameters_t current_managed_parameters_struct = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
