@@ -1977,6 +1977,10 @@ uint8_t* Crypto_Prepare_TC_AAD(uint8_t* buffer, uint16_t len_aad, uint8_t* abm_b
 **/
 static int32_t crypto_tc_validate_sa(SecurityAssociation_t* sa)
 {
+    if (sa->sa_state != SA_OPERATIONAL)
+    {
+        return CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL;
+    }
     if (sa->shivf_len > 0 && crypto_config.iv_type == IV_CRYPTO_MODULE && crypto_config.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
         return CRYPTO_LIB_ERR_NULL_IV;
