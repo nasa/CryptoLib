@@ -58,7 +58,8 @@ typedef enum
     CRYPTOGRAPHY_TYPE_UNITIALIZED = 0,
     CRYPTOGRAPHY_TYPE_LIBGCRYPT,
     CRYPTOGRAPHY_TYPE_KMCCRYPTO,
-    CRYPTOGRAPHY_TYPE_WOLFSSL
+    CRYPTOGRAPHY_TYPE_WOLFSSL,
+    CRYPTOGRAPHY_TYPE_CUSTOM
 } CryptographyType;
 /***************************************
 ** GVCID Managed Parameter enums
@@ -88,7 +89,7 @@ typedef enum
 } CreateFecfBool;
 typedef enum
 {
-    AOS_FHEC_NA,
+    AOS_FHEC_NA=0,
     AOS_NO_FHEC,
     AOS_HAS_FHEC
 } AosFhecPresent;
@@ -189,6 +190,7 @@ typedef enum
 {
     CRYPTO_CIPHER_NONE,
     CRYPTO_CIPHER_AES256_GCM,
+    CRYPTO_CIPHER_AES256_GCM_SIV,
     CRYPTO_CIPHER_AES256_CBC,
     CRYPTO_CIPHER_AES256_CBC_MAC,
     CRYPTO_CIPHER_AES256_CCM
@@ -231,7 +233,7 @@ struct _GvcidManagedParameters_t
     TcSegmentHdrsPresent has_segmentation_hdr;
     uint16_t max_frame_size; // Maximum TC/TM Frame Length with headers
     OcfPresent has_ocf;
-    GvcidManagedParameters_t* next; // Will be a list of managed parameters!
+    int set_flag; // Will be a list of managed parameters!
 };
 #define GVCID_MANAGED_PARAMETERS_SIZE (sizeof(GvcidManagedParameters_t))
 

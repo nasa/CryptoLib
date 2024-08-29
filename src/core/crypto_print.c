@@ -212,7 +212,7 @@ void Crypto_saPrint(SecurityAssociation_t* sa)
     printf("\t ek_ref     = %s \n", sa->ek_ref);
     printf("\t akid       = %d \n", sa->akid);
     printf("\t ak_ref     = %s \n", sa->ak_ref);
-    printf("\t iv_len     = %d \n", sa->shivf_len);
+    printf("\t iv_len     = %d \n", sa->iv_len);
     if (sa->iv_len > 0)
     {
         for (i = 0; i < sa->iv_len; i++)
@@ -295,6 +295,7 @@ void Crypto_binprint(void* c, size_t n)
 void Crypto_mpPrint(GvcidManagedParameters_t* managed_parameters, uint8_t print_children)
 // Prints the currently configured Managed Parameters
 {
+    print_children = print_children;
     if (managed_parameters != NULL)
     {
         printf("Managed Parameter: \n");
@@ -306,9 +307,9 @@ void Crypto_mpPrint(GvcidManagedParameters_t* managed_parameters, uint8_t print_
         printf("\t max_frame_size: %d\n", managed_parameters->max_frame_size);
         printf("\t TM has ocf %d\n", managed_parameters->has_ocf);
     }
-    if (managed_parameters->next != NULL && print_children != 0)
-    {
-        Crypto_mpPrint(managed_parameters->next, print_children);
-    }
+    // if (managed_parameters->next != NULL && print_children != 0)
+    // {
+    //     Crypto_mpPrint(managed_parameters->next, print_children);
+    // }
 }
 #endif

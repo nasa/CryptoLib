@@ -19,6 +19,14 @@ include_directories(../include)
 
 aux_source_directory(core LIB_SRC_FILES)
 
+if(CRYPTO_CUSTOM)
+    aux_source_directory(${CRYPTO_CUSTOM_PATH} CRYPTO_FILES)
+    list(APPEND LIB_SRC_FILES ${CRYPTO_FILES})
+else()
+    aux_source_directory(crypto/custom_stub CRYPTO_FILES)
+    list(APPEND LIB_SRC_FILES ${CRYPTO_FILES})
+endif()
+
 if(CRYPTO_LIBGCRYPT)
     aux_source_directory(crypto/libgcrypt LIBGCRYPT_FILES)
     list(APPEND LIB_SRC_FILES ${LIBGCRYPT_FILES})
@@ -45,7 +53,7 @@ endif()
 
 if(KEY_CUSTOM)
     # Assumes CryptoLib is a Git submodule to project and custom directories and definitions exist at top level
-    aux_source_directory(../../key/custom KEY_CUSTOM_FILES)
+    aux_source_directory(${KEY_CUSTOM_PATH} KEY_CUSTOM_FILES)
     list(APPEND LIB_SRC_FILES ${KEY_CUSTOM_FILES})
 else()
     aux_source_directory(key/custom_stub KEY_CUSTOM_FILES)
@@ -70,7 +78,7 @@ endif()
 
 if(MC_CUSTOM)
     # Assumes CryptoLib is a Git submodule to project and custom directories and definitions exist at top level
-    aux_source_directory(../../mc/custom MC_CUSTOM_FILES)
+    aux_source_directory(${MC_CUSTOM_PATH} MC_CUSTOM_FILES)
     list(APPEND LIB_SRC_FILES ${MC_CUSTOM_FILES})
 else()
     aux_source_directory(mc/custom_stub MC_CUSTOM_FILES)
@@ -95,7 +103,7 @@ endif()
 
 if(SA_CUSTOM)
     # Assumes CryptoLib is a Git submodule to project and custom directories and definitions exist at top level
-    aux_source_directory(../../sa/custom SA_CUSTOM_FILES)
+    aux_source_directory(${SA_CUSTOM_PATH} SA_CUSTOM_FILES)
     list(APPEND LIB_SRC_FILES ${SA_CUSTOM_FILES})
 else()
     aux_source_directory(sa/custom_stub SA_CUSTOM_FILES)
@@ -150,6 +158,10 @@ endif()
 
 file(GLOB CRYPTO_INCLUDES ../include/*.h)
 set_target_properties(crypto PROPERTIES PUBLIC_HEADER "${CRYPTO_INCLUDES}")
+# This causes the library to be installed as libcryptolib.so while still being
+# referred to as crypto from CMake. Without this, the library filename would be
+# libcrypto.so which would conflict with openssl
+set_target_properties(crypto PROPERTIES OUTPUT_NAME "cryptolib")
 
 add_custom_command(TARGET crypto POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:crypto> ${PROJECT_BINARY_DIR}/lib/libcrypto.so

@@ -141,23 +141,23 @@ int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char* 
         }
         break;
 
-        case CRYPTO_CMD_VCID:
-            if (crypto_standalone_check_number_arguments(num_tokens, 1) == CRYPTO_LIB_SUCCESS)
+    case CRYPTO_CMD_VCID:
+        if (crypto_standalone_check_number_arguments(num_tokens, 1) == CRYPTO_LIB_SUCCESS)
+        {
+            uint8_t vcid = (uint8_t) atoi(&tokens[0]);
+            /* Confirm new VCID valid */
+            if (vcid < 64)
             {
-                uint8_t vcid = (uint8_t) atoi(&tokens[0]);
-                /* Confirm new VCID valid */
-                if (vcid < 64)
+                SaInterface sa_if = get_sa_interface_inmemory();
+                SecurityAssociation_t* test_association = NULL;
+                sa_if->sa_get_from_spi(vcid, &test_association);
+                
+                /* Handle special case for VCID */
+                if(vcid == 1)
                 {
-                    SaInterface sa_if = get_sa_interface_inmemory();
-                    SecurityAssociation_t* test_association = NULL;
-                    sa_if->sa_get_from_spi(vcid, &test_association);
-                    
-                    /* Handle special case for VCID */
-                    if(vcid == 1)
-                    {
-                        printf("Special case for VCID 1! \n");
-                        vcid = 0;
-                    }
+                    printf("Special case for VCID 1! \n");
+                    vcid = 0;
+                }
 
                 if ((test_association->sa_state == SA_OPERATIONAL) &&
                     (test_association->gvcid_blk.mapid == TYPE_TC) &&
@@ -219,7 +219,27 @@ int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char* 
     return status;
 }
 
-int32_t crypto_standalone_udp_init(udp_info_t* sock, int32_t port)
+int32_t crypto_host_to_ip(const char * hostname, char* ip)
+{
+    struct hostent *he;
+    struct in_addr **addr_list;
+    
+    if ( (he = gethostbyname( hostname ) ) == NULL )
+    {
+        return 1;
+    }
+
+    addr_list = (struct in_addr **) he->h_addr_list;
+
+    for(int i=0; addr_list[i] != NULL; i++)
+    {
+        strcpy(ip, inet_ntoa(*addr_list[i]) );
+        return 0;
+    }
+    return 1;
+}
+
+int32_t crypto_standalone_udp_init(udp_info_t* sock, int32_t port, uint8_t bind_sock)
 {
     int status = CRYPTO_LIB_SUCCESS;
     int optval;
@@ -231,19 +251,35 @@ int32_t crypto_standalone_udp_init(udp_info_t* sock, int32_t port)
     sock->sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
     if (sock->sockfd == -1)
     {
-        printf("udp_init:  Socket create error port %d", sock->port);
+        printf("udp_init:  Socket create error port %d \n", sock->port);
     }
 
-    /* Bind */
-    struct sockaddr_in saddr;
-    saddr.sin_family = AF_INET;
-    saddr.sin_addr.s_addr = inet_addr("0.0.0.0");
-    saddr.sin_port = htons(sock->port);
-    status = bind(sock->sockfd, (struct sockaddr*)&saddr, sizeof(saddr));
-    if (status != 0)
+    /* Determine IP */
+    sock->saddr.sin_family = AF_INET;
+    if(inet_addr(sock->ip_address) != INADDR_NONE)
     {
-        printf(" udp_init:  Socker bind error with port %d", sock->port);
-        status = CRYPTO_LIB_ERROR;
+        sock->saddr.sin_addr.s_addr = inet_addr(sock->ip_address);
+    }
+    else
+    {
+        char ip[16];
+        int check = crypto_host_to_ip(sock->ip_address, ip);
+        if(check == 0)
+        {
+            sock->saddr.sin_addr.s_addr = inet_addr(ip);
+        }
+    }
+    sock->saddr.sin_port = htons(sock->port);
+
+    /* Bind */
+    if (bind_sock > 0)
+    {
+        status = bind(sock->sockfd, (struct sockaddr*)&sock->saddr, sizeof(sock->saddr));
+        if (status != 0)
+        {
+            printf(" udp_init:  Socker bind error with port %d \n", sock->port);
+            status = CRYPTO_LIB_ERROR;
+        }
     }
 
     /* Keep Alive */
@@ -264,8 +300,7 @@ int32_t crypto_reset(void)
         printf("CryptoLib initialization failed with error %d \n", status);
     }
 
-    status = Crypto_Init_TM_Unit_Test();
-    // TODO: CryptoLib appears to be looking at the second byte and not specficially the SCID bits
+    status = Crypto_SC_Init();
     if (status != CRYPTO_LIB_SUCCESS)
     {
         printf("CryptoLib initialization failed with error %d \n", status);
@@ -297,10 +332,12 @@ void crypto_standalone_tc_frame(uint8_t* in_data, uint16_t in_length, uint8_t* o
     /* SDLS Trailer */
 }
 
-void *crypto_standalone_tc_apply(void* sock)
+void *crypto_standalone_tc_apply(void* socks)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    udp_info_t* tc_sock = (udp_info_t* )sock;
+    udp_interface_t* tc_socks = (udp_interface_t*)socks;
+    udp_info_t* tc_read_sock = &tc_socks->read;
+    udp_info_t* tc_write_sock = &tc_socks->write;
 
     uint8_t tc_apply_in[TC_MAX_FRAME_SIZE];
     uint16_t tc_in_len = 0;
@@ -311,13 +348,7 @@ void *crypto_standalone_tc_apply(void* sock)
     uint8_t tc_framed[TC_MAX_FRAME_SIZE];
 #endif
 
-    struct sockaddr_in rcv_addr;
-    struct sockaddr_in fwd_addr;
     int sockaddr_size = sizeof(struct sockaddr_in);
-
-    fwd_addr.sin_family = AF_INET;
-    fwd_addr.sin_addr.s_addr = inet_addr("0.0.0.0");
-    fwd_addr.sin_port = htons(TC_APPLY_FWD_PORT);
 
     /* Prepare */
     memset(tc_apply_in, 0x00, sizeof(tc_apply_in));
@@ -325,7 +356,7 @@ void *crypto_standalone_tc_apply(void* sock)
     while (keepRunning == CRYPTO_LIB_SUCCESS)
     {
         /* Receive */
-        status = recvfrom(tc_sock->sockfd, tc_apply_in, sizeof(tc_apply_in), 0, (struct sockaddr*)&rcv_addr, (socklen_t*)&sockaddr_size);
+        status = recvfrom(tc_read_sock->sockfd, tc_apply_in, sizeof(tc_apply_in), 0, (struct sockaddr*)&tc_read_sock->ip_address, (socklen_t*)&sockaddr_size);
         if (status != -1)
         {
             tc_in_len = status;
@@ -371,7 +402,7 @@ void *crypto_standalone_tc_apply(void* sock)
                 }
 
                 /* Reply */
-                status = sendto(tc_sock->sockfd, tc_out_ptr, tc_out_len, 0, (struct sockaddr*)&fwd_addr, sizeof(fwd_addr));
+                status = sendto(tc_write_sock->sockfd, tc_out_ptr, tc_out_len, 0, (struct sockaddr*)&tc_write_sock->saddr, sizeof(tc_write_sock->saddr));
                 if ((status == -1) || (status != tc_out_len))
                 {
                     printf("crypto_standalone_tc_apply - Reply error %d \n", status);
@@ -379,7 +410,7 @@ void *crypto_standalone_tc_apply(void* sock)
             }
             else
             {
-                printf("crypto_standalone_tc_apply - AppySecurity error %d \n", status);
+                printf("crypto_standalone_tc_apply - ApplySecurity error %d \n", status);
             }
 
             /* Reset */
@@ -398,8 +429,9 @@ void *crypto_standalone_tc_apply(void* sock)
         /* Delay */
         usleep(100);
     }
-    close(tc_sock->port);
-    return tc_sock;
+    close(tc_read_sock->port);
+    close(tc_write_sock->port);
+    return tc_read_sock;
 }
 
 void crypto_standalone_tm_frame(uint8_t* in_data, uint16_t in_length, uint8_t* out_data, uint16_t* out_length, uint16_t spi)
@@ -414,9 +446,9 @@ void crypto_standalone_tm_frame(uint8_t* in_data, uint16_t in_length, uint8_t* o
     }
 
     // Calculate security headers and trailers
-    uint8_t header_length = 6 + 2 + sa_ptr->shivf_len + sa_ptr->shplf_len + sa_ptr->shsnf_len;
+    uint8_t header_length = 6 + 2 + sa_ptr->shivf_len + sa_ptr->shplf_len + sa_ptr->shsnf_len + 40; // TODO: Why +40?
     uint8_t trailer_length = sa_ptr->stmacf_len;
-    if (current_managed_parameters->has_fecf == TM_HAS_FECF)
+    if (current_managed_parameters_struct.has_fecf == TM_HAS_FECF)
     {
         trailer_length += 4;
     }
@@ -428,11 +460,114 @@ void crypto_standalone_tm_frame(uint8_t* in_data, uint16_t in_length, uint8_t* o
     memcpy(out_data, &in_data[header_length], in_length - header_length - trailer_length);
 }
 
-void* crypto_standalone_tm_process(void* sock)
+void crypto_standalone_tm_debug_recv(int32_t status, int tm_process_len, uint8_t* tm_process_in)
+{
+    if (tm_debug == 1)
+    {
+        printf("crypto_standalone_tm_process - received[%d]: 0x", tm_process_len);
+        for (int i = 0; i < status; i++)
+        {
+            printf("%02x", tm_process_in[i]);
+        }
+        printf("\n");
+    }
+}
+
+void crypto_standalone_tm_debug_process(uint8_t* tm_process_in)
+{
+    if (tm_debug == 1)
+    {
+        printf("Printing first bytes of Tf Pri Hdr:\n\t");
+        for (int i = 0; i < 6; i++)
+        {
+            printf("%02X", *(tm_process_in + 4 + i));
+        }
+        printf("\n");
+        printf("Processing frame WITH ASM...\n");
+    }
+}
+
+void crypto_standalone_spp_telem_or_idle(int32_t* status_p, uint8_t* tm_ptr, uint16_t* spp_len_p, udp_interface_t* tm_socks, int* tm_process_len_p)
+{
+    int32_t status = *status_p;
+    uint16_t spp_len = *spp_len_p;
+    int tm_process_len = *tm_process_len_p;
+
+    udp_info_t* tm_write_sock = &tm_socks->write;
+
+    if ((tm_ptr[0] == 0x08) || ((tm_ptr[0] == 0x03) && tm_ptr[1] == 0xff))
+    {
+        spp_len = (((0xFFFF & tm_ptr[4]) << 8) | tm_ptr[5]) + 7;
+#ifdef CRYPTO_STANDALONE_TM_PROCESS_DEBUG
+        printf("crypto_standalone_tm_process - SPP[%d]: 0x", spp_len); 
+        for (int i = 0; i < spp_len; i++)
+        {
+            printf("%02x", tm_ptr[i]);
+        }
+        printf("\n");
+#endif
+        // Send all SPP telemetry packets
+        if (tm_ptr[0] == 0x08)  
+        {
+            status = sendto(tm_write_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr*)&tm_write_sock->saddr, sizeof(tm_write_sock->saddr));
+        }
+        // Only send idle packets if configured to do so
+        else
+        {
+#ifdef CRYPTO_STANDALONE_DISCARD_IDLE_PACKETS
+            // Don't forward idle packets
+            status = spp_len;
+#else
+            status = sendto(tm_write_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr*)&tm_write_sock->saddr, sizeof(tm_write_sock->saddr));
+#endif
+        }
+
+        // Check status
+        if ((status == -1) || (status != spp_len))
+        {
+            printf("crypto_standalone_tm_process - Reply error %d \n", status);
+        }
+        tm_ptr = &tm_ptr[spp_len];
+        tm_process_len = tm_process_len - spp_len;
+    }
+    else if ((tm_ptr[0] == 0xFF && tm_ptr[1] == 0x48) ||
+             (tm_ptr[0] == 0x00 && tm_ptr[1] == 0x00) ||
+             (tm_ptr[0] == 0x02 && tm_ptr[1] == 0x00) ||
+             (tm_ptr[0] == 0xFF && tm_ptr[1] == 0xFF))
+    {
+        // TODO: Why 0x0200?
+        // Idle Frame
+        // Idle Frame is entire length of remaining data
+#ifdef CRYPTO_STANDALONE_DISCARD_IDLE_FRAMES
+        // Don't forward idle frame
+        status = spp_len;
+#else
+        status = sendto(tm_write_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr*)&tm_write_sock->saddr, sizeof(tm_write_sock->saddr));
+        if ((status == -1) || (status != spp_len))
+        {
+            printf("crypto_standalone_tm_process - Reply error %d \n", status);
+        }
+        tm_ptr = &tm_ptr[spp_len];
+#endif
+        tm_process_len = 0;
+    }
+    else
+    {
+        printf("crypto_standalone_tm_process - SPP loop error, expected idle packet or frame! tm_ptr = 0x%02x%02x \n", tm_ptr[0], tm_ptr[1]);
+        tm_process_len = 0;
+    }
+    *status_p = status;
+    *spp_len_p = spp_len;
+    *tm_process_len_p = tm_process_len;
+}
+
+void* crypto_standalone_tm_process(void* socks)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    udp_info_t* tm_sock = (udp_info_t*)sock;
-
+    udp_interface_t* tm_socks = (udp_interface_t*)socks;
+    udp_info_t* tm_read_sock = &tm_socks->read;
+    udp_info_t* tm_write_sock = &tm_socks->write;
+    
     uint8_t tm_process_in[TM_CADU_SIZE]; // Accounts for ASM automatically based on #def
     int tm_process_len = 0;
     uint16_t spp_len = 0;
@@ -444,43 +579,21 @@ void* crypto_standalone_tm_process(void* sock)
     uint16_t tm_framed_len = 0;
 #endif
 
-    struct sockaddr_in rcv_addr;
-    struct sockaddr_in fwd_addr;
     int sockaddr_size = sizeof(struct sockaddr_in);
-
-    fwd_addr.sin_family = AF_INET;
-    fwd_addr.sin_addr.s_addr = inet_addr("0.0.0.0");
-    fwd_addr.sin_port = htons(TM_PROCESS_FWD_PORT);
 
     while (keepRunning == CRYPTO_LIB_SUCCESS)
     {
         /* Receive */
-        status = recvfrom(tm_sock->sockfd, tm_process_in, sizeof(tm_process_in), 0, (struct sockaddr*)&rcv_addr, (socklen_t*)&sockaddr_size);
+        status = recvfrom(tm_read_sock->sockfd, tm_process_in, sizeof(tm_process_in), 0, (struct sockaddr*)&tm_read_sock->ip_address, (socklen_t*)&sockaddr_size);
         if (status != -1)
         {
             tm_process_len = status;
-            if (tm_debug == 1)
-            {
-                printf("crypto_standalone_tm_process - received[%d]: 0x", tm_process_len);
-                for (int i = 0; i < status; i++)
-                {
-                    printf("%02x", tm_process_in[i]);
-                }
-                printf("\n");
-            }
+            /* Receive */
+            crypto_standalone_tm_debug_recv(status, tm_process_len, tm_process_in);
             /* Process */
 #ifdef TM_CADU_HAS_ASM
             // Process Security skipping prepended ASM
-            if (tm_debug == 1)
-            {
-                printf("Printing first bytes of Tf Pri Hdr:\n\t");
-                for (int i = 0; i < 6; i++)
-                {
-                    printf("%02X", *(tm_process_in + 4 + i));
-                }
-                printf("\n");
-                printf("Processing frame WITH ASM...\n");
-            }
+            crypto_standalone_tm_debug_process(tm_process_in);
             // Account for ASM length
             status = Crypto_TM_ProcessSecurity(tm_process_in + 4, (const uint16_t)tm_process_len - 4, &tm_ptr, &tm_out_len);
 #else
@@ -500,7 +613,7 @@ void* crypto_standalone_tm_process(void* sock)
                     }
                     else
                     {
-                        printf("crypto_standalone_tm_process - status = %d, decrypted[%d]: 0x", status, tm_out_len);
+                        printf("crypto_standalone_tm_process: 1 - status = %d, decrypted[%d]: 0x", status, tm_out_len);
                         for (int i = 0; i < tm_out_len; i++)
                         {
                             printf("%02x", tm_ptr[i]);
@@ -526,7 +639,7 @@ void* crypto_standalone_tm_process(void* sock)
                 if (tm_debug == 1)
                 // Note: Need logic to allow broken packet assembly
                 {
-                    printf("crypto_standalone_tm_process - beginning after first header pointer - deframed[%d]: 0x", tm_process_len);
+                    printf("crypto_standalone_tm_process: 2 - beginning after first header pointer - deframed[%d]: 0x", tm_process_len);
                     for (int i = 0; i < tm_process_len; i++)
                     {
                         printf("%02x", tm_framed[i]);
@@ -540,63 +653,7 @@ void* crypto_standalone_tm_process(void* sock)
                 while (tm_process_len > 5)
                 {
                     // SPP Telemetry OR SPP Idle Packet
-                    if ((tm_ptr[0] == 0x08) || ((tm_ptr[0] == 0x03) && tm_ptr[1] == 0xff))
-                    {
-                        spp_len = (((0xFFFF & tm_ptr[4]) << 8) | tm_ptr[5]) + 7;
-#ifdef CRYPTO_STANDALONE_TM_PROCESS_DEBUG
-                        printf("crypto_standalone_tm_process - SPP[%d]: 0x", spp_len); 
-                        for (int i = 0; i < spp_len; i++)
-                        {
-                            printf("%02x", tm_ptr[i]);
-                        }
-                        printf("\n");
-#endif
-                        // Send all SPP telemetry packets
-                        if (tm_ptr[0] == 0x08)  
-                        {
-                            status = sendto(tm_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr*)&fwd_addr, sizeof(fwd_addr));
-                        }
-                        // Only send idle packets if configured to do so
-                        else
-                        {
-#ifdef CRYPTO_STANDALONE_DISCARD_IDLE_PACKETS
-                            // Don't forward idle packets
-                            status = spp_len;
-#else
-                            status = sendto(tm_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr*)&fwd_addr, sizeof(fwd_addr));
-#endif
-                        }
-
-                        // Check status
-                        if ((status == -1) || (status != spp_len))
-                        {
-                            printf("crypto_standalone_tm_process - Reply error %d \n", status);
-                        }
-                        tm_ptr = &tm_ptr[spp_len];
-                        tm_process_len = tm_process_len - spp_len;
-                    }
-                    else if (tm_ptr[0] == 0xff && tm_ptr[1] == 0x48)
-                    {
-                        // Idle Frame
-                        // Idle Frame is entire length of remaining data
-#ifdef CRYPTO_STANDALONE_DISCARD_IDLE_FRAMES
-                        // Don't forward idle frame
-                        status = spp_len;
-#else
-                        status = sendto(tm_sock->sockfd, tm_ptr, tm_process_len, 0, (struct sockaddr*)&fwd_addr, sizeof(fwd_addr));
-                        if ((status == -1) || (status != spp_len))
-                        {
-                            printf("crypto_standalone_tm_process - Reply error %d \n", status);
-                        }
-                        tm_ptr = &tm_ptr[spp_len];
-#endif
-                        tm_process_len = 0;
-                    }
-                    else
-                    {
-                        printf("crypto_standalone_tm_process - SPP loop error, expected idle packet or frame! tm_ptr = 0x%02x%02x \n", tm_ptr[0], tm_ptr[1]);
-                        tm_process_len = 0;
-                    }
+                    crypto_standalone_spp_telem_or_idle(&status, tm_ptr, &spp_len, tm_socks, &tm_process_len);
                 }
             }
             else
@@ -615,8 +672,9 @@ void* crypto_standalone_tm_process(void* sock)
         /* Delay */
         usleep(100);
     }
-    close(tm_sock->port);
-    return tm_sock;
+    close(tm_read_sock->port);
+    close(tm_write_sock->port);
+    return tm_read_sock;
 }
 
 void crypto_standalone_cleanup(const int signal)
@@ -642,20 +700,35 @@ int main(int argc, char* argv[])
     int cmd;
     char* token_ptr;
 
-    udp_info_t tc_apply;
-    udp_info_t tm_process;
+    udp_interface_t tc_apply;
+    udp_interface_t tm_process;
+
     pthread_t tc_apply_thread;
     pthread_t tm_process_thread;
 
+    tc_apply.read.ip_address = CRYPTOLIB_HOSTNAME;
+    tc_apply.read.port = TC_APPLY_PORT;
+    tc_apply.write.ip_address = SC_HOSTNAME;
+    tc_apply.write.port = TC_APPLY_FWD_PORT;
+    tm_process.read.ip_address = CRYPTOLIB_HOSTNAME;
+    tm_process.read.port = TM_PROCESS_PORT;
+    tm_process.write.ip_address = GSW_HOSTNAME;
+    tm_process.write.port = TM_PROCESS_FWD_PORT;
+
     printf("Starting CryptoLib in standalone mode! \n");
-    printf("  TC Apply - UDP %d \n", TC_APPLY_PORT);
-    printf("  TM Process - UDP %d \n", TM_PROCESS_PORT);
-    printf("\n");
     if (argc != 1)
     {
         printf("Invalid number of arguments! \n");
         printf("  Expected zero but received: %s \n", argv[1]);
     }
+
+    /* Catch CTRL+C */
+    signal(SIGINT, crypto_standalone_cleanup);
+
+    /* Startup delay */
+    sleep(10);
+    //printf("Press enter once ground software has finished initializing...\n");
+    //fgets(input_buf, CRYPTO_MAX_INPUT_BUF, stdin);
 
     /* Initialize CryptoLib */
     status = crypto_reset();
@@ -668,29 +741,53 @@ int main(int argc, char* argv[])
     /* Initialize sockets */
     if (keepRunning == CRYPTO_LIB_SUCCESS)
     {
-        status = crypto_standalone_udp_init(&tc_apply, TC_APPLY_PORT);
+        status = crypto_standalone_udp_init(&tc_apply.read, TC_APPLY_PORT, 1);
         if (status != CRYPTO_LIB_SUCCESS)
         {
-            printf("crypto_standalone_udp_init tc_apply failed with status %d \n", status);
+            printf("crypto_standalone_udp_init tc_apply.read failed with status %d \n", status);
             keepRunning = CRYPTO_LIB_ERROR;
         }
         else
         {
-            status = crypto_standalone_udp_init(&tm_process, TM_PROCESS_PORT);
+            status = crypto_standalone_udp_init(&tc_apply.write, TC_APPLY_FWD_PORT, 0);
             if (status != CRYPTO_LIB_SUCCESS)
             {
-                printf("crypto_standalone_udp_init tm_process failed with status %d \n", status);
+                printf("crypto_standalone_udp_init tc_apply.write failed with status %d \n", status);
+                keepRunning = CRYPTO_LIB_ERROR;
+            }
+        }
+    }
+    
+    if (keepRunning == CRYPTO_LIB_SUCCESS)
+    {
+        status = crypto_standalone_udp_init(&tm_process.read, TM_PROCESS_PORT, 1);
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+            printf("crypto_standalone_udp_init tm_apply.read failed with status %d \n", status);
+            keepRunning = CRYPTO_LIB_ERROR;
+        }
+        else
+        {
+            status = crypto_standalone_udp_init(&tm_process.write, TM_PROCESS_FWD_PORT, 0);
+            if (status != CRYPTO_LIB_SUCCESS)
+            {
+                printf("crypto_standalone_udp_init tc_apply.write failed with status %d \n", status);
                 keepRunning = CRYPTO_LIB_ERROR;
             }
         }
     }
 
-    /* Catch CTRL+C */
-    signal(SIGINT, crypto_standalone_cleanup);
-
     /* Start threads */
     if (keepRunning == CRYPTO_LIB_SUCCESS)
     {
+        printf("  TC Apply \n");
+        printf("    Read, UDP - %s : %d \n", tc_apply.read.ip_address, tc_apply.read.port);
+        printf("    Write, UDP - %s : %d \n", tc_apply.write.ip_address, tc_apply.write.port);
+        printf("  TM Process \n");
+        printf("    Read, UDP - %s : %d \n", tm_process.read.ip_address, tm_process.read.port);
+        printf("    Write, UDP - %s : %d \n", tm_process.write.ip_address, tm_process.write.port);
+        printf("\n");
+
         status = pthread_create(&tc_apply_thread, NULL, *crypto_standalone_tc_apply, &tc_apply);
         if (status < 0)
         {
@@ -745,8 +842,10 @@ int main(int argc, char* argv[])
     }
 
     /* Cleanup */
-    close(tc_apply.port);
-    close(tm_process.port);
+    close(tc_apply.read.port);
+    close(tc_apply.write.port);
+    close(tm_process.read.port);
+    close(tm_process.write.port);
 
     Crypto_Shutdown();
 

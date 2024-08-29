@@ -65,6 +65,32 @@ uint16_t crc16Table[256];
 */
 
 /**
+ * @brief Function: clean_ekref
+ * Null terminates the entire array for EKREF
+ * @param sa: SecurityAssocation_t*
+ **/
+void clean_ekref(SecurityAssociation_t* sa)
+{
+    for(int y = 0; y < REF_SIZE; y++)
+    {
+        sa->ek_ref[y] = '\0';
+    }
+}
+
+/**
+ * @brief Function: clean_akref
+ * Null terminates the entire array for AKREF
+ * @param sa: SecurityAssocation_t*
+ **/
+void clean_akref(SecurityAssociation_t* sa)
+{
+    for(int y = 0; y < REF_SIZE; y++)
+    {
+        sa->ak_ref[y] = '\0';
+    }
+}
+
+/**
  * @brief Function: Crypto_Is_AEAD_Algorithm
  * Looks up cipher suite ID and determines if it's an AEAD algorithm. Returns 1 if true, 0 if false;
  * @param cipher_suite_id: uint32
@@ -74,7 +100,7 @@ uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
     // CryptoLib only supports AES-GCM, which is an AEAD (Authenticated Encryption with Associated Data) algorithm, so
     // return true/1.
     // TODO - Add cipher suite mapping to which algorithms are AEAD and which are not.
-    if ((cipher_suite_id == CRYPTO_CIPHER_AES256_GCM) || (cipher_suite_id == CRYPTO_CIPHER_AES256_CBC_MAC))
+    if ((cipher_suite_id == CRYPTO_CIPHER_AES256_GCM) || (cipher_suite_id == CRYPTO_CIPHER_AES256_CBC_MAC) || (cipher_suite_id == CRYPTO_CIPHER_AES256_GCM_SIV))
     {
 #ifdef DEBUG
         printf(KYEL "CRYPTO IS AEAD? : TRUE\n" RESET);
@@ -349,10 +375,10 @@ uint16_t Crypto_Calc_FECF(const uint8_t* ingest, int len_ingest)
         }
     }
     // Check if Testing
-    if (badFECF == 1)
-    {
-        fecf++;
-    }
+    //if (badFECF == 1)
+    //{
+    //    fecf++;
+    //}
 
 #ifdef FECF_DEBUG
     int x;
@@ -658,6 +684,33 @@ int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
     return status;
 }
 
+
+int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
+                                                GvcidManagedParameters_t* managed_parameters_in,
+                                                GvcidManagedParameters_t* managed_parameters_out)
+{
+    int32_t status = MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND;
+    for(int i = 0; i < gvcid_counter; i++)
+    {
+        if (managed_parameters_in[i].tfvn == tfvn && managed_parameters_in[i].scid == scid &&
+            managed_parameters_in[i].vcid == vcid)
+        {
+            *managed_parameters_out = managed_parameters_in[i];
+            status = CRYPTO_LIB_SUCCESS;
+            break;
+        }
+    }
+
+    if(status != CRYPTO_LIB_SUCCESS)
+    {
+        printf(KRED "Error: Managed Parameters for GVCID(TFVN: %d, SCID: %d, VCID: %d) not found. \n" RESET, tfvn, scid,
+               vcid);
+    }
+
+    return status;
+}
+
+
 /**
  * @brief Function: Crypto_Get_Managed_Parameters_For_Gvcid
  * @param tfvn: uint8
@@ -667,52 +720,52 @@ int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
  * @param managed_parameters_out: GvcidManagedParameters_t**
  * @return int32: Success/Failure
  **/
-int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
-                                                GvcidManagedParameters_t* managed_parameters_in,
-                                                GvcidManagedParameters_t** managed_parameters_out)
-{
-    int32_t status = MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND;
+// int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
+//                                                 GvcidManagedParameters_t* managed_parameters_in,
+//                                                 GvcidManagedParameters_t** managed_parameters_out)
+// {
+//     int32_t status = MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND;
 
-    if (managed_parameters_in != NULL)
-    {
-        if (managed_parameters_in->tfvn == tfvn && managed_parameters_in->scid == scid &&
-            managed_parameters_in->vcid == vcid)
-        {
-            *managed_parameters_out = managed_parameters_in;
-            status = CRYPTO_LIB_SUCCESS;
-            return status;
-        }
-        else
-        {
-            return Crypto_Get_Managed_Parameters_For_Gvcid(tfvn, scid, vcid, managed_parameters_in->next,
-                                                           managed_parameters_out);
-        }
-    }
-    else
-    {
-        printf(KRED "Error: Managed Parameters for GVCID(TFVN: %d, SCID: %d, VCID: %d) not found. \n" RESET, tfvn, scid,
-               vcid);
-        return status;
-    }
-}
+//     if (managed_parameters_in != NULL)
+//     {
+//         if (managed_parameters_in->tfvn == tfvn && managed_parameters_in->scid == scid &&
+//             managed_parameters_in->vcid == vcid)
+//         {
+//             *managed_parameters_out = managed_parameters_in;
+//             status = CRYPTO_LIB_SUCCESS;
+//             return status;
+//         }
+//         else
+//         {
+//             return Crypto_Get_Managed_Parameters_For_Gvcid(tfvn, scid, vcid, managed_parameters_in->next,
+//                                                            managed_parameters_out);
+//         }
+//     }
+//     else
+//     {
+//         printf(KRED "Error: Managed Parameters for GVCID(TFVN: %d, SCID: %d, VCID: %d) not found. \n" RESET, tfvn, scid,
+//                vcid);
+//         return status;
+//     }
+// }
 
 /**
  * @brief Function: Crypto_Free_Managed_Parameters
  * Managed parameters are expected to live the duration of the program, this may not be necessary.
  * @param managed_parameters: GvcidManagedParameters_t*
  **/
-void Crypto_Free_Managed_Parameters(GvcidManagedParameters_t* managed_parameters)
-{
-    if (managed_parameters == NULL)
-    {
-        return; // Nothing to free, just return!
-    }
-    if (managed_parameters->next != NULL)
-    {
-        Crypto_Free_Managed_Parameters(managed_parameters->next);
-    }
-    free(managed_parameters);
-}
+// void Crypto_Free_Managed_Parameters(GvcidManagedParameters_t* managed_parameters)
+// {
+//     if (managed_parameters == NULL)
+//     {
+//         return; // Nothing to free, just return!
+//     }
+//     if (managed_parameters->next != NULL)
+//     {
+//         Crypto_Free_Managed_Parameters(managed_parameters->next);
+//     }
+//     free(managed_parameters);
+// }
 
 /**
  * @brief Function: Crypto_Process_Extended_Procedure_Pdu
@@ -806,30 +859,45 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, uin
     return status;
 } // End Process SDLS PDU
 
-/*
-** @brief: Check IVs and ARSNs to ensure within valid positive window if applicable
-*/
-int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t* sa_ptr, uint8_t* arsn, uint8_t* iv)
+
+/**
+ * @brief Function: Crypto_Check_Anti_Replay_Verify_Pointers
+ * Sanity Check, validates pointers, verifies non-null
+ * @param sa_ptr: SecurityAssociation_t*
+ * @param arsn: uint8_t*
+ * @param iv: uint8_t*
+ **/
+int32_t Crypto_Check_Anti_Replay_Verify_Pointers(SecurityAssociation_t* sa_ptr, uint8_t* arsn, uint8_t* iv)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    int8_t IV_VALID = -1;
-    int8_t ARSN_VALID = -1;
-
-    // Check for NULL pointers
     if (sa_ptr == NULL) // #177 - Modification made per suggestion of 'Spicydll' - prevents null dereference
     {
-        return CRYPTO_LIB_ERR_NULL_SA;
+        status = CRYPTO_LIB_ERR_NULL_SA;
+        return status;
     }
     if (arsn == NULL && sa_ptr->arsn_len > 0)
     {
-        return CRYPTO_LIB_ERR_NULL_ARSN;
+        status = CRYPTO_LIB_ERR_NULL_ARSN;
+        return status;
     }
     if (iv == NULL && sa_ptr->shivf_len > 0 && crypto_config.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
-        return CRYPTO_LIB_ERR_NULL_IV;
+        status = CRYPTO_LIB_ERR_NULL_IV;
+        return status;
     }
-    
-    // If sequence number field is greater than zero, check for replay
+    return status;
+}
+
+/**
+ * @brief Function: Crypto_Check_Anti_Replay_ARSNW
+ * Sanity Check, validates ARSN within window
+ * @param sa_ptr: SecurityAssociation_t*
+ * @param arsn: uint8_t*
+ * @param arsn_valid: uint8_t*
+ **/
+int32_t Crypto_Check_Anti_Replay_ARSNW(SecurityAssociation_t* sa_ptr, uint8_t* arsn, int8_t* arsn_valid)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
     if (sa_ptr->shsnf_len > 0)
     {
         // Check Sequence Number is in ARSNW
@@ -855,11 +923,23 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t* sa_ptr, uint8_t* arsn, u
         // Valid ARSN received, increment stored value
         else
         {
-            ARSN_VALID = CRYPTO_TRUE;
+            *arsn_valid = CRYPTO_TRUE;
             // memcpy(sa_ptr->arsn, arsn, sa_ptr->arsn_len);
         }
     }
-    // If IV is greater than zero and using GCM, check for replay
+    return status;
+}
+
+/**
+ * @brief Function: Crypto_Check_Anti_Replay_GCM
+ * Sanity Check, validates IV within window
+ * @param sa_ptr: SecurityAssociation_t*
+ * @param iv: uint8_t*
+ * @param iv_valid: uint8_t*
+ **/
+int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t* sa_ptr, uint8_t* iv, int8_t* iv_valid)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
     if ((sa_ptr->iv_len > 0) && (sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM))
     {
         // Check IV is in ARSNW
@@ -893,20 +973,46 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t* sa_ptr, uint8_t* arsn, u
         // Valid IV received, increment stored value
         else
         {
-            IV_VALID = CRYPTO_TRUE;
+            *iv_valid = CRYPTO_TRUE;
             // memcpy(sa_ptr->iv, iv, sa_ptr->iv_len);
         }
     }
-    // IV length is greater than zero, but not using an incrementing IV as in GCM
-    // we can't verify this internally as Crpytolib doesn't track previous IVs
-    // or generate random ones
-    // else{}
+    return status;
+}
+
+/**
+ * @brief Function: Crypto_Check_Anti_Replay
+ * Verifies data within window.
+ * @param sa_ptr: SecurityAssociation_t*
+ * @param arsn: uint8_t*
+ * @param iv: uint8_t*
+ **/
+int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t* sa_ptr, uint8_t* arsn, uint8_t* iv)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    int8_t iv_valid = -1;
+    int8_t arsn_valid = -1;
+
+    // Check for NULL pointers
+    status = Crypto_Check_Anti_Replay_Verify_Pointers(sa_ptr, arsn, iv);
+
+    // If sequence number field is greater than zero, check for replay
+    if(status == CRYPTO_LIB_SUCCESS)
+    {
+        status = Crypto_Check_Anti_Replay_ARSNW(sa_ptr, arsn, &arsn_valid);
+    }
+
+    // If IV is greater than zero and using GCM, check for replay
+    if(status == CRYPTO_LIB_SUCCESS)
+    {
+        status = Crypto_Check_Anti_Replay_GCM(sa_ptr, iv, &iv_valid);
+    }
 
     // For GCM specifically, if have a valid IV...
-    if ((sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM) && (IV_VALID == CRYPTO_TRUE))
+    if ((sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM || sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM_SIV) && (iv_valid == CRYPTO_TRUE))
     {
         // Using ARSN? Need to be valid to increment both
-        if (sa_ptr->arsn_len > 0 && ARSN_VALID == CRYPTO_TRUE)
+        if (sa_ptr->arsn_len > 0 && arsn_valid == CRYPTO_TRUE)
         {
             memcpy(sa_ptr->iv, iv, sa_ptr->iv_len);
             memcpy(sa_ptr->arsn, arsn, sa_ptr->arsn_len);
@@ -919,18 +1025,25 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t* sa_ptr, uint8_t* arsn, u
     }
 
     // If not GCM, and ARSN is valid - can incrmeent it
-    if (sa_ptr->ecs != CRYPTO_CIPHER_AES256_GCM && ARSN_VALID == CRYPTO_TRUE)
+    if ((sa_ptr->ecs != CRYPTO_CIPHER_AES256_GCM && sa_ptr->ecs != CRYPTO_CIPHER_AES256_GCM_SIV) && arsn_valid == CRYPTO_TRUE)
     {
         memcpy(sa_ptr->arsn, arsn, sa_ptr->arsn_len);
+    }
+
+    if(status != CRYPTO_LIB_SUCCESS)
+    {
+        // Log error if it happened
+        mc_if->mc_log(status);
     }
 
     return status;
 }
 
-/*
-** @brief: For a given algorithm, return the associated key length in bytes
-** @param: algo
-*/
+/**
+* @brief: Function: Crypto_Get_ECS_Algo_Keylen
+* For a given algorithm, return the associated key length in bytes
+* @param algo: uint8_t
+**/
 int32_t Crypto_Get_ECS_Algo_Keylen(uint8_t algo)
 {
     int32_t retval = -1;
@@ -938,6 +1051,9 @@ int32_t Crypto_Get_ECS_Algo_Keylen(uint8_t algo)
     switch (algo)
     {
     case CRYPTO_CIPHER_AES256_GCM:
+        retval = 32;
+        break;
+    case CRYPTO_CIPHER_AES256_GCM_SIV:
         retval = 32;
         break;
     case CRYPTO_CIPHER_AES256_CBC:
@@ -953,10 +1069,11 @@ int32_t Crypto_Get_ECS_Algo_Keylen(uint8_t algo)
     return retval;
 }
 
-/*
-** @brief: For a given algorithm, return the associated key length in bytes
-** @param: algo
-*/
+/**
+* @brief: Function: Crypto_Get_ACS_Algo_Keylen
+* For a given algorithm, return the associated key length in bytes
+* @param algo: uint8_t
+**/
 int32_t Crypto_Get_ACS_Algo_Keylen(uint8_t algo)
 {
     int32_t retval = -1;
@@ -979,6 +1096,11 @@ int32_t Crypto_Get_ACS_Algo_Keylen(uint8_t algo)
     return retval;
 }
 
+/**
+* @brief: Function: Crypto_Get_Security_Header_Length
+* Return Security Header Length
+* @param sa_ptr: SecurityAssociation_t*
+**/
 int32_t Crypto_Get_Security_Header_Length(SecurityAssociation_t* sa_ptr)
 {
     /* Narrator's Note: Leaving this here for future work
@@ -1002,12 +1124,17 @@ int32_t Crypto_Get_Security_Header_Length(SecurityAssociation_t* sa_ptr)
     return securityHeaderLength;
 }
 
+/**
+* @brief: Function: Crypto_Get_Security_Trailer_Length
+* Return Security Trailer Length
+* @param sa_ptr: SecurityAssociation_t*
+**/
 int32_t Crypto_Get_Security_Trailer_Length(SecurityAssociation_t* sa_ptr)
 {
     if (!sa_ptr) 
     { 
 #ifdef DEBUG
-        printf(KRED "Get_Trailer_Header_Length passed Null SA!\n" RESET);
+        printf(KRED "Get_Trailer_Trailer_Length passed Null SA!\n" RESET);
 #endif
         return CRYPTO_LIB_ERR_NULL_SA;
     }
