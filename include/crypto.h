@@ -182,7 +182,7 @@ int32_t Crypto_TM_Do_Decrypt_NONAEAD(uint8_t sa_service_type, uint16_t pdu_len, 
 void Crypto_TM_Calc_PDU_MAC(uint16_t* pdu_len, uint16_t byte_idx, SecurityAssociation_t* sa_ptr, int* mac_loc);
 int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t* sa_ptr, uint8_t ecs_is_aead_algorithm, uint16_t byte_idx, uint8_t* p_new_dec_frame, uint16_t pdu_len, uint8_t* p_ingest, crypto_key_t* ekp, crypto_key_t* akp, uint8_t iv_loc, int mac_loc, uint16_t aad_len, uint8_t* aad, uint8_t** pp_processed_frame, uint16_t* p_decrypted_length);
 void Crypto_TM_Process_Debug_Print(uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t* sa_ptr);
-
+void Crypto_TM_Print_FSR(uint8_t* p_ingest, uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t* sa_ptr);
 
 extern uint8_t Crypto_Prep_Reply(uint8_t* ingest, uint8_t appID);
 extern int32_t Crypto_increment(uint8_t* num, int length);

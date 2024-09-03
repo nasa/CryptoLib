@@ -1767,35 +1767,8 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
 
         Crypto_TM_Process_Debug_Print(byte_idx, pdu_len, sa_ptr);
 
-        // TODO: Call OCF Debug print function here
-        if(current_managed_parameters_struct.has_ocf == TM_HAS_OCF)
-        {
-            byte_idx += (pdu_len + sa_ptr->stmacf_len);
-            Telemetry_Frame_Ocf_Fsr_t report;
-            printf("%d\n", byte_idx);
-            printf("%02x\n", p_ingest[byte_idx] >> 7);
-            report.cwt = (p_ingest[byte_idx] >> 7);
-            report.fvn = (p_ingest[byte_idx] >> 4) & 0x0007;
-            report.af = (p_ingest[byte_idx] & 0x0008);
-            report.bsnf = (p_ingest[byte_idx] & 0x0004);
-            report.bmacf = (p_ingest[byte_idx] & 0x0002);
-            report.bsaf = (p_ingest[byte_idx] & 0x0001);
-            byte_idx++;
-            report.lspi = (p_ingest[byte_idx] << 8) | (p_ingest[byte_idx + 1]);
-            byte_idx += 2;
-            report.snval = p_ingest[byte_idx];
-            byte_idx++;
-            // TM_t* tm_frame = NULL;
-
-            // TODO: Parse OCF bits into report variable from p_ingest using byte_idx calculation in Crypto_TM_Process_debug_print
-            // NOTE: Check `void Crypto_TM_updateOCF(void)`
-            //Crypto_TM_updateOCF(report, tm_frame);
-            Crypto_fsrPrint(&report);
-        }
-
-        // Copy pdu into output frame
-        // this will be over-written by decryption functions if necessary,
-        // but not by authentication which requires
+        // TODO: separate into own function: 
+        Crypto_TM_Print_FSR(p_ingest, byte_idx, pdu_len, sa_ptr);
 
         // Get Key        
         status = Crypto_TM_Get_Keys(&ekp, &akp, sa_ptr);
@@ -1821,6 +1794,28 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
     } 
 
     return status;
+}
+
+void Crypto_TM_Print_FSR(uint8_t* p_ingest, uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t* sa_ptr)
+{
+    if(current_managed_parameters_struct.has_ocf == TM_HAS_OCF)
+        {
+            byte_idx += (pdu_len + sa_ptr->stmacf_len);
+            Telemetry_Frame_Ocf_Fsr_t report;
+            report.cwt = (p_ingest[byte_idx] >> 7);
+            report.fvn = (p_ingest[byte_idx] >> 4) & 0x0007;
+            report.af = (p_ingest[byte_idx] & 0x0008);
+            report.bsnf = (p_ingest[byte_idx] & 0x0004);
+            report.bmacf = (p_ingest[byte_idx] & 0x0002);
+            report.bsaf = (p_ingest[byte_idx] & 0x0001);
+            byte_idx += 1;
+            report.lspi = (p_ingest[byte_idx] << 8) | (p_ingest[byte_idx + 1]);
+            byte_idx += 2;
+            report.snval = (p_ingest[byte_idx]);
+            byte_idx++;
+            
+            Crypto_fsrPrint(&report);
+        }
 }
 
 /**
