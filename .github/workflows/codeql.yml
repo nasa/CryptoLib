@@ -42,7 +42,7 @@ jobs:
       matrix:
         include:
         - language: c-cpp
-          build-mode: autobuild
+          build-mode: manual
         - language: python
           build-mode: none
         # CodeQL supports the following values keywords for 'language': 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'swift'
@@ -79,7 +79,7 @@ jobs:
     - if: matrix.build-mode == 'manual'
       shell: bash
       run: |
-        bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
+        bash ${GITHUB_WORKSPACE}/support/scripts/internal_docker_build.sh
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
