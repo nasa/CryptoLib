@@ -12,8 +12,6 @@
 name: "CodeQL Advanced"
 
 on:
-  push:
-    branches: [ main, dev, 287-consider-open-source-code-scanner-extensions-and-update-codecov]
   pull_request:
     branches: [ main, dev ]
 
