@@ -903,31 +903,31 @@ int32_t sa_get_operational_sa_from_gvcid_generate_error(int32_t* status, uint8_t
             // ordering so the 'most accurate' SA's error is returned
             // (determined by matching header fields L to R)
             sa_mismatched_tfvn_error(&i, status, tfvn, scid, vcid, mapid);
-            if(status != CRYPTO_LIB_SUCCESS)
+            if(*status != CRYPTO_LIB_SUCCESS)
             {
                 sa_debug_block(tfvn, scid, vcid, mapid);
                 return *status;   
             }
             sa_mismatched_scid(&i, status, tfvn, scid, vcid, mapid);
-            if(status != CRYPTO_LIB_SUCCESS)
+            if(*status != CRYPTO_LIB_SUCCESS)
             {
                 sa_debug_block(tfvn, scid, vcid, mapid);
                 return *status;   
             }
             sa_mismatched_vcid(&i, status, tfvn, scid, vcid, mapid);
-            if(status != CRYPTO_LIB_SUCCESS)
+            if(*status != CRYPTO_LIB_SUCCESS)
             {
                 sa_debug_block(tfvn, scid, vcid, mapid);
                 return *status;   
             }
             sa_mismatched_mapid(&i, status, tfvn, scid, vcid, mapid);
-            if(status != CRYPTO_LIB_SUCCESS)
+            if(*status != CRYPTO_LIB_SUCCESS)
             {
                 sa_debug_block(tfvn, scid, vcid, mapid);
                 return *status;   
             }
             sa_non_operational_sa(&i, status, tfvn, scid, vcid, mapid);
-            if(status != CRYPTO_LIB_SUCCESS)
+            if(*status != CRYPTO_LIB_SUCCESS)
             {
                 sa_debug_block(tfvn, scid, vcid, mapid);
                 return *status;   
