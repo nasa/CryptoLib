@@ -13,7 +13,7 @@ name: "CodeQL Advanced"
 
 on:
   push:
-    branches: [ main, dev, 287-consider-open-source-code-scanner-extensions-and-update-codecov ]
+    branches: [ main, dev, 287-consider-open-source-code-scanner-extensions-and-update-codecov]
   pull_request:
     branches: [ main, dev ]
 
@@ -96,7 +96,7 @@ jobs:
         && sudo ./configure \
         && sudo make install \
         && sudo ldconfig 
-        bash ${GITHUB_WORKSPACE}/support/scripts/internal_docker_build.sh
+        bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
