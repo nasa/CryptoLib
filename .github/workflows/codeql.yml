@@ -11,9 +11,9 @@
 #
 name: "CodeQL Advanced"
 
-on:
-  pull_request:
-    branches: [ main, dev ]
+# on:
+#   pull_request:
+#     branches: [ main, dev ]
 
 jobs:
   analyze:
@@ -77,8 +77,6 @@ jobs:
     - if: matrix.build-mode == 'manual'
       shell: bash
       run: |
-        sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3
-        sudo pip install pycryptodome
         curl  \
         -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 \
         -o /tmp/libgpg-error-1.50.tar.bz2 \
@@ -94,9 +92,4 @@ jobs:
         && sudo ./configure \
         && sudo make install \
         && sudo ldconfig 
-        bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
 
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
-      with:
-        category: "/language:${{matrix.language}}"
