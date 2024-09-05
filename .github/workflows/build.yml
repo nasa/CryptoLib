@@ -60,7 +60,7 @@ jobs:
       run: sudo pip install pycryptodome
     - name: Install Libgcrypt
       run: >
-        ansible-playbook ${GITHUB_WORKSPACE}/.github/workflows/codeql.yml
+        ansible-playbook ${GITHUB_WORKSPACE}/support/scripts/codeql.yml
     # End Container Setup
     
     - name: Internal Build Script
