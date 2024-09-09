@@ -149,6 +149,14 @@ UTEST(TM_PROCESS_SECURITY, HAPPY_PATH_CLEAR_FECF)
     int truth_tm_len = 0;
     hex_conversion(truth_tm_h, &truth_tm_b, &truth_tm_len);
 
+    SecurityAssociation_t* sa_ptr;
+    // Deactivate SA 1
+    sa_if->sa_get_from_spi(1, &sa_ptr);
+    sa_ptr->sa_state = SA_NONE;
+    // Activate SA 5
+    sa_if->sa_get_from_spi(5, &sa_ptr);
+    sa_ptr->sa_state = SA_OPERATIONAL;
+
     status = Crypto_TM_ProcessSecurity((uint8_t* )framed_tm_b, framed_tm_len, &ptr_processed_frame, &processed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Determine managed parameters by GVCID, which nominally happens in TO
@@ -1131,6 +1139,7 @@ UTEST(TM_PROCESS_ENC_VAL, AEAD_AES_GCM_BITMASK_1)
 
     printf("\n\n");
 
+    Crypto_Shutdown();
     free(truth_tm_b);
     free(framed_tm_b);
     free(iv_b);
@@ -1148,15 +1157,15 @@ UTEST(TM_PROCESS, TM_SA_SEGFAULT_TEST)
                             IV_INTERNAL, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    // AOS Tests
+    // TM Tests
     //Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x002c, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_NO_OCF, 1786, AOS_NO_FHEC, AOS_HAS_IZ, 10);
-    GvcidManagedParameters_t AOS_Managed_Parameters = {1, 0x002c, 0, AOS_HAS_FECF, AOS_NO_FHEC, AOS_HAS_IZ, 10, AOS_SEGMENT_HDRS_NA, 1786, AOS_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_Managed_Parameters);
+    GvcidManagedParameters_t TM_UT_Managed_Parameters = {0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
     status = Crypto_Init();
 
     // Test frame setup
-    char* framed_tm_h = "02c000001800FFFF";
+    char* framed_tm_h = "02c00000180000FFFFFF";
     char* framed_tm_b = NULL;
     int framed_tm_len = 0;
     hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);
@@ -1167,6 +1176,43 @@ UTEST(TM_PROCESS, TM_SA_SEGFAULT_TEST)
     Crypto_Shutdown();
     free(framed_tm_b);
     free(ptr_processed_frame);
+}
+
+UTEST(TM_PROCESS, TM_SA_NOT_OPERATIONAL)
+{
+    // Local Variables
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    uint8_t* ptr_processed_frame = NULL;
+    uint16_t processed_tm_len;
+
+    // Configure Parameters
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // TM Tests
+    //Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TM_UT_Managed_Parameters = {0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+
+    status = Crypto_Init();
+
+    TC_t* tc_sdls_processed_frame;
+    tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
+    memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
+
+    // Test frame setup
+    //                  "2003000C00002C414243444546"
+    char* framed_tm_h = "02C000001800002C414243444546";
+    char* framed_tm_b = NULL;
+    int framed_tm_len = 0;
+    hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);
+    status = Crypto_TM_ProcessSecurity((uint8_t* )framed_tm_b, framed_tm_len, &ptr_processed_frame, &processed_tm_len);
+
+    ASSERT_EQ(CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL, status);
+    free(framed_tm_b);
+    free(tc_sdls_processed_frame);
+    Crypto_Shutdown();
 }
 
 UTEST_MAIN();
