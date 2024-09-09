@@ -1201,8 +1201,6 @@ UTEST(TM_PROCESS, TM_SA_NOT_OPERATIONAL)
     tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
 
-    // Test frame setup
-    //                  "2003000C00002C414243444546"
     char* framed_tm_h = "02C000001800002C414243444546";
     char* framed_tm_b = NULL;
     int framed_tm_len = 0;
