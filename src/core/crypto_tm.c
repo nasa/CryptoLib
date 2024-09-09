@@ -1767,7 +1767,6 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
 
         Crypto_TM_Process_Debug_Print(byte_idx, pdu_len, sa_ptr);
 
-        // TODO: separate into own function: 
         Crypto_TM_Print_FSR(p_ingest, byte_idx, pdu_len, sa_ptr);
 
         // Get Key        
@@ -1804,9 +1803,9 @@ void Crypto_TM_Print_FSR(uint8_t* p_ingest, uint16_t byte_idx, uint16_t pdu_len,
             Telemetry_Frame_Ocf_Fsr_t report;
             report.cwt = (p_ingest[byte_idx] >> 7);
             report.fvn = (p_ingest[byte_idx] >> 4) & 0x0007;
-            report.af = (p_ingest[byte_idx] & 0x0008);
-            report.bsnf = (p_ingest[byte_idx] & 0x0004);
-            report.bmacf = (p_ingest[byte_idx] & 0x0002);
+            report.af = (p_ingest[byte_idx] >> 3) & 0x0001;
+            report.bsnf = (p_ingest[byte_idx] >> 2) & 0x0001;
+            report.bmacf = (p_ingest[byte_idx] >> 1) & 0x0001;
             report.bsaf = (p_ingest[byte_idx] & 0x0001);
             byte_idx += 1;
             report.lspi = (p_ingest[byte_idx] << 8) | (p_ingest[byte_idx + 1]);
