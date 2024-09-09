@@ -1249,6 +1249,13 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8
 
     }
 
+    // check sa state before decrypting
+    if (sa_ptr->sa_state != SA_OPERATIONAL)
+    {
+        printf(KRED "Error: SA Not Operational \n" RESET);
+        return CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL;
+    }
+
     if(sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_TRUE)
     {
 
