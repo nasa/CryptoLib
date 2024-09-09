@@ -1768,6 +1768,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
         Crypto_TM_Process_Debug_Print(byte_idx, pdu_len, sa_ptr);
 
         Crypto_TM_Print_FSR(p_ingest, byte_idx, pdu_len, sa_ptr);
+        Crypto_TM_Print_CLCW(p_ingest, byte_idx, pdu_len, sa_ptr);
 
         // Get Key        
         status = Crypto_TM_Get_Keys(&ekp, &akp, sa_ptr);
@@ -1793,6 +1794,35 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
     } 
 
     return status;
+}
+
+void Crypto_TM_Print_CLCW(uint8_t* p_ingest, uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t* sa_ptr)
+{
+    if(current_managed_parameters_struct.has_ocf == TM_HAS_OCF)
+        {
+            byte_idx += (pdu_len + sa_ptr->stmacf_len);
+            Telemetry_Frame_Ocf_Clcw_t clcw;
+            clcw.cwt = (p_ingest[byte_idx] >> 7) & 0x0001;
+            clcw.cvn = (p_ingest[byte_idx] >> 5) & 0x0003;
+            clcw.sf = (p_ingest[byte_idx] >> 2) & 0x0007;
+            clcw.cie = (p_ingest[byte_idx] >> 0) & 0x0003;
+            byte_idx += 1;
+            clcw.vci = (p_ingest[byte_idx] >> 2) & 0x003F;
+            clcw.spare0 = (p_ingest[byte_idx] >> 0) & 0x0003;
+            byte_idx += 1;
+            clcw.nrfaf = (p_ingest[byte_idx] >> 7) & 0x0001;
+            clcw.nblf = (p_ingest[byte_idx] >> 6) & 0x0001;
+            clcw.lof = (p_ingest[byte_idx] >> 5) & 0x0001;
+            clcw.waitf = (p_ingest[byte_idx] >> 4) & 0x0001;
+            clcw.rtf = (p_ingest[byte_idx] >> 3) & 0x0001;
+            clcw.fbc = (p_ingest[byte_idx] >> 1) & 0x0003;
+            clcw.spare1 = (p_ingest[byte_idx] >> 0) & 0x0001;
+            byte_idx += 1;
+            clcw.rv = (p_ingest[byte_idx]);
+            byte_idx += 1;
+            
+            Crypto_clcwPrint(&clcw);
+        }
 }
 
 void Crypto_TM_Print_FSR(uint8_t* p_ingest, uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t* sa_ptr)
