@@ -11,7 +11,7 @@
 #
 ---
 name: "CodeQL Advanced"
-.dependency_template: &dependency_template
+dependency_template: &dependency_template
   run: |
     curl  \
     -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 \
