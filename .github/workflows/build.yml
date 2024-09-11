@@ -46,7 +46,7 @@ jobs:
       run: sudo pip install pycryptodome
     - name: Install Libgcrypt
       run: >
-        ansible-playbook ${GITHUB_WORKSPACE}/support/scripts/codeql.yml
+        bash ${GITHUB_WORKSPACE}/support/scripts/update_env.sh
     # End Container Setup
     
     - name: Internal Build Script
@@ -86,7 +86,21 @@ jobs:
   #     run: sudo pip install pycryptodome
   #   - name: Install Libgcrypt
   #     run: >
-  #       bash ${GITHUB_WORKSPACE}/support/scripts/update_env.sh
+  #       curl  
+  #       -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 
+  #       -o /tmp/libgpg-error-1.50.tar.bz2 
+  #       && tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/ 
+  #       && cd /tmp/libgpg-error-1.50 
+  #       && sudo ./configure 
+  #       && sudo make install 
+  #       && curl  
+  #       -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 
+  #       -o /tmp/libgcrypt-1.11.0.tar.bz2 
+  #       && tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ 
+  #       && cd /tmp/libgcrypt-1.11.0 
+  #       && sudo ./configure 
+  #       && sudo make install
+  #       && sudo ldconfig
   #   # End Container Setup
     
   #   - name: KMC Build Script
@@ -127,6 +141,14 @@ jobs:
    
      #      cmake -DCMAKE_INSTALL_PREFIX=/home/runner/.local -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
     - name: Build WolfSSL
+      #  -DCMAKE_INSTALL_PREFIX=/home/runner/.local
+      #run: cd /tmp/wolfssl/;
+      #     sudo chown -R runner /usr/local; 
+      #     ./autogen.sh;
+      #     sudo ./configure --enable-aesccm --enable-aessiv --enable-cmac;
+      #     make;
+      #     make install;
+      #sudo chown -R runner /usr/local;
       run: mkdir /tmp/wolfssl/build;
            cd /tmp/wolfssl/build;
            cmake -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
