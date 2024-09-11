@@ -36,7 +36,7 @@ on:
   pull_request:
     branches: [ main, dev ]
 
-  jobs:
+jobs:
   - internal_build:
       variables: 
         BUILD_STRING: &BUILD_STRING
