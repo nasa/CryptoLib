@@ -17,6 +17,13 @@ on:
     branches: [ main, dev, 291-apply-codeql-workflow-to-all-builds ]
   pull_request:
     branches: [ main, dev ]
+env:
+  BUILD_DEPENDENCIES: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3
+  BUILD_PIP_DEPENDENCIES: sudo pip install pycryptodome
+  BUILD_UPDATE_LIBGPG: curl -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 -o /tmp/libgpg-error-1.50.tar.bz2 
+  BUILD_INSTALL_LIBGPG: tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/ && cd /tmp/libgpg-error-1.50 && sudo ./configure && sudo make install 
+  BUILD_UPDATE_LIBGCRYPT: curl -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 -o /tmp/libgcrypt-1.11.0.tar.bz2 
+  BUILD_INSTALL_LIBGCRYPT: tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ && cd /tmp/libgcrypt-1.11.0 && sudo ./configure && sudo make install && sudo ldconfig    
 
 jobs:
   internal_build:
@@ -40,20 +47,6 @@ jobs:
 
     env: 
       BUILD_STRING: build_internal.sh
-      BUILD_DEPENDENCIES: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3
-      BUILD_PIP_DEPENDENCIES: sudo pip install pycryptodome
-      BUILD_SETUP: |
-        curl -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 -o /tmp/libgpg-error-1.50.tar.bz2 
-        tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/
-        cd /tmp/libgpg-error-1.50 
-        sudo ./configure 
-        sudo make install 
-        curl -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 -o /tmp/libgcrypt-1.11.0.tar.bz2 
-        tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ 
-        cd /tmp/libgcrypt-1.11.0 
-        sudo ./configure 
-        sudo make install 
-        sudo ldconfig    
 
 
     strategy:
@@ -100,7 +93,9 @@ jobs:
       run: |
         $BUILD_DEPENDENCIES
         $BUILD_PIP_DEPENDENCIES
-        $BUILD_SETUP
+        $BUILD_UPDATE_LIBGPG
+        $BUILD_INSTALL_LIBGPG
+        $BUILD_UPDATE_LIBGCRYPT
+        $BUILD_INSTALL_LIBGCRYPT
         bash ${GITHUB_WORKSPACE}/support/scripts/$BUILD_STRING
-  
   
