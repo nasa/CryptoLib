@@ -148,17 +148,13 @@ jobs:
            sudo ldconfig;
 
       - name: Update Dependencies
-        run: |
-          curl  
-          -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 
-          -o /tmp/libgpg-error-1.50.tar.bz2 
+        run: >
+          curl -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 -o /tmp/libgpg-error-1.50.tar.bz2 
           && tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/ 
           && cd /tmp/libgpg-error-1.50 
           && sudo ./configure 
           && sudo make install 
-          && curl  
-          -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 
-          -o /tmp/libgcrypt-1.11.0.tar.bz2 
+          && curl -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 -o /tmp/libgcrypt-1.11.0.tar.bz2 
           && tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ 
           && cd /tmp/libgcrypt-1.11.0 
           && sudo ./configure 
