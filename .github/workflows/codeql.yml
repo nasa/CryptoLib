@@ -119,9 +119,9 @@ jobs:
           bash ${GITHUB_WORKSPACE}/support/scripts/$BUILD_STRING
 
       - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
-      with:
-        category: "/language:${{matrix.language}}"
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{matrix.language}}"
 
   build_wolf:
       name: Analyze Build_Wolf
@@ -196,9 +196,9 @@ jobs:
           bash ${GITHUB_WORKSPACE}/support/scripts/$BUILD_STRING
 
       - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
-      with:
-        category: "/language:${{matrix.language}}"
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{matrix.language}}"
 
   build_rhel:
       name: Analyze Build_RHEL
@@ -246,6 +246,6 @@ jobs:
           bash ${GITHUB_WORKSPACE}/support/scripts/$BUILD_STRING
 
       - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
-      with:
-        category: "/language:${{matrix.language}}"
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{matrix.language}}"
