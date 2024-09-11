@@ -48,6 +48,10 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    - name: Update Dependencies
+      run: |
+        bash ${GITHUB_WORKSPACE}/support/scripts/update_env.sh
+
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
@@ -58,7 +62,6 @@ jobs:
     - if: matrix.build-mode == 'manual'
       shell: bash
       run: |
-        bash ${GITHUB_WORKSPACE}/support/scripts/update_env.sh
         bash ${GITHUB_WORKSPACE}/support/scripts/$BUILD_STRING
   
   minimal_build:
@@ -90,6 +93,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Update Dependencies
+        run: |
+          bash ${GITHUB_WORKSPACE}/support/scripts/update_env.sh
+
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
@@ -100,7 +107,6 @@ jobs:
       - if: matrix.build-mode == 'manual'
         shell: bash
         run: |
-          bash ${GITHUB_WORKSPACE}/support/scripts/update_env.sh
           bash ${GITHUB_WORKSPACE}/support/scripts/$BUILD_STRING
 
   wolf_build:
@@ -140,6 +146,10 @@ jobs:
            cmake --build .;
            sudo make install;
            sudo ldconfig;
+
+      - name: Update Dependencies
+        run: |
+          bash ${GITHUB_WORKSPACE}/support/scripts/update_env.sh
       
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -154,7 +164,6 @@ jobs:
       - if: matrix.build-mode == 'manual'
         shell: bash
         run: |
-          bash ${GITHUB_WORKSPACE}/support/scripts/update_env.sh
           bash ${GITHUB_WORKSPACE}/support/scripts/$BUILD_STRING
 
   rhel_build:
@@ -186,6 +195,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Update Dependencies
+        run: |
+          bash ${GITHUB_WORKSPACE}/support/scripts/update_env.sh
+
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
@@ -196,5 +209,4 @@ jobs:
       - if: matrix.build-mode == 'manual'
         shell: bash
         run: |
-          bash ${GITHUB_WORKSPACE}/support/scripts/update_env.sh
           bash ${GITHUB_WORKSPACE}/support/scripts/$BUILD_STRING
