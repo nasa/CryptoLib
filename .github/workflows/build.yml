@@ -53,11 +53,6 @@ jobs:
       working-directory: ${{github.workspace}}
       run: bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
 
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
-      with:
-        category: "/language:c-cpp"
-
     - name: Code-Coverage
       working-directory: ${{github.workspace}}
       run: make gcov
@@ -139,16 +134,7 @@ jobs:
     - name: Clone WolfSSL
       run: git clone --depth 1 --branch v5.6.0-stable https://github.com/wolfSSL/wolfssl.git /tmp/wolfssl
    
-     #      cmake -DCMAKE_INSTALL_PREFIX=/home/runner/.local -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
     - name: Build WolfSSL
-      #  -DCMAKE_INSTALL_PREFIX=/home/runner/.local
-      #run: cd /tmp/wolfssl/;
-      #     sudo chown -R runner /usr/local; 
-      #     ./autogen.sh;
-      #     sudo ./configure --enable-aesccm --enable-aessiv --enable-cmac;
-      #     make;
-      #     make install;
-      #sudo chown -R runner /usr/local;
       run: mkdir /tmp/wolfssl/build;
            cd /tmp/wolfssl/build;
            cmake -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
