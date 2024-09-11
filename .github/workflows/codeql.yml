@@ -42,17 +42,17 @@ jobs:
       BUILD_STRING: build_internal.sh
       BUILD_DEPENDENCIES: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3
       BUILD_PIP_DEPENDENCIES: sudo pip install pycryptodome
-      # BUILD_SETUP: curl -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 -o /tmp/libgpg-error-1.50.tar.bz2 \
-      #   && tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/ \
-      #   && cd /tmp/libgpg-error-1.50 \
-      #   && sudo ./configure \
-      #   && sudo make install \
-      #   && curl -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 -o /tmp/libgcrypt-1.11.0.tar.bz2 \
-      #   && tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ \
-      #   && cd /tmp/libgcrypt-1.11.0 \
-      #   && sudo ./configure \
-      #   && sudo make install \
-      #   && sudo ldconfig 
+      BUILD_SETUP: curl -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 -o /tmp/libgpg-error-1.50.tar.bz2 
+        tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/
+        cd /tmp/libgpg-error-1.50 
+        sudo ./configure 
+        sudo make install 
+        curl -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 -o /tmp/libgcrypt-1.11.0.tar.bz2 
+        tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ 
+        cd /tmp/libgcrypt-1.11.0 
+        sudo ./configure 
+        sudo make install 
+        sudo ldconfig    
 
 
     strategy:
@@ -61,8 +61,8 @@ jobs:
         include:
         - language: c-cpp
           build-mode: manual
-        - language: python
-          build-mode: none
+        # - language: python
+        #   build-mode: none
         # CodeQL supports the following values keywords for 'language': 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'swift'
         # Use `c-cpp` to analyze code written in C, C++ or both
         # Use 'java-kotlin' to analyze code written in Java, Kotlin or both
@@ -99,17 +99,7 @@ jobs:
       run: |
         $BUILD_DEPENDENCIES
         $BUILD_PIP_DEPENDENCIES
-        curl -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 -o /tmp/libgpg-error-1.50.tar.bz2 
-        tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/
-        cd /tmp/libgpg-error-1.50 
-        sudo ./configure 
-        sudo make install 
-        curl -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 -o /tmp/libgcrypt-1.11.0.tar.bz2 
-        tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ 
-        cd /tmp/libgcrypt-1.11.0 
-        sudo ./configure 
-        sudo make install 
-        sudo ldconfig        
+        $BUILD_SETUP
         bash ${GITHUB_WORKSPACE}/support/scripts/$BUILD_STRING
   
   
