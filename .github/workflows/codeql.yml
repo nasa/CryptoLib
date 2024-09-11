@@ -60,7 +60,7 @@ jobs:
 
     - if: matrix.build-mode == 'manual'
       shell: bash
-      run: >
+      run: |
         sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3
         bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
     - name: Perform CodeQL Analysis
