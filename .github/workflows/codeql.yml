@@ -11,24 +11,6 @@
 #
 ---
 name: "CodeQL Advanced"
-anchors: 
-  dependency_template: &dependency_template |
-    curl  \
-    -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 \
-    -o /tmp/libgpg-error-1.50.tar.bz2 \
-    && tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/ \
-    && cd /tmp/libgpg-error-1.50 \
-    && sudo ./configure \
-    && sudo make install \
-    && curl  \
-    -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 \
-    -o /tmp/libgcrypt-1.11.0.tar.bz2 \
-    && tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ \
-    && cd /tmp/libgcrypt-1.11.0 \
-    && sudo ./configure \
-    && sudo make install \
-    && sudo ldconfig  
-    && 'eval $BUILD_STRING'
 
 on: 
   push:
@@ -39,7 +21,7 @@ on:
 jobs:
   internal_build:
     variables: 
-      BUILD_STRING: &BUILD_STRING
+      BUILD_STRING: bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
 
     name: Analyze (${{ matrix.language }})
     # Runner size impacts CodeQL analysis time. To learn more, please see:
@@ -100,6 +82,22 @@ jobs:
     # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
     - if: matrix.build-mode == 'manual'
       shell: bash
-      run: *dependency_template
+      run: |
+        curl  \
+        -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 \
+        -o /tmp/libgpg-error-1.50.tar.bz2 \
+        && tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/ \
+        && cd /tmp/libgpg-error-1.50 \
+        && sudo ./configure \
+        && sudo make install \
+        && curl  \
+        -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 \
+        -o /tmp/libgcrypt-1.11.0.tar.bz2 \
+        && tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ \
+        && cd /tmp/libgcrypt-1.11.0 \
+        && sudo ./configure \
+        && sudo make install \
+        && sudo ldconfig  
+        && 'eval $BUILD_STRING'
   
   
