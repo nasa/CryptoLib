@@ -19,7 +19,7 @@ on:
     branches: [ main, dev ]
 
 jobs:
-  internal_build:
+  analyze:
     name: Analyze Build_Internal
     runs-on: ubuntu-latest
     permissions:
@@ -64,7 +64,7 @@ jobs:
       run: |
         bash ${GITHUB_WORKSPACE}/support/scripts/$BUILD_STRING
   
-  minimal_build:
+  analyze:
       name: Analyze Build_Minimal
       runs-on: ubuntu-latest
       permissions:
@@ -109,7 +109,7 @@ jobs:
         run: |
           bash ${GITHUB_WORKSPACE}/support/scripts/$BUILD_STRING
 
-  wolf_build:
+  analyze:
       name: Analyze Build_Wolf
       runs-on: ubuntu-latest
       permissions:
@@ -151,7 +151,7 @@ jobs:
 
       - name: Install Python Libraries
         run: sudo pip install pycryptodome
-        
+
       - name: Update Dependencies
         run: >
           curl -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 -o /tmp/libgpg-error-1.50.tar.bz2 
@@ -181,7 +181,7 @@ jobs:
         run: |
           bash ${GITHUB_WORKSPACE}/support/scripts/$BUILD_STRING
 
-  rhel_build:
+  analyze:
       name: Analyze Build_RHEL
       runs-on: ubuntu-latest
       permissions:
