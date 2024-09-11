@@ -130,6 +130,7 @@ endif()
 if(DEFINED CFE_SYSTEM_PSPNAME)
     set(CMAKE_INSTALL_RPATH "./${INSTALL_SUBDIR}")
     add_cfe_app(crypto ${LIB_SRC_FILES})
+    target_include_directories(crypto PUBLIC ../include)
     install(TARGETS crypto RUNTIME_DEPENDENCIES DESTINATION ${CMAKE_INSTALL_PREFIX}/${TGTSYS_${SYSVAR}}/${INSTALL_SUBDIR})
 else() 
     # Standalone build
