@@ -179,8 +179,8 @@ else()
 endif()
 
 if(SA_MARIADB)
-    file(GLOB MYSQL_SCRIPTS sa/sa_mariadb_sql/*.sql)
-    file(GLOB MYSQL_TEST_SCRIPTS sa/test_sa_mariadb_sql/*.sql)
+    file(GLOB MYSQL_SCRIPTS sa/sadb_mariadb_sql/*.sql)
+    file(GLOB MYSQL_TEST_SCRIPTS sa/test_sadb_mariadb_sql/*.sql)
     install(FILES ${MYSQL_SCRIPTS}
             DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/sa_mariadb_sql)
     install(FILES ${MYSQL_TEST_SCRIPTS}
