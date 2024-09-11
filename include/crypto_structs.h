@@ -20,17 +20,17 @@
 #define CRYPTO_STRUCTS_H
 
 #include "crypto_config.h"
-#include <stdio.h>
 
-#ifdef NOS3 // NOS3/cFS build is ready
-#include "common_types.h"
-#else // Assume build outside of NOS3/cFS infrastructure
-#include <stdint.h>
-#include <stdio.h>
-#ifndef KMC_CFFI_EXCLUDE // Exclude libraries that CFFI parser can’t process
-#include <stdlib.h>
-#endif
-#endif
+    #ifdef NOS3 // NOS3/cFS build is ready
+        #include "common_types.h"
+    #endif // Assume build outside of NOS3/cFS infrastructure
+
+    #ifndef KMC_CFFI_EXCLUDE // Exclude libraries that CFFI parser can’t process
+        #include <stdlib.h>
+        #include <stdint.h>
+        #include <stdio.h>
+    #endif  
+    
 
 /*
 ** Definitions
