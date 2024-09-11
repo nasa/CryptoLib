@@ -4,9 +4,9 @@
 # Will update Libgpg and LibGCrypt
 #
 
-apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3
-pip install pycryptodome
+sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3
+sudo pip install pycryptodome
 curl -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 -o /tmp/libgpg-error-1.50.tar.bz2 
-tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/ && cd /tmp/libgpg-error-1.50 && ./configure && make install 
+tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/ && cd /tmp/libgpg-error-1.50 && sudo ./configure && sudo make install 
 curl -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 -o /tmp/libgcrypt-1.11.0.tar.bz2 
-tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ && cd /tmp/libgcrypt-1.11.0 && ./configure && make install && ldconfig    
+tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ && cd /tmp/libgcrypt-1.11.0 && sudo ./configure && sudo make install && sudo ldconfig    
