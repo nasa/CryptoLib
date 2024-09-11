@@ -42,7 +42,8 @@ jobs:
       BUILD_STRING: build_internal.sh
       BUILD_DEPENDENCIES: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3
       BUILD_PIP_DEPENDENCIES: sudo pip install pycryptodome
-      BUILD_SETUP: curl -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 -o /tmp/libgpg-error-1.50.tar.bz2 
+      BUILD_SETUP: |
+        curl -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 -o /tmp/libgpg-error-1.50.tar.bz2 
         tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/
         cd /tmp/libgpg-error-1.50 
         sudo ./configure 
