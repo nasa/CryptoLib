@@ -56,6 +56,8 @@
 #define RESET
 #endif
 
+// Managed Parameters Size
+#define GVCID_MAN_PARAM_SIZE 250
 
 // Max Frame Size
 #define TC_MAX_FRAME_SIZE 1024
@@ -75,6 +77,7 @@
 #define TYPE_TC 0
 #define TYPE_MAP 1
 #define TYPE_TM 2
+#define TYPE_AOS 3
 
 // Specific to Authentication
 #define SA_NONE 0
@@ -116,6 +119,7 @@
 #define ENABLED 1
 #define IV_SIZE 16   /* TM IV size bytes */
 #define IV_SIZE_TC 4 /* TC IV size bytes */
+#define REF_SIZE 250
 #define OCF_SIZE 4
 #define MAC_SIZE 16           /* bytes */
 #define FECF_SIZE 2

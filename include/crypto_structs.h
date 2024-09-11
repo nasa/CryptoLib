@@ -21,15 +21,16 @@
 
 #include "crypto_config.h"
 
-#ifdef NOS3 // NOS3/cFS build is ready
-#include "common_types.h"
-#else // Assume build outside of NOS3/cFS infrastructure
-#include <stdint.h>
-#ifndef KMC_CFFI_EXCLUDE // Exclude libraries that CFFI parser can’t process
-#include <stdio.h>
-#include <stdlib.h>
-#endif
-#endif
+    #ifdef NOS3 // NOS3/cFS build is ready
+        #include "common_types.h"
+    #endif // Assume build outside of NOS3/cFS infrastructure
+
+    #ifndef KMC_CFFI_EXCLUDE // Exclude libraries that CFFI parser can’t process
+        #include <stdlib.h>
+        #include <stdint.h>
+        #include <stdio.h>
+    #endif  
+    
 
 /*
 ** Definitions
@@ -52,8 +53,8 @@ typedef struct
     uint16_t spi;  // Security Parameter Index
     uint16_t ekid; // Encryption Key ID  (Used with numerically indexed keystores, EG inmemory keyring)
     uint16_t akid; // Authentication Key ID
-    char*    ek_ref; // Encryption Key Reference (Used with string-referenced keystores,EG-PKCS12 keystores, KMC crypto)
-    char*    ak_ref; // Authentication Key Reference (Used with string-referenced keystores,EG-PKCS12 keystores, KMC crypto)
+    char ek_ref[REF_SIZE]; // Encryption Key Reference (Used with string-referenced keystores,EG-PKCS12 keystores, KMC crypto)
+    char ak_ref[REF_SIZE]; // Authentication Key Reference (Used with string-referenced keystores,EG-PKCS12 keystores, KMC crypto)
     uint8_t sa_state : 2;
     crypto_gvcid_t gvcid_blk;
     // crypto_gvcid_t gvcid_tm_blk[NUM_GVCID];

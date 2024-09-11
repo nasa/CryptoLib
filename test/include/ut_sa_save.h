@@ -16,13 +16,20 @@
    jstar-development-team@mail.nasa.gov
 */
 
-#include "key_interface.h"
-/* Variables */
-static KeyInterfaceStruct key_if_struct;
+#ifndef CRYPTOLIB_UT_SA_SAVE_H
+#define CRYPTOLIB_UT_SA_SAVE_H
 
-/* Functions */
-KeyInterface get_key_interface_custom(void)
+#ifdef __cplusplus
+extern "C"
 {
-    fprintf(stderr, "ERROR: Loading custom key interface stub source code. Rebuild CryptoLib with -DKEY_CUSTOM=ON to use implementation.\n");
-    return &key_if_struct;
-}
+#endif
+
+#include "crypto.h"
+#include "shared_util.h"
+#include <stdio.h>
+
+#ifdef __cplusplus
+} /* Close scope of 'extern "C"' declaration which encloses file. */
+#endif
+
+#endif //CRYPTOLIB_UT_SA_SAVE_H

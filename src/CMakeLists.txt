@@ -19,6 +19,14 @@ include_directories(../include)
 
 aux_source_directory(core LIB_SRC_FILES)
 
+if(CRYPTO_CUSTOM)
+    aux_source_directory(${CRYPTO_CUSTOM_PATH} CRYPTO_FILES)
+    list(APPEND LIB_SRC_FILES ${CRYPTO_FILES})
+else()
+    aux_source_directory(crypto/custom_stub CRYPTO_FILES)
+    list(APPEND LIB_SRC_FILES ${CRYPTO_FILES})
+endif()
+
 if(CRYPTO_LIBGCRYPT)
     aux_source_directory(crypto/libgcrypt LIBGCRYPT_FILES)
     list(APPEND LIB_SRC_FILES ${LIBGCRYPT_FILES})
@@ -45,7 +53,7 @@ endif()
 
 if(KEY_CUSTOM)
     # Assumes CryptoLib is a Git submodule to project and custom directories and definitions exist at top level
-    aux_source_directory(../../key/custom KEY_CUSTOM_FILES)
+    aux_source_directory(${KEY_CUSTOM_PATH} KEY_CUSTOM_FILES)
     list(APPEND LIB_SRC_FILES ${KEY_CUSTOM_FILES})
 else()
     aux_source_directory(key/custom_stub KEY_CUSTOM_FILES)
@@ -70,7 +78,7 @@ endif()
 
 if(MC_CUSTOM)
     # Assumes CryptoLib is a Git submodule to project and custom directories and definitions exist at top level
-    aux_source_directory(../../mc/custom MC_CUSTOM_FILES)
+    aux_source_directory(${MC_CUSTOM_PATH} MC_CUSTOM_FILES)
     list(APPEND LIB_SRC_FILES ${MC_CUSTOM_FILES})
 else()
     aux_source_directory(mc/custom_stub MC_CUSTOM_FILES)
@@ -95,7 +103,7 @@ endif()
 
 if(SA_CUSTOM)
     # Assumes CryptoLib is a Git submodule to project and custom directories and definitions exist at top level
-    aux_source_directory(../../sa/custom SA_CUSTOM_FILES)
+    aux_source_directory(${SA_CUSTOM_PATH} SA_CUSTOM_FILES)
     list(APPEND LIB_SRC_FILES ${SA_CUSTOM_FILES})
 else()
     aux_source_directory(sa/custom_stub SA_CUSTOM_FILES)
@@ -120,8 +128,10 @@ endif()
 
 # Create the app module
 if(DEFINED CFE_SYSTEM_PSPNAME)
-    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/cpu${TGTSYS_${SYSVAR}}/${INSTALL_SUBDIR}")
+    set(CMAKE_INSTALL_RPATH "./${INSTALL_SUBDIR}")
     add_cfe_app(crypto ${LIB_SRC_FILES})
+    target_include_directories(crypto PUBLIC ../include)
+    install(TARGETS crypto RUNTIME_DEPENDENCIES DESTINATION ${CMAKE_INSTALL_PREFIX}/${TGTSYS_${SYSVAR}}/${INSTALL_SUBDIR})
 else() 
     # Standalone build
     add_library(crypto SHARED ${LIB_SRC_FILES})
@@ -150,6 +160,10 @@ endif()
 
 file(GLOB CRYPTO_INCLUDES ../include/*.h)
 set_target_properties(crypto PROPERTIES PUBLIC_HEADER "${CRYPTO_INCLUDES}")
+# This causes the library to be installed as libcryptolib.so while still being
+# referred to as crypto from CMake. Without this, the library filename would be
+# libcrypto.so which would conflict with openssl
+set_target_properties(crypto PROPERTIES OUTPUT_NAME "cryptolib")
 
 add_custom_command(TARGET crypto POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:crypto> ${PROJECT_BINARY_DIR}/lib/libcrypto.so
@@ -167,8 +181,8 @@ else()
 endif()
 
 if(SA_MARIADB)
-    file(GLOB MYSQL_SCRIPTS sa/sa_mariadb_sql/*.sql)
-    file(GLOB MYSQL_TEST_SCRIPTS sa/test_sa_mariadb_sql/*.sql)
+    file(GLOB MYSQL_SCRIPTS sa/sadb_mariadb_sql/*.sql)
+    file(GLOB MYSQL_TEST_SCRIPTS sa/test_sadb_mariadb_sql/*.sql)
     install(FILES ${MYSQL_SCRIPTS}
             DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/sa_mariadb_sql)
     install(FILES ${MYSQL_TEST_SCRIPTS}

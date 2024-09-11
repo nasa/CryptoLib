@@ -37,6 +37,11 @@ CryptoConfig_t crypto_config;
 CryptographyKmcCryptoServiceConfig_t* cryptography_kmc_crypto_config = NULL;
 CamConfig_t* cam_config = NULL;
 
+GvcidManagedParameters_t gvcid_managed_parameters_array[GVCID_MAN_PARAM_SIZE];  
+int gvcid_counter = 0;
+GvcidManagedParameters_t gvcid_null_struct = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+GvcidManagedParameters_t current_managed_parameters_struct = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
 GvcidManagedParameters_t* gvcid_managed_parameters = NULL;
 GvcidManagedParameters_t* current_managed_parameters = NULL;
 
@@ -51,10 +56,28 @@ int32_t crypto_free_config_structs(void);
  * @brief Function: Crypto_Init_TC_Unit_Test
  * @return int32: status
  **/
-int32_t Crypto_TC_Init(void)
+int32_t Crypto_SC_Init(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    status = Crypto_Init_TC_Unit_Test();
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, 
+                            TC_HAS_PUS_HDR, TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, 
+                            TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F, 
+                            SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // TC
+    //Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    
+    //Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 4, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    TC_UT_Managed_Parameters.vcid = 4;
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+
+    // TM
+    //Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_HAS_OCF, 1786, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TM_UT_Managed_Parameters = {0, 0x0003, 1, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_HAS_OCF, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+    status = Crypto_Init();
     return status;
 }
 
@@ -71,11 +94,16 @@ int32_t Crypto_Init_TC_Unit_Test(void)
                             TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F, 
                             SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TC Tests
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 4, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+    //Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    TC_UT_Managed_Parameters.vcid = 1;
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    TC_UT_Managed_Parameters.vcid = 4;
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 4, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
     status = Crypto_Init();
-    printf("Crypto_Init TC Called.\n");
     return status;
 }
 
@@ -91,9 +119,20 @@ int32_t Crypto_Init_TM_Unit_Test(void)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TM_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TM Tests
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, 1786, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002c, 0, TM_NO_FECF, TM_SEGMENT_HDRS_NA, 1786, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0042, 0, TM_NO_FECF, TM_SEGMENT_HDRS_NA, 1786, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    //Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TM_UT_Managed_Parameters = {0, 0x0003, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+    
+    //Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002c, 0, TM_NO_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    TM_UT_Managed_Parameters.scid = 0x002c;
+    TM_UT_Managed_Parameters.has_fecf = TM_NO_FECF;
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+
+    //Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0042, 0, TM_NO_FECF, TM_SEGMENT_HDRS_NA, TM_HAS_OCF, 1786, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    TM_UT_Managed_Parameters.scid = 0x0042;
+    TM_UT_Managed_Parameters.has_ocf = TM_HAS_OCF;
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+
     status = Crypto_Init();
     return status;
 }
@@ -110,9 +149,19 @@ int32_t Crypto_Init_AOS_Unit_Test(void)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             AOS_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0003, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, 1786, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x002c, 0, AOS_NO_FECF, AOS_SEGMENT_HDRS_NA, 1786, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0042, 0, AOS_NO_FECF, AOS_SEGMENT_HDRS_NA, 1786, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    //Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0003, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_NO_OCF, 1786, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t AOS_UT_Managed_Parameters = {1, 0x0003, 0, AOS_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, AOS_SEGMENT_HDRS_NA, 1786, AOS_NO_OCF, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
+
+    //Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x002c, 0, AOS_NO_FECF, AOS_SEGMENT_HDRS_NA, AOS_NO_OCF, 1786, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    AOS_UT_Managed_Parameters.scid = 0x002c;
+    AOS_UT_Managed_Parameters.has_fecf = AOS_NO_FECF;
+    Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
+
+    //Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0042, 0, AOS_NO_FECF, AOS_SEGMENT_HDRS_NA, AOS_HAS_OCF, 1786, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    AOS_UT_Managed_Parameters.scid = 0x0042;
+    AOS_UT_Managed_Parameters.has_ocf = AOS_HAS_OCF;
+    Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
     return status;
 }
@@ -133,7 +182,7 @@ int32_t Crypto_Init_With_Configs(CryptoConfig_t* crypto_config_p, GvcidManagedPa
         memcpy(&crypto_config, crypto_config_p, CRYPTO_CONFIG_SIZE);
         crypto_config.init_status = INITIALIZED;
     }
-    gvcid_managed_parameters = gvcid_managed_parameters_p;
+    gvcid_managed_parameters_array[0] = *gvcid_managed_parameters_p;
     sa_mariadb_config = sa_mariadb_config_p;
     cryptography_kmc_crypto_config = cryptography_kmc_crypto_config_p;
     status = Crypto_Init();
@@ -154,7 +203,7 @@ int32_t Crypto_Init(void)
         printf(KRED "ERROR: CryptoLib must be configured before intializing!\n" RESET);
         return status; // No configuration set -- return!
     }
-    if (gvcid_managed_parameters == NULL)
+    if (gvcid_managed_parameters_array[0].set_flag == 0)
     {
         status = CRYPTO_MANAGED_PARAM_CONFIGURATION_NOT_COMPLETE;
         printf(KRED "ERROR: CryptoLib  Managed Parameters must be configured before intializing!\n" RESET);
@@ -166,62 +215,68 @@ int32_t Crypto_Init(void)
 // #endif
 
     /* Key Interface */
-    if (crypto_config.key_type == KEY_TYPE_CUSTOM)
-    {
-        key_if = get_key_interface_custom();
-    }
-    else if (crypto_config.key_type == KEY_TYPE_INTERNAL)
-    {
-        key_if = get_key_interface_internal();
-    }
-    else // KEY_TYPE_KMC
-    {
-        key_if = get_key_interface_kmc();
+    if (key_if == NULL) {
+        if (crypto_config.key_type == KEY_TYPE_CUSTOM)
+        {
+            key_if = get_key_interface_custom();
+        }
+        else if (crypto_config.key_type == KEY_TYPE_INTERNAL)
+        {
+            key_if = get_key_interface_internal();
+        }
+        else // KEY_TYPE_KMC
+        {
+            key_if = get_key_interface_kmc();
+        }
     }
     key_if->key_init();
     // TODO: Check and return status on error
 
     /* MC Interface */
-    if (crypto_config.mc_type == MC_TYPE_CUSTOM)
-    {
-        mc_if = get_mc_interface_custom();
-    }
-    else if (crypto_config.mc_type == MC_TYPE_DISABLED)
-    {
-        mc_if = get_mc_interface_disabled();
-    }
-    else // MC_TYPE_INTERNAL
-    {
-        mc_if = get_mc_interface_internal();
+    if (mc_if == NULL) {
+        if (crypto_config.mc_type == MC_TYPE_CUSTOM)
+        {
+            mc_if = get_mc_interface_custom();
+        }
+        else if (crypto_config.mc_type == MC_TYPE_DISABLED)
+        {
+            mc_if = get_mc_interface_disabled();
+        }
+        else // MC_TYPE_INTERNAL
+        {
+            mc_if = get_mc_interface_internal();
+        }
     }
     mc_if->mc_initialize();
     // TODO: Check and return status on error
 
     /* SA Interface */
-    // Prepare SA type from config
-    if (crypto_config.sa_type == SA_TYPE_CUSTOM)
-    {
-        sa_if = get_sa_interface_custom();
-    }
-    else if (crypto_config.sa_type == SA_TYPE_INMEMORY)
-    {
-        sa_if = get_sa_interface_inmemory();
-    }
-    else if (crypto_config.sa_type == SA_TYPE_MARIADB)
-    {
-        if (sa_mariadb_config == NULL)
+    if (sa_if == NULL) {
+        // Prepare SA type from config
+        if (crypto_config.sa_type == SA_TYPE_CUSTOM)
         {
-            status = CRYPTO_MARIADB_CONFIGURATION_NOT_COMPLETE;
-            printf(KRED "ERROR: CryptoLib MariaDB must be configured before intializing!\n" RESET);
-            return status; // MariaDB connection specified but no configuration exists, return!
+            sa_if = get_sa_interface_custom();
         }
-        sa_if = get_sa_interface_mariadb();
+        else if (crypto_config.sa_type == SA_TYPE_INMEMORY)
+        {
+            sa_if = get_sa_interface_inmemory();
+        }
+        else if (crypto_config.sa_type == SA_TYPE_MARIADB)
+        {
+            if (sa_mariadb_config == NULL)
+            {
+                status = CRYPTO_MARIADB_CONFIGURATION_NOT_COMPLETE;
+                printf(KRED "ERROR: CryptoLib MariaDB must be configured before intializing!\n" RESET);
+                return status; // MariaDB connection specified but no configuration exists, return!
+            }
+            sa_if = get_sa_interface_mariadb();
+        }
+        else
+        {
+            status = SADB_INVALID_SADB_TYPE;
+            return status;
+        } // TODO: Error stack
     }
-    else
-    {
-        status = SADB_INVALID_SADB_TYPE;
-        return status;
-    } // TODO: Error stack
 
     /* Crypto Interface */
     // Determine which cryptographic module is in use
@@ -229,6 +284,10 @@ int32_t Crypto_Init(void)
     if (cryptography_if == NULL)
     {
         cryptography_if = get_cryptography_interface_wolfssl();
+    }
+    if (cryptography_if == NULL)
+    {
+        cryptography_if = get_cryptography_interface_custom();
     }
     if (cryptography_if == NULL)
     {   // Note this needs to be the last option in the chain due to addition configuration required
@@ -300,11 +359,19 @@ int32_t Crypto_Shutdown(void)
     crypto_free_config_structs();
 
     current_managed_parameters = NULL;
-    if (gvcid_managed_parameters != NULL)
+    current_managed_parameters_struct = gvcid_null_struct;
+    for(int i = 0; i < gvcid_counter; i++)
     {
-        Crypto_Free_Managed_Parameters(gvcid_managed_parameters);
-        gvcid_managed_parameters = NULL;
+        gvcid_managed_parameters_array[i] = gvcid_null_struct;
     }
+    
+    gvcid_counter = 0;
+
+    // if (gvcid_managed_parameters != NULL)
+    // {
+    //     Crypto_Free_Managed_Parameters(gvcid_managed_parameters);
+    //     gvcid_managed_parameters = NULL;
+    // }
 
     if(key_if != NULL)
     {
@@ -460,6 +527,24 @@ int32_t Crypto_Config_Cam(uint8_t cam_enabled, char* cookie_file_path, char* key
     return status;
 }
 
+
+
+int32_t Crypto_Config_Add_Gvcid_Managed_Parameters(GvcidManagedParameters_t gvcid_managed_parameters_struct)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    if (gvcid_counter > GVCID_MAN_PARAM_SIZE)
+    {
+        status = CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT;
+    }
+    else
+    {
+        gvcid_managed_parameters_array[gvcid_counter] = gvcid_managed_parameters_struct;
+        gvcid_counter++;    
+    }
+    
+    return status; 
+}
+
 /**
  * @brief Function: Crypto_Config_Add_Gvcid_Managed_Parameter
  * @param tfvn: uint8
@@ -467,47 +552,51 @@ int32_t Crypto_Config_Cam(uint8_t cam_enabled, char* cookie_file_path, char* key
  * @param vcid: uint8
  * @param has_fecf: uint8
  * @param has_segmentation_hdr: uint8
+ * @param has_ocf: uint8
  * @param max_frame_size: uint16
- * @param has_fhec: uint8
+ * @param aos_has_fhec: uint8
+ * @param aos_has_iz: uint8
+ * @param aos_iz_len: uint16
  * @return int32: Success/Failure
  **/
-int32_t Crypto_Config_Add_Gvcid_Managed_Parameter(uint8_t tfvn, uint16_t scid, uint8_t vcid, uint8_t has_fecf,
-                                                  uint8_t has_segmentation_hdr, uint16_t max_frame_size, uint8_t aos_has_fhec,
-                                                  uint8_t aos_has_iz, uint16_t aos_iz_len)
-{
-    int32_t status = CRYPTO_LIB_SUCCESS;
+// int32_t Crypto_Config_Add_Gvcid_Managed_Parameter(uint8_t tfvn, uint16_t scid, uint8_t vcid, uint8_t has_fecf,
+//                                                   uint8_t has_segmentation_hdr, uint8_t has_ocf, uint16_t max_frame_size, uint8_t aos_has_fhec,
+//                                                   uint8_t aos_has_iz, uint16_t aos_iz_len)
+// {
+//     int32_t status = CRYPTO_LIB_SUCCESS;
 
-    if (gvcid_managed_parameters == NULL)
-    { // case: Global Root Node not Set
-        gvcid_managed_parameters = (GvcidManagedParameters_t* )calloc(1, GVCID_MANAGED_PARAMETERS_SIZE);
-        if(gvcid_managed_parameters != NULL)
-        {
-            gvcid_managed_parameters->tfvn = tfvn;
-            gvcid_managed_parameters->scid = scid;
-            gvcid_managed_parameters->vcid = vcid;
-            gvcid_managed_parameters->has_fecf = has_fecf;
-            gvcid_managed_parameters->has_segmentation_hdr = has_segmentation_hdr;
-            gvcid_managed_parameters->max_frame_size = max_frame_size;
-            gvcid_managed_parameters->aos_has_fhec = aos_has_fhec;
-            gvcid_managed_parameters->aos_has_iz = aos_has_iz;
-            gvcid_managed_parameters->aos_iz_len = aos_iz_len;
-            gvcid_managed_parameters->next = NULL;
-            return status;
-        }
-        else
-        {
-            // calloc failed - return error
-            status = CRYPTO_LIB_ERR_NULL_BUFFER;
-            return status;
-        }
-    }
-    else
-    { // Recurse through nodes and add at end
-        return crypto_config_add_gvcid_managed_parameter_recursion(tfvn, scid, vcid, has_fecf, has_segmentation_hdr, 
-                                                                   max_frame_size, aos_has_fhec, aos_has_iz, aos_iz_len, 
-                                                                   gvcid_managed_parameters);
-    }
-}
+//     if (gvcid_managed_parameters == NULL)
+//     { // case: Global Root Node not Set
+//         gvcid_managed_parameters = (GvcidManagedParameters_t* )calloc(1, GVCID_MANAGED_PARAMETERS_SIZE);
+//         if(gvcid_managed_parameters != NULL)
+//         {
+//             gvcid_managed_parameters->tfvn = tfvn;
+//             gvcid_managed_parameters->scid = scid;
+//             gvcid_managed_parameters->vcid = vcid;
+//             gvcid_managed_parameters->has_fecf = has_fecf;
+//             gvcid_managed_parameters->has_segmentation_hdr = has_segmentation_hdr;
+//             gvcid_managed_parameters->has_ocf = has_ocf;
+//             gvcid_managed_parameters->max_frame_size = max_frame_size;
+//             gvcid_managed_parameters->aos_has_fhec = aos_has_fhec;
+//             gvcid_managed_parameters->aos_has_iz = aos_has_iz;
+//             gvcid_managed_parameters->aos_iz_len = aos_iz_len;
+//             gvcid_managed_parameters->next = NULL;
+//             return status;
+//         }
+//         else
+//         {
+//             // calloc failed - return error
+//             status = CRYPTO_LIB_ERR_NULL_BUFFER;
+//             return status;
+//         }
+//     }
+//     else
+//     { // Recurse through nodes and add at end
+//         return crypto_config_add_gvcid_managed_parameter_recursion(tfvn, scid, vcid, has_fecf, has_segmentation_hdr, has_ocf,
+//                                                                    max_frame_size, aos_has_fhec, aos_has_iz, aos_iz_len, 
+//                                                                    gvcid_managed_parameters);
+//     }
+// }
 
 int32_t crypto_free_config_structs(void)
 {
@@ -589,30 +678,31 @@ char* crypto_deep_copy_string(char* src_string)
  * @param managed_parameter: GvcidManagedParameters_t*
  * @return int32: Success/Failure
  **/
-int32_t crypto_config_add_gvcid_managed_parameter_recursion(uint8_t tfvn, uint16_t scid, uint8_t vcid, uint8_t has_fecf,
-                                                            uint8_t has_segmentation_hdr, uint16_t max_frame_size, uint8_t aos_has_fhec,
-                                                            uint8_t aos_has_iz, uint16_t aos_iz_len,
-                                                            GvcidManagedParameters_t* managed_parameter)
-{
-    if (managed_parameter->next != NULL)
-    {
-        return crypto_config_add_gvcid_managed_parameter_recursion(tfvn, scid, vcid, has_fecf, has_segmentation_hdr,
-                                                                   max_frame_size, aos_has_fhec, aos_has_iz,
-                                                                   aos_iz_len, managed_parameter->next);
-    }
-    else
-    {
-        managed_parameter->next = (GvcidManagedParameters_t* )calloc(1, GVCID_MANAGED_PARAMETERS_SIZE);
-        managed_parameter->next->tfvn = tfvn;
-        managed_parameter->next->scid = scid;
-        managed_parameter->next->vcid = vcid;
-        managed_parameter->next->has_fecf = has_fecf;
-        managed_parameter->next->has_segmentation_hdr = has_segmentation_hdr;
-        managed_parameter->next->max_frame_size = max_frame_size;
-        managed_parameter->next->next = NULL;
-        return CRYPTO_LIB_SUCCESS;
-    }
-}
+// int32_t crypto_config_add_gvcid_managed_parameter_recursion(uint8_t tfvn, uint16_t scid, uint8_t vcid, uint8_t has_fecf,
+//                                                             uint8_t has_segmentation_hdr, uint8_t has_ocf, uint16_t max_frame_size, uint8_t aos_has_fhec,
+//                                                             uint8_t aos_has_iz, uint16_t aos_iz_len,
+//                                                             GvcidManagedParameters_t* managed_parameter)
+// {
+//     if (managed_parameter->next != NULL)
+//     {
+//         return crypto_config_add_gvcid_managed_parameter_recursion(tfvn, scid, vcid, has_fecf, has_segmentation_hdr, has_ocf,
+//                                                                    max_frame_size, aos_has_fhec, aos_has_iz,
+//                                                                    aos_iz_len, managed_parameter->next);
+//     }
+//     else
+//     {
+//         managed_parameter->next = (GvcidManagedParameters_t* )calloc(1, GVCID_MANAGED_PARAMETERS_SIZE);
+//         managed_parameter->next->tfvn = tfvn;
+//         managed_parameter->next->scid = scid;
+//         managed_parameter->next->vcid = vcid;
+//         managed_parameter->next->has_fecf = has_fecf;
+//         managed_parameter->next->has_segmentation_hdr = has_segmentation_hdr;
+//         managed_parameter->next->has_ocf = has_ocf;
+//         managed_parameter->next->max_frame_size = max_frame_size;
+//         managed_parameter->next->next = NULL;
+//         return CRYPTO_LIB_SUCCESS;
+//     }
+// }
 
 /**
  * @brief Function: Crypto_Local_Config
