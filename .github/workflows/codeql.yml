@@ -61,128 +61,128 @@ jobs:
         bash ${GITHUB_WORKSPACE}/support/scripts/update_env.sh
         bash ${GITHUB_WORKSPACE}/support/scripts/$BUILD_STRING
   
-minimal_build:
-    name: Analyze Build_Internal
-    runs-on: ubuntu-latest
-    permissions:
-      # required for all workflows
-      security-events: write
+  minimal_build:
+      name: Analyze Build_Internal
+      runs-on: ubuntu-latest
+      permissions:
+        # required for all workflows
+        security-events: write
 
-      # required to fetch internal or private CodeQL packs
-      packages: read
+        # required to fetch internal or private CodeQL packs
+        packages: read
 
-      # only required for workflows in private repositories
-      actions: read
-      contents: read
+        # only required for workflows in private repositories
+        actions: read
+        contents: read
 
-    env: 
-      BUILD_STRING: build_minimal.sh
+      env: 
+        BUILD_STRING: build_minimal.sh
 
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-        - language: c-cpp
-          build-mode: manual
-        # - language: python
-        #   build-mode: none
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      strategy:
+        fail-fast: false
+        matrix:
+          include:
+          - language: c-cpp
+            build-mode: manual
+          # - language: python
+          #   build-mode: none
+      steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    # Initializes the CodeQL tools for scanning.
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
-      with:
-        languages: ${{ matrix.language }}
-        build-mode: ${{ matrix.build-mode }}
+      # Initializes the CodeQL tools for scanning.
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
 
-    - if: matrix.build-mode == 'manual'
-      shell: bash
-      run: |
-        bash ${GITHUB_WORKSPACE}/support/scripts/update_env.sh
-        bash ${GITHUB_WORKSPACE}/support/scripts/$BUILD_STRING
+      - if: matrix.build-mode == 'manual'
+        shell: bash
+        run: |
+          bash ${GITHUB_WORKSPACE}/support/scripts/update_env.sh
+          bash ${GITHUB_WORKSPACE}/support/scripts/$BUILD_STRING
 
-wolf_build:
-    name: Analyze Build_Internal
-    runs-on: ubuntu-latest
-    permissions:
-      # required for all workflows
-      security-events: write
+  wolf_build:
+      name: Analyze Build_Internal
+      runs-on: ubuntu-latest
+      permissions:
+        # required for all workflows
+        security-events: write
 
-      # required to fetch internal or private CodeQL packs
-      packages: read
+        # required to fetch internal or private CodeQL packs
+        packages: read
 
-      # only required for workflows in private repositories
-      actions: read
-      contents: read
+        # only required for workflows in private repositories
+        actions: read
+        contents: read
 
-    env: 
-      BUILD_STRING: build_wolf.sh
+      env: 
+        BUILD_STRING: build_wolf.sh
 
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-        - language: c-cpp
-          build-mode: manual
-        # - language: python
-        #   build-mode: none
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      strategy:
+        fail-fast: false
+        matrix:
+          include:
+          - language: c-cpp
+            build-mode: manual
+          # - language: python
+          #   build-mode: none
+      steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    # Initializes the CodeQL tools for scanning.
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
-      with:
-        languages: ${{ matrix.language }}
-        build-mode: ${{ matrix.build-mode }}
+      # Initializes the CodeQL tools for scanning.
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
 
-    - if: matrix.build-mode == 'manual'
-      shell: bash
-      run: |
-        bash ${GITHUB_WORKSPACE}/support/scripts/update_env.sh
-        bash ${GITHUB_WORKSPACE}/support/scripts/$BUILD_STRING
+      - if: matrix.build-mode == 'manual'
+        shell: bash
+        run: |
+          bash ${GITHUB_WORKSPACE}/support/scripts/update_env.sh
+          bash ${GITHUB_WORKSPACE}/support/scripts/$BUILD_STRING
 
-rhel_build:
-    name: Analyze Build_Internal
-    runs-on: ubuntu-latest
-    permissions:
-      # required for all workflows
-      security-events: write
+  rhel_build:
+      name: Analyze Build_Internal
+      runs-on: ubuntu-latest
+      permissions:
+        # required for all workflows
+        security-events: write
 
-      # required to fetch internal or private CodeQL packs
-      packages: read
+        # required to fetch internal or private CodeQL packs
+        packages: read
 
-      # only required for workflows in private repositories
-      actions: read
-      contents: read
+        # only required for workflows in private repositories
+        actions: read
+        contents: read
 
-    env: 
-      BUILD_STRING: build_rhel.sh
+      env: 
+        BUILD_STRING: build_rhel.sh
 
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-        - language: c-cpp
-          build-mode: manual
-        # - language: python
-        #   build-mode: none
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      strategy:
+        fail-fast: false
+        matrix:
+          include:
+          - language: c-cpp
+            build-mode: manual
+          # - language: python
+          #   build-mode: none
+      steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    # Initializes the CodeQL tools for scanning.
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
-      with:
-        languages: ${{ matrix.language }}
-        build-mode: ${{ matrix.build-mode }}
+      # Initializes the CodeQL tools for scanning.
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
 
-    - if: matrix.build-mode == 'manual'
-      shell: bash
-      run: |
-        bash ${GITHUB_WORKSPACE}/support/scripts/update_env.sh
-        bash ${GITHUB_WORKSPACE}/support/scripts/$BUILD_STRING
+      - if: matrix.build-mode == 'manual'
+        shell: bash
+        run: |
+          bash ${GITHUB_WORKSPACE}/support/scripts/update_env.sh
+          bash ${GITHUB_WORKSPACE}/support/scripts/$BUILD_STRING
