@@ -62,7 +62,7 @@ jobs:
         bash ${GITHUB_WORKSPACE}/support/scripts/$BUILD_STRING
   
   minimal_build:
-      name: Analyze Build_Internal
+      name: Analyze Build_Minimal
       runs-on: ubuntu-latest
       permissions:
         # required for all workflows
@@ -104,7 +104,7 @@ jobs:
           bash ${GITHUB_WORKSPACE}/support/scripts/$BUILD_STRING
 
   wolf_build:
-      name: Analyze Build_Internal
+      name: Analyze Build_Wolf
       runs-on: ubuntu-latest
       permissions:
         # required for all workflows
@@ -128,7 +128,19 @@ jobs:
             build-mode: manual
           # - language: python
           #   build-mode: none
+      
       steps:
+      - name: Clone WolfSSL
+        run: git clone --depth 1 --branch v5.6.0-stable https://github.com/wolfSSL/wolfssl.git /tmp/wolfssl
+      
+      - name: Build WolfSSL
+        run: mkdir /tmp/wolfssl/build;
+           cd /tmp/wolfssl/build;
+           cmake -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
+           cmake --build .;
+           sudo make install;
+           sudo ldconfig;
+      
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -146,7 +158,7 @@ jobs:
           bash ${GITHUB_WORKSPACE}/support/scripts/$BUILD_STRING
 
   rhel_build:
-      name: Analyze Build_Internal
+      name: Analyze Build_RHEL
       runs-on: ubuntu-latest
       permissions:
         # required for all workflows
