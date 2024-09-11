@@ -23,21 +23,7 @@ jobs:
       run: sudo pip install pycryptodome
     - name: Install Libgcrypt
       run: >
-        curl  
-        -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 
-        -o /tmp/libgpg-error-1.50.tar.bz2 
-        && tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/ 
-        && cd /tmp/libgpg-error-1.50 
-        && sudo ./configure 
-        && sudo make install 
-        && curl  
-        -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 
-        -o /tmp/libgcrypt-1.11.0.tar.bz2 
-        && tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ 
-        && cd /tmp/libgcrypt-1.11.0 
-        && sudo ./configure 
-        && sudo make install
-        && sudo ldconfig
+        bash ${GITHUB_WORKSPACE}/support/scripts/update_env.sh
     # End Container Setup
     
     - name: Minimal Build Script
@@ -100,21 +86,7 @@ jobs:
   #     run: sudo pip install pycryptodome
   #   - name: Install Libgcrypt
   #     run: >
-  #       curl  
-  #       -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 
-  #       -o /tmp/libgpg-error-1.50.tar.bz2 
-  #       && tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/ 
-  #       && cd /tmp/libgpg-error-1.50 
-  #       && sudo ./configure 
-  #       && sudo make install 
-  #       && curl  
-  #       -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 
-  #       -o /tmp/libgcrypt-1.11.0.tar.bz2 
-  #       && tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ 
-  #       && cd /tmp/libgcrypt-1.11.0 
-  #       && sudo ./configure 
-  #       && sudo make install
-  #       && sudo ldconfig
+  #       bash ${GITHUB_WORKSPACE}/support/scripts/update_env.sh
   #   # End Container Setup
     
   #   - name: KMC Build Script
@@ -149,34 +121,12 @@ jobs:
       run: sudo pip install pycryptodome
     - name: Install Libgcrypt
       run: >
-        curl  
-        -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 
-        -o /tmp/libgpg-error-1.50.tar.bz2 
-        && tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/ 
-        && cd /tmp/libgpg-error-1.50 
-        && sudo ./configure 
-        && sudo make install 
-        && curl  
-        -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 
-        -o /tmp/libgcrypt-1.11.0.tar.bz2 
-        && tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ 
-        && cd /tmp/libgcrypt-1.11.0 
-        && sudo ./configure 
-        && sudo make install
-        && sudo ldconfig
+        bash ${GITHUB_WORKSPACE}/support/scripts/update_env.sh
     - name: Clone WolfSSL
       run: git clone --depth 1 --branch v5.6.0-stable https://github.com/wolfSSL/wolfssl.git /tmp/wolfssl
    
      #      cmake -DCMAKE_INSTALL_PREFIX=/home/runner/.local -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
     - name: Build WolfSSL
-      #  -DCMAKE_INSTALL_PREFIX=/home/runner/.local
-      #run: cd /tmp/wolfssl/;
-      #     sudo chown -R runner /usr/local; 
-      #     ./autogen.sh;
-      #     sudo ./configure --enable-aesccm --enable-aessiv --enable-cmac;
-      #     make;
-      #     make install;
-      #sudo chown -R runner /usr/local;
       run: mkdir /tmp/wolfssl/build;
            cd /tmp/wolfssl/build;
            cmake -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
@@ -222,23 +172,7 @@ jobs:
       run: pip3 install pycryptodome
     - name: Install Libgcrypt
       run: >
-        curl 
-        -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 
-        -o /tmp/libgpg-error-1.50.tar.bz2 
-        && tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/ 
-        && cd /tmp/libgpg-error-1.50 
-        && ./configure 
-        && make install 
-        && curl  
-        -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 
-        -o /tmp/libgcrypt-1.11.0.tar.bz2 
-        && tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ 
-        && cd /tmp/libgcrypt-1.11.0 
-        && ./configure 
-        && make install  
-        && echo "export LD_LIBRARY_PATH=/usr/local/lib/:/usr/local/include:$LD_LIBRARY_PATH" >> ~/.bashrc 
-        && source ~/.bashrc 
-        && ldconfig
+        bash ${GITHUB_WORKSPACE}/support/scripts/update_env.sh
     # End Container Setup
 
     - name: RHEL Build Script
