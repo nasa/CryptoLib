@@ -62,11 +62,6 @@ jobs:
       shell: bash
       run: |
         bash ${GITHUB_WORKSPACE}/support/scripts/$BUILD_STRING
-        
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
-      with:
-        category: "/language:${{matrix.language}}"
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
