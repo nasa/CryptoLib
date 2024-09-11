@@ -20,7 +20,7 @@ on:
 
 jobs:
   internal_build:
-    name: Analyze Build_Internal (cpp)
+    name: Analyze Build_Internal
     # Runner size impacts CodeQL analysis time. To learn more, please see:
     #   - https://gh.io/recommended-hardware-resources-for-running-codeql
     #   - https://gh.io/supported-runners-and-hardware-resources
@@ -99,6 +99,7 @@ jobs:
         && sudo ./configure \
         && sudo make install \
         && sudo ldconfig \
+        && pwd \
         && $BUILD_STRING
   
   
