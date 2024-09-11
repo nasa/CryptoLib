@@ -30,6 +30,12 @@ name: "CodeQL Advanced"
     && sudo ldconfig  
     && 'eval $BUILD_STRING'
 
+on: 
+  push:
+    branches: [ main, dev, 291-apply-codeql-workflow-to-all-builds ]
+  pull_request:
+    branches: [ main, dev ]
+
   jobs:
   - internal_build:
       variables: 
