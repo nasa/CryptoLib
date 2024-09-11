@@ -39,7 +39,7 @@ jobs:
       contents: read
 
     env: 
-      BUILD_STRING: bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
+      BUILD_STRING: ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
 
 
     strategy:
@@ -98,8 +98,7 @@ jobs:
         && cd /tmp/libgcrypt-1.11.0 \
         && sudo ./configure \
         && sudo make install \
-        && sudo ldconfig \
-        && pwd \
-        && $BUILD_STRING
+        && sudo ldconfig 
+        bash $BUILD_STRING
   
   
