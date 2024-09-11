@@ -39,7 +39,7 @@ jobs:
       contents: read
 
     env: 
-      BUILD_STRING: ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
+      BUILD_STRING: build_internal.sh
 
 
     strategy:
@@ -99,6 +99,6 @@ jobs:
         && sudo ./configure \
         && sudo make install \
         && sudo ldconfig 
-        bash $BUILD_STRING
+        bash ${GITHUB_WORKSPACE}/support/scripts/$BUILD_STRING
   
   
