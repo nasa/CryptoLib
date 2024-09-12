@@ -1246,7 +1246,9 @@ static int32_t sa_expire(void)
 
     // Read ingest
     spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
+#ifdef DEBUG
     printf("spi = %d \n", spi);
+#endif
 
     // Check SPI exists and in 'Keyed' state
     if (spi < NUM_SA)
@@ -1288,7 +1290,9 @@ static int32_t sa_create(void)
 
     // Read sdls_frame.pdu.data
     spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
+#ifdef DEBUG
     printf("spi = %d \n", spi);
+#endif
 
     // Check if valid SPI
     if (spi < NUM_SA)
@@ -1347,7 +1351,9 @@ static int32_t sa_create(void)
     }
     else
     {
+#ifdef DEBUG
         printf(KRED "ERROR: SPI %d cannot be created.\n" RESET, spi);
+#endif
     }
 
     return CRYPTO_LIB_SUCCESS;
@@ -1364,7 +1370,9 @@ static int32_t sa_delete(void)
 
     // Read ingest
     spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
+#ifdef DEBUG
     printf("spi = %d \n", spi);
+#endif
 
     // Check SPI exists and in 'Unkeyed' state
     if (spi < NUM_SA)

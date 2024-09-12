@@ -1723,7 +1723,9 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
         p_new_dec_frame = (uint8_t*)calloc(1, (len_ingest) * sizeof(uint8_t));
         if (!p_new_dec_frame)
         {
+#ifdef DEBUG
             printf(KRED "Error: Calloc for decrypted output buffer failed! \n" RESET);
+#endif
             status = CRYPTO_LIB_ERROR;
         }
     }
@@ -1789,7 +1791,9 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
 
         if (sa_ptr->sa_state != SA_OPERATIONAL)
         {
+#ifdef DEBUG
             printf(KRED "Error: SA Not Operational \n" RESET);
+#endif
             return CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL;
         }
 
