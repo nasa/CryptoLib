@@ -980,13 +980,13 @@ static int32_t sa_start(TC_t* tc_frame)
     // Read ingest
     spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
 
-    // Overwrite last PID
-    sa[spi].lpid =
-        (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
-
     // Check SPI exists and in 'Keyed' state
     if (spi < NUM_SA)
     {
+        // Overwrite last PID
+        sa[spi].lpid =
+            (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
+
         if (sa[spi].sa_state == SA_KEYED)
         {
             count = 2;
@@ -1109,13 +1109,13 @@ static int32_t sa_stop(void)
     spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
     printf("spi = %d \n", spi);
 
-    // Overwrite last PID
-    sa[spi].lpid =
-        (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
-
     // Check SPI exists and in 'Active' state
     if (spi < NUM_SA)
     {
+        // Overwrite last PID
+        sa[spi].lpid =
+            (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
+
         if (sa[spi].sa_state == SA_OPERATIONAL)
         {
             // Remove all GVC/GMAP IDs
@@ -1170,13 +1170,13 @@ static int32_t sa_rekey(void)
     spi = ((uint8_t)sdls_frame.pdu.data[count] << 8) | (uint8_t)sdls_frame.pdu.data[count + 1];
     count = count + 2;
 
-    // Overwrite last PID
-    sa[spi].lpid =
-        (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
-
     // Check SPI exists and in 'Unkeyed' state
     if (spi < NUM_SA)
     {
+        // Overwrite last PID
+        sa[spi].lpid =
+            (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
+
         if (sa[spi].sa_state == SA_UNKEYED)
         { // Encryption Key
             sa[spi].ekid = ((uint8_t)sdls_frame.pdu.data[count] << 8) | (uint8_t)sdls_frame.pdu.data[count + 1];
@@ -1248,13 +1248,13 @@ static int32_t sa_expire(void)
     spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
     printf("spi = %d \n", spi);
 
-    // Overwrite last PID
-    sa[spi].lpid =
-        (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
-
     // Check SPI exists and in 'Keyed' state
     if (spi < NUM_SA)
     {
+        // Overwrite last PID
+        sa[spi].lpid =
+            (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
+
         if (sa[spi].sa_state == SA_KEYED)
         { // Change to 'Unkeyed' state
             sa[spi].sa_state = SA_UNKEYED;
@@ -1290,57 +1290,65 @@ static int32_t sa_create(void)
     spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
     printf("spi = %d \n", spi);
 
-    // Overwrite last PID
-    sa[spi].lpid =
-        (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
+    // Check if valid SPI
+    if (spi < NUM_SA)
+    {
+        // Overwrite last PID
+        sa[spi].lpid =
+            (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
 
-    // Write SA Configuration
-    sa[spi].est = ((uint8_t)sdls_frame.pdu.data[2] & 0x80) >> 7;
-    sa[spi].ast = ((uint8_t)sdls_frame.pdu.data[2] & 0x40) >> 6;
-    sa[spi].shivf_len = ((uint8_t)sdls_frame.pdu.data[2] & 0x3F);
-    sa[spi].shsnf_len = ((uint8_t)sdls_frame.pdu.data[3] & 0xFC) >> 2;
-    sa[spi].shplf_len = ((uint8_t)sdls_frame.pdu.data[3] & 0x03);
-    sa[spi].stmacf_len = ((uint8_t)sdls_frame.pdu.data[4]);
-    sa[spi].ecs_len = ((uint8_t)sdls_frame.pdu.data[5]);
-    for (x = 0; x < sa[spi].ecs_len; x++)
-    {
-        sa[spi].ecs = ((uint8_t)sdls_frame.pdu.data[count++]);
-    }
-    sa[spi].shivf_len = ((uint8_t)sdls_frame.pdu.data[count++]);
-    for (x = 0; x < sa[spi].shivf_len; x++)
-    {
-        sa[spi].iv[x] = ((uint8_t)sdls_frame.pdu.data[count++]);
-    }
-    sa[spi].acs_len = ((uint8_t)sdls_frame.pdu.data[count++]);
-    for (x = 0; x < sa[spi].acs_len; x++)
-    {
-        sa[spi].acs = ((uint8_t)sdls_frame.pdu.data[count++]);
-    }
-    sa[spi].abm_len = (uint8_t)((sdls_frame.pdu.data[count] << 8) | (sdls_frame.pdu.data[count + 1]));
-    count = count + 2;
-    for (x = 0; x < sa[spi].abm_len; x++)
-    {
-        sa[spi].abm[x] = ((uint8_t)sdls_frame.pdu.data[count++]);
-    }
-    sa[spi].arsn_len = ((uint8_t)sdls_frame.pdu.data[count++]);
-    for (x = 0; x < sa[spi].arsn_len; x++)
-    {
-        *(sa[spi].arsn + x) = ((uint8_t)sdls_frame.pdu.data[count++]);
-    }
-    sa[spi].arsnw_len = ((uint8_t)sdls_frame.pdu.data[count++]);
-    for (x = 0; x < sa[spi].arsnw_len; x++)
-    {
-        sa[spi].arsnw = sa[spi].arsnw | (((uint8_t)sdls_frame.pdu.data[count++]) << (sa[spi].arsnw_len - x));
-    }
+        // Write SA Configuration
+        sa[spi].est = ((uint8_t)sdls_frame.pdu.data[2] & 0x80) >> 7;
+        sa[spi].ast = ((uint8_t)sdls_frame.pdu.data[2] & 0x40) >> 6;
+        sa[spi].shivf_len = ((uint8_t)sdls_frame.pdu.data[2] & 0x3F);
+        sa[spi].shsnf_len = ((uint8_t)sdls_frame.pdu.data[3] & 0xFC) >> 2;
+        sa[spi].shplf_len = ((uint8_t)sdls_frame.pdu.data[3] & 0x03);
+        sa[spi].stmacf_len = ((uint8_t)sdls_frame.pdu.data[4]);
+        sa[spi].ecs_len = ((uint8_t)sdls_frame.pdu.data[5]);
+        for (x = 0; x < sa[spi].ecs_len; x++)
+        {
+            sa[spi].ecs = ((uint8_t)sdls_frame.pdu.data[count++]);
+        }
+        sa[spi].shivf_len = ((uint8_t)sdls_frame.pdu.data[count++]);
+        for (x = 0; x < sa[spi].shivf_len; x++)
+        {
+            sa[spi].iv[x] = ((uint8_t)sdls_frame.pdu.data[count++]);
+        }
+        sa[spi].acs_len = ((uint8_t)sdls_frame.pdu.data[count++]);
+        for (x = 0; x < sa[spi].acs_len; x++)
+        {
+            sa[spi].acs = ((uint8_t)sdls_frame.pdu.data[count++]);
+        }
+        sa[spi].abm_len = (uint8_t)((sdls_frame.pdu.data[count] << 8) | (sdls_frame.pdu.data[count + 1]));
+        count = count + 2;
+        for (x = 0; x < sa[spi].abm_len; x++)
+        {
+            sa[spi].abm[x] = ((uint8_t)sdls_frame.pdu.data[count++]);
+        }
+        sa[spi].arsn_len = ((uint8_t)sdls_frame.pdu.data[count++]);
+        for (x = 0; x < sa[spi].arsn_len; x++)
+        {
+            *(sa[spi].arsn + x) = ((uint8_t)sdls_frame.pdu.data[count++]);
+        }
+        sa[spi].arsnw_len = ((uint8_t)sdls_frame.pdu.data[count++]);
+        for (x = 0; x < sa[spi].arsnw_len; x++)
+        {
+            sa[spi].arsnw = sa[spi].arsnw | (((uint8_t)sdls_frame.pdu.data[count++]) << (sa[spi].arsnw_len - x));
+        }
 
-    // TODO: Checks for valid data
+        // TODO: Checks for valid data
 
-    // Set state to unkeyed
-    sa[spi].sa_state = SA_UNKEYED;
+        // Set state to unkeyed
+        sa[spi].sa_state = SA_UNKEYED;
 
 #ifdef PDU_DEBUG
-    Crypto_saPrint(&sa[spi]);
+        Crypto_saPrint(&sa[spi]);
 #endif
+    }
+    else
+    {
+        printf(KRED "ERROR: SPI %d cannot be created.\n" RESET, spi);
+    }
 
     return CRYPTO_LIB_SUCCESS;
 }
@@ -1358,13 +1366,13 @@ static int32_t sa_delete(void)
     spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
     printf("spi = %d \n", spi);
 
-    // Overwrite last PID
-    sa[spi].lpid =
-        (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
-
     // Check SPI exists and in 'Unkeyed' state
     if (spi < NUM_SA)
     {
+        // Overwrite last PID
+        sa[spi].lpid =
+            (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
+
         if (sa[spi].sa_state == SA_UNKEYED)
         { // Change to 'None' state
             sa[spi].sa_state = SA_NONE;
