@@ -1183,7 +1183,12 @@ static int32_t sa_rekey(void)
     // Check SPI exists and in 'Unkeyed' state
     if (spi < NUM_SA)
     {
-        // Overwrite last PID
+        // Overwrite last PID : 8 bits
+        // Bits from L-R
+        //   1 : Procedure Type Flag (type)
+        //   2 : User Flag (uf)
+        // 3-4 : Service Group Field (sg)
+        // 5-8 : Procedure Identification Field (pid)
         sa[spi].lpid =
             (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
 
@@ -1263,7 +1268,12 @@ static int32_t sa_expire(void)
     // Check SPI exists and in 'Keyed' state
     if (spi < NUM_SA)
     {
-        // Overwrite last PID
+        // Overwrite last PID : 8 bits
+        // Bits from L-R
+        //   1 : Procedure Type Flag (type)
+        //   2 : User Flag (uf)
+        // 3-4 : Service Group Field (sg)
+        // 5-8 : Procedure Identification Field (pid)
         sa[spi].lpid =
             (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
 
@@ -1307,7 +1317,12 @@ static int32_t sa_create(void)
     // Check if valid SPI
     if (spi < NUM_SA)
     {
-        // Overwrite last PID
+        // Overwrite last PID : 8 bits
+        // Bits from L-R
+        //   1 : Procedure Type Flag (type)
+        //   2 : User Flag (uf)
+        // 3-4 : Service Group Field (sg)
+        // 5-8 : Procedure Identification Field (pid)
         sa[spi].lpid =
             (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
 
@@ -1387,7 +1402,12 @@ static int32_t sa_delete(void)
     // Check SPI exists and in 'Unkeyed' state
     if (spi < NUM_SA)
     {
-        // Overwrite last PID
+        // Overwrite last PID : 8 bits
+        // Bits from L-R
+        //   1 : Procedure Type Flag (type)
+        //   2 : User Flag (uf)
+        // 3-4 : Service Group Field (sg)
+        // 5-8 : Procedure Identification Field (pid)
         sa[spi].lpid =
             (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
 
