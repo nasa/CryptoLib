@@ -1723,7 +1723,9 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
         p_new_dec_frame = (uint8_t*)calloc(1, (len_ingest) * sizeof(uint8_t));
         if (!p_new_dec_frame)
         {
+#ifdef DEBUG
             printf(KRED "Error: Calloc for decrypted output buffer failed! \n" RESET);
+#endif
             status = CRYPTO_LIB_ERROR;
         }
     }
@@ -1786,6 +1788,14 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
 
         // Parse MAC, prepare AAD
         Crypto_TM_Parse_Mac_Prep_AAD(sa_service_type, p_ingest, mac_loc, sa_ptr, &aad_len, byte_idx, aad);
+
+        if (sa_ptr->sa_state != SA_OPERATIONAL)
+        {
+#ifdef DEBUG
+            printf(KRED "Error: SA Not Operational \n" RESET);
+#endif
+            return CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL;
+        }
 
         status = Crypto_TM_Do_Decrypt(sa_service_type, sa_ptr, ecs_is_aead_algorithm, byte_idx, p_new_dec_frame, pdu_len, p_ingest, ekp, akp, iv_loc, mac_loc, aad_len, aad, pp_processed_frame, p_decrypted_length);
     } 

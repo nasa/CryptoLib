@@ -1006,7 +1006,9 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8
     {
         // Probably unnecessary check
         // Leaving for now as it would be cleaner in SA to have an association enum returned I believe
+#ifdef SA_DEBUG
         printf(KRED "Error: SA Service Type is not defined! \n" RESET);
+#endif
         status = CRYPTO_LIB_ERROR;
         mc_if->mc_log(status);
         return status;
@@ -1105,7 +1107,9 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8
     p_new_dec_frame = (uint8_t*)calloc(1, (len_ingest) * sizeof(uint8_t));
     if (!p_new_dec_frame)
     {
+#ifdef DEBUG
         printf(KRED "Error: Calloc for decrypted output buffer failed! \n" RESET);
+#endif
         status = CRYPTO_LIB_ERROR;
         mc_if->mc_log(status);
         return status;
@@ -1247,6 +1251,15 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8
         printf("\n");
 #endif
 
+    }
+
+    // check sa state before decrypting
+    if (sa_ptr->sa_state != SA_OPERATIONAL)
+    {
+#ifdef DEBUG
+        printf(KRED "Error: SA Not Operational \n" RESET);
+#endif
+        return CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL;
     }
 
     if(sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_TRUE)
