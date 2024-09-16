@@ -1197,6 +1197,8 @@ UTEST(TM_PROCESS, TM_OCF_TEST)
     status = Crypto_TM_ProcessSecurity((uint8_t* )framed_tm_b, framed_tm_len, &ptr_processed_frame, &processed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
+    printf("FSR: %08X\n", Crypto_Get_FSR());
+
     Crypto_Shutdown();
     free(framed_tm_b);
     free(ptr_processed_frame);

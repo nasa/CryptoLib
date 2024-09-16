@@ -235,7 +235,6 @@ void Crypto_TM_Handle_Managed_Parameter_Flags(uint16_t* pdu_len)
 int32_t Crypto_TM_Get_Keys(crypto_key_t** ekp, crypto_key_t** akp, SecurityAssociation_t* sa_ptr)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    printf("getting key for ekid %d\n", sa_ptr->ekid);
     *ekp = key_if->get_key(sa_ptr->ekid);
     if (ekp == NULL)
     {
@@ -244,14 +243,11 @@ int32_t Crypto_TM_Get_Keys(crypto_key_t** ekp, crypto_key_t** akp, SecurityAssoc
     }
     
     *akp = key_if->get_key(sa_ptr->akid);
-    printf("getting key for akid %d\n", sa_ptr->akid);
     if (akp == NULL && status == CRYPTO_LIB_SUCCESS)
     {
         status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
         mc_if->mc_log(status);
     }
-    printf("key value for ekp %d: %02x%02x\n", sa_ptr->ekid, (*ekp)->value[0],(*ekp)->value[1]);
-    printf("key value for akp %d: %02x%02x\n", sa_ptr->akid, (*akp)->value[0], (*akp)->value[1]);
     return status;
 }
 
@@ -1767,8 +1763,8 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
 
         Crypto_TM_Process_Debug_Print(byte_idx, pdu_len, sa_ptr);
 
-        Crypto_TM_Print_FSR(p_ingest, byte_idx, pdu_len, sa_ptr);
-        Crypto_TM_Print_CLCW(p_ingest, byte_idx, pdu_len, sa_ptr);
+        Crypto_TM_Set_FSR(p_ingest, byte_idx, pdu_len, sa_ptr);
+        // Crypto_TM_Print_CLCW(p_ingest, byte_idx, pdu_len, sa_ptr);
 
         // Get Key        
         status = Crypto_TM_Get_Keys(&ekp, &akp, sa_ptr);
@@ -1825,25 +1821,27 @@ void Crypto_TM_Print_CLCW(uint8_t* p_ingest, uint16_t byte_idx, uint16_t pdu_len
         }
 }
 
-void Crypto_TM_Print_FSR(uint8_t* p_ingest, uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t* sa_ptr)
+void Crypto_TM_Set_FSR(uint8_t* p_ingest, uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t* sa_ptr)
 {
     if(current_managed_parameters_struct.has_ocf == TM_HAS_OCF)
         {
+            Telemetry_Frame_Ocf_Fsr_t temp_report;
             byte_idx += (pdu_len + sa_ptr->stmacf_len);
-            Telemetry_Frame_Ocf_Fsr_t report;
-            report.cwt = (p_ingest[byte_idx] >> 7);
-            report.fvn = (p_ingest[byte_idx] >> 4) & 0x0007;
-            report.af = (p_ingest[byte_idx] >> 3) & 0x0001;
-            report.bsnf = (p_ingest[byte_idx] >> 2) & 0x0001;
-            report.bmacf = (p_ingest[byte_idx] >> 1) & 0x0001;
-            report.bsaf = (p_ingest[byte_idx] & 0x0001);
+            temp_report.cwt = (p_ingest[byte_idx] >> 7) & 0x0001;
+            temp_report.fvn = (p_ingest[byte_idx] >> 4) & 0x0007;
+            temp_report.af = (p_ingest[byte_idx] >> 3) & 0x0001;
+            temp_report.bsnf = (p_ingest[byte_idx] >> 2) & 0x0001;
+            temp_report.bmacf = (p_ingest[byte_idx] >> 1) & 0x0001;
+            temp_report.bsaf = (p_ingest[byte_idx] & 0x0001);
             byte_idx += 1;
-            report.lspi = (p_ingest[byte_idx] << 8) | (p_ingest[byte_idx + 1]);
+            temp_report.lspi = (p_ingest[byte_idx] << 8) | (p_ingest[byte_idx + 1]);
             byte_idx += 2;
-            report.snval = (p_ingest[byte_idx]);
+            temp_report.snval = (p_ingest[byte_idx]);
             byte_idx++;
-            
+            report = temp_report;
+#ifdef TM_DEBUG
             Crypto_fsrPrint(&report);
+#endif
         }
 }
 

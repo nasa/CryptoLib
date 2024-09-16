@@ -1145,3 +1145,17 @@ int32_t Crypto_Get_Security_Trailer_Length(SecurityAssociation_t* sa_ptr)
     return securityTrailerLength;
 
 }
+
+uint32_t Crypto_Get_FSR()
+{
+    uint32_t fsr;
+    fsr = (report.cwt   << 31) |    // bit(s) 1
+          (report.fvn   << 28) |    // bit(s) 2-4
+          (report.af    << 27) |    // bit(s) 5
+          (report.bsnf  << 26) |    // bit(s) 6
+          (report.bmacf << 25) |    // bit(s) 7
+          (report.bsaf  << 24) |    // bit(s) 8
+          (report.lspi  <<  8) |    // bit(s) 9-24
+          (report.snval <<  0);     // bit(s) 25-32
+    return fsr;
+}
