@@ -14,7 +14,7 @@ jobs:
     # Container Setup
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Update
       run: sudo apt-get update
     - name: Install Dependencies
@@ -51,7 +51,7 @@ jobs:
     # Container Setup
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Update
       run: sudo apt-get update
     - name: Install Dependencies
@@ -100,7 +100,7 @@ jobs:
   #   # Container Setup
   #   runs-on: ubuntu-latest
   #   steps:
-  #   - uses: actions/checkout@v2
+  #   - uses: actions/checkout@v4
   #   - name: Update
   #     run: sudo apt-get update
   #   - name: Install Dependencies
@@ -149,7 +149,7 @@ jobs:
     # Container Setup
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Update
       run: sudo apt-get update
     - name: Install Dependencies
@@ -219,7 +219,7 @@ jobs:
     container:
       image: rockylinux/rockylinux:8
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Update
       run: yum update -y
     - name: Install Dependencies
