@@ -280,27 +280,30 @@ int32_t Crypto_Init(void)
 
     /* Crypto Interface */
     // Determine which cryptographic module is in use
-    cryptography_if = get_cryptography_interface_libgcrypt();
     if (cryptography_if == NULL)
     {
-        cryptography_if = get_cryptography_interface_wolfssl();
-    }
-    if (cryptography_if == NULL)
-    {
-        cryptography_if = get_cryptography_interface_custom();
-    }
-    if (cryptography_if == NULL)
-    {   // Note this needs to be the last option in the chain due to addition configuration required
-        if (cryptography_kmc_crypto_config != NULL)
+        cryptography_if = get_cryptography_interface_libgcrypt();
+        if (cryptography_if == NULL)
         {
-            cryptography_if = get_cryptography_interface_kmc_crypto_service();
+            cryptography_if = get_cryptography_interface_wolfssl();
         }
-    }
-    if (cryptography_if == NULL)
-    {
-        printf("Fatal Error: Unable to identify Cryptography Interface!\n");
-        status = CRYPTOGRAPHY_INVALID_CRYPTO_INTERFACE_TYPE;
-        return status;
+        if (cryptography_if == NULL)
+        {
+            cryptography_if = get_cryptography_interface_custom();
+        }
+        if (cryptography_if == NULL)
+        {   // Note this needs to be the last option in the chain due to addition configuration required
+            if (cryptography_kmc_crypto_config != NULL)
+            {
+                cryptography_if = get_cryptography_interface_kmc_crypto_service();
+            }
+        }
+        if (cryptography_if == NULL)
+        {
+            printf("Fatal Error: Unable to identify Cryptography Interface!\n");
+            status = CRYPTOGRAPHY_INVALID_CRYPTO_INTERFACE_TYPE;
+            return status;
+        }
     }
 
     // Initialize the cryptography library.
