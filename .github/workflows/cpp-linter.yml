@@ -1,0 +1,25 @@
+name: cpp-linter
+
+on:
+  push:
+    branches: [ main, dev, 299-setup-code-formatter ]
+  pull_request:
+    branches: [ main, dev ]
+
+
+jobs:
+  cpp-linter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cpp-linter/cpp-linter-action@main
+        id: linter
+        continue-on-error: true
+        with:
+          style: file
+          files-changed-only: false
+          thread-comments: false
+
+      - name: Fail fast?!
+        if: steps.linter.outputs.checks-failed != 0
+        run: exit 1
