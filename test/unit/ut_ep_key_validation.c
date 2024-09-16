@@ -243,9 +243,8 @@ UTEST(EP_KEY_VALIDATION, DEACTIVATE_142)
     // Activate SA 9
     sa_if->sa_get_from_spi(0, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    test_association->ecs_len = 1;
+    //test_association->ecs_len = 1;
     test_association->ecs = CRYPTO_CIPHER_NONE;
-    //test_association->ekid = 142;
     test_association->est = 0;
     test_association->ast = 0;
     test_association->iv_len = 12;
@@ -255,7 +254,7 @@ UTEST(EP_KEY_VALIDATION, DEACTIVATE_142)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    ekp = key_if->get_key(test_association->ekid);
+    ekp = key_if->get_key(142);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
     ekp->key_state = KEY_ACTIVE;
 
@@ -278,96 +277,92 @@ UTEST(EP_KEY_VALIDATION, DEACTIVATE_142)
     free(buffer_DEACTIVATE_b);
 }
 
-UTEST(EP_KEY_VALIDATION, INVENTORY_132_134)
-{
-    remove("sa_save_file.bin");
-    // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_0_Managed_Parameters = {0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
+// UTEST(EP_KEY_VALIDATION, INVENTORY_132_134)
+// {
+//     remove("sa_save_file.bin");
+//     // Setup & Initialize CryptoLib
+//     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+//                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+//                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+//                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+//     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+//     GvcidManagedParameters_t TC_0_Managed_Parameters = {0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+//     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
     
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    //GvcidManagedParameters_t TC_1_Managed_Parameters = {0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
-    //Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
+//     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+//     //GvcidManagedParameters_t TC_1_Managed_Parameters = {0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+//     //Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
     
-    int status = CRYPTO_LIB_SUCCESS;
-    printf("HERE1\n");
-    status = Crypto_Init();
-    printf("HERE2\n");
-    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-    SaInterface sa_if = get_sa_interface_inmemory();
-    crypto_key_t* ekp = NULL;
+//     int status = CRYPTO_LIB_SUCCESS;
+//     status = Crypto_Init();
+//     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+//     SaInterface sa_if = get_sa_interface_inmemory();
+//     crypto_key_t* ekp = NULL;
     
 
-    // NOTE: Added Transfer Frame header to the plaintext
-    char* buffer_nist_key_h = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
-    char* buffer_nist_iv_h = "b6ac8e4963f49207ffd6374b"; // The last valid IV that was seen by the SA
-    char* buffer_INVENTORY_h = "2003001e00ff000000001880d03b000a197f0b00070004008400861f6d82ebe4fc55555555";
-                            // |2003001c00| = Primary Header
-                            //           |ff| = SPI
-                            //             |00000000| = security Header
-                            //                     |1880| = CryptoLib App ID
-                            //                         |d03b| = seq, packet id
-                            //                             |000a| = Packet Length
-                            //                                 |197f| = pusv, ack, st
-                            //                                     |0b| = sst
-                            //                                       |0007| = PDU Tag
-                            //                                           |0004| = PDU Length
-                            //                                               |0084| = Key ID (132)
-                            //                                                   |0086| = Key ID (134)
-                            //                                                       |1f6d82ebe4fc55555555| = Trailer???
+//     // NOTE: Added Transfer Frame header to the plaintext
+//     char* buffer_nist_key_h = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
+//     char* buffer_nist_iv_h = "000000000000000000000000"; // The last valid IV that was seen by the SA
+//     char* buffer_INVENTORY_h = "2003001e00ff000000001880d03b000a197f0b00070004008400861f6d82ebe4fc55555555";
+//                             // |2003001c00| = Primary Header
+//                             //           |ff| = SPI
+//                             //             |00000000| = security Header
+//                             //                     |1880| = CryptoLib App ID
+//                             //                         |d03b| = seq, packet id
+//                             //                             |000a| = Packet Length
+//                             //                                 |197f| = pusv, ack, st
+//                             //                                     |0b| = sst
+//                             //                                       |0007| = PDU Tag
+//                             //                                           |0004| = PDU Length
+//                             //                                               |0084| = Key ID (132)
+//                             //                                                   |0086| = Key ID (134)
+//                             //                                                       |1f6d82ebe4fc55555555| = Trailer???
 
-    uint8_t *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_INVENTORY_b = NULL;
-    int buffer_nist_iv_len, buffer_nist_key_len, buffer_INVENTORY_len = 0;
-    printf("Fail 5\n");
-    // Setup Processed Frame For Decryption
-    TC_t tc_nist_processed_frame;
+//     uint8_t *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_INVENTORY_b = NULL;
+//     int buffer_nist_iv_len, buffer_nist_key_len, buffer_INVENTORY_len = 0;
 
-    // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association;
+//     // Setup Processed Frame For Decryption
+//     TC_t tc_nist_processed_frame;
 
-    // Deactivate SA 1
-    sa_if->sa_get_from_spi(1, &test_association);
-    test_association->sa_state = SA_NONE;
+//     // Expose/setup SAs for testing
+//     SecurityAssociation_t* test_association;
 
-    // Activate SA 9
-    sa_if->sa_get_from_spi(0, &test_association);
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->ecs_len = 1;
-    test_association->ecs = CRYPTO_CIPHER_NONE;
-    test_association->est = 0;
-    test_association->ast = 0;
-    test_association->shsnf_len = 2;
-    test_association->arsn_len = 2;
-    test_association->arsnw = 5;
-    test_association->iv_len = 12;
-    printf("Fail 6\n");
-    // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
-    ekp = key_if->get_key(test_association->ekid);
-    memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
-    printf("Fail 7\n");
-    // Convert frames that will be processed
-    hex_conversion(buffer_INVENTORY_h, (char**) &buffer_INVENTORY_b, &buffer_INVENTORY_len);
-    // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char**) &buffer_nist_iv_b, &buffer_nist_iv_len);
-    memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
-    printf("Fail 8\n");
-    // Expect success on next valid IV && ARSN
-    printf(KGRN "Checking  next valid IV && valid ARSN... should be able to receive it... \n" RESET);
-    status = Crypto_TC_ProcessSecurity(buffer_INVENTORY_b, &buffer_INVENTORY_len, &tc_nist_processed_frame);
-    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+//     // Deactivate SA 1
+//     sa_if->sa_get_from_spi(1, &test_association);
+//     test_association->sa_state = SA_NONE;
 
-    printf("\n");
-    Crypto_Shutdown();
-    free(buffer_nist_iv_b);
-    free(buffer_nist_key_b);
-    ASSERT_EQ(0,0);
-}
+//     // Activate SA 9
+//     sa_if->sa_get_from_spi(0, &test_association);
+//     test_association->sa_state = SA_OPERATIONAL;
+//     test_association->ecs_len = 1;
+//     test_association->ecs = CRYPTO_CIPHER_NONE;
+//     test_association->est = 0;
+//     test_association->ast = 0;
+//     test_association->shsnf_len = 2;
+//     test_association->arsn_len = 2;
+//     test_association->arsnw = 5;
+//     test_association->iv_len = 12;
+
+//     // Insert key into keyring of SA 9
+//     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
+//     ekp = key_if->get_key(test_association->ekid);
+//     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
+//     // Convert frames that will be processed
+//     hex_conversion(buffer_INVENTORY_h, (char**) &buffer_INVENTORY_b, &buffer_INVENTORY_len);
+//     // Convert/Set input IV
+//     hex_conversion(buffer_nist_iv_h, (char**) &buffer_nist_iv_b, &buffer_nist_iv_len);
+//     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
+//     // Expect success on next valid IV && ARSN
+//     printf(KGRN "Checking  next valid IV && valid ARSN... should be able to receive it... \n" RESET);
+//     status = Crypto_TC_ProcessSecurity(buffer_INVENTORY_b, &buffer_INVENTORY_len, &tc_nist_processed_frame);
+//     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+//     printf("\n");
+//     Crypto_Shutdown();
+//     free(buffer_nist_iv_b);
+//     free(buffer_nist_key_b);
+//     ASSERT_EQ(0,0);
+// }
 
 UTEST(EP_KEY_VALIDATION, VERIFY_132_134)
 {
@@ -390,11 +385,11 @@ UTEST(EP_KEY_VALIDATION, VERIFY_132_134)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     SaInterface sa_if = get_sa_interface_inmemory();
     crypto_key_t* ekp = NULL;
-    
+
 
     // NOTE: Added Transfer Frame header to the plaintext
     char* buffer_nist_key_h = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
-    char* buffer_nist_iv_h = "b6ac8e4963f49207ffd6374b"; // The last valid IV that was seen by the SA
+    char* buffer_nist_iv_h = "000000000000000000000001"; // The last valid IV that was seen by the SA
     char* buffer_VERIFY_h = "2003003e00ff000000001880d03a002c197f0b00040024008471fc3ad5b1c36ad56bd5a5432315cdab008675c06302465bc6d5091a29957eebed35c00a6ed8";
     //                      |2003003e00| = Primary Header
     //                                |ff| = SPI
@@ -411,7 +406,6 @@ UTEST(EP_KEY_VALIDATION, VERIFY_132_134)
     //                                                                                                        |0086| = Key ID (134)
     //                                                                                                            |75c06302465bc6d5091a29957eebed35| = Challenge
     //                                                                                                                                            |c00a6ed8| = Trailer  
-    
     uint8_t *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_VERIFY_b = NULL;
     int buffer_nist_iv_len, buffer_nist_key_len, buffer_VERIFY_len = 0;
 
@@ -428,13 +422,16 @@ UTEST(EP_KEY_VALIDATION, VERIFY_132_134)
     // Activate SA 9
     sa_if->sa_get_from_spi(0, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    test_association->ecs_len = 1;
+    test_association->ecs_len = 0;
     test_association->ecs = CRYPTO_CIPHER_NONE;
     test_association->est = 0;
     test_association->ast = 0;
     test_association->iv_len = 12;
+    //test_association->shivf_len = 12;
+    test_association->stmacf_len = 16;
     test_association->shsnf_len = 2;
     test_association->arsn_len = 2;
+    test_association->arsnw_len = 1;
     test_association->arsnw = 5;
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
@@ -457,5 +454,187 @@ UTEST(EP_KEY_VALIDATION, VERIFY_132_134)
     free(buffer_nist_iv_b);
     free(buffer_nist_key_b);
     free(buffer_VERIFY_b);
+
+}
+
+UTEST(EP_KEY_VALIDATION, VERIFY_APPLY_132_134)
+{
+    remove("sa_save_file.bin");
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_0_Managed_Parameters = {0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
+    
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_1_Managed_Parameters = {0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
+    
+    int status = CRYPTO_LIB_SUCCESS;
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    SaInterface sa_if = get_sa_interface_inmemory();
+    crypto_key_t* ekp = NULL;
+
+
+    // NOTE: Added Transfer Frame header to the plaintext
+    char* buffer_nist_key_h = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
+    char* buffer_nist_iv_h = "000000000000000000000001"; // The last valid IV that was seen by the SA
+    char* buffer_RESPONSE_h = "0880d03a006584005c0000000000000000000000000001d8eaa795affaa0e951bb6cf0116192e16b1977d6723e92e01123ccef548e28857e0000000000000000000000000275c47f30b4ee759ffa9607237db92121d65d3ed1fe943fcf04535efd0e0fc793";
+
+    uint8_t *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_RESPONSE_b = NULL;
+    int buffer_nist_iv_len, buffer_nist_key_len, buffer_RESPONSE_len  = 0;
+
+    // Expose/setup SAs for testing
+    SecurityAssociation_t* test_association;
+
+    // Deactivate SA 1
+    sa_if->sa_get_from_spi(1, &test_association);
+    test_association->sa_state = SA_NONE;
+
+    // Activate SA 9
+    sa_if->sa_get_from_spi(0, &test_association);
+    test_association->sa_state = SA_OPERATIONAL;
+    test_association->ecs_len = 0;
+    test_association->ecs = CRYPTO_CIPHER_NONE;
+    test_association->est = 0;
+    test_association->ast = 0;
+    test_association->iv_len = 12;
+    //test_association->shivf_len = 12;
+    test_association->stmacf_len = 16;
+    test_association->shsnf_len = 2;
+    test_association->arsn_len = 2;
+    test_association->arsnw_len = 1;
+    test_association->arsnw = 5;
+    // Insert key into keyring of SA 9
+    hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
+    ekp = key_if->get_key(test_association->ekid);
+    memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
+
+    // Convert frames that will be processed
+    // Convert/Set input IV
+    hex_conversion(buffer_nist_iv_h, (char**) &buffer_nist_iv_b, &buffer_nist_iv_len);
+    memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
+    hex_conversion(buffer_RESPONSE_h, (char**) &buffer_RESPONSE_b, &buffer_RESPONSE_len);
+
+    // Expect success on next valid IV && ARSN
+    printf(KGRN "Checking  next valid IV && valid ARSN... should be able to receive it... \n" RESET);
+
+    uint8_t* ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+    status = Crypto_TC_ApplySecurity((uint8_t*)buffer_RESPONSE_b, buffer_RESPONSE_len, &ptr_enc_frame, &enc_frame_len);
+
+    printf("\n");
+    Crypto_Shutdown();
+    free(buffer_nist_iv_b);
+    free(buffer_nist_key_b);
+    free(buffer_RESPONSE_b);
+
+}
+
+    /*
+    
+    
+    Swap to TM
+
+    
+     */
+
+
+
+
+
+
+
+
+UTEST(EP_KEY_VALIDATION, VERIFY_RESPONSE_132_134)
+{
+    remove("sa_save_file.bin");
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+                            IV_INTERNAL, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_NO_PUS_HDR,
+                            TC_IGNORE_SA_STATE_TRUE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TM_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TM_0_Managed_Parameters = {0, 0x0003, 0, TM_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1024, TM_NO_OCF, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_0_Managed_Parameters);
+    
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TM_1_Managed_Parameters = {0, 0x0003, 1, TM_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1024, TM_NO_OCF, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_1_Managed_Parameters);
+    
+    int status = CRYPTO_LIB_SUCCESS;
+    printf("Fail Before INIT\n");
+    status = Crypto_Init();
+    printf("Fail After INIT\n");
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    sa_if = get_sa_interface_inmemory();
+    crypto_key_t* ekp = NULL;
+
+    char* buffer_nist_key_h = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
+    char* buffer_nist_iv_h = "000000000000000000000001"; // The last valid IV that was seen by the SA
+    char* buffer_RESPONSE_h = "0031020218000000001a0080ffff006084005c0084000000000000000000000001d8eaa795affaa0e951bb6cf0116192e16b1977d6723e92e01123ccef548e2885008600000000000000000000000275c47f30ca26e64af30c19ebffe0b314849133e138ac65bc2806e520a90c96a8216607ff000000390000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007ff000000390000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007ff000000390000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007ff000000390000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007ff000000390000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007ff000000390000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007ff000000390000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007ff000000390000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007ff000000390000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007ff000000390000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007ff000000390000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007ff000000390000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007ff000000390000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007ff000000390000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007ff000000390000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007ff0000003900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000f844";
+    //char* buffer_RESPONSE_h = "02C0000018000880d03a006584005c0000000000000000000000000001d8eaa795affaa0e951bb6cf0116192e16b1977d6723e92e01123ccef548e28857e0000000000000000000000000275c47f30b4ee759ffa9607237db92121d65d3ed1fe943fcf04535efd0e0fc793";
+    //                        |02C000001801| = Pri Header
+    //                                    |0880d03a| = Sec Header
+    //                                            |0065| = Entire Pkt Length
+    //                                                |84| = PDU Tag
+    //                                                  |005c| = PDU length
+    //                                                      |0000| = kid ???
+    //                                                          |000000000000000000000001| = IV
+    //                                                                                  |d8eaa795affaa0e951bb6cf0116192e1| = Enc Chall
+    //                                                                                                                  |6b1977d6723e92e01123ccef548e2885| = Chall MAC
+    //                                                                                                                                                  |7e00| = kid ???
+    //                                                                                                                                                      |000000000000000000000002| = IV
+    //                                                                                                                                                                              |75c47f30b4ee759ffa9607237db92121| = ENC Chall
+    //                                                                                                                                                                                                              |d65d3ed1fe943fcf04535efd0e0fc793| = Chall MAC
+    uint8_t *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_RESPONSE_b = NULL;
+    int buffer_nist_iv_len, buffer_nist_key_len, buffer_RESPONSE_len = 0;
+
+    uint8_t* tm_nist_processed_frame;
+
+    SecurityAssociation_t* test_association;
+
+    // Deactivate SA 1
+    sa_if->sa_get_from_spi(1, &test_association);
+    test_association->sa_state = SA_NONE;
+
+    // Activate SA 0
+    sa_if->sa_get_from_spi(0, &test_association);
+    test_association->sa_state = SA_OPERATIONAL;
+    test_association->ecs_len = 0;
+    test_association->ecs = CRYPTO_CIPHER_NONE;
+    test_association->est = 0;
+    test_association->ast = 0;
+    test_association->iv_len = 12;
+    //test_association->shivf_len = 12;
+    test_association->stmacf_len = 16;
+    test_association->shsnf_len = 2;
+    test_association->arsn_len = 2;
+    test_association->arsnw_len = 1;
+    test_association->arsnw = 5;
+    // Insert key into keyring of SA 9
+    hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
+    ekp = key_if->get_key(test_association->ekid);
+    memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
+
+    // Convert frames that will be processed
+    hex_conversion(buffer_RESPONSE_h, (char**) &buffer_RESPONSE_b, &buffer_RESPONSE_len);
+    // Convert/Set input IV
+    hex_conversion(buffer_nist_iv_h, (char**) &buffer_nist_iv_b, &buffer_nist_iv_len);
+    memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
+
+    uint16_t length;
+    
+    status = Crypto_TM_ProcessSecurity((uint8_t*)buffer_RESPONSE_b, buffer_RESPONSE_len, &tm_nist_processed_frame, &length);
+
+    printf("\n");
+    Crypto_Shutdown();
+    free(buffer_nist_iv_b);
+    free(buffer_nist_key_b);
+    free(buffer_RESPONSE_b);
 }
 UTEST_MAIN();

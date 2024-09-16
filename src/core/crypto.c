@@ -431,6 +431,8 @@ int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
     int count = 0;
     int* count_ptr = &count;
 
+    printf("In Crypto PDU\n");
+
     switch (sdls_frame.pdu.type)
     {
     case 0: // Command
@@ -670,6 +672,8 @@ int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
         break;
     }
 
+printf("Status: %d\nCount: %d\n", status, *count_ptr);
+
 #ifdef CCSDS_DEBUG
     int x;
     if ((status == 0) && (*count_ptr > 0) && (ingest != NULL))
@@ -782,6 +786,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, uin
 
     if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
     {
+        // TODO: Determine if different App ID needed for clarity purposes
         if ((tc_sdls_processed_frame->tc_pdu[0] == 0x18) && (tc_sdls_processed_frame->tc_pdu[1] == 0x80))
         // Crypto Lib Application ID
         {
@@ -830,7 +835,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, uin
     else if (tc_sdls_processed_frame->tc_header.vcid == TC_SDLS_EP_VCID) // TC SDLS PDU with no packet layer
     {
 #ifdef DEBUG
-        printf(KGRN "Received SDLS command: " RESET);
+        printf(KGRN "Received SDLS command (No Packet Header or PUS): " RESET);
 #endif
         // No Packet HDR or PUS in these frames
         // SDLS TLV PDU

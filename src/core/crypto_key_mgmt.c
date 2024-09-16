@@ -381,7 +381,8 @@ int32_t Crypto_Key_verify(uint8_t* ingest, TC_t* tc_frame, int* count)
         // Key Challenge
         for (y = 0; y < CHALLENGE_SIZE; y++)
         {
-            packet.blk[x].challenge[y] = sdls_frame.pdu.data[*count += 1];
+            packet.blk[x].challenge[y] = sdls_frame.pdu.data[*count];
+            *count += 1;
         }
 #ifdef PDU_DEBUG
         printf("\n");
@@ -398,8 +399,9 @@ int32_t Crypto_Key_verify(uint8_t* ingest, TC_t* tc_frame, int* count)
         ingest[*count += 1] = (packet.blk[x].kid & 0xFF00) >> 8;
         ingest[*count += 1] = (packet.blk[x].kid & 0x00FF);
 
+        uint16_t ekp_kid = ((packet.blk[x].kid & 0xFF00) >> 8) | (packet.blk[x].kid & 0x00FF);
         // Get Key
-        ekp = key_if->get_key(x);
+        ekp = key_if->get_key(ekp_kid);
         if (ekp == NULL)
         {
             return CRYPTO_LIB_ERR_KEY_ID_ERROR;
@@ -409,7 +411,8 @@ int32_t Crypto_Key_verify(uint8_t* ingest, TC_t* tc_frame, int* count)
         iv_loc = *count;
         for (y = 0; y < 12; y++)
         {
-            ingest[*count += 1] = *(tc_frame->tc_sec_header.iv + y);
+            ingest[*count] = *(tc_frame->tc_sec_header.iv + y);
+            *count += 1;
         }
         ingest[*count - 1] = ingest[*count - 1] + x + 1;
 
