@@ -2,7 +2,7 @@ name: CryptoLib
 
 on: 
   push:
-    branches: [ main, dev ]
+    branches: [ main, dev, 277-revisit-ci-build-scripts ]
   pull_request:
     branches: [ main, dev ]
 
