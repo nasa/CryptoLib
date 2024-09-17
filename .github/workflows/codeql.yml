@@ -12,8 +12,6 @@
 name: "CodeQL Advanced"
 
 on: 
-  push:
-    branches: [ main, dev, 277-revisit-ci-build-scripts ]
   pull_request:
     branches: [ main, dev ]
 
