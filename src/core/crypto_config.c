@@ -280,68 +280,83 @@ int32_t Crypto_Init(void)
 
     /* Crypto Interface */
     // Determine which cryptographic module is in use
-    cryptography_if = get_cryptography_interface_libgcrypt();
     if (cryptography_if == NULL)
     {
-        cryptography_if = get_cryptography_interface_wolfssl();
-    }
-    if (cryptography_if == NULL)
-    {
-        cryptography_if = get_cryptography_interface_custom();
-    }
-    if (cryptography_if == NULL)
-    {   // Note this needs to be the last option in the chain due to addition configuration required
-        if (cryptography_kmc_crypto_config != NULL)
+        cryptography_if = get_cryptography_interface_libgcrypt();
+        if (cryptography_if == NULL)
         {
-            cryptography_if = get_cryptography_interface_kmc_crypto_service();
+            cryptography_if = get_cryptography_interface_wolfssl();
+        }
+        if (cryptography_if == NULL)
+        {
+            cryptography_if = get_cryptography_interface_custom();
+        }
+        if (cryptography_if == NULL)
+        {   // Note this needs to be the last option in the chain due to addition configuration required
+            if (cryptography_kmc_crypto_config != NULL)
+            {
+                cryptography_if = get_cryptography_interface_kmc_crypto_service();
+            }
+        }
+        if (cryptography_if == NULL)
+        {
+#ifdef DEBUG
+            printf("Fatal Error: Unable to identify Cryptography Interface!\n");
+#endif
+            status = CRYPTOGRAPHY_INVALID_CRYPTO_INTERFACE_TYPE;
         }
     }
-    if (cryptography_if == NULL)
+
+    if(status == CRYPTO_LIB_SUCCESS)
     {
-        printf("Fatal Error: Unable to identify Cryptography Interface!\n");
-        status = CRYPTOGRAPHY_INVALID_CRYPTO_INTERFACE_TYPE;
-        return status;
-    }
-
-    // Initialize the cryptography library.
-    status = cryptography_if->cryptography_init();
-    if(status != CRYPTO_LIB_SUCCESS){
-        fprintf(stderr, "Fatal Error: Unable to initialize Cryptography Interface.\n");
-        return status;
-    }
-
-    // Configure the cryptography library.
-    status = cryptography_if->cryptography_config();
-
-    if(status != CRYPTO_LIB_SUCCESS){
-        fprintf(stderr, "Fatal Error: Unable to configure Cryptography Interface.\n");
-        return status;
-    }
-
-    // Init Security Associations
-    status = sa_if->sa_init();
-    if (status==CRYPTO_LIB_SUCCESS)
-    {
-        status = sa_if->sa_config();
-
-        Crypto_Local_Init();
-        Crypto_Local_Config();
-
-        // TODO - Add error checking
-
-        // Init table for CRC calculations
-        Crypto_Calc_CRC_Init_Table();
-
-        // cFS Standard Initialized Message
+        // Initialize the cryptography library.
+        status = cryptography_if->cryptography_init();
+        if(status != CRYPTO_LIB_SUCCESS){
 #ifdef DEBUG
-        printf(KBLU "Crypto Lib Intialized.  Version %d.%d.%d.%d\n" RESET, CRYPTO_LIB_MAJOR_VERSION,
-               CRYPTO_LIB_MINOR_VERSION, CRYPTO_LIB_REVISION, CRYPTO_LIB_MISSION_REV);
+            fprintf(stderr, "Fatal Error: Unable to initialize Cryptography Interface.\n");
 #endif
-    }
-    else
-    {
-        printf(KBLU "Error, Crypto Lib NOT Intialized, sa_init() returned error:%d.  Version .%d.%d.%d\n" RESET, CRYPTO_LIB_MAJOR_VERSION,
-           CRYPTO_LIB_MINOR_VERSION, CRYPTO_LIB_REVISION, CRYPTO_LIB_MISSION_REV); 
+        }
+        if(status == CRYPTO_LIB_SUCCESS)
+        {
+            // Configure the cryptography library.
+            status = cryptography_if->cryptography_config();
+        }
+
+        if(status != CRYPTO_LIB_SUCCESS){
+#ifdef DEBUG
+            fprintf(stderr, "Fatal Error: Unable to configure Cryptography Interface.\n");
+#endif
+        }
+        if(status == CRYPTO_LIB_SUCCESS)
+        {
+            // Init Security Associations
+            status = sa_if->sa_init();
+            if (status==CRYPTO_LIB_SUCCESS)
+            {
+                status = sa_if->sa_config();
+
+                Crypto_Local_Init();
+                Crypto_Local_Config();
+
+                // TODO - Add error checking
+
+                // Init table for CRC calculations
+                Crypto_Calc_CRC_Init_Table();
+
+                // cFS Standard Initialized Message
+#ifdef DEBUG
+                printf(KBLU "Crypto Lib Intialized.  Version %d.%d.%d.%d\n" RESET, CRYPTO_LIB_MAJOR_VERSION,
+                    CRYPTO_LIB_MINOR_VERSION, CRYPTO_LIB_REVISION, CRYPTO_LIB_MISSION_REV);
+#endif
+            }
+            else
+            {
+    #ifdef DEBUG
+                printf(KBLU "Error, Crypto Lib NOT Intialized, sa_init() returned error:%d.  Version .%d.%d.%d\n" RESET, CRYPTO_LIB_MAJOR_VERSION,
+                CRYPTO_LIB_MINOR_VERSION, CRYPTO_LIB_REVISION, CRYPTO_LIB_MISSION_REV); 
+    #endif
+            }
+        }
     }
 
     return status;
