@@ -197,7 +197,7 @@ jobs:
 
   build_rhel:
       name: Analyze Build_RHEL
-      runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'rockylinux/rockylinux:9' }}
+      runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
       permissions:
         # required for all workflows
         security-events: write
