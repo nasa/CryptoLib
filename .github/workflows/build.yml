@@ -227,8 +227,8 @@ jobs:
       # Might want to trim this down, but these dependencies should work for KMC
     - name: install lcov
       run: yum install -y --enablerepo=epel lcov
-    - name: Install Python Dependencies
-      run: pip install pycryptodome
+    - name: install lcov
+      run: python3-pip install pycryptodome
     - name: Install Libgcrypt
       run: >
         curl 
