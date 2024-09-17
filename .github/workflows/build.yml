@@ -228,7 +228,7 @@ jobs:
     - name: install lcov
       run: yum install -y --enablerepo=epel lcov
     - name: Install Python Dependencies
-      run: pip3 install pycryptodome
+      run: pip install pycryptodome
     - name: Install Libgcrypt
       run: >
         curl 
