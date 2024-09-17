@@ -123,6 +123,7 @@ include_directories(include)
 include_directories(../include) 
 
 if(TEST_ENC)
+    set(Python3_FIND_STRATEGY VERSION)
     find_package (Python3 REQUIRED COMPONENTS Interpreter Development)
     execute_process(COMMAND pip3 show pycryptodome RESULT_VARIABLE EXIT_CODE OUTPUT_QUIET)
     if(NOT ${EXIT_CODE} EQUAL 0)

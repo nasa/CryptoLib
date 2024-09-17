@@ -12,8 +12,6 @@
 name: "CodeQL Advanced"
 
 on: 
-  push:
-    branches: [ main, dev ]
   pull_request:
     branches: [ main, dev ]
 
@@ -156,7 +154,9 @@ jobs:
            sudo make install;
            sudo ldconfig;
       - name: Install Dependencies
-        run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 autoconf libtool
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 autoconf libtool
 
       - name: Install Python Libraries
         run: sudo pip install pycryptodome
