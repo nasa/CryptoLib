@@ -156,7 +156,9 @@ jobs:
            sudo make install;
            sudo ldconfig;
       - name: Install Dependencies
-        run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 autoconf libtool
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 autoconf libtool
 
       - name: Install Python Libraries
         run: sudo pip install pycryptodome
@@ -197,7 +199,7 @@ jobs:
 
   build_rhel:
       name: Analyze Build_RHEL
-      runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
+      runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'rockylinux/rockylinux:9' }}
       permissions:
         # required for all workflows
         security-events: write
