@@ -19,6 +19,8 @@
 #include "crypto_error.h"
 #include "crypto.h"
 
+#define CRYPTO_UNDEFINED_ERROR (char*) "CRYPTO_UNDEFINED_ERROR_CODE"
+
 char *crypto_enum_errlist_core[] =
 {
         (char*) "CRYPTO_LIB_SUCCESS",
@@ -77,7 +79,7 @@ char *crypto_enum_errlist_core[] =
         (char*) "CRYPTO_LIB_ERR_FAIL_SA_LOAD", 
         (char*) "CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT",
         (char*) "CRYPTO_LIB_ERR_KEY_VALIDATION",
-        (char*) "CRYPTO_LIB_ERR_SPI_INDEX_OOB", 
+        (char*) "CRYPTO_LIB_ERR_SPI_INDEX_OOB",
 };
 
 char *crypto_enum_errlist_config[] =

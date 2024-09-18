@@ -136,7 +136,5 @@ extern char *crypto_enum_errlist_crypto_if[];
 extern char *crypto_enum_errlist_crypto_kmc[];
 extern char *crypto_enum_errlist_crypto_cam[];
 
-#define CRYPTO_UNDEFINED_ERROR (char*) "CRYPTO_UNDEFINED_ERROR_CODE"
-
 
 #endif //CRYPTO_ERROR_H
