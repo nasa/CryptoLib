@@ -128,6 +128,27 @@
 #define CRYPTO_LIB_ERR_SPI_INDEX_OOB (-56)
 #define CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL (-57)
 
+// Define codes for returning MDB Strings, and determining error based on strings
+#define CAM_ERROR_CODES 600
+#define CAM_ERROR_CODES_MAX 610
+
+#define KMC_ERROR_CODES 500
+#define KMC_ERROR_CODES_MAX 515
+
+#define CRYPTO_INTERFACE_ERROR_CODES 400
+#define CRYPTO_INTERFACE_ERROR_CODES_MAX 402
+
+#define SADB_ERROR_CODES 300
+#define SADB_ERROR_CODES_MAX 303
+
+#define SADB_INTERFACE_ERROR_CODES 200
+#define SADB_INTERFACE_ERROR_CODES_MAX 201
+
+#define CONFIGURATION_ERROR_CODES 100
+#define CONFIGURATION_ERROR_CODES_MAX 103
+
+#define CRYPTO_CORE_ERROR_CODES_MAX -57
+
 extern char *crypto_enum_errlist_core[];
 extern char *crypto_enum_errlist_config[];
 extern char *crypto_enum_errlist_sa_if[];
