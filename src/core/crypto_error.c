@@ -179,27 +179,27 @@ char* Crypto_Get_Error_Code_Enum_String(int32_t crypto_error_code)
     char* return_string = CRYPTO_UNDEFINED_ERROR;
     if(crypto_error_code >= 600) // CAM Error Codes
     {
-        return_string = Crypto_Get_Error_Code_String(crypto_error_code, 610, crypto_enum_errlist_crypto_cam[crypto_error_code % 600]);
+        return_string = Crypto_Get_Error_Code_String(crypto_error_code, 610, crypto_enum_errlist_crypto_cam[crypto_error_code - 600]);
     }
     else if(crypto_error_code >= 500) // KMC Error Codes
     {
-        return_string = Crypto_Get_Error_Code_String(crypto_error_code, 515, crypto_enum_errlist_crypto_kmc[crypto_error_code % 500]);
+        return_string = Crypto_Get_Error_Code_String(crypto_error_code, 515, crypto_enum_errlist_crypto_kmc[crypto_error_code - 500]);
     }
     else if(crypto_error_code >= 400) // Crypto Interface Error Codes
     {
-        return_string = Crypto_Get_Error_Code_String(crypto_error_code, 402, crypto_enum_errlist_crypto_if[crypto_error_code % 400]);
+        return_string = Crypto_Get_Error_Code_String(crypto_error_code, 402, crypto_enum_errlist_crypto_if[crypto_error_code - 400]);
     }
     else if(crypto_error_code >= 300) // SADB MariadDB Error Codes
     {
-        return_string = Crypto_Get_Error_Code_String(crypto_error_code, 303, crypto_enum_errlist_sa_mariadb[crypto_error_code % 300]);
+        return_string = Crypto_Get_Error_Code_String(crypto_error_code, 303, crypto_enum_errlist_sa_mariadb[crypto_error_code - 300]);
     }
     else if(crypto_error_code >= 200) // SADB Interface Error Codes
     {
-        return_string = Crypto_Get_Error_Code_String(crypto_error_code, 201, crypto_enum_errlist_sa_if[crypto_error_code % 200]);
+        return_string = Crypto_Get_Error_Code_String(crypto_error_code, 201, crypto_enum_errlist_sa_if[crypto_error_code - 200]);
     }
     else if(crypto_error_code >= 100) // Configuration Error Codes
     {
-        return_string = Crypto_Get_Error_Code_String(crypto_error_code, 103, crypto_enum_errlist_config[crypto_error_code % 100]);
+        return_string = Crypto_Get_Error_Code_String(crypto_error_code, 103, crypto_enum_errlist_config[crypto_error_code - 100]);
     }
     else if(crypto_error_code <= 0) // Cryptolib Core Error Codes
     {
