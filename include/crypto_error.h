@@ -19,8 +19,9 @@
 #define CRYPTO_ERROR_H
 
 /*
- * If error codes are added to this header file, their enum string must be added to the error lists (in crypto_error.c)
- *  AND logic for returning the enum string must be added to crypto_error.c -- Crypto_Get_Error_Code_Enum_String(int32_t)
+ *  *** IMPORTANT READ ***
+ *  If error codes are added to this header file, their enum string must be added to the error lists (in crypto_error.c)
+ *  AND the appropriate _ERROR_CODE_MAX must be updated below!
  */
 
 #define CRYPTO_CONFIGURATION_NOT_COMPLETE 100
