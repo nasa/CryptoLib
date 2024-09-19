@@ -34,11 +34,11 @@ CFS_MODULE_DECLARE_LIB(crypto);
 */
 CCSDS_t sdls_frame;
 // TM_t tm_frame;
-uint8_t tm_frame[1786];                    // Testing
+uint8_t tm_frame[TM_MAX_FRAME_SIZE];       // TM Global Frame
 TM_FramePrimaryHeader_t tm_frame_pri_hdr;  // Used to reduce bit math duplication
 TM_FrameSecurityHeader_t tm_frame_sec_hdr; // Used to reduce bit math duplication
 // AOS_t aos_frame
-uint8_t aos_frame[1786];                    // Testing
+uint8_t aos_frame[AOS_MAX_FRAME_SIZE];       // AOS Global Frame
 AOS_FramePrimaryHeader_t aos_frame_pri_hdr;  // Used to reduce bit math duplication
 AOS_FrameSecurityHeader_t aos_frame_sec_hdr; // Used to reduce bit math duplication
 // OCF

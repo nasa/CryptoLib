@@ -61,6 +61,8 @@
 
 // Max Frame Size
 #define TC_MAX_FRAME_SIZE 1024
+#define TM_MAX_FRAME_SIZE 1786
+#define AOS_MAX_FRAME_SIZE 1786
 
 // Spacecraft Defines
 #define SCID 0x0003
