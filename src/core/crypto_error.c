@@ -80,6 +80,7 @@ char *crypto_enum_errlist_core[] =
         (char*) "CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT",
         (char*) "CRYPTO_LIB_ERR_KEY_VALIDATION",
         (char*) "CRYPTO_LIB_ERR_SPI_INDEX_OOB",
+        (char*) "CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL",
 };
 
 char *crypto_enum_errlist_config[] =
@@ -139,6 +140,8 @@ char *crypto_enum_errlist_crypto_cam[] =
         (char*) "CAM_INVALID_CONFIGURATION_KEYTAB_FILE_PATH_NULL",
         (char*) "CAM_INVALID_CONFIGURATION_KEYTAB_FILE_USERNAME_NULL",
         (char*) "CAM_KEYTAB_FILE_KINIT_FAILURE",
+        (char*) "CAM_KERBEROS_REQUEST_TIME_OUT",
+        (char*) "CAM_MAX_AUTH_RETRIES_REACHED",
 };
 
 /*
