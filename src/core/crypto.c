@@ -32,7 +32,6 @@ CFS_MODULE_DECLARE_LIB(crypto);
 /*
 ** Global Variables
 */
-// crypto_key_t ak_ring[NUM_KEYS];
 CCSDS_t sdls_frame;
 // TM_t tm_frame;
 uint8_t tm_frame[1786];                    // Testing
@@ -254,12 +253,6 @@ uint8_t Crypto_Prep_Reply(uint8_t* ingest, uint8_t appID)
     ingest[count++] = (sdls_frame.hdr.pkt_length & 0xFF00) >> 8;
     ingest[count++] = (sdls_frame.hdr.pkt_length & 0x00FF);
 
-    // Fill ingest with PUS
-    // ingest[count++] = (sdls_frame.pus.shf << 7) | (sdls_frame.pus.pusv << 4) | (sdls_frame.pus.ack);
-    // ingest[count++] = (sdls_frame.pus.st);
-    // ingest[count++] = (sdls_frame.pus.sst);
-    // ingest[count++] = (sdls_frame.pus.sid << 4) | (sdls_frame.pus.spare);
-
     // Fill ingest with Tag and Length
     ingest[count++] =
         (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | (sdls_frame.pdu.pid);
@@ -268,52 +261,6 @@ uint8_t Crypto_Prep_Reply(uint8_t* ingest, uint8_t appID)
 
     return count;
 }
-
-/**
- * @brief Function Crypto_FECF
- * Calculate the Frame Error Control Field (FECF), also known as a cyclic redundancy check (CRC)
- * @param fecf: int
- * @param ingest: uint8_t*
- * @param len_ingest: int
- * @param tc_frame: TC_t*
- * @return int32: Success/Failure
- **/
-/*
-int32_t Crypto_FECF(int fecf, uint8_t* ingest, int len_ingest,TC_t* tc_frame)
-{
-    int32_t result = CRYPTO_LIB_SUCCESS;
-    uint16_t calc_fecf = Crypto_Calc_FECF(ingest, len_ingest);
-
-    if ( (fecf & 0xFFFF) != calc_fecf )
-        {
-            if (((uint8_t)ingest[18] == 0x0B) && ((uint8_t)ingest[19] == 0x00) && (((uint8_t)ingest[20] & 0xF0) ==
-0x40))
-            {
-                // User packet check only used for ESA Testing!
-            }
-            else
-            {   // TODO: Error Correction
-                printf(KRED "Error: FECF incorrect!\n" RESET);
-                if (log_summary.rs > 0)
-                {
-                    Crypto_increment((uint8_t*)&log_summary.num_se, 4);
-                    log_summary.rs--;
-                    mc_log.blk[log_count].emt = FECF_ERR_EID;
-                    mc_log.blk[log_count].emv[0] = 0x4E;
-                    mc_log.blk[log_count].emv[1] = 0x41;
-                    mc_log.blk[log_count].emv[2] = 0x53;
-                    mc_log.blk[log_count].emv[3] = 0x41;
-                    mc_log.blk[log_count++].em_len = 4;
-                }
-                #ifdef FECF_DEBUG
-                    printf("\t Calculated = 0x%04x \n\t Received   = 0x%04x \n", calc_fecf,
-tc_frame->tc_sec_trailer.fecf); #endif result = CRYPTO_LIB_ERROR;
-            }
-        }
-
-    return result;
-}
-*/
 
 /**
  * @brief Function Crypto_Calc_FECF
@@ -344,11 +291,6 @@ uint16_t Crypto_Calc_FECF(const uint8_t* ingest, int len_ingest)
             }
         }
     }
-    // Check if Testing
-    //if (badFECF == 1)
-    //{
-    //    fecf++;
-    //}
 
 #ifdef FECF_DEBUG
     int x;
@@ -379,7 +321,6 @@ uint16_t Crypto_Calc_CRC16(uint8_t* data, int size)
 
     for (; size > 0; size--)
     {
-        // printf("*data = 0x%02x \n", (uint8_t) *data);
         crc = ((crc << 8) & 0xFF00) ^ crc16Table[(crc >> 8) ^ *data++];
     }
 
@@ -680,63 +621,6 @@ int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uin
     return status;
 }
 
-
-/**
- * @brief Function: Crypto_Get_Managed_Parameters_For_Gvcid
- * @param tfvn: uint8
- * @param scid: uint16
- * @param vcid: uint8
- * @param managed_parameters_in: GvcidManagedParameters_t*
- * @param managed_parameters_out: GvcidManagedParameters_t**
- * @return int32: Success/Failure
- **/
-// int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
-//                                                 GvcidManagedParameters_t* managed_parameters_in,
-//                                                 GvcidManagedParameters_t** managed_parameters_out)
-// {
-//     int32_t status = MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND;
-
-//     if (managed_parameters_in != NULL)
-//     {
-//         if (managed_parameters_in->tfvn == tfvn && managed_parameters_in->scid == scid &&
-//             managed_parameters_in->vcid == vcid)
-//         {
-//             *managed_parameters_out = managed_parameters_in;
-//             status = CRYPTO_LIB_SUCCESS;
-//             return status;
-//         }
-//         else
-//         {
-//             return Crypto_Get_Managed_Parameters_For_Gvcid(tfvn, scid, vcid, managed_parameters_in->next,
-//                                                            managed_parameters_out);
-//         }
-//     }
-//     else
-//     {
-//         printf(KRED "Error: Managed Parameters for GVCID(TFVN: %d, SCID: %d, VCID: %d) not found. \n" RESET, tfvn, scid,
-//                vcid);
-//         return status;
-//     }
-// }
-
-/**
- * @brief Function: Crypto_Free_Managed_Parameters
- * Managed parameters are expected to live the duration of the program, this may not be necessary.
- * @param managed_parameters: GvcidManagedParameters_t*
- **/
-// void Crypto_Free_Managed_Parameters(GvcidManagedParameters_t* managed_parameters)
-// {
-//     if (managed_parameters == NULL)
-//     {
-//         return; // Nothing to free, just return!
-//     }
-//     if (managed_parameters->next != NULL)
-//     {
-//         Crypto_Free_Managed_Parameters(managed_parameters->next);
-//     }
-//     free(managed_parameters);
-// }
-
 /**
  * @brief Function: Crypto_Process_Extended_Procedure_Pdu
  * @param tc_sdls_processed_frame: TC_t*
@@ -894,7 +778,6 @@ int32_t Crypto_Check_Anti_Replay_ARSNW(SecurityAssociation_t* sa_ptr, uint8_t* a
         else
         {
             *arsn_valid = CRYPTO_TRUE;
-            // memcpy(sa_ptr->arsn, arsn, sa_ptr->arsn_len);
         }
     }
     return status;
@@ -944,7 +827,6 @@ int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t* sa_ptr, uint8_t* iv,
         else
         {
             *iv_valid = CRYPTO_TRUE;
-            // memcpy(sa_ptr->iv, iv, sa_ptr->iv_len);
         }
     }
     return status;
