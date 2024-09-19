@@ -98,21 +98,25 @@ uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
 {
     // CryptoLib only supports AES-GCM, which is an AEAD (Authenticated Encryption with Associated Data) algorithm, so
     // return true/1.
+
+    int status = CRYPTO_FALSE;
+
     // TODO - Add cipher suite mapping to which algorithms are AEAD and which are not.
     if ((cipher_suite_id == CRYPTO_CIPHER_AES256_GCM) || (cipher_suite_id == CRYPTO_CIPHER_AES256_CBC_MAC) || (cipher_suite_id == CRYPTO_CIPHER_AES256_GCM_SIV))
     {
 #ifdef DEBUG
         printf(KYEL "CRYPTO IS AEAD? : TRUE\n" RESET);
 #endif
-        return CRYPTO_TRUE;
+        status = CRYPTO_TRUE;
     }
     else
     {
 #ifdef DEBUG
         printf(KYEL "CRYPTO IS AEAD? : FALSE\n" RESET);
 #endif
-        return CRYPTO_FALSE;
+        status = CRYPTO_FALSE;
     }
+    return status;
 }
 
 // TODO - Review this. Not sure it quite works how we think
@@ -158,6 +162,7 @@ int32_t Crypto_increment(uint8_t* num, int length)
 int32_t Crypto_window(uint8_t* actual, uint8_t* expected, int length, int window)
 {
     int status = CRYPTO_LIB_ERROR;
+    int return_code = 0;
     int result = 0;
     uint8_t temp[length];
     int i;
@@ -169,14 +174,16 @@ int32_t Crypto_window(uint8_t* actual, uint8_t* expected, int length, int window
 #ifdef DEBUG
         printf("Crypto_Window expected ptr is NULL\n");
 #endif
-        return status;
+        status = CRYPTO_LIB_ERROR;
+        return_code = 1;
     }
     if (expected == NULL)
     {
 #ifdef DEBUG
         printf("Crypto_Window expected ptr is NULL\n");
 #endif
-        return status;
+        status = CRYPTO_LIB_ERROR;
+        return_code = 1;
     }
     // Check for special case where received value is all 0's and expected is all 0's (won't have -1 in sa!)
     // Received ARSN is: 00000000, SA ARSN is: 00000000
@@ -191,33 +198,35 @@ int32_t Crypto_window(uint8_t* actual, uint8_t* expected, int length, int window
     if (zero_case == CRYPTO_TRUE)
     {
         status = CRYPTO_LIB_SUCCESS;
-        return status;
+        return_code = 1;
     }
-
-    memcpy(temp, expected, length);
-    for (i = 0; i < window; i++)
+    if (return_code != 1)
     {
-        // Recall - the stored IV or ARSN is the last valid one received, check against next expected
-        Crypto_increment(&temp[0], length);
+        memcpy(temp, expected, length);
+        for (i = 0; i < window; i++)
+        {
+            // Recall - the stored IV or ARSN is the last valid one received, check against next expected
+            Crypto_increment(&temp[0], length);
 
 #ifdef DEBUG
-        printf("Checking Frame Against Incremented Window:\n");
-        Crypto_hexprint(temp, length);
+            printf("Checking Frame Against Incremented Window:\n");
+            Crypto_hexprint(temp, length);
 #endif
 
-        result = 0;
-        /* go from right (least significant) to left (most signifcant) */
-        for (j = length - 1; j >= 0; --j)
-        {
-            if (actual[j] == temp[j])
+            result = 0;
+            /* go from right (least significant) to left (most signifcant) */
+            for (j = length - 1; j >= 0; --j)
             {
-                result++;
+                if (actual[j] == temp[j])
+                {
+                    result++;
+                }
             }
-        }
-        if (result == length)
-        {
-            status = CRYPTO_LIB_SUCCESS;
-            break;
+            if (result == length)
+            {
+                status = CRYPTO_LIB_SUCCESS;
+                break;
+            }
         }
     }
     return status;
