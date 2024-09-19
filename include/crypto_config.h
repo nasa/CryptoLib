@@ -18,21 +18,6 @@
 #ifndef CRYPTO_CONFIG_H
 #define CRYPTO_CONFIG_H
 
-// Build Defines
-//#define BUILD_STATIC
-
-// Debug Defines -- Use CMAKE options
-//#define ARC_DEBUG
-//#define CCSDS_DEBUG
-//#define DEBUG //(CMAKE option, not hardcoded)
-//#define FECF_DEBUG
-//#define MAC_DEBUG
-//#define OCF_DEBUG
-//#define PDU_DEBUG
-//#define SA_DEBUG
-//#define TC_DEBUG
-//#define TM_DEBUG
-
 // Debug Colors
 #ifdef DEBUG
 #define CRYPTO_DEBUG printf("%s:%s: %d", __FILE__, __FUNCTION__, __LINE__);
@@ -214,5 +199,16 @@
 // Logic Behavior Defines
 #define CRYPTO_FALSE 0
 #define CRYPTO_TRUE 1
+
+/*
+** SAVE FILE NAME/LOCATION
+*/
+#define CRYPTO_SA_SAVE "sa_save_file.bin"
+
+/*
+** TC_BLOCK_SIZE
+*/
+#define TC_BLOCK_SIZE 16
+
 
 #endif //CRYPTO_CONFIG_H

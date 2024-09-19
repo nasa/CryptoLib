@@ -733,14 +733,14 @@ void Crypto_Local_Config(void)
     log_summary.rs = LOG_SIZE;
     // Add a two messages to the log
     log_summary.rs--;
-    mc_log.blk[log_count].emt = STARTUP;
+    mc_log.blk[log_count].emt = STARTUP_EID;
     mc_log.blk[log_count].emv[0] = 0x4E;
     mc_log.blk[log_count].emv[1] = 0x41;
     mc_log.blk[log_count].emv[2] = 0x53;
     mc_log.blk[log_count].emv[3] = 0x41;
     mc_log.blk[log_count++].em_len = 4;
     log_summary.rs--;
-    mc_log.blk[log_count].emt = STARTUP;
+    mc_log.blk[log_count].emt = STARTUP_EID;
     mc_log.blk[log_count].emv[0] = 0x4E;
     mc_log.blk[log_count].emv[1] = 0x41;
     mc_log.blk[log_count].emv[2] = 0x53;
