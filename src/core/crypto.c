@@ -128,26 +128,34 @@ uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
  * @return int32: Success/Failure
  **/
 int32_t Crypto_increment(uint8_t* num, int length)
-{
+{   
+    int status = CRYPTO_LIB_SUCCESS;
     int i;
-    /* go from right (least significant) to left (most signifcant) */
-    for (i = length - 1; i >= 0; --i)
+    if (num == NULL)
     {
-        ++(num[i]); /* increment current byte */
-
-        if (num[i] != 0) /* if byte did not overflow, we're done! */
-            break;
+        status = CRYPTO_LIB_ERR_NULL_BUFFER;
     }
-
-    if (i < 0) /* this means num[0] was incremented and overflowed */
+    if (status == CRYPTO_LIB_SUCCESS)
     {
-        for (i = 0; i < length; i++)
+        /* go from right (least significant) to left (most signifcant) */
+        for (i = length - 1; i >= 0; --i)
         {
-            num[i] = 0;
+            ++(num[i]); /* increment current byte */
+
+            if (num[i] != 0) /* if byte did not overflow, we're done! */
+                break;
+        }
+
+        if (i < 0) /* this means num[0] was incremented and overflowed */
+        {
+            for (i = 0; i < length; i++)
+            {
+                num[i] = 0;
+            }
         }
     }
 
-    return CRYPTO_LIB_SUCCESS;
+    return status;
 }
 
 /**
@@ -348,7 +356,13 @@ uint16_t Crypto_Calc_CRC16(uint8_t* data, int size)
 int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-
+    // Check null pointer
+    if (tc_frame == NULL)
+    {
+        status = CRYPTO_LIB_ERR_NULL_BUFFER;
+        return status;
+    }
+    // TODO: Break Switch statement into separate functions and remove return statement above
     switch (sdls_frame.pdu.type)
     {
     case 0: // Command
@@ -610,23 +624,30 @@ int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uin
                                                 GvcidManagedParameters_t* managed_parameters_out)
 {
     int32_t status = MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND;
-    for(int i = 0; i < gvcid_counter; i++)
+    // Check gvcid counter against a max
+    if (gvcid_counter > NUM_GVCID)
     {
-        if (managed_parameters_in[i].tfvn == tfvn && managed_parameters_in[i].scid == scid &&
-            managed_parameters_in[i].vcid == vcid)
+        status = CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT;
+    }
+    if (status != CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT)
+    {
+        for(int i = 0; i < gvcid_counter; i++)
         {
-            *managed_parameters_out = managed_parameters_in[i];
-            status = CRYPTO_LIB_SUCCESS;
-            break;
+            if (managed_parameters_in[i].tfvn == tfvn && managed_parameters_in[i].scid == scid &&
+                managed_parameters_in[i].vcid == vcid)
+            {
+                *managed_parameters_out = managed_parameters_in[i];
+                status = CRYPTO_LIB_SUCCESS;
+                break;
+            }
+        }
+
+        if(status != CRYPTO_LIB_SUCCESS)
+        {
+            printf(KRED "Error: Managed Parameters for GVCID(TFVN: %d, SCID: %d, VCID: %d) not found. \n" RESET, tfvn, scid,
+                vcid);
         }
     }
-
-    if(status != CRYPTO_LIB_SUCCESS)
-    {
-        printf(KRED "Error: Managed Parameters for GVCID(TFVN: %d, SCID: %d, VCID: %d) not found. \n" RESET, tfvn, scid,
-               vcid);
-    }
-
     return status;
 }
 
@@ -640,44 +661,77 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, uin
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     int x;
-
-    if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
+    // Check for null pointers
+    if (tc_sdls_processed_frame == NULL)
     {
-        if ((tc_sdls_processed_frame->tc_pdu[0] == 0x18) && (tc_sdls_processed_frame->tc_pdu[1] == 0x80))
-        // Crypto Lib Application ID
+        status = CRYPTO_LIB_ERR_NULL_BUFFER;
+    }
+    if (status == CRYPTO_LIB_SUCCESS)
+    {
+        if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
+        {
+            if ((tc_sdls_processed_frame->tc_pdu[0] == 0x18) && (tc_sdls_processed_frame->tc_pdu[1] == 0x80))
+            // Crypto Lib Application ID
+            {
+#ifdef DEBUG
+                printf(KGRN "Received SDLS command: " RESET);
+#endif
+                // CCSDS Header
+                sdls_frame.hdr.pvn = (tc_sdls_processed_frame->tc_pdu[0] & 0xE0) >> 5;
+                sdls_frame.hdr.type = (tc_sdls_processed_frame->tc_pdu[0] & 0x10) >> 4;
+                sdls_frame.hdr.shdr = (tc_sdls_processed_frame->tc_pdu[0] & 0x08) >> 3;
+                sdls_frame.hdr.appID =
+                    ((tc_sdls_processed_frame->tc_pdu[0] & 0x07) << 8) | tc_sdls_processed_frame->tc_pdu[1];
+                sdls_frame.hdr.seq = (tc_sdls_processed_frame->tc_pdu[2] & 0xC0) >> 6;
+                sdls_frame.hdr.pktid =
+                    ((tc_sdls_processed_frame->tc_pdu[2] & 0x3F) << 8) | tc_sdls_processed_frame->tc_pdu[3];
+                sdls_frame.hdr.pkt_length = (tc_sdls_processed_frame->tc_pdu[4] << 8) | tc_sdls_processed_frame->tc_pdu[5];
+
+                // CCSDS PUS
+                sdls_frame.pus.shf = (tc_sdls_processed_frame->tc_pdu[6] & 0x80) >> 7;
+                sdls_frame.pus.pusv = (tc_sdls_processed_frame->tc_pdu[6] & 0x70) >> 4;
+                sdls_frame.pus.ack = (tc_sdls_processed_frame->tc_pdu[6] & 0x0F);
+                sdls_frame.pus.st = tc_sdls_processed_frame->tc_pdu[7];
+                sdls_frame.pus.sst = tc_sdls_processed_frame->tc_pdu[8];
+                sdls_frame.pus.sid = (tc_sdls_processed_frame->tc_pdu[9] & 0xF0) >> 4;
+                sdls_frame.pus.spare = (tc_sdls_processed_frame->tc_pdu[9] & 0x0F);
+
+                // SDLS TLV PDU
+                sdls_frame.pdu.type = (tc_sdls_processed_frame->tc_pdu[10] & 0x80) >> 7;
+                sdls_frame.pdu.uf = (tc_sdls_processed_frame->tc_pdu[10] & 0x40) >> 6;
+                sdls_frame.pdu.sg = (tc_sdls_processed_frame->tc_pdu[10] & 0x30) >> 4;
+                sdls_frame.pdu.pid = (tc_sdls_processed_frame->tc_pdu[10] & 0x0F);
+                sdls_frame.pdu.pdu_len = (tc_sdls_processed_frame->tc_pdu[11] << 8) | tc_sdls_processed_frame->tc_pdu[12];
+                for (x = 13; x < (13 + sdls_frame.hdr.pkt_length); x++)
+                {
+                    sdls_frame.pdu.data[x - 13] = tc_sdls_processed_frame->tc_pdu[x];
+                }
+
+#ifdef CCSDS_DEBUG
+                Crypto_ccsdsPrint(&sdls_frame);
+#endif
+
+                // Determine type of PDU
+                status = Crypto_PDU(ingest, tc_sdls_processed_frame);
+            }
+        }
+        else if (tc_sdls_processed_frame->tc_header.vcid == TC_SDLS_EP_VCID) // TC SDLS PDU with no packet layer
         {
 #ifdef DEBUG
             printf(KGRN "Received SDLS command: " RESET);
 #endif
-            // CCSDS Header
-            sdls_frame.hdr.pvn = (tc_sdls_processed_frame->tc_pdu[0] & 0xE0) >> 5;
-            sdls_frame.hdr.type = (tc_sdls_processed_frame->tc_pdu[0] & 0x10) >> 4;
-            sdls_frame.hdr.shdr = (tc_sdls_processed_frame->tc_pdu[0] & 0x08) >> 3;
-            sdls_frame.hdr.appID =
-                ((tc_sdls_processed_frame->tc_pdu[0] & 0x07) << 8) | tc_sdls_processed_frame->tc_pdu[1];
-            sdls_frame.hdr.seq = (tc_sdls_processed_frame->tc_pdu[2] & 0xC0) >> 6;
-            sdls_frame.hdr.pktid =
-                ((tc_sdls_processed_frame->tc_pdu[2] & 0x3F) << 8) | tc_sdls_processed_frame->tc_pdu[3];
-            sdls_frame.hdr.pkt_length = (tc_sdls_processed_frame->tc_pdu[4] << 8) | tc_sdls_processed_frame->tc_pdu[5];
-
-            // CCSDS PUS
-            sdls_frame.pus.shf = (tc_sdls_processed_frame->tc_pdu[6] & 0x80) >> 7;
-            sdls_frame.pus.pusv = (tc_sdls_processed_frame->tc_pdu[6] & 0x70) >> 4;
-            sdls_frame.pus.ack = (tc_sdls_processed_frame->tc_pdu[6] & 0x0F);
-            sdls_frame.pus.st = tc_sdls_processed_frame->tc_pdu[7];
-            sdls_frame.pus.sst = tc_sdls_processed_frame->tc_pdu[8];
-            sdls_frame.pus.sid = (tc_sdls_processed_frame->tc_pdu[9] & 0xF0) >> 4;
-            sdls_frame.pus.spare = (tc_sdls_processed_frame->tc_pdu[9] & 0x0F);
-
+            // No Packet HDR or PUS in these frames
             // SDLS TLV PDU
-            sdls_frame.pdu.type = (tc_sdls_processed_frame->tc_pdu[10] & 0x80) >> 7;
-            sdls_frame.pdu.uf = (tc_sdls_processed_frame->tc_pdu[10] & 0x40) >> 6;
-            sdls_frame.pdu.sg = (tc_sdls_processed_frame->tc_pdu[10] & 0x30) >> 4;
-            sdls_frame.pdu.pid = (tc_sdls_processed_frame->tc_pdu[10] & 0x0F);
-            sdls_frame.pdu.pdu_len = (tc_sdls_processed_frame->tc_pdu[11] << 8) | tc_sdls_processed_frame->tc_pdu[12];
-            for (x = 13; x < (13 + sdls_frame.hdr.pkt_length); x++)
+            sdls_frame.pdu.type = (tc_sdls_processed_frame->tc_pdu[0] & 0x80) >> 7;
+            sdls_frame.pdu.uf = (tc_sdls_processed_frame->tc_pdu[0] & 0x40) >> 6;
+            sdls_frame.pdu.sg = (tc_sdls_processed_frame->tc_pdu[0] & 0x30) >> 4;
+            sdls_frame.pdu.pid = (tc_sdls_processed_frame->tc_pdu[0] & 0x0F);
+            sdls_frame.pdu.pdu_len = (tc_sdls_processed_frame->tc_pdu[1] << 8) | tc_sdls_processed_frame->tc_pdu[2];
+            for (x = 3; x < (3 + tc_sdls_processed_frame->tc_header.fl); x++)
             {
-                sdls_frame.pdu.data[x - 13] = tc_sdls_processed_frame->tc_pdu[x];
+                // Todo - Consider how this behaves with large OTAR PDUs that are larger than 1 TC in size. Most likely
+                // fails. Must consider Uplink Sessions (sequence numbers).
+                sdls_frame.pdu.data[x - 3] = tc_sdls_processed_frame->tc_pdu[x];
             }
 
 #ifdef CCSDS_DEBUG
@@ -687,38 +741,11 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, uin
             // Determine type of PDU
             status = Crypto_PDU(ingest, tc_sdls_processed_frame);
         }
-    }
-    else if (tc_sdls_processed_frame->tc_header.vcid == TC_SDLS_EP_VCID) // TC SDLS PDU with no packet layer
-    {
-#ifdef DEBUG
-        printf(KGRN "Received SDLS command: " RESET);
-#endif
-        // No Packet HDR or PUS in these frames
-        // SDLS TLV PDU
-        sdls_frame.pdu.type = (tc_sdls_processed_frame->tc_pdu[0] & 0x80) >> 7;
-        sdls_frame.pdu.uf = (tc_sdls_processed_frame->tc_pdu[0] & 0x40) >> 6;
-        sdls_frame.pdu.sg = (tc_sdls_processed_frame->tc_pdu[0] & 0x30) >> 4;
-        sdls_frame.pdu.pid = (tc_sdls_processed_frame->tc_pdu[0] & 0x0F);
-        sdls_frame.pdu.pdu_len = (tc_sdls_processed_frame->tc_pdu[1] << 8) | tc_sdls_processed_frame->tc_pdu[2];
-        for (x = 3; x < (3 + tc_sdls_processed_frame->tc_header.fl); x++)
+        else
         {
-            // Todo - Consider how this behaves with large OTAR PDUs that are larger than 1 TC in size. Most likely
-            // fails. Must consider Uplink Sessions (sequence numbers).
-            sdls_frame.pdu.data[x - 3] = tc_sdls_processed_frame->tc_pdu[x];
+            // TODO - Process SDLS PDU with Packet Layer without PUS_HDR
         }
-
-#ifdef CCSDS_DEBUG
-        Crypto_ccsdsPrint(&sdls_frame);
-#endif
-
-        // Determine type of PDU
-        status = Crypto_PDU(ingest, tc_sdls_processed_frame);
     }
-    else
-    {
-        // TODO - Process SDLS PDU with Packet Layer without PUS_HDR
-    }
-
     return status;
 } // End Process SDLS PDU
 
@@ -761,34 +788,42 @@ int32_t Crypto_Check_Anti_Replay_Verify_Pointers(SecurityAssociation_t* sa_ptr, 
 int32_t Crypto_Check_Anti_Replay_ARSNW(SecurityAssociation_t* sa_ptr, uint8_t* arsn, int8_t* arsn_valid)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    if (sa_ptr->shsnf_len > 0)
+
+    // Check for null pointers
+    if (sa_ptr == NULL || arsn == NULL || arsn_valid == NULL)
     {
-        // Check Sequence Number is in ARSNW
-        status = Crypto_window(arsn, sa_ptr->arsn, sa_ptr->arsn_len, sa_ptr->arsnw);
-#ifdef DEBUG
-        printf("Received ARSN is\n\t");
-        for (int i = 0; i < sa_ptr->arsn_len; i++)
-        {
-            printf("%02x", *(arsn + i));
-        }
-        printf("\nSA ARSN is\n\t");
-        for (int i = 0; i < sa_ptr->arsn_len; i++)
-        {
-            printf("%02x", *(sa_ptr->arsn + i));
-        }
-        printf("\nARSNW is: %d\n", sa_ptr->arsnw);
-        printf("Status from Crypto_Window is: %d\n", status);
-#endif
-        if (status != CRYPTO_LIB_SUCCESS)
-        {
-            return CRYPTO_LIB_ERR_ARSN_OUTSIDE_WINDOW;
-        }
-        // Valid ARSN received, increment stored value
-        else
-        {
-            *arsn_valid = CRYPTO_TRUE;
-        }
+        status = CRYPTO_LIB_ERR_NULL_BUFFER;
     }
+
+    if (status == CRYPTO_LIB_SUCCESS)
+        if (sa_ptr->shsnf_len > 0)
+        {
+            // Check Sequence Number is in ARSNW
+            status = Crypto_window(arsn, sa_ptr->arsn, sa_ptr->arsn_len, sa_ptr->arsnw);
+    #ifdef DEBUG
+            printf("Received ARSN is\n\t");
+            for (int i = 0; i < sa_ptr->arsn_len; i++)
+            {
+                printf("%02x", *(arsn + i));
+            }
+            printf("\nSA ARSN is\n\t");
+            for (int i = 0; i < sa_ptr->arsn_len; i++)
+            {
+                printf("%02x", *(sa_ptr->arsn + i));
+            }
+            printf("\nARSNW is: %d\n", sa_ptr->arsnw);
+            printf("Status from Crypto_Window is: %d\n", status);
+    #endif
+            if (status != CRYPTO_LIB_SUCCESS)
+            {
+                return CRYPTO_LIB_ERR_ARSN_OUTSIDE_WINDOW;
+            }
+            // Valid ARSN received, increment stored value
+            else
+            {
+                *arsn_valid = CRYPTO_TRUE;
+            }
+        }
     return status;
 }
 
