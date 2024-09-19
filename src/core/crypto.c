@@ -93,15 +93,12 @@ void clean_akref(SecurityAssociation_t* sa)
  * @brief Function: Crypto_Is_AEAD_Algorithm
  * Looks up cipher suite ID and determines if it's an AEAD algorithm. Returns 1 if true, 0 if false;
  * @param cipher_suite_id: uint32
+ * @return int: Success/Failure
  **/
 uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
 {
-    // CryptoLib only supports AES-GCM, which is an AEAD (Authenticated Encryption with Associated Data) algorithm, so
-    // return true/1.
-
     int status = CRYPTO_FALSE;
 
-    // TODO - Add cipher suite mapping to which algorithms are AEAD and which are not.
     if ((cipher_suite_id == CRYPTO_CIPHER_AES256_GCM) || (cipher_suite_id == CRYPTO_CIPHER_AES256_CBC_MAC) || (cipher_suite_id == CRYPTO_CIPHER_AES256_GCM_SIV))
     {
 #ifdef DEBUG
@@ -395,6 +392,7 @@ int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
                 {
                 default:
                     status = Crypto_USER_DEFINED_CMD(ingest);
+                    break;
                 }
                 break;
             }
@@ -423,6 +421,13 @@ int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
     return status;
 }
 
+/**
+ * @brief Function: Crypto_SG_KEY_MGMT
+ * Parses Key Management Procedure from PID
+ * @param ingest: uint8_t*
+ * @param tc_frame: TC_t*
+ * @return int32: Success/Failure
+ **/
 int32_t Crypto_SG_KEY_MGMT(uint8_t* ingest, TC_t* tc_frame)
 {
     int status = CRYPTO_LIB_SUCCESS;
@@ -473,6 +478,13 @@ int32_t Crypto_SG_KEY_MGMT(uint8_t* ingest, TC_t* tc_frame)
     return status;
 }
 
+/**
+ * @brief Function: Crypto_SG_SA_MGMT
+ * Parses SA Management Procedure from PID
+ * @param ingest: uint8_t*
+ * @param tc_frame: TC_t*
+ * @return int32: Success/Failure
+ **/
 int32_t Crypto_SG_SA_MGMT(uint8_t* ingest, TC_t* tc_frame)
 {
     int status = CRYPTO_LIB_SUCCESS;
@@ -547,6 +559,12 @@ int32_t Crypto_SG_SA_MGMT(uint8_t* ingest, TC_t* tc_frame)
     return status;
 }
 
+/**
+ * @brief Function: Crypto_SEC_MON_CTRL
+ * Parses MC Procedure from PID
+ * @param ingest: uint8_t*
+ * @return int32: Success/Failure
+ **/
 int32_t Crypto_SEC_MON_CTRL(uint8_t* ingest)
 {
     int status = CRYPTO_LIB_SUCCESS;
@@ -597,54 +615,60 @@ int32_t Crypto_SEC_MON_CTRL(uint8_t* ingest)
     return status;
 }
 
+/**
+ * @brief Function: Crypto_USER_DEFINED_CMD
+ * Parses User Defined Procedure from PID
+ * @param ingest: uint8_t*
+ * @return int32: Success/Failure
+ **/
 int32_t Crypto_USER_DEFINED_CMD(uint8_t* ingest)
 {
     int status = CRYPTO_LIB_SUCCESS;
     switch (sdls_frame.pdu.pid)
     {
-        case PID_IDLE_FRAME_TRIGGER: // Idle Frame Trigger
+        case PID_IDLE_FRAME_TRIGGER: 
 #ifdef PDU_DEBUG
             printf(KMAG "User Idle Trigger\n" RESET);
 #endif
             status = Crypto_User_IdleTrigger(ingest);
             break;
-        case PID_TOGGLE_BAD_SPI: // Toggle Bad SPI
+        case PID_TOGGLE_BAD_SPI: 
 #ifdef PDU_DEBUG
             printf(KMAG "User Toggle Bad SPI\n" RESET);
 #endif
             status = Crypto_User_BadSPI();
             break;
-        case PID_TOGGLE_BAD_IV: // Toggle Bad IV
+        case PID_TOGGLE_BAD_IV: 
 #ifdef PDU_DEBUG
             printf(KMAG "User Toggle Bad IV\n" RESET);
 #endif
             status = Crypto_User_BadIV();
             break;
-        case PID_TOGGLE_BAD_MAC: // Toggle Bad MAC
+        case PID_TOGGLE_BAD_MAC: 
 #ifdef PDU_DEBUG
             printf(KMAG "User Toggle Bad MAC\n" RESET);
 #endif
             status = Crypto_User_BadMAC();
             break;
-        case PID_TOGGLE_BAD_FECF: // Toggle Bad FECF
+        case PID_TOGGLE_BAD_FECF: 
 #ifdef PDU_DEBUG
             printf(KMAG "User Toggle Bad FECF\n" RESET);
 #endif
             status = Crypto_User_BadFECF();
             break;
-        case PID_MODIFY_KEY: // Modify Key
+        case PID_MODIFY_KEY: 
 #ifdef PDU_DEBUG
             printf(KMAG "User Modify Key\n" RESET);
 #endif
             status = Crypto_User_ModifyKey();
             break;
-        case PID_MODIFY_ACTIVE_TM: // Modify ActiveTM
+        case PID_MODIFY_ACTIVE_TM: 
 #ifdef PDU_DEBUG
             printf(KMAG "User Modify Active TM\n" RESET);
 #endif
             status = Crypto_User_ModifyActiveTM();
             break;
-        case PID_MODIFY_VCID: // Modify TM VCID
+        case PID_MODIFY_VCID: 
 #ifdef PDU_DEBUG
             printf(KMAG "User Modify VCID\n" RESET);
 #endif
@@ -659,6 +683,15 @@ int32_t Crypto_USER_DEFINED_CMD(uint8_t* ingest)
     return status;
 }
 
+/**
+ * @brief Function: Crypto_Process_Extended_Procedure_Pdu
+ * @param tfvn: uint8_t
+ * @param scid: uint16_t
+ * @param vcid: uint8_t
+ * @param managed_parameters_in: GvcidManagedParameters_t*
+ * @param managed_parameters_out: GvcidManagedParameters_t*
+ * @return int32: Success/Failure
+ **/
 int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
                                                 GvcidManagedParameters_t* managed_parameters_in,
                                                 GvcidManagedParameters_t* managed_parameters_out)
@@ -684,8 +717,10 @@ int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uin
 
         if(status != CRYPTO_LIB_SUCCESS)
         {
+#ifdef DEBUG
             printf(KRED "Error: Managed Parameters for GVCID(TFVN: %d, SCID: %d, VCID: %d) not found. \n" RESET, tfvn, scid,
                 vcid);
+#endif
         }
     }
     return status;
@@ -695,6 +730,7 @@ int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uin
  * @brief Function: Crypto_Process_Extended_Procedure_Pdu
  * @param tc_sdls_processed_frame: TC_t*
  * @param ingest: uint8_t*
+ * @return int32: Success/Failure
  * @note TODO - Actually update based on variable config
  **/
 int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, uint8_t* ingest)
@@ -796,6 +832,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, uin
  * @param sa_ptr: SecurityAssociation_t*
  * @param arsn: uint8_t*
  * @param iv: uint8_t*
+ * @return int32: Success/Failure
  **/
 int32_t Crypto_Check_Anti_Replay_Verify_Pointers(SecurityAssociation_t* sa_ptr, uint8_t* arsn, uint8_t* iv)
 {
@@ -824,6 +861,7 @@ int32_t Crypto_Check_Anti_Replay_Verify_Pointers(SecurityAssociation_t* sa_ptr, 
  * @param sa_ptr: SecurityAssociation_t*
  * @param arsn: uint8_t*
  * @param arsn_valid: uint8_t*
+ * @return int32: Success/Failure
  **/
 int32_t Crypto_Check_Anti_Replay_ARSNW(SecurityAssociation_t* sa_ptr, uint8_t* arsn, int8_t* arsn_valid)
 {
@@ -873,6 +911,7 @@ int32_t Crypto_Check_Anti_Replay_ARSNW(SecurityAssociation_t* sa_ptr, uint8_t* a
  * @param sa_ptr: SecurityAssociation_t*
  * @param iv: uint8_t*
  * @param iv_valid: uint8_t*
+ * @return int32: Success/Failure
  **/
 int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t* sa_ptr, uint8_t* iv, int8_t* iv_valid)
 {
@@ -922,6 +961,7 @@ int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t* sa_ptr, uint8_t* iv,
  * @param sa_ptr: SecurityAssociation_t*
  * @param arsn: uint8_t*
  * @param iv: uint8_t*
+ * @return int32: Success/Failure
  **/
 int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t* sa_ptr, uint8_t* arsn, uint8_t* iv)
 {
@@ -977,8 +1017,9 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t* sa_ptr, uint8_t* arsn, u
 
 /**
 * @brief: Function: Crypto_Get_ECS_Algo_Keylen
-* For a given algorithm, return the associated key length in bytes
+* For a given ECS algorithm, return the associated key length in bytes
 * @param algo: uint8_t
+* @return int32: Key Length
 **/
 int32_t Crypto_Get_ECS_Algo_Keylen(uint8_t algo)
 {
@@ -1007,8 +1048,9 @@ int32_t Crypto_Get_ECS_Algo_Keylen(uint8_t algo)
 
 /**
 * @brief: Function: Crypto_Get_ACS_Algo_Keylen
-* For a given algorithm, return the associated key length in bytes
+* For a given ACS algorithm, return the associated key length in bytes
 * @param algo: uint8_t
+* @return int32: Key Length
 **/
 int32_t Crypto_Get_ACS_Algo_Keylen(uint8_t algo)
 {
