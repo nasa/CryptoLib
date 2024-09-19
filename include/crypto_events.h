@@ -27,6 +27,6 @@
 #define IV_REPLAY_ERR_EID 6
 #define OTAR_MK_ERR_EID 7
 
-#define STARTUP 10
+#define STARTUP_EID 10
 
 #endif //CRYPTO_EVENTS_H
