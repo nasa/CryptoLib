@@ -198,7 +198,6 @@ void Crypto_Local_Config(void);
 void Crypto_Local_Init(void);
 // int32_t  Crypto_gcm_err(int gcm_err);
 int32_t Crypto_window(uint8_t* actual, uint8_t* expected, int length, int window);
-// int32_t Crypto_compare_less_equal(uint8_t* actual, uint8_t* expected, int length);
 // int32_t  Crypto_FECF(int fecf, uint8_t* ingest, int len_ingest,TC_t* tc_frame);
 uint16_t Crypto_Calc_FECF(const uint8_t* ingest, int len_ingest);
 void Crypto_Calc_CRC_Init_Table(void);

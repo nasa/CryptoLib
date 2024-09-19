@@ -225,36 +225,6 @@ int32_t Crypto_window(uint8_t* actual, uint8_t* expected, int length, int window
 }
 
 /**
- * @brief Function: Crypto_compare_less_equal
- * @param actual: uint8*
- * @param expected: uint8*
- * @param length: int
- * @return int32: Success/Failure
- **/
-/*
-int32_t Crypto_compare_less_equal(uint8_t* actual, uint8_t* expected, int length)
-{
-    int status = CRYPTO_LIB_ERROR;
-    int i;
-
-    for(i = 0; i < length - 1; i++)
-    {
-        if (actual[i] > expected[i])
-        {
-            status = CRYPTO_LIB_SUCCESS;
-            break;
-        }
-        else if (actual[i] < expected[i])
-        {
-            status = CRYPTO_LIB_ERROR;
-            break;
-        }
-    }
-    return status;
-}
-*/
-
-/**
  * @brief Function: Crypto_Prep_Reply
  * Assumes that both the pkt_length and pdu_len are set properly
  * @param ingest: uint8_t*
