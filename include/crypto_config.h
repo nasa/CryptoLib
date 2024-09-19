@@ -90,6 +90,17 @@
 #define KEY_DESTROYED 3
 #define KEY_CORRUPTED 4
 
+// Key Length Defines
+// ECS
+#define AES256_GCM 32
+#define AES256_GCM_SIV 32
+#define AES256_CBC 32
+#define AES256_CCM 32
+// ACS
+#define CMAC_AES256 32
+#define HMAC_SHA256 32
+#define HMAC_SHA512 64
+
 // SA Service Types
 #define SA_PLAINTEXT 0
 #define SA_AUTHENTICATION 1
@@ -119,6 +130,7 @@
 #define PAD_SIZE 32           /* bytes */
 #define CHALLENGE_SIZE 16     /* bytes */
 #define CHALLENGE_MAC_SIZE 16 /* bytes */
+#define BYTE_LEN 8            /* bits */
 
 // Monitoring and Control Defines
 #define EMV_SIZE 4  /* bytes */
@@ -134,7 +146,7 @@
 #define PDU_USER_FLAG_TRUE 1
 #define PDU_USER_FLAG_FALSE 0
 
-// Procedure Identification (PID)
+// Procedure Identification (PID) - CCSDS Defined Commands
 // Service Group - Key Management
 #define SG_KEY_MGMT 0x00 // 0b00
 #define PID_OTAR 0x01 // 0b0001
@@ -163,6 +175,16 @@
 #define PID_ERASE_LOG 0x04 // 0b0100
 #define PID_SELF_TEST 0x05 // 0b0101
 #define PID_ALARM_FLAG 0x07 // 0b0111
+
+// Procedure Identification (PID) - User Defined Commands
+#define PID_IDLE_FRAME_TRIGGER 0
+#define PID_TOGGLE_BAD_SPI 1
+#define PID_TOGGLE_BAD_IV 2
+#define PID_TOGGLE_BAD_MAC 3
+#define PID_TOGGLE_BAD_FECF 4
+#define PID_MODIFY_KEY 5
+#define PID_MODIFY_ACTIVE_TM 6
+#define PID_MODIFY_VCID 7
 
 // TC Defines
 #define TC_SH_SIZE 8 /* bits */

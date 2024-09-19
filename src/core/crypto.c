@@ -56,8 +56,8 @@ uint8_t badIV = 0;
 uint8_t badMAC = 0;
 uint8_t badFECF = 0;
 //  CRC
-uint32_t crc32Table[256];
-uint16_t crc16Table[256];
+uint32_t crc32Table[CRC32TBL_SIZE];
+uint16_t crc16Table[CRC16TBL_SIZE];
 
 /*
 ** Assisting Functions
@@ -297,7 +297,7 @@ uint16_t Crypto_Calc_FECF(const uint8_t* ingest, int len_ingest)
 
     for (i = 0; i < len_ingest; i++)
     { // Byte Logic
-        for (j = 0; j < 8; j++)
+        for (j = 0; j < BYTE_LEN; j++)
         { // Bit Logic
             bit = ((ingest[i] >> (7 - j) & 1) == 1);
             c15 = ((fecf >> 15 & 1) == 1);
@@ -338,7 +338,7 @@ uint16_t Crypto_Calc_CRC16(uint8_t* data, int size)
 
     for (; size > 0; size--)
     {
-        crc = ((crc << 8) & 0xFF00) ^ crc16Table[(crc >> 8) ^ *data++];
+        crc = ((crc << BYTE_LEN) & 0xFF00) ^ crc16Table[(crc >> BYTE_LEN) ^ *data++];
     }
 
     return crc;
@@ -356,68 +356,70 @@ uint16_t Crypto_Calc_CRC16(uint8_t* data, int size)
 int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
+
     // Check null pointer
     if (tc_frame == NULL)
     {
         status = CRYPTO_LIB_ERR_NULL_BUFFER;
-        return status;
     }
-    // TODO: Break Switch statement into separate functions and remove return statement above
-    switch (sdls_frame.pdu.type)
+    
+    if (status == CRYPTO_LIB_SUCCESS)
     {
-    case PDU_TYPE_COMMAND: 
-        switch (sdls_frame.pdu.uf)
+        switch (sdls_frame.pdu.type)
         {
-        case PDU_USER_FLAG_FALSE: // CCSDS Defined Command
-            switch (sdls_frame.pdu.sg)
+        case PDU_TYPE_COMMAND: 
+            switch (sdls_frame.pdu.uf)
             {
-            case SG_KEY_MGMT: // Key Management Procedure
-                status = Crypto_SG_KEY_MGMT(ingest, tc_frame);
-                break;
-            case SG_SA_MGMT: // Security Association Management Procedure
-                status = Crypto_SG_SA_MGMT(ingest, tc_frame);
-                break;
-            case SG_SEC_MON_CTRL: // Security Monitoring & Control Procedure
-                status = Crypto_SEC_MON_CTRL(ingest);
-                break;
-            default: // ERROR
+            case PDU_USER_FLAG_FALSE: // CCSDS Defined Command
+                switch (sdls_frame.pdu.sg)
+                {
+                case SG_KEY_MGMT: // Key Management Procedure
+                    status = Crypto_SG_KEY_MGMT(ingest, tc_frame);
+                    break;
+                case SG_SA_MGMT: // Security Association Management Procedure
+                    status = Crypto_SG_SA_MGMT(ingest, tc_frame);
+                    break;
+                case SG_SEC_MON_CTRL: // Security Monitoring & Control Procedure
+                    status = Crypto_SEC_MON_CTRL(ingest);
+                    break;
+                default: // ERROR
 #ifdef PDU_DEBUG
-                printf(KRED "Error: Crypto_PDU failed interpreting Service Group! \n" RESET);
+                    printf(KRED "Error: Crypto_PDU failed interpreting Service Group! \n" RESET);
 #endif
+                    break;
+                }
+                break;
+
+            case PDU_USER_FLAG_TRUE: // User Defined Command
+                switch (sdls_frame.pdu.sg)
+                {
+                default:
+                    status = Crypto_USER_DEFINED_CMD(ingest);
+                }
                 break;
             }
             break;
 
-        case PDU_USER_FLAG_TRUE: // User Defined Command
-            switch (sdls_frame.pdu.sg)
-            {
-            default:
-                status = Crypto_USER_DEFINED_CMD(ingest);
-            }
+        case PDU_TYPE_REPLY: 
+#ifdef PDU_DEBUG
+            printf(KRED "Error: Crypto_PDU failed interpreting PDU Type!  Received a Reply!?! \n" RESET);
+#endif
             break;
         }
-        break;
-
-    case PDU_TYPE_REPLY: 
-#ifdef PDU_DEBUG
-        printf(KRED "Error: Crypto_PDU failed interpreting PDU Type!  Received a Reply!?! \n" RESET);
-#endif
-        break;
-    }
 
 #ifdef CCSDS_DEBUG
-    int x;
-    if ((status > 0) && (ingest != NULL))
-    {
-        printf(KMAG "CCSDS message put on software bus: 0x" RESET);
-        for (x = 0; x < status; x++)
+        int x;
+        if ((status > 0) && (ingest != NULL))
         {
-            printf(KMAG "%02x" RESET, (uint8_t)ingest[x]);
+            printf(KMAG "CCSDS message put on software bus: 0x" RESET);
+            for (x = 0; x < status; x++)
+            {
+                printf(KMAG "%02x" RESET, (uint8_t)ingest[x]);
+            }
+            printf("\n");
         }
-        printf("\n");
-    }
 #endif
-
+    }
     return status;
 }
 
@@ -600,49 +602,49 @@ int32_t Crypto_USER_DEFINED_CMD(uint8_t* ingest)
     int status = CRYPTO_LIB_SUCCESS;
     switch (sdls_frame.pdu.pid)
     {
-        case 0: // Idle Frame Trigger
+        case PID_IDLE_FRAME_TRIGGER: // Idle Frame Trigger
 #ifdef PDU_DEBUG
             printf(KMAG "User Idle Trigger\n" RESET);
 #endif
             status = Crypto_User_IdleTrigger(ingest);
             break;
-        case 1: // Toggle Bad SPI
+        case PID_TOGGLE_BAD_SPI: // Toggle Bad SPI
 #ifdef PDU_DEBUG
             printf(KMAG "User Toggle Bad SPI\n" RESET);
 #endif
             status = Crypto_User_BadSPI();
             break;
-        case 2: // Toggle Bad IV
+        case PID_TOGGLE_BAD_IV: // Toggle Bad IV
 #ifdef PDU_DEBUG
             printf(KMAG "User Toggle Bad IV\n" RESET);
 #endif
             status = Crypto_User_BadIV();
             break;
-        case 3: // Toggle Bad MAC
+        case PID_TOGGLE_BAD_MAC: // Toggle Bad MAC
 #ifdef PDU_DEBUG
             printf(KMAG "User Toggle Bad MAC\n" RESET);
 #endif
             status = Crypto_User_BadMAC();
             break;
-        case 4: // Toggle Bad FECF
+        case PID_TOGGLE_BAD_FECF: // Toggle Bad FECF
 #ifdef PDU_DEBUG
             printf(KMAG "User Toggle Bad FECF\n" RESET);
 #endif
             status = Crypto_User_BadFECF();
             break;
-        case 5: // Modify Key
+        case PID_MODIFY_KEY: // Modify Key
 #ifdef PDU_DEBUG
             printf(KMAG "User Modify Key\n" RESET);
 #endif
             status = Crypto_User_ModifyKey();
             break;
-        case 6: // Modify ActiveTM
+        case PID_MODIFY_ACTIVE_TM: // Modify ActiveTM
 #ifdef PDU_DEBUG
             printf(KMAG "User Modify Active TM\n" RESET);
 #endif
             status = Crypto_User_ModifyActiveTM();
             break;
-        case 7: // Modify TM VCID
+        case PID_MODIFY_VCID: // Modify TM VCID
 #ifdef PDU_DEBUG
             printf(KMAG "User Modify VCID\n" RESET);
 #endif
@@ -985,16 +987,16 @@ int32_t Crypto_Get_ECS_Algo_Keylen(uint8_t algo)
     switch (algo)
     {
     case CRYPTO_CIPHER_AES256_GCM:
-        retval = 32;
+        retval = AES256_GCM_KEYLEN;
         break;
     case CRYPTO_CIPHER_AES256_GCM_SIV:
-        retval = 32;
+        retval = AES256_GCM_SIV_KEYLEN;
         break;
     case CRYPTO_CIPHER_AES256_CBC:
-        retval = 32;
+        retval = AES256_CBC_KEYLEN;
         break;
     case CRYPTO_CIPHER_AES256_CCM:
-        retval = 32;
+        retval = AES256_CCM_KEYLEN;
         break;
     default:
         break;
@@ -1015,13 +1017,13 @@ int32_t Crypto_Get_ACS_Algo_Keylen(uint8_t algo)
     switch (algo)
     {
     case CRYPTO_MAC_CMAC_AES256:
-        retval = 32;
+        retval = CMAC_AES256_KEYLEN;
         break;
     case CRYPTO_MAC_HMAC_SHA256:
-        retval = 32;
+        retval = HMAC_SHA256_KEYLEN;
         break;
     case CRYPTO_MAC_HMAC_SHA512:
-        retval = 64;
+        retval = HMAC_SHA512_KEYLEN;
         break;
     default:
         break;
