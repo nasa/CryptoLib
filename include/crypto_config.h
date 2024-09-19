@@ -141,6 +141,14 @@
 #define ST_OK 0x00
 #define ST_NOK 0xFF
 
+// Protocol Data Unit (PDU)
+// PDU Type
+#define PDU_TYPE_COMMAND 0
+#define PDU_TYPE_REPLY 1
+// PDU User Flag
+#define PDU_USER_FLAG_TRUE 1
+#define PDU_USER_FLAG_FALSE 0
+
 // Procedure Identification (PID)
 // Service Group - Key Management
 #define SG_KEY_MGMT 0x00 // 0b00

@@ -365,240 +365,43 @@ int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
     // TODO: Break Switch statement into separate functions and remove return statement above
     switch (sdls_frame.pdu.type)
     {
-    case 0: // Command
+    case PDU_TYPE_COMMAND: 
         switch (sdls_frame.pdu.uf)
         {
-        case 0: // CCSDS Defined Command
+        case PDU_USER_FLAG_FALSE: // CCSDS Defined Command
             switch (sdls_frame.pdu.sg)
             {
             case SG_KEY_MGMT: // Key Management Procedure
-                switch (sdls_frame.pdu.pid)
-                {
-                case PID_OTAR:
-#ifdef PDU_DEBUG
-                    printf(KGRN "Key OTAR\n" RESET);
-#endif
-                    status = Crypto_Key_OTAR();
-                    break;
-                case PID_KEY_ACTIVATION:
-#ifdef PDU_DEBUG
-                    printf(KGRN "Key Activate\n" RESET);
-#endif
-                    status = Crypto_Key_update(KEY_ACTIVE);
-                    break;
-                case PID_KEY_DEACTIVATION:
-#ifdef PDU_DEBUG
-                    printf(KGRN "Key Deactivate\n" RESET);
-#endif
-                    status = Crypto_Key_update(KEY_DEACTIVATED);
-                    break;
-                case PID_KEY_VERIFICATION:
-#ifdef PDU_DEBUG
-                    printf(KGRN "Key Verify\n" RESET);
-#endif
-                    status = Crypto_Key_verify(ingest, tc_frame);
-                    break;
-                case PID_KEY_DESTRUCTION:
-#ifdef PDU_DEBUG
-                    printf(KGRN "Key Destroy\n" RESET);
-#endif
-                    status = Crypto_Key_update(KEY_DESTROYED);
-                    break;
-                case PID_KEY_INVENTORY:
-#ifdef PDU_DEBUG
-                    printf(KGRN "Key Inventory\n" RESET);
-#endif
-                    status = Crypto_Key_inventory(ingest);
-                    break;
-                default:
-                    printf(KRED "Error: Crypto_PDU failed interpreting Key Management Procedure Identification Field! "
-                                "\n" RESET);
-                    break;
-                }
+                status = Crypto_SG_KEY_MGMT(ingest, tc_frame);
                 break;
             case SG_SA_MGMT: // Security Association Management Procedure
-                switch (sdls_frame.pdu.pid)
-                {
-                case PID_CREATE_SA:
-#ifdef PDU_DEBUG
-                    printf(KGRN "SA Create\n" RESET);
-#endif
-                    status = sa_if->sa_create();
-                    break;
-                case PID_DELETE_SA:
-#ifdef PDU_DEBUG
-                    printf(KGRN "SA Delete\n" RESET);
-#endif
-                    status = sa_if->sa_delete();
-                    break;
-                case PID_SET_ARSNW:
-#ifdef PDU_DEBUG
-                    printf(KGRN "SA setARSNW\n" RESET);
-#endif
-                    status = sa_if->sa_setARSNW();
-                    break;
-                case PID_REKEY_SA:
-#ifdef PDU_DEBUG
-                    printf(KGRN "SA Rekey\n" RESET);
-#endif
-                    status = sa_if->sa_rekey();
-                    break;
-                case PID_EXPIRE_SA:
-#ifdef PDU_DEBUG
-                    printf(KGRN "SA Expire\n" RESET);
-#endif
-                    status = sa_if->sa_expire();
-                    break;
-                case PID_SET_ARSN:
-#ifdef PDU_DEBUG
-                    printf(KGRN "SA SetARSN\n" RESET);
-#endif
-                    status = sa_if->sa_setARSN();
-                    break;
-                case PID_START_SA:
-#ifdef PDU_DEBUG
-                    printf(KGRN "SA Start\n" RESET);
-#endif
-                    status = sa_if->sa_start(tc_frame);
-                    break;
-                case PID_STOP_SA:
-#ifdef PDU_DEBUG
-                    printf(KGRN "SA Stop\n" RESET);
-#endif
-                    status = sa_if->sa_stop();
-                    break;
-                case PID_READ_ARSN:
-#ifdef PDU_DEBUG
-                    printf(KGRN "SA readARSN\n" RESET);
-#endif
-                    status = Crypto_SA_readARSN(ingest);
-                    break;
-                case PID_SA_STATUS:
-#ifdef PDU_DEBUG
-                    printf(KGRN "SA Status\n" RESET);
-#endif
-                    status = sa_if->sa_status(ingest);
-                    break;
-                default:
-                    printf(KRED "Error: Crypto_PDU failed interpreting SA Procedure Identification Field! \n" RESET);
-                    break;
-                }
+                status = Crypto_SG_SA_MGMT(ingest, tc_frame);
                 break;
             case SG_SEC_MON_CTRL: // Security Monitoring & Control Procedure
-                switch (sdls_frame.pdu.pid)
-                {
-                case PID_PING:
-#ifdef PDU_DEBUG
-                    printf(KGRN "MC Ping\n" RESET);
-#endif
-                    status = Crypto_MC_ping(ingest);
-                    break;
-                case PID_LOG_STATUS:
-#ifdef PDU_DEBUG
-                    printf(KGRN "MC Status\n" RESET);
-#endif
-                    status = Crypto_MC_status(ingest);
-                    break;
-                case PID_DUMP_LOG:
-#ifdef PDU_DEBUG
-                    printf(KGRN "MC Dump\n" RESET);
-#endif
-                    status = Crypto_MC_dump(ingest);
-                    break;
-                case PID_ERASE_LOG:
-#ifdef PDU_DEBUG
-                    printf(KGRN "MC Erase\n" RESET);
-#endif
-                    status = Crypto_MC_erase(ingest);
-                    break;
-                case PID_SELF_TEST:
-#ifdef PDU_DEBUG
-                    printf(KGRN "MC Selftest\n" RESET);
-#endif
-                    status = Crypto_MC_selftest(ingest);
-                    break;
-                case PID_ALARM_FLAG:
-#ifdef PDU_DEBUG
-                    printf(KGRN "MC Reset Alarm\n" RESET);
-#endif
-                    status = Crypto_MC_resetalarm();
-                    break;
-                default:
-                    printf(KRED "Error: Crypto_PDU failed interpreting MC Procedure Identification Field! \n" RESET);
-                    break;
-                }
+                status = Crypto_SEC_MON_CTRL(ingest);
                 break;
             default: // ERROR
+#ifdef PDU_DEBUG
                 printf(KRED "Error: Crypto_PDU failed interpreting Service Group! \n" RESET);
+#endif
                 break;
             }
             break;
 
-        case 1: // User Defined Command
+        case PDU_USER_FLAG_TRUE: // User Defined Command
             switch (sdls_frame.pdu.sg)
             {
             default:
-                switch (sdls_frame.pdu.pid)
-                {
-                case 0: // Idle Frame Trigger
-#ifdef PDU_DEBUG
-                    printf(KMAG "User Idle Trigger\n" RESET);
-#endif
-                    status = Crypto_User_IdleTrigger(ingest);
-                    break;
-                case 1: // Toggle Bad SPI
-#ifdef PDU_DEBUG
-                    printf(KMAG "User Toggle Bad SPI\n" RESET);
-#endif
-                    status = Crypto_User_BadSPI();
-                    break;
-                case 2: // Toggle Bad IV
-#ifdef PDU_DEBUG
-                    printf(KMAG "User Toggle Bad IV\n" RESET);
-#endif
-                    status = Crypto_User_BadIV();
-                    break;
-                case 3: // Toggle Bad MAC
-#ifdef PDU_DEBUG
-                    printf(KMAG "User Toggle Bad MAC\n" RESET);
-#endif
-                    status = Crypto_User_BadMAC();
-                    break;
-                case 4: // Toggle Bad FECF
-#ifdef PDU_DEBUG
-                    printf(KMAG "User Toggle Bad FECF\n" RESET);
-#endif
-                    status = Crypto_User_BadFECF();
-                    break;
-                case 5: // Modify Key
-#ifdef PDU_DEBUG
-                    printf(KMAG "User Modify Key\n" RESET);
-#endif
-                    status = Crypto_User_ModifyKey();
-                    break;
-                case 6: // Modify ActiveTM
-#ifdef PDU_DEBUG
-                    printf(KMAG "User Modify Active TM\n" RESET);
-#endif
-                    status = Crypto_User_ModifyActiveTM();
-                    break;
-                case 7: // Modify TM VCID
-#ifdef PDU_DEBUG
-                    printf(KMAG "User Modify VCID\n" RESET);
-#endif
-                    status = Crypto_User_ModifyVCID();
-                    break;
-                default:
-                    printf(KRED "Error: Crypto_PDU received user defined command! \n" RESET);
-                    break;
-                }
+                status = Crypto_USER_DEFINED_CMD(ingest);
             }
             break;
         }
         break;
 
-    case 1: // Reply
+    case PDU_TYPE_REPLY: 
+#ifdef PDU_DEBUG
         printf(KRED "Error: Crypto_PDU failed interpreting PDU Type!  Received a Reply!?! \n" RESET);
+#endif
         break;
     }
 
@@ -618,6 +421,241 @@ int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
     return status;
 }
 
+int32_t Crypto_SG_KEY_MGMT(uint8_t* ingest, TC_t* tc_frame)
+{
+    int status = CRYPTO_LIB_SUCCESS;
+    switch (sdls_frame.pdu.pid)
+    {
+        case PID_OTAR:
+#ifdef PDU_DEBUG
+            printf(KGRN "Key OTAR\n" RESET);
+#endif
+            status = Crypto_Key_OTAR();
+            break;
+        case PID_KEY_ACTIVATION:
+#ifdef PDU_DEBUG
+            printf(KGRN "Key Activate\n" RESET);
+#endif
+            status = Crypto_Key_update(KEY_ACTIVE);
+            break;
+        case PID_KEY_DEACTIVATION:
+#ifdef PDU_DEBUG
+            printf(KGRN "Key Deactivate\n" RESET);
+#endif
+            status = Crypto_Key_update(KEY_DEACTIVATED);
+            break;
+        case PID_KEY_VERIFICATION:
+#ifdef PDU_DEBUG
+            printf(KGRN "Key Verify\n" RESET);
+#endif
+            status = Crypto_Key_verify(ingest, tc_frame);
+            break;
+        case PID_KEY_DESTRUCTION:
+#ifdef PDU_DEBUG
+            printf(KGRN "Key Destroy\n" RESET);
+#endif
+            status = Crypto_Key_update(KEY_DESTROYED);
+            break;
+        case PID_KEY_INVENTORY:
+#ifdef PDU_DEBUG
+            printf(KGRN "Key Inventory\n" RESET);
+#endif
+            status = Crypto_Key_inventory(ingest);
+            break;
+        default:
+#ifdef PDU_DEBUG
+            printf(KRED "Error: Crypto_PDU failed interpreting Key Management Procedure Identification Field! \n" RESET);
+#endif
+            break;
+    }
+    return status;
+}
+
+int32_t Crypto_SG_SA_MGMT(uint8_t* ingest, TC_t* tc_frame)
+{
+    int status = CRYPTO_LIB_SUCCESS;
+    switch (sdls_frame.pdu.pid)
+    {
+        case PID_CREATE_SA:
+#ifdef PDU_DEBUG
+            printf(KGRN "SA Create\n" RESET);
+#endif
+            status = sa_if->sa_create();
+            break;
+        case PID_DELETE_SA:
+#ifdef PDU_DEBUG
+            printf(KGRN "SA Delete\n" RESET);
+#endif
+            status = sa_if->sa_delete();
+            break;
+        case PID_SET_ARSNW:
+#ifdef PDU_DEBUG
+            printf(KGRN "SA setARSNW\n" RESET);
+#endif
+            status = sa_if->sa_setARSNW();
+            break;
+        case PID_REKEY_SA:
+#ifdef PDU_DEBUG
+            printf(KGRN "SA Rekey\n" RESET);
+#endif
+            status = sa_if->sa_rekey();
+            break;
+        case PID_EXPIRE_SA:
+#ifdef PDU_DEBUG
+            printf(KGRN "SA Expire\n" RESET);
+#endif
+            status = sa_if->sa_expire();
+            break;
+        case PID_SET_ARSN:
+#ifdef PDU_DEBUG
+            printf(KGRN "SA SetARSN\n" RESET);
+#endif
+            status = sa_if->sa_setARSN();
+            break;
+        case PID_START_SA:
+#ifdef PDU_DEBUG
+            printf(KGRN "SA Start\n" RESET);
+#endif
+            status = sa_if->sa_start(tc_frame);
+            break;
+        case PID_STOP_SA:
+#ifdef PDU_DEBUG
+            printf(KGRN "SA Stop\n" RESET);
+#endif
+            status = sa_if->sa_stop();
+            break;
+        case PID_READ_ARSN:
+#ifdef PDU_DEBUG
+            printf(KGRN "SA readARSN\n" RESET);
+#endif
+            status = Crypto_SA_readARSN(ingest);
+            break;
+        case PID_SA_STATUS:
+#ifdef PDU_DEBUG
+            printf(KGRN "SA Status\n" RESET);
+#endif
+            status = sa_if->sa_status(ingest);
+            break;
+        default:
+#ifdef PDU_DEBUG
+            printf(KRED "Error: Crypto_PDU failed interpreting SA Procedure Identification Field! \n" RESET);
+#endif
+            break;
+    }
+    return status;
+}
+
+int32_t Crypto_SEC_MON_CTRL(uint8_t* ingest)
+{
+    int status = CRYPTO_LIB_SUCCESS;
+    switch (sdls_frame.pdu.pid)
+    {
+        case PID_PING:
+#ifdef PDU_DEBUG
+            printf(KGRN "MC Ping\n" RESET);
+#endif
+            status = Crypto_MC_ping(ingest);
+            break;
+        case PID_LOG_STATUS:
+#ifdef PDU_DEBUG
+            printf(KGRN "MC Status\n" RESET);
+#endif
+            status = Crypto_MC_status(ingest);
+            break;
+        case PID_DUMP_LOG:
+#ifdef PDU_DEBUG
+            printf(KGRN "MC Dump\n" RESET);
+#endif
+            status = Crypto_MC_dump(ingest);
+            break;
+        case PID_ERASE_LOG:
+#ifdef PDU_DEBUG
+            printf(KGRN "MC Erase\n" RESET);
+#endif
+            status = Crypto_MC_erase(ingest);
+            break;
+        case PID_SELF_TEST:
+#ifdef PDU_DEBUG
+            printf(KGRN "MC Selftest\n" RESET);
+#endif
+            status = Crypto_MC_selftest(ingest);
+            break;
+        case PID_ALARM_FLAG:
+#ifdef PDU_DEBUG
+            printf(KGRN "MC Reset Alarm\n" RESET);
+#endif
+            status = Crypto_MC_resetalarm();
+            break;
+        default:
+#ifdef PDU_DEBUG
+            printf(KRED "Error: Crypto_PDU failed interpreting MC Procedure Identification Field! \n" RESET);
+            break;
+#endif
+    }
+    return status;
+}
+
+int32_t Crypto_USER_DEFINED_CMD(uint8_t* ingest)
+{
+    int status = CRYPTO_LIB_SUCCESS;
+    switch (sdls_frame.pdu.pid)
+    {
+        case 0: // Idle Frame Trigger
+#ifdef PDU_DEBUG
+            printf(KMAG "User Idle Trigger\n" RESET);
+#endif
+            status = Crypto_User_IdleTrigger(ingest);
+            break;
+        case 1: // Toggle Bad SPI
+#ifdef PDU_DEBUG
+            printf(KMAG "User Toggle Bad SPI\n" RESET);
+#endif
+            status = Crypto_User_BadSPI();
+            break;
+        case 2: // Toggle Bad IV
+#ifdef PDU_DEBUG
+            printf(KMAG "User Toggle Bad IV\n" RESET);
+#endif
+            status = Crypto_User_BadIV();
+            break;
+        case 3: // Toggle Bad MAC
+#ifdef PDU_DEBUG
+            printf(KMAG "User Toggle Bad MAC\n" RESET);
+#endif
+            status = Crypto_User_BadMAC();
+            break;
+        case 4: // Toggle Bad FECF
+#ifdef PDU_DEBUG
+            printf(KMAG "User Toggle Bad FECF\n" RESET);
+#endif
+            status = Crypto_User_BadFECF();
+            break;
+        case 5: // Modify Key
+#ifdef PDU_DEBUG
+            printf(KMAG "User Modify Key\n" RESET);
+#endif
+            status = Crypto_User_ModifyKey();
+            break;
+        case 6: // Modify ActiveTM
+#ifdef PDU_DEBUG
+            printf(KMAG "User Modify Active TM\n" RESET);
+#endif
+            status = Crypto_User_ModifyActiveTM();
+            break;
+        case 7: // Modify TM VCID
+#ifdef PDU_DEBUG
+            printf(KMAG "User Modify VCID\n" RESET);
+#endif
+            status = Crypto_User_ModifyVCID();
+            break;
+        default:
+#ifdef PDU_DEBUG
+            printf(KRED "Error: Crypto_PDU received user defined command! \n" RESET);
+#endif
+            break;
+    }
+    return status;
+}
 
 int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
                                                 GvcidManagedParameters_t* managed_parameters_in,
