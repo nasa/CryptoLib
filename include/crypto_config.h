@@ -92,14 +92,14 @@
 
 // Key Length Defines
 // ECS
-#define AES256_GCM 32
-#define AES256_GCM_SIV 32
-#define AES256_CBC 32
-#define AES256_CCM 32
+#define AES256_GCM_KEYLEN 32
+#define AES256_GCM_SIV_KEYLEN 32
+#define AES256_CBC_KEYLEN 32
+#define AES256_CCM_KEYLEN 32
 // ACS
-#define CMAC_AES256 32
-#define HMAC_SHA256 32
-#define HMAC_SHA512 64
+#define CMAC_AES256_KEYLEN 32
+#define HMAC_SHA256_KEYLEN 32
+#define HMAC_SHA512_KEYLEN 64
 
 // SA Service Types
 #define SA_PLAINTEXT 0
