@@ -158,7 +158,7 @@
 #define TC_SH_SIZE 8 /* bits */
 #define TC_SN_SIZE 2
 #define TC_SN_WINDOW 10 /* +/- value */
-#define TC_FRAME_DATA_SIZE 1740 /* bytes */
+#define TC_FRAME_DATA_SIZE 1019 /* bytes */ // 1024 - 5byte header
 
 // CCSDS PUS Defines
 #define TLV_DATA_SIZE 494 /* bytes */
