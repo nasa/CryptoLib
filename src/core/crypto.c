@@ -99,6 +99,7 @@ uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
 {
     int status = CRYPTO_FALSE;
 
+    // Determine if AEAD Algorithm
     if ((cipher_suite_id == CRYPTO_CIPHER_AES256_GCM) || (cipher_suite_id == CRYPTO_CIPHER_AES256_CBC_MAC) || (cipher_suite_id == CRYPTO_CIPHER_AES256_GCM_SIV))
     {
 #ifdef DEBUG
@@ -116,7 +117,6 @@ uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
     return status;
 }
 
-// TODO - Review this. Not sure it quite works how we think
 /**
  * @brief Function: Crypto_increment
  * Increments the bytes within a uint8_t array
@@ -286,7 +286,7 @@ uint8_t Crypto_Prep_Reply(uint8_t* ingest, uint8_t appID)
 uint16_t Crypto_Calc_FECF(const uint8_t* ingest, int len_ingest)
 {
     uint16_t fecf = 0xFFFF;
-    uint16_t poly = 0x1021; // TODO: This polynomial is (CRC-CCITT) for ESA testing, may not match standard protocol
+    uint16_t poly = 0x1021; // This polynomial is (CRC-CCITT) for ESA testing, may not match standard protocol
     uint8_t bit;
     uint8_t c15;
     int i;
@@ -346,6 +346,7 @@ uint16_t Crypto_Calc_CRC16(uint8_t* data, int size)
 */
 /**
  * @brief Function: Crypto_PDU
+ * Parses PDU and directs to other function based on type/flags/sg
  * @param ingest: uint8_t*
  * @param tc_frame: TC_t*
  * @return int32: Success/Failure
