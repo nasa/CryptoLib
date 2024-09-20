@@ -159,7 +159,7 @@
 #define TC_SN_SIZE 2
 #define TC_SN_WINDOW 10 /* +/- value */
 #define TC_FRAME_DATA_SIZE 1019 /* bytes */ // 1024 - 5byte header
-#define TC_CADU_BYTES 4
+#define TC_CADU_ASM_SIZE 4
 
 // CCSDS PUS Defines
 #define TLV_DATA_SIZE 494 /* bytes */
@@ -182,7 +182,7 @@
 #define TM_CADU_HAS_ASM 1 // Skip 0x1acffc1d at beginning of each frame
 // TM CADU based on ASM, currently only holds non-turbo ASM
 #ifdef TM_CADU_HAS_ASM
-   #define TM_CADU_SIZE (TM_FRAME_DATA_SIZE + TC_CADU_BYTES)
+   #define TM_CADU_SIZE (TM_FRAME_DATA_SIZE + TC_CADU_ASM_SIZE)
 #else
    #define TM_CADU_SIZE TM_FRAME_DATA_SIZE
 #endif
