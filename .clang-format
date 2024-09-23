@@ -1,5 +1,5 @@
 ---
-Language:        C
+Language:        Cpp
 AccessModifierOffset: -4
 AlignAfterOpenBracket: Align
 AlignConsecutiveAssignments: true
@@ -64,4 +64,5 @@ TabWidth:        8
 UseTab:          Never
 IncludeDirs:
   - ./include
+  - ./test/include
 ...

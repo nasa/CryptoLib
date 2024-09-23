@@ -11,6 +11,7 @@ jobs:
     permissions:
       pull-requests: write
       contents: write
+      metadata: read
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,3 +22,5 @@ jobs:
           style: 'file'
           files-changed-only: false
           thread-comments: true
+          format-review: true
+          tidy-review: true
