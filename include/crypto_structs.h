@@ -19,6 +19,12 @@
 #ifndef CRYPTO_STRUCTS_H
 #define CRYPTO_STRUCTS_H
 
+#define SDLS_CHALLENGED_SIZE 10
+#define SDLS_CMAC_SIZE 10
+#define SDLS_KEY_VERIFY_BLK_SIZE 29
+#define SDLS_KEY_ID_SIZE 98
+#define SDLS_EKB_LEN 30
+
 #include "crypto_config.h"
 
     #ifdef NOS3 // NOS3/cFS build is ready
@@ -46,6 +52,8 @@ typedef struct
 
 /*
 ** Security Association
+*  https://public.ccsds.org/Pubs/355x0b2.pdf
+*  Table A6
 */
 typedef struct
 {
@@ -57,7 +65,6 @@ typedef struct
     char ak_ref[REF_SIZE]; // Authentication Key Reference (Used with string-referenced keystores,EG-PKCS12 keystores, KMC crypto)
     uint8_t sa_state : 2;
     crypto_gvcid_t gvcid_blk;
-    // crypto_gvcid_t gvcid_tm_blk[NUM_GVCID];
     uint8_t lpid;
 
     // Configuration
@@ -114,7 +121,6 @@ typedef struct
 {
     uint16_t ekid;        // Encrypted Key ID
     uint8_t ek[KEY_SIZE]; // Encrypted Key
-    // uint8_t	ekcrc[4];			// Encrypted Key CRC
 } SDLS_EKB_t;
 #define SDLS_EKB_SIZE (sizeof(SDLS_EKB_t))
 
@@ -122,7 +128,7 @@ typedef struct
 {
     uint16_t mkid;         // Master Key ID
     uint8_t iv[IV_SIZE];   // Initialization Vector
-    SDLS_EKB_t EKB[30];    // Encrypted Key Block
+    SDLS_EKB_t EKB[SDLS_EKB_LEN];    // Encrypted Key Block
     uint8_t mac[MAC_SIZE]; // Message Authentication Code
 } SDLS_OTAR_t;
 #define SDLS_OTAR_SIZE (sizeof(SDLS_OTAR_t))
@@ -135,7 +141,7 @@ typedef struct
 
 typedef struct
 {
-    SDLS_KEY_t kblk[98]; // Key ID Block
+    SDLS_KEY_t kblk[SDLS_KEY_ID_SIZE]; // Key ID Block
 } SDLS_KEY_BLK_t;
 #define SDLS_KEY_BLK_SIZE (sizeof(SDLS_KEY_BLK_t))
 
@@ -155,7 +161,7 @@ typedef struct
 
 typedef struct
 {
-    SDLS_KEYV_CMD_BLK_t blk[29]; // Key Verification Command Block
+    SDLS_KEYV_CMD_BLK_t blk[SDLS_KEY_VERIFY_BLK_SIZE]; // Key Verification Command Block
 } SDLS_KEYV_CMD_t;
 #define SDLS_KEYV_CMD_SIZE (sizeof(SDLS_KEYV_CMD_t))
 
@@ -168,25 +174,27 @@ typedef struct
 } SDLS_KEYV_RPLY_BLK_t;
 #define SDLS_KEYV_RPLY_BLK_SIZE (sizeof(SDLS_KEYV_RPLY_BLK_t))
 
+
 typedef struct
 {
-    SDLS_KEYV_RPLY_BLK_t blk[29]; // Key Verification Reply Block
+    SDLS_KEYV_RPLY_BLK_t blk[SDLS_KEY_VERIFY_BLK_SIZE]; // Key Verification Reply Block
 } SDLS_KEYV_RPLY_t;
 #define SDLS_KEYV_RPLY_SIZE (sizeof(SDLS_KEYV_RPLY_t))
 
 typedef struct
 {
     uint16_t kid : 16; // Key ID
-    uint8_t challenged[10];
+    uint8_t challenged[SDLS_CHALLENGED_SIZE];
 } SDLS_KEYDB_CMD_t;
 #define SDLS_KEYDB_CMD_SIZE (sizeof(SDLS_KEYDB_CMD_t))
+
 
 typedef struct
 {
     uint16_t kid : 16;      // Key ID
     uint8_t iv[IV_SIZE];    // Initialization Vector
-    uint8_t challenged[10]; // Encrypted Challenge
-    uint8_t cmac[4];        // Challenge Message Authentication Code
+    uint8_t challenged[SDLS_CHALLENGED_SIZE]; // Encrypted Challenge
+    uint8_t cmac[SDLS_CMAC_SIZE];        // Challenge Message Authentication Code
 } SDLS_KEYDB_RPLY_t;
 #define SDLS_KEYDB_RPLY_SIZE (sizeof(SDLS_KEYDB_RPLY_t))
 
@@ -233,8 +241,6 @@ typedef struct
 /*
 ** Telecommand (TC) Definitions
 */
-// typedef struct __attribute__ ((packed)) //__attribute__ ((packed)) is not easily supported in CFFI python. Only add
-// when CFFI properly supports packed & nonpacked structs.
 typedef struct
 {
     uint8_t tfvn : 2;   // Transfer Frame Version Number
@@ -312,19 +318,10 @@ typedef struct
 } CCSDS_PUS_t;
 #define CCSDS_PUS_SIZE (sizeof(CCSDS_PUS_t))
 
-/* unused?
-typedef struct
-{
-  uint8_t    CmdHeader[CFE_SB_CMD_HDR_SIZE];
-
-} Crypto_NoArgsCmd_t;
-*/
-
 typedef struct
 {
     CCSDS_HDR_t hdr;
     CCSDS_PUS_t pus;
-    // CCSDS_2HDR_t	cmd;
     SDLS_TLV_t pdu;
 } CCSDS_t;
 #define CCSDS_SIZE (sizeof(CCSDS_t))
@@ -396,8 +393,6 @@ typedef struct
     uint16_t fhp : 11;  // First Header Pointer
                         // Sync Flag 0 = Contains position of the first byte of the first packet in the data field
                         // Sync Flag 1 = undefined
-    // uint8_t	tfshvn	:2;			// Transfer Frame Secondary Header Version Number - shall be 00
-    // uint8_t	tfshlen	:6;			// TFSH Length (max 64 Bytes)
 } TM_FramePrimaryHeader_t;
 #define TM_FRAME_PRIMARYHEADER_SIZE (sizeof(TM_FramePrimaryHeader_t))
 
@@ -405,8 +400,6 @@ typedef struct
 {
     uint16_t spi;        // Security Parameter Index
     uint8_t iv[IV_SIZE]; // Initialization Vector for encryption
-    // uint8_t	sn[TM_SN_SIZE]; 	// Sequence Number for anti-replay
-    // uint8_t	pad[TM_PAD_SIZE]; 	// Count of the used fill Bytes
 } TM_FrameSecurityHeader_t;
 #define TM_FRAME_SECHEADER_SIZE (sizeof(TM_FrameSecurityHeader_t))
 
@@ -462,8 +455,6 @@ typedef struct
 {
     uint16_t spi;        // Security Parameter Index
     uint8_t iv[IV_SIZE]; // Initialization Vector for encryption
-    // uint8_t	sn[TM_SN_SIZE]; 	// Sequence Number for anti-replay
-    // uint8_t	pad[TM_PAD_SIZE]; 	// Count of the used fill Bytes
 } AOS_FrameSecurityHeader_t;
 #define AOS_FRAME_SECHEADER_SIZE (sizeof(AOS_FrameSecurityHeader_t))
 
