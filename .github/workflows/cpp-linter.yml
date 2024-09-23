@@ -3,15 +3,18 @@ name: cpp-linter
 on:
   push:
     branches: [ main, dev, 299-setup-code-formatter ]
+    permissions:
+      metadata: read
+      contents: write
   pull_request:
     branches: [ main, dev ]
+    permissions:
+      metadata: read
+      contents: write
 
 
 jobs:
   cpp-linter:
-    permissions:
-      metadata: read
-      contents: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
