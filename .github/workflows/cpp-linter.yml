@@ -9,6 +9,9 @@ on:
 
 jobs:
   cpp-linter:
+    permissions:
+      metadata: read
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
