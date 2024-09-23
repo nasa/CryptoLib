@@ -917,40 +917,48 @@ int32_t Crypto_Check_Anti_Replay_ARSNW(SecurityAssociation_t* sa_ptr, uint8_t* a
 int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t* sa_ptr, uint8_t* iv, int8_t* iv_valid)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    if ((sa_ptr->iv_len > 0) && (sa_ptr->iv_len <= IV_SIZE) && (sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM))
+    if ((sa_ptr->iv_len > 0) && (sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM))
     {
-        // Check IV is in ARSNW
-        if(crypto_config.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
+        // Check IV Length
+        if (sa_ptr->iv_len > IV_SIZE)
         {
-            status = Crypto_window(iv, sa_ptr->iv, sa_ptr->iv_len, sa_ptr->arsnw);
+            status = CRYPTO_LIB_ERR_IV_GREATER_THAN_MAX_LENGTH;
         }
-        else // SA_INCREMENT_NONTRANSMITTED_IV_FALSE
+        if (status == CRYPTO_LIB_SUCCESS)
         {
-            // Whole IV gets checked in MAC validation previously, this only verifies transmitted portion is what we expect.
-            status = Crypto_window(iv, sa_ptr->iv + (sa_ptr->iv_len - sa_ptr->shivf_len), sa_ptr->shivf_len, sa_ptr->arsnw);
-        }
-#ifdef DEBUG
-        printf("Received IV is\n\t");
-        for (int i = 0; i < sa_ptr->iv_len; i++)
-        {
-            printf("%02x", *(iv + i));
-        }
-        printf("\nSA IV is\n\t");
-        for (int i = 0; i < sa_ptr->iv_len; i++)
-        {
-            printf("%02x", *(sa_ptr->iv + i));
-        }
-        printf("\nARSNW is: %d\n", sa_ptr->arsnw);
-        printf("Crypto_Window return status is: %d\n", status);
-#endif
-        if (status != CRYPTO_LIB_SUCCESS)
-        {
-            return CRYPTO_LIB_ERR_IV_OUTSIDE_WINDOW;
-        }
-        // Valid IV received, increment stored value
-        else
-        {
-            *iv_valid = CRYPTO_TRUE;
+            // Check IV is in ARSNW
+            if(crypto_config.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
+            {
+                status = Crypto_window(iv, sa_ptr->iv, sa_ptr->iv_len, sa_ptr->arsnw);
+            }
+            else // SA_INCREMENT_NONTRANSMITTED_IV_FALSE
+            {
+                // Whole IV gets checked in MAC validation previously, this only verifies transmitted portion is what we expect.
+                status = Crypto_window(iv, sa_ptr->iv + (sa_ptr->iv_len - sa_ptr->shivf_len), sa_ptr->shivf_len, sa_ptr->arsnw);
+            }
+    #ifdef DEBUG
+            printf("Received IV is\n\t");
+            for (int i = 0; i < sa_ptr->iv_len; i++)
+            {
+                printf("%02x", *(iv + i));
+            }
+            printf("\nSA IV is\n\t");
+            for (int i = 0; i < sa_ptr->iv_len; i++)
+            {
+                printf("%02x", *(sa_ptr->iv + i));
+            }
+            printf("\nARSNW is: %d\n", sa_ptr->arsnw);
+            printf("Crypto_Window return status is: %d\n", status);
+    #endif
+            if (status != CRYPTO_LIB_SUCCESS)
+            {
+                return CRYPTO_LIB_ERR_IV_OUTSIDE_WINDOW;
+            }
+            // Valid IV received, increment stored value
+            else
+            {
+                *iv_valid = CRYPTO_TRUE;
+            }
         }
     }
     return status;
