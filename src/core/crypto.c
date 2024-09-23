@@ -936,7 +936,7 @@ int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t* sa_ptr, uint8_t* iv,
                 // Whole IV gets checked in MAC validation previously, this only verifies transmitted portion is what we expect.
                 status = Crypto_window(iv, sa_ptr->iv + (sa_ptr->iv_len - sa_ptr->shivf_len), sa_ptr->shivf_len, sa_ptr->arsnw);
             }
-    #ifdef DEBUG
+#ifdef DEBUG
             printf("Received IV is\n\t");
             for (int i = 0; i < sa_ptr->iv_len; i++)
             {
@@ -949,7 +949,7 @@ int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t* sa_ptr, uint8_t* iv,
             }
             printf("\nARSNW is: %d\n", sa_ptr->arsnw);
             printf("Crypto_Window return status is: %d\n", status);
-    #endif
+#endif
             if (status != CRYPTO_LIB_SUCCESS)
             {
                 return CRYPTO_LIB_ERR_IV_OUTSIDE_WINDOW;
