@@ -18,7 +18,6 @@ jobs:
         id: linter
         continue-on-error: true
         with:
-          style: 'file'
           files-changed-only: false
           thread-comments: true
           format-review: true
