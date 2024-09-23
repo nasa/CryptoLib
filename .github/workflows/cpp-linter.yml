@@ -18,7 +18,7 @@ jobs:
         id: linter
         continue-on-error: true
         with:
-          style: '.clang-format'
+          style: './.clang-format'
           files-changed-only: false
           thread-comments: true
           format-review: true
