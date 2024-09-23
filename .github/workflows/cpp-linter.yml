@@ -1,17 +1,15 @@
 name: cpp-linter
 
+permissions:
+  metadata: read
+  contents: write
+  pull-requests: write
+
 on:
   push:
     branches: [ main, dev, 299-setup-code-formatter ]
-    permissions:
-      metadata: read
-      contents: write
   pull_request:
     branches: [ main, dev ]
-    permissions:
-      metadata: read
-      contents: write
-
 
 jobs:
   cpp-linter:
@@ -23,4 +21,4 @@ jobs:
         continue-on-error: true
         with:
           files-changed-only: false
-          thread-comments: true
+          thread-comments: update
