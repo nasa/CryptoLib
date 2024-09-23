@@ -235,10 +235,10 @@ void clean_akref(SecurityAssociation_t* sa);
 // Determine Payload Data Unit
 int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, uint8_t* ingest);
 int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame);
-
-// Helper length functions
-int32_t Crypto_Get_Security_Header_Length(SecurityAssociation_t* sa_ptr);
-int32_t Crypto_Get_Security_Trailer_Length(SecurityAssociation_t* sa_ptr);
+int32_t Crypto_SG_KEY_MGMT(uint8_t* ingest, TC_t* tc_frame);
+int32_t Crypto_SG_SA_MGMT(uint8_t* ingest, TC_t* tc_frame);
+int32_t Crypto_SEC_MON_CTRL(uint8_t* ingest);
+int32_t Crypto_USER_DEFINED_CMD(uint8_t* ingest);
 
 // Managed Parameter Functions
 int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
