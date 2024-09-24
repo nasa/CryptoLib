@@ -155,7 +155,7 @@ typedef struct
 
 typedef struct
 {
-    SDLS_KEYV_CMD_BLK_t blk[29]; // Key Verification Command Block
+    SDLS_KEYV_CMD_BLK_t blk[SDLS_KEYV_MAX_KEYS]; // Key Verification Command Block
 } SDLS_KEYV_CMD_t;
 #define SDLS_KEYV_CMD_SIZE (sizeof(SDLS_KEYV_CMD_t))
 
@@ -170,7 +170,7 @@ typedef struct
 
 typedef struct
 {
-    SDLS_KEYV_RPLY_BLK_t blk[29]; // Key Verification Reply Block
+    SDLS_KEYV_RPLY_BLK_t blk[SDLS_KEYV_MAX_KEYS]; // Key Verification Reply Block
 } SDLS_KEYV_RPLY_t;
 #define SDLS_KEYV_RPLY_SIZE (sizeof(SDLS_KEYV_RPLY_t))
 

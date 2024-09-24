@@ -390,8 +390,9 @@ int32_t Crypto_Key_verify(uint8_t* ingest, TC_t* tc_frame, int* count)
     }
     
     // Prepare for Reply
-    sdls_frame.pdu.pdu_len = pdu_keys * (2 + 12 + CHALLENGE_SIZE + CHALLENGE_MAC_SIZE);
-    sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
+    sdls_frame.pdu.pdu_len = pdu_keys * (SDLS_KEYV_KEY_ID_LEN + SDLS_KEYV_IV_LEN + CHALLENGE_SIZE + CHALLENGE_MAC_SIZE);
+    // length = pdu_len + HDR + PUS - 1 (per CCSDS Convention)
+    sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + CCSDS_HDR_SIZE + CCSDS_PUS_SIZE - 1;
     *count = Crypto_Prep_Reply(ingest, 128);
     for (x = 0; x < pdu_keys; x++)
     {   
@@ -409,12 +410,12 @@ int32_t Crypto_Key_verify(uint8_t* ingest, TC_t* tc_frame, int* count)
 
         // Initialization Vector
         iv_loc = *count;
-        for (y = 0; y < 12; y++)
+        for (y = 0; y < SDLS_KEYV_IV_LEN; y++)
         {
             ingest[*count] = *(tc_frame->tc_sec_header.iv + y);
             *count += 1;
         }
-        ingest[*count - 1] = ingest[*count - 1] + x + 1;
+        ingest[*count - 1] = ingest[*count - 1] + x + 1; // Why are we incrementing IV by 1? Remove?
 
         // Encrypt challenge
         uint8_t ecs = CRYPTO_CIPHER_AES256_GCM;
@@ -426,7 +427,7 @@ int32_t Crypto_Key_verify(uint8_t* ingest, TC_t* tc_frame, int* count)
                                                    32, // Key Length
                                                    NULL, // SA Reference for key
                                                    &(ingest[iv_loc]), // IV
-                                                   12, // IV Length
+                                                   SDLS_KEYV_IV_LEN, // IV Length
                                                    &(ingest[(*count + CHALLENGE_SIZE)]), // MAC
                                                    CHALLENGE_MAC_SIZE, // MAC Size
                                                    NULL,

@@ -185,6 +185,11 @@
 #define AOS_FRAME_DATA_SIZE 1786 /* bytes */
 #define AOS_FILL_SIZE 1145       /* bytes */
 
+// SDLS Behavior Defines
+#define SDLS_KEYV_MAX_KEYS 21  /* keys */
+#define SDLS_KEYV_IV_LEN 12    /* bytes */
+#define SDLS_KEYV_KEY_ID_LEN 2 /* bytes */
+
 // TC Behavior Defines
 #define TC_SDLS_EP_VCID                                                                                                \
     4 // VCID which has SDLS PDUs (JPL uses VCIDs to determine TC type, there is no space packet layer with APIDs). Set
