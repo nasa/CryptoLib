@@ -158,13 +158,13 @@
 // Service Group - Security Association Management
 #define SG_SA_MGMT 0x01 // 0b01
 #define PID_CREATE_SA 0x01 //0b0001
-#define PID_REKEY_SA 0x05 //0b0110
+#define PID_REKEY_SA 0x06 //0b0110
 #define PID_START_SA 0x0B //0b1011
 #define PID_STOP_SA 0x0E // 0b1110
 #define PID_EXPIRE_SA 0x09 // 0b1001
 #define PID_DELETE_SA 0x04 // 0b0100
 #define PID_SET_ARSN 0x0A //0b1010
-#define PID_SET_ARSNW 0x06 // 0b0101
+#define PID_SET_ARSNW 0x05 // 0b0101
 #define PID_READ_ARSN 0x00 // 0b0000
 #define PID_SA_STATUS 0x0F // 0b1111
 // Service Group - Security Monitoring & Control
