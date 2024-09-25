@@ -34,6 +34,8 @@ CFS_MODULE_DECLARE_LIB(crypto);
 */
 // crypto_key_t ak_ring[NUM_KEYS];
 CCSDS_t sdls_frame;
+// SDLS Replies
+SDLS_KEYV_RPLY_t sdls_ep_keyv_reply;       // Reply block for challenged keys
 // TM_t tm_frame;
 uint8_t tm_frame[1786];                    // Testing
 TM_FramePrimaryHeader_t tm_frame_pri_hdr;  // Used to reduce bit math duplication

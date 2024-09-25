@@ -270,6 +270,7 @@ extern char* crypto_deep_copy_string(char* src_string);
 */ 
 // Data stores used in multiple components
 extern CCSDS_t sdls_frame;
+extern SDLS_KEYV_RPLY_t sdls_ep_keyv_reply;
 // extern TM_t tm_frame;
 extern uint8_t tm_frame[1786];
 extern TM_FramePrimaryHeader_t tm_frame_pri_hdr; 
@@ -294,7 +295,6 @@ extern SaInterface sa_if;
 extern CryptographyInterface cryptography_if;
 
 // extern crypto_key_t ak_ring[NUM_KEYS];
-extern CCSDS_t sdls_frame;
 extern SadbMariaDBConfig_t* sa_mariadb_config;
 extern GvcidManagedParameters_t* gvcid_managed_parameters;
 extern GvcidManagedParameters_t* current_managed_parameters;

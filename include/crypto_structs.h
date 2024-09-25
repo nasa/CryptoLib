@@ -164,7 +164,7 @@ typedef struct
     uint16_t kid : 16;                  // Key ID
     uint8_t iv[IV_SIZE];                // Key Initialization Vector
     uint8_t challenged[CHALLENGE_SIZE]; // Encrypted Challenge
-    uint8_t cmac[CHALLENGE_MAC_SIZE];   // Challenge Message Authentication Code
+    uint8_t mac[CHALLENGE_MAC_SIZE];    // Challenge Message Authentication Code
 } SDLS_KEYV_RPLY_BLK_t;
 #define SDLS_KEYV_RPLY_BLK_SIZE (sizeof(SDLS_KEYV_RPLY_BLK_t))
 

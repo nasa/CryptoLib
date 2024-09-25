@@ -352,8 +352,6 @@ int32_t Crypto_Key_verify(uint8_t* ingest, TC_t* tc_frame, int* count)
     // Local variables
     SDLS_KEYV_CMD_t packet;
     int pdu_keys = sdls_frame.pdu.pdu_len / SDLS_KEYV_CMD_BLK_SIZE;
-    uint8_t iv_loc;
-    // uint8_t tmp_mac[MAC_SIZE];
     int x;
     int y;
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -394,41 +392,47 @@ int32_t Crypto_Key_verify(uint8_t* ingest, TC_t* tc_frame, int* count)
     // length = pdu_len + HDR + PUS - 1 (per CCSDS Convention)
     sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + CCSDS_HDR_SIZE + CCSDS_PUS_SIZE - 1;
     *count = Crypto_Prep_Reply(ingest, 128);
+    uint16_t pdu_data_idx = 0;
     for (x = 0; x < pdu_keys; x++)
     {   
         // Key ID
-        ingest[*count += 1] = (packet.blk[x].kid & 0xFF00) >> 8;
-        ingest[*count += 1] = (packet.blk[x].kid & 0x00FF);
+        sdls_ep_keyv_reply.blk[x].kid = packet.blk[x].kid;
 
-        uint16_t ekp_kid = ((packet.blk[x].kid & 0xFF00) >> 8) | (packet.blk[x].kid & 0x00FF);
+        sdls_frame.pdu.data[pdu_data_idx] = (packet.blk[x].kid & 0xFF00) >> 8;
+        pdu_data_idx += 1;
+        sdls_frame.pdu.data[pdu_data_idx] = (packet.blk[x].kid & 0x00FF);
+        pdu_data_idx += 1;
+
         // Get Key
-        ekp = key_if->get_key(ekp_kid);
+        ekp = key_if->get_key(sdls_ep_keyv_reply.blk[x].kid);
         if (ekp == NULL)
         {
             return CRYPTO_LIB_ERR_KEY_ID_ERROR;
         }
 
         // Initialization Vector
-        iv_loc = *count;
         for (y = 0; y < SDLS_KEYV_IV_LEN; y++)
         {
-            ingest[*count] = *(tc_frame->tc_sec_header.iv + y);
+            sdls_frame.pdu.data[pdu_data_idx] = *(tc_frame->tc_sec_header.iv + y);
+            sdls_ep_keyv_reply.blk[x].iv[y] = *(tc_frame->tc_sec_header.iv + y);
+            pdu_data_idx += 1;
             *count += 1;
         }
-        ingest[*count - 1] = ingest[*count - 1] + x + 1; // Why are we incrementing IV by 1? Remove?
+        // ***** This increments the lowest bytes of the IVs so they aren't 
+        sdls_ep_keyv_reply.blk[x].iv[11] = sdls_ep_keyv_reply.blk[x].iv[SDLS_KEYV_IV_LEN-1] + x + 1;
 
         // Encrypt challenge
         uint8_t ecs = CRYPTO_CIPHER_AES256_GCM;
-        cryptography_if->cryptography_aead_encrypt(&(ingest[*count]), // ciphertext output
+        cryptography_if->cryptography_aead_encrypt(&(sdls_ep_keyv_reply.blk[x].challenged[0]), // ciphertext output
                                                    (size_t)CHALLENGE_SIZE, // length of data
                                                    &(packet.blk[x].challenge[0]), // plaintext input
                                                    (size_t)CHALLENGE_SIZE, // in data length
                                                    &(ekp->value[0]), // Key Index
                                                    32, // Key Length
                                                    NULL, // SA Reference for key
-                                                   &(ingest[iv_loc]), // IV
+                                                   &(sdls_ep_keyv_reply.blk[x].iv[0]), // IV
                                                    SDLS_KEYV_IV_LEN, // IV Length
-                                                   &(ingest[(*count + CHALLENGE_SIZE)]), // MAC
+                                                   &(sdls_ep_keyv_reply.blk[x].mac[0]), // MAC
                                                    CHALLENGE_MAC_SIZE, // MAC Size
                                                    NULL,
                                                    0,
@@ -441,10 +445,37 @@ int32_t Crypto_Key_verify(uint8_t* ingest, TC_t* tc_frame, int* count)
                                                    );
 
         *count += CHALLENGE_SIZE + CHALLENGE_MAC_SIZE; // Don't forget to increment count!
+        pdu_data_idx += CHALLENGE_SIZE + CHALLENGE_MAC_SIZE;
     }
+    
+    // SDLS TLV PDU
+    uint8_t header_byte = sdls_frame.pdu.type | sdls_frame.pdu.uf | sdls_frame.pdu.sg | sdls_frame.pdu.pid  | sdls_frame.pdu.pdu_len;
 
 #ifdef PDU_DEBUG
-    printf("Crypto_Key_verify: Response is %d bytes \n", *count);
+
+    printf("Header byte is: %02X", header_byte);
+    for ( int i = 0; i < pdu_keys; i++)
+    {
+        printf("\nKey Index %d Verification results:", i);
+        printf("\n\tKID: %04X", sdls_ep_keyv_reply.blk[i].kid);
+        printf("\n\tIV: ");
+        for (int j = 0; j < 12; j ++) // TODO
+        {
+            printf("%02X", sdls_ep_keyv_reply.blk[i].iv[j]);
+        }
+        printf("\n\tChallenged: ");
+        for (int j = 0; j < CHALLENGE_SIZE; j ++)
+        {
+            printf("%02X", sdls_ep_keyv_reply.blk[i].challenged[j]);
+        }
+        printf("\n\tMAC: ");
+        for (int j = 0; j < CHALLENGE_MAC_SIZE; j ++)
+        {
+            printf("%02X", sdls_ep_keyv_reply.blk[i].mac[j]);
+        }
+        
+    }
+    printf("\nCrypto_Key_verify: Response is %d bytes \n", *count);
 #endif
 
     return status;

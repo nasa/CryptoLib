@@ -389,7 +389,7 @@ UTEST(EP_KEY_VALIDATION, VERIFY_132_134)
 
     // NOTE: Added Transfer Frame header to the plaintext
     char* buffer_nist_key_h = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
-    char* buffer_nist_iv_h = "000000000000000000000001"; // The last valid IV that was seen by the SA
+    // Truth PDU                 0880D03A006584005C0000000000000000000000000001D8EAA795AFFAA0E951BB6CF0116192E16B1977D6723E92E01123CCEF548E28857E00000000000000000000000002
     char* buffer_VERIFY_h = "2003003e00ff000000001880d03a002c197f0b00040024008471fc3ad5b1c36ad56bd5a5432315cdab008675c06302465bc6d5091a29957eebed35c00a6ed8";
     //                      |2003003e00| = Primary Header
     //                                |ff| = SPI
@@ -406,8 +406,8 @@ UTEST(EP_KEY_VALIDATION, VERIFY_132_134)
     //                                                                                                        |0086| = Key ID (134)
     //                                                                                                            |75c06302465bc6d5091a29957eebed35| = Challenge
     //                                                                                                                                            |c00a6ed8| = Trailer  
-    uint8_t *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_VERIFY_b = NULL;
-    int buffer_nist_iv_len, buffer_nist_key_len, buffer_VERIFY_len = 0;
+    uint8_t *buffer_nist_key_b, *buffer_VERIFY_b = NULL;
+    int buffer_nist_key_len, buffer_VERIFY_len = 0;
 
     // Setup Processed Frame For Decryption
     TC_t tc_nist_processed_frame;
@@ -426,9 +426,6 @@ UTEST(EP_KEY_VALIDATION, VERIFY_132_134)
     test_association->ecs = CRYPTO_CIPHER_NONE;
     test_association->est = 0;
     test_association->ast = 0;
-    test_association->iv_len = 12;
-    //test_association->shivf_len = 12;
-    test_association->stmacf_len = 16;
     test_association->shsnf_len = 2;
     test_association->arsn_len = 2;
     test_association->arsnw_len = 1;
@@ -440,18 +437,14 @@ UTEST(EP_KEY_VALIDATION, VERIFY_132_134)
 
     // Convert frames that will be processed
     hex_conversion(buffer_VERIFY_h, (char**) &buffer_VERIFY_b, &buffer_VERIFY_len);
-    // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char**) &buffer_nist_iv_b, &buffer_nist_iv_len);
-    memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
 
     // Expect success on next valid IV && ARSN
-    printf(KGRN "Checking  next valid IV && valid ARSN... should be able to receive it... \n" RESET);
+    printf(KGRN "Checking next valid IV && valid ARSN... should be able to receive it... \n" RESET);
     status = Crypto_TC_ProcessSecurity(buffer_VERIFY_b, &buffer_VERIFY_len, &tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     printf("\n");
     Crypto_Shutdown();
-    free(buffer_nist_iv_b);
     free(buffer_nist_key_b);
     free(buffer_VERIFY_b);
 
