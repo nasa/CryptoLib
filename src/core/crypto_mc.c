@@ -216,7 +216,7 @@ int32_t Crypto_SA_readARSN(uint8_t* ingest, int* count)
 
         if (status == CRYPTO_LIB_SUCCESS)
         {
-            if (sa_ptr->shivf_len > 0)
+            if (sa_ptr->shivf_len > 0 && sa_ptr->ecs == 1 && sa_ptr->acs == 1)
             { // Set IV - authenticated encryption
                 for (x = 0; x < sa_ptr->shivf_len - 1; x++)
                 {
@@ -236,15 +236,17 @@ int32_t Crypto_SA_readARSN(uint8_t* ingest, int* count)
             else
             {
                 // TODO
+                // Also, count not being returned correctly since not Auth Enc
             }
 #ifdef PDU_DEBUG
             printf("spi = %d \n", spi);
-            if (sa_ptr->shivf_len > 0)
+            printf("ARSN_LEN: %d\n", sa_ptr->arsn_len);
+            if (sa_ptr->shivf_len > 0) // Not sure why shivf_len is being used
             {
                 printf("ARSN = 0x");
-                for (x = 0; x < sa_ptr->shivf_len; x++)
+                for (x = 0; x < sa_ptr->arsn_len; x++)
                 {
-                    printf("%02x", *(sa_ptr->iv + x));
+                    printf("%02x", *(sa_ptr->arsn + x));
                 }
                 printf("\n");
             }

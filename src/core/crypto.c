@@ -410,10 +410,10 @@ int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
 
 #ifdef CCSDS_DEBUG
         int x;
-        if ((status > 0) && (ingest != NULL))
+        if ((*count_ptr > 0) && (ingest != NULL))
         {
             printf(KMAG "CCSDS message put on software bus: 0x" RESET);
-            for (x = 0; x < status; x++)
+            for (x = 0; x < *count_ptr; x++)
             {
                 printf(KMAG "%02x" RESET, (uint8_t)ingest[x]);
             }
