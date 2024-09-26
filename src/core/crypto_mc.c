@@ -54,7 +54,7 @@ int32_t Crypto_MC_status(uint8_t* ingest)
     // TODO: Update log_summary.rs;
 
     // Prepare for Reply
-    sdls_frame.pdu.pdu_len = 2; // 4
+    sdls_frame.pdu.pdu_len = SDLS_MC_LOG_RPLY_SIZE; // 4
     sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
     count = Crypto_Prep_Reply(ingest, 128);
 
@@ -79,13 +79,14 @@ int32_t Crypto_MC_status(uint8_t* ingest)
  **/
 int32_t Crypto_MC_dump(uint8_t* ingest)
 {
+    // TODO: Fix Reply Size, same as key verification
     if(ingest == NULL) return CRYPTO_LIB_ERROR;
     int count = 0;
     int x;
     int y;
 
     // Prepare for Reply
-    sdls_frame.pdu.pdu_len = (log_count * 6); // SDLS_MC_DUMP_RPLY_SIZE
+    sdls_frame.pdu.pdu_len = SDLS_MC_DUMP_RPLY_SIZE; // SDLS_MC_DUMP_RPLY_SIZE
     sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
     count = Crypto_Prep_Reply(ingest, 128);
 
@@ -139,7 +140,7 @@ int32_t Crypto_MC_erase(uint8_t* ingest)
     log_summary.rs = LOG_SIZE;
 
     // Prepare for Reply
-    sdls_frame.pdu.pdu_len = 2; // 4
+    sdls_frame.pdu.pdu_len = SDLS_MC_LOG_RPLY_SIZE; // 4
     sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
     count = Crypto_Prep_Reply(ingest, 128);
 
@@ -166,7 +167,7 @@ int32_t Crypto_MC_selftest(uint8_t* ingest)
     // TODO: Perform test
 
     // Prepare for Reply
-    sdls_frame.pdu.pdu_len = 1;
+    sdls_frame.pdu.pdu_len = SDLS_MC_ST_RPLY_SIZE;
     sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
     count = Crypto_Prep_Reply(ingest, 128);
 

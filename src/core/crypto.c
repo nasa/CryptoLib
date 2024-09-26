@@ -568,6 +568,7 @@ int32_t Crypto_SG_SA_MGMT(uint8_t* ingest, TC_t* tc_frame)
  **/
 int32_t Crypto_SEC_MON_CTRL(uint8_t* ingest)
 {
+    // TODO: Not yet returning count
     int status = CRYPTO_LIB_SUCCESS;
     switch (sdls_frame.pdu.pid)
     {
