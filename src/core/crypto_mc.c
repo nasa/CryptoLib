@@ -86,20 +86,31 @@ int32_t Crypto_MC_dump(uint8_t* ingest)
     int y;
 
     // Prepare for Reply
-    sdls_frame.pdu.pdu_len = SDLS_MC_DUMP_RPLY_SIZE; // SDLS_MC_DUMP_RPLY_SIZE
-    sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
+    sdls_frame.pdu.pdu_len = SDLS_MC_DUMP_RPLY_SIZE * log_count * 8; // SDLS_MC_DUMP_RPLY_SIZE
+    //sdls_frame.pdu.pdu_len = SDLS_MC_DUMP_BLK_RPLY_SIZE;
+    sdls_frame.hdr.pkt_length = (sdls_frame.pdu.pdu_len/8) + 9;
     count = Crypto_Prep_Reply(ingest, 128);
 
     // PDU
     for (x = 0; x < log_count; x++)
     {
         ingest[count++] = mc_log.blk[x].emt;
-        // ingest[count++] = (mc_log.blk[x].em_len & 0xFF00) >> 8;
+        ingest[count++] = (mc_log.blk[x].em_len & 0xFF00) >> 8;
         ingest[count++] = (mc_log.blk[x].em_len & 0x00FF);
         for (y = 0; y < EMV_SIZE; y++)
         {
             ingest[count++] = mc_log.blk[x].emv[y];
         }
+#ifdef PDU_DEBUG
+        printf("Log %d emt: 0x%02x\n", x, mc_log.blk[x].emt);
+        printf("Log %d em_len: 0x%04x\n", x, (mc_log.blk[x].em_len & 0xFFFF));
+        printf("Log %d emv: 0x", x);
+        for (y = 0; y < EMV_SIZE; y++)
+        {
+            printf("%02x", mc_log.blk[x].emv[y]);
+        }
+        printf("\n\n");
+#endif
     }
 
 #ifdef PDU_DEBUG

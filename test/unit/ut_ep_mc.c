@@ -143,12 +143,21 @@ UTEST(EP_MC, MC_DUMP)
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
+    // 0880d2c70039b300300a044e4153410a044e4153410a044e4153410a044e4153410a044e4153410a044e415341
     char* buffer_DUMP_h = "2003001a00ff000100001880d2c70008197f0b00330000b1fe312855";
-    //                     |2003001a00| = Primary Header
-    //                               |ff| = Ext. Procs
-    //                                 |0001| = 
-    //                                     |00000000000000000000000219c6efd1cd012f28eb9f38c49e6a93c47958d3525b0aec899dd33fe1d0a7b9743| =  
-    //                                                                                                                              |5555555| = 
+    //                    |2003001a00| = Primary Header
+    //                              |ff| = Ext. Procs
+    //                                |00010000| = Security Header
+    //                                        |1880| = CryptoLib App ID
+    //                                            |d2c7| = seq, packet id
+    //                                                |0008| = packet length
+    //                                                    |197f| = pusv, ack, st
+    //                                                        |0b| = sst
+    //                                                          |0033| = PDU Tag
+    //                                                              |0000| = PDU Length
+    //                                                                  |b1fe|
+    //                                                                      |3128|
+    //                                                                          |55| = Padding
 
     uint8_t *buffer_DUMP_b = NULL;
     int buffer_DUMP_len = 0;
@@ -199,7 +208,7 @@ UTEST(EP_MC, MC_ERASE)
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char* buffer_ERASE_h = "2003001a00ff000100001880d2c70008197f0b00340000b1fe312855";
+    char* buffer_ERASE_h = "2003001b00ff000100001880d2c70008197f0b00340000b1fe312855";
     //                     |2003001a00| = Primary Header
     //                               |ff| = Ext. Procs
     //                                 |0001| = 

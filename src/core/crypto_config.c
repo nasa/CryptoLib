@@ -728,25 +728,27 @@ void Crypto_Local_Config(void)
     // Initial TM configuration
     // tm_frame.tm_sec_header.spi = 1;
 
-    // Initialize Log
-    log_summary.num_se = 2;
-    log_summary.rs = LOG_SIZE;
-    // Add a two messages to the log
-    log_summary.rs--;
-    mc_log.blk[log_count].emt = STARTUP_EID;
-    mc_log.blk[log_count].emv[0] = 0x4E;
-    mc_log.blk[log_count].emv[1] = 0x41;
-    mc_log.blk[log_count].emv[2] = 0x53;
-    mc_log.blk[log_count].emv[3] = 0x41;
-    mc_log.blk[log_count++].em_len = 4;
-    log_summary.rs--;
-    mc_log.blk[log_count].emt = STARTUP_EID;
-    mc_log.blk[log_count].emv[0] = 0x4E;
-    mc_log.blk[log_count].emv[1] = 0x41;
-    mc_log.blk[log_count].emv[2] = 0x53;
-    mc_log.blk[log_count].emv[3] = 0x41;
-    mc_log.blk[log_count++].em_len = 4;
-
+    if (log_count == 0)
+    {
+        // Initialize Log
+        log_summary.num_se = 2;
+        log_summary.rs = LOG_SIZE;
+        // Add a two messages to the log
+        log_summary.rs--;
+        mc_log.blk[log_count].emt = STARTUP_EID;
+        mc_log.blk[log_count].emv[0] = 0x4E;
+        mc_log.blk[log_count].emv[1] = 0x41;
+        mc_log.blk[log_count].emv[2] = 0x53;
+        mc_log.blk[log_count].emv[3] = 0x41;
+        mc_log.blk[log_count++].em_len = 4;
+        log_summary.rs--;
+        mc_log.blk[log_count].emt = STARTUP_EID;
+        mc_log.blk[log_count].emv[0] = 0x4E;
+        mc_log.blk[log_count].emv[1] = 0x41;
+        mc_log.blk[log_count].emv[2] = 0x53;
+        mc_log.blk[log_count].emv[3] = 0x41;
+        mc_log.blk[log_count++].em_len = 4;
+    }
 }
 
 /**
