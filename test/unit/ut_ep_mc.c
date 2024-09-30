@@ -88,11 +88,19 @@ UTEST(EP_MC, MC_STATUS)
 
     // NOTE: Added Transfer Frame header to the plaintext
     char* buffer_STATUS_h = "2003001a00ff000100001880d2c70008197f0b00320000b1fe312855";
-    //                     |2003001a00| = Primary Header
-    //                               |ff| = Ext. Procs
-    //                                 |0001| = 
-    //                                     |00000000000000000000000219c6efd1cd012f28eb9f38c49e6a93c47958d3525b0aec899dd33fe1d0a7b9743| =  
-    //                                                                                                                              |5555555| = 
+    //                      |2003001a00| = Primary Header
+    //                                |ff| = Ext. Procs
+    //                                  |00010000| = Security Header
+    //                                          |1880| = CryptoLib App ID
+    //                                              |d2c7| = seq, packet id
+    //                                                  |0008| = packet length
+    //                                                      |197f| = pusv, ack, st
+    //                                                          |0b| = sst
+    //                                                            |0032| = PDU Tag
+    //                                                                |0000| = PDU Length
+    //                                                                    |b1fe|
+    //                                                                        |3128|
+    //                                                                            |55| = Padding
 
     uint8_t *buffer_STATUS_b = NULL;
     int buffer_STATUS_len = 0;
@@ -208,12 +216,20 @@ UTEST(EP_MC, MC_ERASE)
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char* buffer_ERASE_h = "2003001b00ff000100001880d2c70008197f0b00340000b1fe312855";
+    char* buffer_ERASE_h = "2003001a00ff000100001880d2c70008197f0b00340000b1fe312855";
     //                     |2003001a00| = Primary Header
     //                               |ff| = Ext. Procs
-    //                                 |0001| = 
-    //                                     |00000000000000000000000219c6efd1cd012f28eb9f38c49e6a93c47958d3525b0aec899dd33fe1d0a7b9743| =  
-    //                                                                                                                              |5555555| = 
+    //                                 |00010000| = Security Header
+    //                                         |1880| = CryptoLib App ID
+    //                                             |d2c7| = seq, packet id
+    //                                                 |0008| = packet length
+    //                                                     |197f| = pusv, ack, st
+    //                                                         |0b| = sst
+    //                                                           |0034| = PDU Tag
+    //                                                               |0000| = PDU Length
+    //                                                                   |b1fe|
+    //                                                                       |3128|
+    //                                                                           |55| = Padding 
 
     uint8_t *buffer_ERASE_b = NULL;
     int buffer_ERASE_len = 0;
@@ -265,11 +281,19 @@ UTEST(EP_MC, MC_SELF_TEST)
 
     // NOTE: Added Transfer Frame header to the plaintext
     char* buffer_SELF_h = "2003001a00ff000100001880d2c70008197f0b00350000b1fe312855";
-    //                     |2003001a00| = Primary Header
-    //                               |ff| = Ext. Procs
-    //                                 |0001| = 
-    //                                     |00000000000000000000000219c6efd1cd012f28eb9f38c49e6a93c47958d3525b0aec899dd33fe1d0a7b9743| =  
-    //                                                                                                                              |5555555| = 
+    //                    |2003001a00| = Primary Header
+    //                              |ff| = Ext. Procs
+    //                                |00010000| = Security Header
+    //                                        |1880| = CryptoLib App ID
+    //                                            |d2c7| = seq, packet id
+    //                                                |0008| = packet length
+    //                                                    |197f| = pusv, ack, st
+    //                                                        |0b| = sst
+    //                                                          |0035| = PDU Tag
+    //                                                              |0000| = PDU Length
+    //                                                                  |b1fe|
+    //                                                                      |3128|
+    //                                                                          |55| = Padding
 
     uint8_t *buffer_SELF_b = NULL;
     int buffer_SELF_len = 0;
@@ -323,9 +347,17 @@ UTEST(EP_MC, MC_ALARM_FLAG_RESET)
     char* buffer_ALARM_h = "2003001a00ff000100001880d2c70008197f0b00370000b1fe312855";
     //                     |2003001a00| = Primary Header
     //                               |ff| = Ext. Procs
-    //                                 |0001| = 
-    //                                     |00000000000000000000000219c6efd1cd012f28eb9f38c49e6a93c47958d3525b0aec899dd33fe1d0a7b9743| =  
-    //                                                                                                                              |5555555| = 
+    //                                 |00010000| = Security Header
+    //                                         |1880| = CryptoLib App ID
+    //                                             |d2c7| = seq, packet id
+    //                                                 |0008| = packet length
+    //                                                     |197f| = pusv, ack, st
+    //                                                         |0b| = sst
+    //                                                           |0037| = PDU Tag
+    //                                                               |0000| = PDU Length
+    //                                                                   |b1fe|
+    //                                                                       |3128|
+    //                                                                           |55| = Padding
 
     uint8_t *buffer_ALARM_b = NULL;
     int buffer_ALARM_len = 0;
