@@ -54,8 +54,8 @@ int32_t Crypto_MC_status(uint8_t* ingest)
     // TODO: Update log_summary.rs;
 
     // Prepare for Reply
-    sdls_frame.pdu.pdu_len = SDLS_MC_LOG_RPLY_SIZE; // 4
-    sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
+    sdls_frame.pdu.pdu_len = SDLS_MC_LOG_RPLY_SIZE * 8; // 4
+    sdls_frame.hdr.pkt_length = (sdls_frame.pdu.pdu_len / 8) + 9;
     count = Crypto_Prep_Reply(ingest, 128);
 
     // PDU
@@ -88,7 +88,7 @@ int32_t Crypto_MC_dump(uint8_t* ingest)
     // Prepare for Reply
     sdls_frame.pdu.pdu_len = SDLS_MC_DUMP_RPLY_SIZE * log_count * 8; // SDLS_MC_DUMP_RPLY_SIZE
     //sdls_frame.pdu.pdu_len = SDLS_MC_DUMP_BLK_RPLY_SIZE;
-    sdls_frame.hdr.pkt_length = (sdls_frame.pdu.pdu_len/8) + 9;
+    sdls_frame.hdr.pkt_length = (sdls_frame.pdu.pdu_len / 8) + 9;
     count = Crypto_Prep_Reply(ingest, 128);
 
     // PDU
@@ -151,8 +151,8 @@ int32_t Crypto_MC_erase(uint8_t* ingest)
     log_summary.rs = LOG_SIZE;
 
     // Prepare for Reply
-    sdls_frame.pdu.pdu_len = SDLS_MC_LOG_RPLY_SIZE; // 4
-    sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
+    sdls_frame.pdu.pdu_len = SDLS_MC_LOG_RPLY_SIZE * 8; // 4
+    sdls_frame.hdr.pkt_length = (sdls_frame.pdu.pdu_len / 8) + 9;
     count = Crypto_Prep_Reply(ingest, 128);
 
     // PDU
@@ -178,8 +178,8 @@ int32_t Crypto_MC_selftest(uint8_t* ingest)
     // TODO: Perform test
 
     // Prepare for Reply
-    sdls_frame.pdu.pdu_len = SDLS_MC_ST_RPLY_SIZE;
-    sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
+    sdls_frame.pdu.pdu_len = SDLS_MC_ST_RPLY_SIZE * 8;
+    sdls_frame.hdr.pkt_length = (sdls_frame.pdu.pdu_len / 8) + 9;
     count = Crypto_Prep_Reply(ingest, 128);
 
     ingest[count++] = result;
@@ -204,8 +204,8 @@ int32_t Crypto_SA_readARSN(uint8_t* ingest)
     spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
 
     // Prepare for Reply
-    sdls_frame.pdu.pdu_len = 2 + IV_SIZE;
-    sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
+    sdls_frame.pdu.pdu_len = (2 + IV_SIZE) * 8;
+    sdls_frame.hdr.pkt_length = (sdls_frame.pdu.pdu_len / 8) + 9;
     count = Crypto_Prep_Reply(ingest, 128);
 
     // Write SPI to reply
