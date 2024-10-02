@@ -106,7 +106,7 @@ typedef struct
     uint8_t sg : 2;        // Service Group Field
     uint8_t pid : 4;       // Procedure Identification Field
     uint16_t pdu_len;      // EP Data Field Length - BITS
-} SDLS_TLV_Hdr_t;
+} __attribute__ ((packed)) SDLS_TLV_Hdr_t;
 #define SDLS_TLV_HDR_SIZE (sizeof(SDLS_TLV_Hdr_t))
 
 typedef struct

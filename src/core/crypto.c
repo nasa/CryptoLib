@@ -276,11 +276,10 @@ uint8_t Crypto_Prep_Reply(uint8_t* reply, uint8_t appID)
     sdls_resp_pkt.hdr.shdr = 1;
     sdls_resp_pkt.hdr.appID = appID;
 
-    sdls_resp_pkt.hdr.type = 1;
-
     // Fill reply with reply header
     reply[count++] = (sdls_resp_pkt.hdr.pvn << 5) | (sdls_resp_pkt.hdr.type << 4) | (sdls_resp_pkt.hdr.shdr << 3) |
                       ((sdls_resp_pkt.hdr.appID & 0x700 >> 8));
+
     reply[count++] = (sdls_resp_pkt.hdr.appID & 0x00FF);
     reply[count++] = (sdls_resp_pkt.hdr.seq << 6) | ((sdls_resp_pkt.hdr.pktid & 0x3F00) >> 8);
     reply[count++] = (sdls_resp_pkt.hdr.pktid & 0x00FF);
@@ -677,21 +676,6 @@ int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
         printf(KRED "Error: Crypto_PDU failed interpreting PDU Type!  Received a Reply!?! \n" RESET);
         break;
     }
-
-printf("Status: %d\nCount: %d\n", status, *count_ptr);
-
-// #ifdef CCSDS_DEBUG
-//     int x;
-//     if ((status == 0) && (*count_ptr > 0) && (ingest != NULL))
-//     {
-//         printf(KMAG "CCSDS message put on software bus: 0x" RESET);
-//         for (x = 0; x < *count_ptr; x++)
-//         {
-//             printf(KMAG "%02x" RESET, (uint8_t)ingest[x]);
-//         }
-//         printf("\n");
-//     }
-// #endif
 
     return status;
 }

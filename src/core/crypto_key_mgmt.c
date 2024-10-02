@@ -393,20 +393,11 @@ int32_t Crypto_Key_verify(TC_t* tc_frame, int* count)
     // length = pdu_len + HDR + PUS - 1 (per CCSDS Convention)
     if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
     {
-        printf("HAS PUS! :)\n");
-        sdls_resp_pkt.hdr.pkt_length =  CCSDS_HDR_SIZE + CCSDS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_resp_pkt.pdu.hdr.pdu_len/8) - 1;
-        printf("TOTAL LENGTH IS: %d\n", sdls_resp_pkt.hdr.pkt_length);
-        printf("PUS LENGTH IS %ld\n", CCSDS_PUS_SIZE);
-        printf("CCSDS_HDR_SIZE IS %ld\n", CCSDS_HDR_SIZE);
-        printf("TLV_HDR_SIZE IS %ld\n", SDLS_TLV_HDR_SIZE);
-        printf("PDU length: Bits %d, bytes: %d\n", sdls_resp_pkt.pdu.hdr.pdu_len, (sdls_resp_pkt.pdu.hdr.pdu_len/8));
-
+        sdls_resp_pkt.hdr.pkt_length =  CCSDS_HDR_SIZE + CCSDS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_resp_pkt.pdu.hdr.pdu_len/8) - 1 ;
     }
     else
     {
-        printf("NO HAS PUS :(\n");
         sdls_resp_pkt.hdr.pkt_length =  CCSDS_HDR_SIZE + SDLS_TLV_HDR_SIZE + (sdls_resp_pkt.pdu.hdr.pdu_len/8) - 1;
-        printf("PDU length: Bits %d, bytes: %d\n", sdls_resp_pkt.pdu.hdr.pdu_len, (sdls_resp_pkt.pdu.hdr.pdu_len/8));
     }
 
     *count = Crypto_Prep_Reply(sdls_ep_reply, 128);
@@ -520,13 +511,3 @@ int32_t Crypto_Key_verify(TC_t* tc_frame, int* count)
 
     return status;
 }
-
-
-// 1010EB406500927F0B00415C00 < 13 bytes. for why?
-
-// 415C00  < wrong PDU header
-
-// 1010EB406500927F0B00
-
-// Data length = 92  (0x5C)
-// 0084000000000000000000000001D8EAA795AFFAA0E951BB6CF0116192E16B1977D6723E92E01123CCEF548E2885008600000000000000000000000275C47F30CA26E64AF30C19EBFFE0B314849133E138AC65BC2806E520A90C96A8
