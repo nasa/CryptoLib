@@ -105,7 +105,13 @@ typedef struct
     uint8_t uf : 1;        // User Flag
     uint8_t sg : 2;        // Service Group Field
     uint8_t pid : 4;       // Procedure Identification Field
-    uint16_t pdu_len : 16; // EP Data Field Length - BITS
+    uint16_t pdu_len;      // EP Data Field Length - BITS
+} SDLS_TLV_Hdr_t;
+#define SDLS_TLV_HDR_SIZE (sizeof(SDLS_TLV_Hdr_t))
+
+typedef struct
+{
+    SDLS_TLV_Hdr_t hdr;
     uint8_t data[TLV_DATA_SIZE];
 } SDLS_TLV_t;
 #define SDLS_TLV_SIZE (sizeof(SDLS_TLV_t))
@@ -155,7 +161,7 @@ typedef struct
 
 typedef struct
 {
-    SDLS_KEYV_CMD_BLK_t blk[SDLS_KEYV_MAX_KEYS]; // Key Verification Command Block
+    SDLS_KEYV_CMD_BLK_t blk[29]; // Key Verification Command Block
 } SDLS_KEYV_CMD_t;
 #define SDLS_KEYV_CMD_SIZE (sizeof(SDLS_KEYV_CMD_t))
 
@@ -170,7 +176,7 @@ typedef struct
 
 typedef struct
 {
-    SDLS_KEYV_RPLY_BLK_t blk[SDLS_KEYV_MAX_KEYS]; // Key Verification Reply Block
+    SDLS_KEYV_RPLY_BLK_t blk[29]; // Key Verification Reply Block
 } SDLS_KEYV_RPLY_t;
 #define SDLS_KEYV_RPLY_SIZE (sizeof(SDLS_KEYV_RPLY_t))
 
@@ -311,14 +317,6 @@ typedef struct
     uint8_t spare : 4;
 } CCSDS_PUS_t;
 #define CCSDS_PUS_SIZE (sizeof(CCSDS_PUS_t))
-
-/* unused?
-typedef struct
-{
-  uint8_t    CmdHeader[CFE_SB_CMD_HDR_SIZE];
-
-} Crypto_NoArgsCmd_t;
-*/
 
 typedef struct
 {

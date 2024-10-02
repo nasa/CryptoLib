@@ -215,7 +215,7 @@ int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t* sa_ptr, uint8_t* iv,
 int32_t Crypto_Key_OTAR(void);
 int32_t Crypto_Key_update(uint8_t state);
 int32_t Crypto_Key_inventory(uint8_t* , int*);
-int32_t Crypto_Key_verify(uint8_t* , TC_t* tc_frame, int*);
+int32_t Crypto_Key_verify(TC_t* tc_frame, int*);
 
 // Security Monitoring & Control Procedure
 int32_t Crypto_MC_ping(uint8_t* ingest);
@@ -269,8 +269,9 @@ extern char* crypto_deep_copy_string(char* src_string);
 ** Extern Global Variables
 */ 
 // Data stores used in multiple components
-extern CCSDS_t sdls_frame;
+extern CCSDS_t sdls_resp_pkt;
 extern SDLS_KEYV_RPLY_t sdls_ep_keyv_reply;
+extern uint8_t sdls_ep_reply[TC_MAX_FRAME_SIZE];
 // extern TM_t tm_frame;
 extern uint8_t tm_frame[1786];
 extern TM_FramePrimaryHeader_t tm_frame_pri_hdr; 

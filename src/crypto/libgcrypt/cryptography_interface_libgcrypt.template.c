@@ -497,7 +497,7 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
     {
         printf("%02X", *(data_in + j));
     }
-    printf("\n");
+    printf("\n" RESET);
 #endif
 
 
@@ -528,7 +528,7 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
     {
         printf("%02X", *(data_out + j));
     }
-    printf("\n");
+    printf("\n" RESET);
 #endif
 
     gcry_cipher_close(tmp_hd);
@@ -590,7 +590,7 @@ int32_t cryptography_gcry_setup(int32_t mode, int32_t algo, gcry_cipher_hd_t* tm
     {
         printf("%02X", *(key_ptr + i));
     }
-    printf("\n");
+    printf("\n" RESET);
 #endif
 
     if ((*gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
@@ -660,7 +660,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     {
         printf("%02X", *(data_in + j));
     }
-    printf("\n");
+    printf("\n" RESET);
 #endif
 
     if(aad_bool == CRYPTO_TRUE) // Authenticate with AAD!
@@ -717,7 +717,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
     {
         printf("%02X", *(data_out + j));
     }
-    printf("\n");
+    printf("\n" RESET);
 #endif
 
     if (authenticate_bool == CRYPTO_TRUE)

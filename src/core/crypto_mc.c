@@ -34,8 +34,8 @@ int32_t Crypto_MC_ping(uint8_t* ingest)
     int count = 0;
 
     // Prepare for Reply
-    sdls_frame.pdu.pdu_len = 0;
-    sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
+    sdls_resp_pkt.pdu.hdr.pdu_len = 0;
+    sdls_resp_pkt.hdr.pkt_length = sdls_resp_pkt.pdu.hdr.pdu_len + 9;
     count = Crypto_Prep_Reply(ingest, 128);
 
     return count;
@@ -54,8 +54,8 @@ int32_t Crypto_MC_status(uint8_t* ingest)
     // TODO: Update log_summary.rs;
 
     // Prepare for Reply
-    sdls_frame.pdu.pdu_len = 2; // 4
-    sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
+    sdls_resp_pkt.pdu.hdr.pdu_len = 2; // 4
+    sdls_resp_pkt.hdr.pkt_length = sdls_resp_pkt.pdu.hdr.pdu_len + 9;
     count = Crypto_Prep_Reply(ingest, 128);
 
     // PDU
@@ -85,8 +85,8 @@ int32_t Crypto_MC_dump(uint8_t* ingest)
     int y;
 
     // Prepare for Reply
-    sdls_frame.pdu.pdu_len = (log_count * 6); // SDLS_MC_DUMP_RPLY_SIZE
-    sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
+    sdls_resp_pkt.pdu.hdr.pdu_len = (log_count * 6); // SDLS_MC_DUMP_RPLY_SIZE
+    sdls_resp_pkt.hdr.pkt_length = sdls_resp_pkt.pdu.hdr.pdu_len + 9;
     count = Crypto_Prep_Reply(ingest, 128);
 
     // PDU
@@ -139,8 +139,8 @@ int32_t Crypto_MC_erase(uint8_t* ingest)
     log_summary.rs = LOG_SIZE;
 
     // Prepare for Reply
-    sdls_frame.pdu.pdu_len = 2; // 4
-    sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
+    sdls_resp_pkt.pdu.hdr.pdu_len = 2; // 4
+    sdls_resp_pkt.hdr.pkt_length = sdls_resp_pkt.pdu.hdr.pdu_len + 9;
     count = Crypto_Prep_Reply(ingest, 128);
 
     // PDU
@@ -166,8 +166,8 @@ int32_t Crypto_MC_selftest(uint8_t* ingest)
     // TODO: Perform test
 
     // Prepare for Reply
-    sdls_frame.pdu.pdu_len = 1;
-    sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
+    sdls_resp_pkt.pdu.hdr.pdu_len = 1;
+    sdls_resp_pkt.hdr.pkt_length = sdls_resp_pkt.pdu.hdr.pdu_len + 9;
     count = Crypto_Prep_Reply(ingest, 128);
 
     ingest[count++] = result;
@@ -189,11 +189,11 @@ int32_t Crypto_SA_readARSN(uint8_t* ingest)
     int x;
 
     // Read ingest
-    spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
+    spi = ((uint8_t)sdls_resp_pkt.pdu.data[0] << 8) | (uint8_t)sdls_resp_pkt.pdu.data[1];
 
     // Prepare for Reply
-    sdls_frame.pdu.pdu_len = 2 + IV_SIZE;
-    sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
+    sdls_resp_pkt.pdu.hdr.pdu_len = 2 + IV_SIZE;
+    sdls_resp_pkt.hdr.pkt_length = sdls_resp_pkt.pdu.hdr.pdu_len + 9;
     count = Crypto_Prep_Reply(ingest, 128);
 
     // Write SPI to reply
