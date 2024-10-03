@@ -85,6 +85,8 @@ UTEST(CRYPTO_MC, READARSN)
 {
     remove("sa_save_file.bin");
     int count = 0;
+    int* temp_count = &count;
+    int32_t status = CRYPTO_LIB_ERROR;
     uint8_t ingest[1024] = {0};
     Crypto_Init_TC_Unit_Test();
     SaInterface sa_if = get_sa_interface_inmemory();
@@ -92,9 +94,9 @@ UTEST(CRYPTO_MC, READARSN)
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
 
     sa_if->sa_get_from_spi(1, &test_association);
-    count = Crypto_SA_readARSN(ingest);
+    status = Crypto_SA_readARSN(ingest, temp_count);
     sa_if = sa_if;
-    ASSERT_EQ(11, count); // Future me's problem... why?
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
 /**

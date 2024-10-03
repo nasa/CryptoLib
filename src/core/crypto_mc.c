@@ -192,66 +192,81 @@ int32_t Crypto_MC_selftest(uint8_t* ingest)
  * @param ingest: uint8_t*
  * @return int32: Count
  **/
-int32_t Crypto_SA_readARSN(uint8_t* ingest)
+int32_t Crypto_SA_readARSN(uint8_t* ingest, int* count)
 {
-    if(ingest == NULL) return CRYPTO_LIB_ERROR;
-    uint8_t count = 0;
-    uint16_t spi = 0x0000;
-    SecurityAssociation_t* sa_ptr;
-    int x;
+    int32_t status = CRYPTO_LIB_SUCCESS;
 
-    // Read ingest
-    spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
-
-    // Prepare for Reply
-    sdls_frame.pdu.pdu_len = (2 + IV_SIZE) * 8;
-    sdls_frame.hdr.pkt_length = (sdls_frame.pdu.pdu_len / 8) + 9;
-    count = Crypto_Prep_Reply(ingest, 128);
-
-    // Write SPI to reply
-    ingest[count++] = (spi & 0xFF00) >> 8;
-    ingest[count++] = (spi & 0x00FF);
-
-    if (sa_if->sa_get_from_spi(spi, &sa_ptr) != CRYPTO_LIB_SUCCESS)
+    if(ingest == NULL)
     {
-        // TODO - Error handling
-        return CRYPTO_LIB_ERROR; // Error -- unable to get SA from SPI.
+        status = CRYPTO_LIB_ERROR;
     }
-    if (sa_ptr->shivf_len > 0)
-    { // Set IV - authenticated encryption
-        for (x = 0; x < sa_ptr->shivf_len - 1; x++)
+
+    if (status == CRYPTO_LIB_SUCCESS)
+    {
+        //uint8_t count = 0;
+        uint16_t spi = 0x0000;
+        SecurityAssociation_t* sa_ptr;
+        int x;
+
+        // Read ingest
+        spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
+
+        // Prepare for Reply
+        sdls_frame.pdu.pdu_len = 2 + IV_SIZE;
+        sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
+        *count = Crypto_Prep_Reply(ingest, 128);
+
+        // Write SPI to reply
+        ingest[*count += 1] = (spi & 0xFF00) >> 8;
+        ingest[*count += 1] = (spi & 0x00FF);
+
+        if (sa_if->sa_get_from_spi(spi, &sa_ptr) != CRYPTO_LIB_SUCCESS)
         {
-            ingest[count++] = *(sa_ptr->iv + x);
+            // TODO - Error handling
+            status = CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL; // Error -- unable to get SA from SPI.
         }
 
-        // TODO: Do we need this?
-        if (*(sa_ptr->iv + sa_ptr->shivf_len - 1) > 0)
-        { // Adjust to report last received, not expected
-            ingest[count++] = *(sa_ptr->iv + sa_ptr->shivf_len - 1) - 1;
-        }
-        else
+        if (status == CRYPTO_LIB_SUCCESS)
         {
-            ingest[count++] = *(sa_ptr->iv + sa_ptr->shivf_len - 1);
-        }
-    }
-    else
-    {
-        // TODO
-    }
+            if (sa_ptr->shivf_len > 0 && sa_ptr->ecs == 1 && sa_ptr->acs == 1)
+            { // Set IV - authenticated encryption
+                for (x = 0; x < sa_ptr->shivf_len - 1; x++)
+                {
+                    ingest[*count += 1] = *(sa_ptr->iv + x);
+                }
+
+                // TODO: Do we need this?
+                if (*(sa_ptr->iv + sa_ptr->shivf_len - 1) > 0)
+                { // Adjust to report last received, not expected
+                    ingest[*count += 1] = *(sa_ptr->iv + sa_ptr->shivf_len - 1) - 1;
+                }
+                else
+                {
+                    ingest[*count += 1] = *(sa_ptr->iv + sa_ptr->shivf_len - 1);
+                }
+            }
+            else
+            {
+                // TODO
+                // Also, count not being returned correctly since not Auth Enc
+            }
 #ifdef PDU_DEBUG
-    printf("spi = %d \n", spi);
-    if (sa_ptr->shivf_len > 0)
-    {
-        printf("ARSN = 0x");
-        for (x = 0; x < sa_ptr->shivf_len; x++)
-        {
-            printf("%02x", *(sa_ptr->iv + x));
-        }
-        printf("\n");
-    }
+            printf("spi = %d \n", spi);
+            printf("ARSN_LEN: %d\n", sa_ptr->arsn_len);
+            if (sa_ptr->shivf_len > 0) // Not sure why shivf_len is being used
+            {
+                printf("ARSN = 0x");
+                for (x = 0; x < sa_ptr->arsn_len; x++)
+                {
+                    printf("%02x", *(sa_ptr->arsn + x));
+                }
+                printf("\n");
+            }
 #endif
+        }
+    }
 
-    return count;
+    return status;
 }
 
 /**

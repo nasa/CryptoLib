@@ -354,6 +354,8 @@ uint16_t Crypto_Calc_CRC16(uint8_t* data, int size)
 int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
+    int count = 0;
+    int* count_ptr = &count;
 
     // Check null pointer
     if (tc_frame == NULL)
@@ -375,7 +377,7 @@ int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
                     status = Crypto_SG_KEY_MGMT(ingest, tc_frame);
                     break;
                 case SG_SA_MGMT: // Security Association Management Procedure
-                    status = Crypto_SG_SA_MGMT(ingest, tc_frame);
+                    status = Crypto_SG_SA_MGMT(ingest, tc_frame, count_ptr);
                     break;
                 case SG_SEC_MON_CTRL: // Security Monitoring & Control Procedure
                     status = Crypto_SEC_MON_CTRL(ingest);
@@ -408,10 +410,10 @@ int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
 
 #ifdef CCSDS_DEBUG
         int x;
-        if ((status > 0) && (ingest != NULL))
+        if ((*count_ptr > 0) && (ingest != NULL))
         {
             printf(KMAG "CCSDS message put on software bus: 0x" RESET);
-            for (x = 0; x < status; x++)
+            for (x = 0; x < *count_ptr; x++)
             {
                 printf(KMAG "%02x" RESET, (uint8_t)ingest[x]);
             }
@@ -486,7 +488,7 @@ int32_t Crypto_SG_KEY_MGMT(uint8_t* ingest, TC_t* tc_frame)
  * @param tc_frame: TC_t*
  * @return int32: Success/Failure
  **/
-int32_t Crypto_SG_SA_MGMT(uint8_t* ingest, TC_t* tc_frame)
+int32_t Crypto_SG_SA_MGMT(uint8_t* ingest, TC_t* tc_frame, int* count)
 {
     int status = CRYPTO_LIB_SUCCESS;
     switch (sdls_frame.pdu.pid)
@@ -543,7 +545,7 @@ int32_t Crypto_SG_SA_MGMT(uint8_t* ingest, TC_t* tc_frame)
 #ifdef PDU_DEBUG
             printf(KGRN "SA readARSN\n" RESET);
 #endif
-            status = Crypto_SA_readARSN(ingest);
+            status = Crypto_SA_readARSN(ingest, count);
             break;
         case PID_SA_STATUS:
 #ifdef PDU_DEBUG
