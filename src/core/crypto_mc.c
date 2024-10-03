@@ -209,7 +209,7 @@ int32_t Crypto_SA_readARSN(uint8_t* ingest, int* count_ptr)
         int x;
 
         // Read ingest
-        spi = ((uint8_t)sdls_resp_pkt.pdu.data[0] << 8) | (uint8_t)sdls_resp_pkt.pdu.data[1];
+        spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
 
         // Prepare for Reply
         sdls_resp_pkt.pdu.hdr.pdu_len = 2 + IV_SIZE;
@@ -253,7 +253,7 @@ int32_t Crypto_SA_readARSN(uint8_t* ingest, int* count_ptr)
 #ifdef PDU_DEBUG
             printf("spi = %d \n", spi);
             printf("ARSN_LEN: %d\n", sa_ptr->arsn_len);
-            if (sa_ptr->shivf_len > 0) // Not sure why shivf_len is being used
+            if (sa_ptr->arsn_len > 0) // Not sure why shivf_len is being used
             {
                 printf("ARSN = 0x");
                 for (x = 0; x < sa_ptr->arsn_len; x++)

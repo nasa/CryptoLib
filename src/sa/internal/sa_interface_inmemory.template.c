@@ -978,7 +978,7 @@ static int32_t sa_start(TC_t* tc_frame)
     int i;
 
     // Read ingest
-    spi = ((uint8_t)sdls_resp_pkt.pdu.data[0] << 8) | (uint8_t)sdls_resp_pkt.pdu.data[1];
+    spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
 
     // Check SPI exists and in 'Keyed' state
     if (spi < NUM_SA)
@@ -1111,12 +1111,8 @@ static int32_t sa_stop(void)
     int x;
 
     // Read ingest
-    spi = ((uint8_t)sdls_resp_pkt.pdu.data[0] << 8) | (uint8_t)sdls_resp_pkt.pdu.data[1];
+    spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
     printf("spi = %d \n", spi);
-
-    // Overwrite last PID
-    sa[spi].lpid =
-        (sdls_resp_pkt.hdr.type << 7) | (sdls_resp_pkt.pdu.hdr.uf << 6) | (sdls_resp_pkt.pdu.hdr.sg << 4) | sdls_resp_pkt.pdu.hdr.pid;
 
     // Check SPI exists and in 'Active' state
     if (spi < NUM_SA)
@@ -1181,12 +1177,8 @@ static int32_t sa_rekey(void)
     int x = 0;
 
     // Read ingest
-    spi = ((uint8_t)sdls_resp_pkt.pdu.data[count] << 8) | (uint8_t)sdls_resp_pkt.pdu.data[count + 1];
+    spi = ((uint8_t)sdls_frame.pdu.data[count] << 8) | (uint8_t)sdls_frame.pdu.data[count + 1];
     count = count + 2;
-
-    // Overwrite last PID
-    sa[spi].lpid =
-        (sdls_resp_pkt.hdr.type << 7) | (sdls_resp_pkt.pdu.hdr.uf << 6) | (sdls_resp_pkt.pdu.hdr.sg << 4) | sdls_resp_pkt.pdu.hdr.pid;
 
     // Check SPI exists and in 'Unkeyed' state
     if (spi < NUM_SA)
@@ -1202,7 +1194,7 @@ static int32_t sa_rekey(void)
 
         if (sa[spi].sa_state == SA_UNKEYED)
         { // Encryption Key
-            sa[spi].ekid = ((uint8_t)sdls_resp_pkt.pdu.data[count] << 8) | (uint8_t)sdls_resp_pkt.pdu.data[count + 1];
+            sa[spi].ekid = ((uint8_t)sdls_frame.pdu.data[count] << 8) | (uint8_t)sdls_frame.pdu.data[count + 1];
             count = count + 2;
 
             // Authentication Key
@@ -1268,12 +1260,8 @@ static int32_t sa_expire(void)
     uint16_t spi = 0x0000;
 
     // Read ingest
-    spi = ((uint8_t)sdls_resp_pkt.pdu.data[0] << 8) | (uint8_t)sdls_resp_pkt.pdu.data[1];
+    spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
     printf("spi = %d \n", spi);
-
-    // Overwrite last PID
-    sa[spi].lpid =
-        (sdls_resp_pkt.hdr.type << 7) | (sdls_resp_pkt.pdu.hdr.uf << 6) | (sdls_resp_pkt.pdu.hdr.sg << 4) | sdls_resp_pkt.pdu.hdr.pid;
 
     // Check SPI exists and in 'Keyed' state
     if (spi < NUM_SA)
@@ -1319,7 +1307,7 @@ static int32_t sa_create(void)
     int x;
 
     // Read sdls_resp_pkt.pdu.data
-    spi = ((uint8_t)sdls_resp_pkt.pdu.data[0] << 8) | (uint8_t)sdls_resp_pkt.pdu.data[1];
+    spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
 #ifdef DEBUG
     printf("spi = %d \n", spi);
 #endif
@@ -1404,7 +1392,7 @@ static int32_t sa_delete(void)
     uint16_t spi = 0x0000;
 
     // Read ingest
-    spi = ((uint8_t)sdls_resp_pkt.pdu.data[0] << 8) | (uint8_t)sdls_resp_pkt.pdu.data[1];
+    spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
 #ifdef DEBUG
     printf("spi = %d \n", spi);
 #endif
@@ -1454,7 +1442,7 @@ static int32_t sa_setARSN(void)
     int x;
 
     // Read ingest
-    spi = ((uint8_t)sdls_resp_pkt.pdu.data[0] << 8) | (uint8_t)sdls_resp_pkt.pdu.data[1];
+    spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
     printf("spi = %d \n", spi);
 
     // TODO: Check SA type (authenticated, encrypted, both) and set appropriately
@@ -1513,7 +1501,7 @@ static int32_t sa_setARSNW(void)
     int x;
 
     // Read ingest
-    spi = ((uint8_t)sdls_resp_pkt.pdu.data[0] << 8) | (uint8_t)sdls_resp_pkt.pdu.data[1];
+    spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
     printf("spi = %d \n", spi);
 
     // Check SPI exists
@@ -1564,7 +1552,7 @@ static int32_t sa_status(uint8_t* ingest)
         uint16_t spi = 0x0000;
 
         // Read ingest
-        spi = ((uint8_t)sdls_resp_pkt.pdu.data[0] << 8) | (uint8_t)sdls_resp_pkt.pdu.data[1];
+        spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
         printf("spi = %d \n", spi);
 
         // Check SPI exists
