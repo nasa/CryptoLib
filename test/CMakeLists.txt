@@ -64,6 +64,10 @@ add_test(NAME UT_EP_MC
 add_test(NAME UT_EP_SA_MGMT
          COMMAND ${PROJECT_BINARY_DIR}/bin/ut_ep_sa_mgmt 
          WORKING_DIRECTORY ${PROJECT_TEST_DIR})
+         
+add_test(NAME UT_EP_KEY_VALIDATION
+         COMMAND ${PROJECT_BINARY_DIR}/bin/ut_ep_key_validation 
+         WORKING_DIRECTORY ${PROJECT_TEST_DIR})
 
 if(NOT ${CRYPTO_WOLFSSL})
     add_test(NAME UT_AES_GCM_SIV

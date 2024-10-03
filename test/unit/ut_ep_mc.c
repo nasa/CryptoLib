@@ -60,7 +60,7 @@ UTEST(EP_MC, MC_REGULAR_PING)
     
     status = Crypto_TC_ProcessSecurity(buffer_PING_b, &buffer_PING_len, &tc_nist_processed_frame);
     //ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-    ASSERT_EQ(9, status);
+    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
     printf("\n");
     Crypto_Shutdown();
@@ -124,7 +124,7 @@ UTEST(EP_MC, MC_STATUS)
     
     status = Crypto_TC_ProcessSecurity(buffer_STATUS_b, &buffer_STATUS_len, &tc_nist_processed_frame);
     //ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-    ASSERT_EQ(11, status);
+    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
     printf("\n");
     Crypto_Shutdown();
@@ -189,7 +189,7 @@ UTEST(EP_MC, MC_DUMP)
     
     status = Crypto_TC_ProcessSecurity(buffer_DUMP_b, &buffer_DUMP_len, &tc_nist_processed_frame);
     //ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-    ASSERT_GT(status, 0);
+    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
     printf("\n");
     Crypto_Shutdown();
@@ -253,7 +253,7 @@ UTEST(EP_MC, MC_ERASE)
     
     status = Crypto_TC_ProcessSecurity(buffer_ERASE_b, &buffer_ERASE_len, &tc_nist_processed_frame);
     //ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-    ASSERT_EQ(11, status);
+    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
     printf("\n");
     Crypto_Shutdown();
@@ -317,7 +317,7 @@ UTEST(EP_MC, MC_SELF_TEST)
     
     status = Crypto_TC_ProcessSecurity(buffer_SELF_b, &buffer_SELF_len, &tc_nist_processed_frame);
     //ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-    ASSERT_EQ(10, status);
+    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
     printf("\n");
     Crypto_Shutdown();

@@ -1658,9 +1658,18 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t* p_ingest, uint16_t len_ingest, uint8_
     crypto_key_t* ekp = NULL;
     crypto_key_t* akp = NULL;  
 
+    printf("p_ingest[0] = %d\n", p_ingest[0]);
+    printf("TFVN = %d\n", (p_ingest[0] & 0xC0) >> 6);
+    printf("p_ingest[1] = %d\n", p_ingest[1]);
     // Bit math to give concise access to values in the ingest
     tm_frame_pri_hdr.tfvn = ((uint8_t)p_ingest[0] & 0xC0) >> 6;
+    //tm_frame_pri_hdr.scid = (((uint16_t)p_ingest[0] & 0x3F) << 4) | (((uint16_t)p_ingest[1] & 0xF0) >> 4);
+    printf("Lower: %02x\n", (((uint16_t)p_ingest[0] & 0x3f) << 4));
+    printf("upper: %02x\n", (((uint16_t)p_ingest[1] & 0xf0) >> 4));
+    printf("Combined %02x\n", (((uint16_t)p_ingest[0] & 0x3F) << 4) | (((uint16_t)p_ingest[1] & 0xF0) >> 4));
     tm_frame_pri_hdr.scid = (((uint16_t)p_ingest[0] & 0x3F) << 4) | (((uint16_t)p_ingest[1] & 0xF0) >> 4);
+    printf("SCID: %02x\n", tm_frame_pri_hdr.scid);
+    //tm_frame_pri_hdr.scid = 0x002c;
     tm_frame_pri_hdr.vcid = ((uint8_t)p_ingest[1] & 0x0E) >> 1;
 
     status = Crypto_TM_Process_Setup(len_ingest, &byte_idx, p_ingest, &secondary_hdr_len);

@@ -29,16 +29,16 @@
  * @param ingest: uint8_t*
  * return int32: count
  **/
-int32_t Crypto_MC_ping(uint8_t* ingest)
+int32_t Crypto_MC_ping(uint8_t* ingest, int* count_ptr)
 {
-    int count = 0;
+    *count_ptr = 0;
 
     // Prepare for Reply
-    sdls_frame.pdu.pdu_len = 0;
-    sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
-    count = Crypto_Prep_Reply(ingest, 128);
+    sdls_resp_pkt.pdu.hdr.pdu_len = 0;
+    sdls_resp_pkt.hdr.pkt_length = sdls_resp_pkt.pdu.hdr.pdu_len + 9;
+    *count_ptr = Crypto_Prep_Reply(ingest, 128);
 
-    return count;
+    return CRYPTO_LIB_SUCCESS;
 }
 
 /**
@@ -46,30 +46,30 @@ int32_t Crypto_MC_ping(uint8_t* ingest)
  * @param ingest: uint8_t*
  * @return int32: count
  **/
-int32_t Crypto_MC_status(uint8_t* ingest)
+int32_t Crypto_MC_status(uint8_t* ingest, int* count_ptr)
 {
     if(ingest == NULL) return CRYPTO_LIB_ERROR;
-    int count = 0;
+    *count_ptr = 0;
 
     // TODO: Update log_summary.rs;
 
     // Prepare for Reply
-    sdls_frame.pdu.pdu_len = SDLS_MC_LOG_RPLY_SIZE * 8; // 4
-    sdls_frame.hdr.pkt_length = (sdls_frame.pdu.pdu_len / 8) + 9;
-    count = Crypto_Prep_Reply(ingest, 128);
+    sdls_resp_pkt.pdu.hdr.pdu_len = SDLS_MC_LOG_RPLY_SIZE * 8; // 4
+    sdls_resp_pkt.hdr.pkt_length = (sdls_resp_pkt.pdu.hdr.pdu_len / 8) + 9;
+    *count_ptr = Crypto_Prep_Reply(ingest, 128);
 
     // PDU
     // ingest[count++] = (log_summary.num_se & 0xFF00) >> 8;
-    ingest[count++] = (log_summary.num_se & 0x00FF);
+    ingest[*count_ptr += 1] = (log_summary.num_se & 0x00FF);
     // ingest[count++] = (log_summary.rs & 0xFF00) >> 8;
-    ingest[count++] = (log_summary.rs & 0x00FF);
+    ingest[*count_ptr += 1] = (log_summary.rs & 0x00FF);
 
 #ifdef PDU_DEBUG
     printf("log_summary.num_se = 0x%02x \n", log_summary.num_se);
     printf("log_summary.rs = 0x%02x \n", log_summary.rs);
 #endif
 
-    return count;
+    return CRYPTO_LIB_SUCCESS;
 }
 
 /**
@@ -77,29 +77,29 @@ int32_t Crypto_MC_status(uint8_t* ingest)
  * @param ingest: uint8_t*
  * @return int32: Count
  **/
-int32_t Crypto_MC_dump(uint8_t* ingest)
+int32_t Crypto_MC_dump(uint8_t* ingest, int* count_ptr)
 {
     // TODO: Fix Reply Size, same as key verification
     if(ingest == NULL) return CRYPTO_LIB_ERROR;
-    int count = 0;
+    *count_ptr = 0;
     int x;
     int y;
 
     // Prepare for Reply
-    sdls_frame.pdu.pdu_len = SDLS_MC_DUMP_RPLY_SIZE * log_count * 8; // SDLS_MC_DUMP_RPLY_SIZE
-    //sdls_frame.pdu.pdu_len = SDLS_MC_DUMP_BLK_RPLY_SIZE;
-    sdls_frame.hdr.pkt_length = (sdls_frame.pdu.pdu_len / 8) + 9;
-    count = Crypto_Prep_Reply(ingest, 128);
+    sdls_resp_pkt.pdu.hdr.pdu_len = SDLS_MC_DUMP_RPLY_SIZE * log_count * 8; // SDLS_MC_DUMP_RPLY_SIZE
+    //sdls_resp_pkt.pdu.pdu_len = SDLS_MC_DUMP_BLK_RPLY_SIZE;
+    sdls_resp_pkt.hdr.pkt_length = (sdls_resp_pkt.pdu.hdr.pdu_len / 8) + 9;
+    *count_ptr = Crypto_Prep_Reply(ingest, 128);
 
     // PDU
     for (x = 0; x < log_count; x++)
     {
-        ingest[count++] = mc_log.blk[x].emt;
-        ingest[count++] = (mc_log.blk[x].em_len & 0xFF00) >> 8;
-        ingest[count++] = (mc_log.blk[x].em_len & 0x00FF);
+        ingest[*count_ptr += 1] = mc_log.blk[x].emt;
+        ingest[*count_ptr += 1] = (mc_log.blk[x].em_len & 0xFF00) >> 8;
+        ingest[*count_ptr += 1] = (mc_log.blk[x].em_len & 0x00FF);
         for (y = 0; y < EMV_SIZE; y++)
         {
-            ingest[count++] = mc_log.blk[x].emv[y];
+            ingest[*count_ptr += 1] = mc_log.blk[x].emv[y];
         }
 #ifdef PDU_DEBUG
         printf("Log %d emt: 0x%02x\n", x, mc_log.blk[x].emt);
@@ -119,7 +119,7 @@ int32_t Crypto_MC_dump(uint8_t* ingest)
     printf("log_summary.rs = 0x%02x \n", log_summary.rs);
 #endif
 
-    return count;
+    return CRYPTO_LIB_SUCCESS;
 }
 
 /**
@@ -127,10 +127,10 @@ int32_t Crypto_MC_dump(uint8_t* ingest)
  * @param ingest: uint8_t*
  * @return int32: count
  **/
-int32_t Crypto_MC_erase(uint8_t* ingest)
+int32_t Crypto_MC_erase(uint8_t* ingest, int* count_ptr)
 {
     if(ingest == NULL) return CRYPTO_LIB_ERROR;
-    int count = 0;
+    *count_ptr = 0;
     int x;
     int y;
 
@@ -151,17 +151,17 @@ int32_t Crypto_MC_erase(uint8_t* ingest)
     log_summary.rs = LOG_SIZE;
 
     // Prepare for Reply
-    sdls_frame.pdu.pdu_len = SDLS_MC_LOG_RPLY_SIZE * 8; // 4
-    sdls_frame.hdr.pkt_length = (sdls_frame.pdu.pdu_len / 8) + 9;
-    count = Crypto_Prep_Reply(ingest, 128);
+    sdls_resp_pkt.pdu.hdr.pdu_len = SDLS_MC_LOG_RPLY_SIZE * 8; // 4
+    sdls_resp_pkt.hdr.pkt_length = (sdls_resp_pkt.pdu.hdr.pdu_len / 8) + 9;
+    *count_ptr = Crypto_Prep_Reply(ingest, 128);
 
     // PDU
     // ingest[count++] = (log_summary.num_se & 0xFF00) >> 8;
-    ingest[count++] = (log_summary.num_se & 0x00FF);
+    ingest[*count_ptr += 1] = (log_summary.num_se & 0x00FF);
     // ingest[count++] = (log_summary.rs & 0xFF00) >> 8;
-    ingest[count++] = (log_summary.rs & 0x00FF);
+    ingest[*count_ptr += 1] = (log_summary.rs & 0x00FF);
 
-    return count;
+    return CRYPTO_LIB_SUCCESS;
 }
 
 /**
@@ -169,22 +169,22 @@ int32_t Crypto_MC_erase(uint8_t* ingest)
  * @param ingest: uint8_t*
  * @return int32: Count
  **/
-int32_t Crypto_MC_selftest(uint8_t* ingest)
+int32_t Crypto_MC_selftest(uint8_t* ingest, int* count_ptr)
 {
     if(ingest == NULL) return CRYPTO_LIB_ERROR;
-    uint8_t count = 0;
+    *count_ptr = 0;
     uint8_t result = ST_OK;
 
     // TODO: Perform test
 
     // Prepare for Reply
-    sdls_frame.pdu.pdu_len = SDLS_MC_ST_RPLY_SIZE * 8;
-    sdls_frame.hdr.pkt_length = (sdls_frame.pdu.pdu_len / 8) + 9;
-    count = Crypto_Prep_Reply(ingest, 128);
+    sdls_resp_pkt.pdu.hdr.pdu_len = SDLS_MC_ST_RPLY_SIZE * 8;
+    sdls_resp_pkt.hdr.pkt_length = (sdls_resp_pkt.pdu.hdr.pdu_len / 8) + 9;
+    *count_ptr = Crypto_Prep_Reply(ingest, 128);
 
-    ingest[count++] = result;
+    ingest[*count_ptr += 1] = result;
 
-    return count;
+    return CRYPTO_LIB_SUCCESS;
 }
 
 /**
@@ -192,7 +192,7 @@ int32_t Crypto_MC_selftest(uint8_t* ingest)
  * @param ingest: uint8_t*
  * @return int32: Count
  **/
-int32_t Crypto_SA_readARSN(uint8_t* ingest, int* count)
+int32_t Crypto_SA_readARSN(uint8_t* ingest, int* count_ptr)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
@@ -209,16 +209,16 @@ int32_t Crypto_SA_readARSN(uint8_t* ingest, int* count)
         int x;
 
         // Read ingest
-        spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
+        spi = ((uint8_t)sdls_resp_pkt.pdu.data[0] << 8) | (uint8_t)sdls_resp_pkt.pdu.data[1];
 
         // Prepare for Reply
-        sdls_frame.pdu.pdu_len = 2 + IV_SIZE;
-        sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
-        *count = Crypto_Prep_Reply(ingest, 128);
+        sdls_resp_pkt.pdu.hdr.pdu_len = 2 + IV_SIZE;
+        sdls_resp_pkt.hdr.pkt_length = sdls_resp_pkt.pdu.hdr.pdu_len + 9;
+        *count_ptr = Crypto_Prep_Reply(ingest, 128);
 
         // Write SPI to reply
-        ingest[*count += 1] = (spi & 0xFF00) >> 8;
-        ingest[*count += 1] = (spi & 0x00FF);
+        ingest[*count_ptr += 1] = (spi & 0xFF00) >> 8;
+        ingest[*count_ptr += 1] = (spi & 0x00FF);
 
         if (sa_if->sa_get_from_spi(spi, &sa_ptr) != CRYPTO_LIB_SUCCESS)
         {
@@ -232,17 +232,17 @@ int32_t Crypto_SA_readARSN(uint8_t* ingest, int* count)
             { // Set IV - authenticated encryption
                 for (x = 0; x < sa_ptr->shivf_len - 1; x++)
                 {
-                    ingest[*count += 1] = *(sa_ptr->iv + x);
+                    ingest[*count_ptr += 1] = *(sa_ptr->iv + x);
                 }
 
                 // TODO: Do we need this?
                 if (*(sa_ptr->iv + sa_ptr->shivf_len - 1) > 0)
                 { // Adjust to report last received, not expected
-                    ingest[*count += 1] = *(sa_ptr->iv + sa_ptr->shivf_len - 1) - 1;
+                    ingest[*count_ptr += 1] = *(sa_ptr->iv + sa_ptr->shivf_len - 1) - 1;
                 }
                 else
                 {
-                    ingest[*count += 1] = *(sa_ptr->iv + sa_ptr->shivf_len - 1);
+                    ingest[*count_ptr += 1] = *(sa_ptr->iv + sa_ptr->shivf_len - 1);
                 }
             }
             else

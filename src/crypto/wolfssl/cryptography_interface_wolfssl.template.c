@@ -404,7 +404,7 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
         {
             printf("%02X", *(data_in + j));
         }
-        printf("\n");
+        printf("\n" RESET);
     #endif
 
     // Reference: https://www.wolfssl.com/documentation/manuals/wolfssl/group__AES.html
@@ -447,7 +447,7 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
         {
             printf("%02X", *(data_out + j));
         }
-        printf("\n");
+        printf("\n" RESET);
     #endif
 
     return status;
@@ -486,7 +486,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
         {
             printf("%02X", *(data_in + j));
         }
-        printf("\n");
+        printf("\n" RESET);
     #endif
 
     // Reference: https://www.wolfssl.com/documentation/manuals/wolfssl/group__AES.html
@@ -531,7 +531,7 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
         {
             printf("%02X", *(data_out + j));
         }
-        printf("\n");
+        printf("\n" RESET);
     #endif
 
     return status;

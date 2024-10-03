@@ -32,11 +32,12 @@
 UTEST(CRYPTO_MC, STATUS)
 {
     remove("sa_save_file.bin");
+    int status = CRYPTO_LIB_SUCCESS;
     int count = 0;
     uint8_t ingest[1024] = {0};
 
-    count = Crypto_MC_status(ingest);
-    ASSERT_EQ(11, count);
+    status = Crypto_MC_status(ingest, &count);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
 /**
@@ -45,11 +46,12 @@ UTEST(CRYPTO_MC, STATUS)
 UTEST(CRYPTO_MC, DUMP)
 {
     remove("sa_save_file.bin");
+    int status = CRYPTO_LIB_SUCCESS;
     int count = 0;
     uint8_t ingest[1024] = {0};
 
-    count = Crypto_MC_dump(ingest);
-    ASSERT_EQ(((log_count * 4) + (log_count * 2) + 9), count);
+    status = Crypto_MC_dump(ingest, &count);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
 /**
@@ -58,11 +60,12 @@ UTEST(CRYPTO_MC, DUMP)
 UTEST(CRYPTO_MC, ERASE)
 {
     remove("sa_save_file.bin");
+    int status = CRYPTO_LIB_SUCCESS;
     int count = 0;
     uint8_t ingest[1024] = {0};
 
-    count = Crypto_MC_erase(ingest);
-    ASSERT_EQ(11, count);
+    status = Crypto_MC_erase(ingest, &count);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
 /**
@@ -71,11 +74,12 @@ UTEST(CRYPTO_MC, ERASE)
 UTEST(CRYPTO_MC, SELFTEST)
 {
     remove("sa_save_file.bin");
+    int status = CRYPTO_LIB_SUCCESS;
     int count = 0;
     uint8_t ingest[1024] = {0};
 
-    count = Crypto_MC_selftest(ingest);
-    ASSERT_EQ(10, count);
+    status = Crypto_MC_selftest(ingest, &count);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
 /**

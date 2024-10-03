@@ -203,16 +203,16 @@ int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t* sa_ptr, uint8_t* iv,
 // Key Management Functions
 int32_t Crypto_Key_OTAR(void);
 int32_t Crypto_Key_update(uint8_t state);
-int32_t Crypto_Key_inventory(uint8_t* );
-int32_t Crypto_Key_verify(uint8_t* , TC_t* tc_frame);
+int32_t Crypto_Key_inventory(uint8_t* , int*);
+int32_t Crypto_Key_verify(TC_t* tc_frame, int*);
 
 // Security Monitoring & Control Procedure
-int32_t Crypto_MC_ping(uint8_t* ingest);
-int32_t Crypto_MC_status(uint8_t* ingest);
-int32_t Crypto_MC_dump(uint8_t* ingest);
-int32_t Crypto_MC_erase(uint8_t* ingest);
-int32_t Crypto_MC_selftest(uint8_t* ingest);
-int32_t Crypto_SA_readARSN(uint8_t* ingest, int* count);
+int32_t Crypto_MC_ping(uint8_t* ingest, int* count_ptr);
+int32_t Crypto_MC_status(uint8_t* ingest, int* count_ptr);
+int32_t Crypto_MC_dump(uint8_t* ingest, int* count_ptr);
+int32_t Crypto_MC_erase(uint8_t* ingest, int* count_ptr);
+int32_t Crypto_MC_selftest(uint8_t* ingest, int* count_ptr);
+int32_t Crypto_SA_readARSN(uint8_t* ingest, int* count_ptr);
 int32_t Crypto_MC_resetalarm(void);
 
 // User Functions
@@ -235,9 +235,9 @@ void clean_akref(SecurityAssociation_t* sa);
 // Determine Payload Data Unit
 int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, uint8_t* ingest);
 int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame);
-int32_t Crypto_SG_KEY_MGMT(uint8_t* ingest, TC_t* tc_frame);
-int32_t Crypto_SG_SA_MGMT(uint8_t* ingest, TC_t* tc_frame, int* count);
-int32_t Crypto_SEC_MON_CTRL(uint8_t* ingest);
+int32_t Crypto_SG_KEY_MGMT(uint8_t* ingest, TC_t* tc_frame, int* count_ptr);
+int32_t Crypto_SG_SA_MGMT(uint8_t* ingest, TC_t* tc_frame, int* count_ptr);
+int32_t Crypto_SEC_MON_CTRL(uint8_t* ingest, int* count_ptr);
 int32_t Crypto_USER_DEFINED_CMD(uint8_t* ingest);
 
 // Managed Parameter Functions
@@ -251,7 +251,9 @@ extern char* crypto_deep_copy_string(char* src_string);
 ** Extern Global Variables
 */ 
 // Data stores used in multiple components
-extern CCSDS_t sdls_frame;
+extern CCSDS_t sdls_resp_pkt;
+extern SDLS_KEYV_RPLY_t sdls_ep_keyv_reply;
+extern uint8_t sdls_ep_reply[TC_MAX_FRAME_SIZE];
 // extern TM_t tm_frame;
 extern uint8_t tm_frame[1786];
 extern TM_FramePrimaryHeader_t tm_frame_pri_hdr; 
@@ -276,7 +278,6 @@ extern SaInterface sa_if;
 extern CryptographyInterface cryptography_if;
 
 // extern crypto_key_t ak_ring[NUM_KEYS];
-extern CCSDS_t sdls_frame;
 extern SadbMariaDBConfig_t* sa_mariadb_config;
 extern GvcidManagedParameters_t* gvcid_managed_parameters;
 extern GvcidManagedParameters_t* current_managed_parameters;

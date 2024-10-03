@@ -112,7 +112,13 @@ typedef struct
     uint8_t uf : 1;        // User Flag
     uint8_t sg : 2;        // Service Group Field
     uint8_t pid : 4;       // Procedure Identification Field
-    uint16_t pdu_len : 16; // EP Data Field Length - BITS
+    uint16_t pdu_len;      // EP Data Field Length - BITS
+} __attribute__ ((packed)) SDLS_TLV_Hdr_t;
+#define SDLS_TLV_HDR_SIZE (sizeof(SDLS_TLV_Hdr_t))
+
+typedef struct
+{
+    SDLS_TLV_Hdr_t hdr;
     uint8_t data[TLV_DATA_SIZE];
 } SDLS_TLV_t;
 #define SDLS_TLV_SIZE (sizeof(SDLS_TLV_t))
@@ -170,7 +176,7 @@ typedef struct
     uint16_t kid : 16;                  // Key ID
     uint8_t iv[IV_SIZE];                // Key Initialization Vector
     uint8_t challenged[CHALLENGE_SIZE]; // Encrypted Challenge
-    uint8_t cmac[CHALLENGE_MAC_SIZE];   // Challenge Message Authentication Code
+    uint8_t mac[CHALLENGE_MAC_SIZE];    // Challenge Message Authentication Code
 } SDLS_KEYV_RPLY_BLK_t;
 #define SDLS_KEYV_RPLY_BLK_SIZE (sizeof(SDLS_KEYV_RPLY_BLK_t))
 
