@@ -155,8 +155,21 @@ typedef struct
 {
     uint16_t kid_first : 16; // First Key ID
     uint16_t kid_last : 16;  // Last Key ID
+} SDLS_KEY_INVENTORY_CMD_t;
+#define SDLS_KEY_INVENTORY_CMD_SIZE (sizeof(SDLS_KEY_INVENTORY_CMD_t))
+
+typedef struct
+{
+    uint16_t kid : 16; // Key ID
+    uint16_t key_state : 8;  // Key state
 } SDLS_KEY_INVENTORY_t;
-#define SDLS_KEY_INVENTORY_SIZE (sizeof(SDLS_KEY_INVENTORY_t))
+#define SDLS_KEY_INVENTORY_RPLY_SIZE (sizeof(SDLS_KEY_INVENTORY_t))
+
+typedef struct
+{
+    SDLS_KEY_INVENTORY_t blk[NUM_KEYS]; // Key Verification Command Block
+} SDLS_KEY_INVENTORY_RPLY_t;
+#define SDLS_KEY_INVENTORY_BLK_RPLY_SIZE (sizeof(SDLS_KEY_INVENTORY_t))
 
 typedef struct
 {
