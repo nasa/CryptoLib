@@ -256,35 +256,36 @@ uint8_t Crypto_Prep_Reply(uint8_t* reply, uint8_t appID)
         return count;
 
     // Prepare CCSDS for reply
-    sdls_resp_pkt.hdr.pvn = 0;
-    sdls_resp_pkt.hdr.type = 0;
-    sdls_resp_pkt.hdr.shdr = 1;
-    sdls_resp_pkt.hdr.appID = appID;
+    sdls_frame.hdr.pvn = 0;
+    sdls_frame.hdr.type = 0;
+    sdls_frame.hdr.shdr = 1;
+    sdls_frame.hdr.appID = appID;
+
+    sdls_frame.pdu.hdr.type = 1;
 
     // Fill reply with reply header
-    reply[count++] = (sdls_resp_pkt.hdr.pvn << 5) | (sdls_resp_pkt.hdr.type << 4) | (sdls_resp_pkt.hdr.shdr << 3) |
-                      ((sdls_resp_pkt.hdr.appID & 0x700 >> 8));
-
-    reply[count++] = (sdls_resp_pkt.hdr.appID & 0x00FF);
-    reply[count++] = (sdls_resp_pkt.hdr.seq << 6) | ((sdls_resp_pkt.hdr.pktid & 0x3F00) >> 8);
-    reply[count++] = (sdls_resp_pkt.hdr.pktid & 0x00FF);
-    reply[count++] = (sdls_resp_pkt.hdr.pkt_length & 0xFF00) >> 8;
-    reply[count++] = (sdls_resp_pkt.hdr.pkt_length & 0x00FF);
+    reply[count++] = (sdls_frame.hdr.pvn << 5) | (sdls_frame.hdr.type << 4) | (sdls_frame.hdr.shdr << 3) |
+                      ((sdls_frame.hdr.appID & 0x700 >> 8));
+    reply[count++] = (sdls_frame.hdr.appID & 0x00FF);
+    reply[count++] = (sdls_frame.hdr.seq << 6) | ((sdls_frame.hdr.pktid & 0x3F00) >> 8);
+    reply[count++] = (sdls_frame.hdr.pktid & 0x00FF);
+    reply[count++] = (sdls_frame.hdr.pkt_length & 0xFF00) >> 8;
+    reply[count++] = (sdls_frame.hdr.pkt_length & 0x00FF);
 
     if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
     {
         // Fill reply with PUS
-        reply[count++] = (sdls_resp_pkt.pus.shf << 7) | (sdls_resp_pkt.pus.pusv << 4) | (sdls_resp_pkt.pus.ack);
-        reply[count++] = (sdls_resp_pkt.pus.st);
-        reply[count++] = (sdls_resp_pkt.pus.sst);
-        reply[count++] = (sdls_resp_pkt.pus.sid << 4) | (sdls_resp_pkt.pus.spare);
+        reply[count++] = (sdls_frame.pus.shf << 7) | (sdls_frame.pus.pusv << 4) | (sdls_frame.pus.ack);
+        reply[count++] = (sdls_frame.pus.st);
+        reply[count++] = (sdls_frame.pus.sst);
+        reply[count++] = (sdls_frame.pus.sid << 4) | (sdls_frame.pus.spare);
     }
 
     // Fill reply with Tag and Length
     reply[count++] =
-        (sdls_resp_pkt.hdr.type << 7) | (sdls_resp_pkt.pdu.hdr.uf << 6) | (sdls_resp_pkt.pdu.hdr.sg << 4) | (sdls_resp_pkt.pdu.hdr.pid);
-    reply[count++] = (sdls_resp_pkt.pdu.hdr.pdu_len & 0xFF00) >> 8;
-    reply[count++] = (sdls_resp_pkt.pdu.hdr.pdu_len & 0x00FF);
+        (sdls_frame.pdu.hdr.type << 7) | (sdls_frame.pdu.hdr.uf << 6) | (sdls_frame.pdu.hdr.sg << 4) | (sdls_frame.pdu.hdr.pid);
+    reply[count++] = (sdls_frame.pdu.hdr.pdu_len & 0xFF00) >> 8;
+    reply[count++] = (sdls_frame.pdu.hdr.pdu_len & 0x00FF);
 
     return count;
 }
@@ -423,7 +424,7 @@ int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
 
 #ifdef CCSDS_DEBUG
         int x;
-        if ((*count_ptr > 0) && (ingest != NULL))
+        if ((*count_ptr > 0))
         {
             printf(KMAG "CCSDS message put on software bus: 0x" RESET);
             for (x = 0; x < *count_ptr; x++)
@@ -800,7 +801,6 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, uin
                 }
 
 #ifdef CCSDS_DEBUG
-            Crypto_ccsdsPrint(&sdls_resp_pkt);
                 Crypto_ccsdsPrint(&sdls_frame);
 #endif
 
@@ -815,16 +815,16 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, uin
 #endif
             // No Packet HDR or PUS in these frames
             // SDLS TLV PDU
-            sdls_resp_pkt.hdr.type = (tc_sdls_processed_frame->tc_pdu[0] & 0x80) >> 7;
-            sdls_resp_pkt.pdu.hdr.uf = (tc_sdls_processed_frame->tc_pdu[0] & 0x40) >> 6;
-            sdls_resp_pkt.pdu.hdr.sg = (tc_sdls_processed_frame->tc_pdu[0] & 0x30) >> 4;
-            sdls_resp_pkt.pdu.hdr.pid = (tc_sdls_processed_frame->tc_pdu[0] & 0x0F);
-            sdls_resp_pkt.pdu.hdr.pdu_len =  (tc_sdls_processed_frame->tc_pdu[1] << 8) | tc_sdls_processed_frame->tc_pdu[2];
+            sdls_frame.hdr.type = (tc_sdls_processed_frame->tc_pdu[0] & 0x80) >> 7;
+            sdls_frame.pdu.hdr.uf = (tc_sdls_processed_frame->tc_pdu[0] & 0x40) >> 6;
+            sdls_frame.pdu.hdr.sg = (tc_sdls_processed_frame->tc_pdu[0] & 0x30) >> 4;
+            sdls_frame.pdu.hdr.pid = (tc_sdls_processed_frame->tc_pdu[0] & 0x0F);
+            sdls_frame.pdu.hdr.pdu_len =  (tc_sdls_processed_frame->tc_pdu[1] << 8) | tc_sdls_processed_frame->tc_pdu[2];
             for (x = 3; x < (3 + tc_sdls_processed_frame->tc_header.fl); x++)
             {
                 // Todo - Consider how this behaves with large OTAR PDUs that are larger than 1 TC in size. Most likely
                 // fails. Must consider Uplink Sessions (sequence numbers).
-                sdls_resp_pkt.pdu.data[x - 3] = tc_sdls_processed_frame->tc_pdu[x];
+                sdls_frame.pdu.data[x - 3] = tc_sdls_processed_frame->tc_pdu[x];
             }
 
 #ifdef CCSDS_DEBUG

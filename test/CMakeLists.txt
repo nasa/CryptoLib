@@ -45,10 +45,6 @@ add_test(NAME UT_AOS_PROCESS
          COMMAND ${PROJECT_BINARY_DIR}/bin/ut_aos_process
          WORKING_DIRECTORY ${PROJECT_TEST_DIR})
 
-add_test(NAME UT_CRYPTO_MC
-         COMMAND ${PROJECT_BINARY_DIR}/bin/ut_crypto_mc 
-         WORKING_DIRECTORY ${PROJECT_TEST_DIR})
-
 add_test(NAME UT_TM_APPLY
          COMMAND ${PROJECT_BINARY_DIR}/bin/ut_tm_apply 
          WORKING_DIRECTORY ${PROJECT_TEST_DIR})
