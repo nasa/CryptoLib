@@ -290,6 +290,38 @@ uint8_t Crypto_Prep_Reply(uint8_t* reply, uint8_t appID)
     return count;
 }
 
+
+int32_t Crypto_Get_Sdls_Ep_Reply(uint8_t* buffer, uint16_t* length)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    // Length to be pulled from packet header
+    uint16_t pkt_length = 0;
+
+    // Check for NULL Inputs
+    if (buffer == NULL || length == NULL)
+    {
+        status = CRYPTO_LIB_ERR_NULL_BUFFER;
+        return status;
+    }
+
+    pkt_length = sdls_frame.hdr.pkt_length;
+
+    // Sanity Check on length
+    if (pkt_length > TC_MAX_FRAME_SIZE)
+    {
+        status = CRYPTO_LIB_ERR_TC_FRAME_SIZE_EXCEEDS_SPEC_LIMIT;
+        return status;
+    }
+
+    // Copy our length, which will fit in the buffer
+    memcpy(buffer, sdls_ep_reply, (size_t)pkt_length);
+
+    // Update length externally
+    *length = pkt_length;
+
+    return status;
+}
+
 /**
  * @brief Function Crypto_Calc_FECF
  * Calculate the Frame Error Control Field (FECF), also known as a cyclic redundancy check (CRC)

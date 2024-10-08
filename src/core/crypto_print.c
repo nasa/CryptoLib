@@ -98,6 +98,38 @@ void Crypto_tmPrint(TM_t* tm_frame)
     printf("\n");
 }
 
+void Crypto_Print_Sdls_Ep_Reply(void)
+{
+    // Length to be pulled from packet header
+    uint16_t pkt_length = 0;
+
+    // Check for Null Inputs
+    if (sdls_ep_reply == NULL)
+    {
+        printf(KRED "The sdls_ep_reply buffer is null... this isn't good as it should be static in memory!\n" RESET);
+        return;
+    }
+
+    pkt_length = (sdls_ep_reply[4] << 8) | sdls_ep_reply[5];
+    
+    // Sanity check on length
+    if (pkt_length > TC_MAX_FRAME_SIZE)
+    {
+        printf(KRED "Unable to print SDLS Reply... invalid length of %d\n" RESET, pkt_length);
+        return;
+    }
+
+    // Do the print
+    printf("SDLS Reply Global: 0x");
+    for (int i =0; i < pkt_length; i++)
+    {
+        printf("%02X", sdls_ep_reply[i]);
+    }
+    printf("\n\n");
+
+    return;
+}
+
 /**
  * @brief Function: Crypto_clcwPrint
  * Prints the current CLCW in memory.

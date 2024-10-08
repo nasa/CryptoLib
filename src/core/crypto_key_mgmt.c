@@ -45,12 +45,12 @@ int32_t Crypto_Key_OTAR(void)
     int y;
     int32_t status = CRYPTO_LIB_SUCCESS;
     // uint16_t pdu_len = (uint16_t) sdls_resp_pkt.pdu.hdr.pdu_len[1] << 8 | sdls_resp_pkt.pdu.hdr.pdu_len[0];
-    int pdu_keys = (sdls_resp_pkt.pdu.hdr.pdu_len - 30) / (2 + 32);
+    int pdu_keys = (sdls_frame.pdu.hdr.pdu_len - 30) / (2 + 32);
     int w;
     crypto_key_t* ekp = NULL;
     printf("# PDU Keys: %d\n", pdu_keys);
     // Master Key ID
-    packet.mkid = (sdls_resp_pkt.pdu.data[0] << 8) | (sdls_resp_pkt.pdu.data[1]);
+    packet.mkid = (sdls_frame.pdu.data[0] << 8) | (sdls_frame.pdu.data[1]);
      printf("MKID: %d\n", packet.mkid);
     if (packet.mkid >= 128)
     {
@@ -73,15 +73,15 @@ int32_t Crypto_Key_OTAR(void)
 
     for (count = 2; count < (2 + 12); count++)
     { // Initialization Vector
-        packet.iv[count - 2] = sdls_resp_pkt.pdu.data[count];
-        //printf("packet.iv[%d] = 0x%02x\n", count-2, packet.iv[count-2]);
+        packet.iv[count - 2] = sdls_frame.pdu.data[count];
+        printf("packet.iv[%d] = 0x%02x\n", count-2, packet.iv[count-2]);
     }
 
-    count = sdls_resp_pkt.pdu.hdr.pdu_len - MAC_SIZE;
+    count = sdls_frame.pdu.hdr.pdu_len - MAC_SIZE;
     for (w = 0; w < 16; w++)
     { // MAC
-        packet.mac[w] = sdls_resp_pkt.pdu.data[count + w];
-        //printf("packet.mac[%d] = 0x%02x\n", w, packet.mac[w]);
+        packet.mac[w] = sdls_frame.pdu.data[count + w];
+        printf("packet.mac[%d] = 0x%02x\n", w, packet.mac[w]);
     }
 
     ekp = key_if->get_key(packet.mkid);
@@ -91,7 +91,7 @@ int32_t Crypto_Key_OTAR(void)
     }
 
     uint8_t ecs = CRYPTO_CIPHER_AES256_GCM;
-    status = cryptography_if->cryptography_aead_decrypt(&(sdls_resp_pkt.pdu.data[14]), // plaintext output
+    status = cryptography_if->cryptography_aead_decrypt(&(sdls_frame.pdu.data[14]), // plaintext output
                                                         (size_t)(pdu_keys * (2 + 32)), // length of data
                                                         NULL,                               // in place decryption
                                                         0,                                  // in data length
@@ -115,7 +115,7 @@ int32_t Crypto_Key_OTAR(void)
     // Read in Decrypted Data
     for (count = 14; x < pdu_keys; x++)
     { // Encrypted Key Blocks
-        packet.EKB[x].ekid = (sdls_resp_pkt.pdu.data[count] << 8) | (sdls_resp_pkt.pdu.data[count + 1]);
+        packet.EKB[x].ekid = (sdls_frame.pdu.data[count] << 8) | (sdls_frame.pdu.data[count + 1]);
         if (packet.EKB[x].ekid < 128)
         {
             report.af = 1;
@@ -146,12 +146,12 @@ int32_t Crypto_Key_OTAR(void)
             for (y = count; y < (32 + count); y++)
             { 
                 // Encrypted Key
-                packet.EKB[x].ek[y - count] = sdls_resp_pkt.pdu.data[y];
+                packet.EKB[x].ek[y - count] = sdls_frame.pdu.data[y];
 #ifdef SA_DEBUG
                 printf("\t packet.EKB[%d].ek[%d] = 0x%02x\n", x, y - count, packet.EKB[x].ek[y - count]);
 #endif
                 // Setup Key Ring
-                ekp->value[y - count] = sdls_resp_pkt.pdu.data[y];
+                ekp->value[y - count] = sdls_frame.pdu.data[y];
             }
             count = count + 32;
 
@@ -300,7 +300,7 @@ int32_t Crypto_Key_update(uint8_t state)
 int32_t Crypto_Key_inventory(uint8_t* ingest, int* count)
 {
     // Local variables
-    SDLS_KEY_INVENTORY_t packet;
+    SDLS_KEY_INVENTORY_CMD_t packet;
     uint16_t range = 0;
     int32_t status = CRYPTO_LIB_SUCCESS;
     crypto_key_t* ekp = NULL;
@@ -313,22 +313,31 @@ int32_t Crypto_Key_inventory(uint8_t* ingest, int* count)
     }
 
     // Read in PDU
-    packet.kid_first = ((uint8_t)sdls_resp_pkt.pdu.data[*count] << 8) | ((uint8_t)sdls_resp_pkt.pdu.data[*count + 1]);
+    packet.kid_first = ((uint8_t)sdls_frame.pdu.data[*count] << 8) | ((uint8_t)sdls_frame.pdu.data[*count + 1]);
     *count = *count + 2;
-    packet.kid_last = ((uint8_t)sdls_resp_pkt.pdu.data[*count] << 8) | ((uint8_t)sdls_resp_pkt.pdu.data[*count + 1]);
+    packet.kid_last = ((uint8_t)sdls_frame.pdu.data[*count] << 8) | ((uint8_t)sdls_frame.pdu.data[*count + 1]);
     *count = *count + 2;
 
     // Prepare for Reply
-    range = packet.kid_last - packet.kid_first;
-    sdls_resp_pkt.pdu.hdr.pdu_len = 2 + (range * (2 + 1));
-    sdls_resp_pkt.hdr.pkt_length = sdls_resp_pkt.pdu.hdr.pdu_len + 9;
-    *count = Crypto_Prep_Reply(ingest, 128);
+    range = packet.kid_last - packet.kid_first + 1;
+    sdls_resp_pkt.pdu.hdr.pdu_len = (sizeof(sdls_resp_pkt.pdu.hdr) + (SDLS_KEY_INVENTORY_RPLY_SIZE * (range))) * 8;
+    sdls_resp_pkt.hdr.pkt_length = (sdls_resp_pkt.pdu.hdr.pdu_len / 8) + 9;
+    *count = Crypto_Prep_Reply(sdls_ep_reply, 128);
+    printf("RESP_LEN: %d\n", *count);
+    sdls_resp_pkt.pdu.data[*count] = ((range & 0xFF00) >> 8);
+    sdls_ep_reply[*count] = ((range & 0xFF00) >> 8);
     ingest[*count += 1] = (range & 0xFF00) >> 8;
+    sdls_resp_pkt.pdu.data[*count] = (range & 0x00FF);
+    sdls_ep_reply[*count] = (range & 0x00FF);
     ingest[*count += 1] = (range & 0x00FF);
-    for (x = packet.kid_first; x < packet.kid_last; x++)
+    for (x = packet.kid_first; x <= packet.kid_last; x++)
     { 
         // Key ID
+        sdls_resp_pkt.pdu.data[*count] = ((x & 0xFF00) >> 8);
+        sdls_ep_reply[*count] = ((x & 0xFF00) >> 8);
         ingest[*count += 1] = (x & 0xFF00) >> 8;
+        sdls_resp_pkt.pdu.data[*count] = (x & 0x00FF);
+        sdls_ep_reply[*count] = (x & 0x00FF);
         ingest[*count += 1] = (x & 0x00FF);
         // Get Key
         ekp = key_if->get_key(x);
@@ -337,8 +346,18 @@ int32_t Crypto_Key_inventory(uint8_t* ingest, int* count)
             return CRYPTO_LIB_ERR_KEY_ID_ERROR;
         }
         // Key State
+        sdls_resp_pkt.pdu.data[*count] = ekp->key_state;
+        sdls_ep_reply[*count] = ekp->key_state;
         ingest[*count += 1] = ekp->key_state;
     }
+#ifdef DEBUG
+    printf("Key Inventory Reply: 0x");
+    for (x = 0; x < sdls_resp_pkt.hdr.pkt_length; x++)
+    {
+        printf("%02x", sdls_ep_reply[x]);
+    }
+    printf("\n");
+#endif
     return status;
 }
 
@@ -351,11 +370,12 @@ int32_t Crypto_Key_verify(TC_t* tc_frame, int* count)
 {
     // Local variables
     SDLS_KEYV_CMD_t packet;
-    int pdu_keys = sdls_resp_pkt.pdu.hdr.pdu_len / SDLS_KEYV_CMD_BLK_SIZE;
+    int pdu_keys = sdls_frame.pdu.hdr.pdu_len / SDLS_KEYV_CMD_BLK_SIZE;
     int x;
     int y;
     int32_t status = CRYPTO_LIB_SUCCESS;
     crypto_key_t* ekp = NULL;
+    tc_frame = tc_frame;
 
     if (key_if == NULL)
     {
@@ -371,7 +391,7 @@ int32_t Crypto_Key_verify(TC_t* tc_frame, int* count)
     for (x = 0; x < pdu_keys; x++)
     {
         // Key ID
-        packet.blk[x].kid = ((uint8_t)sdls_resp_pkt.pdu.data[*count] << 8) | ((uint8_t)sdls_resp_pkt.pdu.data[*count + 1]);
+        packet.blk[x].kid = ((uint8_t)sdls_frame.pdu.data[*count] << 8) | ((uint8_t)sdls_frame.pdu.data[*count + 1]);
         *count += 2;
 #ifdef PDU_DEBUG
         printf("\tCrypto_Key_verify: Block %d Key ID is %d ", x, packet.blk[x].kid);
@@ -379,7 +399,7 @@ int32_t Crypto_Key_verify(TC_t* tc_frame, int* count)
         // Key Challenge
         for (y = 0; y < CHALLENGE_SIZE; y++)
         {
-            packet.blk[x].challenge[y] = sdls_resp_pkt.pdu.data[*count];
+            packet.blk[x].challenge[y] = sdls_frame.pdu.data[*count];
             *count += 1;
         }
 #ifdef PDU_DEBUG
@@ -388,16 +408,16 @@ int32_t Crypto_Key_verify(TC_t* tc_frame, int* count)
     }
     
     // Prepare for Reply
-    sdls_resp_pkt.pdu.hdr.pdu_len = pdu_keys * (SDLS_KEYV_KEY_ID_LEN + SDLS_KEYV_IV_LEN + CHALLENGE_SIZE + CHALLENGE_MAC_SIZE) * 8;
+    sdls_frame.pdu.hdr.pdu_len = pdu_keys * (SDLS_KEYV_KEY_ID_LEN + SDLS_KEYV_IV_LEN + CHALLENGE_SIZE + CHALLENGE_MAC_SIZE) * 8;
 
     // length = pdu_len + HDR + PUS - 1 (per CCSDS Convention)
     if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
     {
-        sdls_resp_pkt.hdr.pkt_length =  CCSDS_HDR_SIZE + CCSDS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_resp_pkt.pdu.hdr.pdu_len/8) - 1 ;
+        sdls_frame.hdr.pkt_length =  CCSDS_HDR_SIZE + CCSDS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.pdu.hdr.pdu_len/8) - 1 ;
     }
     else
     {
-        sdls_resp_pkt.hdr.pkt_length =  CCSDS_HDR_SIZE + SDLS_TLV_HDR_SIZE + (sdls_resp_pkt.pdu.hdr.pdu_len/8) - 1;
+        sdls_frame.hdr.pkt_length =  CCSDS_HDR_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.pdu.hdr.pdu_len/8) - 1;
     }
 
     *count = Crypto_Prep_Reply(sdls_ep_reply, 128);
@@ -427,9 +447,9 @@ int32_t Crypto_Key_verify(TC_t* tc_frame, int* count)
         // Initialization Vector
         for (y = 0; y < SDLS_KEYV_IV_LEN; y++)
         {
-            sdls_resp_pkt.pdu.data[pdu_data_idx] = *(tc_frame->tc_sec_header.iv + y);
-            sdls_ep_keyv_reply.blk[x].iv[y] = *(tc_frame->tc_sec_header.iv + y);
-            sdls_ep_reply[pdu_data_idx] = *(tc_frame->tc_sec_header.iv + y);
+            sdls_resp_pkt.pdu.data[pdu_data_idx] =0x00; //= *(tc_frame->tc_sec_header.iv + y);
+            sdls_ep_keyv_reply.blk[x].iv[y] =0x00; //= *(tc_frame->tc_sec_header.iv + y);
+            sdls_ep_reply[pdu_data_idx] =0x00; //= *(tc_frame->tc_sec_header.iv + y);
             pdu_data_idx += 1;
             *count += 1;
         }

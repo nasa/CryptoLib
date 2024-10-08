@@ -176,8 +176,6 @@ void Crypto_TM_Calc_PDU_MAC(uint16_t* pdu_len, uint16_t byte_idx, SecurityAssoci
 int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t* sa_ptr, uint8_t ecs_is_aead_algorithm, uint16_t byte_idx, uint8_t* p_new_dec_frame, uint16_t pdu_len, uint8_t* p_ingest, crypto_key_t* ekp, crypto_key_t* akp, uint8_t iv_loc, int mac_loc, uint16_t aad_len, uint8_t* aad, uint8_t** pp_processed_frame, uint16_t* p_decrypted_length);
 void Crypto_TM_Process_Debug_Print(uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t* sa_ptr);
 
-
-extern uint8_t Crypto_Prep_Reply(uint8_t* ingest, uint8_t appID);
 extern int32_t Crypto_increment(uint8_t* num, int length);
 int32_t Crypto_Get_tmLength(int len);
 uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id);
@@ -199,6 +197,11 @@ int32_t Crypto_Get_ACS_Algo_Keylen(uint8_t algo);
 int32_t Crypto_Check_Anti_Replay_Verify_Pointers(SecurityAssociation_t* sa_ptr, uint8_t* arsn, uint8_t* iv);
 int32_t Crypto_Check_Anti_Replay_ARSNW(SecurityAssociation_t* sa_ptr, uint8_t* arsn, int8_t* arsn_valid);
 int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t* sa_ptr, uint8_t* iv, int8_t* iv_valid);
+
+// SDLS Related Functions
+extern uint8_t Crypto_Prep_Reply(uint8_t* ingest, uint8_t appID);
+extern void Crypto_Print_Sdls_Ep_Reply(void);
+extern int32_t Crypto_Get_Sdls_Ep_Reply(uint8_t* buffer, uint16_t* length);
 
 // Key Management Functions
 int32_t Crypto_Key_OTAR(void);
