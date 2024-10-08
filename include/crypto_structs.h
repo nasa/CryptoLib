@@ -220,9 +220,16 @@ typedef struct
 typedef struct
 {
     uint16_t spi : 16; // Security Parameter Index
-    uint8_t lpid : 8;  // Procedure ID from Last State Transition
+    uint8_t lpid : 8;  // Procedure ID from Last State Transition or Current State
 } SDLS_SA_STATUS_RPLY_t;
 #define SDLS_SA_STATUS_RPLY_SIZE (sizeof(SDLS_SA_STATUS_RPLY_t))
+
+typedef struct
+{
+    uint16_t spi : 16;        // Security Parameter Index
+    uint8_t arsn[ARSN_SIZE];  // Anti-Replay Sequence Number
+} SDLS_SA_READ_ARSN_RPLY_t;
+#define SDLS_SA_READ_ARSN_RPLY_SIZE (sizeof(SDLS_SA_READ_ARSN_RPLY_t))
 
 typedef struct
 {

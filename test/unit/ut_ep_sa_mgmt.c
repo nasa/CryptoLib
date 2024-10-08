@@ -175,6 +175,9 @@ UTEST(EP_SA_MGMT, SA_6_READ_ARSN)
     // Modify SA 1
     sa_if->sa_get_from_spi(6, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
+    test_association->shivf_len = 0;
+    test_association->iv_len = 0;
+    test_association->ecs = 0;
     test_association->arsn_len = 4;
     test_association->arsn[0] = 0xDE;
     test_association->arsn[1] = 0xAD;

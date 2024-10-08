@@ -254,15 +254,6 @@ int32_t Crypto_SA_readARSN(uint8_t* ingest, int* count_ptr)
         // Read ingest
         spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
 
-        // Prepare for Reply
-        sdls_resp_pkt.pdu.hdr.pdu_len = (2 + IV_SIZE) * 8;
-        sdls_resp_pkt.hdr.pkt_length = (sdls_resp_pkt.pdu.hdr.pdu_len / 8) + 9;
-        *count_ptr = Crypto_Prep_Reply(ingest, 128);
-
-        // Write SPI to reply
-        ingest[*count_ptr += 1] = (spi & 0xFF00) >> 8;
-        ingest[*count_ptr += 1] = (spi & 0x00FF);
-
         if (sa_if->sa_get_from_spi(spi, &sa_ptr) != CRYPTO_LIB_SUCCESS)
         {
             // TODO - Error handling
@@ -271,21 +262,41 @@ int32_t Crypto_SA_readARSN(uint8_t* ingest, int* count_ptr)
 
         if (status == CRYPTO_LIB_SUCCESS)
         {
+            // Prepare for Reply
+            sdls_frame.pdu.hdr.pdu_len = (SPI_LEN + sa_ptr->arsn_len) * 8; // bits
+            sdls_frame.hdr.pkt_length = (sdls_frame.pdu.hdr.pdu_len / 8) + 9;
+            *count_ptr = Crypto_Prep_Reply(sdls_ep_reply, 128);
+
+            // Write SPI to reply
+            sdls_ep_reply[*count_ptr] = (spi & 0xFF00) >> 8;
+            *count_ptr += 1;
+            sdls_ep_reply[*count_ptr] = (spi & 0x00FF);
+            *count_ptr += 1;
+
+            for (x = 0; x < sa_ptr->arsn_len; x++)
+            {
+                sdls_ep_reply[*count_ptr] = *(sa_ptr->arsn + x);
+                *count_ptr += 1;
+            }
+
             if (sa_ptr->shivf_len > 0 && sa_ptr->ecs == 1 && sa_ptr->acs == 1)
             { // Set IV - authenticated encryption
                 for (x = 0; x < sa_ptr->shivf_len - 1; x++)
                 {
-                    ingest[*count_ptr += 1] = *(sa_ptr->iv + x);
+                    sdls_ep_reply[*count_ptr] = *(sa_ptr->iv + x);
+                    *count_ptr += 1;
                 }
 
                 // TODO: Do we need this?
                 if (*(sa_ptr->iv + sa_ptr->shivf_len - 1) > 0)
                 { // Adjust to report last received, not expected
-                    ingest[*count_ptr += 1] = *(sa_ptr->iv + sa_ptr->shivf_len - 1) - 1;
+                    sdls_ep_reply[*count_ptr] = *(sa_ptr->iv + sa_ptr->shivf_len - 1) - 1;
+                    *count_ptr += 1;
                 }
                 else
                 {
-                    ingest[*count_ptr += 1] = *(sa_ptr->iv + sa_ptr->shivf_len - 1);
+                    sdls_ep_reply[*count_ptr] = *(sa_ptr->iv + sa_ptr->shivf_len - 1);
+                    *count_ptr += 1;
                 }
             }
             else
@@ -305,6 +316,12 @@ int32_t Crypto_SA_readARSN(uint8_t* ingest, int* count_ptr)
                 }
                 printf("\n");
             }
+            printf("SA Read ARSN Reply: 0x");
+            for (int x = 0; x < *count_ptr; x++)
+            {
+                printf("%02x", sdls_ep_reply[x]);
+            }
+            printf("\n");
 #endif
         }
     }
