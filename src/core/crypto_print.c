@@ -104,11 +104,11 @@ void Crypto_Print_Sdls_Ep_Reply(void)
     uint16_t pkt_length = 0;
 
     // Check for Null Inputs
-    if (sdls_ep_reply == NULL)
-    {
-        printf(KRED "The sdls_ep_reply buffer is null... this isn't good as it should be static in memory!\n" RESET);
-        return;
-    }
+    // if (sdls_ep_reply == NULL)
+    // {
+    //     printf(KRED "The sdls_ep_reply buffer is null... this isn't good as it should be static in memory!\n" RESET);
+    //     return;
+    // }
 
     pkt_length = ((sdls_ep_reply[4] << 8) | sdls_ep_reply[5]) + 1;
     

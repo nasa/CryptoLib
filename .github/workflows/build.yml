@@ -11,6 +11,8 @@ jobs:
   minimal_build:
     # Container Setup
     runs-on: ubuntu-latest
+    container:
+        image: ivvitc/cryptolib:20240814
     steps:
     - uses: actions/checkout@v4
     - name: Update
@@ -18,7 +20,7 @@ jobs:
     - name: Install Dependencies
       run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3
     - name: Install Python Libraries
-      run: pip install pycryptodome --break-system-packages
+      run: pip install pycryptodome
     - name: Install Libgcrypt
       run: >
         curl  
