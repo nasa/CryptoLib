@@ -16,9 +16,11 @@ jobs:
     - name: Update
       run: sudo apt-get update
     - name: Install Dependencies
-      run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 
+      run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 pipx
+    - name: Verify PipX
+      run: pipx ensurepath
     - name: Install Python Libraries
-      run: sudo apt install python3-pycryptodome
+      run: pipx install pycryptodome
     - name: Install Libgcrypt
       run: >
         curl  
