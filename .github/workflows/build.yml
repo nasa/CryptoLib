@@ -18,7 +18,7 @@ jobs:
     - name: Install Dependencies
       run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3
     - name: Install Python Libraries
-      run: pipx install pycryptodome --break-system-packages
+      run: pip install pycryptodome --break-system-packages
     - name: Install Libgcrypt
       run: >
         curl  
