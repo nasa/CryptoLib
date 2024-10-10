@@ -257,7 +257,7 @@ int32_t Crypto_Key_update(uint8_t state)
                 mc_log.blk[log_count++].em_len = 4;
             }
             printf(KRED "Error: MKID state cannot be changed! \n" RESET);
-            // TODO: Exit
+            return CRYPTO_LIB_ERR_KEY_ID_ERROR;
         }
 
         ekp = key_if->get_key(packet.kblk[x].kid);
@@ -287,6 +287,7 @@ int32_t Crypto_Key_update(uint8_t state)
                 mc_log.blk[log_count++].em_len = 4;
             }
             printf(KRED "Error: Key %d cannot transition to desired state! \n" RESET, packet.kblk[x].kid);
+            return CRYPTO_LIB_ERR_KEY_STATE_TRANSITION_ERROR;
         }
     }
     return CRYPTO_LIB_SUCCESS;
