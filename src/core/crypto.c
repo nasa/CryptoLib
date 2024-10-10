@@ -33,7 +33,6 @@ CFS_MODULE_DECLARE_LIB(crypto);
 ** Global Variables
 */
 // crypto_key_t ak_ring[NUM_KEYS];
-CCSDS_t sdls_resp_pkt;
 // SDLS Replies
 SDLS_KEYV_RPLY_t sdls_ep_keyv_reply;       // Reply block for challenged keys
 uint8_t sdls_ep_reply[TC_MAX_FRAME_SIZE];

@@ -254,7 +254,6 @@ extern char* crypto_deep_copy_string(char* src_string);
 ** Extern Global Variables
 */ 
 // Data stores used in multiple components
-extern CCSDS_t sdls_resp_pkt;
 extern CCSDS_t sdls_frame;
 extern SDLS_KEYV_RPLY_t sdls_ep_keyv_reply;
 extern uint8_t sdls_ep_reply[TC_MAX_FRAME_SIZE];

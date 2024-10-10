@@ -44,7 +44,7 @@ int32_t Crypto_Key_OTAR(void)
     int x = 0;
     int y;
     int32_t status = CRYPTO_LIB_SUCCESS;
-    // uint16_t pdu_len = (uint16_t) sdls_resp_pkt.pdu.hdr.pdu_len[1] << 8 | sdls_resp_pkt.pdu.hdr.pdu_len[0];
+    // uint16_t pdu_len = (uint16_t) sdls_frame.pdu.hdr.pdu_len[1] << 8 | sdls_frame.pdu.hdr.pdu_len[0];
     int pdu_keys = (sdls_frame.pdu.hdr.pdu_len - 30) / (2 + 32);
     int w;
     crypto_key_t* ekp = NULL;
@@ -185,7 +185,7 @@ int32_t Crypto_Key_update(uint8_t state)
 { // Local variables
     SDLS_KEY_BLK_t packet;
     int count = 0;
-    int pdu_keys = sdls_resp_pkt.pdu.hdr.pdu_len / 2;
+    int pdu_keys = sdls_frame.pdu.hdr.pdu_len / 2;
     int32_t status;
     crypto_key_t* ekp = NULL;
     int x;
@@ -202,7 +202,7 @@ int32_t Crypto_Key_update(uint8_t state)
     // Read in PDU
     for (x = 0; x < pdu_keys; x++)
     {
-        packet.kblk[x].kid = (sdls_resp_pkt.pdu.data[count] << 8) | (sdls_resp_pkt.pdu.data[count + 1]);
+        packet.kblk[x].kid = (sdls_frame.pdu.data[count] << 8) | (sdls_frame.pdu.data[count + 1]);
         count = count + 2;
 #ifdef PDU_DEBUG
         if (x != (pdu_keys - 1))
@@ -421,11 +421,11 @@ int32_t Crypto_Key_verify(TC_t* tc_frame)
         // Key ID
         sdls_ep_keyv_reply.blk[x].kid = packet.blk[x].kid;
 
-        sdls_resp_pkt.pdu.data[pdu_data_idx] = (packet.blk[x].kid & 0xFF00) >> 8;
+        sdls_frame.pdu.data[pdu_data_idx] = (packet.blk[x].kid & 0xFF00) >> 8;
         sdls_ep_reply[pdu_data_idx] = (packet.blk[x].kid & 0xFF00) >> 8;
         pdu_data_idx += 1;
         
-        sdls_resp_pkt.pdu.data[pdu_data_idx] = (packet.blk[x].kid & 0x00FF);
+        sdls_frame.pdu.data[pdu_data_idx] = (packet.blk[x].kid & 0x00FF);
         sdls_ep_reply[pdu_data_idx] = (packet.blk[x].kid & 0x00FF);
         pdu_data_idx += 1;
         count += 2;
@@ -440,14 +440,14 @@ int32_t Crypto_Key_verify(TC_t* tc_frame)
         // Initialization Vector
         for (y = 0; y < SDLS_KEYV_IV_LEN; y++)
         {
-            sdls_resp_pkt.pdu.data[pdu_data_idx] =0x00; //= *(tc_frame->tc_sec_header.iv + y);
+            sdls_frame.pdu.data[pdu_data_idx] =0x00; //= *(tc_frame->tc_sec_header.iv + y);
             sdls_ep_keyv_reply.blk[x].iv[y] =0x00; //= *(tc_frame->tc_sec_header.iv + y);
             sdls_ep_reply[pdu_data_idx] =0x00; //= *(tc_frame->tc_sec_header.iv + y);
             pdu_data_idx += 1;
             count += 1;
         }
         // ***** This increments the lowest bytes of the IVs so they aren't identical
-        sdls_resp_pkt.pdu.data[pdu_data_idx-1] = sdls_resp_pkt.pdu.data[pdu_data_idx-1] + x + 1; 
+        sdls_frame.pdu.data[pdu_data_idx-1] = sdls_frame.pdu.data[pdu_data_idx-1] + x + 1; 
         sdls_ep_keyv_reply.blk[x].iv[11] = sdls_ep_keyv_reply.blk[x].iv[SDLS_KEYV_IV_LEN-1] + x + 1;
         sdls_ep_reply[pdu_data_idx-1] = sdls_ep_reply[pdu_data_idx-1] + x + 1;
 
@@ -475,11 +475,11 @@ int32_t Crypto_Key_verify(TC_t* tc_frame)
                                                    );
 
         // Copy from the KEYV Blocks into the output PDU
-        memcpy(&sdls_resp_pkt.pdu.data[pdu_data_idx], &(sdls_ep_keyv_reply.blk[x].challenged[0]), CHALLENGE_SIZE);
+        memcpy(&sdls_frame.pdu.data[pdu_data_idx], &(sdls_ep_keyv_reply.blk[x].challenged[0]), CHALLENGE_SIZE);
         memcpy(&sdls_ep_reply[pdu_data_idx], &(sdls_ep_keyv_reply.blk[x].challenged[0]), CHALLENGE_SIZE);
         pdu_data_idx += CHALLENGE_SIZE;
 
-        memcpy(&sdls_resp_pkt.pdu.data[pdu_data_idx], &(sdls_ep_keyv_reply.blk[x].mac[0]), CHALLENGE_MAC_SIZE);
+        memcpy(&sdls_frame.pdu.data[pdu_data_idx], &(sdls_ep_keyv_reply.blk[x].mac[0]), CHALLENGE_MAC_SIZE);
         memcpy(&sdls_ep_reply[pdu_data_idx], &(sdls_ep_keyv_reply.blk[x].mac[0]), CHALLENGE_MAC_SIZE);
         pdu_data_idx += CHALLENGE_MAC_SIZE;
 
