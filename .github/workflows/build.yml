@@ -59,7 +59,7 @@ jobs:
     - name: Install Dependencies
       run: apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3
     - name: Install Python Libraries
-      run: apt install python3-pycryptodome
+      run: pip install pycryptodome
     - name: Install Libgcrypt
       run: >
         curl  
@@ -159,7 +159,7 @@ jobs:
     - name: Install Dependencies
       run: apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 autoconf libtool
     - name: Install Python Libraries
-      run: apt install python3-pycryptodome
+      run: pip install pycryptodome
     - name: Install Libgcrypt
       run: >
         curl  
