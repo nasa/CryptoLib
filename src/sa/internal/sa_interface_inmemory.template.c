@@ -1198,7 +1198,7 @@ static int32_t sa_rekey(void)
             count = count + 2;
 
             // Authentication Key
-            // sa[spi].akid = ((uint8_t)sdls_resp_pkt.pdu.data[count] << 8) | (uint8_t)sdls_resp_pkt.pdu.data[count+1];
+            // sa[spi].akid = ((uint8_t)sdls_frame.pdu.data[count] << 8) | (uint8_t)sdls_frame.pdu.data[count+1];
             // count = count + 2;
 
             // Anti-Replay Seq Num

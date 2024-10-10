@@ -177,36 +177,36 @@ void Crypto_fsrPrint(SDLS_FSR_t* report)
 /**
  * @brief Function: Crypto_ccsdsPrint
  * Prints the current CCSDS in memory.
- * @param sdls_resp_pkt: CCSDS_t*
+ * @param sdls_frame: CCSDS_t*
  **/
-void Crypto_ccsdsPrint(CCSDS_t* sdls_resp_pkt)
+void Crypto_ccsdsPrint(CCSDS_t* sdls_frame)
 {
     printf("Current CCSDS in memory is: \n");
     printf("\t Primary Header\n");
-    printf("\t\t pvn        = 0x%01x \n", sdls_resp_pkt->hdr.pvn);
-    printf("\t\t type       = 0x%01x \n", sdls_resp_pkt->hdr.type);
-    printf("\t\t shdr       = 0x%01x \n", sdls_resp_pkt->hdr.shdr);
-    printf("\t\t appID      = 0x%03x \n", sdls_resp_pkt->hdr.appID);
-    printf("\t\t seq        = 0x%01x \n", sdls_resp_pkt->hdr.seq);
-    printf("\t\t pktid      = 0x%04x \n", sdls_resp_pkt->hdr.pktid);
-    printf("\t\t pkt_length = 0x%04x \n", sdls_resp_pkt->hdr.pkt_length);
+    printf("\t\t pvn        = 0x%01x \n", sdls_frame->hdr.pvn);
+    printf("\t\t type       = 0x%01x \n", sdls_frame->hdr.type);
+    printf("\t\t shdr       = 0x%01x \n", sdls_frame->hdr.shdr);
+    printf("\t\t appID      = 0x%03x \n", sdls_frame->hdr.appID);
+    printf("\t\t seq        = 0x%01x \n", sdls_frame->hdr.seq);
+    printf("\t\t pktid      = 0x%04x \n", sdls_frame->hdr.pktid);
+    printf("\t\t pkt_length = 0x%04x \n", sdls_frame->hdr.pkt_length);
     printf("\t PUS Header\n");
-    printf("\t\t shf        = 0x%01x \n", sdls_resp_pkt->pus.shf);
-    printf("\t\t pusv       = 0x%01x \n", sdls_resp_pkt->pus.pusv);
-    printf("\t\t ack        = 0x%01x \n", sdls_resp_pkt->pus.ack);
-    printf("\t\t st         = 0x%02x \n", sdls_resp_pkt->pus.st);
-    printf("\t\t sst        = 0x%02x \n", sdls_resp_pkt->pus.sst);
-    printf("\t\t sid        = 0x%01x \n", sdls_resp_pkt->pus.sid);
-    printf("\t\t spare      = 0x%01x \n", sdls_resp_pkt->pus.spare);
+    printf("\t\t shf        = 0x%01x \n", sdls_frame->pus.shf);
+    printf("\t\t pusv       = 0x%01x \n", sdls_frame->pus.pusv);
+    printf("\t\t ack        = 0x%01x \n", sdls_frame->pus.ack);
+    printf("\t\t st         = 0x%02x \n", sdls_frame->pus.st);
+    printf("\t\t sst        = 0x%02x \n", sdls_frame->pus.sst);
+    printf("\t\t sid        = 0x%01x \n", sdls_frame->pus.sid);
+    printf("\t\t spare      = 0x%01x \n", sdls_frame->pus.spare);
     printf("\t PDU \n");
-    printf("\t\t type       = 0x%01x \n", sdls_resp_pkt->pdu.hdr.type);
-    printf("\t\t uf         = 0x%01x \n", sdls_resp_pkt->pdu.hdr.uf);
-    printf("\t\t sg         = 0x%01x \n", sdls_resp_pkt->pdu.hdr.sg);
-    printf("\t\t pid        = 0x%01x \n", sdls_resp_pkt->pdu.hdr.pid);
-    printf("\t\t pdu_len    = 0x%04x \n", sdls_resp_pkt->pdu.hdr.pdu_len);
-    printf("\t\t data[0]    = 0x%02x \n", sdls_resp_pkt->pdu.data[0]);
-    printf("\t\t data[1]    = 0x%02x \n", sdls_resp_pkt->pdu.data[1]);
-    printf("\t\t data[2]    = 0x%02x \n", sdls_resp_pkt->pdu.data[2]);
+    printf("\t\t type       = 0x%01x \n", sdls_frame->pdu.hdr.type);
+    printf("\t\t uf         = 0x%01x \n", sdls_frame->pdu.hdr.uf);
+    printf("\t\t sg         = 0x%01x \n", sdls_frame->pdu.hdr.sg);
+    printf("\t\t pid        = 0x%01x \n", sdls_frame->pdu.hdr.pid);
+    printf("\t\t pdu_len    = 0x%04x \n", sdls_frame->pdu.hdr.pdu_len);
+    printf("\t\t data[0]    = 0x%02x \n", sdls_frame->pdu.data[0]);
+    printf("\t\t data[1]    = 0x%02x \n", sdls_frame->pdu.data[1]);
+    printf("\t\t data[2]    = 0x%02x \n", sdls_frame->pdu.data[2]);
     printf("\n");
 }
 

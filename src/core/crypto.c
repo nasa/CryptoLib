@@ -845,7 +845,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, uin
             }
 
 #ifdef CCSDS_DEBUG
-            Crypto_ccsdsPrint(&sdls_resp_pkt);
+            Crypto_ccsdsPrint(&sdls_frame);
 #endif
 
             // Determine type of PDU
