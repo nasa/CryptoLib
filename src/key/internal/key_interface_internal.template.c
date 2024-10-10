@@ -54,7 +54,6 @@ static crypto_key_t* get_key(uint32_t key_id)
 static int32_t key_init(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-
     // Initialize all to zero
     for(uint32_t i = 0; i < NUM_KEYS; i++)
     {
@@ -602,7 +601,6 @@ static int32_t key_init(void)
     #ifdef DEBUG
         printf(KGRN "Key internal interface intialized \n" RESET);
     #endif
-
     return status;
 }
 

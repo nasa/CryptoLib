@@ -1882,8 +1882,8 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t* ingest, int* len_ingest, TC_t* tc
         mc_if->mc_log(status);
         return status; // Cryptography IF call failed, return.
     }
-    
     // Extended PDU processing, if applicable
+    // TODO: Validiate using correct SA
     if (status == CRYPTO_LIB_SUCCESS && crypto_config.process_sdls_pdus == TC_PROCESS_SDLS_PDUS_TRUE)
     {
         status = Crypto_Process_Extended_Procedure_Pdu(tc_sdls_processed_frame, ingest);
