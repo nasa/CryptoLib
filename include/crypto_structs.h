@@ -243,7 +243,7 @@ typedef struct
     uint8_t emt : 8;       // Event Message Tag
     uint16_t em_len : 16;  // Event Message Length
     uint8_t emv[EMV_SIZE]; // Event Message Value
-} SDLS_MC_DUMP_RPLY_t;
+} __attribute__ ((packed)) SDLS_MC_DUMP_RPLY_t;
 #define SDLS_MC_DUMP_RPLY_SIZE (sizeof(SDLS_MC_DUMP_RPLY_t))
 
 typedef struct

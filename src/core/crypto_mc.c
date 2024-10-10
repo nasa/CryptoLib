@@ -106,7 +106,7 @@ int32_t Crypto_MC_dump(uint8_t* ingest)
 
     // Prepare for Reply
     sdls_frame.pdu.hdr.pdu_len = SDLS_MC_DUMP_RPLY_SIZE * log_count * 8; // SDLS_MC_DUMP_RPLY_SIZE
-    sdls_frame.hdr.pkt_length = (sdls_frame.pdu.hdr.pdu_len / 8) + 1 + 9;
+    sdls_frame.hdr.pkt_length = (sdls_frame.pdu.hdr.pdu_len / 8) + SDLS_TLV_HDR_SIZE + 9;
     count = Crypto_Prep_Reply(sdls_ep_reply, 128);
     // PDU
     for (x = 0; x < log_count; x++)

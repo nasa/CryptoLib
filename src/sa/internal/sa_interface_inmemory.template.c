@@ -1561,7 +1561,7 @@ static int32_t sa_status(uint8_t* ingest)
             printf("SIZE: %ld\n", SDLS_SA_STATUS_RPLY_SIZE);
             // Prepare for Reply
             sdls_frame.pdu.hdr.pdu_len = SDLS_SA_STATUS_RPLY_SIZE * 8;
-            sdls_frame.hdr.pkt_length = (sdls_frame.pdu.hdr.pdu_len / 8) + SDLS_TLV_HDR_SIZE + 9; // TODO: Why +2?
+            sdls_frame.hdr.pkt_length = (sdls_frame.pdu.hdr.pdu_len / 8) + SDLS_TLV_HDR_SIZE + 9;
             count = Crypto_Prep_Reply(sdls_ep_reply, 128);
             // PDU
             sdls_ep_reply[count++] = (spi & 0xFF00) >> 8;
