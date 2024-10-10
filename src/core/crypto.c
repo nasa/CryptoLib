@@ -304,7 +304,7 @@ int32_t Crypto_Get_Sdls_Ep_Reply(uint8_t* buffer, uint16_t* length)
         return status;
     }
 
-    pkt_length = sdls_frame.hdr.pkt_length;
+    pkt_length = sdls_frame.hdr.pkt_length + 1; // TODO: Confirm `+1` is ok here
 
     // Sanity Check on length
     if (pkt_length > TC_MAX_FRAME_SIZE)
@@ -400,8 +400,6 @@ uint16_t Crypto_Calc_CRC16(uint8_t* data, int size)
 int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    int count = 0;
-    int* count_ptr = &count;
 
     // Check null pointer
     if (tc_frame == NULL)
@@ -420,13 +418,13 @@ int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
                 switch (sdls_frame.pdu.hdr.sg)
                 {
                 case SG_KEY_MGMT: // Key Management Procedure
-                    status = Crypto_SG_KEY_MGMT(ingest, tc_frame, count_ptr);
+                    status = Crypto_SG_KEY_MGMT(ingest, tc_frame);
                     break;
                 case SG_SA_MGMT: // Security Association Management Procedure
-                    status = Crypto_SG_SA_MGMT(ingest, tc_frame, count_ptr);
+                    status = Crypto_SG_SA_MGMT(ingest, tc_frame);
                     break;
                 case SG_SEC_MON_CTRL: // Security Monitoring & Control Procedure
-                    status = Crypto_SEC_MON_CTRL(ingest, count_ptr);
+                    status = Crypto_SEC_MON_CTRL(ingest);
                     break;
                 default: // ERROR
 #ifdef PDU_DEBUG
@@ -453,19 +451,6 @@ int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
 #endif
             break;
         }
-
-#ifdef CCSDS_DEBUG
-        int x;
-        if ((*count_ptr > 0))
-        {
-            printf(KMAG "CCSDS message put on software bus: 0x" RESET);
-            for (x = 0; x < *count_ptr; x++)
-            {
-                printf(KMAG "%02x" RESET, (uint8_t)ingest[x]);
-            }
-            printf("\n");
-        }
-#endif
     }
     return status;
 }
@@ -477,7 +462,7 @@ int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
  * @param tc_frame: TC_t*
  * @return int32: Success/Failure
  **/
-int32_t Crypto_SG_KEY_MGMT(uint8_t* ingest, TC_t* tc_frame, int* count_ptr)
+int32_t Crypto_SG_KEY_MGMT(uint8_t* ingest, TC_t* tc_frame)
 {
     int status = CRYPTO_LIB_SUCCESS;
     switch (sdls_frame.pdu.hdr.pid)
@@ -504,7 +489,7 @@ int32_t Crypto_SG_KEY_MGMT(uint8_t* ingest, TC_t* tc_frame, int* count_ptr)
 #ifdef PDU_DEBUG
             printf(KGRN "Key Verify\n" RESET);
 #endif
-            status = Crypto_Key_verify(tc_frame, count_ptr);
+            status = Crypto_Key_verify(tc_frame);
             break;
         case PID_KEY_DESTRUCTION:
 #ifdef PDU_DEBUG
@@ -516,7 +501,7 @@ int32_t Crypto_SG_KEY_MGMT(uint8_t* ingest, TC_t* tc_frame, int* count_ptr)
 #ifdef PDU_DEBUG
             printf(KGRN "Key Inventory\n" RESET);
 #endif
-            status = Crypto_Key_inventory(ingest, count_ptr);
+            status = Crypto_Key_inventory(ingest);
             break;
         default:
 #ifdef PDU_DEBUG
@@ -534,7 +519,7 @@ int32_t Crypto_SG_KEY_MGMT(uint8_t* ingest, TC_t* tc_frame, int* count_ptr)
  * @param tc_frame: TC_t*
  * @return int32: Success/Failure
  **/
-int32_t Crypto_SG_SA_MGMT(uint8_t* ingest, TC_t* tc_frame, int* count_ptr)
+int32_t Crypto_SG_SA_MGMT(uint8_t* ingest, TC_t* tc_frame)
 {
     int status = CRYPTO_LIB_SUCCESS;
     switch (sdls_frame.pdu.hdr.pid)
@@ -591,7 +576,7 @@ int32_t Crypto_SG_SA_MGMT(uint8_t* ingest, TC_t* tc_frame, int* count_ptr)
 #ifdef PDU_DEBUG
             printf(KGRN "SA readARSN\n" RESET);
 #endif
-            status = Crypto_SA_readARSN(ingest, count_ptr);
+            status = Crypto_SA_readARSN(ingest);
             break;
         case PID_SA_STATUS:
 #ifdef PDU_DEBUG
@@ -614,7 +599,7 @@ int32_t Crypto_SG_SA_MGMT(uint8_t* ingest, TC_t* tc_frame, int* count_ptr)
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
  **/
-int32_t Crypto_SEC_MON_CTRL(uint8_t* ingest, int* count_ptr)
+int32_t Crypto_SEC_MON_CTRL(uint8_t* ingest)
 {
     int status = CRYPTO_LIB_SUCCESS;
     switch (sdls_frame.pdu.hdr.pid)
@@ -623,31 +608,31 @@ int32_t Crypto_SEC_MON_CTRL(uint8_t* ingest, int* count_ptr)
 #ifdef PDU_DEBUG
             printf(KGRN "MC Ping\n" RESET);
 #endif
-            status = Crypto_MC_ping(ingest, count_ptr);
+            status = Crypto_MC_ping(ingest);
             break;
         case PID_LOG_STATUS:
 #ifdef PDU_DEBUG
             printf(KGRN "MC Status\n" RESET);
 #endif
-            status = Crypto_MC_status(ingest, count_ptr);
+            status = Crypto_MC_status(ingest);
             break;
         case PID_DUMP_LOG:
 #ifdef PDU_DEBUG
             printf(KGRN "MC Dump\n" RESET);
 #endif
-            status = Crypto_MC_dump(ingest, count_ptr);
+            status = Crypto_MC_dump(ingest);
             break;
         case PID_ERASE_LOG:
 #ifdef PDU_DEBUG
             printf(KGRN "MC Erase\n" RESET);
 #endif
-            status = Crypto_MC_erase(ingest, count_ptr);
+            status = Crypto_MC_erase(ingest);
             break;
         case PID_SELF_TEST:
 #ifdef PDU_DEBUG
             printf(KGRN "MC Selftest\n" RESET);
 #endif
-            status = Crypto_MC_selftest(ingest, count_ptr);
+            status = Crypto_MC_selftest(ingest);
             break;
         case PID_ALARM_FLAG:
 #ifdef PDU_DEBUG

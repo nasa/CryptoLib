@@ -1558,9 +1558,10 @@ static int32_t sa_status(uint8_t* ingest)
         // Check SPI exists
         if (spi < NUM_SA)
         {
+            printf("SIZE: %ld\n", SDLS_SA_STATUS_RPLY_SIZE);
             // Prepare for Reply
             sdls_frame.pdu.hdr.pdu_len = SDLS_SA_STATUS_RPLY_SIZE * 8;
-            sdls_frame.hdr.pkt_length = (sdls_frame.pdu.hdr.pdu_len / 8) + 9;
+            sdls_frame.hdr.pkt_length = (sdls_frame.pdu.hdr.pdu_len / 8) + SDLS_TLV_HDR_SIZE + 9; // TODO: Why +2?
             count = Crypto_Prep_Reply(sdls_ep_reply, 128);
             // PDU
             sdls_ep_reply[count++] = (spi & 0xFF00) >> 8;
@@ -1577,12 +1578,12 @@ static int32_t sa_status(uint8_t* ingest)
         Crypto_saPrint(&sa[spi]);
         if (status == CRYPTO_LIB_SUCCESS)
         {
-            printf("SA Status Reply: 0x");
+            printf("SA Status Reply:   0x");
             for (int x = 0; x < count; x++)
             {
-                printf("%02x", sdls_ep_reply[x]);
+                printf("%02X", sdls_ep_reply[x]);
             }
-            printf("\n");
+            printf("\n\n");
         }
 #endif
     }

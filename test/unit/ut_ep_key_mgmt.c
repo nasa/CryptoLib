@@ -1,10 +1,10 @@
-#include "ut_ep_key_validation.h"
+#include "ut_ep_key_mgmt.h"
 #include "crypto.h"
 #include "crypto_error.h"
 #include "sa_interface.h"
 #include "utest.h"
 
-UTEST(EP_KEY_VALIDATION, OTAR_0_140_142)
+UTEST(EP_KEY_MGMT, OTAR_0_140_142)
 {
     remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
@@ -96,7 +96,7 @@ UTEST(EP_KEY_VALIDATION, OTAR_0_140_142)
     free(buffer_OTAR_b);
 }
 
-UTEST(EP_KEY_VALIDATION, ACTIVATE_141_142)
+UTEST(EP_KEY_MGMT, ACTIVATE_141_142)
 {
     remove("sa_save_file.bin");
     uint8_t* ptr_enc_frame = NULL;
@@ -184,7 +184,7 @@ UTEST(EP_KEY_VALIDATION, ACTIVATE_141_142)
     free(buffer_ACTIVATE_b);
 }
 
-UTEST(EP_KEY_VALIDATION, DEACTIVATE_142)
+UTEST(EP_KEY_MGMT, DEACTIVATE_142)
 {
     remove("sa_save_file.bin");
     uint8_t* ptr_enc_frame = NULL;
@@ -274,7 +274,7 @@ UTEST(EP_KEY_VALIDATION, DEACTIVATE_142)
     free(buffer_DEACTIVATE_b);
 }
 
-UTEST(EP_KEY_VALIDATION, INVENTORY_132_134)
+UTEST(EP_KEY_MGMT, INVENTORY_132_134)
 {
     remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
@@ -354,6 +354,29 @@ UTEST(EP_KEY_VALIDATION, INVENTORY_132_134)
     status = Crypto_TC_ProcessSecurity(buffer_INVENTORY_b, &buffer_INVENTORY_len, &tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
+    // Check reply values
+    uint16_t reply_length = 0;
+    uint8_t sdls_ep_reply_local[1024];
+    status = Crypto_Get_Sdls_Ep_Reply(&sdls_ep_reply_local[0], &reply_length);
+    // Expect success
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    // Print local copy
+    printf("SDLS Reply LOCAL:  0x");
+    for (int i =0; i < reply_length; i++)
+    {
+        printf("%02X", sdls_ep_reply_local[i]);
+    }
+    printf("\n\n");
+    // Print Global copy for sanity check
+    Crypto_Print_Sdls_Ep_Reply();
+
+    // Let's compare everything.
+    for (int i = 0; i < reply_length; i++)
+    {
+        ASSERT_EQ(sdls_ep_reply[i], sdls_ep_reply_local[i]);
+    }
+
     printf("\n");
     Crypto_Shutdown();
     free(buffer_nist_iv_b);
@@ -361,7 +384,7 @@ UTEST(EP_KEY_VALIDATION, INVENTORY_132_134)
     ASSERT_EQ(0,0);
 }
 
-UTEST(EP_KEY_VALIDATION, VERIFY_132_134)
+UTEST(EP_KEY_MGMT, VERIFY_132_134)
 {
     remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib

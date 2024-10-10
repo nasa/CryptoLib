@@ -1,5 +1,5 @@
-#ifndef CRYPTOLIB_UT_EP_KEY_VALIDATION_H
-#define CRYPTOLIB_UT_EP_KEY_VALIDATION_H
+#ifndef CRYPTOLIB_UT_EP_KEY_MGMT_H
+#define CRYPTOLIB_UT_EP_KEY_MGMT_H
 
 #ifdef __cplusplus
 extern "C"
@@ -15,4 +15,4 @@ extern "C"
 } /* Close scope of 'extern "C"' declaration which encloses file. */
 #endif
 
-#endif //CRYPTOLIB_UT_EP_KEY_VALIDATION_H
+#endif //CRYPTOLIB_UT_EP_KEY_MGMT_H

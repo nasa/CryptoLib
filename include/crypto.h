@@ -206,16 +206,16 @@ extern int32_t Crypto_Get_Sdls_Ep_Reply(uint8_t* buffer, uint16_t* length);
 // Key Management Functions
 int32_t Crypto_Key_OTAR(void);
 int32_t Crypto_Key_update(uint8_t state);
-int32_t Crypto_Key_inventory(uint8_t* , int*);
-int32_t Crypto_Key_verify(TC_t* tc_frame, int*);
+int32_t Crypto_Key_inventory(uint8_t*);
+int32_t Crypto_Key_verify(TC_t* tc_frame);
 
 // Security Monitoring & Control Procedure
-int32_t Crypto_MC_ping(uint8_t* ingest, int* count_ptr);
-int32_t Crypto_MC_status(uint8_t* ingest, int* count_ptr);
-int32_t Crypto_MC_dump(uint8_t* ingest, int* count_ptr);
-int32_t Crypto_MC_erase(uint8_t* ingest, int* count_ptr);
-int32_t Crypto_MC_selftest(uint8_t* ingest, int* count_ptr);
-int32_t Crypto_SA_readARSN(uint8_t* ingest, int* count_ptr);
+int32_t Crypto_MC_ping(uint8_t* ingest);
+int32_t Crypto_MC_status(uint8_t* ingest);
+int32_t Crypto_MC_dump(uint8_t* ingest);
+int32_t Crypto_MC_erase(uint8_t* ingest);
+int32_t Crypto_MC_selftest(uint8_t* ingest);
+int32_t Crypto_SA_readARSN(uint8_t* ingest);
 int32_t Crypto_MC_resetalarm(void);
 
 // User Functions
@@ -238,9 +238,9 @@ void clean_akref(SecurityAssociation_t* sa);
 // Determine Payload Data Unit
 int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, uint8_t* ingest);
 int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame);
-int32_t Crypto_SG_KEY_MGMT(uint8_t* ingest, TC_t* tc_frame, int* count_ptr);
-int32_t Crypto_SG_SA_MGMT(uint8_t* ingest, TC_t* tc_frame, int* count_ptr);
-int32_t Crypto_SEC_MON_CTRL(uint8_t* ingest, int* count_ptr);
+int32_t Crypto_SG_KEY_MGMT(uint8_t* ingest, TC_t* tc_frame);
+int32_t Crypto_SG_SA_MGMT(uint8_t* ingest, TC_t* tc_frame);
+int32_t Crypto_SEC_MON_CTRL(uint8_t* ingest);
 int32_t Crypto_USER_DEFINED_CMD(uint8_t* ingest);
 
 // Managed Parameter Functions

@@ -63,6 +63,30 @@ UTEST(EP_MC, MC_REGULAR_PING)
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
     printf("\n");
+
+    // Check reply values
+    uint16_t reply_length = 0;
+    uint8_t sdls_ep_reply_local[1024];
+    status = Crypto_Get_Sdls_Ep_Reply(&sdls_ep_reply_local[0], &reply_length);
+    // Expect success
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    // Print local copy
+    printf("SDLS Reply LOCAL:  0x");
+    for (int i =0; i < reply_length; i++)
+    {
+        printf("%02X", sdls_ep_reply_local[i]);
+    }
+    printf("\n\n");
+    // Print Global copy for sanity check
+    Crypto_Print_Sdls_Ep_Reply();
+
+    // Let's compare everything.
+    for (int i = 0; i < reply_length; i++)
+    {
+        ASSERT_EQ(sdls_ep_reply[i], sdls_ep_reply_local[i]);
+    }
+
     Crypto_Shutdown();
     
     free(buffer_PING_b);
@@ -127,6 +151,30 @@ UTEST(EP_MC, MC_STATUS)
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
     printf("\n");
+
+    // Check reply values
+    uint16_t reply_length = 0;
+    uint8_t sdls_ep_reply_local[1024];
+    status = Crypto_Get_Sdls_Ep_Reply(&sdls_ep_reply_local[0], &reply_length);
+    // Expect success
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    // Print local copy
+    printf("SDLS Reply LOCAL:  0x");
+    for (int i =0; i < reply_length; i++)
+    {
+        printf("%02X", sdls_ep_reply_local[i]);
+    }
+    printf("\n\n");
+    // Print Global copy for sanity check
+    Crypto_Print_Sdls_Ep_Reply();
+
+    // Let's compare everything.
+    for (int i = 0; i < reply_length; i++)
+    {
+        ASSERT_EQ(sdls_ep_reply[i], sdls_ep_reply_local[i]);
+    }
+
     Crypto_Shutdown();
     
     free(buffer_STATUS_b);
@@ -192,6 +240,30 @@ UTEST(EP_MC, MC_DUMP)
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
     printf("\n");
+
+    // Check reply values
+    uint16_t reply_length = 0;
+    uint8_t sdls_ep_reply_local[1024];
+    status = Crypto_Get_Sdls_Ep_Reply(&sdls_ep_reply_local[0], &reply_length);
+    // Expect success
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    // Print local copy
+    printf("SDLS Reply LOCAL:  0x");
+    for (int i =0; i < reply_length; i++)
+    {
+        printf("%02X", sdls_ep_reply_local[i]);
+    }
+    printf("\n\n");
+    // Print Global copy for sanity check
+    Crypto_Print_Sdls_Ep_Reply();
+
+    // Let's compare everything.
+    for (int i = 0; i < reply_length; i++)
+    {
+        ASSERT_EQ(sdls_ep_reply[i], sdls_ep_reply_local[i]);
+    }
+
     Crypto_Shutdown();
     
     free(buffer_DUMP_b);
@@ -256,6 +328,30 @@ UTEST(EP_MC, MC_ERASE)
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
     printf("\n");
+
+    // Check reply values
+    uint16_t reply_length = 0;
+    uint8_t sdls_ep_reply_local[1024];
+    status = Crypto_Get_Sdls_Ep_Reply(&sdls_ep_reply_local[0], &reply_length);
+    // Expect success
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    // Print local copy
+    printf("SDLS Reply LOCAL:  0x");
+    for (int i =0; i < reply_length; i++)
+    {
+        printf("%02X", sdls_ep_reply_local[i]);
+    }
+    printf("\n\n");
+    // Print Global copy for sanity check
+    Crypto_Print_Sdls_Ep_Reply();
+
+    // Let's compare everything.
+    for (int i = 0; i < reply_length; i++)
+    {
+        ASSERT_EQ(sdls_ep_reply[i], sdls_ep_reply_local[i]);
+    }
+
     Crypto_Shutdown();
     
     free(buffer_ERASE_b);
@@ -320,6 +416,30 @@ UTEST(EP_MC, MC_SELF_TEST)
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
     printf("\n");
+
+    // Check reply values
+    uint16_t reply_length = 0;
+    uint8_t sdls_ep_reply_local[1024];
+    status = Crypto_Get_Sdls_Ep_Reply(&sdls_ep_reply_local[0], &reply_length);
+    // Expect success
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    // Print local copy
+    printf("SDLS Reply LOCAL:  0x");
+    for (int i =0; i < reply_length; i++)
+    {
+        printf("%02X", sdls_ep_reply_local[i]);
+    }
+    printf("\n\n");
+    // Print Global copy for sanity check
+    Crypto_Print_Sdls_Ep_Reply();
+
+    // Let's compare everything.
+    for (int i = 0; i < reply_length; i++)
+    {
+        ASSERT_EQ(sdls_ep_reply[i], sdls_ep_reply_local[i]);
+    }
+
     Crypto_Shutdown();
     
     free(buffer_SELF_b);

@@ -110,7 +110,7 @@ void Crypto_Print_Sdls_Ep_Reply(void)
         return;
     }
 
-    pkt_length = (sdls_ep_reply[4] << 8) | sdls_ep_reply[5];
+    pkt_length = ((sdls_ep_reply[4] << 8) | sdls_ep_reply[5]) + 1;
     
     // Sanity check on length
     if (pkt_length > TC_MAX_FRAME_SIZE)

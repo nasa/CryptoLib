@@ -297,11 +297,12 @@ int32_t Crypto_Key_update(uint8_t state)
  * @param ingest: uint8_t*
  * @return int32: count
  **/
-int32_t Crypto_Key_inventory(uint8_t* ingest, int* count)
+int32_t Crypto_Key_inventory(uint8_t* ingest)
 {
     // Local variables
     SDLS_KEY_INVENTORY_CMD_t packet;
     uint16_t range = 0;
+    uint8_t count = 0;
     int32_t status = CRYPTO_LIB_SUCCESS;
     crypto_key_t* ekp = NULL;
     uint16_t x;
@@ -313,32 +314,24 @@ int32_t Crypto_Key_inventory(uint8_t* ingest, int* count)
     }
 
     // Read in PDU
-    packet.kid_first = ((uint8_t)sdls_frame.pdu.data[*count] << 8) | ((uint8_t)sdls_frame.pdu.data[*count + 1]);
-    *count = *count + 2;
-    packet.kid_last = ((uint8_t)sdls_frame.pdu.data[*count] << 8) | ((uint8_t)sdls_frame.pdu.data[*count + 1]);
-    *count = *count + 2;
+    packet.kid_first = ((uint8_t)sdls_frame.pdu.data[count] << 8) | ((uint8_t)sdls_frame.pdu.data[count + 1]);
+    count = count + 2;
+    packet.kid_last = ((uint8_t)sdls_frame.pdu.data[count] << 8) | ((uint8_t)sdls_frame.pdu.data[count + 1]);
+    count = count + 2;
 
     // Prepare for Reply
     range = packet.kid_last - packet.kid_first + 1;
-    sdls_resp_pkt.pdu.hdr.pdu_len = (sizeof(sdls_resp_pkt.pdu.hdr) + (SDLS_KEY_INVENTORY_RPLY_SIZE * (range))) * 8;
-    sdls_resp_pkt.hdr.pkt_length = (sdls_resp_pkt.pdu.hdr.pdu_len / 8) + 9;
-    *count = Crypto_Prep_Reply(sdls_ep_reply, 128);
-    printf("RESP_LEN: %d\n", *count);
-    sdls_resp_pkt.pdu.data[*count] = ((range & 0xFF00) >> 8);
-    sdls_ep_reply[*count] = ((range & 0xFF00) >> 8);
-    ingest[*count += 1] = (range & 0xFF00) >> 8;
-    sdls_resp_pkt.pdu.data[*count] = (range & 0x00FF);
-    sdls_ep_reply[*count] = (range & 0x00FF);
-    ingest[*count += 1] = (range & 0x00FF);
+    sdls_frame.pdu.hdr.pdu_len = (SDLS_KEY_INVENTORY_RPLY_SIZE * (range)) * 8;
+    sdls_frame.hdr.pkt_length = (sdls_frame.pdu.hdr.pdu_len / 8) + SDLS_TLV_HDR_SIZE + 2 + 9; // 2 = Num Keys Returned Field (2 Bytes)
+    count = Crypto_Prep_Reply(sdls_ep_reply, 128);
+    
+    sdls_ep_reply[count++] = ((range & 0xFF00) >> 8);
+    sdls_ep_reply[count++] = (range & 0x00FF);
     for (x = packet.kid_first; x <= packet.kid_last; x++)
     { 
         // Key ID
-        sdls_resp_pkt.pdu.data[*count] = ((x & 0xFF00) >> 8);
-        sdls_ep_reply[*count] = ((x & 0xFF00) >> 8);
-        ingest[*count += 1] = (x & 0xFF00) >> 8;
-        sdls_resp_pkt.pdu.data[*count] = (x & 0x00FF);
-        sdls_ep_reply[*count] = (x & 0x00FF);
-        ingest[*count += 1] = (x & 0x00FF);
+        sdls_ep_reply[count++] = ((x & 0xFF00) >> 8);
+        sdls_ep_reply[count++] = (x & 0x00FF);
         // Get Key
         ekp = key_if->get_key(x);
         if (ekp == NULL)
@@ -346,17 +339,15 @@ int32_t Crypto_Key_inventory(uint8_t* ingest, int* count)
             return CRYPTO_LIB_ERR_KEY_ID_ERROR;
         }
         // Key State
-        sdls_resp_pkt.pdu.data[*count] = ekp->key_state;
-        sdls_ep_reply[*count] = ekp->key_state;
-        ingest[*count += 1] = ekp->key_state;
+        sdls_ep_reply[count++] = ekp->key_state;
     }
 #ifdef DEBUG
-    printf("Key Inventory Reply: 0x");
-    for (x = 0; x < sdls_resp_pkt.hdr.pkt_length; x++)
+    printf("Key Inv. Reply:    0x");
+    for (x = 0; x < count; x++)
     {
-        printf("%02x", sdls_ep_reply[x]);
+        printf("%02X", sdls_ep_reply[x]);
     }
-    printf("\n");
+    printf("\n\n");
 #endif
     return status;
 }
@@ -366,13 +357,14 @@ int32_t Crypto_Key_inventory(uint8_t* ingest, int* count)
  * @param tc_frame: TC_t*
  * @return int32: count
  **/
-int32_t Crypto_Key_verify(TC_t* tc_frame, int* count)
+int32_t Crypto_Key_verify(TC_t* tc_frame)
 {
     // Local variables
     SDLS_KEYV_CMD_t packet;
     int pdu_keys = sdls_frame.pdu.hdr.pdu_len / SDLS_KEYV_CMD_BLK_SIZE;
     int x;
     int y;
+    uint8_t count = 0;
     int32_t status = CRYPTO_LIB_SUCCESS;
     crypto_key_t* ekp = NULL;
     tc_frame = tc_frame;
@@ -391,16 +383,16 @@ int32_t Crypto_Key_verify(TC_t* tc_frame, int* count)
     for (x = 0; x < pdu_keys; x++)
     {
         // Key ID
-        packet.blk[x].kid = ((uint8_t)sdls_frame.pdu.data[*count] << 8) | ((uint8_t)sdls_frame.pdu.data[*count + 1]);
-        *count += 2;
+        packet.blk[x].kid = ((uint8_t)sdls_frame.pdu.data[count] << 8) | ((uint8_t)sdls_frame.pdu.data[count + 1]);
+        count += 2;
 #ifdef PDU_DEBUG
         printf("\tCrypto_Key_verify: Block %d Key ID is %d ", x, packet.blk[x].kid);
 #endif
         // Key Challenge
         for (y = 0; y < CHALLENGE_SIZE; y++)
         {
-            packet.blk[x].challenge[y] = sdls_frame.pdu.data[*count];
-            *count += 1;
+            packet.blk[x].challenge[y] = sdls_frame.pdu.data[count];
+            count += 1;
         }
 #ifdef PDU_DEBUG
         printf("\n");
@@ -420,8 +412,8 @@ int32_t Crypto_Key_verify(TC_t* tc_frame, int* count)
         sdls_frame.hdr.pkt_length =  CCSDS_HDR_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.pdu.hdr.pdu_len/8) - 1;
     }
 
-    *count = Crypto_Prep_Reply(sdls_ep_reply, 128);
-    uint16_t pdu_data_idx = *count;
+    count = Crypto_Prep_Reply(sdls_ep_reply, 128);
+    uint16_t pdu_data_idx = count;
 
     for (x = 0; x < pdu_keys; x++)
     {   
@@ -435,7 +427,7 @@ int32_t Crypto_Key_verify(TC_t* tc_frame, int* count)
         sdls_resp_pkt.pdu.data[pdu_data_idx] = (packet.blk[x].kid & 0x00FF);
         sdls_ep_reply[pdu_data_idx] = (packet.blk[x].kid & 0x00FF);
         pdu_data_idx += 1;
-        *count += 2;
+        count += 2;
 
         // Get Key
         ekp = key_if->get_key(sdls_ep_keyv_reply.blk[x].kid);
@@ -451,7 +443,7 @@ int32_t Crypto_Key_verify(TC_t* tc_frame, int* count)
             sdls_ep_keyv_reply.blk[x].iv[y] =0x00; //= *(tc_frame->tc_sec_header.iv + y);
             sdls_ep_reply[pdu_data_idx] =0x00; //= *(tc_frame->tc_sec_header.iv + y);
             pdu_data_idx += 1;
-            *count += 1;
+            count += 1;
         }
         // ***** This increments the lowest bytes of the IVs so they aren't identical
         sdls_resp_pkt.pdu.data[pdu_data_idx-1] = sdls_resp_pkt.pdu.data[pdu_data_idx-1] + x + 1; 
@@ -490,7 +482,7 @@ int32_t Crypto_Key_verify(TC_t* tc_frame, int* count)
         memcpy(&sdls_ep_reply[pdu_data_idx], &(sdls_ep_keyv_reply.blk[x].mac[0]), CHALLENGE_MAC_SIZE);
         pdu_data_idx += CHALLENGE_MAC_SIZE;
 
-        *count += CHALLENGE_SIZE + CHALLENGE_MAC_SIZE; // Don't forget to increment count!
+        count += CHALLENGE_SIZE + CHALLENGE_MAC_SIZE; // Don't forget to increment count!
     }
 
 #ifdef PDU_DEBUG
@@ -517,10 +509,10 @@ int32_t Crypto_Key_verify(TC_t* tc_frame, int* count)
         }
         
     }
-    printf("\n\nCrypto_Key_Verify: Response is %d bytes \n", *count);
+    printf("\n\nCrypto_Key_Verify: Response is %d bytes \n", count);
 
     printf("\nPrinting NEW SDLS response packet:\n\t");
-    for (uint16_t idx = 0; idx < *count; idx++)
+    for (uint16_t idx = 0; idx < count; idx++)
     {
         printf("%02X", sdls_ep_reply[idx]);
     }
