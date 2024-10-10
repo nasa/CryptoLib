@@ -162,14 +162,8 @@ typedef struct
 {
     uint16_t kid : 16; // Key ID
     uint16_t key_state : 8;  // Key state
-} __attribute__ ((packed)) SDLS_KEY_INVENTORY_t;
-#define SDLS_KEY_INVENTORY_RPLY_SIZE (sizeof(SDLS_KEY_INVENTORY_t))
-
-typedef struct
-{
-    SDLS_KEY_INVENTORY_t blk[NUM_KEYS]; // Key Verification Command Block // TODO: Is NUM_KEYS size right?
-} SDLS_KEY_INVENTORY_RPLY_t;
-#define SDLS_KEY_INVENTORY_BLK_RPLY_SIZE (sizeof(SDLS_KEY_INVENTORY_t))
+} __attribute__ ((packed)) SDLS_KEY_INVENTORY_RPLY_t;
+#define SDLS_KEY_INVENTORY_RPLY_SIZE (sizeof(SDLS_KEY_INVENTORY_RPLY_t))
 
 typedef struct
 {
