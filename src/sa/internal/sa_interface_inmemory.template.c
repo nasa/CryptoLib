@@ -1519,10 +1519,7 @@ static int32_t sa_setARSNW(void)
             sa[spi].arsnw_len = ARSN_SIZE;
         }
 
-        for (x = 0; x < sa[spi].arsnw_len; x++)
-        {
-            sa[spi].arsnw = (((uint8_t)sdls_frame.pdu.data[x + 2]));
-        }
+        sa[spi].arsnw = (((uint8_t)sdls_frame.pdu.data[x + 2]));
 #ifdef PDU_DEBUG
         printf("ARSN set to: %d\n", sa[spi].arsnw);
 #endif
