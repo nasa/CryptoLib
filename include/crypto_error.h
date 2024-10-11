@@ -150,7 +150,7 @@
 #define CONFIGURATION_ERROR_CODES 100
 #define CONFIGURATION_ERROR_CODES_MAX 103
 
-#define CRYPTO_CORE_ERROR_CODES_MAX -58
+#define CRYPTO_CORE_ERROR_CODES_MAX -59
 
 extern char *crypto_enum_errlist_core[];
 extern char *crypto_enum_errlist_config[];
