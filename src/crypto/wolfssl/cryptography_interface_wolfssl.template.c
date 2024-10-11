@@ -632,7 +632,15 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                     // Added for now while assessing unit tests and requirements
                     if (mac_size > 0)
                     {
-                        status = wc_AesGcmDecrypt(&dec, data_out, data_in, len_data_in, iv, iv_len, mac, mac_size, aad, aad_len);
+                        if (len_data_in == 0)
+                        {
+                            // in place decryption
+                            status = wc_AesGcmDecrypt(&dec, data_out, data_out, len_data_out, iv, iv_len, mac, mac_size, aad, aad_len);
+                        }
+                        else
+                        {
+                            status = wc_AesGcmDecrypt(&dec, data_out, data_in, len_data_in, iv, iv_len, mac, mac_size, aad, aad_len);
+                        }
                     }
                     else
                     {
