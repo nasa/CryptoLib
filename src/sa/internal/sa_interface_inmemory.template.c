@@ -1502,7 +1502,6 @@ static int32_t sa_setARSNW(void)
 {
     // Local variables
     uint16_t spi = 0x0000;
-    int x;
 
     // Read ingest
     spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
