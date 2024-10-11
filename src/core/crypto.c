@@ -303,7 +303,7 @@ int32_t Crypto_Get_Sdls_Ep_Reply(uint8_t* buffer, uint16_t* length)
         return status;
     }
 
-    pkt_length = sdls_frame.hdr.pkt_length + 1; // TODO: Confirm `+1` is ok here
+    pkt_length = sdls_frame.hdr.pkt_length + 1;
 
     // Sanity Check on length
     if (pkt_length > TC_MAX_FRAME_SIZE)

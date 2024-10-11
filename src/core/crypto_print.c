@@ -103,13 +103,6 @@ void Crypto_Print_Sdls_Ep_Reply(void)
     // Length to be pulled from packet header
     uint16_t pkt_length = 0;
 
-    // Check for Null Inputs
-    // if (sdls_ep_reply == NULL)
-    // {
-    //     printf(KRED "The sdls_ep_reply buffer is null... this isn't good as it should be static in memory!\n" RESET);
-    //     return;
-    // }
-
     pkt_length = ((sdls_ep_reply[4] << 8) | sdls_ep_reply[5]) + 1;
     
     // Sanity check on length
@@ -121,7 +114,7 @@ void Crypto_Print_Sdls_Ep_Reply(void)
 
     // Do the print
     printf("SDLS Reply Global: 0x");
-    for (int i =0; i < pkt_length; i++)
+    for (int i = 0; i < pkt_length; i++)
     {
         printf("%02X", sdls_ep_reply[i]);
     }

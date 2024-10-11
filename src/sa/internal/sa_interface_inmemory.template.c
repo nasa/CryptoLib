@@ -1233,15 +1233,19 @@ static int32_t sa_rekey(void)
         }
         else
         {
+#ifdef PDU_DEBUG
             printf(KRED "ERROR: SPI %d is not in the UNKEYED state.\n" RESET, spi);
+#endif
         }
     }
     else
     {
+#ifdef PDU_DEBUG
         printf(KRED "ERROR: SPI %d does not exist.\n" RESET, spi);
+#endif
     }
 
-#ifdef DEBUG
+#ifdef PDU_DEBUG
     printf("\t spi  = %d \n", spi);
     printf("\t ekid = %d \n", sa[spi].ekid);
     // printf("\t akid = %d \n", sa[spi].akid);
@@ -1502,13 +1506,13 @@ static int32_t sa_setARSNW(void)
 
     // Read ingest
     spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
+#ifdef PDU_DEBUG
     printf("spi = %d \n", spi);
+#endif
 
     // Check SPI exists
     if (spi < NUM_SA)
     {
-        sa[spi].arsnw_len = (uint8_t)sdls_frame.pdu.data[2];
-
         // Check for out of bounds
         if (sa[spi].arsnw_len > (ARSN_SIZE))
         {
@@ -1517,7 +1521,7 @@ static int32_t sa_setARSNW(void)
 
         for (x = 0; x < sa[spi].arsnw_len; x++)
         {
-            sa[spi].arsnw = (((uint8_t)sdls_frame.pdu.data[x + 2]) << (sa[spi].arsnw_len - 1 - x));
+            sa[spi].arsnw = (((uint8_t)sdls_frame.pdu.data[x + 2]));
         }
 #ifdef PDU_DEBUG
         printf("ARSN set to: %d\n", sa[spi].arsnw);
@@ -1525,7 +1529,9 @@ static int32_t sa_setARSNW(void)
     }
     else
     {
+#ifdef PDU_DEBUG
         printf("sa_setARSNW ERROR: SPI %d does not exist.\n", spi);
+#endif
     }
 
     return CRYPTO_LIB_SUCCESS;

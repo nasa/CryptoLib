@@ -27,7 +27,7 @@
 /**
  * @brief Function: Crypto_MC_ping
  * @param ingest: uint8_t*
- * return int32: count
+ * @return int32: Success/Failure
  **/
 int32_t Crypto_MC_ping(uint8_t* ingest)
 {
@@ -37,7 +37,7 @@ int32_t Crypto_MC_ping(uint8_t* ingest)
 
     // Prepare for Reply
     sdls_frame.pdu.hdr.pdu_len = 0;
-    sdls_frame.hdr.pkt_length = sdls_frame.pdu.hdr.pdu_len + SDLS_TLV_HDR_SIZE + 9;
+    sdls_frame.hdr.pkt_length = (sdls_frame.pdu.hdr.pdu_len / 8) + SDLS_TLV_HDR_SIZE + 9;
     count = Crypto_Prep_Reply(sdls_ep_reply, 128);
 
 #ifdef PDU_DEBUG
@@ -55,14 +55,12 @@ int32_t Crypto_MC_ping(uint8_t* ingest)
 /**
  * @brief Function: Crypto_MC_status
  * @param ingest: uint8_t*
- * @return int32: count
+ * @return int32: Success/Failure
  **/
 int32_t Crypto_MC_status(uint8_t* ingest)
 {
     if(ingest == NULL) return CRYPTO_LIB_ERROR;
     uint8_t count = 0;
-
-    // TODO: Update log_summary.rs;
 
     // Prepare for Reply
     sdls_frame.pdu.hdr.pdu_len = SDLS_MC_LOG_RPLY_SIZE * 8;
@@ -70,13 +68,13 @@ int32_t Crypto_MC_status(uint8_t* ingest)
     count = Crypto_Prep_Reply(sdls_ep_reply, 128);
     // PDU
     sdls_ep_reply[count] = (log_summary.num_se & 0xFF00) >> 8;
-    count += 1;
+    count++;
     sdls_ep_reply[count] = (log_summary.num_se & 0x00FF);
-    count += 1;
+    count++;
     sdls_ep_reply[count] = (log_summary.rs & 0xFF00) >> 8;
-    count += 1;
+    count++;
     sdls_ep_reply[count] = (log_summary.rs & 0x00FF);
-    count += 1;
+    count++;
 
 #ifdef PDU_DEBUG
     printf("MC Status Reply:   0x");
@@ -95,33 +93,32 @@ int32_t Crypto_MC_status(uint8_t* ingest)
 /**
  * @brief Function: Crypto_MC_dump
  * @param ingest: uint8_t*
- * @return int32: Count
+ * @return int32: Success/Failure
  **/
 int32_t Crypto_MC_dump(uint8_t* ingest)
 {
-    // TODO: Fix Reply Size, same as key verification
     if(ingest == NULL) return CRYPTO_LIB_ERROR;
     uint8_t count = 0;
     int x;
     int y;
 
     // Prepare for Reply
-    sdls_frame.pdu.hdr.pdu_len = SDLS_MC_DUMP_RPLY_SIZE * log_count * 8; // SDLS_MC_DUMP_RPLY_SIZE
+    sdls_frame.pdu.hdr.pdu_len = (SDLS_MC_DUMP_RPLY_SIZE * log_count) * 8;
     sdls_frame.hdr.pkt_length = (sdls_frame.pdu.hdr.pdu_len / 8) + SDLS_TLV_HDR_SIZE + 9;
     count = Crypto_Prep_Reply(sdls_ep_reply, 128);
     // PDU
     for (x = 0; x < log_count; x++)
     {
         sdls_ep_reply[count] = mc_log.blk[x].emt;
-        count += 1;
+        count++;
         sdls_ep_reply[count] = (mc_log.blk[x].em_len & 0xFF00) >> 8;
-        count += 1;
+        count++;
         sdls_ep_reply[count] = (mc_log.blk[x].em_len & 0x00FF);
-        count += 1;
+        count++;
         for (y = 0; y < EMV_SIZE; y++)
         {
             sdls_ep_reply[count] = mc_log.blk[x].emv[y];
-            count += 1;
+            count++;
         }
 #ifdef PDU_DEBUG
         printf("Log %d emt: 0x%02x\n", x, mc_log.blk[x].emt);
@@ -153,7 +150,7 @@ int32_t Crypto_MC_dump(uint8_t* ingest)
 /**
  * @brief Function: Crypto_MC_erase
  * @param ingest: uint8_t*
- * @return int32: count
+ * @return int32: Success/Failure
  **/
 int32_t Crypto_MC_erase(uint8_t* ingest)
 {
@@ -184,14 +181,13 @@ int32_t Crypto_MC_erase(uint8_t* ingest)
     count = Crypto_Prep_Reply(sdls_ep_reply, 128);
     // PDU
     sdls_ep_reply[count] = (log_summary.num_se & 0xFF00) >> 8;
-    count += 1;
+    count++;
     sdls_ep_reply[count] = (log_summary.num_se & 0x00FF);
-    count += 1;
+    count++;
     sdls_ep_reply[count] = (log_summary.rs & 0xFF00) >> 8;
-    count += 1;
+    count++;
     sdls_ep_reply[count] = (log_summary.rs & 0x00FF);
-    count += 1;
-    // 0880d2c7000d197f0b00b4002000000032 0880d2c70010197f0b00b4002000000032
+    count++;
 
 #ifdef PDU_DEBUG
     printf("log_count = %d \n", log_count);
@@ -211,7 +207,7 @@ int32_t Crypto_MC_erase(uint8_t* ingest)
 /**
  * @brief Function: Crypto_MC_selftest
  * @param ingest: uint8_t*
- * @return int32: Count
+ * @return int32: Success/Failure
  **/
 int32_t Crypto_MC_selftest(uint8_t* ingest)
 {
@@ -223,12 +219,12 @@ int32_t Crypto_MC_selftest(uint8_t* ingest)
 
     // Prepare for Reply
     sdls_frame.pdu.hdr.pdu_len = (SDLS_MC_ST_RPLY_SIZE) * 8;
-    sdls_frame.hdr.pkt_length = (sdls_frame.pdu.hdr.pdu_len / 8) + (SDLS_TLV_HDR_SIZE) + 9; // TODO: Why is the `+SDLS_TLV_HDR_SIZE` needed to get the correct size? 
+    sdls_frame.hdr.pkt_length = (sdls_frame.pdu.hdr.pdu_len / 8) + (SDLS_TLV_HDR_SIZE) + 9;
     sdls_frame.pdu.data[0] = result;
     count = Crypto_Prep_Reply(sdls_ep_reply, 128);
 
     sdls_ep_reply[count] = result;
-    count += 1;
+    count++;
 
 #ifdef PDU_DEBUG
     printf("MC SelfTest Reply: 0x");
@@ -245,7 +241,7 @@ int32_t Crypto_MC_selftest(uint8_t* ingest)
 /**
  * @brief Function: Crypto_SA_readASRN
  * @param ingest: uint8_t*
- * @return int32: Count
+ * @return int32: Success/Failure
  **/
 int32_t Crypto_SA_readARSN(uint8_t* ingest)
 {
@@ -281,14 +277,14 @@ int32_t Crypto_SA_readARSN(uint8_t* ingest)
 
             // Write SPI to reply
             sdls_ep_reply[count] = (spi & 0xFF00) >> 8;
-            count += 1;
+            count++;
             sdls_ep_reply[count] = (spi & 0x00FF);
-            count += 1;
+            count++;
 
             for (x = 0; x < sa_ptr->arsn_len; x++)
             {
                 sdls_ep_reply[count] = *(sa_ptr->arsn + x);
-                count += 1;
+                count++;
             }
 
             if (sa_ptr->shivf_len > 0 && sa_ptr->ecs == 1 && sa_ptr->acs == 1)
@@ -296,30 +292,29 @@ int32_t Crypto_SA_readARSN(uint8_t* ingest)
                 for (x = 0; x < sa_ptr->shivf_len - 1; x++)
                 {
                     sdls_ep_reply[count] = *(sa_ptr->iv + x);
-                    count += 1;
+                    count++;
                 }
 
                 // TODO: Do we need this?
                 if (*(sa_ptr->iv + sa_ptr->shivf_len - 1) > 0)
                 { // Adjust to report last received, not expected
                     sdls_ep_reply[count] = *(sa_ptr->iv + sa_ptr->shivf_len - 1) - 1;
-                    count += 1;
+                    count++;
                 }
                 else
                 {
                     sdls_ep_reply[count] = *(sa_ptr->iv + sa_ptr->shivf_len - 1);
-                    count += 1;
+                    count++;
                 }
             }
             else
             {
                 // TODO
-                // Also, count not being returned correctly since not Auth Enc
             }
 #ifdef PDU_DEBUG
             printf("spi = %d \n", spi);
             printf("ARSN_LEN: %d\n", sa_ptr->arsn_len);
-            if (sa_ptr->arsn_len > 0) // Not sure why shivf_len is being used
+            if (sa_ptr->arsn_len > 0)
             {
                 printf("ARSN = 0x");
                 for (x = 0; x < sa_ptr->arsn_len; x++)

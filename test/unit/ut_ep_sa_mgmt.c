@@ -265,6 +265,7 @@ UTEST(EP_SA_MGMT, SA_6_SET_ARSNW)
     // Modify SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->shivf_len = 0;
+    test_association->arsnw_len = 1;
 
     // Modify SA 1
     sa_if->sa_get_from_spi(6, &test_association);

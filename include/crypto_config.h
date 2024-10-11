@@ -207,8 +207,9 @@
 
 // SDLS Behavior Defines
 #define SDLS_KEYV_MAX_KEYS 21  /* keys */
-#define SDLS_KEYV_IV_LEN 12    /* bytes */
+#define SDLS_IV_LEN 12         /* bytes */
 #define SDLS_KEYV_KEY_ID_LEN 2 /* bytes */
+#define SDLS_KEY_LEN 32        /* bytes */
 
 // TC Behavior Defines
 #define TC_SDLS_EP_VCID                                                                                                \

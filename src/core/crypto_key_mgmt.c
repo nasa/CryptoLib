@@ -48,10 +48,13 @@ int32_t Crypto_Key_OTAR(void)
     int pdu_keys = (sdls_frame.pdu.hdr.pdu_len - 30) / (2 + 32);
     int w;
     crypto_key_t* ekp = NULL;
-    printf("# PDU Keys: %d\n", pdu_keys);
+    
     // Master Key ID
     packet.mkid = (sdls_frame.pdu.data[0] << 8) | (sdls_frame.pdu.data[1]);
-     printf("MKID: %d\n", packet.mkid);
+#ifdef DEBUG
+    printf("# PDU Keys: %d\n", pdu_keys);
+    printf("MKID: %d\n", packet.mkid);
+#endif
     if (packet.mkid >= 128)
     {
         report.af = 1;
@@ -66,7 +69,9 @@ int32_t Crypto_Key_OTAR(void)
             mc_log.blk[log_count].emv[3] = 0x41;
             mc_log.blk[log_count++].em_len = 4;
         }
+#ifdef DEBUG
         printf(KRED "Error: MKID is not valid! \n" RESET);
+#endif
         status = CRYPTO_LIB_ERROR;
         return status;
     }
@@ -74,14 +79,18 @@ int32_t Crypto_Key_OTAR(void)
     for (count = 2; count < (2 + 12); count++)
     { // Initialization Vector
         packet.iv[count - 2] = sdls_frame.pdu.data[count];
+#ifdef DEBUG
         printf("packet.iv[%d] = 0x%02x\n", count-2, packet.iv[count-2]);
+#endif
     }
 
     count = sdls_frame.pdu.hdr.pdu_len - MAC_SIZE;
     for (w = 0; w < 16; w++)
     { // MAC
         packet.mac[w] = sdls_frame.pdu.data[count + w];
+#ifdef DEBUG
         printf("packet.mac[%d] = 0x%02x\n", w, packet.mac[w]);
+#endif
     }
 
     ekp = key_if->get_key(packet.mkid);
@@ -92,14 +101,14 @@ int32_t Crypto_Key_OTAR(void)
 
     uint8_t ecs = CRYPTO_CIPHER_AES256_GCM;
     status = cryptography_if->cryptography_aead_decrypt(&(sdls_frame.pdu.data[14]), // plaintext output
-                                                        (size_t)(pdu_keys * (2 + 32)), // length of data
+                                                        (size_t)(pdu_keys * (2 + SDLS_KEY_LEN)), // length of data
                                                         NULL,                               // in place decryption
                                                         0,                                  // in data length
                                                         &(ekp->value[0]), //key
                                                         ekp->key_len, //key length
                                                         NULL, //SA reference
                                                         &(packet.iv[0]), //IV
-                                                        12, //IV length
+                                                        SDLS_IV_LEN, //IV length
                                                         &(packet.mac[0]), // tag input
                                                         MAC_SIZE,          // tag size
                                                         NULL, // AAD
@@ -130,7 +139,9 @@ int32_t Crypto_Key_OTAR(void)
                 mc_log.blk[log_count].emv[3] = 0x41; // A
                 mc_log.blk[log_count++].em_len = 4;
             }
+#ifdef DEBUG
             printf(KRED "Error: Cannot OTAR master key! \n" RESET);
+#endif
             status = CRYPTO_LIB_ERROR;
             return status;
         }
@@ -143,7 +154,7 @@ int32_t Crypto_Key_OTAR(void)
             }
             
             count = count + 2;
-            for (y = count; y < (32 + count); y++)
+            for (y = count; y < (SDLS_KEY_LEN + count); y++)
             { 
                 // Encrypted Key
                 packet.EKB[x].ek[y - count] = sdls_frame.pdu.data[y];
@@ -153,7 +164,7 @@ int32_t Crypto_Key_OTAR(void)
                 // Setup Key Ring
                 ekp->value[y - count] = sdls_frame.pdu.data[y];
             }
-            count = count + 32;
+            count = count + SDLS_KEY_LEN;
 
             // Set state to PREACTIVE
             ekp->key_state = KEY_PREACTIVE;
@@ -165,7 +176,7 @@ int32_t Crypto_Key_OTAR(void)
     for (x = 0; x < pdu_keys; x++)
     {
         printf("%d) Key ID = %d, 0x", x + 1, packet.EKB[x].ekid);
-        for (y = 0; y < 32; y++)
+        for (y = 0; y < SDLS_KEY_LEN; y++)
         {
             printf("%02x", packet.EKB[x].ek[y]);
         }
@@ -256,7 +267,9 @@ int32_t Crypto_Key_update(uint8_t state)
                 mc_log.blk[log_count].emv[3] = 0x41;
                 mc_log.blk[log_count++].em_len = 4;
             }
+#ifdef PDU_DEBUG
             printf(KRED "Error: MKID state cannot be changed! \n" RESET);
+#endif
             return CRYPTO_LIB_ERR_KEY_ID_ERROR;
         }
 
@@ -269,9 +282,6 @@ int32_t Crypto_Key_update(uint8_t state)
         if (ekp->key_state == (state - 1))
         {
             ekp->key_state = state;
-#ifdef PDU_DEBUG
-            // printf("Key ID %d state changed to ", packet.kblk[x].kid);
-#endif
         }
         else
         {
@@ -286,7 +296,9 @@ int32_t Crypto_Key_update(uint8_t state)
                 mc_log.blk[log_count].emv[3] = 0x41;
                 mc_log.blk[log_count++].em_len = 4;
             }
+#ifdef PDU_DEBUG
             printf(KRED "Error: Key %d cannot transition to desired state! \n" RESET, packet.kblk[x].kid);
+#endif
             return CRYPTO_LIB_ERR_KEY_STATE_TRANSITION_ERROR;
         }
     }
@@ -296,7 +308,7 @@ int32_t Crypto_Key_update(uint8_t state)
 /**
  * @brief Function: Crypto_Key_inventory
  * @param ingest: uint8_t*
- * @return int32: count
+ * @return int32: Success/Failure
  **/
 int32_t Crypto_Key_inventory(uint8_t* ingest)
 {
@@ -356,7 +368,7 @@ int32_t Crypto_Key_inventory(uint8_t* ingest)
 /**
  * @brief Function: Crypto_Key_verify
  * @param tc_frame: TC_t*
- * @return int32: count
+ * @return int32: Success/Failure
  **/
 int32_t Crypto_Key_verify(TC_t* tc_frame)
 {
@@ -401,7 +413,7 @@ int32_t Crypto_Key_verify(TC_t* tc_frame)
     }
     
     // Prepare for Reply
-    sdls_frame.pdu.hdr.pdu_len = pdu_keys * (SDLS_KEYV_KEY_ID_LEN + SDLS_KEYV_IV_LEN + CHALLENGE_SIZE + CHALLENGE_MAC_SIZE) * 8;
+    sdls_frame.pdu.hdr.pdu_len = pdu_keys * (SDLS_KEYV_KEY_ID_LEN + SDLS_IV_LEN + CHALLENGE_SIZE + CHALLENGE_MAC_SIZE) * 8;
 
     // length = pdu_len + HDR + PUS - 1 (per CCSDS Convention)
     if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
@@ -438,7 +450,7 @@ int32_t Crypto_Key_verify(TC_t* tc_frame)
         }
 
         // Initialization Vector
-        for (y = 0; y < SDLS_KEYV_IV_LEN; y++)
+        for (y = 0; y < SDLS_IV_LEN; y++)
         {
             sdls_frame.pdu.data[pdu_data_idx] =0x00; //= *(tc_frame->tc_sec_header.iv + y);
             sdls_ep_keyv_reply.blk[x].iv[y] =0x00; //= *(tc_frame->tc_sec_header.iv + y);
@@ -448,7 +460,7 @@ int32_t Crypto_Key_verify(TC_t* tc_frame)
         }
         // ***** This increments the lowest bytes of the IVs so they aren't identical
         sdls_frame.pdu.data[pdu_data_idx-1] = sdls_frame.pdu.data[pdu_data_idx-1] + x + 1; 
-        sdls_ep_keyv_reply.blk[x].iv[11] = sdls_ep_keyv_reply.blk[x].iv[SDLS_KEYV_IV_LEN-1] + x + 1;
+        sdls_ep_keyv_reply.blk[x].iv[11] = sdls_ep_keyv_reply.blk[x].iv[SDLS_IV_LEN-1] + x + 1;
         sdls_ep_reply[pdu_data_idx-1] = sdls_ep_reply[pdu_data_idx-1] + x + 1;
 
         // Encrypt challenge
@@ -458,10 +470,10 @@ int32_t Crypto_Key_verify(TC_t* tc_frame)
                                                    &(packet.blk[x].challenge[0]), // plaintext input
                                                    (size_t)CHALLENGE_SIZE, // in data length
                                                    &(ekp->value[0]), // Key Index
-                                                   32,   // Key Length
+                                                   SDLS_KEY_LEN,   // Key Length
                                                    NULL, // SA Reference for key
                                                    &(sdls_ep_keyv_reply.blk[x].iv[0]), // IV
-                                                   SDLS_KEYV_IV_LEN, // IV Length
+                                                   SDLS_IV_LEN, // IV Length
                                                    &(sdls_ep_keyv_reply.blk[x].mac[0]), // MAC
                                                    CHALLENGE_MAC_SIZE, // MAC Size
                                                    NULL,
@@ -494,7 +506,7 @@ int32_t Crypto_Key_verify(TC_t* tc_frame)
         printf("\nKey Index %d Verification results:", i);
         printf("\n\tKID: %04X", sdls_ep_keyv_reply.blk[i].kid);
         printf("\n\tIV: ");
-        for (int j = 0; j < SDLS_KEYV_IV_LEN; j ++)
+        for (int j = 0; j < SDLS_KEY_LEN; j ++)
         {
             printf("%02X", sdls_ep_keyv_reply.blk[i].iv[j]);
         }
