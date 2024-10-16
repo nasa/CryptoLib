@@ -13,7 +13,7 @@ name: "CodeQL Advanced"
 
 on:
   push: 
-    branches: [ dev, 334-resolve-codeql-ci-failures ]
+    branches: [ dev ]
   pull_request:
     branches: [ main, dev ]
 
