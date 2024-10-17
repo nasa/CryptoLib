@@ -24,3 +24,4 @@ jobs:
           step-summary: 'true'
           no-lgtm: 'false'
           passive-reviews: 'true'
+          ignore: 'test/include/utest.h'
