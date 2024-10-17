@@ -19,7 +19,6 @@ jobs:
         id: linter
         with:
           style: 'file'
-          tidy-checks: ''
           files-changed-only: false
           verbosity: 'debug'
           step-summary: 'true'
