@@ -98,6 +98,31 @@ void Crypto_tmPrint(TM_t* tm_frame)
     printf("\n");
 }
 
+void Crypto_Print_Sdls_Ep_Reply(void)
+{
+    // Length to be pulled from packet header
+    uint16_t pkt_length = 0;
+
+    pkt_length = ((sdls_ep_reply[4] << 8) | sdls_ep_reply[5]) + 1;
+    
+    // Sanity check on length
+    if (pkt_length > TC_MAX_FRAME_SIZE)
+    {
+        printf(KRED "Unable to print SDLS Reply... invalid length of %d\n" RESET, pkt_length);
+        return;
+    }
+
+    // Do the print
+    printf("SDLS Reply Global: 0x");
+    for (int i = 0; i < pkt_length; i++)
+    {
+        printf("%02X", sdls_ep_reply[i]);
+    }
+    printf("\n\n");
+
+    return;
+}
+
 /**
  * @brief Function: Crypto_clcwPrint
  * Prints the current CLCW in memory.
@@ -167,11 +192,11 @@ void Crypto_ccsdsPrint(CCSDS_t* sdls_frame)
     printf("\t\t sid        = 0x%01x \n", sdls_frame->pus.sid);
     printf("\t\t spare      = 0x%01x \n", sdls_frame->pus.spare);
     printf("\t PDU \n");
-    printf("\t\t type       = 0x%01x \n", sdls_frame->pdu.type);
-    printf("\t\t uf         = 0x%01x \n", sdls_frame->pdu.uf);
-    printf("\t\t sg         = 0x%01x \n", sdls_frame->pdu.sg);
-    printf("\t\t pid        = 0x%01x \n", sdls_frame->pdu.pid);
-    printf("\t\t pdu_len    = 0x%04x \n", sdls_frame->pdu.pdu_len);
+    printf("\t\t type       = 0x%01x \n", sdls_frame->pdu.hdr.type);
+    printf("\t\t uf         = 0x%01x \n", sdls_frame->pdu.hdr.uf);
+    printf("\t\t sg         = 0x%01x \n", sdls_frame->pdu.hdr.sg);
+    printf("\t\t pid        = 0x%01x \n", sdls_frame->pdu.hdr.pid);
+    printf("\t\t pdu_len    = 0x%04x \n", sdls_frame->pdu.hdr.pdu_len);
     printf("\t\t data[0]    = 0x%02x \n", sdls_frame->pdu.data[0]);
     printf("\t\t data[1]    = 0x%02x \n", sdls_frame->pdu.data[1]);
     printf("\t\t data[2]    = 0x%02x \n", sdls_frame->pdu.data[2]);

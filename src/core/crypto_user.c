@@ -31,8 +31,8 @@ int32_t Crypto_User_IdleTrigger(uint8_t* ingest)
     uint8_t count = 0;
 
     // Prepare for Reply
-    sdls_frame.pdu.pdu_len = 0;
-    sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
+    sdls_frame.pdu.hdr.pdu_len = 0;
+    sdls_frame.hdr.pkt_length = sdls_frame.pdu.hdr.pdu_len + 9;
     count = Crypto_Prep_Reply(ingest, 144);
 
     return count;
