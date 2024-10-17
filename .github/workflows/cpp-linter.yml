@@ -3,7 +3,6 @@ name: cpp-linter
 on:
   push:
     branches: [ 299-setup-code-formatter ]
-    paths: [ '**.c', '**.h' ]
   pull_request:
     branches: [ main, dev ]
 
