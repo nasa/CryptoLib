@@ -15,10 +15,40 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Update
+        run: sudo apt-get update
+      - name: Install Dependencies
+        run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3
+      - name: Install Python Libraries
+        run: sudo pip install pycryptodome
+      - name: Install Libgcrypt
+        run: >
+          curl  
+          -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 
+          -o /tmp/libgpg-error-1.50.tar.bz2 
+          && tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/ 
+          && cd /tmp/libgpg-error-1.50 
+          && sudo ./configure 
+          && sudo make install 
+          && curl  
+          -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 
+          -o /tmp/libgcrypt-1.11.0.tar.bz2 
+          && tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ 
+          && cd /tmp/libgcrypt-1.11.0 
+          && sudo ./configure 
+          && sudo make install
+          && sudo ldconfig
+      # End Container Setup
+      
+      - name: Internal Build Script
+        working-directory: ${{github.workspace}}
+        run: bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
       - uses: cpp-linter/cpp-linter-action@main
         id: linter
         continue-on-error: true
         with:
           style: 'file'
           files-changed-only: false
+          thread-comments: true
           tidy-review: true
+          format-review: true
