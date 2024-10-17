@@ -19,8 +19,7 @@ jobs:
         id: linter
         continue-on-error: true
         with:
-          style: file
-          tidy-checks: ''
+          style: 'llvm'
           files-changed-only: false
           file-annotations: true
           thread-comments: true
