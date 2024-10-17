@@ -20,7 +20,7 @@ jobs:
         with:
           style: 'file'
           files-changed-only: false
-          verbosity: 'debug'
+          verbosity: 'info'
           step-summary: 'true'
           no-lgtm: 'false'
           passive-reviews: 'true'
