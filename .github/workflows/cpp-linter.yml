@@ -15,10 +15,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: cpp-linter/cpp-linter-action@main
+      - uses: cpp-linter/cpp-linter-action@v2
         id: linter
         continue-on-error: true
         with:
           style: file
+          tidy-checks: ''
           files-changed-only: false
-          thread-comments: false
+          file-annotations: true
+          thread-comments: true
