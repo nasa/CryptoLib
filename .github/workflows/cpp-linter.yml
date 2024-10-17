@@ -18,7 +18,7 @@ jobs:
       - uses: cpp-linter/cpp-linter-action@v2
         id: linter
         with:
-          style: ''
+          style: 'file'
           tidy-checks: ''
           files-changed-only: false
           verbosity: 'debug'
