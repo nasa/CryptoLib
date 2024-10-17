@@ -1,6 +1,8 @@
 name: cpp-linter
 
 on:
+  push:
+    branches: [ 299-setup-code-formatter ]
   pull_request:
     branches: [ main, dev ]
 
@@ -9,6 +11,7 @@ jobs:
     permissions:
       pull-requests: write
       contents: write
+      actions: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,5 +21,4 @@ jobs:
         with:
           style: 'file'
           files-changed-only: false
-          thread-comments: true
           tidy-review: true
