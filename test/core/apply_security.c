@@ -23,18 +23,18 @@
 
 #include "apply_security.h"
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
-    char* buffer = NULL;
-    const char* filename;
-    long buffer_size;
-    char st[64];
-    char* security_type = st;
+    char       *buffer = NULL;
+    const char *filename;
+    long        buffer_size;
+    char        st[64];
+    char       *security_type = st;
 
     if (argc == 3)
     {
         security_type = argv[1];
-        filename = argv[2];
+        filename      = argv[2];
     }
     else
     {
@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
         return CRYPTO_LIB_ERROR;
     }
     buffer = c_read_file(filename, &buffer_size);
-    if(buffer == NULL)
+    if (buffer == NULL)
         return -1;
 
     debug_printf("File buffer size:%lu\n", buffer_size);
@@ -60,21 +60,21 @@ int main(int argc, char* argv[])
     // Setup & Initialize CryptoLib
     // Crypto_Init();
 
-    uint8_t* ptr_enc_frame = NULL;
+    uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
 
     // Call ApplySecurity on buffer contents depending on type.
     if (strcmp(security_type, "tc") == 0)
     {
-        Crypto_TC_ApplySecurity((uint8_t* )buffer, (const uint16_t)buffer_size_i, &ptr_enc_frame, &enc_frame_len);
+        Crypto_TC_ApplySecurity((uint8_t *)buffer, (const uint16_t)buffer_size_i, &ptr_enc_frame, &enc_frame_len);
     }
     else if (strcmp(security_type, "tm") == 0)
     {
-        //Crypto_TM_ApplySecurity();
+        // Crypto_TM_ApplySecurity();
     }
     else if (strcmp(security_type, "aos") == 0)
     {
-        Crypto_AOS_ApplySecurity((uint8_t* )buffer, (int *)&buffer_size_i);
+        Crypto_AOS_ApplySecurity((uint8_t *)buffer, (int *)&buffer_size_i);
     }
 
 #ifdef TC_DEBUG

@@ -37,14 +37,13 @@
 //     #define CLIENT_CERTIFICATE_KEY "/certs/debian-key.pem"
 // #endif
 
-
 // void cleanup_sa(SecurityAssociation_t* test_association)
 // {
 //     if (test_association->ek_ref[0] != '\0')
 //         clean_ek_ref(test_association);
 //     if (test_association->ak_ref[0] != '\0')
 //         clean_ak_ref(test_association);
-    
+
 //     free(test_association);
 // }
 
@@ -52,9 +51,9 @@
 // {
 //     printf("Resetting Database\n");
 //     system("mysql --host=localhost -uroot -pitc123! < ../../src/sa/sa_mariadb_sql/empty_sadb.sql");
-//     system("mysql --host=localhost -uroot -pitc123! < ../../src/sa/test_sa_mariadb_sql/create_sa_ivv_unit_tests.sql");
+//     system("mysql --host=localhost -uroot -pitc123! <
+//     ../../src/sa/test_sa_mariadb_sql/create_sa_ivv_unit_tests.sql");
 // }
-
 
 // // Global SQL Connection Parameters
 // // Generic passwords saved in a file = bad ... but this is just for testing
@@ -68,7 +67,7 @@
 // char* ssl_key = "NONE";
 // char* ssl_ca = "NONE";
 // char* ssl_capath = "NONE";
-// uint8_t verify_server = 0; 
+// uint8_t verify_server = 0;
 // char* client_key_password = NULL;
 
 // /**
@@ -78,12 +77,12 @@
 // {
 //     int32_t status = CRYPTO_LIB_ERROR;
 //     reload_db();
-    
+
 //     status = Crypto_Config_MariaDB(mysql_hostname, mysql_database, mysql_port, CRYPTO_FALSE, verify_server, ssl_ca,
 //                                 ssl_capath, ssl_cert, ssl_key, client_key_password, mysql_username, mysql_password);
 //     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-//     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+//     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
 //                         IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
 //                         TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
 //                         TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -105,8 +104,8 @@
 //     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 //     status = sa_if->sa_get_from_spi(1, &test_sa);
 //     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-//     ASSERT_EQ(test_sa->iv[11] , 0xAB); 
-//     Crypto_Shutdown();      
+//     ASSERT_EQ(test_sa->iv[11] , 0xAB);
+//     Crypto_Shutdown();
 //     cleanup_sa(test_sa);
 // }
 
@@ -117,12 +116,12 @@
 // {
 //     int32_t status = CRYPTO_LIB_ERROR;
 //     reload_db();
-    
+
 //     status = Crypto_Config_MariaDB(mysql_hostname, mysql_database, mysql_port, CRYPTO_FALSE, verify_server, ssl_ca,
 //                                 ssl_capath, ssl_cert, ssl_key, client_key_password, mysql_username, mysql_password);
 //     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-//     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+//     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
 //                         IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
 //                         TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
 //                         TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -153,12 +152,12 @@
 //     cleanup_sa(test_association);
 //     status = sa_if->sa_get_from_spi(2, &test_association);
 //     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-//     ASSERT_EQ(test_association->iv[test_association->iv_len - 1], 2);  // Verify that IV incremented.   
+//     ASSERT_EQ(test_association->iv[test_association->iv_len - 1], 2);  // Verify that IV incremented.
 
 //     free(raw_tc_sdls_ping_b);
 //     free(ptr_enc_frame);
 //     cleanup_sa(test_association);
-//     Crypto_Shutdown();  
+//     Crypto_Shutdown();
 // }
 
 // /**
@@ -168,13 +167,12 @@
 // {
 //     int32_t status = CRYPTO_LIB_ERROR;
 //     reload_db();
-    
+
 //     status = Crypto_Config_MariaDB(mysql_hostname, mysql_database, mysql_port, CRYPTO_FALSE, verify_server, ssl_ca,
 //                                 ssl_capath, ssl_cert, ssl_key, client_key_password, mysql_username, mysql_password);
 //     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-
-//     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+//     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
 //                         IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
 //                         TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
 //                         TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -200,15 +198,15 @@
 
 //     return_val =
 //         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
-    
+
 //     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
-    
+
 //     cleanup_sa(test_association);
 //     status = sa_if->sa_get_from_spi(3, &test_association);
 //     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-//     ASSERT_EQ(test_association->iv[test_association->iv_len - 1], 2);  // Verify that IV incremented.  
+//     ASSERT_EQ(test_association->iv[test_association->iv_len - 1], 2);  // Verify that IV incremented.
 
-//     Crypto_Shutdown();    
+//     Crypto_Shutdown();
 //     cleanup_sa(test_association);
 //     free(raw_tc_sdls_ping_b);
 //     free(ptr_enc_frame);
@@ -216,26 +214,23 @@
 
 // /**
 //  * @brief Validation Test: Authorized Decryption
-//  * Makes use of truth data created from the previous AUTH_ENCRYPTION_TEST, to validate that Crypto_TC_ProcessSecurity(
-//  *uint8_t* ingest, int* len_ingest,TC_t* tc_sdls_processed_frame) properly decrypts data and returns it to the intial
-//  *truth data created by the python_auth_encryption(uint8_t* data, uint8_t* key, uint8_t* iv, uint8_t* header, uint8_t*
-//  *bitmask, uint8_t** expected, long* expected_length) function.
+//  * Makes use of truth data created from the previous AUTH_ENCRYPTION_TEST, to validate that
+//  Crypto_TC_ProcessSecurity( *uint8_t* ingest, int* len_ingest,TC_t* tc_sdls_processed_frame) properly decrypts data
+//  and returns it to the intial *truth data created by the python_auth_encryption(uint8_t* data, uint8_t* key, uint8_t*
+//  iv, uint8_t* header, uint8_t* *bitmask, uint8_t** expected, long* expected_length) function.
 //  **/
 // UTEST(MARIA_DB, AUTH_DECRYPTION_TEST)
 // {
-//     char* dec_test_h = "20030433000000030000000000000000000000014ED87188D42B3F36130F355E83F3DE9C5E8F716321145159B41144E5514EBBEA";
-//     char* enc_test_h = "80d2c70008197f0b00310000b1fe";
-//     uint8_t* dec_test_b, *enc_test_b = NULL;
-//     int dec_test_len, enc_test_len = 0;
-//     int32_t status = CRYPTO_LIB_ERROR;
-//     reload_db();
-    
+//     char* dec_test_h =
+//     "20030433000000030000000000000000000000014ED87188D42B3F36130F355E83F3DE9C5E8F716321145159B41144E5514EBBEA"; char*
+//     enc_test_h = "80d2c70008197f0b00310000b1fe"; uint8_t* dec_test_b, *enc_test_b = NULL; int dec_test_len,
+//     enc_test_len = 0; int32_t status = CRYPTO_LIB_ERROR; reload_db();
+
 //     status = Crypto_Config_MariaDB(mysql_hostname, mysql_database, mysql_port, CRYPTO_FALSE, verify_server, ssl_ca,
 //                                 ssl_capath, ssl_cert, ssl_key, client_key_password, mysql_username, mysql_password);
 //     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-
-//     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+//     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
 //                         IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
 //                         TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
 //                         TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -248,12 +243,11 @@
 
 //     hex_conversion(dec_test_h, (char**) &dec_test_b, &dec_test_len);
 //     hex_conversion(enc_test_h, (char**) &enc_test_b, &enc_test_len);
-    
 
 //     TC_t* tc_sdls_processed_frame;
 //     tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
 //     memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
-    
+
 //     SecurityAssociation_t* test_association;
 //     sa_if->sa_get_from_spi(3, &test_association);
 //     test_association->iv[test_association->iv_len - 1] = 0;
@@ -282,13 +276,12 @@
 // {
 //     int32_t status = CRYPTO_LIB_ERROR;
 //     reload_db();
-    
+
 //     status = Crypto_Config_MariaDB(mysql_hostname, mysql_database, mysql_port, CRYPTO_FALSE, verify_server, ssl_ca,
 //                                 ssl_capath, ssl_cert, ssl_key, client_key_password, mysql_username, mysql_password);
 //     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-
-//     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+//     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
 //                         IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
 //                         TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
 //                         TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -325,10 +318,6 @@
 //     return_val =
 //         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 //     free(ptr_enc_frame);
-//     ptr_enc_frame = NULL;    
-//     return_val =
-//         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
-//     free(ptr_enc_frame);
 //     ptr_enc_frame = NULL;
 //     return_val =
 //         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
@@ -340,13 +329,16 @@
 //     ptr_enc_frame = NULL;
 //     return_val =
 //         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
-    
-    
+//     free(ptr_enc_frame);
+//     ptr_enc_frame = NULL;
+//     return_val =
+//         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+
 //     cleanup_sa(test_association);
-//     sa_if->sa_get_from_spi(4, &test_association);    
+//     sa_if->sa_get_from_spi(4, &test_association);
 //     for (int i = 0; i < test_association->iv_len; i++)
 //     {
-//         printf("[%d] Truth: %02x, Actual: %02x\n", i, expected_iv_b[i], *(test_association->iv + i)); 
+//         printf("[%d] Truth: %02x, Actual: %02x\n", i, expected_iv_b[i], *(test_association->iv + i));
 //         ASSERT_EQ(expected_iv_b[i], *(test_association->iv + i));
 //     }
 
@@ -356,7 +348,7 @@
 //     free(new_iv_b);
 //     free(raw_tc_sdls_ping_b);
 //     free(ptr_enc_frame);
-//     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);  
+//     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
 // }
 
 // /**
@@ -366,13 +358,12 @@
 // {
 //     int32_t status = CRYPTO_LIB_ERROR;
 //     reload_db();
-    
+
 //     status = Crypto_Config_MariaDB(mysql_hostname, mysql_database, mysql_port, CRYPTO_FALSE, verify_server, ssl_ca,
 //                                 ssl_capath, ssl_cert, ssl_key, client_key_password, mysql_username, mysql_password);
 //     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-
-//     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+//     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
 //                         IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
 //                         TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
 //                         TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -408,10 +399,6 @@
 //     sa_if->sa_get_from_spi(4, &test_association);
 //     memcpy(test_association->iv, new_iv_b, new_iv_len);
 //     return_val =
-//         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);  
-//     free(ptr_enc_frame);
-//     ptr_enc_frame = NULL; 
-//     return_val =
 //         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 //     free(ptr_enc_frame);
 //     ptr_enc_frame = NULL;
@@ -424,13 +411,17 @@
 //     free(ptr_enc_frame);
 //     ptr_enc_frame = NULL;
 //     return_val =
-//         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len); 
+//         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+//     free(ptr_enc_frame);
+//     ptr_enc_frame = NULL;
+//     return_val =
+//         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
 //     cleanup_sa(test_association);
-//     sa_if->sa_get_from_spi(4, &test_association);    
+//     sa_if->sa_get_from_spi(4, &test_association);
 //     for (int i = 0; i < test_association->iv_len; i++)
 //     {
-//         printf("[%d] Truth: %02x, Actual: %02x\n", i, expected_iv_b[i], *(test_association->iv + i)); 
+//         printf("[%d] Truth: %02x, Actual: %02x\n", i, expected_iv_b[i], *(test_association->iv + i));
 //         ASSERT_EQ(expected_iv_b[i], *(test_association->iv + i));
 //     }
 
@@ -440,9 +431,8 @@
 //     free(new_iv_b);
 //     free(raw_tc_sdls_ping_b);
 //     free(ptr_enc_frame);
-//     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);  
+//     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
 // }
-
 
 // /**
 //  * @brief Unit Test: Nominal Authorized Encryption With Partial ARSN Rollover, increment static ARSN
@@ -451,13 +441,12 @@
 // {
 //     int32_t status = CRYPTO_LIB_ERROR;
 //     reload_db();
-    
+
 //     status = Crypto_Config_MariaDB(mysql_hostname, mysql_database, mysql_port, CRYPTO_FALSE, verify_server, ssl_ca,
 //                                 ssl_capath, ssl_cert, ssl_key, client_key_password, mysql_username, mysql_password);
 //     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-
-//     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+//     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
 //                         IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
 //                         TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
 //                         TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -494,37 +483,42 @@
 //     sa_if->sa_get_from_spi(5, &test_association);
 
 //     return_val =
-//             Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+//             Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame,
+//             &enc_frame_len);
 //     ASSERT_EQ(CRYPTO_LIB_SUCCESS,return_val);
 //     free(ptr_enc_frame);
 //     ptr_enc_frame = NULL;
 //     cleanup_sa(test_association);
 //     sa_if->sa_get_from_spi(5, &test_association);
 //     return_val =
-//             Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+//             Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame,
+//             &enc_frame_len);
 //     ASSERT_EQ(CRYPTO_LIB_SUCCESS,return_val);
 //     free(ptr_enc_frame);
 //     ptr_enc_frame = NULL;
 //     cleanup_sa(test_association);
 //     sa_if->sa_get_from_spi(5, &test_association);
 //     return_val =
-//             Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+//             Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame,
+//             &enc_frame_len);
 //     ASSERT_EQ(CRYPTO_LIB_SUCCESS,return_val);
 //     free(ptr_enc_frame);
 //     ptr_enc_frame = NULL;
 //     cleanup_sa(test_association);
 //     sa_if->sa_get_from_spi(5, &test_association);
 //     return_val =
-//             Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+//             Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame,
+//             &enc_frame_len);
 //     ASSERT_EQ(CRYPTO_LIB_SUCCESS,return_val);
 //     free(ptr_enc_frame);
 //     ptr_enc_frame = NULL;
 //     cleanup_sa(test_association);
 //     sa_if->sa_get_from_spi(5, &test_association);
 //     return_val =
-//             Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+//             Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame,
+//             &enc_frame_len);
 //     ASSERT_EQ(CRYPTO_LIB_SUCCESS,return_val);
-    
+
 //     cleanup_sa(test_association);
 
 //     printf("Expected ARSN:\n");
@@ -540,7 +534,7 @@
 //     }
 
 //     //Must shutdown after checking test_association ARSN since that will get freed!
-    
+
 //     cleanup_sa(test_association);
 //     free(expected_arsn_b);
 //     free(new_arsn_b);
@@ -558,13 +552,12 @@
 // {
 //     int32_t status = CRYPTO_LIB_ERROR;
 //     reload_db();
-    
+
 //     status = Crypto_Config_MariaDB(mysql_hostname, mysql_database, mysql_port, CRYPTO_FALSE, verify_server, ssl_ca,
 //                                 ssl_capath, ssl_cert, ssl_key, client_key_password, mysql_username, mysql_password);
 //     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-
-//     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+//     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
 //                         IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
 //                         TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
 //                         TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -582,7 +575,8 @@
 //     uint8_t* ptr_enc_frame = NULL;
 //     uint16_t enc_frame_len = 0;
 
-//     int32_t return_val = Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_bad_scid_b, raw_tc_sdls_ping_bad_scid_len,
+//     int32_t return_val = Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_bad_scid_b,
+//     raw_tc_sdls_ping_bad_scid_len,
 //                                                  &ptr_enc_frame, &enc_frame_len);
 //     free(raw_tc_sdls_ping_bad_scid_b);
 //     free(ptr_enc_frame);

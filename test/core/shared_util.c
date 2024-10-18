@@ -32,7 +32,7 @@
 char *c_read_file(const char *f_name, long *f_size)
 {
     char *buffer = 0;
-    long length;
+    long  length;
     FILE *f = fopen(f_name, "rb");
     if (f)
     {
@@ -69,9 +69,9 @@ int convert_hexstring_to_byte_array(char *source_str, char *dest_buffer)
 {
     char *line = source_str;
     char *data = line;
-    int offset;
-    int read_byte;
-    int data_len = 0;
+    int   offset;
+    int   read_byte;
+    int   data_len = 0;
 
     while (sscanf(data, " %02x%n", &read_byte, &offset) == 1)
     {
@@ -93,7 +93,7 @@ int convert_hexstring_to_byte_array(char *source_str, char *dest_buffer)
 void hex_conversion(char *buffer_h, char **buffer_b, int *buffer_b_length)
 {
     // Convert input plaintext
-    *buffer_b = (char *)malloc((strlen(buffer_h) / 2) * sizeof(char));
+    *buffer_b        = (char *)malloc((strlen(buffer_h) / 2) * sizeof(char));
     *buffer_b_length = convert_hexstring_to_byte_array(buffer_h, *buffer_b);
 }
 
@@ -130,9 +130,9 @@ void debug_hexprintf(const char *bin_data, int size_bin_data)
     // https://stackoverflow.com/questions/6357031/how-do-you-convert-a-byte-array-to-a-hexadecimal-string-in-c
     // https://stackoverflow.com/questions/5040920/converting-from-signed-char-to-unsigned-char-and-back-again
     char *u_bin_data = (char *)bin_data;
-    char output[(size_bin_data * 2) + 1];
+    char  output[(size_bin_data * 2) + 1];
     char *ptr = &output[0];
-    int i;
+    int   i;
     for (i = 0; i < size_bin_data; i++)
     {
         ptr += sprintf(ptr, "%02X", u_bin_data[i]);
@@ -143,7 +143,7 @@ void debug_hexprintf(const char *bin_data, int size_bin_data)
 void debug_hexprintf(const char *bin_data, int size_bin_data)
 {
     // TODO - is this function / argument necessary?
-    bin_data = bin_data; 
+    bin_data      = bin_data;
     size_bin_data = size_bin_data;
     // Do nothing, DEBUG preprocessor disabled.
 }

@@ -8,22 +8,24 @@ UTEST(EP_MC, MC_REGULAR_PING)
 {
     remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_0_Managed_Parameters = {0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_0_Managed_Parameters = {
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
-    
+
     Crypto_Init();
     SaInterface sa_if = get_sa_interface_inmemory();
-    
+
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char* buffer_PING_h = "2003001a00ff000100001880d2c70008197f0b00310000b1fe312855";
+    char *buffer_PING_h = "2003001a00ff000100001880d2c70008197f0b00310000b1fe312855";
     //                    |2003001a00| = Primary Header
     //                              |ff| = Ext. Procs
     //                                |0001| = SPI
@@ -38,14 +40,14 @@ UTEST(EP_MC, MC_REGULAR_PING)
     //                                                                  |b1fe3128| = FSR
     //                                                                          |55| = Padding
 
-    uint8_t *buffer_PING_b = NULL;
-    int buffer_PING_len = 0;
+    uint8_t *buffer_PING_b   = NULL;
+    int      buffer_PING_len = 0;
 
     // Setup Processed Frame For Decryption
     TC_t tc_nist_processed_frame;
 
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association;
+    SecurityAssociation_t *test_association;
 
     // Modify SA 1
     sa_if->sa_get_from_spi(1, &test_association);
@@ -56,24 +58,24 @@ UTEST(EP_MC, MC_REGULAR_PING)
     test_association->sa_state = SA_UNKEYED;
 
     // Convert frames that will be processed
-    hex_conversion(buffer_PING_h, (char**) &buffer_PING_b, &buffer_PING_len);
-    
+    hex_conversion(buffer_PING_h, (char **)&buffer_PING_b, &buffer_PING_len);
+
     status = Crypto_TC_ProcessSecurity(buffer_PING_b, &buffer_PING_len, &tc_nist_processed_frame);
-    //ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    // ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
     printf("\n");
 
     // Check reply values
     uint16_t reply_length = 0;
-    uint8_t sdls_ep_reply_local[1024];
+    uint8_t  sdls_ep_reply_local[1024];
     status = Crypto_Get_Sdls_Ep_Reply(&sdls_ep_reply_local[0], &reply_length);
     // Expect success
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Print local copy
     printf("SDLS Reply LOCAL:  0x");
-    for (int i =0; i < reply_length; i++)
+    for (int i = 0; i < reply_length; i++)
     {
         printf("%02X", sdls_ep_reply_local[i]);
     }
@@ -88,7 +90,7 @@ UTEST(EP_MC, MC_REGULAR_PING)
     }
 
     Crypto_Shutdown();
-    
+
     free(buffer_PING_b);
 }
 
@@ -96,22 +98,24 @@ UTEST(EP_MC, MC_STATUS)
 {
     remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_0_Managed_Parameters = {0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_0_Managed_Parameters = {
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
-    
+
     Crypto_Init();
     SaInterface sa_if = get_sa_interface_inmemory();
-    
+
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char* buffer_STATUS_h = "2003001a00ff000100001880d2c70008197f0b00320000b1fe312855";
+    char *buffer_STATUS_h = "2003001a00ff000100001880d2c70008197f0b00320000b1fe312855";
     //                      |2003001a00| = Primary Header
     //                                |ff| = Ext. Procs
     //                                  |00010000| = Security Header
@@ -126,14 +130,14 @@ UTEST(EP_MC, MC_STATUS)
     //                                                                        |3128|
     //                                                                            |55| = Padding
 
-    uint8_t *buffer_STATUS_b = NULL;
-    int buffer_STATUS_len = 0;
+    uint8_t *buffer_STATUS_b   = NULL;
+    int      buffer_STATUS_len = 0;
 
     // Setup Processed Frame For Decryption
     TC_t tc_nist_processed_frame;
 
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association;
+    SecurityAssociation_t *test_association;
 
     // Modify SA 1
     sa_if->sa_get_from_spi(1, &test_association);
@@ -144,24 +148,24 @@ UTEST(EP_MC, MC_STATUS)
     test_association->sa_state = SA_UNKEYED;
 
     // Convert frames that will be processed
-    hex_conversion(buffer_STATUS_h, (char**) &buffer_STATUS_b, &buffer_STATUS_len);
-    
+    hex_conversion(buffer_STATUS_h, (char **)&buffer_STATUS_b, &buffer_STATUS_len);
+
     status = Crypto_TC_ProcessSecurity(buffer_STATUS_b, &buffer_STATUS_len, &tc_nist_processed_frame);
-    //ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    // ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
     printf("\n");
 
     // Check reply values
     uint16_t reply_length = 0;
-    uint8_t sdls_ep_reply_local[1024];
+    uint8_t  sdls_ep_reply_local[1024];
     status = Crypto_Get_Sdls_Ep_Reply(&sdls_ep_reply_local[0], &reply_length);
     // Expect success
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Print local copy
     printf("SDLS Reply LOCAL:  0x");
-    for (int i =0; i < reply_length; i++)
+    for (int i = 0; i < reply_length; i++)
     {
         printf("%02X", sdls_ep_reply_local[i]);
     }
@@ -176,7 +180,7 @@ UTEST(EP_MC, MC_STATUS)
     }
 
     Crypto_Shutdown();
-    
+
     free(buffer_STATUS_b);
 }
 
@@ -184,23 +188,25 @@ UTEST(EP_MC, MC_DUMP)
 {
     remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_0_Managed_Parameters = {0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_0_Managed_Parameters = {
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
-    
+
     Crypto_Init();
     SaInterface sa_if = get_sa_interface_inmemory();
-    
+
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
     // 0880d2c70039b300300a044e4153410a044e4153410a044e4153410a044e4153410a044e4153410a044e415341
-    char* buffer_DUMP_h = "2003001a00ff000100001880d2c70008197f0b00330000b1fe312855";
+    char *buffer_DUMP_h = "2003001a00ff000100001880d2c70008197f0b00330000b1fe312855";
     //                    |2003001a00| = Primary Header
     //                              |ff| = Ext. Procs
     //                                |00010000| = Security Header
@@ -215,14 +221,14 @@ UTEST(EP_MC, MC_DUMP)
     //                                                                      |3128|
     //                                                                          |55| = Padding
 
-    uint8_t *buffer_DUMP_b = NULL;
-    int buffer_DUMP_len = 0;
+    uint8_t *buffer_DUMP_b   = NULL;
+    int      buffer_DUMP_len = 0;
 
     // Setup Processed Frame For Decryption
     TC_t tc_nist_processed_frame;
 
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association;
+    SecurityAssociation_t *test_association;
 
     // Modify SA 1
     sa_if->sa_get_from_spi(1, &test_association);
@@ -233,24 +239,24 @@ UTEST(EP_MC, MC_DUMP)
     test_association->sa_state = SA_UNKEYED;
 
     // Convert frames that will be processed
-    hex_conversion(buffer_DUMP_h, (char**) &buffer_DUMP_b, &buffer_DUMP_len);
-    
+    hex_conversion(buffer_DUMP_h, (char **)&buffer_DUMP_b, &buffer_DUMP_len);
+
     status = Crypto_TC_ProcessSecurity(buffer_DUMP_b, &buffer_DUMP_len, &tc_nist_processed_frame);
-    //ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    // ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
     printf("\n");
 
     // Check reply values
     uint16_t reply_length = 0;
-    uint8_t sdls_ep_reply_local[1024];
+    uint8_t  sdls_ep_reply_local[1024];
     status = Crypto_Get_Sdls_Ep_Reply(&sdls_ep_reply_local[0], &reply_length);
     // Expect success
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Print local copy
     printf("SDLS Reply LOCAL:  0x");
-    for (int i =0; i < reply_length; i++)
+    for (int i = 0; i < reply_length; i++)
     {
         printf("%02X", sdls_ep_reply_local[i]);
     }
@@ -265,7 +271,7 @@ UTEST(EP_MC, MC_DUMP)
     }
 
     Crypto_Shutdown();
-    
+
     free(buffer_DUMP_b);
 }
 
@@ -273,22 +279,24 @@ UTEST(EP_MC, MC_ERASE)
 {
     remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_0_Managed_Parameters = {0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_0_Managed_Parameters = {
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
-    
+
     Crypto_Init();
     SaInterface sa_if = get_sa_interface_inmemory();
-    
+
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char* buffer_ERASE_h = "2003001a00ff000100001880d2c70008197f0b00340000b1fe312855";
+    char *buffer_ERASE_h = "2003001a00ff000100001880d2c70008197f0b00340000b1fe312855";
     //                     |2003001a00| = Primary Header
     //                               |ff| = Ext. Procs
     //                                 |00010000| = Security Header
@@ -301,16 +309,16 @@ UTEST(EP_MC, MC_ERASE)
     //                                                               |0000| = PDU Length
     //                                                                   |b1fe|
     //                                                                       |3128|
-    //                                                                           |55| = Padding 
+    //                                                                           |55| = Padding
 
-    uint8_t *buffer_ERASE_b = NULL;
-    int buffer_ERASE_len = 0;
+    uint8_t *buffer_ERASE_b   = NULL;
+    int      buffer_ERASE_len = 0;
 
     // Setup Processed Frame For Decryption
     TC_t tc_nist_processed_frame;
 
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association;
+    SecurityAssociation_t *test_association;
 
     // Modify SA 1
     sa_if->sa_get_from_spi(1, &test_association);
@@ -321,24 +329,24 @@ UTEST(EP_MC, MC_ERASE)
     test_association->sa_state = SA_UNKEYED;
 
     // Convert frames that will be processed
-    hex_conversion(buffer_ERASE_h, (char**) &buffer_ERASE_b, &buffer_ERASE_len);
-    
+    hex_conversion(buffer_ERASE_h, (char **)&buffer_ERASE_b, &buffer_ERASE_len);
+
     status = Crypto_TC_ProcessSecurity(buffer_ERASE_b, &buffer_ERASE_len, &tc_nist_processed_frame);
-    //ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    // ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
     printf("\n");
 
     // Check reply values
     uint16_t reply_length = 0;
-    uint8_t sdls_ep_reply_local[1024];
+    uint8_t  sdls_ep_reply_local[1024];
     status = Crypto_Get_Sdls_Ep_Reply(&sdls_ep_reply_local[0], &reply_length);
     // Expect success
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Print local copy
     printf("SDLS Reply LOCAL:  0x");
-    for (int i =0; i < reply_length; i++)
+    for (int i = 0; i < reply_length; i++)
     {
         printf("%02X", sdls_ep_reply_local[i]);
     }
@@ -353,7 +361,7 @@ UTEST(EP_MC, MC_ERASE)
     }
 
     Crypto_Shutdown();
-    
+
     free(buffer_ERASE_b);
 }
 
@@ -361,22 +369,24 @@ UTEST(EP_MC, MC_SELF_TEST)
 {
     remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_0_Managed_Parameters = {0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_0_Managed_Parameters = {
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
-    
+
     Crypto_Init();
     SaInterface sa_if = get_sa_interface_inmemory();
-    
+
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char* buffer_SELF_h = "2003001a00ff000100001880d2c70008197f0b00350000b1fe312855";
+    char *buffer_SELF_h = "2003001a00ff000100001880d2c70008197f0b00350000b1fe312855";
     //                    |2003001a00| = Primary Header
     //                              |ff| = Ext. Procs
     //                                |00010000| = Security Header
@@ -391,14 +401,14 @@ UTEST(EP_MC, MC_SELF_TEST)
     //                                                                      |3128|
     //                                                                          |55| = Padding
 
-    uint8_t *buffer_SELF_b = NULL;
-    int buffer_SELF_len = 0;
+    uint8_t *buffer_SELF_b   = NULL;
+    int      buffer_SELF_len = 0;
 
     // Setup Processed Frame For Decryption
     TC_t tc_nist_processed_frame;
 
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association;
+    SecurityAssociation_t *test_association;
 
     // Modify SA 1
     sa_if->sa_get_from_spi(1, &test_association);
@@ -409,24 +419,24 @@ UTEST(EP_MC, MC_SELF_TEST)
     test_association->sa_state = SA_UNKEYED;
 
     // Convert frames that will be processed
-    hex_conversion(buffer_SELF_h, (char**) &buffer_SELF_b, &buffer_SELF_len);
-    
+    hex_conversion(buffer_SELF_h, (char **)&buffer_SELF_b, &buffer_SELF_len);
+
     status = Crypto_TC_ProcessSecurity(buffer_SELF_b, &buffer_SELF_len, &tc_nist_processed_frame);
-    //ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    // ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
     printf("\n");
 
     // Check reply values
     uint16_t reply_length = 0;
-    uint8_t sdls_ep_reply_local[1024];
+    uint8_t  sdls_ep_reply_local[1024];
     status = Crypto_Get_Sdls_Ep_Reply(&sdls_ep_reply_local[0], &reply_length);
     // Expect success
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Print local copy
     printf("SDLS Reply LOCAL:  0x");
-    for (int i =0; i < reply_length; i++)
+    for (int i = 0; i < reply_length; i++)
     {
         printf("%02X", sdls_ep_reply_local[i]);
     }
@@ -441,7 +451,7 @@ UTEST(EP_MC, MC_SELF_TEST)
     }
 
     Crypto_Shutdown();
-    
+
     free(buffer_SELF_b);
 }
 
@@ -449,22 +459,24 @@ UTEST(EP_MC, MC_ALARM_FLAG_RESET)
 {
     remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_0_Managed_Parameters = {0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_0_Managed_Parameters = {
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
-    
+
     Crypto_Init();
     SaInterface sa_if = get_sa_interface_inmemory();
-    
+
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char* buffer_ALARM_h = "2003001a00ff000100001880d2c70008197f0b00370000b1fe312855";
+    char *buffer_ALARM_h = "2003001a00ff000100001880d2c70008197f0b00370000b1fe312855";
     //                     |2003001a00| = Primary Header
     //                               |ff| = Ext. Procs
     //                                 |00010000| = Security Header
@@ -479,14 +491,14 @@ UTEST(EP_MC, MC_ALARM_FLAG_RESET)
     //                                                                       |3128|
     //                                                                           |55| = Padding
 
-    uint8_t *buffer_ALARM_b = NULL;
-    int buffer_ALARM_len = 0;
+    uint8_t *buffer_ALARM_b   = NULL;
+    int      buffer_ALARM_len = 0;
 
     // Setup Processed Frame For Decryption
     TC_t tc_nist_processed_frame;
 
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association;
+    SecurityAssociation_t *test_association;
 
     // Modify SA 1
     sa_if->sa_get_from_spi(1, &test_association);
@@ -497,15 +509,15 @@ UTEST(EP_MC, MC_ALARM_FLAG_RESET)
     test_association->sa_state = SA_UNKEYED;
 
     // Convert frames that will be processed
-    hex_conversion(buffer_ALARM_h, (char**) &buffer_ALARM_b, &buffer_ALARM_len);
-    
+    hex_conversion(buffer_ALARM_h, (char **)&buffer_ALARM_b, &buffer_ALARM_len);
+
     status = Crypto_TC_ProcessSecurity(buffer_ALARM_b, &buffer_ALARM_len, &tc_nist_processed_frame);
-    //ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    // ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     printf("\n");
     Crypto_Shutdown();
-    
+
     free(buffer_ALARM_b);
 }
 
