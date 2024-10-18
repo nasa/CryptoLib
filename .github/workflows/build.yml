@@ -1,8 +1,6 @@
 name: CryptoLib
 
 on: 
-  push:
-    branches: [ main, dev ]
   pull_request:
     branches: [ main, dev ]
 
@@ -14,7 +12,7 @@ jobs:
     # Container Setup
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Update
       run: sudo apt-get update
     - name: Install Dependencies
@@ -51,7 +49,7 @@ jobs:
     # Container Setup
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Update
       run: sudo apt-get update
     - name: Install Dependencies
@@ -100,7 +98,7 @@ jobs:
   #   # Container Setup
   #   runs-on: ubuntu-latest
   #   steps:
-  #   - uses: actions/checkout@v2
+  #   - uses: actions/checkout@v4
   #   - name: Update
   #     run: sudo apt-get update
   #   - name: Install Dependencies
@@ -149,7 +147,7 @@ jobs:
     # Container Setup
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Update
       run: sudo apt-get update
     - name: Install Dependencies
@@ -217,18 +215,18 @@ jobs:
     # Container Setup
     runs-on: ubuntu-latest
     container:
-      image: rockylinux/rockylinux:8
+      image: rockylinux/rockylinux:9
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Update
       run: yum update -y
     - name: Install Dependencies
-      run: yum install -y epel-release python38-devel libcurl-devel git cmake gcc java-11-openjdk-devel openssl wget bzip2 ldconfig mariadb-devel mariadb-common mariadb-connector-c mariadb-connector-c-config mariadb-errmsg mariadb-gssapi-server
+      run: yum install -y --enablerepo=devel python3-pip python3-devel epel-release libcurl-devel git cmake gcc java-11-openjdk-devel openssl wget bzip2 ldconfig mariadb-devel mariadb-common mariadb-connector-c mariadb-connector-c-config mariadb-errmsg mariadb-gssapi-server
       # Might want to trim this down, but these dependencies should work for KMC
     - name: install lcov
       run: yum install -y --enablerepo=epel lcov
-    - name: Install Python Dependencies
-      run: pip3 install pycryptodome
+    - name: install lcov
+      run: python3 -m pip install pycryptodome
     - name: Install Libgcrypt
       run: >
         curl 

@@ -19,8 +19,9 @@
 #define CRYPTO_ERROR_H
 
 /*
- * If error codes are added to this header file, their enum string must be added to the error lists (in crypto_error.c)
- *  AND logic for returning the enum string must be added to crypto_error.c -- Crypto_Get_Error_Code_Enum_String(int32_t)
+ *  *** IMPORTANT READ ***
+ *  If error codes are added to this header file, their enum string must be added to the error lists (in crypto_error.c)
+ *  AND the appropriate _ERROR_CODE_MAX must be updated below!
  */
 
 #define CRYPTO_CONFIGURATION_NOT_COMPLETE 100
@@ -127,6 +128,28 @@
 #define CRYPTO_LIB_ERR_KEY_VALIDATION (-55)
 #define CRYPTO_LIB_ERR_SPI_INDEX_OOB (-56)
 #define CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL (-57)
+#define CRYPTO_LIB_ERR_IV_GREATER_THAN_MAX_LENGTH (-58)
+
+// Define codes for returning MDB Strings, and determining error based on strings
+#define CAM_ERROR_CODES 600
+#define CAM_ERROR_CODES_MAX 610
+
+#define KMC_ERROR_CODES 500
+#define KMC_ERROR_CODES_MAX 515
+
+#define CRYPTO_INTERFACE_ERROR_CODES 400
+#define CRYPTO_INTERFACE_ERROR_CODES_MAX 402
+
+#define SADB_ERROR_CODES 300
+#define SADB_ERROR_CODES_MAX 303
+
+#define SADB_INTERFACE_ERROR_CODES 200
+#define SADB_INTERFACE_ERROR_CODES_MAX 201
+
+#define CONFIGURATION_ERROR_CODES 100
+#define CONFIGURATION_ERROR_CODES_MAX 103
+
+#define CRYPTO_CORE_ERROR_CODES_MAX -57
 
 extern char *crypto_enum_errlist_core[];
 extern char *crypto_enum_errlist_config[];
@@ -135,8 +158,6 @@ extern char *crypto_enum_errlist_sa_mariadb[];
 extern char *crypto_enum_errlist_crypto_if[];
 extern char *crypto_enum_errlist_crypto_kmc[];
 extern char *crypto_enum_errlist_crypto_cam[];
-
-#define CRYPTO_UNDEFINED_ERROR (char*) "CRYPTO_UNDEFINED_ERROR_CODE"
 
 
 #endif //CRYPTO_ERROR_H

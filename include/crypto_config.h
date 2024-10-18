@@ -18,21 +18,6 @@
 #ifndef CRYPTO_CONFIG_H
 #define CRYPTO_CONFIG_H
 
-// Build Defines
-//#define BUILD_STATIC
-
-// Debug Defines -- Use CMAKE options
-//#define ARC_DEBUG
-//#define CCSDS_DEBUG
-//#define DEBUG //(CMAKE option, not hardcoded)
-//#define FECF_DEBUG
-//#define MAC_DEBUG
-//#define OCF_DEBUG
-//#define PDU_DEBUG
-//#define SA_DEBUG
-//#define TC_DEBUG
-//#define TM_DEBUG
-
 // Debug Colors
 #ifdef DEBUG
 #define CRYPTO_DEBUG printf("%s:%s: %d", __FILE__, __FUNCTION__, __LINE__);
@@ -61,6 +46,8 @@
 
 // Max Frame Size
 #define TC_MAX_FRAME_SIZE 1024
+#define TM_MAX_FRAME_SIZE 1786
+#define AOS_MAX_FRAME_SIZE 1786
 
 // Spacecraft Defines
 #define SCID 0x0003
@@ -103,6 +90,17 @@
 #define KEY_DESTROYED 3
 #define KEY_CORRUPTED 4
 
+// Key Length Defines
+// ECS
+#define AES256_GCM_KEYLEN 32
+#define AES256_GCM_SIV_KEYLEN 32
+#define AES256_CBC_KEYLEN 32
+#define AES256_CCM_KEYLEN 32
+// ACS
+#define CMAC_AES256_KEYLEN 32
+#define HMAC_SHA256_KEYLEN 32
+#define HMAC_SHA512_KEYLEN 64
+
 // SA Service Types
 #define SA_PLAINTEXT 0
 #define SA_AUTHENTICATION 1
@@ -132,6 +130,7 @@
 #define PAD_SIZE 32           /* bytes */
 #define CHALLENGE_SIZE 16     /* bytes */
 #define CHALLENGE_MAC_SIZE 16 /* bytes */
+#define BYTE_LEN 8            /* bits */
 
 // Monitoring and Control Defines
 #define EMV_SIZE 4  /* bytes */
@@ -139,7 +138,15 @@
 #define ST_OK 0x00
 #define ST_NOK 0xFF
 
-// Procedure Identification (PID)
+// Protocol Data Unit (PDU)
+// PDU Type
+#define PDU_TYPE_COMMAND 0
+#define PDU_TYPE_REPLY 1
+// PDU User Flag
+#define PDU_USER_FLAG_TRUE 1
+#define PDU_USER_FLAG_FALSE 0
+
+// Procedure Identification (PID) - CCSDS Defined Commands
 // Service Group - Key Management
 #define SG_KEY_MGMT 0x00 // 0b00
 #define PID_OTAR 0x01 // 0b0001
@@ -169,11 +176,22 @@
 #define PID_SELF_TEST 0x05 // 0b0101
 #define PID_ALARM_FLAG 0x07 // 0b0111
 
+// Procedure Identification (PID) - User Defined Commands
+#define PID_IDLE_FRAME_TRIGGER 0
+#define PID_TOGGLE_BAD_SPI 1
+#define PID_TOGGLE_BAD_IV 2
+#define PID_TOGGLE_BAD_MAC 3
+#define PID_TOGGLE_BAD_FECF 4
+#define PID_MODIFY_KEY 5
+#define PID_MODIFY_ACTIVE_TM 6
+#define PID_MODIFY_VCID 7
+
 // TC Defines
 #define TC_SH_SIZE 8 /* bits */
 #define TC_SN_SIZE 2
 #define TC_SN_WINDOW 10 /* +/- value */
-#define TC_FRAME_DATA_SIZE 1740 /* bytes */
+#define TC_FRAME_DATA_SIZE 1019 /* bytes */ // 1024 - 5byte header
+#define TC_CADU_ASM_SIZE 4
 
 // CCSDS PUS Defines
 #define TLV_DATA_SIZE 494 /* bytes */
@@ -196,7 +214,7 @@
 #define TM_CADU_HAS_ASM 1 // Skip 0x1acffc1d at beginning of each frame
 // TM CADU based on ASM, currently only holds non-turbo ASM
 #ifdef TM_CADU_HAS_ASM
-   #define TM_CADU_SIZE (TM_FRAME_DATA_SIZE + 6)
+   #define TM_CADU_SIZE (TM_FRAME_DATA_SIZE + TC_CADU_ASM_SIZE)
 #else
    #define TM_CADU_SIZE TM_FRAME_DATA_SIZE
 #endif
@@ -204,5 +222,16 @@
 // Logic Behavior Defines
 #define CRYPTO_FALSE 0
 #define CRYPTO_TRUE 1
+
+/*
+** SAVE FILE NAME/LOCATION
+*/
+#define CRYPTO_SA_SAVE "sa_save_file.bin"
+
+/*
+** TC_BLOCK_SIZE
+*/
+#define TC_BLOCK_SIZE 16
+
 
 #endif //CRYPTO_CONFIG_H

@@ -32,14 +32,13 @@ CFS_MODULE_DECLARE_LIB(crypto);
 /*
 ** Global Variables
 */
-// crypto_key_t ak_ring[NUM_KEYS];
 CCSDS_t sdls_frame;
 // TM_t tm_frame;
-uint8_t tm_frame[1786];                    // Testing
+uint8_t tm_frame[TM_MAX_FRAME_SIZE];       // TM Global Frame
 TM_FramePrimaryHeader_t tm_frame_pri_hdr;  // Used to reduce bit math duplication
 TM_FrameSecurityHeader_t tm_frame_sec_hdr; // Used to reduce bit math duplication
 // AOS_t aos_frame
-uint8_t aos_frame[1786];                    // Testing
+uint8_t aos_frame[AOS_MAX_FRAME_SIZE];       // AOS Global Frame
 AOS_FramePrimaryHeader_t aos_frame_pri_hdr;  // Used to reduce bit math duplication
 AOS_FrameSecurityHeader_t aos_frame_sec_hdr; // Used to reduce bit math duplication
 // OCF
@@ -57,8 +56,8 @@ uint8_t badIV = 0;
 uint8_t badMAC = 0;
 uint8_t badFECF = 0;
 //  CRC
-uint32_t crc32Table[256];
-uint16_t crc16Table[256];
+uint32_t crc32Table[CRC32TBL_SIZE];
+uint16_t crc16Table[CRC16TBL_SIZE];
 
 /*
 ** Assisting Functions
@@ -94,29 +93,30 @@ void clean_akref(SecurityAssociation_t* sa)
  * @brief Function: Crypto_Is_AEAD_Algorithm
  * Looks up cipher suite ID and determines if it's an AEAD algorithm. Returns 1 if true, 0 if false;
  * @param cipher_suite_id: uint32
+ * @return int: Success/Failure
  **/
 uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
 {
-    // CryptoLib only supports AES-GCM, which is an AEAD (Authenticated Encryption with Associated Data) algorithm, so
-    // return true/1.
-    // TODO - Add cipher suite mapping to which algorithms are AEAD and which are not.
+    int status = CRYPTO_FALSE;
+
+    // Determine if AEAD Algorithm
     if ((cipher_suite_id == CRYPTO_CIPHER_AES256_GCM) || (cipher_suite_id == CRYPTO_CIPHER_AES256_CBC_MAC) || (cipher_suite_id == CRYPTO_CIPHER_AES256_GCM_SIV))
     {
 #ifdef DEBUG
         printf(KYEL "CRYPTO IS AEAD? : TRUE\n" RESET);
 #endif
-        return CRYPTO_TRUE;
+        status = CRYPTO_TRUE;
     }
     else
     {
 #ifdef DEBUG
         printf(KYEL "CRYPTO IS AEAD? : FALSE\n" RESET);
 #endif
-        return CRYPTO_FALSE;
+        status = CRYPTO_FALSE;
     }
+    return status;
 }
 
-// TODO - Review this. Not sure it quite works how we think
 /**
  * @brief Function: Crypto_increment
  * Increments the bytes within a uint8_t array
@@ -125,26 +125,34 @@ uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
  * @return int32: Success/Failure
  **/
 int32_t Crypto_increment(uint8_t* num, int length)
-{
+{   
+    int status = CRYPTO_LIB_SUCCESS;
     int i;
-    /* go from right (least significant) to left (most signifcant) */
-    for (i = length - 1; i >= 0; --i)
+    if (num == NULL)
     {
-        ++(num[i]); /* increment current byte */
-
-        if (num[i] != 0) /* if byte did not overflow, we're done! */
-            break;
+        status = CRYPTO_LIB_ERR_NULL_BUFFER;
     }
-
-    if (i < 0) /* this means num[0] was incremented and overflowed */
+    if (status == CRYPTO_LIB_SUCCESS)
     {
-        for (i = 0; i < length; i++)
+        /* go from right (least significant) to left (most signifcant) */
+        for (i = length - 1; i >= 0; --i)
         {
-            num[i] = 0;
+            ++(num[i]); /* increment current byte */
+
+            if (num[i] != 0) /* if byte did not overflow, we're done! */
+                break;
+        }
+
+        if (i < 0) /* this means num[0] was incremented and overflowed */
+        {
+            for (i = 0; i < length; i++)
+            {
+                num[i] = 0;
+            }
         }
     }
 
-    return CRYPTO_LIB_SUCCESS;
+    return status;
 }
 
 /**
@@ -159,6 +167,7 @@ int32_t Crypto_increment(uint8_t* num, int length)
 int32_t Crypto_window(uint8_t* actual, uint8_t* expected, int length, int window)
 {
     int status = CRYPTO_LIB_ERROR;
+    int return_code = 0;
     int result = 0;
     uint8_t temp[length];
     int i;
@@ -170,14 +179,16 @@ int32_t Crypto_window(uint8_t* actual, uint8_t* expected, int length, int window
 #ifdef DEBUG
         printf("Crypto_Window expected ptr is NULL\n");
 #endif
-        return status;
+        status = CRYPTO_LIB_ERROR;
+        return_code = 1;
     }
     if (expected == NULL)
     {
 #ifdef DEBUG
         printf("Crypto_Window expected ptr is NULL\n");
 #endif
-        return status;
+        status = CRYPTO_LIB_ERROR;
+        return_code = 1;
     }
     // Check for special case where received value is all 0's and expected is all 0's (won't have -1 in sa!)
     // Received ARSN is: 00000000, SA ARSN is: 00000000
@@ -192,67 +203,39 @@ int32_t Crypto_window(uint8_t* actual, uint8_t* expected, int length, int window
     if (zero_case == CRYPTO_TRUE)
     {
         status = CRYPTO_LIB_SUCCESS;
-        return status;
+        return_code = 1;
     }
-
-    memcpy(temp, expected, length);
-    for (i = 0; i < window; i++)
+    if (return_code != 1)
     {
-        // Recall - the stored IV or ARSN is the last valid one received, check against next expected
-        Crypto_increment(&temp[0], length);
+        memcpy(temp, expected, length);
+        for (i = 0; i < window; i++)
+        {
+            // Recall - the stored IV or ARSN is the last valid one received, check against next expected
+            Crypto_increment(&temp[0], length);
 
 #ifdef DEBUG
-        printf("Checking Frame Against Incremented Window:\n");
-        Crypto_hexprint(temp, length);
+            printf("Checking Frame Against Incremented Window:\n");
+            Crypto_hexprint(temp, length);
 #endif
 
-        result = 0;
-        /* go from right (least significant) to left (most signifcant) */
-        for (j = length - 1; j >= 0; --j)
-        {
-            if (actual[j] == temp[j])
+            result = 0;
+            /* go from right (least significant) to left (most signifcant) */
+            for (j = length - 1; j >= 0; --j)
             {
-                result++;
+                if (actual[j] == temp[j])
+                {
+                    result++;
+                }
+            }
+            if (result == length)
+            {
+                status = CRYPTO_LIB_SUCCESS;
+                break;
             }
         }
-        if (result == length)
-        {
-            status = CRYPTO_LIB_SUCCESS;
-            break;
-        }
     }
     return status;
 }
-
-/**
- * @brief Function: Crypto_compare_less_equal
- * @param actual: uint8*
- * @param expected: uint8*
- * @param length: int
- * @return int32: Success/Failure
- **/
-/*
-int32_t Crypto_compare_less_equal(uint8_t* actual, uint8_t* expected, int length)
-{
-    int status = CRYPTO_LIB_ERROR;
-    int i;
-
-    for(i = 0; i < length - 1; i++)
-    {
-        if (actual[i] > expected[i])
-        {
-            status = CRYPTO_LIB_SUCCESS;
-            break;
-        }
-        else if (actual[i] < expected[i])
-        {
-            status = CRYPTO_LIB_ERROR;
-            break;
-        }
-    }
-    return status;
-}
-*/
 
 /**
  * @brief Function: Crypto_Prep_Reply
@@ -284,12 +267,6 @@ uint8_t Crypto_Prep_Reply(uint8_t* ingest, uint8_t appID)
     ingest[count++] = (sdls_frame.hdr.pkt_length & 0xFF00) >> 8;
     ingest[count++] = (sdls_frame.hdr.pkt_length & 0x00FF);
 
-    // Fill ingest with PUS
-    // ingest[count++] = (sdls_frame.pus.shf << 7) | (sdls_frame.pus.pusv << 4) | (sdls_frame.pus.ack);
-    // ingest[count++] = (sdls_frame.pus.st);
-    // ingest[count++] = (sdls_frame.pus.sst);
-    // ingest[count++] = (sdls_frame.pus.sid << 4) | (sdls_frame.pus.spare);
-
     // Fill ingest with Tag and Length
     ingest[count++] =
         (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | (sdls_frame.pdu.pid);
@@ -298,52 +275,6 @@ uint8_t Crypto_Prep_Reply(uint8_t* ingest, uint8_t appID)
 
     return count;
 }
-
-/**
- * @brief Function Crypto_FECF
- * Calculate the Frame Error Control Field (FECF), also known as a cyclic redundancy check (CRC)
- * @param fecf: int
- * @param ingest: uint8_t*
- * @param len_ingest: int
- * @param tc_frame: TC_t*
- * @return int32: Success/Failure
- **/
-/*
-int32_t Crypto_FECF(int fecf, uint8_t* ingest, int len_ingest,TC_t* tc_frame)
-{
-    int32_t result = CRYPTO_LIB_SUCCESS;
-    uint16_t calc_fecf = Crypto_Calc_FECF(ingest, len_ingest);
-
-    if ( (fecf & 0xFFFF) != calc_fecf )
-        {
-            if (((uint8_t)ingest[18] == 0x0B) && ((uint8_t)ingest[19] == 0x00) && (((uint8_t)ingest[20] & 0xF0) ==
-0x40))
-            {
-                // User packet check only used for ESA Testing!
-            }
-            else
-            {   // TODO: Error Correction
-                printf(KRED "Error: FECF incorrect!\n" RESET);
-                if (log_summary.rs > 0)
-                {
-                    Crypto_increment((uint8_t*)&log_summary.num_se, 4);
-                    log_summary.rs--;
-                    mc_log.blk[log_count].emt = FECF_ERR_EID;
-                    mc_log.blk[log_count].emv[0] = 0x4E;
-                    mc_log.blk[log_count].emv[1] = 0x41;
-                    mc_log.blk[log_count].emv[2] = 0x53;
-                    mc_log.blk[log_count].emv[3] = 0x41;
-                    mc_log.blk[log_count++].em_len = 4;
-                }
-                #ifdef FECF_DEBUG
-                    printf("\t Calculated = 0x%04x \n\t Received   = 0x%04x \n", calc_fecf,
-tc_frame->tc_sec_trailer.fecf); #endif result = CRYPTO_LIB_ERROR;
-            }
-        }
-
-    return result;
-}
-*/
 
 /**
  * @brief Function Crypto_Calc_FECF
@@ -355,7 +286,7 @@ tc_frame->tc_sec_trailer.fecf); #endif result = CRYPTO_LIB_ERROR;
 uint16_t Crypto_Calc_FECF(const uint8_t* ingest, int len_ingest)
 {
     uint16_t fecf = 0xFFFF;
-    uint16_t poly = 0x1021; // TODO: This polynomial is (CRC-CCITT) for ESA testing, may not match standard protocol
+    uint16_t poly = 0x1021; // This polynomial is (CRC-CCITT) for ESA testing, may not match standard protocol
     uint8_t bit;
     uint8_t c15;
     int i;
@@ -363,7 +294,7 @@ uint16_t Crypto_Calc_FECF(const uint8_t* ingest, int len_ingest)
 
     for (i = 0; i < len_ingest; i++)
     { // Byte Logic
-        for (j = 0; j < 8; j++)
+        for (j = 0; j < BYTE_LEN; j++)
         { // Bit Logic
             bit = ((ingest[i] >> (7 - j) & 1) == 1);
             c15 = ((fecf >> 15 & 1) == 1);
@@ -374,11 +305,6 @@ uint16_t Crypto_Calc_FECF(const uint8_t* ingest, int len_ingest)
             }
         }
     }
-    // Check if Testing
-    //if (badFECF == 1)
-    //{
-    //    fecf++;
-    //}
 
 #ifdef FECF_DEBUG
     int x;
@@ -409,8 +335,7 @@ uint16_t Crypto_Calc_CRC16(uint8_t* data, int size)
 
     for (; size > 0; size--)
     {
-        // printf("*data = 0x%02x \n", (uint8_t) *data);
-        crc = ((crc << 8) & 0xFF00) ^ crc16Table[(crc >> 8) ^ *data++];
+        crc = ((crc << BYTE_LEN) & 0xFF00) ^ crc16Table[(crc >> BYTE_LEN) ^ *data++];
     }
 
     return crc;
@@ -421,6 +346,7 @@ uint16_t Crypto_Calc_CRC16(uint8_t* data, int size)
 */
 /**
  * @brief Function: Crypto_PDU
+ * Parses PDU and directs to other function based on type/flags/sg
  * @param ingest: uint8_t*
  * @param tc_frame: TC_t*
  * @return int32: Success/Failure
@@ -429,392 +355,460 @@ int32_t Crypto_PDU(uint8_t* ingest, TC_t* tc_frame)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
-    switch (sdls_frame.pdu.type)
+    // Check null pointer
+    if (tc_frame == NULL)
     {
-    case 0: // Command
-        switch (sdls_frame.pdu.uf)
+        status = CRYPTO_LIB_ERR_NULL_BUFFER;
+    }
+    
+    if (status == CRYPTO_LIB_SUCCESS)
+    {
+        switch (sdls_frame.pdu.type)
         {
-        case 0: // CCSDS Defined Command
-            switch (sdls_frame.pdu.sg)
+        case PDU_TYPE_COMMAND: 
+            switch (sdls_frame.pdu.uf)
             {
-            case SG_KEY_MGMT: // Key Management Procedure
-                switch (sdls_frame.pdu.pid)
+            case PDU_USER_FLAG_FALSE: // CCSDS Defined Command
+                switch (sdls_frame.pdu.sg)
                 {
-                case PID_OTAR:
-#ifdef PDU_DEBUG
-                    printf(KGRN "Key OTAR\n" RESET);
-#endif
-                    status = Crypto_Key_OTAR();
+                case SG_KEY_MGMT: // Key Management Procedure
+                    status = Crypto_SG_KEY_MGMT(ingest, tc_frame);
                     break;
-                case PID_KEY_ACTIVATION:
-#ifdef PDU_DEBUG
-                    printf(KGRN "Key Activate\n" RESET);
-#endif
-                    status = Crypto_Key_update(KEY_ACTIVE);
+                case SG_SA_MGMT: // Security Association Management Procedure
+                    status = Crypto_SG_SA_MGMT(ingest, tc_frame);
                     break;
-                case PID_KEY_DEACTIVATION:
-#ifdef PDU_DEBUG
-                    printf(KGRN "Key Deactivate\n" RESET);
-#endif
-                    status = Crypto_Key_update(KEY_DEACTIVATED);
+                case SG_SEC_MON_CTRL: // Security Monitoring & Control Procedure
+                    status = Crypto_SEC_MON_CTRL(ingest);
                     break;
-                case PID_KEY_VERIFICATION:
+                default: // ERROR
 #ifdef PDU_DEBUG
-                    printf(KGRN "Key Verify\n" RESET);
+                    printf(KRED "Error: Crypto_PDU failed interpreting Service Group! \n" RESET);
 #endif
-                    status = Crypto_Key_verify(ingest, tc_frame);
-                    break;
-                case PID_KEY_DESTRUCTION:
-#ifdef PDU_DEBUG
-                    printf(KGRN "Key Destroy\n" RESET);
-#endif
-                    status = Crypto_Key_update(KEY_DESTROYED);
-                    break;
-                case PID_KEY_INVENTORY:
-#ifdef PDU_DEBUG
-                    printf(KGRN "Key Inventory\n" RESET);
-#endif
-                    status = Crypto_Key_inventory(ingest);
-                    break;
-                default:
-                    printf(KRED "Error: Crypto_PDU failed interpreting Key Management Procedure Identification Field! "
-                                "\n" RESET);
                     break;
                 }
                 break;
-            case SG_SA_MGMT: // Security Association Management Procedure
-                switch (sdls_frame.pdu.pid)
+
+            case PDU_USER_FLAG_TRUE: // User Defined Command
+                switch (sdls_frame.pdu.sg)
                 {
-                case PID_CREATE_SA:
-#ifdef PDU_DEBUG
-                    printf(KGRN "SA Create\n" RESET);
-#endif
-                    status = sa_if->sa_create();
-                    break;
-                case PID_DELETE_SA:
-#ifdef PDU_DEBUG
-                    printf(KGRN "SA Delete\n" RESET);
-#endif
-                    status = sa_if->sa_delete();
-                    break;
-                case PID_SET_ARSNW:
-#ifdef PDU_DEBUG
-                    printf(KGRN "SA setARSNW\n" RESET);
-#endif
-                    status = sa_if->sa_setARSNW();
-                    break;
-                case PID_REKEY_SA:
-#ifdef PDU_DEBUG
-                    printf(KGRN "SA Rekey\n" RESET);
-#endif
-                    status = sa_if->sa_rekey();
-                    break;
-                case PID_EXPIRE_SA:
-#ifdef PDU_DEBUG
-                    printf(KGRN "SA Expire\n" RESET);
-#endif
-                    status = sa_if->sa_expire();
-                    break;
-                case PID_SET_ARSN:
-#ifdef PDU_DEBUG
-                    printf(KGRN "SA SetARSN\n" RESET);
-#endif
-                    status = sa_if->sa_setARSN();
-                    break;
-                case PID_START_SA:
-#ifdef PDU_DEBUG
-                    printf(KGRN "SA Start\n" RESET);
-#endif
-                    status = sa_if->sa_start(tc_frame);
-                    break;
-                case PID_STOP_SA:
-#ifdef PDU_DEBUG
-                    printf(KGRN "SA Stop\n" RESET);
-#endif
-                    status = sa_if->sa_stop();
-                    break;
-                case PID_READ_ARSN:
-#ifdef PDU_DEBUG
-                    printf(KGRN "SA readARSN\n" RESET);
-#endif
-                    status = Crypto_SA_readARSN(ingest);
-                    break;
-                case PID_SA_STATUS:
-#ifdef PDU_DEBUG
-                    printf(KGRN "SA Status\n" RESET);
-#endif
-                    status = sa_if->sa_status(ingest);
-                    break;
                 default:
-                    printf(KRED "Error: Crypto_PDU failed interpreting SA Procedure Identification Field! \n" RESET);
+                    status = Crypto_USER_DEFINED_CMD(ingest);
                     break;
                 }
-                break;
-            case SG_SEC_MON_CTRL: // Security Monitoring & Control Procedure
-                switch (sdls_frame.pdu.pid)
-                {
-                case PID_PING:
-#ifdef PDU_DEBUG
-                    printf(KGRN "MC Ping\n" RESET);
-#endif
-                    status = Crypto_MC_ping(ingest);
-                    break;
-                case PID_LOG_STATUS:
-#ifdef PDU_DEBUG
-                    printf(KGRN "MC Status\n" RESET);
-#endif
-                    status = Crypto_MC_status(ingest);
-                    break;
-                case PID_DUMP_LOG:
-#ifdef PDU_DEBUG
-                    printf(KGRN "MC Dump\n" RESET);
-#endif
-                    status = Crypto_MC_dump(ingest);
-                    break;
-                case PID_ERASE_LOG:
-#ifdef PDU_DEBUG
-                    printf(KGRN "MC Erase\n" RESET);
-#endif
-                    status = Crypto_MC_erase(ingest);
-                    break;
-                case PID_SELF_TEST:
-#ifdef PDU_DEBUG
-                    printf(KGRN "MC Selftest\n" RESET);
-#endif
-                    status = Crypto_MC_selftest(ingest);
-                    break;
-                case PID_ALARM_FLAG:
-#ifdef PDU_DEBUG
-                    printf(KGRN "MC Reset Alarm\n" RESET);
-#endif
-                    status = Crypto_MC_resetalarm();
-                    break;
-                default:
-                    printf(KRED "Error: Crypto_PDU failed interpreting MC Procedure Identification Field! \n" RESET);
-                    break;
-                }
-                break;
-            default: // ERROR
-                printf(KRED "Error: Crypto_PDU failed interpreting Service Group! \n" RESET);
                 break;
             }
             break;
 
-        case 1: // User Defined Command
-            switch (sdls_frame.pdu.sg)
-            {
-            default:
-                switch (sdls_frame.pdu.pid)
-                {
-                case 0: // Idle Frame Trigger
+        case PDU_TYPE_REPLY: 
 #ifdef PDU_DEBUG
-                    printf(KMAG "User Idle Trigger\n" RESET);
+            printf(KRED "Error: Crypto_PDU failed interpreting PDU Type!  Received a Reply!?! \n" RESET);
 #endif
-                    status = Crypto_User_IdleTrigger(ingest);
-                    break;
-                case 1: // Toggle Bad SPI
-#ifdef PDU_DEBUG
-                    printf(KMAG "User Toggle Bad SPI\n" RESET);
-#endif
-                    status = Crypto_User_BadSPI();
-                    break;
-                case 2: // Toggle Bad IV
-#ifdef PDU_DEBUG
-                    printf(KMAG "User Toggle Bad IV\n" RESET);
-#endif
-                    status = Crypto_User_BadIV();
-                    break;
-                case 3: // Toggle Bad MAC
-#ifdef PDU_DEBUG
-                    printf(KMAG "User Toggle Bad MAC\n" RESET);
-#endif
-                    status = Crypto_User_BadMAC();
-                    break;
-                case 4: // Toggle Bad FECF
-#ifdef PDU_DEBUG
-                    printf(KMAG "User Toggle Bad FECF\n" RESET);
-#endif
-                    status = Crypto_User_BadFECF();
-                    break;
-                case 5: // Modify Key
-#ifdef PDU_DEBUG
-                    printf(KMAG "User Modify Key\n" RESET);
-#endif
-                    status = Crypto_User_ModifyKey();
-                    break;
-                case 6: // Modify ActiveTM
-#ifdef PDU_DEBUG
-                    printf(KMAG "User Modify Active TM\n" RESET);
-#endif
-                    status = Crypto_User_ModifyActiveTM();
-                    break;
-                case 7: // Modify TM VCID
-#ifdef PDU_DEBUG
-                    printf(KMAG "User Modify VCID\n" RESET);
-#endif
-                    status = Crypto_User_ModifyVCID();
-                    break;
-                default:
-                    printf(KRED "Error: Crypto_PDU received user defined command! \n" RESET);
-                    break;
-                }
-            }
             break;
         }
-        break;
-
-    case 1: // Reply
-        printf(KRED "Error: Crypto_PDU failed interpreting PDU Type!  Received a Reply!?! \n" RESET);
-        break;
-    }
 
 #ifdef CCSDS_DEBUG
-    int x;
-    if ((status > 0) && (ingest != NULL))
-    {
-        printf(KMAG "CCSDS message put on software bus: 0x" RESET);
-        for (x = 0; x < status; x++)
+        int x;
+        if ((status > 0) && (ingest != NULL))
         {
-            printf(KMAG "%02x" RESET, (uint8_t)ingest[x]);
+            printf(KMAG "CCSDS message put on software bus: 0x" RESET);
+            for (x = 0; x < status; x++)
+            {
+                printf(KMAG "%02x" RESET, (uint8_t)ingest[x]);
+            }
+            printf("\n");
         }
-        printf("\n");
-    }
 #endif
-
+    }
     return status;
 }
 
+/**
+ * @brief Function: Crypto_SG_KEY_MGMT
+ * Parses Key Management Procedure from PID
+ * @param ingest: uint8_t*
+ * @param tc_frame: TC_t*
+ * @return int32: Success/Failure
+ **/
+int32_t Crypto_SG_KEY_MGMT(uint8_t* ingest, TC_t* tc_frame)
+{
+    int status = CRYPTO_LIB_SUCCESS;
+    switch (sdls_frame.pdu.pid)
+    {
+        case PID_OTAR:
+#ifdef PDU_DEBUG
+            printf(KGRN "Key OTAR\n" RESET);
+#endif
+            status = Crypto_Key_OTAR();
+            break;
+        case PID_KEY_ACTIVATION:
+#ifdef PDU_DEBUG
+            printf(KGRN "Key Activate\n" RESET);
+#endif
+            status = Crypto_Key_update(KEY_ACTIVE);
+            break;
+        case PID_KEY_DEACTIVATION:
+#ifdef PDU_DEBUG
+            printf(KGRN "Key Deactivate\n" RESET);
+#endif
+            status = Crypto_Key_update(KEY_DEACTIVATED);
+            break;
+        case PID_KEY_VERIFICATION:
+#ifdef PDU_DEBUG
+            printf(KGRN "Key Verify\n" RESET);
+#endif
+            status = Crypto_Key_verify(ingest, tc_frame);
+            break;
+        case PID_KEY_DESTRUCTION:
+#ifdef PDU_DEBUG
+            printf(KGRN "Key Destroy\n" RESET);
+#endif
+            status = Crypto_Key_update(KEY_DESTROYED);
+            break;
+        case PID_KEY_INVENTORY:
+#ifdef PDU_DEBUG
+            printf(KGRN "Key Inventory\n" RESET);
+#endif
+            status = Crypto_Key_inventory(ingest);
+            break;
+        default:
+#ifdef PDU_DEBUG
+            printf(KRED "Error: Crypto_PDU failed interpreting Key Management Procedure Identification Field! \n" RESET);
+#endif
+            break;
+    }
+    return status;
+}
 
+/**
+ * @brief Function: Crypto_SG_SA_MGMT
+ * Parses SA Management Procedure from PID
+ * @param ingest: uint8_t*
+ * @param tc_frame: TC_t*
+ * @return int32: Success/Failure
+ **/
+int32_t Crypto_SG_SA_MGMT(uint8_t* ingest, TC_t* tc_frame)
+{
+    int status = CRYPTO_LIB_SUCCESS;
+    switch (sdls_frame.pdu.pid)
+    {
+        case PID_CREATE_SA:
+#ifdef PDU_DEBUG
+            printf(KGRN "SA Create\n" RESET);
+#endif
+            status = sa_if->sa_create();
+            break;
+        case PID_DELETE_SA:
+#ifdef PDU_DEBUG
+            printf(KGRN "SA Delete\n" RESET);
+#endif
+            status = sa_if->sa_delete();
+            break;
+        case PID_SET_ARSNW:
+#ifdef PDU_DEBUG
+            printf(KGRN "SA setARSNW\n" RESET);
+#endif
+            status = sa_if->sa_setARSNW();
+            break;
+        case PID_REKEY_SA:
+#ifdef PDU_DEBUG
+            printf(KGRN "SA Rekey\n" RESET);
+#endif
+            status = sa_if->sa_rekey();
+            break;
+        case PID_EXPIRE_SA:
+#ifdef PDU_DEBUG
+            printf(KGRN "SA Expire\n" RESET);
+#endif
+            status = sa_if->sa_expire();
+            break;
+        case PID_SET_ARSN:
+#ifdef PDU_DEBUG
+            printf(KGRN "SA SetARSN\n" RESET);
+#endif
+            status = sa_if->sa_setARSN();
+            break;
+        case PID_START_SA:
+#ifdef PDU_DEBUG
+            printf(KGRN "SA Start\n" RESET);
+#endif
+            status = sa_if->sa_start(tc_frame);
+            break;
+        case PID_STOP_SA:
+#ifdef PDU_DEBUG
+            printf(KGRN "SA Stop\n" RESET);
+#endif
+            status = sa_if->sa_stop();
+            break;
+        case PID_READ_ARSN:
+#ifdef PDU_DEBUG
+            printf(KGRN "SA readARSN\n" RESET);
+#endif
+            status = Crypto_SA_readARSN(ingest);
+            break;
+        case PID_SA_STATUS:
+#ifdef PDU_DEBUG
+            printf(KGRN "SA Status\n" RESET);
+#endif
+            status = sa_if->sa_status(ingest);
+            break;
+        default:
+#ifdef PDU_DEBUG
+            printf(KRED "Error: Crypto_PDU failed interpreting SA Procedure Identification Field! \n" RESET);
+#endif
+            break;
+    }
+    return status;
+}
+
+/**
+ * @brief Function: Crypto_SEC_MON_CTRL
+ * Parses MC Procedure from PID
+ * @param ingest: uint8_t*
+ * @return int32: Success/Failure
+ **/
+int32_t Crypto_SEC_MON_CTRL(uint8_t* ingest)
+{
+    int status = CRYPTO_LIB_SUCCESS;
+    switch (sdls_frame.pdu.pid)
+    {
+        case PID_PING:
+#ifdef PDU_DEBUG
+            printf(KGRN "MC Ping\n" RESET);
+#endif
+            status = Crypto_MC_ping(ingest);
+            break;
+        case PID_LOG_STATUS:
+#ifdef PDU_DEBUG
+            printf(KGRN "MC Status\n" RESET);
+#endif
+            status = Crypto_MC_status(ingest);
+            break;
+        case PID_DUMP_LOG:
+#ifdef PDU_DEBUG
+            printf(KGRN "MC Dump\n" RESET);
+#endif
+            status = Crypto_MC_dump(ingest);
+            break;
+        case PID_ERASE_LOG:
+#ifdef PDU_DEBUG
+            printf(KGRN "MC Erase\n" RESET);
+#endif
+            status = Crypto_MC_erase(ingest);
+            break;
+        case PID_SELF_TEST:
+#ifdef PDU_DEBUG
+            printf(KGRN "MC Selftest\n" RESET);
+#endif
+            status = Crypto_MC_selftest(ingest);
+            break;
+        case PID_ALARM_FLAG:
+#ifdef PDU_DEBUG
+            printf(KGRN "MC Reset Alarm\n" RESET);
+#endif
+            status = Crypto_MC_resetalarm();
+            break;
+        default:
+#ifdef PDU_DEBUG
+            printf(KRED "Error: Crypto_PDU failed interpreting MC Procedure Identification Field! \n" RESET);
+            break;
+#endif
+    }
+    return status;
+}
+
+/**
+ * @brief Function: Crypto_USER_DEFINED_CMD
+ * Parses User Defined Procedure from PID
+ * @param ingest: uint8_t*
+ * @return int32: Success/Failure
+ **/
+int32_t Crypto_USER_DEFINED_CMD(uint8_t* ingest)
+{
+    int status = CRYPTO_LIB_SUCCESS;
+    switch (sdls_frame.pdu.pid)
+    {
+        case PID_IDLE_FRAME_TRIGGER: 
+#ifdef PDU_DEBUG
+            printf(KMAG "User Idle Trigger\n" RESET);
+#endif
+            status = Crypto_User_IdleTrigger(ingest);
+            break;
+        case PID_TOGGLE_BAD_SPI: 
+#ifdef PDU_DEBUG
+            printf(KMAG "User Toggle Bad SPI\n" RESET);
+#endif
+            status = Crypto_User_BadSPI();
+            break;
+        case PID_TOGGLE_BAD_IV: 
+#ifdef PDU_DEBUG
+            printf(KMAG "User Toggle Bad IV\n" RESET);
+#endif
+            status = Crypto_User_BadIV();
+            break;
+        case PID_TOGGLE_BAD_MAC: 
+#ifdef PDU_DEBUG
+            printf(KMAG "User Toggle Bad MAC\n" RESET);
+#endif
+            status = Crypto_User_BadMAC();
+            break;
+        case PID_TOGGLE_BAD_FECF: 
+#ifdef PDU_DEBUG
+            printf(KMAG "User Toggle Bad FECF\n" RESET);
+#endif
+            status = Crypto_User_BadFECF();
+            break;
+        case PID_MODIFY_KEY: 
+#ifdef PDU_DEBUG
+            printf(KMAG "User Modify Key\n" RESET);
+#endif
+            status = Crypto_User_ModifyKey();
+            break;
+        case PID_MODIFY_ACTIVE_TM: 
+#ifdef PDU_DEBUG
+            printf(KMAG "User Modify Active TM\n" RESET);
+#endif
+            status = Crypto_User_ModifyActiveTM();
+            break;
+        case PID_MODIFY_VCID: 
+#ifdef PDU_DEBUG
+            printf(KMAG "User Modify VCID\n" RESET);
+#endif
+            status = Crypto_User_ModifyVCID();
+            break;
+        default:
+#ifdef PDU_DEBUG
+            printf(KRED "Error: Crypto_PDU received user defined command! \n" RESET);
+#endif
+            break;
+    }
+    return status;
+}
+
+/**
+ * @brief Function: Crypto_Process_Extended_Procedure_Pdu
+ * @param tfvn: uint8_t
+ * @param scid: uint16_t
+ * @param vcid: uint8_t
+ * @param managed_parameters_in: GvcidManagedParameters_t*
+ * @param managed_parameters_out: GvcidManagedParameters_t*
+ * @return int32: Success/Failure
+ **/
 int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
                                                 GvcidManagedParameters_t* managed_parameters_in,
                                                 GvcidManagedParameters_t* managed_parameters_out)
 {
     int32_t status = MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND;
-    for(int i = 0; i < gvcid_counter; i++)
+    // Check gvcid counter against a max
+    if (gvcid_counter > NUM_GVCID)
     {
-        if (managed_parameters_in[i].tfvn == tfvn && managed_parameters_in[i].scid == scid &&
-            managed_parameters_in[i].vcid == vcid)
+        status = CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT;
+    }
+    if (status != CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT)
+    {
+        for(int i = 0; i < gvcid_counter; i++)
         {
-            *managed_parameters_out = managed_parameters_in[i];
-            status = CRYPTO_LIB_SUCCESS;
-            break;
+            if (managed_parameters_in[i].tfvn == tfvn && managed_parameters_in[i].scid == scid &&
+                managed_parameters_in[i].vcid == vcid)
+            {
+                *managed_parameters_out = managed_parameters_in[i];
+                status = CRYPTO_LIB_SUCCESS;
+                break;
+            }
+        }
+
+        if(status != CRYPTO_LIB_SUCCESS)
+        {
+#ifdef DEBUG
+            printf(KRED "Error: Managed Parameters for GVCID(TFVN: %d, SCID: %d, VCID: %d) not found. \n" RESET, tfvn, scid,
+                vcid);
+#endif
         }
     }
-
-    if(status != CRYPTO_LIB_SUCCESS)
-    {
-        printf(KRED "Error: Managed Parameters for GVCID(TFVN: %d, SCID: %d, VCID: %d) not found. \n" RESET, tfvn, scid,
-               vcid);
-    }
-
     return status;
 }
-
-
-/**
- * @brief Function: Crypto_Get_Managed_Parameters_For_Gvcid
- * @param tfvn: uint8
- * @param scid: uint16
- * @param vcid: uint8
- * @param managed_parameters_in: GvcidManagedParameters_t*
- * @param managed_parameters_out: GvcidManagedParameters_t**
- * @return int32: Success/Failure
- **/
-// int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
-//                                                 GvcidManagedParameters_t* managed_parameters_in,
-//                                                 GvcidManagedParameters_t** managed_parameters_out)
-// {
-//     int32_t status = MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND;
-
-//     if (managed_parameters_in != NULL)
-//     {
-//         if (managed_parameters_in->tfvn == tfvn && managed_parameters_in->scid == scid &&
-//             managed_parameters_in->vcid == vcid)
-//         {
-//             *managed_parameters_out = managed_parameters_in;
-//             status = CRYPTO_LIB_SUCCESS;
-//             return status;
-//         }
-//         else
-//         {
-//             return Crypto_Get_Managed_Parameters_For_Gvcid(tfvn, scid, vcid, managed_parameters_in->next,
-//                                                            managed_parameters_out);
-//         }
-//     }
-//     else
-//     {
-//         printf(KRED "Error: Managed Parameters for GVCID(TFVN: %d, SCID: %d, VCID: %d) not found. \n" RESET, tfvn, scid,
-//                vcid);
-//         return status;
-//     }
-// }
-
-/**
- * @brief Function: Crypto_Free_Managed_Parameters
- * Managed parameters are expected to live the duration of the program, this may not be necessary.
- * @param managed_parameters: GvcidManagedParameters_t*
- **/
-// void Crypto_Free_Managed_Parameters(GvcidManagedParameters_t* managed_parameters)
-// {
-//     if (managed_parameters == NULL)
-//     {
-//         return; // Nothing to free, just return!
-//     }
-//     if (managed_parameters->next != NULL)
-//     {
-//         Crypto_Free_Managed_Parameters(managed_parameters->next);
-//     }
-//     free(managed_parameters);
-// }
 
 /**
  * @brief Function: Crypto_Process_Extended_Procedure_Pdu
  * @param tc_sdls_processed_frame: TC_t*
  * @param ingest: uint8_t*
+ * @return int32: Success/Failure
  * @note TODO - Actually update based on variable config
  **/
 int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, uint8_t* ingest)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     int x;
-
-    if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
+    // Check for null pointers
+    if (tc_sdls_processed_frame == NULL)
     {
-        if ((tc_sdls_processed_frame->tc_pdu[0] == 0x18) && (tc_sdls_processed_frame->tc_pdu[1] == 0x80))
-        // Crypto Lib Application ID
+        status = CRYPTO_LIB_ERR_NULL_BUFFER;
+    }
+    if (status == CRYPTO_LIB_SUCCESS)
+    {
+        if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
+        {
+            if ((tc_sdls_processed_frame->tc_pdu[0] == 0x18) && (tc_sdls_processed_frame->tc_pdu[1] == 0x80))
+            // Crypto Lib Application ID
+            {
+#ifdef DEBUG
+                printf(KGRN "Received SDLS command: " RESET);
+#endif
+                // CCSDS Header
+                sdls_frame.hdr.pvn = (tc_sdls_processed_frame->tc_pdu[0] & 0xE0) >> 5;
+                sdls_frame.hdr.type = (tc_sdls_processed_frame->tc_pdu[0] & 0x10) >> 4;
+                sdls_frame.hdr.shdr = (tc_sdls_processed_frame->tc_pdu[0] & 0x08) >> 3;
+                sdls_frame.hdr.appID =
+                    ((tc_sdls_processed_frame->tc_pdu[0] & 0x07) << 8) | tc_sdls_processed_frame->tc_pdu[1];
+                sdls_frame.hdr.seq = (tc_sdls_processed_frame->tc_pdu[2] & 0xC0) >> 6;
+                sdls_frame.hdr.pktid =
+                    ((tc_sdls_processed_frame->tc_pdu[2] & 0x3F) << 8) | tc_sdls_processed_frame->tc_pdu[3];
+                sdls_frame.hdr.pkt_length = (tc_sdls_processed_frame->tc_pdu[4] << 8) | tc_sdls_processed_frame->tc_pdu[5];
+
+                // CCSDS PUS
+                sdls_frame.pus.shf = (tc_sdls_processed_frame->tc_pdu[6] & 0x80) >> 7;
+                sdls_frame.pus.pusv = (tc_sdls_processed_frame->tc_pdu[6] & 0x70) >> 4;
+                sdls_frame.pus.ack = (tc_sdls_processed_frame->tc_pdu[6] & 0x0F);
+                sdls_frame.pus.st = tc_sdls_processed_frame->tc_pdu[7];
+                sdls_frame.pus.sst = tc_sdls_processed_frame->tc_pdu[8];
+                sdls_frame.pus.sid = (tc_sdls_processed_frame->tc_pdu[9] & 0xF0) >> 4;
+                sdls_frame.pus.spare = (tc_sdls_processed_frame->tc_pdu[9] & 0x0F);
+
+                // SDLS TLV PDU
+                sdls_frame.pdu.type = (tc_sdls_processed_frame->tc_pdu[10] & 0x80) >> 7;
+                sdls_frame.pdu.uf = (tc_sdls_processed_frame->tc_pdu[10] & 0x40) >> 6;
+                sdls_frame.pdu.sg = (tc_sdls_processed_frame->tc_pdu[10] & 0x30) >> 4;
+                sdls_frame.pdu.pid = (tc_sdls_processed_frame->tc_pdu[10] & 0x0F);
+                sdls_frame.pdu.pdu_len = (tc_sdls_processed_frame->tc_pdu[11] << 8) | tc_sdls_processed_frame->tc_pdu[12];
+                for (x = 13; x < (13 + sdls_frame.hdr.pkt_length); x++)
+                {
+                    sdls_frame.pdu.data[x - 13] = tc_sdls_processed_frame->tc_pdu[x];
+                }
+
+#ifdef CCSDS_DEBUG
+                Crypto_ccsdsPrint(&sdls_frame);
+#endif
+
+                // Determine type of PDU
+                status = Crypto_PDU(ingest, tc_sdls_processed_frame);
+            }
+        }
+        else if (tc_sdls_processed_frame->tc_header.vcid == TC_SDLS_EP_VCID) // TC SDLS PDU with no packet layer
         {
 #ifdef DEBUG
             printf(KGRN "Received SDLS command: " RESET);
 #endif
-            // CCSDS Header
-            sdls_frame.hdr.pvn = (tc_sdls_processed_frame->tc_pdu[0] & 0xE0) >> 5;
-            sdls_frame.hdr.type = (tc_sdls_processed_frame->tc_pdu[0] & 0x10) >> 4;
-            sdls_frame.hdr.shdr = (tc_sdls_processed_frame->tc_pdu[0] & 0x08) >> 3;
-            sdls_frame.hdr.appID =
-                ((tc_sdls_processed_frame->tc_pdu[0] & 0x07) << 8) | tc_sdls_processed_frame->tc_pdu[1];
-            sdls_frame.hdr.seq = (tc_sdls_processed_frame->tc_pdu[2] & 0xC0) >> 6;
-            sdls_frame.hdr.pktid =
-                ((tc_sdls_processed_frame->tc_pdu[2] & 0x3F) << 8) | tc_sdls_processed_frame->tc_pdu[3];
-            sdls_frame.hdr.pkt_length = (tc_sdls_processed_frame->tc_pdu[4] << 8) | tc_sdls_processed_frame->tc_pdu[5];
-
-            // CCSDS PUS
-            sdls_frame.pus.shf = (tc_sdls_processed_frame->tc_pdu[6] & 0x80) >> 7;
-            sdls_frame.pus.pusv = (tc_sdls_processed_frame->tc_pdu[6] & 0x70) >> 4;
-            sdls_frame.pus.ack = (tc_sdls_processed_frame->tc_pdu[6] & 0x0F);
-            sdls_frame.pus.st = tc_sdls_processed_frame->tc_pdu[7];
-            sdls_frame.pus.sst = tc_sdls_processed_frame->tc_pdu[8];
-            sdls_frame.pus.sid = (tc_sdls_processed_frame->tc_pdu[9] & 0xF0) >> 4;
-            sdls_frame.pus.spare = (tc_sdls_processed_frame->tc_pdu[9] & 0x0F);
-
+            // No Packet HDR or PUS in these frames
             // SDLS TLV PDU
-            sdls_frame.pdu.type = (tc_sdls_processed_frame->tc_pdu[10] & 0x80) >> 7;
-            sdls_frame.pdu.uf = (tc_sdls_processed_frame->tc_pdu[10] & 0x40) >> 6;
-            sdls_frame.pdu.sg = (tc_sdls_processed_frame->tc_pdu[10] & 0x30) >> 4;
-            sdls_frame.pdu.pid = (tc_sdls_processed_frame->tc_pdu[10] & 0x0F);
-            sdls_frame.pdu.pdu_len = (tc_sdls_processed_frame->tc_pdu[11] << 8) | tc_sdls_processed_frame->tc_pdu[12];
-            for (x = 13; x < (13 + sdls_frame.hdr.pkt_length); x++)
+            sdls_frame.pdu.type = (tc_sdls_processed_frame->tc_pdu[0] & 0x80) >> 7;
+            sdls_frame.pdu.uf = (tc_sdls_processed_frame->tc_pdu[0] & 0x40) >> 6;
+            sdls_frame.pdu.sg = (tc_sdls_processed_frame->tc_pdu[0] & 0x30) >> 4;
+            sdls_frame.pdu.pid = (tc_sdls_processed_frame->tc_pdu[0] & 0x0F);
+            sdls_frame.pdu.pdu_len = (tc_sdls_processed_frame->tc_pdu[1] << 8) | tc_sdls_processed_frame->tc_pdu[2];
+            for (x = 3; x < (3 + tc_sdls_processed_frame->tc_header.fl); x++)
             {
-                sdls_frame.pdu.data[x - 13] = tc_sdls_processed_frame->tc_pdu[x];
+                // Todo - Consider how this behaves with large OTAR PDUs that are larger than 1 TC in size. Most likely
+                // fails. Must consider Uplink Sessions (sequence numbers).
+                sdls_frame.pdu.data[x - 3] = tc_sdls_processed_frame->tc_pdu[x];
             }
 
 #ifdef CCSDS_DEBUG
@@ -824,38 +818,11 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, uin
             // Determine type of PDU
             status = Crypto_PDU(ingest, tc_sdls_processed_frame);
         }
-    }
-    else if (tc_sdls_processed_frame->tc_header.vcid == TC_SDLS_EP_VCID) // TC SDLS PDU with no packet layer
-    {
-#ifdef DEBUG
-        printf(KGRN "Received SDLS command: " RESET);
-#endif
-        // No Packet HDR or PUS in these frames
-        // SDLS TLV PDU
-        sdls_frame.pdu.type = (tc_sdls_processed_frame->tc_pdu[0] & 0x80) >> 7;
-        sdls_frame.pdu.uf = (tc_sdls_processed_frame->tc_pdu[0] & 0x40) >> 6;
-        sdls_frame.pdu.sg = (tc_sdls_processed_frame->tc_pdu[0] & 0x30) >> 4;
-        sdls_frame.pdu.pid = (tc_sdls_processed_frame->tc_pdu[0] & 0x0F);
-        sdls_frame.pdu.pdu_len = (tc_sdls_processed_frame->tc_pdu[1] << 8) | tc_sdls_processed_frame->tc_pdu[2];
-        for (x = 3; x < (3 + tc_sdls_processed_frame->tc_header.fl); x++)
+        else
         {
-            // Todo - Consider how this behaves with large OTAR PDUs that are larger than 1 TC in size. Most likely
-            // fails. Must consider Uplink Sessions (sequence numbers).
-            sdls_frame.pdu.data[x - 3] = tc_sdls_processed_frame->tc_pdu[x];
+            // TODO - Process SDLS PDU with Packet Layer without PUS_HDR
         }
-
-#ifdef CCSDS_DEBUG
-        Crypto_ccsdsPrint(&sdls_frame);
-#endif
-
-        // Determine type of PDU
-        status = Crypto_PDU(ingest, tc_sdls_processed_frame);
     }
-    else
-    {
-        // TODO - Process SDLS PDU with Packet Layer without PUS_HDR
-    }
-
     return status;
 } // End Process SDLS PDU
 
@@ -866,6 +833,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t* tc_sdls_processed_frame, uin
  * @param sa_ptr: SecurityAssociation_t*
  * @param arsn: uint8_t*
  * @param iv: uint8_t*
+ * @return int32: Success/Failure
  **/
 int32_t Crypto_Check_Anti_Replay_Verify_Pointers(SecurityAssociation_t* sa_ptr, uint8_t* arsn, uint8_t* iv)
 {
@@ -894,39 +862,47 @@ int32_t Crypto_Check_Anti_Replay_Verify_Pointers(SecurityAssociation_t* sa_ptr, 
  * @param sa_ptr: SecurityAssociation_t*
  * @param arsn: uint8_t*
  * @param arsn_valid: uint8_t*
+ * @return int32: Success/Failure
  **/
 int32_t Crypto_Check_Anti_Replay_ARSNW(SecurityAssociation_t* sa_ptr, uint8_t* arsn, int8_t* arsn_valid)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    if (sa_ptr->shsnf_len > 0)
+
+    // Check for null pointers
+    if (sa_ptr == NULL || arsn == NULL || arsn_valid == NULL)
     {
-        // Check Sequence Number is in ARSNW
-        status = Crypto_window(arsn, sa_ptr->arsn, sa_ptr->arsn_len, sa_ptr->arsnw);
-#ifdef DEBUG
-        printf("Received ARSN is\n\t");
-        for (int i = 0; i < sa_ptr->arsn_len; i++)
-        {
-            printf("%02x", *(arsn + i));
-        }
-        printf("\nSA ARSN is\n\t");
-        for (int i = 0; i < sa_ptr->arsn_len; i++)
-        {
-            printf("%02x", *(sa_ptr->arsn + i));
-        }
-        printf("\nARSNW is: %d\n", sa_ptr->arsnw);
-        printf("Status from Crypto_Window is: %d\n", status);
-#endif
-        if (status != CRYPTO_LIB_SUCCESS)
-        {
-            return CRYPTO_LIB_ERR_ARSN_OUTSIDE_WINDOW;
-        }
-        // Valid ARSN received, increment stored value
-        else
-        {
-            *arsn_valid = CRYPTO_TRUE;
-            // memcpy(sa_ptr->arsn, arsn, sa_ptr->arsn_len);
-        }
+        status = CRYPTO_LIB_ERR_NULL_BUFFER;
     }
+
+    if (status == CRYPTO_LIB_SUCCESS)
+        if (sa_ptr->shsnf_len > 0)
+        {
+            // Check Sequence Number is in ARSNW
+            status = Crypto_window(arsn, sa_ptr->arsn, sa_ptr->arsn_len, sa_ptr->arsnw);
+    #ifdef DEBUG
+            printf("Received ARSN is\n\t");
+            for (int i = 0; i < sa_ptr->arsn_len; i++)
+            {
+                printf("%02x", *(arsn + i));
+            }
+            printf("\nSA ARSN is\n\t");
+            for (int i = 0; i < sa_ptr->arsn_len; i++)
+            {
+                printf("%02x", *(sa_ptr->arsn + i));
+            }
+            printf("\nARSNW is: %d\n", sa_ptr->arsnw);
+            printf("Status from Crypto_Window is: %d\n", status);
+    #endif
+            if (status != CRYPTO_LIB_SUCCESS)
+            {
+                return CRYPTO_LIB_ERR_ARSN_OUTSIDE_WINDOW;
+            }
+            // Valid ARSN received, increment stored value
+            else
+            {
+                *arsn_valid = CRYPTO_TRUE;
+            }
+        }
     return status;
 }
 
@@ -936,45 +912,53 @@ int32_t Crypto_Check_Anti_Replay_ARSNW(SecurityAssociation_t* sa_ptr, uint8_t* a
  * @param sa_ptr: SecurityAssociation_t*
  * @param iv: uint8_t*
  * @param iv_valid: uint8_t*
+ * @return int32: Success/Failure
  **/
 int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t* sa_ptr, uint8_t* iv, int8_t* iv_valid)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     if ((sa_ptr->iv_len > 0) && (sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM))
     {
-        // Check IV is in ARSNW
-        if(crypto_config.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
+        // Check IV Length
+        if (sa_ptr->iv_len > IV_SIZE)
         {
-            status = Crypto_window(iv, sa_ptr->iv, sa_ptr->iv_len, sa_ptr->arsnw);
+            status = CRYPTO_LIB_ERR_IV_GREATER_THAN_MAX_LENGTH;
         }
-        else // SA_INCREMENT_NONTRANSMITTED_IV_FALSE
+        if (status == CRYPTO_LIB_SUCCESS)
         {
-            // Whole IV gets checked in MAC validation previously, this only verifies transmitted portion is what we expect.
-            status = Crypto_window(iv, sa_ptr->iv + (sa_ptr->iv_len - sa_ptr->shivf_len), sa_ptr->shivf_len, sa_ptr->arsnw);
-        }
+            // Check IV is in ARSNW
+            if(crypto_config.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
+            {
+                status = Crypto_window(iv, sa_ptr->iv, sa_ptr->iv_len, sa_ptr->arsnw);
+            }
+            else // SA_INCREMENT_NONTRANSMITTED_IV_FALSE
+            {
+                // Whole IV gets checked in MAC validation previously, this only verifies transmitted portion is what we expect.
+                status = Crypto_window(iv, sa_ptr->iv + (sa_ptr->iv_len - sa_ptr->shivf_len), sa_ptr->shivf_len, sa_ptr->arsnw);
+            }
 #ifdef DEBUG
-        printf("Received IV is\n\t");
-        for (int i = 0; i < sa_ptr->iv_len; i++)
-        {
-            printf("%02x", *(iv + i));
-        }
-        printf("\nSA IV is\n\t");
-        for (int i = 0; i < sa_ptr->iv_len; i++)
-        {
-            printf("%02x", *(sa_ptr->iv + i));
-        }
-        printf("\nARSNW is: %d\n", sa_ptr->arsnw);
-        printf("Crypto_Window return status is: %d\n", status);
+            printf("Received IV is\n\t");
+            for (int i = 0; i < sa_ptr->iv_len; i++)
+            {
+                printf("%02x", *(iv + i));
+            }
+            printf("\nSA IV is\n\t");
+            for (int i = 0; i < sa_ptr->iv_len; i++)
+            {
+                printf("%02x", *(sa_ptr->iv + i));
+            }
+            printf("\nARSNW is: %d\n", sa_ptr->arsnw);
+            printf("Crypto_Window return status is: %d\n", status);
 #endif
-        if (status != CRYPTO_LIB_SUCCESS)
-        {
-            return CRYPTO_LIB_ERR_IV_OUTSIDE_WINDOW;
-        }
-        // Valid IV received, increment stored value
-        else
-        {
-            *iv_valid = CRYPTO_TRUE;
-            // memcpy(sa_ptr->iv, iv, sa_ptr->iv_len);
+            if (status != CRYPTO_LIB_SUCCESS)
+            {
+                return CRYPTO_LIB_ERR_IV_OUTSIDE_WINDOW;
+            }
+            // Valid IV received, increment stored value
+            else
+            {
+                *iv_valid = CRYPTO_TRUE;
+            }
         }
     }
     return status;
@@ -986,6 +970,7 @@ int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t* sa_ptr, uint8_t* iv,
  * @param sa_ptr: SecurityAssociation_t*
  * @param arsn: uint8_t*
  * @param iv: uint8_t*
+ * @return int32: Success/Failure
  **/
 int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t* sa_ptr, uint8_t* arsn, uint8_t* iv)
 {
@@ -1041,8 +1026,9 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t* sa_ptr, uint8_t* arsn, u
 
 /**
 * @brief: Function: Crypto_Get_ECS_Algo_Keylen
-* For a given algorithm, return the associated key length in bytes
+* For a given ECS algorithm, return the associated key length in bytes
 * @param algo: uint8_t
+* @return int32: Key Length
 **/
 int32_t Crypto_Get_ECS_Algo_Keylen(uint8_t algo)
 {
@@ -1051,16 +1037,16 @@ int32_t Crypto_Get_ECS_Algo_Keylen(uint8_t algo)
     switch (algo)
     {
     case CRYPTO_CIPHER_AES256_GCM:
-        retval = 32;
+        retval = AES256_GCM_KEYLEN;
         break;
     case CRYPTO_CIPHER_AES256_GCM_SIV:
-        retval = 32;
+        retval = AES256_GCM_SIV_KEYLEN;
         break;
     case CRYPTO_CIPHER_AES256_CBC:
-        retval = 32;
+        retval = AES256_CBC_KEYLEN;
         break;
     case CRYPTO_CIPHER_AES256_CCM:
-        retval = 32;
+        retval = AES256_CCM_KEYLEN;
         break;
     default:
         break;
@@ -1071,8 +1057,9 @@ int32_t Crypto_Get_ECS_Algo_Keylen(uint8_t algo)
 
 /**
 * @brief: Function: Crypto_Get_ACS_Algo_Keylen
-* For a given algorithm, return the associated key length in bytes
+* For a given ACS algorithm, return the associated key length in bytes
 * @param algo: uint8_t
+* @return int32: Key Length
 **/
 int32_t Crypto_Get_ACS_Algo_Keylen(uint8_t algo)
 {
@@ -1081,67 +1068,17 @@ int32_t Crypto_Get_ACS_Algo_Keylen(uint8_t algo)
     switch (algo)
     {
     case CRYPTO_MAC_CMAC_AES256:
-        retval = 32;
+        retval = CMAC_AES256_KEYLEN;
         break;
     case CRYPTO_MAC_HMAC_SHA256:
-        retval = 32;
+        retval = HMAC_SHA256_KEYLEN;
         break;
     case CRYPTO_MAC_HMAC_SHA512:
-        retval = 64;
+        retval = HMAC_SHA512_KEYLEN;
         break;
     default:
         break;
     }
 
     return retval;
-}
-
-/**
-* @brief: Function: Crypto_Get_Security_Header_Length
-* Return Security Header Length
-* @param sa_ptr: SecurityAssociation_t*
-**/
-int32_t Crypto_Get_Security_Header_Length(SecurityAssociation_t* sa_ptr)
-{
-    /* Narrator's Note: Leaving this here for future work
-    ** eventually we need a way to reconcile cryptolib managed parameters with TO managed parameters
-    GvcidManagedParameters_t* temp_current_managed_parameters = NULL;
-    Crypto_Get_Managed_Parameters_For_Gvcid(tfvn, scid, vcid,
-                                            gvcid_managed_parameters, temp_current_managed_parameters);
-    */
-
-    if (!sa_ptr) 
-    { 
-#ifdef DEBUG
-        printf(KRED "Get_Security_Header_Length passed Null SA!\n" RESET);
-#endif
-        return CRYPTO_LIB_ERR_NULL_SA;
-    }
-    uint16_t securityHeaderLength = 2; // Start with SPI
-
-    securityHeaderLength += sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;
-
-    return securityHeaderLength;
-}
-
-/**
-* @brief: Function: Crypto_Get_Security_Trailer_Length
-* Return Security Trailer Length
-* @param sa_ptr: SecurityAssociation_t*
-**/
-int32_t Crypto_Get_Security_Trailer_Length(SecurityAssociation_t* sa_ptr)
-{
-    if (!sa_ptr) 
-    { 
-#ifdef DEBUG
-        printf(KRED "Get_Trailer_Trailer_Length passed Null SA!\n" RESET);
-#endif
-        return CRYPTO_LIB_ERR_NULL_SA;
-    }
-    uint16_t securityTrailerLength = 0;
-
-    securityTrailerLength = sa_ptr->stmacf_len;
-
-    return securityTrailerLength;
-
 }
