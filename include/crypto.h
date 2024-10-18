@@ -176,8 +176,6 @@ void Crypto_TM_Calc_PDU_MAC(uint16_t* pdu_len, uint16_t byte_idx, SecurityAssoci
 int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t* sa_ptr, uint8_t ecs_is_aead_algorithm, uint16_t byte_idx, uint8_t* p_new_dec_frame, uint16_t pdu_len, uint8_t* p_ingest, crypto_key_t* ekp, crypto_key_t* akp, uint8_t iv_loc, int mac_loc, uint16_t aad_len, uint8_t* aad, uint8_t** pp_processed_frame, uint16_t* p_decrypted_length);
 void Crypto_TM_Process_Debug_Print(uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t* sa_ptr);
 
-
-extern uint8_t Crypto_Prep_Reply(uint8_t* ingest, uint8_t appID);
 extern int32_t Crypto_increment(uint8_t* num, int length);
 int32_t Crypto_Get_tmLength(int len);
 uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id);
@@ -200,11 +198,16 @@ int32_t Crypto_Check_Anti_Replay_Verify_Pointers(SecurityAssociation_t* sa_ptr, 
 int32_t Crypto_Check_Anti_Replay_ARSNW(SecurityAssociation_t* sa_ptr, uint8_t* arsn, int8_t* arsn_valid);
 int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t* sa_ptr, uint8_t* iv, int8_t* iv_valid);
 
+// SDLS Related Functions
+extern uint8_t Crypto_Prep_Reply(uint8_t* ingest, uint8_t appID);
+extern void Crypto_Print_Sdls_Ep_Reply(void);
+extern int32_t Crypto_Get_Sdls_Ep_Reply(uint8_t* buffer, uint16_t* length);
+
 // Key Management Functions
 int32_t Crypto_Key_OTAR(void);
 int32_t Crypto_Key_update(uint8_t state);
-int32_t Crypto_Key_inventory(uint8_t* );
-int32_t Crypto_Key_verify(uint8_t* , TC_t* tc_frame);
+int32_t Crypto_Key_inventory(uint8_t*);
+int32_t Crypto_Key_verify(TC_t* tc_frame);
 
 // Security Monitoring & Control Procedure
 int32_t Crypto_MC_ping(uint8_t* ingest);
@@ -252,6 +255,8 @@ extern char* crypto_deep_copy_string(char* src_string);
 */ 
 // Data stores used in multiple components
 extern CCSDS_t sdls_frame;
+extern SDLS_KEYV_RPLY_t sdls_ep_keyv_reply;
+extern uint8_t sdls_ep_reply[TC_MAX_FRAME_SIZE];
 // extern TM_t tm_frame;
 extern uint8_t tm_frame[1786];
 extern TM_FramePrimaryHeader_t tm_frame_pri_hdr; 
@@ -276,7 +281,6 @@ extern SaInterface sa_if;
 extern CryptographyInterface cryptography_if;
 
 // extern crypto_key_t ak_ring[NUM_KEYS];
-extern CCSDS_t sdls_frame;
 extern SadbMariaDBConfig_t* sa_mariadb_config;
 extern GvcidManagedParameters_t* gvcid_managed_parameters;
 extern GvcidManagedParameters_t* current_managed_parameters;

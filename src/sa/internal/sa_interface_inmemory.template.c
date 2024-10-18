@@ -990,13 +990,13 @@ static int32_t sa_start(TC_t* tc_frame)
         // 3-4 : Service Group Field (sg)
         // 5-8 : Procedure Identification Field (pid)
         sa[spi].lpid =
-            (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
+            (sdls_frame.pdu.hdr.type << 7) | (sdls_frame.pdu.hdr.uf << 6) | (sdls_frame.pdu.hdr.sg << 4) | sdls_frame.pdu.hdr.pid;
 
         if (sa[spi].sa_state == SA_KEYED)
         {
             count = 2;
 
-            for (x = 0; x <= ((sdls_frame.pdu.pdu_len - 2) / 4); x++)
+            for (x = 0; x <= ((sdls_frame.pdu.hdr.pdu_len - 2) / 4); x++)
             { // Read in GVCID
                 gvcid.tfvn = (sdls_frame.pdu.data[count] >> 4);
                 gvcid.scid = (sdls_frame.pdu.data[count] << 12) | (sdls_frame.pdu.data[count + 1] << 4) |
@@ -1124,7 +1124,7 @@ static int32_t sa_stop(void)
         // 3-4 : Service Group Field (sg)
         // 5-8 : Procedure Identification Field (pid)
         sa[spi].lpid =
-            (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
+            (sdls_frame.pdu.hdr.type << 7) | (sdls_frame.pdu.hdr.uf << 6) | (sdls_frame.pdu.hdr.sg << 4) | sdls_frame.pdu.hdr.pid;
 
         if (sa[spi].sa_state == SA_OPERATIONAL)
         {
@@ -1190,7 +1190,7 @@ static int32_t sa_rekey(void)
         // 3-4 : Service Group Field (sg)
         // 5-8 : Procedure Identification Field (pid)
         sa[spi].lpid =
-            (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
+            (sdls_frame.pdu.hdr.type << 7) | (sdls_frame.pdu.hdr.uf << 6) | (sdls_frame.pdu.hdr.sg << 4) | sdls_frame.pdu.hdr.pid;
 
         if (sa[spi].sa_state == SA_UNKEYED)
         { // Encryption Key
@@ -1233,15 +1233,19 @@ static int32_t sa_rekey(void)
         }
         else
         {
+#ifdef PDU_DEBUG
             printf(KRED "ERROR: SPI %d is not in the UNKEYED state.\n" RESET, spi);
+#endif
         }
     }
     else
     {
+#ifdef PDU_DEBUG
         printf(KRED "ERROR: SPI %d does not exist.\n" RESET, spi);
+#endif
     }
 
-#ifdef DEBUG
+#ifdef PDU_DEBUG
     printf("\t spi  = %d \n", spi);
     printf("\t ekid = %d \n", sa[spi].ekid);
     // printf("\t akid = %d \n", sa[spi].akid);
@@ -1261,9 +1265,7 @@ static int32_t sa_expire(void)
 
     // Read ingest
     spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
-#ifdef DEBUG
     printf("spi = %d \n", spi);
-#endif
 
     // Check SPI exists and in 'Keyed' state
     if (spi < NUM_SA)
@@ -1275,7 +1277,7 @@ static int32_t sa_expire(void)
         // 3-4 : Service Group Field (sg)
         // 5-8 : Procedure Identification Field (pid)
         sa[spi].lpid =
-            (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
+            (sdls_frame.pdu.hdr.type << 7) | (sdls_frame.pdu.hdr.uf << 6) | (sdls_frame.pdu.hdr.sg << 4) | sdls_frame.pdu.hdr.pid;
 
         if (sa[spi].sa_state == SA_KEYED)
         { // Change to 'Unkeyed' state
@@ -1324,7 +1326,7 @@ static int32_t sa_create(void)
         // 3-4 : Service Group Field (sg)
         // 5-8 : Procedure Identification Field (pid)
         sa[spi].lpid =
-            (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
+            (sdls_frame.pdu.hdr.type << 7) | (sdls_frame.pdu.hdr.uf << 6) | (sdls_frame.pdu.hdr.sg << 4) | sdls_frame.pdu.hdr.pid;
 
         // Write SA Configuration
         sa[spi].est = ((uint8_t)sdls_frame.pdu.data[2] & 0x80) >> 7;
@@ -1409,7 +1411,7 @@ static int32_t sa_delete(void)
         // 3-4 : Service Group Field (sg)
         // 5-8 : Procedure Identification Field (pid)
         sa[spi].lpid =
-            (sdls_frame.pdu.type << 7) | (sdls_frame.pdu.uf << 6) | (sdls_frame.pdu.sg << 4) | sdls_frame.pdu.pid;
+            (sdls_frame.pdu.hdr.type << 7) | (sdls_frame.pdu.hdr.uf << 6) | (sdls_frame.pdu.hdr.sg << 4) | sdls_frame.pdu.hdr.pid;
 
         if (sa[spi].sa_state == SA_UNKEYED)
         { // Change to 'None' state
@@ -1453,11 +1455,11 @@ static int32_t sa_setARSN(void)
     // Check SPI exists
     if (spi < NUM_SA)
     {
-#ifdef PDU_DEBUG
-        printf("SPI %d IV updated to: 0x", spi);
-#endif
-        if (sa[spi].shivf_len > 0)
+        if (sa[spi].shivf_len > 0 && sa[spi].ecs == 1 && sa[spi].acs == 1)
         { // Set IV - authenticated encryption
+#ifdef PDU_DEBUG
+            printf("SPI %d IV updated to: 0x", spi);
+#endif
             for (x = 0; x < IV_SIZE; x++)
             {
                 *(sa[spi].iv + x) = (uint8_t)sdls_frame.pdu.data[x + 2];
@@ -1469,7 +1471,16 @@ static int32_t sa_setARSN(void)
         }
         else
         { // Set SN
-          // TODO
+#ifdef PDU_DEBUG
+            printf("SPI %d ARSN updated to: 0x", spi);
+#endif
+            for (x = 0; x < sa[spi].arsn_len; x++)
+            {
+                *(sa[spi].arsn + x) = (uint8_t)sdls_frame.pdu.data[x + 2];
+#ifdef PDU_DEBUG
+                printf("%02x", *(sa[spi].arsn + x));
+#endif
+            }
         }
 #ifdef PDU_DEBUG
         printf("\n");
@@ -1491,31 +1502,32 @@ static int32_t sa_setARSNW(void)
 {
     // Local variables
     uint16_t spi = 0x0000;
-    int x;
 
     // Read ingest
     spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
+#ifdef PDU_DEBUG
     printf("spi = %d \n", spi);
+#endif
 
     // Check SPI exists
     if (spi < NUM_SA)
     {
-        sa[spi].arsnw_len = (uint8_t)sdls_frame.pdu.data[2];
-
         // Check for out of bounds
         if (sa[spi].arsnw_len > (ARSN_SIZE))
         {
             sa[spi].arsnw_len = ARSN_SIZE;
         }
 
-        for (x = 0; x < sa[spi].arsnw_len; x++)
-        {
-            sa[spi].arsnw = (((uint8_t)sdls_frame.pdu.data[x + 3]) << (sa[spi].arsnw_len - x));
-        }
+        sa[spi].arsnw = (((uint8_t)sdls_frame.pdu.data[2]));
+#ifdef PDU_DEBUG
+        printf("ARSN set to: %d\n", sa[spi].arsnw);
+#endif
     }
     else
     {
+#ifdef PDU_DEBUG
         printf("sa_setARSNW ERROR: SPI %d does not exist.\n", spi);
+#endif
     }
 
     return CRYPTO_LIB_SUCCESS;
@@ -1528,36 +1540,55 @@ static int32_t sa_setARSNW(void)
  **/
 static int32_t sa_status(uint8_t* ingest)
 {
-    if(ingest == NULL) return CRYPTO_LIB_ERROR;
+    // TODO: Count is not being returned yet
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    if(ingest == NULL)
+    {
+        status = CRYPTO_LIB_ERROR;
+    }
     
-    // Local variables
-    int count = 0;
-    uint16_t spi = 0x0000;
-
-    // Read ingest
-    spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
-    printf("spi = %d \n", spi);
-
-    // Check SPI exists
-    if (spi < NUM_SA)
+    if (status == CRYPTO_LIB_SUCCESS)
     {
-        // Prepare for Reply
-        sdls_frame.pdu.pdu_len = 3;
-        sdls_frame.hdr.pkt_length = sdls_frame.pdu.pdu_len + 9;
-        count = Crypto_Prep_Reply(ingest, 128);
-        // PDU
-        ingest[count++] = (spi & 0xFF00) >> 8;
-        ingest[count++] = (spi & 0x00FF);
-        ingest[count++] = sa[spi].lpid;
-    }
-    else
-    {
-        printf("sa_status ERROR: SPI %d does not exist.\n", spi);
-    }
+        // Local variables
+        int count = 0;
+        uint16_t spi = 0x0000;
+
+        // Read ingest
+        spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
+        printf("spi = %d \n", spi);
+
+        // Check SPI exists
+        if (spi < NUM_SA)
+        {
+            printf("SIZE: %ld\n", SDLS_SA_STATUS_RPLY_SIZE);
+            // Prepare for Reply
+            sdls_frame.pdu.hdr.pdu_len = SDLS_SA_STATUS_RPLY_SIZE * 8;
+            sdls_frame.hdr.pkt_length = (sdls_frame.pdu.hdr.pdu_len / 8) + SDLS_TLV_HDR_SIZE + 9;
+            count = Crypto_Prep_Reply(sdls_ep_reply, 128);
+            // PDU
+            sdls_ep_reply[count++] = (spi & 0xFF00) >> 8;
+            sdls_ep_reply[count++] = (spi & 0x00FF);
+            sdls_ep_reply[count++] = sa[spi].lpid;
+        }
+        else
+        {
+            printf("sa_status ERROR: SPI %d does not exist.\n", spi);
+            status = CRYPTO_LIB_ERR_SPI_INDEX_OOB;
+        }
 
 #ifdef SA_DEBUG
-    Crypto_saPrint(&sa[spi]);
+        Crypto_saPrint(&sa[spi]);
+        if (status == CRYPTO_LIB_SUCCESS)
+        {
+            printf("SA Status Reply:   0x");
+            for (int x = 0; x < count; x++)
+            {
+                printf("%02X", sdls_ep_reply[x]);
+            }
+            printf("\n\n");
+        }
 #endif
+    }
 
-    return count;
+    return status;
 }

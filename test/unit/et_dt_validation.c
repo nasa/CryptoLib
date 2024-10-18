@@ -237,6 +237,7 @@ UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
     // Setup & Initialize CryptoLib
     Crypto_Init_TC_Unit_Test();
     SaInterface sa_if = get_sa_interface_inmemory();
+    int status = CRYPTO_LIB_SUCCESS;
 
     char* activate_sa4_h = "2003002000ff000100011880d2c9000e197f0b001b0004000400003040d95ecbc2";
     char* dec_test_ping_h =
@@ -252,8 +253,6 @@ UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
 
     SecurityAssociation_t* test_association = NULL;
     test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
-
-    int32_t return_val = -1;
 
     TC_t* tc_sdls_processed_frame;
     tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
@@ -274,8 +273,8 @@ UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
     test_association->abm_len = ABM_SIZE;
 
     // Ensure that Process Security can activate SA 4
-    return_val = Crypto_TC_ProcessSecurity(activate_sa4_b, &activate_sa4_len, tc_sdls_processed_frame);
-    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+    status = Crypto_TC_ProcessSecurity(activate_sa4_b, &activate_sa4_len, tc_sdls_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Deactive SA 1
     test_association->sa_state = SA_NONE;
@@ -300,8 +299,8 @@ UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
     test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
     test_association->arsn_len = ((test_association->arsnw * 2) + 1);
 
-    return_val = Crypto_TC_ProcessSecurity(dec_test_ping_b, &dec_test_ping_len, tc_sdls_processed_frame);
-    ASSERT_EQ(9, return_val); // 9 is the number of pings in that EP PDU.
+    status = Crypto_TC_ProcessSecurity(dec_test_ping_b, &dec_test_ping_len, tc_sdls_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status); // 9 is the number of pings in that EP PDU.
 
     Crypto_Shutdown();
 

@@ -108,157 +108,162 @@ UTEST(CRYPTO_C, PDU_SWITCH)
 
     Crypto_Init();
 
-    sdls_frame.pdu.type = 0;
-    sdls_frame.pdu.uf = 0;
-    sdls_frame.pdu.sg = SG_KEY_MGMT;
-    sdls_frame.pdu.pid = PID_OTAR;
+    sdls_frame.hdr.type = 0;
+    sdls_frame.pdu.hdr.uf = 0;
+    printf("SG_KEY_MGMT\n");
+    sdls_frame.pdu.hdr.sg = SG_KEY_MGMT;
+    sdls_frame.pdu.hdr.pid = PID_OTAR;
     uint8_t* ingest = NULL;
 
     TC_t tc_frame;
     status = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.pid = PID_KEY_ACTIVATION;
+    sdls_frame.pdu.hdr.pid = PID_KEY_ACTIVATION;
     status = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.pid = PID_KEY_DEACTIVATION;
+    sdls_frame.pdu.hdr.pid = PID_KEY_DEACTIVATION;
     status = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.pdu_len = 0;
-    sdls_frame.pdu.pid = PID_KEY_VERIFICATION;
+    sdls_frame.pdu.hdr.pdu_len = 0;
+    sdls_frame.pdu.hdr.pid = PID_KEY_VERIFICATION;
     status = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.pid = PID_KEY_DESTRUCTION;
+    sdls_frame.pdu.hdr.pid = PID_KEY_DESTRUCTION;
     status = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.pid = PID_KEY_INVENTORY;
-    status = Crypto_PDU(ingest, &tc_frame);
-    ASSERT_EQ(status, CRYPTOGRAPHY_UNSUPPORTED_OPERATION_FOR_KEY_RING);
-
-    sdls_frame.pdu.pid = SG_KEY_MGMT;
+    sdls_frame.pdu.hdr.pid = PID_KEY_INVENTORY;
     status = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.sg = SG_SA_MGMT;
-    sdls_frame.pdu.pid = PID_CREATE_SA;
+    sdls_frame.pdu.hdr.pid = SG_KEY_MGMT;
     status = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.pid = PID_DELETE_SA;
+    printf("SG_SA_MGMT\n");
+    sdls_frame.pdu.hdr.sg = SG_SA_MGMT;
+    sdls_frame.pdu.hdr.pid = PID_CREATE_SA;
     status = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.pid = PID_SET_ARSNW;
+    sdls_frame.pdu.hdr.pid = PID_DELETE_SA;
     status = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.pid = PID_REKEY_SA;
+    sdls_frame.pdu.hdr.pid = PID_SET_ARSNW;
     status = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.pid = PID_EXPIRE_SA;
+    sdls_frame.pdu.hdr.pid = PID_REKEY_SA;
     status = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.pid = PID_SET_ARSN;
+    sdls_frame.pdu.hdr.pid = PID_EXPIRE_SA;
     status = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.pid = PID_START_SA;
+    sdls_frame.pdu.hdr.pid = PID_SET_ARSN;
     status = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.pid = PID_STOP_SA;
+    sdls_frame.pdu.hdr.pid = PID_START_SA;
     status = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.pid = PID_READ_ARSN;
-    status = Crypto_PDU(ingest, &tc_frame);
-    ASSERT_EQ(status, CRYPTO_LIB_ERROR);
-
-    sdls_frame.pdu.pid = PID_SA_STATUS;
-    status = Crypto_PDU(ingest, &tc_frame);
-    ASSERT_EQ(status, CRYPTO_LIB_ERROR);
-
-    sdls_frame.pdu.pid = 0b111;
+    sdls_frame.pdu.hdr.pid = PID_STOP_SA;
     status = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.sg = SG_SEC_MON_CTRL;
-    sdls_frame.pdu.pid = PID_LOG_STATUS;
-    status = Crypto_PDU(ingest, &tc_frame);
-    ASSERT_EQ(status, CRYPTO_LIB_ERROR);
-
-    sdls_frame.pdu.pid = PID_DUMP_LOG;
-    status = Crypto_PDU(ingest, &tc_frame);
-    ASSERT_EQ(status, CRYPTO_LIB_ERROR);
-
-    sdls_frame.pdu.pid = PID_ERASE_LOG;
-    status = Crypto_PDU(ingest, &tc_frame);
-    ASSERT_EQ(status, CRYPTO_LIB_ERROR);
-
-    sdls_frame.pdu.pid = PID_SELF_TEST;
-    status = Crypto_PDU(ingest, &tc_frame);
-    ASSERT_EQ(status, CRYPTO_LIB_ERROR);
-
-    sdls_frame.pdu.pid = PID_ALARM_FLAG;
+    sdls_frame.pdu.hdr.pid = PID_READ_ARSN;
     status = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.pid = 0b1111;
+    sdls_frame.pdu.hdr.pid = PID_SA_STATUS;
     status = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.sg = PID_LOG_STATUS;
-    sdls_frame.pdu.pid = PID_LOG_STATUS;
+    sdls_frame.pdu.hdr.pid = 0b111;
     status = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.uf = 1;
-    sdls_frame.pdu.pid = 0;
+    printf("SG_SEC_MON_CTRL\n");
+    sdls_frame.pdu.hdr.sg = SG_SEC_MON_CTRL;
+    sdls_frame.pdu.hdr.pid = PID_LOG_STATUS;
     status = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.pid = 1;
+    sdls_frame.pdu.hdr.pid = PID_DUMP_LOG;
     status = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.pid = 2;
+    sdls_frame.pdu.hdr.pid = PID_ERASE_LOG;
     status = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.pid = 3;
+    sdls_frame.pdu.hdr.pid = PID_SELF_TEST;
     status = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.pid = 4;
+    sdls_frame.pdu.hdr.pid = PID_ALARM_FLAG;
     status = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.pid = 5;
+    sdls_frame.pdu.hdr.pid = 0b1111;
     status = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.pid = 6;
+    printf("PID_LOG_STATUS\n");
+    sdls_frame.pdu.hdr.sg = PID_LOG_STATUS;
+    sdls_frame.pdu.hdr.pid = PID_LOG_STATUS;
+    status = Crypto_PDU(ingest, &tc_frame);
+    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+
+    printf("UF_TRUE\n");
+    sdls_frame.pdu.hdr.uf = 1;
+    sdls_frame.pdu.hdr.pid = 0;
+    status = Crypto_PDU(ingest, &tc_frame);
+    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+
+    sdls_frame.pdu.hdr.pid = 1;
+    status = Crypto_PDU(ingest, &tc_frame);
+    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+
+    sdls_frame.pdu.hdr.pid = 2;
+    status = Crypto_PDU(ingest, &tc_frame);
+    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+
+    sdls_frame.pdu.hdr.pid = 3;
+    status = Crypto_PDU(ingest, &tc_frame);
+    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+
+    sdls_frame.pdu.hdr.pid = 4;
+    status = Crypto_PDU(ingest, &tc_frame);
+    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+
+    sdls_frame.pdu.hdr.pid = 5;
+    status = Crypto_PDU(ingest, &tc_frame);
+    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+
+    sdls_frame.pdu.hdr.pid = 6;
     status = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
 // TODO:  (RB) Disabled for now.  Key Inventory needs to be re-worked. - Not currently using EP
     
-    // sdls_frame.pdu.pid = 7;
+    // sdls_frame.pdu.hdr.pid = 7;
     // status = Crypto_PDU(ingest, &tc_frame);
     // ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.pid = 8;
+    sdls_frame.pdu.hdr.pid = 8;
     status = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.type = 1;
-    sdls_frame.pdu.pid = 8;
+    sdls_frame.hdr.type = 1;
+    sdls_frame.pdu.hdr.pid = 8;
     status = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 }
