@@ -1,8 +1,6 @@
 name: cpp-linter
 
 on:
-  push:
-    branches: [ 299-setup-code-formatter ]
   pull_request:
     branches: [ main, dev ]
 
