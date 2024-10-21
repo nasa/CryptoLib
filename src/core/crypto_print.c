@@ -30,7 +30,7 @@
  * Prints the current TC in memory.
  * @param tc_frame: TC_t*
  **/
-void Crypto_tcPrint(TC_t* tc_frame)
+void Crypto_tcPrint(TC_t *tc_frame)
 {
     printf("Current TC in memory is: \n");
     printf("\t Header\n");
@@ -61,7 +61,7 @@ void Crypto_tcPrint(TC_t* tc_frame)
  * @param tm_frame: TM_t*
  **/
 // TODO - START HERE WORK ON PRINT HERE
-void Crypto_tmPrint(TM_t* tm_frame)
+void Crypto_tmPrint(TM_t *tm_frame)
 {
     tm_frame = tm_frame;
     printf("Current TM in memory is: \n");
@@ -104,7 +104,7 @@ void Crypto_Print_Sdls_Ep_Reply(void)
     uint16_t pkt_length = 0;
 
     pkt_length = ((sdls_ep_reply[4] << 8) | sdls_ep_reply[5]) + 1;
-    
+
     // Sanity check on length
     if (pkt_length > TC_MAX_FRAME_SIZE)
     {
@@ -128,7 +128,7 @@ void Crypto_Print_Sdls_Ep_Reply(void)
  * Prints the current CLCW in memory.
  * @param clcw: Telemetry_Frame_Clcw_t*
  **/
-void Crypto_clcwPrint(Telemetry_Frame_Clcw_t* clcw)
+void Crypto_clcwPrint(Telemetry_Frame_Clcw_t *clcw)
 {
     printf("Current CLCW in memory is: \n");
     printf("\t cwt    = 0x%01x \n", clcw->cwt);
@@ -153,7 +153,7 @@ void Crypto_clcwPrint(Telemetry_Frame_Clcw_t* clcw)
  * Prints the current FSR in memory.
  * @param report: SDLS_FSR_t*
  **/
-void Crypto_fsrPrint(SDLS_FSR_t* report)
+void Crypto_fsrPrint(SDLS_FSR_t *report)
 {
     printf("Current FSR in memory is: \n");
     printf("\t cwt    = 0x%01x \n", report->cwt);
@@ -172,7 +172,7 @@ void Crypto_fsrPrint(SDLS_FSR_t* report)
  * Prints the current CCSDS in memory.
  * @param sdls_frame: CCSDS_t*
  **/
-void Crypto_ccsdsPrint(CCSDS_t* sdls_frame)
+void Crypto_ccsdsPrint(CCSDS_t *sdls_frame)
 {
     printf("Current CCSDS in memory is: \n");
     printf("\t Primary Header\n");
@@ -208,7 +208,7 @@ void Crypto_ccsdsPrint(CCSDS_t* sdls_frame)
  * Prints the current Security Association in memory.
  * @param sa: SecurityAssociation_t*
  **/
-void Crypto_saPrint(SecurityAssociation_t* sa)
+void Crypto_saPrint(SecurityAssociation_t *sa)
 {
     int i;
 
@@ -245,7 +245,8 @@ void Crypto_saPrint(SecurityAssociation_t* sa)
             printf("\t iv[%d]      = 0x%02x \n", i, *(sa->iv + i));
         }
     }
-    else{
+    else
+    {
         printf("\t iv        = %s \n", sa->iv);
     }
     printf("\t acs_len    = %d \n", sa->acs_len);
@@ -281,10 +282,10 @@ void Crypto_saPrint(SecurityAssociation_t* sa)
  * @param c: void*, The hex to be printed.
  * @param n: size_t, The size of the array to be printed.
  **/
-void Crypto_hexprint(const void* c, size_t n)
+void Crypto_hexprint(const void *c, size_t n)
 {
-    const uint8_t* t = c;
-    size_t idx = 0;
+    const uint8_t *t   = c;
+    size_t         idx = 0;
     if (c == NULL)
         return;
     while (idx < n)
@@ -301,15 +302,15 @@ void Crypto_hexprint(const void* c, size_t n)
  * @param c: void*, The binary array to be printed.
  * @param n: size_t, The size of the array to be printed.
  **/
-void Crypto_binprint(void* c, size_t n)
+void Crypto_binprint(void *c, size_t n)
 {
-    uint8_t* t = c;
-    int q;
+    uint8_t *t = c;
+    int      q;
 
     if (c == NULL)
         return;
     while (n > 0)
-    {    
+    {
         --n;
         for (q = 0x80; q; q >>= 1)
             printf("%x", !!(t[n] & q));
@@ -317,7 +318,7 @@ void Crypto_binprint(void* c, size_t n)
     printf("\n");
 }
 
-void Crypto_mpPrint(GvcidManagedParameters_t* managed_parameters, uint8_t print_children)
+void Crypto_mpPrint(GvcidManagedParameters_t *managed_parameters, uint8_t print_children)
 // Prints the currently configured Managed Parameters
 {
     print_children = print_children;

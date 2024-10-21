@@ -1,0 +1,25 @@
+name: cpp-linter
+
+on:
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  cpp-linter:
+    permissions:
+      pull-requests: write
+      contents: write
+      actions: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cpp-linter/cpp-linter-action@v2
+        id: linter
+        with:
+          style: 'file'
+          files-changed-only: false
+          verbosity: 'info'
+          step-summary: 'true'
+          no-lgtm: 'false'
+          passive-reviews: 'true'
+          ignore: 'test/include/utest.h'

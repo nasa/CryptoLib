@@ -29,16 +29,16 @@
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
  **/
-int32_t Crypto_MC_ping(uint8_t* ingest)
+int32_t Crypto_MC_ping(uint8_t *ingest)
 {
     uint8_t count = 0;
-    count = count;
-    ingest = ingest;
+    count         = count;
+    ingest        = ingest;
 
     // Prepare for Reply
     sdls_frame.pdu.hdr.pdu_len = 0;
-    sdls_frame.hdr.pkt_length = (sdls_frame.pdu.hdr.pdu_len / 8) + SDLS_TLV_HDR_SIZE + 9;
-    count = Crypto_Prep_Reply(sdls_ep_reply, 128);
+    sdls_frame.hdr.pkt_length  = (sdls_frame.pdu.hdr.pdu_len / 8) + SDLS_TLV_HDR_SIZE + 9;
+    count                      = Crypto_Prep_Reply(sdls_ep_reply, 128);
 
 #ifdef PDU_DEBUG
     printf("MC Ping Reply: \t   0x");
@@ -57,15 +57,16 @@ int32_t Crypto_MC_ping(uint8_t* ingest)
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
  **/
-int32_t Crypto_MC_status(uint8_t* ingest)
+int32_t Crypto_MC_status(uint8_t *ingest)
 {
-    if(ingest == NULL) return CRYPTO_LIB_ERROR;
+    if (ingest == NULL)
+        return CRYPTO_LIB_ERROR;
     uint8_t count = 0;
 
     // Prepare for Reply
     sdls_frame.pdu.hdr.pdu_len = SDLS_MC_LOG_RPLY_SIZE * 8;
-    sdls_frame.hdr.pkt_length = (sdls_frame.pdu.hdr.pdu_len / 8) + SDLS_TLV_HDR_SIZE + 9;
-    count = Crypto_Prep_Reply(sdls_ep_reply, 128);
+    sdls_frame.hdr.pkt_length  = (sdls_frame.pdu.hdr.pdu_len / 8) + SDLS_TLV_HDR_SIZE + 9;
+    count                      = Crypto_Prep_Reply(sdls_ep_reply, 128);
     // PDU
     sdls_ep_reply[count] = (log_summary.num_se & 0xFF00) >> 8;
     count++;
@@ -95,17 +96,18 @@ int32_t Crypto_MC_status(uint8_t* ingest)
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
  **/
-int32_t Crypto_MC_dump(uint8_t* ingest)
+int32_t Crypto_MC_dump(uint8_t *ingest)
 {
-    if(ingest == NULL) return CRYPTO_LIB_ERROR;
+    if (ingest == NULL)
+        return CRYPTO_LIB_ERROR;
     uint8_t count = 0;
-    int x;
-    int y;
+    int     x;
+    int     y;
 
     // Prepare for Reply
     sdls_frame.pdu.hdr.pdu_len = (SDLS_MC_DUMP_RPLY_SIZE * log_count) * 8;
-    sdls_frame.hdr.pkt_length = (sdls_frame.pdu.hdr.pdu_len / 8) + SDLS_TLV_HDR_SIZE + 9;
-    count = Crypto_Prep_Reply(sdls_ep_reply, 128);
+    sdls_frame.hdr.pkt_length  = (sdls_frame.pdu.hdr.pdu_len / 8) + SDLS_TLV_HDR_SIZE + 9;
+    count                      = Crypto_Prep_Reply(sdls_ep_reply, 128);
     // PDU
     for (x = 0; x < log_count; x++)
     {
@@ -152,17 +154,18 @@ int32_t Crypto_MC_dump(uint8_t* ingest)
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
  **/
-int32_t Crypto_MC_erase(uint8_t* ingest)
+int32_t Crypto_MC_erase(uint8_t *ingest)
 {
-    if(ingest == NULL) return CRYPTO_LIB_ERROR;
+    if (ingest == NULL)
+        return CRYPTO_LIB_ERROR;
     uint8_t count = 0;
-    int x;
-    int y;
+    int     x;
+    int     y;
 
     // Zero Logs
     for (x = 0; x < LOG_SIZE; x++)
     {
-        mc_log.blk[x].emt = 0;
+        mc_log.blk[x].emt    = 0;
         mc_log.blk[x].em_len = 0;
         for (y = 0; y < EMV_SIZE; y++)
         {
@@ -171,14 +174,14 @@ int32_t Crypto_MC_erase(uint8_t* ingest)
     }
 
     // Compute Summary
-    log_count = 0;
+    log_count          = 0;
     log_summary.num_se = 0;
-    log_summary.rs = LOG_SIZE;
+    log_summary.rs     = LOG_SIZE;
 
     // Prepare for Reply
     sdls_frame.pdu.hdr.pdu_len = SDLS_MC_LOG_RPLY_SIZE * 8; // 4
-    sdls_frame.hdr.pkt_length = (sdls_frame.pdu.hdr.pdu_len / 8) + SDLS_TLV_HDR_SIZE + 9;
-    count = Crypto_Prep_Reply(sdls_ep_reply, 128);
+    sdls_frame.hdr.pkt_length  = (sdls_frame.pdu.hdr.pdu_len / 8) + SDLS_TLV_HDR_SIZE + 9;
+    count                      = Crypto_Prep_Reply(sdls_ep_reply, 128);
     // PDU
     sdls_ep_reply[count] = (log_summary.num_se & 0xFF00) >> 8;
     count++;
@@ -209,19 +212,20 @@ int32_t Crypto_MC_erase(uint8_t* ingest)
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
  **/
-int32_t Crypto_MC_selftest(uint8_t* ingest)
+int32_t Crypto_MC_selftest(uint8_t *ingest)
 {
-    if(ingest == NULL) return CRYPTO_LIB_ERROR;
-    uint8_t count = 0;
+    if (ingest == NULL)
+        return CRYPTO_LIB_ERROR;
+    uint8_t count  = 0;
     uint8_t result = ST_OK;
 
     // TODO: Perform test
 
     // Prepare for Reply
-    sdls_frame.pdu.hdr.pdu_len = (SDLS_MC_ST_RPLY_SIZE) * 8;
-    sdls_frame.hdr.pkt_length = (sdls_frame.pdu.hdr.pdu_len / 8) + (SDLS_TLV_HDR_SIZE) + 9;
-    sdls_frame.pdu.data[0] = result;
-    count = Crypto_Prep_Reply(sdls_ep_reply, 128);
+    sdls_frame.pdu.hdr.pdu_len = (SDLS_MC_ST_RPLY_SIZE)*8;
+    sdls_frame.hdr.pkt_length  = (sdls_frame.pdu.hdr.pdu_len / 8) + (SDLS_TLV_HDR_SIZE) + 9;
+    sdls_frame.pdu.data[0]     = result;
+    count                      = Crypto_Prep_Reply(sdls_ep_reply, 128);
 
     sdls_ep_reply[count] = result;
     count++;
@@ -243,21 +247,21 @@ int32_t Crypto_MC_selftest(uint8_t* ingest)
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
  **/
-int32_t Crypto_SA_readARSN(uint8_t* ingest)
+int32_t Crypto_SA_readARSN(uint8_t *ingest)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
-    if(ingest == NULL)
+    if (ingest == NULL)
     {
         status = CRYPTO_LIB_ERROR;
     }
 
     if (status == CRYPTO_LIB_SUCCESS)
     {
-        //uint8_t count = 0;
-        uint16_t spi = 0x0000;
-        SecurityAssociation_t* sa_ptr;
-        int x;
+        // uint8_t count = 0;
+        uint16_t               spi = 0x0000;
+        SecurityAssociation_t *sa_ptr;
+        int                    x;
 
         // Read ingest
         spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
@@ -272,8 +276,8 @@ int32_t Crypto_SA_readARSN(uint8_t* ingest)
         {
             // Prepare for Reply
             sdls_frame.pdu.hdr.pdu_len = (SPI_LEN + sa_ptr->arsn_len) * 8; // bits
-            sdls_frame.hdr.pkt_length = (sdls_frame.pdu.hdr.pdu_len / 8) + SDLS_TLV_HDR_SIZE + 9;
-            uint8_t count = Crypto_Prep_Reply(sdls_ep_reply, 128);
+            sdls_frame.hdr.pkt_length  = (sdls_frame.pdu.hdr.pdu_len / 8) + SDLS_TLV_HDR_SIZE + 9;
+            uint8_t count              = Crypto_Prep_Reply(sdls_ep_reply, 128);
 
             // Write SPI to reply
             sdls_ep_reply[count] = (spi & 0xFF00) >> 8;
@@ -342,8 +346,8 @@ int32_t Crypto_SA_readARSN(uint8_t* ingest)
  **/
 int32_t Crypto_MC_resetalarm(void)
 { // Reset all alarm flags
-    report.af = 0;
-    report.bsnf = 0;
+    report.af    = 0;
+    report.bsnf  = 0;
     report.bmacf = 0;
     report.ispif = 0;
     return CRYPTO_LIB_SUCCESS;

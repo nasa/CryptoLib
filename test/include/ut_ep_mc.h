@@ -32,4 +32,4 @@ extern "C"
 } /* Close scope of 'extern "C"' declaration which encloses file. */
 #endif
 
-#endif //CRYPTOLIB_UT_EP_MC_H
+#endif // CRYPTOLIB_UT_EP_MC_H

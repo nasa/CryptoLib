@@ -26,14 +26,14 @@
  * @param ingest: uint8_t*
  * @return int32: count
  **/
-int32_t Crypto_User_IdleTrigger(uint8_t* ingest)
+int32_t Crypto_User_IdleTrigger(uint8_t *ingest)
 {
     uint8_t count = 0;
 
     // Prepare for Reply
     sdls_frame.pdu.hdr.pdu_len = 0;
-    sdls_frame.hdr.pkt_length = sdls_frame.pdu.hdr.pdu_len + 9;
-    count = Crypto_Prep_Reply(ingest, 144);
+    sdls_frame.hdr.pkt_length  = sdls_frame.pdu.hdr.pdu_len + 9;
+    count                      = Crypto_Prep_Reply(ingest, 144);
 
     return count;
 }
@@ -122,9 +122,9 @@ int32_t Crypto_User_ModifyKey(void)
 {
     // Local variables
     uint16_t kid = ((uint8_t)sdls_frame.pdu.data[0] << 8) | ((uint8_t)sdls_frame.pdu.data[1]);
-    uint8_t mod = (uint8_t)sdls_frame.pdu.data[2];
+    uint8_t  mod = (uint8_t)sdls_frame.pdu.data[2];
 
-    crypto_key_t* ekp = NULL;
+    crypto_key_t *ekp = NULL;
 
     ekp = key_if->get_key(kid);
     if (ekp == NULL)
@@ -134,17 +134,17 @@ int32_t Crypto_User_ModifyKey(void)
 
     switch (mod)
     {
-    case 1: // Invalidate Key
-        ekp->value[KEY_SIZE - 1]++;
-        printf("Key %d value invalidated! \n", kid);
-        break;
-    case 2: // Modify key state
-        ekp->key_state = (uint8_t)sdls_frame.pdu.data[3] & 0x0F;
-        printf("Key %d state changed to %d! \n", kid, mod);
-        break;
-    default:
-        // Error
-        break;
+        case 1: // Invalidate Key
+            ekp->value[KEY_SIZE - 1]++;
+            printf("Key %d value invalidated! \n", kid);
+            break;
+        case 2: // Modify key state
+            ekp->key_state = (uint8_t)sdls_frame.pdu.data[3] & 0x0F;
+            printf("Key %d state changed to %d! \n", kid, mod);
+            break;
+        default:
+            // Error
+            break;
     }
 
     return CRYPTO_LIB_SUCCESS;
@@ -171,9 +171,9 @@ int32_t Crypto_User_ModifyVCID(void)
     // tm_frame.tm_header.vcid = (uint8_t)sdls_frame.pdu.data[0];
     // Check this
     tm_frame_pri_hdr.vcid = (uint8_t)sdls_frame.pdu.data[0];
-    SecurityAssociation_t* sa_ptr;
-    int i;
-    int j;
+    SecurityAssociation_t *sa_ptr;
+    int                    i;
+    int                    j;
 
     for (i = 0; i < NUM_GVCID; i++)
     {
@@ -187,8 +187,8 @@ int32_t Crypto_User_ModifyVCID(void)
 
             if (sa_ptr->gvcid_blk.mapid == TYPE_TM)
             {
-                
-                if (sa_ptr->gvcid_blk.vcid == tm_frame_pri_hdr.vcid)//.tm_header.vcid)
+
+                if (sa_ptr->gvcid_blk.vcid == tm_frame_pri_hdr.vcid) //.tm_header.vcid)
                 {
                     // TODO Check this
                     tm_frame_sec_hdr.spi = i;

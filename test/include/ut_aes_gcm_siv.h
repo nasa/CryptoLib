@@ -15,4 +15,4 @@ extern "C"
 } /* Close scope of 'extern "C"' declaration which encloses file. */
 #endif
 
-#endif //CRYPTOLIB_UT_AES_GCM_SIV_H
+#endif // CRYPTOLIB_UT_AES_GCM_SIV_H
