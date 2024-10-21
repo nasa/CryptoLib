@@ -219,12 +219,13 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
                              crypto_key_t *ekp, crypto_key_t *akp, uint8_t iv_loc, int mac_loc, uint16_t aad_len,
                              uint8_t *aad, uint8_t **pp_processed_frame, uint16_t *p_decrypted_length);
 void    Crypto_TM_Process_Debug_Print(uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t *sa_ptr);
+void    Crypto_TM_Set_FSR(uint8_t *p_ingest, uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t *sa_ptr);
 
 extern int32_t Crypto_increment(uint8_t *num, int length);
 int32_t        Crypto_Get_tmLength(int len);
 uint8_t        Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id);
 void           Crypto_TM_updatePDU(uint8_t *ingest, int len_ingest);
-void           Crypto_TM_updateOCF(void);
+void           Crypto_TM_updateOCF(Telemetry_Frame_Ocf_Fsr_t *report, TM_t *tm_frame);
 uint8_t       *Crypto_Prepare_TC_AAD(uint8_t *buffer, uint16_t len_aad, uint8_t *abm_buffer);
 uint32_t       Crypto_Prepare_TM_AAD(const uint8_t *buffer, uint16_t len_aad, const uint8_t *abm_buffer, uint8_t *aad);
 uint32_t       Crypto_Prepare_AOS_AAD(const uint8_t *buffer, uint16_t len_aad, const uint8_t *abm_buffer, uint8_t *aad);

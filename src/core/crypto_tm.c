@@ -1871,12 +1871,12 @@ void Crypto_TM_Set_FSR(uint8_t *p_ingest, uint16_t byte_idx, uint16_t pdu_len, S
     {
         Telemetry_Frame_Ocf_Fsr_t temp_report;
         byte_idx += (pdu_len + sa_ptr->stmacf_len);
-        temp_report.cwt   = (p_ingest[byte_idx] >> 7) & 0x0001;
-        temp_report.fvn   = (p_ingest[byte_idx] >> 4) & 0x0007;
-        temp_report.af    = (p_ingest[byte_idx] >> 3) & 0x0001;
-        temp_report.bsnf  = (p_ingest[byte_idx] >> 2) & 0x0001;
-        temp_report.bmacf = (p_ingest[byte_idx] >> 1) & 0x0001;
-        temp_report.bsaf  = (p_ingest[byte_idx] & 0x0001);
+        temp_report.cwt   = (p_ingest[byte_idx] >> 7) & 0x01;
+        temp_report.fvn   = (p_ingest[byte_idx] >> 4) & 0x07;
+        temp_report.af    = (p_ingest[byte_idx] >> 3) & 0x01;
+        temp_report.bsnf  = (p_ingest[byte_idx] >> 2) & 0x01;
+        temp_report.bmacf = (p_ingest[byte_idx] >> 1) & 0x01;
+        temp_report.bsaf  = (p_ingest[byte_idx] & 0x01);
         byte_idx += 1;
         temp_report.lspi = (p_ingest[byte_idx] << 8) | (p_ingest[byte_idx + 1]);
         byte_idx += 2;

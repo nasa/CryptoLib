@@ -1998,7 +1998,7 @@ UTEST(TM_PROCESS, TM_SA_SEGFAULT_TEST)
     status = Crypto_Init();
 
     // Test frame setup
-    char *framed_tm_h   = "02c00000180000FFFFFF";
+    char *framed_tm_h   = "02C00000180000FFFFFF";
     char *framed_tm_b   = NULL;
     int   framed_tm_len = 0;
     hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);
@@ -2011,7 +2011,6 @@ UTEST(TM_PROCESS, TM_SA_SEGFAULT_TEST)
     free(ptr_processed_frame);
 }
 
-<<<<<<< HEAD
 UTEST(TM_PROCESS, TM_OCF_TEST)
 {
     // Local Variables
@@ -2029,7 +2028,33 @@ UTEST(TM_PROCESS, TM_OCF_TEST)
     // AOS_NO_FHEC, AOS_HAS_IZ, 10);
     GvcidManagedParameters_t TM_UT_Managed_Parameters = {
         0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 16, TM_HAS_OCF, 1};
-=======
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+    Crypto_Init();
+
+    // Test frame setup
+    char *framed_tm_h   = "02C0000D180000000000DEADBEEFFFFF";
+    char *framed_tm_b   = NULL;
+    int   framed_tm_len = 0;
+    hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);
+
+    SecurityAssociation_t *test_association;
+    // Deactivate SA 1
+    sa_if->sa_get_from_spi(1, &test_association);
+    test_association->sa_state = SA_NONE;
+    // Activate SA 5
+    sa_if->sa_get_from_spi(0, &test_association);
+    test_association->sa_state = SA_OPERATIONAL;
+
+    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &ptr_processed_frame, &processed_tm_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    printf("FSR: %08X\n", Crypto_Get_FSR());
+
+    Crypto_Shutdown();
+    free(framed_tm_b);
+    free(ptr_processed_frame);
+}
+
 UTEST(TM_PROCESS, TM_SA_NOT_OPERATIONAL)
 {
     // Local Variables
@@ -2047,27 +2072,10 @@ UTEST(TM_PROCESS, TM_SA_NOT_OPERATIONAL)
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TM_UT_Managed_Parameters = {
         0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
->>>>>>> dev
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
     status = Crypto_Init();
 
-<<<<<<< HEAD
-    // Test frame setup
-    char *framed_tm_h   = "02C0000D180000000000C0000000FFFF";
-    char *framed_tm_b   = NULL;
-    int   framed_tm_len = 0;
-    hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);
-
-    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &ptr_processed_frame, &processed_tm_len);
-    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-
-    printf("FSR: %08X\n", Crypto_Get_FSR());
-
-    Crypto_Shutdown();
-    free(framed_tm_b);
-    free(ptr_processed_frame);
-=======
     TC_t *tc_sdls_processed_frame;
     tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
@@ -2082,7 +2090,6 @@ UTEST(TM_PROCESS, TM_SA_NOT_OPERATIONAL)
     free(framed_tm_b);
     free(tc_sdls_processed_frame);
     Crypto_Shutdown();
->>>>>>> dev
 }
 
 UTEST_MAIN();
