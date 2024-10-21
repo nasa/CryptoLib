@@ -362,11 +362,11 @@ typedef struct
     uint8_t cie : 2;    // COP In Effect
     uint8_t vci : 6;    // Virtual Channel Identification
     uint8_t spare0 : 2; // Reserved Spare "00"
-    uint8_t nrfaf : 1;   // No RF Avaliable Flag
-    uint8_t nblf : 1;    // No Bit Lock Flag
-    uint8_t lof : 1;     // Lock-Out Flag
-    uint8_t waitf : 1;   // Wait Flag
-    uint8_t rtf : 1;     // Retransmit Flag
+    uint8_t nrfaf : 1;  // No RF Avaliable Flag
+    uint8_t nblf : 1;   // No Bit Lock Flag
+    uint8_t lof : 1;    // Lock-Out Flag
+    uint8_t waitf : 1;  // Wait Flag
+    uint8_t rtf : 1;    // Retransmit Flag
     uint8_t fbc : 2;    // FARM-B Counter
     uint8_t spare1 : 1; // Reserved Spare "0"
     uint8_t rv : 8;     // Report Value
@@ -378,14 +378,14 @@ typedef struct
 // Ref: Version 100, CCSDS 355.1-B-1, Feb 2020
 typedef struct
 {
-    uint8_t cwt : 1;    // Control Word Type "1"
-    uint8_t fvn : 3;    // FSR Version Number "100"
-    uint8_t af : 1;     // Alarm Flag
-    uint8_t bsnf : 1;   // Bad Sequence Number Flag
-    uint8_t bmacf : 1;  // Bad Mac Flag
-    uint8_t bsaf : 1;   // Bad Security Association Flag
+    uint8_t  cwt : 1;   // Control Word Type "1"
+    uint8_t  fvn : 3;   // FSR Version Number "100"
+    uint8_t  af : 1;    // Alarm Flag
+    uint8_t  bsnf : 1;  // Bad Sequence Number Flag
+    uint8_t  bmacf : 1; // Bad Mac Flag
+    uint8_t  bsaf : 1;  // Bad Security Association Flag
     uint16_t lspi : 16; // Last SPI Used
-    uint8_t snval : 8;  // Sequence Number Value (LSB)
+    uint8_t  snval : 8; // Sequence Number Value (LSB)
 } Telemetry_Frame_Ocf_Fsr_t;
 
 #define TELEMETRY_FRAME_OCF_FSR_SIZE (sizeof(Telemetry_Frame_Ocf_Fsr_t))

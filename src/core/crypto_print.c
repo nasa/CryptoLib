@@ -128,7 +128,7 @@ void Crypto_Print_Sdls_Ep_Reply(void)
  * Prints the current CLCW in memory.
  * @param clcw: Telemetry_Frame_Ocf_Clcw_t*
  **/
-void Crypto_clcwPrint(Telemetry_Frame_Ocf_Clcw_t* clcw)
+void Crypto_clcwPrint(Telemetry_Frame_Ocf_Clcw_t *clcw)
 {
     printf("Current CLCW in memory is: \n");
     printf("\t cwt    = 0x%01x \n", clcw->cwt);
@@ -153,7 +153,7 @@ void Crypto_clcwPrint(Telemetry_Frame_Ocf_Clcw_t* clcw)
  * Prints the current FSR in memory.
  * @param report: Telemetry_Frame_Ocf_Fsr_t*
  **/
-void Crypto_fsrPrint(Telemetry_Frame_Ocf_Fsr_t* report)
+void Crypto_fsrPrint(Telemetry_Frame_Ocf_Fsr_t *report)
 {
     printf("Current FSR in memory is: \n");
     printf("\t cwt    = 0x%01x \n", report->cwt);

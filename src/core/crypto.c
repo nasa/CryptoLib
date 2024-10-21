@@ -1122,11 +1122,11 @@ int32_t Crypto_Get_ACS_Algo_Keylen(uint8_t algo)
 }
 
 /**
-* @brief: Function: Crypto_Get_Security_Header_Length
-* Return Security Header Length
-* @param sa_ptr: SecurityAssociation_t*
-**/
-int32_t Crypto_Get_Security_Header_Length(SecurityAssociation_t* sa_ptr)
+ * @brief: Function: Crypto_Get_Security_Header_Length
+ * Return Security Header Length
+ * @param sa_ptr: SecurityAssociation_t*
+ **/
+int32_t Crypto_Get_Security_Header_Length(SecurityAssociation_t *sa_ptr)
 {
     /* Narrator's Note: Leaving this here for future work
     ** eventually we need a way to reconcile cryptolib managed parameters with TO managed parameters
@@ -1135,8 +1135,8 @@ int32_t Crypto_Get_Security_Header_Length(SecurityAssociation_t* sa_ptr)
                                             gvcid_managed_parameters, temp_current_managed_parameters);
     */
 
-    if (!sa_ptr) 
-    { 
+    if (!sa_ptr)
+    {
 #ifdef DEBUG
         printf(KRED "Get_Security_Header_Length passed Null SA!\n" RESET);
 #endif
@@ -1150,14 +1150,14 @@ int32_t Crypto_Get_Security_Header_Length(SecurityAssociation_t* sa_ptr)
 }
 
 /**
-* @brief: Function: Crypto_Get_Security_Trailer_Length
-* Return Security Trailer Length
-* @param sa_ptr: SecurityAssociation_t*
-**/
-int32_t Crypto_Get_Security_Trailer_Length(SecurityAssociation_t* sa_ptr)
+ * @brief: Function: Crypto_Get_Security_Trailer_Length
+ * Return Security Trailer Length
+ * @param sa_ptr: SecurityAssociation_t*
+ **/
+int32_t Crypto_Get_Security_Trailer_Length(SecurityAssociation_t *sa_ptr)
 {
-    if (!sa_ptr) 
-    { 
+    if (!sa_ptr)
+    {
 #ifdef DEBUG
         printf(KRED "Get_Trailer_Trailer_Length passed Null SA!\n" RESET);
 #endif
@@ -1168,19 +1168,18 @@ int32_t Crypto_Get_Security_Trailer_Length(SecurityAssociation_t* sa_ptr)
     securityTrailerLength = sa_ptr->stmacf_len;
 
     return securityTrailerLength;
-
 }
 
 uint32_t Crypto_Get_FSR()
 {
     uint32_t fsr;
-    fsr = (report.cwt   << 31) |    // bit(s) 1
-          (report.fvn   << 28) |    // bit(s) 2-4
-          (report.af    << 27) |    // bit(s) 5
-          (report.bsnf  << 26) |    // bit(s) 6
-          (report.bmacf << 25) |    // bit(s) 7
-          (report.bsaf  << 24) |    // bit(s) 8
-          (report.lspi  <<  8) |    // bit(s) 9-24
-          (report.snval <<  0);     // bit(s) 25-32
+    fsr = (report.cwt << 31) |   // bit(s) 1
+          (report.fvn << 28) |   // bit(s) 2-4
+          (report.af << 27) |    // bit(s) 5
+          (report.bsnf << 26) |  // bit(s) 6
+          (report.bmacf << 25) | // bit(s) 7
+          (report.bsaf << 24) |  // bit(s) 8
+          (report.lspi << 8) |   // bit(s) 9-24
+          (report.snval << 0);   // bit(s) 25-32
     return fsr;
 }
