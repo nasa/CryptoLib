@@ -31,7 +31,7 @@ jobs:
       packages: read
 
       # only required for workflows in private repositories
-      actions: read
+      actions: write
       contents: read
 
     env: 
