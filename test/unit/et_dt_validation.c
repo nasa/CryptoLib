@@ -55,7 +55,7 @@ void setup_python()
     Py_Initialize();
     PyRun_SimpleString("import sys\nsys.path.append('../test')");
     PyRun_SimpleString("import sys\nsys.path.append('../../test')");
-    pName = PyUnicode_FromString("encryption_test");
+    pName   = PyUnicode_FromString("encryption_test");
     pModule = PyImport_Import(pName);
     if (pModule == NULL)
     {
@@ -64,7 +64,7 @@ void setup_python()
         return;
     }
 
-    pDict = PyModule_GetDict(pModule);
+    pDict  = PyModule_GetDict(pModule);
     pClass = PyDict_GetItemString(pDict, "Encryption");
 
     if (PyCallable_Check(pClass))
@@ -83,21 +83,22 @@ void setup_python()
  * @brief Python Cryptodoem CMAC Truth Baseline
  * @param data Hexstring of the plain text
  * @param key Hexstring of the key to be used
- * @param expected Output character array that will be allocated within this function.  Memory must be freed upon completion of the test
+ * @param expected Output character array that will be allocated within this function.  Memory must be freed upon
+ *completion of the test
  * @param expected_length The length of the expected character array this is set within this function
  * @note User must free memory themselves.
  **/
-void python_cmac(char* data, char* key, uint8_t** expected, long *expected_length)
+void python_cmac(char *data, char *key, uint8_t **expected, long *expected_length)
 {
     setup_python();
 
-    pValue = PyObject_CallMethod(pInstance, "encrypt_cmac", "ss", data, key);
-    pValue = PyObject_CallMethod(pInstance, "get_len", NULL);
-    long temp_length = PyLong_AsLong(pValue);
-    *expected_length = temp_length;
-    pValue = PyObject_CallMethod(pInstance, "get_results", NULL);
-    char* temp_expected = PyBytes_AsString(pValue);
-    *expected = (uint8_t* )malloc(sizeof(uint8_t) * (int)*expected_length);
+    pValue              = PyObject_CallMethod(pInstance, "encrypt_cmac", "ss", data, key);
+    pValue              = PyObject_CallMethod(pInstance, "get_len", NULL);
+    long temp_length    = PyLong_AsLong(pValue);
+    *expected_length    = temp_length;
+    pValue              = PyObject_CallMethod(pInstance, "get_results", NULL);
+    char *temp_expected = PyBytes_AsString(pValue);
+    *expected           = (uint8_t *)malloc(sizeof(uint8_t) * (int)*expected_length);
     memcpy(*expected, temp_expected, (int)*expected_length);
     return;
 }
@@ -117,18 +118,18 @@ void python_cmac(char* data, char* key, uint8_t** expected, long *expected_lengt
  * @note The char** expected that is passsed to this function must be freed by the user upon completion of unit test or
  *other call.
  **/
-void python_auth_encryption(char* data, char* key, char* iv, char* header, char* bitmask, uint8_t** expected,
+void python_auth_encryption(char *data, char *key, char *iv, char *header, char *bitmask, uint8_t **expected,
                             long *expected_length)
 {
     setup_python();
     pValue = PyObject_CallMethod(pInstance, "encrypt", "sssss", data, key, iv, header, bitmask);
 
-    pValue = PyObject_CallMethod(pInstance, "get_len", NULL);
-    long temp_length = PyLong_AsLong(pValue);
-    *expected_length = temp_length;
-    pValue = PyObject_CallMethod(pInstance, "get_results", NULL);
-    char* temp_expected = PyBytes_AsString(pValue);
-    *expected = (uint8_t* )malloc(sizeof(uint8_t) * (int)*expected_length);
+    pValue              = PyObject_CallMethod(pInstance, "get_len", NULL);
+    long temp_length    = PyLong_AsLong(pValue);
+    *expected_length    = temp_length;
+    pValue              = PyObject_CallMethod(pInstance, "get_results", NULL);
+    char *temp_expected = PyBytes_AsString(pValue);
+    *expected           = (uint8_t *)malloc(sizeof(uint8_t) * (int)*expected_length);
     memcpy(*expected, temp_expected, (int)*expected_length);
     return;
 }
@@ -181,7 +182,7 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
     // Expose SA 4 for testing
     sa_if->sa_get_from_spi(4, &test_association_4);
     test_association_4->sa_state = SA_KEYED;
-    
+
     // Ensure that Process Security can activate SA 4
     return_val = Crypto_TC_ProcessSecurity(activate_sa4_b, &activate_sa4_len, tc_sdls_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
@@ -202,7 +203,7 @@ UTEST(ET_VALIDATION, AUTH_ENCRYPTION_TEST)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
 
     Crypto_Shutdown();
-    
+
     // Get Truth Baseline
     python_auth_encryption("1880d2ca0008197f0b0031000039c5",
                            "FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210",
@@ -236,72 +237,71 @@ UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
     remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     Crypto_Init_TC_Unit_Test();
-    SaInterface sa_if = get_sa_interface_inmemory();
+    SaInterface sa_if  = get_sa_interface_inmemory();
+    int         status = CRYPTO_LIB_SUCCESS;
 
-    char* activate_sa4_h = "2003002000ff000100011880d2c9000e197f0b001b0004000400003040d95ecbc2";
-    char* dec_test_ping_h =
+    char *activate_sa4_h = "2003002000ff000100011880d2c9000e197f0b001b0004000400003040d95ecbc2";
+    char *dec_test_ping_h =
         "2003043400FF00040000000000000000000000017E1D8EEA8D45CEBA17888E0CDCD747DC78E5F372F997F2A63AA5DFC168395DC987";
-    char* enc_test_ping_h = "1880d2ca0008197f0b0031000039c5";
+    char *enc_test_ping_h = "1880d2ca0008197f0b0031000039c5";
 
-    uint8_t* activate_sa4_b, *dec_test_ping_b, *enc_test_ping_b = NULL;
-    int activate_sa4_len, dec_test_ping_len, enc_test_ping_len = 0;
+    uint8_t *activate_sa4_b, *dec_test_ping_b, *enc_test_ping_b     = NULL;
+    int      activate_sa4_len, dec_test_ping_len, enc_test_ping_len = 0;
 
-    hex_conversion(activate_sa4_h, (char**) &activate_sa4_b, &activate_sa4_len);
-    hex_conversion(dec_test_ping_h, (char**) &dec_test_ping_b, &dec_test_ping_len);
-    hex_conversion(enc_test_ping_h, (char**) &enc_test_ping_b, &enc_test_ping_len);
+    hex_conversion(activate_sa4_h, (char **)&activate_sa4_b, &activate_sa4_len);
+    hex_conversion(dec_test_ping_h, (char **)&dec_test_ping_b, &dec_test_ping_len);
+    hex_conversion(enc_test_ping_h, (char **)&enc_test_ping_b, &enc_test_ping_len);
 
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t *test_association = NULL;
+    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
 
-    int32_t return_val = -1;
-
-    TC_t* tc_sdls_processed_frame;
+    TC_t *tc_sdls_processed_frame;
     tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
 
     // Default SA
     // Expose SA 1 for testing
     sa_if->sa_get_from_spi(1, &test_association);
-    test_association->ecs = CRYPTO_CIPHER_NONE;
+    test_association->ecs       = CRYPTO_CIPHER_NONE;
     test_association->shivf_len = 0;
-    test_association->iv_len = 0;
+    test_association->iv_len    = 0;
     test_association->shsnf_len = 0;
-    test_association->arsn_len = 0;
+    test_association->arsn_len  = 0;
 
     // Expose SA 7 for testing
     sa_if->sa_get_from_spi(4, &test_association);
     test_association->sa_state = SA_KEYED;
-    test_association->abm_len = ABM_SIZE;
+    test_association->abm_len  = ABM_SIZE;
 
     // Ensure that Process Security can activate SA 4
-    return_val = Crypto_TC_ProcessSecurity(activate_sa4_b, &activate_sa4_len, tc_sdls_processed_frame);
-    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+    status = Crypto_TC_ProcessSecurity(activate_sa4_b, &activate_sa4_len, tc_sdls_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Deactive SA 1
     test_association->sa_state = SA_NONE;
 
     // Expose SA 4 for testing
     sa_if->sa_get_from_spi(4, &test_association);
-    test_association->arsn_len = 0;
+    test_association->arsn_len       = 0;
     test_association->gvcid_blk.vcid = 1;
-    test_association->iv[11] = 0;
-    test_association->ast = 1;
-    test_association->est = 1;
-    test_association->ekid = 130;
-    test_association->ecs_len = 1;
-    test_association->shivf_len = 12;
-    test_association->iv_len = 12;
-    test_association->stmacf_len = 16;
-    test_association->arsnw_len = 1;
-    test_association->abm_len = ABM_SIZE;
-    test_association->arsnw = 5;
-    test_association->arsn_len = 0;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
-    test_association->arsn_len = ((test_association->arsnw * 2) + 1);
+    test_association->iv[11]         = 0;
+    test_association->ast            = 1;
+    test_association->est            = 1;
+    test_association->ekid           = 130;
+    test_association->ecs_len        = 1;
+    test_association->shivf_len      = 12;
+    test_association->iv_len         = 12;
+    test_association->stmacf_len     = 16;
+    test_association->arsnw_len      = 1;
+    test_association->abm_len        = ABM_SIZE;
+    test_association->arsnw          = 5;
+    test_association->arsn_len       = 0;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ecs            = CRYPTO_CIPHER_AES256_GCM;
+    test_association->arsn_len       = ((test_association->arsnw * 2) + 1);
 
-    return_val = Crypto_TC_ProcessSecurity(dec_test_ping_b, &dec_test_ping_len, tc_sdls_processed_frame);
-    ASSERT_EQ(9, return_val); // 9 is the number of pings in that EP PDU.
+    status = Crypto_TC_ProcessSecurity(dec_test_ping_b, &dec_test_ping_len, tc_sdls_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status); // 9 is the number of pings in that EP PDU.
 
     Crypto_Shutdown();
 
@@ -337,70 +337,72 @@ UTEST(DT_VALIDATION, AUTH_DECRYPTION_TEST)
 UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 {
     remove("sa_save_file.bin");
-    uint8_t* ptr_enc_frame = NULL;
+    uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
     // Crypto_Init_TC_Unit_Test();
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    
-    GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};  
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
+    // TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
 
     Crypto_Init();
-    SaInterface sa_if = get_sa_interface_inmemory();
-    crypto_key_t* ekp = NULL;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *ekp   = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char* buffer_nist_key_h = "ef9f9284cf599eac3b119905a7d18851e7e374cf63aea04358586b0f757670f8";
-    char* buffer_nist_pt_h = "2003001600722ee47da4b77424733546c2d400c4e567a8";
-    char* buffer_nist_iv_h = "b6ac8e4963f49207ffd6374c";
-    char* buffer_nist_ct_h = "1224dfefb72a20d49e09256908874979";
-    uint8_t* buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_ct_b, *buffer_nist_key_b = NULL;
-    int buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_ct_len, buffer_nist_key_len = 0;
+    char    *buffer_nist_key_h = "ef9f9284cf599eac3b119905a7d18851e7e374cf63aea04358586b0f757670f8";
+    char    *buffer_nist_pt_h  = "2003001600722ee47da4b77424733546c2d400c4e567a8";
+    char    *buffer_nist_iv_h  = "b6ac8e4963f49207ffd6374c";
+    char    *buffer_nist_ct_h  = "1224dfefb72a20d49e09256908874979";
+    uint8_t *buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_ct_b, *buffer_nist_key_b      = NULL;
+    int      buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_ct_len, buffer_nist_key_len = 0;
 
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t *test_association = NULL;
+    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->est = 1;
-    test_association->ast = 0;
-    test_association->ecs_len = 1;
-    test_association->acs_len = 1;
-    test_association->shivf_len = 12;
-    test_association->abm_len = 1024;
-    test_association->arsnw_len = 1;
-    test_association->arsnw = 5;
-    test_association->arsn_len = 11;
-    test_association->gvcid_blk.tfvn = 0;
+    test_association->sa_state        = SA_OPERATIONAL;
+    test_association->est             = 1;
+    test_association->ast             = 0;
+    test_association->ecs_len         = 1;
+    test_association->acs_len         = 1;
+    test_association->shivf_len       = 12;
+    test_association->abm_len         = 1024;
+    test_association->arsnw_len       = 1;
+    test_association->arsnw           = 5;
+    test_association->arsn_len        = 11;
+    test_association->gvcid_blk.tfvn  = 0;
     test_association->gvcid_blk.mapid = TYPE_TC;
-    test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
+    test_association->ecs             = CRYPTO_CIPHER_AES256_GCM;
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
     ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char**) &buffer_nist_pt_b, &buffer_nist_pt_len);
+    hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char**) &buffer_nist_iv_b, &buffer_nist_iv_len);
+    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input ciphertext
-    hex_conversion(buffer_nist_ct_h, (char**) &buffer_nist_ct_b, &buffer_nist_ct_len);
+    hex_conversion(buffer_nist_ct_h, (char **)&buffer_nist_ct_b, &buffer_nist_ct_len);
 
     Crypto_TC_ApplySecurity(buffer_nist_pt_b, buffer_nist_pt_len, &ptr_enc_frame, &enc_frame_len);
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
@@ -409,7 +411,7 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     Crypto_Shutdown();
     for (int i = 0; i < buffer_nist_pt_len - 7; i++)
     {
-        //printf("[%d]: %02x -> %02x \n", i, *(ptr_enc_frame + enc_data_idx), buffer_nist_ct_b[i]);
+        // printf("[%d]: %02x -> %02x \n", i, *(ptr_enc_frame + enc_data_idx), buffer_nist_ct_b[i]);
         ASSERT_EQ(*(ptr_enc_frame + enc_data_idx), buffer_nist_ct_b[i]);
         enc_data_idx++;
     }
@@ -430,70 +432,72 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 {
     remove("sa_save_file.bin");
-    uint8_t* ptr_enc_frame = NULL;
+    uint8_t *ptr_enc_frame = NULL;
 
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};  
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
+    // TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    
+
     Crypto_Init();
-    SaInterface sa_if = get_sa_interface_inmemory();
-    crypto_key_t* ekp = NULL;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *ekp   = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char* buffer_nist_key_h = "ef9f9284cf599eac3b119905a7d18851e7e374cf63aea04358586b0f757670f8";
-    char* buffer_nist_pt_h = "2003001600722ee47da4b77424733546c2d400c4e567a8";
-    char* buffer_nist_iv_h = "b6ac8e4963f49207ffd6374b";
-    char* buffer_nist_et_h = "2003002500FF0009B6AC8E4963F49207FFD6374C00001224DFEFB72A20D49E09256908874979AD6F";
-    uint8_t* buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_et_b, *buffer_nist_key_b = NULL;
-    int buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_et_len, buffer_nist_key_len = 0;
+    char    *buffer_nist_key_h = "ef9f9284cf599eac3b119905a7d18851e7e374cf63aea04358586b0f757670f8";
+    char    *buffer_nist_pt_h  = "2003001600722ee47da4b77424733546c2d400c4e567a8";
+    char    *buffer_nist_iv_h  = "b6ac8e4963f49207ffd6374b";
+    char    *buffer_nist_et_h  = "2003002500FF0009B6AC8E4963F49207FFD6374C00001224DFEFB72A20D49E09256908874979AD6F";
+    uint8_t *buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_et_b, *buffer_nist_key_b      = NULL;
+    int      buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_et_len, buffer_nist_key_len = 0;
 
     // Setup Processed Frame For Decryption
-    TC_t* tc_nist_processed_frame;
+    TC_t *tc_nist_processed_frame;
     tc_nist_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
 
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t *test_association = NULL;
+    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->est = 1;
-    test_association->ast = 0;
-    test_association->ecs_len = 1;
-    test_association->acs_len = 1;
-    test_association->shivf_len = 12;
-    test_association->iv_len = 12;
-    test_association->abm_len = 1024;
-    test_association->arsnw_len = 1;
-    test_association->arsnw = 5;
-    test_association->arsn_len = 2;
-    test_association->gvcid_blk.tfvn = 0;
+    test_association->sa_state        = SA_OPERATIONAL;
+    test_association->est             = 1;
+    test_association->ast             = 0;
+    test_association->ecs_len         = 1;
+    test_association->acs_len         = 1;
+    test_association->shivf_len       = 12;
+    test_association->iv_len          = 12;
+    test_association->abm_len         = 1024;
+    test_association->arsnw_len       = 1;
+    test_association->arsnw           = 5;
+    test_association->arsn_len        = 2;
+    test_association->gvcid_blk.tfvn  = 0;
     test_association->gvcid_blk.mapid = TYPE_TC;
-    test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
+    test_association->ecs             = CRYPTO_CIPHER_AES256_GCM;
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
     ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char**) &buffer_nist_pt_b, &buffer_nist_pt_len);
+    hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char**) &buffer_nist_iv_b, &buffer_nist_iv_len);
+    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     //  for (int i = 0; i < buffer_nist_iv_len; i++)
     // {
@@ -502,9 +506,8 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
     //     enc_data_idx++;
     // }
 
-
     // Convert input encryptedtext
-    hex_conversion(buffer_nist_et_h, (char**) &buffer_nist_et_b, &buffer_nist_et_len);
+    hex_conversion(buffer_nist_et_h, (char **)&buffer_nist_et_b, &buffer_nist_et_len);
 
     Crypto_TC_ProcessSecurity(buffer_nist_et_b, &buffer_nist_et_len, tc_nist_processed_frame);
 
@@ -535,71 +538,71 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
 {
     remove("sa_save_file.bin");
-    uint8_t* ptr_enc_frame = NULL;
+    uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};  
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
+    // TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    
+
     Crypto_Init();
-    SaInterface sa_if = get_sa_interface_inmemory();
-    crypto_key_t* ekp = NULL;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *ekp   = NULL;
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char* buffer_nist_key_h = "e9ccd6eef27f740d1d5c70b187734e11e76a8ac0ad1702ff02180c5c1c9e5399";
-    char* buffer_nist_pt_h = "2003001600419635e6e12b257a8ecae411f94480ff56be";
-    char* buffer_nist_iv_h = "1af2613c4184dbd101fcedce";
-    char* buffer_nist_ct_h = "9cd21f414f1f54d5f6f58b1f2f77e5b6";
-    uint8_t* buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_ct_b, *buffer_nist_key_b = NULL;
-    int buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_ct_len, buffer_nist_key_len = 0;
+    char    *buffer_nist_key_h = "e9ccd6eef27f740d1d5c70b187734e11e76a8ac0ad1702ff02180c5c1c9e5399";
+    char    *buffer_nist_pt_h  = "2003001600419635e6e12b257a8ecae411f94480ff56be";
+    char    *buffer_nist_iv_h  = "1af2613c4184dbd101fcedce";
+    char    *buffer_nist_ct_h  = "9cd21f414f1f54d5f6f58b1f2f77e5b6";
+    uint8_t *buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_ct_b, *buffer_nist_key_b      = NULL;
+    int      buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_ct_len, buffer_nist_key_len = 0;
 
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t *test_association = NULL;
+    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->est = 1;
-    test_association->ast = 0;
-    test_association->ecs_len = 1;
-    test_association->acs_len = 0;
-    test_association->shivf_len = 12;
-    test_association->abm_len = 1024;
-    test_association->arsnw_len = 1;
-    test_association->arsnw = 5;
-    test_association->arsn_len = 11;
-    test_association->gvcid_blk.tfvn = 0;
+    test_association->sa_state        = SA_OPERATIONAL;
+    test_association->est             = 1;
+    test_association->ast             = 0;
+    test_association->ecs_len         = 1;
+    test_association->acs_len         = 0;
+    test_association->shivf_len       = 12;
+    test_association->abm_len         = 1024;
+    test_association->arsnw_len       = 1;
+    test_association->arsnw           = 5;
+    test_association->arsn_len        = 11;
+    test_association->gvcid_blk.tfvn  = 0;
     test_association->gvcid_blk.mapid = TYPE_TC;
-    test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
-
+    test_association->ecs             = CRYPTO_CIPHER_AES256_GCM;
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
     ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char**) &buffer_nist_pt_b, &buffer_nist_pt_len);
+    hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char**) &buffer_nist_iv_b, &buffer_nist_iv_len);
+    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input ciphertext
-    hex_conversion(buffer_nist_ct_h, (char**) &buffer_nist_ct_b, &buffer_nist_ct_len);
+    hex_conversion(buffer_nist_ct_h, (char **)&buffer_nist_ct_b, &buffer_nist_ct_len);
 
     sa_if->sa_get_from_spi(9, &test_association);
-
 
     Crypto_TC_ApplySecurity(buffer_nist_pt_b, buffer_nist_pt_len, &ptr_enc_frame, &enc_frame_len);
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
@@ -628,77 +631,79 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
 UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
 {
     remove("sa_save_file.bin");
-    uint8_t* ptr_enc_frame = NULL;
+    uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};  
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
+    // TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    
+
     Crypto_Init();
-    SaInterface sa_if = get_sa_interface_inmemory();
-    crypto_key_t* ekp = NULL;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *ekp   = NULL;
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char* buffer_nist_key_h = "e9ccd6eef27f740d1d5c70b187734e11e76a8ac0ad1702ff02180c5c1c9e5399";
-    char* buffer_nist_pt_h = "2003001600419635e6e12b257a8ecae411f94480ff56be";
-    char* buffer_nist_iv_h = "1af2613c4184dbd101fcedcd";
-                            //2003002500FF0009B6AC8E4963F49207FFD6374C00001224DFEFB72A20D49E09256908874979AD6F
-    char* buffer_nist_et_h = "2003002500FF00091AF2613C4184DBD101FCEDCE00009CD21F414F1F54D5F6F58B1F2F77E5B66987";
-    uint8_t* buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_et_b, *buffer_nist_key_b = NULL;
-    int buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_et_len, buffer_nist_key_len = 0;
+    char *buffer_nist_key_h = "e9ccd6eef27f740d1d5c70b187734e11e76a8ac0ad1702ff02180c5c1c9e5399";
+    char *buffer_nist_pt_h  = "2003001600419635e6e12b257a8ecae411f94480ff56be";
+    char *buffer_nist_iv_h  = "1af2613c4184dbd101fcedcd";
+    // 2003002500FF0009B6AC8E4963F49207FFD6374C00001224DFEFB72A20D49E09256908874979AD6F
+    char    *buffer_nist_et_h = "2003002500FF00091AF2613C4184DBD101FCEDCE00009CD21F414F1F54D5F6F58B1F2F77E5B66987";
+    uint8_t *buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_et_b, *buffer_nist_key_b      = NULL;
+    int      buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_et_len, buffer_nist_key_len = 0;
 
     // Setup Processed Frame For Decryption
-    TC_t* tc_nist_processed_frame;
+    TC_t *tc_nist_processed_frame;
     tc_nist_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
 
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t *test_association = NULL;
+    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->est = 1;
-    test_association->ast = 0;
-    test_association->ecs_len = 1;
-    test_association->acs_len = 0;
-    test_association->shivf_len = 12;
-    test_association->iv_len = 12;
-    test_association->abm_len = 1024;
-    test_association->arsnw_len = 1;
-    test_association->arsnw = 5;
-    test_association->arsn_len = 2;
-    test_association->gvcid_blk.tfvn = 0;
+    test_association->sa_state        = SA_OPERATIONAL;
+    test_association->est             = 1;
+    test_association->ast             = 0;
+    test_association->ecs_len         = 1;
+    test_association->acs_len         = 0;
+    test_association->shivf_len       = 12;
+    test_association->iv_len          = 12;
+    test_association->abm_len         = 1024;
+    test_association->arsnw_len       = 1;
+    test_association->arsnw           = 5;
+    test_association->arsn_len        = 2;
+    test_association->gvcid_blk.tfvn  = 0;
     test_association->gvcid_blk.mapid = TYPE_TC;
-    test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
+    test_association->ecs             = CRYPTO_CIPHER_AES256_GCM;
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
     ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char**) &buffer_nist_pt_b, &buffer_nist_pt_len);
+    hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char**) &buffer_nist_iv_b, &buffer_nist_iv_len);
+    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input ciphertext
-    hex_conversion(buffer_nist_et_h, (char**) &buffer_nist_et_b, &buffer_nist_et_len);
+    hex_conversion(buffer_nist_et_h, (char **)&buffer_nist_et_b, &buffer_nist_et_len);
 
     int32_t status;
 
     status = Crypto_TC_ProcessSecurity(buffer_nist_et_b, &buffer_nist_et_len, tc_nist_processed_frame);
-    ASSERT_EQ(0,status);
+    ASSERT_EQ(0, status);
 
     Crypto_Shutdown();
     for (int i = 0; i < tc_nist_processed_frame->tc_pdu_len; i++)
@@ -723,68 +728,70 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
 UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
 {
     remove("sa_save_file.bin");
-    uint8_t* ptr_enc_frame = NULL;
+    uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};  
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
+    // TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    
+
     Crypto_Init();
-    SaInterface sa_if = get_sa_interface_inmemory();
-    crypto_key_t* ekp = NULL;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *ekp   = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char* buffer_nist_key_h = "7ecc9dcb3d5b413cadc3af7b7812758bd869295f8aaf611ba9935de76bd87013";
-    char* buffer_nist_pt_h = "200300160073d4d7984ce422ac983797c0526ac6f9446b";
-    char* buffer_nist_iv_h = "6805be41e983717bf6781052";
-    char* buffer_nist_ct_h = "487211dd440f4d09d00bc5c3158a822c";
-    uint8_t* buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_ct_b, *buffer_nist_key_b = NULL;
-    int buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_ct_len, buffer_nist_key_len = 0;
+    char    *buffer_nist_key_h = "7ecc9dcb3d5b413cadc3af7b7812758bd869295f8aaf611ba9935de76bd87013";
+    char    *buffer_nist_pt_h  = "200300160073d4d7984ce422ac983797c0526ac6f9446b";
+    char    *buffer_nist_iv_h  = "6805be41e983717bf6781052";
+    char    *buffer_nist_ct_h  = "487211dd440f4d09d00bc5c3158a822c";
+    uint8_t *buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_ct_b, *buffer_nist_key_b      = NULL;
+    int      buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_ct_len, buffer_nist_key_len = 0;
 
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t *test_association = NULL;
+    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->est = 1;
-    test_association->ast = 0;
-    test_association->ecs_len = 1;
-    test_association->acs_len = 0;
-    test_association->shivf_len = 12;
-    test_association->abm_len = 1024;
-    test_association->arsnw_len = 1;
-    test_association->arsnw = 5;
-    test_association->arsn_len = 2;
-    test_association->gvcid_blk.tfvn = 0;
+    test_association->sa_state        = SA_OPERATIONAL;
+    test_association->est             = 1;
+    test_association->ast             = 0;
+    test_association->ecs_len         = 1;
+    test_association->acs_len         = 0;
+    test_association->shivf_len       = 12;
+    test_association->abm_len         = 1024;
+    test_association->arsnw_len       = 1;
+    test_association->arsnw           = 5;
+    test_association->arsn_len        = 2;
+    test_association->gvcid_blk.tfvn  = 0;
     test_association->gvcid_blk.mapid = TYPE_TC;
-    test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
+    test_association->ecs             = CRYPTO_CIPHER_AES256_GCM;
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
     ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char**) &buffer_nist_pt_b, &buffer_nist_pt_len);
+    hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char**) &buffer_nist_iv_b, &buffer_nist_iv_len);
+    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input ciphertext
-    hex_conversion(buffer_nist_ct_h, (char**) &buffer_nist_ct_b, &buffer_nist_ct_len);
+    hex_conversion(buffer_nist_ct_h, (char **)&buffer_nist_ct_b, &buffer_nist_ct_len);
 
     Crypto_TC_ApplySecurity(buffer_nist_pt_b, buffer_nist_pt_len, &ptr_enc_frame, &enc_frame_len);
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
@@ -813,72 +820,74 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
 UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
 {
     remove("sa_save_file.bin");
-    uint8_t* ptr_enc_frame = NULL;
+    uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};  
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
+    // TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    
+
     Crypto_Init();
-    SaInterface sa_if = get_sa_interface_inmemory();
-    crypto_key_t* ekp = NULL;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *ekp   = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char* buffer_nist_key_h = "7ecc9dcb3d5b413cadc3af7b7812758bd869295f8aaf611ba9935de76bd87013";
-    char* buffer_nist_pt_h = "200300160073d4d7984ce422ac983797c0526ac6f9446b";
-    char* buffer_nist_iv_h = "6805be41e983717bf6781051";
-    char* buffer_nist_et_h = "2003002500FF00096805BE41E983717BF67810520000487211DD440F4D09D00BC5C3158A822C46E3";
-    uint8_t* buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_et_b, *buffer_nist_key_b = NULL;
-    int buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_et_len, buffer_nist_key_len = 0;
+    char    *buffer_nist_key_h = "7ecc9dcb3d5b413cadc3af7b7812758bd869295f8aaf611ba9935de76bd87013";
+    char    *buffer_nist_pt_h  = "200300160073d4d7984ce422ac983797c0526ac6f9446b";
+    char    *buffer_nist_iv_h  = "6805be41e983717bf6781051";
+    char    *buffer_nist_et_h  = "2003002500FF00096805BE41E983717BF67810520000487211DD440F4D09D00BC5C3158A822C46E3";
+    uint8_t *buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_et_b, *buffer_nist_key_b      = NULL;
+    int      buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_et_len, buffer_nist_key_len = 0;
 
     // Setup Processed Frame For Decryption
-    TC_t* tc_nist_processed_frame;
+    TC_t *tc_nist_processed_frame;
     tc_nist_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
 
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t *test_association = NULL;
+    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->est = 1;
-    test_association->ast = 0;
-    test_association->ecs_len = 1;
-    test_association->acs_len = 0;
-    test_association->shivf_len = 12;
-    test_association->iv_len = 12;
-    test_association->abm_len = 1024;
-    test_association->arsnw_len = 1;
-    test_association->arsnw = 5;
-    test_association->arsn_len = 2;
-    test_association->gvcid_blk.tfvn = 0;
+    test_association->sa_state        = SA_OPERATIONAL;
+    test_association->est             = 1;
+    test_association->ast             = 0;
+    test_association->ecs_len         = 1;
+    test_association->acs_len         = 0;
+    test_association->shivf_len       = 12;
+    test_association->iv_len          = 12;
+    test_association->abm_len         = 1024;
+    test_association->arsnw_len       = 1;
+    test_association->arsnw           = 5;
+    test_association->arsn_len        = 2;
+    test_association->gvcid_blk.tfvn  = 0;
     test_association->gvcid_blk.mapid = TYPE_TC;
-    test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
+    test_association->ecs             = CRYPTO_CIPHER_AES256_GCM;
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
     ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char**) &buffer_nist_pt_b, &buffer_nist_pt_len);
+    hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char**) &buffer_nist_iv_b, &buffer_nist_iv_len);
+    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input ciphertext
-    hex_conversion(buffer_nist_et_h, (char**) &buffer_nist_et_b, &buffer_nist_et_len);
+    hex_conversion(buffer_nist_et_h, (char **)&buffer_nist_et_b, &buffer_nist_et_len);
 
     Crypto_TC_ProcessSecurity(buffer_nist_et_b, &buffer_nist_et_len, tc_nist_processed_frame);
 
@@ -905,69 +914,71 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_2)
 UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
 {
     remove("sa_save_file.bin");
-    uint8_t* ptr_enc_frame = NULL;
+    uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    //Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    //Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};  
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
+    // TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    
+
     Crypto_Init();
-    SaInterface sa_if = get_sa_interface_inmemory();
-    crypto_key_t* ekp = NULL;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *ekp   = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char* buffer_nist_key_h = "a881373e248615e3d6576f5a5fb68883515ae72d6a2938e3a6f0b8dcb639c9c0";
-    char* buffer_nist_pt_h = "200300160007d1dc9930e710b1ebe533c81f671101e43c";
-    char* buffer_nist_iv_h = "f0b744f157087df4e41818a9";
-    char* buffer_nist_ct_h = "b65a2878b9dddbd4a0204dae6a6a6fc0";
-    uint8_t* buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_ct_b, *buffer_nist_key_b = NULL;
-    int buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_ct_len, buffer_nist_key_len = 0;
+    char    *buffer_nist_key_h = "a881373e248615e3d6576f5a5fb68883515ae72d6a2938e3a6f0b8dcb639c9c0";
+    char    *buffer_nist_pt_h  = "200300160007d1dc9930e710b1ebe533c81f671101e43c";
+    char    *buffer_nist_iv_h  = "f0b744f157087df4e41818a9";
+    char    *buffer_nist_ct_h  = "b65a2878b9dddbd4a0204dae6a6a6fc0";
+    uint8_t *buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_ct_b, *buffer_nist_key_b      = NULL;
+    int      buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_ct_len, buffer_nist_key_len = 0;
 
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t *test_association = NULL;
+    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->est = 1;
-    test_association->ast = 0;
-    test_association->ecs_len = 1;
-    test_association->acs_len = 0;
-    test_association->shivf_len = 12;
-    test_association->iv_len = 12;
-    test_association->abm_len = 1024;
-    test_association->arsnw_len = 1;
-    test_association->arsnw = 5;
-    test_association->arsn_len = 2;
-    test_association->gvcid_blk.tfvn = 0;
+    test_association->sa_state        = SA_OPERATIONAL;
+    test_association->est             = 1;
+    test_association->ast             = 0;
+    test_association->ecs_len         = 1;
+    test_association->acs_len         = 0;
+    test_association->shivf_len       = 12;
+    test_association->iv_len          = 12;
+    test_association->abm_len         = 1024;
+    test_association->arsnw_len       = 1;
+    test_association->arsnw           = 5;
+    test_association->arsn_len        = 2;
+    test_association->gvcid_blk.tfvn  = 0;
     test_association->gvcid_blk.mapid = TYPE_TC;
-    test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
+    test_association->ecs             = CRYPTO_CIPHER_AES256_GCM;
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
     ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char**) &buffer_nist_pt_b, &buffer_nist_pt_len);
+    hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char**) &buffer_nist_iv_b, &buffer_nist_iv_len);
+    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input ciphertext
-    hex_conversion(buffer_nist_ct_h, (char**) &buffer_nist_ct_b, &buffer_nist_ct_len);
+    hex_conversion(buffer_nist_ct_h, (char **)&buffer_nist_ct_b, &buffer_nist_ct_len);
 
     Crypto_TC_ApplySecurity(buffer_nist_pt_b, buffer_nist_pt_len, &ptr_enc_frame, &enc_frame_len);
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
@@ -996,72 +1007,74 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
 UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
 {
     remove("sa_save_file.bin");
-    uint8_t* ptr_enc_frame = NULL;
+    uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};  
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
+    // TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    
+
     Crypto_Init();
-    SaInterface sa_if = get_sa_interface_inmemory();
-    crypto_key_t* ekp = NULL;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *ekp   = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char* buffer_nist_key_h = "a881373e248615e3d6576f5a5fb68883515ae72d6a2938e3a6f0b8dcb639c9c0";
-    char* buffer_nist_pt_h = "200300160007d1dc9930e710b1ebe533c81f671101e43c";
-    char* buffer_nist_iv_h = "f0b744f157087df4e41818a8";
-    char* buffer_nist_et_h = "2003002500FF0009F0B744F157087DF4E41818A90000B65A2878B9DDDBD4A0204DAE6A6A6FC0C327";
-    uint8_t* buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_et_b, *buffer_nist_key_b = NULL;
-    int buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_et_len, buffer_nist_key_len = 0;
+    char    *buffer_nist_key_h = "a881373e248615e3d6576f5a5fb68883515ae72d6a2938e3a6f0b8dcb639c9c0";
+    char    *buffer_nist_pt_h  = "200300160007d1dc9930e710b1ebe533c81f671101e43c";
+    char    *buffer_nist_iv_h  = "f0b744f157087df4e41818a8";
+    char    *buffer_nist_et_h  = "2003002500FF0009F0B744F157087DF4E41818A90000B65A2878B9DDDBD4A0204DAE6A6A6FC0C327";
+    uint8_t *buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_et_b, *buffer_nist_key_b      = NULL;
+    int      buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_et_len, buffer_nist_key_len = 0;
 
     // Setup Processed Frame For Decryption
-    TC_t* tc_nist_processed_frame;
+    TC_t *tc_nist_processed_frame;
     tc_nist_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
 
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t *test_association = NULL;
+    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->est = 1;
-    test_association->ast = 0;
-    test_association->ecs_len = 1;
-    test_association->acs_len = 0;
-    test_association->shivf_len = 12;
-    test_association->iv_len = 12;
-    test_association->abm_len = 1024;
-    test_association->arsnw_len = 1;
-    test_association->arsnw = 5;
-    test_association->arsn_len = 2;
-    test_association->gvcid_blk.tfvn = 0;
+    test_association->sa_state        = SA_OPERATIONAL;
+    test_association->est             = 1;
+    test_association->ast             = 0;
+    test_association->ecs_len         = 1;
+    test_association->acs_len         = 0;
+    test_association->shivf_len       = 12;
+    test_association->iv_len          = 12;
+    test_association->abm_len         = 1024;
+    test_association->arsnw_len       = 1;
+    test_association->arsnw           = 5;
+    test_association->arsn_len        = 2;
+    test_association->gvcid_blk.tfvn  = 0;
     test_association->gvcid_blk.mapid = TYPE_TC;
-    test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
+    test_association->ecs             = CRYPTO_CIPHER_AES256_GCM;
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
     ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char**) &buffer_nist_pt_b, &buffer_nist_pt_len);
+    hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char**) &buffer_nist_iv_b, &buffer_nist_iv_len);
+    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input ciphertext
-    hex_conversion(buffer_nist_et_h, (char**) &buffer_nist_et_b, &buffer_nist_et_len);
+    hex_conversion(buffer_nist_et_h, (char **)&buffer_nist_et_b, &buffer_nist_et_len);
 
     Crypto_TC_ProcessSecurity(buffer_nist_et_b, &buffer_nist_et_len, tc_nist_processed_frame);
 
@@ -1088,69 +1101,71 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_3)
 UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
 {
     remove("sa_save_file.bin");
-    uint8_t* ptr_enc_frame = NULL;
+    uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    //Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    //Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};  
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
+    // TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    
+
     Crypto_Init();
-    SaInterface sa_if = get_sa_interface_inmemory();
-    crypto_key_t* ekp = NULL;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *ekp   = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char* buffer_nist_key_h = "84c90349539c2a7989cb24dfae5e4182382ae94ba717d385977017f74f0d87d6";
-    char* buffer_nist_pt_h = "200300160031c4e1d0ccece6b7a999bfc31f38559af5dd";
-    char* buffer_nist_iv_h = "eeddeaf4355c826dfd153393";
-    char* buffer_nist_ct_h = "5c6cfbdd06c19445ecf500c21aeca173";
-    uint8_t* buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_ct_b, *buffer_nist_key_b = NULL;
-    int buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_ct_len, buffer_nist_key_len = 0;
+    char    *buffer_nist_key_h = "84c90349539c2a7989cb24dfae5e4182382ae94ba717d385977017f74f0d87d6";
+    char    *buffer_nist_pt_h  = "200300160031c4e1d0ccece6b7a999bfc31f38559af5dd";
+    char    *buffer_nist_iv_h  = "eeddeaf4355c826dfd153393";
+    char    *buffer_nist_ct_h  = "5c6cfbdd06c19445ecf500c21aeca173";
+    uint8_t *buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_ct_b, *buffer_nist_key_b      = NULL;
+    int      buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_ct_len, buffer_nist_key_len = 0;
 
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t *test_association = NULL;
+    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->est = 1;
-    test_association->ast = 0;
-    test_association->ecs_len = 1;
-    test_association->acs_len = 0;
-    test_association->shivf_len = 12;
-    test_association->iv_len = 12;
-    test_association->abm_len = 1024;
-    test_association->arsnw_len = 1;
-    test_association->arsnw = 5;
-    test_association->arsn_len = 2;
-    test_association->gvcid_blk.tfvn = 0;
+    test_association->sa_state        = SA_OPERATIONAL;
+    test_association->est             = 1;
+    test_association->ast             = 0;
+    test_association->ecs_len         = 1;
+    test_association->acs_len         = 0;
+    test_association->shivf_len       = 12;
+    test_association->iv_len          = 12;
+    test_association->abm_len         = 1024;
+    test_association->arsnw_len       = 1;
+    test_association->arsnw           = 5;
+    test_association->arsn_len        = 2;
+    test_association->gvcid_blk.tfvn  = 0;
     test_association->gvcid_blk.mapid = TYPE_TC;
-    test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
+    test_association->ecs             = CRYPTO_CIPHER_AES256_GCM;
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
     ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char**) &buffer_nist_pt_b, &buffer_nist_pt_len);
+    hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char**) &buffer_nist_iv_b, &buffer_nist_iv_len);
+    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input ciphertext
-    hex_conversion(buffer_nist_ct_h, (char**) &buffer_nist_ct_b, &buffer_nist_ct_len);
+    hex_conversion(buffer_nist_ct_h, (char **)&buffer_nist_ct_b, &buffer_nist_ct_len);
 
     Crypto_TC_ApplySecurity(buffer_nist_pt_b, buffer_nist_pt_len, &ptr_enc_frame, &enc_frame_len);
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
@@ -1179,72 +1194,74 @@ UTEST(NIST_ENC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
 UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
 {
     remove("sa_save_file.bin");
-    uint8_t* ptr_enc_frame = NULL;
+    uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};  
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
+    // TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    
+
     Crypto_Init();
-    SaInterface sa_if = get_sa_interface_inmemory();
-    crypto_key_t* ekp = NULL;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *ekp   = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char* buffer_nist_key_h = "84c90349539c2a7989cb24dfae5e4182382ae94ba717d385977017f74f0d87d6";
-    char* buffer_nist_pt_h = "200300160031c4e1d0ccece6b7a999bfc31f38559af5dd";
-    char* buffer_nist_iv_h = "eeddeaf4355c826dfd153392";
-    char* buffer_nist_et_h = "2003002500FF0009EEDDEAF4355C826DFD15339300005C6CFBDD06C19445ECF500C21AECA1738A7D";
-    uint8_t* buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_et_b, *buffer_nist_key_b = NULL;
-    int buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_et_len, buffer_nist_key_len = 0;
+    char    *buffer_nist_key_h = "84c90349539c2a7989cb24dfae5e4182382ae94ba717d385977017f74f0d87d6";
+    char    *buffer_nist_pt_h  = "200300160031c4e1d0ccece6b7a999bfc31f38559af5dd";
+    char    *buffer_nist_iv_h  = "eeddeaf4355c826dfd153392";
+    char    *buffer_nist_et_h  = "2003002500FF0009EEDDEAF4355C826DFD15339300005C6CFBDD06C19445ECF500C21AECA1738A7D";
+    uint8_t *buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_et_b, *buffer_nist_key_b      = NULL;
+    int      buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_et_len, buffer_nist_key_len = 0;
 
     // Setup Processed Frame For Decryption
-    TC_t* tc_nist_processed_frame;
+    TC_t *tc_nist_processed_frame;
     tc_nist_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
 
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t *test_association = NULL;
+    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->est = 1;
-    test_association->ast = 0;
-    test_association->ecs_len = 1;
-    test_association->acs_len = 0;
-    test_association->shivf_len = 12;
-    test_association->iv_len = 12;
-    test_association->abm_len = 1024;
-    test_association->arsnw_len = 1;
-    test_association->arsnw = 5;
-    test_association->arsn_len = 2;
-    test_association->gvcid_blk.tfvn = 0;
+    test_association->sa_state        = SA_OPERATIONAL;
+    test_association->est             = 1;
+    test_association->ast             = 0;
+    test_association->ecs_len         = 1;
+    test_association->acs_len         = 0;
+    test_association->shivf_len       = 12;
+    test_association->iv_len          = 12;
+    test_association->abm_len         = 1024;
+    test_association->arsnw_len       = 1;
+    test_association->arsnw           = 5;
+    test_association->arsn_len        = 2;
+    test_association->gvcid_blk.tfvn  = 0;
     test_association->gvcid_blk.mapid = TYPE_TC;
-    test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
+    test_association->ecs             = CRYPTO_CIPHER_AES256_GCM;
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
     ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char**) &buffer_nist_pt_b, &buffer_nist_pt_len);
+    hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char**) &buffer_nist_iv_b, &buffer_nist_iv_len);
+    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input ciphertext
-    hex_conversion(buffer_nist_et_h, (char**) &buffer_nist_et_b, &buffer_nist_et_len);
+    hex_conversion(buffer_nist_et_h, (char **)&buffer_nist_et_b, &buffer_nist_et_len);
 
     Crypto_TC_ProcessSecurity(buffer_nist_et_b, &buffer_nist_et_len, tc_nist_processed_frame);
 
@@ -1282,74 +1299,76 @@ UTEST(NIST_DEC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_4)
 UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 {
     remove("sa_save_file.bin");
-    uint8_t* ptr_enc_frame = NULL;
+    uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    //Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    //Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};  
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
+    // TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    
+
     Crypto_Init();
-    SaInterface sa_if = get_sa_interface_inmemory();
-    crypto_key_t* ekp = NULL;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *ekp   = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char* buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
-    char* buffer_nist_pt_h = "200300060028C2"; // Empty Transfer frame
-    char* buffer_nist_iv_h = "d79cf22d504cc793c3fb6c8a";
-    char* buffer_nist_aad_h = "b96baa8c1c75a671bfb2d08d06be5f36"; // Zeroed out by abm
-    char* buffer_cyber_chef_mac_h = "b04cb89841f1591793f6e1bca1479d92";
-    uint8_t* buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_nist_aad_b,
+    char    *buffer_nist_key_h       = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
+    char    *buffer_nist_pt_h        = "200300060028C2"; // Empty Transfer frame
+    char    *buffer_nist_iv_h        = "d79cf22d504cc793c3fb6c8a";
+    char    *buffer_nist_aad_h       = "b96baa8c1c75a671bfb2d08d06be5f36"; // Zeroed out by abm
+    char    *buffer_cyber_chef_mac_h = "b04cb89841f1591793f6e1bca1479d92";
+    uint8_t *buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_nist_aad_b,
         *buffer_cyber_chef_mac_b = NULL;
     int buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_key_len, buffer_nist_aad_len, buffer_cyber_chef_mac_len = 0;
 
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t *test_association = NULL;
+    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->est = 0;
-    test_association->ast = 1;
-    test_association->ecs_len = 1;
-    test_association->acs_len = 0;
+    test_association->sa_state  = SA_OPERATIONAL;
+    test_association->est       = 0;
+    test_association->ast       = 1;
+    test_association->ecs_len   = 1;
+    test_association->acs_len   = 0;
     test_association->shivf_len = 12;
-    test_association->iv_len = 12;
-    test_association->abm_len = 1024;
+    test_association->iv_len    = 12;
+    test_association->abm_len   = 1024;
     memset(test_association->abm, 0xFF, (test_association->abm_len * sizeof(uint8_t))); // Bitmask
-    test_association->stmacf_len = 16;
-    test_association->arsnw_len = 1;
-    test_association->arsnw = 5;
-    test_association->arsn_len = 2;
-    test_association->gvcid_blk.tfvn = 0;
+    test_association->stmacf_len      = 16;
+    test_association->arsnw_len       = 1;
+    test_association->arsnw           = 5;
+    test_association->arsn_len        = 2;
+    test_association->gvcid_blk.tfvn  = 0;
     test_association->gvcid_blk.mapid = TYPE_TC;
-    test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
+    test_association->ecs             = CRYPTO_CIPHER_AES256_GCM;
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
     ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char**) &buffer_nist_pt_b, &buffer_nist_pt_len);
+    hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char**) &buffer_nist_iv_b, &buffer_nist_iv_len);
+    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input aad
-    hex_conversion(buffer_nist_aad_h, (char**) &buffer_nist_aad_b, &buffer_nist_aad_len);
+    hex_conversion(buffer_nist_aad_h, (char **)&buffer_nist_aad_b, &buffer_nist_aad_len);
     // Convert input mac
-    hex_conversion(buffer_cyber_chef_mac_h, (char**) &buffer_cyber_chef_mac_b, &buffer_cyber_chef_mac_len);
+    hex_conversion(buffer_cyber_chef_mac_h, (char **)&buffer_cyber_chef_mac_b, &buffer_cyber_chef_mac_len);
 
     Crypto_TC_ApplySecurity(buffer_nist_pt_b, buffer_nist_pt_len, &ptr_enc_frame, &enc_frame_len);
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
@@ -1383,71 +1402,73 @@ UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 UTEST(NIST_ENC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_1)
 {
     remove("sa_save_file.bin");
-    uint8_t* ptr_enc_frame = NULL;
+    uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};  
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
+    // TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    
+
     Crypto_Init();
-    SaInterface sa_if = get_sa_interface_inmemory();
-    crypto_key_t* ekp = NULL;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *ekp   = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char* buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
-    char* buffer_nist_pt_h = "200300060028C2"; // Empty Transfer frame
-    char* buffer_nist_iv_h = "d79cf22d504cc793c3fb6c8a";
-    char* buffer_cyber_chef_mac_h = "b04cb89841f1591793f6e1bca1479d92";
-    uint8_t* buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_cyber_chef_mac_b = NULL;
-    int buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_key_len, buffer_cyber_chef_mac_len = 0;
+    char    *buffer_nist_key_h       = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
+    char    *buffer_nist_pt_h        = "200300060028C2"; // Empty Transfer frame
+    char    *buffer_nist_iv_h        = "d79cf22d504cc793c3fb6c8a";
+    char    *buffer_cyber_chef_mac_h = "b04cb89841f1591793f6e1bca1479d92";
+    uint8_t *buffer_nist_pt_b, *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_cyber_chef_mac_b      = NULL;
+    int      buffer_nist_pt_len, buffer_nist_iv_len, buffer_nist_key_len, buffer_cyber_chef_mac_len = 0;
 
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t *test_association = NULL;
+    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->est = 0;
-    test_association->ast = 1;
-    test_association->ecs_len = 1;
-    test_association->acs_len = 0;
+    test_association->sa_state  = SA_OPERATIONAL;
+    test_association->est       = 0;
+    test_association->ast       = 1;
+    test_association->ecs_len   = 1;
+    test_association->acs_len   = 0;
     test_association->shivf_len = 12;
-    test_association->iv_len = 12;
-    test_association->abm_len = 1024;
+    test_association->iv_len    = 12;
+    test_association->abm_len   = 1024;
     memset(test_association->abm, 0xFF, (test_association->abm_len * sizeof(uint8_t))); // Bitmask
-    test_association->stmacf_len = 16;
-    test_association->arsnw_len = 1;
-    test_association->arsnw = 5;
-    test_association->arsn_len = 2;
-    test_association->gvcid_blk.tfvn = 0;
+    test_association->stmacf_len      = 16;
+    test_association->arsnw_len       = 1;
+    test_association->arsnw           = 5;
+    test_association->arsn_len        = 2;
+    test_association->gvcid_blk.tfvn  = 0;
     test_association->gvcid_blk.mapid = TYPE_TC;
-    test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
+    test_association->ecs             = CRYPTO_CIPHER_AES256_GCM;
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
     ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char**) &buffer_nist_pt_b, &buffer_nist_pt_len);
+    hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char**) &buffer_nist_iv_b, &buffer_nist_iv_len);
+    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input mac
-    hex_conversion(buffer_cyber_chef_mac_h, (char**) &buffer_cyber_chef_mac_b, &buffer_cyber_chef_mac_len);
+    hex_conversion(buffer_cyber_chef_mac_h, (char **)&buffer_cyber_chef_mac_b, &buffer_cyber_chef_mac_len);
 
     Crypto_TC_ApplySecurity(buffer_nist_pt_b, buffer_nist_pt_len, &ptr_enc_frame, &enc_frame_len);
 
@@ -1481,108 +1502,109 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
 {
     remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};  
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
+    // TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     Crypto_Init();
-    SaInterface sa_if = get_sa_interface_inmemory();
-    crypto_key_t* ekp = NULL;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *ekp   = NULL;
 
     // NIST supplied vectors
-    char* buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
-    char* buffer_nist_iv_h = "d79cf22d504cc793c3fb6c89";
-    char* buffer_cyber_chef_mac_h = "E7BB31D506998FCBDA078E66D5680194";
-    char* buffer_nist_pt_h = "722ee47da4b77424733546c2d400c4e5";
+    char *buffer_nist_key_h       = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
+    char *buffer_nist_iv_h        = "d79cf22d504cc793c3fb6c89";
+    char *buffer_cyber_chef_mac_h = "E7BB31D506998FCBDA078E66D5680194";
+    char *buffer_nist_pt_h        = "722ee47da4b77424733546c2d400c4e5";
 
     // Create a MAC'd frame by adding our headers and a fecf
-    //  |  Header | SPI |           iv               |         plaintext            |             mac               |fecf|
-    char* buffer_nist_mac_frame_h =
-        "2003003700FF0009D79CF22D504CC793C3FB6C8A0000722ee47da4b77424733546c2d400c4e5E7BB31D506998FCBDA078E66D5680194B401";
+    //  |  Header | SPI |           iv               |         plaintext            |             mac |fecf|
+    char *buffer_nist_mac_frame_h = "2003003700FF0009D79CF22D504CC793C3FB6C8A0000722ee47da4b77424733546c2d400c4e5E7BB31"
+                                    "D506998FCBDA078E66D5680194B401";
 
-    uint8_t* buffer_nist_iv_b, *buffer_nist_pt_b, *buffer_nist_key_b, *buffer_cyber_chef_mac_b,
+    uint8_t *buffer_nist_iv_b, *buffer_nist_pt_b, *buffer_nist_key_b, *buffer_cyber_chef_mac_b,
         *buffer_nist_mac_frame_b, *buffer_nist_cp_b = NULL;
     int buffer_nist_iv_len, buffer_nist_pt_len, buffer_nist_key_len, buffer_cyber_chef_mac_len,
         buffer_nist_mac_frame_len = 0;
 
     // Setup Processed Frame For Decryption
-    TC_t* tc_nist_processed_frame;
+    TC_t *tc_nist_processed_frame;
     tc_nist_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
 
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t *test_association = NULL;
+    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
-    test_association->ast = 1;
-    test_association->est = 0;
-    test_association->arsn_len = 2;
+    test_association->ast       = 1;
+    test_association->est       = 0;
+    test_association->arsn_len  = 2;
     test_association->arsnw_len = 1;
-    test_association->abm_len = 1024;
+    test_association->abm_len   = 1024;
     memset(test_association->abm, 0xFF, (test_association->abm_len * sizeof(uint8_t)));
-    test_association->shivf_len = 12;
-    test_association->iv_len = 12;
-    test_association->stmacf_len = 16;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
+    test_association->shivf_len      = 12;
+    test_association->iv_len         = 12;
+    test_association->stmacf_len     = 16;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ecs            = CRYPTO_CIPHER_AES256_GCM;
     test_association->gvcid_blk.tfvn = 0;
-    
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
     ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char**) &buffer_nist_pt_b, &buffer_nist_pt_len);
+    hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char**) &buffer_nist_iv_b, &buffer_nist_iv_len);
+    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input mac
-    hex_conversion(buffer_cyber_chef_mac_h, (char**) &buffer_cyber_chef_mac_b, &buffer_cyber_chef_mac_len);
+    hex_conversion(buffer_cyber_chef_mac_h, (char **)&buffer_cyber_chef_mac_b, &buffer_cyber_chef_mac_len);
     // Convert mac frame
-    hex_conversion(buffer_nist_mac_frame_h, (char**) &buffer_nist_mac_frame_b, &buffer_nist_mac_frame_len);
+    hex_conversion(buffer_nist_mac_frame_h, (char **)&buffer_nist_mac_frame_b, &buffer_nist_mac_frame_len);
 
     Crypto_TC_ProcessSecurity(buffer_nist_mac_frame_b, &buffer_nist_mac_frame_len, tc_nist_processed_frame);
 
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
     // Calc payload index: total length - pt length
 #ifdef DEBUG
-         printf("Expected MAC: ");
-         for (int i=0; i<buffer_cyber_chef_mac_len; i++)
-         {
-             printf("%02x ", buffer_cyber_chef_mac_b[i]);
-         }
-         printf("\nReceived MAC: ");
-         for (int i=0; i<test_association->stmacf_len; i++)
-         {
-             printf("%02x ", tc_nist_processed_frame->tc_sec_trailer.mac[i]);
-         }
-         printf("\n");
+    printf("Expected MAC: ");
+    for (int i = 0; i < buffer_cyber_chef_mac_len; i++)
+    {
+        printf("%02x ", buffer_cyber_chef_mac_b[i]);
+    }
+    printf("\nReceived MAC: ");
+    for (int i = 0; i < test_association->stmacf_len; i++)
+    {
+        printf("%02x ", tc_nist_processed_frame->tc_sec_trailer.mac[i]);
+    }
+    printf("\n");
 #endif
 
 #ifdef DEBUG
-        printf("PDU Length: %d \n",tc_nist_processed_frame->tc_pdu_len);
-        printf("Expected PDU: ");
-         for (int i=0; i < tc_nist_processed_frame->tc_pdu_len; i++)
-         {
-             printf("%02x ", buffer_nist_pt_b[i]);
-         }
-         printf("\nReceived PDU: ");
-         for (int i=0; i < tc_nist_processed_frame->tc_pdu_len; i++)
-         {
-             printf("%02x ", tc_nist_processed_frame->tc_pdu[i]);
-         }
-         printf("\n");
+    printf("PDU Length: %d \n", tc_nist_processed_frame->tc_pdu_len);
+    printf("Expected PDU: ");
+    for (int i = 0; i < tc_nist_processed_frame->tc_pdu_len; i++)
+    {
+        printf("%02x ", buffer_nist_pt_b[i]);
+    }
+    printf("\nReceived PDU: ");
+    for (int i = 0; i < tc_nist_processed_frame->tc_pdu_len; i++)
+    {
+        printf("%02x ", tc_nist_processed_frame->tc_pdu[i]);
+    }
+    printf("\n");
 #endif
 
     // Verify the MAC
@@ -1591,11 +1613,11 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0)
         ASSERT_EQ(tc_nist_processed_frame->tc_sec_trailer.mac[i], buffer_cyber_chef_mac_b[i]);
     }
     for (int i = 0; i < tc_nist_processed_frame->tc_pdu_len; i++)
-    {   // Verify the PDU Data is present and not stomped
+    { // Verify the PDU Data is present and not stomped
         ASSERT_EQ(tc_nist_processed_frame->tc_pdu[i], buffer_nist_pt_b[i]);
     }
 
-    Crypto_Shutdown();    
+    Crypto_Shutdown();
     free(buffer_nist_iv_b);
     free(buffer_nist_key_b);
     free(buffer_cyber_chef_mac_b);
@@ -1613,81 +1635,83 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_DATA)
     remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     int32_t status;
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    //Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    //Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};  
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
+    // TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    
+
     Crypto_Init();
-    SaInterface sa_if = get_sa_interface_inmemory();
-    crypto_key_t* ekp = NULL;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *ekp   = NULL;
 
     // NIST supplied vectors
-    char* buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
-    char* buffer_nist_iv_h = "d79cf22d504cc793c3fb6c89";
+    char *buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
+    char *buffer_nist_iv_h  = "d79cf22d504cc793c3fb6c89";
     // char* buffer_cyber_chef_mac_h = "99eff39be8327e6950f03a329209d577";
-    char* buffer_cyber_chef_mac_h = "34d0e323f5e4b80426401d4aa37930da";
-    char* buffer_nist_pt_h = "722ee47da4b77424733546c2d400c4e5";
+    char *buffer_cyber_chef_mac_h = "34d0e323f5e4b80426401d4aa37930da";
+    char *buffer_nist_pt_h        = "722ee47da4b77424733546c2d400c4e5";
 
     // Create a MAC'd frame by adding our headers and a fecf
     //  |  Header | SPI |           iv          |         plaintext             |             mac               |fecf|
-    char* buffer_nist_mac_frame_h =
-        "2003003700FF0009D79CF22D504CC793C3FB6C8A0000722ee47da4b77424733546c2d400c40034d0e323f5e4b80426401d4aa37930da123b";
+    char *buffer_nist_mac_frame_h = "2003003700FF0009D79CF22D504CC793C3FB6C8A0000722ee47da4b77424733546c2d400c40034d0e3"
+                                    "23f5e4b80426401d4aa37930da123b";
 
-    uint8_t* buffer_nist_iv_b, *buffer_nist_pt_b, *buffer_nist_key_b, *buffer_cyber_chef_mac_b,
+    uint8_t *buffer_nist_iv_b, *buffer_nist_pt_b, *buffer_nist_key_b, *buffer_cyber_chef_mac_b,
         *buffer_nist_mac_frame_b, *buffer_nist_cp_b = NULL;
     int buffer_nist_iv_len, buffer_nist_pt_len, buffer_nist_key_len, buffer_cyber_chef_mac_len,
         buffer_nist_mac_frame_len = 0;
 
     // Setup Processed Frame For Decryption
-    TC_t* tc_nist_processed_frame;
+    TC_t *tc_nist_processed_frame;
     tc_nist_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
 
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t *test_association = NULL;
+    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
-    test_association->ast = 1;
-    test_association->est = 0;
-    test_association->arsn_len = 2;
+    test_association->ast       = 1;
+    test_association->est       = 0;
+    test_association->arsn_len  = 2;
     test_association->arsnw_len = 1;
-    test_association->abm_len = 1024;
+    test_association->abm_len   = 1024;
     memset(test_association->abm, 0xFF, (test_association->abm_len * sizeof(uint8_t)));
-    test_association->shivf_len = 12;
-    test_association->iv_len = 12;
-    test_association->stmacf_len = 16;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
+    test_association->shivf_len      = 12;
+    test_association->iv_len         = 12;
+    test_association->stmacf_len     = 16;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ecs            = CRYPTO_CIPHER_AES256_GCM;
     test_association->gvcid_blk.tfvn = 0;
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
     ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char**) &buffer_nist_pt_b, &buffer_nist_pt_len);
+    hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char**) &buffer_nist_iv_b, &buffer_nist_iv_len);
+    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input mac
-    hex_conversion(buffer_cyber_chef_mac_h, (char**) &buffer_cyber_chef_mac_b, &buffer_cyber_chef_mac_len);
+    hex_conversion(buffer_cyber_chef_mac_h, (char **)&buffer_cyber_chef_mac_b, &buffer_cyber_chef_mac_len);
     // Convert mac frame
-    hex_conversion(buffer_nist_mac_frame_h, (char**) &buffer_nist_mac_frame_b, &buffer_nist_mac_frame_len);
+    hex_conversion(buffer_nist_mac_frame_h, (char **)&buffer_nist_mac_frame_b, &buffer_nist_mac_frame_len);
 
     status = Crypto_TC_ProcessSecurity(buffer_nist_mac_frame_b, &buffer_nist_mac_frame_len, tc_nist_processed_frame);
-    //printf("TC_Process returned status %d\n", status);
+    // printf("TC_Process returned status %d\n", status);
 
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
     // Calc payload index: total length - pt length
@@ -1724,81 +1748,83 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_MAC)
     remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     int32_t status;
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    //Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    //Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};  
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
+    // TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    
+
     Crypto_Init();
-    SaInterface sa_if = get_sa_interface_inmemory();
-    crypto_key_t* ekp = NULL;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *ekp   = NULL;
 
     // NIST supplied vectors
-    char* buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
-    char* buffer_nist_iv_h = "d79cf22d504cc793c3fb6c89";
+    char *buffer_nist_key_h = "78dc4e0aaf52d935c3c01eea57428f00ca1fd475f5da86a49c8dd73d68c8e223";
+    char *buffer_nist_iv_h  = "d79cf22d504cc793c3fb6c89";
     // char* buffer_cyber_chef_mac_h = "99eff39be8327e6950f03a329209d577";
-    char* buffer_cyber_chef_mac_h = "34d0e323f5e4b80426401d4aa37930da";
-    char* buffer_nist_pt_h = "722ee47da4b77424733546c2d400c4e5";
+    char *buffer_cyber_chef_mac_h = "34d0e323f5e4b80426401d4aa37930da";
+    char *buffer_nist_pt_h        = "722ee47da4b77424733546c2d400c4e5";
 
     // Create a MAC'd frame by adding our headers and a fecf
     //  |  Header | SPI |           iv          |         plaintext             |             mac               |fecf|
-    char* buffer_nist_mac_frame_h =
+    char *buffer_nist_mac_frame_h =
         "2003003500FF0009D79CF22D504CC793C3FB6C8A722ee47da4b77424733546c2d400c4e534d0e323f5e4b80426401d4aa37930009f68";
 
-    uint8_t* buffer_nist_iv_b, *buffer_nist_pt_b, *buffer_nist_key_b, *buffer_cyber_chef_mac_b,
+    uint8_t *buffer_nist_iv_b, *buffer_nist_pt_b, *buffer_nist_key_b, *buffer_cyber_chef_mac_b,
         *buffer_nist_mac_frame_b, *buffer_nist_cp_b = NULL;
     int buffer_nist_iv_len, buffer_nist_pt_len, buffer_nist_key_len, buffer_cyber_chef_mac_len,
         buffer_nist_mac_frame_len = 0;
 
     // Setup Processed Frame For Decryption
-    TC_t* tc_nist_processed_frame;
+    TC_t *tc_nist_processed_frame;
     tc_nist_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
 
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t *test_association = NULL;
+    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
-    test_association->ast = 1;
-    test_association->est = 0;
-    test_association->arsn_len = 2;
+    test_association->ast       = 1;
+    test_association->est       = 0;
+    test_association->arsn_len  = 2;
     test_association->arsnw_len = 1;
-    test_association->abm_len = 1024;
+    test_association->abm_len   = 1024;
     memset(test_association->abm, 0xFF, (test_association->abm_len * sizeof(uint8_t)));
-    test_association->shivf_len = 12;
-    test_association->iv_len = 12;
-    test_association->stmacf_len = 16;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->ecs = CRYPTO_CIPHER_AES256_GCM;
+    test_association->shivf_len      = 12;
+    test_association->iv_len         = 12;
+    test_association->stmacf_len     = 16;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ecs            = CRYPTO_CIPHER_AES256_GCM;
     test_association->gvcid_blk.tfvn = 0;
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
     ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
-    hex_conversion(buffer_nist_pt_h, (char**) &buffer_nist_pt_b, &buffer_nist_pt_len);
+    hex_conversion(buffer_nist_pt_h, (char **)&buffer_nist_pt_b, &buffer_nist_pt_len);
     // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char**) &buffer_nist_iv_b, &buffer_nist_iv_len);
+    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
     // Convert input mac
-    hex_conversion(buffer_cyber_chef_mac_h, (char**) &buffer_cyber_chef_mac_b, &buffer_cyber_chef_mac_len);
+    hex_conversion(buffer_cyber_chef_mac_h, (char **)&buffer_cyber_chef_mac_b, &buffer_cyber_chef_mac_len);
     // Convert mac frame
-    hex_conversion(buffer_nist_mac_frame_h, (char**) &buffer_nist_mac_frame_b, &buffer_nist_mac_frame_len);
+    hex_conversion(buffer_nist_mac_frame_h, (char **)&buffer_nist_mac_frame_b, &buffer_nist_mac_frame_len);
 
     status = Crypto_TC_ProcessSecurity(buffer_nist_mac_frame_b, &buffer_nist_mac_frame_len, tc_nist_processed_frame);
-    //printf("TC_Process returned status %d\n", status);
+    // printf("TC_Process returned status %d\n", status);
 
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
     // Calc payload index: total length - pt length
@@ -1833,74 +1859,78 @@ UTEST(NIST_DEC_MAC_VALIDATION, AES_GCM_256_IV_96_PT_128_TEST_0_BAD_MAC)
 UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
 {
     remove("sa_save_file.bin");
-    uint8_t* ptr_enc_frame = NULL;
+    uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    //Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    //Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};  
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
+    // TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    
+
     Crypto_Init();
-    SaInterface sa_if = get_sa_interface_inmemory();
-    crypto_key_t* akp = NULL;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *akp   = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char* buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
-    //                        |  Header |           NIST CMAC Test Vector                                                                                               |FECF|
-    char* buffer_frame_pt_h = "2003004600C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258C925";
-    // Python truth string passed below is ZEROed out, not including a MAC or FECF which isn't hashed against, but the LENGTH (including fecf) needs to be updated in the Tf Header
-    // Length is dependent on whatever the variable mac length to be updated in the header
-    //  | Header |SPI|  ARSN  | NIST CMAC Frame Data                                                                                                         |
+    char *buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
+    //                        |  Header |           NIST CMAC Test Vector |FECF|
+    char *buffer_frame_pt_h = "2003004600C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A"
+                              "71158E23D80B699E8006E52345FB7273B2E084407F19394258C925";
+    // Python truth string passed below is ZEROed out, not including a MAC or FECF which isn't hashed against, but the
+    // LENGTH (including fecf) needs to be updated in the Tf Header Length is dependent on whatever the variable mac
+    // length to be updated in the header
+    //  | Header |SPI|  ARSN  | NIST CMAC Frame Data |
     // "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258";
-    // "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"         
-    // Python output MAC   
-    char* buffer_python_mac_h = "7629961f6b92145290ad3e149940511a";
-    uint8_t* buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b = NULL;
-    int buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
+    // "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+    // Python output MAC
+    char    *buffer_python_mac_h = "7629961f6b92145290ad3e149940511a";
+    uint8_t *buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b     = NULL;
+    int      buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
 
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t *test_association = NULL;
+    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
-    test_association->ast = 1;
-    test_association->est = 0;
+    test_association->ast       = 1;
+    test_association->est       = 0;
     test_association->shivf_len = 0;
-    test_association->iv_len = 0;
+    test_association->iv_len    = 0;
     test_association->shsnf_len = 4;
-    test_association->arsn_len = 4;
-    test_association->abm_len = 1024;
+    test_association->arsn_len  = 4;
+    test_association->abm_len   = 1024;
     memset(test_association->abm, 0x00, (test_association->abm_len * sizeof(uint8_t))); // Bitmask
-    test_association->stmacf_len = 16;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->ecs = CRYPTO_CIPHER_NONE;
-    test_association->acs_len = 1;
-    test_association->acs = CRYPTO_MAC_CMAC_AES256;
-    test_association->ekid = 0;
-    test_association->akid = 136;
+    test_association->stmacf_len     = 16;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ecs            = CRYPTO_CIPHER_NONE;
+    test_association->acs_len        = 1;
+    test_association->acs            = CRYPTO_MAC_CMAC_AES256;
+    test_association->ekid           = 0;
+    test_association->akid           = 136;
     test_association->gvcid_blk.tfvn = 0;
-    //sa_if->sa_get_from_spi(9, &test_association);
+    // sa_if->sa_get_from_spi(9, &test_association);
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
     akp = key_if->get_key(test_association->akid);
     memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
-    hex_conversion(buffer_frame_pt_h, (char**) &buffer_frame_pt_b, &buffer_frame_pt_len);
+    hex_conversion(buffer_frame_pt_h, (char **)&buffer_frame_pt_b, &buffer_frame_pt_len);
     // Convert input mac
-    hex_conversion(buffer_python_mac_h, (char**) &buffer_python_mac_b, &buffer_python_mac_len);
+    hex_conversion(buffer_python_mac_h, (char **)&buffer_python_mac_b, &buffer_python_mac_len);
 
     Crypto_TC_ApplySecurity(buffer_frame_pt_b, buffer_frame_pt_len, &ptr_enc_frame, &enc_frame_len);
 
@@ -1913,7 +1943,8 @@ UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
     {
         if (ptr_enc_frame[enc_data_idx] != buffer_python_mac_b[i])
         {
-            printf("[%d] Truth: %02x, Actual: %02x\n", enc_data_idx, buffer_python_mac_b[i], ptr_enc_frame[enc_data_idx]);
+            printf("[%d] Truth: %02x, Actual: %02x\n", enc_data_idx, buffer_python_mac_b[i],
+                   ptr_enc_frame[enc_data_idx]);
         }
         ASSERT_EQ(ptr_enc_frame[enc_data_idx], buffer_python_mac_b[i]);
         enc_data_idx++;
@@ -1934,72 +1965,77 @@ UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
 UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
 {
     remove("sa_save_file.bin");
-    uint8_t* ptr_enc_frame = NULL;
+    uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA,1};  
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
+    // TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     Crypto_Init();
-    SaInterface sa_if = get_sa_interface_inmemory();
-    crypto_key_t* akp = NULL;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *akp   = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char* buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
-    //                        |  Header |           NIST CMAC Test Vector                                                                                               |FECF|
-    char* buffer_frame_pt_h = "2003004600C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258C925";
-    // Python truth string passed below, not including a MAC or FECF which isn't hashed against, but the LENGTH (including fecf) needs to be updated in the Tf Header
-    // Length is dependent on whatevr the variable mac length to be updated in the header
-    //                           | Header |SPI|  ARSN  | NIST CMAC Frame Data                                                                                                         |
-    // char* buffer_frame_pt_h = "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258";
+    char *buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
+    //                        |  Header |           NIST CMAC Test Vector |FECF|
+    char *buffer_frame_pt_h = "2003004600C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A"
+                              "71158E23D80B699E8006E52345FB7273B2E084407F19394258C925";
+    // Python truth string passed below, not including a MAC or FECF which isn't hashed against, but the LENGTH
+    // (including fecf) needs to be updated in the Tf Header Length is dependent on whatevr the variable mac length to
+    // be updated in the header
+    //                           | Header |SPI|  ARSN  | NIST CMAC Frame Data |
+    // char* buffer_frame_pt_h =
+    // "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258";
     //                           2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258CF549CC15D63EAB7AD25EB3089D94E6C2D9D
-    // Python output MAC   
-    char* buffer_python_mac_h = "cf549cc15d63eab7ad25eb3089d94e6c";
-    uint8_t* buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b = NULL;
-    int buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
+    // Python output MAC
+    char    *buffer_python_mac_h = "cf549cc15d63eab7ad25eb3089d94e6c";
+    uint8_t *buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b     = NULL;
+    int      buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
 
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t *test_association = NULL;
+    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
-    test_association->ast = 1;
-    test_association->est = 0;
-    test_association->arsn_len = 0;
+    test_association->ast       = 1;
+    test_association->est       = 0;
+    test_association->arsn_len  = 0;
     test_association->shivf_len = 0;
-    test_association->iv_len = 0;
+    test_association->iv_len    = 0;
     test_association->shsnf_len = 4;
-    test_association->arsn_len = 4;
-    test_association->abm_len = 1024;
+    test_association->arsn_len  = 4;
+    test_association->abm_len   = 1024;
     memset(test_association->abm, 0xFF, (test_association->abm_len * sizeof(uint8_t))); // Bitmask
-    test_association->stmacf_len = 16;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->ecs = CRYPTO_CIPHER_NONE;
-    test_association->acs = CRYPTO_MAC_CMAC_AES256;
-    test_association->ekid = 0;
-    test_association->akid = 136;
+    test_association->stmacf_len     = 16;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ecs            = CRYPTO_CIPHER_NONE;
+    test_association->acs            = CRYPTO_MAC_CMAC_AES256;
+    test_association->ekid           = 0;
+    test_association->akid           = 136;
     test_association->gvcid_blk.tfvn = 0;
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
     akp = key_if->get_key(test_association->akid);
     memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
-    hex_conversion(buffer_frame_pt_h, (char**) &buffer_frame_pt_b, &buffer_frame_pt_len);
+    hex_conversion(buffer_frame_pt_h, (char **)&buffer_frame_pt_b, &buffer_frame_pt_len);
     // Convert input mac
-    hex_conversion(buffer_python_mac_h, (char**) &buffer_python_mac_b, &buffer_python_mac_len);
+    hex_conversion(buffer_python_mac_h, (char **)&buffer_python_mac_b, &buffer_python_mac_len);
 
     int status = Crypto_TC_ApplySecurity(buffer_frame_pt_b, buffer_frame_pt_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -2010,7 +2046,8 @@ UTEST(NIST_ENC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
 
     for (int i = 0; i < buffer_python_mac_len; i++)
     {
-        // printf("[%d] Truth: %02x, Actual: %02x\n", enc_data_idx, buffer_python_mac_b[i], *(ptr_enc_frame + enc_data_idx));
+        // printf("[%d] Truth: %02x, Actual: %02x\n", enc_data_idx, buffer_python_mac_b[i], *(ptr_enc_frame +
+        // enc_data_idx));
         ASSERT_EQ(*(ptr_enc_frame + enc_data_idx), buffer_python_mac_b[i]);
         enc_data_idx++;
     }
@@ -2030,73 +2067,80 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
     remove("sa_save_file.bin");
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    //Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    //Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};  
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
+    // TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    
+
     Crypto_Init();
-    SaInterface sa_if = get_sa_interface_inmemory();
-    crypto_key_t* akp = NULL;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *akp   = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char* buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
-    //                        | Header  |SPI|  ARSN  |           NIST CMAC Test Vector                                                                                               |   MAC                        |FECF|
-    char* buffer_frame_pt_h = "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F193942587629961f6b92145290ad3e149940511a46ce";
-    // Python truth string passed below, not including a MAC or FECF which isn't hashed against, but the LENGTH (including fecf) needs to be updated in the Tf Header
-    // Length is dependent on whatevr the variable mac length to be updated in the header
-    //                           | Header |SPI|  ARSN  | NIST CMAC Frame Data                                                                                                         |
-    // char* buffer_frame_pt_h = "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258";
+    char *buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
+    //                        | Header  |SPI|  ARSN  |           NIST CMAC Test Vector |   MAC |FECF|
+    char *buffer_frame_pt_h =
+        "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D8"
+        "0B699E8006E52345FB7273B2E084407F193942587629961f6b92145290ad3e149940511a46ce";
+    // Python truth string passed below, not including a MAC or FECF which isn't hashed against, but the LENGTH
+    // (including fecf) needs to be updated in the Tf Header Length is dependent on whatevr the variable mac length to
+    // be updated in the header
+    //                           | Header |SPI|  ARSN  | NIST CMAC Frame Data |
+    // char* buffer_frame_pt_h =
+    // "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258";
     //                           2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258CF549CC15D63EAB7AD25EB3089D94E6C2D9D
-    // Zeroed out w. bitmask      000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    // Python output MAC   
-    char* buffer_python_mac_h = "7629961f6b92145290ad3e149940511a";
-    uint8_t* buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b = NULL;
-    int buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
+    // Zeroed out w. bitmask
+    // 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    // Python output MAC
+    char    *buffer_python_mac_h = "7629961f6b92145290ad3e149940511a";
+    uint8_t *buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b     = NULL;
+    int      buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
 
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t *test_association = NULL;
+    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
-    test_association->ast = 1;
-    test_association->est = 0;
-    test_association->arsn_len = 0;
+    test_association->ast       = 1;
+    test_association->est       = 0;
+    test_association->arsn_len  = 0;
     test_association->shivf_len = 0;
-    test_association->iv_len = 0;
+    test_association->iv_len    = 0;
     test_association->shsnf_len = 4;
-    test_association->arsn_len = 4;
-    test_association->abm_len = 1024;
+    test_association->arsn_len  = 4;
+    test_association->abm_len   = 1024;
     memset(test_association->abm, 0x00, (test_association->abm_len * sizeof(uint8_t))); // Bitmask
     test_association->stmacf_len = 16;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->ecs = CRYPTO_CIPHER_NONE;
-    test_association->acs = CRYPTO_MAC_CMAC_AES256;
-    test_association->ekid = 0;
-    test_association->akid = 136;
+    test_association->sa_state   = SA_OPERATIONAL;
+    test_association->ecs        = CRYPTO_CIPHER_NONE;
+    test_association->acs        = CRYPTO_MAC_CMAC_AES256;
+    test_association->ekid       = 0;
+    test_association->akid       = 136;
 
-    TC_t* tc_sdls_processed_frame;
+    TC_t *tc_sdls_processed_frame;
     tc_sdls_processed_frame = calloc(1, sizeof(uint8_t) * TC_SIZE);
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
     akp = key_if->get_key(test_association->akid);
     memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
-    hex_conversion(buffer_frame_pt_h, (char**) &buffer_frame_pt_b, &buffer_frame_pt_len);
+    hex_conversion(buffer_frame_pt_h, (char **)&buffer_frame_pt_b, &buffer_frame_pt_len);
     // Convert input mac
-    hex_conversion(buffer_python_mac_h, (char**) &buffer_python_mac_b, &buffer_python_mac_len);
+    hex_conversion(buffer_python_mac_h, (char **)&buffer_python_mac_b, &buffer_python_mac_len);
 
     int32_t status = Crypto_TC_ProcessSecurity(buffer_frame_pt_b, &buffer_frame_pt_len, tc_sdls_processed_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
@@ -2108,7 +2152,8 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_0)
 
     for (int i = 0; i < buffer_python_mac_len; i++)
     {
-        printf("[%d] Truth: %02x, Actual: %02x\n", enc_data_idx, buffer_python_mac_b[i], (tc_sdls_processed_frame->tc_sec_trailer.mac[i]));
+        printf("[%d] Truth: %02x, Actual: %02x\n", enc_data_idx, buffer_python_mac_b[i],
+               (tc_sdls_processed_frame->tc_sec_trailer.mac[i]));
         ASSERT_EQ(tc_sdls_processed_frame->tc_sec_trailer.mac[i], buffer_python_mac_b[i]);
         enc_data_idx++;
     }
@@ -2130,71 +2175,77 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
     remove("sa_save_file.bin");
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};  
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
+    // TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     Crypto_Init();
-    SaInterface sa_if = get_sa_interface_inmemory();
-    crypto_key_t* akp = NULL;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *akp   = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char* buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
-    //                        | Header  |SPI|  ARSN  |           NIST CMAC Test Vector                                                                                               |   MAC                        |FECF|
-    char* buffer_frame_pt_h = "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258CF549CC15D63EAB7AD25EB3089D94E6C2D9D";
-    // Python truth string passed below, not including a MAC or FECF which isn't hashed against, but the LENGTH (including fecf) needs to be updated in the Tf Header
-    // Length is dependent on whatevr the variable mac length to be updated in the header
-    //                           | Header |SPI|  ARSN  | NIST CMAC Frame Data                                                                                                         |
-    // char* buffer_frame_pt_h = "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258";
+    char *buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
+    //                        | Header  |SPI|  ARSN  |           NIST CMAC Test Vector |   MAC |FECF|
+    char *buffer_frame_pt_h =
+        "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D8"
+        "0B699E8006E52345FB7273B2E084407F19394258CF549CC15D63EAB7AD25EB3089D94E6C2D9D";
+    // Python truth string passed below, not including a MAC or FECF which isn't hashed against, but the LENGTH
+    // (including fecf) needs to be updated in the Tf Header Length is dependent on whatevr the variable mac length to
+    // be updated in the header
+    //                           | Header |SPI|  ARSN  | NIST CMAC Frame Data |
+    // char* buffer_frame_pt_h =
+    // "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258";
     //                           2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258CF549CC15D63EAB7AD25EB3089D94E6C2D9D
-    // Python output MAC   
-    char* buffer_python_mac_h = "cf549cc15d63eab7ad25eb3089d94e6c";
-    uint8_t* buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b = NULL;
-    int buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
+    // Python output MAC
+    char    *buffer_python_mac_h = "cf549cc15d63eab7ad25eb3089d94e6c";
+    uint8_t *buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b     = NULL;
+    int      buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
 
     // Expose/setup SAs for testing
-    SecurityAssociation_t* test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t *test_association = NULL;
+    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
-    test_association->ast = 1;
-    test_association->est = 0;
-    test_association->arsn_len = 0;
+    test_association->ast       = 1;
+    test_association->est       = 0;
+    test_association->arsn_len  = 0;
     test_association->shivf_len = 0;
-    test_association->iv_len = 0;
+    test_association->iv_len    = 0;
     test_association->shsnf_len = 4;
-    test_association->arsn_len = 4;
-    test_association->abm_len = 1024;
+    test_association->arsn_len  = 4;
+    test_association->abm_len   = 1024;
     memset(test_association->abm, 0xFF, (test_association->abm_len * sizeof(uint8_t))); // Bitmask
     test_association->stmacf_len = 16;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->ecs = CRYPTO_CIPHER_NONE;
-    test_association->acs = CRYPTO_MAC_CMAC_AES256;
-    test_association->ekid = 0;
-    test_association->akid = 136;
+    test_association->sa_state   = SA_OPERATIONAL;
+    test_association->ecs        = CRYPTO_CIPHER_NONE;
+    test_association->acs        = CRYPTO_MAC_CMAC_AES256;
+    test_association->ekid       = 0;
+    test_association->akid       = 136;
 
-    TC_t* tc_sdls_processed_frame;
+    TC_t *tc_sdls_processed_frame;
     tc_sdls_processed_frame = calloc(1, sizeof(uint8_t) * TC_SIZE);
 
     // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char**) &buffer_nist_key_b, &buffer_nist_key_len);
+    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
     akp = key_if->get_key(test_association->akid);
     memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert input plaintext
-    hex_conversion(buffer_frame_pt_h, (char**) &buffer_frame_pt_b, &buffer_frame_pt_len);
+    hex_conversion(buffer_frame_pt_h, (char **)&buffer_frame_pt_b, &buffer_frame_pt_len);
     // Convert input mac
-    hex_conversion(buffer_python_mac_h, (char**) &buffer_python_mac_b, &buffer_python_mac_len);
+    hex_conversion(buffer_python_mac_h, (char **)&buffer_python_mac_b, &buffer_python_mac_len);
 
     Crypto_TC_ProcessSecurity(buffer_frame_pt_b, &buffer_frame_pt_len, tc_sdls_processed_frame);
 
@@ -2205,7 +2256,8 @@ UTEST(NIST_DEC_CMAC_VALIDATION, AES_CMAC_256_PT_128_TEST_1)
 
     for (int i = 0; i < buffer_python_mac_len; i++)
     {
-        printf("[%d] Truth: %02x, Actual: %02x\n", enc_data_idx, buffer_python_mac_b[i], (tc_sdls_processed_frame->tc_sec_trailer.mac[i]));
+        printf("[%d] Truth: %02x, Actual: %02x\n", enc_data_idx, buffer_python_mac_b[i],
+               (tc_sdls_processed_frame->tc_sec_trailer.mac[i]));
         ASSERT_EQ(tc_sdls_processed_frame->tc_sec_trailer.mac[i], buffer_python_mac_b[i]);
         enc_data_idx++;
     }
@@ -2227,61 +2279,65 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_256_PT_128_TEST_0)
     uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};  
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
+    // TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
 
     Crypto_Init();
-    SaInterface sa_if = get_sa_interface_inmemory();
-    crypto_key_t* akp = NULL;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *akp   = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
-    //                        |  Header |           NIST CMAC Test Vector                                                                                               |FECF|
-    char *buffer_frame_pt_h = "2003004600C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258C925";
-    // Python truth string passed below is ZEROed out, not including a MAC or FECF which isn't hashed against, but the LENGTH (including fecf) needs to be updated in the Tf Header
-    // Length is dependent on whatever the variable mac length to be updated in the header
-    //  | Header |SPI|  ARSN  | NIST CMAC Frame Data                                                                                                         |
+    //                        |  Header |           NIST CMAC Test Vector |FECF|
+    char *buffer_frame_pt_h = "2003004600C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A"
+                              "71158E23D80B699E8006E52345FB7273B2E084407F19394258C925";
+    // Python truth string passed below is ZEROed out, not including a MAC or FECF which isn't hashed against, but the
+    // LENGTH (including fecf) needs to be updated in the Tf Header Length is dependent on whatever the variable mac
+    // length to be updated in the header
+    //  | Header |SPI|  ARSN  | NIST CMAC Frame Data |
     // "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258";
-    // "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"         
-    // Python output MAC   
+    // "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+    // Python output MAC
     // 6b5953e41cffb4d15a62e25da5e092f98bd26b7487f0c98f440374d42e136f13
     // Trunc to first 16 bytes
     // 6b5953e41cffb4d15a62e25da5e092f9
-    char* buffer_python_mac_h = "6b5953e41cffb4d15a62e25da5e092f9";
-    uint8_t *buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b = NULL;
-    int buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
+    char    *buffer_python_mac_h = "6b5953e41cffb4d15a62e25da5e092f9";
+    uint8_t *buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b     = NULL;
+    int      buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
 
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
-    test_association->ast = 1;
-    test_association->est = 0;
+    test_association->ast       = 1;
+    test_association->est       = 0;
     test_association->shivf_len = 0;
-    test_association->iv_len = 0;
+    test_association->iv_len    = 0;
     test_association->shsnf_len = 4;
-    test_association->arsn_len = 4;
-    test_association->abm_len = 1024;
+    test_association->arsn_len  = 4;
+    test_association->abm_len   = 1024;
     memset(test_association->abm, 0x00, (test_association->abm_len * sizeof(uint8_t))); // Bitmask
-    test_association->stmacf_len = 16;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->ecs = CRYPTO_CIPHER_NONE;
-    test_association->acs = CRYPTO_MAC_HMAC_SHA256;
-    test_association->ekid = 0;
-    test_association->akid = 136;
+    test_association->stmacf_len     = 16;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ecs            = CRYPTO_CIPHER_NONE;
+    test_association->acs            = CRYPTO_MAC_HMAC_SHA256;
+    test_association->ekid           = 0;
+    test_association->akid           = 136;
     test_association->gvcid_blk.tfvn = 0;
 
     // Insert key into keyring of SA 9
@@ -2304,7 +2360,8 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_256_PT_128_TEST_0)
     {
         if (ptr_enc_frame[enc_data_idx] != buffer_python_mac_b[i])
         {
-            printf("[%d] Truth: %02x, Actual: %02x \n", enc_data_idx, buffer_python_mac_b[i], ptr_enc_frame[enc_data_idx]);
+            printf("[%d] Truth: %02x, Actual: %02x \n", enc_data_idx, buffer_python_mac_b[i],
+                   ptr_enc_frame[enc_data_idx]);
         }
         ASSERT_EQ(ptr_enc_frame[enc_data_idx], buffer_python_mac_b[i]);
         enc_data_idx++;
@@ -2325,62 +2382,66 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
     remove("sa_save_file.bin");
     uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
-    int32_t status;
+    int32_t  status;
 
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};  
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
+    // TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     Crypto_Init();
-    SaInterface sa_if = get_sa_interface_inmemory();
-    crypto_key_t* akp = NULL;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *akp   = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
-    //                        |  Header |           NIST CMAC Test Vector                                                                                               |FECF|
-    char *buffer_frame_pt_h = "2003004600C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258C925";
-    // Python truth string passed below is ZEROed out, not including a MAC or FECF which isn't hashed against, but the LENGTH (including fecf) needs to be updated in the Tf Header
-    // Length is dependent on whatever the variable mac length to be updated in the header
-    //  | Header |SPI|  ARSN  | NIST CMAC Frame Data                                                                                                         |
+    //                        |  Header |           NIST CMAC Test Vector |FECF|
+    char *buffer_frame_pt_h = "2003004600C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A"
+                              "71158E23D80B699E8006E52345FB7273B2E084407F19394258C925";
+    // Python truth string passed below is ZEROed out, not including a MAC or FECF which isn't hashed against, but the
+    // LENGTH (including fecf) needs to be updated in the Tf Header Length is dependent on whatever the variable mac
+    // length to be updated in the header
+    //  | Header |SPI|  ARSN  | NIST CMAC Frame Data |
     // "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258";
-    // Python output MAC   
+    // Python output MAC
     // 5d0ae5c3859d51d9c1e31681db475acba1f2cd1ade8e5ba7356ae9f2372e4444
     // Trunc to first 16 bytes
     // 5d0ae5c3859d51d9c1e31681db475acb
-    char* buffer_python_mac_h = "5d0ae5c3859d51d9c1e31681db475acb";
-    uint8_t *buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b = NULL;
-    int buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
+    char    *buffer_python_mac_h = "5d0ae5c3859d51d9c1e31681db475acb";
+    uint8_t *buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b     = NULL;
+    int      buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
 
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
-    test_association->ast = 1;
-    test_association->est = 0;
+    test_association->ast       = 1;
+    test_association->est       = 0;
     test_association->shivf_len = 0;
-    test_association->iv_len = 0;
+    test_association->iv_len    = 0;
     test_association->shsnf_len = 4;
-    test_association->arsn_len = 4;
-    test_association->abm_len = 1024;
+    test_association->arsn_len  = 4;
+    test_association->abm_len   = 1024;
     memset(test_association->abm, 0xFF, (test_association->abm_len * sizeof(uint8_t))); // Bitmask
-    test_association->stmacf_len = 16;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->ecs = CRYPTO_CIPHER_NONE;
-    test_association->acs = CRYPTO_MAC_HMAC_SHA256;
-    test_association->ekid = 0;
-    test_association->akid = 136;
+    test_association->stmacf_len     = 16;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ecs            = CRYPTO_CIPHER_NONE;
+    test_association->acs            = CRYPTO_MAC_HMAC_SHA256;
+    test_association->ekid           = 0;
+    test_association->akid           = 136;
     test_association->gvcid_blk.tfvn = 0;
 
     // Insert key into keyring of SA 9
@@ -2404,7 +2465,8 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
     {
         if (ptr_enc_frame[enc_data_idx] != buffer_python_mac_b[i])
         {
-            printf("[%d] Truth: %02x, Actual: %02x\n", enc_data_idx, buffer_python_mac_b[i], *(ptr_enc_frame + enc_data_idx));
+            printf("[%d] Truth: %02x, Actual: %02x\n", enc_data_idx, buffer_python_mac_b[i],
+                   *(ptr_enc_frame + enc_data_idx));
         }
         ASSERT_EQ(ptr_enc_frame[enc_data_idx], buffer_python_mac_b[i]);
         enc_data_idx++;
@@ -2424,160 +2486,171 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
     remove("sa_save_file.bin");
     uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
-    int32_t status;
+    int32_t  status;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
-                           IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                           TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                           TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-
-//    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-//    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-   GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};  
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    TC_UT_Managed_Parameters.vcid = 1;
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-   Crypto_Init();
-   SaInterface sa_if = get_sa_interface_inmemory();
-   crypto_key_t* akp = NULL;
-
-   // NIST supplied vectors
-   // NOTE: Added Transfer Frame header to the plaintext
-   char *buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
-   //                        |  Header |           NIST CMAC Test Vector                                                                                               |FECF|
-   char *buffer_frame_pt_h = "2003004600C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258C925";
-   // Python truth string passed below is ZEROed out, not including a MAC or FECF which isn't hashed against, but the LENGTH (including fecf) needs to be updated in the Tf Header
-   // Length is dependent on whatever the variable mac length to be updated in the header
-   //  | Header |SPI|  ARSN  | NIST CMAC Frame Data                                                                                                         |
-   // "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258";
-   // "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-   // Python output MAC
-   // 676e9ebdf306b7db7ad41892887342e892bcc59688caef44693c1659b6a683e844d584030b7c532105b8c2539e0aed51af6df77e87f1834e92c2085889d1c44b
-   // Trunc to first 16 bytes
-   // 676e9ebdf306b7db7ad41892887342e8
-   char* buffer_python_mac_h = "676e9ebdf306b7db7ad41892887342e8";
-   uint8_t *buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b = NULL;
-   int buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
-
-   // Expose/setup SAs for testing
-   SecurityAssociation_t *test_association = NULL;
-   test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
-   // Deactivate SA 1
-   sa_if->sa_get_from_spi(1, &test_association);
-   test_association->sa_state = SA_NONE;
-   // Activate SA 9
-   sa_if->sa_get_from_spi(9, &test_association);
-   test_association->ast = 1;
-   test_association->est = 0;
-   test_association->shivf_len = 0;
-   test_association->iv_len = 0;
-   test_association->shsnf_len = 4;
-   test_association->arsn_len = 4;
-   test_association->abm_len = 1024;
-   memset(test_association->abm, 0x00, (test_association->abm_len * sizeof(uint8_t))); // Bitmask
-   test_association->stmacf_len = 16;
-   test_association->sa_state = SA_OPERATIONAL;
-   test_association->ecs = CRYPTO_CIPHER_NONE;
-   test_association->acs = CRYPTO_MAC_HMAC_SHA512;
-   test_association->ekid = 0;
-   test_association->akid = 136;
-   test_association->gvcid_blk.tfvn = 0;
-
-   // Insert key into keyring of SA 9
-   hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
-   akp = key_if->get_key(test_association->akid);
-   memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
-   akp->key_len = 64;
-
-   // Convert input plaintext
-   hex_conversion(buffer_frame_pt_h, (char **)&buffer_frame_pt_b, &buffer_frame_pt_len);
-   // Convert input mac
-   hex_conversion(buffer_python_mac_h, (char **)&buffer_python_mac_b, &buffer_python_mac_len);
-
-   status = Crypto_TC_ApplySecurity(buffer_frame_pt_b, buffer_frame_pt_len, &ptr_enc_frame, &enc_frame_len);
-   ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-
-   // Note: For comparison, primarily interested in the MAC
-   // Calc payload index: total length - pt length
-   uint16_t enc_data_idx = enc_frame_len - buffer_python_mac_len - 2;
-   Crypto_Shutdown();
-
-   for (int i = 0; i < buffer_python_mac_len; i++)
-   {
-       printf("[%d] Truth: %02x, Actual: %02x\n", enc_data_idx, buffer_python_mac_b[i], *(ptr_enc_frame + enc_data_idx));
-       ASSERT_EQ(*(ptr_enc_frame + enc_data_idx), buffer_python_mac_b[i]);
-       enc_data_idx++;
-   }
-
-   free(ptr_enc_frame);
-   free(buffer_frame_pt_b);
-   free(buffer_nist_key_b);
-   free(buffer_python_mac_b);
-}
-
-/**
-* @brief Unit Test: Test HMAC SHA-512, key length 64 bytes, bitmask of 1s
-**/
-UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
-{
-    remove("sa_save_file.bin");
-    uint8_t *ptr_enc_frame = NULL;
-    uint16_t enc_frame_len = 0;
-    int32_t status;
-    // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};  
+
+    //    Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    //    AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
+    //    TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     Crypto_Init();
-    SaInterface sa_if = get_sa_interface_inmemory();
-    crypto_key_t* akp = NULL;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *akp   = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
-    //                        |  Header |           NIST CMAC Test Vector                                                                                               |FECF|
-    char *buffer_frame_pt_h = "2003004600C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258C925";
-    // Python truth string passed below, not including a MAC or FECF which isn't hashed against, but the LENGTH (including fecf) needs to be updated in the Tf Header
-    // Length is dependent on whatever the variable mac length to be updated in the header
-    //  | Header |SPI|  ARSN  | NIST CMAC Frame Data                                                                                                         |
+    char *buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445b228c753292acd5df351000a"
+                              "591bf960d8555c3f6284afe7c6846cbb6c6f5445";
+    //                        |  Header |           NIST CMAC Test Vector |FECF|
+    char *buffer_frame_pt_h = "2003004600C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A"
+                              "71158E23D80B699E8006E52345FB7273B2E084407F19394258C925";
+    // Python truth string passed below is ZEROed out, not including a MAC or FECF which isn't hashed against, but the
+    // LENGTH (including fecf) needs to be updated in the Tf Header Length is dependent on whatever the variable mac
+    // length to be updated in the header
+    //  | Header |SPI|  ARSN  | NIST CMAC Frame Data |
     // "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258";
+    // "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
     // Python output MAC
-    // 907bbd1d9f2fd37e541f0b1ee12f5db0b1e0cbc57cfe08aecfc74b001371db711abb39caf658ee692d418725dc92cabd8d0a93ce423ff7594adf3fd91e7a6435
+    // 676e9ebdf306b7db7ad41892887342e892bcc59688caef44693c1659b6a683e844d584030b7c532105b8c2539e0aed51af6df77e87f1834e92c2085889d1c44b
     // Trunc to first 16 bytes
-    // 907bbd1d9f2fd37e541f0b1ee12f5db0
-    char* buffer_python_mac_h = "907bbd1d9f2fd37e541f0b1ee12f5db0";
-    uint8_t *buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b = NULL;
-    int buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
+    // 676e9ebdf306b7db7ad41892887342e8
+    char    *buffer_python_mac_h = "676e9ebdf306b7db7ad41892887342e8";
+    uint8_t *buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b     = NULL;
+    int      buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
 
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association = NULL;
-    test_association = calloc(1, sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
-    test_association->ast = 1;
-    test_association->est = 0;
+    test_association->ast       = 1;
+    test_association->est       = 0;
     test_association->shivf_len = 0;
-    test_association->iv_len = 0;
+    test_association->iv_len    = 0;
     test_association->shsnf_len = 4;
-    test_association->arsn_len = 4;
-    test_association->abm_len = 1024;
+    test_association->arsn_len  = 4;
+    test_association->abm_len   = 1024;
+    memset(test_association->abm, 0x00, (test_association->abm_len * sizeof(uint8_t))); // Bitmask
+    test_association->stmacf_len     = 16;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ecs            = CRYPTO_CIPHER_NONE;
+    test_association->acs            = CRYPTO_MAC_HMAC_SHA512;
+    test_association->ekid           = 0;
+    test_association->akid           = 136;
+    test_association->gvcid_blk.tfvn = 0;
+
+    // Insert key into keyring of SA 9
+    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
+    akp = key_if->get_key(test_association->akid);
+    memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
+    akp->key_len = 64;
+
+    // Convert input plaintext
+    hex_conversion(buffer_frame_pt_h, (char **)&buffer_frame_pt_b, &buffer_frame_pt_len);
+    // Convert input mac
+    hex_conversion(buffer_python_mac_h, (char **)&buffer_python_mac_b, &buffer_python_mac_len);
+
+    status = Crypto_TC_ApplySecurity(buffer_frame_pt_b, buffer_frame_pt_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    // Note: For comparison, primarily interested in the MAC
+    // Calc payload index: total length - pt length
+    uint16_t enc_data_idx = enc_frame_len - buffer_python_mac_len - 2;
+    Crypto_Shutdown();
+
+    for (int i = 0; i < buffer_python_mac_len; i++)
+    {
+        printf("[%d] Truth: %02x, Actual: %02x\n", enc_data_idx, buffer_python_mac_b[i],
+               *(ptr_enc_frame + enc_data_idx));
+        ASSERT_EQ(*(ptr_enc_frame + enc_data_idx), buffer_python_mac_b[i]);
+        enc_data_idx++;
+    }
+
+    free(ptr_enc_frame);
+    free(buffer_frame_pt_b);
+    free(buffer_nist_key_b);
+    free(buffer_python_mac_b);
+}
+
+/**
+ * @brief Unit Test: Test HMAC SHA-512, key length 64 bytes, bitmask of 1s
+ **/
+UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
+{
+    remove("sa_save_file.bin");
+    uint8_t *ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+    int32_t  status;
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
+    // TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    TC_UT_Managed_Parameters.vcid = 1;
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    Crypto_Init();
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *akp   = NULL;
+
+    // NIST supplied vectors
+    // NOTE: Added Transfer Frame header to the plaintext
+    char *buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445b228c753292acd5df351000a"
+                              "591bf960d8555c3f6284afe7c6846cbb6c6f5445";
+    //                        |  Header |           NIST CMAC Test Vector |FECF|
+    char *buffer_frame_pt_h = "2003004600C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A"
+                              "71158E23D80B699E8006E52345FB7273B2E084407F19394258C925";
+    // Python truth string passed below, not including a MAC or FECF which isn't hashed against, but the LENGTH
+    // (including fecf) needs to be updated in the Tf Header Length is dependent on whatever the variable mac length to
+    // be updated in the header
+    //  | Header |SPI|  ARSN  | NIST CMAC Frame Data |
+    // "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258";
+    // Python output MAC
+    // 907bbd1d9f2fd37e541f0b1ee12f5db0b1e0cbc57cfe08aecfc74b001371db711abb39caf658ee692d418725dc92cabd8d0a93ce423ff7594adf3fd91e7a6435
+    // Trunc to first 16 bytes
+    // 907bbd1d9f2fd37e541f0b1ee12f5db0
+    char    *buffer_python_mac_h = "907bbd1d9f2fd37e541f0b1ee12f5db0";
+    uint8_t *buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b     = NULL;
+    int      buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
+
+    // Expose/setup SAs for testing
+    SecurityAssociation_t *test_association = NULL;
+    test_association                        = calloc(1, sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    // Deactivate SA 1
+    sa_if->sa_get_from_spi(1, &test_association);
+    test_association->sa_state = SA_NONE;
+    // Activate SA 9
+    sa_if->sa_get_from_spi(9, &test_association);
+    test_association->ast       = 1;
+    test_association->est       = 0;
+    test_association->shivf_len = 0;
+    test_association->iv_len    = 0;
+    test_association->shsnf_len = 4;
+    test_association->arsn_len  = 4;
+    test_association->abm_len   = 1024;
     memset(test_association->abm, 0xFF, (test_association->abm_len * sizeof(uint8_t))); // Bitmask
-    test_association->stmacf_len = 16;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->ecs = CRYPTO_CIPHER_NONE;
-    test_association->acs = CRYPTO_MAC_HMAC_SHA512;
-    test_association->ekid = 0;
-    test_association->akid = 136;
+    test_association->stmacf_len     = 16;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ecs            = CRYPTO_CIPHER_NONE;
+    test_association->acs            = CRYPTO_MAC_HMAC_SHA512;
+    test_association->ekid           = 0;
+    test_association->akid           = 136;
     test_association->gvcid_blk.tfvn = 0;
 
     // Insert key into keyring of SA 9
@@ -2601,7 +2674,8 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
 
     for (int i = 0; i < buffer_python_mac_len; i++)
     {
-        printf("[%d] Truth: %02x, Actual: %02x\n", enc_data_idx, buffer_python_mac_b[i], *(ptr_enc_frame + enc_data_idx + i));
+        printf("[%d] Truth: %02x, Actual: %02x\n", enc_data_idx, buffer_python_mac_b[i],
+               *(ptr_enc_frame + enc_data_idx + i));
         ASSERT_EQ(*(ptr_enc_frame + enc_data_idx + i), buffer_python_mac_b[i]);
         // enc_data_idx++;
     }
@@ -2618,63 +2692,68 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
 UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_0)
 {
     remove("sa_save_file.bin");
-    int32_t status = 0;
+    int32_t  status        = 0;
     uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};  
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
+    // TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     Crypto_Init();
-    SaInterface sa_if = get_sa_interface_inmemory();
-    crypto_key_t* akp = NULL;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *akp   = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
-    //                        |  Header |SPI | arsn   |     Payload                                                                                                                   | SHA 256 HMAC                |FECF|
-    char *buffer_frame_pt_h = "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F193942586B5953E41CFFB4D15A62E25DA5E092F969F2";
-    // Python truth string passed below is ZEROed out, not including a MAC or FECF which isn't hashed against, but the LENGTH (including fecf) needs to be updated in the Tf Header
-    // Length is dependent on whatever the variable mac length to be updated in the header
-    //  | Header |SPI|  ARSN  | NIST CMAC Frame Data                                                                                                         |
+    //                        |  Header |SPI | arsn   |     Payload | SHA 256 HMAC                |FECF|
+    char *buffer_frame_pt_h =
+        "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D8"
+        "0B699E8006E52345FB7273B2E084407F193942586B5953E41CFFB4D15A62E25DA5E092F969F2";
+    // Python truth string passed below is ZEROed out, not including a MAC or FECF which isn't hashed against, but the
+    // LENGTH (including fecf) needs to be updated in the Tf Header Length is dependent on whatever the variable mac
+    // length to be updated in the header
+    //  | Header |SPI|  ARSN  | NIST CMAC Frame Data |
     // "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258";
     // "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
     // Python output MAC
     // 6b5953e41cffb4d15a62e25da5e092f98bd26b7487f0c98f440374d42e136f13
     // Trunc to first 16 bytes
     // 6b5953e41cffb4d15a62e25da5e092f9
-    char* buffer_python_mac_h = "6b5953e41cffb4d15a62e25da5e092f9";
-    uint8_t *buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b = NULL;
-    int buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
+    char    *buffer_python_mac_h = "6b5953e41cffb4d15a62e25da5e092f9";
+    uint8_t *buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b     = NULL;
+    int      buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
 
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
-    test_association->ast = 1;
-    test_association->est = 0;
+    test_association->ast       = 1;
+    test_association->est       = 0;
     test_association->shivf_len = 0;
-    test_association->iv_len = 0;
+    test_association->iv_len    = 0;
     test_association->shsnf_len = 4;
-    test_association->arsn_len = 4;
-    test_association->abm_len = 1024;
+    test_association->arsn_len  = 4;
+    test_association->abm_len   = 1024;
     memset(test_association->abm, 0x00, (test_association->abm_len * sizeof(uint8_t))); // Bitmask
-    test_association->stmacf_len = 16;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->ecs = CRYPTO_CIPHER_NONE;
-    test_association->acs = CRYPTO_MAC_HMAC_SHA256;
-    test_association->ekid = 0;
-    test_association->akid = 136;
+    test_association->stmacf_len     = 16;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ecs            = CRYPTO_CIPHER_NONE;
+    test_association->acs            = CRYPTO_MAC_HMAC_SHA256;
+    test_association->ekid           = 0;
+    test_association->akid           = 136;
     test_association->gvcid_blk.tfvn = 0;
 
     TC_t *tc_sdls_processed_frame;
@@ -2699,7 +2778,8 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_0)
     {
         if (*(tc_sdls_processed_frame->tc_sec_trailer.mac + i) != buffer_python_mac_b[i])
         {
-            printf("[%d] Truth: %02x, Actual: %02x\n", i, buffer_python_mac_b[i], *(tc_sdls_processed_frame->tc_sec_trailer.mac + i));
+            printf("[%d] Truth: %02x, Actual: %02x\n", i, buffer_python_mac_b[i],
+                   *(tc_sdls_processed_frame->tc_sec_trailer.mac + i));
         }
         ASSERT_EQ(*(tc_sdls_processed_frame->tc_sec_trailer.mac + i), buffer_python_mac_b[i]);
     }
@@ -2719,63 +2799,68 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_0)
 UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
 {
     remove("sa_save_file.bin");
-    int32_t status = 0;
+    int32_t  status        = 0;
     uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};  
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
+    // TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
 
     Crypto_Init();
-    SaInterface sa_if = get_sa_interface_inmemory();
-    crypto_key_t* akp = NULL;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *akp   = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
-    //                        |  Header |SPI | arsn   |     Payload                                                                                                                   | SHA 256 HMAC                | FECF|
-    char *buffer_frame_pt_h = "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F193942585d0ae5c3859d51d9c1e31681db475acb5b35";
-    // Python truth string passed below, not including a MAC or FECF which isn't hashed against, but the LENGTH (including fecf) needs to be updated in the Tf Header
-    // Length is dependent on whatever the variable mac length to be updated in the header.
-    //  | Header |SPI|  ARSN  | NIST CMAC Frame Data                                                                                                         |
+    //                        |  Header |SPI | arsn   |     Payload | SHA 256 HMAC                | FECF|
+    char *buffer_frame_pt_h =
+        "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D8"
+        "0B699E8006E52345FB7273B2E084407F193942585d0ae5c3859d51d9c1e31681db475acb5b35";
+    // Python truth string passed below, not including a MAC or FECF which isn't hashed against, but the LENGTH
+    // (including fecf) needs to be updated in the Tf Header Length is dependent on whatever the variable mac length to
+    // be updated in the header.
+    //  | Header |SPI|  ARSN  | NIST CMAC Frame Data |
     // "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258";
-    // Python output MAC   
+    // Python output MAC
     // 5d0ae5c3859d51d9c1e31681db475acba1f2cd1ade8e5ba7356ae9f2372e4444
     // Trunc to first 16 bytes
     // 5d0ae5c3859d51d9c1e31681db475acb
-    char* buffer_python_mac_h = "5d0ae5c3859d51d9c1e31681db475acb";
-    uint8_t *buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b = NULL;
-    int buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
+    char    *buffer_python_mac_h = "5d0ae5c3859d51d9c1e31681db475acb";
+    uint8_t *buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b     = NULL;
+    int      buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
 
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
-    test_association->ast = 1;
-    test_association->est = 0;
+    test_association->ast       = 1;
+    test_association->est       = 0;
     test_association->shivf_len = 0;
-    test_association->iv_len = 0;
+    test_association->iv_len    = 0;
     test_association->shsnf_len = 4;
-    test_association->arsn_len = 4;
-    test_association->abm_len = 1024;
+    test_association->arsn_len  = 4;
+    test_association->abm_len   = 1024;
     memset(test_association->abm, 0xFF, (test_association->abm_len * sizeof(uint8_t))); // Bitmask
-    test_association->stmacf_len = 16;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->ecs = CRYPTO_CIPHER_NONE;
-    test_association->acs = CRYPTO_MAC_HMAC_SHA256;
-    test_association->ekid = 0;
-    test_association->akid = 136;
+    test_association->stmacf_len     = 16;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ecs            = CRYPTO_CIPHER_NONE;
+    test_association->acs            = CRYPTO_MAC_HMAC_SHA256;
+    test_association->ekid           = 0;
+    test_association->akid           = 136;
     test_association->gvcid_blk.tfvn = 0;
 
     TC_t *tc_sdls_processed_frame;
@@ -2799,7 +2884,8 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_256_PT_128_TEST_1)
 
     for (int i = 0; i < buffer_python_mac_len; i++)
     {
-        printf("[%d] Truth: %02x, Actual: %02x\n", i, buffer_python_mac_b[i], *(tc_sdls_processed_frame->tc_sec_trailer.mac + i));
+        printf("[%d] Truth: %02x, Actual: %02x\n", i, buffer_python_mac_b[i],
+               *(tc_sdls_processed_frame->tc_sec_trailer.mac + i));
         ASSERT_EQ(*(tc_sdls_processed_frame->tc_sec_trailer.mac + i), buffer_python_mac_b[i]);
     }
 
@@ -2818,61 +2904,67 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
     remove("sa_save_file.bin");
     int32_t status = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};  
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
+    // TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
 
     Crypto_Init();
-    SaInterface sa_if = get_sa_interface_inmemory();
-    crypto_key_t* akp = NULL;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *akp   = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
-    //                        |  Header |SPI | ARSN   |     Payload                                                                                                                   | SHA 512 HMAC                 |FECF|
-    char *buffer_frame_pt_h = "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258676e9ebdf306b7db7ad41892887342e80DC5";
-    // Python truth string passed below is ZEROed out, not including a MAC or FECF which isn't hashed against, but the LENGTH (including fecf) needs to be updated in the Tf Header
-    // Length is dependent on whatever the variable mac length to be updated in the header
-    //  | Header |SPI|  ARSN  | NIST CMAC Frame Data                                                                                                         |
+    char *buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445b228c753292acd5df351000a"
+                              "591bf960d8555c3f6284afe7c6846cbb6c6f5445";
+    //                        |  Header |SPI | ARSN   |     Payload | SHA 512 HMAC                 |FECF|
+    char *buffer_frame_pt_h =
+        "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D8"
+        "0B699E8006E52345FB7273B2E084407F19394258676e9ebdf306b7db7ad41892887342e80DC5";
+    // Python truth string passed below is ZEROed out, not including a MAC or FECF which isn't hashed against, but the
+    // LENGTH (including fecf) needs to be updated in the Tf Header Length is dependent on whatever the variable mac
+    // length to be updated in the header
+    //  | Header |SPI|  ARSN  | NIST CMAC Frame Data |
     // "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258";
     // "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
     // Python output MAC
     // 676e9ebdf306b7db7ad41892887342e892bcc59688caef44693c1659b6a683e844d584030b7c532105b8c2539e0aed51af6df77e87f1834e92c2085889d1c44b
     // Trunc to first 16 bytes
     // 676e9ebdf306b7db7ad41892887342e8
-    char* buffer_python_mac_h = "676e9ebdf306b7db7ad41892887342e8";
-    uint8_t *buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b = NULL;
-    int buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
+    char    *buffer_python_mac_h = "676e9ebdf306b7db7ad41892887342e8";
+    uint8_t *buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b     = NULL;
+    int      buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
 
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
-    test_association->ast = 1;
-    test_association->est = 0;
+    test_association->ast       = 1;
+    test_association->est       = 0;
     test_association->shivf_len = 0;
-    test_association->iv_len = 0;
+    test_association->iv_len    = 0;
     test_association->shsnf_len = 4;
-    test_association->arsn_len = 4;
-    test_association->abm_len = 1024;
+    test_association->arsn_len  = 4;
+    test_association->abm_len   = 1024;
     memset(test_association->abm, 0x00, (test_association->abm_len * sizeof(uint8_t))); // Bitmask
-    test_association->stmacf_len = 16;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->ecs = CRYPTO_CIPHER_NONE;
-    test_association->acs = CRYPTO_MAC_HMAC_SHA512;
-    test_association->ekid = 0;
-    test_association->akid = 136;
+    test_association->stmacf_len     = 16;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ecs            = CRYPTO_CIPHER_NONE;
+    test_association->acs            = CRYPTO_MAC_HMAC_SHA512;
+    test_association->ekid           = 0;
+    test_association->akid           = 136;
     test_association->gvcid_blk.tfvn = 0;
 
     TC_t *tc_sdls_processed_frame;
@@ -2897,7 +2989,8 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_0)
 
     for (int i = 0; i < buffer_python_mac_len; i++)
     {
-        printf("[%d] Truth: %02x, Actual: %02x\n", i, buffer_python_mac_b[i], *(tc_sdls_processed_frame->tc_sec_trailer.mac + i));
+        printf("[%d] Truth: %02x, Actual: %02x\n", i, buffer_python_mac_b[i],
+               *(tc_sdls_processed_frame->tc_sec_trailer.mac + i));
         ASSERT_EQ(*(tc_sdls_processed_frame->tc_sec_trailer.mac + i), buffer_python_mac_b[i]);
     }
 
@@ -2914,60 +3007,66 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
     remove("sa_save_file.bin");
     int32_t status = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};  
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
+    // TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     Crypto_Init();
-    SaInterface sa_if = get_sa_interface_inmemory();
-    crypto_key_t* akp = NULL;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *akp   = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
-    //                        |  Header |SPI | ARSN   |     Payload                                                                                                                   | SHA 512 HMAC                 |FECF|
-    char *buffer_frame_pt_h = "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258907bbd1d9f2fd37e541f0b1ee12f5db0679a";
-    // Python truth string passed below is ZEROed out, not including a MAC or FECF which isn't hashed against, but the LENGTH (including fecf) needs to be updated in the Tf Header
-    // Length is dependent on whatever the variable mac length to be updated in the header
-    //  | Header |SPI|  ARSN  | NIST CMAC Frame Data                                                                                                         |
+    char *buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445b228c753292acd5df351000a"
+                              "591bf960d8555c3f6284afe7c6846cbb6c6f5445";
+    //                        |  Header |SPI | ARSN   |     Payload | SHA 512 HMAC                 |FECF|
+    char *buffer_frame_pt_h =
+        "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D8"
+        "0B699E8006E52345FB7273B2E084407F19394258907bbd1d9f2fd37e541f0b1ee12f5db0679a";
+    // Python truth string passed below is ZEROed out, not including a MAC or FECF which isn't hashed against, but the
+    // LENGTH (including fecf) needs to be updated in the Tf Header Length is dependent on whatever the variable mac
+    // length to be updated in the header
+    //  | Header |SPI|  ARSN  | NIST CMAC Frame Data |
     // "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258";
     // "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
     // Python output MAC
     // 907bbd1d9f2fd37e541f0b1ee12f5db0b1e0cbc57cfe08aecfc74b001371db711abb39caf658ee692d418725dc92cabd8d0a93ce423ff7594adf3fd91e7a6435
     // Trunc to first 16 bytes
     // 907bbd1d9f2fd37e541f0b1ee12f5db0b1e0cbc57cfe08aecfc74b001371db711abb39caf658ee692d418725dc92cabd8d0a93ce423ff7594adf3fd91e7a6435
-    char* buffer_python_mac_h = "907bbd1d9f2fd37e541f0b1ee12f5db0";
-    uint8_t *buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b = NULL;
-    int buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
+    char    *buffer_python_mac_h = "907bbd1d9f2fd37e541f0b1ee12f5db0";
+    uint8_t *buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b     = NULL;
+    int      buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
 
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
-    test_association->ast = 1;
-    test_association->est = 0;
+    test_association->ast       = 1;
+    test_association->est       = 0;
     test_association->shivf_len = 0;
-    test_association->iv_len = 0;
+    test_association->iv_len    = 0;
     test_association->shsnf_len = 4;
-    test_association->arsn_len = 4;
-    test_association->abm_len = 1024;
+    test_association->arsn_len  = 4;
+    test_association->abm_len   = 1024;
     memset(test_association->abm, 0xFF, (test_association->abm_len * sizeof(uint8_t))); // Bitmask
-    test_association->stmacf_len = 16;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->ecs = CRYPTO_CIPHER_NONE;
-    test_association->acs = CRYPTO_MAC_HMAC_SHA512;
-    test_association->ekid = 0;
-    test_association->akid = 136;
+    test_association->stmacf_len     = 16;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ecs            = CRYPTO_CIPHER_NONE;
+    test_association->acs            = CRYPTO_MAC_HMAC_SHA512;
+    test_association->ekid           = 0;
+    test_association->akid           = 136;
     test_association->gvcid_blk.tfvn = 0;
 
     TC_t *tc_sdls_processed_frame;
@@ -2992,7 +3091,8 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
 
     for (int i = 0; i < buffer_python_mac_len; i++)
     {
-        printf("[%d] Truth: %02x, Actual: %02x\n", i, buffer_python_mac_b[i], *(tc_sdls_processed_frame->tc_sec_trailer.mac + i));
+        printf("[%d] Truth: %02x, Actual: %02x\n", i, buffer_python_mac_b[i],
+               *(tc_sdls_processed_frame->tc_sec_trailer.mac + i));
         ASSERT_EQ(*(tc_sdls_processed_frame->tc_sec_trailer.mac + i), buffer_python_mac_b[i]);
     }
 
@@ -3007,38 +3107,40 @@ UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_PT_128_TEST_1)
 UTEST(PLAINTEXT, ENCRYPT_DECRYPT)
 {
     remove("sa_save_file.bin");
-    int32_t status = CRYPTO_LIB_ERROR;
-    uint8_t* ptr_enc_frame = NULL;
+    int32_t  status        = CRYPTO_LIB_ERROR;
+    uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_TRUE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};  
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
+    // TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     Crypto_Init();
 
-    char* jpl_frame_pt_h = "2003001c00ff000100001880d03e000a197f0b000300020093d4ba21c4555555555555";
-    uint8_t* jpl_frame_pt_b = NULL;
-    int jpl_frame_pt_len = 0;
-    TC_t* tc_sdls_processed_frame;
+    char    *jpl_frame_pt_h   = "2003001c00ff000100001880d03e000a197f0b000300020093d4ba21c4555555555555";
+    uint8_t *jpl_frame_pt_b   = NULL;
+    int      jpl_frame_pt_len = 0;
+    TC_t    *tc_sdls_processed_frame;
     tc_sdls_processed_frame = calloc(1, sizeof(uint8_t) * TC_SIZE);
 
     // Convert input jpl frame
-    hex_conversion(jpl_frame_pt_h, (char**) &jpl_frame_pt_b, &jpl_frame_pt_len);
+    hex_conversion(jpl_frame_pt_h, (char **)&jpl_frame_pt_b, &jpl_frame_pt_len);
 
     // Apply, save the generated frame
     status = Crypto_TC_ApplySecurity(jpl_frame_pt_b, jpl_frame_pt_len, &ptr_enc_frame, &enc_frame_len);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
-    
+
     // Process the generated frame
     int len = (int)enc_frame_len;
-    status = Crypto_TC_ProcessSecurity(ptr_enc_frame, &len, tc_sdls_processed_frame);
+    status  = Crypto_TC_ProcessSecurity(ptr_enc_frame, &len, tc_sdls_processed_frame);
     Crypto_Shutdown();
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 }
@@ -3050,63 +3152,67 @@ UTEST(PLAINTEXT, ENCRYPT_DECRYPT)
 UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_SHORT_KEY)
 {
     remove("sa_save_file.bin");
-    int32_t status = 0;
+    int32_t  status        = 0;
     uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};  
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
+    // TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     Crypto_Init();
-    SaInterface sa_if = get_sa_interface_inmemory();
-    crypto_key_t* akp = NULL;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *akp   = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
-    //                        |  Header |           NIST CMAC Test Vector                                                                                               |FECF|
-    char *buffer_frame_pt_h = "2003004600C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258C925";
-    // Python truth string passed below is ZEROed out, not including a MAC or FECF which isn't hashed against, but the LENGTH (including fecf) needs to be updated in the Tf Header
-    // Length is dependent on whatever the variable mac length to be updated in the header
-    //  | Header |SPI|  ARSN  | NIST CMAC Frame Data                                                                                                         |
+    //                        |  Header |           NIST CMAC Test Vector |FECF|
+    char *buffer_frame_pt_h = "2003004600C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A"
+                              "71158E23D80B699E8006E52345FB7273B2E084407F19394258C925";
+    // Python truth string passed below is ZEROed out, not including a MAC or FECF which isn't hashed against, but the
+    // LENGTH (including fecf) needs to be updated in the Tf Header Length is dependent on whatever the variable mac
+    // length to be updated in the header
+    //  | Header |SPI|  ARSN  | NIST CMAC Frame Data |
     // "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258";
-    // Python output MAC   
+    // Python output MAC
     // 75c570016a9458a71cea6aaca6ff46971ea007ed0a84e97fd2df79f6634c3efbb62edef3d1fb6549d0c9319e2d1dea866f634f67a2006c435b5bd2a3dd314fef
     // Trunc to first 16 bytes
     // 75c570016a9458a71cea6aaca6ff4697
-    char* buffer_python_mac_h = "75c570016a9458a71cea6aaca6ff4697";
-    uint8_t *buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b = NULL;
-    int buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
+    char    *buffer_python_mac_h = "75c570016a9458a71cea6aaca6ff4697";
+    uint8_t *buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b     = NULL;
+    int      buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
 
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
-    test_association->ast = 1;
-    test_association->est = 0;
+    test_association->ast       = 1;
+    test_association->est       = 0;
     test_association->shivf_len = 0;
-    test_association->iv_len = 0;
+    test_association->iv_len    = 0;
     test_association->shsnf_len = 4;
-    test_association->arsn_len = 4;
-    test_association->abm_len = 1024;
+    test_association->arsn_len  = 4;
+    test_association->abm_len   = 1024;
     memset(test_association->abm, 0xFF, (test_association->abm_len * sizeof(uint8_t))); // Bitmask
-    test_association->stmacf_len = 16;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->ecs = CRYPTO_CIPHER_NONE;
-    test_association->acs = CRYPTO_MAC_HMAC_SHA512;
-    test_association->ekid = 0;
-    test_association->akid = 136;
+    test_association->stmacf_len     = 16;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ecs            = CRYPTO_CIPHER_NONE;
+    test_association->acs            = CRYPTO_MAC_HMAC_SHA512;
+    test_association->ekid           = 0;
+    test_association->akid           = 136;
     test_association->gvcid_blk.tfvn = 0;
 
     // Insert key into keyring of SA 9
@@ -3137,62 +3243,67 @@ UTEST(NIST_ENC_HMAC_VALIDATION, SHA_512_SHORT_KEY)
 UTEST(NIST_DEC_HMAC_VALIDATION, SHA_512_SHORT_KEY)
 {
     remove("sa_save_file.bin");
-    int32_t status = 0;
+    int32_t  status        = 0;
     uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT, 
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};  
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
+    // TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     Crypto_Init();
-    SaInterface sa_if = get_sa_interface_inmemory();
-    crypto_key_t* akp = NULL;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *akp   = NULL;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "b228c753292acd5df351000a591bf960d8555c3f6284afe7c6846cbb6c6f5445";
-    //                        |  Header |SPI | arsn   |     Payload                                                                                                                   | SHA 512 HMAC                 |FECF|
-    char *buffer_frame_pt_h = "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F1939425875c570016a9458a71cea6aaca6ff46970f67";
-    // Python truth string passed below, not including a MAC or FECF which isn't hashed against, but the LENGTH (including fecf) needs to be updated in the Tf Header
-    // Length is dependent on whatever the variable mac length to be updated in the header
-    //  | Header |SPI|  ARSN  | NIST CMAC Frame Data                                                                                                         |
+    //                        |  Header |SPI | arsn   |     Payload | SHA 512 HMAC                 |FECF|
+    char *buffer_frame_pt_h =
+        "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D8"
+        "0B699E8006E52345FB7273B2E084407F1939425875c570016a9458a71cea6aaca6ff46970f67";
+    // Python truth string passed below, not including a MAC or FECF which isn't hashed against, but the LENGTH
+    // (including fecf) needs to be updated in the Tf Header Length is dependent on whatever the variable mac length to
+    // be updated in the header
+    //  | Header |SPI|  ARSN  | NIST CMAC Frame Data |
     // "2003005C00000900000000C66D322247EBF272E6A353F9940B00847CF78E27F2BC0C81A696DB411E47C0E9630137D3FA860A71158E23D80B699E8006E52345FB7273B2E084407F19394258";
-    // Python output MAC   
+    // Python output MAC
     // 75c570016a9458a71cea6aaca6ff46971ea007ed0a84e97fd2df79f6634c3efbb62edef3d1fb6549d0c9319e2d1dea866f634f67a2006c435b5bd2a3dd314fef
     // Trunc to first 16 bytes
     // 75c570016a9458a71cea6aaca6ff4697
-    char* buffer_python_mac_h = "75c570016a9458a71cea6aaca6ff4697";
-    uint8_t *buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b = NULL;
-    int buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
+    char    *buffer_python_mac_h = "75c570016a9458a71cea6aaca6ff4697";
+    uint8_t *buffer_frame_pt_b, *buffer_nist_key_b, *buffer_python_mac_b     = NULL;
+    int      buffer_frame_pt_len, buffer_nist_key_len, buffer_python_mac_len = 0;
 
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association = NULL;
-    test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
-    test_association->ast = 1;
-    test_association->est = 0;
+    test_association->ast       = 1;
+    test_association->est       = 0;
     test_association->shivf_len = 0;
-    test_association->iv_len = 0;
+    test_association->iv_len    = 0;
     test_association->shsnf_len = 4;
-    test_association->arsn_len = 4;
-    test_association->abm_len = 1024;
+    test_association->arsn_len  = 4;
+    test_association->abm_len   = 1024;
     memset(test_association->abm, 0xFF, (test_association->abm_len * sizeof(uint8_t))); // Bitmask
-    test_association->stmacf_len = 16;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->ecs = CRYPTO_CIPHER_NONE;
-    test_association->acs = CRYPTO_MAC_HMAC_SHA512;
-    test_association->ekid = 0;
-    test_association->akid = 136;
+    test_association->stmacf_len     = 16;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ecs            = CRYPTO_CIPHER_NONE;
+    test_association->acs            = CRYPTO_MAC_HMAC_SHA512;
+    test_association->ekid           = 0;
+    test_association->akid           = 136;
     test_association->gvcid_blk.tfvn = 0;
 
     TC_t *tc_sdls_processed_frame;

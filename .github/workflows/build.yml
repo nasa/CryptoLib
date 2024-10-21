@@ -1,8 +1,6 @@
 name: CryptoLib
 
 on: 
-  push:
-    branches: [ main, dev ]
   pull_request:
     branches: [ main, dev ]
 
@@ -13,14 +11,16 @@ jobs:
   minimal_build:
     # Container Setup
     runs-on: ubuntu-latest
+    container:
+        image: ivvitc/cryptolib:20240814
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Update
-      run: sudo apt-get update
+      run: apt-get update
     - name: Install Dependencies
-      run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 
+      run: apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3
     - name: Install Python Libraries
-      run: sudo pip install pycryptodome
+      run: pip install pycryptodome
     - name: Install Libgcrypt
       run: >
         curl  
@@ -28,16 +28,16 @@ jobs:
         -o /tmp/libgpg-error-1.50.tar.bz2 
         && tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/ 
         && cd /tmp/libgpg-error-1.50 
-        && sudo ./configure 
-        && sudo make install 
+        && ./configure 
+        && make install 
         && curl  
         -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 
         -o /tmp/libgcrypt-1.11.0.tar.bz2 
         && tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ 
         && cd /tmp/libgcrypt-1.11.0 
-        && sudo ./configure 
-        && sudo make install
-        && sudo ldconfig
+        && ./configure 
+        && make install
+        && ldconfig
     # End Container Setup
     
     - name: Minimal Build Script
@@ -50,14 +50,16 @@ jobs:
   internal_build:
     # Container Setup
     runs-on: ubuntu-latest
+    container:
+        image: ivvitc/cryptolib:20240814
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Update
-      run: sudo apt-get update
+      run: apt-get update
     - name: Install Dependencies
-      run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3
+      run: apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3
     - name: Install Python Libraries
-      run: sudo pip install pycryptodome
+      run: pip install pycryptodome
     - name: Install Libgcrypt
       run: >
         curl  
@@ -65,16 +67,16 @@ jobs:
         -o /tmp/libgpg-error-1.50.tar.bz2 
         && tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/ 
         && cd /tmp/libgpg-error-1.50 
-        && sudo ./configure 
-        && sudo make install 
+        && ./configure 
+        && make install 
         && curl  
         -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 
         -o /tmp/libgcrypt-1.11.0.tar.bz2 
         && tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ 
         && cd /tmp/libgcrypt-1.11.0 
-        && sudo ./configure 
-        && sudo make install
-        && sudo ldconfig
+        && ./configure 
+        && make install
+        && ldconfig
     # End Container Setup
     
     - name: Internal Build Script
@@ -100,7 +102,7 @@ jobs:
   #   # Container Setup
   #   runs-on: ubuntu-latest
   #   steps:
-  #   - uses: actions/checkout@v2
+  #   - uses: actions/checkout@v4
   #   - name: Update
   #     run: sudo apt-get update
   #   - name: Install Dependencies
@@ -148,14 +150,16 @@ jobs:
   wolf_build:
     # Container Setup
     runs-on: ubuntu-latest
+    container:
+        image: ivvitc/cryptolib:20240814
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Update
-      run: sudo apt-get update
+      run: apt-get update
     - name: Install Dependencies
-      run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 autoconf libtool
+      run: apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 autoconf libtool
     - name: Install Python Libraries
-      run: sudo pip install pycryptodome
+      run: pip install pycryptodome
     - name: Install Libgcrypt
       run: >
         curl  
@@ -163,16 +167,16 @@ jobs:
         -o /tmp/libgpg-error-1.50.tar.bz2 
         && tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/ 
         && cd /tmp/libgpg-error-1.50 
-        && sudo ./configure 
-        && sudo make install 
+        && ./configure 
+        && make install 
         && curl  
         -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 
         -o /tmp/libgcrypt-1.11.0.tar.bz2 
         && tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ 
         && cd /tmp/libgcrypt-1.11.0 
-        && sudo ./configure 
-        && sudo make install
-        && sudo ldconfig
+        && ./configure 
+        && make install
+        && ldconfig
     - name: Clone WolfSSL
       run: git clone --depth 1 --branch v5.6.0-stable https://github.com/wolfSSL/wolfssl.git /tmp/wolfssl
    
@@ -190,8 +194,8 @@ jobs:
            cd /tmp/wolfssl/build;
            cmake -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
            cmake --build .;
-           sudo make install;
-           sudo ldconfig;
+           make install;
+           ldconfig;
     # End Container Setup
     
     - name: Wolf Build Script
@@ -217,18 +221,18 @@ jobs:
     # Container Setup
     runs-on: ubuntu-latest
     container:
-      image: rockylinux/rockylinux:8
+      image: rockylinux/rockylinux:9
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Update
       run: yum update -y
     - name: Install Dependencies
-      run: yum install -y epel-release python38-devel libcurl-devel git cmake gcc java-11-openjdk-devel openssl wget bzip2 ldconfig mariadb-devel mariadb-common mariadb-connector-c mariadb-connector-c-config mariadb-errmsg mariadb-gssapi-server
+      run: yum install -y --enablerepo=devel python3-pip python3-devel epel-release libcurl-devel git cmake gcc java-11-openjdk-devel openssl wget bzip2 ldconfig mariadb-devel mariadb-common mariadb-connector-c mariadb-connector-c-config mariadb-errmsg mariadb-gssapi-server
       # Might want to trim this down, but these dependencies should work for KMC
     - name: install lcov
       run: yum install -y --enablerepo=epel lcov
-    - name: Install Python Dependencies
-      run: pip3 install pycryptodome
+    - name: install lcov
+      run: python3 -m pip install pycryptodome
     - name: Install Libgcrypt
       run: >
         curl 

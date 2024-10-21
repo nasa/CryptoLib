@@ -22,20 +22,20 @@
 static KeyInterfaceStruct key_if_struct;
 
 /* Prototypes */
-static crypto_key_t* get_key(uint32_t key_id);
-static int32_t key_init(void);
-static int32_t key_shutdown(void);
+static crypto_key_t *get_key(uint32_t key_id);
+static int32_t       key_init(void);
+static int32_t       key_shutdown(void);
 
 /* Functions */
 KeyInterface get_key_interface_kmc(void)
 {
-    key_if_struct.get_key = get_key;
-    key_if_struct.key_init = key_init;
+    key_if_struct.get_key      = get_key;
+    key_if_struct.key_init     = key_init;
     key_if_struct.key_shutdown = key_shutdown;
     return &key_if_struct;
 }
 
-static crypto_key_t* get_key(uint32_t key_id)
+static crypto_key_t *get_key(uint32_t key_id)
 {
     /* Avoid set but not used warning */
     key_id = key_id;

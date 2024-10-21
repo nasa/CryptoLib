@@ -89,7 +89,7 @@ typedef enum
 } CreateFecfBool;
 typedef enum
 {
-    AOS_FHEC_NA=0,
+    AOS_FHEC_NA = 0,
     AOS_NO_FHEC,
     AOS_HAS_FHEC
 } AosFhecPresent;
@@ -172,8 +172,8 @@ typedef enum
 
 typedef enum
 {
-    CAM_LOGIN_NONE, // Using already populated cam_cookie_file
-    CAM_LOGIN_KERBEROS, // Using already logged-in Kerberos to generate CAM cookies
+    CAM_LOGIN_NONE,       // Using already populated cam_cookie_file
+    CAM_LOGIN_KERBEROS,   // Using already logged-in Kerberos to generate CAM cookies
     CAM_LOGIN_KEYTAB_FILE // using keytab file to login and generate CAM cookies
 } CamLoginMethod;
 /*
@@ -201,39 +201,40 @@ typedef enum
 */
 typedef struct
 {
-    InitStatus init_status;
-    KeyType key_type;
-    McType mc_type;
-    SadbType sa_type;
+    InitStatus       init_status;
+    KeyType          key_type;
+    McType           mc_type;
+    SadbType         sa_type;
     CryptographyType cryptography_type;
-    IvType iv_type; // Whether or not CryptoLib should generate the IV
-    CreateFecfBool crypto_create_fecf; // Whether or not CryptoLib is expected to calculate TC FECFs and return
-                                         // payloads with the FECF
-    TcProcessSdlsPdus process_sdls_pdus; // Config to process SDLS extended procedure PDUs in CryptoLib
-    TcPusHdrPresent has_pus_hdr;
-    TcIgnoreSaState ignore_sa_state; // TODO - add logic that uses this configuration
+    IvType           iv_type;             // Whether or not CryptoLib should generate the IV
+    CreateFecfBool   crypto_create_fecf;  // Whether or not CryptoLib is expected to calculate TC FECFs and return
+                                          // payloads with the FECF
+    TcProcessSdlsPdus  process_sdls_pdus; // Config to process SDLS extended procedure PDUs in CryptoLib
+    TcPusHdrPresent    has_pus_hdr;
+    TcIgnoreSaState    ignore_sa_state; // TODO - add logic that uses this configuration
     TcIgnoreAntiReplay ignore_anti_replay;
     TcUniqueSaPerMapId unique_sa_per_mapid;
-    CheckFecfBool crypto_check_fecf;
-    uint8_t vcid_bitmask;
-    uint8_t crypto_increment_nontransmitted_iv; // Whether or not CryptoLib increments the non-transmitted portion of the IV field
+    CheckFecfBool      crypto_check_fecf;
+    uint8_t            vcid_bitmask;
+    uint8_t crypto_increment_nontransmitted_iv; // Whether or not CryptoLib increments the non-transmitted portion of
+                                                // the IV field
 } CryptoConfig_t;
 #define CRYPTO_CONFIG_SIZE (sizeof(CryptoConfig_t))
 
 typedef struct _GvcidManagedParameters_t GvcidManagedParameters_t;
 struct _GvcidManagedParameters_t
 {
-    uint8_t tfvn : 4;   // Transfer Frame Version Number
-    uint16_t scid : 10; // SpacecraftID
-    uint8_t vcid : 6;   // Virtual Channel ID
-    FecfPresent has_fecf;
-    AosFhecPresent aos_has_fhec;
+    uint8_t              tfvn : 4;  // Transfer Frame Version Number
+    uint16_t             scid : 10; // SpacecraftID
+    uint8_t              vcid : 6;  // Virtual Channel ID
+    FecfPresent          has_fecf;
+    AosFhecPresent       aos_has_fhec;
     AosInsertZonePresent aos_has_iz;
-    uint16_t aos_iz_len;
+    uint16_t             aos_iz_len;
     TcSegmentHdrsPresent has_segmentation_hdr;
-    uint16_t max_frame_size; // Maximum TC/TM Frame Length with headers
-    OcfPresent has_ocf;
-    int set_flag; // Will be a list of managed parameters!
+    uint16_t             max_frame_size; // Maximum TC/TM Frame Length with headers
+    OcfPresent           has_ocf;
+    int                  set_flag;
 };
 #define GVCID_MANAGED_PARAMETERS_SIZE (sizeof(GvcidManagedParameters_t))
 
@@ -242,18 +243,18 @@ struct _GvcidManagedParameters_t
 */
 typedef struct
 {
-    char* mysql_username;
-    char* mysql_password;
-    char* mysql_hostname;
-    char* mysql_database;
+    char    *mysql_username;
+    char    *mysql_password;
+    char    *mysql_hostname;
+    char    *mysql_database;
     uint16_t mysql_port;
-    char* mysql_mtls_cert;
-    char* mysql_mtls_key;
-    char* mysql_mtls_ca;
-    char* mysql_mtls_capath;
-    uint8_t mysql_tls_verify_server;
-    char* mysql_mtls_client_key_password;
-    uint8_t mysql_require_secure_transport;
+    char    *mysql_mtls_cert;
+    char    *mysql_mtls_key;
+    char    *mysql_mtls_ca;
+    char    *mysql_mtls_capath;
+    uint8_t  mysql_tls_verify_server;
+    char    *mysql_mtls_client_key_password;
+    uint8_t  mysql_require_secure_transport;
 
 } SadbMariaDBConfig_t;
 #define SADB_MARIADB_CONFIG_SIZE (sizeof(SadbMariaDBConfig_t))
@@ -263,18 +264,18 @@ typedef struct
 */
 typedef struct
 {
-    char* kmc_crypto_hostname;
-    char* protocol;
+    char    *kmc_crypto_hostname;
+    char    *protocol;
     uint16_t kmc_crypto_port;
-    char* kmc_crypto_app_uri;
-    char* mtls_client_cert_path;
-    char* mtls_client_cert_type; // default "PEM", supports "P12" and "DER"
-    char* mtls_client_key_path;
-    char* mtls_client_key_pass;
-    char* mtls_ca_bundle;
-    char* mtls_ca_path;
-    char* mtls_issuer_cert;
-    uint8_t ignore_ssl_hostname_validation;
+    char    *kmc_crypto_app_uri;
+    char    *mtls_client_cert_path;
+    char    *mtls_client_cert_type; // default "PEM", supports "P12" and "DER"
+    char    *mtls_client_key_path;
+    char    *mtls_client_key_pass;
+    char    *mtls_ca_bundle;
+    char    *mtls_ca_path;
+    char    *mtls_issuer_cert;
+    uint8_t  ignore_ssl_hostname_validation;
 
 } CryptographyKmcCryptoServiceConfig_t;
 #define CRYPTOGRAPHY_KMC_CRYPTO_SERVICE_CONFIG_SIZE (sizeof(CryptographyKmcCryptoServiceConfig_t))
@@ -285,14 +286,14 @@ typedef struct
 typedef struct
 {
     uint8_t cam_enabled;
-    char* cookie_file_path;
-    char* keytab_file_path;
-    char* access_manager_uri;
-    char* username;
-    char* cam_home;
+    char   *cookie_file_path;
+    char   *keytab_file_path;
+    char   *access_manager_uri;
+    char   *username;
+    char   *cam_home;
     uint8_t login_method;
 
 } CamConfig_t;
 #define CAM_CONFIG_SIZE (sizeof(CamConfig_t))
 
-#endif //CRYPTO_CONFIG_STRUCTS_H
+#endif // CRYPTO_CONFIG_STRUCTS_H

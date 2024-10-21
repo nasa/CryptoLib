@@ -35,29 +35,28 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-//C++ guard
+// C++ guard
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-typedef char char_t;
-typedef unsigned int uint_t;
+    typedef char         char_t;
+    typedef unsigned int uint_t;
 
-//Base64 encoding related functions
-void base64Encode(const void* input, size_t inputLen, char_t* output,
-                  size_t* outputLen);
+    // Base64 encoding related functions
+    void base64Encode(const void *input, size_t inputLen, char_t *output, size_t *outputLen);
 
-int32_t base64Decode(const char_t* input, size_t inputLen, void* output,
-                     size_t* outputLen);
+    int32_t base64Decode(const char_t *input, size_t inputLen, void *output, size_t *outputLen);
 
 #define ERROR_INVALID_PARAMETER 21
-#define ERROR_INVALID_LENGTH 22
+#define ERROR_INVALID_LENGTH    22
 #define ERROR_INVALID_CHARACTER 23
-#define NO_ERROR 0
+#define NO_ERROR                0
 
-//C++ guard
+// C++ guard
 #ifdef __cplusplus
 }
 #endif
 
-#endif //BASE64_H
+#endif // BASE64_H

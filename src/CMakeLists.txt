@@ -128,8 +128,10 @@ endif()
 
 # Create the app module
 if(DEFINED CFE_SYSTEM_PSPNAME)
-    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/cpu${TGTSYS_${SYSVAR}}/${INSTALL_SUBDIR}")
+    set(CMAKE_INSTALL_RPATH "./${INSTALL_SUBDIR}")
     add_cfe_app(crypto ${LIB_SRC_FILES})
+    target_include_directories(crypto PUBLIC ../include)
+    install(TARGETS crypto RUNTIME_DEPENDENCIES DESTINATION ${CMAKE_INSTALL_PREFIX}/${TGTSYS_${SYSVAR}}/${INSTALL_SUBDIR})
 else() 
     # Standalone build
     add_library(crypto SHARED ${LIB_SRC_FILES})
@@ -179,8 +181,8 @@ else()
 endif()
 
 if(SA_MARIADB)
-    file(GLOB MYSQL_SCRIPTS sa/sa_mariadb_sql/*.sql)
-    file(GLOB MYSQL_TEST_SCRIPTS sa/test_sa_mariadb_sql/*.sql)
+    file(GLOB MYSQL_SCRIPTS sa/sadb_mariadb_sql/*.sql)
+    file(GLOB MYSQL_TEST_SCRIPTS sa/test_sadb_mariadb_sql/*.sql)
     install(FILES ${MYSQL_SCRIPTS}
             DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/sa_mariadb_sql)
     install(FILES ${MYSQL_TEST_SCRIPTS}

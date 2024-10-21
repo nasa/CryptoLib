@@ -45,16 +45,24 @@ add_test(NAME UT_AOS_PROCESS
          COMMAND ${PROJECT_BINARY_DIR}/bin/ut_aos_process
          WORKING_DIRECTORY ${PROJECT_TEST_DIR})
 
-add_test(NAME UT_CRYPTO_MC
-         COMMAND ${PROJECT_BINARY_DIR}/bin/ut_crypto_mc 
-         WORKING_DIRECTORY ${PROJECT_TEST_DIR})
-
 add_test(NAME UT_TM_APPLY
          COMMAND ${PROJECT_BINARY_DIR}/bin/ut_tm_apply 
          WORKING_DIRECTORY ${PROJECT_TEST_DIR})
 
 add_test(NAME UT_TM_PROCESS
          COMMAND ${PROJECT_BINARY_DIR}/bin/ut_tm_process 
+         WORKING_DIRECTORY ${PROJECT_TEST_DIR})
+
+add_test(NAME UT_EP_MC
+         COMMAND ${PROJECT_BINARY_DIR}/bin/ut_ep_mc 
+         WORKING_DIRECTORY ${PROJECT_TEST_DIR})
+         
+add_test(NAME UT_EP_SA_MGMT
+         COMMAND ${PROJECT_BINARY_DIR}/bin/ut_ep_sa_mgmt 
+         WORKING_DIRECTORY ${PROJECT_TEST_DIR})
+         
+add_test(NAME UT_EP_KEY_MGMT
+         COMMAND ${PROJECT_BINARY_DIR}/bin/ut_ep_key_mgmt 
          WORKING_DIRECTORY ${PROJECT_TEST_DIR})
 
 if(NOT ${CRYPTO_WOLFSSL})
@@ -123,6 +131,7 @@ include_directories(include)
 include_directories(../include) 
 
 if(TEST_ENC)
+    set(Python3_FIND_STRATEGY VERSION)
     find_package (Python3 REQUIRED COMPONENTS Interpreter Development)
     execute_process(COMMAND pip3 show pycryptodome RESULT_VARIABLE EXIT_CODE OUTPUT_QUIET)
     if(NOT ${EXIT_CODE} EQUAL 0)
