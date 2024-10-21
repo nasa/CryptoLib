@@ -464,11 +464,11 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
         {
             status = cryptography_if->cryptography_authenticate( // Stub out data in/out as this is done in place and
                                                                  // want to save cycles
-                (uint8_t *)(&pTfBuffer[0]), // ciphertext output
-                (size_t)0,                  // length of data
-                (uint8_t *)(&pTfBuffer[0]), // plaintext input
-                (size_t)0,                  // in data length - from start of frame to end of data
-                &(akp->value[0]),           // Key
+                (uint8_t *)(&pTfBuffer[0]),                      // ciphertext output
+                (size_t)0,                                       // length of data
+                (uint8_t *)(&pTfBuffer[0]),                      // plaintext input
+                (size_t)0,                                       // in data length - from start of frame to end of data
+                &(akp->value[0]),                                // Key
                 Crypto_Get_ACS_Algo_Keylen(sa_ptr->acs),
                 sa_ptr,              // SA (for key reference)
                 sa_ptr->iv,          // IV
