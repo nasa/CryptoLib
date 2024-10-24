@@ -581,6 +581,26 @@ int32_t cryptography_gcry_setup(int32_t mode, int32_t algo, gcry_cipher_hd_t *tm
         gcry_cipher_close(*tmp_hd);
         return status;
     }
+#ifdef FIPS_MODE
+    *gcry_error = gcry_cipher_setup_geniv(*tmp_hd, GCRY_CIPHER_GENIV_METHOD_CONCAT, iv, iv_len, iv, iv_len);
+    if ((*gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+    {
+        printf(KRED "ERROR: gcry_cipher_setup_geniv error code %d\n" RESET, *gcry_error & GPG_ERR_CODE_MASK);
+        printf(KRED "Failure: %s/%s\n", gcry_strsource(*gcry_error), gcry_strerror(*gcry_error));
+        gcry_cipher_close(*tmp_hd);
+        status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
+        return status;
+    }
+    *gcry_error = gcry_cipher_geniv(*tmp_hd, iv, iv_len);
+    if ((*gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+    {
+        printf(KRED "ERROR: gcry_cipher_geniv error code %d\n" RESET, *gcry_error & GPG_ERR_CODE_MASK);
+        printf(KRED "Failure: %s/%s\n", gcry_strsource(*gcry_error), gcry_strerror(*gcry_error));
+        gcry_cipher_close(*tmp_hd);
+        status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
+        return status;
+    }
+#else
     *gcry_error = gcry_cipher_setiv(*tmp_hd, iv, iv_len);
     if ((*gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
@@ -590,6 +610,7 @@ int32_t cryptography_gcry_setup(int32_t mode, int32_t algo, gcry_cipher_hd_t *tm
         gcry_cipher_close(*tmp_hd);
         return status;
     }
+#endif
     return status;
 }
 
@@ -872,6 +893,26 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
         status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
         return status;
     }
+#ifdef FIPS_MODE
+    gcry_error = gcry_cipher_setup_geniv(tmp_hd, GCRY_CIPHER_GENIV_METHOD_CONCAT, iv, iv_len, iv, iv_len);
+    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+    {
+        printf(KRED "ERROR: gcry_cipher_setup_geniv error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+        printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+        gcry_cipher_close(tmp_hd);
+        status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
+        return status;
+    }
+    gcry_error = gcry_cipher_geniv(tmp_hd, iv, iv_len);
+    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+    {
+        printf(KRED "ERROR: gcry_cipher_geniv error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+        printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+        gcry_cipher_close(tmp_hd);
+        status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
+        return status;
+    }
+#else
     gcry_error = gcry_cipher_setiv(tmp_hd, iv, iv_len);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
@@ -881,6 +922,7 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
         status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
         return status;
     }
+#endif
 
     if (aad_bool == CRYPTO_TRUE)
     {
