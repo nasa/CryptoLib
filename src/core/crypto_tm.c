@@ -641,7 +641,7 @@ void Crypto_TM_ApplySecurity_Debug_Print(uint16_t idx, uint16_t pdu_len, Securit
     if (current_managed_parameters_struct.has_ocf == TM_HAS_OCF)
     {
         // If OCF exists, comes immediately after MAC
-        printf(KYEL "OCF Location is: %d" RESET, idx + pdu_len + sa_ptr->stmacf_len);
+        printf(KYEL "OCF Location is: %d\n" RESET, idx + pdu_len + sa_ptr->stmacf_len);
     }
     if (current_managed_parameters_struct.has_fecf == TM_HAS_FECF)
     {
@@ -1653,7 +1653,7 @@ void Crypto_TM_Process_Debug_Print(uint16_t byte_idx, uint16_t pdu_len, Security
     if (current_managed_parameters_struct.has_ocf == TM_HAS_OCF)
     {
         // If OCF exists, comes immediately after MAC
-        printf(KYEL "OCF Location is: %d" RESET, byte_idx + pdu_len + sa_ptr->stmacf_len);
+        printf(KYEL "OCF Location is: %d\n" RESET, byte_idx + pdu_len + sa_ptr->stmacf_len);
     }
     if (current_managed_parameters_struct.has_fecf == TM_HAS_FECF)
     {
@@ -1797,9 +1797,8 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_
 
         Crypto_TM_Process_Debug_Print(byte_idx, pdu_len, sa_ptr);
 
-        // Copy pdu into output frame
-        // this will be over-written by decryption functions if necessary,
-        // but not by authentication which requires
+        Crypto_Set_FSR(p_ingest, byte_idx, pdu_len, sa_ptr);
+        // Crypto_TM_Print_CLCW(p_ingest, byte_idx, pdu_len, sa_ptr);
 
         // Get Key
         status = Crypto_TM_Get_Keys(&ekp, &akp, sa_ptr);
@@ -1835,6 +1834,35 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_
     }
 
     return status;
+}
+
+void Crypto_TM_Print_CLCW(uint8_t *p_ingest, uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t *sa_ptr)
+{
+    if (current_managed_parameters_struct.has_ocf == TM_HAS_OCF)
+    {
+        byte_idx += (pdu_len + sa_ptr->stmacf_len);
+        Telemetry_Frame_Ocf_Clcw_t clcw;
+        clcw.cwt = (p_ingest[byte_idx] >> 7) & 0x0001;
+        clcw.cvn = (p_ingest[byte_idx] >> 5) & 0x0003;
+        clcw.sf  = (p_ingest[byte_idx] >> 2) & 0x0007;
+        clcw.cie = (p_ingest[byte_idx] >> 0) & 0x0003;
+        byte_idx += 1;
+        clcw.vci    = (p_ingest[byte_idx] >> 2) & 0x003F;
+        clcw.spare0 = (p_ingest[byte_idx] >> 0) & 0x0003;
+        byte_idx += 1;
+        clcw.nrfaf  = (p_ingest[byte_idx] >> 7) & 0x0001;
+        clcw.nblf   = (p_ingest[byte_idx] >> 6) & 0x0001;
+        clcw.lof    = (p_ingest[byte_idx] >> 5) & 0x0001;
+        clcw.waitf  = (p_ingest[byte_idx] >> 4) & 0x0001;
+        clcw.rtf    = (p_ingest[byte_idx] >> 3) & 0x0001;
+        clcw.fbc    = (p_ingest[byte_idx] >> 1) & 0x0003;
+        clcw.spare1 = (p_ingest[byte_idx] >> 0) & 0x0001;
+        byte_idx += 1;
+        clcw.rv = (p_ingest[byte_idx]);
+        byte_idx += 1;
+
+        Crypto_clcwPrint(&clcw);
+    }
 }
 
 /**
@@ -2008,40 +2036,21 @@ variables if (sa_if->sa_get_from_spi(tm_frame[0], &sa_ptr) != CRYPTO_LIB_SUCCESS
  * @brief Function: Crypto_TM_updateOCF
  * Update the TM OCF
  **/
-/**
-void Crypto_TM_updateOCF(void)
+
+void Crypto_TM_updateOCF(Telemetry_Frame_Ocf_Fsr_t *report, TM_t *tm_frame)
 {
     // TODO
-    if (ocf == 0)
-    { // CLCW
-        clcw.vci = tm_frame.tm_header.vcid;
-
-        tm_frame.tm_sec_trailer.ocf[0] = (clcw.cwt << 7) | (clcw.cvn << 5) | (clcw.sf << 2) | (clcw.cie);
-        tm_frame.tm_sec_trailer.ocf[1] = (clcw.vci << 2) | (clcw.spare0);
-        tm_frame.tm_sec_trailer.ocf[2] = (clcw.nrfa << 7) | (clcw.nbl << 6) | (clcw.lo << 5) | (clcw.wait << 4) |
-                                         (clcw.rt << 3) | (clcw.fbc << 1) | (clcw.spare1);
-        tm_frame.tm_sec_trailer.ocf[3] = (clcw.rv);
-        // Alternate OCF
-        ocf = 1;
+    tm_frame->tm_sec_trailer.ocf[0] = (report->cwt << 7) | (report->fvn << 4) | (report->af << 3) |
+                                      (report->bsnf << 2) | (report->bmacf << 1) | (report->bsaf);
+    tm_frame->tm_sec_trailer.ocf[1] = (report->lspi & 0xFF00) >> 8;
+    tm_frame->tm_sec_trailer.ocf[2] = (report->lspi & 0x00FF);
+    tm_frame->tm_sec_trailer.ocf[3] = (report->snval);
+    // Alternate OCF
+    // ocf = 0;
 #ifdef OCF_DEBUG
-        Crypto_clcwPrint(&clcw);
+    Crypto_fsrPrint(report);
 #endif
-    }
-    else
-    { // FSR
-        tm_frame.tm_sec_trailer.ocf[0] = (report.cwt << 7) | (report.vnum << 4) | (report.af << 3) |
-                                         (report.bsnf << 2) | (report.bmacf << 1) | (report.ispif);
-        tm_frame.tm_sec_trailer.ocf[1] = (report.lspiu & 0xFF00) >> 8;
-        tm_frame.tm_sec_trailer.ocf[2] = (report.lspiu & 0x00FF);
-        tm_frame.tm_sec_trailer.ocf[3] = (report.snval);
-        // Alternate OCF
-        ocf = 0;
-#ifdef OCF_DEBUG
-        Crypto_fsrPrint(&report);
-#endif
-    }
 }
-  **/
 
 /**
  * @brief Function: Crypto_Prepare_TM_AAD

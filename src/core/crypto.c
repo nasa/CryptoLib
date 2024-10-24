@@ -46,9 +46,9 @@ uint8_t                   aos_frame[AOS_MAX_FRAME_SIZE]; // AOS Global Frame
 AOS_FramePrimaryHeader_t  aos_frame_pri_hdr;             // Used to reduce bit math duplication
 AOS_FrameSecurityHeader_t aos_frame_sec_hdr;             // Used to reduce bit math duplication
 // OCF
-uint8_t                ocf = 0;
-SDLS_FSR_t             report;
-Telemetry_Frame_Clcw_t clcw;
+uint8_t                    ocf = 0;
+Telemetry_Frame_Ocf_Fsr_t  report;
+Telemetry_Frame_Ocf_Clcw_t clcw;
 // Flags
 SDLS_MC_LOG_RPLY_t      log_summary;
 SDLS_MC_DUMP_BLK_RPLY_t mc_log;
@@ -1119,4 +1119,91 @@ int32_t Crypto_Get_ACS_Algo_Keylen(uint8_t algo)
     }
 
     return retval;
+}
+
+/**
+ * @brief: Function: Crypto_Get_Security_Header_Length
+ * Return Security Header Length
+ * @param sa_ptr: SecurityAssociation_t*
+ **/
+int32_t Crypto_Get_Security_Header_Length(SecurityAssociation_t *sa_ptr)
+{
+    /* Narrator's Note: Leaving this here for future work
+    ** eventually we need a way to reconcile cryptolib managed parameters with TO managed parameters
+    GvcidManagedParameters_t* temp_current_managed_parameters = NULL;
+    Crypto_Get_Managed_Parameters_For_Gvcid(tfvn, scid, vcid,
+                                            gvcid_managed_parameters, temp_current_managed_parameters);
+    */
+
+    if (!sa_ptr)
+    {
+#ifdef DEBUG
+        printf(KRED "Get_Security_Header_Length passed Null SA!\n" RESET);
+#endif
+        return CRYPTO_LIB_ERR_NULL_SA;
+    }
+    uint16_t securityHeaderLength = 2; // Start with SPI
+
+    securityHeaderLength += sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;
+
+    return securityHeaderLength;
+}
+
+/**
+ * @brief: Function: Crypto_Get_Security_Trailer_Length
+ * Return Security Trailer Length
+ * @param sa_ptr: SecurityAssociation_t*
+ **/
+int32_t Crypto_Get_Security_Trailer_Length(SecurityAssociation_t *sa_ptr)
+{
+    if (!sa_ptr)
+    {
+#ifdef DEBUG
+        printf(KRED "Get_Trailer_Trailer_Length passed Null SA!\n" RESET);
+#endif
+        return CRYPTO_LIB_ERR_NULL_SA;
+    }
+    uint16_t securityTrailerLength = 0;
+
+    securityTrailerLength = sa_ptr->stmacf_len;
+
+    return securityTrailerLength;
+}
+
+void Crypto_Set_FSR(uint8_t *p_ingest, uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t *sa_ptr)
+{
+    if (current_managed_parameters_struct.has_ocf == TM_HAS_OCF || current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
+    {
+        Telemetry_Frame_Ocf_Fsr_t temp_report;
+        byte_idx += (pdu_len + sa_ptr->stmacf_len);
+        temp_report.cwt   = (p_ingest[byte_idx] >> 7) & 0x01;
+        temp_report.fvn   = (p_ingest[byte_idx] >> 4) & 0x07;
+        temp_report.af    = (p_ingest[byte_idx] >> 3) & 0x01;
+        temp_report.bsnf  = (p_ingest[byte_idx] >> 2) & 0x01;
+        temp_report.bmacf = (p_ingest[byte_idx] >> 1) & 0x01;
+        temp_report.bsaf  = (p_ingest[byte_idx] & 0x01);
+        byte_idx += 1;
+        temp_report.lspi = (p_ingest[byte_idx] << 8) | (p_ingest[byte_idx + 1]);
+        byte_idx += 2;
+        temp_report.snval = (p_ingest[byte_idx]);
+        byte_idx++;
+        report = temp_report;
+#ifdef DEBUG
+        Crypto_fsrPrint(&report);
+#endif
+    }
+}
+
+uint32_t Crypto_Get_FSR()
+{
+    uint32_t fsr;
+    fsr = (report.cwt << 31) |   // bit(s) 1
+          (report.fvn << 28) |   // bit(s) 2-4
+          (report.af << 27) |    // bit(s) 5
+          (report.bsnf << 26) |  // bit(s) 6
+          (report.bmacf << 25) | // bit(s) 7
+          (report.bsaf << 24) |  // bit(s) 8
+          (report.lspi << 8) |   // bit(s) 9-24
+          (report.snval << 0);   // bit(s) 25-32
+    return fsr;
 }

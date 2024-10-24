@@ -48,14 +48,14 @@ void Crypto_tmPrint(TM_t *tm_frame);
  * @param clcw: Telemetry_Frame_Clcw_t*
  * Prints the contents of the clcw
  **/
-void Crypto_clcwPrint(Telemetry_Frame_Clcw_t *clcw);
+void Crypto_clcwPrint(Telemetry_Frame_Ocf_Clcw_t *clcw);
 
 /**
  * @brief Function: Crypto_fsrPrint
  * @param report: SDLS_FSR_t*
  * Prints the contents of current FSR in memory
  **/
-void Crypto_fsrPrint(SDLS_FSR_t *report);
+void Crypto_fsrPrint(Telemetry_Frame_Ocf_Fsr_t *report);
 
 /**
  * @brief Function: Crypto_ccsdsPrint

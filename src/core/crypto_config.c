@@ -828,23 +828,23 @@ void Crypto_Local_Init(void)
     clcw.cie    = 1; // COP In Effect
     clcw.vci    = 0; // Virtual Channel Identification
     clcw.spare0 = 0; // Reserved Spare
-    clcw.nrfa   = 0; // No RF Avaliable Flag
-    clcw.nbl    = 0; // No Bit Lock Flag
-    clcw.lo     = 0; // Lock-Out Flag
-    clcw.wait   = 0; // Wait Flag
-    clcw.rt     = 0; // Retransmit Flag
+    clcw.nrfaf  = 0; // No RF Avaliable Flag
+    clcw.nblf   = 0; // No Bit Lock Flag
+    clcw.lof    = 0; // Lock-Out Flag
+    clcw.waitf  = 0; // Wait Flag
+    clcw.rtf    = 0; // Retransmit Flag
     clcw.fbc    = 0; // FARM-B Counter
     clcw.spare1 = 0; // Reserved Spare
     clcw.rv     = 0; // Report Value
 
     // Initialize Frame Security Report
     report.cwt   = 1; // Control Word Type "0b1""
-    report.vnum  = 4; // FSR Version "0b100""
+    report.fvn   = 4; // FSR Version "0b100""
     report.af    = 0; // Alarm Field
     report.bsnf  = 0; // Bad SN Flag
     report.bmacf = 0; // Bad MAC Flag
-    report.ispif = 0; // Invalid SPI Flag
-    report.lspiu = 0; // Last SPI Used
+    report.bsaf  = 0; // Invalid SPI Flag
+    report.lspi  = 0; // Last SPI Used
     report.snval = 0; // SN Value (LSB)
 }
 

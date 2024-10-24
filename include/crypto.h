@@ -159,6 +159,10 @@ void    Crypto_TC_Handle_Padding(uint32_t pkcs_padding, SecurityAssociation_t *s
                                  uint16_t *index);
 int32_t Crypto_TC_Set_IV(SecurityAssociation_t *sa_ptr, uint8_t *p_new_enc_frame, uint16_t *index);
 
+// OCF
+uint32_t Crypto_Get_FSR();
+void     Crypto_Set_FSR(uint8_t *p_ingest, uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t *sa_ptr);
+
 // Telemetry (TM)
 extern int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer);
 extern int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_t **pp_processed_frame,
@@ -221,7 +225,7 @@ extern int32_t Crypto_increment(uint8_t *num, int length);
 int32_t        Crypto_Get_tmLength(int len);
 uint8_t        Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id);
 void           Crypto_TM_updatePDU(uint8_t *ingest, int len_ingest);
-void           Crypto_TM_updateOCF(void);
+void           Crypto_TM_updateOCF(Telemetry_Frame_Ocf_Fsr_t *report, TM_t *tm_frame);
 uint8_t       *Crypto_Prepare_TC_AAD(uint8_t *buffer, uint16_t len_aad, uint8_t *abm_buffer);
 uint32_t       Crypto_Prepare_TM_AAD(const uint8_t *buffer, uint16_t len_aad, const uint8_t *abm_buffer, uint8_t *aad);
 uint32_t       Crypto_Prepare_AOS_AAD(const uint8_t *buffer, uint16_t len_aad, const uint8_t *abm_buffer, uint8_t *aad);
@@ -325,10 +329,12 @@ extern CryptographyInterface                 cryptography_if;
 extern SadbMariaDBConfig_t      *sa_mariadb_config;
 extern GvcidManagedParameters_t *gvcid_managed_parameters;
 extern GvcidManagedParameters_t *current_managed_parameters;
+
 // OCF
-extern uint8_t                ocf;
-extern SDLS_FSR_t             report;
-extern Telemetry_Frame_Clcw_t clcw;
+extern uint8_t                    ocf;
+extern Telemetry_Frame_Ocf_Fsr_t  report;
+extern Telemetry_Frame_Ocf_Clcw_t clcw;
+
 // Flags
 extern SDLS_MC_LOG_RPLY_t      log_summary;
 extern SDLS_MC_DUMP_BLK_RPLY_t mc_log;

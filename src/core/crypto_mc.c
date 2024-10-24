@@ -349,6 +349,6 @@ int32_t Crypto_MC_resetalarm(void)
     report.af    = 0;
     report.bsnf  = 0;
     report.bmacf = 0;
-    report.ispif = 0;
+    report.bsaf  = 0;
     return CRYPTO_LIB_SUCCESS;
 }
