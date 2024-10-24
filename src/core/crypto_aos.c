@@ -1181,6 +1181,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     {
         mac_loc = byte_idx + pdu_len;
     }
+    Crypto_Set_FSR(p_ingest, byte_idx, pdu_len, sa_ptr);
 
 #ifdef AOS_DEBUG
     printf(KYEL "Index / data location starts at: %d\n" RESET, byte_idx);

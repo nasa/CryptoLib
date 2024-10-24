@@ -1797,7 +1797,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_
 
         Crypto_TM_Process_Debug_Print(byte_idx, pdu_len, sa_ptr);
 
-        Crypto_TM_Set_FSR(p_ingest, byte_idx, pdu_len, sa_ptr);
+        Crypto_Set_FSR(p_ingest, byte_idx, pdu_len, sa_ptr);
         // Crypto_TM_Print_CLCW(p_ingest, byte_idx, pdu_len, sa_ptr);
 
         // Get Key
@@ -1862,30 +1862,6 @@ void Crypto_TM_Print_CLCW(uint8_t *p_ingest, uint16_t byte_idx, uint16_t pdu_len
         byte_idx += 1;
 
         Crypto_clcwPrint(&clcw);
-    }
-}
-
-void Crypto_TM_Set_FSR(uint8_t *p_ingest, uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t *sa_ptr)
-{
-    if (current_managed_parameters_struct.has_ocf == TM_HAS_OCF)
-    {
-        Telemetry_Frame_Ocf_Fsr_t temp_report;
-        byte_idx += (pdu_len + sa_ptr->stmacf_len);
-        temp_report.cwt   = (p_ingest[byte_idx] >> 7) & 0x01;
-        temp_report.fvn   = (p_ingest[byte_idx] >> 4) & 0x07;
-        temp_report.af    = (p_ingest[byte_idx] >> 3) & 0x01;
-        temp_report.bsnf  = (p_ingest[byte_idx] >> 2) & 0x01;
-        temp_report.bmacf = (p_ingest[byte_idx] >> 1) & 0x01;
-        temp_report.bsaf  = (p_ingest[byte_idx] & 0x01);
-        byte_idx += 1;
-        temp_report.lspi = (p_ingest[byte_idx] << 8) | (p_ingest[byte_idx + 1]);
-        byte_idx += 2;
-        temp_report.snval = (p_ingest[byte_idx]);
-        byte_idx++;
-        report = temp_report;
-#ifdef TM_DEBUG
-        Crypto_fsrPrint(&report);
-#endif
     }
 }
 

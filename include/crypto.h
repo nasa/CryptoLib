@@ -161,6 +161,7 @@ int32_t Crypto_TC_Set_IV(SecurityAssociation_t *sa_ptr, uint8_t *p_new_enc_frame
 
 // OCF
 uint32_t Crypto_Get_FSR();
+void     Crypto_Set_FSR(uint8_t *p_ingest, uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t *sa_ptr);
 
 // Telemetry (TM)
 extern int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer);
@@ -219,7 +220,6 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
                              crypto_key_t *ekp, crypto_key_t *akp, uint8_t iv_loc, int mac_loc, uint16_t aad_len,
                              uint8_t *aad, uint8_t **pp_processed_frame, uint16_t *p_decrypted_length);
 void    Crypto_TM_Process_Debug_Print(uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t *sa_ptr);
-void    Crypto_TM_Set_FSR(uint8_t *p_ingest, uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t *sa_ptr);
 
 extern int32_t Crypto_increment(uint8_t *num, int length);
 int32_t        Crypto_Get_tmLength(int len);

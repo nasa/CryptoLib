@@ -686,11 +686,12 @@ int32_t sa_init(void)
                 sa[x].ek_ref[y] = '\0';
                 sa[x].ak_ref[y] = '\0';
             }
-            sa[x].abm_len   = 0;
-            sa[x].acs_len   = 0;
-            sa[x].acs       = 0;
-            sa[x].shsnf_len = 0;
-            sa[x].arsn_len  = 0;
+            sa[x].abm_len    = 0;
+            sa[x].acs_len    = 0;
+            sa[x].acs        = 0;
+            sa[x].shsnf_len  = 0;
+            sa[x].arsn_len   = 0;
+            sa[x].stmacf_len = 0;
             for (int y = 0; y < ARSN_SIZE; y++)
             {
                 sa[x].arsn[y] = 0;
