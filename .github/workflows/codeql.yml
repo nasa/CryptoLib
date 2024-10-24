@@ -21,6 +21,8 @@ jobs:
   build_internal:
     name: Analyze Build_Internal
     runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
+    container:
+        image: ivvitc/cryptolib:20240814
     permissions:
       # required for all workflows
       security-events: write
@@ -29,7 +31,7 @@ jobs:
       packages: read
 
       # only required for workflows in private repositories
-      actions: read
+      actions: write
       contents: read
 
     env: 
@@ -71,6 +73,8 @@ jobs:
   build_minimal:
       name: Analyze Build_Minimal
       runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
+      container:
+        image: ivvitc/cryptolib:20240814
       permissions:
         # required for all workflows
         security-events: write
@@ -121,6 +125,8 @@ jobs:
   build_wolf:
       name: Analyze Build_Wolf
       runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
+      container:
+        image: ivvitc/cryptolib:20240814
       permissions:
         # required for all workflows
         security-events: write
@@ -153,29 +159,29 @@ jobs:
            cd /tmp/wolfssl/build;
            cmake -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
            cmake --build .;
-           sudo make install;
-           sudo ldconfig;
+           make install;
+           ldconfig;
       - name: Install Dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 autoconf libtool
+          apt-get update
+          apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 autoconf libtool
 
       - name: Install Python Libraries
-        run: sudo pip install pycryptodome
+        run: pip install pycryptodome
 
       - name: Update Dependencies
         run: >
           curl -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 -o /tmp/libgpg-error-1.50.tar.bz2 
           && tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/ 
           && cd /tmp/libgpg-error-1.50 
-          && sudo ./configure 
-          && sudo make install 
+          && ./configure 
+          && make install 
           && curl -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 -o /tmp/libgcrypt-1.11.0.tar.bz2 
           && tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ 
           && cd /tmp/libgcrypt-1.11.0 
-          && sudo ./configure 
-          && sudo make install
-          && sudo ldconfig
+          && ./configure 
+          && make install
+          && ldconfig
       
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -200,6 +206,8 @@ jobs:
   build_rhel:
       name: Analyze Build_RHEL
       runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
+      container:
+        image: ivvitc/cryptolib:20240814
       permissions:
         # required for all workflows
         security-events: write

@@ -24,6 +24,7 @@ static McInterfaceStruct mc_if_struct;
 /* Functions */
 McInterface get_mc_interface_custom(void)
 {
-    fprintf(stderr,"ERROR: Loading custom monitoring and control interface stub source code. Rebuild CryptoLib with -DMC_CUSTOM=ON to use implementation.\n");
+    fprintf(stderr, "ERROR: Loading custom monitoring and control interface stub source code. Rebuild CryptoLib with "
+                    "-DMC_CUSTOM=ON to use implementation.\n");
     return &mc_if_struct;
 }

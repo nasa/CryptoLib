@@ -24,6 +24,7 @@ static KeyInterfaceStruct key_if_struct;
 /* Functions */
 KeyInterface get_key_interface_kmc(void)
 {
-    fprintf(stderr,"ERROR: Loading KMC key interface stub source code. Rebuild CryptoLib with -DKEY_KMC=ON to use implementation.\n");
+    fprintf(stderr, "ERROR: Loading KMC key interface stub source code. Rebuild CryptoLib with -DKEY_KMC=ON to use "
+                    "implementation.\n");
     return &key_if_struct;
 }

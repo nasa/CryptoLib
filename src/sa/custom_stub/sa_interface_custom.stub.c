@@ -20,6 +20,7 @@ static SaInterfaceStruct sa_if_struct;
 /* Functions */
 SaInterface get_sa_interface_custom(void)
 {
-    fprintf(stderr,"ERROR: Loading custom SA interface stub source code. Rebuild CryptoLib with -DSA_CUSTOM=ON to use proper internal implementation.\n");
+    fprintf(stderr, "ERROR: Loading custom SA interface stub source code. Rebuild CryptoLib with -DSA_CUSTOM=ON to use "
+                    "proper internal implementation.\n");
     return &sa_if_struct;
 }
