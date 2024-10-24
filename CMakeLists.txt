@@ -59,6 +59,7 @@ option(TEST "Test" OFF)
 option(TEST_ENC "Tests - Encryption" OFF)
 option(SA_FILE "Save Security Association to File" OFF)
 option(KEY_VALIDATION "Validate existance of key duplication" OFF)
+option(FIPS_MODE "Enables FIPS mode where applicable" OFF)
 
 OPTION(KMC_MDB_RH "KMC-MDB-RedHat-Integration-Testing" OFF) #Disabled by default, enable with: -DKMC_MDB_RH=ON
 OPTION(KMC_MDB_DB "KMC-MDB-Debian-Integration-Testing" OFF) #Disabled by default, enable with: -DKMC_MDB_DB=ON
@@ -126,6 +127,10 @@ if(DEFINED MC_LOG_CUSTOM_PATH)
     add_compile_definitions(MC_LOG_PATH="${MC_LOG_CUSTOM_PATH}")
 else()
     add_compile_definitions(MC_LOG_PATH="${MC_LOG_PATH_DEFAULT}")
+endif()
+
+if(FIPS_MODE)
+    add_definitions(-DFIPS_MODE)
 endif()
 
 IF(KMC_MDB_RH)

@@ -82,6 +82,13 @@ static int32_t cryptography_config(void)
 static int32_t cryptography_init(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
+
+    // TODO: Configure FIPS mode if requested
+#ifdef FIPS_MODE
+    printf(KRED "IN FIPS MODE\n");
+    gcry_control(GCRYCTL_FORCE_FIPS_MODE, 1);
+#endif
+
     // Initialize libgcrypt
     if (!gcry_check_version(GCRYPT_VERSION))
     {
