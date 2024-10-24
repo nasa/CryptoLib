@@ -582,6 +582,7 @@ int32_t cryptography_gcry_setup(int32_t mode, int32_t algo, gcry_cipher_hd_t *tm
         return status;
     }
 #ifdef FIPS_MODE
+    // TODO: Set dynamic IV + length params in setup_geniv
     *gcry_error = gcry_cipher_setup_geniv(*tmp_hd, GCRY_CIPHER_GENIV_METHOD_CONCAT, iv, iv_len, iv, iv_len);
     if ((*gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
@@ -894,6 +895,7 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
         return status;
     }
 #ifdef FIPS_MODE
+    // TODO: Set dynamic IV + length params in setup_geniv
     gcry_error = gcry_cipher_setup_geniv(tmp_hd, GCRY_CIPHER_GENIV_METHOD_CONCAT, iv, iv_len, iv, iv_len);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
