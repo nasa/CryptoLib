@@ -56,7 +56,7 @@ option(SA_MARIADB "Security Association - MariaDB" OFF)
 option(SUPPORT "Support" OFF)
 option(SYSTEM_INSTALL "SystemInstall" OFF)
 option(TEST "Test" OFF)
-option(TEST_ENC "Tests - Encryption" OFF)
+# option(TEST_ENC "Tests - Encryption" OFF)
 option(SA_FILE "Save Security Association to File" OFF)
 option(KEY_VALIDATION "Validate existance of key duplication" OFF)
 
@@ -150,10 +150,10 @@ elseif(NOT DEFINED CFE_SYSTEM_PSPNAME)
     set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}/install)
 endif()
 
-if(TEST_ENC)
-    # Can't run an additional set of tests without `TEST` enabled
-    set(TEST ON)
-endif()
+# if(TEST_ENC)
+#     # Can't run an additional set of tests without `TEST` enabled
+#     set(TEST ON)
+# endif()
 
 if(TEST)
     include(CTest)

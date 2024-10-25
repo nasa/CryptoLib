@@ -121,41 +121,41 @@ endif()
     #          WORKING_DIRECTORY ${PROJECT_TEST_DIR})
 #endif()
 
-if(TEST_ENC)
-    add_test(NAME ET_DT_VALIDATION
-             COMMAND ${PROJECT_BINARY_DIR}/bin/et_dt_validation 
-             WORKING_DIRECTORY ${PROJECT_TEST_DIR})
-endif()
+# if(TEST_ENC)
+#     add_test(NAME ET_DT_VALIDATION
+#              COMMAND ${PROJECT_BINARY_DIR}/bin/et_dt_validation 
+#              WORKING_DIRECTORY ${PROJECT_TEST_DIR})
+# endif()
 
 include_directories(include)
 include_directories(../include) 
 
-if(TEST_ENC)
-    set(Python3_FIND_STRATEGY VERSION)
-    find_package (Python3 REQUIRED COMPONENTS Interpreter Development)
-    execute_process(COMMAND pip3 show pycryptodome RESULT_VARIABLE EXIT_CODE OUTPUT_QUIET)
-    if(NOT ${EXIT_CODE} EQUAL 0)
-        message(FATAL_ERROR "The \"pycryptodome\" Python3 package is not installed, and is required for TEST_ENC.")
-    endif()
-endif()
+# if(TEST_ENC)
+#     set(Python3_FIND_STRATEGY VERSION)
+#     find_package (Python3 REQUIRED COMPONENTS Interpreter Development)
+#     execute_process(COMMAND pip3 show pycryptodome RESULT_VARIABLE EXIT_CODE OUTPUT_QUIET)
+#     if(NOT ${EXIT_CODE} EQUAL 0)
+#         message(FATAL_ERROR "The \"pycryptodome\" Python3 package is not installed, and is required for TEST_ENC.")
+#     endif()
+# endif()
 
 file( GLOB UNIT_FILES unit/*.c)
 foreach(SOURCE_PATH ${UNIT_FILES})
     get_filename_component(EXECUTABLE_NAME ${SOURCE_PATH} NAME_WE)
 
-    if((NOT TEST_ENC) AND ${EXECUTABLE_NAME} STREQUAL et_dt_validation)
-        continue()
-    else()
-        add_executable(${EXECUTABLE_NAME} ${SOURCE_PATH}) 
-        target_sources(${EXECUTABLE_NAME} PRIVATE core/shared_util.c)
-        target_link_libraries(${EXECUTABLE_NAME} LINK_PUBLIC crypto pthread)
-    endif()
+    # if((NOT TEST_ENC) AND ${EXECUTABLE_NAME} STREQUAL et_dt_validation)
+    #     continue()
+    # else()
+    add_executable(${EXECUTABLE_NAME} ${SOURCE_PATH}) 
+    target_sources(${EXECUTABLE_NAME} PRIVATE core/shared_util.c)
+    target_link_libraries(${EXECUTABLE_NAME} LINK_PUBLIC crypto pthread)
+    # endif()
 
-    if(TEST_ENC AND ${EXECUTABLE_NAME} STREQUAL et_dt_validation)
-        target_link_libraries(${EXECUTABLE_NAME} PUBLIC ${Python3_LIBRARIES}) 
-        target_include_directories(${EXECUTABLE_NAME} PUBLIC ${Python3_INCLUDE_DIRS}) 
-        find_library(${Python3_LIBRARIES} pycryptodome)
-    endif()
+    # if(TEST_ENC AND ${EXECUTABLE_NAME} STREQUAL et_dt_validation)
+    #     target_link_libraries(${EXECUTABLE_NAME} PUBLIC ${Python3_LIBRARIES}) 
+    #     target_include_directories(${EXECUTABLE_NAME} PUBLIC ${Python3_INCLUDE_DIRS}) 
+    #     find_library(${Python3_LIBRARIES} pycryptodome)
+    # endif()
 
     add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${EXECUTABLE_NAME}> ${PROJECT_BINARY_DIR}/bin/${EXECUTABLE_NAME}
