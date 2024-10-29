@@ -46,7 +46,7 @@ typedef struct
     uint16_t scid : 16; // Spacecraft ID
     uint16_t vcid : 6;  // Virtual Channel ID
     uint8_t  mapid : 6; // Multiplexer Access Point ID
-} crypto_gvcid_t;
+} __attribute__((packed)) crypto_gvcid_t;
 #define CRYPTO_GVCID_SIZE (sizeof(crypto_gvcid_t))
 
 /*
@@ -88,7 +88,7 @@ typedef struct
     uint8_t  arsnw_len : 8;   // Anti-Replay Seq Num Window Length
     uint16_t arsnw;           // Anti-Replay Seq Num Window
 
-} SecurityAssociation_t;
+} __attribute__((packed)) SecurityAssociation_t;
 #define SA_SIZE (sizeof(SecurityAssociation_t))
 
 /*
@@ -104,7 +104,7 @@ typedef struct
     uint8_t  ispif : 1;  // Invalid SPI Flag
     uint16_t lspiu : 16; // Last SPI Used
     uint8_t  snval : 8;  // SN Value (LSB)
-} SDLS_FSR_t;
+} __attribute__((packed)) SDLS_FSR_t;
 #define SDLS_FSR_SIZE (sizeof(SDLS_FSR_t))
 
 typedef struct
@@ -275,7 +275,7 @@ typedef struct
     uint8_t  vcid : 6;  // Virtual Channel ID
     uint16_t fl : 10;   // The whole transfer frame length (max 1024)
     uint8_t  fsn : 8;   // Frame sequence number, also N(S), zeroed on Type-B frames
-} TC_FramePrimaryHeader_t;
+} __attribute__((packed)) TC_FramePrimaryHeader_t;
 #define TC_FRAME_PRIMARYHEADER_STRUCT_SIZE (sizeof(TC_FramePrimaryHeader_t))
 #define TC_FRAME_HEADER_SIZE               5
 
@@ -289,7 +289,7 @@ typedef struct
     uint8_t  sn_field_len;
     uint8_t  pad[PAD_SIZE]; // Count of the used fill Bytes
     uint8_t  pad_field_len;
-} TC_FrameSecurityHeader_t;
+} __attribute__((packed)) TC_FrameSecurityHeader_t;
 #define TC_FRAME_SECHEADER_SIZE (sizeof(TC_FrameSecurityHeader_t))
 
 typedef struct
@@ -297,7 +297,7 @@ typedef struct
     uint8_t  mac[MAC_SIZE]; // Message Authentication Code
     uint8_t  mac_field_len;
     uint16_t fecf; // Frame Error Control Field
-} TC_FrameSecurityTrailer_t;
+} __attribute__((packed)) TC_FrameSecurityTrailer_t;
 #define TC_FRAME_SECTRAILER_SIZE (sizeof(TC_FrameSecurityTrailer_t))
 
 typedef struct
@@ -307,7 +307,7 @@ typedef struct
     uint8_t                   tc_pdu[TC_FRAME_DATA_SIZE];
     uint16_t                  tc_pdu_len;
     TC_FrameSecurityTrailer_t tc_sec_trailer;
-} TC_t;
+} __attribute__((packed)) TC_t;
 #define TC_SIZE (sizeof(TC_t))
 
 /*
@@ -342,7 +342,7 @@ typedef struct
     CCSDS_HDR_t hdr;
     CCSDS_PUS_t pus;
     SDLS_TLV_t  pdu;
-} CCSDS_t;
+} __attribute__((packed)) CCSDS_t;
 #define CCSDS_SIZE (sizeof(CCSDS_t))
 
 /*
@@ -370,7 +370,7 @@ typedef struct
     uint8_t fbc : 2;    // FARM-B Counter
     uint8_t spare1 : 1; // Reserved Spare "0"
     uint8_t rv : 8;     // Report Value
-} Telemetry_Frame_Ocf_Clcw_t;
+} __attribute__((packed)) Telemetry_Frame_Ocf_Clcw_t;
 
 #define TELEMETRY_FRAME_OCF_CLCW_SIZE (sizeof(Telemetry_Frame_Ocf_Clcw_t))
 
@@ -386,7 +386,7 @@ typedef struct
     uint8_t  bsaf : 1;  // Bad Security Association Flag
     uint16_t lspi : 16; // Last SPI Used
     uint8_t  snval : 8; // Sequence Number Value (LSB)
-} Telemetry_Frame_Ocf_Fsr_t;
+} __attribute__((packed)) Telemetry_Frame_Ocf_Fsr_t;
 
 #define TELEMETRY_FRAME_OCF_FSR_SIZE (sizeof(Telemetry_Frame_Ocf_Fsr_t))
 
@@ -463,10 +463,10 @@ typedef struct
     uint8_t spare : 2; // Reserved Spare
                        // 0 = Shall be set to 0
                        // Sync Flag 1 = Undefined
-    uint8_t vfcc : 2;  // VC Frame Count cycle
+    uint8_t vfcc : 4;  // VC Frame Count cycle
                        // Sync Flag 0 = Shall be 11
                        // Sync Flag 1 = Undefined
-    uint16_t fhp : 11; // First Header Pointer
+    uint16_t fhp : 16; // First Header Pointer
                        // Sync Flag 0 = Contains position of the first byte of the first packet in the data field
                        // Sync Flag 1 = undefined
 } AOS_FramePrimaryHeader_t;
@@ -493,7 +493,7 @@ typedef struct
     AOS_FrameSecurityHeader_t  tm_sec_header;
     uint8_t                    aos_pdu[AOS_FRAME_DATA_SIZE];
     AOS_FrameSecurityTrailer_t aos_sec_trailer;
-} AOS_t;
+} __attribute__((packed)) AOS_t;
 #define AOS_SIZE (sizeof(AOS_t))
 
 #define AOS_MIN_SIZE \
