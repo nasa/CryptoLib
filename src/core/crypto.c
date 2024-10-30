@@ -287,6 +287,7 @@ uint8_t Crypto_Prep_Reply(uint8_t *reply, uint8_t appID)
     reply[count++] = (sdls_frame.pdu.hdr.pdu_len & 0xFF00) >> 8;
     reply[count++] = (sdls_frame.pdu.hdr.pdu_len & 0x00FF);
 
+    sdls_frame.pdu.hdr.type = 0;
     return count;
 }
 

@@ -112,8 +112,8 @@ UTEST(CRYPTO_C, PDU_SWITCH)
 
     Crypto_Init();
 
-    sdls_frame.hdr.type   = 0;
-    sdls_frame.pdu.hdr.uf = 0;
+    sdls_frame.pdu.hdr.type = PDU_TYPE_COMMAND;
+    sdls_frame.pdu.hdr.uf = PDU_USER_FLAG_FALSE;
     printf("SG_KEY_MGMT\n");
     sdls_frame.pdu.hdr.sg  = SG_KEY_MGMT;
     sdls_frame.pdu.hdr.pid = PID_OTAR;
@@ -131,7 +131,6 @@ UTEST(CRYPTO_C, PDU_SWITCH)
     status                 = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.hdr.pdu_len = 0;
     sdls_frame.pdu.hdr.pid     = PID_KEY_VERIFICATION;
     status                     = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
@@ -142,7 +141,7 @@ UTEST(CRYPTO_C, PDU_SWITCH)
 
     sdls_frame.pdu.hdr.pid = PID_KEY_INVENTORY;
     status                 = Crypto_PDU(ingest, &tc_frame);
-    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+    ASSERT_EQ(status, CRYPTOGRAPHY_UNSUPPORTED_OPERATION_FOR_KEY_RING);
 
     sdls_frame.pdu.hdr.pid = SG_KEY_MGMT;
     status                 = Crypto_PDU(ingest, &tc_frame);
@@ -184,11 +183,11 @@ UTEST(CRYPTO_C, PDU_SWITCH)
 
     sdls_frame.pdu.hdr.pid = PID_READ_ARSN;
     status                 = Crypto_PDU(ingest, &tc_frame);
-    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+    ASSERT_EQ(status, CRYPTO_LIB_ERROR);
 
     sdls_frame.pdu.hdr.pid = PID_SA_STATUS;
     status                 = Crypto_PDU(ingest, &tc_frame);
-    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+    ASSERT_EQ(status, CRYPTO_LIB_ERROR);
 
     sdls_frame.pdu.hdr.pid = 0b111;
     status                 = Crypto_PDU(ingest, &tc_frame);
@@ -198,19 +197,19 @@ UTEST(CRYPTO_C, PDU_SWITCH)
     sdls_frame.pdu.hdr.sg  = SG_SEC_MON_CTRL;
     sdls_frame.pdu.hdr.pid = PID_LOG_STATUS;
     status                 = Crypto_PDU(ingest, &tc_frame);
-    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+    ASSERT_EQ(status, CRYPTO_LIB_ERROR);
 
     sdls_frame.pdu.hdr.pid = PID_DUMP_LOG;
     status                 = Crypto_PDU(ingest, &tc_frame);
-    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+    ASSERT_EQ(status, CRYPTO_LIB_ERROR);
 
     sdls_frame.pdu.hdr.pid = PID_ERASE_LOG;
     status                 = Crypto_PDU(ingest, &tc_frame);
-    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+    ASSERT_EQ(status, CRYPTO_LIB_ERROR);
 
     sdls_frame.pdu.hdr.pid = PID_SELF_TEST;
     status                 = Crypto_PDU(ingest, &tc_frame);
-    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+    ASSERT_EQ(status, CRYPTO_LIB_ERROR);
 
     sdls_frame.pdu.hdr.pid = PID_ALARM_FLAG;
     status                 = Crypto_PDU(ingest, &tc_frame);
@@ -220,53 +219,45 @@ UTEST(CRYPTO_C, PDU_SWITCH)
     status                 = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    printf("PID_LOG_STATUS\n");
-    sdls_frame.pdu.hdr.sg  = PID_LOG_STATUS;
-    sdls_frame.pdu.hdr.pid = PID_LOG_STATUS;
-    status                 = Crypto_PDU(ingest, &tc_frame);
-    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
-
     printf("UF_TRUE\n");
-    sdls_frame.pdu.hdr.uf  = 1;
-    sdls_frame.pdu.hdr.pid = 0;
+    sdls_frame.pdu.hdr.uf  = PDU_USER_FLAG_TRUE;
+    sdls_frame.pdu.hdr.pid = PID_IDLE_FRAME_TRIGGER;
     status                 = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.hdr.pid = 1;
+    sdls_frame.pdu.hdr.pid = PID_TOGGLE_BAD_SPI;
     status                 = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.hdr.pid = 2;
+    sdls_frame.pdu.hdr.pid = PID_TOGGLE_BAD_IV;
     status                 = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.hdr.pid = 3;
+    sdls_frame.pdu.hdr.pid = PID_TOGGLE_BAD_MAC;
     status                 = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.hdr.pid = 4;
+    sdls_frame.pdu.hdr.pid = PID_TOGGLE_BAD_FECF;
     status                 = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.hdr.pid = 5;
+    sdls_frame.pdu.hdr.pid = PID_MODIFY_KEY;
     status                 = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.hdr.pid = 6;
+    sdls_frame.pdu.hdr.pid = PID_MODIFY_ACTIVE_TM;
     status                 = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    // TODO:  (RB) Disabled for now.  Key Inventory needs to be re-worked. - Not currently using EP
-
-    // sdls_frame.pdu.hdr.pid = 7;
-    // status = Crypto_PDU(ingest, &tc_frame);
-    // ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+    sdls_frame.pdu.hdr.pid = PID_MODIFY_VCID;
+    status = Crypto_PDU(ingest, &tc_frame);
+    ASSERT_EQ(status, CRYPTO_LIB_ERROR);
 
     sdls_frame.pdu.hdr.pid = 8;
     status                 = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.hdr.type    = 1;
+    sdls_frame.hdr.type    = PDU_TYPE_REPLY;
     sdls_frame.pdu.hdr.pid = 8;
     status                 = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
@@ -358,6 +349,50 @@ UTEST(CRYPTO_C, GET_ECS_ALGO_KEY_LEN)
     uint8_t crypto_algo = CRYPTO_CIPHER_AES256_GCM;
     algo_keylen         = Crypto_Get_ACS_Algo_Keylen(crypto_algo);
     ASSERT_EQ(algo_keylen, 32);
+}
+
+UTEST(CRYPTO_C, STRUCT_SIZE_VERIFICATION)
+{
+    ASSERT_EQ(CRYPTO_GVCID_SIZE, (size_t)4);
+    ASSERT_EQ(SA_SIZE, (size_t)2348);
+    ASSERT_EQ(SDLS_FSR_SIZE, (size_t)4);
+    ASSERT_EQ(SDLS_TLV_HDR_SIZE, (size_t)3);
+    ASSERT_EQ(SDLS_TLV_SIZE, (size_t)497);
+    ASSERT_EQ(SDLS_EKB_SIZE, (size_t)514);
+    ASSERT_EQ(SDLS_OTAR_SIZE, (size_t)(2 + 16 + 30*514 + 16));
+    ASSERT_EQ(SDLS_KEY_SIZE, (size_t)2);
+    ASSERT_EQ(SDLS_KEY_INVENTORY_CMD_SIZE, (size_t)4);
+    ASSERT_EQ(SDLS_KEY_INVENTORY_RPLY_SIZE, (size_t)3);
+    ASSERT_EQ(SDLS_KEYV_CMD_BLK_SIZE, (size_t)18);
+    ASSERT_EQ(SDLS_KEYV_CMD_SIZE, (size_t)(29*18));
+    ASSERT_EQ(SDLS_KEYV_RPLY_BLK_SIZE, (size_t)50);
+    ASSERT_EQ(SDLS_KEYV_RPLY_SIZE, (size_t)(50*29));
+    ASSERT_EQ(SDLS_KEYDB_CMD_SIZE, (size_t)12);
+    ASSERT_EQ(SDLS_KEYDB_RPLY_SIZE, (size_t)38);
+    ASSERT_EQ(SDLS_SA_STATUS_RPLY_SIZE, (size_t)3);
+    ASSERT_EQ(SDLS_SA_READ_ARSN_RPLY_SIZE, (size_t)22);
+    ASSERT_EQ(SDLS_MC_LOG_RPLY_SIZE, (size_t)4);
+    ASSERT_EQ(SDLS_MC_DUMP_RPLY_SIZE, (size_t)7);
+    ASSERT_EQ(SDLS_MC_DUMP_BLK_RPLY_SIZE, (size_t)(7*50));
+    ASSERT_EQ(SDLS_MC_ST_RPLY_SIZE, (size_t)1);
+    ASSERT_EQ(SDLS_MC_SN_RPLY_SIZE, (size_t)16);
+    ASSERT_EQ(TC_FRAME_PRIMARYHEADER_STRUCT_SIZE, (size_t)5);
+    ASSERT_EQ(TC_FRAME_SECHEADER_SIZE, (size_t)70);
+    ASSERT_EQ(TC_FRAME_SECTRAILER_SIZE, (size_t)19);
+    ASSERT_EQ(TC_SIZE, (size_t)(5 + 70 + 19 + 2 + 1019));
+    ASSERT_EQ(CCSDS_HDR_SIZE, (size_t)6);
+    ASSERT_EQ(CCSDS_PUS_SIZE, (size_t)4);
+    ASSERT_EQ(CCSDS_SIZE, (size_t)(6 + 4 + 497));
+    ASSERT_EQ(TELEMETRY_FRAME_OCF_CLCW_SIZE, (size_t)4);
+    ASSERT_EQ(TELEMETRY_FRAME_OCF_FSR_SIZE, (size_t)4);
+    ASSERT_EQ(TM_FRAME_PRIMARYHEADER_SIZE, (size_t)6);
+    ASSERT_EQ(TM_FRAME_SECHEADER_SIZE, (size_t)18);
+    ASSERT_EQ(TM_FRAME_SECTRAILER_SIZE, (size_t)22);
+    ASSERT_EQ(TM_SIZE, (size_t)(6 + 18 + 1786 + 22));
+    ASSERT_EQ(AOS_FRAME_PRIMARYHEADER_SIZE, (size_t)8);
+    ASSERT_EQ(AOS_FRAME_SECHEADER_SIZE, (size_t)18);
+    ASSERT_EQ(AOS_FRAME_SECTRAILER_SIZE, (size_t)22);
+    ASSERT_EQ(AOS_SIZE, (size_t)(8 + 18 + 1786 + 22));
 }
 
 UTEST_MAIN();
