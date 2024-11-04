@@ -226,7 +226,7 @@ int32_t        Crypto_Get_tmLength(int len);
 uint8_t        Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id);
 void           Crypto_TM_updatePDU(uint8_t *ingest, int len_ingest);
 void           Crypto_TM_updateOCF(Telemetry_Frame_Ocf_Fsr_t *report, TM_t *tm_frame);
-uint8_t       *Crypto_Prepare_TC_AAD(uint8_t *buffer, uint16_t len_aad, uint8_t *abm_buffer);
+uint8_t *Crypto_Prepare_TC_AAD(uint8_t *buffer, uint16_t len_aad, uint8_t *abm_buffer);
 uint32_t       Crypto_Prepare_TM_AAD(const uint8_t *buffer, uint16_t len_aad, const uint8_t *abm_buffer, uint8_t *aad);
 uint32_t       Crypto_Prepare_AOS_AAD(const uint8_t *buffer, uint16_t len_aad, const uint8_t *abm_buffer, uint8_t *aad);
 void           Crypto_Local_Config(void);
@@ -312,11 +312,11 @@ extern AOS_FrameSecurityHeader_t aos_frame_sec_hdr; // Used to reduce bit math d
 
 // Global configuration structs
 extern CryptoConfig_t                        crypto_config;
-extern SadbMariaDBConfig_t                  *sa_mariadb_config;
+extern SadbMariaDBConfig_t *sa_mariadb_config;
 extern CryptographyKmcCryptoServiceConfig_t *cryptography_kmc_crypto_config;
-extern CamConfig_t                          *cam_config;
-extern GvcidManagedParameters_t             *gvcid_managed_parameters;
-extern GvcidManagedParameters_t             *current_managed_parameters;
+extern CamConfig_t *cam_config;
+extern GvcidManagedParameters_t *gvcid_managed_parameters;
+extern GvcidManagedParameters_t *current_managed_parameters;
 extern GvcidManagedParameters_t              gvcid_managed_parameters_array[GVCID_MAX_PARAM_SIZE];
 extern GvcidManagedParameters_t              current_managed_parameters_struct;
 extern int                                   gvcid_counter;

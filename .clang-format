@@ -2,9 +2,19 @@
 Language:        Cpp
 AccessModifierOffset: -4
 AlignAfterOpenBracket: Align
-AlignConsecutiveAssignments: true
-AlignConsecutiveDeclarations: true
-AlignConsecutiveMacros: true
+AlignConsecutiveAssignments: 
+  Enabled: true
+  AcrossComments: true
+  AlignCompound: true
+AlignConsecutiveDeclarations: 
+  Enabled: true
+  AcrossComments: true
+  AlignFunctionPointers: true
+  AlignFunctionDeclarations: true
+AlignConsecutiveMacros:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: false
 AlignEscapedNewlines: Left
 AlignOperands:   true
 AlignTrailingComments: true
@@ -17,7 +27,7 @@ AllowShortLoopsOnASingleLine: false
 AlwaysBreakAfterReturnType: None
 AlwaysBreakBeforeMultilineStrings: false
 BinPackArguments: true
-BinPackParameters: true
+BinPackParameters: BinPack
 BreakBeforeBinaryOperators: None
 BreakBeforeBraces: Allman
 BreakBeforeTernaryOperators: true
@@ -36,7 +46,8 @@ IncludeIsMainRegex: '$'
 IndentCaseLabels: true
 IndentPPDirectives: None
 IndentWidth:     4
-KeepEmptyLinesAtTheStartOfBlocks: true
+KeepEmptyLines: 
+  AtStartOfBlock: true
 MacroBlockBegin: ''
 MacroBlockEnd:   ''
 MaxEmptyLinesToKeep: 1
@@ -48,8 +59,8 @@ PenaltyBreakString: 1000
 PenaltyExcessCharacter: 1000000
 PenaltyReturnTypeOnItsOwnLine: 60
 PointerAlignment: Right
-ReflowComments:  true
-SortIncludes:    false
+ReflowComments:  Always
+SortIncludes:    Never
 SpaceAfterCStyleCast: false
 SpaceBeforeAssignmentOperators: true
 SpaceBeforeParens: ControlStatements
@@ -57,7 +68,7 @@ SpaceInEmptyParentheses: false
 SpaceBeforeCpp11BracedList: true
 SpacesBeforeTrailingComments: 1
 SpacesInCStyleCastParentheses: false
-SpacesInParentheses: false
+SpacesInParens: Never
 SpacesInSquareBrackets: false
 Standard:        c++11
 TabWidth:        8

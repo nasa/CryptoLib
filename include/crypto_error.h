@@ -150,14 +150,14 @@
 #define CONFIGURATION_ERROR_CODES     100
 #define CONFIGURATION_ERROR_CODES_MAX 103
 
-#define CRYPTO_CORE_ERROR_CODES_MAX -59
+#define CRYPTO_CORE_ERROR_CODES_MAX (-59)
 
-extern char *crypto_enum_errlist_core[];
-extern char *crypto_enum_errlist_config[];
-extern char *crypto_enum_errlist_sa_if[];
-extern char *crypto_enum_errlist_sa_mariadb[];
-extern char *crypto_enum_errlist_crypto_if[];
-extern char *crypto_enum_errlist_crypto_kmc[];
-extern char *crypto_enum_errlist_crypto_cam[];
+extern const char *crypto_enum_errlist_core[];
+extern const char *crypto_enum_errlist_config[];
+extern const char *crypto_enum_errlist_sa_if[];
+extern const char *crypto_enum_errlist_sa_mariadb[];
+extern const char *crypto_enum_errlist_crypto_if[];
+extern const char *crypto_enum_errlist_crypto_kmc[];
+extern const char *crypto_enum_errlist_crypto_cam[];
 
 #endif // CRYPTO_ERROR_H

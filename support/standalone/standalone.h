@@ -75,7 +75,7 @@ extern "C"
 #define CRYPTO_MAX_INPUT_TOKENS     32
 #define CRYPTO_MAX_INPUT_TOKEN_SIZE 64
 
-#define CRYPTO_CMD_UNKNOWN  -1
+#define CRYPTO_CMD_UNKNOWN  (-1)
 #define CRYPTO_CMD_HELP     0
 #define CRYPTO_CMD_EXIT     1
 #define CRYPTO_CMD_NOOP     2
@@ -113,11 +113,11 @@ extern "C"
     int32_t crypto_standalone_udp_init(udp_info_t *sock, int32_t port, uint8_t bind_sock);
     int32_t crypto_reset(void);
     void    crypto_standalone_tc_frame(uint8_t *in_data, uint16_t in_length, uint8_t *out_data, uint16_t *out_length);
-    void   *crypto_standalone_tc_apply(void *socks);
+    void    *crypto_standalone_tc_apply(void *socks);
     void    crypto_standalone_tm_frame(uint8_t *in_data, uint16_t in_length, uint8_t *out_data, uint16_t *out_length,
                                        uint16_t spi);
-    void   *crypto_standalone_tm_process(void *socks);
-    void    crypto_standalone_cleanup(const int signal);
+    void    *crypto_standalone_tm_process(void *socks);
+    void    crypto_standalone_cleanup(int signal);
 
 #ifdef __cplusplus
 } /* Close scope of 'extern "C"' declaration which encloses file. */
