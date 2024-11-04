@@ -2,19 +2,19 @@ USE sadb;
 
 -- SCID 44 (MMT) Security Associations AES/GCM/NoPadding --
 -- SA 1 - Only Keyed SA Available (VC 33)
-INSERT INTO security_associations (spi,ekid,sa_state,ecs,est,ast,shivf_len,iv_len,stmacf_len,iv,abm_len,abm,arsnw,arsn_len,tfvn,scid,vcid,mapid)
+INSERT INTO TC_security_associations (spi,ekid,sa_state,ecs,est,ast,shivf_len,iv_len,stmacf_len,iv,abm_len,abm,arsnw,arsn_len,tfvn,scid,vcid,mapid)
 VALUES (1,'kmc/test/key130',2,X'01',1,1,12,12,16,X'000000000000000000000001',19,X'00000000000000000000000000000000000000',5,0,0,44,33,0);
 
 -- SA 2 - Only Unkeyed SA Available (VC 32)
-INSERT INTO security_associations (spi,ekid,sa_state,ecs,est,ast,shivf_len,iv_len,stmacf_len,iv,abm_len,abm,arsnw,arsn_len,tfvn,scid,vcid,mapid)
+INSERT INTO TC_security_associations (spi,ekid,sa_state,ecs,est,ast,shivf_len,iv_len,stmacf_len,iv,abm_len,abm,arsnw,arsn_len,tfvn,scid,vcid,mapid)
 VALUES (2,'kmc/test/key130',1,X'01',1,1,12,12,16,X'000000000000000000000001',19,X'00000000000000000000000000000000000000',5,0,0,44,32,0);
 
 -- SA 3 - Null ECS & EKID for AESGCM Error (VC 34)
-INSERT INTO security_associations (spi,ekid,sa_state,ecs,est,ast,shivf_len,iv_len,stmacf_len,iv,abm_len,abm,arsnw,arsn_len,tfvn,scid,vcid,mapid)
+INSERT INTO TC_security_associations (spi,ekid,sa_state,ecs,est,ast,shivf_len,iv_len,stmacf_len,iv,abm_len,abm,arsnw,arsn_len,tfvn,scid,vcid,mapid)
 VALUES (3,NULL,3,'',1,1,12,12,16,X'000000000000000000000001',19,X'00000000000000000000000000000000000000',5,0,0,44,34,0);
 
 -- SA 4 - Invalid Frame Length with Seg Headers Config Set (VC 28)
-INSERT INTO security_associations (spi,ekid,sa_state,ecs,est,ast,shivf_len,iv_len,stmacf_len,iv,abm_len,abm,arsnw,arsn_len,tfvn,scid,vcid,mapid)
+INSERT INTO TC_security_associations (spi,ekid,sa_state,ecs,est,ast,shivf_len,iv_len,stmacf_len,iv,abm_len,abm,arsnw,arsn_len,tfvn,scid,vcid,mapid)
 VALUES (4,'kmc/test/key128',3,X'01',1,1,12,12,16,X'000000000000000000000001',19,X'0000000000000000000000000000000000000000',5,0,0,44,28,1);
 
 

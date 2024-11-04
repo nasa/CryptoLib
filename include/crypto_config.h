@@ -41,6 +41,9 @@
 #define RESET
 #endif
 
+// KMC Defines
+#define SADB_TABLE "TC"
+
 // Managed Parameters Size
 #define GVCID_MAN_PARAM_SIZE 250
 
