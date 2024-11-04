@@ -1,6 +1,8 @@
 name: cpp-linter
 
 on:
+  push:
+    branches: [ 341-resolve-cpp-linter-suggestions ]
   pull_request:
     branches: [ main, dev ]
 

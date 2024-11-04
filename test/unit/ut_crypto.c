@@ -113,7 +113,7 @@ UTEST(CRYPTO_C, PDU_SWITCH)
     Crypto_Init();
 
     sdls_frame.pdu.hdr.type = PDU_TYPE_COMMAND;
-    sdls_frame.pdu.hdr.uf = PDU_USER_FLAG_FALSE;
+    sdls_frame.pdu.hdr.uf   = PDU_USER_FLAG_FALSE;
     printf("SG_KEY_MGMT\n");
     sdls_frame.pdu.hdr.sg  = SG_KEY_MGMT;
     sdls_frame.pdu.hdr.pid = PID_OTAR;
@@ -131,8 +131,8 @@ UTEST(CRYPTO_C, PDU_SWITCH)
     status                 = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.pdu.hdr.pid     = PID_KEY_VERIFICATION;
-    status                     = Crypto_PDU(ingest, &tc_frame);
+    sdls_frame.pdu.hdr.pid = PID_KEY_VERIFICATION;
+    status                 = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
     sdls_frame.pdu.hdr.pid = PID_KEY_DESTRUCTION;
@@ -250,7 +250,7 @@ UTEST(CRYPTO_C, PDU_SWITCH)
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
     sdls_frame.pdu.hdr.pid = PID_MODIFY_VCID;
-    status = Crypto_PDU(ingest, &tc_frame);
+    status                 = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_ERROR);
 
     sdls_frame.pdu.hdr.pid = 8;
@@ -359,21 +359,21 @@ UTEST(CRYPTO_C, STRUCT_SIZE_VERIFICATION)
     ASSERT_EQ(SDLS_TLV_HDR_SIZE, (size_t)3);
     ASSERT_EQ(SDLS_TLV_SIZE, (size_t)497);
     ASSERT_EQ(SDLS_EKB_SIZE, (size_t)514);
-    ASSERT_EQ(SDLS_OTAR_SIZE, (size_t)(2 + 16 + 30*514 + 16));
+    ASSERT_EQ(SDLS_OTAR_SIZE, (size_t)(2 + 16 + 30 * 514 + 16));
     ASSERT_EQ(SDLS_KEY_SIZE, (size_t)2);
     ASSERT_EQ(SDLS_KEY_INVENTORY_CMD_SIZE, (size_t)4);
     ASSERT_EQ(SDLS_KEY_INVENTORY_RPLY_SIZE, (size_t)3);
     ASSERT_EQ(SDLS_KEYV_CMD_BLK_SIZE, (size_t)18);
-    ASSERT_EQ(SDLS_KEYV_CMD_SIZE, (size_t)(29*18));
+    ASSERT_EQ(SDLS_KEYV_CMD_SIZE, (size_t)(29 * 18));
     ASSERT_EQ(SDLS_KEYV_RPLY_BLK_SIZE, (size_t)50);
-    ASSERT_EQ(SDLS_KEYV_RPLY_SIZE, (size_t)(50*29));
+    ASSERT_EQ(SDLS_KEYV_RPLY_SIZE, (size_t)(50 * 29));
     ASSERT_EQ(SDLS_KEYDB_CMD_SIZE, (size_t)12);
     ASSERT_EQ(SDLS_KEYDB_RPLY_SIZE, (size_t)38);
     ASSERT_EQ(SDLS_SA_STATUS_RPLY_SIZE, (size_t)3);
     ASSERT_EQ(SDLS_SA_READ_ARSN_RPLY_SIZE, (size_t)22);
     ASSERT_EQ(SDLS_MC_LOG_RPLY_SIZE, (size_t)4);
     ASSERT_EQ(SDLS_MC_DUMP_RPLY_SIZE, (size_t)7);
-    ASSERT_EQ(SDLS_MC_DUMP_BLK_RPLY_SIZE, (size_t)(7*50));
+    ASSERT_EQ(SDLS_MC_DUMP_BLK_RPLY_SIZE, (size_t)(7 * 50));
     ASSERT_EQ(SDLS_MC_ST_RPLY_SIZE, (size_t)1);
     ASSERT_EQ(SDLS_MC_SN_RPLY_SIZE, (size_t)16);
     ASSERT_EQ(TC_FRAME_PRIMARYHEADER_STRUCT_SIZE, (size_t)5);

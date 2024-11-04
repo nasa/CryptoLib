@@ -1808,7 +1808,7 @@ UTEST(AOS_PROCESS, AOS_SA_NOT_OPERATIONAL)
 UTEST(AOS_PROCESS, AOS_OCF_TEST)
 {
     remove("sa_save_file.bin");
-    
+
     // Local Variables
     int32_t  status              = CRYPTO_LIB_SUCCESS;
     uint8_t *ptr_processed_frame = NULL;
@@ -1834,10 +1834,10 @@ UTEST(AOS_PROCESS, AOS_OCF_TEST)
     SecurityAssociation_t *sa_ptr = NULL;
     SaInterface            sa_if  = get_sa_interface_inmemory();
     sa_if->sa_get_from_spi(9, &sa_ptr); // Enable and setup 5
-    sa_ptr->sa_state = SA_OPERATIONAL;
-    sa_ptr->shivf_len = 0;
-    sa_ptr->gvcid_blk.tfvn = 1;
-    sa_ptr->gvcid_blk.vcid = 0;
+    sa_ptr->sa_state        = SA_OPERATIONAL;
+    sa_ptr->shivf_len       = 0;
+    sa_ptr->gvcid_blk.tfvn  = 1;
+    sa_ptr->gvcid_blk.vcid  = 0;
     sa_ptr->gvcid_blk.mapid = 0;
 
     status =
