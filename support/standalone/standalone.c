@@ -37,7 +37,8 @@ static volatile uint8_t tm_debug    = 0;
 */
 int32_t crypto_standalone_check_number_arguments(int actual, int expected)
 {
-    int32_t status = CRYPTO_LIB_SUCCESS;
+    int32_t status = 0;
+    status         = CRYPTO_LIB_SUCCESS;
     if (actual != expected)
     {
         status = CRYPTO_LIB_ERROR;
@@ -54,7 +55,6 @@ void crypto_standalone_to_lower(char *str)
         *ptr = tolower((unsigned char)*ptr);
         ptr++;
     }
-    return;
 }
 
 void crypto_standalone_print_help(void)
@@ -73,8 +73,9 @@ void crypto_standalone_print_help(void)
 
 int32_t crypto_standalone_get_command(const char *str)
 {
-    int32_t status = CRYPTO_CMD_UNKNOWN;
-    char    lcmd[CRYPTO_MAX_INPUT_TOKEN_SIZE];
+    int32_t status = 0;
+    status         = CRYPTO_CMD_UNKNOWN;
+    char lcmd[CRYPTO_MAX_INPUT_TOKEN_SIZE];
 
     strncpy(lcmd, str, CRYPTO_MAX_INPUT_TOKEN_SIZE);
     crypto_standalone_to_lower(lcmd);
@@ -145,7 +146,7 @@ int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char *
             {
                 uint8_t vcid = (uint8_t)atoi(&tokens[0]);
                 /* Confirm new VCID valid */
-                if (vcid < 64)
+                if (vcid < CRYPTO_STANDALONE_VCID_MAX)
                 {
                     SaInterface            sa_if            = get_sa_interface_inmemory();
                     SecurityAssociation_t *test_association = NULL;
@@ -241,10 +242,11 @@ int32_t crypto_host_to_ip(const char *hostname, char *ip)
 
 int32_t crypto_standalone_udp_init(udp_info_t *sock, int32_t port, uint8_t bind_sock)
 {
-    int       status = CRYPTO_LIB_SUCCESS;
-    int       optval;
-    socklen_t optlen;
+    int       status = 0;
+    int       optval = 0;
+    socklen_t optlen = 0;
 
+    status     = CRYPTO_LIB_SUCCESS;
     sock->port = port;
 
     /* Create */
@@ -262,7 +264,7 @@ int32_t crypto_standalone_udp_init(udp_info_t *sock, int32_t port, uint8_t bind_
     }
     else
     {
-        char ip[16];
+        char ip[CRYPTO_STANDALONE_IP_LEN];
         int  check = crypto_host_to_ip(sock->ip_address, ip);
         if (check == 0)
         {
@@ -292,7 +294,7 @@ int32_t crypto_standalone_udp_init(udp_info_t *sock, int32_t port, uint8_t bind_
 
 int32_t crypto_reset(void)
 {
-    int32_t status;
+    int32_t status = 0;
 
     status = Crypto_Shutdown();
     if (status != CRYPTO_LIB_SUCCESS)
@@ -311,38 +313,44 @@ int32_t crypto_reset(void)
 
 void crypto_standalone_tc_frame(uint8_t *in_data, uint16_t in_length, uint8_t *out_data, uint16_t *out_length)
 {
+    int byte_idx = 0;
+
     /* TC Length */
-    *out_length = (uint16_t)CRYPTO_STANDALONE_FRAMING_TC_DATA_LEN + 6;
+    *out_length = (uint16_t)CRYPTO_STANDALONE_FRAMING_TC_DATA_LEN + TC_FRAME_HEADER_SIZE + TC_SEGMENT_HDR_SIZE;
 
     /* TC Header */
-    out_data[0] = 0x20;
-    out_data[1] = CRYPTO_STANDALONE_FRAMING_SCID;
-    out_data[2] = ((tc_vcid << 2) & 0xFC) | (((uint16_t)CRYPTO_STANDALONE_FRAMING_TC_DATA_LEN >> 8) & 0x03);
-    out_data[3] = (uint16_t)CRYPTO_STANDALONE_FRAMING_TC_DATA_LEN & 0x00FF;
-    out_data[4] = tc_seq_num++;
+    out_data[byte_idx++] = CRYPTO_STANDALONE_FRAMING_BYPASS;
+    out_data[byte_idx++] = CRYPTO_STANDALONE_FRAMING_SCID;
+    out_data[byte_idx++] =
+        ((tc_vcid << 2) & CRYPTO_STANDALONE_FRAMING_VCID_MASK) |
+        (((uint16_t)CRYPTO_STANDALONE_FRAMING_TC_DATA_LEN >> BYTE_LEN) & CRYPTO_STANDALONE_FRAMING_SCID_F2BITS);
+    out_data[byte_idx++] = (uint16_t)CRYPTO_STANDALONE_FRAMING_TC_DATA_LEN & CRYPTO_STANDALONE_FRAMING_SCID_L8BITS;
+    out_data[byte_idx++] = tc_seq_num++;
 
     /* Segement Header */
-    out_data[5] = 0x00;
+    out_data[byte_idx++] = 0x00;
 
     /* SDLS Header */
 
     /* TC Data */
-    memcpy(&out_data[6], in_data, in_length);
+    memcpy(&out_data[byte_idx], in_data, in_length);
 
     /* SDLS Trailer */
 }
 
 void *crypto_standalone_tc_apply(void *socks)
 {
-    int32_t          status        = CRYPTO_LIB_SUCCESS;
+    int32_t          status        = 0;
     udp_interface_t *tc_socks      = (udp_interface_t *)socks;
     udp_info_t      *tc_read_sock  = &tc_socks->read;
     udp_info_t      *tc_write_sock = &tc_socks->write;
 
-    uint8_t  tc_apply_in[TC_MAX_FRAME_SIZE];
-    uint16_t tc_in_len = 0;
-    uint8_t *tc_out_ptr;
-    uint16_t tc_out_len = 0;
+    uint8_t  tc_apply_in[TC_MAX_FRAME_SIZE] = {0};
+    uint16_t tc_in_len                      = 0;
+    uint8_t *tc_out_ptr                     = NULL;
+    uint16_t tc_out_len                     = 0;
+
+    status = CRYPTO_LIB_SUCCESS;
 
 #ifdef CRYPTO_STANDALONE_HANDLE_FRAMING
     uint8_t tc_framed[TC_MAX_FRAME_SIZE];

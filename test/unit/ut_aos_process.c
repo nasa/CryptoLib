@@ -83,7 +83,7 @@ UTEST(AOS_PROCESS, NO_CONFIG)
         Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_h, framed_aos_len, &ptr_processed_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_ERR_NO_CONFIG, status);
 
-    char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
+    const char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
     ASSERT_STREQ("CRYPTO_LIB_ERR_NO_CONFIG", error_enum);
 
     free(framed_aos_b);
@@ -166,7 +166,7 @@ UTEST(AOS_PROCESS, NO_INIT)
         Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_h, framed_aos_len, &ptr_processed_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_ERR_NO_CONFIG, status);
 
-    char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
+    const char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
     ASSERT_STREQ("CRYPTO_LIB_ERR_NO_CONFIG", error_enum);
 
     free(framed_aos_b);

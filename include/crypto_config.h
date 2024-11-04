@@ -72,16 +72,16 @@
 #define SA_KEYED       2
 #define SA_OPERATIONAL 3
 // SA State Transitions
-#define SA_CREATE 5
-#define SA_REKEY  6
-#define SA_START  7
-#define SA_STOP   2
-#define SA_EXPIRE 1
-#define SA_DELETE 0
+#define SA_CREATE      5
+#define SA_REKEY       6
+#define SA_START       7
+#define SA_STOP        2
+#define SA_EXPIRE      1
+#define SA_DELETE      0
 // SA Additional Directives
-#define SA_STATUS   8
-#define SA_SETARSN  9
-#define SA_SETARSNW 10
+#define SA_STATUS      8
+#define SA_SETARSN     9
+#define SA_SETARSNW    10
 
 // Key State Defines
 #define KEY_PREACTIVE   0
@@ -97,9 +97,9 @@
 #define AES256_CBC_KEYLEN     32
 #define AES256_CCM_KEYLEN     32
 // ACS
-#define CMAC_AES256_KEYLEN 32
-#define HMAC_SHA256_KEYLEN 32
-#define HMAC_SHA512_KEYLEN 64
+#define CMAC_AES256_KEYLEN    32
+#define HMAC_SHA256_KEYLEN    32
+#define HMAC_SHA512_KEYLEN    64
 
 // SA Service Types
 #define SA_PLAINTEXT                0
@@ -140,8 +140,8 @@
 
 // Protocol Data Unit (PDU)
 // PDU Type
-#define PDU_TYPE_COMMAND 0
-#define PDU_TYPE_REPLY   1
+#define PDU_TYPE_COMMAND    0
+#define PDU_TYPE_REPLY      1
 // PDU User Flag
 #define PDU_USER_FLAG_TRUE  1
 #define PDU_USER_FLAG_FALSE 0
@@ -156,25 +156,25 @@
 #define PID_KEY_DESTRUCTION  0x06 // 0b0110
 #define PID_KEY_INVENTORY    0x07 // 0b0111
 // Service Group - Security Association Management
-#define SG_SA_MGMT    0x01 // 0b01
-#define PID_CREATE_SA 0x01 // 0b0001
-#define PID_REKEY_SA  0x06 // 0b0110
-#define PID_START_SA  0x0B // 0b1011
-#define PID_STOP_SA   0x0E // 0b1110
-#define PID_EXPIRE_SA 0x09 // 0b1001
-#define PID_DELETE_SA 0x04 // 0b0100
-#define PID_SET_ARSN  0x0A // 0b1010
-#define PID_SET_ARSNW 0x05 // 0b0101
-#define PID_READ_ARSN 0x00 // 0b0000
-#define PID_SA_STATUS 0x0F // 0b1111
+#define SG_SA_MGMT           0x01 // 0b01
+#define PID_CREATE_SA        0x01 // 0b0001
+#define PID_REKEY_SA         0x06 // 0b0110
+#define PID_START_SA         0x0B // 0b1011
+#define PID_STOP_SA          0x0E // 0b1110
+#define PID_EXPIRE_SA        0x09 // 0b1001
+#define PID_DELETE_SA        0x04 // 0b0100
+#define PID_SET_ARSN         0x0A // 0b1010
+#define PID_SET_ARSNW        0x05 // 0b0101
+#define PID_READ_ARSN        0x00 // 0b0000
+#define PID_SA_STATUS        0x0F // 0b1111
 // Service Group - Security Monitoring & Control
-#define SG_SEC_MON_CTRL 0x03 // 0b11
-#define PID_PING        0x01 // 0b0001
-#define PID_LOG_STATUS  0x02 // 0b0010
-#define PID_DUMP_LOG    0x03 // 0b0011
-#define PID_ERASE_LOG   0x04 // 0b0100
-#define PID_SELF_TEST   0x05 // 0b0101
-#define PID_ALARM_FLAG  0x07 // 0b0111
+#define SG_SEC_MON_CTRL      0x03 // 0b11
+#define PID_PING             0x01 // 0b0001
+#define PID_LOG_STATUS       0x02 // 0b0010
+#define PID_DUMP_LOG         0x03 // 0b0011
+#define PID_ERASE_LOG        0x04 // 0b0100
+#define PID_SELF_TEST        0x05 // 0b0101
+#define PID_ALARM_FLAG       0x07 // 0b0111
 
 // Procedure Identification (PID) - User Defined Commands
 #define PID_IDLE_FRAME_TRIGGER 0

@@ -184,10 +184,8 @@ int32_t Crypto_User_ModifyVCID(void)
         }
         for (j = 0; j < NUM_SA; j++)
         {
-
             if (sa_ptr->gvcid_blk.mapid == TYPE_TM)
             {
-
                 if (sa_ptr->gvcid_blk.vcid == tm_frame_pri_hdr.vcid) //.tm_header.vcid)
                 {
                     // TODO Check this

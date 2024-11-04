@@ -56,10 +56,16 @@ extern "C"
     //#define CRYPTO_STANDALONE_TC_APPLY_DEBUG
     //#define CRYPTO_STANDALONE_TM_PROCESS_DEBUG
 
+#define CRYPTO_STANDALONE_VCID_MAX 64
+#define CRYPTO_STANDALONE_IP_LEN   16
 #define CRYPTO_STANDALONE_HANDLE_FRAMING
-#define CRYPTO_STANDALONE_FRAMING_SCID        3
-#define CRYPTO_STANDALONE_FRAMING_VCID        0x00
-#define CRYPTO_STANDALONE_FRAMING_TC_DATA_LEN 512
+#define CRYPTO_STANDALONE_FRAMING_BYPASS      0x20
+#define CRYPTO_STANDALONE_FRAMING_SCID        0x03   // 10 bits
+#define CRYPTO_STANDALONE_FRAMING_SCID_F2BITS 0x03   // First 2 bits
+#define CRYPTO_STANDALONE_FRAMING_SCID_L8BITS 0x00FF // Last 8 bits
+#define CRYPTO_STANDALONE_FRAMING_VCID        0x00   // 6 bits
+#define CRYPTO_STANDALONE_FRAMING_VCID_MASK   0xFC
+#define CRYPTO_STANDALONE_FRAMING_TC_DATA_LEN 512 // 10 bits
 
 /*
 ** Can be used to reduce ground system error messages
@@ -113,10 +119,10 @@ extern "C"
     int32_t crypto_standalone_udp_init(udp_info_t *sock, int32_t port, uint8_t bind_sock);
     int32_t crypto_reset(void);
     void    crypto_standalone_tc_frame(uint8_t *in_data, uint16_t in_length, uint8_t *out_data, uint16_t *out_length);
-    void    *crypto_standalone_tc_apply(void *socks);
+    void   *crypto_standalone_tc_apply(void *socks);
     void    crypto_standalone_tm_frame(uint8_t *in_data, uint16_t in_length, uint8_t *out_data, uint16_t *out_length,
                                        uint16_t spi);
-    void    *crypto_standalone_tm_process(void *socks);
+    void   *crypto_standalone_tm_process(void *socks);
     void    crypto_standalone_cleanup(int signal);
 
 #ifdef __cplusplus

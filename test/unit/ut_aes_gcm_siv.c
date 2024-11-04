@@ -238,7 +238,6 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_DEC_TEST_1)
 
     for (int i = 0; i < tc_rfc_processed_frame->tc_pdu_len; i++)
     {
-
         if (buffer_rfc_pt_b[i + 5] != tc_rfc_processed_frame->tc_pdu[i])
         {
             printf("[%d]: %02x -> %02x \n", i, buffer_rfc_pt_b[i + 5], tc_rfc_processed_frame->tc_pdu[i]);

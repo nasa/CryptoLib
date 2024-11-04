@@ -50,7 +50,7 @@ UTEST(AOS_APPLY, NULL_BUFFER)
 
     ASSERT_EQ(CRYPTO_LIB_ERR_NULL_BUFFER, status);
 
-    char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
+    const char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
     ASSERT_STREQ("CRYPTO_LIB_ERR_NULL_BUFFER", error_enum);
     Crypto_Shutdown();
 }
@@ -68,7 +68,7 @@ UTEST(AOS_APPLY, NO_CONFIG)
 
     ASSERT_EQ(CRYPTO_LIB_ERR_NO_CONFIG, status);
 
-    char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
+    const char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
     ASSERT_STREQ("CRYPTO_LIB_ERR_NO_CONFIG", error_enum);
     Crypto_Shutdown();
 }
@@ -146,7 +146,7 @@ UTEST(AOS_APPLY, NO_INIT)
     status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
     ASSERT_EQ(CRYPTO_LIB_ERR_NO_CONFIG, status);
 
-    char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
+    const char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
     ASSERT_STREQ("CRYPTO_LIB_ERR_NO_CONFIG", error_enum);
 
     free(test_aos_b);
@@ -254,7 +254,7 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FECF)
 
     status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-    char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
+    const char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
     ASSERT_STREQ("CRYPTO_LIB_SUCCESS", error_enum);
     // Now, byte by byte verify the static frame in memory is what we expect (updated SPI and FECF)
     for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
@@ -379,7 +379,7 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FECF_LEFT_BLANK)
     status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-    char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
+    const char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
     ASSERT_STREQ("CRYPTO_LIB_SUCCESS", error_enum);
 
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
@@ -504,7 +504,7 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FHEC_FECF)
     status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-    char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
+    const char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
     ASSERT_STREQ("CRYPTO_LIB_SUCCESS", error_enum);
 
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
@@ -630,7 +630,7 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FHEC_OID_FECF)
     status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-    char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
+    const char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
     ASSERT_STREQ("CRYPTO_LIB_SUCCESS", error_enum);
 
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
@@ -767,7 +767,7 @@ UTEST(AOS_APPLY, AES_CMAC_256_TEST_BITMASK_1)
     status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-    char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
+    const char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
     ASSERT_STREQ("CRYPTO_LIB_SUCCESS", error_enum);
 
     // Now, byte by byte verify the static frame in memory is what we expect (updated SPI and FECF)
@@ -931,7 +931,7 @@ UTEST(AOS_APPLY, AES_CMAC_256_TEST_BITMASK_0)
     status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-    char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
+    const char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
     ASSERT_STREQ("CRYPTO_LIB_SUCCESS", error_enum);
 
     // Now, byte by byte verify the static frame in memory is what we expect (updated SPI and FECF)
@@ -1072,7 +1072,7 @@ UTEST(AOS_APPLY, AES_GCM)
     status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-    char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
+    const char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
     ASSERT_STREQ("CRYPTO_LIB_SUCCESS", error_enum);
 
     // Now, byte by byte verify the static frame in memory is what we expect (updated SPI and FECF)
@@ -1222,7 +1222,7 @@ UTEST(AOS_APPLY, AEAD_GCM_BITMASK_1)
     status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-    char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
+    const char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
     ASSERT_STREQ("CRYPTO_LIB_SUCCESS", error_enum);
 
     // Now, byte by byte verify the static frame in memory is what we expect (updated SPI and FECF)

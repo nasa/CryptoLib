@@ -1273,7 +1273,6 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
 
     if (sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_TRUE)
     {
-
         if (sa_service_type == SA_ENCRYPTION)
         {
             status = cryptography_if->cryptography_decrypt(p_new_dec_frame + byte_idx, // plaintext output

@@ -274,7 +274,6 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
                                     uint8_t *key, uint32_t len_key, SecurityAssociation_t *sa_ptr, uint8_t *iv,
                                     uint32_t iv_len, uint8_t *ecs, uint8_t padding, char *cam_cookies)
 {
-
     int32_t status = CRYPTO_LIB_SUCCESS;
     key            = key;     // Direct key input is not supported in KMC interface
     len_key        = len_key; // Direct key input is not supported in KMC interface
@@ -1206,7 +1205,6 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
         char *encrypt_endpoint_final = (char *)malloc(len_encrypt_endpoint);
         if (iv != NULL)
         {
-
             snprintf(encrypt_endpoint_final, len_encrypt_endpoint, encrypt_offset_endpoint, sa_ptr->ek_ref,
                      AES_GCM_TRANSFORMATION, iv_base64, aad_offset_str, mac_size_str);
         }

@@ -79,7 +79,7 @@ UTEST(TM_APPLY_SECURITY, NO_CRYPTO_INIT)
     status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b);
     ASSERT_EQ(CRYPTO_LIB_ERR_NO_CONFIG, status);
 
-    char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
+    const char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
     ASSERT_STREQ("CRYPTO_LIB_ERR_NO_CONFIG", error_enum);
     free(framed_tm_b);
     Crypto_Shutdown();
@@ -102,7 +102,7 @@ UTEST(TM_APPLY_SECURITY, NULL_BUFFER)
     status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b);
     ASSERT_EQ(CRYPTO_LIB_ERR_NULL_BUFFER, status);
 
-    char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
+    const char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
     ASSERT_STREQ("CRYPTO_LIB_ERR_NULL_BUFFER", error_enum);
     free(framed_tm_b);
     Crypto_Shutdown();
@@ -169,7 +169,7 @@ UTEST(TM_APPLY_SECURITY, NO_CONFIG)
     status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b);
     ASSERT_EQ(CRYPTO_LIB_ERR_NO_CONFIG, status);
 
-    char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
+    const char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
     ASSERT_STREQ("CRYPTO_LIB_ERR_NO_CONFIG", error_enum);
 
     free(framed_tm_b);

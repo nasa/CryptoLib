@@ -22,65 +22,65 @@
 #define CRYPTO_UNDEFINED_ERROR (char *)"CRYPTO_UNDEFINED_ERROR_CODE"
 
 const char *crypto_enum_errlist_core[] = {(char *)"CRYPTO_LIB_SUCCESS",
-                                    (char *)"CRYPTO_LIB_ERROR",
-                                    (char *)"CRYPTO_LIB_ERR_NO_INIT",
-                                    (char *)"CRYPTO_LIB_ERR_INVALID_TFVN",
-                                    (char *)"CRYPTO_LIB_ERR_INVALID_SCID",
-                                    (char *)"CRYPTO_LIB_ERR_INVALID_VCID",
-                                    (char *)"CRYPTO_LIB_ERR_INVALID_MAPID",
-                                    (char *)"CRYPTO_LIB_ERR_INVALID_CC_FLAG",
-                                    (char *)"CRYPTO_LIB_ERR_NO_OPERATIONAL_SA",
-                                    (char *)"CRYPTO_LIB_ERR_NULL_BUFFER",
-                                    (char *)"CRYPTO_LIB_ERR_UT_BYTE_MISMATCH",
-                                    (char *)"CRYPTO_LIB_ERR_NO_CONFIG",
-                                    (char *)"CRYPTO_LIB_ERR_INVALID_FECF",
-                                    (char *)"CRYPTO_LIB_ERR_ARSN_OUTSIDE_WINDOW",
-                                    (char *)"CRYPTO_LIB_ERR_LIBGCRYPT_ERROR",
-                                    (char *)"CRYPTO_LIB_ERR_AUTHENTICATION_ERROR",
-                                    (char *)"CRYPTO_LIB_ERR_NULL_IV",
-                                    (char *)"CRYPTO_LIB_ERR_NULL_ABM",
-                                    (char *)"CRYPTO_LIB_ERR_DECRYPT_ERROR",
-                                    (char *)"CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD",
-                                    (char *)"CRYPTO_LIB_ERR_MAC_RETRIEVAL_ERROR",
-                                    (char *)"CRYPTO_LIB_ERR_MAC_VALIDATION_ERROR",
-                                    (char *)"CRYPTO_LIB_ERR_INVALID_HEADER",
-                                    (char *)"CRYPTO_LIB_ERR_IV_OUTSIDE_WINDOW",
-                                    (char *)"CRYPTO_LIB_ERR_NULL_ARSN",
-                                    (char *)"CRYPTO_LIB_ERR_NULL_SA",
-                                    (char *)"CRYPTO_LIB_ERR_UNSUPPORTED_ACS",
-                                    (char *)"CRYPTO_LIB_ERR_ENCRYPTION_ERROR",
-                                    (char *)"CRYPTO_LIB_ERR_INVALID_SA_CONFIGURATION",
-                                    (char *)"CRYPTO_LIB_ERR_TC_FRAME_SIZE_EXCEEDS_MANAGED_PARAM_MAX_LIMIT",
-                                    (char *)"CRYPTO_LIB_ERR_TC_FRAME_SIZE_EXCEEDS_SPEC_LIMIT",
-                                    (char *)"CRYPTO_LIB_ERR_UNSUPPORTED_ECS",
-                                    (char *)"CRYPTO_LIB_ERR_KEY_LENGTH_ERROR",
-                                    (char *)"CRYPTO_LIB_ERR_NULL_ECS_PTR",
-                                    (char *)"CRYPTO_LIB_ERR_IV_NOT_SUPPORTED_FOR_ACS_ALGO",
-                                    (char *)"CRYPTO_LIB_ERR_NULL_CIPHERS",
-                                    (char *)"CRYPTO_LIB_ERR_NO_ECS_SET_FOR_ENCRYPTION_MODE",
-                                    (char *)"CRYPTO_LIB_ERR_IV_LEN_SHORTER_THAN_SEC_HEADER_LENGTH",
-                                    (char *)"CRYPTO_LIB_ERR_ARSN_LEN_SHORTER_THAN_SEC_HEADER_LENGTH",
-                                    (char *)"CRYPTO_LIB_ERR_FRAME_COUNTER_DOESNT_MATCH_SA",
-                                    (char *)"CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_TC_STANDARD",
-                                    (char *)"CRYPTO_LIB_ERR_INPUT_FRAME_LENGTH_SHORTER_THAN_FRAME_HEADERS_LENGTH",
-                                    (char *)"CRYPTO_LIB_ERR_UNSUPPORTED_ECS_MODE",
-                                    (char *)"CRYPTO_LIB_ERR_NULL_MODE_PTR",
-                                    (char *)"CRYPTO_LIB_ERR_UNSUPPORTED_MODE",
-                                    (char *)"CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_TM_STANDARD",
-                                    (char *)"CRYPTO_LIB_ERR_TC_ENUM_USED_FOR_TM_CONFIG",
-                                    (char *)"CRYPTO_LIB_ERR_KEY_ID_ERROR",
-                                    (char *)"CRYPTO_LIB_ERR_MC_INIT",
-                                    (char *)"CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_AOS_STANDARD",
-                                    (char *)"CRYPTO_LIB_ERR_TC_ENUM_USED_FOR_AOS_CONFIG",
-                                    (char *)"CRYPTO_LIB_ERR_INVALID_SA_SERVICE_TYPE",
-                                    (char *)"CRYPTO_LIB_ERR_FAIL_SA_SAVE",
-                                    (char *)"CRYPTO_LIB_ERR_FAIL_SA_LOAD",
-                                    (char *)"CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT",
-                                    (char *)"CRYPTO_LIB_ERR_KEY_VALIDATION",
-                                    (char *)"CRYPTO_LIB_ERR_SPI_INDEX_OOB",
-                                    (char *)"CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL",
-                                    (char *)"CRYPTO_LIB_ERR_IV_GREATER_THAN_MAX_LENGTH",
-                                    (char *)"CRYPTO_LIB_ERR_KEY_STATE_TRANSITION_ERROR"};
+                                          (char *)"CRYPTO_LIB_ERROR",
+                                          (char *)"CRYPTO_LIB_ERR_NO_INIT",
+                                          (char *)"CRYPTO_LIB_ERR_INVALID_TFVN",
+                                          (char *)"CRYPTO_LIB_ERR_INVALID_SCID",
+                                          (char *)"CRYPTO_LIB_ERR_INVALID_VCID",
+                                          (char *)"CRYPTO_LIB_ERR_INVALID_MAPID",
+                                          (char *)"CRYPTO_LIB_ERR_INVALID_CC_FLAG",
+                                          (char *)"CRYPTO_LIB_ERR_NO_OPERATIONAL_SA",
+                                          (char *)"CRYPTO_LIB_ERR_NULL_BUFFER",
+                                          (char *)"CRYPTO_LIB_ERR_UT_BYTE_MISMATCH",
+                                          (char *)"CRYPTO_LIB_ERR_NO_CONFIG",
+                                          (char *)"CRYPTO_LIB_ERR_INVALID_FECF",
+                                          (char *)"CRYPTO_LIB_ERR_ARSN_OUTSIDE_WINDOW",
+                                          (char *)"CRYPTO_LIB_ERR_LIBGCRYPT_ERROR",
+                                          (char *)"CRYPTO_LIB_ERR_AUTHENTICATION_ERROR",
+                                          (char *)"CRYPTO_LIB_ERR_NULL_IV",
+                                          (char *)"CRYPTO_LIB_ERR_NULL_ABM",
+                                          (char *)"CRYPTO_LIB_ERR_DECRYPT_ERROR",
+                                          (char *)"CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD",
+                                          (char *)"CRYPTO_LIB_ERR_MAC_RETRIEVAL_ERROR",
+                                          (char *)"CRYPTO_LIB_ERR_MAC_VALIDATION_ERROR",
+                                          (char *)"CRYPTO_LIB_ERR_INVALID_HEADER",
+                                          (char *)"CRYPTO_LIB_ERR_IV_OUTSIDE_WINDOW",
+                                          (char *)"CRYPTO_LIB_ERR_NULL_ARSN",
+                                          (char *)"CRYPTO_LIB_ERR_NULL_SA",
+                                          (char *)"CRYPTO_LIB_ERR_UNSUPPORTED_ACS",
+                                          (char *)"CRYPTO_LIB_ERR_ENCRYPTION_ERROR",
+                                          (char *)"CRYPTO_LIB_ERR_INVALID_SA_CONFIGURATION",
+                                          (char *)"CRYPTO_LIB_ERR_TC_FRAME_SIZE_EXCEEDS_MANAGED_PARAM_MAX_LIMIT",
+                                          (char *)"CRYPTO_LIB_ERR_TC_FRAME_SIZE_EXCEEDS_SPEC_LIMIT",
+                                          (char *)"CRYPTO_LIB_ERR_UNSUPPORTED_ECS",
+                                          (char *)"CRYPTO_LIB_ERR_KEY_LENGTH_ERROR",
+                                          (char *)"CRYPTO_LIB_ERR_NULL_ECS_PTR",
+                                          (char *)"CRYPTO_LIB_ERR_IV_NOT_SUPPORTED_FOR_ACS_ALGO",
+                                          (char *)"CRYPTO_LIB_ERR_NULL_CIPHERS",
+                                          (char *)"CRYPTO_LIB_ERR_NO_ECS_SET_FOR_ENCRYPTION_MODE",
+                                          (char *)"CRYPTO_LIB_ERR_IV_LEN_SHORTER_THAN_SEC_HEADER_LENGTH",
+                                          (char *)"CRYPTO_LIB_ERR_ARSN_LEN_SHORTER_THAN_SEC_HEADER_LENGTH",
+                                          (char *)"CRYPTO_LIB_ERR_FRAME_COUNTER_DOESNT_MATCH_SA",
+                                          (char *)"CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_TC_STANDARD",
+                                          (char *)"CRYPTO_LIB_ERR_INPUT_FRAME_LENGTH_SHORTER_THAN_FRAME_HEADERS_LENGTH",
+                                          (char *)"CRYPTO_LIB_ERR_UNSUPPORTED_ECS_MODE",
+                                          (char *)"CRYPTO_LIB_ERR_NULL_MODE_PTR",
+                                          (char *)"CRYPTO_LIB_ERR_UNSUPPORTED_MODE",
+                                          (char *)"CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_TM_STANDARD",
+                                          (char *)"CRYPTO_LIB_ERR_TC_ENUM_USED_FOR_TM_CONFIG",
+                                          (char *)"CRYPTO_LIB_ERR_KEY_ID_ERROR",
+                                          (char *)"CRYPTO_LIB_ERR_MC_INIT",
+                                          (char *)"CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_AOS_STANDARD",
+                                          (char *)"CRYPTO_LIB_ERR_TC_ENUM_USED_FOR_AOS_CONFIG",
+                                          (char *)"CRYPTO_LIB_ERR_INVALID_SA_SERVICE_TYPE",
+                                          (char *)"CRYPTO_LIB_ERR_FAIL_SA_SAVE",
+                                          (char *)"CRYPTO_LIB_ERR_FAIL_SA_LOAD",
+                                          (char *)"CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT",
+                                          (char *)"CRYPTO_LIB_ERR_KEY_VALIDATION",
+                                          (char *)"CRYPTO_LIB_ERR_SPI_INDEX_OOB",
+                                          (char *)"CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL",
+                                          (char *)"CRYPTO_LIB_ERR_IV_GREATER_THAN_MAX_LENGTH",
+                                          (char *)"CRYPTO_LIB_ERR_KEY_STATE_TRANSITION_ERROR"};
 
 const char *crypto_enum_errlist_config[] = {
     (char *)"CRYPTO_CONFIGURATION_NOT_COMPLETE",
@@ -142,8 +142,8 @@ const char *crypto_enum_errlist_crypto_cam[] = {
 ** @param: int32_t, int32_t, char*
 * @return: char*
 */
-char *Crypto_Get_Crypto_Error_Code_String(int32_t crypto_error_code, int32_t crypto_error_code_max,
-                                          char *valid_output_string)
+const char *Crypto_Get_Crypto_Error_Code_String(int32_t crypto_error_code, int32_t crypto_error_code_max,
+                                                const char *valid_output_string)
 {
     if (crypto_error_code < crypto_error_code_max)
     {
@@ -157,7 +157,8 @@ char *Crypto_Get_Crypto_Error_Code_String(int32_t crypto_error_code, int32_t cry
 ** @param: int32_t, int32_t, char*
 * @return: char*
 */
-char *Crypto_Get_Error_Code_String(int32_t crypto_error_code, int32_t crypto_error_code_max, char *valid_output_string)
+const char *Crypto_Get_Error_Code_String(int32_t crypto_error_code, int32_t crypto_error_code_max,
+                                         const char *valid_output_string)
 {
     if (crypto_error_code > crypto_error_code_max)
     {
@@ -171,9 +172,9 @@ char *Crypto_Get_Error_Code_String(int32_t crypto_error_code, int32_t crypto_err
 ** @param: int32_t
 * @return: char*
 */
-char *Crypto_Get_Error_Code_Enum_String(int32_t crypto_error_code)
+const char *Crypto_Get_Error_Code_Enum_String(int32_t crypto_error_code)
 {
-    char *return_string = CRYPTO_UNDEFINED_ERROR;
+    const char *return_string = CRYPTO_UNDEFINED_ERROR;
     if (crypto_error_code >= CAM_ERROR_CODES) // CAM Error Codes
     {
         return_string =
