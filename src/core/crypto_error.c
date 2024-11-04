@@ -21,7 +21,7 @@
 
 #define CRYPTO_UNDEFINED_ERROR (char *)"CRYPTO_UNDEFINED_ERROR_CODE"
 
-char *crypto_enum_errlist_core[] = {(char *)"CRYPTO_LIB_SUCCESS",
+const char *crypto_enum_errlist_core[] = {(char *)"CRYPTO_LIB_SUCCESS",
                                     (char *)"CRYPTO_LIB_ERROR",
                                     (char *)"CRYPTO_LIB_ERR_NO_INIT",
                                     (char *)"CRYPTO_LIB_ERR_INVALID_TFVN",
@@ -82,29 +82,29 @@ char *crypto_enum_errlist_core[] = {(char *)"CRYPTO_LIB_SUCCESS",
                                     (char *)"CRYPTO_LIB_ERR_IV_GREATER_THAN_MAX_LENGTH",
                                     (char *)"CRYPTO_LIB_ERR_KEY_STATE_TRANSITION_ERROR"};
 
-char *crypto_enum_errlist_config[] = {
+const char *crypto_enum_errlist_config[] = {
     (char *)"CRYPTO_CONFIGURATION_NOT_COMPLETE",
     (char *)"CRYPTO_MANAGED_PARAM_CONFIGURATION_NOT_COMPLETE",
     (char *)"CRYPTO_MARIADB_CONFIGURATION_NOT_COMPLETE",
     (char *)"MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND",
 };
 
-char *crypto_enum_errlist_sa_if[] = {
+const char *crypto_enum_errlist_sa_if[] = {
     (char *)"SADB_INVALID_SADB_TYPE",
     (char *)"SADB_NULL_SA_USED",
 };
-char *crypto_enum_errlist_sa_mariadb[] = {
+const char *crypto_enum_errlist_sa_mariadb[] = {
     (char *)"SADB_MARIADB_CONNECTION_FAILED",
     (char *)"SADB_QUERY_FAILED",
     (char *)"SADB_QUERY_EMPTY_RESULTS",
     (char *)"SADB_INSERT_FAILED",
 };
-char *crypto_enum_errlist_crypto_if[] = {
+const char *crypto_enum_errlist_crypto_if[] = {
     (char *)"CRYPTOGRAPHY_INVALID_CRYPTO_INTERFACE_TYPE",
     (char *)"CRYPTOGRAPHY_UNSUPPORTED_OPERATION_FOR_KEY_RING",
     (char *)"CRYPTOGRAPHY_LIBRARY_INITIALIZIATION_ERROR",
 };
-char *crypto_enum_errlist_crypto_kmc[] = {
+const char *crypto_enum_errlist_crypto_kmc[] = {
     (char *)"CRYPTOGRAPHY_KMC_CRYPTO_SERVICE_CONFIGURATION_NOT_COMPLETE",
     (char *)"CRYPTOGRAPHY_KMC_CURL_INITIALIZATION_FAILURE",
     (char *)"CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_CONNECTION_ERROR",
@@ -123,7 +123,7 @@ char *crypto_enum_errlist_crypto_kmc[] = {
     (char *)"CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_ENCRYPT_ERROR",
 };
 
-char *crypto_enum_errlist_crypto_cam[] = {
+const char *crypto_enum_errlist_crypto_cam[] = {
     (char *)"CAM_CONFIG_NOT_SUPPORTED_ERROR",
     (char *)"CAM_INVALID_COOKIE_FILE_CONFIGURATION_NULL",
     (char *)"CAM_AUTHENTICATION_FAILURE_REDIRECT",

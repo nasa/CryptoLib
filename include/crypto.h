@@ -95,10 +95,10 @@ extern int32_t Crypto_Init_AOS_Unit_Test(void); // Initialize CryptoLib with uni
 extern int32_t Crypto_Shutdown(void); // Free all allocated memory
 
 // Telecommand (TC)
-extern int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_frame_length,
+extern int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, uint16_t in_frame_length,
                                        uint8_t **pp_enc_frame, uint16_t *p_enc_frame_len);
 extern int32_t Crypto_TC_ProcessSecurity(uint8_t *ingest, int *len_ingest, TC_t *tc_sdls_processed_frame);
-extern int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, const uint16_t in_frame_length,
+extern int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, uint16_t in_frame_length,
                                            uint8_t **pp_enc_frame, uint16_t *p_enc_frame_len, char *cam_cookies);
 extern int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc_sdls_processed_frame,
                                              char *cam_cookies);
@@ -148,7 +148,7 @@ int32_t Crypto_TC_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
                              const uint8_t *p_in_frame, char *cam_cookies, uint32_t pkcs_padding,
                              uint16_t new_enc_frame_header_field_length, uint16_t *new_fecf);
 int32_t Crypto_TC_Check_Init_Setup(uint16_t in_frame_length);
-int32_t Crypto_TC_Sanity_Setup(const uint8_t *p_in_frame, const uint16_t in_frame_length);
+int32_t Crypto_TC_Sanity_Setup(const uint8_t *p_in_frame, uint16_t in_frame_length);
 int32_t Crytpo_TC_Validate_TC_Temp_Header(const uint16_t in_frame_length, TC_FramePrimaryHeader_t temp_tc_header,
                                           const uint8_t *p_in_frame, uint8_t *map_id, uint8_t *segmentation_hdr,
                                           SecurityAssociation_t **sa_ptr);
