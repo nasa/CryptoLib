@@ -45,7 +45,8 @@ int32_t Crypto_Key_OTAR(void)
     int         y;
     int32_t     status = CRYPTO_LIB_SUCCESS;
     // uint16_t pdu_len = (uint16_t) sdls_frame.pdu.hdr.pdu_len[1] << 8 | sdls_frame.pdu.hdr.pdu_len[0];
-    int           pdu_keys = (sdls_frame.pdu.hdr.pdu_len - SDLS_KEYID_LEN - SDLS_IV_LEN - MAC_SIZE) / (SDLS_KEYID_LEN + SDLS_KEY_LEN);
+    int pdu_keys =
+        (sdls_frame.pdu.hdr.pdu_len - SDLS_KEYID_LEN - SDLS_IV_LEN - MAC_SIZE) / (SDLS_KEYID_LEN + SDLS_KEY_LEN);
     int           w;
     crypto_key_t *ekp = NULL;
 
@@ -100,25 +101,26 @@ int32_t Crypto_Key_OTAR(void)
     }
 
     uint8_t ecs = CRYPTO_CIPHER_AES256_GCM;
-    status      = cryptography_if->cryptography_aead_decrypt(&(sdls_frame.pdu.data[14]), // plaintext output
-                                                             (size_t)(pdu_keys * (SDLS_KEYID_LEN + SDLS_KEY_LEN)), // length of data
-                                                             NULL,             // in place decryption
-                                                             0,                // in data length
-                                                             &(ekp->value[0]), // key
-                                                             ekp->key_len,     // key length
-                                                             NULL,             // SA reference
-                                                             &(packet.iv[0]),  // IV
-                                                             SDLS_IV_LEN,      // IV length
-                                                             &(packet.mac[0]), // tag input
-                                                             MAC_SIZE,         // tag size
-                                                             NULL,             // AAD
-                                                             0,                // AAD Length
-                                                             CRYPTO_TRUE,      // decrypt
-                                                             CRYPTO_TRUE,      // authenticate
-                                                             CRYPTO_FALSE,     // AAD Bool
-                                                             &ecs,             // encryption cipher
-                                                             NULL,             // authentication cipher
-                                                             NULL              // cam_cookies
+    status      = cryptography_if->cryptography_aead_decrypt(
+             &(sdls_frame.pdu.data[14]),                           // plaintext output
+             (size_t)(pdu_keys * (SDLS_KEYID_LEN + SDLS_KEY_LEN)), // length of data
+             NULL,                                                 // in place decryption
+             0,                                                    // in data length
+             &(ekp->value[0]),                                     // key
+             ekp->key_len,                                         // key length
+             NULL,                                                 // SA reference
+             &(packet.iv[0]),                                      // IV
+             SDLS_IV_LEN,                                          // IV length
+             &(packet.mac[0]),                                     // tag input
+             MAC_SIZE,                                             // tag size
+             NULL,                                                 // AAD
+             0,                                                    // AAD Length
+             CRYPTO_TRUE,                                          // decrypt
+             CRYPTO_TRUE,                                          // authenticate
+             CRYPTO_FALSE,                                         // AAD Bool
+             &ecs,                                                 // encryption cipher
+             NULL,                                                 // authentication cipher
+             NULL                                                  // cam_cookies
          );
 
     // Read in Decrypted Data
