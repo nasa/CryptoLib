@@ -636,48 +636,55 @@ int32_t crypto_free_config_structs(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
-    // free(crypto_config); //no strings in this struct, just free it.
-    crypto_config.init_status = UNITIALIZED;
+    if (crypto_config.init_status == UNITIALIZED)
+    {
+        status = CRYPTO_LIB_SUCCESS;
+    }
+    else
+    {
+        // free(crypto_config); //no strings in this struct, just free it.
+        crypto_config.init_status = UNITIALIZED;
 
-    // Config structs with char* types that are malloc'd and must be freed individually.
-    if (sa_mariadb_config != NULL)
-    {
-        free(sa_mariadb_config->mysql_username);
-        free(sa_mariadb_config->mysql_password);
-        free(sa_mariadb_config->mysql_hostname);
-        free(sa_mariadb_config->mysql_database);
-        free(sa_mariadb_config->mysql_mtls_cert);
-        free(sa_mariadb_config->mysql_mtls_key);
-        free(sa_mariadb_config->mysql_mtls_ca);
-        free(sa_mariadb_config->mysql_mtls_capath);
-        free(sa_mariadb_config->mysql_mtls_client_key_password);
-        free(sa_mariadb_config);
-        sa_mariadb_config = NULL;
-    }
-    if (cryptography_kmc_crypto_config != NULL)
-    {
-        free(cryptography_kmc_crypto_config->kmc_crypto_hostname);
-        free(cryptography_kmc_crypto_config->protocol);
-        free(cryptography_kmc_crypto_config->kmc_crypto_app_uri);
-        free(cryptography_kmc_crypto_config->mtls_client_cert_path);
-        free(cryptography_kmc_crypto_config->mtls_client_cert_type);
-        free(cryptography_kmc_crypto_config->mtls_client_key_path);
-        free(cryptography_kmc_crypto_config->mtls_client_key_pass);
-        free(cryptography_kmc_crypto_config->mtls_ca_bundle);
-        free(cryptography_kmc_crypto_config->mtls_ca_path);
-        free(cryptography_kmc_crypto_config->mtls_issuer_cert);
-        free(cryptography_kmc_crypto_config);
-        cryptography_kmc_crypto_config = NULL;
-    }
-    if (cam_config != NULL)
-    {
-        free(cam_config->cookie_file_path);
-        free(cam_config->keytab_file_path);
-        free(cam_config->access_manager_uri);
-        free(cam_config->username);
-        free(cam_config->cam_home);
-        free(cam_config);
-        cam_config = NULL;
+        // Config structs with char* types that are malloc'd and must be freed individually.
+        if (sa_mariadb_config != NULL)
+        {
+            free(sa_mariadb_config->mysql_username);
+            free(sa_mariadb_config->mysql_password);
+            free(sa_mariadb_config->mysql_hostname);
+            free(sa_mariadb_config->mysql_database);
+            free(sa_mariadb_config->mysql_mtls_cert);
+            free(sa_mariadb_config->mysql_mtls_key);
+            free(sa_mariadb_config->mysql_mtls_ca);
+            free(sa_mariadb_config->mysql_mtls_capath);
+            free(sa_mariadb_config->mysql_mtls_client_key_password);
+            free(sa_mariadb_config);
+            sa_mariadb_config = NULL;
+        }
+        if (cryptography_kmc_crypto_config != NULL)
+        {
+            free(cryptography_kmc_crypto_config->kmc_crypto_hostname);
+            free(cryptography_kmc_crypto_config->protocol);
+            free(cryptography_kmc_crypto_config->kmc_crypto_app_uri);
+            free(cryptography_kmc_crypto_config->mtls_client_cert_path);
+            free(cryptography_kmc_crypto_config->mtls_client_cert_type);
+            free(cryptography_kmc_crypto_config->mtls_client_key_path);
+            free(cryptography_kmc_crypto_config->mtls_client_key_pass);
+            free(cryptography_kmc_crypto_config->mtls_ca_bundle);
+            free(cryptography_kmc_crypto_config->mtls_ca_path);
+            free(cryptography_kmc_crypto_config->mtls_issuer_cert);
+            free(cryptography_kmc_crypto_config);
+            cryptography_kmc_crypto_config = NULL;
+        }
+        if (cam_config != NULL)
+        {
+            free(cam_config->cookie_file_path);
+            free(cam_config->keytab_file_path);
+            free(cam_config->access_manager_uri);
+            free(cam_config->username);
+            free(cam_config->cam_home);
+            free(cam_config);
+            cam_config = NULL;
+        }
     }
     return status;
 }
