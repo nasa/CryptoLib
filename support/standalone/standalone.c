@@ -113,7 +113,7 @@ int32_t crypto_standalone_get_command(const char *str)
 
 int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char *tokens)
 {
-    int32_t status = CRYPTO_LIB_SUCCESS;
+    int32_t status = 0;
 
     /* Process command */
     switch (cc)
@@ -222,8 +222,8 @@ int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char *
 
 int32_t crypto_host_to_ip(const char *hostname, char *ip)
 {
-    struct hostent  *he;
-    struct in_addr **addr_list;
+    struct hostent  *he = NULL;
+    struct in_addr **addr_list = NULL;
 
     if ((he = gethostbyname(hostname)) == NULL)
     {
@@ -578,7 +578,7 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status_p, uint8_t *tm_ptr, uin
 
 void *crypto_standalone_tm_process(void *socks)
 {
-    int32_t          status        = CRYPTO_LIB_SUCCESS;
+    int32_t          status        = 0;
     udp_interface_t *tm_socks      = (udp_interface_t *)socks;
     udp_info_t      *tm_read_sock  = &tm_socks->read;
     udp_info_t      *tm_write_sock = &tm_socks->write;
@@ -705,24 +705,23 @@ void crypto_standalone_cleanup(const int signal)
     /* Signal threads to stop */
     keepRunning = CRYPTO_LIB_ERROR;
     exit(signal);
-    return;
 }
 
 int main(int argc, char *argv[])
 {
-    int32_t status = CRYPTO_LIB_SUCCESS;
+    int32_t status = 0;
 
     char  input_buf[CRYPTO_MAX_INPUT_BUF];
     char  input_tokens[CRYPTO_MAX_INPUT_TOKENS][CRYPTO_MAX_INPUT_TOKEN_SIZE];
-    int   num_input_tokens;
-    int   cmd;
-    char *token_ptr;
+    int   num_input_tokens = 0;
+    int   cmd = 0;
+    char *token_ptr = NULL;
 
     udp_interface_t tc_apply;
     udp_interface_t tm_process;
 
-    pthread_t tc_apply_thread;
-    pthread_t tm_process_thread;
+    pthread_t tc_apply_thread = 0;
+    pthread_t tm_process_thread = 0;
 
     tc_apply.read.ip_address    = CRYPTOLIB_HOSTNAME;
     tc_apply.read.port          = TC_APPLY_PORT;
@@ -744,7 +743,7 @@ int main(int argc, char *argv[])
     signal(SIGINT, crypto_standalone_cleanup);
 
     /* Startup delay */
-    sleep(10);
+    sleep(CRYPTO_STANDALONE_STARTUP_DELAY);
     // printf("Press enter once ground software has finished initializing...\n");
     // fgets(input_buf, CRYPTO_MAX_INPUT_BUF, stdin);
 
