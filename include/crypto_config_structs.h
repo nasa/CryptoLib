@@ -116,6 +116,13 @@ typedef enum
     TM_NO_OCF,
     TM_HAS_OCF
 } OcfPresent;
+typedef enum
+{
+    MARIADB_TC_TABLE = 0,
+    MARIADB_TM_TABLE,
+    MARIADB_AOS_TABLE,
+    MARIADB_LEGACY_TABLE
+} MariadbTables;
 /***************************************
 ** TC specific enums
 ****************************************/
