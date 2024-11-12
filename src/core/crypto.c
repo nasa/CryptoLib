@@ -1216,27 +1216,27 @@ uint32_t Crypto_Get_FSR()
  * @param algo: uint8_t
  * @return int32: Key Length
  **/
-char* Crypto_Get_MariaDB_Table_Prefix(uint8_t table)
-{
-    char *retval = "";
+// char* Crypto_Get_MariaDB_Table_Prefix(uint8_t table)
+// {
+//     char retval[25];
 
-    switch (table)
-    {
-        case MARIADB_TC_TABLE:
-            retval = MARIADB_TC_TABLE_PREFIX;
-            break;
-        case MARIADB_TM_TABLE:
-            retval = MARIADB_TM_TABLE_PREFIX;
-            break;
-        case MARIADB_AOS_TABLE:
-            retval = MARIADB_AOS_TABLE_PREFIX;
-            break;
-        case MARIADB_LEGACY_TABLE:
-            retval = MARIADB_LEGACY_TABLE_PREFIX;
-            break;
-        default:
-            break;
-    }
+//     switch (table)
+//     {
+//         case MARIADB_TC_TABLE:
+//             retval = MARIADB_TC_TABLE_PREFIX;
+//             break;
+//         case MARIADB_TM_TABLE:
+//             retval = MARIADB_TM_TABLE_PREFIX;
+//             break;
+//         case MARIADB_AOS_TABLE:
+//             retval = MARIADB_AOS_TABLE_PREFIX;
+//             break;
+//         case MARIADB_LEGACY_TABLE:
+//             retval = MARIADB_LEGACY_TABLE_PREFIX;
+//             break;
+//         default:
+//             break;
+//     }
 
-    return retval;
-}
+//     return retval;
+// }

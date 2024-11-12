@@ -48,18 +48,18 @@ static const char *SQL_SADB_GET_SA_BY_SPI =
     "SELECT "
     "spi,ekid,akid,sa_state,tfvn,scid,vcid,mapid,lpid,est,ast,shivf_len,shsnf_len,shplf_len,stmacf_len,ecs_len,HEX(ecs)"
     ",HEX(iv),iv_len,acs_len,HEX(acs),abm_len,HEX(abm),arsn_len,HEX(arsn),arsnw"
-    " FROM %ssecurity_associations WHERE spi='%d'";
+    " FROM %s WHERE spi='%d'";
 static const char *SQL_SADB_GET_SA_BY_GVCID =
     "SELECT "
     "spi,ekid,akid,sa_state,tfvn,scid,vcid,mapid,lpid,est,ast,shivf_len,shsnf_len,shplf_len,stmacf_len,ecs_len,HEX(ecs)"
     ",HEX(iv),iv_len,acs_len,HEX(acs),abm_len,HEX(abm),arsn_len,HEX(arsn),arsnw"
-    " FROM %ssecurity_associations WHERE tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d' AND sa_state='%d'";
+    " FROM %s WHERE tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d' AND sa_state='%d'";
 static const char *SQL_SADB_UPDATE_IV_ARC_BY_SPI =
-    "UPDATE %ssecurity_associations"
+    "UPDATE %s"
     " SET iv=X'%s', arsn=X'%s'"
     " WHERE spi='%d' AND tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d'";
 static const char *SQL_SADB_UPDATE_IV_ARC_BY_SPI_NULL_IV =
-    "UPDATE %ssecurity_associations"
+    "UPDATE %s"
     " SET arsn=X'%s'"
     " WHERE spi='%d' AND tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d'";
 
@@ -187,11 +187,13 @@ static int32_t sa_get_from_spi(uint16_t spi, SecurityAssociation_t **security_as
     int32_t status = CRYPTO_LIB_SUCCESS;
 
     char spi_query[2048];
-    char* table_prefix = Crypto_Get_MariaDB_Table_Prefix(MARIADB_TC_TABLE);
-    snprintf(spi_query, sizeof(spi_query), SQL_SADB_GET_SA_BY_SPI, table_prefix, spi);
-
-    status = parse_sa_from_mysql_query(&spi_query[0], security_association);
-
+    char table[25];
+    status = query_all_tables(&table);
+    if (status == CRYPTO_LIB_SUCCESS)
+    {
+        snprintf(spi_query, sizeof(spi_query), SQL_SADB_GET_SA_BY_SPI, table, spi);
+        status = parse_sa_from_mysql_query(&spi_query[0], security_association);
+    }
     return status;
 }
 static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uint16_t vcid, uint8_t mapid,
@@ -200,12 +202,16 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
     int32_t status = CRYPTO_LIB_SUCCESS;
 
     char gvcid_query[2048];
-    char* table_prefix = Crypto_Get_MariaDB_Table_Prefix(MARIADB_TC_TABLE);
-    snprintf(gvcid_query, sizeof(gvcid_query), SQL_SADB_GET_SA_BY_GVCID, table_prefix, tfvn, scid, vcid, mapid,
-             SA_OPERATIONAL);
 
-    status = parse_sa_from_mysql_query(&gvcid_query[0], security_association);
+    char table[25];
+    status = query_all_tables(&table);
+    if (status == CRYPTO_LIB_SUCCESS)
+    {
+        snprintf(gvcid_query, sizeof(gvcid_query), SQL_SADB_GET_SA_BY_GVCID, table_prefix, tfvn, scid, vcid, mapid,
+                SA_OPERATIONAL);
 
+        status = parse_sa_from_mysql_query(&gvcid_query[0], security_association);
+    }
     return status;
 }
 static int32_t sa_save_sa(SecurityAssociation_t *sa)
@@ -226,41 +232,44 @@ static int32_t sa_save_sa(SecurityAssociation_t *sa)
 
     char *arsn_h = malloc(sa->arsn_len * 2 + 1);
     convert_byte_array_to_hexstring(sa->arsn, sa->arsn_len, arsn_h);
-    char* table_prefix = Crypto_Get_MariaDB_Table_Prefix(MARIADB_TC_TABLE);
-
-    if (sa->iv != NULL)
+    // insert table queries here, store in variable = table that returned correct response
+    char table[25];
+    status = query_all_tables(&table);
+    if (status == CRYPTO_LIB_SUCCESS)
     {
-        snprintf(update_sa_query, sizeof(update_sa_query), SQL_SADB_UPDATE_IV_ARC_BY_SPI, table_prefix, iv_h, arsn_h,
-                 sa->spi, sa->gvcid_blk.tfvn, sa->gvcid_blk.scid, sa->gvcid_blk.vcid, sa->gvcid_blk.mapid);
+        if (sa->iv != NULL)
+        {
+            snprintf(update_sa_query, sizeof(update_sa_query), SQL_SADB_UPDATE_IV_ARC_BY_SPI, table_prefix, iv_h, arsn_h,
+                    sa->spi, sa->gvcid_blk.tfvn, sa->gvcid_blk.scid, sa->gvcid_blk.vcid, sa->gvcid_blk.mapid);
 
-        free(iv_h);
-    }
-    else
-    {
-        snprintf(update_sa_query, sizeof(update_sa_query), SQL_SADB_UPDATE_IV_ARC_BY_SPI_NULL_IV, table_prefix, arsn_h,
-                 sa->spi, sa->gvcid_blk.tfvn, sa->gvcid_blk.scid, sa->gvcid_blk.vcid, sa->gvcid_blk.mapid);
-        free(iv_h);
-    }
+            free(iv_h);
+        }
+        else
+        {
+            snprintf(update_sa_query, sizeof(update_sa_query), SQL_SADB_UPDATE_IV_ARC_BY_SPI_NULL_IV, table_prefix, arsn_h,
+                    sa->spi, sa->gvcid_blk.tfvn, sa->gvcid_blk.scid, sa->gvcid_blk.vcid, sa->gvcid_blk.mapid);
+            free(iv_h);
+        }
 
-    free(arsn_h);
+        free(arsn_h);
 #ifdef SA_DEBUG
-    fprintf(stderr, "MySQL Insert SA Query: %s \n", update_sa_query);
+        fprintf(stderr, "MySQL Insert SA Query: %s \n", update_sa_query);
 #endif
 
-    // Crypto_saPrint(sa);
-    if (mysql_query(con, update_sa_query))
-    {
-        status = finish_with_error(&con, SADB_QUERY_FAILED);
+        // Crypto_saPrint(sa);
+        if (mysql_query(con, update_sa_query))
+        {
+            status = finish_with_error(&con, SADB_QUERY_FAILED);
+        }
+        // todo - if query fails, need to push failure message to error stack instead of just return code.
+
+        // We free the allocated SA memory in the save function.
+        if (sa->ek_ref[0] != '\0')
+            clean_ekref(sa);
+        if (sa->ak_ref[0] != '\0')
+            clean_akref(sa);
+        free(sa);
     }
-    // todo - if query fails, need to push failure message to error stack instead of just return code.
-
-    // We free the allocated SA memory in the save function.
-    if (sa->ek_ref[0] != '\0')
-        clean_ekref(sa);
-    if (sa->ak_ref[0] != '\0')
-        clean_akref(sa);
-    free(sa);
-
     return status;
 }
 // Security Association Utility Functions
@@ -588,4 +597,41 @@ static int32_t finish_with_error(MYSQL **con_loc, int err)
     mysql_close(*con_loc);
     *con_loc = NULL;
     return err;
+}
+
+static int32_t query_all_tables(char* table)
+{
+    int32_t status = 0;
+    char gvcid_query[2048];
+
+    char *tables[] = {MARIADB_TC_TABLE_PREFIX, MARIADB_TM_TABLE_PREFIX, MARIADB_AOS_TABLE_PREFIX};
+    char *mapid[]  = {TYPE_TC                , TYPE_TM                , TYPE_AOS};
+    for (int i = 0; i <= 2; i++)
+    {
+        snprintf(gvcid_query, sizeof(gvcid_query), SQL_SADB_GET_SA_BY_GVCID, tables[i], current_managed_parameters_struct.tfvn, current_managed_parameters_struct.scid, current_managed_parameters_struct.vcid, mapid[i],
+                SA_OPERATIONAL);
+
+        MYSQL_RES *result = mysql_store_result(con);
+
+        int num_rows = mysql_num_rows(result);
+        if (num_rows == 0)
+        {
+            continue;
+        }
+        else
+        {
+            if (status == CRYPTO_LIB_SUCCESS)
+            {
+                //Collision
+                return CRYPTO_LIB_ERROR;
+            }
+            else
+            {
+                status = CRYPTO_LIB_SUCCESS;
+                table = tables[i];
+            }
+        }
+    }
+
+    return status;
 }
