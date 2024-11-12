@@ -42,10 +42,10 @@
 #endif
 
 // KMC Defines
-#define MARIADB_TC_TABLE_PREFIX "TC_"
-#define MARIADB_TM_TABLE_PREFIX "TM_"
-#define MARIADB_AOS_TABLE_PREFIX "AOS_"
-#define MARIADB_LEGACY_TABLE_PREFIX ""
+#define MARIADB_TC_TABLE_PREFIX "TC_security_associations"
+#define MARIADB_TM_TABLE_PREFIX "TM_security_associations"
+#define MARIADB_AOS_TABLE_PREFIX "AOS_security_associations"
+#define MARIADB_LEGACY_TABLE_PREFIX "security_associations"
 
 // Managed Parameters Size
 #define GVCID_MAN_PARAM_SIZE 250
