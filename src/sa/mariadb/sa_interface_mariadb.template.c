@@ -207,7 +207,7 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
     status = query_all_tables(&table);
     if (status == CRYPTO_LIB_SUCCESS)
     {
-        snprintf(gvcid_query, sizeof(gvcid_query), SQL_SADB_GET_SA_BY_GVCID, table_prefix, tfvn, scid, vcid, mapid,
+        snprintf(gvcid_query, sizeof(gvcid_query), SQL_SADB_GET_SA_BY_GVCID, table, tfvn, scid, vcid, mapid,
                 SA_OPERATIONAL);
 
         status = parse_sa_from_mysql_query(&gvcid_query[0], security_association);
@@ -239,14 +239,14 @@ static int32_t sa_save_sa(SecurityAssociation_t *sa)
     {
         if (sa->iv != NULL)
         {
-            snprintf(update_sa_query, sizeof(update_sa_query), SQL_SADB_UPDATE_IV_ARC_BY_SPI, table_prefix, iv_h, arsn_h,
+            snprintf(update_sa_query, sizeof(update_sa_query), SQL_SADB_UPDATE_IV_ARC_BY_SPI, table, iv_h, arsn_h,
                     sa->spi, sa->gvcid_blk.tfvn, sa->gvcid_blk.scid, sa->gvcid_blk.vcid, sa->gvcid_blk.mapid);
 
             free(iv_h);
         }
         else
         {
-            snprintf(update_sa_query, sizeof(update_sa_query), SQL_SADB_UPDATE_IV_ARC_BY_SPI_NULL_IV, table_prefix, arsn_h,
+            snprintf(update_sa_query, sizeof(update_sa_query), SQL_SADB_UPDATE_IV_ARC_BY_SPI_NULL_IV, table, arsn_h,
                     sa->spi, sa->gvcid_blk.tfvn, sa->gvcid_blk.scid, sa->gvcid_blk.vcid, sa->gvcid_blk.mapid);
             free(iv_h);
         }
