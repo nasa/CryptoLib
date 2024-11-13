@@ -238,7 +238,6 @@ uint16_t       Crypto_Calc_CRC16(uint8_t *data, int size);
 int32_t        Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, uint8_t *iv);
 int32_t        Crypto_Get_ECS_Algo_Keylen(uint8_t algo);
 int32_t        Crypto_Get_ACS_Algo_Keylen(uint8_t algo);
-char*          Crypto_Get_MariaDB_Table_Prefix(uint8_t table);
 
 int32_t Crypto_Check_Anti_Replay_Verify_Pointers(SecurityAssociation_t *sa_ptr, uint8_t *arsn, uint8_t *iv);
 int32_t Crypto_Check_Anti_Replay_ARSNW(SecurityAssociation_t *sa_ptr, uint8_t *arsn, int8_t *arsn_valid);

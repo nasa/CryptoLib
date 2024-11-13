@@ -67,6 +67,7 @@ static const char *SQL_SADB_UPDATE_IV_ARC_BY_SPI_NULL_IV =
 static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **security_association);
 static int32_t convert_hexstring_to_byte_array(char *hexstr, uint8_t *byte_array);
 static void    convert_byte_array_to_hexstring(void *src_buffer, size_t buffer_length, char *dest_str);
+static int32_t parse_table_from_gvcid(char* table);
 
 /*
 ** Global Variables
@@ -188,7 +189,8 @@ static int32_t sa_get_from_spi(uint16_t spi, SecurityAssociation_t **security_as
 
     char spi_query[2048];
     char table[25];
-    status = query_all_tables(&table);
+    
+    status = parse_table_from_gvcid(&table);
     if (status == CRYPTO_LIB_SUCCESS)
     {
         snprintf(spi_query, sizeof(spi_query), SQL_SADB_GET_SA_BY_SPI, table, spi);
@@ -202,9 +204,9 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
     int32_t status = CRYPTO_LIB_SUCCESS;
 
     char gvcid_query[2048];
-
     char table[25];
-    status = query_all_tables(&table);
+
+    status = parse_table_from_gvcid(&table);
     if (status == CRYPTO_LIB_SUCCESS)
     {
         snprintf(gvcid_query, sizeof(gvcid_query), SQL_SADB_GET_SA_BY_GVCID, table, tfvn, scid, vcid, mapid,
@@ -232,9 +234,9 @@ static int32_t sa_save_sa(SecurityAssociation_t *sa)
 
     char *arsn_h = malloc(sa->arsn_len * 2 + 1);
     convert_byte_array_to_hexstring(sa->arsn, sa->arsn_len, arsn_h);
-    // insert table queries here, store in variable = table that returned correct response
+    
     char table[25];
-    status = query_all_tables(&table);
+    status = parse_table_from_gvcid(&table);
     if (status == CRYPTO_LIB_SUCCESS)
     {
         if (sa->iv != NULL)
@@ -599,39 +601,24 @@ static int32_t finish_with_error(MYSQL **con_loc, int err)
     return err;
 }
 
-static int32_t query_all_tables(char* table)
+static int32_t parse_table_from_gvcid(char* table)
 {
     int32_t status = 0;
-    char gvcid_query[2048];
-
-    char *tables[] = {MARIADB_TC_TABLE_PREFIX, MARIADB_TM_TABLE_PREFIX, MARIADB_AOS_TABLE_PREFIX};
-    char *mapid[]  = {TYPE_TC                , TYPE_TM                , TYPE_AOS};
-    for (int i = 0; i <= 2; i++)
+    if (current_managed_parameters->has_fecf == TC_HAS_FECF || current_managed_parameters->has_fecf == TC_NO_FECF)
     {
-        snprintf(gvcid_query, sizeof(gvcid_query), SQL_SADB_GET_SA_BY_GVCID, tables[i], current_managed_parameters_struct.tfvn, current_managed_parameters_struct.scid, current_managed_parameters_struct.vcid, mapid[i],
-                SA_OPERATIONAL);
-
-        MYSQL_RES *result = mysql_store_result(con);
-
-        int num_rows = mysql_num_rows(result);
-        if (num_rows == 0)
-        {
-            continue;
-        }
-        else
-        {
-            if (status == CRYPTO_LIB_SUCCESS)
-            {
-                //Collision
-                return CRYPTO_LIB_ERROR;
-            }
-            else
-            {
-                status = CRYPTO_LIB_SUCCESS;
-                table = tables[i];
-            }
-        }
+        table = MARIADB_TC_TABLE_NAME;
     }
-
+    else if (current_managed_parameters->has_fecf == TM_HAS_FECF || current_managed_parameters->has_fecf == TM_NO_FECF)
+    {
+        table = MARIADB_TM_TABLE_NAME;
+    }
+    else if (current_managed_parameters->has_fecf == AOS_HAS_FECF || current_managed_parameters->has_fecf == AOS_NO_FECF)
+    {
+        table = MARIADB_AOS_TABLE_NAME;
+    }
+    else
+    {
+        status = CRYPTO_LIB_ERROR;
+    }
     return status;
 }
