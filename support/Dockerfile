@@ -27,9 +27,9 @@ RUN apt-get update -y \
         ca-certificates \
         cmake \
         curl \
+        gdb \
         gettext \
         git \
-        gdb\
         lcov \
         libcurl4-openssl-dev \
         libmariadb-dev \
