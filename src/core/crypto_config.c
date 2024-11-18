@@ -306,12 +306,9 @@ int32_t Crypto_Init(void)
         {
             cryptography_if = get_cryptography_interface_custom();
         }
-        if (cryptography_if == NULL)
+        if (cryptography_if == NULL && cryptography_kmc_crypto_config != NULL)
         { // Note this needs to be the last option in the chain due to addition configuration required
-            if (cryptography_kmc_crypto_config != NULL)
-            {
-                cryptography_if = get_cryptography_interface_kmc_crypto_service();
-            }
+            cryptography_if = get_cryptography_interface_kmc_crypto_service();
         }
         if (cryptography_if == NULL)
         {

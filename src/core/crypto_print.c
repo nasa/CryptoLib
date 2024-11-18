@@ -211,69 +211,75 @@ void Crypto_ccsdsPrint(CCSDS_t *sdls_frame)
 void Crypto_saPrint(SecurityAssociation_t *sa)
 {
     int i;
+    if (sa->spi < NUM_SA)
+    {
+        printf("SA status: \n");
+        printf("\t spi   = %d \n", sa->spi);
+        printf("\t sa_state   = 0x%01x \n", sa->sa_state);
+        // printf("\t gvcid[0]   = 0x%02x \n", sa->gvcid_blk[spi].gvcid[0]);
+        // printf("\t gvcid[1]   = 0x%02x \n", sa->gvcid_blk[spi].gvcid[1]);
+        // printf("\t gvcid[2]   = 0x%02x \n", sa->gvcid_blk[spi].gvcid[2]);
+        // printf("\t gvcid[3]   = 0x%02x \n", sa->gvcid_blk[spi].gvcid[3]);
+        printf("\t est        = 0x%01x \n", sa->est);
+        printf("\t ast        = 0x%01x \n", sa->ast);
+        printf("\t shivf_len  = %d \n", sa->shivf_len);
+        printf("\t shsnf_len  = %d \n", sa->shsnf_len);
+        printf("\t shplf_len  = %d \n", sa->shplf_len);
+        printf("\t stmacf_len = %d \n", sa->stmacf_len);
+        printf("\t ecs_len    = %d \n", sa->ecs_len);
+        if (sa->ecs_len > 0)
+        {
+            for (i = 0; i < sa->ecs_len; i++)
+            {
+                printf("\t ecs[%d]     = 0x%02x \n", i, (sa->ecs + i));
+            }
+        }
+        printf("\t ekid       = %d \n", sa->ekid);
+        printf("\t ek_ref     = %s \n", sa->ek_ref);
+        printf("\t akid       = %d \n", sa->akid);
+        printf("\t ak_ref     = %s \n", sa->ak_ref);
+        printf("\t iv_len     = %d \n", sa->iv_len);
+        if (sa->iv_len > 0)
+        {
+            for (i = 0; i < sa->iv_len; i++)
+            {
+                printf("\t iv[%d]      = 0x%02x \n", i, *(sa->iv + i));
+            }
+        }
+        else
+        {
+            printf("\t iv        = %s \n", sa->iv);
+        }
+        printf("\t acs_len    = %d \n", sa->acs_len);
+        printf("\t acs        = 0x%02x \n", sa->acs);
+        printf("\t abm_len    = %d \n", sa->abm_len);
+        if (sa->abm_len > 0)
+        {
+            printf("\t abm        = ");
+            for (i = 0; i < sa->abm_len; i++)
+            {
+                printf("%02x", *(sa->abm + i));
+            }
+            printf("\n");
+        }
+        printf("\t arsn_len    = %d \n", sa->arsn_len);
+        if (sa->arsn_len > 0)
+        {
+            printf("\t arsn        = ");
+            for (i = 0; i < sa->arsn_len; i++)
+            {
+                printf("%02x", *(sa->arsn + i));
+            }
+            printf("\n");
+        }
 
-    printf("SA status: \n");
-    printf("\t spi   = %d \n", sa->spi);
-    printf("\t sa_state   = 0x%01x \n", sa->sa_state);
-    // printf("\t gvcid[0]   = 0x%02x \n", sa->gvcid_blk[spi].gvcid[0]);
-    // printf("\t gvcid[1]   = 0x%02x \n", sa->gvcid_blk[spi].gvcid[1]);
-    // printf("\t gvcid[2]   = 0x%02x \n", sa->gvcid_blk[spi].gvcid[2]);
-    // printf("\t gvcid[3]   = 0x%02x \n", sa->gvcid_blk[spi].gvcid[3]);
-    printf("\t est        = 0x%01x \n", sa->est);
-    printf("\t ast        = 0x%01x \n", sa->ast);
-    printf("\t shivf_len  = %d \n", sa->shivf_len);
-    printf("\t shsnf_len  = %d \n", sa->shsnf_len);
-    printf("\t shplf_len  = %d \n", sa->shplf_len);
-    printf("\t stmacf_len = %d \n", sa->stmacf_len);
-    printf("\t ecs_len    = %d \n", sa->ecs_len);
-    if (sa->ecs_len > 0)
-    {
-        for (i = 0; i < sa->ecs_len; i++)
-        {
-            printf("\t ecs[%d]     = 0x%02x \n", i, (sa->ecs + i));
-        }
-    }
-    printf("\t ekid       = %d \n", sa->ekid);
-    printf("\t ek_ref     = %s \n", sa->ek_ref);
-    printf("\t akid       = %d \n", sa->akid);
-    printf("\t ak_ref     = %s \n", sa->ak_ref);
-    printf("\t iv_len     = %d \n", sa->iv_len);
-    if (sa->iv_len > 0)
-    {
-        for (i = 0; i < sa->iv_len; i++)
-        {
-            printf("\t iv[%d]      = 0x%02x \n", i, *(sa->iv + i));
-        }
+        printf("\t arsnw_len   = %d \n", sa->arsnw_len);
+        printf("\t arsnw       = %d \n", sa->arsnw);
     }
     else
     {
-        printf("\t iv        = %s \n", sa->iv);
+        printf("SPI %d does not exist\n", sa->spi);
     }
-    printf("\t acs_len    = %d \n", sa->acs_len);
-    printf("\t acs        = 0x%02x \n", sa->acs);
-    printf("\t abm_len    = %d \n", sa->abm_len);
-    if (sa->abm_len > 0)
-    {
-        printf("\t abm        = ");
-        for (i = 0; i < sa->abm_len; i++)
-        {
-            printf("%02x", *(sa->abm + i));
-        }
-        printf("\n");
-    }
-    printf("\t arsn_len    = %d \n", sa->arsn_len);
-    if (sa->arsn_len > 0)
-    {
-        printf("\t arsn        = ");
-        for (i = 0; i < sa->arsn_len; i++)
-        {
-            printf("%02x", *(sa->arsn + i));
-        }
-        printf("\n");
-    }
-
-    printf("\t arsnw_len   = %d \n", sa->arsnw_len);
-    printf("\t arsnw       = %d \n", sa->arsnw);
 }
 
 /**

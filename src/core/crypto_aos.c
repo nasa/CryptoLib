@@ -86,7 +86,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
     printf("\tVCID: 0x%04X", vcid);
     printf("\tMAP: %d\n", 0);
     printf("\tPriHdr as follows:\n\t\t");
-    for (int i = 0; i < 6; i++)
+    for (i = 0; i < 6; i++)
     {
         printf("%02X", (uint8_t)pTfBuffer[i]);
     }
@@ -120,7 +120,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
 
 #ifdef AOS_DEBUG
     printf(KYEL "AOS BEFORE Apply Sec:\n\t" RESET);
-    for (int16_t i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
     {
         printf("%02X", pTfBuffer[i]);
     }
@@ -179,6 +179,9 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
             break;
         case SA_AUTHENTICATED_ENCRYPTION:
             printf(KBLU "Creating a SDLS AOS - AUTHENTICATED ENCRYPTION!\n" RESET);
+            break;
+        default:
+            printf(KRED "Failed interpreting SA Service Type\n" RESET);
             break;
     }
 #endif
@@ -241,20 +244,18 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
         return status;
     }
 
-    if (sa_ptr->est == 0 && sa_ptr->ast == 1)
+    if (sa_ptr->est == 0 && sa_ptr->ast == 1 && sa_ptr->acs_len != 0)
     {
-        if (sa_ptr->acs_len != 0)
+        if ((sa_ptr->acs == CRYPTO_MAC_CMAC_AES256 || sa_ptr->acs == CRYPTO_MAC_HMAC_SHA256 ||
+            sa_ptr->acs == CRYPTO_MAC_HMAC_SHA512) &&
+            sa_ptr->iv_len > 0)
         {
-            if ((sa_ptr->acs == CRYPTO_MAC_CMAC_AES256 || sa_ptr->acs == CRYPTO_MAC_HMAC_SHA256 ||
-                 sa_ptr->acs == CRYPTO_MAC_HMAC_SHA512) &&
-                sa_ptr->iv_len > 0)
-            {
-                status = CRYPTO_LIB_ERR_IV_NOT_SUPPORTED_FOR_ACS_ALGO;
-                mc_if->mc_log(status);
-                return status;
-            }
+            status = CRYPTO_LIB_ERR_IV_NOT_SUPPORTED_FOR_ACS_ALGO;
+            mc_if->mc_log(status);
+            return status;
         }
     }
+    
     // Start index from the transmitted portion
     for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
     {
@@ -297,8 +298,8 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
 
         // Byte Magic
         hex_padding[0] = (pkcs_padding >> 16) & 0xFF;
-        hex_padding[1] = (pkcs_padding >> 8) & 0xFF;
-        hex_padding[2] = (pkcs_padding)&0xFF;
+        hex_padding[1] = (pkcs_padding >> 8)  & 0xFF;
+        hex_padding[2] =  pkcs_padding        & 0xFF;
 
         uint8_t padding_start = 0;
         padding_start         = 3 - sa_ptr->shplf_len;
@@ -619,7 +620,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
 
 #ifdef AOS_DEBUG
     printf(KYEL "Printing new AOS frame:\n\t");
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
     {
         printf("%02X", pTfBuffer[i]);
     }
@@ -1063,6 +1064,9 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
         case SA_AUTHENTICATED_ENCRYPTION:
             printf(KBLU "Processing a AOS - AUTHENTICATED ENCRYPTION!\n" RESET);
             break;
+        default:
+            printf(KRED "Failed interpreting SA Service Type\n" RESET);
+            break;
     }
 #endif
 
@@ -1113,7 +1117,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     }
 
     // Accio buffer
-    p_new_dec_frame = (uint8_t *)calloc(1, (len_ingest) * sizeof(uint8_t));
+    p_new_dec_frame = (uint8_t *)calloc(1, len_ingest * sizeof(uint8_t));
     if (!p_new_dec_frame)
     {
 #ifdef DEBUG
@@ -1166,7 +1170,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
 
     // Calculate size of the protocol data unit
     // NOTE: This size itself is not the length for authentication
-    pdu_len = current_managed_parameters_struct.max_frame_size - (byte_idx)-sa_ptr->stmacf_len;
+    pdu_len = current_managed_parameters_struct.max_frame_size - byte_idx - sa_ptr->stmacf_len;
     if (current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
     {
         pdu_len -= 4;
@@ -1378,7 +1382,6 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     else if (sa_service_type == SA_PLAINTEXT)
     {
         memcpy(p_new_dec_frame + byte_idx, &(p_ingest[byte_idx]), pdu_len);
-        byte_idx += pdu_len;
     }
 
 #ifdef AOS_DEBUG

@@ -265,7 +265,7 @@ uint8_t Crypto_Prep_Reply(uint8_t *reply, uint8_t appID)
 
     // Fill reply with reply header
     reply[count++] = (sdls_frame.hdr.pvn << 5) | (sdls_frame.hdr.type << 4) | (sdls_frame.hdr.shdr << 3) |
-                     ((sdls_frame.hdr.appID & 0x700 >> 8));
+                     (sdls_frame.hdr.appID & 0x700 >> 8);
     reply[count++] = (sdls_frame.hdr.appID & 0x00FF);
     reply[count++] = (sdls_frame.hdr.seq << 6) | ((sdls_frame.hdr.pktid & 0x3F00) >> 8);
     reply[count++] = (sdls_frame.hdr.pktid & 0x00FF);
@@ -442,12 +442,24 @@ int32_t Crypto_PDU(uint8_t *ingest, TC_t *tc_frame)
                                 break;
                         }
                         break;
+                    
+                    default: // ERROR
+#ifdef PDU_DEBUG
+                                printf(KRED "Error: Crypto_PDU failed interpreting User Flag! \n" RESET);
+#endif
+                        break;
                 }
                 break;
 
             case PDU_TYPE_REPLY:
 #ifdef PDU_DEBUG
                 printf(KRED "Error: Crypto_PDU failed interpreting PDU Type!  Received a Reply!?! \n" RESET);
+#endif
+                break;
+
+            default:
+#ifdef PDU_DEBUG
+                printf(KRED "Error: Crypto_PDU failed interpreting PDU Type!\n" RESET);
 #endif
                 break;
         }

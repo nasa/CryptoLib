@@ -395,6 +395,7 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
     uint8_t ciphertext_found     = CRYPTO_FALSE;
     char   *ciphertext_base64    = NULL;
     char   *ciphertext_IV_base64 = NULL;
+    uint8_t *save_ptr;
     for (json_idx = 1; json_idx < parse_result; json_idx++)
     {
         if (jsoneq(chunk_write->response, &t[json_idx], "metadata") == 0)
@@ -407,15 +408,15 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
             char *line;
             char *token;
             char  temp_buff[256];
-            for (line = strtok(ciphertext_IV_base64, ","); line != NULL; line = strtok(line + strlen(line) + 1, ","))
+            for (line = __strtok_r(ciphertext_IV_base64, ",", save_ptr); line != NULL; line = __strtok_r(line + strlen(line) + 1, ",", save_ptr))
             {
                 strncpy(temp_buff, line, sizeof(temp_buff));
 
-                for (token = strtok(temp_buff, ":"); token != NULL; token = strtok(token + strlen(token) + 1, ":"))
+                for (token = __strtok_r(temp_buff, ":", save_ptr); token != NULL; token = strtok_r(token + strlen(token) + 1, ":", save_ptr))
                 {
                     if (strcmp(token, "initialVector") == 0)
                     {
-                        token                          = strtok(token + strlen(token) + 1, ":");
+                        token                          = __strtok_r(token + strlen(token) + 1, ":", save_ptr);
                         char  *ciphertext_token_base64 = malloc(strlen(token));
                         size_t cipher_text_token_len   = strlen(token);
                         memcpy(ciphertext_token_base64, token, cipher_text_token_len);
@@ -1356,10 +1357,11 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
         return status;
     }
 
-    int     json_idx             = 0;
-    uint8_t ciphertext_found     = CRYPTO_FALSE;
-    char   *ciphertext_base64    = NULL;
-    char   *ciphertext_IV_base64 = NULL;
+    int      json_idx             = 0;
+    uint8_t  ciphertext_found     = CRYPTO_FALSE;
+    char    *ciphertext_base64    = NULL;
+    char    *ciphertext_IV_base64 = NULL;
+    uint8_t *save_ptr;
     for (json_idx = 1; json_idx < parse_result; json_idx++)
     {
         if (jsoneq(chunk_write->response, &t[json_idx], "metadata") == 0)
@@ -1373,15 +1375,15 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
             char *line;
             char *token;
             char  temp_buff[256];
-            for (line = strtok(ciphertext_IV_base64, ","); line != NULL; line = strtok(line + strlen(line) + 1, ","))
+            for (line = __strtok_r(ciphertext_IV_base64, ",", save_ptr); line != NULL; line = __strtok_r(line + strlen(line) + 1, ",", save_ptr))
             {
                 strncpy(temp_buff, line, sizeof(temp_buff));
 
-                for (token = strtok(temp_buff, ":"); token != NULL; token = strtok(token + strlen(token) + 1, ":"))
+                for (token = __strtok_r(temp_buff, ":", save_ptr); token != NULL; token = __strtok_r(token + strlen(token) + 1, ":", save_ptr))
                 {
                     if (strcmp(token, "initialVector") == 0)
                     {
-                        token                          = strtok(token + strlen(token) + 1, ":");
+                        token                          = __strtok_r(token + strlen(token) + 1, ":", save_ptr);
                         char  *ciphertext_token_base64 = malloc(strlen(token));
                         size_t cipher_text_token_len   = strlen(token);
                         memcpy(ciphertext_token_base64, token, cipher_text_token_len);

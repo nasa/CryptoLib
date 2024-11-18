@@ -213,7 +213,7 @@ char *Crypto_Get_Error_Code_Enum_String(int32_t crypto_error_code)
     {
         return_string = Crypto_Get_Crypto_Error_Code_String(
             crypto_error_code, CRYPTO_CORE_ERROR_CODES_MAX,
-            crypto_enum_errlist_core[(crypto_error_code * (-1))]); // Cryptolib uses negative error return codes.
+            crypto_enum_errlist_core[crypto_error_code * (-1)]); // Cryptolib uses negative error return codes.
     }
     return return_string;
 }
