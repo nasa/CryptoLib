@@ -50,12 +50,12 @@ int32_t Crypto_Key_OTAR(void)
     crypto_key_t *ekp = NULL;
 
     // Master Key ID
-    packet.mkid = (sdls_frame.pdu.data[0] << 8) | (sdls_frame.pdu.data[1]);
+    packet.mkid = (sdls_frame.pdu.data[0] << BYTE_LEN) | (sdls_frame.pdu.data[1]);
 #ifdef DEBUG
     printf("# PDU Keys: %d\n", pdu_keys);
     printf("MKID: %d\n", packet.mkid);
 #endif
-    if (packet.mkid >= 128)
+    if (packet.mkid >= MKID_MAX)
     {
         report.af = 1;
         if (log_summary.rs > 0)
@@ -76,11 +76,11 @@ int32_t Crypto_Key_OTAR(void)
         return status;
     }
 
-    for (count = 2; count < (2 + SDLS_IV_LEN); count++)
+    for (count = SDLS_OTAR_IV_OFFSET; count < (SDLS_OTAR_IV_OFFSET + SDLS_IV_LEN); count++)
     { // Initialization Vector
-        packet.iv[count - 2] = sdls_frame.pdu.data[count];
+        packet.iv[count - SDLS_OTAR_IV_OFFSET] = sdls_frame.pdu.data[count];
 #ifdef DEBUG
-        printf("packet.iv[%d] = 0x%02x\n", count - 2, packet.iv[count - 2]);
+        printf("packet.iv[%d] = 0x%02x\n", count - SDLS_OTAR_IV_OFFSET, packet.iv[count - SDLS_OTAR_IV_OFFSET]);
 #endif
     }
 
@@ -124,8 +124,8 @@ int32_t Crypto_Key_OTAR(void)
     // Read in Decrypted Data
     for (count = 14; x < pdu_keys; x++)
     { // Encrypted Key Blocks
-        packet.EKB[x].ekid = (sdls_frame.pdu.data[count] << 8) | (sdls_frame.pdu.data[count + 1]);
-        if (packet.EKB[x].ekid < 128)
+        packet.EKB[x].ekid = (sdls_frame.pdu.data[count] << BYTE_LEN) | (sdls_frame.pdu.data[count + 1]);
+        if (packet.EKB[x].ekid < CRYPTOLIB_APPID)
         {
             report.af = 1;
             if (log_summary.rs > 0)
@@ -213,7 +213,7 @@ int32_t Crypto_Key_update(uint8_t state)
     // Read in PDU
     for (x = 0; x < pdu_keys; x++)
     {
-        packet.kblk[x].kid = (sdls_frame.pdu.data[count] << 8) | (sdls_frame.pdu.data[count + 1]);
+        packet.kblk[x].kid = (sdls_frame.pdu.data[count] << BYTE_LEN) | (sdls_frame.pdu.data[count + 1]);
         count              = count + 2;
 #ifdef PDU_DEBUG
         if (x != (pdu_keys - 1))
@@ -253,7 +253,7 @@ int32_t Crypto_Key_update(uint8_t state)
     // Update Key State
     for (x = 0; x < pdu_keys; x++)
     {
-        if (packet.kblk[x].kid < 128)
+        if (packet.kblk[x].kid < MKID_MAX)
         {
             report.af = 1;
             if (log_summary.rs > 0)
@@ -327,24 +327,24 @@ int32_t Crypto_Key_inventory(uint8_t *ingest)
     }
 
     // Read in PDU
-    packet.kid_first = ((uint8_t)sdls_frame.pdu.data[count] << 8) | ((uint8_t)sdls_frame.pdu.data[count + 1]);
+    packet.kid_first = ((uint8_t)sdls_frame.pdu.data[count] << BYTE_LEN) | ((uint8_t)sdls_frame.pdu.data[count + 1]);
     count            = count + 2;
-    packet.kid_last  = ((uint8_t)sdls_frame.pdu.data[count] << 8) | ((uint8_t)sdls_frame.pdu.data[count + 1]);
+    packet.kid_last  = ((uint8_t)sdls_frame.pdu.data[count] << BYTE_LEN) | ((uint8_t)sdls_frame.pdu.data[count + 1]);
     count            = count + 2;
 
     // Prepare for Reply
     range                      = packet.kid_last - packet.kid_first + 1;
-    sdls_frame.pdu.hdr.pdu_len = (SDLS_KEY_INVENTORY_RPLY_SIZE * (range)) * 8;
+    sdls_frame.pdu.hdr.pdu_len = (SDLS_KEY_INVENTORY_RPLY_SIZE * (range)) * BYTE_LEN;
     sdls_frame.hdr.pkt_length =
-        (sdls_frame.pdu.hdr.pdu_len / 8) + SDLS_TLV_HDR_SIZE + 2 + 9; // 2 = Num Keys Returned Field (2 Bytes)
-    count = Crypto_Prep_Reply(sdls_ep_reply, 128);
+        CCSDS_HDR_SIZE + CCSDS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.pdu.hdr.pdu_len / BYTE_LEN) - 1 + 2; // 2 = Num Keys Returned Field (2 Bytes)
+    count = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
 
-    sdls_ep_reply[count++] = ((range & 0xFF00) >> 8);
+    sdls_ep_reply[count++] = ((range & 0xFF00) >> BYTE_LEN);
     sdls_ep_reply[count++] = (range & 0x00FF);
     for (x = packet.kid_first; x <= packet.kid_last; x++)
     {
         // Key ID
-        sdls_ep_reply[count++] = ((x & 0xFF00) >> 8);
+        sdls_ep_reply[count++] = ((x & 0xFF00) >> BYTE_LEN);
         sdls_ep_reply[count++] = (x & 0x00FF);
         // Get Key
         ekp = key_if->get_key(x);
@@ -397,7 +397,7 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
     for (x = 0; x < pdu_keys; x++)
     {
         // Key ID
-        packet.blk[x].kid = ((uint8_t)sdls_frame.pdu.data[count] << 8) | ((uint8_t)sdls_frame.pdu.data[count + 1]);
+        packet.blk[x].kid = ((uint8_t)sdls_frame.pdu.data[count] << BYTE_LEN) | ((uint8_t)sdls_frame.pdu.data[count + 1]);
         count += 2;
 #ifdef PDU_DEBUG
         printf("\tCrypto_Key_verify: Block %d Key ID is %d ", x, packet.blk[x].kid);
@@ -415,20 +415,20 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
 
     // Prepare for Reply
     sdls_frame.pdu.hdr.pdu_len =
-        pdu_keys * (SDLS_KEYV_KEY_ID_LEN + SDLS_IV_LEN + CHALLENGE_SIZE + CHALLENGE_MAC_SIZE) * 8;
+        pdu_keys * (SDLS_KEYV_KEY_ID_LEN + SDLS_IV_LEN + CHALLENGE_SIZE + CHALLENGE_MAC_SIZE) * BYTE_LEN;
 
     // length = pdu_len + HDR + PUS - 1 (per CCSDS Convention)
     if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
     {
         sdls_frame.hdr.pkt_length =
-            CCSDS_HDR_SIZE + CCSDS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.pdu.hdr.pdu_len / 8) - 1;
+            CCSDS_HDR_SIZE + CCSDS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.pdu.hdr.pdu_len / BYTE_LEN) - 1;
     }
     else
     {
-        sdls_frame.hdr.pkt_length = CCSDS_HDR_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.pdu.hdr.pdu_len / 8) - 1;
+        sdls_frame.hdr.pkt_length = CCSDS_HDR_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.pdu.hdr.pdu_len / BYTE_LEN) - 1;
     }
 
-    count                 = Crypto_Prep_Reply(sdls_ep_reply, 128);
+    count                 = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
     uint16_t pdu_data_idx = count;
 
     for (x = 0; x < pdu_keys; x++)
@@ -436,8 +436,8 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
         // Key ID
         sdls_ep_keyv_reply.blk[x].kid = packet.blk[x].kid;
 
-        sdls_frame.pdu.data[pdu_data_idx] = (packet.blk[x].kid & 0xFF00) >> 8;
-        sdls_ep_reply[pdu_data_idx]       = (packet.blk[x].kid & 0xFF00) >> 8;
+        sdls_frame.pdu.data[pdu_data_idx] = (packet.blk[x].kid & 0xFF00) >> BYTE_LEN;
+        sdls_ep_reply[pdu_data_idx]       = (packet.blk[x].kid & 0xFF00) >> BYTE_LEN;
         pdu_data_idx += 1;
 
         sdls_frame.pdu.data[pdu_data_idx] = (packet.blk[x].kid & 0x00FF);

@@ -1112,7 +1112,7 @@ static int32_t sa_stop(void)
     int      x;
 
     // Read ingest
-    spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
+    spi = ((uint8_t)sdls_frame.pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[1];
     printf("spi = %d \n", spi);
 
     // Check SPI exists and in 'Active' state
@@ -1178,7 +1178,7 @@ static int32_t sa_rekey(void)
     int      x     = 0;
 
     // Read ingest
-    spi   = ((uint8_t)sdls_frame.pdu.data[count] << 8) | (uint8_t)sdls_frame.pdu.data[count + 1];
+    spi   = ((uint8_t)sdls_frame.pdu.data[count] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[count + 1];
     count = count + 2;
 
     // Check SPI exists and in 'Unkeyed' state
@@ -1195,7 +1195,7 @@ static int32_t sa_rekey(void)
 
         if (sa[spi].sa_state == SA_UNKEYED)
         { // Encryption Key
-            sa[spi].ekid = ((uint8_t)sdls_frame.pdu.data[count] << 8) | (uint8_t)sdls_frame.pdu.data[count + 1];
+            sa[spi].ekid = ((uint8_t)sdls_frame.pdu.data[count] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[count + 1];
             count        = count + 2;
 
             // Authentication Key
@@ -1265,7 +1265,7 @@ static int32_t sa_expire(void)
     uint16_t spi = 0x0000;
 
     // Read ingest
-    spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
+    spi = ((uint8_t)sdls_frame.pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[1];
     printf("spi = %d \n", spi);
 
     // Check SPI exists and in 'Keyed' state
@@ -1312,7 +1312,7 @@ static int32_t sa_create(void)
     int      x;
 
     // Read sdls_frame.pdu.data
-    spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
+    spi = ((uint8_t)sdls_frame.pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[1];
 #ifdef DEBUG
     printf("spi = %d \n", spi);
 #endif
@@ -1351,7 +1351,7 @@ static int32_t sa_create(void)
         {
             sa[spi].acs = ((uint8_t)sdls_frame.pdu.data[count++]);
         }
-        sa[spi].abm_len = (uint8_t)((sdls_frame.pdu.data[count] << 8) | (sdls_frame.pdu.data[count + 1]));
+        sa[spi].abm_len = (uint8_t)((sdls_frame.pdu.data[count] << BYTE_LEN) | (sdls_frame.pdu.data[count + 1]));
         count           = count + 2;
         for (x = 0; x < sa[spi].abm_len; x++)
         {
@@ -1397,7 +1397,7 @@ static int32_t sa_delete(void)
     uint16_t spi = 0x0000;
 
     // Read ingest
-    spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
+    spi = ((uint8_t)sdls_frame.pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[1];
 #ifdef DEBUG
     printf("spi = %d \n", spi);
 #endif
@@ -1447,7 +1447,7 @@ static int32_t sa_setARSN(void)
     int      x;
 
     // Read ingest
-    spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
+    spi = ((uint8_t)sdls_frame.pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[1];
     printf("spi = %d \n", spi);
 
     // TODO: Check SA type (authenticated, encrypted, both) and set appropriately
@@ -1505,7 +1505,7 @@ static int32_t sa_setARSNW(void)
     uint16_t spi = 0x0000;
 
     // Read ingest
-    spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
+    spi = ((uint8_t)sdls_frame.pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[1];
 #ifdef PDU_DEBUG
     printf("spi = %d \n", spi);
 #endif
@@ -1555,7 +1555,7 @@ static int32_t sa_status(uint8_t *ingest)
         uint16_t spi   = 0x0000;
 
         // Read ingest
-        spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
+        spi = ((uint8_t)sdls_frame.pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[1];
         printf("spi = %d \n", spi);
 
         // Check SPI exists
@@ -1563,11 +1563,11 @@ static int32_t sa_status(uint8_t *ingest)
         {
             printf("SIZE: %ld\n", SDLS_SA_STATUS_RPLY_SIZE);
             // Prepare for Reply
-            sdls_frame.pdu.hdr.pdu_len = SDLS_SA_STATUS_RPLY_SIZE * 8;
-            sdls_frame.hdr.pkt_length  = (sdls_frame.pdu.hdr.pdu_len / 8) + SDLS_TLV_HDR_SIZE + 9;
-            count                      = Crypto_Prep_Reply(sdls_ep_reply, 128);
+            sdls_frame.pdu.hdr.pdu_len = SDLS_SA_STATUS_RPLY_SIZE * BYTE_LEN;
+            sdls_frame.hdr.pkt_length  = CCSDS_HDR_SIZE + CCSDS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.pdu.hdr.pdu_len / BYTE_LEN) - 1;
+            count                      = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
             // PDU
-            sdls_ep_reply[count++] = (spi & 0xFF00) >> 8;
+            sdls_ep_reply[count++] = (spi & 0xFF00) >> BYTE_LEN;
             sdls_ep_reply[count++] = (spi & 0x00FF);
             sdls_ep_reply[count++] = sa[spi].lpid;
         }
