@@ -387,33 +387,38 @@ int32_t Crypto_TC_Do_Encrypt_PLAINTEXT(uint8_t sa_service_type, SecurityAssociat
         printf("Encrypted bytes output_loc is %d\n", index);
         printf("Input bytes input_loc is %d\n", TC_FRAME_HEADER_SIZE + segment_hdr_len);
 #endif
-
-        /* Get Key */
-        ekp = key_if->get_key(sa_ptr->ekid);
-        if (ekp == NULL)
+        if (crypto_config.key_type != KEY_TYPE_KMC)
         {
-            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-            mc_if->mc_log(status);
-            return status;
-        }
-        if (ecs_is_aead_algorithm == CRYPTO_TRUE)
-        {
-            // Check that key length to be used ets the algorithm requirement
-            if ((int32_t)ekp->key_len != Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs))
+            /* Get Key */
+            ekp = key_if->get_key(sa_ptr->ekid);
+            if (ekp == NULL)
             {
-                Crypto_TC_Safe_Free_Ptr(*aad);
-                status = CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
+                status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
                 mc_if->mc_log(status);
                 return status;
             }
-
+        }
+        if (ecs_is_aead_algorithm == CRYPTO_TRUE)
+        {
+            if (crypto_config.key_type != KEY_TYPE_KMC)
+            {
+                // Check that key length to be used ets the algorithm requirement
+                if ((int32_t)ekp->key_len != Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs))
+                {
+                    Crypto_TC_Safe_Free_Ptr(*aad);
+                    status = CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
+                    mc_if->mc_log(status);
+                    return status;
+                }
+            }
+            printf("here\n");
             status = cryptography_if->cryptography_aead_encrypt(
                 &p_new_enc_frame[index],                                          // ciphertext output
                 (size_t)tf_payload_len,                                           // length of data
                 (uint8_t *)(p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), // plaintext input
                 (size_t)tf_payload_len,                                           // in data length
                 &(ekp->value[0]),                                                 // Key
-                Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs), // Length of key derived from sa_ptr key_ref
+                32,                                      // Length of key derived from sa_ptr key_ref
                 sa_ptr,                                  // SA (for key reference)
                 sa_ptr->iv,                              // IV
                 sa_ptr->iv_len,                          // IV Length
@@ -425,6 +430,7 @@ int32_t Crypto_TC_Do_Encrypt_PLAINTEXT(uint8_t sa_service_type, SecurityAssociat
                 &sa_ptr->ecs, // encryption cipher
                 &sa_ptr->acs, // authentication cipher
                 cam_cookies);
+            printf("here1\n");
         }
         else // non aead algorithm
         {

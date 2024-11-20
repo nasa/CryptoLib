@@ -592,6 +592,7 @@ static int32_t cryptography_aead_encrypt(
     uint8_t *iv, uint32_t iv_len, uint8_t *mac, uint32_t mac_size, uint8_t *aad, uint32_t aad_len, uint8_t encrypt_bool,
     uint8_t authenticate_bool, uint8_t aad_bool, uint8_t *ecs, uint8_t *acs, char *cam_cookies)
 {
+    printf("internal\n");
     gcry_error_t     gcry_error = GPG_ERR_NO_ERROR;
     gcry_cipher_hd_t tmp_hd     = 0;
     int32_t          status     = CRYPTO_LIB_SUCCESS;
@@ -612,7 +613,7 @@ static int32_t cryptography_aead_encrypt(
         mc_if->mc_log(status);
         return status;
     }
-
+    
     // TODO: Get Flag Functionality
     status = cryptography_gcry_setup(mode, algo, &tmp_hd, key_ptr, len_key, iv, iv_len, &gcry_error);
     if (status != CRYPTO_LIB_SUCCESS)

@@ -31,11 +31,11 @@
 #include "common_types.h"
 #endif // Assume build outside of NOS3/cFS infrastructure
 
-#ifndef KMC_CFFI_EXCLUDE // Exclude libraries that CFFI parser can’t process
+//#ifndef KMC_CFFI_EXCLUDE // Exclude libraries that CFFI parser can’t process
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
-#endif
+//#endif
 
 /*
 ** Definitions

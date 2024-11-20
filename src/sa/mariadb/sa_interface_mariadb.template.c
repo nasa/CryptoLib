@@ -190,7 +190,7 @@ static int32_t sa_get_from_spi(uint16_t spi, SecurityAssociation_t **security_as
     char spi_query[2048];
     char table[25];
     
-    status = parse_table_from_gvcid(&table);
+    status = parse_table_from_gvcid(&table[0]);
     if (status == CRYPTO_LIB_SUCCESS)
     {
         snprintf(spi_query, sizeof(spi_query), SQL_SADB_GET_SA_BY_SPI, table, spi);
@@ -206,7 +206,7 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
     char gvcid_query[2048];
     char table[25];
 
-    status = parse_table_from_gvcid(&table);
+    status = parse_table_from_gvcid(&table[0]);
     if (status == CRYPTO_LIB_SUCCESS)
     {
         snprintf(gvcid_query, sizeof(gvcid_query), SQL_SADB_GET_SA_BY_GVCID, table, tfvn, scid, vcid, mapid,
@@ -236,7 +236,7 @@ static int32_t sa_save_sa(SecurityAssociation_t *sa)
     convert_byte_array_to_hexstring(sa->arsn, sa->arsn_len, arsn_h);
     
     char table[25];
-    status = parse_table_from_gvcid(&table);
+    status = parse_table_from_gvcid(&table[0]);
     if (status == CRYPTO_LIB_SUCCESS)
     {
         if (sa->iv != NULL)
@@ -604,20 +604,24 @@ static int32_t finish_with_error(MYSQL **con_loc, int err)
 static int32_t parse_table_from_gvcid(char* table)
 {
     int32_t status = 0;
-    if (current_managed_parameters->has_fecf == TC_HAS_FECF || current_managed_parameters->has_fecf == TC_NO_FECF)
+    if (current_managed_parameters_struct.has_fecf == TC_HAS_FECF || current_managed_parameters_struct.has_fecf == TC_NO_FECF)
     {
-        table = MARIADB_TC_TABLE_NAME;
+        //table = MARIADB_TC_TABLE_NAME;
+        strcpy(table, MARIADB_TC_TABLE_NAME);
     }
-    else if (current_managed_parameters->has_fecf == TM_HAS_FECF || current_managed_parameters->has_fecf == TM_NO_FECF)
+    else if (current_managed_parameters_struct.has_fecf == TM_HAS_FECF || current_managed_parameters_struct.has_fecf == TM_NO_FECF)
     {
-        table = MARIADB_TM_TABLE_NAME;
+        //table = MARIADB_TM_TABLE_NAME;
+        strcpy(table, MARIADB_TM_TABLE_NAME);
     }
-    else if (current_managed_parameters->has_fecf == AOS_HAS_FECF || current_managed_parameters->has_fecf == AOS_NO_FECF)
+    else if (current_managed_parameters_struct.has_fecf == AOS_HAS_FECF || current_managed_parameters_struct.has_fecf == AOS_NO_FECF)
     {
-        table = MARIADB_AOS_TABLE_NAME;
+        //table = MARIADB_AOS_TABLE_NAME;
+        strcpy(table, MARIADB_AOS_TABLE_NAME);
     }
     else
     {
+        table = table;
         status = CRYPTO_LIB_ERROR;
     }
     return status;
