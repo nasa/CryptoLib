@@ -188,7 +188,7 @@ static int32_t sa_get_from_spi(uint16_t spi, SecurityAssociation_t **security_as
     int32_t status = CRYPTO_LIB_SUCCESS;
 
     char spi_query[2048];
-    char table[25];
+    char table[25] = {""};
     
     status = parse_table_from_gvcid(&table[0]);
     if (status == CRYPTO_LIB_SUCCESS)
@@ -204,7 +204,7 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
     int32_t status = CRYPTO_LIB_SUCCESS;
 
     char gvcid_query[2048];
-    char table[25];
+    char table[25] = {""};
 
     status = parse_table_from_gvcid(&table[0]);
     if (status == CRYPTO_LIB_SUCCESS)
@@ -235,7 +235,7 @@ static int32_t sa_save_sa(SecurityAssociation_t *sa)
     char *arsn_h = malloc(sa->arsn_len * 2 + 1);
     convert_byte_array_to_hexstring(sa->arsn, sa->arsn_len, arsn_h);
     
-    char table[25];
+    char table[25] = {""};
     status = parse_table_from_gvcid(&table[0]);
     if (status == CRYPTO_LIB_SUCCESS)
     {
@@ -603,7 +603,7 @@ static int32_t finish_with_error(MYSQL **con_loc, int err)
 
 static int32_t parse_table_from_gvcid(char* table)
 {
-    int32_t status = 0;
+    int32_t status = CRYPTO_LIB_SUCCESS;
     if (current_managed_parameters_struct.has_fecf == TC_HAS_FECF || current_managed_parameters_struct.has_fecf == TC_NO_FECF)
     {
         //table = MARIADB_TC_TABLE_NAME;
@@ -624,5 +624,8 @@ static int32_t parse_table_from_gvcid(char* table)
         table = table;
         status = CRYPTO_LIB_ERROR;
     }
+#ifdef DEBUG
+    printf("Current_man_params.has_fecf: %d\n", current_managed_parameters_struct.has_fecf);
+#endif    
     return status;
 }

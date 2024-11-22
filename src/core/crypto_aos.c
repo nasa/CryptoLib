@@ -356,24 +356,27 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
         printf(KYEL "FECF Location is: %d\n" RESET, current_managed_parameters_struct.max_frame_size - 2);
     }
 #endif
-
-    // Get Key
     crypto_key_t *ekp = NULL;
-    ekp               = key_if->get_key(sa_ptr->ekid);
-    if (ekp == NULL)
-    {
-        status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-        mc_if->mc_log(status);
-        return status;
-    }
-
     crypto_key_t *akp = NULL;
-    akp               = key_if->get_key(sa_ptr->akid);
-    if (akp == NULL)
+
+    if (crypto_config.key_type != KEY_TYPE_KMC)
     {
-        status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-        mc_if->mc_log(status);
-        return status;
+        // Get Key
+        ekp               = key_if->get_key(sa_ptr->ekid);
+        if (ekp == NULL)
+        {
+            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+            mc_if->mc_log(status);
+            return status;
+        }
+
+        akp               = key_if->get_key(sa_ptr->akid);
+        if (akp == NULL)
+        {
+            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+            mc_if->mc_log(status);
+            return status;
+        }
     }
 
     /**

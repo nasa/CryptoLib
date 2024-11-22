@@ -411,14 +411,13 @@ int32_t Crypto_TC_Do_Encrypt_PLAINTEXT(uint8_t sa_service_type, SecurityAssociat
                     return status;
                 }
             }
-            printf("here\n");
             status = cryptography_if->cryptography_aead_encrypt(
                 &p_new_enc_frame[index],                                          // ciphertext output
                 (size_t)tf_payload_len,                                           // length of data
                 (uint8_t *)(p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), // plaintext input
                 (size_t)tf_payload_len,                                           // in data length
                 &(ekp->value[0]),                                                 // Key
-                32,                                      // Length of key derived from sa_ptr key_ref
+                Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs),                                      // Length of key derived from sa_ptr key_ref
                 sa_ptr,                                  // SA (for key reference)
                 sa_ptr->iv,                              // IV
                 sa_ptr->iv_len,                          // IV Length
@@ -430,7 +429,6 @@ int32_t Crypto_TC_Do_Encrypt_PLAINTEXT(uint8_t sa_service_type, SecurityAssociat
                 &sa_ptr->ecs, // encryption cipher
                 &sa_ptr->acs, // authentication cipher
                 cam_cookies);
-            printf("here1\n");
         }
         else // non aead algorithm
         {

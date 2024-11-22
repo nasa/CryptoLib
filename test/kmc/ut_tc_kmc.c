@@ -109,7 +109,7 @@ void MDB_DB_RESET()
     }
 
     printf("Truncating Tables\n");
-    char *query = "TRUNCATE TABLE security_associations\n";
+    char *query = "TRUNCATE TABLE TC_security_associations\n";
     if (mysql_real_query(con, query, strlen(query)))
     { // query should be NUL terminated!
         printf("Failed to Truncate Table\n");
@@ -150,8 +150,9 @@ void MDB_DB_RESET()
 /**
  * @brief Unit Test: Nominal Encryption CBC KMC
  **/
-UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_CBC_KMC)
+UTEST(TC_APPLY_KMC, HAPPY_PATH_ENC_TC_CBC_KMC)
 {
+    remove("sa_save_file.bin");
     reload_db();
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_KMC, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO,
@@ -163,61 +164,23 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_CBC_KMC)
     Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service", "/certs/ammos-ca-bundle.crt",
                                      NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE, "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
     GvcidManagedParameters_t TC_UT_Managed_Parameters0 = {
-        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, AOS_NO_OCF, 1};
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters0);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters1 = {
-        0, 0x0003, 1, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, AOS_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters1);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters2 = {
-        0, 0x0003, 2, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, AOS_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters2);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters3 = {
-        0, 0x0003, 3, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, AOS_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters3);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, AOS_FHEC_NA,
-    // AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 2, TC_HAS_FECF,
-    // TC_HAS_SEGMENT_HDRS, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 3,
-    // TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+
     int32_t return_val = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
 
     char *raw_tc_sdls_ping_h   = "20030015000080d2c70008197f0b00310000b1fe3128";
     char *raw_tc_sdls_ping_b   = NULL;
     int   raw_tc_sdls_ping_len = 0;
-    // SaInterface sa_if = get_sa_interface_inmemory();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
     uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
 
-    // SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
-    // Expose the SADB Security Association for test edits.
-    // sa_if->sa_get_from_spi(1, &test_association);
-    // test_association->sa_state = SA_NONE;
-    // sa_if->sa_get_from_spi(11, &test_association);
-    // test_association->arsn_len = 0;
-    // test_association->shsnf_len = 0;
-    // test_association->ast = 0;
-    // test_association->stmacf_len = 0;
-    // test_association->sa_state = SA_OPERATIONAL;
-    // sa_if->sa_get_from_spi(11, &test_association);
     return_val =
         Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
-
-    char    *truth_data_h = "2003002A0000000B00000000000000000000000000000000025364F9BC3344AF359DA06CA886746F59A0AB";
-    uint8_t *truth_data_b = NULL;
-    int      truth_data_l = 0;
-
-    hex_conversion(truth_data_h, (char **)&truth_data_b, &truth_data_l);
-    // printf("Encrypted Frame:\n");
-    for (int i = 0; i < enc_frame_len; i++)
-    {
-        printf("%02x -> %02x \n", ptr_enc_frame[i], truth_data_b[i]);
-        //ASSERT_EQ(ptr_enc_frame[i], truth_data_b[i]);
-    }
-    // printf("\n");
 
     Crypto_Shutdown();
     free(raw_tc_sdls_ping_b);
