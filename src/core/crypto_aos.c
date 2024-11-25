@@ -904,6 +904,8 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     SecurityAssociation_t *sa_ptr          = NULL;
     uint8_t                sa_service_type = -1;
     uint8_t                spi             = -1;
+    crypto_key_t          *ekp             = NULL;
+    crypto_key_t          *akp             = NULL;
 
     // Bit math to give concise access to values in the ingest
     aos_frame_pri_hdr.tfvn = ((uint8_t)p_ingest[0] & 0xC0) >> 6;
@@ -1201,23 +1203,24 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     }
 #endif
 
-    // Get Key
-    crypto_key_t *ekp = NULL;
-    ekp               = key_if->get_key(sa_ptr->ekid);
-    if (ekp == NULL)
+    if (crypto_config.key_type != KEY_TYPE_KMC)
     {
-        status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-        mc_if->mc_log(status);
-        return status;
-    }
+        // Get Key
+        ekp               = key_if->get_key(sa_ptr->ekid);
+        if (ekp == NULL)
+        {
+            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+            mc_if->mc_log(status);
+            return status;
+        }
 
-    crypto_key_t *akp = NULL;
-    akp               = key_if->get_key(sa_ptr->akid);
-    if (akp == NULL)
-    {
-        status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-        mc_if->mc_log(status);
-        return status;
+        akp               = key_if->get_key(sa_ptr->akid);
+        if (akp == NULL)
+        {
+            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+            mc_if->mc_log(status);
+            return status;
+        }
     }
 
     /**
