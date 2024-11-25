@@ -132,7 +132,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
     Crypto_saPrint(sa_ptr);
 #endif
 
-    // Determine SA Service Type
+    // Determine SA Service Type 
     if ((sa_ptr->est == 0) && (sa_ptr->ast == 0))
     {
         sa_service_type = SA_PLAINTEXT;
