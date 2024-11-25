@@ -17,7 +17,7 @@
 */
 
 /**
- *  Unit Tests that make use of TC Functionality with KMC Service.
+ *  Unit Tests that make use of AOS Functionality with KMC Service.
  **/
 
 #include "ut_aos_apply.h"
@@ -164,7 +164,7 @@ UTEST(AOS_APPLY_KMC, HAPPY_PATH_ENC_AOS_CBC_KMC)
     Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service", "/certs/ammos-ca-bundle.crt",
                                      NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE, "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
     GvcidManagedParameters_t AOS_UT_Managed_Parameters0 = {
-        0, 0x0003, 0, AOS_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, AOS_SEGMENT_HDRS_NA, 1786, AOS_NO_OCF, 1};
+        1, 0x0003, 0, AOS_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, AOS_SEGMENT_HDRS_NA, 1786, AOS_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters0);
     
     int32_t return_val = Crypto_Init();

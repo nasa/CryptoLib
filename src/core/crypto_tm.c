@@ -713,18 +713,6 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer)
     printf("\n");
 #endif
 
-    status = sa_if->sa_get_operational_sa_from_gvcid(tfvn, scid, vcid, 0, &sa_ptr);
-
-    // No operational/valid SA found
-    if (status != CRYPTO_LIB_SUCCESS)
-    {
-#ifdef TM_DEBUG
-        printf(KRED "Error: Could not retrieve an SA!\n" RESET);
-#endif
-        mc_if->mc_log(status);
-        return status;
-    }
-
     status = Crypto_Get_Managed_Parameters_For_Gvcid(tfvn, scid, vcid, gvcid_managed_parameters_array,
                                                      &current_managed_parameters_struct);
 
@@ -737,6 +725,31 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer)
         mc_if->mc_log(status);
         return status;
     }
+
+    status = sa_if->sa_get_operational_sa_from_gvcid(tfvn, scid, vcid, 0, &sa_ptr);
+
+    // No operational/valid SA found
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+#ifdef TM_DEBUG
+        printf(KRED "Error: Could not retrieve an SA!\n" RESET);
+#endif
+        mc_if->mc_log(status);
+        return status;
+    }
+
+//     status = Crypto_Get_Managed_Parameters_For_Gvcid(tfvn, scid, vcid, gvcid_managed_parameters_array,
+//                                                      &current_managed_parameters_struct);
+
+//     // No managed parameters found
+//     if (status != CRYPTO_LIB_SUCCESS)
+//     {
+// #ifdef TM_DEBUG
+//         printf(KRED "Error: No managed parameters found!\n" RESET);
+// #endif
+//         mc_if->mc_log(status);
+//         return status;
+//     }
 
 #ifdef TM_DEBUG
     printf(KYEL "TM BEFORE Apply Sec:\n\t" RESET);

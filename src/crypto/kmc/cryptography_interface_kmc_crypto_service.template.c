@@ -1150,27 +1150,25 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
                                          uint32_t aad_len, uint8_t encrypt_bool, uint8_t authenticate_bool,
                                          uint8_t aad_bool, uint8_t *ecs, uint8_t *acs, char *cam_cookies)
 {
-    printf("0\n");
     int32_t status = CRYPTO_LIB_SUCCESS;
     key            = key;     // Direct key input is not supported in KMC interface
     len_key        = len_key; // Direct key input is not supported in KMC interface
     ecs            = ecs;
     acs            = acs;
-    printf("1\n");
+
     curl_easy_reset(curl);
     status = configure_curl_connect_opts(curl, cam_cookies);
     if (status != CRYPTO_LIB_SUCCESS)
     {
         return status;
     }
-    printf("2\n");
     // Base64 URL encode IV for KMC REST Encrypt
     char *iv_base64 = (char *)calloc(1, B64ENCODE_OUT_SAFESIZE(iv_len) + 1);
     if (iv != NULL)
     {
         base64urlEncode(iv, iv_len, iv_base64, NULL);
     }
-    printf("3\n");
+    
 #ifdef DEBUG
     printf("IV_BASE64: %s\n", iv_base64);
 #endif
@@ -1181,14 +1179,14 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
 #ifdef DEBUG
     printf("IV Base64 URL Encoded: %s\n", iv_base64);
 #endif
-    printf("4\n");
+    
     if (sa_ptr->ek_ref[0] == '\0')
     {
         status = CRYPTOGRAHPY_KMC_NULL_ENCRYPTION_KEY_REFERENCE_IN_SA;
         free(iv_base64);
         return status;
     }
-    printf("5\n");
+    
     char *encrypt_uri;
     if (aad_bool == CRYPTO_TRUE)
     {
@@ -1202,7 +1200,7 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
 
         uint32_t mac_size_str_len = 0;
         char    *mac_size_str     = int_to_str(mac_size * 8, &mac_size_str_len);
-        printf("6\n");
+        
         int len_encrypt_endpoint = strlen(encrypt_offset_endpoint) + strlen(sa_ptr->ek_ref) + strlen(iv_base64) +
                                    strlen(AES_GCM_TRANSFORMATION) + aad_offset_str_len + mac_size_str_len;
         char *encrypt_endpoint_final = (char *)malloc(len_encrypt_endpoint);
@@ -1218,7 +1216,7 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
             snprintf(encrypt_endpoint_final, len_encrypt_endpoint, encrypt_offset_endpoint_null_iv, sa_ptr->ek_ref,
                      AES_GCM_TRANSFORMATION, aad_offset_str, mac_size_str);
         }
-        printf("7\n");
+        
         free(aad_offset_str);
         free(mac_size_str);
 #ifdef DEBUG
@@ -1228,7 +1226,7 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
         encrypt_uri[0] = '\0';
         strcat(encrypt_uri, kmc_root_uri);
         strcat(encrypt_uri, encrypt_endpoint_final);
-        printf("8\n");
+        
         // Prepare encrypt_payload with AAD at the front for KMC Crypto Service.
         if (encrypt_bool == CRYPTO_FALSE) // Not encrypting data, only passing in AAD for TAG.
         {
@@ -1252,7 +1250,7 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
     }
     else // No AAD -- just prepare the endpoint URI
     {
-        printf("6.2\n");
+        
         int len_encrypt_endpoint =
             strlen(encrypt_endpoint) + strlen(sa_ptr->ek_ref) + strlen(iv_base64) + strlen(AES_GCM_TRANSFORMATION);
         char *encrypt_endpoint_final = (char *)malloc(len_encrypt_endpoint);

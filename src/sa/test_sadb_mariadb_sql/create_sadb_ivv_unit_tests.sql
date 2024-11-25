@@ -26,9 +26,9 @@ INSERT INTO TC_security_associations (spi,ekid,sa_state,ecs,est,ast,shivf_len,iv
 VALUES (6,'kmc/test/key130',3,X'02',1,0,16,16,NULL,0,36,X'000000000000000000000000000000000000000000000000000000000000000000000000',5,3,X'05FFFC',0,3,4,0,1,1,X'00',2);
 
 -- SCID 44 (MMT) Security Associations AES/GCM/NoPadding --
--- SA 7 - Only Keyed SA Available (VC 33)
+-- SA 7 - Only Keyed SA Available (VC 0) (Edited for TM Enc Testing)
 INSERT INTO TC_security_associations (spi,ekid,sa_state,ecs,est,ast,shivf_len,iv_len,stmacf_len,iv,abm_len,abm,arsnw,arsn_len,tfvn,scid,vcid,mapid)
-VALUES (7,'kmc/test/key130',2,X'01',1,1,12,12,16,X'000000000000000000000001',19,X'00000000000000000000000000000000000000',5,0,0,44,33,0);
+VALUES (7,'kmc/test/key130',3,X'01',1,1,12,12,16,X'000000000000000000000001',20,X'00000000000000000000000000000000000000',5,0,0,44,0,0);
 
 -- SA 8 - Only Unkeyed SA Available (VC 32)
 INSERT INTO TC_security_associations (spi,ekid,sa_state,ecs,est,ast,shivf_len,iv_len,stmacf_len,iv,abm_len,abm,arsnw,arsn_len,tfvn,scid,vcid,mapid)
@@ -115,7 +115,7 @@ VALUES (6,'kmc/test/key130',3,X'02',1,0,16,16,NULL,0,36,X'0000000000000000000000
 -- SCID 44 (MMT) Security Associations AES/GCM/NoPadding --
 -- SA 7 - Only Keyed SA Available (VC 33)
 INSERT INTO TM_security_associations (spi,ekid,sa_state,ecs,est,ast,shivf_len,iv_len,stmacf_len,iv,abm_len,abm,arsnw,arsn_len,tfvn,scid,vcid,mapid)
-VALUES (7,'kmc/test/key130',2,X'01',1,1,12,12,16,X'000000000000000000000001',19,X'00000000000000000000000000000000000000',5,0,0,44,33,0);
+VALUES (7,'kmc/test/key130',3,X'01',1,1,12,12,16,X'000000000000000000000001',20,X'00000000000000000000000000000000000000',5,0,0,44,0,0);
 
 -- SA 8 - Only Unkeyed SA Available (VC 32)
 INSERT INTO TM_security_associations (spi,ekid,sa_state,ecs,est,ast,shivf_len,iv_len,stmacf_len,iv,abm_len,abm,arsnw,arsn_len,tfvn,scid,vcid,mapid)
@@ -202,7 +202,7 @@ VALUES (6,'kmc/test/key130',3,X'02',1,0,16,16,NULL,0,36,X'0000000000000000000000
 -- SCID 44 (MMT) Security Associations AES/GCM/NoPadding --
 -- SA 7 - Only Keyed SA Available (VC 33)
 INSERT INTO AOS_security_associations (spi,ekid,sa_state,ecs,est,ast,shivf_len,iv_len,stmacf_len,iv,abm_len,abm,arsnw,arsn_len,tfvn,scid,vcid,mapid)
-VALUES (7,'kmc/test/key130',2,X'01',1,1,12,12,16,X'000000000000000000000001',19,X'00000000000000000000000000000000000000',5,0,0,44,33,0);
+VALUES (7,'kmc/test/key130',3,X'01',1,1,12,12,16,X'000000000000000000000001',20,X'00000000000000000000000000000000000000',5,0,1,3,0,0);
 
 -- SA 8 - Only Unkeyed SA Available (VC 32)
 INSERT INTO AOS_security_associations (spi,ekid,sa_state,ecs,est,ast,shivf_len,iv_len,stmacf_len,iv,abm_len,abm,arsnw,arsn_len,tfvn,scid,vcid,mapid)

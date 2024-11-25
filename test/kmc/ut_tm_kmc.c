@@ -17,7 +17,7 @@
 */
 
 /**
- *  Unit Tests that make use of TC Functionality with KMC Service.
+ *  Unit Tests that make use of TM Functionality with KMC Service.
  **/
 
 #include "ut_tm_apply.h"
@@ -166,7 +166,7 @@ UTEST(TM_APPLY_KMC, HAPPY_PATH_ENC_TM_CBC_KMC)
     Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service", "/certs/ammos-ca-bundle.crt",
                                      NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE, "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
     GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x0003, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
+        0, 0x002C, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
     
     printf("has_fecf: %d\n", current_managed_parameters_struct.has_fecf);
