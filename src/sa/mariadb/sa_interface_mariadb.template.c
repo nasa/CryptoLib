@@ -606,26 +606,20 @@ static int32_t parse_table_from_gvcid(char* table)
     int32_t status = CRYPTO_LIB_SUCCESS;
     if (current_managed_parameters_struct.has_fecf == TC_HAS_FECF || current_managed_parameters_struct.has_fecf == TC_NO_FECF)
     {
-        //table = MARIADB_TC_TABLE_NAME;
         strcpy(table, MARIADB_TC_TABLE_NAME);
     }
     else if (current_managed_parameters_struct.has_fecf == TM_HAS_FECF || current_managed_parameters_struct.has_fecf == TM_NO_FECF)
     {
-        //table = MARIADB_TM_TABLE_NAME;
         strcpy(table, MARIADB_TM_TABLE_NAME);
     }
     else if (current_managed_parameters_struct.has_fecf == AOS_HAS_FECF || current_managed_parameters_struct.has_fecf == AOS_NO_FECF)
     {
-        //table = MARIADB_AOS_TABLE_NAME;
         strcpy(table, MARIADB_AOS_TABLE_NAME);
     }
     else
     {
         table = table;
         status = CRYPTO_LIB_ERROR;
-    }
-#ifdef DEBUG
-    printf("Current_man_params.has_fecf: %d\n", current_managed_parameters_struct.has_fecf);
-#endif    
+    }    
     return status;
 }

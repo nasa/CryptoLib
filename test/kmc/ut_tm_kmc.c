@@ -217,8 +217,6 @@ UTEST(TM_APPLY_KMC, HAPPY_PATH_ENC_TM_CBC_KMC)
     return_val =
         Crypto_TM_ApplySecurity((uint8_t *)raw_tm_sdls_ping_b);
 
-    printf("has_fecf: %d\n", current_managed_parameters_struct.has_fecf);
-
     Crypto_Shutdown();
     free(raw_tm_sdls_ping_b);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
