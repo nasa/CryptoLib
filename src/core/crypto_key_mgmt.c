@@ -497,13 +497,13 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
                                                    NULL          // cam_cookies
         );
 
-        // If encryption errors, return
+        // If encryption errors, capture something about it for testing
+        // We need to continue on, other keys could be successful
         if (status != CRYPTO_LIB_SUCCESS)
         {
 #ifdef DEBUG
         printf(KRED "Error: OTAR Key Verification encryption failed for new key index %d with error %d \n" RESET, x, status);
 #endif
-            return status;
         }
 
         // Copy from the KEYV Blocks into the output PDU
