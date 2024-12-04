@@ -81,6 +81,7 @@ char *crypto_enum_errlist_core[] = {(char *)"CRYPTO_LIB_SUCCESS",
                                     (char *)"CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL",
                                     (char *)"CRYPTO_LIB_ERR_IV_GREATER_THAN_MAX_LENGTH",
                                     (char *)"CRYPTO_LIB_ERR_KEY_STATE_TRANSITION_ERROR",
+                                    (char *)"CRYPTO_LIB_ERR_SPI_INDEX_MISMATCH",
                                     (char *)"CRYPTO_LIB_ERR_KEY_STATE_INVALID"};
 
 char *crypto_enum_errlist_config[] = {
