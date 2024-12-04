@@ -99,7 +99,7 @@ int32_t Crypto_Key_OTAR(void)
         return CRYPTO_LIB_ERR_KEY_ID_ERROR;
     }
 
-    uint8_t ecs = CRYPTO_CIPHER_AES256_GCM;
+    uint8_t ecs = CRYPTO_CIPHER_AES256_GCM; // Per SDLS baseline
     status      = cryptography_if->cryptography_aead_decrypt(&(sdls_frame.pdu.data[14]), // plaintext output
                                                              (size_t)(pdu_keys * (SDLS_KEYID_LEN + SDLS_KEY_LEN)), // length of data
                                                              NULL,             // in place decryption
@@ -134,7 +134,7 @@ int32_t Crypto_Key_OTAR(void)
     for (count = 14; x < pdu_keys; x++)
     { // Encrypted Key Blocks
         packet.EKB[x].ekid = (sdls_frame.pdu.data[count] << BYTE_LEN) | (sdls_frame.pdu.data[count + 1]);
-        if (packet.EKB[x].ekid < CRYPTOLIB_APPID)
+        if (packet.EKB[x].ekid < MKID_MAX)
         {
             report.af = 1;
             if (log_summary.rs > 0)
