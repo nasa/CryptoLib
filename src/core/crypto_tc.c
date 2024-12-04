@@ -348,6 +348,7 @@ int32_t Crypto_TC_Do_Encrypt_PLAINTEXT(uint8_t sa_service_type, SecurityAssociat
 {
     int32_t  status = CRYPTO_LIB_SUCCESS;
     uint16_t index  = *index_p;
+    crypto_key_t *akp = NULL;
     if (sa_service_type != SA_PLAINTEXT)
     {
         uint8_t *mac_ptr = NULL;
@@ -390,13 +391,14 @@ int32_t Crypto_TC_Do_Encrypt_PLAINTEXT(uint8_t sa_service_type, SecurityAssociat
 
         /* Get Key */
         ekp = key_if->get_key(sa_ptr->ekid);
-        if (ekp == NULL)
+        akp = key_if->get_key(sa_ptr->akid);
+        if (ekp == NULL || akp == NULL)
         {
             status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
             mc_if->mc_log(status);
             return status;
         }
-        if (ekp->key_state != KEY_ACTIVE)
+        if (ekp->key_state != KEY_ACTIVE || akp->key_state != KEY_ACTIVE)
         {
             status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
             mc_if->mc_log(status);
@@ -469,7 +471,7 @@ int32_t Crypto_TC_Do_Encrypt_PLAINTEXT(uint8_t sa_service_type, SecurityAssociat
                 {
                     return CRYPTO_LIB_ERR_KEY_ID_ERROR;
                 }
-                if (ekp->key_state != KEY_ACTIVE)
+                if (akp->key_state != KEY_ACTIVE)
                 {
                     status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
                     mc_if->mc_log(status);
