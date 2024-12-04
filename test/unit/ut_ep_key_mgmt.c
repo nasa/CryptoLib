@@ -427,9 +427,9 @@ UTEST(EP_KEY_MGMT, VERIFY_132_134)
 }
 
 /*
-** Test that a fail OTAR key decryption will bubble up to a top-level error. 
+** Test that an OTAR attempt with non-active Master Key will bubble up to a top-level error. 
 */
-UTEST(EP_KEY_MGMT, OTAR_0_140_142_BAD_DECRYPT)
+UTEST(EP_KEY_MGMT, OTAR_0_140_142_MK_NOT_ACTIVE)
 {
     remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
@@ -459,7 +459,7 @@ UTEST(EP_KEY_MGMT, OTAR_0_140_142_BAD_DECRYPT)
     char *buffer_nist_key_h = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
     // char* buffer_nist_iv_h = "b6ac8e4963f49207ffd6374b"; // The last valid IV that was seen by the SA
     char *buffer_OTAR_h =
-        "2003009e00ff000100001880d037008c197f0b00010084007F344892bbc54f5395297d4c37172f2a3c46f6a81c1349e9e26ac80985d8bb"
+        "2003009e00ff000000001880d037008c197f0b00010084007F344892bbc54f5395297d4c37172f2a3c46f6a81c1349e9e26ac80985d8bb"
         "d55a5814c662e49fba52f99ba09558cd21cf268b8e50b2184137e80f76122034c580464e2f06d2659a50508bdfe9e9a55990ba4148af89"
         "6d8a6eebe8b5d2258685d4ce217a20174fdd4f0efac62758c51b04e55710a47209c923b641d19a39001f9e986366f5ffd95555";
     //                    |2003009e00| = Primary Header
@@ -495,8 +495,8 @@ UTEST(EP_KEY_MGMT, OTAR_0_140_142_BAD_DECRYPT)
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association;
 
-    // Activate SA 1
-    sa_if->sa_get_from_spi(1, &test_association);
+    // Activate SA 0
+    sa_if->sa_get_from_spi(0, &test_association);
     test_association->sa_state  = SA_OPERATIONAL;
     test_association->ecs_len   = 1;
     test_association->ecs       = CRYPTO_CIPHER_NONE;
@@ -510,6 +510,112 @@ UTEST(EP_KEY_MGMT, OTAR_0_140_142_BAD_DECRYPT)
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
     // ekp = key_if->get_key(test_association->ekid);
+    // memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
+
+    // Convert frames that will be processed
+    hex_conversion(buffer_OTAR_h, (char **)&buffer_OTAR_b, &buffer_OTAR_len);
+    // Convert/Set input IV
+    // hex_conversion(buffer_nist_iv_h, (char**) &buffer_nist_iv_b, &buffer_nist_iv_len);
+    // memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
+
+    // Expect success on next valid IV && ARSN
+    printf(KGRN "Checking next valid IV && valid ARSN... should be able to receive it... \n" RESET);
+    status = Crypto_TC_ProcessSecurity(buffer_OTAR_b, &buffer_OTAR_len, &tc_nist_processed_frame);
+    // Not sure where it'll fail yet, but shouldn't be a success
+    ASSERT_NE(CRYPTO_LIB_SUCCESS, status);
+    printf("\n");
+    Crypto_Shutdown();
+    // free(buffer_nist_iv_b);
+    free(buffer_nist_key_b);
+    free(buffer_OTAR_b);
+}
+
+/*
+** Test that a fail OTAR key decryption will bubble up to a top-level error. 
+*/
+UTEST(EP_KEY_MGMT, OTAR_0_140_142_BAD_DECRYPT)
+{
+    remove("sa_save_file.bin");
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_0_Managed_Parameters = {
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
+
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_1_Managed_Parameters = {
+        0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
+
+    Crypto_Init();
+    SaInterface sa_if = get_sa_interface_inmemory();
+    crypto_key_t* ekp = NULL;
+    int status = CRYPTO_LIB_SUCCESS;
+
+    // NOTE: Added Transfer Frame header to the plaintext
+    char *buffer_nist_key_h = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
+    // char* buffer_nist_iv_h = "b6ac8e4963f49207ffd6374b"; // The last valid IV that was seen by the SA
+    char *buffer_OTAR_h =
+        "2003009e00ff000000001880d037008c197f0b00010084007F344892bbc54f5395297d4c37172f2a3c46f6a81c1349e9e26ac80985d8bb"
+        "d55a5814c662e49fba52f99ba09558cd21cf268b8e50b2184137e80f76122034c580464e2f06d2659a50508bdfe9e9a55990ba4148af89"
+        "6d8a6eebe8b5d2258685d4ce217a20174fdd4f0efac62758c51b04e55710a47209c923b641d19a39001f9e986366f5ffd95555";
+    //                    |2003009e00| = Primary Header
+    //                              |ff| = Ext. Procs
+    //                                |0000| = SPI
+    //                                    |0000| = ARSN
+    //                                        |1880| = CryptoLib App ID
+    //                                            |d037| = seq, pktid
+    //                                                |008c| = pkt_length
+    //                                                    |197f| = pusv, ack, st
+    //                                                        |0b| = sst, sid, spare
+    //                                                          |0001| = PDU Tag
+    //                                                              |0084| = PDU Length
+    //                                                                  |007F| = Master Key ID - Valid id, invalid that it isn't set up in the keyring!
+    //                                                                      |344892bbc54f5395297d4c37| = IV
+    //                                                                                              |172f| = Encrypted
+    //                                                                                              Key ID
+    //                                                                                                  |2a3c46f6a81c1349e9e26ac80985d8bbd55a5814c662e49fba52f99ba09558cd|
+    //                                                                                                  = Encrypted Key
+    //                                                                                                                                                                  |21cf| = Encrypted Key ID
+    //                                                                                                                                                                      |268b8e50b2184137e80f76122034c580464e2f06d2659a50508bdfe9e9a55990| = Encrypted Key
+    //                                                                                                                                                                                                                                      |ba41| = EKID
+    //                                                                                                                                                                                                                                          |48af896d8a6eebe8b5d2258685d4ce217a20174fdd4f0efac62758c51b04e557| = EK
+    //                                                                                                                                                                                                                                                                                                          |10a47209c923b641d19a39001f9e9861| = MAC
+    //                                                                                                                                                                                                                                                                                                                                          |66f5ffd95555| = Trailer or Padding???
+
+    uint8_t *buffer_nist_key_b, *buffer_OTAR_b    = NULL;
+    int      buffer_nist_key_len, buffer_OTAR_len = 0;
+
+    // Setup Processed Frame For Decryption
+    TC_t tc_nist_processed_frame;
+
+    // Expose/setup SAs for testing
+    SecurityAssociation_t *test_association;
+
+    // Activate SA 0
+    sa_if->sa_get_from_spi(0, &test_association);
+    test_association->sa_state  = SA_OPERATIONAL;
+    test_association->ecs_len   = 1;
+    test_association->ecs       = CRYPTO_CIPHER_NONE;
+    test_association->est       = 0;
+    test_association->ast       = 0;
+    test_association->shsnf_len = 2;
+    test_association->arsn_len  = 2;
+    test_association->arsnw     = 5;
+    test_association->iv_len    = 0;
+    test_association->shivf_len = 0;
+    test_association->ekid      = 127;
+    // Insert key into keyring of SA 9
+    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
+    ekp = key_if->get_key(test_association->ekid);
+    ekp->key_state = KEY_ACTIVE;
     // memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert frames that will be processed

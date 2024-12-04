@@ -714,6 +714,9 @@ static int32_t sa_get_from_spi(uint16_t spi, SecurityAssociation_t **security_as
     // Check if spi index in sa array
     if (spi >= NUM_SA)
     {
+#ifdef SA_DEBUG
+        printf(KRED "sa_get_from_spi: SPI: %d > NUM_SA: %d.\n" RESET, spi, NUM_SA);
+#endif
         return CRYPTO_LIB_ERR_SPI_INDEX_OOB;
     }
     *security_association = &sa[spi];
