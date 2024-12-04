@@ -13,8 +13,6 @@ UTEST(EP_MC, MC_REGULAR_PING)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
@@ -25,10 +23,10 @@ UTEST(EP_MC, MC_REGULAR_PING)
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_PING_h = "2003001a00ff000100001880d2c70008197f0b00310000b1fe312855";
+    char *buffer_PING_h = "2003001a00ff000000001880d2c70008197f0b00310000b1fe312855";
     //                    |2003001a00| = Primary Header
     //                              |ff| = Ext. Procs
-    //                                |0001| = SPI
+    //                                |0000| = SPI
     //                                    |0000| = ARSN
     //                                        |1880| = CryptoLib App ID
     //                                            |d2c7| = seq, pktid
@@ -49,9 +47,16 @@ UTEST(EP_MC, MC_REGULAR_PING)
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association;
 
-    // Modify SA 1
-    sa_if->sa_get_from_spi(1, &test_association);
+    // Modify SA 0
+    sa_if->sa_get_from_spi(0, &test_association);
     test_association->shivf_len = 0;
+    test_association->sa_state = SA_OPERATIONAL;
+    test_association->iv_len          = 12;
+    test_association->shsnf_len       = 2;
+    test_association->arsnw           = 5;
+    test_association->arsnw_len       = 1;
+    test_association->arsn_len        = 2;
+    test_association->gvcid_blk.scid  = SCID & 0x3FF;
 
     // Modify SA 6
     sa_if->sa_get_from_spi(6, &test_association);
@@ -115,20 +120,7 @@ UTEST(EP_MC, MC_STATUS)
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_STATUS_h = "2003001a00ff000100001880d2c70008197f0b00320000b1fe312855";
-    //                      |2003001a00| = Primary Header
-    //                                |ff| = Ext. Procs
-    //                                  |00010000| = Security Header
-    //                                          |1880| = CryptoLib App ID
-    //                                              |d2c7| = seq, packet id
-    //                                                  |0008| = packet length
-    //                                                      |197f| = pusv, ack, st
-    //                                                          |0b| = sst
-    //                                                            |0032| = PDU Tag
-    //                                                                |0000| = PDU Length
-    //                                                                    |b1fe|
-    //                                                                        |3128|
-    //                                                                            |55| = Padding
+    char *buffer_STATUS_h = "2003001a00ff000000001880d2c70008197f0b00320000b1fe312855";
 
     uint8_t *buffer_STATUS_b   = NULL;
     int      buffer_STATUS_len = 0;
@@ -139,9 +131,16 @@ UTEST(EP_MC, MC_STATUS)
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association;
 
-    // Modify SA 1
-    sa_if->sa_get_from_spi(1, &test_association);
+    // Modify SA 0
+    sa_if->sa_get_from_spi(0, &test_association);
     test_association->shivf_len = 0;
+    test_association->sa_state = SA_OPERATIONAL;
+    test_association->iv_len          = 12;
+    test_association->shsnf_len       = 2;
+    test_association->arsnw           = 5;
+    test_association->arsnw_len       = 1;
+    test_association->arsn_len        = 2;
+    test_association->gvcid_blk.scid  = SCID & 0x3FF;
 
     // Modify SA 6
     sa_if->sa_get_from_spi(6, &test_association);
@@ -193,8 +192,6 @@ UTEST(EP_MC, MC_DUMP)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
@@ -204,22 +201,7 @@ UTEST(EP_MC, MC_DUMP)
 
     int status = CRYPTO_LIB_SUCCESS;
 
-    // NOTE: Added Transfer Frame header to the plaintext
-    // 0880d2c70039b300300a044e4153410a044e4153410a044e4153410a044e4153410a044e4153410a044e415341
-    char *buffer_DUMP_h = "2003001a00ff000100001880d2c70008197f0b00330000b1fe312855";
-    //                    |2003001a00| = Primary Header
-    //                              |ff| = Ext. Procs
-    //                                |00010000| = Security Header
-    //                                        |1880| = CryptoLib App ID
-    //                                            |d2c7| = seq, packet id
-    //                                                |0008| = packet length
-    //                                                    |197f| = pusv, ack, st
-    //                                                        |0b| = sst
-    //                                                          |0033| = PDU Tag
-    //                                                              |0000| = PDU Length
-    //                                                                  |b1fe|
-    //                                                                      |3128|
-    //                                                                          |55| = Padding
+    char *buffer_DUMP_h = "2003001a00ff000000001880d2c70008197f0b00330000b1fe312855";
 
     uint8_t *buffer_DUMP_b   = NULL;
     int      buffer_DUMP_len = 0;
@@ -230,9 +212,16 @@ UTEST(EP_MC, MC_DUMP)
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association;
 
-    // Modify SA 1
-    sa_if->sa_get_from_spi(1, &test_association);
+    // Modify SA 0
+    sa_if->sa_get_from_spi(0, &test_association);
     test_association->shivf_len = 0;
+    test_association->sa_state = SA_OPERATIONAL;
+    test_association->iv_len          = 12;
+    test_association->shsnf_len       = 2;
+    test_association->arsnw           = 5;
+    test_association->arsnw_len       = 1;
+    test_association->arsn_len        = 2;
+    test_association->gvcid_blk.scid  = SCID & 0x3FF;
 
     // Modify SA 6
     sa_if->sa_get_from_spi(6, &test_association);
@@ -296,20 +285,7 @@ UTEST(EP_MC, MC_ERASE)
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_ERASE_h = "2003001a00ff000100001880d2c70008197f0b00340000b1fe312855";
-    //                     |2003001a00| = Primary Header
-    //                               |ff| = Ext. Procs
-    //                                 |00010000| = Security Header
-    //                                         |1880| = CryptoLib App ID
-    //                                             |d2c7| = seq, packet id
-    //                                                 |0008| = packet length
-    //                                                     |197f| = pusv, ack, st
-    //                                                         |0b| = sst
-    //                                                           |0034| = PDU Tag
-    //                                                               |0000| = PDU Length
-    //                                                                   |b1fe|
-    //                                                                       |3128|
-    //                                                                           |55| = Padding
+    char *buffer_ERASE_h = "2003001a00ff000000001880d2c70008197f0b00340000b1fe312855";
 
     uint8_t *buffer_ERASE_b   = NULL;
     int      buffer_ERASE_len = 0;
@@ -320,9 +296,16 @@ UTEST(EP_MC, MC_ERASE)
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association;
 
-    // Modify SA 1
-    sa_if->sa_get_from_spi(1, &test_association);
+    // Modify SA 0
+    sa_if->sa_get_from_spi(0, &test_association);
     test_association->shivf_len = 0;
+    test_association->sa_state = SA_OPERATIONAL;
+    test_association->iv_len          = 12;
+    test_association->shsnf_len       = 2;
+    test_association->arsnw           = 5;
+    test_association->arsnw_len       = 1;
+    test_association->arsn_len        = 2;
+    test_association->gvcid_blk.scid  = SCID & 0x3FF;
 
     // Modify SA 6
     sa_if->sa_get_from_spi(6, &test_association);
@@ -374,8 +357,6 @@ UTEST(EP_MC, MC_SELF_TEST)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
@@ -386,20 +367,7 @@ UTEST(EP_MC, MC_SELF_TEST)
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_SELF_h = "2003001a00ff000100001880d2c70008197f0b00350000b1fe312855";
-    //                    |2003001a00| = Primary Header
-    //                              |ff| = Ext. Procs
-    //                                |00010000| = Security Header
-    //                                        |1880| = CryptoLib App ID
-    //                                            |d2c7| = seq, packet id
-    //                                                |0008| = packet length
-    //                                                    |197f| = pusv, ack, st
-    //                                                        |0b| = sst
-    //                                                          |0035| = PDU Tag
-    //                                                              |0000| = PDU Length
-    //                                                                  |b1fe|
-    //                                                                      |3128|
-    //                                                                          |55| = Padding
+    char *buffer_SELF_h = "2003001a00ff000000001880d2c70008197f0b00350000b1fe312855";
 
     uint8_t *buffer_SELF_b   = NULL;
     int      buffer_SELF_len = 0;
@@ -410,9 +378,17 @@ UTEST(EP_MC, MC_SELF_TEST)
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association;
 
-    // Modify SA 1
-    sa_if->sa_get_from_spi(1, &test_association);
+    // Modify SA 0
+    sa_if->sa_get_from_spi(0, &test_association);
+    sa_if->sa_get_from_spi(0, &test_association);
     test_association->shivf_len = 0;
+    test_association->sa_state = SA_OPERATIONAL;
+    test_association->iv_len          = 12;
+    test_association->shsnf_len       = 2;
+    test_association->arsnw           = 5;
+    test_association->arsnw_len       = 1;
+    test_association->arsn_len        = 2;
+    test_association->gvcid_blk.scid  = SCID & 0x3FF;
 
     // Modify SA 6
     sa_if->sa_get_from_spi(6, &test_association);
@@ -464,8 +440,6 @@ UTEST(EP_MC, MC_ALARM_FLAG_RESET)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
@@ -476,21 +450,8 @@ UTEST(EP_MC, MC_ALARM_FLAG_RESET)
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_ALARM_h = "2003001a00ff000100001880d2c70008197f0b00370000b1fe312855";
-    //                     |2003001a00| = Primary Header
-    //                               |ff| = Ext. Procs
-    //                                 |00010000| = Security Header
-    //                                         |1880| = CryptoLib App ID
-    //                                             |d2c7| = seq, packet id
-    //                                                 |0008| = packet length
-    //                                                     |197f| = pusv, ack, st
-    //                                                         |0b| = sst
-    //                                                           |0037| = PDU Tag
-    //                                                               |0000| = PDU Length
-    //                                                                   |b1fe|
-    //                                                                       |3128|
-    //                                                                           |55| = Padding
-
+    char *buffer_ALARM_h = "2003001a00ff000000001880d2c70008197f0b00370000b1fe312855";
+ 
     uint8_t *buffer_ALARM_b   = NULL;
     int      buffer_ALARM_len = 0;
 
@@ -500,9 +461,16 @@ UTEST(EP_MC, MC_ALARM_FLAG_RESET)
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association;
 
-    // Modify SA 1
-    sa_if->sa_get_from_spi(1, &test_association);
+    // Modify SA 0
+    sa_if->sa_get_from_spi(0, &test_association);
     test_association->shivf_len = 0;
+    test_association->sa_state = SA_OPERATIONAL;
+    test_association->iv_len          = 12;
+    test_association->shsnf_len       = 2;
+    test_association->arsnw           = 5;
+    test_association->arsnw_len       = 1;
+    test_association->arsn_len        = 2;
+    test_association->gvcid_blk.scid  = SCID & 0x3FF;
 
     // Modify SA 6
     sa_if->sa_get_from_spi(6, &test_association);
