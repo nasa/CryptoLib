@@ -2219,6 +2219,8 @@ UTEST(TM_PROCESS, TM_KEY_STATE_TEST)
     SecurityAssociation_t *sa_ptr;
     sa_if->sa_get_from_spi(1, &sa_ptr);
     sa_ptr->sa_state = SA_OPERATIONAL;
+    sa_ptr->est = 1;
+    sa_ptr->ecs = CRYPTO_CIPHER_AES256_GCM;
 
     crypto_key_t *ekp    = NULL;
     ekp = key_if->get_key(sa_ptr->ekid);

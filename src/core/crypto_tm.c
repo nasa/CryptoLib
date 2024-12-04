@@ -237,28 +237,31 @@ void Crypto_TM_Handle_Managed_Parameter_Flags(uint16_t *pdu_len)
 int32_t Crypto_TM_Get_Keys(crypto_key_t **ekp, crypto_key_t **akp, SecurityAssociation_t *sa_ptr)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-
     *ekp           = key_if->get_key(sa_ptr->ekid);
     *akp           = key_if->get_key(sa_ptr->akid);
 
-    if ((*ekp)->key_state != KEY_ACTIVE || (*akp)->key_state != KEY_ACTIVE)
+    if (*ekp == NULL || *akp == NULL)
     {
-        status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
+        status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
         mc_if->mc_log(status);
+        return status;
     }
-    
-    if (status == CRYPTO_LIB_SUCCESS)
+    if (sa_ptr->est == 1)
     {
-        if (*ekp == NULL)
+        if ((*ekp)->key_state != KEY_ACTIVE)
         {
-            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+            status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
             mc_if->mc_log(status);
+            return status;
         }
-
-        if (*akp == NULL && status == CRYPTO_LIB_SUCCESS)
+    }
+    if (sa_ptr->ast == 1)
+    {
+        if ((*akp)->key_state != KEY_ACTIVE)
         {
-            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+            status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
             mc_if->mc_log(status);
+            return status;
         }
     }
     return status;
