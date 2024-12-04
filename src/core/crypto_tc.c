@@ -351,16 +351,16 @@ int32_t Crypto_TC_Do_Encrypt_PLAINTEXT(uint8_t sa_service_type, SecurityAssociat
     crypto_key_t *akp = NULL;
 
     /* Get Key */
-    ekp = key_if->get_key(sa_ptr->ekid);
-    akp = key_if->get_key(sa_ptr->akid);
-    if (ekp == NULL || akp == NULL)
-    {
-        status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-        mc_if->mc_log(status);
-        return status;
-    }
+    
     if (sa_ptr->est == 1)
     {
+        ekp = key_if->get_key(sa_ptr->ekid);
+        if (ekp == NULL)
+        {
+            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+            mc_if->mc_log(status);
+            return status;
+        }
         if (ekp->key_state != KEY_ACTIVE)
         {
             status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
@@ -370,6 +370,13 @@ int32_t Crypto_TC_Do_Encrypt_PLAINTEXT(uint8_t sa_service_type, SecurityAssociat
     }
     if (sa_ptr->ast == 1)
     {
+        akp = key_if->get_key(sa_ptr->akid);
+        if (akp == NULL)
+        {
+            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+            mc_if->mc_log(status);
+            return status;
+        }
         if (akp->key_state != KEY_ACTIVE)
         {
             status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
@@ -1576,34 +1583,31 @@ int32_t Crypto_TC_Get_Keys(crypto_key_t **ekp, crypto_key_t **akp, SecurityAssoc
 
     if (sa_ptr->est == 1)
     {
-        if ((*ekp)->key_state != KEY_ACTIVE)
-        {
-            status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
-            mc_if->mc_log(status);
-        }
-    }
-    if (sa_ptr->ast == 1)
-    {
-        if ((*akp)->key_state != KEY_ACTIVE)
-        {
-            status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
-            mc_if->mc_log(status);
-        }
-    }
-    if (status == CRYPTO_LIB_SUCCESS)
-    {
         if (*ekp == NULL)
         {
             status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
             mc_if->mc_log(status);
         }
-
+        if ((*ekp)->key_state != KEY_ACTIVE && (status == CRYPTO_LIB_SUCCESS))
+        {
+            status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
+            mc_if->mc_log(status);
+        }
+    }
+    if (sa_ptr->ast == 1 && status == CRYPTO_LIB_SUCCESS)
+    {
         if ((*akp == NULL) && (status == CRYPTO_LIB_SUCCESS))
         {
             status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
             mc_if->mc_log(status);
         }
+        if ((*akp)->key_state != KEY_ACTIVE && (status == CRYPTO_LIB_SUCCESS))
+        {
+            status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
+            mc_if->mc_log(status);
+        }
     }
+    
 
     return status;
 }
