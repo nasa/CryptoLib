@@ -72,7 +72,7 @@ int32_t Crypto_Key_OTAR(void)
 #ifdef DEBUG
         printf(KRED "Error: MKID is not valid! \n" RESET);
 #endif
-        status = CRYPTO_LIB_ERROR;
+        status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
         return status;
     }
 
@@ -93,10 +93,17 @@ int32_t Crypto_Key_OTAR(void)
 #endif
     }
 
+    // Try to get key
     ekp = key_if->get_key(packet.mkid);
     if (ekp == NULL)
     {
         return CRYPTO_LIB_ERR_KEY_ID_ERROR;
+    }
+
+    // Check key state
+    if(ekp->key_state != KEY_ACTIVE)
+    {
+        return CRYPTO_LIB_ERR_KEY_STATE_INVALID;
     }
 
     uint8_t ecs = CRYPTO_CIPHER_AES256_GCM; // Per SDLS baseline
