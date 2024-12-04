@@ -160,6 +160,47 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC)
 }
 
 /**
+ * @brief Unit Test: Nominal Encryption
+ **/
+UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_BAD_SPI)
+{
+    remove("sa_save_file.bin");
+    // Setup & Initialize CryptoLib
+    Crypto_Init_TC_Unit_Test();
+    char       *raw_tc_sdls_ping_h   = "20030015000080d2c70008197f0b00310000b1fe3128";
+    char       *raw_tc_sdls_ping_b   = NULL;
+    int         raw_tc_sdls_ping_len = 0;
+    SaInterface sa_if                = get_sa_interface_inmemory();
+
+    hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
+
+    uint8_t *ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+
+    int32_t return_val = CRYPTO_LIB_ERROR;
+
+    SecurityAssociation_t *test_association;
+    // Expose the SADB Security Association for test edits.
+    sa_if->sa_get_from_spi(1, &test_association);
+    test_association->sa_state = SA_NONE;
+    sa_if->sa_get_from_spi(4, &test_association);
+    // Set the Key
+    test_association->ekid           = 130;
+    test_association->gvcid_blk.vcid = 0;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ast            = 0;
+    test_association->arsn_len       = 0;
+    test_association->spi            = 5;
+
+    return_val =
+        Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    Crypto_Shutdown();
+    free(raw_tc_sdls_ping_b);
+    free(ptr_enc_frame);
+    ASSERT_EQ(CRYPTO_LIB_ERR_SPI_INDEX_MISMATCH, return_val);
+}
+
+/**
  * @brief Unit Test: Nominal Encryption CBC
  **/
 UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_CBC)
@@ -1382,6 +1423,54 @@ UTEST(TC_APPLY_SECURITY, PLAINTEXT_W_ARSN)
     Crypto_Shutdown();
     free(raw_tc_sdls_ping_b);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+}
+
+UTEST(TC_APPLY_SECURITY, TC_KEY_STATE_TEST)
+{
+    remove("sa_save_file.bin");
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    Crypto_Init();
+    // Test string
+    char *raw_tc_sdls_ping_h   = "20030015000080d2c70008197f0b00310000b1fe3128";
+    char *raw_tc_sdls_ping_b   = NULL;
+    int   raw_tc_sdls_ping_len = 0;
+
+    hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
+
+    uint8_t *ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+    int32_t  return_val    = CRYPTO_LIB_ERROR;
+
+    SecurityAssociation_t *test_association;
+    sa_if->sa_get_from_spi(1, &test_association);
+    test_association->sa_state = SA_KEYED;
+    sa_if->sa_get_from_spi(4, &test_association);
+    test_association->sa_state = SA_OPERATIONAL;
+    test_association->ekid = 130;
+
+    crypto_key_t *ekp    = NULL;
+    ekp = key_if->get_key(test_association->ekid);
+    ekp->key_state = KEY_DEACTIVATED;
+
+    crypto_key_t *akp    = NULL;
+    akp = key_if->get_key(test_association->akid);
+    akp->key_state = KEY_DEACTIVATED;
+
+    return_val =
+        Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+
+    Crypto_Shutdown();
+    free(raw_tc_sdls_ping_b);
+    ASSERT_EQ(CRYPTO_LIB_ERR_KEY_STATE_INVALID, return_val);
 }
 
 UTEST_MAIN();

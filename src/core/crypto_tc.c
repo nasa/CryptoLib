@@ -348,6 +348,43 @@ int32_t Crypto_TC_Do_Encrypt_PLAINTEXT(uint8_t sa_service_type, SecurityAssociat
 {
     int32_t  status = CRYPTO_LIB_SUCCESS;
     uint16_t index  = *index_p;
+    crypto_key_t *akp = NULL;
+
+    /* Get Key */
+    
+    if (sa_ptr->est == 1)
+    {
+        ekp = key_if->get_key(sa_ptr->ekid);
+        if (ekp == NULL)
+        {
+            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+            mc_if->mc_log(status);
+            return status;
+        }
+        if (ekp->key_state != KEY_ACTIVE)
+        {
+            status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
+            mc_if->mc_log(status);
+            return status;
+        }
+    }
+    if (sa_ptr->ast == 1)
+    {
+        akp = key_if->get_key(sa_ptr->akid);
+        if (akp == NULL)
+        {
+            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+            mc_if->mc_log(status);
+            return status;
+        }
+        if (akp->key_state != KEY_ACTIVE)
+        {
+            status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
+            mc_if->mc_log(status);
+            return status;
+        }
+    }
+
     if (sa_service_type != SA_PLAINTEXT)
     {
         uint8_t *mac_ptr = NULL;
@@ -388,14 +425,6 @@ int32_t Crypto_TC_Do_Encrypt_PLAINTEXT(uint8_t sa_service_type, SecurityAssociat
         printf("Input bytes input_loc is %d\n", TC_FRAME_HEADER_SIZE + segment_hdr_len);
 #endif
 
-        /* Get Key */
-        ekp = key_if->get_key(sa_ptr->ekid);
-        if (ekp == NULL)
-        {
-            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-            mc_if->mc_log(status);
-            return status;
-        }
         if (ecs_is_aead_algorithm == CRYPTO_TRUE)
         {
             // Check that key length to be used ets the algorithm requirement
@@ -456,13 +485,6 @@ int32_t Crypto_TC_Do_Encrypt_PLAINTEXT(uint8_t sa_service_type, SecurityAssociat
 
             if (sa_service_type == SA_AUTHENTICATION)
             {
-                /* Get Key */
-                crypto_key_t *akp = NULL;
-                akp               = key_if->get_key(sa_ptr->akid);
-                if (akp == NULL)
-                {
-                    return CRYPTO_LIB_ERR_KEY_ID_ERROR;
-                }
 
                 // Check that key length to be used ets the algorithm requirement
                 if ((int32_t)akp->key_len != Crypto_Get_ACS_Algo_Keylen(sa_ptr->acs))
@@ -1559,17 +1581,34 @@ int32_t Crypto_TC_Get_Keys(crypto_key_t **ekp, crypto_key_t **akp, SecurityAssoc
     *ekp           = key_if->get_key(sa_ptr->ekid);
     *akp           = key_if->get_key(sa_ptr->akid);
 
-    if (ekp == NULL)
+    if (sa_ptr->est == 1)
     {
-        status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-        mc_if->mc_log(status);
+        if (*ekp == NULL)
+        {
+            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+            mc_if->mc_log(status);
+        }
+        if ((*ekp)->key_state != KEY_ACTIVE && (status == CRYPTO_LIB_SUCCESS))
+        {
+            status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
+            mc_if->mc_log(status);
+        }
     }
+    if (sa_ptr->ast == 1 && status == CRYPTO_LIB_SUCCESS)
+    {
+        if ((*akp == NULL) && (status == CRYPTO_LIB_SUCCESS))
+        {
+            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+            mc_if->mc_log(status);
+        }
+        if ((*akp)->key_state != KEY_ACTIVE && (status == CRYPTO_LIB_SUCCESS))
+        {
+            status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
+            mc_if->mc_log(status);
+        }
+    }
+    
 
-    if ((akp == NULL) && (status == CRYPTO_LIB_SUCCESS))
-    {
-        status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-        mc_if->mc_log(status);
-    }
     return status;
 }
 
@@ -1867,6 +1906,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
     memcpy((tc_sdls_processed_frame->tc_sec_header.pad),
            &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len]),
            sa_ptr->shplf_len);
+           
 
     // Parse MAC, prepare AAD
     status = Crypto_TC_Prep_AAD(tc_sdls_processed_frame, fecf_len, sa_service_type, ecs_is_aead_algorithm, &aad_len,
@@ -1924,10 +1964,20 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
         return status; // Cryptography IF call failed, return.
     }
     // Extended PDU processing, if applicable
-    // TODO: Validiate using correct SA
+ 
     if (status == CRYPTO_LIB_SUCCESS && crypto_config.process_sdls_pdus == TC_PROCESS_SDLS_PDUS_TRUE)
     {
-        status = Crypto_Process_Extended_Procedure_Pdu(tc_sdls_processed_frame, ingest);
+        if((sa_ptr->spi == SPI_MIN) || sa_ptr->spi == SPI_MAX) 
+        {
+            status = Crypto_Process_Extended_Procedure_Pdu(tc_sdls_processed_frame, ingest);
+        }
+        else  
+        {
+            // Some Magic here to log that an inappropriate SA was attempted to be used for EP
+            status = CRYPTO_LIB_ERR_SPI_INDEX_OOB;  // TODO:  Do we want a different error code for this?
+            mc_if->mc_log(status);
+            status = CRYPTO_LIB_SUCCESS;
+        }
     }
 
     Crypto_TC_Safe_Free_Ptr(aad);
@@ -2009,6 +2059,24 @@ uint8_t *Crypto_Prepare_TC_AAD(uint8_t *buffer, uint16_t len_aad, uint8_t *abm_b
     return aad;
 }
 
+static int32_t validate_sa_index(SecurityAssociation_t *sa)
+{
+    int32_t returnval = -1;
+    SecurityAssociation_t *temp_sa;
+    sa_if->sa_get_from_spi(sa->spi, &temp_sa);
+    int sa_index = -1;
+    sa_index = (int)(sa - temp_sa); // Based on array memory location
+#ifdef DEBUG
+    if(sa_index == 0)
+        printf("SA Index matches SPI\n");
+    else
+        printf("Malformed SA SPI based on SA Index!\n");
+#endif
+    if(sa_index == 0)
+        returnval = 0;
+    return returnval;
+}
+
 /**
  * TODO: Single Return
  * @brief Function: crypto_tc_validate_sa
@@ -2018,6 +2086,10 @@ uint8_t *Crypto_Prepare_TC_AAD(uint8_t *buffer, uint16_t len_aad, uint8_t *abm_b
  **/
 static int32_t crypto_tc_validate_sa(SecurityAssociation_t *sa)
 {
+    if(validate_sa_index(sa) != 0)
+    {
+        return CRYPTO_LIB_ERR_SPI_INDEX_MISMATCH;
+    }
     if (sa->sa_state != SA_OPERATIONAL)
     {
         return CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL;
