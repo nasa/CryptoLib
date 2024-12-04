@@ -2020,6 +2020,24 @@ uint8_t *Crypto_Prepare_TC_AAD(uint8_t *buffer, uint16_t len_aad, uint8_t *abm_b
     return aad;
 }
 
+static int32_t validate_sa_index(SecurityAssociation_t *sa)
+{
+    int32_t returnval = -1;
+    SecurityAssociation_t *temp_sa;
+    sa_if->sa_get_from_spi(sa->spi, &temp_sa);
+    int sa_index = -1;
+    sa_index = (int)(sa - temp_sa);
+#ifdef DEBUG
+    if(sa_index == 0)
+        printf("SA Index matches SPI\n");
+    else
+        printf("Malformed SA SPI based on SA Index!\n");
+#endif
+    if(sa_index == 0)
+        returnval = 0;
+    return returnval;
+}
+
 /**
  * TODO: Single Return
  * @brief Function: crypto_tc_validate_sa
@@ -2029,6 +2047,10 @@ uint8_t *Crypto_Prepare_TC_AAD(uint8_t *buffer, uint16_t len_aad, uint8_t *abm_b
  **/
 static int32_t crypto_tc_validate_sa(SecurityAssociation_t *sa)
 {
+    if(validate_sa_index(sa) != 0)
+    {
+        return CRYPTO_LIB_ERR_SPI_INDEX_OOB;
+    }
     if (sa->sa_state != SA_OPERATIONAL)
     {
         return CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL;

@@ -13,8 +13,6 @@ UTEST(EP_MC, MC_REGULAR_PING)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
@@ -123,19 +121,6 @@ UTEST(EP_MC, MC_STATUS)
 
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_STATUS_h = "2003001a00ff000000001880d2c70008197f0b00320000b1fe312855";
-    //                      |2003001a00| = Primary Header
-    //                                |ff| = Ext. Procs
-    //                                  |00000000| = Security Header
-    //                                          |1880| = CryptoLib App ID
-    //                                              |d2c7| = seq, packet id
-    //                                                  |0008| = packet length
-    //                                                      |197f| = pusv, ack, st
-    //                                                          |0b| = sst
-    //                                                            |0032| = PDU Tag
-    //                                                                |0000| = PDU Length
-    //                                                                    |b1fe|
-    //                                                                        |3128|
-    //                                                                            |55| = Padding
 
     uint8_t *buffer_STATUS_b   = NULL;
     int      buffer_STATUS_len = 0;
@@ -207,8 +192,6 @@ UTEST(EP_MC, MC_DUMP)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
@@ -218,22 +201,7 @@ UTEST(EP_MC, MC_DUMP)
 
     int status = CRYPTO_LIB_SUCCESS;
 
-    // NOTE: Added Transfer Frame header to the plaintext
-    // 0880d2c70039b300300a044e4153410a044e4153410a044e4153410a044e4153410a044e4153410a044e415341
     char *buffer_DUMP_h = "2003001a00ff000000001880d2c70008197f0b00330000b1fe312855";
-    //                    |2003001a00| = Primary Header
-    //                              |ff| = Ext. Procs
-    //                                |00000000| = Security Header
-    //                                        |1880| = CryptoLib App ID
-    //                                            |d2c7| = seq, packet id
-    //                                                |0008| = packet length
-    //                                                    |197f| = pusv, ack, st
-    //                                                        |0b| = sst
-    //                                                          |0033| = PDU Tag
-    //                                                              |0000| = PDU Length
-    //                                                                  |b1fe|
-    //                                                                      |3128|
-    //                                                                          |55| = Padding
 
     uint8_t *buffer_DUMP_b   = NULL;
     int      buffer_DUMP_len = 0;
@@ -318,19 +286,6 @@ UTEST(EP_MC, MC_ERASE)
 
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_ERASE_h = "2003001a00ff000000001880d2c70008197f0b00340000b1fe312855";
-    //                     |2003001a00| = Primary Header
-    //                               |ff| = Ext. Procs
-    //                                 |00000000| = Security Header
-    //                                         |1880| = CryptoLib App ID
-    //                                             |d2c7| = seq, packet id
-    //                                                 |0008| = packet length
-    //                                                     |197f| = pusv, ack, st
-    //                                                         |0b| = sst
-    //                                                           |0034| = PDU Tag
-    //                                                               |0000| = PDU Length
-    //                                                                   |b1fe|
-    //                                                                       |3128|
-    //                                                                           |55| = Padding
 
     uint8_t *buffer_ERASE_b   = NULL;
     int      buffer_ERASE_len = 0;
@@ -402,8 +357,6 @@ UTEST(EP_MC, MC_SELF_TEST)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
@@ -415,19 +368,6 @@ UTEST(EP_MC, MC_SELF_TEST)
 
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_SELF_h = "2003001a00ff000000001880d2c70008197f0b00350000b1fe312855";
-    //                    |2003001a00| = Primary Header
-    //                              |ff| = Ext. Procs
-    //                                |00000000| = Security Header
-    //                                        |1880| = CryptoLib App ID
-    //                                            |d2c7| = seq, packet id
-    //                                                |0008| = packet length
-    //                                                    |197f| = pusv, ack, st
-    //                                                        |0b| = sst
-    //                                                          |0035| = PDU Tag
-    //                                                              |0000| = PDU Length
-    //                                                                  |b1fe|
-    //                                                                      |3128|
-    //                                                                          |55| = Padding
 
     uint8_t *buffer_SELF_b   = NULL;
     int      buffer_SELF_len = 0;
@@ -500,8 +440,6 @@ UTEST(EP_MC, MC_ALARM_FLAG_RESET)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
@@ -513,20 +451,7 @@ UTEST(EP_MC, MC_ALARM_FLAG_RESET)
 
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_ALARM_h = "2003001a00ff000000001880d2c70008197f0b00370000b1fe312855";
-    //                     |2003001a00| = Primary Header
-    //                               |ff| = Ext. Procs
-    //                                 |00000000| = Security Header
-    //                                         |1880| = CryptoLib App ID
-    //                                             |d2c7| = seq, packet id
-    //                                                 |0008| = packet length
-    //                                                     |197f| = pusv, ack, st
-    //                                                         |0b| = sst
-    //                                                           |0037| = PDU Tag
-    //                                                               |0000| = PDU Length
-    //                                                                   |b1fe|
-    //                                                                       |3128|
-    //                                                                           |55| = Padding
-
+ 
     uint8_t *buffer_ALARM_b   = NULL;
     int      buffer_ALARM_len = 0;
 

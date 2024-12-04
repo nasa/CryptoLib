@@ -13,21 +13,17 @@ UTEST(EP_KEY_MGMT, OTAR_0_140_142)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_1_Managed_Parameters = {
         0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
 
     Crypto_Init();
     SaInterface sa_if = get_sa_interface_inmemory();
-    // crypto_key_t* ekp = NULL;
+
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
@@ -62,14 +58,10 @@ UTEST(EP_KEY_MGMT, OTAR_0_140_142)
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
-    // ekp = key_if->get_key(test_association->ekid);
-    // memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
     // Convert frames that will be processed
     hex_conversion(buffer_OTAR_h, (char **)&buffer_OTAR_b, &buffer_OTAR_len);
     // Convert/Set input IV
-    // hex_conversion(buffer_nist_iv_h, (char**) &buffer_nist_iv_b, &buffer_nist_iv_len);
-    // memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
 
     // Expect success on next valid IV && ARSN
     printf(KGRN "Checking  next valid IV && valid ARSN... should be able to receive it... \n" RESET);
@@ -78,7 +70,6 @@ UTEST(EP_KEY_MGMT, OTAR_0_140_142)
 
     printf("\n");
     Crypto_Shutdown();
-    // free(buffer_nist_iv_b);
     free(buffer_nist_key_b);
     free(buffer_OTAR_b);
 }
@@ -93,14 +84,10 @@ UTEST(EP_KEY_MGMT, ACTIVATE_141_142)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_1_Managed_Parameters = {
         0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
@@ -137,7 +124,6 @@ UTEST(EP_KEY_MGMT, ACTIVATE_141_142)
     test_association->arsn_len  = 2;
     test_association->arsnw     = 5;
     test_association->iv_len    = 12;
-    test_association->sa_state = SA_OPERATIONAL;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
@@ -173,14 +159,10 @@ UTEST(EP_KEY_MGMT, DEACTIVATE_142)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_1_Managed_Parameters = {
         0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
@@ -219,7 +201,6 @@ UTEST(EP_KEY_MGMT, DEACTIVATE_142)
     test_association->shsnf_len = 2;
     test_association->arsn_len  = 2;
     test_association->arsnw     = 5;
-    test_association->sa_state = SA_OPERATIONAL;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
@@ -254,16 +235,10 @@ UTEST(EP_KEY_MGMT, INVENTORY_132_134)
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
-
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
-    // GvcidManagedParameters_t TC_1_Managed_Parameters = {0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0,
-    // TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1}; Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
 
     int status = CRYPTO_LIB_SUCCESS;
     status     = Crypto_Init();
@@ -354,14 +329,11 @@ UTEST(EP_KEY_MGMT, VERIFY_132_134)
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_1_Managed_Parameters = {
         0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
@@ -380,13 +352,7 @@ UTEST(EP_KEY_MGMT, VERIFY_132_134)
     char *buffer_TRUTH_RESPONSE_h =
         "0880D03A0068197F0B008402E00084000000000000000000000001D8EAA795AFFAA0E951BB6CF0116192E16B1977D6723E92E01123CCEF"
         "548E2885008600000000000000000000000275C47F30CA26E64AF30C19EBFFE0B314849133E138AC65BC2806E520A90C96A8";
-    //                         0880D03A0068 = Primary Header
-    //                                    197F0B00 = PUS Header
-    //                                           0402E0 = PDU Tag & Length
-    //                                                0084 000000000000000000000001 D8EAA795AFFAA0E951BB6CF0116192E1
-    //                                                6B1977D6723E92E01123CCEF548E2885 =  #1: KID, IV, CHALLENGE, MAC
-    //                                                0086 000000000000000000000002 75C47F30CA26E64AF30C19EBFFE0B314
-    //                                                849133E138AC65BC2806E520A90C96A8 =  #2: KID, IV, CHALLENGE, MAC
+
     uint8_t *buffer_nist_key_b, *buffer_VERIFY_b, *buffer_TRUTH_RESPONSE_b     = NULL;
     int      buffer_nist_key_len, buffer_VERIFY_len, buffer_TRUTH_RESPONSE_len = 0;
 

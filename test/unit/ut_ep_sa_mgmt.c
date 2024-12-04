@@ -27,21 +27,7 @@ UTEST(EP_SA_MGMT, SA_6_REKEY_133)
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_REKEY_h =
         "2003002a00ff000000001880d0ac0018197f0b0016000c00060085000000000000000000000000da959fc8555555555555";
-    //                     |2003002a00| = Primary Header
-    //                               |ff| = Ext. Procs
-    //                                 |0000| = SPI
-    //                                     |0000| = ARSN
-    //                                         |1880| = CryptoLib App ID
-    //                                             |d0ac| = seq, pktid
-    //                                                 |0018| = pkt_length
-    //                                                     |197f| = pusv, ack, st
-    //                                                         |0b| = sst, sid, spare
-    //                                                           |0016| = PDU Tag
-    //                                                               |000c| = PDU Length
-    //                                                                   |0006| = SA
-    //                                                                       |0085| = Key ID
-    //                                                                           |000000000000000000000000da959fc8| = IV
-
+  
     uint8_t *buffer_REKEY_b   = NULL;
     int      buffer_REKEY_len = 0;
 
@@ -87,8 +73,6 @@ UTEST(EP_SA_MGMT, SA_START_6)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
@@ -100,18 +84,6 @@ UTEST(EP_SA_MGMT, SA_START_6)
 
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_START_h = "2003002000ff000000001880d0ad000e197f0b001b0004000600003040f6f7a61a5555";
-    //                     |2003002000| = Primary Header
-    //                               |ff| = Ext. Procs
-    //                                 |0000| = SPI
-    //                                     |0000| = ARSN
-    //                                         |1880| = CryptoLib App ID
-    //                                             |d0ad| = seq, pktid
-    //                                                 |000e| = pkt_length
-    //                                                     |197f| = pusv, ack, st
-    //                                                         |0b| = sst, sid, spare
-    //                                                           |001b| = PDU Tag
-    //                                                               |0004| = PDU Length
-    //                                                                   |0006| = SA being started
 
     uint8_t *buffer_START_b   = NULL;
     int      buffer_START_len = 0;
@@ -154,8 +126,7 @@ UTEST(EP_SA_MGMT, SA_6_READ_ARSN)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
@@ -167,18 +138,6 @@ UTEST(EP_SA_MGMT, SA_6_READ_ARSN)
 
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_READ_h = "2003001c00ff000000001880d0b0000a197f0b001000020006555555555555";
-    //                    |2003001c00| = Primary Header
-    //                              |ff| = Ext. Procs
-    //                                |0000| = SPI
-    //                                    |0000| = ARSN
-    //                                        |1880| = CryptoLib App ID
-    //                                            |d0ad| = seq, pktid
-    //                                                |000e| = pkt_length
-    //                                                    |197f| = pusv, ack, st
-    //                                                        |0b| = sst, sid, spare
-    //                                                          |001b| = PDU Tag
-    //                                                              |0002| = PDU Length
-    //                                                                  |0006| = SA being read
 
     uint8_t *buffer_READ_b   = NULL;
     int      buffer_READ_len = 0;
@@ -256,8 +215,6 @@ UTEST(EP_SA_MGMT, SA_6_SET_ARSNW)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
@@ -269,19 +226,6 @@ UTEST(EP_SA_MGMT, SA_6_SET_ARSNW)
 
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_SET_h = "2003001a00ff000000001880d0b1000a197f0b0015000400060955";
-    //                   |2003001a00| = Primary Header
-    //                             |ff| = Ext. Procs
-    //                               |0000| = SPI
-    //                                   |0000| = ARSN
-    //                                       |1880| = CryptoLib App ID
-    //                                           |d0b1| = seq, pktid
-    //                                               |0009| = pkt_length
-    //                                                   |197f| = pusv, ack, st
-    //                                                       |0b| = sst, sid, spare
-    //                                                         |0015| = PDU Tag
-    //                                                             |000a| = PDU Length
-    //                                                                 |0006| = SA being modified
-    //                                                                     |09| = ARSNW
 
     uint8_t *buffer_SET_b   = NULL;
     int      buffer_SET_len = 0;
@@ -330,8 +274,6 @@ UTEST(EP_SA_MGMT, SA_6_SET_ARSN)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
@@ -343,19 +285,6 @@ UTEST(EP_SA_MGMT, SA_6_SET_ARSN)
 
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_SET_h = "2003002800ff000000001880d0b10016197f0b001a000a000600000000000000000000006413b5983e55";
-    //                   |2003002800| = Primary Header
-    //                             |ff| = Ext. Procs
-    //                               |0001| = SPI
-    //                                   |0000| = ARSN
-    //                                       |1880| = CryptoLib App ID
-    //                                           |d0b1| = seq, pktid
-    //                                               |0016| = pkt_length
-    //                                                   |197f| = pusv, ack, st
-    //                                                       |0b| = sst, sid, spare
-    //                                                         |001a| = PDU Tag
-    //                                                             |000a| = PDU Length
-    //                                                                 |0006| = SA being modified
-    //                                                                     |00000000000000000000006413b5983e| = ARSN
 
     uint8_t *buffer_SET_b   = NULL;
     int      buffer_SET_len = 0;
@@ -405,8 +334,6 @@ UTEST(EP_SA_MGMT, SA_6_STATUS)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
@@ -499,8 +426,6 @@ UTEST(EP_SA_MGMT, SA_STOP_6)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
@@ -512,18 +437,6 @@ UTEST(EP_SA_MGMT, SA_STOP_6)
 
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_STOP_h = "2003001c00ff000000001880d0b6000a197f0b001e00020006938f21c4555555555555";
-    //                    |2003001c00| = Primary Header
-    //                              |ff| = Ext. Procs
-    //                                |0000| = SPI
-    //                                    |0000| = ARSN
-    //                                        |1880| = CryptoLib App ID
-    //                                            |d0b6| = seq, pktid
-    //                                                |000a| = pkt_length
-    //                                                    |197f| = pusv, ack, st
-    //                                                        |0b| = sst, sid, spare
-    //                                                          |001e| = PDU Tag
-    //                                                              |0002| = PDU Length
-    //                                                                  |0006| = SA being stopped
 
     uint8_t *buffer_STOP_b   = NULL;
     int      buffer_STOP_len = 0;
@@ -570,8 +483,6 @@ UTEST(EP_SA_MGMT, SA_EXPIRE_6)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
