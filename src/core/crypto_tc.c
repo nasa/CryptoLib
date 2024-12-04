@@ -1867,6 +1867,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
     memcpy((tc_sdls_processed_frame->tc_sec_header.pad),
            &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len]),
            sa_ptr->shplf_len);
+           
 
     // Parse MAC, prepare AAD
     status = Crypto_TC_Prep_AAD(tc_sdls_processed_frame, fecf_len, sa_service_type, ecs_is_aead_algorithm, &aad_len,
@@ -1924,10 +1925,20 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
         return status; // Cryptography IF call failed, return.
     }
     // Extended PDU processing, if applicable
-    // TODO: Validiate using correct SA
+ 
     if (status == CRYPTO_LIB_SUCCESS && crypto_config.process_sdls_pdus == TC_PROCESS_SDLS_PDUS_TRUE)
     {
-        status = Crypto_Process_Extended_Procedure_Pdu(tc_sdls_processed_frame, ingest);
+        if((sa_ptr->spi == SPI_MIN) || sa_ptr->spi == SPI_MAX) //TODO:  Make sure that SPI can't be changed from the current array index.
+        {
+            status = Crypto_Process_Extended_Procedure_Pdu(tc_sdls_processed_frame, ingest);
+        }
+        else  
+        {
+            // Some Magic here to log that an inappropriate SA was attempted to be used for EP
+            status = CRYPTO_LIB_ERR_SPI_INDEX_OOB;  // TODO:  Do we want a different error code for this?
+            mc_if->mc_log(status);
+            status = CRYPTO_LIB_SUCCESS;
+        }
     }
 
     Crypto_TC_Safe_Free_Ptr(aad);

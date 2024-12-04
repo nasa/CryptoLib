@@ -229,12 +229,12 @@ static int32_t sa_save_sa(SecurityAssociation_t *sa)
 void sa_populate(void)
 {
     // Security Associations
-    // EMPTY SA - Not Used (SA_NONE)
     sa[0].spi             = 0;
     sa[0].sa_state        = SA_UNKEYED;
     sa[0].est             = 0;
     sa[0].ast             = 0;
     sa[0].shivf_len       = 0;
+    sa[0].iv_len          = 0;
     sa[0].shsnf_len       = 0;
     sa[0].arsn_len        = 0;
     sa[0].arsnw_len       = 0;
