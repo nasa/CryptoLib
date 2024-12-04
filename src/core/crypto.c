@@ -719,7 +719,7 @@ int32_t Crypto_USER_DEFINED_CMD(uint8_t *ingest)
 }
 
 /**
- * @brief Function: Crypto_Process_Extended_Procedure_Pdu
+ * @brief Function: Crypto_Get_Managed_Parameters_For_Gvcid
  * @param tfvn: uint8_t
  * @param scid: uint16_t
  * @param vcid: uint8_t
