@@ -249,13 +249,13 @@ int32_t Crypto_TM_Get_Keys(crypto_key_t **ekp, crypto_key_t **akp, SecurityAssoc
     
     if (status == CRYPTO_LIB_SUCCESS)
     {
-        if (ekp == NULL)
+        if (*ekp == NULL)
         {
             status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
             mc_if->mc_log(status);
         }
 
-        if (akp == NULL && status == CRYPTO_LIB_SUCCESS)
+        if (*akp == NULL && status == CRYPTO_LIB_SUCCESS)
         {
             status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
             mc_if->mc_log(status);
