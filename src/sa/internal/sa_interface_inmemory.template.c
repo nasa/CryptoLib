@@ -511,23 +511,6 @@ void sa_populate(void)
     sa[13].gvcid_blk.vcid  = 0;
     sa[13].gvcid_blk.mapid = TYPE_TC;
 
-    // TC - Keyed
-    sa[14].spi             = 14;
-    sa[14].ekid            = 14;
-    sa[14].sa_state        = SA_KEYED;
-    sa[14].est             = 0;
-    sa[14].ast             = 0;
-    sa[14].shivf_len       = 12;
-    sa[14].iv_len          = 12;
-    sa[14].shsnf_len       = 2;
-    sa[14].arsnw           = 5;
-    sa[14].arsnw_len       = 1;
-    sa[14].arsn_len        = 2;
-    sa[14].gvcid_blk.tfvn  = 2;
-    sa[14].gvcid_blk.scid  = SCID & 0x3FF;
-    sa[14].gvcid_blk.vcid  = 1;
-    sa[14].gvcid_blk.mapid = TYPE_TC;
-
     // TC - Unkeyed
     sa[14].spi             = 14;
     sa[14].ekid            = 14;
