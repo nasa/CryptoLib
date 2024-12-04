@@ -1928,7 +1928,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
  
     if (status == CRYPTO_LIB_SUCCESS && crypto_config.process_sdls_pdus == TC_PROCESS_SDLS_PDUS_TRUE)
     {
-        if((sa_ptr->spi == SPI_MIN) || sa_ptr->spi == SPI_MAX) //TODO:  Make sure that SPI can't be changed from the current array index.
+        if((sa_ptr->spi == SPI_MIN) || sa_ptr->spi == SPI_MAX) 
         {
             status = Crypto_Process_Extended_Procedure_Pdu(tc_sdls_processed_frame, ingest);
         }
@@ -2026,7 +2026,7 @@ static int32_t validate_sa_index(SecurityAssociation_t *sa)
     SecurityAssociation_t *temp_sa;
     sa_if->sa_get_from_spi(sa->spi, &temp_sa);
     int sa_index = -1;
-    sa_index = (int)(sa - temp_sa);
+    sa_index = (int)(sa - temp_sa); // Based on array memory location
 #ifdef DEBUG
     if(sa_index == 0)
         printf("SA Index matches SPI\n");
@@ -2049,7 +2049,7 @@ static int32_t crypto_tc_validate_sa(SecurityAssociation_t *sa)
 {
     if(validate_sa_index(sa) != 0)
     {
-        return CRYPTO_LIB_ERR_SPI_INDEX_OOB;
+        return CRYPTO_LIB_ERR_SPI_INDEX_MISMATCH;
     }
     if (sa->sa_state != SA_OPERATIONAL)
     {

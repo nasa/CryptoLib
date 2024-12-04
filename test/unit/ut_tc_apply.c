@@ -197,7 +197,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_BAD_SPI)
     Crypto_Shutdown();
     free(raw_tc_sdls_ping_b);
     free(ptr_enc_frame);
-    ASSERT_EQ(CRYPTO_LIB_ERR_SPI_INDEX_OOB, return_val);
+    ASSERT_EQ(CRYPTO_LIB_ERR_SPI_INDEX_MISMATCH, return_val);
 }
 
 /**
