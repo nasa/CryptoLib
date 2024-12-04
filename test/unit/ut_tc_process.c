@@ -103,6 +103,7 @@ UTEST(TC_PROCESS, EXERCISE_IV)
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
     ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
+    ekp->key_state = KEY_ACTIVE;
 
     // Convert frames that will be processed
     hex_conversion(buffer_replay_h, (char **)&buffer_replay_b, &buffer_replay_len);
@@ -239,6 +240,7 @@ UTEST(TC_PROCESS, EXERCISE_ARSN)
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
     akp = key_if->get_key(test_association->akid);
     memcpy(akp->value, buffer_nist_key_b, buffer_nist_key_len);
+    akp->key_state = KEY_ACTIVE;
     // Convert frames that will be processed
     hex_conversion(buffer_replay_h, (char **)&buffer_replay_b, &buffer_replay_len);
     hex_conversion(buffer_outside_window_h, (char **)&buffer_outside_window_b, &buffer_outside_window_len);
@@ -705,6 +707,14 @@ UTEST(TC_PROCESS, HAPPY_PATH_DECRYPT_CBC)
     test_association->ekid       = 130;
     test_association->sa_state   = SA_OPERATIONAL;
 
+    crypto_key_t *ekp    = NULL;
+    ekp = key_if->get_key(test_association->ekid);
+    ekp->key_state = KEY_ACTIVE;
+
+    crypto_key_t *akp    = NULL;
+    akp = key_if->get_key(test_association->akid);
+    akp->key_state = KEY_ACTIVE;
+
     // Convert input test frame
     hex_conversion(test_frame_pt_h, (char **)&test_frame_pt_b, &test_frame_pt_len);
 
@@ -779,6 +789,14 @@ UTEST(TC_PROCESS, DECRYPT_CBC_1B)
     test_association->ekid       = 130;
     test_association->sa_state   = SA_OPERATIONAL;
 
+    crypto_key_t *ekp    = NULL;
+    ekp = key_if->get_key(test_association->ekid);
+    ekp->key_state = KEY_ACTIVE;
+
+    crypto_key_t *akp    = NULL;
+    akp = key_if->get_key(test_association->akid);
+    akp->key_state = KEY_ACTIVE;
+
     // Convert input test frame
     hex_conversion(test_frame_pt_h, (char **)&test_frame_pt_b, &test_frame_pt_len);
 
@@ -852,6 +870,14 @@ UTEST(TC_PROCESS, DECRYPT_CBC_16B)
     test_association->stmacf_len = 0;
     test_association->sa_state   = SA_OPERATIONAL;
     test_association->ekid       = 130;
+
+    crypto_key_t *ekp    = NULL;
+    ekp = key_if->get_key(test_association->ekid);
+    ekp->key_state = KEY_ACTIVE;
+    
+    crypto_key_t *akp    = NULL;
+    akp = key_if->get_key(test_association->akid);
+    akp->key_state = KEY_ACTIVE;
 
     // Convert input test frame
     hex_conversion(test_frame_pt_h, (char **)&test_frame_pt_b, &test_frame_pt_len);
@@ -987,6 +1013,8 @@ UTEST(TC_PROCESS, GCM_IV_AND_ARSN)
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
     ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
+
+    ekp->key_state = KEY_ACTIVE;
 
     // Convert frames that will be processed
     hex_conversion(buffer_replay_h, (char **)&buffer_replay_b, &buffer_replay_len);

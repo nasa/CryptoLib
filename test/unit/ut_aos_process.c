@@ -1535,6 +1535,14 @@ UTEST(AOS_PROCESS, AES_GCM_DEC_ONLY)
     test_association->shsnf_len      = 0;
     memset(test_association->abm, 0xFF, (test_association->abm_len * sizeof(uint8_t))); // Bitmask of ones
 
+    crypto_key_t *ekp    = NULL;
+    ekp = key_if->get_key(test_association->ekid);
+    ekp->key_state = KEY_ACTIVE;
+    
+    crypto_key_t *akp    = NULL;
+    akp = key_if->get_key(test_association->akid);
+    akp->key_state = KEY_ACTIVE;
+
     // Set a more obvious IV for test purposes
     char *iv_h   = "DEADBEEFDEADBEEFDEADBEEFDEADBEEE";
     char *iv_b   = NULL;
@@ -1795,6 +1803,14 @@ UTEST(AOS_PROCESS, AOS_SA_NOT_OPERATIONAL)
     sa_ptr->sa_state = SA_KEYED;
     sa_if->sa_get_from_spi(5, &sa_ptr); // Enable and setup 5
     sa_ptr->sa_state = SA_NONE;
+
+    crypto_key_t *ekp    = NULL;
+    ekp = key_if->get_key(sa_ptr->ekid);
+    ekp->key_state = KEY_ACTIVE;
+    
+    crypto_key_t *akp    = NULL;
+    akp = key_if->get_key(sa_ptr->akid);
+    akp->key_state = KEY_ACTIVE;
 
     status =
         Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, &ptr_processed_frame, &processed_aos_len);

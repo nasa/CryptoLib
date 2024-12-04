@@ -252,6 +252,17 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FECF)
     aos_frame_pri_hdr.scid = (((uint16_t)test_aos_b[0] & 0x3F) << 2) | (((uint16_t)test_aos_b[1] & 0xC0) >> 6);
     aos_frame_pri_hdr.vcid = ((uint8_t)test_aos_b[1] & 0x3F);
 
+    SecurityAssociation_t *test_association;
+    sa_if->sa_get_from_spi(10, &test_association);
+
+    crypto_key_t *ekp    = NULL;
+    ekp = key_if->get_key(test_association->ekid);
+    ekp->key_state = KEY_ACTIVE;
+    
+    crypto_key_t *akp    = NULL;
+    akp = key_if->get_key(test_association->akid);
+    akp->key_state = KEY_ACTIVE;
+
     status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
@@ -375,6 +386,17 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FECF_LEFT_BLANK)
     aos_frame_pri_hdr.tfvn = ((uint8_t)test_aos_b[0] & 0xC0) >> 6;
     aos_frame_pri_hdr.scid = (((uint16_t)test_aos_b[0] & 0x3F) << 2) | (((uint16_t)test_aos_b[1] & 0xC0) >> 6);
     aos_frame_pri_hdr.vcid = ((uint8_t)test_aos_b[1] & 0x3F);
+
+    SecurityAssociation_t *test_association;
+    sa_if->sa_get_from_spi(10, &test_association);
+
+    crypto_key_t *ekp    = NULL;
+    ekp = key_if->get_key(test_association->ekid);
+    ekp->key_state = KEY_ACTIVE;
+    
+    crypto_key_t *akp    = NULL;
+    akp = key_if->get_key(test_association->akid);
+    akp->key_state = KEY_ACTIVE;
 
     status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -501,6 +523,17 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FHEC_FECF)
     aos_frame_pri_hdr.scid = (((uint16_t)test_aos_b[0] & 0x3F) << 2) | (((uint16_t)test_aos_b[1] & 0xC0) >> 6);
     aos_frame_pri_hdr.vcid = ((uint8_t)test_aos_b[1] & 0x3F);
 
+    SecurityAssociation_t *test_association;
+    sa_if->sa_get_from_spi(10, &test_association);
+
+    crypto_key_t *ekp    = NULL;
+    ekp = key_if->get_key(test_association->ekid);
+    ekp->key_state = KEY_ACTIVE;
+    
+    crypto_key_t *akp    = NULL;
+    akp = key_if->get_key(test_association->akid);
+    akp->key_state = KEY_ACTIVE;
+
     status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
@@ -626,6 +659,17 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FHEC_OID_FECF)
     aos_frame_pri_hdr.tfvn = ((uint8_t)test_aos_b[0] & 0xC0) >> 6;
     aos_frame_pri_hdr.scid = (((uint16_t)test_aos_b[0] & 0x3F) << 2) | (((uint16_t)test_aos_b[1] & 0xC0) >> 6);
     aos_frame_pri_hdr.vcid = ((uint8_t)test_aos_b[1] & 0x3F);
+
+    SecurityAssociation_t *test_association;
+    sa_if->sa_get_from_spi(10, &test_association);
+
+    crypto_key_t *ekp    = NULL;
+    ekp = key_if->get_key(test_association->ekid);
+    ekp->key_state = KEY_ACTIVE;
+    
+    crypto_key_t *akp    = NULL;
+    akp = key_if->get_key(test_association->akid);
+    akp->key_state = KEY_ACTIVE;
 
     status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -761,8 +805,16 @@ UTEST(AOS_APPLY, AES_CMAC_256_TEST_BITMASK_1)
     sa_ptr->sa_state = SA_KEYED;
 
     // Configure SA 15 on
-    sa_if->sa_get_from_spi(15, &sa_ptr);
+    sa_if->sa_get_from_spi(10, &sa_ptr);
     sa_ptr->sa_state = SA_OPERATIONAL;
+
+    crypto_key_t *ekp    = NULL;
+    ekp = key_if->get_key(sa_ptr->ekid);
+    ekp->key_state = KEY_ACTIVE;
+    
+    crypto_key_t *akp    = NULL;
+    akp = key_if->get_key(sa_ptr->akid);
+    akp->key_state = KEY_ACTIVE;
 
     status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -1058,16 +1110,14 @@ UTEST(AOS_APPLY, AES_GCM)
     aos_frame_pri_hdr.scid = (((uint16_t)test_aos_b[0] & 0x3F) << 2) | (((uint16_t)test_aos_b[1] & 0xC0) >> 6);
     aos_frame_pri_hdr.vcid = ((uint8_t)test_aos_b[1] & 0x3F);
 
-    // Expose/setup SA for testing
-    // Configure SA 14 off
-    sa_if->sa_get_from_spi(14, &sa_ptr);
-    sa_ptr->sa_state = SA_KEYED;
-
-    // Configure SA 16 on
-    sa_if->sa_get_from_spi(11, &sa_ptr);
-    sa_ptr->sa_state  = SA_OPERATIONAL;
-    sa_ptr->ecs       = CRYPTO_CIPHER_AES256_GCM;
-    sa_ptr->shplf_len = 0;
+    sa_if->sa_get_from_spi(10, &sa_ptr);
+    crypto_key_t *ekp    = NULL;
+    ekp = key_if->get_key(sa_ptr->ekid);
+    ekp->key_state = KEY_ACTIVE;
+    
+    crypto_key_t *akp    = NULL;
+    akp = key_if->get_key(sa_ptr->akid);
+    akp->key_state = KEY_ACTIVE;
 
     status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -1218,6 +1268,14 @@ UTEST(AOS_APPLY, AEAD_GCM_BITMASK_1)
     sa_ptr->iv_len     = 16;
     sa_ptr->shivf_len  = 16;
     sa_ptr->stmacf_len = 16;
+
+    crypto_key_t *ekp    = NULL;
+    ekp = key_if->get_key(sa_ptr->ekid);
+    ekp->key_state = KEY_ACTIVE;
+    
+    crypto_key_t *akp    = NULL;
+    akp = key_if->get_key(sa_ptr->akid);
+    akp->key_state = KEY_ACTIVE;
 
     status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
