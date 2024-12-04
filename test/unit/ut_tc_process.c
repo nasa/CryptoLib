@@ -1238,6 +1238,7 @@ UTEST(TC_PROCESS, TC_KEY_STATE_TEST)
     SecurityAssociation_t *test_association;
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
+    test_association->est = 1;
 
     crypto_key_t *ekp    = NULL;
     ekp = key_if->get_key(test_association->ekid);
