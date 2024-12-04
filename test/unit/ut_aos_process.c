@@ -1535,6 +1535,14 @@ UTEST(AOS_PROCESS, AES_GCM_DEC_ONLY)
     test_association->shsnf_len      = 0;
     memset(test_association->abm, 0xFF, (test_association->abm_len * sizeof(uint8_t))); // Bitmask of ones
 
+    crypto_key_t *ekp    = NULL;
+    ekp = key_if->get_key(test_association->ekid);
+    ekp->key_state = KEY_ACTIVE;
+    
+    crypto_key_t *akp    = NULL;
+    akp = key_if->get_key(test_association->akid);
+    akp->key_state = KEY_ACTIVE;
+
     // Set a more obvious IV for test purposes
     char *iv_h   = "DEADBEEFDEADBEEFDEADBEEFDEADBEEE";
     char *iv_b   = NULL;
@@ -1796,6 +1804,14 @@ UTEST(AOS_PROCESS, AOS_SA_NOT_OPERATIONAL)
     sa_if->sa_get_from_spi(5, &sa_ptr); // Enable and setup 5
     sa_ptr->sa_state = SA_NONE;
 
+    crypto_key_t *ekp    = NULL;
+    ekp = key_if->get_key(sa_ptr->ekid);
+    ekp->key_state = KEY_ACTIVE;
+    
+    crypto_key_t *akp    = NULL;
+    akp = key_if->get_key(sa_ptr->akid);
+    akp->key_state = KEY_ACTIVE;
+
     status =
         Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, &ptr_processed_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL, status);
@@ -1845,6 +1861,58 @@ UTEST(AOS_PROCESS, AOS_OCF_TEST)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     printf("FSR: %08X\n", Crypto_Get_FSR());
+
+    Crypto_Shutdown();
+    free(framed_aos_b);
+    free(ptr_processed_frame);
+}
+
+UTEST(AOS_PROCESS, AOS_KEY_STATE_TEST)
+{
+    // Local Variables
+    int32_t  status              = CRYPTO_LIB_SUCCESS;
+    uint8_t *ptr_processed_frame = NULL;
+    uint16_t processed_aos_len;
+
+    // Configure Parameters
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL, CRYPTO_AOS_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // AOS Tests
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x002c, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_NO_OCF, 1786,
+    // AOS_NO_FHEC, AOS_HAS_IZ, 10);
+    GvcidManagedParameters_t AOS_UT_Managed_Parameters = {
+        1, 0x002c, 0, AOS_HAS_FECF, AOS_NO_FHEC, AOS_HAS_IZ, 0, AOS_SEGMENT_HDRS_NA, 1786, AOS_NO_OCF, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
+    status = Crypto_Init();
+
+    // Test frame setup
+    char *framed_aos_h   = "42C00000000000050000000000000000FFFF";
+    char *framed_aos_b   = NULL;
+    int   framed_aos_len = 0;
+    hex_conversion(framed_aos_h, &framed_aos_b, &framed_aos_len);
+
+    SecurityAssociation_t *sa_ptr = NULL;
+    SaInterface            sa_if  = get_sa_interface_inmemory();
+    sa_if->sa_get_from_spi(10, &sa_ptr); // Disable SPI 10
+    sa_ptr->sa_state = SA_KEYED;
+    sa_if->sa_get_from_spi(5, &sa_ptr); // Enable and setup 5
+    sa_ptr->sa_state = SA_OPERATIONAL;
+    sa_ptr->est = 1;
+    sa_ptr->ecs = CRYPTO_CIPHER_AES256_GCM;
+
+    crypto_key_t *ekp    = NULL;
+    ekp = key_if->get_key(sa_ptr->ekid);
+    ekp->key_state = KEY_DEACTIVATED;
+    
+    crypto_key_t *akp    = NULL;
+    akp = key_if->get_key(sa_ptr->akid);
+    akp->key_state = KEY_DEACTIVATED;
+
+    status =
+        Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, &ptr_processed_frame, &processed_aos_len);
+    ASSERT_EQ(CRYPTO_LIB_ERR_KEY_STATE_INVALID, status);
 
     Crypto_Shutdown();
     free(framed_aos_b);

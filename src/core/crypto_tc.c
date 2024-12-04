@@ -348,6 +348,43 @@ int32_t Crypto_TC_Do_Encrypt_PLAINTEXT(uint8_t sa_service_type, SecurityAssociat
 {
     int32_t  status = CRYPTO_LIB_SUCCESS;
     uint16_t index  = *index_p;
+    crypto_key_t *akp = NULL;
+
+    /* Get Key */
+    
+    if (sa_ptr->est == 1)
+    {
+        ekp = key_if->get_key(sa_ptr->ekid);
+        if (ekp == NULL)
+        {
+            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+            mc_if->mc_log(status);
+            return status;
+        }
+        if (ekp->key_state != KEY_ACTIVE)
+        {
+            status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
+            mc_if->mc_log(status);
+            return status;
+        }
+    }
+    if (sa_ptr->ast == 1)
+    {
+        akp = key_if->get_key(sa_ptr->akid);
+        if (akp == NULL)
+        {
+            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+            mc_if->mc_log(status);
+            return status;
+        }
+        if (akp->key_state != KEY_ACTIVE)
+        {
+            status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
+            mc_if->mc_log(status);
+            return status;
+        }
+    }
+
     if (sa_service_type != SA_PLAINTEXT)
     {
         uint8_t *mac_ptr = NULL;
@@ -388,14 +425,6 @@ int32_t Crypto_TC_Do_Encrypt_PLAINTEXT(uint8_t sa_service_type, SecurityAssociat
         printf("Input bytes input_loc is %d\n", TC_FRAME_HEADER_SIZE + segment_hdr_len);
 #endif
 
-        /* Get Key */
-        ekp = key_if->get_key(sa_ptr->ekid);
-        if (ekp == NULL)
-        {
-            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-            mc_if->mc_log(status);
-            return status;
-        }
         if (ecs_is_aead_algorithm == CRYPTO_TRUE)
         {
             // Check that key length to be used ets the algorithm requirement
@@ -456,13 +485,6 @@ int32_t Crypto_TC_Do_Encrypt_PLAINTEXT(uint8_t sa_service_type, SecurityAssociat
 
             if (sa_service_type == SA_AUTHENTICATION)
             {
-                /* Get Key */
-                crypto_key_t *akp = NULL;
-                akp               = key_if->get_key(sa_ptr->akid);
-                if (akp == NULL)
-                {
-                    return CRYPTO_LIB_ERR_KEY_ID_ERROR;
-                }
 
                 // Check that key length to be used ets the algorithm requirement
                 if ((int32_t)akp->key_len != Crypto_Get_ACS_Algo_Keylen(sa_ptr->acs))
@@ -1559,17 +1581,34 @@ int32_t Crypto_TC_Get_Keys(crypto_key_t **ekp, crypto_key_t **akp, SecurityAssoc
     *ekp           = key_if->get_key(sa_ptr->ekid);
     *akp           = key_if->get_key(sa_ptr->akid);
 
-    if (ekp == NULL)
+    if (sa_ptr->est == 1)
     {
-        status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-        mc_if->mc_log(status);
+        if (*ekp == NULL)
+        {
+            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+            mc_if->mc_log(status);
+        }
+        if ((*ekp)->key_state != KEY_ACTIVE && (status == CRYPTO_LIB_SUCCESS))
+        {
+            status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
+            mc_if->mc_log(status);
+        }
     }
+    if (sa_ptr->ast == 1 && status == CRYPTO_LIB_SUCCESS)
+    {
+        if ((*akp == NULL) && (status == CRYPTO_LIB_SUCCESS))
+        {
+            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+            mc_if->mc_log(status);
+        }
+        if ((*akp)->key_state != KEY_ACTIVE && (status == CRYPTO_LIB_SUCCESS))
+        {
+            status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
+            mc_if->mc_log(status);
+        }
+    }
+    
 
-    if ((akp == NULL) && (status == CRYPTO_LIB_SUCCESS))
-    {
-        status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-        mc_if->mc_log(status);
-    }
     return status;
 }
 
