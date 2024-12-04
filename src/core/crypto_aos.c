@@ -359,21 +359,31 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
 
     // Get Key
     crypto_key_t *ekp = NULL;
+    crypto_key_t *akp = NULL;
     ekp               = key_if->get_key(sa_ptr->ekid);
-    if (ekp == NULL)
+    akp               = key_if->get_key(sa_ptr->akid);
+
+    if (ekp->key_state != KEY_ACTIVE || akp->key_state != KEY_ACTIVE)
     {
-        status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+        status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
         mc_if->mc_log(status);
         return status;
     }
-
-    crypto_key_t *akp = NULL;
-    akp               = key_if->get_key(sa_ptr->akid);
-    if (akp == NULL)
+    if (status == CRYPTO_LIB_SUCCESS)
     {
-        status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-        mc_if->mc_log(status);
-        return status;
+        if (ekp == NULL)
+        {
+            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+            mc_if->mc_log(status);
+            return status;
+        }
+
+        if (akp == NULL)
+        {
+            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+            mc_if->mc_log(status);
+            return status;
+        }
     }
 
     /**
@@ -1200,21 +1210,31 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
 
     // Get Key
     crypto_key_t *ekp = NULL;
+    crypto_key_t *akp = NULL;
     ekp               = key_if->get_key(sa_ptr->ekid);
-    if (ekp == NULL)
+    akp               = key_if->get_key(sa_ptr->akid);
+
+    if (ekp->key_state != KEY_ACTIVE || akp->key_state != KEY_ACTIVE)
     {
-        status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+        status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
         mc_if->mc_log(status);
         return status;
     }
-
-    crypto_key_t *akp = NULL;
-    akp               = key_if->get_key(sa_ptr->akid);
-    if (akp == NULL)
+    if (status == CRYPTO_LIB_SUCCESS)
     {
-        status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-        mc_if->mc_log(status);
-        return status;
+        if (ekp == NULL)
+        {
+            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+            mc_if->mc_log(status);
+            return status;
+        }
+
+        if (akp == NULL)
+        {
+            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+            mc_if->mc_log(status);
+            return status;
+        }
     }
 
     /**

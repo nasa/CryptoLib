@@ -396,6 +396,12 @@ int32_t Crypto_TC_Do_Encrypt_PLAINTEXT(uint8_t sa_service_type, SecurityAssociat
             mc_if->mc_log(status);
             return status;
         }
+        if (ekp->key_state != KEY_ACTIVE)
+        {
+            status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
+            mc_if->mc_log(status);
+            return status;
+        }
         if (ecs_is_aead_algorithm == CRYPTO_TRUE)
         {
             // Check that key length to be used ets the algorithm requirement
@@ -462,6 +468,12 @@ int32_t Crypto_TC_Do_Encrypt_PLAINTEXT(uint8_t sa_service_type, SecurityAssociat
                 if (akp == NULL)
                 {
                     return CRYPTO_LIB_ERR_KEY_ID_ERROR;
+                }
+                if (ekp->key_state != KEY_ACTIVE)
+                {
+                    status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
+                    mc_if->mc_log(status);
+                    return status;
                 }
 
                 // Check that key length to be used ets the algorithm requirement
@@ -1559,17 +1571,26 @@ int32_t Crypto_TC_Get_Keys(crypto_key_t **ekp, crypto_key_t **akp, SecurityAssoc
     *ekp           = key_if->get_key(sa_ptr->ekid);
     *akp           = key_if->get_key(sa_ptr->akid);
 
-    if (ekp == NULL)
+    if ((*ekp)->key_state != KEY_ACTIVE || (*akp)->key_state != KEY_ACTIVE)
     {
-        status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+        status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
         mc_if->mc_log(status);
+    }
+    if (status == CRYPTO_LIB_SUCCESS)
+    {
+        if (ekp == NULL)
+        {
+            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+            mc_if->mc_log(status);
+        }
+
+        if ((akp == NULL) && (status == CRYPTO_LIB_SUCCESS))
+        {
+            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+            mc_if->mc_log(status);
+        }
     }
 
-    if ((akp == NULL) && (status == CRYPTO_LIB_SUCCESS))
-    {
-        status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-        mc_if->mc_log(status);
-    }
     return status;
 }
 
