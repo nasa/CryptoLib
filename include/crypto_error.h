@@ -132,6 +132,7 @@
 #define CRYPTO_LIB_ERR_KEY_STATE_TRANSITION_ERROR                           (-59)
 #define CRYPTO_LIB_ERR_SPI_INDEX_MISMATCH                                   (-60)
 #define CRYPTO_LIB_ERR_KEY_STATE_INVALID                                    (-61)
+#define CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI                                    (-62)
 
 // Define codes for returning MDB Strings, and determining error based on strings
 #define CAM_ERROR_CODES     600
