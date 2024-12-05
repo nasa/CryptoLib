@@ -132,15 +132,13 @@
 #define CRYPTO_LIB_ERR_KEY_STATE_TRANSITION_ERROR                           (-59)
 #define CRYPTO_LIB_ERR_SPI_INDEX_MISMATCH                                   (-60)
 #define CRYPTO_LIB_ERR_KEY_STATE_INVALID                                    (-61)
-<<<<<<< HEAD
-#define CRYPTO_LIB_ERR_SHIVF_LEN_GREATER_THAN_MAX_IV_SIZE                   (-62)
-#define CRYPTO_LIB_ERR_SHSNF_LEN_GREATER_THAN_MAX_ARSN_SIZE                 (-63)
-#define CRYPTO_LIB_ERR_ABM_LEN_GREATER_THAN_MAX_ABM_SIZE                    (-64)
-#define CRYPTO_LIB_ERR_STMACF_LEN_GREATER_THAN_MAX_MAC_SIZE                 (-65)
-#define CRYPTO_LIB_ERR_SHPLF_LEN_GREATER_THAN_MAX_PAD_SIZE                  (-66)
-=======
 #define CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI                                    (-62)
->>>>>>> dev
+#define CRYPTO_LIB_ERR_SHIVF_LEN_GREATER_THAN_MAX_IV_SIZE                   (-63)
+#define CRYPTO_LIB_ERR_SHSNF_LEN_GREATER_THAN_MAX_ARSN_SIZE                 (-64)
+#define CRYPTO_LIB_ERR_ABM_LEN_GREATER_THAN_MAX_ABM_SIZE                    (-65)
+#define CRYPTO_LIB_ERR_STMACF_LEN_GREATER_THAN_MAX_MAC_SIZE                 (-66)
+#define CRYPTO_LIB_ERR_SHPLF_LEN_GREATER_THAN_MAX_PAD_SIZE                  (-67)
+
 
 // Define codes for returning MDB Strings, and determining error based on strings
 #define CAM_ERROR_CODES     600
@@ -161,7 +159,7 @@
 #define CONFIGURATION_ERROR_CODES     100
 #define CONFIGURATION_ERROR_CODES_MAX 103
 
-#define CRYPTO_CORE_ERROR_CODES_MAX -66
+#define CRYPTO_CORE_ERROR_CODES_MAX -67
 
 extern char *crypto_enum_errlist_core[];
 extern char *crypto_enum_errlist_config[];
