@@ -72,7 +72,7 @@ int32_t Crypto_Key_OTAR(void)
 #ifdef DEBUG
         printf(KRED "Error: MKID is not valid! \n" RESET);
 #endif
-        status = CRYPTO_LIB_ERROR;
+        status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
         return status;
     }
 
@@ -93,13 +93,20 @@ int32_t Crypto_Key_OTAR(void)
 #endif
     }
 
+    // Try to get key
     ekp = key_if->get_key(packet.mkid);
     if (ekp == NULL)
     {
         return CRYPTO_LIB_ERR_KEY_ID_ERROR;
     }
 
-    uint8_t ecs = CRYPTO_CIPHER_AES256_GCM;
+    // Check key state
+    if(ekp->key_state != KEY_ACTIVE)
+    {
+        return CRYPTO_LIB_ERR_KEY_STATE_INVALID;
+    }
+
+    uint8_t ecs = CRYPTO_CIPHER_AES256_GCM; // Per SDLS baseline
     status      = cryptography_if->cryptography_aead_decrypt(&(sdls_frame.pdu.data[14]), // plaintext output
                                                              (size_t)(pdu_keys * (SDLS_KEYID_LEN + SDLS_KEY_LEN)), // length of data
                                                              NULL,             // in place decryption
@@ -121,11 +128,20 @@ int32_t Crypto_Key_OTAR(void)
                                                              NULL              // cam_cookies
          );
 
+    // If decryption errors, return
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+#ifdef DEBUG
+        printf(KRED "Error: OTAR AEAD Decryption failed with error %d \n" RESET, status);
+#endif
+        return status;
+    }
+
     // Read in Decrypted Data
     for (count = 14; x < pdu_keys; x++)
     { // Encrypted Key Blocks
         packet.EKB[x].ekid = (sdls_frame.pdu.data[count] << BYTE_LEN) | (sdls_frame.pdu.data[count + 1]);
-        if (packet.EKB[x].ekid < CRYPTOLIB_APPID)
+        if (packet.EKB[x].ekid < MKID_MAX)
         {
             report.af = 1;
             if (log_summary.rs > 0)
@@ -468,7 +484,7 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
 
         // Encrypt challenge
         uint8_t ecs = CRYPTO_CIPHER_AES256_GCM;
-        cryptography_if->cryptography_aead_encrypt(&(sdls_ep_keyv_reply.blk[x].challenged[0]), // ciphertext output
+        status = cryptography_if->cryptography_aead_encrypt(&(sdls_ep_keyv_reply.blk[x].challenged[0]), // ciphertext output
                                                    (size_t)CHALLENGE_SIZE,                     // length of data
                                                    &(packet.blk[x].challenge[0]),              // plaintext input
                                                    (size_t)CHALLENGE_SIZE,                     // in data length
@@ -487,6 +503,15 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
                                                    NULL,         // authentication cipher
                                                    NULL          // cam_cookies
         );
+
+        // If encryption errors, capture something about it for testing
+        // We need to continue on, other keys could be successful
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+#ifdef DEBUG
+        printf(KRED "Error: OTAR Key Verification encryption failed for new key index %d with error %d \n" RESET, x, status);
+#endif
+        }
 
         // Copy from the KEYV Blocks into the output PDU
         memcpy(&sdls_frame.pdu.data[pdu_data_idx], &(sdls_ep_keyv_reply.blk[x].challenged[0]), CHALLENGE_SIZE);
