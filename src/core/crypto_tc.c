@@ -1967,17 +1967,24 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
  
     if (status == CRYPTO_LIB_SUCCESS && crypto_config.process_sdls_pdus == TC_PROCESS_SDLS_PDUS_TRUE)
     {
-        if((sa_ptr->spi == SPI_MIN) || sa_ptr->spi == SPI_MAX) 
+        #ifdef CRYPTO_EPROC
+        if((sa_ptr->spi == SPI_MIN) || sa_ptr->spi == SPI_MAX) //TODO:  Make sure that SPI can't be changed from the current array index.
         {
             status = Crypto_Process_Extended_Procedure_Pdu(tc_sdls_processed_frame, ingest);
         }
         else  
         {
             // Some Magic here to log that an inappropriate SA was attempted to be used for EP
-            status = CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI;  // TODO:  Do we want a different error code for this?
+            status = CRYPTO_LIB_ERR_SPI_INDEX_OOB;  
             mc_if->mc_log(status);
             status = CRYPTO_LIB_SUCCESS;
         }
+        #else
+            status = CRYPTO_LIB_ERR_SDLS_EP_NOT_BUILT; 
+            mc_if->mc_log(status);
+            status = CRYPTO_LIB_SUCCESS;
+            printf("Extended Procedures Not Built - Rebuild with -DEPROCS Flag if needed.\n");
+        #endif //CRYPTO_EPROC
     }
 
     Crypto_TC_Safe_Free_Ptr(aad);

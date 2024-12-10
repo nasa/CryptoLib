@@ -761,6 +761,8 @@ int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uin
     return status;
 }
 
+
+#ifdef CRYPTO_EPROC
 /**
  * @brief Function: Crypto_Process_Extended_Procedure_Pdu
  * @param tc_sdls_processed_frame: TC_t*
@@ -861,6 +863,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
     }
     return status;
 } // End Process SDLS PDU
+#endif //CRYPTO_EPROC
 
 /**
  * @brief Function: Crypto_Check_Anti_Replay_Verify_Pointers

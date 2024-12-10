@@ -263,6 +263,7 @@ UTEST(CRYPTO_C, PDU_SWITCH)
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 }
 
+#ifdef CRYPTO_EPROC
 /**
  * @brief Unit Test: Crypto Extended Procedures PDU Test
  **/
@@ -280,6 +281,7 @@ UTEST(CRYPTO_C, EXT_PROC_PDU)
     status = Crypto_Process_Extended_Procedure_Pdu(tc_frame, ingest);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 }
+#endif //CRYPTO_EPROC
 
 /**
  * @brief Unit Test: Crypto ACS Get Algorithm response
