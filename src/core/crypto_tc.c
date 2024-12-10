@@ -1967,7 +1967,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
  
     if (status == CRYPTO_LIB_SUCCESS && crypto_config.process_sdls_pdus == TC_PROCESS_SDLS_PDUS_TRUE)
     {
-        if((sa_ptr->spi == SPI_MIN) || sa_ptr->spi == SPI_MAX) //TODO:  Make sure that SPI can't be changed from the current array index.
+        if((sa_ptr->spi == SPI_MIN) || sa_ptr->spi == SPI_MAX) 
         {
             status = Crypto_Process_Extended_Procedure_Pdu(tc_sdls_processed_frame, ingest);
         }
