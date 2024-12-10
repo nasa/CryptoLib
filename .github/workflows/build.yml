@@ -269,3 +269,54 @@ jobs:
       with:
         files: 'coverage/*.c.gcov'
         verbose: true
+
+  #
+  # Ext. Proc. Build
+  #
+  EP_build:
+    # Container Setup
+    runs-on: ubuntu-latest
+    container:
+        image: ivvitc/cryptolib:20240814
+    steps:
+    - uses: actions/checkout@v4
+    - name: Update
+      run: apt-get update
+    - name: Install Dependencies
+      run: apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3
+    - name: Install Python Libraries
+      run: pip install pycryptodome
+    - name: Install Libgcrypt
+      run: >
+        curl  
+        -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 
+        -o /tmp/libgpg-error-1.50.tar.bz2 
+        && tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/ 
+        && cd /tmp/libgpg-error-1.50 
+        && ./configure 
+        && make install 
+        && curl  
+        -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 
+        -o /tmp/libgcrypt-1.11.0.tar.bz2 
+        && tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ 
+        && cd /tmp/libgcrypt-1.11.0 
+        && ./configure 
+        && make install
+        && ldconfig
+    # End Container Setup
+    
+    - name: Internal Build Script
+      working-directory: ${{github.workspace}}
+      run: bash ${GITHUB_WORKSPACE}/support/scripts/build_ep.sh
+
+    - name: Code-Coverage
+      working-directory: ${{github.workspace}}
+      run: make gcov
+
+    - name: Upload 
+      uses: codecov/codecov-action@v4
+      env:
+        CODECOV_TOKEN: 71699f25-12a3-44a4-8a83-be777b9e577a
+      with:
+        files: 'coverage/*.c.gcov'
+        verbose: true

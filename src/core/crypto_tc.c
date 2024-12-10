@@ -1974,7 +1974,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
         else  
         {
             // Some Magic here to log that an inappropriate SA was attempted to be used for EP
-            status = CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI;  // TODO:  Do we want a different error code for this?
+            status = CRYPTO_LIB_ERR_SPI_INDEX_OOB;  
             mc_if->mc_log(status);
             status = CRYPTO_LIB_SUCCESS;
         }
