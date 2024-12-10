@@ -762,7 +762,6 @@ int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uin
 }
 
 
-#ifdef CRYPTO_EPROC
 /**
  * @brief Function: Crypto_Process_Extended_Procedure_Pdu
  * @param tc_sdls_processed_frame: TC_t*
@@ -785,7 +784,9 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
         {
             if ((tc_sdls_processed_frame->tc_pdu[0] == 0x18) && (tc_sdls_processed_frame->tc_pdu[1] == 0x80))
             // Crypto Lib Application ID
+            
             {
+                #ifdef CRYPTO_EPROC 
 #ifdef DEBUG
                 printf(KGRN "Received SDLS command: " RESET);
 #endif
@@ -828,6 +829,9 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
 
                 // Determine type of PDU
                 status = Crypto_PDU(ingest, tc_sdls_processed_frame);
+                #else
+                status = CRYPTO_LIB_ERR_SDLS_EP_NOT_BUILT;
+                #endif //CRYPTO_EPROC
             }
         }
         else if (tc_sdls_processed_frame->tc_header.vcid == TC_SDLS_EP_VCID) // TC SDLS PDU with no packet layer
@@ -863,7 +867,6 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
     }
     return status;
 } // End Process SDLS PDU
-#endif //CRYPTO_EPROC
 
 /**
  * @brief Function: Crypto_Check_Anti_Replay_Verify_Pointers
