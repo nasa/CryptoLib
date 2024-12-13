@@ -839,6 +839,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                 }
 
                 #else // Received an EP command without EPs being built
+                valid_ep_sa = valid_ep_sa; // Suppress build error
                 status = CRYPTO_LIB_ERR_SDLS_EP_NOT_BUILT;
                 #endif //CRYPTO_EPROC
             }
@@ -875,6 +876,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
             }
 
             #else // Received an EP command without EPs being built
+            valid_ep_sa = valid_ep_sa; // Suppress build error
             status = CRYPTO_LIB_ERR_SDLS_EP_NOT_BUILT;
             #endif //CRYPTO_EPROC
         }
