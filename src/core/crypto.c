@@ -782,7 +782,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
     }
 
     // Validate correct SA for EPs
-    bool valid_ep_sa = (tc_sdls_processed_frame->tc_sec_header.spi != SPI_MIN) && (tc_sdls_processed_frame->tc_sec_header.spi != SPI_MAX);
+    bool valid_ep_sa = (tc_sdls_processed_frame->tc_sec_header.spi == SPI_MIN) || (tc_sdls_processed_frame->tc_sec_header.spi == SPI_MAX);
     if (status == CRYPTO_LIB_SUCCESS)
     {
         if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
@@ -793,7 +793,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
 #ifdef CRYPTO_EPROC
                 // Check validity of SAs used for EP
                 if(valid_ep_sa) 
-                { 
+                {
 #ifdef DEBUG
                     printf(KGRN "Received SDLS command: " RESET);
 #endif
@@ -837,6 +837,12 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                 // Determine type of PDU
                 status = Crypto_PDU(ingest, tc_sdls_processed_frame);
                 }
+                // Received EP PDU on invalid SA
+                else
+                {
+                    printf(KRED "Received EP PDU on invalid SA! SPI %d\n" RESET, tc_sdls_processed_frame->tc_sec_header.spi);
+                    status = CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI;
+                }
 
                 #else // Received an EP command without EPs being built
                 valid_ep_sa = valid_ep_sa; // Suppress build error
@@ -874,8 +880,10 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                 // Determine type of PDU
                 status = Crypto_PDU(ingest, tc_sdls_processed_frame);
             }
-
             #else // Received an EP command without EPs being built
+#ifdef CCSDS_DEBUG
+            printf(KRED "PDU DEBUG %s %d\n" RESET, __FILE__, __LINE__);
+#endif
             valid_ep_sa = valid_ep_sa; // Suppress build error
             status = CRYPTO_LIB_ERR_SDLS_EP_NOT_BUILT;
             #endif //CRYPTO_EPROC

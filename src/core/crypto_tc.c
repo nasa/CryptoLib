@@ -1967,17 +1967,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
  
     if (status == CRYPTO_LIB_SUCCESS && crypto_config.process_sdls_pdus == TC_PROCESS_SDLS_PDUS_TRUE)
     {
-        // if((sa_ptr->spi == SPI_MIN) || sa_ptr->spi == SPI_MAX) 
-        // {
-            status = Crypto_Process_Extended_Procedure_Pdu(tc_sdls_processed_frame, ingest);
-        // }
-        // else  
-        // {
-            // Some Magic here to log that an inappropriate SA was attempted to be used for EP
-            // status = CRYPTO_LIB_ERR_SPI_INDEX_OOB;  
-            // mc_if->mc_log(status);
-            // status = CRYPTO_LIB_SUCCESS;
-        // }
+        status = Crypto_Process_Extended_Procedure_Pdu(tc_sdls_processed_frame, ingest);
     }
 
     Crypto_TC_Safe_Free_Ptr(aad);
