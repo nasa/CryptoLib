@@ -825,7 +825,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                     sdls_frame.pdu.hdr.pid  = (tc_sdls_processed_frame->tc_pdu[10] & 0x0F);
                     sdls_frame.pdu.hdr.pdu_len =
                         (tc_sdls_processed_frame->tc_pdu[11] << 8) | tc_sdls_processed_frame->tc_pdu[12];
-                    for (uint16_t x = 13; x < (13 + sdls_frame.hdr.pkt_length); x++)
+                    for (int x = 13; x < (13 + sdls_frame.hdr.pkt_length); x++)
                     {
                         sdls_frame.pdu.data[x - 13] = tc_sdls_processed_frame->tc_pdu[x];
                     }
@@ -866,7 +866,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                 sdls_frame.pdu.hdr.sg      = (tc_sdls_processed_frame->tc_pdu[0] & 0x30) >> 4;
                 sdls_frame.pdu.hdr.pid     = (tc_sdls_processed_frame->tc_pdu[0] & 0x0F);
                 sdls_frame.pdu.hdr.pdu_len = (tc_sdls_processed_frame->tc_pdu[1] << 8) | tc_sdls_processed_frame->tc_pdu[2];
-                for (uint16_t x = 3; x < (3 + tc_sdls_processed_frame->tc_header.fl); x++)
+                for (int x = 3; x < (3 + tc_sdls_processed_frame->tc_header.fl); x++)
                 {
                     // Todo - Consider how this behaves with large OTAR PDUs that are larger than 1 TC in size. Most likely
                     // fails. Must consider Uplink Sessions (sequence numbers).
