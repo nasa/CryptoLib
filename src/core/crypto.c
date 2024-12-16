@@ -781,10 +781,10 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
     }
 
     // Validate correct SA for EPs
-    uint8_t valid_ep_sa = CRYPTO_TRUE;
+    uint8_t valid_ep_sa = CRYPTO_FALSE;
     if ((tc_sdls_processed_frame->tc_sec_header.spi == SPI_MIN) || (tc_sdls_processed_frame->tc_sec_header.spi == SPI_MAX))
     {
-        valid_ep_sa = CRYPTO_FALSE;
+        valid_ep_sa = CRYPTO_TRUE;
     }
 
     if (status == CRYPTO_LIB_SUCCESS)
@@ -796,7 +796,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
             {
 #ifdef CRYPTO_EPROC
                 // Check validity of SAs used for EP
-                if(valid_ep_sa) 
+                if(valid_ep_sa == CRYPTO_TRUE) 
                 {
 #ifdef DEBUG
                     printf(KGRN "Received SDLS command: " RESET);
@@ -858,7 +858,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
         {
         #ifdef CRYPTO_EPROC
             // Check validity of SAs used for EP
-            if(valid_ep_sa)
+            if(valid_ep_sa == CRYPTO_TRUE)
             { 
 #ifdef DEBUG
                 printf(KGRN "Received SDLS command (No Packet Header or PUS): " RESET);
@@ -892,10 +892,10 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
             status = CRYPTO_LIB_ERR_SDLS_EP_NOT_BUILT;
             #endif //CRYPTO_EPROC
         }
-            else
-            {
-                // TODO - Process SDLS PDU with Packet Layer without PUS_HDR
-            }
+        else
+        {
+            // TODO - Process SDLS PDU with Packet Layer without PUS_HDR
+        }
         }
     return status;
 } // End Process SDLS PDU
