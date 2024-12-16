@@ -529,37 +529,37 @@ int32_t Crypto_SG_SA_MGMT(uint8_t *ingest, TC_t *tc_frame)
 #ifdef PDU_DEBUG
             printf(KGRN "SA Create\n" RESET);
 #endif
-            status = sa_if->sa_create();
+            status = sa_if->sa_create(tc_frame);
             break;
         case PID_DELETE_SA:
 #ifdef PDU_DEBUG
             printf(KGRN "SA Delete\n" RESET);
 #endif
-            status = sa_if->sa_delete();
+            status = sa_if->sa_delete(tc_frame);
             break;
         case PID_SET_ARSNW:
 #ifdef PDU_DEBUG
             printf(KGRN "SA setARSNW\n" RESET);
 #endif
-            status = sa_if->sa_setARSNW();
+            status = sa_if->sa_setARSNW(tc_frame);
             break;
         case PID_REKEY_SA:
 #ifdef PDU_DEBUG
             printf(KGRN "SA Rekey\n" RESET);
 #endif
-            status = sa_if->sa_rekey();
+            status = sa_if->sa_rekey(tc_frame);
             break;
         case PID_EXPIRE_SA:
 #ifdef PDU_DEBUG
             printf(KGRN "SA Expire\n" RESET);
 #endif
-            status = sa_if->sa_expire();
+            status = sa_if->sa_expire(tc_frame);
             break;
         case PID_SET_ARSN:
 #ifdef PDU_DEBUG
             printf(KGRN "SA SetARSN\n" RESET);
 #endif
-            status = sa_if->sa_setARSN();
+            status = sa_if->sa_setARSN(tc_frame);
             break;
         case PID_START_SA:
 #ifdef PDU_DEBUG
@@ -571,7 +571,7 @@ int32_t Crypto_SG_SA_MGMT(uint8_t *ingest, TC_t *tc_frame)
 #ifdef PDU_DEBUG
             printf(KGRN "SA Stop\n" RESET);
 #endif
-            status = sa_if->sa_stop();
+            status = sa_if->sa_stop(tc_frame);
             break;
         case PID_READ_ARSN:
 #ifdef PDU_DEBUG

@@ -25,15 +25,15 @@ static int32_t sa_get_from_spi(uint16_t, SecurityAssociation_t **);
 static int32_t sa_get_operational_sa_from_gvcid(uint8_t, uint16_t, uint16_t, uint8_t, SecurityAssociation_t **);
 static int32_t sa_save_sa(SecurityAssociation_t *sa);
 // Security Association Utility Functions
-static int32_t sa_stop(void);
+static int32_t sa_stop(TC_t *tc_frame);
 static int32_t sa_start(TC_t *tc_frame);
-static int32_t sa_expire(void);
-static int32_t sa_rekey(void);
+static int32_t sa_expire(TC_t *tc_frame);
+static int32_t sa_rekey(TC_t *tc_frame);
 static int32_t sa_status(uint8_t *);
-static int32_t sa_create(void);
-static int32_t sa_setARSN(void);
-static int32_t sa_setARSNW(void);
-static int32_t sa_delete(void);
+static int32_t sa_create(TC_t *tc_frame);
+static int32_t sa_setARSN(TC_t *tc_frame);
+static int32_t sa_setARSNW(TC_t *tc_frame);
+static int32_t sa_delete(TC_t *tc_frame);
 
 /*
 ** Global Variables
@@ -1091,15 +1091,29 @@ static int32_t sa_start(TC_t *tc_frame)
  * @brief Function: sa_stop
  * @return int32: Success/Failure
  **/
-static int32_t sa_stop(void)
+static int32_t sa_stop(TC_t *tc_frame)
 {
     // Local variables
-    uint16_t spi = 0x0000;
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    uint16_t spi    = 0x0000;
+    uint16_t control_spi = 0x0000;
     int      x;
 
     // Read ingest
-    spi = ((uint8_t)sdls_frame.pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[1];
+    spi    = ((uint8_t)sdls_frame.pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[1];
+    control_spi = tc_frame->tc_sec_header.spi;
+
+#ifdef DEBUG
+    printf("control_spi = %d \n", spi);
     printf("spi = %d \n", spi);
+#endif
+
+    if (spi == control_spi)
+    {
+        printf(KRED "ERROR: Cannot modify SA in use\n" RESET);
+        status = CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI;
+        return status;
+    }
 
     // Check SPI exists and in 'Active' state
     if (spi < NUM_SA)
@@ -1149,23 +1163,33 @@ static int32_t sa_stop(void)
     printf("\t spi = %d \n", spi);
 #endif
 
-    return CRYPTO_LIB_SUCCESS;
+    return status;
 }
 
 /**
  * @brief Function: sa_rekey
  * @return int32: Success/Failure
  **/
-static int32_t sa_rekey(void)
+static int32_t sa_rekey(TC_t *tc_frame)
 {
     // Local variables
-    uint16_t spi   = 0x0000;
-    int      count = 0;
-    int      x     = 0;
+    uint16_t spi         = 0x0000;
+    uint16_t control_spi = 0x0000;
+    int32_t  status      = CRYPTO_LIB_SUCCESS;
+    int      count       = 0;
+    int      x           = 0;
 
     // Read ingest
     spi   = ((uint8_t)sdls_frame.pdu.data[count] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[count + 1];
     count = count + 2;
+
+    control_spi = tc_frame->tc_sec_header.spi;
+    if (spi == control_spi)
+    {
+        printf(KRED "ERROR: Cannot modify SA in use\n" RESET);
+        status = CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI;
+        return status;
+    }
 
     // Check SPI exists and in 'Unkeyed' state
     if (spi < NUM_SA)
@@ -1245,14 +1269,23 @@ static int32_t sa_rekey(void)
  * @brief Function: sa_expire
  * @return int32: Success/Failure
  **/
-static int32_t sa_expire(void)
+static int32_t sa_expire(TC_t *tc_frame)
 {
     // Local variables
-    uint16_t spi = 0x0000;
+    uint16_t spi         = 0x0000;
+    uint16_t control_spi = 0x0000;
+    int32_t  status      = CRYPTO_LIB_SUCCESS;
 
     // Read ingest
     spi = ((uint8_t)sdls_frame.pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[1];
-    printf("spi = %d \n", spi);
+
+    control_spi = tc_frame->tc_sec_header.spi;
+    if (spi == control_spi)
+    {
+        printf(KRED "ERROR: Cannot modify SA in use\n" RESET);
+        status = CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI;
+        return status;
+    }
 
     // Check SPI exists and in 'Keyed' state
     if (spi < NUM_SA)
@@ -1290,11 +1323,13 @@ static int32_t sa_expire(void)
  * @brief Function: sa_create
  * @return int32: Success/Failure
  **/
-static int32_t sa_create(void)
+static int32_t sa_create(TC_t *tc_frame)
 {
     // Local variables
     uint8_t  count = 6;
     uint16_t spi   = 0x0000;
+    uint16_t control_spi = 0x0000;
+    int32_t  status       = CRYPTO_LIB_SUCCESS;
     int      x;
 
     // Read sdls_frame.pdu.data
@@ -1302,6 +1337,14 @@ static int32_t sa_create(void)
 #ifdef DEBUG
     printf("spi = %d \n", spi);
 #endif
+
+    control_spi = tc_frame->tc_sec_header.spi;
+    if (spi == control_spi)
+    {
+        printf(KRED "ERROR: Cannot modify SA in use\n" RESET);
+        status = CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI;
+        return status;
+    }
 
     // Check if valid SPI
     if (spi < NUM_SA)
@@ -1377,16 +1420,26 @@ static int32_t sa_create(void)
  * @brief Function: sa_delete
  * @return int32: Success/Failure
  **/
-static int32_t sa_delete(void)
+static int32_t sa_delete(TC_t *tc_frame)
 {
     // Local variables
     uint16_t spi = 0x0000;
+    uint16_t control_spi = 0x0000;
+    int32_t  status      = CRYPTO_LIB_SUCCESS;
 
     // Read ingest
     spi = ((uint8_t)sdls_frame.pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[1];
 #ifdef DEBUG
     printf("spi = %d \n", spi);
 #endif
+
+    control_spi = tc_frame->tc_sec_header.spi;
+    if (spi == control_spi)
+    {
+        printf(KRED "ERROR: Cannot modify SA in use\n" RESET);
+        status = CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI;
+        return status;
+    }
 
     // Check SPI exists and in 'Unkeyed' state
     if (spi < NUM_SA)
@@ -1426,15 +1479,24 @@ static int32_t sa_delete(void)
  * @brief Function: sa_setASRN
  * @return int32: Success/Failure
  **/
-static int32_t sa_setARSN(void)
+static int32_t sa_setARSN(TC_t *tc_frame)
 {
     // Local variables
-    uint16_t spi = 0x0000;
+    uint16_t spi         = 0x0000;
+    uint16_t control_spi = 0x0000;
+    int32_t  status       = CRYPTO_LIB_SUCCESS;
     int      x;
 
     // Read ingest
     spi = ((uint8_t)sdls_frame.pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[1];
-    printf("spi = %d \n", spi);
+    
+    control_spi = tc_frame->tc_sec_header.spi;
+    if (spi == control_spi)
+    {
+        printf(KRED "ERROR: Cannot modify SA in use\n" RESET);
+        status = CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI;
+        return status;
+    }
 
     // TODO: Check SA type (authenticated, encrypted, both) and set appropriately
     // TODO: Add more checks on bounds
@@ -1485,16 +1547,26 @@ static int32_t sa_setARSN(void)
  * @brief Function: sa_setARSNW
  * @return int32: Success/Failure
  **/
-static int32_t sa_setARSNW(void)
+static int32_t sa_setARSNW(TC_t *tc_frame)
 {
     // Local variables
-    uint16_t spi = 0x0000;
+    uint16_t spi         = 0x0000;
+    uint16_t control_spi = 0x0000;
+    int32_t  status      = CRYPTO_LIB_SUCCESS;
 
     // Read ingest
     spi = ((uint8_t)sdls_frame.pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[1];
 #ifdef PDU_DEBUG
     printf("spi = %d \n", spi);
 #endif
+
+    control_spi = tc_frame->tc_sec_header.spi;
+    if (spi == control_spi)
+    {
+        printf(KRED "ERROR: Cannot modify SA in use\n" RESET);
+        status = CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI;
+        return status;
+    }
 
     // Check SPI exists
     if (spi < NUM_SA)

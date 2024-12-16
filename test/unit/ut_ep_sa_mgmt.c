@@ -588,7 +588,7 @@ UTEST(EP_SA_MGMT, SA_STOP_SELF)
     hex_conversion(buffer_STOP_h, (char **)&buffer_STOP_b, &buffer_STOP_len);
 
     status = Crypto_TC_ProcessSecurity(buffer_STOP_b, &buffer_STOP_len, &tc_nist_processed_frame);
-    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    ASSERT_EQ(CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI, status);
 
     printf("\n");
     Crypto_Shutdown();
