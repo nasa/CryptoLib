@@ -224,7 +224,7 @@ int32_t Crypto_Key_update(uint8_t state)
     }
 
 #ifdef PDU_DEBUG
-    printf("Keys ");
+    printf("Key(s) ");
 #endif
     // Read in PDU
     for (x = 0; x < pdu_keys; x++)

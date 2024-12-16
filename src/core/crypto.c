@@ -797,7 +797,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
             if(valid_ep_sa == CRYPTO_TRUE) 
             {
 #ifdef DEBUG
-                printf(KGRN "Received SDLS command: " RESET);
+                printf(KGRN "Received SDLS command w/ packet header:\n\t " RESET);
 #endif
                 // CCSDS Header
                 sdls_frame.hdr.pvn  = (tc_sdls_processed_frame->tc_pdu[0] & 0xE0) >> 5;
@@ -821,19 +821,38 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                     sdls_frame.pus.sst   = tc_sdls_processed_frame->tc_pdu[8];
                     sdls_frame.pus.sid   = (tc_sdls_processed_frame->tc_pdu[9] & 0xF0) >> 4;
                     sdls_frame.pus.spare = (tc_sdls_processed_frame->tc_pdu[9] & 0x0F);
-                }
 
                 // SDLS TLV PDU
-                sdls_frame.pdu.hdr.type = (tc_sdls_processed_frame->tc_pdu[10] & 0x80) >> 7;
-                sdls_frame.pdu.hdr.uf   = (tc_sdls_processed_frame->tc_pdu[10] & 0x40) >> 6;
-                sdls_frame.pdu.hdr.sg   = (tc_sdls_processed_frame->tc_pdu[10] & 0x30) >> 4;
-                sdls_frame.pdu.hdr.pid  = (tc_sdls_processed_frame->tc_pdu[10] & 0x0F);
-                sdls_frame.pdu.hdr.pdu_len =
-                    (tc_sdls_processed_frame->tc_pdu[11] << 8) | tc_sdls_processed_frame->tc_pdu[12];
-                for (int x = 13; x < (13 + sdls_frame.hdr.pkt_length); x++)
-                {
-                    sdls_frame.pdu.data[x - 13] = tc_sdls_processed_frame->tc_pdu[x];
+                    printf(KRED "WHOMP WHOMP 1\n" RESET);
+                    sdls_frame.pdu.hdr.type = (tc_sdls_processed_frame->tc_pdu[10] & 0x80) >> 7;
+                    sdls_frame.pdu.hdr.uf   = (tc_sdls_processed_frame->tc_pdu[10] & 0x40) >> 6;
+                    sdls_frame.pdu.hdr.sg   = (tc_sdls_processed_frame->tc_pdu[10] & 0x30) >> 4;
+                    sdls_frame.pdu.hdr.pid  = (tc_sdls_processed_frame->tc_pdu[10] & 0x0F);
+                    sdls_frame.pdu.hdr.pdu_len =
+                        (tc_sdls_processed_frame->tc_pdu[11] << 8) | tc_sdls_processed_frame->tc_pdu[12];
+                    for (int x = 13; x < (13 + sdls_frame.hdr.pkt_length); x++)
+                    {
+                        sdls_frame.pdu.data[x - 13] = tc_sdls_processed_frame->tc_pdu[x];
+                    }
                 }
+                // Not using PUS Header
+                else
+                {
+                // SDLS TLV PDU
+                    printf(KRED "WHOMP WHOMP 2\n" RESET);
+                    sdls_frame.pdu.hdr.type = (tc_sdls_processed_frame->tc_pdu[6] & 0x80) >> 7;
+                    sdls_frame.pdu.hdr.uf   = (tc_sdls_processed_frame->tc_pdu[6] & 0x40) >> 6;
+                    sdls_frame.pdu.hdr.sg   = (tc_sdls_processed_frame->tc_pdu[6] & 0x30) >> 4;
+                    sdls_frame.pdu.hdr.pid  = (tc_sdls_processed_frame->tc_pdu[6] & 0x0F);
+                    sdls_frame.pdu.hdr.pdu_len =
+                        (tc_sdls_processed_frame->tc_pdu[7] << 8) | tc_sdls_processed_frame->tc_pdu[8];
+                    for (int x = 9; x < (9 + sdls_frame.hdr.pkt_length); x++)
+                    {
+                        sdls_frame.pdu.data[x - 9] = tc_sdls_processed_frame->tc_pdu[x];
+                    }
+                }
+
+                
 
 #ifdef CCSDS_DEBUG
                 Crypto_ccsdsPrint(&sdls_frame);
@@ -865,6 +884,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
 #endif
                 // No Packet HDR or PUS in these frames
                 // SDLS TLV PDU
+                printf(KRED "WHOMP WHOMP 3\n" RESET);
                 sdls_frame.hdr.type        = (tc_sdls_processed_frame->tc_pdu[0] & 0x80) >> 7;
                 sdls_frame.pdu.hdr.uf      = (tc_sdls_processed_frame->tc_pdu[0] & 0x40) >> 6;
                 sdls_frame.pdu.hdr.sg      = (tc_sdls_processed_frame->tc_pdu[0] & 0x30) >> 4;
