@@ -789,7 +789,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
 
     if (status == CRYPTO_LIB_SUCCESS)
     {
-        // Check for speciic App ID for EPs - the CryptoLib Apid in this case
+        // Check for specific App ID for EPs - the CryptoLib Apid in this case
         if ((tc_sdls_processed_frame->tc_pdu[0] == 0x18) && (tc_sdls_processed_frame->tc_pdu[1] == 0x80))
         {
 #ifdef CRYPTO_EPROC
