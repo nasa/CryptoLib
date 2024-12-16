@@ -21,7 +21,6 @@
 */
 #include "crypto.h"
 #include <string.h>
-#include <stdbool.h>
 
 /*
 ** Static Library Declaration
@@ -782,7 +781,12 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
     }
 
     // Validate correct SA for EPs
-    bool valid_ep_sa = (tc_sdls_processed_frame->tc_sec_header.spi == SPI_MIN) || (tc_sdls_processed_frame->tc_sec_header.spi == SPI_MAX);
+    uint8_t valid_ep_sa = CRYPTO_TRUE;
+    if ((tc_sdls_processed_frame->tc_sec_header.spi == SPI_MIN) || (tc_sdls_processed_frame->tc_sec_header.spi == SPI_MAX))
+    {
+        valid_ep_sa = CRYPTO_FALSE;
+    }
+
     if (status == CRYPTO_LIB_SUCCESS)
     {
         if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
