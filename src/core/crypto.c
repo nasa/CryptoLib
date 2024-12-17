@@ -824,16 +824,26 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                     sdls_frame.pus.spare = (tc_sdls_processed_frame->tc_pdu[9] & 0x0F);
 
                 // SDLS TLV PDU
-                    printf(KRED "WHOMP WHOMP 1\n" RESET);
                     sdls_frame.pdu.hdr.type = (tc_sdls_processed_frame->tc_pdu[10] & 0x80) >> 7;
                     sdls_frame.pdu.hdr.uf   = (tc_sdls_processed_frame->tc_pdu[10] & 0x40) >> 6;
                     sdls_frame.pdu.hdr.sg   = (tc_sdls_processed_frame->tc_pdu[10] & 0x30) >> 4;
                     sdls_frame.pdu.hdr.pid  = (tc_sdls_processed_frame->tc_pdu[10] & 0x0F);
                     sdls_frame.pdu.hdr.pdu_len =
                         (tc_sdls_processed_frame->tc_pdu[11] << 8) | tc_sdls_processed_frame->tc_pdu[12];
-                    for (int x = 13; x < (13 + sdls_frame.hdr.pkt_length); x++)
+
+                    // Subtract headers from total frame length
+                   // uint16_t max_tlv = tc_sdls_processed_frame->tc_header.fl - CCSDS_HDR_SIZE - CCSDS_PUS_SIZE - SDLS_TLV_HDR_SIZE;
+                    if (sdls_frame.hdr.pkt_length < TLV_DATA_SIZE) // && (sdls_frame.hdr.pkt_length < max_tlv))
                     {
-                        sdls_frame.pdu.data[x - 13] = tc_sdls_processed_frame->tc_pdu[x];
+                        for (int x = 13; x < (13 + sdls_frame.hdr.pkt_length); x++)
+                        {
+                            sdls_frame.pdu.data[x - 13] = tc_sdls_processed_frame->tc_pdu[x];
+                        }
+                    }
+                    else
+                    {
+                        status = CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
+                        return status;
                     }
                 }
                 // Not using PUS Header
@@ -846,9 +856,20 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                     sdls_frame.pdu.hdr.pid  = (tc_sdls_processed_frame->tc_pdu[6] & 0x0F);
                     sdls_frame.pdu.hdr.pdu_len =
                         (tc_sdls_processed_frame->tc_pdu[7] << 8) | tc_sdls_processed_frame->tc_pdu[8];
-                    for (int x = 9; x < (9 + sdls_frame.hdr.pkt_length); x++)
+                    
+                    // Make sure TLV isn't larger than we have allocated, and it is sane given total frame length
+                    uint16_t max_tlv = tc_sdls_processed_frame->tc_header.fl - CCSDS_HDR_SIZE - SDLS_TLV_HDR_SIZE;
+                    if ((sdls_frame.hdr.pkt_length < TLV_DATA_SIZE) && (sdls_frame.hdr.pkt_length < max_tlv))
                     {
-                        sdls_frame.pdu.data[x - 9] = tc_sdls_processed_frame->tc_pdu[x];
+                        for (int x = 9; x < (9 + sdls_frame.hdr.pkt_length); x++)
+                        {
+                            sdls_frame.pdu.data[x - 9] = tc_sdls_processed_frame->tc_pdu[x];
+                        }
+                    }
+                    else
+                    {
+                        status = CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
+                        return status;
                     }
                 }
 
@@ -884,7 +905,6 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
 #endif
                 // No Packet HDR or PUS in these frames
                 // SDLS TLV PDU
-                printf(KRED "WHOMP WHOMP 3\n" RESET);
                 sdls_frame.hdr.type        = (tc_sdls_processed_frame->tc_pdu[0] & 0x80) >> 7;
                 sdls_frame.pdu.hdr.uf      = (tc_sdls_processed_frame->tc_pdu[0] & 0x40) >> 6;
                 sdls_frame.pdu.hdr.sg      = (tc_sdls_processed_frame->tc_pdu[0] & 0x30) >> 4;
