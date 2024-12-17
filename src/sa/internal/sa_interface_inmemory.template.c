@@ -1072,12 +1072,16 @@ static int32_t sa_start(TC_t *tc_frame)
         }
         else
         {
+#ifdef DEBUG
             printf(KRED "ERROR: SPI %d is not in the KEYED state.\n" RESET, spi);
+#endif
         }
     }
     else
     {
+#ifdef DEBUG
         printf(KRED "ERROR: SPI %d does not exist.\n" RESET, spi);
+#endif
     }
 
 #ifdef DEBUG
@@ -1110,7 +1114,9 @@ static int32_t sa_stop(TC_t *tc_frame)
 
     if (spi == control_spi)
     {
+#ifdef DEBUG
         printf(KRED "ERROR: Cannot modify SA in use\n" RESET);
+#endif
         status = CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI;
         return status;
     }
@@ -1151,12 +1157,16 @@ static int32_t sa_stop(TC_t *tc_frame)
         }
         else
         {
+#ifdef DEBUG
             printf(KRED "ERROR: SPI %d is not in the OPERATIONAL state.\n" RESET, spi);
+#endif
         }
     }
     else
     {
+#ifdef DEBUG
         printf(KRED "ERROR: SPI %d does not exist.\n" RESET, spi);
+#endif
     }
 
 #ifdef DEBUG
@@ -1186,7 +1196,9 @@ static int32_t sa_rekey(TC_t *tc_frame)
     control_spi = tc_frame->tc_sec_header.spi;
     if (spi == control_spi)
     {
+#ifdef DEBUG
         printf(KRED "ERROR: Cannot modify SA in use\n" RESET);
+#endif
         status = CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI;
         return status;
     }
@@ -1282,7 +1294,9 @@ static int32_t sa_expire(TC_t *tc_frame)
     control_spi = tc_frame->tc_sec_header.spi;
     if (spi == control_spi)
     {
+#ifdef DEBUG
         printf(KRED "ERROR: Cannot modify SA in use\n" RESET);
+#endif
         status = CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI;
         return status;
     }
@@ -1308,12 +1322,16 @@ static int32_t sa_expire(TC_t *tc_frame)
         }
         else
         {
+#ifdef DEBUG
             printf(KRED "ERROR: SPI %d is not in the KEYED state.\n" RESET, spi);
+#endif
         }
     }
     else
     {
+#ifdef DEBUG
         printf(KRED "ERROR: SPI %d does not exist.\n" RESET, spi);
+#endif
     }
 
     return CRYPTO_LIB_SUCCESS;
@@ -1341,7 +1359,9 @@ static int32_t sa_create(TC_t *tc_frame)
     control_spi = tc_frame->tc_sec_header.spi;
     if (spi == control_spi)
     {
+#ifdef DEBUG
         printf(KRED "ERROR: Cannot modify SA in use\n" RESET);
+#endif
         status = CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI;
         return status;
     }
@@ -1436,7 +1456,9 @@ static int32_t sa_delete(TC_t *tc_frame)
     control_spi = tc_frame->tc_sec_header.spi;
     if (spi == control_spi)
     {
+#ifdef DEBUG
         printf(KRED "ERROR: Cannot modify SA in use\n" RESET);
+#endif
         status = CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI;
         return status;
     }
@@ -1464,12 +1486,16 @@ static int32_t sa_delete(TC_t *tc_frame)
         }
         else
         {
+#ifdef DEBUG
             printf(KRED "ERROR: SPI %d is not in the UNKEYED state.\n" RESET, spi);
+#endif
         }
     }
     else
     {
+#ifdef DEBUG
         printf(KRED "ERROR: SPI %d does not exist.\n" RESET, spi);
+#endif
     }
 
     return CRYPTO_LIB_SUCCESS;
@@ -1493,7 +1519,9 @@ static int32_t sa_setARSN(TC_t *tc_frame)
     control_spi = tc_frame->tc_sec_header.spi;
     if (spi == control_spi)
     {
+#ifdef DEBUG
         printf(KRED "ERROR: Cannot modify SA in use\n" RESET);
+#endif
         status = CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI;
         return status;
     }
@@ -1563,7 +1591,9 @@ static int32_t sa_setARSNW(TC_t *tc_frame)
     control_spi = tc_frame->tc_sec_header.spi;
     if (spi == control_spi)
     {
+#ifdef DEBUG
         printf(KRED "ERROR: Cannot modify SA in use\n" RESET);
+#endif
         status = CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI;
         return status;
     }
