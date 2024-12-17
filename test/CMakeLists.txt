@@ -52,18 +52,19 @@ add_test(NAME UT_TM_APPLY
 add_test(NAME UT_TM_PROCESS
          COMMAND ${PROJECT_BINARY_DIR}/bin/ut_tm_process 
          WORKING_DIRECTORY ${PROJECT_TEST_DIR})
-
-add_test(NAME UT_EP_MC
-         COMMAND ${PROJECT_BINARY_DIR}/bin/ut_ep_mc 
-         WORKING_DIRECTORY ${PROJECT_TEST_DIR})
-         
-add_test(NAME UT_EP_SA_MGMT
-         COMMAND ${PROJECT_BINARY_DIR}/bin/ut_ep_sa_mgmt 
-         WORKING_DIRECTORY ${PROJECT_TEST_DIR})
-         
-add_test(NAME UT_EP_KEY_MGMT
-         COMMAND ${PROJECT_BINARY_DIR}/bin/ut_ep_key_mgmt 
-         WORKING_DIRECTORY ${PROJECT_TEST_DIR})
+if(CRYPTO_EPROC)        
+    add_test(NAME UT_EP_MC
+            COMMAND ${PROJECT_BINARY_DIR}/bin/ut_ep_mc 
+            WORKING_DIRECTORY ${PROJECT_TEST_DIR})
+            
+    add_test(NAME UT_EP_SA_MGMT
+            COMMAND ${PROJECT_BINARY_DIR}/bin/ut_ep_sa_mgmt 
+            WORKING_DIRECTORY ${PROJECT_TEST_DIR})
+            
+    add_test(NAME UT_EP_KEY_MGMT
+            COMMAND ${PROJECT_BINARY_DIR}/bin/ut_ep_key_mgmt 
+            WORKING_DIRECTORY ${PROJECT_TEST_DIR})
+endif()
 
 if(NOT ${CRYPTO_WOLFSSL})
     add_test(NAME UT_AES_GCM_SIV

@@ -87,6 +87,7 @@ UTEST(CRYPTO_C, BAD_CC_FLAG)
     ASSERT_EQ(CRYPTO_LIB_ERR_INVALID_CC_FLAG, return_val);
 }
 
+#ifdef CRYPTO_EPROC
 /**
  * @brief Unit Test: PDU Switch testing
  * @note: TODO: This needs to be reworked to actually better test.
@@ -263,6 +264,7 @@ UTEST(CRYPTO_C, PDU_SWITCH)
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 }
 
+
 /**
  * @brief Unit Test: Crypto Extended Procedures PDU Test
  **/
@@ -280,6 +282,7 @@ UTEST(CRYPTO_C, EXT_PROC_PDU)
     status = Crypto_Process_Extended_Procedure_Pdu(tc_frame, ingest);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 }
+#endif //CRYPTO_EPROC
 
 /**
  * @brief Unit Test: Crypto ACS Get Algorithm response
@@ -395,4 +398,75 @@ UTEST(CRYPTO_C, STRUCT_SIZE_VERIFICATION)
     ASSERT_EQ(AOS_SIZE, (size_t)(8 + 18 + 1786 + 22));
 }
 
+#ifndef CRYPTO_EPROC
+UTEST(CRYPTO_C, OTAR_0_140_142_FAIL_TEST)
+{
+    remove("sa_save_file.bin");
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+
+    GvcidManagedParameters_t TC_0_Managed_Parameters = {
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
+
+    GvcidManagedParameters_t TC_1_Managed_Parameters = {
+        0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
+
+    Crypto_Init();
+    SaInterface sa_if = get_sa_interface_inmemory();
+
+    int status = CRYPTO_LIB_SUCCESS;
+
+    // NOTE: Added Transfer Frame header to the plaintext
+    char *buffer_nist_key_h = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
+    // char* buffer_nist_iv_h = "b6ac8e4963f49207ffd6374b"; // The last valid IV that was seen by the SA
+    char *buffer_OTAR_h =
+        "2003009e00ff000000001880d037008c197f0b000100840000344892bbc54f5395297d4c37172f2a3c46f6a81c1349e9e26ac80985d8bb"
+        "d55a5814c662e49fba52f99ba09558cd21cf268b8e50b2184137e80f76122034c580464e2f06d2659a50508bdfe9e9a55990ba4148af89"
+        "6d8a6eebe8b5d2258685d4ce217a20174fdd4f0efac62758c51b04e55710a47209c923b641d19a39001f9e986166f5ffd95555";
+
+    uint8_t *buffer_nist_key_b, *buffer_OTAR_b    = NULL;
+    int      buffer_nist_key_len, buffer_OTAR_len = 0;
+
+    // Setup Processed Frame For Decryption
+    TC_t tc_nist_processed_frame;
+
+    // Expose/setup SAs for testing
+    SecurityAssociation_t *test_association;
+
+    // Activate SA 0
+    sa_if->sa_get_from_spi(0, &test_association);
+    test_association->sa_state  = SA_OPERATIONAL;
+    test_association->ecs_len   = 1;
+    test_association->ecs       = CRYPTO_CIPHER_NONE;
+    test_association->est       = 0;
+    test_association->ast       = 0;
+    test_association->shsnf_len = 2;
+    test_association->arsn_len  = 2;
+    test_association->arsnw     = 5;
+    test_association->iv_len    = 0;
+    test_association->shivf_len = 0;
+
+    // Insert key into keyring of SA 9
+    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
+
+    // Convert frames that will be processed
+    hex_conversion(buffer_OTAR_h, (char **)&buffer_OTAR_b, &buffer_OTAR_len);
+    // Convert/Set input IV
+
+    // Expect success on next valid IV && ARSN
+    printf(KGRN "Checking  next valid IV && valid ARSN... should be able to receive it... \n" RESET);
+    status = Crypto_TC_ProcessSecurity(buffer_OTAR_b, &buffer_OTAR_len, &tc_nist_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_ERR_SDLS_EP_NOT_BUILT, status);
+
+    printf("\n");
+    Crypto_Shutdown();
+    free(buffer_nist_key_b);
+    free(buffer_OTAR_b);
+}
+#endif //CRYPTO_EPROC
 UTEST_MAIN();

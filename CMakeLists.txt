@@ -64,6 +64,7 @@ OPTION(KMC_MDB_RH "KMC-MDB-RedHat-Integration-Testing" OFF) #Disabled by default
 OPTION(KMC_MDB_DB "KMC-MDB-Debian-Integration-Testing" OFF) #Disabled by default, enable with: -DKMC_MDB_DB=ON
 OPTION(KMC_CFFI_EXCLUDE "KMC-Exclude-Problematic-CFFI-Code" OFF) #Disabled by default, enable with: -DKMC_CFFI_EXCLUDE=ON
 
+OPTION(CRYPTO_EPROC "Enables the building and use of Extended Procedures" OFF) #Disabled by default, enable with -DCRYPTO_EPROC=ON
 
 #
 # Custom Module Paths
@@ -137,6 +138,12 @@ IF(KMC_MDB_DB)
     ADD_DEFINITIONS(-DKMC_MDB_DB)
     ADD_DEFINITIONS(-DKMC_CFFI_EXCLUDE)
 ENDIF(KMC_MDB_DB)
+
+IF(CRYPTO_EPROC)
+    ADD_DEFINITIONS(-DCRYPTO_EPROC)
+    message(WARNING "Cryptolib Extended Procedures NOT complete.  NOT Fully tested.  Use at own risk!")
+
+ENDIF(CRYPTO_EPROC)
 
 if(SYSTEM_INSTALL)
     # The library will be installed to /usr/local unless overridden with

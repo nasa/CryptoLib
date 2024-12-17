@@ -111,7 +111,7 @@
 #define NUM_SA              64
 #define SPI_LEN             2   /* bytes */
 #define SPI_MIN             0
-#define SPI_MAX             NUM_SA /* TODO: is 64 what we want here?*/
+#define SPI_MAX             NUM_SA - 1
 #define KEY_SIZE            512 /* bytes */
 #define KEY_ID_SIZE         8
 #define MKID_MAX            128
