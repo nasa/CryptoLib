@@ -811,6 +811,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                 sdls_frame.hdr.pkt_length =
                     (tc_sdls_processed_frame->tc_pdu[4] << 8) | tc_sdls_processed_frame->tc_pdu[5];
 
+                // Using PUS Header
                 if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
                 {  
                 // If ECSS PUS Header is being used
@@ -839,7 +840,6 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                 else
                 {
                 // SDLS TLV PDU
-                    printf(KRED "WHOMP WHOMP 2\n" RESET);
                     sdls_frame.pdu.hdr.type = (tc_sdls_processed_frame->tc_pdu[6] & 0x80) >> 7;
                     sdls_frame.pdu.hdr.uf   = (tc_sdls_processed_frame->tc_pdu[6] & 0x40) >> 6;
                     sdls_frame.pdu.hdr.sg   = (tc_sdls_processed_frame->tc_pdu[6] & 0x30) >> 4;

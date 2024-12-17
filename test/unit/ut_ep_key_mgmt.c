@@ -662,7 +662,7 @@ UTEST(EP_KEY_MGMT, DEACTIVATE_142_NO_PUS)
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h   = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
     char *buffer_nist_iv_h    = "b6ac8e4963f49207ffd6374b"; // The last valid IV that was seen by the SA
-    char *buffer_DEACTIVATE_h = "2003001c00ff000000001880d0390000030002008e1f6d21c4555555555555";
+    char *buffer_DEACTIVATE_h = "2003001c00ff000000001880d039000a030002008e1f6d21c4555555555555";
 
     uint8_t *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_DEACTIVATE_b     = NULL;
     int      buffer_nist_iv_len, buffer_nist_key_len, buffer_DEACTIVATE_len = 0;
