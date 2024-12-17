@@ -1365,6 +1365,11 @@ static int32_t sa_create(void)
         // Verify data
         status = sa_verify_data(temp_sa);
 
+        if (status == CRYPTO_LIB_SUCCESS)
+        {
+            sa[spi] = *temp_sa;
+        }
+
 #ifdef PDU_DEBUG
         Crypto_saPrint(&sa[spi]);
 #endif
