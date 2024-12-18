@@ -1351,7 +1351,6 @@ static int32_t sa_create(TC_t *tc_frame)
     uint8_t  count = 6;
     uint16_t spi   = 0x0000;
     uint16_t control_spi = 0x0000;
-    int32_t  status       = CRYPTO_LIB_SUCCESS;
     int      x;
 
     // Read sdls_frame.pdu.data
