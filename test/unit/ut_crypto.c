@@ -152,27 +152,27 @@ UTEST(CRYPTO_C, PDU_SWITCH)
     sdls_frame.pdu.hdr.sg  = SG_SA_MGMT;
     sdls_frame.pdu.hdr.pid = PID_CREATE_SA;
     status                 = Crypto_PDU(ingest, &tc_frame);
-    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+    ASSERT_EQ(status, CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI);
 
     sdls_frame.pdu.hdr.pid = PID_DELETE_SA;
     status                 = Crypto_PDU(ingest, &tc_frame);
-    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+    ASSERT_EQ(status, CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI);
 
     sdls_frame.pdu.hdr.pid = PID_SET_ARSNW;
     status                 = Crypto_PDU(ingest, &tc_frame);
-    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+    ASSERT_EQ(status, CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI);
 
     sdls_frame.pdu.hdr.pid = PID_REKEY_SA;
     status                 = Crypto_PDU(ingest, &tc_frame);
-    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+    ASSERT_EQ(status, CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI);
 
     sdls_frame.pdu.hdr.pid = PID_EXPIRE_SA;
     status                 = Crypto_PDU(ingest, &tc_frame);
-    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+    ASSERT_EQ(status, CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI);
 
     sdls_frame.pdu.hdr.pid = PID_SET_ARSN;
     status                 = Crypto_PDU(ingest, &tc_frame);
-    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+    ASSERT_EQ(status, CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI);
 
     sdls_frame.pdu.hdr.pid = PID_START_SA;
     status                 = Crypto_PDU(ingest, &tc_frame);
@@ -180,7 +180,7 @@ UTEST(CRYPTO_C, PDU_SWITCH)
 
     sdls_frame.pdu.hdr.pid = PID_STOP_SA;
     status                 = Crypto_PDU(ingest, &tc_frame);
-    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+    ASSERT_EQ(status, CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI);
 
     sdls_frame.pdu.hdr.pid = PID_READ_ARSN;
     status                 = Crypto_PDU(ingest, &tc_frame);
