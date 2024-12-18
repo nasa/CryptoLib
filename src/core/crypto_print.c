@@ -183,14 +183,22 @@ void Crypto_ccsdsPrint(CCSDS_t *sdls_frame)
     printf("\t\t seq        = 0x%01x \n", sdls_frame->hdr.seq);
     printf("\t\t pktid      = 0x%04x \n", sdls_frame->hdr.pktid);
     printf("\t\t pkt_length = 0x%04x \n", sdls_frame->hdr.pkt_length);
-    printf("\t PUS Header\n");
-    printf("\t\t shf        = 0x%01x \n", sdls_frame->pus.shf);
-    printf("\t\t pusv       = 0x%01x \n", sdls_frame->pus.pusv);
-    printf("\t\t ack        = 0x%01x \n", sdls_frame->pus.ack);
-    printf("\t\t st         = 0x%02x \n", sdls_frame->pus.st);
-    printf("\t\t sst        = 0x%02x \n", sdls_frame->pus.sst);
-    printf("\t\t sid        = 0x%01x \n", sdls_frame->pus.sid);
-    printf("\t\t spare      = 0x%01x \n", sdls_frame->pus.spare);
+    if(crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
+    {
+        printf("\t PUS Header\n");
+        printf("\t\t shf        = 0x%01x \n", sdls_frame->pus.shf);
+        printf("\t\t pusv       = 0x%01x \n", sdls_frame->pus.pusv);
+        printf("\t\t ack        = 0x%01x \n", sdls_frame->pus.ack);
+        printf("\t\t st         = 0x%02x \n", sdls_frame->pus.st);
+        printf("\t\t sst        = 0x%02x \n", sdls_frame->pus.sst);
+        printf("\t\t sid        = 0x%01x \n", sdls_frame->pus.sid);
+        printf("\t\t spare      = 0x%01x \n", sdls_frame->pus.spare);
+    }
+    else
+    {
+        printf("\t PUS Header\n");
+        printf("\t\t Config not configured for PUS Header, not printing\n");
+    }
     printf("\t PDU \n");
     printf("\t\t type       = 0x%01x \n", sdls_frame->pdu.hdr.type);
     printf("\t\t uf         = 0x%01x \n", sdls_frame->pdu.hdr.uf);
