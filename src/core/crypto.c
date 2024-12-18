@@ -768,6 +768,10 @@ int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uin
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
  * @note TODO - Actually update based on variable config
+ * @note Allows EPs to be processed one of two ways.
+ * @note - 1) By using a packet layer with APID 0x1880
+ * @note - 2) By using a defined Virtual Channel ID
+ * @note Requires this to happen on either SPI_MIN (0) or SPI_MAX (configurable)
  **/
 int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uint8_t *ingest)
 {
@@ -885,7 +889,9 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
             // Received EP PDU on invalid SA
             else
             {
+#ifdef CCSDS_DEBUG
                 printf(KRED "Received EP PDU on invalid SA! SPI %d\n" RESET, tc_sdls_processed_frame->tc_sec_header.spi);
+#endif
                 status = CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI;
             }
 
@@ -894,13 +900,15 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
             status = CRYPTO_LIB_ERR_SDLS_EP_NOT_BUILT;
             #endif //CRYPTO_EPROC
         }
-        else if (tc_sdls_processed_frame->tc_header.vcid == TC_SDLS_EP_VCID) // TC SDLS PDU with no packet layer
+
+        // If not a specific APID, check if using VCIDs for SDLS PDUs with no packet layer
+        else if (tc_sdls_processed_frame->tc_header.vcid == TC_SDLS_EP_VCID) 
         {
         #ifdef CRYPTO_EPROC
             // Check validity of SAs used for EP
             if(valid_ep_sa == CRYPTO_TRUE)
             { 
-#ifdef DEBUG
+#ifdef CCSDS_DEBUG
                 printf(KGRN "Received SDLS command (No Packet Header or PUS): " RESET);
 #endif
                 // No Packet HDR or PUS in these frames
