@@ -837,7 +837,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
 
                     // Subtract headers from total frame length
                    // uint16_t max_tlv = tc_sdls_processed_frame->tc_header.fl - CCSDS_HDR_SIZE - CCSDS_PUS_SIZE - SDLS_TLV_HDR_SIZE;
-                    if (sdls_frame.hdr.pkt_length < TLV_DATA_SIZE) // && (sdls_frame.hdr.pkt_length < max_tlv))
+                    if (sdls_frame.hdr.pkt_length <= TLV_DATA_SIZE) // && (sdls_frame.hdr.pkt_length < max_tlv))
                     {
                         for (int x = 13; x < (13 + sdls_frame.hdr.pkt_length); x++)
                         {
