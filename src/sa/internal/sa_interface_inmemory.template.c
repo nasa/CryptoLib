@@ -1367,7 +1367,34 @@ static int32_t sa_create(void)
 
         if (status == CRYPTO_LIB_SUCCESS)
         {
-            sa[spi] = *temp_sa;
+            // Copy data from temp_sa to sa[spi]
+            sa[spi].lpid = temp_sa->lpid;
+            sa[spi].est = temp_sa->est;
+            sa[spi].ast = temp_sa->ast;
+            sa[spi].shivf_len = temp_sa->shivf_len;
+            sa[spi].shsnf_len = temp_sa->shsnf_len;
+            sa[spi].shplf_len = temp_sa->shplf_len;
+            sa[spi].stmacf_len = temp_sa->stmacf_len;
+            sa[spi].ecs_len = temp_sa->ecs_len;
+            sa[spi].ecs = temp_sa->ecs;
+            for (x = 0; x < sa[spi].shivf_len; x++)
+            {
+                sa[spi].iv[x] = temp_sa->iv[x];
+            }
+            sa[spi].acs = temp_sa->acs;
+            sa[spi].abm_len = temp_sa->abm_len;
+            for (x = 0; x < sa[spi].abm_len; x++)
+            {
+                sa[spi].abm[x] = temp_sa->abm[x];
+            }
+            sa[spi].arsn_len = temp_sa->arsn_len;
+            for (x = 0; x < sa[spi].arsn_len; x++)
+            {
+                *(sa[spi].arsn + x) = *(temp_sa->arsn + x);
+            }
+            sa[spi].arsnw_len = temp_sa->arsnw_len;
+            sa[spi].arsnw = temp_sa->arsnw;
+            sa[spi].sa_state = temp_sa->sa_state;
         }
 
 #ifdef PDU_DEBUG
