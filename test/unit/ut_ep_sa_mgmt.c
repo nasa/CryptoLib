@@ -539,4 +539,61 @@ UTEST(EP_SA_MGMT, SA_EXPIRE_6)
     free(buffer_EXPIRE_b);
 }
 
+UTEST(EP_SA_MGMT, SA_STOP_SELF)
+{
+    remove("sa_save_file.bin");
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+
+    GvcidManagedParameters_t TC_0_Managed_Parameters = {
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
+
+    Crypto_Init();
+    SaInterface sa_if = get_sa_interface_inmemory();
+
+    int status = CRYPTO_LIB_SUCCESS;
+
+    // NOTE: Added Transfer Frame header to the plaintext
+    char *buffer_STOP_h = "2003001c00ff000000001880d0b6000a197f0b001e00020000938f21c4555555555555";
+
+    uint8_t *buffer_STOP_b   = NULL;
+    int      buffer_STOP_len = 0;
+
+    // Setup Processed Frame For Decryption
+    TC_t tc_nist_processed_frame;
+
+    // Expose/setup SAs for testing
+    SecurityAssociation_t *test_association;
+
+    // Modify SA 0
+    sa_if->sa_get_from_spi(0, &test_association);
+    test_association->shivf_len = 0;
+    test_association->sa_state = SA_OPERATIONAL;
+    test_association->iv_len          = 12;
+    test_association->shsnf_len       = 2;
+    test_association->arsnw           = 5;
+    test_association->arsnw_len       = 1;
+    test_association->arsn_len        = 2;
+    test_association->gvcid_blk.scid  = SCID & 0x3FF;
+
+    // Modify SA 6
+    sa_if->sa_get_from_spi(6, &test_association);
+    test_association->sa_state = SA_OPERATIONAL;
+
+    // Convert frames that will be processed
+    hex_conversion(buffer_STOP_h, (char **)&buffer_STOP_b, &buffer_STOP_len);
+
+    status = Crypto_TC_ProcessSecurity(buffer_STOP_b, &buffer_STOP_len, &tc_nist_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI, status);
+
+    printf("\n");
+    Crypto_Shutdown();
+
+    free(buffer_STOP_b);
+}
+
 UTEST_MAIN();

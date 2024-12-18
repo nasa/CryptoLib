@@ -529,37 +529,37 @@ int32_t Crypto_SG_SA_MGMT(uint8_t *ingest, TC_t *tc_frame)
 #ifdef PDU_DEBUG
             printf(KGRN "SA Create\n" RESET);
 #endif
-            status = sa_if->sa_create();
+            status = sa_if->sa_create(tc_frame);
             break;
         case PID_DELETE_SA:
 #ifdef PDU_DEBUG
             printf(KGRN "SA Delete\n" RESET);
 #endif
-            status = sa_if->sa_delete();
+            status = sa_if->sa_delete(tc_frame);
             break;
         case PID_SET_ARSNW:
 #ifdef PDU_DEBUG
             printf(KGRN "SA setARSNW\n" RESET);
 #endif
-            status = sa_if->sa_setARSNW();
+            status = sa_if->sa_setARSNW(tc_frame);
             break;
         case PID_REKEY_SA:
 #ifdef PDU_DEBUG
             printf(KGRN "SA Rekey\n" RESET);
 #endif
-            status = sa_if->sa_rekey();
+            status = sa_if->sa_rekey(tc_frame);
             break;
         case PID_EXPIRE_SA:
 #ifdef PDU_DEBUG
             printf(KGRN "SA Expire\n" RESET);
 #endif
-            status = sa_if->sa_expire();
+            status = sa_if->sa_expire(tc_frame);
             break;
         case PID_SET_ARSN:
 #ifdef PDU_DEBUG
             printf(KGRN "SA SetARSN\n" RESET);
 #endif
-            status = sa_if->sa_setARSN();
+            status = sa_if->sa_setARSN(tc_frame);
             break;
         case PID_START_SA:
 #ifdef PDU_DEBUG
@@ -571,7 +571,7 @@ int32_t Crypto_SG_SA_MGMT(uint8_t *ingest, TC_t *tc_frame)
 #ifdef PDU_DEBUG
             printf(KGRN "SA Stop\n" RESET);
 #endif
-            status = sa_if->sa_stop();
+            status = sa_if->sa_stop(tc_frame);
             break;
         case PID_READ_ARSN:
 #ifdef PDU_DEBUG
@@ -768,27 +768,40 @@ int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uin
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
  * @note TODO - Actually update based on variable config
+ * @note Allows EPs to be processed one of two ways.
+ * @note - 1) By using a packet layer with APID 0x1880
+ * @note - 2) By using a defined Virtual Channel ID
+ * @note Requires this to happen on either SPI_MIN (0) or SPI_MAX (configurable)
  **/
 int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uint8_t *ingest)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    int     x;
+    ingest = ingest; // Suppress unused variable error depending on build
+
     // Check for null pointers
     if (tc_sdls_processed_frame == NULL)
     {
         status = CRYPTO_LIB_ERR_NULL_BUFFER;
     }
+
+    // Validate correct SA for EPs
+    uint8_t valid_ep_sa = CRYPTO_FALSE;
+    if ((tc_sdls_processed_frame->tc_sec_header.spi == SPI_MIN) || (tc_sdls_processed_frame->tc_sec_header.spi == SPI_MAX))
+    {
+        valid_ep_sa = CRYPTO_TRUE;
+    }
+
     if (status == CRYPTO_LIB_SUCCESS)
     {
-        if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
+        // Check for specific App ID for EPs - the CryptoLib Apid in this case
+        if ((tc_sdls_processed_frame->tc_pdu[0] == 0x18) && (tc_sdls_processed_frame->tc_pdu[1] == 0x80))
         {
-            if ((tc_sdls_processed_frame->tc_pdu[0] == 0x18) && (tc_sdls_processed_frame->tc_pdu[1] == 0x80))
-            // Crypto Lib Application ID
-            
+#ifdef CRYPTO_EPROC
+            // Check validity of SAs used for EP
+            if(valid_ep_sa == CRYPTO_TRUE) 
             {
-                #ifdef CRYPTO_EPROC 
 #ifdef DEBUG
-                printf(KGRN "Received SDLS command: " RESET);
+                printf(KGRN "Received SDLS command w/ packet header:\n\t " RESET);
 #endif
                 // CCSDS Header
                 sdls_frame.hdr.pvn  = (tc_sdls_processed_frame->tc_pdu[0] & 0xE0) >> 5;
@@ -802,25 +815,114 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                 sdls_frame.hdr.pkt_length =
                     (tc_sdls_processed_frame->tc_pdu[4] << 8) | tc_sdls_processed_frame->tc_pdu[5];
 
-                // CCSDS PUS
-                sdls_frame.pus.shf   = (tc_sdls_processed_frame->tc_pdu[6] & 0x80) >> 7;
-                sdls_frame.pus.pusv  = (tc_sdls_processed_frame->tc_pdu[6] & 0x70) >> 4;
-                sdls_frame.pus.ack   = (tc_sdls_processed_frame->tc_pdu[6] & 0x0F);
-                sdls_frame.pus.st    = tc_sdls_processed_frame->tc_pdu[7];
-                sdls_frame.pus.sst   = tc_sdls_processed_frame->tc_pdu[8];
-                sdls_frame.pus.sid   = (tc_sdls_processed_frame->tc_pdu[9] & 0xF0) >> 4;
-                sdls_frame.pus.spare = (tc_sdls_processed_frame->tc_pdu[9] & 0x0F);
+                // Using PUS Header
+                if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
+                {  
+                // If ECSS PUS Header is being used
+                    sdls_frame.pus.shf   = (tc_sdls_processed_frame->tc_pdu[6] & 0x80) >> 7;
+                    sdls_frame.pus.pusv  = (tc_sdls_processed_frame->tc_pdu[6] & 0x70) >> 4;
+                    sdls_frame.pus.ack   = (tc_sdls_processed_frame->tc_pdu[6] & 0x0F);
+                    sdls_frame.pus.st    = tc_sdls_processed_frame->tc_pdu[7];
+                    sdls_frame.pus.sst   = tc_sdls_processed_frame->tc_pdu[8];
+                    sdls_frame.pus.sid   = (tc_sdls_processed_frame->tc_pdu[9] & 0xF0) >> 4;
+                    sdls_frame.pus.spare = (tc_sdls_processed_frame->tc_pdu[9] & 0x0F);
 
                 // SDLS TLV PDU
-                sdls_frame.pdu.hdr.type = (tc_sdls_processed_frame->tc_pdu[10] & 0x80) >> 7;
-                sdls_frame.pdu.hdr.uf   = (tc_sdls_processed_frame->tc_pdu[10] & 0x40) >> 6;
-                sdls_frame.pdu.hdr.sg   = (tc_sdls_processed_frame->tc_pdu[10] & 0x30) >> 4;
-                sdls_frame.pdu.hdr.pid  = (tc_sdls_processed_frame->tc_pdu[10] & 0x0F);
-                sdls_frame.pdu.hdr.pdu_len =
-                    (tc_sdls_processed_frame->tc_pdu[11] << 8) | tc_sdls_processed_frame->tc_pdu[12];
-                for (x = 13; x < (13 + sdls_frame.hdr.pkt_length); x++)
+                    sdls_frame.pdu.hdr.type = (tc_sdls_processed_frame->tc_pdu[10] & 0x80) >> 7;
+                    sdls_frame.pdu.hdr.uf   = (tc_sdls_processed_frame->tc_pdu[10] & 0x40) >> 6;
+                    sdls_frame.pdu.hdr.sg   = (tc_sdls_processed_frame->tc_pdu[10] & 0x30) >> 4;
+                    sdls_frame.pdu.hdr.pid  = (tc_sdls_processed_frame->tc_pdu[10] & 0x0F);
+                    sdls_frame.pdu.hdr.pdu_len =
+                        (tc_sdls_processed_frame->tc_pdu[11] << 8) | tc_sdls_processed_frame->tc_pdu[12];
+
+                    // Subtract headers from total frame length
+                   // uint16_t max_tlv = tc_sdls_processed_frame->tc_header.fl - CCSDS_HDR_SIZE - CCSDS_PUS_SIZE - SDLS_TLV_HDR_SIZE;
+                    if (sdls_frame.hdr.pkt_length < TLV_DATA_SIZE) // && (sdls_frame.hdr.pkt_length < max_tlv))
+                    {
+                        for (int x = 13; x < (13 + sdls_frame.hdr.pkt_length); x++)
+                        {
+                            sdls_frame.pdu.data[x - 13] = tc_sdls_processed_frame->tc_pdu[x];
+                        }
+                    }
+                    else
+                    {
+                        status = CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
+                        return status;
+                    }
+                }
+                // Not using PUS Header
+                else
                 {
-                    sdls_frame.pdu.data[x - 13] = tc_sdls_processed_frame->tc_pdu[x];
+                // SDLS TLV PDU
+                    sdls_frame.pdu.hdr.type = (tc_sdls_processed_frame->tc_pdu[6] & 0x80) >> 7;
+                    sdls_frame.pdu.hdr.uf   = (tc_sdls_processed_frame->tc_pdu[6] & 0x40) >> 6;
+                    sdls_frame.pdu.hdr.sg   = (tc_sdls_processed_frame->tc_pdu[6] & 0x30) >> 4;
+                    sdls_frame.pdu.hdr.pid  = (tc_sdls_processed_frame->tc_pdu[6] & 0x0F);
+                    sdls_frame.pdu.hdr.pdu_len =
+                        (tc_sdls_processed_frame->tc_pdu[7] << 8) | tc_sdls_processed_frame->tc_pdu[8];
+                    
+                    // Make sure TLV isn't larger than we have allocated, and it is sane given total frame length
+                    uint16_t max_tlv = tc_sdls_processed_frame->tc_header.fl - CCSDS_HDR_SIZE - SDLS_TLV_HDR_SIZE;
+                    if ((sdls_frame.hdr.pkt_length < TLV_DATA_SIZE) && (sdls_frame.hdr.pkt_length < max_tlv))
+                    {
+                        for (int x = 9; x < (9 + sdls_frame.hdr.pkt_length); x++)
+                        {
+                            sdls_frame.pdu.data[x - 9] = tc_sdls_processed_frame->tc_pdu[x];
+                        }
+                    }
+                    else
+                    {
+                        status = CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
+                        return status;
+                    }
+                }
+
+                
+
+#ifdef CCSDS_DEBUG
+                Crypto_ccsdsPrint(&sdls_frame);
+#endif
+            
+            // Determine type of PDU
+            status = Crypto_PDU(ingest, tc_sdls_processed_frame);
+            }
+            // Received EP PDU on invalid SA
+            else
+            {
+#ifdef CCSDS_DEBUG
+                printf(KRED "Received EP PDU on invalid SA! SPI %d\n" RESET, tc_sdls_processed_frame->tc_sec_header.spi);
+#endif
+                status = CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI;
+            }
+
+            #else // Received an EP command without EPs being built
+            valid_ep_sa = valid_ep_sa; // Suppress build error
+            status = CRYPTO_LIB_ERR_SDLS_EP_NOT_BUILT;
+            #endif //CRYPTO_EPROC
+        }
+
+        // If not a specific APID, check if using VCIDs for SDLS PDUs with no packet layer
+        else if (tc_sdls_processed_frame->tc_header.vcid == TC_SDLS_EP_VCID) 
+        {
+        #ifdef CRYPTO_EPROC
+            // Check validity of SAs used for EP
+            if(valid_ep_sa == CRYPTO_TRUE)
+            { 
+#ifdef CCSDS_DEBUG
+                printf(KGRN "Received SDLS command (No Packet Header or PUS): " RESET);
+#endif
+                // No Packet HDR or PUS in these frames
+                // SDLS TLV PDU
+                sdls_frame.hdr.type        = (tc_sdls_processed_frame->tc_pdu[0] & 0x80) >> 7;
+                sdls_frame.pdu.hdr.uf      = (tc_sdls_processed_frame->tc_pdu[0] & 0x40) >> 6;
+                sdls_frame.pdu.hdr.sg      = (tc_sdls_processed_frame->tc_pdu[0] & 0x30) >> 4;
+                sdls_frame.pdu.hdr.pid     = (tc_sdls_processed_frame->tc_pdu[0] & 0x0F);
+                sdls_frame.pdu.hdr.pdu_len = (tc_sdls_processed_frame->tc_pdu[1] << 8) | tc_sdls_processed_frame->tc_pdu[2];
+                for (int x = 3; x < (3 + tc_sdls_processed_frame->tc_header.fl); x++)
+                {
+                    // Todo - Consider how this behaves with large OTAR PDUs that are larger than 1 TC in size. Most likely
+                    // fails. Must consider Uplink Sessions (sequence numbers).
+                    sdls_frame.pdu.data[x - 3] = tc_sdls_processed_frame->tc_pdu[x];
                 }
 
 #ifdef CCSDS_DEBUG
@@ -829,40 +931,14 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
 
                 // Determine type of PDU
                 status = Crypto_PDU(ingest, tc_sdls_processed_frame);
-                #else
-                status = CRYPTO_LIB_ERR_SDLS_EP_NOT_BUILT;
-                #endif //CRYPTO_EPROC
             }
-        }
-        else if (tc_sdls_processed_frame->tc_header.vcid == TC_SDLS_EP_VCID) // TC SDLS PDU with no packet layer
-        {
-#ifdef DEBUG
-            printf(KGRN "Received SDLS command (No Packet Header or PUS): " RESET);
-#endif
-            // No Packet HDR or PUS in these frames
-            // SDLS TLV PDU
-            sdls_frame.hdr.type        = (tc_sdls_processed_frame->tc_pdu[0] & 0x80) >> 7;
-            sdls_frame.pdu.hdr.uf      = (tc_sdls_processed_frame->tc_pdu[0] & 0x40) >> 6;
-            sdls_frame.pdu.hdr.sg      = (tc_sdls_processed_frame->tc_pdu[0] & 0x30) >> 4;
-            sdls_frame.pdu.hdr.pid     = (tc_sdls_processed_frame->tc_pdu[0] & 0x0F);
-            sdls_frame.pdu.hdr.pdu_len = (tc_sdls_processed_frame->tc_pdu[1] << 8) | tc_sdls_processed_frame->tc_pdu[2];
-            for (x = 3; x < (3 + tc_sdls_processed_frame->tc_header.fl); x++)
-            {
-                // Todo - Consider how this behaves with large OTAR PDUs that are larger than 1 TC in size. Most likely
-                // fails. Must consider Uplink Sessions (sequence numbers).
-                sdls_frame.pdu.data[x - 3] = tc_sdls_processed_frame->tc_pdu[x];
-            }
-
+            #else // Received an EP command without EPs being built
 #ifdef CCSDS_DEBUG
-            Crypto_ccsdsPrint(&sdls_frame);
+            printf(KRED "PDU DEBUG %s %d\n" RESET, __FILE__, __LINE__);
 #endif
-
-            // Determine type of PDU
-            status = Crypto_PDU(ingest, tc_sdls_processed_frame);
-        }
-        else
-        {
-            // TODO - Process SDLS PDU with Packet Layer without PUS_HDR
+            valid_ep_sa = valid_ep_sa; // Suppress build error
+            status = CRYPTO_LIB_ERR_SDLS_EP_NOT_BUILT;
+            #endif //CRYPTO_EPROC
         }
     }
     return status;
