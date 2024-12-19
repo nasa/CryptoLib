@@ -18,7 +18,7 @@ Please open an issue or discussion if you find any problems or have questions. W
 If you would like to contribute to the repository, please complete the [CryptoLib_Indv_CLA](./doc/CryptoLib_Indv_CLA.pdf) form and submit it to gsfc-softwarerequest@mail.nasa.gov with John.P.Lucas@nasa.gov copied. Next please create an issue capturing work to be done noting you intend to work it, a related branch, and submit a pull request when ready and we'll work to get it integrated.
 
 
-MC/DC
+# MC/DC
 
 ![Line Coverage](doc/coverage/line-coverage-badge.svg)
 ![Branch Coverage](doc/coverage/branch-coverage-badge.svg)
