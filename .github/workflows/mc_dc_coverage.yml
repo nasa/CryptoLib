@@ -17,6 +17,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    # Install dependencies and setup environment
     - name: Install Dependencies
       env:
         DEBIAN_FRONTEND: noninteractive
@@ -34,22 +35,27 @@ jobs:
         cd /tmp/libgcrypt-1.11.0 && ./configure && make install
         ldconfig
 
-    # Build with coverage instrumentation
+    # Build the project with coverage flags
     - name: Internal Build Script
-      run: bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
+      run: |
+        export CFLAGS="-fprofile-arcs -ftest-coverage -g"
+        bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
 
     # Generate consolidated coverage report and badges
     - name: Generate Coverage Report and Badges
       run: |
         mkdir -p coverage
+        # Generate coverage report
         gcovr --branches --xml-pretty --exclude-unreachable-branches -o coverage/coverage_report.xml
         gcovr --branches --html --html-details -o coverage/coverage_report.html
 
         # Extract coverage metrics
         LINE_COVERAGE=$(grep 'line-rate' coverage/coverage_report.xml | sed -n 's/.*line-rate="\(.*\)".*/\1/p')
         BRANCH_COVERAGE=$(grep 'branch-rate' coverage/coverage_report.xml | sed -n 's/.*branch-rate="\(.*\)".*/\1/p')
-        LINE_COVERAGE_PERCENT=$(awk "BEGIN {print int($LINE_COVERAGE * 100)}")
-        BRANCH_COVERAGE_PERCENT=$(awk "BEGIN {print int($BRANCH_COVERAGE * 100)}")
+
+        # Convert to percentages using printf and bc
+        LINE_COVERAGE_PERCENT=$(printf "%.0f" $(echo "$LINE_COVERAGE * 100" | bc))
+        BRANCH_COVERAGE_PERCENT=$(printf "%.0f" $(echo "$BRANCH_COVERAGE * 100" | bc))
 
         # Generate badges
         curl -o coverage/line-coverage-badge.svg "https://img.shields.io/badge/line%20coverage-${LINE_COVERAGE_PERCENT}%25-brightgreen"
@@ -73,4 +79,3 @@ jobs:
       with:
         name: coverage-report
         path: coverage
-
