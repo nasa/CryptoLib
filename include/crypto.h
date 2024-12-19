@@ -179,6 +179,13 @@ extern char *Crypto_Get_Error_Code_Enum_String(int32_t crypto_error_code);
 /*
 ** Internal Prototypes
 */
+
+int32_t Crypto_Get_Security_Header_Length(SecurityAssociation_t *sa_ptr);
+int32_t Crypto_Get_Security_Trailer_Length(SecurityAssociation_t *sa_ptr);
+
+/*
+** Internal Prototypes
+*/
 // Telemetry (TM)
 int32_t Crypto_TM_Sanity_Check(uint8_t *pTfBuffer);
 int32_t Crypto_TM_Determine_SA_Service_Type(uint8_t *sa_service_type, SecurityAssociation_t *sa_ptr);
