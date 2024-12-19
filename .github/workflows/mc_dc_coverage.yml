@@ -22,8 +22,8 @@ jobs:
     # Step 2: Install dependencies
     - name: Install Dependencies
       run: |
-        sudo apt-get update
-        sudo apt-get install -y lcov gcovr libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3
+        apt-get update
+        apt-get install -y lcov gcovr libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3
     - name: Install Python Libraries
       run: pip install pycryptodome
     - name: Install Libgcrypt
