@@ -78,11 +78,8 @@ jobs:
     # Step 6: Upload to Codecov
     - name: Upload to Codecov
       uses: codecov/codecov-action@v5
-      with:
-        files: doc/coverage/coverage.xml
-        flags: coverage
-        env:
-          CODECOV_TOKEN: 71699f25-12a3-44a4-8a83-be777b9e577a
+      env:
+        CODECOV_TOKEN: 71699f25-12a3-44a4-8a83-be777b9e577a
 
     # Step 7: Commit and push coverage report (optional)
     - name: Commit Coverage Report
