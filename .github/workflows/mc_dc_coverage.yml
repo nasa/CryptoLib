@@ -40,7 +40,12 @@ jobs:
         tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/
         cd /tmp/libgcrypt-1.11.0 && ./configure && make install
         ldconfig
-
+        
+    - name: Upload to Code Cov
+      uses: codecov/codecov-action@v5
+      env:
+        CODECOV_TOKEN: 71699f25-12a3-44a4-8a83-be777b9e577a
+        
     - name: Fix Detached HEAD State
       run: git checkout -B ${GITHUB_REF##*/}
 
@@ -102,3 +107,5 @@ jobs:
       with:
         name: coverage-report
         path: doc/coverage
+        
+   
