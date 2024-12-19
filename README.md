@@ -19,5 +19,6 @@ If you would like to contribute to the repository, please complete the [CryptoLi
 
 
 MC/DC
-![Line Coverage](coverage/line-coverage-badge.svg)
-![Branch Coverage](coverage/branch-coverage-badge.svg)
+
+![Line Coverage](doc/coverage/line-coverage-badge.svg)
+![Branch Coverage](doc/coverage/branch-coverage-badge.svg)
