@@ -4,13 +4,15 @@ on:
   push:
     branches:
       - 258-cyclomatic-complexity-and-mcdc-in-ci
+    paths-ignore:
+      - 'coverage/line-coverage-badge.svg'
+      - 'coverage/branch-coverage-badge.svg'
   pull_request:
     branches:
       - 258-cyclomatic-complexity-and-mcdc-in-ci
 
 jobs:
   coverage:
-    if: "!contains(github.event.head_commit.message, 'Update coverage badges')" && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     container:
       image: ivvitc/cryptolib:20240814
@@ -44,9 +46,7 @@ jobs:
 
     # Step 4: Fix Detached HEAD State
     - name: Fix Detached HEAD State
-      run: |
-        git checkout -B ${GITHUB_REF##*/}
-      working-directory: ${{ github.workspace }}
+      run: git checkout -B ${GITHUB_REF##*/}
 
     # Step 5: Build with Coverage Flags
     - name: Build with Coverage Flags
@@ -61,21 +61,17 @@ jobs:
         gcovr --branches --xml-pretty --exclude-unreachable-branches -o coverage/coverage_report.xml
         gcovr --branches --html --html-details -o coverage/coverage_report.html
 
-        # Extract coverage metrics
         LINE_COVERAGE=$(grep 'line-rate' coverage/coverage_report.xml | sed -n 's/.*line-rate="\(.*\)".*/\1/p')
         BRANCH_COVERAGE=$(grep 'branch-rate' coverage/coverage_report.xml | sed -n 's/.*branch-rate="\(.*\)".*/\1/p')
 
-        # Convert to percentages
         LINE_COVERAGE_PERCENT=$(printf "%.0f" $(echo "$LINE_COVERAGE * 100" | bc))
         BRANCH_COVERAGE_PERCENT=$(printf "%.0f" $(echo "$BRANCH_COVERAGE * 100" | bc))
 
-        # Generate badges
         curl -o coverage/line-coverage-badge.svg "https://img.shields.io/badge/line%20coverage-${LINE_COVERAGE_PERCENT}%25-brightgreen"
         curl -o coverage/branch-coverage-badge.svg "https://img.shields.io/badge/branch%20coverage-${BRANCH_COVERAGE_PERCENT}%25-brightgreen"
 
     # Step 7: Commit Badges to the Current Branch
     - name: Commit Coverage Badges
-      working-directory: ${{ github.workspace }}
       run: |
         git config user.name "github-actions"
         git config user.email "actions@github.com"
