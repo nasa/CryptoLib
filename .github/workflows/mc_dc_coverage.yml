@@ -18,7 +18,7 @@ jobs:
     - name: Update
       run: apt-get update
     - name: Install Dependencies
-      run: apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3
+      run: apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 gcovr
     - name: Install Python Libraries
       run: pip install pycryptodome
     - name: Install Libgcrypt
