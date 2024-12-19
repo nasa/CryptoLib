@@ -1,12 +1,11 @@
-name: CryptoLib Coverage
+name: CryptoLib Coverage with MC/DC
 
 on:
   push:
     branches:
       - 258-cyclomatic-complexity-and-mcdc-in-ci
     paths-ignore:
-      - 'doc/coverage/line-coverage-badge.svg'
-      - 'doc/coverage/branch-coverage-badge.svg'
+      - 'doc/coverage/*.svg'
   pull_request:
     branches:
       - 258-cyclomatic-complexity-and-mcdc-in-ci
@@ -15,97 +14,62 @@ jobs:
   coverage:
     runs-on: ubuntu-latest
     container:
-      image: ivvitc/cryptolib:20240814
+      image: ivvitc/cryptolib:20240814  # Replace with your container if applicable
 
     steps:
+    # Step 1: Check out the repository
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0  # Fetch full history for branch operations
 
+    # Step 2: Configure Git safe directory
     - name: Configure Safe Directory
       run: git config --global --add safe.directory $GITHUB_WORKSPACE
 
+    # Step 3: Install dependencies
     - name: Install Dependencies
       env:
         DEBIAN_FRONTEND: noninteractive
-        TZ: Etc/UTC
       run: |
         apt-get update
-        apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 gcovr bc
+        apt-get install -y gcc g++ lcov gcov python3-pip bc
         pip install pycryptodome
-        curl -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 -o /tmp/libgpg-error-1.50.tar.bz2
-        tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/
-        cd /tmp/libgpg-error-1.50 && ./configure && make install
-        curl -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 -o /tmp/libgcrypt-1.11.0.tar.bz2
-        tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/
-        cd /tmp/libgcrypt-1.11.0 && ./configure && make install
-        ldconfig
-        
-    - name: Fix Detached HEAD State
-      run: git checkout -B ${GITHUB_REF##*/}
+        # Install gMCov dependencies
+        git clone https://github.com/Monika-rani12/gMCov.git /tmp/gmcov
+        chmod +x /tmp/gmcov/main-gProfiler.sh
 
-    - name: Build with Coverage Flags
+    # Step 4: Build and run tests with instrumentation
+    - name: Build and Run Tests with Instrumentation
       run: |
         export CFLAGS="-fprofile-arcs -ftest-coverage -g"
         bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
-        
-    - name: Generate Coverage Report and Badges
+
+    # Step 5: Analyze MC/DC coverage with gMCov
+    - name: Generate MC/DC Coverage Report
       run: |
-        mkdir -p doc/coverage
-        gcovr --branches --xml-pretty --exclude-unreachable-branches -o doc/coverage/coverage_report.xml
-        gcovr --branches --html --html-details -o doc/coverage/coverage_report.html
+        cd /tmp/gmcov
+        ./main-gProfiler.sh
+        mv output_mcdc_report ${GITHUB_WORKSPACE}/doc/coverage/
 
-        # Extract overall coverage metrics from the root <coverage> tag
-        LINE_COVERAGE=$(grep -oP '(?<=<coverage line-rate=")[0-9.]+(?=")' doc/coverage/coverage_report.xml | head -n 1)
-        BRANCH_COVERAGE=$(grep -oP '(?<=branch-rate=")[0-9.]+(?=")' doc/coverage/coverage_report.xml | head -n 1)
-
-        # Convert to percentages
-        LINE_COVERAGE_PERCENT=$(printf "%.0f" $(echo "$LINE_COVERAGE * 100" | bc))
-        BRANCH_COVERAGE_PERCENT=$(printf "%.0f" $(echo "$BRANCH_COVERAGE * 100" | bc))
-
-        # Debug extracted values
-        echo "Line Coverage: $LINE_COVERAGE_PERCENT%"
-        echo "Branch Coverage: $BRANCH_COVERAGE_PERCENT%"
-
-        # Determine colors based on coverage percentages
-        if [ "$LINE_COVERAGE_PERCENT" -ge 80 ]; then
-            LINE_COLOR="brightgreen"
-        elif [ "$LINE_COVERAGE_PERCENT" -ge 50 ]; then
-            LINE_COLOR="yellow"
-        else
-            LINE_COLOR="red"
-        fi
-
-        if [ "$BRANCH_COVERAGE_PERCENT" -ge 80 ]; then
-            BRANCH_COLOR="brightgreen"
-        elif [ "$BRANCH_COVERAGE_PERCENT" -ge 50 ]; then
-            BRANCH_COLOR="yellow"
-        else
-            BRANCH_COLOR="red"
-        fi
-
-        # Generate badges with dynamic colors
-        curl -o doc/coverage/line-coverage-badge.svg "https://img.shields.io/badge/line%20coverage-${LINE_COVERAGE_PERCENT}%25-${LINE_COLOR}"
-        curl -o doc/coverage/branch-coverage-badge.svg "https://img.shields.io/badge/branch%20coverage-${BRANCH_COVERAGE_PERCENT}%25-${BRANCH_COLOR}"
-
-    - name: Upload to Code Cov
+    # Step 6: Upload coverage reports to Codecov
+    - name: Upload to Codecov
       uses: codecov/codecov-action@v5
-      env:
-        CODECOV_TOKEN: 71699f25-12a3-44a4-8a83-be777b9e577a
-        
-    - name: Commit Coverage Badges
+      with:
+        files: doc/coverage/output_mcdc_report
+        flags: mcdc
+
+    # Step 7: Commit and push coverage report (optional)
+    - name: Commit Coverage Report
       run: |
         git config user.name "github-actions"
         git config user.email "actions@github.com"
-        git add doc/coverage/line-coverage-badge.svg
-        git add doc/coverage/branch-coverage-badge.svg
-        git commit -m "Update coverage badges" || echo "No changes to commit"
+        git add doc/coverage/output_mcdc_report
+        git commit -m "Update MC/DC coverage report" || echo "No changes to commit"
         git push origin HEAD
 
+    # Step 8: Upload MC/DC coverage report as an artifact (optional)
     - name: Upload Coverage Report
       uses: actions/upload-artifact@v3
       with:
-        name: coverage-report
-        path: doc/coverage
-        
-   
+        name: mcdc-coverage-report
+        path: doc/coverage/output_mcdc_report
