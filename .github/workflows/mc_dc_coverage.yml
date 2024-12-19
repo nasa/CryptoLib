@@ -50,24 +50,44 @@ jobs:
         # export CFLAGS="-fprofile-arcs -ftest-coverage -g"
         bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
         
-    # Step 5: Generate Coverage Report
     - name: Generate Coverage Report
       run: |
         mkdir -p coverage
         gcovr --branches --html --html-details -o coverage/coverage_report.html
         gcovr --branches --xml -o coverage/coverage_report.xml
 
-    # Step 6: Upload Coverage Report as an Artifact
+    - name: Generate Line and Branch Coverage Badges
+      run: |
+        # Extract line coverage
+        LINE_COVERAGE=$(gcovr --xml-pretty --exclude-unreachable-branches | grep 'line-rate' | head -n 1 | sed -n 's/.*line-rate="\(.*\)".*/\1/p')
+        LINE_COVERAGE_PERCENT=$(awk "BEGIN {print int($LINE_COVERAGE * 100)}")
+    
+        # Extract branch coverage
+        BRANCH_COVERAGE=$(gcovr --xml-pretty --exclude-unreachable-branches | grep 'branch-rate' | head -n 1 | sed -n 's/.*branch-rate="\(.*\)".*/\1/p')
+        BRANCH_COVERAGE_PERCENT=$(awk "BEGIN {print int($BRANCH_COVERAGE * 100)}")
+    
+        # Generate badges
+        curl -o line-coverage-badge.svg "https://img.shields.io/badge/line%20coverage-${LINE_COVERAGE_PERCENT}%25-brightgreen"
+        curl -o branch-coverage-badge.svg "https://img.shields.io/badge/branch%20coverage-${BRANCH_COVERAGE_PERCENT}%25-brightgreen"
+    
+        # Save badges in the repository
+        mv line-coverage-badge.svg .github/workflows/coverage/line-coverage-badge.svg
+        mv branch-coverage-badge.svg .github/workflows/coverage/branch-coverage-badge.svg
+
+
+    - name: Commit Coverage Badge to Badges Branch
+      if: ${{ github.event_name == 'push' }}
+      run: |
+        git config user.name "github-actions"
+        git config user.email "actions@github.com"
+        git checkout -b badges || git checkout badges
+        git add .github/workflows/coverage/line-coverage-badge.svg
+        git add .github/workflows/coverage/branch-coverage-badge.svg
+        git commit -m "Update coverage badge"
+        git push origin badges
+
     - name: Upload Coverage Report
       uses: actions/upload-artifact@v3
       with:
         name: coverage-report
         path: coverage
-
-    # # Step 7: Upload Coverage to GitHub Pages (Optional)
-    # - name: Deploy to GitHub Pages
-    #   if: ${{ github.event_name == 'push' }}
-    #   uses: peaceiris/actions-gh-pages@v3
-    #   with:
-    #     github_token: ${{ secrets.GITHUB_TOKEN }}
-    #     publish_dir: coverage
