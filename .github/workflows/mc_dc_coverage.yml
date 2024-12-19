@@ -11,8 +11,8 @@ on:
 jobs:
   coverage:
     runs-on: ubuntu-latest
-    container:
-      image: ivvitc/cryptolib:20240814
+    # container:
+    #   image: ivvitc/cryptolib:20240814
 
     steps:
     # Step 1: Checkout the repository
