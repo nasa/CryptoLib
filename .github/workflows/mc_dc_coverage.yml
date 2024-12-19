@@ -15,11 +15,12 @@ jobs:
       image: ivvitc/cryptolib:20240814
 
     steps:
+    # Step 1: Checkout Repository
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0  # Fetch full history for branch operations
 
-    # Install dependencies and setup environment
+    # Step 2: Install Dependencies
     - name: Install Dependencies
       env:
         DEBIAN_FRONTEND: noninteractive
@@ -28,7 +29,6 @@ jobs:
         apt-get update
         apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 gcovr
         pip install pycryptodome
-        # Install Libgcrypt
         curl -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 -o /tmp/libgpg-error-1.50.tar.bz2
         tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/
         cd /tmp/libgpg-error-1.50 && ./configure && make install
@@ -37,17 +37,22 @@ jobs:
         cd /tmp/libgcrypt-1.11.0 && ./configure && make install
         ldconfig
 
-    # Build the project with coverage flags
-    - name: Internal Build Script
+    # Step 3: Fix Detached HEAD State
+    - name: Fix Detached HEAD State
+      run: |
+        git checkout -B ${GITHUB_REF##*/}
+      working-directory: ${{ github.workspace }}
+
+    # Step 4: Build with Coverage Flags
+    - name: Build with Coverage Flags
       run: |
         export CFLAGS="-fprofile-arcs -ftest-coverage -g"
         bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
 
-    # Generate consolidated coverage report and badges
+    # Step 5: Generate Coverage Report and Badges
     - name: Generate Coverage Report and Badges
       run: |
         mkdir -p coverage
-        # Generate coverage report
         gcovr --branches --xml-pretty --exclude-unreachable-branches -o coverage/coverage_report.xml
         gcovr --branches --html --html-details -o coverage/coverage_report.html
 
@@ -55,7 +60,7 @@ jobs:
         LINE_COVERAGE=$(grep 'line-rate' coverage/coverage_report.xml | sed -n 's/.*line-rate="\(.*\)".*/\1/p')
         BRANCH_COVERAGE=$(grep 'branch-rate' coverage/coverage_report.xml | sed -n 's/.*branch-rate="\(.*\)".*/\1/p')
 
-        # Convert to percentages using printf and bc
+        # Convert to percentages
         LINE_COVERAGE_PERCENT=$(printf "%.0f" $(echo "$LINE_COVERAGE * 100" | bc))
         BRANCH_COVERAGE_PERCENT=$(printf "%.0f" $(echo "$BRANCH_COVERAGE * 100" | bc))
 
@@ -63,8 +68,9 @@ jobs:
         curl -o coverage/line-coverage-badge.svg "https://img.shields.io/badge/line%20coverage-${LINE_COVERAGE_PERCENT}%25-brightgreen"
         curl -o coverage/branch-coverage-badge.svg "https://img.shields.io/badge/branch%20coverage-${BRANCH_COVERAGE_PERCENT}%25-brightgreen"
 
-    # Commit badges to the current branch
+    # Step 6: Commit Badges to the Current Branch
     - name: Commit Coverage Badges
+      working-directory: ${{ github.workspace }}
       run: |
         git config user.name "github-actions"
         git config user.email "actions@github.com"
@@ -72,9 +78,8 @@ jobs:
         git add coverage/branch-coverage-badge.svg
         git commit -m "Update coverage badges"
         git push origin HEAD
-      working-directory: ${{ github.workspace }}
 
-    # Upload consolidated coverage report as an artifact
+    # Step 7: Upload Coverage Report
     - name: Upload Coverage Report
       uses: actions/upload-artifact@v3
       with:
