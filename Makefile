@@ -33,3 +33,6 @@ kmc:
 
 wolf:
 	./support/scripts/wolf_docker_build.sh
+
+env:
+	./support/scripts/update_env.sh
