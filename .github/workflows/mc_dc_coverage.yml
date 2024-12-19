@@ -17,6 +17,12 @@ jobs:
     - uses: actions/checkout@v4
     - name: Update
       run: apt-get update
+    - name: Preconfigure tzdata
+      run: |
+        echo 'tzdata tzdata/Areas select Etc' | sudo debconf-set-selections
+        echo 'tzdata tzdata/Zones/Etc select UTC' | sudo debconf-set-selections
+        sudo DEBIAN_FRONTEND=noninteractive apt-get update
+        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y lcov gcovr
     - name: Install Dependencies
       run: apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 gcovr
     - name: Install Python Libraries
