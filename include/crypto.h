@@ -160,7 +160,7 @@ void    Crypto_TC_Handle_Padding(uint32_t pkcs_padding, SecurityAssociation_t *s
 int32_t Crypto_TC_Set_IV(SecurityAssociation_t *sa_ptr, uint8_t *p_new_enc_frame, uint16_t *index);
 
 // OCF
-uint32_t Crypto_Get_FSR();
+uint32_t Crypto_Get_FSR(void);
 void     Crypto_Set_FSR(uint8_t *p_ingest, uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t *sa_ptr);
 
 // Telemetry (TM)
