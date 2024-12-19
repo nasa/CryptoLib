@@ -12,82 +12,65 @@ jobs:
   coverage:
     runs-on: ubuntu-latest
     container:
-        image: ivvitc/cryptolib:20240814
+      image: ivvitc/cryptolib:20240814
+
     steps:
     - uses: actions/checkout@v4
-    - name: Update
-      run: apt-get update
+
     - name: Install Dependencies
       env:
         DEBIAN_FRONTEND: noninteractive
         TZ: Etc/UTC
       run: |
+        apt-get update
         apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 gcovr
-    - name: Install Python Libraries
-      run: pip install pycryptodome
-    - name: Install Libgcrypt
-      run: >
-        curl  
-        -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 
-        -o /tmp/libgpg-error-1.50.tar.bz2 
-        && tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/ 
-        && cd /tmp/libgpg-error-1.50 
-        && ./configure 
-        && make install 
-        && curl  
-        -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 
-        -o /tmp/libgcrypt-1.11.0.tar.bz2 
-        && tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ 
-        && cd /tmp/libgcrypt-1.11.0 
-        && ./configure 
-        && make install
-        && ldconfig
-    # End Container Setup
-    
+        pip install pycryptodome
+        # Install Libgcrypt
+        curl -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 -o /tmp/libgpg-error-1.50.tar.bz2
+        tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/
+        cd /tmp/libgpg-error-1.50 && ./configure && make install
+        curl -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 -o /tmp/libgcrypt-1.11.0.tar.bz2
+        tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/
+        cd /tmp/libgcrypt-1.11.0 && ./configure && make install
+        ldconfig
+
+    # Build with coverage instrumentation
     - name: Internal Build Script
-      working-directory: ${{github.workspace}}
-      run: |
-        # export CFLAGS="-fprofile-arcs -ftest-coverage -g"
-        bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
-        
-    - name: Generate Coverage Report
+      run: bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
+
+    # Generate consolidated coverage report and badges
+    - name: Generate Coverage Report and Badges
       run: |
         mkdir -p coverage
+        gcovr --branches --xml-pretty --exclude-unreachable-branches -o coverage/coverage_report.xml
         gcovr --branches --html --html-details -o coverage/coverage_report.html
-        gcovr --branches --xml -o coverage/coverage_report.xml
 
-    - name: Generate Line and Branch Coverage Badges
-      run: |
-        # Extract line coverage
-        LINE_COVERAGE=$(gcovr --xml-pretty --exclude-unreachable-branches | grep 'line-rate' | head -n 1 | sed -n 's/.*line-rate="\(.*\)".*/\1/p')
+        # Extract coverage metrics
+        LINE_COVERAGE=$(grep 'line-rate' coverage/coverage_report.xml | sed -n 's/.*line-rate="\(.*\)".*/\1/p')
+        BRANCH_COVERAGE=$(grep 'branch-rate' coverage/coverage_report.xml | sed -n 's/.*branch-rate="\(.*\)".*/\1/p')
         LINE_COVERAGE_PERCENT=$(awk "BEGIN {print int($LINE_COVERAGE * 100)}")
-    
-        # Extract branch coverage
-        BRANCH_COVERAGE=$(gcovr --xml-pretty --exclude-unreachable-branches | grep 'branch-rate' | head -n 1 | sed -n 's/.*branch-rate="\(.*\)".*/\1/p')
         BRANCH_COVERAGE_PERCENT=$(awk "BEGIN {print int($BRANCH_COVERAGE * 100)}")
-    
+
         # Generate badges
-        curl -o line-coverage-badge.svg "https://img.shields.io/badge/line%20coverage-${LINE_COVERAGE_PERCENT}%25-brightgreen"
-        curl -o branch-coverage-badge.svg "https://img.shields.io/badge/branch%20coverage-${BRANCH_COVERAGE_PERCENT}%25-brightgreen"
-    
-        # Save badges in the repository
-        mv line-coverage-badge.svg .github/workflows/coverage/line-coverage-badge.svg
-        mv branch-coverage-badge.svg .github/workflows/coverage/branch-coverage-badge.svg
+        curl -o coverage/line-coverage-badge.svg "https://img.shields.io/badge/line%20coverage-${LINE_COVERAGE_PERCENT}%25-brightgreen"
+        curl -o coverage/branch-coverage-badge.svg "https://img.shields.io/badge/branch%20coverage-${BRANCH_COVERAGE_PERCENT}%25-brightgreen"
 
-
-    - name: Commit Coverage Badge to Badges Branch
+    # Commit badges to a separate branch
+    - name: Commit Coverage Badges
       if: ${{ github.event_name == 'push' }}
       run: |
         git config user.name "github-actions"
         git config user.email "actions@github.com"
         git checkout -b badges || git checkout badges
-        git add .github/workflows/coverage/line-coverage-badge.svg
-        git add .github/workflows/coverage/branch-coverage-badge.svg
-        git commit -m "Update coverage badge"
+        git add coverage/line-coverage-badge.svg
+        git add coverage/branch-coverage-badge.svg
+        git commit -m "Update coverage badges"
         git push origin badges
 
+    # Upload consolidated coverage report as an artifact
     - name: Upload Coverage Report
       uses: actions/upload-artifact@v3
       with:
         name: coverage-report
         path: coverage
+
