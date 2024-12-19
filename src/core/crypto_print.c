@@ -199,7 +199,7 @@ void Crypto_ccsdsPrint(CCSDS_t *sdls_frame)
         printf("\t PUS Header\n");
         printf("\t\t Config not configured for PUS Header, not printing\n");
     }
-    printf("\t PDU \n");
+    printf("\t TLV PDU \n");
     printf("\t\t type       = 0x%01x \n", sdls_frame->tlv_pdu.hdr.type);
     printf("\t\t uf         = 0x%01x \n", sdls_frame->tlv_pdu.hdr.uf);
     printf("\t\t sg         = 0x%01x \n", sdls_frame->tlv_pdu.hdr.sg);
