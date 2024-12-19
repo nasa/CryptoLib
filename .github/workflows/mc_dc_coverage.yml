@@ -77,14 +77,14 @@ jobs:
         curl -o coverage/line-coverage-badge.svg "https://img.shields.io/badge/line%20coverage-${LINE_COVERAGE_PERCENT}%25-brightgreen"
         curl -o coverage/branch-coverage-badge.svg "https://img.shields.io/badge/branch%20coverage-${BRANCH_COVERAGE_PERCENT}%25-brightgreen"
 
-    # Step 7: Commit Badges to the Current Branch
+   # Step 7: Commit Badges to the Current Branch
     - name: Commit Coverage Badges
       run: |
         git config user.name "github-actions"
         git config user.email "actions@github.com"
         git add coverage/line-coverage-badge.svg
         git add coverage/branch-coverage-badge.svg
-        git commit -m "Update coverage badges"
+        git commit -m "Update coverage badges" || echo "No changes to commit"
         git push origin HEAD
 
     # Step 8: Upload Coverage Report
