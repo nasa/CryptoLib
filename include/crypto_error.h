@@ -134,9 +134,15 @@
 #define CRYPTO_LIB_ERR_KEY_STATE_INVALID                                    (-61)
 #define CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI                                    (-62)
 #define CRYPTO_LIB_ERR_SDLS_EP_NOT_BUILT                                    (-63)
-#define CRYPTO_LIB_ERR_BAD_TLV_LENGTH                                       (-64)     
+#define CRYPTO_LIB_ERR_BAD_TLV_LENGTH                                       (-64)
+#define CRYPTO_LIB_ERR_SHIVF_LEN_GREATER_THAN_MAX_IV_SIZE                   (-65)
+#define CRYPTO_LIB_ERR_SHSNF_LEN_GREATER_THAN_MAX_ARSN_SIZE                 (-66)
+#define CRYPTO_LIB_ERR_ABM_LEN_GREATER_THAN_MAX_ABM_SIZE                    (-67)
+#define CRYPTO_LIB_ERR_STMACF_LEN_GREATER_THAN_MAX_MAC_SIZE                 (-68)
+#define CRYPTO_LIB_ERR_SHPLF_LEN_GREATER_THAN_MAX_PAD_SIZE                  (-69)
 
-#define CRYPTO_CORE_ERROR_CODES_MAX -64
+#define CRYPTO_CORE_ERROR_CODES_MAX -69
+
 
 // Define codes for returning MDB Strings, and determining error based on strings
 #define CAM_ERROR_CODES     600
