@@ -10,6 +10,7 @@ on:
 
 jobs:
   coverage:
+    if: "!contains(github.event.head_commit.message, 'Update coverage badges')" && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     container:
       image: ivvitc/cryptolib:20240814
@@ -20,7 +21,11 @@ jobs:
       with:
         fetch-depth: 0  # Fetch full history for branch operations
 
-    # Step 2: Install Dependencies
+    # Step 2: Configure Safe Directory
+    - name: Configure Safe Directory
+      run: git config --global --add safe.directory $GITHUB_WORKSPACE
+
+    # Step 3: Install Dependencies
     - name: Install Dependencies
       env:
         DEBIAN_FRONTEND: noninteractive
@@ -37,19 +42,19 @@ jobs:
         cd /tmp/libgcrypt-1.11.0 && ./configure && make install
         ldconfig
 
-    # Step 3: Fix Detached HEAD State
+    # Step 4: Fix Detached HEAD State
     - name: Fix Detached HEAD State
       run: |
         git checkout -B ${GITHUB_REF##*/}
       working-directory: ${{ github.workspace }}
 
-    # Step 4: Build with Coverage Flags
+    # Step 5: Build with Coverage Flags
     - name: Build with Coverage Flags
       run: |
         export CFLAGS="-fprofile-arcs -ftest-coverage -g"
         bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
 
-    # Step 5: Generate Coverage Report and Badges
+    # Step 6: Generate Coverage Report and Badges
     - name: Generate Coverage Report and Badges
       run: |
         mkdir -p coverage
@@ -68,7 +73,7 @@ jobs:
         curl -o coverage/line-coverage-badge.svg "https://img.shields.io/badge/line%20coverage-${LINE_COVERAGE_PERCENT}%25-brightgreen"
         curl -o coverage/branch-coverage-badge.svg "https://img.shields.io/badge/branch%20coverage-${BRANCH_COVERAGE_PERCENT}%25-brightgreen"
 
-    # Step 6: Commit Badges to the Current Branch
+    # Step 7: Commit Badges to the Current Branch
     - name: Commit Coverage Badges
       working-directory: ${{ github.workspace }}
       run: |
@@ -79,7 +84,7 @@ jobs:
         git commit -m "Update coverage badges"
         git push origin HEAD
 
-    # Step 7: Upload Coverage Report
+    # Step 8: Upload Coverage Report
     - name: Upload Coverage Report
       uses: actions/upload-artifact@v3
       with:
