@@ -126,14 +126,6 @@ else()
     list(APPEND LIB_SRC_FILES ${MARIADB_FILES})
 endif()
 
-if(NOT CMAKE_CROSSCOMPILING)
-    install(TARGETS cryptolib
-    RUNTIME_DEPENDENCIES
-    # Other dependencies here)
-else()
-    install(TARGETS cryptolib)
-endif()
-
 # Create the app module
 if(DEFINED CFE_SYSTEM_PSPNAME)
     set(CMAKE_INSTALL_RPATH "./${INSTALL_SUBDIR}")
