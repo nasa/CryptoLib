@@ -5,8 +5,8 @@ on:
     branches:
       - 258-cyclomatic-complexity-and-mcdc-in-ci
     paths-ignore:
-      - 'coverage/line-coverage-badge.svg'
-      - 'coverage/branch-coverage-badge.svg'
+      - 'doc/coverage/line-coverage-badge.svg'
+      - 'doc/coverage/branch-coverage-badge.svg'
   pull_request:
     branches:
       - 258-cyclomatic-complexity-and-mcdc-in-ci
@@ -18,16 +18,13 @@ jobs:
       image: ivvitc/cryptolib:20240814
 
     steps:
-    # Step 1: Checkout Repository
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0  # Fetch full history for branch operations
 
-    # Step 2: Configure Safe Directory
     - name: Configure Safe Directory
       run: git config --global --add safe.directory $GITHUB_WORKSPACE
 
-    # Step 3: Install Dependencies
     - name: Install Dependencies
       env:
         DEBIAN_FRONTEND: noninteractive
@@ -44,17 +41,14 @@ jobs:
         cd /tmp/libgcrypt-1.11.0 && ./configure && make install
         ldconfig
 
-    # Step 4: Fix Detached HEAD State
     - name: Fix Detached HEAD State
       run: git checkout -B ${GITHUB_REF##*/}
 
-    # Step 5: Build with Coverage Flags
     - name: Build with Coverage Flags
       run: |
         export CFLAGS="-fprofile-arcs -ftest-coverage -g"
         bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
 
-    # Step 6: Generate Coverage Report and Badges
     - name: Generate Coverage Report and Badges
       run: |
         mkdir -p coverage
@@ -69,25 +63,36 @@ jobs:
         LINE_COVERAGE_PERCENT=$(printf "%.0f" $(echo "$LINE_COVERAGE * 100" | bc))
         BRANCH_COVERAGE_PERCENT=$(printf "%.0f" $(echo "$BRANCH_COVERAGE * 100" | bc))
 
-        # Debug extracted values 
-        echo "Line Coverage: $LINE_COVERAGE_PERCENT%"
-        echo "Branch Coverage: $BRANCH_COVERAGE_PERCENT%"
+        # Determine colors based on coverage percentages
+        if [ "$LINE_COVERAGE_PERCENT" -ge 80 ]; then
+            LINE_COLOR="brightgreen"
+        elif [ "$LINE_COVERAGE_PERCENT" -ge 50 ]; then
+            LINE_COLOR="yellow"
+        else
+            LINE_COLOR="red"
+        fi
 
-        # Generate badges
-        curl -o coverage/line-coverage-badge.svg "https://img.shields.io/badge/line%20coverage-${LINE_COVERAGE_PERCENT}%25-brightgreen"
-        curl -o coverage/branch-coverage-badge.svg "https://img.shields.io/badge/branch%20coverage-${BRANCH_COVERAGE_PERCENT}%25-brightgreen"
+        if [ "$BRANCH_COVERAGE_PERCENT" -ge 80 ]; then
+            BRANCH_COLOR="brightgreen"
+        elif [ "$BRANCH_COVERAGE_PERCENT" -ge 50 ]; then
+            BRANCH_COLOR="yellow"
+        else
+            BRANCH_COLOR="red"
+        fi
 
-   # Step 7: Commit Badges to the Current Branch
+        # Generate badges with dynamic colors
+        curl -o coverage/line-coverage-badge.svg "https://img.shields.io/badge/line%20coverage-${LINE_COVERAGE_PERCENT}%25-${LINE_COLOR}"
+        curl -o coverage/branch-coverage-badge.svg "https://img.shields.io/badge/branch%20coverage-${BRANCH_COVERAGE_PERCENT}%25-${BRANCH_COLOR}"
+
     - name: Commit Coverage Badges
       run: |
         git config user.name "github-actions"
         git config user.email "actions@github.com"
-        git add coverage/line-coverage-badge.svg
-        git add coverage/branch-coverage-badge.svg
+        git add doc/coverag/eline-coverage-badge.svg
+        git add doc/coveragebranch-coverage-badge.svg
         git commit -m "Update coverage badges" || echo "No changes to commit"
         git push origin HEAD
 
-    # Step 8: Upload Coverage Report
     - name: Upload Coverage Report
       uses: actions/upload-artifact@v3
       with:
