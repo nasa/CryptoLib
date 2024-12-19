@@ -910,15 +910,16 @@ UTEST(EP_KEY_MGMT, TLV_TESTS)
     //                                                                       0002 - length
     //                                                                           008e - value
 
-    char *buffer_TLV_OVERRUN_h =  "2003001c00ff000000001880d039FFFF197f0b0003FFFF008e1f6d21c4555555555555";
-    char *buffer_TLV_MAX_h =      "2003001c00ff000000001880d03901EE197f0b000301EE008e1f6d21c4555555555555";
-    char *buffer_TLV_MAX_PLUS_h = "2003001c00ff000000001880d03901EF197f0b000301EF008e1f6d21c4555555555555";
-    char *buffer_TLV_ONE_h =      "2003001c00ff000000001880d0390001197f0b0003000100811f6d21c4555555555555";
-    char *buffer_TLV_ZERO_h =     "2003001c00ff000000001880d0390000197f0b00030000008e1f6d21c4555555555555";
+    char *buffer_TLV_OVERRUN_h =  "2003001c00ff000000001880d039FFFF197f0b0003FFFF008e1f6d21c4555555555555"; // FFFF = 65535
+    char *buffer_TLV_MAX_MINUS_h ="2003001c00ff000000001880d03901EE197f0b000301ED008e1f6d21c4555555555555"; // 01ED = 493
+    char *buffer_TLV_MAX_h =      "2003001c00ff000000001880d03901EE197f0b000301EE008e1f6d21c4555555555555"; // 01EE = 494
+    char *buffer_TLV_MAX_PLUS_h = "2003001c00ff000000001880d03901EF197f0b000301EF008e1f6d21c4555555555555"; // 01EF = 495
+    char *buffer_TLV_ONE_h =      "2003001c00ff000000001880d0390001197f0b0003000100811f6d21c4555555555555"; // 0001 = 1
+    char *buffer_TLV_ZERO_h =     "2003001c00ff000000001880d0390000197f0b00030000008e1f6d21c4555555555555"; // 0000 = 0
 
-    uint8_t *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_TLV_OVERRUN_b, *buffer_TLV_MAX_b,
+    uint8_t *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_TLV_OVERRUN_b, *buffer_TLV_MAX_MINUS_b, *buffer_TLV_MAX_b,
             *buffer_TLV_MAX_PLUS_b, *buffer_TLV_ONE_b, *buffer_TLV_ZERO_b     = NULL;
-    int      buffer_nist_iv_len, buffer_nist_key_len, buffer_TLV_OVERRUN_len, buffer_TLV_MAX_len, 
+    int      buffer_nist_iv_len, buffer_nist_key_len, buffer_TLV_OVERRUN_len, buffer_TLV_MAX_MINUS_len, buffer_TLV_MAX_len, 
              buffer_TLV_MAX_PLUS_len, buffer_TLV_ONE_len, buffer_TLV_ZERO_len = 0;
 
     // Setup Processed Frame For Decryption
@@ -951,6 +952,7 @@ UTEST(EP_KEY_MGMT, TLV_TESTS)
 
     // Convert frames that will be processed
     hex_conversion(buffer_TLV_OVERRUN_h, (char **)&buffer_TLV_OVERRUN_b, &buffer_TLV_OVERRUN_len);
+    hex_conversion(buffer_TLV_MAX_MINUS_h, (char **)&buffer_TLV_MAX_MINUS_b, &buffer_TLV_MAX_MINUS_len);
     hex_conversion(buffer_TLV_MAX_h, (char **)&buffer_TLV_MAX_b, &buffer_TLV_MAX_len);
     hex_conversion(buffer_TLV_MAX_PLUS_h, (char **)&buffer_TLV_MAX_PLUS_b, &buffer_TLV_MAX_PLUS_len);
     hex_conversion(buffer_TLV_ZERO_h, (char **)&buffer_TLV_ZERO_b, &buffer_TLV_ZERO_len);
@@ -962,6 +964,10 @@ UTEST(EP_KEY_MGMT, TLV_TESTS)
     printf(KGRN "Checking for TLV overrun, should fail... \n" RESET);
     status = Crypto_TC_ProcessSecurity(buffer_TLV_OVERRUN_b, &buffer_TLV_OVERRUN_len, &tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_ERR_BAD_TLV_LENGTH, status);
+
+    printf(KGRN "Checking for TLV MAX - 1, should pass... \n" RESET);
+    status = Crypto_TC_ProcessSecurity(buffer_TLV_MAX_MINUS_b, &buffer_TLV_MAX_MINUS_len, &tc_nist_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     
     printf(KGRN "Checking for TLV MAX, should pass... \n" RESET);
     status = Crypto_TC_ProcessSecurity(buffer_TLV_MAX_b, &buffer_TLV_MAX_len, &tc_nist_processed_frame);
@@ -984,6 +990,7 @@ UTEST(EP_KEY_MGMT, TLV_TESTS)
     free(ptr_enc_frame);
     free(buffer_nist_iv_b);
     free(buffer_nist_key_b);
+    free(buffer_TLV_MAX_MINUS_b);
     free(buffer_TLV_MAX_b);
     free(buffer_TLV_MAX_PLUS_b);
     free(buffer_TLV_ONE_b);

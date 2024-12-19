@@ -341,7 +341,7 @@ typedef struct
 {
     CCSDS_HDR_t hdr;
     CCSDS_PUS_t pus;
-    SDLS_TLV_t  pdu;
+    SDLS_TLV_t  tlv_pdu;
 } __attribute__((packed)) CCSDS_t;
 #define CCSDS_SIZE (sizeof(CCSDS_t))
 

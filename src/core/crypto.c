@@ -261,7 +261,7 @@ uint8_t Crypto_Prep_Reply(uint8_t *reply, uint8_t appID)
     sdls_frame.hdr.shdr  = 1;
     sdls_frame.hdr.appID = appID;
 
-    sdls_frame.pdu.hdr.type = 1;
+    sdls_frame.tlv_pdu.hdr.type = 1;
 
     // Fill reply with reply header
     reply[count++] = (sdls_frame.hdr.pvn << 5) | (sdls_frame.hdr.type << 4) | (sdls_frame.hdr.shdr << 3) |
@@ -282,12 +282,12 @@ uint8_t Crypto_Prep_Reply(uint8_t *reply, uint8_t appID)
     }
 
     // Fill reply with Tag and Length
-    reply[count++] = (sdls_frame.pdu.hdr.type << 7) | (sdls_frame.pdu.hdr.uf << 6) | (sdls_frame.pdu.hdr.sg << 4) |
-                     (sdls_frame.pdu.hdr.pid);
-    reply[count++] = (sdls_frame.pdu.hdr.pdu_len & 0xFF00) >> 8;
-    reply[count++] = (sdls_frame.pdu.hdr.pdu_len & 0x00FF);
+    reply[count++] = (sdls_frame.tlv_pdu.hdr.type << 7) | (sdls_frame.tlv_pdu.hdr.uf << 6) | (sdls_frame.tlv_pdu.hdr.sg << 4) |
+                     (sdls_frame.tlv_pdu.hdr.pid);
+    reply[count++] = (sdls_frame.tlv_pdu.hdr.pdu_len & 0xFF00) >> 8;
+    reply[count++] = (sdls_frame.tlv_pdu.hdr.pdu_len & 0x00FF);
 
-    sdls_frame.pdu.hdr.type = 0;
+    sdls_frame.tlv_pdu.hdr.type = 0;
     return count;
 }
 
@@ -409,13 +409,13 @@ int32_t Crypto_PDU(uint8_t *ingest, TC_t *tc_frame)
 
     if (status == CRYPTO_LIB_SUCCESS)
     {
-        switch (sdls_frame.pdu.hdr.type)
+        switch (sdls_frame.tlv_pdu.hdr.type)
         {
             case PDU_TYPE_COMMAND:
-                switch (sdls_frame.pdu.hdr.uf)
+                switch (sdls_frame.tlv_pdu.hdr.uf)
                 {
                     case PDU_USER_FLAG_FALSE: // CCSDS Defined Command
-                        switch (sdls_frame.pdu.hdr.sg)
+                        switch (sdls_frame.tlv_pdu.hdr.sg)
                         {
                             case SG_KEY_MGMT: // Key Management Procedure
                                 status = Crypto_SG_KEY_MGMT(ingest, tc_frame);
@@ -435,7 +435,7 @@ int32_t Crypto_PDU(uint8_t *ingest, TC_t *tc_frame)
                         break;
 
                     case PDU_USER_FLAG_TRUE: // User Defined Command
-                        switch (sdls_frame.pdu.hdr.sg)
+                        switch (sdls_frame.tlv_pdu.hdr.sg)
                         {
                             default:
                                 status = Crypto_USER_DEFINED_CMD(ingest);
@@ -465,7 +465,7 @@ int32_t Crypto_PDU(uint8_t *ingest, TC_t *tc_frame)
 int32_t Crypto_SG_KEY_MGMT(uint8_t *ingest, TC_t *tc_frame)
 {
     int status = CRYPTO_LIB_SUCCESS;
-    switch (sdls_frame.pdu.hdr.pid)
+    switch (sdls_frame.tlv_pdu.hdr.pid)
     {
         case PID_OTAR:
 #ifdef PDU_DEBUG
@@ -523,7 +523,7 @@ int32_t Crypto_SG_KEY_MGMT(uint8_t *ingest, TC_t *tc_frame)
 int32_t Crypto_SG_SA_MGMT(uint8_t *ingest, TC_t *tc_frame)
 {
     int status = CRYPTO_LIB_SUCCESS;
-    switch (sdls_frame.pdu.hdr.pid)
+    switch (sdls_frame.tlv_pdu.hdr.pid)
     {
         case PID_CREATE_SA:
 #ifdef PDU_DEBUG
@@ -603,7 +603,7 @@ int32_t Crypto_SG_SA_MGMT(uint8_t *ingest, TC_t *tc_frame)
 int32_t Crypto_SEC_MON_CTRL(uint8_t *ingest)
 {
     int status = CRYPTO_LIB_SUCCESS;
-    switch (sdls_frame.pdu.hdr.pid)
+    switch (sdls_frame.tlv_pdu.hdr.pid)
     {
         case PID_PING:
 #ifdef PDU_DEBUG
@@ -659,7 +659,7 @@ int32_t Crypto_SEC_MON_CTRL(uint8_t *ingest)
 int32_t Crypto_USER_DEFINED_CMD(uint8_t *ingest)
 {
     int status = CRYPTO_LIB_SUCCESS;
-    switch (sdls_frame.pdu.hdr.pid)
+    switch (sdls_frame.tlv_pdu.hdr.pid)
     {
         case PID_IDLE_FRAME_TRIGGER:
 #ifdef PDU_DEBUG
@@ -773,7 +773,7 @@ int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uin
  * @note - 2) By using a defined Virtual Channel ID
  * @note Requires this to happen on either SPI_MIN (0) or SPI_MAX (configurable)
  **/
-int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uint8_t *ingest)
+int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uint8_t *ingest, uint16_t len_ingest)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     ingest = ingest; // Suppress unused variable error depending on build
@@ -828,20 +828,27 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                     sdls_frame.pus.spare = (tc_sdls_processed_frame->tc_pdu[9] & 0x0F);
 
                 // SDLS TLV PDU
-                    sdls_frame.pdu.hdr.type = (tc_sdls_processed_frame->tc_pdu[10] & 0x80) >> 7;
-                    sdls_frame.pdu.hdr.uf   = (tc_sdls_processed_frame->tc_pdu[10] & 0x40) >> 6;
-                    sdls_frame.pdu.hdr.sg   = (tc_sdls_processed_frame->tc_pdu[10] & 0x30) >> 4;
-                    sdls_frame.pdu.hdr.pid  = (tc_sdls_processed_frame->tc_pdu[10] & 0x0F);
-                    sdls_frame.pdu.hdr.pdu_len =
+                    sdls_frame.tlv_pdu.hdr.type = (tc_sdls_processed_frame->tc_pdu[10] & 0x80) >> 7;
+                    sdls_frame.tlv_pdu.hdr.uf   = (tc_sdls_processed_frame->tc_pdu[10] & 0x40) >> 6;
+                    sdls_frame.tlv_pdu.hdr.sg   = (tc_sdls_processed_frame->tc_pdu[10] & 0x30) >> 4;
+                    sdls_frame.tlv_pdu.hdr.pid  = (tc_sdls_processed_frame->tc_pdu[10] & 0x0F);
+                    sdls_frame.tlv_pdu.hdr.pdu_len =
                         (tc_sdls_processed_frame->tc_pdu[11] << 8) | tc_sdls_processed_frame->tc_pdu[12];
 
                     // Subtract headers from total frame length
                    // uint16_t max_tlv = tc_sdls_processed_frame->tc_header.fl - CCSDS_HDR_SIZE - CCSDS_PUS_SIZE - SDLS_TLV_HDR_SIZE;
+#ifdef CCSDS_DEBUG
+                    printf("Printing lengths for sanity check:\n");
+                    printf("\t Telecommand PDU Length: %d \n", tc_sdls_processed_frame->tc_pdu_len);
+                    printf("\t Received TLV Length: %d \n", 1);
+                    printf("\t Max possible TLV Length: %d \n", 1);
+                    printf("\t Calculated TLV length based on ");
+#endif
                     if (sdls_frame.hdr.pkt_length <= TLV_DATA_SIZE) // && (sdls_frame.hdr.pkt_length < max_tlv))
                     {
                         for (int x = 13; x < (13 + sdls_frame.hdr.pkt_length); x++)
                         {
-                            sdls_frame.pdu.data[x - 13] = tc_sdls_processed_frame->tc_pdu[x];
+                            sdls_frame.tlv_pdu.data[x - 13] = tc_sdls_processed_frame->tc_pdu[x];
                         }
                     }
                     else
@@ -854,20 +861,21 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                 else
                 {
                 // SDLS TLV PDU
-                    sdls_frame.pdu.hdr.type = (tc_sdls_processed_frame->tc_pdu[6] & 0x80) >> 7;
-                    sdls_frame.pdu.hdr.uf   = (tc_sdls_processed_frame->tc_pdu[6] & 0x40) >> 6;
-                    sdls_frame.pdu.hdr.sg   = (tc_sdls_processed_frame->tc_pdu[6] & 0x30) >> 4;
-                    sdls_frame.pdu.hdr.pid  = (tc_sdls_processed_frame->tc_pdu[6] & 0x0F);
-                    sdls_frame.pdu.hdr.pdu_len =
+                    sdls_frame.tlv_pdu.hdr.type = (tc_sdls_processed_frame->tc_pdu[6] & 0x80) >> 7;
+                    sdls_frame.tlv_pdu.hdr.uf   = (tc_sdls_processed_frame->tc_pdu[6] & 0x40) >> 6;
+                    sdls_frame.tlv_pdu.hdr.sg   = (tc_sdls_processed_frame->tc_pdu[6] & 0x30) >> 4;
+                    sdls_frame.tlv_pdu.hdr.pid  = (tc_sdls_processed_frame->tc_pdu[6] & 0x0F);
+                    sdls_frame.tlv_pdu.hdr.pdu_len =
                         (tc_sdls_processed_frame->tc_pdu[7] << 8) | tc_sdls_processed_frame->tc_pdu[8];
                     
                     // Make sure TLV isn't larger than we have allocated, and it is sane given total frame length
                     uint16_t max_tlv = tc_sdls_processed_frame->tc_header.fl - CCSDS_HDR_SIZE - SDLS_TLV_HDR_SIZE;
+                    len_ingest = len_ingest; // suppress error for now
                     if ((sdls_frame.hdr.pkt_length < TLV_DATA_SIZE) && (sdls_frame.hdr.pkt_length < max_tlv))
                     {
                         for (int x = 9; x < (9 + sdls_frame.hdr.pkt_length); x++)
                         {
-                            sdls_frame.pdu.data[x - 9] = tc_sdls_processed_frame->tc_pdu[x];
+                            sdls_frame.tlv_pdu.data[x - 9] = tc_sdls_processed_frame->tc_pdu[x];
                         }
                     }
                     else
@@ -913,16 +921,16 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
 #endif
                 // No Packet HDR or PUS in these frames
                 // SDLS TLV PDU
-                sdls_frame.hdr.type        = (tc_sdls_processed_frame->tc_pdu[0] & 0x80) >> 7;
-                sdls_frame.pdu.hdr.uf      = (tc_sdls_processed_frame->tc_pdu[0] & 0x40) >> 6;
-                sdls_frame.pdu.hdr.sg      = (tc_sdls_processed_frame->tc_pdu[0] & 0x30) >> 4;
-                sdls_frame.pdu.hdr.pid     = (tc_sdls_processed_frame->tc_pdu[0] & 0x0F);
-                sdls_frame.pdu.hdr.pdu_len = (tc_sdls_processed_frame->tc_pdu[1] << 8) | tc_sdls_processed_frame->tc_pdu[2];
+                sdls_frame.tlv_pdu.hdr.type    = (tc_sdls_processed_frame->tc_pdu[0] & 0x80) >> 7;
+                sdls_frame.tlv_pdu.hdr.uf      = (tc_sdls_processed_frame->tc_pdu[0] & 0x40) >> 6;
+                sdls_frame.tlv_pdu.hdr.sg      = (tc_sdls_processed_frame->tc_pdu[0] & 0x30) >> 4;
+                sdls_frame.tlv_pdu.hdr.pid     = (tc_sdls_processed_frame->tc_pdu[0] & 0x0F);
+                sdls_frame.tlv_pdu.hdr.pdu_len = (tc_sdls_processed_frame->tc_pdu[1] << 8) | tc_sdls_processed_frame->tc_pdu[2];
                 for (int x = 3; x < (3 + tc_sdls_processed_frame->tc_header.fl); x++)
                 {
                     // Todo - Consider how this behaves with large OTAR PDUs that are larger than 1 TC in size. Most likely
                     // fails. Must consider Uplink Sessions (sequence numbers).
-                    sdls_frame.pdu.data[x - 3] = tc_sdls_processed_frame->tc_pdu[x];
+                    sdls_frame.tlv_pdu.data[x - 3] = tc_sdls_processed_frame->tc_pdu[x];
                 }
 
 #ifdef CCSDS_DEBUG

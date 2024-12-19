@@ -965,7 +965,7 @@ static int32_t sa_start(TC_t *tc_frame)
     int            i;
 
     // Read ingest
-    spi = ((uint8_t)sdls_frame.pdu.data[0] << 8) | (uint8_t)sdls_frame.pdu.data[1];
+    spi = ((uint8_t)sdls_frame.tlv_pdu.data[0] << 8) | (uint8_t)sdls_frame.tlv_pdu.data[1];
 
     // Check SPI exists and in 'Keyed' state
     if (spi < NUM_SA)
@@ -976,22 +976,22 @@ static int32_t sa_start(TC_t *tc_frame)
         //   2 : User Flag (uf)
         // 3-4 : Service Group Field (sg)
         // 5-8 : Procedure Identification Field (pid)
-        sa[spi].lpid = (sdls_frame.pdu.hdr.type << 7) | (sdls_frame.pdu.hdr.uf << 6) | (sdls_frame.pdu.hdr.sg << 4) |
-                       sdls_frame.pdu.hdr.pid;
+        sa[spi].lpid = (sdls_frame.tlv_pdu.hdr.type << 7) | (sdls_frame.tlv_pdu.hdr.uf << 6) | (sdls_frame.tlv_pdu.hdr.sg << 4) |
+                       sdls_frame.tlv_pdu.hdr.pid;
 
         if (sa[spi].sa_state == SA_KEYED)
         {
             count = 2;
 
-            for (x = 0; x <= ((sdls_frame.pdu.hdr.pdu_len - 2) / 4); x++)
+            for (x = 0; x <= ((sdls_frame.tlv_pdu.hdr.pdu_len - 2) / 4); x++)
             { // Read in GVCID
-                gvcid.tfvn = (sdls_frame.pdu.data[count] >> 4);
-                gvcid.scid = (sdls_frame.pdu.data[count] << 12) | (sdls_frame.pdu.data[count + 1] << 4) |
-                             (sdls_frame.pdu.data[count + 2] >> 4);
-                gvcid.vcid = (sdls_frame.pdu.data[count + 2] << 4) | (sdls_frame.pdu.data[count + 3] && 0x3F);
+                gvcid.tfvn = (sdls_frame.tlv_pdu.data[count] >> 4);
+                gvcid.scid = (sdls_frame.tlv_pdu.data[count] << 12) | (sdls_frame.tlv_pdu.data[count + 1] << 4) |
+                             (sdls_frame.tlv_pdu.data[count + 2] >> 4);
+                gvcid.vcid = (sdls_frame.tlv_pdu.data[count + 2] << 4) | (sdls_frame.tlv_pdu.data[count + 3] && 0x3F);
                 if (current_managed_parameters_struct.has_segmentation_hdr == TC_HAS_SEGMENT_HDRS)
                 {
-                    gvcid.mapid = (sdls_frame.pdu.data[count + 3]);
+                    gvcid.mapid = (sdls_frame.tlv_pdu.data[count + 3]);
                 }
                 else
                 {
@@ -1104,7 +1104,7 @@ static int32_t sa_stop(TC_t *tc_frame)
     int      x;
 
     // Read ingest
-    spi    = ((uint8_t)sdls_frame.pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[1];
+    spi    = ((uint8_t)sdls_frame.tlv_pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.tlv_pdu.data[1];
     control_spi = tc_frame->tc_sec_header.spi;
 
 #ifdef DEBUG
@@ -1130,8 +1130,8 @@ static int32_t sa_stop(TC_t *tc_frame)
         //   2 : User Flag (uf)
         // 3-4 : Service Group Field (sg)
         // 5-8 : Procedure Identification Field (pid)
-        sa[spi].lpid = (sdls_frame.pdu.hdr.type << 7) | (sdls_frame.pdu.hdr.uf << 6) | (sdls_frame.pdu.hdr.sg << 4) |
-                       sdls_frame.pdu.hdr.pid;
+        sa[spi].lpid = (sdls_frame.tlv_pdu.hdr.type << 7) | (sdls_frame.tlv_pdu.hdr.uf << 6) | (sdls_frame.tlv_pdu.hdr.sg << 4) |
+                       sdls_frame.tlv_pdu.hdr.pid;
 
         if (sa[spi].sa_state == SA_OPERATIONAL)
         {
@@ -1190,7 +1190,7 @@ static int32_t sa_rekey(TC_t *tc_frame)
     int      x           = 0;
 
     // Read ingest
-    spi   = ((uint8_t)sdls_frame.pdu.data[count] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[count + 1];
+    spi   = ((uint8_t)sdls_frame.tlv_pdu.data[count] << BYTE_LEN) | (uint8_t)sdls_frame.tlv_pdu.data[count + 1];
     count = count + 2;
 
     control_spi = tc_frame->tc_sec_header.spi;
@@ -1212,16 +1212,16 @@ static int32_t sa_rekey(TC_t *tc_frame)
         //   2 : User Flag (uf)
         // 3-4 : Service Group Field (sg)
         // 5-8 : Procedure Identification Field (pid)
-        sa[spi].lpid = (sdls_frame.pdu.hdr.type << 7) | (sdls_frame.pdu.hdr.uf << 6) | (sdls_frame.pdu.hdr.sg << 4) |
-                       sdls_frame.pdu.hdr.pid;
+        sa[spi].lpid = (sdls_frame.tlv_pdu.hdr.type << 7) | (sdls_frame.tlv_pdu.hdr.uf << 6) | (sdls_frame.tlv_pdu.hdr.sg << 4) |
+                       sdls_frame.tlv_pdu.hdr.pid;
 
         if (sa[spi].sa_state == SA_UNKEYED)
         { // Encryption Key
-            sa[spi].ekid = ((uint8_t)sdls_frame.pdu.data[count] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[count + 1];
+            sa[spi].ekid = ((uint8_t)sdls_frame.tlv_pdu.data[count] << BYTE_LEN) | (uint8_t)sdls_frame.tlv_pdu.data[count + 1];
             count        = count + 2;
 
             // Authentication Key
-            // sa[spi].akid = ((uint8_t)sdls_frame.pdu.data[count] << 8) | (uint8_t)sdls_frame.pdu.data[count+1];
+            // sa[spi].akid = ((uint8_t)sdls_frame.tlv_pdu.data[count] << 8) | (uint8_t)sdls_frame.tlv_pdu.data[count+1];
             // count = count + 2;
 
             // Anti-Replay Seq Num
@@ -1234,9 +1234,9 @@ static int32_t sa_rekey(TC_t *tc_frame)
                 {
                     // TODO: Uncomment once fixed in ESA implementation
                     // TODO: Assuming this was fixed...
-                    *(sa[spi].iv + x - count) = (uint8_t)sdls_frame.pdu.data[x];
+                    *(sa[spi].iv + x - count) = (uint8_t)sdls_frame.tlv_pdu.data[x];
 #ifdef PDU_DEBUG
-                    printf("%02x", sdls_frame.pdu.data[x]);
+                    printf("%02x", sdls_frame.tlv_pdu.data[x]);
 #endif
                 }
             }
@@ -1289,7 +1289,7 @@ static int32_t sa_expire(TC_t *tc_frame)
     int32_t  status      = CRYPTO_LIB_SUCCESS;
 
     // Read ingest
-    spi = ((uint8_t)sdls_frame.pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[1];
+    spi = ((uint8_t)sdls_frame.tlv_pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.tlv_pdu.data[1];
 
     control_spi = tc_frame->tc_sec_header.spi;
     if (spi == control_spi)
@@ -1310,8 +1310,8 @@ static int32_t sa_expire(TC_t *tc_frame)
         //   2 : User Flag (uf)
         // 3-4 : Service Group Field (sg)
         // 5-8 : Procedure Identification Field (pid)
-        sa[spi].lpid = (sdls_frame.pdu.hdr.type << 7) | (sdls_frame.pdu.hdr.uf << 6) | (sdls_frame.pdu.hdr.sg << 4) |
-                       sdls_frame.pdu.hdr.pid;
+        sa[spi].lpid = (sdls_frame.tlv_pdu.hdr.type << 7) | (sdls_frame.tlv_pdu.hdr.uf << 6) | (sdls_frame.tlv_pdu.hdr.sg << 4) |
+                       sdls_frame.tlv_pdu.hdr.pid;
 
         if (sa[spi].sa_state == SA_KEYED)
         { // Change to 'Unkeyed' state
@@ -1350,8 +1350,8 @@ static int32_t sa_create(TC_t *tc_frame)
     int32_t  status       = CRYPTO_LIB_SUCCESS;
     int      x;
 
-    // Read sdls_frame.pdu.data
-    spi = ((uint8_t)sdls_frame.pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[1];
+    // Read sdls_frame.tlv_pdu.data
+    spi = ((uint8_t)sdls_frame.tlv_pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.tlv_pdu.data[1];
 #ifdef DEBUG
     printf("spi = %d \n", spi);
 #endif
@@ -1375,46 +1375,46 @@ static int32_t sa_create(TC_t *tc_frame)
         //   2 : User Flag (uf)
         // 3-4 : Service Group Field (sg)
         // 5-8 : Procedure Identification Field (pid)
-        sa[spi].lpid = (sdls_frame.pdu.hdr.type << 7) | (sdls_frame.pdu.hdr.uf << 6) | (sdls_frame.pdu.hdr.sg << 4) |
-                       sdls_frame.pdu.hdr.pid;
+        sa[spi].lpid = (sdls_frame.tlv_pdu.hdr.type << 7) | (sdls_frame.tlv_pdu.hdr.uf << 6) | (sdls_frame.tlv_pdu.hdr.sg << 4) |
+                       sdls_frame.tlv_pdu.hdr.pid;
 
         // Write SA Configuration
-        sa[spi].est        = ((uint8_t)sdls_frame.pdu.data[2] & 0x80) >> 7;
-        sa[spi].ast        = ((uint8_t)sdls_frame.pdu.data[2] & 0x40) >> 6;
-        sa[spi].shivf_len  = ((uint8_t)sdls_frame.pdu.data[2] & 0x3F);
-        sa[spi].shsnf_len  = ((uint8_t)sdls_frame.pdu.data[3] & 0xFC) >> 2;
-        sa[spi].shplf_len  = ((uint8_t)sdls_frame.pdu.data[3] & 0x03);
-        sa[spi].stmacf_len = ((uint8_t)sdls_frame.pdu.data[4]);
-        sa[spi].ecs_len    = ((uint8_t)sdls_frame.pdu.data[5]);
+        sa[spi].est        = ((uint8_t)sdls_frame.tlv_pdu.data[2] & 0x80) >> 7;
+        sa[spi].ast        = ((uint8_t)sdls_frame.tlv_pdu.data[2] & 0x40) >> 6;
+        sa[spi].shivf_len  = ((uint8_t)sdls_frame.tlv_pdu.data[2] & 0x3F);
+        sa[spi].shsnf_len  = ((uint8_t)sdls_frame.tlv_pdu.data[3] & 0xFC) >> 2;
+        sa[spi].shplf_len  = ((uint8_t)sdls_frame.tlv_pdu.data[3] & 0x03);
+        sa[spi].stmacf_len = ((uint8_t)sdls_frame.tlv_pdu.data[4]);
+        sa[spi].ecs_len    = ((uint8_t)sdls_frame.tlv_pdu.data[5]);
         for (x = 0; x < sa[spi].ecs_len; x++)
         {
-            sa[spi].ecs = ((uint8_t)sdls_frame.pdu.data[count++]);
+            sa[spi].ecs = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
         }
-        sa[spi].shivf_len = ((uint8_t)sdls_frame.pdu.data[count++]);
+        sa[spi].shivf_len = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
         for (x = 0; x < sa[spi].shivf_len; x++)
         {
-            sa[spi].iv[x] = ((uint8_t)sdls_frame.pdu.data[count++]);
+            sa[spi].iv[x] = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
         }
-        sa[spi].acs_len = ((uint8_t)sdls_frame.pdu.data[count++]);
+        sa[spi].acs_len = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
         for (x = 0; x < sa[spi].acs_len; x++)
         {
-            sa[spi].acs = ((uint8_t)sdls_frame.pdu.data[count++]);
+            sa[spi].acs = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
         }
-        sa[spi].abm_len = (uint8_t)((sdls_frame.pdu.data[count] << BYTE_LEN) | (sdls_frame.pdu.data[count + 1]));
+        sa[spi].abm_len = (uint8_t)((sdls_frame.tlv_pdu.data[count] << BYTE_LEN) | (sdls_frame.tlv_pdu.data[count + 1]));
         count           = count + 2;
         for (x = 0; x < sa[spi].abm_len; x++)
         {
-            sa[spi].abm[x] = ((uint8_t)sdls_frame.pdu.data[count++]);
+            sa[spi].abm[x] = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
         }
-        sa[spi].arsn_len = ((uint8_t)sdls_frame.pdu.data[count++]);
+        sa[spi].arsn_len = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
         for (x = 0; x < sa[spi].arsn_len; x++)
         {
-            *(sa[spi].arsn + x) = ((uint8_t)sdls_frame.pdu.data[count++]);
+            *(sa[spi].arsn + x) = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
         }
-        sa[spi].arsnw_len = ((uint8_t)sdls_frame.pdu.data[count++]);
+        sa[spi].arsnw_len = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
         for (x = 0; x < sa[spi].arsnw_len; x++)
         {
-            sa[spi].arsnw = sa[spi].arsnw | (((uint8_t)sdls_frame.pdu.data[count++]) << (sa[spi].arsnw_len - x));
+            sa[spi].arsnw = sa[spi].arsnw | (((uint8_t)sdls_frame.tlv_pdu.data[count++]) << (sa[spi].arsnw_len - x));
         }
 
         // TODO: Checks for valid data
@@ -1448,7 +1448,7 @@ static int32_t sa_delete(TC_t *tc_frame)
     int32_t  status      = CRYPTO_LIB_SUCCESS;
 
     // Read ingest
-    spi = ((uint8_t)sdls_frame.pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[1];
+    spi = ((uint8_t)sdls_frame.tlv_pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.tlv_pdu.data[1];
 #ifdef DEBUG
     printf("spi = %d \n", spi);
 #endif
@@ -1472,8 +1472,8 @@ static int32_t sa_delete(TC_t *tc_frame)
         //   2 : User Flag (uf)
         // 3-4 : Service Group Field (sg)
         // 5-8 : Procedure Identification Field (pid)
-        sa[spi].lpid = (sdls_frame.pdu.hdr.type << 7) | (sdls_frame.pdu.hdr.uf << 6) | (sdls_frame.pdu.hdr.sg << 4) |
-                       sdls_frame.pdu.hdr.pid;
+        sa[spi].lpid = (sdls_frame.tlv_pdu.hdr.type << 7) | (sdls_frame.tlv_pdu.hdr.uf << 6) | (sdls_frame.tlv_pdu.hdr.sg << 4) |
+                       sdls_frame.tlv_pdu.hdr.pid;
 
         if (sa[spi].sa_state == SA_UNKEYED)
         { // Change to 'None' state
@@ -1514,7 +1514,7 @@ static int32_t sa_setARSN(TC_t *tc_frame)
     int      x;
 
     // Read ingest
-    spi = ((uint8_t)sdls_frame.pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[1];
+    spi = ((uint8_t)sdls_frame.tlv_pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.tlv_pdu.data[1];
     
     control_spi = tc_frame->tc_sec_header.spi;
     if (spi == control_spi)
@@ -1539,7 +1539,7 @@ static int32_t sa_setARSN(TC_t *tc_frame)
 #endif
             for (x = 0; x < IV_SIZE; x++)
             {
-                *(sa[spi].iv + x) = (uint8_t)sdls_frame.pdu.data[x + 2];
+                *(sa[spi].iv + x) = (uint8_t)sdls_frame.tlv_pdu.data[x + 2];
 #ifdef PDU_DEBUG
                 printf("%02x", *(sa[spi].iv + x));
 #endif
@@ -1553,7 +1553,7 @@ static int32_t sa_setARSN(TC_t *tc_frame)
 #endif
             for (x = 0; x < sa[spi].arsn_len; x++)
             {
-                *(sa[spi].arsn + x) = (uint8_t)sdls_frame.pdu.data[x + 2];
+                *(sa[spi].arsn + x) = (uint8_t)sdls_frame.tlv_pdu.data[x + 2];
 #ifdef PDU_DEBUG
                 printf("%02x", *(sa[spi].arsn + x));
 #endif
@@ -1583,7 +1583,7 @@ static int32_t sa_setARSNW(TC_t *tc_frame)
     int32_t  status      = CRYPTO_LIB_SUCCESS;
 
     // Read ingest
-    spi = ((uint8_t)sdls_frame.pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[1];
+    spi = ((uint8_t)sdls_frame.tlv_pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.tlv_pdu.data[1];
 #ifdef PDU_DEBUG
     printf("spi = %d \n", spi);
 #endif
@@ -1607,7 +1607,7 @@ static int32_t sa_setARSNW(TC_t *tc_frame)
             sa[spi].arsnw_len = ARSN_SIZE;
         }
 
-        sa[spi].arsnw = (((uint8_t)sdls_frame.pdu.data[2]));
+        sa[spi].arsnw = (((uint8_t)sdls_frame.tlv_pdu.data[2]));
 #ifdef PDU_DEBUG
         printf("ARSN set to: %d\n", sa[spi].arsnw);
 #endif
@@ -1643,7 +1643,7 @@ static int32_t sa_status(uint8_t *ingest)
         uint16_t spi   = 0x0000;
 
         // Read ingest
-        spi = ((uint8_t)sdls_frame.pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[1];
+        spi = ((uint8_t)sdls_frame.tlv_pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.tlv_pdu.data[1];
         printf("spi = %d \n", spi);
 
         // Check SPI exists
@@ -1651,8 +1651,8 @@ static int32_t sa_status(uint8_t *ingest)
         {
             printf("SIZE: %ld\n", SDLS_SA_STATUS_RPLY_SIZE);
             // Prepare for Reply
-            sdls_frame.pdu.hdr.pdu_len = SDLS_SA_STATUS_RPLY_SIZE * BYTE_LEN;
-            sdls_frame.hdr.pkt_length  = CCSDS_HDR_SIZE + CCSDS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.pdu.hdr.pdu_len / BYTE_LEN) - 1;
+            sdls_frame.tlv_pdu.hdr.pdu_len = SDLS_SA_STATUS_RPLY_SIZE * BYTE_LEN;
+            sdls_frame.hdr.pkt_length  = CCSDS_HDR_SIZE + CCSDS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
             count                      = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
             // PDU
             sdls_ep_reply[count++] = (spi & 0xFF00) >> BYTE_LEN;
