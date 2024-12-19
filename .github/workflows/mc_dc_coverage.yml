@@ -30,13 +30,19 @@ jobs:
     - name: Install Dependencies
       env:
         DEBIAN_FRONTEND: noninteractive
+        TZ: Etc/UTC
       run: |
         apt-get update
-        apt-get install -y gcc g++ lcov gcov python3-pip bc
+        apt-get install -y gcc g++ gcovr lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 bc tzdata
         pip install pycryptodome
-        # Install gMCov dependencies
-        git clone https://github.com/Monika-rani12/gMCov.git /tmp/gmcov
-        chmod +x /tmp/gmcov/main-gProfiler.sh
+        # Install additional libraries if necessary
+        curl -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 -o /tmp/libgpg-error-1.50.tar.bz2
+        tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/
+        cd /tmp/libgpg-error-1.50 && ./configure && make install
+        curl -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 -o /tmp/libgcrypt-1.11.0.tar.bz2
+        tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/
+        cd /tmp/libgcrypt-1.11.0 && ./configure && make install
+        ldconfig
 
     # Step 4: Build and run tests with instrumentation
     - name: Build and Run Tests with Instrumentation
@@ -47,6 +53,8 @@ jobs:
     # Step 5: Analyze MC/DC coverage with gMCov
     - name: Generate MC/DC Coverage Report
       run: |
+        git clone https://github.com/Monika-rani12/gMCov.git /tmp/gmcov
+        chmod +x /tmp/gmcov/main-gProfiler.sh
         cd /tmp/gmcov
         ./main-gProfiler.sh
         mv output_mcdc_report ${GITHUB_WORKSPACE}/doc/coverage/
