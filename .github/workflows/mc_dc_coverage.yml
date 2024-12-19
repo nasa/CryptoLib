@@ -22,6 +22,7 @@ jobs:
     # Step 2: Install dependencies
     - name: Install Dependencies
       run: |
+        export DEBIAN_FRONTEND=noninteractive
         apt-get update
         apt-get install -y lcov gcovr libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3
     - name: Install Python Libraries
