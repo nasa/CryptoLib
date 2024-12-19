@@ -16,6 +16,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch full history
 
     # Install dependencies and setup environment
     - name: Install Dependencies
@@ -61,6 +63,11 @@ jobs:
         curl -o coverage/line-coverage-badge.svg "https://img.shields.io/badge/line%20coverage-${LINE_COVERAGE_PERCENT}%25-brightgreen"
         curl -o coverage/branch-coverage-badge.svg "https://img.shields.io/badge/branch%20coverage-${BRANCH_COVERAGE_PERCENT}%25-brightgreen"
 
+    # Fix detached HEAD state
+    - name: Fix Detached HEAD
+      run: git checkout -B ${GITHUB_REF##*/}
+      working-directory: ${{ github.workspace }}
+
     # Commit badges to a separate branch
     - name: Commit Coverage Badges
       if: ${{ github.event_name == 'push' }}
@@ -72,6 +79,7 @@ jobs:
         git add coverage/branch-coverage-badge.svg
         git commit -m "Update coverage badges"
         git push origin badges
+      working-directory: ${{ github.workspace }}
 
     # Upload consolidated coverage report as an artifact
     - name: Upload Coverage Report
