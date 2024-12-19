@@ -41,11 +41,6 @@ jobs:
         cd /tmp/libgcrypt-1.11.0 && ./configure && make install
         ldconfig
         
-    - name: Upload to Code Cov
-      uses: codecov/codecov-action@v5
-      env:
-        CODECOV_TOKEN: 71699f25-12a3-44a4-8a83-be777b9e577a
-        
     - name: Fix Detached HEAD State
       run: git checkout -B ${GITHUB_REF##*/}
 
@@ -53,7 +48,7 @@ jobs:
       run: |
         export CFLAGS="-fprofile-arcs -ftest-coverage -g"
         bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
-
+        
     - name: Generate Coverage Report and Badges
       run: |
         mkdir -p doc/coverage
@@ -93,6 +88,11 @@ jobs:
         curl -o doc/coverage/line-coverage-badge.svg "https://img.shields.io/badge/line%20coverage-${LINE_COVERAGE_PERCENT}%25-${LINE_COLOR}"
         curl -o doc/coverage/branch-coverage-badge.svg "https://img.shields.io/badge/branch%20coverage-${BRANCH_COVERAGE_PERCENT}%25-${BRANCH_COLOR}"
 
+    - name: Upload to Code Cov
+      uses: codecov/codecov-action@v5
+      env:
+        CODECOV_TOKEN: 71699f25-12a3-44a4-8a83-be777b9e577a
+        
     - name: Commit Coverage Badges
       run: |
         git config user.name "github-actions"
