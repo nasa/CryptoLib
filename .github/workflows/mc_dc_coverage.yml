@@ -11,6 +11,25 @@ on:
       - 258-cyclomatic-complexity-and-mcdc-in-ci
 
 jobs:
+  mcdc-check:
+    runs-on: ubuntu-latest
+    container: 
+      image: registry.gitlab.com/gtd-gmbh/mcdc-checker/mcdc-checker
+    steps:
+    - name: Check out the Repository
+      uses: actions/checkout@v4
+
+    - name: Run MC/DC Checker
+      run: |
+        mkdir -p doc/coverage
+        mcdc_checker -a -j doc/coverage/report.json
+
+    - name: Upload Coverage Report
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report-mcdc
+        path: doc/coverage
+
   coverage:
     runs-on: ubuntu-latest
     container:
@@ -35,7 +54,6 @@ jobs:
         apt-get update
         apt-get install -y gcc g++ gcovr lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 bc tzdata
         pip install pycryptodome
-        # Install additional libraries if necessary
         curl -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 -o /tmp/libgpg-error-1.50.tar.bz2
         tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/
         cd /tmp/libgpg-error-1.50 && ./configure && make install
@@ -50,34 +68,34 @@ jobs:
         export CFLAGS="-fprofile-arcs -ftest-coverage -g"
         bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
 
-    # Step 5: Analyze MC/DC coverage with gMCov
-    - name: Generate MC/DC Coverage Report
+    # Step 5: Generate Coverage Report
+    - name: Generate Coverage Report
       run: |
-        git clone https://github.com/Monika-rani12/gMCov.git /tmp/gmcov
-        chmod +x /tmp/gmcov/main-gProfiler.sh
-        cd /tmp/gmcov
-        ./main-gProfiler.sh
-        mv output_mcdc_report ${GITHUB_WORKSPACE}/doc/coverage/
+        mkdir -p doc/coverage
+        gcovr --branches --xml-pretty --output doc/coverage/coverage.xml
+        gcovr --branches --html --html-details --output doc/coverage/coverage.html
 
-    # Step 6: Upload coverage reports to Codecov
+    # Step 6: Upload to Codecov
     - name: Upload to Codecov
       uses: codecov/codecov-action@v5
       with:
-        files: doc/coverage/output_mcdc_report
-        flags: mcdc
+        files: doc/coverage/coverage.xml
+        flags: coverage
+        env:
+          CODECOV_TOKEN: 71699f25-12a3-44a4-8a83-be777b9e577a
 
     # Step 7: Commit and push coverage report (optional)
     - name: Commit Coverage Report
       run: |
         git config user.name "github-actions"
         git config user.email "actions@github.com"
-        git add doc/coverage/output_mcdc_report
-        git commit -m "Update MC/DC coverage report" || echo "No changes to commit"
+        git add doc/coverage/*
+        git commit -m "Update coverage reports" || echo "No changes to commit"
         git push origin HEAD
 
-    # Step 8: Upload MC/DC coverage report as an artifact (optional)
+    # Step 8: Upload Coverage Report
     - name: Upload Coverage Report
       uses: actions/upload-artifact@v3
       with:
-        name: mcdc-coverage-report
-        path: doc/coverage/output_mcdc_report
+        name: coverage-report
+        path: doc/coverage
