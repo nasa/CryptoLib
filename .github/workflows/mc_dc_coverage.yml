@@ -39,7 +39,8 @@ jobs:
     - name: Set up Clang
       uses: egor-tensin/setup-clang@v1
       with:
-        version: 17
+        version: latest
+        platform: x64
 
     - name: Verify Clang Installation
       run: |
