@@ -60,15 +60,6 @@ jobs:
         curl -o doc/coverage/line-coverage-badge.svg "https://img.shields.io/badge/line%20coverage-${LINE_COVERAGE_PERCENT}%25-${LINE_COLOR}"
         curl -o doc/coverage/branch-coverage-badge.svg "https://img.shields.io/badge/branch%20coverage-${BRANCH_COVERAGE_PERCENT}%25-${BRANCH_COLOR}"
 
-    - name: Commit Coverage Badges
-      run: |
-        git config user.name "github-actions"
-        git config user.email "actions@github.com"
-        git add doc/coverage/line-coverage-badge.svg
-        git add doc/coverage/branch-coverage-badge.svg
-        git commit -m "Update coverage badges" || echo "No changes to commit"
-        git push origin HEAD
-
     - name: Run MC/DC Analysis
       run: |
         # Ensure the output directory exists
@@ -81,7 +72,7 @@ jobs:
 
         # Ensure pipx path is properly set up
         echo "Ensuring pipx path is added..."
-        pipx ensurepath || true  # Prevent failure if already set
+        pipx ensurepath || true
         export PATH=$PATH:/github/home/.local/bin  # Re-export PATH for good measure
 
         # Debug: Check pipx installation
@@ -94,19 +85,31 @@ jobs:
         # Debug: Confirm mcdc-checker is available
         echo "Checking if mcdc-checker is available..."
         which mcdc-checker || { echo "mcdc-checker not found in PATH"; exit 1; }
-        mcdc-checker --version || { echo "Failed to get mcdc-checker version"; exit 1; }
+        echo "mcdc-checker is available; checking usage information..."
+        mcdc-checker --help || { echo "mcdc-checker usage check failed"; exit 1; }
 
         # Debug: List all C source files
         echo "Listing C source files:"
         find $GITHUB_WORKSPACE/src -type f -name '*.c' -exec echo {} \;
 
-        # Run mcdc-checker on all .c files with debugging
+        # Run mcdc-checker and capture output
         echo "Running mcdc-checker..."
         mcdc-checker -a -v -j $GITHUB_WORKSPACE/doc/coverage/mcdc_report.json \
-          -I $GITHUB_WORKSPACE/include $(find $GITHUB_WORKSPACE/src -type f -name '*.c' | tr '\n' ' ') || {
-          echo "mcdc-checker failed"; exit 1;
-        }
+          -I $GITHUB_WORKSPACE/include $(find $GITHUB_WORKSPACE/src -type f -name '*.c' | tr '\n' ' ') \
+          > $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log 2>&1
+        CHECKER_EXIT_CODE=$?
+
+        # Display mcdc-checker output
+        echo "MC/DC Checker Output:"
+        cat $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log
+
+        # Handle exit code
+        if [ $CHECKER_EXIT_CODE -ne 0 ]; then
+          echo "mcdc-checker failed with exit code $CHECKER_EXIT_CODE"
+          exit $CHECKER_EXIT_CODE
+        fi
       shell: bash
+
 
     - name: Upload All Artifacts
       uses: actions/upload-artifact@v3
