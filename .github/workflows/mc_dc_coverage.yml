@@ -95,24 +95,25 @@ jobs:
         export LD_LIBRARY_PATH=/usr/lib/llvm-19/lib:$LD_LIBRARY_PATH
         export CC=/usr/lib/llvm-19/bin/clang
         export CXX=/usr/lib/llvm-19/bin/clang++
-        
+    
         echo "Verifying Clang bindings..."
         python3 -c "
         import clang.cindex as cindex
         cindex.Config.set_library_file('/usr/lib/llvm-19/lib/libclang.so')
-        print('Clang library file configured:', cindex.Config.library_path)
+        print('Clang library file configured:', cindex.Config.library_file)
         "
     
         echo "Testing Clang version in checker environment..."
         clang --version || { echo 'Clang not found'; exit 1; }
     
-        echo "Running mcdc-checker..."
-        mcdc-checker -a -j $GITHUB_WORKSPACE/doc/coverage/mcdc_report.json \
+        echo "Running mcdc-checker with debug logs..."
+        mcdc-checker -a -d -j $GITHUB_WORKSPACE/doc/coverage/mcdc_report.json \
           -I $GITHUB_WORKSPACE/include $(find $GITHUB_WORKSPACE/src -type f -name '*.c' | tr '\n' ' ') \
           > $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log 2>&1 || true
     
         echo "Displaying MC/DC Checker Output:"
         cat $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log
+
 
 
     - name: Display MC/DC Checker Output
