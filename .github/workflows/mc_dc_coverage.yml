@@ -44,57 +44,64 @@ jobs:
         pipx install --system-site-packages mcdc-checker
         pipx inject mcdc-checker clang
 
-    - name: Build with Coverage Flags
+    - name: Verify clang Installation
       run: |
-        export CFLAGS="-fprofile-arcs -ftest-coverage -g"
-        bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
+        echo "Checking clang binary..."
+        which clang || { echo "clang not found in PATH"; exit 1; }
+        echo "clang version:"
+        clang --version    
 
-    - name: Generate Coverage Report and Badges
-      run: |
-        mkdir -p doc/coverage
-        gcovr --branches --xml-pretty --exclude-unreachable-branches -o doc/coverage/coverage_report.xml
-        gcovr --branches --html --html-details -o doc/coverage/coverage_report.html
-        LINE_COVERAGE=$(grep -oP '(?<=<coverage line-rate=")[0-9.]+(?=")' doc/coverage/coverage_report.xml | head -n 1)
-        BRANCH_COVERAGE=$(grep -oP '(?<=branch-rate=")[0-9.]+(?=")' doc/coverage/coverage_report.xml | head -n 1)
-        LINE_COVERAGE_PERCENT=$(printf "%.0f" $(echo "$LINE_COVERAGE * 100" | bc))
-        BRANCH_COVERAGE_PERCENT=$(printf "%.0f" $(echo "$BRANCH_COVERAGE * 100" | bc))
-        if [ "$LINE_COVERAGE_PERCENT" -ge 80 ]; then LINE_COLOR="brightgreen"; elif [ "$LINE_COVERAGE_PERCENT" -ge 50 ]; then LINE_COLOR="yellow"; else LINE_COLOR="red"; fi
-        if [ "$BRANCH_COVERAGE_PERCENT" -ge 80 ]; then BRANCH_COLOR="brightgreen"; elif [ "$BRANCH_COVERAGE_PERCENT" -ge 50 ]; then BRANCH_COLOR="yellow"; else BRANCH_COLOR="red"; fi
-        curl -o doc/coverage/line-coverage-badge.svg "https://img.shields.io/badge/line%20coverage-${LINE_COVERAGE_PERCENT}%25-${LINE_COLOR}"
-        curl -o doc/coverage/branch-coverage-badge.svg "https://img.shields.io/badge/branch%20coverage-${BRANCH_COVERAGE_PERCENT}%25-${BRANCH_COLOR}"
+    # - name: Build with Coverage Flags
+    #   run: |
+    #     export CFLAGS="-fprofile-arcs -ftest-coverage -g"
+    #     bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
 
-    - name: Commit Coverage Badges
-      run: |
-        git config user.name "github-actions"
-        git config user.email "actions@github.com"
-        git add doc/coverage/line-coverage-badge.svg
-        git add doc/coverage/branch-coverage-badge.svg
-        git commit -m "Update coverage badges" || echo "No changes to commit"
-        git push origin HEAD
+    # - name: Generate Coverage Report and Badges
+    #   run: |
+    #     mkdir -p doc/coverage
+    #     gcovr --branches --xml-pretty --exclude-unreachable-branches -o doc/coverage/coverage_report.xml
+    #     gcovr --branches --html --html-details -o doc/coverage/coverage_report.html
+    #     LINE_COVERAGE=$(grep -oP '(?<=<coverage line-rate=")[0-9.]+(?=")' doc/coverage/coverage_report.xml | head -n 1)
+    #     BRANCH_COVERAGE=$(grep -oP '(?<=branch-rate=")[0-9.]+(?=")' doc/coverage/coverage_report.xml | head -n 1)
+    #     LINE_COVERAGE_PERCENT=$(printf "%.0f" $(echo "$LINE_COVERAGE * 100" | bc))
+    #     BRANCH_COVERAGE_PERCENT=$(printf "%.0f" $(echo "$BRANCH_COVERAGE * 100" | bc))
+    #     if [ "$LINE_COVERAGE_PERCENT" -ge 80 ]; then LINE_COLOR="brightgreen"; elif [ "$LINE_COVERAGE_PERCENT" -ge 50 ]; then LINE_COLOR="yellow"; else LINE_COLOR="red"; fi
+    #     if [ "$BRANCH_COVERAGE_PERCENT" -ge 80 ]; then BRANCH_COLOR="brightgreen"; elif [ "$BRANCH_COVERAGE_PERCENT" -ge 50 ]; then BRANCH_COLOR="yellow"; else BRANCH_COLOR="red"; fi
+    #     curl -o doc/coverage/line-coverage-badge.svg "https://img.shields.io/badge/line%20coverage-${LINE_COVERAGE_PERCENT}%25-${LINE_COLOR}"
+    #     curl -o doc/coverage/branch-coverage-badge.svg "https://img.shields.io/badge/branch%20coverage-${BRANCH_COVERAGE_PERCENT}%25-${BRANCH_COLOR}"
 
-    - name: Run MC/DC Analysis
-      run: |
-        # Ensure the output directory exists
-        echo "Creating coverage directory..."
-        mkdir -p $GITHUB_WORKSPACE/doc/coverage
+    # - name: Commit Coverage Badges
+    #   run: |
+    #     git config user.name "github-actions"
+    #     git config user.email "actions@github.com"
+    #     git add doc/coverage/line-coverage-badge.svg
+    #     git add doc/coverage/branch-coverage-badge.svg
+    #     git commit -m "Update coverage badges" || echo "No changes to commit"
+    #     git push origin HEAD
 
-        # Add pipx installation path to PATH
-        echo "Adding pipx path to PATH..."
-        export PATH=$PATH:/github/home/.local/bin
+    # - name: Run MC/DC Analysis
+    #   run: |
+    #     # Ensure the output directory exists
+    #     echo "Creating coverage directory..."
+    #     mkdir -p $GITHUB_WORKSPACE/doc/coverage
 
-        # Debug: Confirm mcdc-checker is available
-        echo "Checking if mcdc-checker is available..."
-        which mcdc-checker || { echo "mcdc-checker not found in PATH"; exit 1; }
+    #     # Add pipx installation path to PATH
+    #     echo "Adding pipx path to PATH..."
+    #     export PATH=$PATH:/github/home/.local/bin
 
-        # Run mcdc-checker without failing the step
-        echo "Running mcdc-checker..."
-        mcdc-checker -a -j $GITHUB_WORKSPACE/doc/coverage/mcdc_report.json \
-          -I $GITHUB_WORKSPACE/include $(find $GITHUB_WORKSPACE/src -type f -name '*.c' | tr '\n' ' ') \
-          > $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log 2>&1 || true
-      shell: bash
+    #     # Debug: Confirm mcdc-checker is available
+    #     echo "Checking if mcdc-checker is available..."
+    #     which mcdc-checker || { echo "mcdc-checker not found in PATH"; exit 1; }
 
-    - name: Display MC/DC Checker Output
-      run: |
-        echo "Displaying MC/DC Checker Output:"
-        cat $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log
-      shell: bash
+    #     # Run mcdc-checker without failing the step
+    #     echo "Running mcdc-checker..."
+    #     mcdc-checker -a -j $GITHUB_WORKSPACE/doc/coverage/mcdc_report.json \
+    #       -I $GITHUB_WORKSPACE/include $(find $GITHUB_WORKSPACE/src -type f -name '*.c' | tr '\n' ' ') \
+    #       > $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log 2>&1 || true
+    #   shell: bash
+
+    # - name: Display MC/DC Checker Output
+    #   run: |
+    #     echo "Displaying MC/DC Checker Output:"
+    #     cat $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log
+    #   shell: bash
