@@ -105,13 +105,14 @@ jobs:
     
         echo "Running mcdc-checker..."
         mcdc-checker -a -j $GITHUB_WORKSPACE/doc/coverage/mcdc_report.json \
-          -I $GITHUB_WORKSPACE/include $(find $GITHUB_WORKSPACE/src -type f -name '*.c' | tr '\n' ' ') \
+          -I $GITHUB_WORKSPACE/include \
+          -I $GITHUB_WORKSPACE/test/include \
+          $(find $GITHUB_WORKSPACE/src -type f -name '*.c' | tr '\n' ' ') \
+          $(find $GITHUB_WORKSPACE/test -type f -name '*.c' | tr '\n' ' ') \
           > $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log 2>&1 || true
     
         echo "Displaying MC/DC Checker Output:"
         cat $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log
-
-
 
 
     - name: Display MC/DC Checker Output
