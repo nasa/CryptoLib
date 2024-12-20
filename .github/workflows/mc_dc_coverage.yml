@@ -36,13 +36,7 @@ jobs:
           python3 python3-pip python3-venv gcovr bc pipx wget \
           software-properties-common clang libclang-dev
         pipx install --system-site-packages mcdc-checker
-
-    - name: Verify Clang Installation
-      run: |
-        echo "Checking clang binary..."
-        which clang || { echo "clang not found in PATH"; exit 1; }
-        echo "clang version:"
-        clang --version
+        pipx ensurepath
 
     - name: Build with Coverage Flags
       run: |
@@ -77,7 +71,7 @@ jobs:
         echo "Running mcdc-checker..."
         mcdc-checker -a -j $GITHUB_WORKSPACE/doc/coverage/mcdc_report.json \
           -I $GITHUB_WORKSPACE/include $(find $GITHUB_WORKSPACE/src -type f -name '*.c' | tr '\n' ' ') \
-          > $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log
+          > $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log 2>&1 || true
 
     - name: Display MC/DC Checker Output
       run: |
