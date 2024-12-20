@@ -34,22 +34,6 @@ jobs:
         apt-get update
         apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 python3-pip python3-venv \
           gcovr bc pipx clang-17 libclang-17-dev
-        pip install clang
-
-        echo "Setting up Clang library path..."
-        export LIBCLANG_PATH=$(find /usr/lib/llvm-17/lib -name "libclang-17.so" -print -quit)
-        if [ -z "$LIBCLANG_PATH" ]; then
-          echo "libclang-17.so not found!"
-          exit 1
-        fi
-        echo "libclang-17.so found at $LIBCLANG_PATH"
-
-        echo "Configuring mcdc-checker to use libclang-17.so..."
-        python3 -c "
-import clang.cindex as cindex
-cindex.Config.set_library_file('$LIBCLANG_PATH')
-print('Clang library path configured: ', cindex.Config.library_path)
-"
         pipx install --system-site-packages mcdc-checker
 
     - name: Build with Coverage Flags
