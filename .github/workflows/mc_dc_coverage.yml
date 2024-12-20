@@ -39,14 +39,14 @@ jobs:
         wget https://apt.llvm.org/llvm.sh
         chmod +x llvm.sh
         ./llvm.sh 19
-        apt-get install -y clang-19 libclang-19-dev python3-clang
+        apt-get install -y clang-19 libclang-19-dev python3-clang-19
+        apt-get remove -y libclang-14-dev libclang-common-14-dev libclang1-14 libllvm14 python3-clang-14
         # Ensure Clang 19 is the default
         update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-19/bin/clang 100
         update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-19/bin/clang++ 100
         pipx install --system-site-packages mcdc-checker
-        # Add pipx binary directory to PATH manually
-        export PATH=$PATH:~/.local/bin
-        echo $PATH
+        pipx ensurepath
+
 
     - name: Verify Clang Installation
       run: |
@@ -103,16 +103,14 @@ jobs:
         print('Clang library file configured:', cindex.Config.library_file)
         "
     
-        echo "Testing Clang version in checker environment..."
-        clang --version || { echo 'Clang not found'; exit 1; }
-    
-        echo "Running mcdc-checker with debug logs..."
-        mcdc-checker -a -d -j $GITHUB_WORKSPACE/doc/coverage/mcdc_report.json \
+        echo "Running mcdc-checker..."
+        mcdc-checker -a -j $GITHUB_WORKSPACE/doc/coverage/mcdc_report.json \
           -I $GITHUB_WORKSPACE/include $(find $GITHUB_WORKSPACE/src -type f -name '*.c' | tr '\n' ' ') \
           > $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log 2>&1 || true
     
         echo "Displaying MC/DC Checker Output:"
         cat $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log
+
 
 
 
