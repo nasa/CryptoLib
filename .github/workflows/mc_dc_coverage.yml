@@ -30,16 +30,27 @@ jobs:
         DEBIAN_FRONTEND: noninteractive
         TZ: Etc/UTC
       run: |
+        echo "Installing dependencies..."
         apt-get update
-        apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 python3-pip python3-venv gcovr bc pipx
-        pipx install --system-site-packages mcdc-checker
-
-    - name: Install Clang Dependencies
-      run: |
-        echo "Installing Clang libraries and Python bindings..."
-        apt-get update
-        apt-get install -y clang libclang-dev
+        apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 python3-pip python3-venv \
+          gcovr bc pipx clang-17 libclang-17-dev
         pip install clang
+
+        echo "Setting up Clang library path..."
+        export LIBCLANG_PATH=$(find /usr/lib/llvm-17/lib -name "libclang-17.so" -print -quit)
+        if [ -z "$LIBCLANG_PATH" ]; then
+          echo "libclang-17.so not found!"
+          exit 1
+        fi
+        echo "libclang-17.so found at $LIBCLANG_PATH"
+
+        echo "Configuring mcdc-checker to use libclang-17.so..."
+        python3 -c "
+import clang.cindex as cindex
+cindex.Config.set_library_file('$LIBCLANG_PATH')
+print('Clang library path configured: ', cindex.Config.library_path)
+"
+        pipx install --system-site-packages mcdc-checker
 
     - name: Build with Coverage Flags
       run: |
@@ -60,6 +71,15 @@ jobs:
         curl -o doc/coverage/line-coverage-badge.svg "https://img.shields.io/badge/line%20coverage-${LINE_COVERAGE_PERCENT}%25-${LINE_COLOR}"
         curl -o doc/coverage/branch-coverage-badge.svg "https://img.shields.io/badge/branch%20coverage-${BRANCH_COVERAGE_PERCENT}%25-${BRANCH_COLOR}"
 
+    - name: Commit Coverage Badges
+      run: |
+        git config user.name "github-actions"
+        git config user.email "actions@github.com"
+        git add doc/coverage/line-coverage-badge.svg
+        git add doc/coverage/branch-coverage-badge.svg
+        git commit -m "Update coverage badges" || echo "No changes to commit"
+        git push origin HEAD
+
     - name: Run MC/DC Analysis
       run: |
         # Ensure the output directory exists
@@ -70,27 +90,9 @@ jobs:
         echo "Adding pipx path to PATH..."
         export PATH=$PATH:/github/home/.local/bin
 
-        # Ensure pipx path is properly set up
-        echo "Ensuring pipx path is added..."
-        pipx ensurepath || true
-        export PATH=$PATH:/github/home/.local/bin  # Re-export PATH for good measure
-
-        # Debug: Check pipx installation
-        echo "Checking pipx-installed binaries in /github/home/.local/bin"
-        ls -la /github/home/.local/bin || true
-
-        echo "Checking pipx environment:"
-        pipx list || true
-
         # Debug: Confirm mcdc-checker is available
         echo "Checking if mcdc-checker is available..."
         which mcdc-checker || { echo "mcdc-checker not found in PATH"; exit 1; }
-        echo "mcdc-checker is available; checking usage information..."
-        mcdc-checker --help || { echo "mcdc-checker usage check failed"; exit 1; }
-
-        # Debug: List all C source files
-        echo "Listing C source files:"
-        find $GITHUB_WORKSPACE/src -type f -name '*.c' -exec echo {} \;
 
         # Run mcdc-checker without failing the step
         echo "Running mcdc-checker..."
@@ -104,16 +106,3 @@ jobs:
         echo "Displaying MC/DC Checker Output:"
         cat $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log
       shell: bash
-
-
-    - name: Display MC/DC Checker Output
-      run: |
-        echo "Displaying MC/DC Checker Output:"
-        cat $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log
-      shell: bash
-
-    - name: Upload All Artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: all-artifacts
-        path: doc/coverage/
