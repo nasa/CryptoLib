@@ -85,11 +85,14 @@ jobs:
 
         # Run mcdc_checker on all .c files with debugging
         echo "Running mcdc_checker..."
+        set -e  # Enable 'exit on error'
+        set -o pipefail  # Ensure pipe failures are caught
         mcdc_checker -a -v -j $GITHUB_WORKSPACE/doc/coverage/mcdc_report.json \
           -I $GITHUB_WORKSPACE/include $(find $GITHUB_WORKSPACE/src -type f -name '*.c' | tr '\n' ' ') || {
           echo "mcdc_checker failed"; exit 1;
         }
-      shell: bash --noprofile --norc -e -o pipefail
+      shell: bash
+
 
 
     - name: Upload All Artifacts
