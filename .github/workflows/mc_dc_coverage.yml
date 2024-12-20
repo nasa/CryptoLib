@@ -25,22 +25,17 @@ jobs:
     - name: Configure Safe Directory
       run: git config --global --add safe.directory $GITHUB_WORKSPACE
 
-    - name: Install Dependencies
+    - name: Install Dependencies (Including Clang)
       env:
         DEBIAN_FRONTEND: noninteractive
-        TZ: Etc/UTC
       run: |
         echo "Installing dependencies..."
         apt-get update
-        apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 python3-pip python3-venv \
-          gcovr bc pipx
+        apt-get install -y \
+          lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat \
+          python3 python3-pip python3-venv gcovr bc pipx wget \
+          software-properties-common clang libclang-dev
         pipx install --system-site-packages mcdc-checker
-
-    - name: Set up Clang
-      uses: egor-tensin/setup-clang@v1
-      with:
-        version: latest
-        platform: x64
 
     - name: Verify Clang Installation
       run: |
@@ -63,8 +58,8 @@ jobs:
         BRANCH_COVERAGE=$(grep -oP '(?<=branch-rate=")[0-9.]+(?=")' doc/coverage/coverage_report.xml | head -n 1)
         LINE_COVERAGE_PERCENT=$(printf "%.0f" $(echo "$LINE_COVERAGE * 100" | bc))
         BRANCH_COVERAGE_PERCENT=$(printf "%.0f" $(echo "$BRANCH_COVERAGE * 100" | bc))
-        if [ "$LINE_COVERAGE_PERCENT" -ge 80 ]; then LINE_COLOR="brightgreen"; elif [ "$LINE_COVERAGE_PERCENT" -ge 50 ]; then LINE_COLOR="yellow"; else LINE_COLOR="red"; fi
-        if [ "$BRANCH_COVERAGE_PERCENT" -ge 80 ]; then BRANCH_COLOR="brightgreen"; elif [ "$BRANCH_COVERAGE_PERCENT" -ge 50 ]; then BRANCH_COLOR="yellow"; else BRANCH_COLOR="red"; fi
+        if [ "$LINE_COVERAGE_PERCENT" -ge 80 ]; then LINE_COLOR="brightgreen"; elif [ "$LINE_COVERAGE_PERCENT" -ge 50"; then LINE_COLOR="yellow"; else LINE_COLOR="red"; fi
+        if [ "$BRANCH_COVERAGE_PERCENT" -ge 80 ]; then BRANCH_COLOR="brightgreen"; elif [ "$BRANCH_COVERAGE_PERCENT" -ge 50"; then BRANCH_COLOR="yellow"; else BRANCH_COLOR="red"; fi
         curl -o doc/coverage/line-coverage-badge.svg "https://img.shields.io/badge/line%20coverage-${LINE_COVERAGE_PERCENT}%25-${LINE_COLOR}"
         curl -o doc/coverage/branch-coverage-badge.svg "https://img.shields.io/badge/branch%20coverage-${BRANCH_COVERAGE_PERCENT}%25-${BRANCH_COLOR}"
 
