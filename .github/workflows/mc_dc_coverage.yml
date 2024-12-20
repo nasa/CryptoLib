@@ -35,32 +35,31 @@ jobs:
           lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat \
           python3 python3-pip python3-venv gcovr bc pipx wget \
           software-properties-common
+        # Add the official LLVM repository and install Clang 19
         wget https://apt.llvm.org/llvm.sh
         chmod +x llvm.sh
         ./llvm.sh 19
-        apt-get install -y clang-19 libclang-19-dev python3-clang
+        apt-get install -y clang-19 libclang-19-dev python3-clang-19
+        apt-get remove -y libclang-14-dev libclang-common-14-dev libclang1-14 libllvm14 python3-clang-14
+        # Ensure Clang 19 is the default
         update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-19/bin/clang 100
         update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-19/bin/clang++ 100
         pipx install --system-site-packages mcdc-checker
         pipx ensurepath
-
-    # - name: Verify Clang Installation
-    #   run: |
-    #     echo "Checking clang binary..."
-    #     which clang || { echo "clang not found in PATH"; exit 1; }
-    #     echo "clang version:"
-    #     clang --version
-
-    # - name: Verify Clang Python Bindings
-    #   run: |
-    #     echo "Testing Clang Python bindings..."
-    #     python3 -c "import clang.cindex; print('Clang bindings are working')"
-
+    - name: Verify Clang Installation
+      run: |
+        echo "Checking clang binary..."
+        which clang || { echo "clang not found in PATH"; exit 1; }
+        echo "clang version:"
+        clang --version
+    - name: Verify Clang Python Bindings
+      run: |
+        echo "Testing Clang Python bindings..."
+        python3 -c "import clang.cindex; print('Clang bindings are working')"
     - name: Build with Coverage Flags
       run: |
         export CFLAGS="-fprofile-arcs -ftest-coverage -g"
         bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
-
     - name: Generate Coverage Report and Badges
       run: |
         mkdir -p doc/coverage
@@ -74,7 +73,6 @@ jobs:
         if [ "$BRANCH_COVERAGE_PERCENT" -ge 80 ]; then BRANCH_COLOR="brightgreen"; elif [ "$BRANCH_COVERAGE_PERCENT" -ge 50 ]; then BRANCH_COLOR="yellow"; else BRANCH_COLOR="red"; fi
         curl -o doc/coverage/line-coverage-badge.svg "https://img.shields.io/badge/line%20coverage-${LINE_COVERAGE_PERCENT}%25-${LINE_COLOR}"
         curl -o doc/coverage/branch-coverage-badge.svg "https://img.shields.io/badge/branch%20coverage-${BRANCH_COVERAGE_PERCENT}%25-${BRANCH_COLOR}"
-
     - name: Commit Coverage Badges
       run: |
         git config user.name "github-actions"
@@ -83,7 +81,6 @@ jobs:
         git add doc/coverage/branch-coverage-badge.svg
         git commit -m "Update coverage badges" || echo "No changes to commit"
         git push origin HEAD
-
     - name: Run MC/DC Analysis
       run: |
         echo "Setting up environment for MC/DC Checker..."
@@ -106,11 +103,15 @@ jobs:
           $(find $GITHUB_WORKSPACE/src -type f -name '*.c' | tr '\n' ' ') \
           $(find $GITHUB_WORKSPACE/test -type f -name '*.c' | tr '\n' ' ') \
           > $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log 2>&1 || true
-    # - name: Display MC/DC Checker Output
-    #   run: |
-    #     echo "Displaying MC/DC Checker Output:"
-    #     cat $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log
+    
+        echo "Displaying MC/DC Checker Output:"
+        cat $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log
 
+    - name: Display MC/DC Checker Output
+      run: |
+        echo "Displaying MC/DC Checker Output:"
+        cat $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log
+        
     - name: Archive Coverage Directory
       uses: actions/upload-artifact@v3
       with:
