@@ -35,14 +35,13 @@ jobs:
         apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 python3-pip python3-venv \
           gcovr bc pipx
         pipx install --system-site-packages mcdc-checker
-        pipx inject mcdc-checker clang
 
-    - name: Set up clang
-      uses: llvm/llvm-project@v1
+    - name: Install Clang
+      uses: actions/setup-clang@v1
       with:
-        version: "17"
+        version: '17' # Specify the Clang version to install
 
-    - name: Verify clang Installation
+    - name: Verify Clang Installation
       run: |
         echo "Checking clang binary..."
         which clang || { echo "clang not found in PATH"; exit 1; }
