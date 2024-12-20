@@ -87,8 +87,18 @@ jobs:
     - name: Run MC/DC Analysis
       run: |
         echo "Setting up environment for MC/DC Checker..."
-        export PATH=/usr/lib/llvm-19/bin:$PATH
+        export PATH=/usr/lib/llvm-19/bin:$HOME/.local/bin:$PATH
         export LD_LIBRARY_PATH=/usr/lib/llvm-19/lib:$LD_LIBRARY_PATH
+        export CC=/usr/lib/llvm-19/bin/clang
+        export CXX=/usr/lib/llvm-19/bin/clang++
+    
+        echo "Verifying Clang bindings..."
+        python3 -c "
+        import clang.cindex as cindex
+        cindex.Config.set_library_file('/usr/lib/llvm-19/lib/libclang.so')
+        print('Clang library file configured:', cindex.Config.library_file)
+        "
+    
         echo "Running mcdc-checker..."
         mcdc-checker -a -j $GITHUB_WORKSPACE/doc/coverage/mcdc_report.json \
           -I $GITHUB_WORKSPACE/include \
@@ -96,7 +106,6 @@ jobs:
           $(find $GITHUB_WORKSPACE/src -type f -name '*.c' | tr '\n' ' ') \
           $(find $GITHUB_WORKSPACE/test -type f -name '*.c' | tr '\n' ' ') \
           > $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log 2>&1 || true
-
     # - name: Display MC/DC Checker Output
     #   run: |
     #     echo "Displaying MC/DC Checker Output:"
