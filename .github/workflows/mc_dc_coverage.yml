@@ -67,6 +67,13 @@ jobs:
         # Ensure the output directory exists
         mkdir -p $GITHUB_WORKSPACE/doc/coverage
 
+        # Add pipx installation path to PATH
+        export PATH=$PATH:/github/home/.local/bin
+
+        # Debug: Confirm mcdc_checker is available
+        which mcdc_checker
+        mcdc_checker --version
+
         # Debug: List all C source files
         echo "C source files:"
         find $GITHUB_WORKSPACE/src -type f -name '*.c' -exec echo {} \;
@@ -74,6 +81,7 @@ jobs:
         # Run mcdc_checker on all .c files
         mcdc_checker -a -j $GITHUB_WORKSPACE/doc/coverage/mcdc_report.json \
           -I $GITHUB_WORKSPACE/include $(find $GITHUB_WORKSPACE/src -type f -name '*.c' | tr '\n' ' ')
+
 
     - name: Upload All Artifacts
       uses: actions/upload-artifact@v3
