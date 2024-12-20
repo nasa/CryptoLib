@@ -65,33 +65,40 @@ jobs:
     - name: Run MC/DC Analysis
       run: |
         # Ensure the output directory exists
+        echo "Creating coverage directory..."
         mkdir -p $GITHUB_WORKSPACE/doc/coverage
 
         # Add pipx installation path to PATH
+        echo "Adding pipx path to PATH..."
         export PATH=$PATH:/github/home/.local/bin
 
         # Ensure pipx path is properly set up
-        pipx ensurepath
-        export PATH=$PATH:/github/home/.local/bin  # Re-export in case ensurepath modifies it
+        echo "Ensuring pipx path is added..."
+        pipx ensurepath || true  # Prevent failure if already set
+        export PATH=$PATH:/github/home/.local/bin  # Re-export PATH for good measure
+
+        # Debug: Check pipx installation
+        echo "Checking pipx-installed binaries in /github/home/.local/bin"
+        ls -la /github/home/.local/bin || true
+
+        echo "Checking pipx environment:"
+        pipx list || true
 
         # Debug: Confirm mcdc_checker is available
         echo "Checking if mcdc_checker is available..."
-        which mcdc_checker || { echo "mcdc_checker not found in PATH"; exit 1; }
-        mcdc_checker --version || { echo "Failed to get mcdc_checker version"; exit 1; }
+        which mcdc_checker || echo "mcdc_checker not found in PATH"
 
-        # Debug: List all C source files
-        echo "Listing C source files:"
-        find $GITHUB_WORKSPACE/src -type f -name '*.c' -exec echo {} \;
-
-        # Run mcdc_checker on all .c files with debugging
-        echo "Running mcdc_checker..."
-        set -e  # Enable 'exit on error'
-        set -o pipefail  # Ensure pipe failures are caught
-        mcdc_checker -a -v -j $GITHUB_WORKSPACE/doc/coverage/mcdc_report.json \
-          -I $GITHUB_WORKSPACE/include $(find $GITHUB_WORKSPACE/src -type f -name '*.c' | tr '\n' ' ') || {
-          echo "mcdc_checker failed"; exit 1;
-        }
+        # Run mcdc_checker directly if available
+        if [ -f /github/home/.local/bin/mcdc_checker ]; then
+          echo "Running mcdc_checker from /github/home/.local/bin..."
+          /github/home/.local/bin/mcdc_checker -a -v -j $GITHUB_WORKSPACE/doc/coverage/mcdc_report.json \
+            -I $GITHUB_WORKSPACE/include $(find $GITHUB_WORKSPACE/src -type f -name '*.c' | tr '\n' ' ')
+        else
+          echo "mcdc_checker not found, failing the workflow."
+          exit 1
+        fi
       shell: bash
+
 
 
 
