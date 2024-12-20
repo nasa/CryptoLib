@@ -71,17 +71,21 @@ jobs:
         export PATH=$PATH:/github/home/.local/bin
 
         # Debug: Confirm mcdc_checker is available
-        which mcdc_checker
-        mcdc_checker --version
+        echo "Checking if mcdc_checker is available..."
+        which mcdc_checker || { echo "mcdc_checker not found in PATH"; exit 1; }
+        mcdc_checker --version || { echo "Failed to get mcdc_checker version"; exit 1; }
 
         # Debug: List all C source files
-        echo "C source files:"
+        echo "Listing C source files:"
         find $GITHUB_WORKSPACE/src -type f -name '*.c' -exec echo {} \;
 
-        # Run mcdc_checker on all .c files
-        mcdc_checker -a -j $GITHUB_WORKSPACE/doc/coverage/mcdc_report.json \
-          -I $GITHUB_WORKSPACE/include $(find $GITHUB_WORKSPACE/src -type f -name '*.c' | tr '\n' ' ')
-
+        # Run mcdc_checker on all .c files with debugging
+        echo "Running mcdc_checker..."
+        mcdc_checker -a -v -j $GITHUB_WORKSPACE/doc/coverage/mcdc_report.json \
+          -I $GITHUB_WORKSPACE/include $(find $GITHUB_WORKSPACE/src -type f -name '*.c' | tr '\n' ' ') || {
+          echo "mcdc_checker failed"; exit 1;
+        }
+      shell: bash
 
     - name: Upload All Artifacts
       uses: actions/upload-artifact@v3
