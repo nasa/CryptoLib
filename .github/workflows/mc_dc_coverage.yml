@@ -71,14 +71,16 @@ jobs:
 
     - name: Run MC/DC Analysis
       run: |
+        # Ensure the directory structure exists
+        mkdir -p $GITHUB_WORKSPACE/doc/coverage
         # Pull the mcdc_checker Docker image
         docker pull registry.gitlab.com/gtd-gmbh/mcdc-checker/mcdc-checker:latest
-        # Run the mcdc_checker container with the required input
+        # Run the mcdc_checker container
         docker run --rm -v $GITHUB_WORKSPACE:/workspace -w /workspace registry.gitlab.com/gtd-gmbh/mcdc-checker/mcdc-checker \
           mcdc_checker -a -j /workspace/doc/coverage/mcdc_report.json
 
-    - name: Upload MC/DC Report
+    - name: Upload All Artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: mcdc-report
-        path: doc/coverage/mcdc_report.json
+        name: all-artifacts
+        path: doc/coverage/
