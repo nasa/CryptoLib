@@ -25,7 +25,7 @@ jobs:
     - name: Configure Safe Directory
       run: git config --global --add safe.directory $GITHUB_WORKSPACE
 
-    - name: Install Dependencies 
+    - name: Install Dependencies (Including Clang and Python Bindings)
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
@@ -34,15 +34,13 @@ jobs:
         apt-get install -y \
           lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat \
           python3 python3-pip python3-venv gcovr bc pipx wget \
-          software-properties-common
-        # Add the official LLVM repository for the latest Clang
-        wget https://apt.llvm.org/llvm.sh
-        chmod +x llvm.sh
-        ./llvm.sh 19
-        apt-get install -y clang-19 libclang-19-dev
-        update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-19/bin/clang 100
-        update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-19/bin/clang++ 100
+          software-properties-common clang libclang-dev python3-clang
         pipx install --system-site-packages mcdc-checker
+
+    - name: Verify Clang Python Bindings
+      run: |
+        echo "Testing Clang Python bindings..."
+        python3 -c "import clang.cindex; print('Clang bindings are working')"
 
     - name: Verify Clang Installation
       run: |
@@ -50,11 +48,6 @@ jobs:
         which clang || { echo "clang not found in PATH"; exit 1; }
         echo "clang version:"
         clang --version
-
-    - name: Verify Clang Python Bindings
-      run: |
-        echo "Testing Clang Python bindings..."
-        python3 -c "import clang.cindex; print('Clang bindings are working')"
 
     - name: Build with Coverage Flags
       run: |
