@@ -44,7 +44,9 @@ jobs:
         update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-19/bin/clang 100
         update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-19/bin/clang++ 100
         pipx install --system-site-packages mcdc-checker
-        pipx ensurepath
+        # Add pipx binary directory to PATH manually
+        export PATH=$PATH:~/.local/bin
+        echo $PATH
 
     - name: Verify Clang Installation
       run: |
@@ -91,12 +93,11 @@ jobs:
         echo "Setting up environment for MC/DC Checker..."
         export PATH=/usr/lib/llvm-19/bin:$PATH
         export LD_LIBRARY_PATH=/usr/lib/llvm-19/lib:$LD_LIBRARY_PATH
+        export PATH=$PATH:~/.local/bin
         echo "Running mcdc-checker..."
         mcdc-checker -a -j $GITHUB_WORKSPACE/doc/coverage/mcdc_report.json \
           -I $GITHUB_WORKSPACE/include $(find $GITHUB_WORKSPACE/src -type f -name '*.c' | tr '\n' ' ') \
           > $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log 2>&1 || true
-
-
 
     - name: Display MC/DC Checker Output
       run: |
