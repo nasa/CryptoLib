@@ -74,13 +74,10 @@ jobs:
 
     - name: Run MC/DC Analysis
       run: |
-        echo "Creating coverage directory..."
-        mkdir -p $GITHUB_WORKSPACE/doc/coverage
-
         echo "Running mcdc-checker..."
         mcdc-checker -a -j $GITHUB_WORKSPACE/doc/coverage/mcdc_report.json \
           -I $GITHUB_WORKSPACE/include $(find $GITHUB_WORKSPACE/src -type f -name '*.c' | tr '\n' ' ') \
-          > $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log 2>&1 || true
+          > $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log
 
     - name: Display MC/DC Checker Output
       run: |
