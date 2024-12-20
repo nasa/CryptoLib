@@ -70,6 +70,10 @@ jobs:
         # Add pipx installation path to PATH
         export PATH=$PATH:/github/home/.local/bin
 
+        # Ensure pipx path is properly set up
+        pipx ensurepath
+        export PATH=$PATH:/github/home/.local/bin  # Re-export in case ensurepath modifies it
+
         # Debug: Confirm mcdc_checker is available
         echo "Checking if mcdc_checker is available..."
         which mcdc_checker || { echo "mcdc_checker not found in PATH"; exit 1; }
@@ -85,7 +89,8 @@ jobs:
           -I $GITHUB_WORKSPACE/include $(find $GITHUB_WORKSPACE/src -type f -name '*.c' | tr '\n' ' ') || {
           echo "mcdc_checker failed"; exit 1;
         }
-      shell: bash
+      shell: bash --noprofile --norc -e -o pipefail
+
 
     - name: Upload All Artifacts
       uses: actions/upload-artifact@v3
