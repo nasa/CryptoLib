@@ -84,23 +84,22 @@ jobs:
         echo "Checking pipx environment:"
         pipx list || true
 
-        # Debug: Confirm mcdc_checker is available
-        echo "Checking if mcdc_checker is available..."
-        which mcdc_checker || echo "mcdc_checker not found in PATH"
+        # Debug: Confirm mcdc-checker is available
+        echo "Checking if mcdc-checker is available..."
+        which mcdc-checker || { echo "mcdc-checker not found in PATH"; exit 1; }
+        mcdc-checker --version || { echo "Failed to get mcdc-checker version"; exit 1; }
 
-        # Run mcdc_checker directly if available
-        if [ -f /github/home/.local/bin/mcdc_checker ]; then
-          echo "Running mcdc_checker from /github/home/.local/bin..."
-          /github/home/.local/bin/mcdc_checker -a -v -j $GITHUB_WORKSPACE/doc/coverage/mcdc_report.json \
-            -I $GITHUB_WORKSPACE/include $(find $GITHUB_WORKSPACE/src -type f -name '*.c' | tr '\n' ' ')
-        else
-          echo "mcdc_checker not found, failing the workflow."
-          exit 1
-        fi
+        # Debug: List all C source files
+        echo "Listing C source files:"
+        find $GITHUB_WORKSPACE/src -type f -name '*.c' -exec echo {} \;
+
+        # Run mcdc-checker on all .c files with debugging
+        echo "Running mcdc-checker..."
+        mcdc-checker -a -v -j $GITHUB_WORKSPACE/doc/coverage/mcdc_report.json \
+          -I $GITHUB_WORKSPACE/include $(find $GITHUB_WORKSPACE/src -type f -name '*.c' | tr '\n' ' ') || {
+          echo "mcdc-checker failed"; exit 1;
+        }
       shell: bash
-
-
-
 
     - name: Upload All Artifacts
       uses: actions/upload-artifact@v3
