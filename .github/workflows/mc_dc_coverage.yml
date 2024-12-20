@@ -44,6 +44,7 @@ jobs:
     - name: Build with Coverage Flags
       run: |
         export CFLAGS="-fprofile-arcs -ftest-coverage -g"
+        export CXXFLAGS="-fprofile-arcs -ftest-coverage -g"
         bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
 
     - name: Generate Coverage Report and Badges
@@ -55,8 +56,8 @@ jobs:
         BRANCH_COVERAGE=$(grep -oP '(?<=branch-rate=")[0-9.]+(?=")' doc/coverage/coverage_report.xml | head -n 1)
         LINE_COVERAGE_PERCENT=$(printf "%.0f" $(echo "$LINE_COVERAGE * 100" | bc))
         BRANCH_COVERAGE_PERCENT=$(printf "%.0f" $(echo "$BRANCH_COVERAGE * 100" | bc))
-        if [ "$LINE_COVERAGE_PERCENT" -ge 80 ]; then LINE_COLOR="brightgreen"; elif [ "$LINE_COVERAGE_PERCENT" -ge 50 ]; then LINE_COLOR="yellow"; else LINE_COLOR="red"; fi
-        if [ "$BRANCH_COVERAGE_PERCENT" -ge 80 ]; then BRANCH_COLOR="brightgreen"; elif [ "$BRANCH_COVERAGE_PERCENT" -ge 50 ]; then BRANCH_COLOR="yellow"; else BRANCH_COLOR="red"; fi
+        if [ "$LINE_COVERAGE_PERCENT" -ge 80 ]; then LINE_COLOR="brightgreen"; elif [ "$LINE_COVERAGE_PERCENT" -ge 50"; then LINE_COLOR="yellow"; else LINE_COLOR="red"; fi
+        if [ "$BRANCH_COVERAGE_PERCENT" -ge 80 ]; then BRANCH_COLOR="brightgreen"; elif [ "$BRANCH_COVERAGE_PERCENT" -ge 50"; then BRANCH_COLOR="yellow"; else BRANCH_COLOR="red"; fi
         curl -o doc/coverage/line-coverage-badge.svg "https://img.shields.io/badge/line%20coverage-${LINE_COVERAGE_PERCENT}%25-${LINE_COLOR}"
         curl -o doc/coverage/branch-coverage-badge.svg "https://img.shields.io/badge/branch%20coverage-${BRANCH_COVERAGE_PERCENT}%25-${BRANCH_COLOR}"
 
@@ -71,13 +72,12 @@ jobs:
 
     - name: Run MC/DC Analysis
       run: |
-        # Ensure the directory structure exists
-        mkdir -p $GITHUB_WORKSPACE/doc/coverage
         # Pull the mcdc_checker Docker image
         docker pull registry.gitlab.com/gtd-gmbh/mcdc-checker/mcdc-checker:latest
-        # Run the mcdc_checker container
+
+        # Run mcdc_checker on source files
         docker run --rm -v $GITHUB_WORKSPACE:/workspace -w /workspace registry.gitlab.com/gtd-gmbh/mcdc-checker/mcdc-checker \
-          mcdc_checker -a -j /workspace/doc/coverage/mcdc_report.json
+          mcdc_checker -a -j /workspace/doc/coverage/mcdc_report.json /workspace/src
 
     - name: Upload All Artifacts
       uses: actions/upload-artifact@v3
