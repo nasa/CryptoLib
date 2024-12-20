@@ -76,17 +76,17 @@ jobs:
         mkdir -p $GITHUB_WORKSPACE/doc/coverage
         chmod -R 777 $GITHUB_WORKSPACE/doc/coverage  # Ensure write permissions
 
-        # Debug: List all C source files
-        echo "C source files:"
+        # Debug: List all C source files outside the container
+        echo "C source files on host:"
         find $GITHUB_WORKSPACE/src -type f -name '*.c' -exec echo {} \;
 
         # Pull the mcdc_checker Docker image
         docker pull registry.gitlab.com/gtd-gmbh/mcdc-checker/mcdc-checker:latest
 
-        # Run mcdc_checker on C source files
+        # Run mcdc_checker inside the container with consistent paths
         docker run --rm -v $GITHUB_WORKSPACE:/workspace -w /workspace registry.gitlab.com/gtd-gmbh/mcdc-checker/mcdc-checker \
           mcdc_checker -a -j /workspace/doc/coverage/mcdc_report.json \
-          -I /workspace/include $(find /workspace/src -type f -name '*.c' | tr '\n' ' ')
+          -I /workspace/include $(find $GITHUB_WORKSPACE/src -type f -name '*.c' | sed "s|$GITHUB_WORKSPACE|/workspace|g" | tr '\n' ' ')
 
     - name: Upload All Artifacts
       uses: actions/upload-artifact@v3
