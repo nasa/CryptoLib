@@ -103,15 +103,25 @@ jobs:
         echo "MC/DC Checker Output:"
         cat $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log
 
-        # Handle exit code
-        if [ $CHECKER_EXIT_CODE -eq 2 ]; then
-          echo "mcdc-checker found issues in the checked files."
-          exit 0  # Do not fail the workflow, since this is expected behavior
-        elif [ $CHECKER_EXIT_CODE -ne 0 ]; then
-          echo "mcdc-checker failed with exit code $CHECKER_EXIT_CODE"
-          exit $CHECKER_EXIT_CODE
-        fi
+        # Handle exit codes
+        case $CHECKER_EXIT_CODE in
+          0)
+            echo "mcdc-checker completed successfully."
+            ;;
+          2)
+            echo "mcdc-checker found issues in the checked files."
+            ;;
+          1|3)
+            echo "mcdc-checker failed with critical errors (exit code: $CHECKER_EXIT_CODE)."
+            exit $CHECKER_EXIT_CODE
+            ;;
+          *)
+            echo "mcdc-checker returned an unexpected exit code: $CHECKER_EXIT_CODE."
+            exit $CHECKER_EXIT_CODE
+            ;;
+        esac
       shell: bash
+
 
     - name: Upload All Artifacts
       uses: actions/upload-artifact@v3
