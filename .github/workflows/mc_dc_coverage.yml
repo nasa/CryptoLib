@@ -1,4 +1,4 @@
-name: CryptoLib Coverage
+name: CryptoLib Coverage and MC/DC Analysis
 
 on:
   push:
@@ -31,7 +31,7 @@ jobs:
         TZ: Etc/UTC
       run: |
         apt-get update
-        apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 gcovr bc
+        apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 gcovr bc docker.io
         pip install pycryptodome
         curl -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 -o /tmp/libgpg-error-1.50.tar.bz2
         tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/
@@ -40,45 +40,26 @@ jobs:
         tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/
         cd /tmp/libgcrypt-1.11.0 && ./configure && make install
         ldconfig
-    - name: Fix Detached HEAD State
-      run: git checkout -B ${GITHUB_REF##*/}
 
     - name: Build with Coverage Flags
       run: |
         export CFLAGS="-fprofile-arcs -ftest-coverage -g"
         bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
+
     - name: Generate Coverage Report and Badges
       run: |
         mkdir -p doc/coverage
         gcovr --branches --xml-pretty --exclude-unreachable-branches -o doc/coverage/coverage_report.xml
         gcovr --branches --html --html-details -o doc/coverage/coverage_report.html
-        # Extract overall coverage metrics from the root <coverage> tag
         LINE_COVERAGE=$(grep -oP '(?<=<coverage line-rate=")[0-9.]+(?=")' doc/coverage/coverage_report.xml | head -n 1)
         BRANCH_COVERAGE=$(grep -oP '(?<=branch-rate=")[0-9.]+(?=")' doc/coverage/coverage_report.xml | head -n 1)
-        # Convert to percentages
         LINE_COVERAGE_PERCENT=$(printf "%.0f" $(echo "$LINE_COVERAGE * 100" | bc))
         BRANCH_COVERAGE_PERCENT=$(printf "%.0f" $(echo "$BRANCH_COVERAGE * 100" | bc))
-        # Debug extracted values
-        echo "Line Coverage: $LINE_COVERAGE_PERCENT%"
-        echo "Branch Coverage: $BRANCH_COVERAGE_PERCENT%"
-        # Determine colors based on coverage percentages
-        if [ "$LINE_COVERAGE_PERCENT" -ge 80 ]; then
-            LINE_COLOR="brightgreen"
-        elif [ "$LINE_COVERAGE_PERCENT" -ge 50 ]; then
-            LINE_COLOR="yellow"
-        else
-            LINE_COLOR="red"
-        fi
-        if [ "$BRANCH_COVERAGE_PERCENT" -ge 80 ]; then
-            BRANCH_COLOR="brightgreen"
-        elif [ "$BRANCH_COVERAGE_PERCENT" -ge 50 ]; then
-            BRANCH_COLOR="yellow"
-        else
-            BRANCH_COLOR="red"
-        fi
-        # Generate badges with dynamic colors
+        if [ "$LINE_COVERAGE_PERCENT" -ge 80 ]; then LINE_COLOR="brightgreen"; elif [ "$LINE_COVERAGE_PERCENT" -ge 50 ]; then LINE_COLOR="yellow"; else LINE_COLOR="red"; fi
+        if [ "$BRANCH_COVERAGE_PERCENT" -ge 80 ]; then BRANCH_COLOR="brightgreen"; elif [ "$BRANCH_COVERAGE_PERCENT" -ge 50 ]; then BRANCH_COLOR="yellow"; else BRANCH_COLOR="red"; fi
         curl -o doc/coverage/line-coverage-badge.svg "https://img.shields.io/badge/line%20coverage-${LINE_COVERAGE_PERCENT}%25-${LINE_COLOR}"
         curl -o doc/coverage/branch-coverage-badge.svg "https://img.shields.io/badge/branch%20coverage-${BRANCH_COVERAGE_PERCENT}%25-${BRANCH_COLOR}"
+
     - name: Commit Coverage Badges
       run: |
         git config user.name "github-actions"
@@ -87,8 +68,17 @@ jobs:
         git add doc/coverage/branch-coverage-badge.svg
         git commit -m "Update coverage badges" || echo "No changes to commit"
         git push origin HEAD
-    - name: Upload Coverage Report
+
+    - name: Run MC/DC Analysis
+      run: |
+        # Pull the mcdc_checker Docker image
+        docker pull registry.gitlab.com/gtd-gmbh/mcdc-checker/mcdc-checker:latest
+        # Run the mcdc_checker container with the required input
+        docker run --rm -v $GITHUB_WORKSPACE:/workspace -w /workspace registry.gitlab.com/gtd-gmbh/mcdc-checker/mcdc-checker \
+          mcdc_checker -a -j /workspace/doc/coverage/mcdc_report.json
+
+    - name: Upload MC/DC Report
       uses: actions/upload-artifact@v3
       with:
-        name: coverage-report
-        path: doc/coverage
+        name: mcdc-report
+        path: doc/coverage/mcdc_report.json
