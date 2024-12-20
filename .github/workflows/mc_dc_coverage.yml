@@ -36,10 +36,10 @@ jobs:
           gcovr bc pipx
         pipx install --system-site-packages mcdc-checker
 
-    - name: Install Clang
-      uses: actions/setup-clang@v1
+    - name: Set up Clang
+      uses: egor-tensin/setup-clang@v1
       with:
-        version: '17' # Specify the Clang version to install
+        version: 17
 
     - name: Verify Clang Installation
       run: |
