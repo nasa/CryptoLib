@@ -25,7 +25,7 @@ jobs:
     - name: Configure Safe Directory
       run: git config --global --add safe.directory $GITHUB_WORKSPACE
 
-    - name: Install Dependencies (Including Clang)
+    - name: Install Dependencies (Including Clang and Python Bindings)
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
@@ -34,16 +34,20 @@ jobs:
         apt-get install -y \
           lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat \
           python3 python3-pip python3-venv gcovr bc pipx wget \
-          software-properties-common clang libclang-dev
+          software-properties-common clang libclang-dev python3-clang
         pipx install --system-site-packages mcdc-checker
 
-    - name: Ensure Pipx Binaries in Path
+    - name: Verify Clang Python Bindings
       run: |
-        echo "Ensuring pipx binary directory is in PATH..."
-        export PATH=$PATH:$HOME/.local/bin
-        echo "PATH updated: $PATH"
-        which mcdc-checker || { echo "mcdc-checker not found in PATH"; exit 1; }
-        mcdc-checker --version || { echo "Failed to verify mcdc-checker installation"; exit 1; }
+        echo "Testing Clang Python bindings..."
+        python3 -c "import clang.cindex; print('Clang bindings are working')"
+
+    - name: Verify Clang Installation
+      run: |
+        echo "Checking clang binary..."
+        which clang || { echo "clang not found in PATH"; exit 1; }
+        echo "clang version:"
+        clang --version
 
     - name: Build with Coverage Flags
       run: |
