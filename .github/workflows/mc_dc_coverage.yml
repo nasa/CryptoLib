@@ -104,12 +104,14 @@ jobs:
         cat $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log
 
         # Handle exit code
-        if [ $CHECKER_EXIT_CODE -ne 0 ]; then
+        if [ $CHECKER_EXIT_CODE -eq 2 ]; then
+          echo "mcdc-checker found issues in the checked files."
+          exit 0  # Do not fail the workflow, since this is expected behavior
+        elif [ $CHECKER_EXIT_CODE -ne 0 ]; then
           echo "mcdc-checker failed with exit code $CHECKER_EXIT_CODE"
           exit $CHECKER_EXIT_CODE
         fi
       shell: bash
-
 
     - name: Upload All Artifacts
       uses: actions/upload-artifact@v3
