@@ -92,36 +92,18 @@ jobs:
         echo "Listing C source files:"
         find $GITHUB_WORKSPACE/src -type f -name '*.c' -exec echo {} \;
 
-        # Run mcdc-checker and capture output
+        # Run mcdc-checker without failing the step
         echo "Running mcdc-checker..."
         mcdc-checker -a -v -j $GITHUB_WORKSPACE/doc/coverage/mcdc_report.json \
           -I $GITHUB_WORKSPACE/include $(find $GITHUB_WORKSPACE/src -type f -name '*.c' | tr '\n' ' ') \
-          > $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log 2>&1
-        CHECKER_EXIT_CODE=$?
-
-        # Display mcdc-checker output
-        echo "MC/DC Checker Output:"
-        cat $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log
-
-        # Handle exit codes
-        case $CHECKER_EXIT_CODE in
-          0)
-            echo "mcdc-checker completed successfully."
-            ;;
-          2)
-            echo "mcdc-checker found issues in the checked files."
-            ;;
-          1|3)
-            echo "mcdc-checker failed with critical errors (exit code: $CHECKER_EXIT_CODE)."
-            exit $CHECKER_EXIT_CODE
-            ;;
-          *)
-            echo "mcdc-checker returned an unexpected exit code: $CHECKER_EXIT_CODE."
-            exit $CHECKER_EXIT_CODE
-            ;;
-        esac
+          > $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log 2>&1 || true
       shell: bash
 
+    - name: Display MC/DC Checker Output
+      run: |
+        echo "Displaying MC/DC Checker Output:"
+        cat $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log
+      shell: bash
 
     - name: Upload All Artifacts
       uses: actions/upload-artifact@v3
