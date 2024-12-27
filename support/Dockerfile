@@ -57,7 +57,8 @@ RUN curl \
     && tar -xjf /tmp/libgcrypt-${GCRYPT_VERSION}.tar.bz2 -C /tmp/ \
     && cd /tmp/libgcrypt-${GCRYPT_VERSION} \
     && ./configure \
-    && make install
+    && make install \
+    && ldconfig
 
 FROM cl1 AS cl2
 ARG WOLFSSL_VERSION=5.6.0-stable

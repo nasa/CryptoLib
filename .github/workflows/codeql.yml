@@ -22,7 +22,7 @@ jobs:
     name: Analyze Build_Internal
     runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
     container:
-        image: ivvitc/cryptolib:20240814
+        image: ivvitc/cryptolib:20241220
     permissions:
       # required for all workflows
       security-events: write
@@ -74,7 +74,7 @@ jobs:
       name: Analyze Build_Minimal
       runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
       container:
-        image: ivvitc/cryptolib:20240814
+        image: ivvitc/cryptolib:20241220
       permissions:
         # required for all workflows
         security-events: write
@@ -126,7 +126,7 @@ jobs:
       name: Analyze Build_Wolf
       runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
       container:
-        image: ivvitc/cryptolib:20240814
+        image: ivvitc/cryptolib:20241220
       permissions:
         # required for all workflows
         security-events: write
@@ -207,7 +207,7 @@ jobs:
       name: Analyze Build_RHEL
       runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
       container:
-        image: ivvitc/cryptolib:20240814
+        image: ivvitc/cryptolib:20241220
       permissions:
         # required for all workflows
         security-events: write
@@ -259,7 +259,7 @@ jobs:
     name: Analyze Build_EP
     runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
     container:
-        image: ivvitc/cryptolib:20240814
+        image: ivvitc/cryptolib:20241220
     permissions:
       # required for all workflows
       security-events: write

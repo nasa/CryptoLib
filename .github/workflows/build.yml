@@ -12,7 +12,7 @@ jobs:
     # Container Setup
     runs-on: ubuntu-latest
     container:
-        image: ivvitc/cryptolib:20240814
+        image: ivvitc/cryptolib:20241220
     steps:
     - uses: actions/checkout@v4
     - name: Update
@@ -51,7 +51,7 @@ jobs:
     # Container Setup
     runs-on: ubuntu-latest
     container:
-        image: ivvitc/cryptolib:20240814
+        image: ivvitc/cryptolib:20241220
     steps:
     - uses: actions/checkout@v4
     - name: Update
@@ -151,7 +151,7 @@ jobs:
     # Container Setup
     runs-on: ubuntu-latest
     container:
-        image: ivvitc/cryptolib:20240814
+        image: ivvitc/cryptolib:20241220
     steps:
     - uses: actions/checkout@v4
     - name: Update
@@ -277,7 +277,7 @@ jobs:
     # Container Setup
     runs-on: ubuntu-latest
     container:
-        image: ivvitc/cryptolib:20240814
+        image: ivvitc/cryptolib:20241220
     steps:
     - uses: actions/checkout@v4
     - name: Update
