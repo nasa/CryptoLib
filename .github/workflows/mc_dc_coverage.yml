@@ -33,8 +33,7 @@ jobs:
         apt-get update
         apt-get install -y \
           lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat \
-          python3 python3-pip bc build-essential cmake git
-        pip install --upgrade pip
+          python3 bc build-essential cmake git
         git clone https://github.com/nist-sws/mcdc-star.git
         cd mcdc-star
         mkdir build
