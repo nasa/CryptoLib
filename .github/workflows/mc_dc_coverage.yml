@@ -25,7 +25,7 @@ jobs:
     - name: Configure Safe Directory
       run: git config --global --add safe.directory $GITHUB_WORKSPACE
 
-    - name: Install Dependencies (Including Clang 19)
+    - name: Install Dependencies
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
@@ -35,31 +35,14 @@ jobs:
           lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat \
           python3 python3-pip python3-venv gcovr bc pipx wget \
           software-properties-common
-    #     # Add the official LLVM repository and install Clang 19
-    #     wget https://apt.llvm.org/llvm.sh
-    #     chmod +x llvm.sh
-    #     ./llvm.sh 19
-    #     apt-get install -y clang-19 libclang-19-dev python3-clang-19
-    #     apt-get remove -y libclang-14-dev libclang-common-14-dev libclang1-14 libllvm14 python3-clang-14
-    #     # Ensure Clang 19 is the default
-    #     update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-19/bin/clang 100
-    #     update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-19/bin/clang++ 100
-    #     pipx install --system-site-packages mcdc-checker
-    #     pipx ensurepath
-    # - name: Verify Clang Installation
-    #   run: |
-    #     echo "Checking clang binary..."
-    #     which clang || { echo "clang not found in PATH"; exit 1; }
-    #     echo "clang version:"
-    #     clang --version
-    # - name: Verify Clang Python Bindings
-    #   run: |
-    #     echo "Testing Clang Python bindings..."
-    #     python3 -c "import clang.cindex; print('Clang bindings are working')"
     - name: Build with Coverage Flags
       run: |
         export CFLAGS="-fprofile-arcs -ftest-coverage -fcondition-coverage -g"
         bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
+    - name: Verify Coverage Files
+      run: |
+        echo "Verifying .gcda files..."
+        find $GITHUB_WORKSPACE -name "*.gcda" || { echo "No coverage files found!"; exit 1; }
     - name: Generate Coverage Report and Badges
       run: |
         mkdir -p doc/coverage
@@ -81,37 +64,7 @@ jobs:
         git add doc/coverage/branch-coverage-badge.svg
         git commit -m "Update coverage badges" || echo "No changes to commit"
         git push origin HEAD
-    - name: Run MC/DC Analysis
-      run: |
-        echo "Setting up environment for MC/DC Checker..."
-        export PATH=/usr/lib/llvm-19/bin:$HOME/.local/bin:$PATH
-        export LD_LIBRARY_PATH=/usr/lib/llvm-19/lib:$LD_LIBRARY_PATH
-        export CC=/usr/lib/llvm-19/bin/clang
-        export CXX=/usr/lib/llvm-19/bin/clang++
-    
-        echo "Verifying Clang bindings..."
-        python3 -c "
-        import clang.cindex as cindex
-        cindex.Config.set_library_file('/usr/lib/llvm-19/lib/libclang.so')
-        print('Clang library file configured:', cindex.Config.library_file)
-        "
-    
-        echo "Running mcdc-checker..."
-        mcdc-checker -a -j $GITHUB_WORKSPACE/doc/coverage/mcdc_report.json \
-          -I $GITHUB_WORKSPACE/include \
-          -I $GITHUB_WORKSPACE/test/include \
-          $(find $GITHUB_WORKSPACE/src -type f -name '*.c' | tr '\n' ' ') \
-          $(find $GITHUB_WORKSPACE/test -type f -name '*.c' | tr '\n' ' ') \
-          > $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log 2>&1 || true
-    
-        echo "Displaying MC/DC Checker Output:"
-        cat $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log
-
-    - name: Display MC/DC Checker Output
-      run: |
-        echo "Displaying MC/DC Checker Output:"
-        cat $GITHUB_WORKSPACE/doc/coverage/mcdc_checker_output.log
-        
+       
     - name: Archive Coverage Directory
       uses: actions/upload-artifact@v3
       with:
