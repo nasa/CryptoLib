@@ -25,43 +25,50 @@ jobs:
     - name: Configure Safe Directory
       run: git config --global --add safe.directory $GITHUB_WORKSPACE
 
-    - name: Install GNATcoverage and Dependencies
+    - name: Install Dependencies and MCDC-Star
+      env:
+        DEBIAN_FRONTEND: noninteractive
       run: |
-        echo "Installing GNAT and dependencies..."
+        echo "Installing project dependencies and MCDC-Star..."
         apt-get update
-        apt-get install -y gnat gprbuild
-        echo "GNATcoverage installation completed."
+        apt-get install -y \
+          lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat \
+          python3 python3-pip bc build-essential cmake git
+        pip install --upgrade pip
+        git clone https://github.com/nist-sws/mcdc-star.git
+        cd mcdc-star
+        mkdir build
+        cd build
+        cmake ..
+        make
+        echo "Dependencies and MCDC-Star installed successfully."
 
-    - name: Build and Run Tests with Coverage Instrumentation
+    - name: Build and Run Tests with Instrumentation
       run: |
         echo "Building the project and running tests with instrumentation..."
-        export CFLAGS="-fprofile-arcs -ftest-coverage"
+        export CFLAGS="-fprofile-arcs -ftest-coverage -g"
         bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
         echo "Build and test execution completed."
 
-    - name: Perform GNATcoverage Analysis
+    - name: Analyze MC/DC Coverage with MCDC-Star
       run: |
-        echo "Running GNATcoverage for MC/DC analysis..."
+        echo "Analyzing MC/DC coverage using MCDC-Star..."
         mkdir -p doc/coverage
-        gnatcov coverage --level=stmt+mcdc \
-                         --annotate=xcov \
-                         --annotate=html \
-                         --output-dir=doc/coverage \
-                         --instrumented-dir=build_output_directory
-        echo "GNATcoverage analysis completed."
+        cd mcdc-star/build
+        ./mcdc_star --input $GITHUB_WORKSPACE --output $GITHUB_WORKSPACE/doc/coverage/mcdc_report.txt
+        echo "MC/DC analysis completed. Report available at doc/coverage/mcdc_report.txt"
 
-    - name: Generate GNATcoverage Reports
+    - name: Generate Line and Branch Coverage Reports
       run: |
-        echo "Generating GNATcoverage reports..."
-        gnatcov report --level=stmt+mcdc \
-                       --output-dir=doc/coverage \
-                       --annotate=html --annotate=text
-        echo "Report generation completed."
+        echo "Generating line and branch coverage reports..."
+        mkdir -p doc/coverage
+        gcovr --xml-pretty -o doc/coverage/coverage_report.xml
+        gcovr --html --html-details -o doc/coverage/coverage_report.html
+        echo "Coverage reports generated."
 
     - name: Generate Coverage Badges
       run: |
         echo "Generating coverage badges..."
-        mkdir -p doc/coverage
         LINE_COVERAGE=$(grep -oP '(?<=<coverage line-rate=")[0-9.]+(?=")' doc/coverage/coverage_report.xml | head -n 1)
         BRANCH_COVERAGE=$(grep -oP '(?<=branch-rate=")[0-9.]+(?=")' doc/coverage/coverage_report.xml | head -n 1)
         LINE_COVERAGE_PERCENT=$(printf "%.0f" $(echo "$LINE_COVERAGE * 100" | bc))
@@ -76,11 +83,11 @@ jobs:
         git config user.name "github-actions"
         git config user.email "actions@github.com"
         git add doc/coverage/
-        git commit -m "Update GNATcoverage reports and badges" || echo "No changes to commit"
+        git commit -m "Update MC/DC coverage reports and badges" || echo "No changes to commit"
         git push origin HEAD
 
     - name: Archive Coverage Reports
       uses: actions/upload-artifact@v3
       with:
-        name: gnat-coverage-reports
+        name: mcdc-coverage-reports
         path: doc/coverage
