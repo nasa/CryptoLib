@@ -15,7 +15,7 @@ jobs:
   coverage:
     runs-on: ubuntu-latest
     container:
-      image: ivvitc/cryptolib:20240814
+      image: ivvitc/cryptolib:20250102
 
     steps:
     - uses: actions/checkout@v4
@@ -58,7 +58,7 @@ jobs:
         python3 -c "import clang.cindex; print('Clang bindings are working')"
     - name: Build with Coverage Flags
       run: |
-        export CFLAGS="-fprofile-arcs -ftest-coverage -g"
+        export CFLAGS="-fprofile-arcs -ftest-coverage -fcondition-coverage -g"
         bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
     - name: Generate Coverage Report and Badges
       run: |
