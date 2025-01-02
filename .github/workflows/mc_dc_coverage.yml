@@ -33,7 +33,7 @@ jobs:
         apt-get update
         apt-get install -y \
           lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat \
-          python3 python3-pip python3-venv gcov gcovr bc pipx wget \
+          python3 python3-pip python3-venv gcovr bc pipx wget \
           software-properties-common
     #     # Add the official LLVM repository and install Clang 19
     #     wget https://apt.llvm.org/llvm.sh
