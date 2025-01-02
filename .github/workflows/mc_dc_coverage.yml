@@ -35,6 +35,11 @@ jobs:
           lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat \
           python3 python3-pip python3-venv gcovr bc pipx wget \
           software-properties-common
+    - name: Verify GCov Versions
+      run: |
+        gcovr --version
+        gcov --version
+        gcc --version
     - name: Build with Coverage Flags
       run: |
         export CFLAGS="-fprofile-arcs -ftest-coverage -fcondition-coverage -g"
