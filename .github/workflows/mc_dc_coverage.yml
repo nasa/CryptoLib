@@ -25,52 +25,43 @@ jobs:
     - name: Configure Safe Directory
       run: git config --global --add safe.directory $GITHUB_WORKSPACE
 
-    - name: Install Dependencies Locally
-      env:
-        DEBIAN_FRONTEND: noninteractive
+    - name: Install GNATcoverage and Dependencies
       run: |
-        echo "Installing dependencies..."
-        apt-get update && apt-get install -y \
-          lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat \
-          python3 python3-pip python3-venv gcovr bc wget cmake make git
-        # Install local dependencies
-        mkdir -p local_tools
-        cd local_tools
-        # Clone and build Coveron
-        git clone https://github.com/coveron/coveron.git
-        cd coveron
-        mkdir build
-        cd build
-        cmake .. -DCMAKE_INSTALL_PREFIX=$HOME/.local
-        make
-        make install
-        cd ../../..
+        echo "Installing GNAT and dependencies..."
+        apt-get update
+        apt-get install -y gnat gprbuild
+        echo "GNATcoverage installation completed."
 
-    - name: Update PATH for Local Tools
+    - name: Build and Run Tests with Coverage Instrumentation
       run: |
-        echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-    - name: Verify GCov Versions
-      run: |
-        gcovr --version
-        gcov --version
-        gcc --version
-
-    - name: Build with Coverage Flags
-      run: |
-        export CFLAGS="-fprofile-arcs -ftest-coverage -fcondition-coverage -g"
+        echo "Building the project and running tests with instrumentation..."
+        export CFLAGS="-fprofile-arcs -ftest-coverage"
         bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
+        echo "Build and test execution completed."
 
-    - name: Verify Coverage Files
+    - name: Perform GNATcoverage Analysis
       run: |
-        echo "Verifying .gcda files..."
-        find $GITHUB_WORKSPACE -name "*.gcda" || { echo "No coverage files found!"; exit 1; }
-
-    - name: Generate Coverage Report
-      run: |
+        echo "Running GNATcoverage for MC/DC analysis..."
         mkdir -p doc/coverage
-        gcovr --verbose --txt-metric branch --xml-pretty --exclude-unreachable-branches -o doc/coverage/coverage_report.xml
-        gcovr --verbose --txt-metric branch --html --html-details -o doc/coverage/coverage_report.html
+        gnatcov coverage --level=stmt+mcdc \
+                         --annotate=xcov \
+                         --annotate=html \
+                         --output-dir=doc/coverage \
+                         --instrumented-dir=build_output_directory
+        echo "GNATcoverage analysis completed."
+
+    - name: Generate GNATcoverage Reports
+      run: |
+        echo "Generating GNATcoverage reports..."
+        gnatcov report --level=stmt+mcdc \
+                       --output-dir=doc/coverage \
+                       --annotate=html --annotate=text
+        echo "Report generation completed."
+
+    - name: Generate Coverage Badges
+      run: |
+        echo "Generating coverage badges..."
+        mkdir -p doc/coverage
         LINE_COVERAGE=$(grep -oP '(?<=<coverage line-rate=")[0-9.]+(?=")' doc/coverage/coverage_report.xml | head -n 1)
         BRANCH_COVERAGE=$(grep -oP '(?<=branch-rate=")[0-9.]+(?=")' doc/coverage/coverage_report.xml | head -n 1)
         LINE_COVERAGE_PERCENT=$(printf "%.0f" $(echo "$LINE_COVERAGE * 100" | bc))
@@ -80,21 +71,16 @@ jobs:
         curl -o doc/coverage/line-coverage-badge.svg "https://img.shields.io/badge/line%20coverage-${LINE_COVERAGE_PERCENT}%25-${LINE_COLOR}"
         curl -o doc/coverage/branch-coverage-badge.svg "https://img.shields.io/badge/branch%20coverage-${BRANCH_COVERAGE_PERCENT}%25-${BRANCH_COLOR}"
 
-    - name: Analyze MC/DC Coverage
-      run: |
-        mkdir -p doc/coverage/mcdc
-        $HOME/.local/bin/coveron --input $GITHUB_WORKSPACE --output doc/coverage/mcdc/mcdc_report
-
-    - name: Commit Coverage Reports
+    - name: Commit and Upload Coverage Reports
       run: |
         git config user.name "github-actions"
         git config user.email "actions@github.com"
         git add doc/coverage/
-        git commit -m "Update coverage reports and MC/DC results" || echo "No changes to commit"
+        git commit -m "Update GNATcoverage reports and badges" || echo "No changes to commit"
         git push origin HEAD
 
-    - name: Archive Coverage Directory
+    - name: Archive Coverage Reports
       uses: actions/upload-artifact@v3
       with:
-        name: coverage-artifacts
+        name: gnat-coverage-reports
         path: doc/coverage
