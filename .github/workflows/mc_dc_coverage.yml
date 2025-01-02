@@ -25,30 +25,48 @@ jobs:
     - name: Configure Safe Directory
       run: git config --global --add safe.directory $GITHUB_WORKSPACE
 
-    - name: Install Dependencies
+    - name: Install Dependencies Locally
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
         echo "Installing dependencies..."
-        apt-get update
-        apt-get install -y \
+        apt-get update && apt-get install -y \
           lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat \
-          python3 python3-pip python3-venv gcovr bc pipx wget \
-          software-properties-common
+          python3 python3-pip python3-venv gcovr bc wget cmake make git
+        # Install local dependencies
+        mkdir -p local_tools
+        cd local_tools
+        # Clone and build Coveron
+        git clone https://github.com/coveron/coveron.git
+        cd coveron
+        mkdir build
+        cd build
+        cmake .. -DCMAKE_INSTALL_PREFIX=$HOME/.local
+        make
+        make install
+        cd ../../..
+
+    - name: Update PATH for Local Tools
+      run: |
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
     - name: Verify GCov Versions
       run: |
         gcovr --version
         gcov --version
         gcc --version
+
     - name: Build with Coverage Flags
       run: |
         export CFLAGS="-fprofile-arcs -ftest-coverage -fcondition-coverage -g"
         bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
+
     - name: Verify Coverage Files
       run: |
         echo "Verifying .gcda files..."
         find $GITHUB_WORKSPACE -name "*.gcda" || { echo "No coverage files found!"; exit 1; }
-    - name: Generate Coverage Report and Badges
+
+    - name: Generate Coverage Report
       run: |
         mkdir -p doc/coverage
         gcovr --verbose --txt-metric branch --xml-pretty --exclude-unreachable-branches -o doc/coverage/coverage_report.xml
@@ -61,15 +79,20 @@ jobs:
         if [ "$BRANCH_COVERAGE_PERCENT" -ge 80 ]; then BRANCH_COLOR="brightgreen"; elif [ "$BRANCH_COVERAGE_PERCENT" -ge 50 ]; then BRANCH_COLOR="yellow"; else BRANCH_COLOR="red"; fi
         curl -o doc/coverage/line-coverage-badge.svg "https://img.shields.io/badge/line%20coverage-${LINE_COVERAGE_PERCENT}%25-${LINE_COLOR}"
         curl -o doc/coverage/branch-coverage-badge.svg "https://img.shields.io/badge/branch%20coverage-${BRANCH_COVERAGE_PERCENT}%25-${BRANCH_COLOR}"
-    - name: Commit Coverage Badges
+
+    - name: Analyze MC/DC Coverage
+      run: |
+        mkdir -p doc/coverage/mcdc
+        $HOME/.local/bin/coveron --input $GITHUB_WORKSPACE --output doc/coverage/mcdc/mcdc_report
+
+    - name: Commit Coverage Reports
       run: |
         git config user.name "github-actions"
         git config user.email "actions@github.com"
-        git add doc/coverage/line-coverage-badge.svg
-        git add doc/coverage/branch-coverage-badge.svg
-        git commit -m "Update coverage badges" || echo "No changes to commit"
+        git add doc/coverage/
+        git commit -m "Update coverage reports and MC/DC results" || echo "No changes to commit"
         git push origin HEAD
-       
+
     - name: Archive Coverage Directory
       uses: actions/upload-artifact@v3
       with:
