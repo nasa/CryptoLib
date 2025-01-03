@@ -44,7 +44,8 @@ RUN apt-get update -y \
     && rm -rf /var/lib/apt/lists/* 
 
 RUN ldconfig \
-    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 60
+    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 60 \
+    && update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-14 60
 
 FROM cl0 AS cl1
 ARG GPG_ERROR_VERSION=1.50
