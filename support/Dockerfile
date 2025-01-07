@@ -17,7 +17,7 @@
 # 
 
 ARG WOLFSSL_VERSION=5.6.0-stable
-FROM ubuntu:latest AS cl0
+FROM ubuntu:noble-20241118.1 AS cl0
 
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -y \
