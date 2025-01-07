@@ -17,19 +17,21 @@
 # 
 
 ARG WOLFSSL_VERSION=5.6.0-stable
-FROM ubuntu:jammy-20240530 AS cl0
+FROM ubuntu:noble-20241118.1 AS cl0
 
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -y \
     && apt-get install -y \
         autoconf \
         automake \
+        build-essential \ 
         ca-certificates \
         cmake \
         curl \
         gettext \
         git \
         gdb\
+        gcc-14 \
         lcov \
         libcurl4-openssl-dev \
         libmariadb-dev \
@@ -40,6 +42,10 @@ RUN apt-get update -y \
         python3-pip \
         unzip \
     && rm -rf /var/lib/apt/lists/* 
+
+RUN ldconfig \
+    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 60 \
+    && update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-14 60
 
 FROM cl0 AS cl1
 ARG GPG_ERROR_VERSION=1.50
