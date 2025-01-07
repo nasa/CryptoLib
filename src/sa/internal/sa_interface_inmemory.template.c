@@ -73,7 +73,7 @@ SaInterface get_sa_interface_inmemory(void)
  * @brief Function: sa_load_file
  * Loads saved sa_file
  **/
-int32_t sa_load_file()
+int32_t sa_load_file(void)
 {
     FILE   *sa_save_file;
     int32_t status       = CRYPTO_LIB_SUCCESS;
