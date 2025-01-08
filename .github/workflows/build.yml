@@ -43,11 +43,13 @@ jobs:
     
     - name: Internal Build Script
       working-directory: ${{github.workspace}}
-      run: bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
+      run: |
+        export CFLAGS="-fprofile-arcs -ftest-coverage -fcondition-coverage -g"
+        bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
 
-    - name: Code-Coverage
-      working-directory: ${{github.workspace}}
-      run: make gcov
+    # - name: Code-Coverage
+    #   working-directory: ${{github.workspace}}
+    #   run: make gcov
 
     - name: Upload 
       uses: codecov/codecov-action@v4
