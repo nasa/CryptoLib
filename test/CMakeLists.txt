@@ -200,8 +200,8 @@ if(${CODECOV})
         # | grep -A 5 "Adder.cpp" > CoverageSummary.tmp
         #COMMAND cat CoverageSummary.tmp
         #COMMAND echo "-- Coverage files have been output to ${PROJECT_BINARY_DIR}/coverage"
-        COMMAND lcov -c --directory ${OBJECT_DIR} --output-file ${PROJECT_BINARY_DIR}/coverage/results.info
-        COMMAND genhtml ${PROJECT_BINARY_DIR}/coverage/results.info --output-directory ${PROJECT_BINARY_DIR}/coverage/results
+        #COMMAND lcov -c --directory ${OBJECT_DIR} --output-file ${PROJECT_BINARY_DIR}/coverage/results.info
+        #COMMAND genhtml ${PROJECT_BINARY_DIR}/coverage/results.info --output-directory ${PROJECT_BINARY_DIR}/coverage/results
         WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/coverage
         )
     add_dependencies(gcov ut_tc_apply)
