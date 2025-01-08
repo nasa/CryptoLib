@@ -145,11 +145,13 @@ jobs:
     
     - name: Wolf Build Script
       working-directory: ${{github.workspace}}
-      run: bash ${GITHUB_WORKSPACE}/support/scripts/build_wolf.sh
+      run: |
+        export CFLAGS="-fprofile-arcs -ftest-coverage -fcondition-coverage -g"
+        bash ${GITHUB_WORKSPACE}/support/scripts/build_wolf.sh
     
-    - name: Code-Coverage
-      working-directory: ${{github.workspace}}
-      run: make gcov
+    # - name: Code-Coverage
+    #   working-directory: ${{github.workspace}}
+    #   run: make gcov
 
     - name: Upload 
       uses: codecov/codecov-action@v4
@@ -199,11 +201,13 @@ jobs:
 
     - name: RHEL Build Script
       working-directory: ${{github.workspace}}
-      run: source ~/.bashrc && ${GITHUB_WORKSPACE}/support/scripts/build_rhel.sh
+      run: |
+        export CFLAGS="-fprofile-arcs -ftest-coverage -fcondition-coverage -g"
+        source ~/.bashrc && ${GITHUB_WORKSPACE}/support/scripts/build_rhel.sh
     
-    - name: Code-Coverage
-      working-directory: ${{github.workspace}}
-      run: source ~/.bashrc && make gcov
+    # - name: Code-Coverage
+    #   working-directory: ${{github.workspace}}
+    #   run: source ~/.bashrc && make gcov
 
     - name: Upload 
       uses: codecov/codecov-action@v4
@@ -231,11 +235,13 @@ jobs:
     
     - name: Internal Build Script
       working-directory: ${{github.workspace}}
-      run: bash ${GITHUB_WORKSPACE}/support/scripts/build_ep.sh
+      run: |
+        export CFLAGS="-fprofile-arcs -ftest-coverage -fcondition-coverage -g"
+        bash ${GITHUB_WORKSPACE}/support/scripts/build_ep.sh
 
-    - name: Code-Coverage
-      working-directory: ${{github.workspace}}
-      run: make gcov
+    # - name: Code-Coverage
+    #   working-directory: ${{github.workspace}}
+    #   run: make gcov
 
     - name: Upload 
       uses: codecov/codecov-action@v4
