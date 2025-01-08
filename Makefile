@@ -21,9 +21,13 @@ all:
 
 clean:
 	rm -rf ./build
+	rm -rf ./docs/wiki/_build
 
 debug:
 	./support/scripts/docker_debug.sh
+
+docs:
+	./support/scripts/build_docs.sh
 
 internal: 
 	./support/scripts/internal_docker_build.sh
