@@ -204,16 +204,16 @@ if(${CODECOV})
         #COMMAND genhtml ${PROJECT_BINARY_DIR}/coverage/results.info --output-directory ${PROJECT_BINARY_DIR}/coverage/results
         WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/coverage
         )
-    add_dependencies(gcov ut_tc_apply)
+    #add_dependencies(gcov ut_tc_apply)
     # Make sure to clean up the coverage folder
-    set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES coverage)
+    #set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES coverage)
 
     # Create the gcov-clean target. This cleans the build as well as generated 
     # .gcda and .gcno files.
-    add_custom_target(scrub
-    COMMAND ${CMAKE_MAKE_PROGRAM} clean
-    COMMAND rm -f ${OBJECT_DIR}/*.gcno
-    COMMAND rm -f ${OBJECT_DIR}/*.gcda
-    WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
-    )
+    #add_custom_target(scrub
+    #COMMAND ${CMAKE_MAKE_PROGRAM} clean
+    #COMMAND rm -f ${OBJECT_DIR}/*.gcno
+    #COMMAND rm -f ${OBJECT_DIR}/*.gcda
+    #WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+    #)
 endif(${CODECOV})
