@@ -30,3 +30,6 @@ test/cmake_install.cmake
 test/CTestTestfile.cmake
 test/CMakeFiles/*
 Testing/Temporary/*
+docs/wiki/_build
+docs/wiki/_templates
+
