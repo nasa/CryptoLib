@@ -10,7 +10,7 @@
 | 1.1.0 | R. Brown, D. Cutright, S. Zemerick | 03/11/2022 | Justin Morris, John Lucas | Scheduled Release |
 | 1.1.1 | R. Brown, J. Lucas, S.Zemerick | 09/20/2022 | Justin Morris | Wiki Updates |
 | 1.3.0 | R. Brown, D. Cutright | 12/13/2023 | J. Lucas | Scheduled Release | 
-
+| 1.3.1 | R.Brown | 01/10/2024 | J. Lucas | Scheduled Documentation Refresh | 
 ***
 
 

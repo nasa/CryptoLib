@@ -20,7 +20,7 @@ If building locally, ensure all dependencies below are met.
 | libmariadb-dev  | libmariadb-dev-compat |
 | libtool         | unzip                 |
 | make            | python3-dev           |
-| python3-pip     |                       |
+| python3-pip     | build-essential       |
 
 <br />
 
@@ -31,10 +31,11 @@ If building locally, ensure all dependencies below are met.
 <br />
 <br />
 
-### Testing
-| __Pip3:__    |
-|--------------|
-| pycryptodome | 
+### Documentation
+| __Apt:__            |                          |
+|---------------------|--------------------------|
+| python3-sphinx      | python3-sphinx-rtd-theme |
+| python3-myst-parser | 
 
 <br />
 <br />
@@ -90,7 +91,6 @@ The two flags (DEBUG and TEST_ENC) can be used simultaneously, or separately.
 > * SUPPORT -- "Support" -- Default OFF
 > * SYSTEM_INSTALL -- "SystemInstall" -- Default OFF
 > * TEST -- "Test" -- Default OFF
-> * TEST_ENC -- "Tests - Encryption"-- Default  OFF
 > * SA_FILE -- "Save Security Association to File" -- Default OFF
 > * KEY_VALIDATION -- "Validate existence of key duplication"-- Default OFF
 
@@ -98,3 +98,4 @@ The two flags (DEBUG and TEST_ENC) can be used simultaneously, or separately.
 > * KMC_MDB_DB "KMC-MDB-Debian-Integration-Testing" -- Default OFF 
 > * KMC_CFFI_EXCLUDE "KMC-Exclude-Problematic-CFFI-Code" -- Default OFF
 
+> * CRYPTO_EPROC "Enables building of Extended Procedures -- Default OFF (CURRENTLY A WIP - Not ready for Operations)
