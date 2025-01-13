@@ -109,7 +109,7 @@
 
 // Generic Defines
 #define NUM_SA              64
-#define SPI_LEN             2   /* bytes */
+#define SPI_LEN             2 /* bytes */
 #define SPI_MIN             0
 #define SPI_MAX             NUM_SA - 1
 #define KEY_SIZE            512 /* bytes */

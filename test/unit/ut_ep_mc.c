@@ -49,14 +49,14 @@ UTEST(EP_MC, MC_REGULAR_PING)
 
     // Modify SA 0
     sa_if->sa_get_from_spi(0, &test_association);
-    test_association->shivf_len = 0;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->iv_len          = 12;
-    test_association->shsnf_len       = 2;
-    test_association->arsnw           = 5;
-    test_association->arsnw_len       = 1;
-    test_association->arsn_len        = 2;
-    test_association->gvcid_blk.scid  = SCID & 0x3FF;
+    test_association->shivf_len      = 0;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->iv_len         = 12;
+    test_association->shsnf_len      = 2;
+    test_association->arsnw          = 5;
+    test_association->arsnw_len      = 1;
+    test_association->arsn_len       = 2;
+    test_association->gvcid_blk.scid = SCID & 0x3FF;
 
     // Modify SA 6
     sa_if->sa_get_from_spi(6, &test_association);
@@ -133,14 +133,14 @@ UTEST(EP_MC, MC_STATUS)
 
     // Modify SA 0
     sa_if->sa_get_from_spi(0, &test_association);
-    test_association->shivf_len = 0;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->iv_len          = 12;
-    test_association->shsnf_len       = 2;
-    test_association->arsnw           = 5;
-    test_association->arsnw_len       = 1;
-    test_association->arsn_len        = 2;
-    test_association->gvcid_blk.scid  = SCID & 0x3FF;
+    test_association->shivf_len      = 0;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->iv_len         = 12;
+    test_association->shsnf_len      = 2;
+    test_association->arsnw          = 5;
+    test_association->arsnw_len      = 1;
+    test_association->arsn_len       = 2;
+    test_association->gvcid_blk.scid = SCID & 0x3FF;
 
     // Modify SA 6
     sa_if->sa_get_from_spi(6, &test_association);
@@ -214,14 +214,14 @@ UTEST(EP_MC, MC_DUMP)
 
     // Modify SA 0
     sa_if->sa_get_from_spi(0, &test_association);
-    test_association->shivf_len = 0;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->iv_len          = 12;
-    test_association->shsnf_len       = 2;
-    test_association->arsnw           = 5;
-    test_association->arsnw_len       = 1;
-    test_association->arsn_len        = 2;
-    test_association->gvcid_blk.scid  = SCID & 0x3FF;
+    test_association->shivf_len      = 0;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->iv_len         = 12;
+    test_association->shsnf_len      = 2;
+    test_association->arsnw          = 5;
+    test_association->arsnw_len      = 1;
+    test_association->arsn_len       = 2;
+    test_association->gvcid_blk.scid = SCID & 0x3FF;
 
     // Modify SA 6
     sa_if->sa_get_from_spi(6, &test_association);
@@ -298,14 +298,14 @@ UTEST(EP_MC, MC_ERASE)
 
     // Modify SA 0
     sa_if->sa_get_from_spi(0, &test_association);
-    test_association->shivf_len = 0;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->iv_len          = 12;
-    test_association->shsnf_len       = 2;
-    test_association->arsnw           = 5;
-    test_association->arsnw_len       = 1;
-    test_association->arsn_len        = 2;
-    test_association->gvcid_blk.scid  = SCID & 0x3FF;
+    test_association->shivf_len      = 0;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->iv_len         = 12;
+    test_association->shsnf_len      = 2;
+    test_association->arsnw          = 5;
+    test_association->arsnw_len      = 1;
+    test_association->arsn_len       = 2;
+    test_association->gvcid_blk.scid = SCID & 0x3FF;
 
     // Modify SA 6
     sa_if->sa_get_from_spi(6, &test_association);
@@ -381,14 +381,14 @@ UTEST(EP_MC, MC_SELF_TEST)
     // Modify SA 0
     sa_if->sa_get_from_spi(0, &test_association);
     sa_if->sa_get_from_spi(0, &test_association);
-    test_association->shivf_len = 0;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->iv_len          = 12;
-    test_association->shsnf_len       = 2;
-    test_association->arsnw           = 5;
-    test_association->arsnw_len       = 1;
-    test_association->arsn_len        = 2;
-    test_association->gvcid_blk.scid  = SCID & 0x3FF;
+    test_association->shivf_len      = 0;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->iv_len         = 12;
+    test_association->shsnf_len      = 2;
+    test_association->arsnw          = 5;
+    test_association->arsnw_len      = 1;
+    test_association->arsn_len       = 2;
+    test_association->gvcid_blk.scid = SCID & 0x3FF;
 
     // Modify SA 6
     sa_if->sa_get_from_spi(6, &test_association);
@@ -451,7 +451,7 @@ UTEST(EP_MC, MC_ALARM_FLAG_RESET)
 
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_ALARM_h = "2003001a00ff000000001880d2c70008197f0b00370000b1fe312855";
- 
+
     uint8_t *buffer_ALARM_b   = NULL;
     int      buffer_ALARM_len = 0;
 
@@ -463,14 +463,14 @@ UTEST(EP_MC, MC_ALARM_FLAG_RESET)
 
     // Modify SA 0
     sa_if->sa_get_from_spi(0, &test_association);
-    test_association->shivf_len = 0;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->iv_len          = 12;
-    test_association->shsnf_len       = 2;
-    test_association->arsnw           = 5;
-    test_association->arsnw_len       = 1;
-    test_association->arsn_len        = 2;
-    test_association->gvcid_blk.scid  = SCID & 0x3FF;
+    test_association->shivf_len      = 0;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->iv_len         = 12;
+    test_association->shsnf_len      = 2;
+    test_association->arsnw          = 5;
+    test_association->arsnw_len      = 1;
+    test_association->arsn_len       = 2;
+    test_association->gvcid_blk.scid = SCID & 0x3FF;
 
     // Modify SA 6
     sa_if->sa_get_from_spi(6, &test_association);

@@ -1535,13 +1535,13 @@ UTEST(AOS_PROCESS, AES_GCM_DEC_ONLY)
     test_association->shsnf_len      = 0;
     memset(test_association->abm, 0xFF, (test_association->abm_len * sizeof(uint8_t))); // Bitmask of ones
 
-    crypto_key_t *ekp    = NULL;
-    ekp = key_if->get_key(test_association->ekid);
-    ekp->key_state = KEY_ACTIVE;
-    
-    crypto_key_t *akp    = NULL;
-    akp = key_if->get_key(test_association->akid);
-    akp->key_state = KEY_ACTIVE;
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(test_association->ekid);
+    ekp->key_state    = KEY_ACTIVE;
+
+    crypto_key_t *akp = NULL;
+    akp               = key_if->get_key(test_association->akid);
+    akp->key_state    = KEY_ACTIVE;
 
     // Set a more obvious IV for test purposes
     char *iv_h   = "DEADBEEFDEADBEEFDEADBEEFDEADBEEE";
@@ -1804,13 +1804,13 @@ UTEST(AOS_PROCESS, AOS_SA_NOT_OPERATIONAL)
     sa_if->sa_get_from_spi(5, &sa_ptr); // Enable and setup 5
     sa_ptr->sa_state = SA_NONE;
 
-    crypto_key_t *ekp    = NULL;
-    ekp = key_if->get_key(sa_ptr->ekid);
-    ekp->key_state = KEY_ACTIVE;
-    
-    crypto_key_t *akp    = NULL;
-    akp = key_if->get_key(sa_ptr->akid);
-    akp->key_state = KEY_ACTIVE;
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(sa_ptr->ekid);
+    ekp->key_state    = KEY_ACTIVE;
+
+    crypto_key_t *akp = NULL;
+    akp               = key_if->get_key(sa_ptr->akid);
+    akp->key_state    = KEY_ACTIVE;
 
     status =
         Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, &ptr_processed_frame, &processed_aos_len);
@@ -1824,7 +1824,7 @@ UTEST(AOS_PROCESS, AOS_SA_NOT_OPERATIONAL)
 UTEST(AOS_PROCESS, AOS_OCF_TEST)
 {
     remove("sa_save_file.bin");
-    
+
     // Local Variables
     int32_t  status              = CRYPTO_LIB_SUCCESS;
     uint8_t *ptr_processed_frame = NULL;
@@ -1850,10 +1850,10 @@ UTEST(AOS_PROCESS, AOS_OCF_TEST)
     SecurityAssociation_t *sa_ptr = NULL;
     SaInterface            sa_if  = get_sa_interface_inmemory();
     sa_if->sa_get_from_spi(9, &sa_ptr); // Enable and setup 5
-    sa_ptr->sa_state = SA_OPERATIONAL;
-    sa_ptr->shivf_len = 0;
-    sa_ptr->gvcid_blk.tfvn = 1;
-    sa_ptr->gvcid_blk.vcid = 0;
+    sa_ptr->sa_state        = SA_OPERATIONAL;
+    sa_ptr->shivf_len       = 0;
+    sa_ptr->gvcid_blk.tfvn  = 1;
+    sa_ptr->gvcid_blk.vcid  = 0;
     sa_ptr->gvcid_blk.mapid = 0;
 
     status =
@@ -1899,16 +1899,16 @@ UTEST(AOS_PROCESS, AOS_KEY_STATE_TEST)
     sa_ptr->sa_state = SA_KEYED;
     sa_if->sa_get_from_spi(5, &sa_ptr); // Enable and setup 5
     sa_ptr->sa_state = SA_OPERATIONAL;
-    sa_ptr->est = 1;
-    sa_ptr->ecs = CRYPTO_CIPHER_AES256_GCM;
+    sa_ptr->est      = 1;
+    sa_ptr->ecs      = CRYPTO_CIPHER_AES256_GCM;
 
-    crypto_key_t *ekp    = NULL;
-    ekp = key_if->get_key(sa_ptr->ekid);
-    ekp->key_state = KEY_DEACTIVATED;
-    
-    crypto_key_t *akp    = NULL;
-    akp = key_if->get_key(sa_ptr->akid);
-    akp->key_state = KEY_DEACTIVATED;
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(sa_ptr->ekid);
+    ekp->key_state    = KEY_DEACTIVATED;
+
+    crypto_key_t *akp = NULL;
+    akp               = key_if->get_key(sa_ptr->akid);
+    akp->key_state    = KEY_DEACTIVATED;
 
     status =
         Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, &ptr_processed_frame, &processed_aos_len);

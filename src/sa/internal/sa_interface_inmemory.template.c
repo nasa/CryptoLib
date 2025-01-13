@@ -37,7 +37,6 @@ static int32_t sa_delete(TC_t *tc_frame);
 // Security Association Local Functions
 int32_t sa_verify_data(SecurityAssociation_t *);
 
-
 /*
 ** Global Variables
 */
@@ -1101,13 +1100,13 @@ static int32_t sa_start(TC_t *tc_frame)
 static int32_t sa_stop(TC_t *tc_frame)
 {
     // Local variables
-    int32_t status = CRYPTO_LIB_SUCCESS;
-    uint16_t spi    = 0x0000;
+    int32_t  status      = CRYPTO_LIB_SUCCESS;
+    uint16_t spi         = 0x0000;
     uint16_t control_spi = 0x0000;
     int      x;
 
     // Read ingest
-    spi    = ((uint8_t)sdls_frame.pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[1];
+    spi         = ((uint8_t)sdls_frame.pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[1];
     control_spi = tc_frame->tc_sec_header.spi;
 
 #ifdef DEBUG
@@ -1347,9 +1346,9 @@ static int32_t sa_expire(TC_t *tc_frame)
 static int32_t sa_create(TC_t *tc_frame)
 {
     // Local variables
-    int32_t status = CRYPTO_LIB_SUCCESS;
-    uint8_t  count = 6;
-    uint16_t spi   = 0x0000;
+    int32_t  status      = CRYPTO_LIB_SUCCESS;
+    uint8_t  count       = 6;
+    uint16_t spi         = 0x0000;
     uint16_t control_spi = 0x0000;
     int      x;
 
@@ -1381,7 +1380,7 @@ static int32_t sa_create(TC_t *tc_frame)
         // 3-4 : Service Group Field (sg)
         // 5-8 : Procedure Identification Field (pid)
         temp_sa->lpid = (sdls_frame.pdu.hdr.type << 7) | (sdls_frame.pdu.hdr.uf << 6) | (sdls_frame.pdu.hdr.sg << 4) |
-                       sdls_frame.pdu.hdr.pid;
+                        sdls_frame.pdu.hdr.pid;
 
         // Write SA Configuration
         temp_sa->est        = ((uint8_t)sdls_frame.pdu.data[2] & 0x80) >> 7;
@@ -1406,7 +1405,7 @@ static int32_t sa_create(TC_t *tc_frame)
             temp_sa->acs = ((uint8_t)sdls_frame.pdu.data[count++]);
         }
         temp_sa->abm_len = (uint8_t)((sdls_frame.pdu.data[count] << BYTE_LEN) | (sdls_frame.pdu.data[count + 1]));
-        count           = count + 2;
+        count            = count + 2;
         for (x = 0; x < temp_sa->abm_len; x++)
         {
             temp_sa->abm[x] = ((uint8_t)sdls_frame.pdu.data[count++]);
@@ -1431,20 +1430,20 @@ static int32_t sa_create(TC_t *tc_frame)
         if (status == CRYPTO_LIB_SUCCESS)
         {
             // Copy data from temp_sa to sa[spi]
-            sa[spi].lpid = temp_sa->lpid;
-            sa[spi].est = temp_sa->est;
-            sa[spi].ast = temp_sa->ast;
-            sa[spi].shivf_len = temp_sa->shivf_len;
-            sa[spi].shsnf_len = temp_sa->shsnf_len;
-            sa[spi].shplf_len = temp_sa->shplf_len;
+            sa[spi].lpid       = temp_sa->lpid;
+            sa[spi].est        = temp_sa->est;
+            sa[spi].ast        = temp_sa->ast;
+            sa[spi].shivf_len  = temp_sa->shivf_len;
+            sa[spi].shsnf_len  = temp_sa->shsnf_len;
+            sa[spi].shplf_len  = temp_sa->shplf_len;
             sa[spi].stmacf_len = temp_sa->stmacf_len;
-            sa[spi].ecs_len = temp_sa->ecs_len;
-            sa[spi].ecs = temp_sa->ecs;
+            sa[spi].ecs_len    = temp_sa->ecs_len;
+            sa[spi].ecs        = temp_sa->ecs;
             for (x = 0; x < sa[spi].shivf_len; x++)
             {
                 sa[spi].iv[x] = temp_sa->iv[x];
             }
-            sa[spi].acs = temp_sa->acs;
+            sa[spi].acs     = temp_sa->acs;
             sa[spi].abm_len = temp_sa->abm_len;
             for (x = 0; x < sa[spi].abm_len; x++)
             {
@@ -1456,8 +1455,8 @@ static int32_t sa_create(TC_t *tc_frame)
                 *(sa[spi].arsn + x) = *(temp_sa->arsn + x);
             }
             sa[spi].arsnw_len = temp_sa->arsnw_len;
-            sa[spi].arsnw = temp_sa->arsnw;
-            sa[spi].sa_state = temp_sa->sa_state;
+            sa[spi].arsnw     = temp_sa->arsnw;
+            sa[spi].sa_state  = temp_sa->sa_state;
         }
 
 #ifdef PDU_DEBUG
@@ -1481,7 +1480,7 @@ static int32_t sa_create(TC_t *tc_frame)
 static int32_t sa_delete(TC_t *tc_frame)
 {
     // Local variables
-    uint16_t spi = 0x0000;
+    uint16_t spi         = 0x0000;
     uint16_t control_spi = 0x0000;
     int32_t  status      = CRYPTO_LIB_SUCCESS;
 
@@ -1548,12 +1547,12 @@ static int32_t sa_setARSN(TC_t *tc_frame)
     // Local variables
     uint16_t spi         = 0x0000;
     uint16_t control_spi = 0x0000;
-    int32_t  status       = CRYPTO_LIB_SUCCESS;
+    int32_t  status      = CRYPTO_LIB_SUCCESS;
     int      x;
 
     // Read ingest
     spi = ((uint8_t)sdls_frame.pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[1];
-    
+
     control_spi = tc_frame->tc_sec_header.spi;
     if (spi == control_spi)
     {
@@ -1690,8 +1689,9 @@ static int32_t sa_status(uint8_t *ingest)
             printf("SIZE: %ld\n", SDLS_SA_STATUS_RPLY_SIZE);
             // Prepare for Reply
             sdls_frame.pdu.hdr.pdu_len = SDLS_SA_STATUS_RPLY_SIZE * BYTE_LEN;
-            sdls_frame.hdr.pkt_length  = CCSDS_HDR_SIZE + CCSDS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.pdu.hdr.pdu_len / BYTE_LEN) - 1;
-            count                      = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
+            sdls_frame.hdr.pkt_length =
+                CCSDS_HDR_SIZE + CCSDS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.pdu.hdr.pdu_len / BYTE_LEN) - 1;
+            count = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
             // PDU
             sdls_ep_reply[count++] = (spi & 0xFF00) >> BYTE_LEN;
             sdls_ep_reply[count++] = (spi & 0x00FF);
@@ -1720,7 +1720,7 @@ static int32_t sa_status(uint8_t *ingest)
     return status;
 }
 
-int32_t sa_verify_data(SecurityAssociation_t * sa_ptr)
+int32_t sa_verify_data(SecurityAssociation_t *sa_ptr)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     if (sa_ptr->shivf_len > IV_SIZE)

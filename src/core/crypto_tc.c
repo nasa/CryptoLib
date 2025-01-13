@@ -346,12 +346,12 @@ int32_t Crypto_TC_Do_Encrypt_PLAINTEXT(uint8_t sa_service_type, SecurityAssociat
                                        uint16_t *index_p, const uint8_t *p_in_frame, char *cam_cookies,
                                        uint32_t pkcs_padding)
 {
-    int32_t  status = CRYPTO_LIB_SUCCESS;
-    uint16_t index  = *index_p;
-    crypto_key_t *akp = NULL;
+    int32_t       status = CRYPTO_LIB_SUCCESS;
+    uint16_t      index  = *index_p;
+    crypto_key_t *akp    = NULL;
 
     /* Get Key */
-    
+
     if (sa_ptr->est == 1)
     {
         ekp = key_if->get_key(sa_ptr->ekid);
@@ -1607,7 +1607,6 @@ int32_t Crypto_TC_Get_Keys(crypto_key_t **ekp, crypto_key_t **akp, SecurityAssoc
             mc_if->mc_log(status);
         }
     }
-    
 
     return status;
 }
@@ -1906,7 +1905,6 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
     memcpy((tc_sdls_processed_frame->tc_sec_header.pad),
            &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len]),
            sa_ptr->shplf_len);
-           
 
     // Parse MAC, prepare AAD
     status = Crypto_TC_Prep_AAD(tc_sdls_processed_frame, fecf_len, sa_service_type, ecs_is_aead_algorithm, &aad_len,
@@ -1964,7 +1962,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
         return status; // Cryptography IF call failed, return.
     }
     // Extended PDU processing, if applicable
- 
+
     if (status == CRYPTO_LIB_SUCCESS && crypto_config.process_sdls_pdus == TC_PROCESS_SDLS_PDUS_TRUE)
     {
         status = Crypto_Process_Extended_Procedure_Pdu(tc_sdls_processed_frame, ingest);
@@ -2051,18 +2049,18 @@ uint8_t *Crypto_Prepare_TC_AAD(uint8_t *buffer, uint16_t len_aad, uint8_t *abm_b
 
 static int32_t validate_sa_index(SecurityAssociation_t *sa)
 {
-    int32_t returnval = -1;
+    int32_t                returnval = -1;
     SecurityAssociation_t *temp_sa;
     sa_if->sa_get_from_spi(sa->spi, &temp_sa);
     int sa_index = -1;
-    sa_index = (int)(sa - temp_sa); // Based on array memory location
+    sa_index     = (int)(sa - temp_sa); // Based on array memory location
 #ifdef DEBUG
-    if(sa_index == 0)
+    if (sa_index == 0)
         printf("SA Index matches SPI\n");
     else
         printf("Malformed SA SPI based on SA Index!\n");
 #endif
-    if(sa_index == 0)
+    if (sa_index == 0)
         returnval = 0;
     return returnval;
 }
@@ -2076,7 +2074,7 @@ static int32_t validate_sa_index(SecurityAssociation_t *sa)
  **/
 static int32_t crypto_tc_validate_sa(SecurityAssociation_t *sa)
 {
-    if(validate_sa_index(sa) != 0)
+    if (validate_sa_index(sa) != 0)
     {
         return CRYPTO_LIB_ERR_SPI_INDEX_MISMATCH;
     }
