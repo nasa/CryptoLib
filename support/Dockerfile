@@ -40,6 +40,9 @@ RUN apt-get update -y \
         make \
         python3-dev \
         python3-pip \
+        python3-sphinx \
+        python3-sphinx-rtd-theme \
+        python3-myst-parser \
         unzip \
     && rm -rf /var/lib/apt/lists/* 
 
@@ -80,3 +83,5 @@ RUN curl \
     && cmake --build . \
     && make install \
     && ldconfig 
+
+

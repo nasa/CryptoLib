@@ -12,7 +12,7 @@ jobs:
     # Container Setup
     runs-on: ubuntu-latest
     container:
-        image: ivvitc/cryptolib:20241220
+        image: ivvitc/cryptolib:20250108
     steps:
     - uses: actions/checkout@v4
     - name: Update
@@ -32,7 +32,7 @@ jobs:
     # Container Setup
     runs-on: ubuntu-latest
     container:
-        image: ivvitc/cryptolib:20241220
+        image: ivvitc/cryptolib:20250108
     steps:
     - uses: actions/checkout@v4
     - name: Update
@@ -43,11 +43,13 @@ jobs:
     
     - name: Internal Build Script
       working-directory: ${{github.workspace}}
-      run: bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
+      run: |
+        export CFLAGS="-fprofile-arcs -ftest-coverage -fcondition-coverage -g"
+        bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
 
-    - name: Code-Coverage
-      working-directory: ${{github.workspace}}
-      run: make gcov
+    # - name: Code-Coverage
+    #   working-directory: ${{github.workspace}}
+    #   run: make gcov
 
     - name: Upload 
       uses: codecov/codecov-action@v4
@@ -113,7 +115,7 @@ jobs:
     # Container Setup
     runs-on: ubuntu-latest
     container:
-        image: ivvitc/cryptolib:20241220
+        image: ivvitc/cryptolib:20250108
     steps:
     - uses: actions/checkout@v4
     - name: Update
@@ -143,11 +145,13 @@ jobs:
     
     - name: Wolf Build Script
       working-directory: ${{github.workspace}}
-      run: bash ${GITHUB_WORKSPACE}/support/scripts/build_wolf.sh
+      run: |
+        export CFLAGS="-fprofile-arcs -ftest-coverage -fcondition-coverage -g"
+        bash ${GITHUB_WORKSPACE}/support/scripts/build_wolf.sh
     
-    - name: Code-Coverage
-      working-directory: ${{github.workspace}}
-      run: make gcov
+    # - name: Code-Coverage
+    #   working-directory: ${{github.workspace}}
+    #   run: make gcov
 
     - name: Upload 
       uses: codecov/codecov-action@v4
@@ -218,7 +222,7 @@ jobs:
     # Container Setup
     runs-on: ubuntu-latest
     container:
-        image: ivvitc/cryptolib:20241220
+        image: ivvitc/cryptolib:20250108
     steps:
     - uses: actions/checkout@v4
     - name: Update
@@ -229,11 +233,13 @@ jobs:
     
     - name: Internal Build Script
       working-directory: ${{github.workspace}}
-      run: bash ${GITHUB_WORKSPACE}/support/scripts/build_ep.sh
+      run: |
+        export CFLAGS="-fprofile-arcs -ftest-coverage -fcondition-coverage -g"
+        bash ${GITHUB_WORKSPACE}/support/scripts/build_ep.sh
 
-    - name: Code-Coverage
-      working-directory: ${{github.workspace}}
-      run: make gcov
+    # - name: Code-Coverage
+    #   working-directory: ${{github.workspace}}
+    #   run: make gcov
 
     - name: Upload 
       uses: codecov/codecov-action@v4
