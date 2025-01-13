@@ -128,14 +128,9 @@ endif()
 
 # Create the app module
 if(DEFINED CFE_SYSTEM_PSPNAME)
-    set(CMAKE_INSTALL_RPATH "./${INSTALL_SUBDIR}")
+    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/cpu${TGTSYS_${SYSVAR}}/${INSTALL_SUBDIR}")
     add_cfe_app(crypto ${LIB_SRC_FILES})
     target_include_directories(crypto PUBLIC ../include)
-    if(NOT CMAKE_CROSSCOMPILING)
-        install(TARGETS crypto RUNTIME_DEPENDENCIES DESTINATION ${CMAKE_INSTALL_PREFIX}/${TGTSYS_${SYSVAR}}/${INSTALL_SUBDIR})
-    else()
-        install(TARGETS crypto)
-    endif()
 else() 
     # Standalone build
     add_library(crypto SHARED ${LIB_SRC_FILES})
