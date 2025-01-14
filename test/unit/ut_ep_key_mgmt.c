@@ -251,7 +251,6 @@ UTEST(EP_KEY_MGMT, INVENTORY_132_134)
     char *buffer_nist_iv_h   = "000000000000000000000000"; // The last valid IV that was seen by the SA
     char *buffer_INVENTORY_h = "2003001e00ff000000001880d03b000a197f0b00070004008400861f6d82ebe4fc55555555";
 
-
     uint8_t *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_INVENTORY_b     = NULL;
     int      buffer_nist_iv_len, buffer_nist_key_len, buffer_INVENTORY_len = 0;
 
@@ -368,17 +367,17 @@ UTEST(EP_KEY_MGMT, VERIFY_132_134)
 
     // Activate SA 0
     sa_if->sa_get_from_spi(0, &test_association);
-    test_association->sa_state  = SA_OPERATIONAL;
-    test_association->ecs_len   = 0;
-    test_association->ecs       = CRYPTO_CIPHER_NONE;
-    test_association->est       = 0;
-    test_association->ast       = 0;
-    test_association->shsnf_len = 2;
-    test_association->arsn_len  = 2;
-    test_association->arsnw_len = 1;
-    test_association->arsnw     = 5;
-    test_association->shivf_len = 0;
-    test_association->iv_len    = 0;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ecs_len        = 0;
+    test_association->ecs            = CRYPTO_CIPHER_NONE;
+    test_association->est            = 0;
+    test_association->ast            = 0;
+    test_association->shsnf_len      = 2;
+    test_association->arsn_len       = 2;
+    test_association->arsnw_len      = 1;
+    test_association->arsnw          = 5;
+    test_association->shivf_len      = 0;
+    test_association->iv_len         = 0;
     test_association->gvcid_blk.scid = 0;
 
     // Insert key into keyring of SA 9
@@ -427,7 +426,7 @@ UTEST(EP_KEY_MGMT, VERIFY_132_134)
 }
 
 /*
-** Test that an OTAR attempt with non-active Master Key will bubble up to a top-level error. 
+** Test that an OTAR attempt with non-active Master Key will bubble up to a top-level error.
 */
 UTEST(EP_KEY_MGMT, OTAR_0_140_142_MK_NOT_ACTIVE)
 {
@@ -473,7 +472,8 @@ UTEST(EP_KEY_MGMT, OTAR_0_140_142_MK_NOT_ACTIVE)
     //                                                        |0b| = sst, sid, spare
     //                                                          |0001| = PDU Tag
     //                                                              |0084| = PDU Length
-    //                                                                  |007F| = Master Key ID - Valid id, invalid that it isn't set up in the keyring!
+    //                                                                  |007F| = Master Key ID - Valid id, invalid that
+    //                                                                  it isn't set up in the keyring!
     //                                                                      |344892bbc54f5395297d4c37| = IV
     //                                                                                              |172f| = Encrypted
     //                                                                                              Key ID
@@ -531,7 +531,7 @@ UTEST(EP_KEY_MGMT, OTAR_0_140_142_MK_NOT_ACTIVE)
 }
 
 /*
-** Test that a fail OTAR key decryption will bubble up to a top-level error. 
+** Test that a fail OTAR key decryption will bubble up to a top-level error.
 */
 UTEST(EP_KEY_MGMT, OTAR_0_140_142_BAD_DECRYPT)
 {
@@ -555,9 +555,9 @@ UTEST(EP_KEY_MGMT, OTAR_0_140_142_BAD_DECRYPT)
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
 
     Crypto_Init();
-    SaInterface sa_if = get_sa_interface_inmemory();
-    crypto_key_t* ekp = NULL;
-    int status = CRYPTO_LIB_SUCCESS;
+    SaInterface   sa_if  = get_sa_interface_inmemory();
+    crypto_key_t *ekp    = NULL;
+    int           status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
@@ -577,7 +577,8 @@ UTEST(EP_KEY_MGMT, OTAR_0_140_142_BAD_DECRYPT)
     //                                                        |0b| = sst, sid, spare
     //                                                          |0001| = PDU Tag
     //                                                              |0084| = PDU Length
-    //                                                                  |007F| = Master Key ID - Valid id, invalid that it isn't set up in the keyring!
+    //                                                                  |007F| = Master Key ID - Valid id, invalid that
+    //                                                                  it isn't set up in the keyring!
     //                                                                      |344892bbc54f5395297d4c37| = IV
     //                                                                                              |172f| = Encrypted
     //                                                                                              Key ID
@@ -614,7 +615,7 @@ UTEST(EP_KEY_MGMT, OTAR_0_140_142_BAD_DECRYPT)
     test_association->ekid      = 127;
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
-    ekp = key_if->get_key(test_association->ekid);
+    ekp            = key_if->get_key(test_association->ekid);
     ekp->key_state = KEY_ACTIVE;
     // memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
@@ -760,7 +761,7 @@ UTEST(EP_KEY_MGMT, DEACTIVATE_142_NO_PUS_BAD_TLV)
 
     // Activate SA 0
     sa_if->sa_get_from_spi(0, &test_association);
-    test_association->sa_state = SA_OPERATIONAL;
+    test_association->sa_state  = SA_OPERATIONAL;
     test_association->ecs       = CRYPTO_CIPHER_NONE;
     test_association->est       = 0;
     test_association->ast       = 0;
@@ -793,7 +794,6 @@ UTEST(EP_KEY_MGMT, DEACTIVATE_142_NO_PUS_BAD_TLV)
     free(buffer_nist_key_b);
     free(buffer_DEACTIVATE_b);
 }
-
 
 UTEST(EP_KEY_MGMT, DEACTIVATE_142_PUS_BAD_TLV)
 {

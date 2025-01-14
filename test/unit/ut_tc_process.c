@@ -707,13 +707,13 @@ UTEST(TC_PROCESS, HAPPY_PATH_DECRYPT_CBC)
     test_association->ekid       = 130;
     test_association->sa_state   = SA_OPERATIONAL;
 
-    crypto_key_t *ekp    = NULL;
-    ekp = key_if->get_key(test_association->ekid);
-    ekp->key_state = KEY_ACTIVE;
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(test_association->ekid);
+    ekp->key_state    = KEY_ACTIVE;
 
-    crypto_key_t *akp    = NULL;
-    akp = key_if->get_key(test_association->akid);
-    akp->key_state = KEY_ACTIVE;
+    crypto_key_t *akp = NULL;
+    akp               = key_if->get_key(test_association->akid);
+    akp->key_state    = KEY_ACTIVE;
 
     // Convert input test frame
     hex_conversion(test_frame_pt_h, (char **)&test_frame_pt_b, &test_frame_pt_len);
@@ -789,13 +789,13 @@ UTEST(TC_PROCESS, DECRYPT_CBC_1B)
     test_association->ekid       = 130;
     test_association->sa_state   = SA_OPERATIONAL;
 
-    crypto_key_t *ekp    = NULL;
-    ekp = key_if->get_key(test_association->ekid);
-    ekp->key_state = KEY_ACTIVE;
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(test_association->ekid);
+    ekp->key_state    = KEY_ACTIVE;
 
-    crypto_key_t *akp    = NULL;
-    akp = key_if->get_key(test_association->akid);
-    akp->key_state = KEY_ACTIVE;
+    crypto_key_t *akp = NULL;
+    akp               = key_if->get_key(test_association->akid);
+    akp->key_state    = KEY_ACTIVE;
 
     // Convert input test frame
     hex_conversion(test_frame_pt_h, (char **)&test_frame_pt_b, &test_frame_pt_len);
@@ -871,13 +871,13 @@ UTEST(TC_PROCESS, DECRYPT_CBC_16B)
     test_association->sa_state   = SA_OPERATIONAL;
     test_association->ekid       = 130;
 
-    crypto_key_t *ekp    = NULL;
-    ekp = key_if->get_key(test_association->ekid);
-    ekp->key_state = KEY_ACTIVE;
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(test_association->ekid);
+    ekp->key_state    = KEY_ACTIVE;
 
-    crypto_key_t *akp    = NULL;
-    akp = key_if->get_key(test_association->akid);
-    akp->key_state = KEY_ACTIVE;
+    crypto_key_t *akp = NULL;
+    akp               = key_if->get_key(test_association->akid);
+    akp->key_state    = KEY_ACTIVE;
 
     // Convert input test frame
     hex_conversion(test_frame_pt_h, (char **)&test_frame_pt_b, &test_frame_pt_len);
@@ -1238,15 +1238,15 @@ UTEST(TC_PROCESS, TC_KEY_STATE_TEST)
     SecurityAssociation_t *test_association;
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    test_association->est = 1;
+    test_association->est      = 1;
 
-    crypto_key_t *ekp    = NULL;
-    ekp = key_if->get_key(test_association->ekid);
-    ekp->key_state = KEY_DEACTIVATED;
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(test_association->ekid);
+    ekp->key_state    = KEY_DEACTIVATED;
 
-    crypto_key_t *akp    = NULL;
-    akp = key_if->get_key(test_association->akid);
-    akp->key_state = KEY_DEACTIVATED;
+    crypto_key_t *akp = NULL;
+    akp               = key_if->get_key(test_association->akid);
+    akp->key_state    = KEY_DEACTIVATED;
 
     // Convert input test frame
     hex_conversion(test_frame_pt_h, (char **)&test_frame_pt_b, &test_frame_pt_len);

@@ -143,7 +143,6 @@
 
 #define CRYPTO_CORE_ERROR_CODES_MAX -69
 
-
 // Define codes for returning MDB Strings, and determining error based on strings
 #define CAM_ERROR_CODES     600
 #define CAM_ERROR_CODES_MAX 610

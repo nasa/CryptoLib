@@ -295,13 +295,13 @@ UTEST(TM_PROCESS_SECURITY, HAPPY_PATH_CLEAR_FECF)
     sa_if->sa_get_from_spi(5, &sa_ptr);
     sa_ptr->sa_state = SA_OPERATIONAL;
 
-    crypto_key_t *ekp    = NULL;
-    ekp = key_if->get_key(sa_ptr->ekid);
-    ekp->key_state = KEY_ACTIVE;
-    
-    crypto_key_t *akp    = NULL;
-    akp = key_if->get_key(sa_ptr->akid);
-    akp->key_state = KEY_ACTIVE;
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(sa_ptr->ekid);
+    ekp->key_state    = KEY_ACTIVE;
+
+    crypto_key_t *akp = NULL;
+    akp               = key_if->get_key(sa_ptr->akid);
+    akp->key_state    = KEY_ACTIVE;
 
     status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &ptr_processed_frame, &processed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -450,13 +450,13 @@ UTEST(TM_PROCESS_SECURITY, SECONDARY_HDR_PRESENT_PLAINTEXT)
     sa_ptr->shivf_len  = 16;
     sa_ptr->stmacf_len = 0;
 
-    crypto_key_t *ekp    = NULL;
-    ekp = key_if->get_key(sa_ptr->ekid);
-    ekp->key_state = KEY_ACTIVE;
-    
-    crypto_key_t *akp    = NULL;
-    akp = key_if->get_key(sa_ptr->akid);
-    akp->key_state = KEY_ACTIVE;
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(sa_ptr->ekid);
+    ekp->key_state    = KEY_ACTIVE;
+
+    crypto_key_t *akp = NULL;
+    akp               = key_if->get_key(sa_ptr->akid);
+    akp->key_state    = KEY_ACTIVE;
 
     status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &ptr_processed_frame, &processed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -615,13 +615,13 @@ UTEST(TM_PROCESS_SECURITY, SECONDARY_HDR_PRESENT_MAC)
     sa_ptr->ekid       = 0;
     sa_ptr->akid       = 136;
 
-    crypto_key_t *ekp    = NULL;
-    ekp = key_if->get_key(sa_ptr->ekid);
-    ekp->key_state = KEY_ACTIVE;
-    
-    crypto_key_t *akp    = NULL;
-    akp = key_if->get_key(sa_ptr->akid);
-    akp->key_state = KEY_ACTIVE;
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(sa_ptr->ekid);
+    ekp->key_state    = KEY_ACTIVE;
+
+    crypto_key_t *akp = NULL;
+    akp               = key_if->get_key(sa_ptr->akid);
+    akp->key_state    = KEY_ACTIVE;
 
     // Determine managed parameters by GVCID, which nominally happens in TO
     // status = Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
@@ -772,13 +772,13 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_0)
     sa_ptr->ekid       = 0;
     sa_ptr->akid       = 136;
 
-    crypto_key_t *ekp    = NULL;
-    ekp = key_if->get_key(sa_ptr->ekid);
-    ekp->key_state = KEY_ACTIVE;
-    
-    crypto_key_t *akp    = NULL;
-    akp = key_if->get_key(sa_ptr->akid);
-    akp->key_state = KEY_ACTIVE;
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(sa_ptr->ekid);
+    ekp->key_state    = KEY_ACTIVE;
+
+    crypto_key_t *akp = NULL;
+    akp               = key_if->get_key(sa_ptr->akid);
+    akp->key_state    = KEY_ACTIVE;
 
     // Bit math to give concise access to values already set in the static transfer frame
     tm_frame_pri_hdr.tfvn = ((uint8_t)framed_tm_b[0] & 0xC0) >> 6;
@@ -949,13 +949,13 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_1)
     sa_ptr->ekid       = 0;
     sa_ptr->akid       = 136;
 
-    crypto_key_t *ekp    = NULL;
-    ekp = key_if->get_key(sa_ptr->ekid);
-    ekp->key_state = KEY_ACTIVE;
-    
-    crypto_key_t *akp    = NULL;
-    akp = key_if->get_key(sa_ptr->akid);
-    akp->key_state = KEY_ACTIVE;
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(sa_ptr->ekid);
+    ekp->key_state    = KEY_ACTIVE;
+
+    crypto_key_t *akp = NULL;
+    akp               = key_if->get_key(sa_ptr->akid);
+    akp->key_state    = KEY_ACTIVE;
 
     // Bit math to give concise access to values already set in the static transfer frame
     tm_frame_pri_hdr.tfvn = ((uint8_t)framed_tm_b[0] & 0xC0) >> 6;
@@ -1124,13 +1124,13 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_0)
     sa_ptr->ekid       = 0;
     sa_ptr->akid       = 136;
 
-    crypto_key_t *ekp    = NULL;
-    ekp = key_if->get_key(sa_ptr->ekid);
-    ekp->key_state = KEY_ACTIVE;
-    
-    crypto_key_t *akp    = NULL;
-    akp = key_if->get_key(sa_ptr->akid);
-    akp->key_state = KEY_ACTIVE;
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(sa_ptr->ekid);
+    ekp->key_state    = KEY_ACTIVE;
+
+    crypto_key_t *akp = NULL;
+    akp               = key_if->get_key(sa_ptr->akid);
+    akp->key_state    = KEY_ACTIVE;
 
     // Bit math to give concise access to values already set in the static transfer frame
     tm_frame_pri_hdr.tfvn = ((uint8_t)framed_tm_b[0] & 0xC0) >> 6;
@@ -1299,13 +1299,13 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_1)
     sa_ptr->ekid       = 0;
     sa_ptr->akid       = 136;
 
-    crypto_key_t *ekp    = NULL;
-    ekp = key_if->get_key(sa_ptr->ekid);
-    ekp->key_state = KEY_ACTIVE;
-    
-    crypto_key_t *akp    = NULL;
-    akp = key_if->get_key(sa_ptr->akid);
-    akp->key_state = KEY_ACTIVE;
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(sa_ptr->ekid);
+    ekp->key_state    = KEY_ACTIVE;
+
+    crypto_key_t *akp = NULL;
+    akp               = key_if->get_key(sa_ptr->akid);
+    akp->key_state    = KEY_ACTIVE;
 
     // Bit math to give concise access to values already set in the static transfer frame
     tm_frame_pri_hdr.tfvn = ((uint8_t)framed_tm_b[0] & 0xC0) >> 6;
@@ -1477,13 +1477,13 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_0)
     sa_ptr->akid       = 136;
 
     // Update key length for SHA512
-    akp          = key_if->get_key(sa_ptr->akid);
-    akp->key_len = 64;
+    akp            = key_if->get_key(sa_ptr->akid);
+    akp->key_len   = 64;
     akp->key_state = KEY_ACTIVE;
 
-    crypto_key_t *ekp    = NULL;
-    ekp = key_if->get_key(sa_ptr->ekid);
-    ekp->key_state = KEY_ACTIVE;
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(sa_ptr->ekid);
+    ekp->key_state    = KEY_ACTIVE;
 
     // Bit math to give concise access to values already set in the static transfer frame
     tm_frame_pri_hdr.tfvn = ((uint8_t)framed_tm_b[0] & 0xC0) >> 6;
@@ -1655,13 +1655,13 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_1)
     sa_ptr->akid       = 136;
 
     // Update key length for SHA512
-    akp          = key_if->get_key(sa_ptr->akid);
-    akp->key_len = 64;
+    akp            = key_if->get_key(sa_ptr->akid);
+    akp->key_len   = 64;
     akp->key_state = KEY_ACTIVE;
 
-    crypto_key_t *ekp    = NULL;
-    ekp = key_if->get_key(sa_ptr->ekid);
-    ekp->key_state = KEY_ACTIVE;
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(sa_ptr->ekid);
+    ekp->key_state    = KEY_ACTIVE;
 
     // Bit math to give concise access to values already set in the static transfer frame
     tm_frame_pri_hdr.tfvn = ((uint8_t)framed_tm_b[0] & 0xC0) >> 6;
@@ -1833,13 +1833,13 @@ UTEST(TM_PROCESS_ENC_VAL, AES_GCM_BITMASK_1)
     test_association->iv_len    = 16;
     test_association->shivf_len = 16;
 
-    crypto_key_t *ekp    = NULL;
-    ekp = key_if->get_key(test_association->ekid);
-    ekp->key_state = KEY_ACTIVE;
-    
-    crypto_key_t *akp    = NULL;
-    akp = key_if->get_key(test_association->akid);
-    akp->key_state = KEY_ACTIVE;
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(test_association->ekid);
+    ekp->key_state    = KEY_ACTIVE;
+
+    crypto_key_t *akp = NULL;
+    akp               = key_if->get_key(test_association->akid);
+    akp->key_state    = KEY_ACTIVE;
 
     // Set a more obvious IV for test purposes
     char *iv_h   = "DEADBEEFDEADBEEFDEADBEEFDEADBEEE";
@@ -2019,13 +2019,13 @@ UTEST(TM_PROCESS_ENC_VAL, AEAD_AES_GCM_BITMASK_1)
     test_association->shivf_len  = 16;
     test_association->stmacf_len = 16;
 
-    crypto_key_t *ekp    = NULL;
-    ekp = key_if->get_key(test_association->ekid);
-    ekp->key_state = KEY_ACTIVE;
-    
-    crypto_key_t *akp    = NULL;
-    akp = key_if->get_key(test_association->akid);
-    akp->key_state = KEY_ACTIVE;
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(test_association->ekid);
+    ekp->key_state    = KEY_ACTIVE;
+
+    crypto_key_t *akp = NULL;
+    akp               = key_if->get_key(test_association->akid);
+    akp->key_state    = KEY_ACTIVE;
 
     // Set a more obvious IV for test purposes
     char *iv_h   = "DEADBEEFDEADBEEFDEADBEEFDEADBEEE";
@@ -2170,13 +2170,13 @@ UTEST(TM_PROCESS, TM_SA_NOT_OPERATIONAL)
     SecurityAssociation_t *sa_ptr;
     sa_if->sa_get_from_spi(44, &sa_ptr);
 
-    crypto_key_t *ekp    = NULL;
-    ekp = key_if->get_key(sa_ptr->ekid);
-    ekp->key_state = KEY_ACTIVE;
-    
-    crypto_key_t *akp    = NULL;
-    akp = key_if->get_key(sa_ptr->akid);
-    akp->key_state = KEY_ACTIVE;
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(sa_ptr->ekid);
+    ekp->key_state    = KEY_ACTIVE;
+
+    crypto_key_t *akp = NULL;
+    akp               = key_if->get_key(sa_ptr->akid);
+    akp->key_state    = KEY_ACTIVE;
 
     status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &ptr_processed_frame, &processed_tm_len);
 
@@ -2219,16 +2219,16 @@ UTEST(TM_PROCESS, TM_KEY_STATE_TEST)
     SecurityAssociation_t *sa_ptr;
     sa_if->sa_get_from_spi(1, &sa_ptr);
     sa_ptr->sa_state = SA_OPERATIONAL;
-    sa_ptr->est = 1;
-    sa_ptr->ecs = CRYPTO_CIPHER_AES256_GCM;
+    sa_ptr->est      = 1;
+    sa_ptr->ecs      = CRYPTO_CIPHER_AES256_GCM;
 
-    crypto_key_t *ekp    = NULL;
-    ekp = key_if->get_key(sa_ptr->ekid);
-    ekp->key_state = KEY_DEACTIVATED;
-    
-    crypto_key_t *akp    = NULL;
-    akp = key_if->get_key(sa_ptr->akid);
-    akp->key_state = KEY_DEACTIVATED;
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(sa_ptr->ekid);
+    ekp->key_state    = KEY_DEACTIVATED;
+
+    crypto_key_t *akp = NULL;
+    akp               = key_if->get_key(sa_ptr->akid);
+    akp->key_state    = KEY_DEACTIVATED;
 
     status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &ptr_processed_frame, &processed_tm_len);
 

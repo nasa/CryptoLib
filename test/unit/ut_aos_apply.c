@@ -255,13 +255,13 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FECF)
     SecurityAssociation_t *test_association;
     sa_if->sa_get_from_spi(10, &test_association);
 
-    crypto_key_t *ekp    = NULL;
-    ekp = key_if->get_key(test_association->ekid);
-    ekp->key_state = KEY_ACTIVE;
-    
-    crypto_key_t *akp    = NULL;
-    akp = key_if->get_key(test_association->akid);
-    akp->key_state = KEY_ACTIVE;
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(test_association->ekid);
+    ekp->key_state    = KEY_ACTIVE;
+
+    crypto_key_t *akp = NULL;
+    akp               = key_if->get_key(test_association->akid);
+    akp->key_state    = KEY_ACTIVE;
 
     status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -390,13 +390,13 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FECF_LEFT_BLANK)
     SecurityAssociation_t *test_association;
     sa_if->sa_get_from_spi(10, &test_association);
 
-    crypto_key_t *ekp    = NULL;
-    ekp = key_if->get_key(test_association->ekid);
-    ekp->key_state = KEY_ACTIVE;
-    
-    crypto_key_t *akp    = NULL;
-    akp = key_if->get_key(test_association->akid);
-    akp->key_state = KEY_ACTIVE;
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(test_association->ekid);
+    ekp->key_state    = KEY_ACTIVE;
+
+    crypto_key_t *akp = NULL;
+    akp               = key_if->get_key(test_association->akid);
+    akp->key_state    = KEY_ACTIVE;
 
     status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -526,13 +526,13 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FHEC_FECF)
     SecurityAssociation_t *test_association;
     sa_if->sa_get_from_spi(10, &test_association);
 
-    crypto_key_t *ekp    = NULL;
-    ekp = key_if->get_key(test_association->ekid);
-    ekp->key_state = KEY_ACTIVE;
-    
-    crypto_key_t *akp    = NULL;
-    akp = key_if->get_key(test_association->akid);
-    akp->key_state = KEY_ACTIVE;
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(test_association->ekid);
+    ekp->key_state    = KEY_ACTIVE;
+
+    crypto_key_t *akp = NULL;
+    akp               = key_if->get_key(test_association->akid);
+    akp->key_state    = KEY_ACTIVE;
 
     status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -663,13 +663,13 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FHEC_OID_FECF)
     SecurityAssociation_t *test_association;
     sa_if->sa_get_from_spi(10, &test_association);
 
-    crypto_key_t *ekp    = NULL;
-    ekp = key_if->get_key(test_association->ekid);
-    ekp->key_state = KEY_ACTIVE;
-    
-    crypto_key_t *akp    = NULL;
-    akp = key_if->get_key(test_association->akid);
-    akp->key_state = KEY_ACTIVE;
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(test_association->ekid);
+    ekp->key_state    = KEY_ACTIVE;
+
+    crypto_key_t *akp = NULL;
+    akp               = key_if->get_key(test_association->akid);
+    akp->key_state    = KEY_ACTIVE;
 
     status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -808,13 +808,13 @@ UTEST(AOS_APPLY, AES_CMAC_256_TEST_BITMASK_1)
     sa_if->sa_get_from_spi(10, &sa_ptr);
     sa_ptr->sa_state = SA_OPERATIONAL;
 
-    crypto_key_t *ekp    = NULL;
-    ekp = key_if->get_key(sa_ptr->ekid);
-    ekp->key_state = KEY_ACTIVE;
-    
-    crypto_key_t *akp    = NULL;
-    akp = key_if->get_key(sa_ptr->akid);
-    akp->key_state = KEY_ACTIVE;
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(sa_ptr->ekid);
+    ekp->key_state    = KEY_ACTIVE;
+
+    crypto_key_t *akp = NULL;
+    akp               = key_if->get_key(sa_ptr->akid);
+    akp->key_state    = KEY_ACTIVE;
 
     status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -1111,13 +1111,13 @@ UTEST(AOS_APPLY, AES_GCM)
     aos_frame_pri_hdr.vcid = ((uint8_t)test_aos_b[1] & 0x3F);
 
     sa_if->sa_get_from_spi(10, &sa_ptr);
-    crypto_key_t *ekp    = NULL;
-    ekp = key_if->get_key(sa_ptr->ekid);
-    ekp->key_state = KEY_ACTIVE;
-    
-    crypto_key_t *akp    = NULL;
-    akp = key_if->get_key(sa_ptr->akid);
-    akp->key_state = KEY_ACTIVE;
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(sa_ptr->ekid);
+    ekp->key_state    = KEY_ACTIVE;
+
+    crypto_key_t *akp = NULL;
+    akp               = key_if->get_key(sa_ptr->akid);
+    akp->key_state    = KEY_ACTIVE;
 
     status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -1269,13 +1269,13 @@ UTEST(AOS_APPLY, AOS_KEY_STATE_TEST)
     sa_ptr->shivf_len  = 16;
     sa_ptr->stmacf_len = 16;
 
-    crypto_key_t *ekp    = NULL;
-    ekp = key_if->get_key(sa_ptr->ekid);
-    ekp->key_state = KEY_ACTIVE;
-    
-    crypto_key_t *akp    = NULL;
-    akp = key_if->get_key(sa_ptr->akid);
-    akp->key_state = KEY_ACTIVE;
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(sa_ptr->ekid);
+    ekp->key_state    = KEY_ACTIVE;
+
+    crypto_key_t *akp = NULL;
+    akp               = key_if->get_key(sa_ptr->akid);
+    akp->key_state    = KEY_ACTIVE;
 
     status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -1379,17 +1379,16 @@ UTEST(AOS_APPLY, AEAD_GCM_BITMASK_1)
     sa_ptr->shivf_len  = 16;
     sa_ptr->stmacf_len = 16;
 
-    crypto_key_t *ekp    = NULL;
-    ekp = key_if->get_key(sa_ptr->ekid);
-    ekp->key_state = KEY_DEACTIVATED;
-    
-    crypto_key_t *akp    = NULL;
-    akp = key_if->get_key(sa_ptr->akid);
-    akp->key_state = KEY_DEACTIVATED;
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(sa_ptr->ekid);
+    ekp->key_state    = KEY_DEACTIVATED;
+
+    crypto_key_t *akp = NULL;
+    akp               = key_if->get_key(sa_ptr->akid);
+    akp->key_state    = KEY_DEACTIVATED;
 
     status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
     ASSERT_EQ(CRYPTO_LIB_ERR_KEY_STATE_INVALID, status);
-
 
     free(test_aos_b);
     Crypto_Shutdown();

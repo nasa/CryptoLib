@@ -183,7 +183,7 @@ void Crypto_ccsdsPrint(CCSDS_t *sdls_frame)
     printf("\t\t seq        = 0x%01x \n", sdls_frame->hdr.seq);
     printf("\t\t pktid      = 0x%04x \n", sdls_frame->hdr.pktid);
     printf("\t\t pkt_length = 0x%04x \n", sdls_frame->hdr.pkt_length);
-    if(crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
+    if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
     {
         printf("\t PUS Header\n");
         printf("\t\t shf        = 0x%01x \n", sdls_frame->pus.shf);

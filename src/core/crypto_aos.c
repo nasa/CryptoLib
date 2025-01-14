@@ -1214,7 +1214,6 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     crypto_key_t *ekp = NULL;
     crypto_key_t *akp = NULL;
 
-    
     if (sa_ptr->est == 1)
     {
         ekp = key_if->get_key(sa_ptr->ekid);

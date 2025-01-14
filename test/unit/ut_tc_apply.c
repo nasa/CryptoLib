@@ -1455,15 +1455,15 @@ UTEST(TC_APPLY_SECURITY, TC_KEY_STATE_TEST)
     test_association->sa_state = SA_KEYED;
     sa_if->sa_get_from_spi(4, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    test_association->ekid = 130;
+    test_association->ekid     = 130;
 
-    crypto_key_t *ekp    = NULL;
-    ekp = key_if->get_key(test_association->ekid);
-    ekp->key_state = KEY_DEACTIVATED;
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(test_association->ekid);
+    ekp->key_state    = KEY_DEACTIVATED;
 
-    crypto_key_t *akp    = NULL;
-    akp = key_if->get_key(test_association->akid);
-    akp->key_state = KEY_DEACTIVATED;
+    crypto_key_t *akp = NULL;
+    akp               = key_if->get_key(test_association->akid);
+    akp->key_state    = KEY_DEACTIVATED;
 
     return_val =
         Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);

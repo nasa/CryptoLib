@@ -45,7 +45,8 @@ int32_t Crypto_Key_OTAR(void)
     int         y;
     int32_t     status = CRYPTO_LIB_SUCCESS;
     // uint16_t pdu_len = (uint16_t) sdls_frame.pdu.hdr.pdu_len[1] << 8 | sdls_frame.pdu.hdr.pdu_len[0];
-    int           pdu_keys = (sdls_frame.pdu.hdr.pdu_len - SDLS_KEYID_LEN - SDLS_IV_LEN - MAC_SIZE) / (SDLS_KEYID_LEN + SDLS_KEY_LEN);
+    int pdu_keys =
+        (sdls_frame.pdu.hdr.pdu_len - SDLS_KEYID_LEN - SDLS_IV_LEN - MAC_SIZE) / (SDLS_KEYID_LEN + SDLS_KEY_LEN);
     int           w;
     crypto_key_t *ekp = NULL;
 
@@ -101,31 +102,32 @@ int32_t Crypto_Key_OTAR(void)
     }
 
     // Check key state
-    if(ekp->key_state != KEY_ACTIVE)
+    if (ekp->key_state != KEY_ACTIVE)
     {
         return CRYPTO_LIB_ERR_KEY_STATE_INVALID;
     }
 
     uint8_t ecs = CRYPTO_CIPHER_AES256_GCM; // Per SDLS baseline
-    status      = cryptography_if->cryptography_aead_decrypt(&(sdls_frame.pdu.data[14]), // plaintext output
-                                                             (size_t)(pdu_keys * (SDLS_KEYID_LEN + SDLS_KEY_LEN)), // length of data
-                                                             NULL,             // in place decryption
-                                                             0,                // in data length
-                                                             &(ekp->value[0]), // key
-                                                             ekp->key_len,     // key length
-                                                             NULL,             // SA reference
-                                                             &(packet.iv[0]),  // IV
-                                                             SDLS_IV_LEN,      // IV length
-                                                             &(packet.mac[0]), // tag input
-                                                             MAC_SIZE,         // tag size
-                                                             NULL,             // AAD
-                                                             0,                // AAD Length
-                                                             CRYPTO_TRUE,      // decrypt
-                                                             CRYPTO_TRUE,      // authenticate
-                                                             CRYPTO_FALSE,     // AAD Bool
-                                                             &ecs,             // encryption cipher
-                                                             NULL,             // authentication cipher
-                                                             NULL              // cam_cookies
+    status      = cryptography_if->cryptography_aead_decrypt(
+             &(sdls_frame.pdu.data[14]),                           // plaintext output
+             (size_t)(pdu_keys * (SDLS_KEYID_LEN + SDLS_KEY_LEN)), // length of data
+             NULL,                                                 // in place decryption
+             0,                                                    // in data length
+             &(ekp->value[0]),                                     // key
+             ekp->key_len,                                         // key length
+             NULL,                                                 // SA reference
+             &(packet.iv[0]),                                      // IV
+             SDLS_IV_LEN,                                          // IV length
+             &(packet.mac[0]),                                     // tag input
+             MAC_SIZE,                                             // tag size
+             NULL,                                                 // AAD
+             0,                                                    // AAD Length
+             CRYPTO_TRUE,                                          // decrypt
+             CRYPTO_TRUE,                                          // authenticate
+             CRYPTO_FALSE,                                         // AAD Bool
+             &ecs,                                                 // encryption cipher
+             NULL,                                                 // authentication cipher
+             NULL                                                  // cam_cookies
          );
 
     // If decryption errors, return
@@ -351,8 +353,9 @@ int32_t Crypto_Key_inventory(uint8_t *ingest)
     // Prepare for Reply
     range                      = packet.kid_last - packet.kid_first + 1;
     sdls_frame.pdu.hdr.pdu_len = (SDLS_KEY_INVENTORY_RPLY_SIZE * (range)) * BYTE_LEN;
-    sdls_frame.hdr.pkt_length =
-        CCSDS_HDR_SIZE + CCSDS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.pdu.hdr.pdu_len / BYTE_LEN) - 1 + 2; // 2 = Num Keys Returned Field (2 Bytes)
+    sdls_frame.hdr.pkt_length  = CCSDS_HDR_SIZE + CCSDS_PUS_SIZE + SDLS_TLV_HDR_SIZE +
+                                (sdls_frame.pdu.hdr.pdu_len / BYTE_LEN) - 1 +
+                                2; // 2 = Num Keys Returned Field (2 Bytes)
     count = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
 
     sdls_ep_reply[count++] = ((range & 0xFF00) >> BYTE_LEN);
@@ -413,7 +416,8 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
     for (x = 0; x < pdu_keys; x++)
     {
         // Key ID
-        packet.blk[x].kid = ((uint8_t)sdls_frame.pdu.data[count] << BYTE_LEN) | ((uint8_t)sdls_frame.pdu.data[count + 1]);
+        packet.blk[x].kid =
+            ((uint8_t)sdls_frame.pdu.data[count] << BYTE_LEN) | ((uint8_t)sdls_frame.pdu.data[count + 1]);
         count += 2;
 #ifdef PDU_DEBUG
         printf("\tCrypto_Key_verify: Block %d Key ID is %d ", x, packet.blk[x].kid);
@@ -484,32 +488,34 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
 
         // Encrypt challenge
         uint8_t ecs = CRYPTO_CIPHER_AES256_GCM;
-        status = cryptography_if->cryptography_aead_encrypt(&(sdls_ep_keyv_reply.blk[x].challenged[0]), // ciphertext output
-                                                   (size_t)CHALLENGE_SIZE,                     // length of data
-                                                   &(packet.blk[x].challenge[0]),              // plaintext input
-                                                   (size_t)CHALLENGE_SIZE,                     // in data length
-                                                   &(ekp->value[0]),                           // Key Index
-                                                   SDLS_KEY_LEN,                               // Key Length
-                                                   NULL,                                       // SA Reference for key
-                                                   &(sdls_ep_keyv_reply.blk[x].iv[0]),         // IV
-                                                   SDLS_IV_LEN,                                // IV Length
-                                                   &(sdls_ep_keyv_reply.blk[x].mac[0]),        // MAC
-                                                   CHALLENGE_MAC_SIZE,                         // MAC Size
-                                                   NULL, 0,
-                                                   CRYPTO_TRUE,  // Encrypt
-                                                   CRYPTO_TRUE,  // Authenticate
-                                                   CRYPTO_FALSE, // AAD
-                                                   &ecs,         // encryption cipher
-                                                   NULL,         // authentication cipher
-                                                   NULL          // cam_cookies
-        );
+        status =
+            cryptography_if->cryptography_aead_encrypt(&(sdls_ep_keyv_reply.blk[x].challenged[0]), // ciphertext output
+                                                       (size_t)CHALLENGE_SIZE,                     // length of data
+                                                       &(packet.blk[x].challenge[0]),              // plaintext input
+                                                       (size_t)CHALLENGE_SIZE,                     // in data length
+                                                       &(ekp->value[0]),                           // Key Index
+                                                       SDLS_KEY_LEN,                               // Key Length
+                                                       NULL,                                // SA Reference for key
+                                                       &(sdls_ep_keyv_reply.blk[x].iv[0]),  // IV
+                                                       SDLS_IV_LEN,                         // IV Length
+                                                       &(sdls_ep_keyv_reply.blk[x].mac[0]), // MAC
+                                                       CHALLENGE_MAC_SIZE,                  // MAC Size
+                                                       NULL, 0,
+                                                       CRYPTO_TRUE,  // Encrypt
+                                                       CRYPTO_TRUE,  // Authenticate
+                                                       CRYPTO_FALSE, // AAD
+                                                       &ecs,         // encryption cipher
+                                                       NULL,         // authentication cipher
+                                                       NULL          // cam_cookies
+            );
 
         // If encryption errors, capture something about it for testing
         // We need to continue on, other keys could be successful
         if (status != CRYPTO_LIB_SUCCESS)
         {
 #ifdef DEBUG
-        printf(KRED "Error: OTAR Key Verification encryption failed for new key index %d with error %d \n" RESET, x, status);
+            printf(KRED "Error: OTAR Key Verification encryption failed for new key index %d with error %d \n" RESET, x,
+                   status);
 #endif
         }
 
