@@ -1,0 +1,14 @@
+version: 2
+
+sphinx:
+  configuration: docs/wiki/conf.py
+
+build:
+  os: ubuntu-22.04
+  tools:
+    python: "3.10"
+  jobs:
+    - install:
+        - apt-get update && apt-get install -y doxygen
+        # - pip install -r docs/wiki/requirements.txt
+    - build
