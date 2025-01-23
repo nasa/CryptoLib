@@ -76,13 +76,13 @@ extern "C"
 #define CRYPTO_MAX_INPUT_TOKEN_SIZE 64
 
 #define CRYPTO_CMD_UNKNOWN  (-1)
-#define CRYPTO_CMD_HELP       0
-#define CRYPTO_CMD_EXIT       1
-#define CRYPTO_CMD_NOOP       2
-#define CRYPTO_CMD_RESET      3
-#define CRYPTO_CMD_VCID       4
-#define CRYPTO_CMD_TC_DEBUG   5
-#define CRYPTO_CMD_TM_DEBUG   6
+#define CRYPTO_CMD_HELP     0
+#define CRYPTO_CMD_EXIT     1
+#define CRYPTO_CMD_NOOP     2
+#define CRYPTO_CMD_RESET    3
+#define CRYPTO_CMD_VCID     4
+#define CRYPTO_CMD_TC_DEBUG 5
+#define CRYPTO_CMD_TM_DEBUG 6
 
     /*
     ** Structures
