@@ -17,19 +17,21 @@
 # 
 
 ARG WOLFSSL_VERSION=5.6.0-stable
-FROM ubuntu:jammy-20240530 AS cl0
+FROM ubuntu:noble-20241118.1 AS cl0
 
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -y \
     && apt-get install -y \
         autoconf \
         automake \
+        build-essential \ 
         ca-certificates \
         cmake \
         curl \
         gettext \
         git \
         gdb\
+        gcc-14 \
         lcov \
         libcurl4-openssl-dev \
         libmariadb-dev \
@@ -38,9 +40,15 @@ RUN apt-get update -y \
         make \
         python3-dev \
         python3-pip \
+        python3-sphinx \
+        python3-sphinx-rtd-theme \
+        python3-myst-parser \
         unzip \
-    && rm -rf /var/lib/apt/lists/* \
-    && pip3 install pycryptodome
+    && rm -rf /var/lib/apt/lists/* 
+
+RUN ldconfig \
+    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 60 \
+    && update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-14 60
 
 FROM cl0 AS cl1
 ARG GPG_ERROR_VERSION=1.50
@@ -58,7 +66,8 @@ RUN curl \
     && tar -xjf /tmp/libgcrypt-${GCRYPT_VERSION}.tar.bz2 -C /tmp/ \
     && cd /tmp/libgcrypt-${GCRYPT_VERSION} \
     && ./configure \
-    && make install
+    && make install \
+    && ldconfig
 
 FROM cl1 AS cl2
 ARG WOLFSSL_VERSION=5.6.0-stable
@@ -74,3 +83,5 @@ RUN curl \
     && cmake --build . \
     && make install \
     && ldconfig 
+
+

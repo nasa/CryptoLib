@@ -1,5 +1,6 @@
 ![Build](https://github.com/nasa/CryptoLib/actions/workflows/build.yml/badge.svg)
 [![CodeCov](https://codecov.io/gh/nasa/CryptoLib/branch/main/graph/badge.svg?token=KCOMCQO0ZU)](https://codecov.io/gh/nasa/CryptoLib)
+[![CodeQL Advanced](https://github.com/nasa/CryptoLib/actions/workflows/codeql.yml/badge.svg?branch=dev)](https://github.com/nasa/CryptoLib/actions/workflows/codeql.yml)
 
 ![CryptoLib logo Final All orange](https://github.com/user-attachments/assets/fc02870b-e2d2-4577-83c2-78985d5fbdd6)
 

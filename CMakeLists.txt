@@ -56,7 +56,7 @@ option(SA_MARIADB "Security Association - MariaDB" OFF)
 option(SUPPORT "Support" OFF)
 option(SYSTEM_INSTALL "SystemInstall" OFF)
 option(TEST "Test" OFF)
-option(TEST_ENC "Tests - Encryption" OFF)
+# option(TEST_ENC "Tests - Encryption" OFF)
 option(SA_FILE "Save Security Association to File" OFF)
 option(KEY_VALIDATION "Validate existance of key duplication" OFF)
 
@@ -64,6 +64,7 @@ OPTION(KMC_MDB_RH "KMC-MDB-RedHat-Integration-Testing" OFF) #Disabled by default
 OPTION(KMC_MDB_DB "KMC-MDB-Debian-Integration-Testing" OFF) #Disabled by default, enable with: -DKMC_MDB_DB=ON
 OPTION(KMC_CFFI_EXCLUDE "KMC-Exclude-Problematic-CFFI-Code" OFF) #Disabled by default, enable with: -DKMC_CFFI_EXCLUDE=ON
 
+OPTION(CRYPTO_EPROC "Enables the building and use of Extended Procedures" OFF) #Disabled by default, enable with -DCRYPTO_EPROC=ON
 
 #
 # Custom Module Paths
@@ -138,6 +139,12 @@ IF(KMC_MDB_DB)
     ADD_DEFINITIONS(-DKMC_CFFI_EXCLUDE)
 ENDIF(KMC_MDB_DB)
 
+IF(CRYPTO_EPROC)
+    ADD_DEFINITIONS(-DCRYPTO_EPROC)
+    message(WARNING "Cryptolib Extended Procedures NOT complete.  NOT Fully tested.  Use at own risk!")
+
+ENDIF(CRYPTO_EPROC)
+
 if(SYSTEM_INSTALL)
     # The library will be installed to /usr/local unless overridden with
     # -DCMAKE_INSTALL_PREFIX=/some/path
@@ -150,10 +157,10 @@ elseif(NOT DEFINED CFE_SYSTEM_PSPNAME)
     set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}/install)
 endif()
 
-if(TEST_ENC)
-    # Can't run an additional set of tests without `TEST` enabled
-    set(TEST ON)
-endif()
+# if(TEST_ENC)
+#     # Can't run an additional set of tests without `TEST` enabled
+#     set(TEST ON)
+# endif()
 
 if(TEST)
     include(CTest)

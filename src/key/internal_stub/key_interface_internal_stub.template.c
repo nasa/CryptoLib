@@ -24,6 +24,7 @@ static KeyInterfaceStruct key_if_struct;
 /* Functions */
 KeyInterface get_key_interface_internal(void)
 {
-    fprintf(stderr,"ERROR: Loading internal key interface stub source code. Rebuild CryptoLib with -DKEY_INTERNAL=ON to use implementation.\n");
+    fprintf(stderr, "ERROR: Loading internal key interface stub source code. Rebuild CryptoLib with -DKEY_INTERNAL=ON "
+                    "to use implementation.\n");
     return &key_if_struct;
 }

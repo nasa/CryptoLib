@@ -28,7 +28,7 @@ typedef struct
     int32_t (*mc_initialize)(void);
     void (*mc_log)(int32_t error_code);
     int32_t (*mc_shutdown)(void);
-    
+
     /* MC Interface, SDLS-EP */
     /*
     int32_t (*mc_ping)();
@@ -38,8 +38,8 @@ typedef struct
     int32_t (*mc_self_test)(void);
     int32_t (*mc_alarm_reset_flag)(void);
     */
-   
-}  McInterfaceStruct, *McInterface;
+
+} McInterfaceStruct, *McInterface;
 
 /* Prototypes */
 McInterface get_mc_interface_custom(void);

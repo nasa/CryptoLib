@@ -11,9 +11,9 @@
 #
 name: "CodeQL Advanced"
 
-on: 
-  push:
-    branches: [ main, dev ]
+on:
+  push: 
+    branches: [ dev ]
   pull_request:
     branches: [ main, dev ]
 
@@ -21,6 +21,8 @@ jobs:
   build_internal:
     name: Analyze Build_Internal
     runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
+    container:
+        image: ivvitc/cryptolib:20250102
     permissions:
       # required for all workflows
       security-events: write
@@ -29,7 +31,7 @@ jobs:
       packages: read
 
       # only required for workflows in private repositories
-      actions: read
+      actions: write
       contents: read
 
     env: 
@@ -71,6 +73,8 @@ jobs:
   build_minimal:
       name: Analyze Build_Minimal
       runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
+      container:
+        image: ivvitc/cryptolib:20250102
       permissions:
         # required for all workflows
         security-events: write
@@ -121,6 +125,8 @@ jobs:
   build_wolf:
       name: Analyze Build_Wolf
       runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
+      container:
+        image: ivvitc/cryptolib:20250102
       permissions:
         # required for all workflows
         security-events: write
@@ -153,27 +159,26 @@ jobs:
            cd /tmp/wolfssl/build;
            cmake -DWOLFSSL_AESCCM=yes -DWOLFSSL_AESSIV=yes -DWOLFSSL_CMAC=yes ..;
            cmake --build .;
-           sudo make install;
-           sudo ldconfig;
+           make install;
+           ldconfig;
       - name: Install Dependencies
-        run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 autoconf libtool
-
-      - name: Install Python Libraries
-        run: sudo pip install pycryptodome
+        run: |
+          apt-get update
+          apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 autoconf libtool
 
       - name: Update Dependencies
         run: >
           curl -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 -o /tmp/libgpg-error-1.50.tar.bz2 
           && tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/ 
           && cd /tmp/libgpg-error-1.50 
-          && sudo ./configure 
-          && sudo make install 
+          && ./configure 
+          && make install 
           && curl -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 -o /tmp/libgcrypt-1.11.0.tar.bz2 
           && tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ 
           && cd /tmp/libgcrypt-1.11.0 
-          && sudo ./configure 
-          && sudo make install
-          && sudo ldconfig
+          && ./configure 
+          && make install
+          && ldconfig
       
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -198,6 +203,8 @@ jobs:
   build_rhel:
       name: Analyze Build_RHEL
       runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
+      container:
+        image: ivvitc/cryptolib:20250102
       permissions:
         # required for all workflows
         security-events: write
@@ -244,3 +251,55 @@ jobs:
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:${{matrix.language}}"
+
+  build_ep:
+    name: Analyze Build_EP
+    runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
+    container:
+        image: ivvitc/cryptolib:20250102
+    permissions:
+      # required for all workflows
+      security-events: write
+
+      # required to fetch internal or private CodeQL packs
+      packages: read
+
+      # only required for workflows in private repositories
+      actions: write
+      contents: read
+
+    env: 
+      BUILD_STRING: build_ep.sh
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - language: c-cpp
+          build-mode: manual
+        # - language: python
+        #   build-mode: none
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Update Dependencies
+      run: |
+        bash ${GITHUB_WORKSPACE}/support/scripts/update_env.sh
+
+    # Initializes the CodeQL tools for scanning.
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: ${{ matrix.language }}
+        build-mode: ${{ matrix.build-mode }}
+
+    - if: matrix.build-mode == 'manual'
+      shell: bash
+      run: |
+        bash ${GITHUB_WORKSPACE}/support/scripts/$BUILD_STRING
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:${{matrix.language}}"

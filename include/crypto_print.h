@@ -28,14 +28,71 @@
 /*
 ** Prototypes
 */
-void Crypto_tcPrint(TC_t* tc_frame);
-void Crypto_tmPrint(TM_t* tm_frame);
-void Crypto_clcwPrint(Telemetry_Frame_Clcw_t* clcw);
-void Crypto_fsrPrint(SDLS_FSR_t* report);
-void Crypto_ccsdsPrint(CCSDS_t* sdls_frame);
-void Crypto_saPrint(SecurityAssociation_t* sa);
-void Crypto_hexprint(const void* c, size_t n);
-void Crypto_binprint(void* c, size_t n);
-void Crypto_mpPrint(GvcidManagedParameters_t* managed_parameters, uint8_t print_children);
 
-#endif //CRYPTO_PRINT_H
+/**
+ * @brief Function: Crypto_tcPrint
+ * @param tc_frame: TC_T*
+ * Prints the contents of the tc_frame
+ **/
+void Crypto_tcPrint(TC_t *tc_frame);
+
+/**
+ * @brief Function: Crypto_tmPrint
+ * @param tm_frame: TM_T*
+ * Prints the contents of the tm_frame
+ **/
+void Crypto_tmPrint(TM_t *tm_frame);
+
+/**
+ * @brief Function: Crypto_clcwPrint
+ * @param clcw: Telemetry_Frame_Clcw_t*
+ * Prints the contents of the clcw
+ **/
+void Crypto_clcwPrint(Telemetry_Frame_Ocf_Clcw_t *clcw);
+
+/**
+ * @brief Function: Crypto_fsrPrint
+ * @param report: SDLS_FSR_t*
+ * Prints the contents of current FSR in memory
+ **/
+void Crypto_fsrPrint(Telemetry_Frame_Ocf_Fsr_t *report);
+
+/**
+ * @brief Function: Crypto_ccsdsPrint
+ * @param sdls_frame: CCSDS_t*
+ * Prints the contents of current CCSDS in memory
+ **/
+void Crypto_ccsdsPrint(CCSDS_t *sdls_frame);
+
+/**
+ * @brief Function: Crypto_saPrint
+ * @param sa: SecurityAssociation_t*
+ * Prints the contents of SA
+ **/
+void Crypto_saPrint(SecurityAssociation_t *sa);
+
+/**
+ * @brief Function: Crypto_hexPrint
+ * Prints the array of hex characters.
+ * @param c: void*, The hex to be printed.
+ * @param n: size_t, The size of the array to be printed.
+ **/
+void Crypto_hexprint(const void *c, size_t n);
+
+/**
+ * @brief Function: Crypto_binprint
+ * Prints the array of binary data.
+ * @param c: void*, The binary array to be printed.
+ * @param n: size_t, The size of the array to be printed.
+ **/
+void Crypto_binprint(void *c, size_t n);
+
+/**
+ * @brief Function: Crypto_mpPrint
+ * Prints the array of Managed Parameters.
+ * @param managed_parameters: GvcidManagedParameters_t*, The binary array to be printed.
+ * @param print_children: uint8_t, The size of the array to be printed.
+ **/
+void Crypto_mpPrint(GvcidManagedParameters_t *managed_parameters, uint8_t print_children);
+
+#endif // CRYPTO_PRINT_H
