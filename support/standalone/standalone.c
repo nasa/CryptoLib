@@ -603,8 +603,8 @@ void *crypto_standalone_tm_process(void *socks)
             // Process Security skipping prepended ASM
             crypto_standalone_tm_debug_process(tm_process_in);
             // Account for ASM length
-            status =
-                Crypto_TM_ProcessSecurity(tm_process_in + 4, (const uint16_t)tm_process_len - 4, &tm_ptr, &tm_out_len);
+            printf("Standalone preparing to process CADU with ASM...\n");
+            status = Crypto_TM_ProcessSecurity(tm_process_in + 4, (const uint16_t)tm_process_len - 4, &tm_ptr, &tm_out_len);
 #else
             if (tm_debug == 1)
             {
@@ -636,6 +636,7 @@ void *crypto_standalone_tm_process(void *socks)
 #ifdef TM_CADU_HAS_ASM
                 uint16_t spi = (0xFFFF & tm_process_in[11]) | tm_process_in[12];
                 // crypto_standalone_tm_frame(tm_process_in+4, tm_process_len-4, tm_framed, &tm_framed_len, spi);
+                // \/ as arrived ... ^ was commented out?
                 crypto_standalone_tm_frame(tm_ptr, tm_out_len, tm_framed, &tm_framed_len, spi);
 #else
                 uint16_t spi = (0xFFFF & tm_process_in[7]) | tm_process_in[8];

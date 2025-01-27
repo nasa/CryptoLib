@@ -712,29 +712,31 @@ static int32_t sa_close(void)
  **/
 static int32_t sa_get_from_spi(uint16_t spi, SecurityAssociation_t **security_association)
 {
+    printf("Inside get SA from spi...\n");
     int32_t status = CRYPTO_LIB_SUCCESS;
     // Check if spi index in sa array
     if (spi >= NUM_SA)
     {
-#ifdef SA_DEBUG
-        printf(KRED "sa_get_from_spi: SPI: %d > NUM_SA: %d.\n" RESET, spi, NUM_SA);
-#endif
-        return CRYPTO_LIB_ERR_SPI_INDEX_OOB;
+        printf("No init...\n");
+        return CRYPTO_LIB_ERR_NO_INIT;
     }
+    printf("before pointer assignment...\n");
     *security_association = &sa[spi];
-    // if (sa[spi].shivf_len > 0 && crypto_config.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
-    // {
-    //     return CRYPTO_LIB_ERR_NULL_IV;
-    // } // Must have IV if doing encryption or authentication
-
-    if ((sa[spi].abm_len == 0) && sa[spi].ast)
+    printf("after pointer assignment...\n");
+    if (sa[spi].iv == NULL && (sa[spi].shivf_len > 0) && crypto_config.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
+        printf("Null IV...\n");
+        return CRYPTO_LIB_ERR_NULL_IV;
+    } // Must have IV if doing encryption or authentication
+    if (sa[spi].abm == NULL && sa[spi].ast)
+    {
+        printf("No abm...\n");
         return CRYPTO_LIB_ERR_NULL_ABM;
     } // Must have abm if doing authentication
-#ifdef SA_DEBUG
+// #ifdef SA_DEBUG
     printf(KYEL "DEBUG - Printing local copy of SA Entry for current SPI.\n" RESET);
     Crypto_saPrint(*security_association);
-#endif
+// #endif
     return status;
 }
 

@@ -99,18 +99,18 @@ void Crypto_TM_Check_For_Secondary_Header(uint8_t *pTfBuffer, uint16_t *idx)
     *idx = 4;
     if ((pTfBuffer[*idx] & 0x80) == 0x80)
     {
-#ifdef TM_DEBUG
+//#ifdef TM_DEBUG
         printf(KYEL "A TM Secondary Header flag is set!\n");
-#endif
+// #endif
         // Secondary header is present
         *idx = 6;
         // Determine length of secondary header
         // Length coded as total length of secondary header - 1
         // Reference CCSDS 132.0-B-2 4.1.3.2.3
         uint8_t secondary_hdr_len = (pTfBuffer[*idx] & 0x3F);
-#ifdef TM_DEBUG
+//#ifdef TM_DEBUG
         printf(KYEL "Secondary Header Length is decoded as: %d\n", secondary_hdr_len);
-#endif
+// #endif
         // Increment from current byte (1st byte of secondary header),
         // to where the SPI would start
         *idx += secondary_hdr_len + 1;
@@ -152,9 +152,9 @@ int32_t Crypto_TM_IV_Sanity_Check(uint8_t *sa_service_type, SecurityAssociation_
     if (*sa_service_type != SA_PLAINTEXT && sa_ptr->ecs_len == 0 && sa_ptr->acs_len == 0)
     {
         status = CRYPTO_LIB_ERR_NULL_CIPHERS;
-#ifdef TM_DEBUG
+//#ifdef TM_DEBUG
         printf(KRED "CRYPTO_LIB_ERR_NULL_CIPHERS, Invalid cipher lengths, %d\n" RESET, CRYPTO_LIB_ERR_NULL_CIPHERS);
-#endif
+// #endif
         mc_if->mc_log(status);
         return status;
     }
@@ -312,9 +312,9 @@ int32_t Crypto_TM_Do_Encrypt_NONPLAINTEXT(uint8_t sa_service_type, uint16_t *aad
             {
                 *aad_len += pdu_len;
             }
-#ifdef TM_DEBUG
-            printf("Calculated AAD Length: %d\n", *aad_len);
-#endif
+//#ifdef TM_DEBUG
+            printf("Calculated AAD Length: %d\n",*aad_len);
+// #endif
             if (sa_ptr->abm_len < *aad_len)
             {
                 status = CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
@@ -449,12 +449,11 @@ int32_t Crypto_TM_Do_Encrypt_NONPLAINTEXT_AEAD_Logic(uint8_t sa_service_type, ui
         {
             // Do nothing, SDLS fields were already copied into static frame in memory
         }
-        else
-        {
-#ifdef TM_DEBUG
+        else{
+//#ifdef TM_DEBUG
             printf(KRED "Service type reported as: %d\n" RESET, sa_service_type);
             printf(KRED "ECS IS AEAD Value: %d\n" RESET, ecs_is_aead_algorithm);
-#endif
+// #endif
             status = CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
         }
     }
@@ -573,22 +572,21 @@ int32_t Crypto_TM_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
         status = Crypto_TM_Do_Encrypt_Handle_Increment(sa_service_type, sa_ptr);
     }
 
-    if (status == CRYPTO_LIB_SUCCESS)
+
+    // Move idx to mac location
+    idx += pdu_len;
+//#ifdef TM_DEBUG
+    if (sa_ptr->stmacf_len > 0)
     {
-        // Move idx to mac location
-        idx += pdu_len;
-#ifdef TM_DEBUG
-        if (sa_ptr->stmacf_len > 0)
-        {
-            printf(KYEL "Data length is %d\n" RESET, pdu_len);
-            printf(KYEL "MAC location starts at: %d\n" RESET, idx);
-            printf(KYEL "MAC length of %d\n" RESET, sa_ptr->stmacf_len);
-        }
-        else
-        {
-            printf(KYEL "MAC NOT SET TO BE USED IN SA - LENGTH IS 0\n");
-        }
-#endif
+        printf(KYEL "Data length is %d\n" RESET, pdu_len);
+        printf(KYEL "MAC location starts at: %d\n" RESET, idx);
+        printf(KYEL "MAC length of %d\n" RESET, sa_ptr->stmacf_len);
+    }
+    else
+    {
+        printf(KYEL "MAC NOT SET TO BE USED IN SA - LENGTH IS 0\n");
+    }
+// #endif
 
         // TODO OCF - ? Here, elsewhere?
 
@@ -617,18 +615,16 @@ int32_t Crypto_TM_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
             idx += 2;
         }
 
-#ifdef TM_DEBUG
-        printf(KYEL "Printing new TM frame:\n\t");
-        for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
-        {
-            printf("%02X", pTfBuffer[i]);
-        }
-        printf("\n");
-#endif
-    }
-    if (status == CRYPTO_LIB_SUCCESS)
+//#ifdef TM_DEBUG
+    printf(KYEL "Printing new TM frame:\n\t");
+    for(int i = 0; i < current_managed_parameters->max_frame_size; i++)
     {
-        status = sa_if->sa_save_sa(sa_ptr);
+        printf("%02X", pTfBuffer[i]);
+    }
+    printf("\n");
+// #endif
+
+    status = sa_if->sa_save_sa(sa_ptr);
 
 #ifdef DEBUG
         printf(KYEL "----- Crypto_TM_ApplySecurity END -----\n" RESET);
@@ -654,7 +650,7 @@ void Crypto_TM_ApplySecurity_Debug_Print(uint16_t idx, uint16_t pdu_len, Securit
     pdu_len = pdu_len;
     sa_ptr  = sa_ptr;
 
-#ifdef TM_DEBUG
+    //#ifdef TM_DEBUG
     printf(KYEL "Data location starts at: %d\n" RESET, idx);
     printf(KYEL "Data size is: %d\n" RESET, pdu_len);
     printf(KYEL "Index at end of SPI is: %d\n", idx);
@@ -668,7 +664,7 @@ void Crypto_TM_ApplySecurity_Debug_Print(uint16_t idx, uint16_t pdu_len, Securit
         // If FECF exists, comes just before end of the frame
         printf(KYEL "FECF Location is: %d\n" RESET, current_managed_parameters_struct.max_frame_size - 2);
     }
-#endif
+// #endif
 }
 
 /**
@@ -718,7 +714,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer)
     scid = (((uint16_t)pTfBuffer[0] & 0x3F) << 4) | (((uint16_t)pTfBuffer[1] & 0xF0) >> 4);
     vcid = ((uint8_t)pTfBuffer[1] & 0x0E) >> 1;
 
-#ifdef TM_DEBUG
+//#ifdef TM_DEBUG
     printf(KYEL "\n----- Crypto_TM_ApplySecurity START -----\n" RESET);
     printf("The following GVCID parameters will be used:\n");
     printf("\tTVFN: 0x%04X\t", tfvn);
@@ -731,16 +727,16 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer)
         printf("%02X", (uint8_t)pTfBuffer[i]);
     }
     printf("\n");
-#endif
+// #endif
 
     status = sa_if->sa_get_operational_sa_from_gvcid(tfvn, scid, vcid, 0, &sa_ptr);
 
     // No operational/valid SA found
     if (status != CRYPTO_LIB_SUCCESS)
     {
-#ifdef TM_DEBUG
+//#ifdef TM_DEBUG
         printf(KRED "Error: Could not retrieve an SA!\n" RESET);
-#endif
+// #endif
         mc_if->mc_log(status);
         return status;
     }
@@ -751,26 +747,26 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer)
     // No managed parameters found
     if (status != CRYPTO_LIB_SUCCESS)
     {
-#ifdef TM_DEBUG
+//#ifdef TM_DEBUG
         printf(KRED "Error: No managed parameters found!\n" RESET);
-#endif
+// #endif
         mc_if->mc_log(status);
         return status;
     }
 
-#ifdef TM_DEBUG
+ //#ifdef TM_DEBUG
     printf(KYEL "TM BEFORE Apply Sec:\n\t" RESET);
     for (int16_t i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
     {
         printf("%02X", pTfBuffer[i]);
     }
     printf("\n");
-#endif
+// #endif
 
-#ifdef SA_DEBUG
+// #ifdef SA_DEBUG
     printf(KYEL "DEBUG - Printing SA Entry for current frame.\n" RESET);
     Crypto_saPrint(sa_ptr);
-#endif
+// #endif
 
     // Determine SA Service Type
     status = Crypto_TM_Determine_SA_Service_Type(&sa_service_type, sa_ptr);
@@ -783,7 +779,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer)
         ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(sa_ptr->ecs);
     }
 
-#ifdef TM_DEBUG
+//#ifdef TM_DEBUG
     switch (sa_service_type)
     {
         case SA_PLAINTEXT:
@@ -799,7 +795,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer)
             printf(KBLU "Creating a SDLS TM - AUTHENTICATED ENCRYPTION!\n" RESET);
             break;
     }
-#endif
+// #endif
 
     // Check if secondary header is present within frame
     // Note: Secondary headers are static only for a mission phase, not guaranteed static
@@ -814,8 +810,13 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer)
      **/
 
     // Set SPI
-    pTfBuffer[idx]     = ((sa_ptr->spi & 0xFF00) >> 8);
-    pTfBuffer[idx + 1] = (sa_ptr->spi & 0x00FF);
+    // pTfBuffer[idx] = ((sa_ptr->spi & 0xFF00) >> 8);
+    // pTfBuffer[idx + 1] = (sa_ptr->spi & 0x00FF);
+    // printf(KBLU "Set SPI idx[%d]:%02X, idx[%d]: %02X\n" RESET,idx, ((sa_ptr->spi & 0xFF00) >> 8), idx+1, (sa_ptr->spi & 0x00FF));
+    // Test code
+    pTfBuffer[idx] = 0xCC; //((sa_ptr->spi & 0xFF00) >> 8);
+    pTfBuffer[idx + 1] = 0xDD; //(sa_ptr->spi & 0x00FF);
+    printf(KBLU "Set SPI idx[%d]:%02X, idx[%d]: %02X\n" RESET,idx, pTfBuffer[idx], idx+1, pTfBuffer[idx+1]);
     idx += 2;
 
     // Set initialization vector if specified
@@ -878,6 +879,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer)
      * ~~~Index currently at start of data field, AKA end of security header~~~
      **/
     data_loc = idx;
+    printf(KBLU "Data begins at idx %d\n"RESET, data_loc);
     // Calculate size of data to be encrypted
     pdu_len = current_managed_parameters_struct.max_frame_size - idx - sa_ptr->stmacf_len;
     // Check other managed parameter flags, subtract their lengths from data field if present
@@ -931,7 +933,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer)
        *len_ingest =*len_ingest + 2;
         // Update TM First Header Pointer
         tm_frame.tm_header.fhp = tm_offset;
-#ifdef TM_DEBUG
+//#ifdef TM_DEBUG
         printf("tm_offset = %d \n", tm_offset);
 #endif
     }
@@ -1134,7 +1136,7 @@ authentication cipher NULL // cam_cookies (not supported in TM functions yet)
         memcpy(ingest, tempTM, count);
     }
 
-#ifdef TM_DEBUG
+//#ifdef TM_DEBUG
     Crypto_tmPrint(&tm_frame);
 #endif
 
@@ -1173,9 +1175,9 @@ int32_t Crypto_TM_Process_Setup(uint16_t len_ingest, uint16_t *byte_idx, uint8_t
     if ((status == CRYPTO_LIB_SUCCESS) &&
         ((crypto_config.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL)))
     {
-#ifdef TM_DEBUG
+//#ifdef TM_DEBUG
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
-#endif
+// #endif
         status = CRYPTO_LIB_ERR_NO_CONFIG;
         // Can't mc_log if it's not configured
         if (mc_if != NULL)
@@ -1191,11 +1193,10 @@ int32_t Crypto_TM_Process_Setup(uint16_t len_ingest, uint16_t *byte_idx, uint8_t
         status = CRYPTO_LIB_ERR_NO_INIT;
     }
 
-#ifdef TM_DEBUG
+//#ifdef TM_DEBUG
     printf(KGRN "TM Process Using following parameters:\n\t" RESET);
-    printf(KGRN "tvfn: %d\t scid: %d\t vcid: %d\n" RESET, tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
-           tm_frame_pri_hdr.vcid);
-#endif
+    printf(KGRN "tvfn: %d\t scid: %d\t vcid: %d\n" RESET,  tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid );
+// #endif
 
     // Lookup-retrieve managed parameters for frame via gvcid:
     if (status == CRYPTO_LIB_SUCCESS)
@@ -1207,9 +1208,9 @@ int32_t Crypto_TM_Process_Setup(uint16_t len_ingest, uint16_t *byte_idx, uint8_t
 
     if (status != CRYPTO_LIB_SUCCESS)
     {
-#ifdef TM_DEBUG
+//#ifdef TM_DEBUG
         printf(KRED "**NO LUCK WITH GVCID!\n" RESET);
-#endif
+// #endif
         // Can't mc_log if it's not configured
         if (mc_if != NULL)
         {
@@ -1227,18 +1228,18 @@ int32_t Crypto_TM_Process_Setup(uint16_t len_ingest, uint16_t *byte_idx, uint8_t
         *byte_idx = 4;
         if ((p_ingest[*byte_idx] & 0x80) == 0x80)
         {
-#ifdef TM_DEBUG
+    //#ifdef TM_DEBUG
             printf(KYEL "A TM Secondary Header flag is set!\n");
-#endif
+    // #endif
             // Secondary header is present
             *byte_idx = 6;
             // Determine length of secondary header
             // Length coded as total length of secondary header - 1
             // Reference CCSDS 132.0-B-2 4.1.3.2.3
             *secondary_hdr_len = (p_ingest[*byte_idx] & 0x3F) + 1;
-#ifdef TM_DEBUG
+    //#ifdef TM_DEBUG
             printf(KYEL "Secondary Header Length is decoded as: %d\n", *secondary_hdr_len);
-#endif
+    // #endif
             // Increment from current byte (1st byte of secondary header),
             // to where the SPI would start
             *byte_idx += *secondary_hdr_len;
@@ -1338,11 +1339,11 @@ int32_t Crypto_TM_FECF_Setup(uint8_t *p_ingest, uint16_t len_ingest)
     // Needs to be TM_HAS_FECF (checked above_ or TM_NO_FECF)
     else if (current_managed_parameters_struct.has_fecf != TM_NO_FECF)
     {
-#ifdef TM_DEBUG
-        printf(KRED "TM_Process Error...tfvn: %d scid: 0x%04X vcid: 0x%02X fecf_enum: %d\n" RESET,
-               current_managed_parameters_struct.tfvn, current_managed_parameters_struct.scid,
-               current_managed_parameters_struct.vcid, current_managed_parameters_struct.has_fecf);
-#endif
+//#ifdef TM_DEBUG
+        printf(KRED "TM_Process Error...tfvn: %d scid: 0x%04X vcid: 0x%02X fecf_enum: %d\n" RESET, 
+            current_managed_parameters->tfvn, current_managed_parameters->scid, 
+            current_managed_parameters->vcid, current_managed_parameters->has_fecf);
+// #endif
         status = CRYPTO_LIB_ERR_TC_ENUM_USED_FOR_TM_CONFIG;
         mc_if->mc_log(status);
     }
@@ -1624,7 +1625,7 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
         byte_idx += pdu_len;
     }
 
-#ifdef TM_DEBUG
+//#ifdef TM_DEBUG
     printf(KYEL "Printing received frame:\n\t" RESET);
     for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
     {
@@ -1636,7 +1637,7 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
         printf(KYEL "%02X", p_new_dec_frame[i]);
     }
     printf("\n");
-#endif
+// #endif
 
     *pp_processed_frame = p_new_dec_frame;
     // TODO maybe not just return this without doing the math ourselves
@@ -1665,9 +1666,9 @@ void Crypto_TM_Process_Debug_Print(uint16_t byte_idx, uint16_t pdu_len, Security
 {
     // Fix for variable warnings
     byte_idx = byte_idx;
-    pdu_len  = pdu_len;
-    sa_ptr   = sa_ptr;
-#ifdef TM_DEBUG
+    pdu_len = pdu_len;
+    sa_ptr = sa_ptr; 
+    //#ifdef TM_DEBUG
     printf(KYEL "Index / data location starts at: %d\n" RESET, byte_idx);
     printf(KYEL "Data size is: %d\n" RESET, pdu_len);
     if (current_managed_parameters_struct.has_ocf == TM_HAS_OCF)
@@ -1680,7 +1681,7 @@ void Crypto_TM_Process_Debug_Print(uint16_t byte_idx, uint16_t pdu_len, Security
         // If FECF exists, comes just before end of the frame
         printf(KYEL "FECF Location is: %d\n" RESET, current_managed_parameters_struct.max_frame_size - 2);
     }
-#endif
+    // #endif
 }
 
 /**
@@ -1726,7 +1727,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_
         spi = (uint8_t)p_ingest[byte_idx] << 8 | (uint8_t)p_ingest[byte_idx + 1];
         // Move index to past the SPI
         byte_idx += 2;
-
+        printf("%s, %d\n", __FILE__, __LINE__);
         status = sa_if->sa_get_from_spi(spi, &sa_ptr);
     }
 
@@ -1750,6 +1751,14 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_
 #ifdef TM_DEBUG
         switch (sa_service_type)
         {
+            // Determine Algorithm cipher & mode. // TODO - Parse authentication_cipher, and handle AEAD cases properly
+            status = Crypto_TM_Determine_Cipher_Mode(sa_service_type, sa_ptr, &encryption_cipher, &ecs_is_aead_algorithm);
+        }
+        if (status == CRYPTO_LIB_SUCCESS) 
+        {
+            //#ifdef TM_DEBUG
+            switch (sa_service_type)
+            {
             case SA_PLAINTEXT:
                 printf(KBLU "Processing a TM - CLEAR!\n" RESET);
                 break;
@@ -1762,8 +1771,8 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_
             case SA_AUTHENTICATED_ENCRYPTION:
                 printf(KBLU "Processing a TM - AUTHENTICATED ENCRYPTION!\n" RESET);
                 break;
-        }
-#endif
+            }
+            // #endif
 
         // Parse & Check FECF, if present, and update fecf length
         status = Crypto_TM_FECF_Setup(p_ingest, len_ingest);
@@ -2091,16 +2100,16 @@ uint32_t Crypto_Prepare_TM_AAD(const uint8_t *buffer, uint16_t len_aad, const ui
         aad[i] = buffer[i] & abm_buffer[i];
     }
 
-#ifdef MAC_DEBUG
+// #ifdef MAC_DEBUG
     printf(KYEL "AAD before ABM Bitmask:\n\t");
     for (i = 0; i < len_aad; i++)
     {
         printf("%02x", buffer[i]);
     }
     printf("\n" RESET);
-#endif
+// #endif
 
-#ifdef MAC_DEBUG
+// #ifdef MAC_DEBUG
     printf(KYEL "Preparing AAD:\n");
     printf("\tUsing AAD Length of %d\n\t", len_aad);
     for (i = 0; i < len_aad; i++)
@@ -2108,7 +2117,7 @@ uint32_t Crypto_Prepare_TM_AAD(const uint8_t *buffer, uint16_t len_aad, const ui
         printf("%02x", aad[i]);
     }
     printf("\n" RESET);
-#endif
+// #endif
 
     return status;
 }
