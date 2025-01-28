@@ -269,7 +269,7 @@ void sa_populate(void)
     // EKID = 2
     sa[2].spi             = 2;
     sa[2].ekid            = 2;
-    sa[2].sa_state        = SA_KEYED;
+    sa[2].sa_state        = SA_OPERATIONAL;
     sa[2].ecs_len         = 1;
     sa[2].ecs             = CRYPTO_CIPHER_AES256_GCM;
     sa[2].est             = 1;
@@ -281,7 +281,7 @@ void sa_populate(void)
     sa[2].arsn_len        = ((sa[2].arsnw * 2) + 1);
     sa[2].gvcid_blk.tfvn  = 0;
     sa[2].gvcid_blk.scid  = SCID & 0x3FF;
-    sa[2].gvcid_blk.vcid  = 0;
+    sa[2].gvcid_blk.vcid  = 2;
     sa[2].gvcid_blk.mapid = TYPE_TC;
 
     // TC - Authentication Only - HMAC_SHA512 (Keyed)
