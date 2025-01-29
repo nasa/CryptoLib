@@ -718,7 +718,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer)
     scid = (((uint16_t)pTfBuffer[0] & 0x3F) << 4) | (((uint16_t)pTfBuffer[1] & 0xF0) >> 4);
     vcid = ((uint8_t)pTfBuffer[1] & 0x0E) >> 1;
 
-#ifdef TM_DEBUG
+// #ifdef TM_DEBUG
     printf(KYEL "\n----- Crypto_TM_ApplySecurity START -----\n" RESET);
     printf("The following GVCID parameters will be used:\n");
     printf("\tTVFN: 0x%04X\t", tfvn);
@@ -731,7 +731,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer)
         printf("%02X", (uint8_t)pTfBuffer[i]);
     }
     printf("\n");
-#endif
+// #endif
 
     status = sa_if->sa_get_operational_sa_from_gvcid(tfvn, scid, vcid, 0, &sa_ptr);
 
