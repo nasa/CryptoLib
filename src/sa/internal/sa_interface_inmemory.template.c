@@ -1589,7 +1589,7 @@ static int32_t sa_setARSN(TC_t *tc_frame)
         else
         {
 #ifdef PDU_DEBUG
-        printf("Failed setARSN on SPI %d, ECS %d, ACS %d\n", spi, sa[spi].ecs, sa[spi].acs == 1);
+        printf("Failed setARSN on SPI %d, ECS %d, ACS %d\n", spi, sa[spi].ecs, sa[spi].acs);
 #endif
         }
     }
