@@ -448,9 +448,23 @@ void crypto_standalone_tm_frame(uint8_t *in_data, uint16_t in_length, uint8_t *o
     {
         printf("WARNING - SA IS NULL!\n");
     }
+    if (tm_debug ==1)
+    {
+        Crypto_saPrint(sa_ptr);
+    }
 
     // Calculate security headers and trailers
-    uint8_t header_length  = 6 + 2 + sa_ptr->shivf_len + sa_ptr->shplf_len + sa_ptr->shsnf_len + 40; // TODO: Why +40?
+    uint8_t header_length  = TM_PRI_HDR_LENGTH + SDLS_SPI_LENGTH + sa_ptr->shivf_len + sa_ptr->shplf_len + sa_ptr->shsnf_len;
+    if (tm_debug==1)
+    {
+        printf("Standalone TM Frame Header debug:\n\t");
+        printf("Primary Header Length: %d\n", TM_PRI_HDR_LENGTH);
+        printf("SPI Length: %d\n", SDLS_SPI_LENGTH);
+        printf("SH IV Length: %d\n", sa_ptr->shivf_len);
+        printf("SH PLF Length: %d\n", sa_ptr->shplf_len);
+        printf("SH SNF Length: %d\n", sa_ptr->shsnf_len);
+        printf("TOTAL CALCED Header Length: %d\n", header_length);
+    }
     uint8_t trailer_length = sa_ptr->stmacf_len;
     if (current_managed_parameters_struct.has_fecf == TM_HAS_FECF)
     {

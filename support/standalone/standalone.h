@@ -68,6 +68,13 @@ extern "C"
 #define CRYPTO_STANDALONE_DISCARD_IDLE_FRAMES
 
 /*
+** Defined lengths
+*/
+#define TM_PRI_HDR_LENGTH 6
+#define TM_ASM_LENGTH 4
+#define SDLS_SPI_LENGTH 2
+
+/*
 ** Defines
 */
 #define CRYPTO_PROMPT               "cryptolib> "
