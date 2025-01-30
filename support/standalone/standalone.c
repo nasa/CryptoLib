@@ -514,19 +514,26 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status_p, uint8_t *tm_ptr, uin
 
     udp_info_t *tm_write_sock = &tm_socks->write;
 
-    if ((tm_ptr[0] == 0x08) || ((tm_ptr[0] == 0x03) && tm_ptr[1] == 0xff))
+    if (tm_debug==1)
     {
-        spp_len = (((0xFFFF & tm_ptr[4]) << 8) | tm_ptr[5]) + 7;
-#ifdef CRYPTO_STANDALONE_TM_PROCESS_DEBUG
-        printf("crypto_standalone_tm_process - SPP[%d]: 0x", spp_len);
-        for (int i = 0; i < spp_len; i++)
+        printf("***Printing SPP about to be processed:\n\t");
+        for (int i=0; i <tm_process_len; i++)
         {
-            printf("%02x", tm_ptr[i]);
+            printf("%02X", tm_ptr[i]);
         }
         printf("\n");
-#endif
+    }
+
+    /* 
+    **  Check if valid spacepacket - either an idle packet, or other valid space packet
+    **  idle Packet References: CCSDS 133.0-B-2 4.1.3.3.4.4 & https://sanaregistry.org/r/space_packet_protocol_application_process_id
+    **  Valid SPP References: CCSDS 133.0-B-2 4.1.3.3.4
+    */
+    if ((tm_ptr[0] >= 0x08) || ((tm_ptr[0] == 0x07) && tm_ptr[1] == 0xff))
+    {
+        spp_len = (((0xFFFF & tm_ptr[4]) << 8) | tm_ptr[5]) + 7;
         // Send all SPP telemetry packets
-        if (tm_ptr[0] == 0x08)
+        if (tm_ptr[0] >= 0x08)
         {
             status = sendto(tm_write_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr *)&tm_write_sock->saddr,
                             sizeof(tm_write_sock->saddr));
@@ -575,6 +582,13 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status_p, uint8_t *tm_ptr, uin
     {
         printf("crypto_standalone_tm_process - SPP loop error, expected idle packet or frame! tm_ptr = 0x%02x%02x \n",
                tm_ptr[0], tm_ptr[1]);
+        printf("Expected to process a length of %d\n", tm_process_len);
+        printf("Trying to print whole expected packet.. .expect error\n\t");
+        for (int i=0; i <tm_process_len; i++)
+        {
+            printf("%02X", tm_ptr[i]);
+        }
+        printf("\n");
         tm_process_len = 0;
     }
     *status_p         = status;
@@ -630,9 +644,9 @@ void *crypto_standalone_tm_process(void *socks)
             {
                 if (tm_debug == 1)
                 {
-                    if (((tm_ptr[4] & 0x0F) == 0x0F) && (tm_ptr[5] == 0xFE))
+                    if (((tm_ptr[4] & 0x07) == 0x07) && (tm_ptr[5] == 0xFE))
                     {
-                        // OID Frame
+                        // OID Frame - FHP of 0x7FE per CCSDS 132.0-B-3 4.1.2.7.6.5
                     }
                     else
                     {
@@ -648,21 +662,13 @@ void *crypto_standalone_tm_process(void *socks)
 /* Frame */
 #ifdef CRYPTO_STANDALONE_HANDLE_FRAMING
 #ifdef TM_CADU_HAS_ASM
-                uint16_t spi = (0xFFFF & tm_process_in[11]) | tm_process_in[12];
-                // crypto_standalone_tm_frame(tm_process_in+4, tm_process_len-4, tm_framed, &tm_framed_len, spi);
-                crypto_standalone_tm_frame(tm_ptr, tm_out_len, tm_framed, &tm_framed_len, spi);
-#else
-                uint16_t spi = (0xFFFF & tm_process_in[7]) | tm_process_in[8];
-                crypto_standalone_tm_frame(tm_process_in, tm_process_len, tm_framed, &tm_framed_len, spi);
-#endif
-                memcpy(tm_process_in, tm_framed, tm_framed_len);
-                tm_process_len = tm_framed_len;
-                tm_framed_len  = 0;
-
+                uint16_t spi = (tm_process_in[10] << 8) | tm_process_in[11];
                 if (tm_debug == 1)
                 // Note: Need logic to allow broken packet assembly
                 {
-                    printf("crypto_standalone_tm_process: 2 - beginning after first header pointer - deframed[%d]: 0x",
+                    printf("Calcing SPI using these  values: idx[10]: 0x%02X and idx[11]: 0x%02x\n", tm_process_in[10], tm_process_in[11]);
+                    printf("Standalone is using SPI 0x%04X (or decimal %d)\n", spi, spi);
+                    printf("crypto_standalone_tm_process with asm: 2 - beginning after first header pointer - deframed[%d]: 0x",
                            tm_process_len);
                     for (int i = 0; i < tm_process_len; i++)
                     {
@@ -670,6 +676,30 @@ void *crypto_standalone_tm_process(void *socks)
                     }
                     printf("\n");
                 }
+
+                crypto_standalone_tm_frame(tm_ptr, tm_out_len, tm_framed, &tm_framed_len, spi);
+#else // no ASM
+                uint16_t spi = (tm_process_in[6] << 8) | tm_process_in[7];
+                printf("Calcing SPI using these  values: 0x%02X and 0x%02x\n", tm_process_in[6], tm_process_in[7]);
+                if (tm_debug == 1)
+                // Note: Need logic to allow broken packet assembly
+                {
+                    printf("Standalone is using SPI 0x%04X (or decimal %d)\n", spi, spi);
+                    printf("crypto_standalone_tm_process without asm: 2 - beginning after first header pointer - deframed[%d]: 0x",
+                           tm_process_len);
+                    for (int i = 0; i < tm_process_len; i++)
+                    {
+                        printf("%02x", tm_framed[i]);
+                    }
+                    printf("\n");
+                }
+                crypto_standalone_tm_frame(tm_process_in, tm_process_len, tm_framed, &tm_framed_len, spi);
+#endif
+                memcpy(tm_process_in, tm_framed, tm_framed_len);
+                tm_process_len = tm_framed_len;
+                tm_framed_len  = 0;
+
+
 #endif
 
                 /* Space Packet Protocol Loop */
