@@ -250,7 +250,7 @@ UTEST(TM_PROCESS_SECURITY, HAPPY_PATH_CLEAR_FECF)
 
     // Truth frame setup
     char *truth_tm_h =
-        "02C000001800000000000000000000000000000066778899AABBCCDDEEFFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAA"
+        "02C000001800000000000000000000000000445566778899AABBCCDDEEFFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAA"
         "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
         "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
         "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
@@ -288,12 +288,10 @@ UTEST(TM_PROCESS_SECURITY, HAPPY_PATH_CLEAR_FECF)
     hex_conversion(truth_tm_h, &truth_tm_b, &truth_tm_len);
 
     SecurityAssociation_t *sa_ptr;
-    // Deactivate SA 1
-    sa_if->sa_get_from_spi(1, &sa_ptr);
-    sa_ptr->sa_state = SA_NONE;
     // Activate SA 5
     sa_if->sa_get_from_spi(5, &sa_ptr);
     sa_ptr->sa_state = SA_OPERATIONAL;
+    sa_ptr->arsn_len  = 0;
 
     crypto_key_t *ekp = NULL;
     ekp               = key_if->get_key(sa_ptr->ekid);
@@ -2211,16 +2209,15 @@ UTEST(TM_PROCESS, TM_KEY_STATE_TEST)
     tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
 
-    char *framed_tm_h   = "02C0000018000001414243444546";
+    char *framed_tm_h   = "02C0000018000008414243444546";
     char *framed_tm_b   = NULL;
     int   framed_tm_len = 0;
     hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);
 
     SecurityAssociation_t *sa_ptr;
-    sa_if->sa_get_from_spi(1, &sa_ptr);
+    sa_if->sa_get_from_spi(8, &sa_ptr);
     sa_ptr->sa_state = SA_OPERATIONAL;
-    sa_ptr->est      = 1;
-    sa_ptr->ecs      = CRYPTO_CIPHER_AES256_GCM;
+    sa_ptr->abm_len  = 8;
 
     crypto_key_t *ekp = NULL;
     ekp               = key_if->get_key(sa_ptr->ekid);
