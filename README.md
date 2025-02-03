@@ -1,4 +1,4 @@
-![Build](https://github.com/nasa/CryptoLib/actions/workflows/build.yml/badge.svg)
+![Build](https://github.com/nasa/CryptoLib/actions/workflows/build.yml/badge.svg?branch=main)
 [![CodeCov](https://codecov.io/gh/nasa/CryptoLib/branch/main/graph/badge.svg?token=KCOMCQO0ZU)](https://codecov.io/gh/nasa/CryptoLib)
 [![CodeQL Advanced](https://github.com/nasa/CryptoLib/actions/workflows/codeql.yml/badge.svg?branch=dev)](https://github.com/nasa/CryptoLib/actions/workflows/codeql.yml)
 
