@@ -735,7 +735,13 @@ static int32_t sa_get_from_spi(uint16_t spi, SecurityAssociation_t **security_as
     // ARSN must be 0 octets in length if not using Auth/Auth Enc
     if (sa[spi].ast == 0 && sa[spi].arsn_len != 0)
     {
-            return CRYPTO_LIB_ERR_INVALID_ARSN_LEN;
+        return CRYPTO_LIB_ERR_INVALID_SVC_TYPE_WITH_ARSN;
+    }
+
+    // ARSN length cannot be less than shsnf length
+    if (sa[spi].shsnf_len > sa[spi].arsn_len)
+    {
+        return CRYPTO_LIB_ERR_ARSN_LT_SHSNF;
     }
     
 #ifdef SA_DEBUG
@@ -876,7 +882,7 @@ void sa_mismatched_arsn(int *i_p, int32_t *status, uint8_t tfvn, uint16_t scid, 
 #ifdef SA_DEBUG
         printf(KRED "An operational SA (%d) was found - but invalid ARSN length.\n" RESET, sa[i].spi);
 #endif
-        *status = CRYPTO_LIB_ERR_INVALID_ARSN_LEN;
+        *status = CRYPTO_LIB_ERR_INVALID_SVC_TYPE_WITH_ARSN;
     }
     *i_p = i;
 }
