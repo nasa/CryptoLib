@@ -307,9 +307,9 @@ UTEST(EP_SA_MGMT, SA_6_SET_ARSN)
     test_association->gvcid_blk.scid = SCID & 0x3FF;
 
     // Modify SA 6
-    sa_if->sa_get_from_spi(6, &test_association);
+    sa_if->sa_get_from_spi(7, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    test_association->arsn_len = 16;
+    test_association->arsn_len = 11;
 
     // Convert frames that will be processed
     hex_conversion(buffer_SET_h, (char **)&buffer_SET_b, &buffer_SET_len);
@@ -317,11 +317,14 @@ UTEST(EP_SA_MGMT, SA_6_SET_ARSN)
     status = Crypto_TC_ProcessSecurity(buffer_SET_b, &buffer_SET_len, &tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-    sa_if->sa_get_from_spi(6, &test_association);
-
+    printf("SA %d ARSN: 0x", test_association->spi);
+    for (int i = 0; i < test_association->arsn_len; i++)
+    {
+        printf("%02x", test_association->arsn[i]);
+    }
     printf("\n");
-    Crypto_Shutdown();
 
+    Crypto_Shutdown();
     free(buffer_SET_b);
 }
 
