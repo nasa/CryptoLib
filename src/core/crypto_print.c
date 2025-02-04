@@ -30,7 +30,7 @@
  * Prints the current TC in memory.
  * @param tc_frame: TC_t*
  **/
-void Crypto_tcPrint(TC_t* tc_frame)
+void Crypto_tcPrint(TC_t *tc_frame)
 {
     printf("Current TC in memory is: \n");
     printf("\t Header\n");
@@ -61,7 +61,7 @@ void Crypto_tcPrint(TC_t* tc_frame)
  * @param tm_frame: TM_t*
  **/
 // TODO - START HERE WORK ON PRINT HERE
-void Crypto_tmPrint(TM_t* tm_frame)
+void Crypto_tmPrint(TM_t *tm_frame)
 {
     tm_frame = tm_frame;
     printf("Current TM in memory is: \n");
@@ -98,12 +98,37 @@ void Crypto_tmPrint(TM_t* tm_frame)
     printf("\n");
 }
 
+void Crypto_Print_Sdls_Ep_Reply(void)
+{
+    // Length to be pulled from packet header
+    uint16_t pkt_length = 0;
+
+    pkt_length = ((sdls_ep_reply[4] << 8) | sdls_ep_reply[5]) + 1;
+
+    // Sanity check on length
+    if (pkt_length > TC_MAX_FRAME_SIZE)
+    {
+        printf(KRED "Unable to print SDLS Reply... invalid length of %d\n" RESET, pkt_length);
+        return;
+    }
+
+    // Do the print
+    printf("SDLS Reply Global: 0x");
+    for (int i = 0; i < pkt_length; i++)
+    {
+        printf("%02X", sdls_ep_reply[i]);
+    }
+    printf("\n\n");
+
+    return;
+}
+
 /**
  * @brief Function: Crypto_clcwPrint
  * Prints the current CLCW in memory.
- * @param clcw: Telemetry_Frame_Clcw_t*
+ * @param clcw: Telemetry_Frame_Ocf_Clcw_t*
  **/
-void Crypto_clcwPrint(Telemetry_Frame_Clcw_t* clcw)
+void Crypto_clcwPrint(Telemetry_Frame_Ocf_Clcw_t *clcw)
 {
     printf("Current CLCW in memory is: \n");
     printf("\t cwt    = 0x%01x \n", clcw->cwt);
@@ -112,11 +137,11 @@ void Crypto_clcwPrint(Telemetry_Frame_Clcw_t* clcw)
     printf("\t cie    = 0x%01x \n", clcw->cie);
     printf("\t vci    = 0x%02x \n", clcw->vci);
     printf("\t spare0 = 0x%01x \n", clcw->spare0);
-    printf("\t nrfa   = 0x%01x \n", clcw->nrfa);
-    printf("\t nbl    = 0x%01x \n", clcw->nbl);
-    printf("\t lo     = 0x%01x \n", clcw->lo);
-    printf("\t wait   = 0x%01x \n", clcw->wait);
-    printf("\t rt     = 0x%01x \n", clcw->rt);
+    printf("\t nrfaf  = 0x%01x \n", clcw->nrfaf);
+    printf("\t nblf   = 0x%01x \n", clcw->nblf);
+    printf("\t lof    = 0x%01x \n", clcw->lof);
+    printf("\t waitf  = 0x%01x \n", clcw->waitf);
+    printf("\t rtf    = 0x%01x \n", clcw->rtf);
     printf("\t fbc    = 0x%01x \n", clcw->fbc);
     printf("\t spare1 = 0x%01x \n", clcw->spare1);
     printf("\t rv     = 0x%02x \n", clcw->rv);
@@ -126,18 +151,18 @@ void Crypto_clcwPrint(Telemetry_Frame_Clcw_t* clcw)
 /**
  * @brief Function: Crypto_fsrPrint
  * Prints the current FSR in memory.
- * @param report: SDLS_FSR_t*
+ * @param report: Telemetry_Frame_Ocf_Fsr_t*
  **/
-void Crypto_fsrPrint(SDLS_FSR_t* report)
+void Crypto_fsrPrint(Telemetry_Frame_Ocf_Fsr_t *report)
 {
     printf("Current FSR in memory is: \n");
     printf("\t cwt    = 0x%01x \n", report->cwt);
-    printf("\t vnum   = 0x%01x \n", report->vnum);
+    printf("\t fvn    = 0x%01x \n", report->fvn);
     printf("\t af     = 0x%01x \n", report->af);
     printf("\t bsnf   = 0x%01x \n", report->bsnf);
     printf("\t bmacf  = 0x%01x \n", report->bmacf);
-    printf("\t ispif  = 0x%01x \n", report->ispif);
-    printf("\t lspiu  = 0x%01x \n", report->lspiu);
+    printf("\t bsaf   = 0x%01x \n", report->bsaf);
+    printf("\t lspi   = 0x%01x \n", report->lspi);
     printf("\t snval  = 0x%01x \n", report->snval);
     printf("\n");
 }
@@ -147,7 +172,7 @@ void Crypto_fsrPrint(SDLS_FSR_t* report)
  * Prints the current CCSDS in memory.
  * @param sdls_frame: CCSDS_t*
  **/
-void Crypto_ccsdsPrint(CCSDS_t* sdls_frame)
+void Crypto_ccsdsPrint(CCSDS_t *sdls_frame)
 {
     printf("Current CCSDS in memory is: \n");
     printf("\t Primary Header\n");
@@ -158,20 +183,28 @@ void Crypto_ccsdsPrint(CCSDS_t* sdls_frame)
     printf("\t\t seq        = 0x%01x \n", sdls_frame->hdr.seq);
     printf("\t\t pktid      = 0x%04x \n", sdls_frame->hdr.pktid);
     printf("\t\t pkt_length = 0x%04x \n", sdls_frame->hdr.pkt_length);
-    printf("\t PUS Header\n");
-    printf("\t\t shf        = 0x%01x \n", sdls_frame->pus.shf);
-    printf("\t\t pusv       = 0x%01x \n", sdls_frame->pus.pusv);
-    printf("\t\t ack        = 0x%01x \n", sdls_frame->pus.ack);
-    printf("\t\t st         = 0x%02x \n", sdls_frame->pus.st);
-    printf("\t\t sst        = 0x%02x \n", sdls_frame->pus.sst);
-    printf("\t\t sid        = 0x%01x \n", sdls_frame->pus.sid);
-    printf("\t\t spare      = 0x%01x \n", sdls_frame->pus.spare);
+    if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
+    {
+        printf("\t PUS Header\n");
+        printf("\t\t shf        = 0x%01x \n", sdls_frame->pus.shf);
+        printf("\t\t pusv       = 0x%01x \n", sdls_frame->pus.pusv);
+        printf("\t\t ack        = 0x%01x \n", sdls_frame->pus.ack);
+        printf("\t\t st         = 0x%02x \n", sdls_frame->pus.st);
+        printf("\t\t sst        = 0x%02x \n", sdls_frame->pus.sst);
+        printf("\t\t sid        = 0x%01x \n", sdls_frame->pus.sid);
+        printf("\t\t spare      = 0x%01x \n", sdls_frame->pus.spare);
+    }
+    else
+    {
+        printf("\t PUS Header\n");
+        printf("\t\t Config not configured for PUS Header, not printing\n");
+    }
     printf("\t PDU \n");
-    printf("\t\t type       = 0x%01x \n", sdls_frame->pdu.type);
-    printf("\t\t uf         = 0x%01x \n", sdls_frame->pdu.uf);
-    printf("\t\t sg         = 0x%01x \n", sdls_frame->pdu.sg);
-    printf("\t\t pid        = 0x%01x \n", sdls_frame->pdu.pid);
-    printf("\t\t pdu_len    = 0x%04x \n", sdls_frame->pdu.pdu_len);
+    printf("\t\t type       = 0x%01x \n", sdls_frame->pdu.hdr.type);
+    printf("\t\t uf         = 0x%01x \n", sdls_frame->pdu.hdr.uf);
+    printf("\t\t sg         = 0x%01x \n", sdls_frame->pdu.hdr.sg);
+    printf("\t\t pid        = 0x%01x \n", sdls_frame->pdu.hdr.pid);
+    printf("\t\t pdu_len    = 0x%04x \n", sdls_frame->pdu.hdr.pdu_len);
     printf("\t\t data[0]    = 0x%02x \n", sdls_frame->pdu.data[0]);
     printf("\t\t data[1]    = 0x%02x \n", sdls_frame->pdu.data[1]);
     printf("\t\t data[2]    = 0x%02x \n", sdls_frame->pdu.data[2]);
@@ -183,7 +216,7 @@ void Crypto_ccsdsPrint(CCSDS_t* sdls_frame)
  * Prints the current Security Association in memory.
  * @param sa: SecurityAssociation_t*
  **/
-void Crypto_saPrint(SecurityAssociation_t* sa)
+void Crypto_saPrint(SecurityAssociation_t *sa)
 {
     int i;
 
@@ -220,7 +253,8 @@ void Crypto_saPrint(SecurityAssociation_t* sa)
             printf("\t iv[%d]      = 0x%02x \n", i, *(sa->iv + i));
         }
     }
-    else{
+    else
+    {
         printf("\t iv        = %s \n", sa->iv);
     }
     printf("\t acs_len    = %d \n", sa->acs_len);
@@ -256,10 +290,10 @@ void Crypto_saPrint(SecurityAssociation_t* sa)
  * @param c: void*, The hex to be printed.
  * @param n: size_t, The size of the array to be printed.
  **/
-void Crypto_hexprint(const void* c, size_t n)
+void Crypto_hexprint(const void *c, size_t n)
 {
-    const uint8_t* t = c;
-    size_t idx = 0;
+    const uint8_t *t   = c;
+    size_t         idx = 0;
     if (c == NULL)
         return;
     while (idx < n)
@@ -276,15 +310,15 @@ void Crypto_hexprint(const void* c, size_t n)
  * @param c: void*, The binary array to be printed.
  * @param n: size_t, The size of the array to be printed.
  **/
-void Crypto_binprint(void* c, size_t n)
+void Crypto_binprint(void *c, size_t n)
 {
-    uint8_t* t = c;
-    int q;
+    uint8_t *t = c;
+    int      q;
 
     if (c == NULL)
         return;
     while (n > 0)
-    {    
+    {
         --n;
         for (q = 0x80; q; q >>= 1)
             printf("%x", !!(t[n] & q));
@@ -292,9 +326,10 @@ void Crypto_binprint(void* c, size_t n)
     printf("\n");
 }
 
-void Crypto_mpPrint(GvcidManagedParameters_t* managed_parameters, uint8_t print_children)
+void Crypto_mpPrint(GvcidManagedParameters_t *managed_parameters, uint8_t print_children)
 // Prints the currently configured Managed Parameters
 {
+    print_children = print_children;
     if (managed_parameters != NULL)
     {
         printf("Managed Parameter: \n");
@@ -306,9 +341,9 @@ void Crypto_mpPrint(GvcidManagedParameters_t* managed_parameters, uint8_t print_
         printf("\t max_frame_size: %d\n", managed_parameters->max_frame_size);
         printf("\t TM has ocf %d\n", managed_parameters->has_ocf);
     }
-    if (managed_parameters->next != NULL && print_children != 0)
-    {
-        Crypto_mpPrint(managed_parameters->next, print_children);
-    }
+    // if (managed_parameters->next != NULL && print_children != 0)
+    // {
+    //     Crypto_mpPrint(managed_parameters->next, print_children);
+    // }
 }
 #endif

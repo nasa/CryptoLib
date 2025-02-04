@@ -24,6 +24,7 @@ static McInterfaceStruct mc_if_struct;
 /* Functions */
 McInterface get_mc_interface_disabled(void)
 {
-    fprintf(stderr,"ERROR: Loading disabled monitoring and control interface stub source code. Rebuild CryptoLib with -DMC_DISABLED=ON to use implementation.\n");
+    fprintf(stderr, "ERROR: Loading disabled monitoring and control interface stub source code. Rebuild CryptoLib with "
+                    "-DMC_DISABLED=ON to use implementation.\n");
     return &mc_if_struct;
 }

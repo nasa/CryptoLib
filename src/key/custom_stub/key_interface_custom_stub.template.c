@@ -17,13 +17,13 @@
 */
 
 #include "key_interface.h"
-
 /* Variables */
 static KeyInterfaceStruct key_if_struct;
 
 /* Functions */
 KeyInterface get_key_interface_custom(void)
 {
-    fprintf(stderr,"ERROR: Loading custom key interface stub source code. Rebuild CryptoLib with -DKEY_CUSTOM=ON to use implementation.\n");
+    fprintf(stderr, "ERROR: Loading custom key interface stub source code. Rebuild CryptoLib with -DKEY_CUSTOM=ON to "
+                    "use implementation.\n");
     return &key_if_struct;
 }

@@ -24,6 +24,7 @@ project(crypto C)
 set(SA_CUSTOM_PATH_DEFAULT "../../sa/custom")
 set(KEY_CUSTOM_PATH_DEFAULT "../../key/custom")
 set(MC_CUSTOM_PATH_DEFAULT "../../mc/custom")
+set(MC_LOG_PATH_DEFAULT "log.txt")
 set(CRYPTO_CUSTOM_PATH_DEFAULT "../../crypto/custom")
 
 
@@ -49,19 +50,21 @@ option(MC_CUSTOM_PATH "Custom Monitoring and Control path" OFF)
 option(MC_DISABLED "Monitoring and Control - Disabled" OFF)
 option(MC_INTERNAL "Monitoring and Control - Internal" ON)
 option(SA_CUSTOM "Security Association - Custom" OFF)
-option(SA_CUSTOM_PATH "Custion Security Association Path" OFF)
+option(SA_CUSTOM_PATH "Custom Security Association Path" OFF)
 option(SA_INTERNAL "Security Association - Internal" ON)
 option(SA_MARIADB "Security Association - MariaDB" OFF)
 option(SUPPORT "Support" OFF)
 option(SYSTEM_INSTALL "SystemInstall" OFF)
 option(TEST "Test" OFF)
-option(TEST_ENC "Tests - Encryption" OFF)
+# option(TEST_ENC "Tests - Encryption" OFF)
 option(SA_FILE "Save Security Association to File" OFF)
+option(KEY_VALIDATION "Validate existance of key duplication" OFF)
 
 OPTION(KMC_MDB_RH "KMC-MDB-RedHat-Integration-Testing" OFF) #Disabled by default, enable with: -DKMC_MDB_RH=ON
 OPTION(KMC_MDB_DB "KMC-MDB-Debian-Integration-Testing" OFF) #Disabled by default, enable with: -DKMC_MDB_DB=ON
 OPTION(KMC_CFFI_EXCLUDE "KMC-Exclude-Problematic-CFFI-Code" OFF) #Disabled by default, enable with: -DKMC_CFFI_EXCLUDE=ON
 
+OPTION(CRYPTO_EPROC "Enables the building and use of Extended Procedures" OFF) #Disabled by default, enable with -DCRYPTO_EPROC=ON
 
 #
 # Custom Module Paths
@@ -110,9 +113,20 @@ if(SA_FILE)
     add_definitions(-DSA_FILE)
 endif()
 
+if(KEY_VALIDATION)
+    add_definitions(-DKEY_VALIDATION)
+endif()
+
 if(DEBUG)
     add_definitions(-DDEBUG -DOCF_DEBUG -DFECF_DEBUG -DSA_DEBUG -DPDU_DEBUG -DCCSDS_DEBUG -DTC_DEBUG -DMAC_DEBUG -DTM_DEBUG -DAOS_DEBUG)
     add_compile_options(-ggdb)
+endif()
+
+if(DEFINED MC_LOG_CUSTOM_PATH)
+    message(STATUS "MC_LOG_CUSTOM_PATH set to: ${MC_LOG_CUSTOM_PATH}")
+    add_compile_definitions(MC_LOG_PATH="${MC_LOG_CUSTOM_PATH}")
+else()
+    add_compile_definitions(MC_LOG_PATH="${MC_LOG_PATH_DEFAULT}")
 endif()
 
 IF(KMC_MDB_RH)
@@ -125,18 +139,28 @@ IF(KMC_MDB_DB)
     ADD_DEFINITIONS(-DKMC_CFFI_EXCLUDE)
 ENDIF(KMC_MDB_DB)
 
+IF(CRYPTO_EPROC)
+    ADD_DEFINITIONS(-DCRYPTO_EPROC)
+    message(WARNING "Cryptolib Extended Procedures NOT complete.  NOT Fully tested.  Use at own risk!")
+
+ENDIF(CRYPTO_EPROC)
+
 if(SYSTEM_INSTALL)
-    set(CMAKE_INSTALL_PREFIX /usr/local)
+    # The library will be installed to /usr/local unless overridden with
+    # -DCMAKE_INSTALL_PREFIX=/some/path
+    # See https://cmake.org/cmake/help/latest/variable/CMAKE_INSTALL_PREFIX.html
+elseif(CRYPTO_SUBMODULE_INSTALL)
+    set(CMAKE_INSTALL_PREFIX ${CRYPTO_SUBMODULE_INSTALL})
 elseif(NOT DEFINED CFE_SYSTEM_PSPNAME)
     # Not cFE / cFS
     set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib")
     set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}/install)
 endif()
 
-if(TEST_ENC)
-    # Can't run an additional set of tests without `TEST` enabled
-    set(TEST ON)
-endif()
+# if(TEST_ENC)
+#     # Can't run an additional set of tests without `TEST` enabled
+#     set(TEST ON)
+# endif()
 
 if(TEST)
     include(CTest)

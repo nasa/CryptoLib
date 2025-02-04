@@ -31,57 +31,36 @@
 #include "crypto_error.h"
 #include "cryptography_interface.h"
 
-
 // Cryptography Interface Initialization & Management Functions
 static int32_t cryptography_config(void);
 static int32_t cryptography_init(void);
 static int32_t cryptography_shutdown(void);
 // Cryptography Interface Functions
-static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
-                                         uint8_t* data_in, size_t len_data_in,
-                                         uint8_t* key, uint32_t len_key,
-                                         SecurityAssociation_t* sa_ptr,
-                                         uint8_t* iv, uint32_t iv_len,uint8_t* ecs, uint8_t padding, char* cam_cookies);
-static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
-                                         uint8_t* data_in, size_t len_data_in,
-                                         uint8_t* key, uint32_t len_key,
-                                         SecurityAssociation_t* sa_ptr, 
-                                         uint8_t* iv, uint32_t iv_len,
-                                         uint8_t* ecs, uint8_t* acs, char* cam_cookies);
-static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
-                                         uint8_t* data_in, size_t len_data_in,
-                                         uint8_t* key, uint32_t len_key,
-                                         SecurityAssociation_t* sa_ptr,
-                                         uint8_t* iv, uint32_t iv_len,
-                                         uint8_t* mac, uint32_t mac_size,
-                                         uint8_t* aad, uint32_t aad_len,
-                                         uint8_t ecs, uint8_t acs, char* cam_cookies);
-static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t len_data_out,
-                                         const uint8_t* data_in, const size_t len_data_in,
-                                         uint8_t* key, uint32_t len_key,
-                                         SecurityAssociation_t* sa_ptr,
-                                         const uint8_t* iv, uint32_t iv_len,
-                                         const uint8_t* mac, uint32_t mac_size,
-                                         const uint8_t* aad, uint32_t aad_len,
-                                         uint8_t ecs, uint8_t acs, char* cam_cookies);
-static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
-                                         uint8_t* data_in, size_t len_data_in,
-                                         uint8_t* key, uint32_t len_key,
-                                         SecurityAssociation_t* sa_ptr,
-                                         uint8_t* iv, uint32_t iv_len,
-                                         uint8_t* mac, uint32_t mac_size,
-                                         uint8_t* aad, uint32_t aad_len,
-                                         uint8_t encrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs, char* cam_cookies);
-static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
-                                         uint8_t* data_in, size_t len_data_in,
-                                         uint8_t* key, uint32_t len_key,
-                                         SecurityAssociation_t* sa_ptr,
-                                         uint8_t* iv, uint32_t iv_len,
-                                         uint8_t* mac, uint32_t mac_size,
-                                         uint8_t* aad, uint32_t aad_len,
-                                         uint8_t decrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs, char* cam_cookies);
+static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint8_t *data_in, size_t len_data_in,
+                                    uint8_t *key, uint32_t len_key, SecurityAssociation_t *sa_ptr, uint8_t *iv,
+                                    uint32_t iv_len, uint8_t *ecs, uint8_t padding, char *cam_cookies);
+static int32_t cryptography_decrypt(uint8_t *data_out, size_t len_data_out, uint8_t *data_in, size_t len_data_in,
+                                    uint8_t *key, uint32_t len_key, SecurityAssociation_t *sa_ptr, uint8_t *iv,
+                                    uint32_t iv_len, uint8_t *ecs, uint8_t *acs, char *cam_cookies);
+static int32_t cryptography_authenticate(uint8_t *data_out, size_t len_data_out, uint8_t *data_in, size_t len_data_in,
+                                         uint8_t *key, uint32_t len_key, SecurityAssociation_t *sa_ptr, uint8_t *iv,
+                                         uint32_t iv_len, uint8_t *mac, uint32_t mac_size, uint8_t *aad,
+                                         uint32_t aad_len, uint8_t ecs, uint8_t acs, char *cam_cookies);
+static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t len_data_out, const uint8_t *data_in,
+                                                    const size_t len_data_in, uint8_t *key, uint32_t len_key,
+                                                    SecurityAssociation_t *sa_ptr, const uint8_t *iv, uint32_t iv_len,
+                                                    const uint8_t *mac, uint32_t mac_size, const uint8_t *aad,
+                                                    uint32_t aad_len, uint8_t ecs, uint8_t acs, char *cam_cookies);
+static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out, uint8_t *data_in, size_t len_data_in,
+                                         uint8_t *key, uint32_t len_key, SecurityAssociation_t *sa_ptr, uint8_t *iv,
+                                         uint32_t iv_len, uint8_t *mac, uint32_t mac_size, uint8_t *aad,
+                                         uint32_t aad_len, uint8_t encrypt_bool, uint8_t authenticate_bool,
+                                         uint8_t aad_bool, uint8_t *ecs, uint8_t *acs, char *cam_cookies);
+static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out, uint8_t *data_in, size_t len_data_in,
+                                         uint8_t *key, uint32_t len_key, SecurityAssociation_t *sa_ptr, uint8_t *iv,
+                                         uint32_t iv_len, uint8_t *mac, uint32_t mac_size, uint8_t *aad,
+                                         uint32_t aad_len, uint8_t decrypt_bool, uint8_t authenticate_bool,
+                                         uint8_t aad_bool, uint8_t *ecs, uint8_t *acs, char *cam_cookies);
 static int32_t cryptography_get_acs_algo(int8_t algo_enum);
 static int32_t cryptography_get_ecs_algo(int8_t algo_enum);
 
@@ -93,17 +72,17 @@ static CryptographyInterfaceStruct cryptography_if_struct;
 
 CryptographyInterface get_cryptography_interface_wolfssl(void)
 {
-    cryptography_if_struct.cryptography_config = cryptography_config;
-    cryptography_if_struct.cryptography_init = cryptography_init;
-    cryptography_if_struct.cryptography_shutdown = cryptography_shutdown;
-    cryptography_if_struct.cryptography_encrypt = cryptography_encrypt;
-    cryptography_if_struct.cryptography_decrypt = cryptography_decrypt;
-    cryptography_if_struct.cryptography_authenticate = cryptography_authenticate;
+    cryptography_if_struct.cryptography_config                  = cryptography_config;
+    cryptography_if_struct.cryptography_init                    = cryptography_init;
+    cryptography_if_struct.cryptography_shutdown                = cryptography_shutdown;
+    cryptography_if_struct.cryptography_encrypt                 = cryptography_encrypt;
+    cryptography_if_struct.cryptography_decrypt                 = cryptography_decrypt;
+    cryptography_if_struct.cryptography_authenticate            = cryptography_authenticate;
     cryptography_if_struct.cryptography_validate_authentication = cryptography_validate_authentication;
-    cryptography_if_struct.cryptography_aead_encrypt = cryptography_aead_encrypt;
-    cryptography_if_struct.cryptography_aead_decrypt = cryptography_aead_decrypt;
-    cryptography_if_struct.cryptography_get_acs_algo = cryptography_get_acs_algo;
-    cryptography_if_struct.cryptography_get_ecs_algo = cryptography_get_ecs_algo;
+    cryptography_if_struct.cryptography_aead_encrypt            = cryptography_aead_encrypt;
+    cryptography_if_struct.cryptography_aead_decrypt            = cryptography_aead_decrypt;
+    cryptography_if_struct.cryptography_get_acs_algo            = cryptography_get_acs_algo;
+    cryptography_if_struct.cryptography_get_ecs_algo            = cryptography_get_ecs_algo;
     return &cryptography_if_struct;
 }
 
@@ -115,7 +94,7 @@ static int32_t cryptography_config(void)
 static int32_t cryptography_init(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    
+
     // Initialize WolfSSL
     if (LIBWOLFSSL_VERSION_HEX != wolfSSL_lib_version_hex())
     {
@@ -127,39 +106,36 @@ static int32_t cryptography_init(void)
 }
 
 static int32_t cryptography_shutdown(void)
-{ 
-    return CRYPTO_LIB_SUCCESS; 
+{
+    return CRYPTO_LIB_SUCCESS;
 }
 
-static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
-                                         uint8_t* data_in, size_t len_data_in,
-                                         uint8_t* key, uint32_t len_key,
-                                         SecurityAssociation_t* sa_ptr, // For key index or key references (when key not passed in explicitly via key param)
-                                         uint8_t* iv, uint32_t iv_len,
-                                         uint8_t* mac, uint32_t mac_size,
-                                         uint8_t* aad, uint32_t aad_len,
-                                         uint8_t ecs, uint8_t acs, char* cam_cookies)
-{ 
+static int32_t cryptography_authenticate(
+    uint8_t *data_out, size_t len_data_out, uint8_t *data_in, size_t len_data_in, uint8_t *key, uint32_t len_key,
+    SecurityAssociation_t *sa_ptr, // For key index or key references (when key not passed in explicitly via key param)
+    uint8_t *iv, uint32_t iv_len, uint8_t *mac, uint32_t mac_size, uint8_t *aad, uint32_t aad_len, uint8_t ecs,
+    uint8_t acs, char *cam_cookies)
+{
     int32_t status = CRYPTO_LIB_SUCCESS;
-    Cmac cmac;
-    Hmac hmac;
+    Cmac    cmac;
+    Hmac    hmac;
     uint8_t calc_mac[64];
 
     // Unused in this implementation
-    cam_cookies = cam_cookies;
-    ecs = ecs;
-    iv = iv;
-    iv_len = iv_len;
+    cam_cookies  = cam_cookies;
+    ecs          = ecs;
+    iv           = iv;
+    iv_len       = iv_len;
     len_data_out = len_data_out;
-    mac_size = mac_size;
-    sa_ptr = sa_ptr;
+    mac_size     = mac_size;
+    sa_ptr       = sa_ptr;
 
-    #ifdef DEBUG
-        printf("cryptography_authenticate \n");
-    #endif
+#ifdef DEBUG
+    printf("cryptography_authenticate \n");
+#endif
 
     // Need to copy the data over, since authentication won't change/move the data directly
-    if(data_out != NULL)
+    if (data_out != NULL)
     {
         memcpy(data_out, data_in, len_data_in);
     }
@@ -178,7 +154,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                 status = wc_CmacUpdate(&cmac, aad, aad_len);
             }
             // Commented out for now while assessing unit tests
-            //if (status == 0)
+            // if (status == 0)
             //{
             //    status = wc_CmacUpdate(&cmac, data_in, len_data_in);
             //}
@@ -196,7 +172,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                 status = wc_HmacUpdate(&hmac, aad, aad_len);
             }
             // Commented out for now while assessing unit tests
-            //if (status == 0)
+            // if (status == 0)
             //{
             //    status = wc_HmacUpdate(&hmac, data_in, len_data_in);
             //}
@@ -217,7 +193,7 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
                 status = wc_HmacUpdate(&hmac, aad, aad_len);
             }
             // Commented out for now while assessing unit tests
-            //if (status == 0)
+            // if (status == 0)
             //{
             //    status = wc_HmacUpdate(&hmac, data_in, len_data_in);
             //}
@@ -235,39 +211,36 @@ static int32_t cryptography_authenticate(uint8_t* data_out, size_t len_data_out,
             status = CRYPTO_LIB_ERR_UNSUPPORTED_ACS;
     }
 
-    return status; 
+    return status;
 }
 
-static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t len_data_out,
-                                                    const uint8_t* data_in, const size_t len_data_in,
-                                                    uint8_t* key, uint32_t len_key,
-                                                    SecurityAssociation_t* sa_ptr,
-                                                    const uint8_t* iv, uint32_t iv_len,
-                                                    const uint8_t* mac, uint32_t mac_size,
-                                                    const uint8_t* aad, uint32_t aad_len,
-                                                    uint8_t ecs, uint8_t acs, char* cam_cookies)
-{ 
+static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t len_data_out, const uint8_t *data_in,
+                                                    const size_t len_data_in, uint8_t *key, uint32_t len_key,
+                                                    SecurityAssociation_t *sa_ptr, const uint8_t *iv, uint32_t iv_len,
+                                                    const uint8_t *mac, uint32_t mac_size, const uint8_t *aad,
+                                                    uint32_t aad_len, uint8_t ecs, uint8_t acs, char *cam_cookies)
+{
     int32_t status = CRYPTO_LIB_SUCCESS;
-    Cmac cmac;
-    Hmac hmac;
+    Cmac    cmac;
+    Hmac    hmac;
     uint8_t calc_mac[64];
 
     // Unused in this implementation
     size_t len_in = len_data_in;
-    len_in = len_in;
-    cam_cookies = cam_cookies;
-    ecs = ecs;
-    iv = iv;
-    iv_len = iv_len;
-    sa_ptr = sa_ptr;
+    len_in        = len_in;
+    cam_cookies   = cam_cookies;
+    ecs           = ecs;
+    iv            = iv;
+    iv_len        = iv_len;
+    sa_ptr        = sa_ptr;
 
-    #ifdef DEBUG
-        printf("cryptography_validate_authentication \n");
-    #endif
+#ifdef DEBUG
+    printf("cryptography_validate_authentication \n");
+#endif
 
     // Need to copy the data over, since authentication won't change/move the data directly
     // If you don't want data out, don't set a data out length
-    if(data_out != NULL)
+    if (data_out != NULL)
     {
         memcpy(data_out, data_in, len_data_out);
     }
@@ -289,7 +262,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
                 }
             }
             // Commented out for now while assessing unit tests
-            //if (status == 0)
+            // if (status == 0)
             //{
             //    status = wc_CmacUpdate(&cmac, data_in, len_data_in);
             //    printf("    wc_CmacUpdate(data_in) returned %d \n", status);
@@ -304,14 +277,14 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
         case CRYPTO_MAC_HMAC_SHA256:
             status = wc_HmacSetKey(&hmac, WC_SHA256, key, len_key);
             if (status == 0)
-            {  
+            {
                 if (aad_len > 0)
                 {
                     status = wc_HmacUpdate(&hmac, aad, aad_len);
                 }
             }
             // Commented out for now while assessing unit tests
-            //if (status == 0)
+            // if (status == 0)
             //{
             //    status = wc_HmacUpdate(&hmac, data_in, len_data_in);
             //}
@@ -331,7 +304,7 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
                 }
             }
             // Commented out for now while assessing unit tests
-            //if (status == 0)
+            // if (status == 0)
             //{
             //    status = wc_HmacUpdate(&hmac, data_in, len_data_in);
             //}
@@ -345,28 +318,28 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
             status = CRYPTO_LIB_ERR_UNSUPPORTED_ACS;
     }
 
-    #ifdef MAC_DEBUG
-        printf("Calculated Mac Size: %d\n", mac_size);
-        printf("Calculated MAC:\n\t");
-        for (uint32_t i = 0; i < mac_size; i ++)
-        {
-            printf("%02X", calc_mac[i]);
-        }
-        printf("\n");
-        printf("Received MAC:\n\t");
-        for (uint32_t i = 0; i < mac_size; i ++)
-        {
-            printf("%02X", mac[i]);
-        }
-        printf("\n");   
-    #endif
+#ifdef MAC_DEBUG
+    printf("Calculated Mac Size: %d\n", mac_size);
+    printf("Calculated MAC:\n\t");
+    for (uint32_t i = 0; i < mac_size; i++)
+    {
+        printf("%02X", calc_mac[i]);
+    }
+    printf("\n");
+    printf("Received MAC:\n\t");
+    for (uint32_t i = 0; i < mac_size; i++)
+    {
+        printf("%02X", mac[i]);
+    }
+    printf("\n");
+#endif
 
     // Compare calculated MAC to provided
     if (status == 0)
     {
-        for(uint32_t i = 0; i < mac_size; i++)
+        for (uint32_t i = 0; i < mac_size; i++)
         {
-            if(calc_mac[i] != mac[i])
+            if (calc_mac[i] != mac[i])
             {
                 status = CRYPTO_LIB_ERR_MAC_VALIDATION_ERROR;
                 break;
@@ -374,38 +347,36 @@ static int32_t cryptography_validate_authentication(uint8_t* data_out, size_t le
         }
     }
 
-    return status; 
+    return status;
 }
 
-static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
-                                         uint8_t* data_in, size_t len_data_in,
-                                         uint8_t* key, uint32_t len_key,
-                                         SecurityAssociation_t* sa_ptr,
-                                         uint8_t* iv, uint32_t iv_len,uint8_t* ecs, uint8_t padding, char* cam_cookies)
+static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint8_t *data_in, size_t len_data_in,
+                                    uint8_t *key, uint32_t len_key, SecurityAssociation_t *sa_ptr, uint8_t *iv,
+                                    uint32_t iv_len, uint8_t *ecs, uint8_t padding, char *cam_cookies)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    Aes enc;
+    Aes     enc;
 
     // Unused in this implementation
-    cam_cookies = cam_cookies;
-    data_out = data_out;
+    cam_cookies  = cam_cookies;
+    data_out     = data_out;
     len_data_out = len_data_out;
-    iv = iv;
-    iv_len = iv_len;
-    padding = padding;
-    sa_ptr = sa_ptr;
+    iv           = iv;
+    iv_len       = iv_len;
+    padding      = padding;
+    sa_ptr       = sa_ptr;
 
-    #ifdef DEBUG
-        printf("cryptography_encrypt \n");
-        size_t j;
-        printf("Input payload length is %ld\n", (long int) len_data_in);
-        printf(KYEL "Printing Frame Data prior to encryption:\n\t");
-        for (j = 0; j < len_data_in; j++)
-        {
-            printf("%02X", *(data_in + j));
-        }
-        printf("\n");
-    #endif
+#ifdef DEBUG
+    printf("cryptography_encrypt \n");
+    size_t j;
+    printf("Input payload length is %ld\n", (long int)len_data_in);
+    printf(KYEL "Printing Frame Data prior to encryption:\n\t");
+    for (j = 0; j < len_data_in; j++)
+    {
+        printf("%02X", *(data_in + j));
+    }
+    printf("\n" RESET);
+#endif
 
     // Reference: https://www.wolfssl.com/documentation/manuals/wolfssl/group__AES.html
     switch (*ecs)
@@ -416,7 +387,7 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
             {
                 status = wc_AesGcmEncrypt(&enc, data_out, data_in, len_data_in, iv, iv_len, NULL, 16, NULL, 0);
                 if (status == -180)
-                {   // Special error case as Wolf will not accept a zero value for MAC size
+                { // Special error case as Wolf will not accept a zero value for MAC size
                     status = CRYPTO_LIB_SUCCESS;
                 }
             }
@@ -439,54 +410,50 @@ static int32_t cryptography_encrypt(uint8_t* data_out, size_t len_data_out,
             break;
     }
 
-    #ifdef DEBUG
-        printf("Output payload length is %ld\n", (long int) len_data_out);
-        printf(KYEL "Printing Frame Data after encryption:\n\t");
-        for (j = 0; j < len_data_out; j++)
-        {
-            printf("%02X", *(data_out + j));
-        }
-        printf("\n");
-    #endif
+#ifdef DEBUG
+    printf("Output payload length is %ld\n", (long int)len_data_out);
+    printf(KYEL "Printing Frame Data after encryption:\n\t");
+    for (j = 0; j < len_data_out; j++)
+    {
+        printf("%02X", *(data_out + j));
+    }
+    printf("\n" RESET);
+#endif
 
     return status;
 }
 
-static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
-                                         uint8_t* data_in, size_t len_data_in,
-                                         uint8_t* key, uint32_t len_key,
-                                         SecurityAssociation_t* sa_ptr, // For key index or key references (when key not passed in explicitly via key param)
-                                         uint8_t* iv, uint32_t iv_len,
-                                         uint8_t* mac, uint32_t mac_size,
-                                         uint8_t* aad, uint32_t aad_len,
-                                         uint8_t encrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs, char* cam_cookies)
+static int32_t cryptography_aead_encrypt(
+    uint8_t *data_out, size_t len_data_out, uint8_t *data_in, size_t len_data_in, uint8_t *key, uint32_t len_key,
+    SecurityAssociation_t *sa_ptr, // For key index or key references (when key not passed in explicitly via key param)
+    uint8_t *iv, uint32_t iv_len, uint8_t *mac, uint32_t mac_size, uint8_t *aad, uint32_t aad_len, uint8_t encrypt_bool,
+    uint8_t authenticate_bool, uint8_t aad_bool, uint8_t *ecs, uint8_t *acs, char *cam_cookies)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    Aes enc;
+    Aes     enc;
 
     // Unused in this implementation
-    acs = acs;
-    cam_cookies = cam_cookies;
-    len_data_out = len_data_out;
-    aad = aad;
-    aad_len = aad_len;
-    encrypt_bool = encrypt_bool;
+    acs               = acs;
+    cam_cookies       = cam_cookies;
+    len_data_out      = len_data_out;
+    aad               = aad;
+    aad_len           = aad_len;
+    encrypt_bool      = encrypt_bool;
     authenticate_bool = authenticate_bool;
-    aad_bool = aad_bool;
-    sa_ptr = sa_ptr;
+    aad_bool          = aad_bool;
+    sa_ptr            = sa_ptr;
 
-    #ifdef DEBUG
-        size_t j;
-        printf("cryptography_aead_encrypt \n");
-        printf("Input payload length is %ld\n", (long int) len_data_in);
-        printf(KYEL "Printing Frame Data prior to encryption:\n\t");
-        for (j = 0; j < len_data_in; j++)
-        {
-            printf("%02X", *(data_in + j));
-        }
-        printf("\n");
-    #endif
+#ifdef DEBUG
+    size_t j;
+    printf("cryptography_aead_encrypt \n");
+    printf("Input payload length is %ld\n", (long int)len_data_in);
+    printf(KYEL "Printing Frame Data prior to encryption:\n\t");
+    for (j = 0; j < len_data_in; j++)
+    {
+        printf("%02X", *(data_in + j));
+    }
+    printf("\n" RESET);
+#endif
 
     // Reference: https://www.wolfssl.com/documentation/manuals/wolfssl/group__AES.html
     switch (*ecs)
@@ -497,13 +464,14 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
             {
                 if ((encrypt_bool == CRYPTO_TRUE) && (authenticate_bool == CRYPTO_TRUE))
                 {
-                    status = wc_AesGcmEncrypt(&enc, data_out, data_in, len_data_in, iv, iv_len, mac, mac_size, aad, aad_len);
+                    status =
+                        wc_AesGcmEncrypt(&enc, data_out, data_in, len_data_in, iv, iv_len, mac, mac_size, aad, aad_len);
                 }
                 else if (encrypt_bool == CRYPTO_TRUE)
                 {
                     status = wc_AesGcmEncrypt(&enc, data_out, data_in, len_data_in, iv, iv_len, mac, 16, aad, aad_len);
                     if (status == -180)
-                    {   // Special error case as Wolf will not accept a zero value for MAC size
+                    { // Special error case as Wolf will not accept a zero value for MAC size
                         status = CRYPTO_LIB_SUCCESS;
                     }
                 }
@@ -523,40 +491,37 @@ static int32_t cryptography_aead_encrypt(uint8_t* data_out, size_t len_data_out,
             break;
     }
 
-    #ifdef DEBUG
-        printf("Output payload length is %ld\n", (long int) len_data_out);
-        printf(KYEL "Printing Frame Data after encryption:\n\t");
-        for (j = 0; j < len_data_out; j++)
-        {
-            printf("%02X", *(data_out + j));
-        }
-        printf("\n");
-    #endif
+#ifdef DEBUG
+    printf("Output payload length is %ld\n", (long int)len_data_out);
+    printf(KYEL "Printing Frame Data after encryption:\n\t");
+    for (j = 0; j < len_data_out; j++)
+    {
+        printf("%02X", *(data_out + j));
+    }
+    printf("\n" RESET);
+#endif
 
     return status;
 }
 
-static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
-                                         uint8_t* data_in, size_t len_data_in,
-                                         uint8_t* key, uint32_t len_key,
-                                         SecurityAssociation_t* sa_ptr, 
-                                         uint8_t* iv, uint32_t iv_len,
-                                         uint8_t* ecs, uint8_t* acs, char* cam_cookies)
+static int32_t cryptography_decrypt(uint8_t *data_out, size_t len_data_out, uint8_t *data_in, size_t len_data_in,
+                                    uint8_t *key, uint32_t len_key, SecurityAssociation_t *sa_ptr, uint8_t *iv,
+                                    uint32_t iv_len, uint8_t *ecs, uint8_t *acs, char *cam_cookies)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    Aes dec;
+    Aes     dec;
     uint8_t calc_mac[16];
-    
-    // Unused in this implementation
-    acs = acs;
-    cam_cookies = cam_cookies;
-    len_data_out = len_data_out;
-    iv_len = iv_len;
-    sa_ptr = sa_ptr;
 
-    #ifdef DEBUG
-        printf("cryptography_decrypt \n");
-    #endif
+    // Unused in this implementation
+    acs          = acs;
+    cam_cookies  = cam_cookies;
+    len_data_out = len_data_out;
+    iv_len       = iv_len;
+    sa_ptr       = sa_ptr;
+
+#ifdef DEBUG
+    printf("cryptography_decrypt \n");
+#endif
 
     // Reference: https://www.wolfssl.com/documentation/manuals/wolfssl/group__AES.html
     switch (*ecs)
@@ -567,7 +532,7 @@ static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
             {
                 status = wc_AesGcmDecrypt(&dec, data_out, data_in, len_data_in, iv, iv_len, calc_mac, 16, NULL, 0);
                 if (status == -180)
-                {   // Special error case as Wolf will not accept a zero value for MAC size
+                { // Special error case as Wolf will not accept a zero value for MAC size
                     status = CRYPTO_LIB_SUCCESS;
                 }
             }
@@ -593,31 +558,27 @@ static int32_t cryptography_decrypt(uint8_t* data_out, size_t len_data_out,
     return status;
 }
 
-static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
-                                         uint8_t* data_in, size_t len_data_in,
-                                         uint8_t* key, uint32_t len_key,
-                                         SecurityAssociation_t* sa_ptr,
-                                         uint8_t* iv, uint32_t iv_len,
-                                         uint8_t* mac, uint32_t mac_size,
-                                         uint8_t* aad, uint32_t aad_len,
-                                         uint8_t decrypt_bool, uint8_t authenticate_bool,
-                                         uint8_t aad_bool, uint8_t* ecs, uint8_t* acs, char* cam_cookies)
+static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out, uint8_t *data_in, size_t len_data_in,
+                                         uint8_t *key, uint32_t len_key, SecurityAssociation_t *sa_ptr, uint8_t *iv,
+                                         uint32_t iv_len, uint8_t *mac, uint32_t mac_size, uint8_t *aad,
+                                         uint32_t aad_len, uint8_t decrypt_bool, uint8_t authenticate_bool,
+                                         uint8_t aad_bool, uint8_t *ecs, uint8_t *acs, char *cam_cookies)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    Aes dec;
-    
-    // Fix warnings
-    acs = acs;
-    cam_cookies = cam_cookies;
-    len_data_out = len_data_out;
-    decrypt_bool = decrypt_bool;
-    authenticate_bool = authenticate_bool;
-    aad_bool = aad_bool;
-    sa_ptr = sa_ptr;
+    Aes     dec;
 
-    #ifdef DEBUG
-        printf("cryptography_aead_decrypt \n");
-    #endif
+    // Fix warnings
+    acs               = acs;
+    cam_cookies       = cam_cookies;
+    len_data_out      = len_data_out;
+    decrypt_bool      = decrypt_bool;
+    authenticate_bool = authenticate_bool;
+    aad_bool          = aad_bool;
+    sa_ptr            = sa_ptr;
+
+#ifdef DEBUG
+    printf("cryptography_aead_decrypt \n");
+#endif
 
     // Reference: https://www.wolfssl.com/documentation/manuals/wolfssl/group__AES.html
     switch (*ecs)
@@ -631,13 +592,24 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                     // Added for now while assessing unit tests and requirements
                     if (mac_size > 0)
                     {
-                        status = wc_AesGcmDecrypt(&dec, data_out, data_in, len_data_in, iv, iv_len, mac, mac_size, aad, aad_len);
+                        if (len_data_in == 0)
+                        {
+                            // in place decryption
+                            status = wc_AesGcmDecrypt(&dec, data_out, data_out, len_data_out, iv, iv_len, mac, mac_size,
+                                                      aad, aad_len);
+                        }
+                        else
+                        {
+                            status = wc_AesGcmDecrypt(&dec, data_out, data_in, len_data_in, iv, iv_len, mac, mac_size,
+                                                      aad, aad_len);
+                        }
                     }
                     else
                     {
-                        status = wc_AesGcmDecrypt(&dec, data_out, data_in, len_data_in, iv, iv_len, mac, 16, aad, aad_len);
+                        status =
+                            wc_AesGcmDecrypt(&dec, data_out, data_in, len_data_in, iv, iv_len, mac, 16, aad, aad_len);
                         if (status == -180)
-                        {   // Special error case as Wolf will not accept a zero value for MAC size
+                        { // Special error case as Wolf will not accept a zero value for MAC size
                             status = CRYPTO_LIB_SUCCESS;
                         }
                     }
@@ -646,13 +618,14 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
                 {
                     status = wc_AesGcmDecrypt(&dec, data_out, data_in, len_data_in, iv, iv_len, mac, 16, aad, aad_len);
                     if (status == -180)
-                    {   // Special error case as Wolf will not accept a zero value for MAC size
+                    { // Special error case as Wolf will not accept a zero value for MAC size
                         status = CRYPTO_LIB_SUCCESS;
                     }
                 }
                 else if (authenticate_bool == CRYPTO_TRUE)
                 {
-                    status = wc_AesGcmDecrypt(&dec, data_out, data_in, len_data_in, iv, iv_len, mac, mac_size, aad, aad_len);
+                    status =
+                        wc_AesGcmDecrypt(&dec, data_out, data_in, len_data_in, iv, iv_len, mac, mac_size, aad, aad_len);
                     // If authentication only, don't decrypt the data. Just pass the data PDU through.
                     memcpy(data_out, data_in, len_data_in);
                 }
@@ -683,7 +656,7 @@ static int32_t cryptography_aead_decrypt(uint8_t* data_out, size_t len_data_out,
  **/
 int32_t cryptography_get_acs_algo(int8_t algo_enum)
 {
-    int32_t algo = CRYPTO_LIB_ERR_UNSUPPORTED_ACS; 
+    int32_t algo = CRYPTO_LIB_ERR_UNSUPPORTED_ACS;
 
     // Unused by WolfSSL, simply leverage same CryptoLib enums
     switch (algo_enum)
@@ -714,7 +687,7 @@ int32_t cryptography_get_acs_algo(int8_t algo_enum)
  **/
 int32_t cryptography_get_ecs_algo(int8_t algo_enum)
 {
-    int32_t algo = CRYPTO_LIB_ERR_UNSUPPORTED_ECS; 
+    int32_t algo = CRYPTO_LIB_ERR_UNSUPPORTED_ECS;
 
     // Unused by WolfSSL, simply leverage same CryptoLib enums
     switch (algo_enum)

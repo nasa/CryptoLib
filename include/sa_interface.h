@@ -33,19 +33,19 @@ typedef struct
     int32_t (*sa_init)(void);
     int32_t (*sa_close)(void);
     // Security Association Interaction Functions
-    int32_t (*sa_get_from_spi)(uint16_t, SecurityAssociation_t** );
-    int32_t (*sa_get_operational_sa_from_gvcid)(uint8_t, uint16_t, uint16_t, uint8_t, SecurityAssociation_t**);
-    int32_t (*sa_save_sa)(SecurityAssociation_t* );
+    int32_t (*sa_get_from_spi)(uint16_t, SecurityAssociation_t **);
+    int32_t (*sa_get_operational_sa_from_gvcid)(uint8_t, uint16_t, uint16_t, uint8_t, SecurityAssociation_t **);
+    int32_t (*sa_save_sa)(SecurityAssociation_t *);
     // Security Association Utility Functions
-    int32_t (*sa_stop)(void);
-    int32_t (*sa_start)(TC_t* tc_frame);
-    int32_t (*sa_expire)(void);
-    int32_t (*sa_rekey)(void);
-    int32_t (*sa_status)(uint8_t* );
-    int32_t (*sa_create)(void);
-    int32_t (*sa_setARSN)(void);
-    int32_t (*sa_setARSNW)(void);
-    int32_t (*sa_delete)(void);
+    int32_t (*sa_stop)(TC_t *tc_frame);
+    int32_t (*sa_start)(TC_t *tc_frame);
+    int32_t (*sa_expire)(TC_t *tc_frame);
+    int32_t (*sa_rekey)(TC_t *tc_frame);
+    int32_t (*sa_status)(uint8_t *);
+    int32_t (*sa_create)(TC_t *tc_frame);
+    int32_t (*sa_setARSN)(TC_t *tc_frame);
+    int32_t (*sa_setARSNW)(TC_t *tc_frame);
+    int32_t (*sa_delete)(TC_t *tc_frame);
 
 } SaInterfaceStruct, *SaInterface;
 
@@ -54,4 +54,4 @@ SaInterface get_sa_interface_inmemory(void);
 SaInterface get_sa_interface_mariadb(void);
 // SaInterface init_parse_sa_routine(uint8_t* );
 
-#endif //CRYPTOLIB_SA_INTERFACE_H
+#endif // CRYPTOLIB_SA_INTERFACE_H

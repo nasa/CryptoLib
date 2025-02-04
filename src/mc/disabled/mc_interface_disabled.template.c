@@ -22,7 +22,7 @@ static McInterfaceStruct mc_if_struct;
 
 /* Prototypes */
 static int32_t mc_initialize(void);
-static void mc_log(int32_t error_code);
+static void    mc_log(int32_t error_code);
 static int32_t mc_shutdown(void);
 
 /* Functions */
@@ -30,8 +30,8 @@ McInterface get_mc_interface_disabled(void)
 {
     /* MC Interface, SDLS */
     mc_if_struct.mc_initialize = mc_initialize;
-    mc_if_struct.mc_log = mc_log;
-    mc_if_struct.mc_shutdown = mc_shutdown;
+    mc_if_struct.mc_log        = mc_log;
+    mc_if_struct.mc_shutdown   = mc_shutdown;
 
     /* MC Interface, SDLS-EP */
     /*
