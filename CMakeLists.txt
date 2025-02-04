@@ -170,7 +170,7 @@ endif()
 #
 # Project Specifics
 #
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror -g -O0")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -Wall -Wextra -Werror -g -O0")
 
 include_directories(include)
 add_subdirectory(src)

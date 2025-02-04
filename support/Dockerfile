@@ -44,6 +44,7 @@ RUN apt-get update -y \
         python3-sphinx-rtd-theme \
         python3-myst-parser \
         unzip \
+        valgrind \
     && rm -rf /var/lib/apt/lists/* 
 
 RUN ldconfig \

@@ -514,15 +514,15 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status_p, uint8_t *tm_ptr, uin
 
     udp_info_t *tm_write_sock = &tm_socks->write;
 
-    if (tm_debug==1)
-    {
-        printf("***Printing SPP about to be processed:\n\t");
-        for (int i=0; i <tm_process_len; i++)
-        {
-            printf("%02X", tm_ptr[i]);
-        }
-        printf("\n");
-    }
+    // if (tm_debug==1)
+    // {
+    //     printf("***Printing SPP about to be processed:\n\t");
+    //     for (int i=0; i <tm_process_len; i++)
+    //     {
+    //         printf("%02X", tm_ptr[i]);
+    //     }
+    //     printf("\n");
+    // }
 
     /* 
     **  Check if valid spacepacket - either an idle packet, or other valid space packet
@@ -532,6 +532,7 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status_p, uint8_t *tm_ptr, uin
     if ((tm_ptr[0] >= 0x08) || ((tm_ptr[0] == 0x07) && tm_ptr[1] == 0xff))
     {
         spp_len = (((0xFFFF & tm_ptr[4]) << 8) | tm_ptr[5]) + 7;
+        printf("SPP Len calced as %d!\n", spp_len);
         // Send all SPP telemetry packets
         if (tm_ptr[0] >= 0x08)
         {
@@ -560,13 +561,15 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status_p, uint8_t *tm_ptr, uin
     }
     else if ((tm_ptr[0] == 0xFF && tm_ptr[1] == 0x48) || (tm_ptr[0] == 0x00 && tm_ptr[1] == 0x00) ||
              (tm_ptr[0] == 0x02 && tm_ptr[1] == 0x00) || (tm_ptr[0] == 0xFF && tm_ptr[1] == 0xFF))
+    // Check if valid idle frame (Header of 0x7FE)
+    // else if (tm_ptr[0] = 0x7f && tm_ptr[1] = 0xFE)
     {
-        // TODO: Why 0x0200?
         // Idle Frame
         // Idle Frame is entire length of remaining data
 #ifdef CRYPTO_STANDALONE_DISCARD_IDLE_FRAMES
         // Don't forward idle frame
         status = spp_len;
+        printf("Dropping idle frame?\n");
 #else
         status = sendto(tm_write_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr *)&tm_write_sock->saddr,
                         sizeof(tm_write_sock->saddr));
@@ -647,6 +650,7 @@ void *crypto_standalone_tm_process(void *socks)
                     if (((tm_ptr[4] & 0x07) == 0x07) && (tm_ptr[5] == 0xFE))
                     {
                         // OID Frame - FHP of 0x7FE per CCSDS 132.0-B-3 4.1.2.7.6.5
+                        printf("First Header Pointer Indicates OID FRAME...\n");
                     }
                     else
                     {
