@@ -285,7 +285,9 @@ UTEST(AOS_PROCESS, HAPPY_PATH_CLEAR_FECF)
     sa_if->sa_get_from_spi(10, &sa_ptr); // Disable SPI 10
     sa_ptr->sa_state = SA_KEYED;
     sa_if->sa_get_from_spi(9, &sa_ptr); // Enable and setup 9
-    sa_ptr->sa_state = SA_OPERATIONAL;
+    sa_ptr->sa_state  = SA_OPERATIONAL;
+    sa_ptr->arsn_len  = 0;
+    sa_ptr->shsnf_len = 0;
 
     status =
         Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, &ptr_processed_frame, &processed_aos_len);
@@ -475,6 +477,8 @@ UTEST(AOS_PROCESS, INSERT_ZONE_PRESENT_PLAINTEXT)
     sa_ptr->sa_state = SA_KEYED;
     sa_if->sa_get_from_spi(9, &sa_ptr); // Enable and setup 9
     sa_ptr->sa_state = SA_OPERATIONAL;
+    sa_ptr->arsn_len = 0;
+    sa_ptr->shsnf_len = 0;
 
     status =
         Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, &ptr_processed_frame, &processed_aos_len);
@@ -517,8 +521,6 @@ UTEST(AOS_PROCESS, AES_CMAC_256_TEST_0)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             AOS_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x002c, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_NO_OCF, 1786,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t AOS_UT_Managed_Parameters = {
         1, 0x002c, 0, AOS_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, AOS_SEGMENT_HDRS_NA, 1786, AOS_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
@@ -526,7 +528,6 @@ UTEST(AOS_PROCESS, AES_CMAC_256_TEST_0)
 
     // Test frame setup
     // Note: SPI 11 (0x0B)
-    // Setup:             | hdr 6    |SPI| data | MAC | FECF
     char *framed_aos_h =
         "42C000001800000B08010000000F00112233445566778899AABBCCDDEEFFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAA"
         "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
@@ -582,7 +583,6 @@ UTEST(AOS_PROCESS, AES_CMAC_256_TEST_0)
     sa_ptr->gvcid_blk.scid = 0x44;
     sa_ptr->iv_len         = 0;
     sa_ptr->shivf_len      = 0;
-    memset(sa_ptr->abm, 0x00, (sa_ptr->abm_len * sizeof(uint8_t))); // Bitmask of zeros
 
     // Truth frame setup
     char *truth_aos_h =
@@ -622,11 +622,6 @@ UTEST(AOS_PROCESS, AES_CMAC_256_TEST_0)
     char *truth_aos_b   = NULL;
     int   truth_aos_len = 0;
     hex_conversion(truth_aos_h, &truth_aos_b, &truth_aos_len);
-
-    // Test Specific Setup
-    // SaInterface sa_if = get_sa_interface_inmemory();
-    // Expose/setup SA for testing
-    // Configure SA 15
 
     status =
         Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, &ptr_processed_frame, &processed_aos_len);
@@ -1738,6 +1733,8 @@ UTEST(AOS_PROCESS, AEAD_GCM_BITMASK_1)
 
 UTEST(AOS_PROCESS, AOS_SA_SEGFAULT_TEST)
 {
+    remove("sa_save_file.bin");
+
     // Local Variables
     int32_t  status              = CRYPTO_LIB_SUCCESS;
     uint8_t *ptr_processed_frame = NULL;
@@ -1773,6 +1770,8 @@ UTEST(AOS_PROCESS, AOS_SA_SEGFAULT_TEST)
 
 UTEST(AOS_PROCESS, AOS_SA_NOT_OPERATIONAL)
 {
+    remove("sa_save_file.bin");
+
     // Local Variables
     int32_t  status              = CRYPTO_LIB_SUCCESS;
     uint8_t *ptr_processed_frame = NULL;
@@ -1792,17 +1791,17 @@ UTEST(AOS_PROCESS, AOS_SA_NOT_OPERATIONAL)
     status = Crypto_Init();
 
     // Test frame setup
-    char *framed_aos_h   = "42C00000000000050000000000000000FFFF";
+    char *framed_aos_h   = "42C00000000800090000000000000000FFFF";
     char *framed_aos_b   = NULL;
     int   framed_aos_len = 0;
     hex_conversion(framed_aos_h, &framed_aos_b, &framed_aos_len);
 
     SecurityAssociation_t *sa_ptr = NULL;
     SaInterface            sa_if  = get_sa_interface_inmemory();
-    sa_if->sa_get_from_spi(10, &sa_ptr); // Disable SPI 10
-    sa_ptr->sa_state = SA_KEYED;
-    sa_if->sa_get_from_spi(5, &sa_ptr); // Enable and setup 5
+    sa_if->sa_get_from_spi(9, &sa_ptr); // Disable SPI 10
     sa_ptr->sa_state = SA_NONE;
+    sa_ptr->arsn_len = 0;
+    sa_ptr->shsnf_len = 0;
 
     crypto_key_t *ekp = NULL;
     ekp               = key_if->get_key(sa_ptr->ekid);
@@ -1842,19 +1841,23 @@ UTEST(AOS_PROCESS, AOS_OCF_TEST)
     status = Crypto_Init();
 
     // Test frame setup
-    char *framed_aos_h   = "42C00000001500090000000000000000DEADBEEFFFFF";
+    char *framed_aos_h   = "42C00000000800090000000000000000DEADBEEFFFFF";
     char *framed_aos_b   = NULL;
     int   framed_aos_len = 0;
     hex_conversion(framed_aos_h, &framed_aos_b, &framed_aos_len);
 
     SecurityAssociation_t *sa_ptr = NULL;
     SaInterface            sa_if  = get_sa_interface_inmemory();
-    sa_if->sa_get_from_spi(9, &sa_ptr); // Enable and setup 5
-    sa_ptr->sa_state        = SA_OPERATIONAL;
-    sa_ptr->shivf_len       = 0;
-    sa_ptr->gvcid_blk.tfvn  = 1;
-    sa_ptr->gvcid_blk.vcid  = 0;
-    sa_ptr->gvcid_blk.mapid = 0;
+    sa_if->sa_get_from_spi(9, &sa_ptr); // Enable and setup 9
+    sa_ptr->sa_state   = SA_OPERATIONAL;
+    sa_ptr->shivf_len  = 0;
+    sa_ptr->shsnf_len  = 0;
+    sa_ptr->arsn_len   = 0;
+    sa_ptr->iv_len     = 0;
+    sa_ptr->shivf_len  = 0;
+    sa_ptr->stmacf_len = 0;
+    sa_ptr->arsnw_len  = 0;
+    sa_ptr->arsn_len   = 0;
 
     status =
         Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, &ptr_processed_frame, &processed_aos_len);
@@ -1898,9 +1901,11 @@ UTEST(AOS_PROCESS, AOS_KEY_STATE_TEST)
     sa_if->sa_get_from_spi(10, &sa_ptr); // Disable SPI 10
     sa_ptr->sa_state = SA_KEYED;
     sa_if->sa_get_from_spi(5, &sa_ptr); // Enable and setup 5
-    sa_ptr->sa_state = SA_OPERATIONAL;
-    sa_ptr->est      = 1;
-    sa_ptr->ecs      = CRYPTO_CIPHER_AES256_GCM;
+    sa_ptr->sa_state  = SA_OPERATIONAL;
+    sa_ptr->est       = 1;
+    sa_ptr->ecs       = CRYPTO_CIPHER_AES256_GCM;
+    sa_ptr->arsn_len  = 0;
+    sa_ptr->shsnf_len = 0;
 
     crypto_key_t *ekp = NULL;
     ekp               = key_if->get_key(sa_ptr->ekid);

@@ -731,6 +731,19 @@ static int32_t sa_get_from_spi(uint16_t spi, SecurityAssociation_t **security_as
     {
         return CRYPTO_LIB_ERR_NULL_ABM;
     } // Must have abm if doing authentication
+
+    // ARSN must be 0 octets in length if not using Auth/Auth Enc
+    if (sa[spi].ast == 0 && sa[spi].arsn_len != 0)
+    {
+        return CRYPTO_LIB_ERR_INVALID_SVC_TYPE_WITH_ARSN;
+    }
+
+    // ARSN length cannot be less than shsnf length
+    if (sa[spi].shsnf_len > sa[spi].arsn_len)
+    {
+        return CRYPTO_LIB_ERR_ARSN_LT_SHSNF;
+    }
+    
 #ifdef SA_DEBUG
     printf(KYEL "DEBUG - Printing local copy of SA Entry for current SPI.\n" RESET);
     Crypto_saPrint(*security_association);
@@ -860,6 +873,20 @@ void sa_non_operational_sa(int *i_p, int32_t *status, uint8_t tfvn, uint16_t sci
     *i_p = i;
 }
 
+void sa_mismatched_arsn(int *i_p, int32_t *status, uint8_t tfvn, uint16_t scid, uint16_t vcid, uint8_t mapid)
+{
+    int i = *i_p;
+    if ((sa[i].arsn_len > 0 && sa[i].ast == 0) && (sa[i].gvcid_blk.tfvn == tfvn) && (sa[i].gvcid_blk.scid == scid) && (sa[i].gvcid_blk.vcid == vcid) &&
+        (sa[i].gvcid_blk.mapid == mapid && sa[i].sa_state == SA_OPERATIONAL))
+    {
+#ifdef SA_DEBUG
+        printf(KRED "An operational SA (%d) was found - but invalid ARSN length.\n" RESET, sa[i].spi);
+#endif
+        *status = CRYPTO_LIB_ERR_INVALID_SVC_TYPE_WITH_ARSN;
+    }
+    *i_p = i;
+}
+
 void sa_debug_block(uint8_t tfvn, uint16_t scid, uint16_t vcid, uint8_t mapid)
 {
 // Detailed debug block
@@ -917,6 +944,12 @@ int32_t sa_get_operational_sa_from_gvcid_generate_error(int32_t *status, uint8_t
                 return *status;
             }
             sa_non_operational_sa(&i, status, tfvn, scid, vcid, mapid);
+            if (*status != CRYPTO_LIB_SUCCESS)
+            {
+                sa_debug_block(tfvn, scid, vcid, mapid);
+                return *status;
+            }
+            sa_mismatched_arsn(&i, status, tfvn, scid, vcid, mapid);
             if (*status != CRYPTO_LIB_SUCCESS)
             {
                 sa_debug_block(tfvn, scid, vcid, mapid);

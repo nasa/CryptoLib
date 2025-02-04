@@ -23,7 +23,7 @@ UTEST(EP_MC, MC_REGULAR_PING)
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_PING_h = "2003001a00ff000000001880d2c70008197f0b00310000b1fe312855";
+    char *buffer_PING_h = "2003001800ff00001880d2c70008197f0b00310000b1fe312855";
     //                    |2003001a00| = Primary Header
     //                              |ff| = Ext. Procs
     //                                |0000| = SPI
@@ -52,15 +52,17 @@ UTEST(EP_MC, MC_REGULAR_PING)
     test_association->shivf_len      = 0;
     test_association->sa_state       = SA_OPERATIONAL;
     test_association->iv_len         = 12;
-    test_association->shsnf_len      = 2;
+    test_association->shsnf_len      = 0;
     test_association->arsnw          = 5;
     test_association->arsnw_len      = 1;
-    test_association->arsn_len       = 2;
+    test_association->arsn_len       = 0;
     test_association->gvcid_blk.scid = SCID & 0x3FF;
 
     // Modify SA 6
     sa_if->sa_get_from_spi(6, &test_association);
-    test_association->sa_state = SA_UNKEYED;
+    test_association->sa_state  = SA_UNKEYED;
+    test_association->arsn_len  = 0;
+    test_association->shsnf_len = 0;
 
     // Convert frames that will be processed
     hex_conversion(buffer_PING_h, (char **)&buffer_PING_b, &buffer_PING_len);
@@ -120,7 +122,7 @@ UTEST(EP_MC, MC_STATUS)
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_STATUS_h = "2003001a00ff000000001880d2c70008197f0b00320000b1fe312855";
+    char *buffer_STATUS_h = "2003001800ff00001880d2c70008197f0b00320000b1fe312855";
 
     uint8_t *buffer_STATUS_b   = NULL;
     int      buffer_STATUS_len = 0;
@@ -136,10 +138,10 @@ UTEST(EP_MC, MC_STATUS)
     test_association->shivf_len      = 0;
     test_association->sa_state       = SA_OPERATIONAL;
     test_association->iv_len         = 12;
-    test_association->shsnf_len      = 2;
+    test_association->shsnf_len      = 0;
     test_association->arsnw          = 5;
     test_association->arsnw_len      = 1;
-    test_association->arsn_len       = 2;
+    test_association->arsn_len       = 0;
     test_association->gvcid_blk.scid = SCID & 0x3FF;
 
     // Modify SA 6
@@ -201,7 +203,7 @@ UTEST(EP_MC, MC_DUMP)
 
     int status = CRYPTO_LIB_SUCCESS;
 
-    char *buffer_DUMP_h = "2003001a00ff000000001880d2c70008197f0b00330000b1fe312855";
+    char *buffer_DUMP_h = "2003001800ff00001880d2c70008197f0b00330000b1fe312855";
 
     uint8_t *buffer_DUMP_b   = NULL;
     int      buffer_DUMP_len = 0;
@@ -217,10 +219,10 @@ UTEST(EP_MC, MC_DUMP)
     test_association->shivf_len      = 0;
     test_association->sa_state       = SA_OPERATIONAL;
     test_association->iv_len         = 12;
-    test_association->shsnf_len      = 2;
+    test_association->shsnf_len      = 0;
     test_association->arsnw          = 5;
     test_association->arsnw_len      = 1;
-    test_association->arsn_len       = 2;
+    test_association->arsn_len       = 0;
     test_association->gvcid_blk.scid = SCID & 0x3FF;
 
     // Modify SA 6
@@ -285,7 +287,7 @@ UTEST(EP_MC, MC_ERASE)
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_ERASE_h = "2003001a00ff000000001880d2c70008197f0b00340000b1fe312855";
+    char *buffer_ERASE_h = "2003001800ff00001880d2c70008197f0b00340000b1fe312855";
 
     uint8_t *buffer_ERASE_b   = NULL;
     int      buffer_ERASE_len = 0;
@@ -301,10 +303,10 @@ UTEST(EP_MC, MC_ERASE)
     test_association->shivf_len      = 0;
     test_association->sa_state       = SA_OPERATIONAL;
     test_association->iv_len         = 12;
-    test_association->shsnf_len      = 2;
+    test_association->shsnf_len      = 0;
     test_association->arsnw          = 5;
     test_association->arsnw_len      = 1;
-    test_association->arsn_len       = 2;
+    test_association->arsn_len       = 0;
     test_association->gvcid_blk.scid = SCID & 0x3FF;
 
     // Modify SA 6
@@ -367,7 +369,7 @@ UTEST(EP_MC, MC_SELF_TEST)
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_SELF_h = "2003001a00ff000000001880d2c70008197f0b00350000b1fe312855";
+    char *buffer_SELF_h = "2003001800ff00001880d2c70008197f0b00350000b1fe312855";
 
     uint8_t *buffer_SELF_b   = NULL;
     int      buffer_SELF_len = 0;
@@ -384,10 +386,10 @@ UTEST(EP_MC, MC_SELF_TEST)
     test_association->shivf_len      = 0;
     test_association->sa_state       = SA_OPERATIONAL;
     test_association->iv_len         = 12;
-    test_association->shsnf_len      = 2;
+    test_association->shsnf_len      = 0;
     test_association->arsnw          = 5;
     test_association->arsnw_len      = 1;
-    test_association->arsn_len       = 2;
+    test_association->arsn_len       = 0;
     test_association->gvcid_blk.scid = SCID & 0x3FF;
 
     // Modify SA 6
@@ -450,7 +452,7 @@ UTEST(EP_MC, MC_ALARM_FLAG_RESET)
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_ALARM_h = "2003001a00ff000000001880d2c70008197f0b00370000b1fe312855";
+    char *buffer_ALARM_h = "2003001800ff00001880d2c70008197f0b00370000b1fe312855";
 
     uint8_t *buffer_ALARM_b   = NULL;
     int      buffer_ALARM_len = 0;
@@ -466,10 +468,10 @@ UTEST(EP_MC, MC_ALARM_FLAG_RESET)
     test_association->shivf_len      = 0;
     test_association->sa_state       = SA_OPERATIONAL;
     test_association->iv_len         = 12;
-    test_association->shsnf_len      = 2;
+    test_association->shsnf_len      = 0;
     test_association->arsnw          = 5;
     test_association->arsnw_len      = 1;
-    test_association->arsn_len       = 2;
+    test_association->arsn_len       = 0;
     test_association->gvcid_blk.scid = SCID & 0x3FF;
 
     // Modify SA 6

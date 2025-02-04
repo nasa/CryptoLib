@@ -30,7 +30,7 @@ UTEST(EP_KEY_MGMT, OTAR_0_140_142)
     char *buffer_nist_key_h = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
     // char* buffer_nist_iv_h = "b6ac8e4963f49207ffd6374b"; // The last valid IV that was seen by the SA
     char *buffer_OTAR_h =
-        "2003009e00ff000000001880d037008c197f0b000100840000344892bbc54f5395297d4c37172f2a3c46f6a81c1349e9e26ac80985d8bb"
+        "2003009c00ff00001880d037008c197f0b000100840000344892bbc54f5395297d4c37172f2a3c46f6a81c1349e9e26ac80985d8bb"
         "d55a5814c662e49fba52f99ba09558cd21cf268b8e50b2184137e80f76122034c580464e2f06d2659a50508bdfe9e9a55990ba4148af89"
         "6d8a6eebe8b5d2258685d4ce217a20174fdd4f0efac62758c51b04e55710a47209c923b641d19a39001f9e986166f5ffd95555";
 
@@ -50,8 +50,8 @@ UTEST(EP_KEY_MGMT, OTAR_0_140_142)
     test_association->ecs       = CRYPTO_CIPHER_NONE;
     test_association->est       = 0;
     test_association->ast       = 0;
-    test_association->shsnf_len = 2;
-    test_association->arsn_len  = 2;
+    test_association->shsnf_len = 0;
+    test_association->arsn_len  = 0;
     test_association->arsnw     = 5;
     test_association->iv_len    = 0;
     test_association->shivf_len = 0;
@@ -100,7 +100,7 @@ UTEST(EP_KEY_MGMT, ACTIVATE_141_142)
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
     char *buffer_nist_iv_h  = "b6ac8e4963f49207ffd6374b"; // The last valid IV that was seen by the SA
-    char *buffer_ACTIVATE_h = "2003001e00ff000000001880d038000c197f0b00020004008d008e82ebe4fc55555555";
+    char *buffer_ACTIVATE_h = "2003001c00ff00001880d038000c197f0b00020004008d008e82ebe4fc55555555";
 
     uint8_t *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_ACTIVATE_b     = NULL;
     int      buffer_nist_iv_len, buffer_nist_key_len, buffer_ACTIVATE_len = 0;
@@ -120,8 +120,8 @@ UTEST(EP_KEY_MGMT, ACTIVATE_141_142)
     test_association->sa_state  = SA_OPERATIONAL;
     test_association->ecs_len   = 1;
     test_association->ecs       = CRYPTO_CIPHER_NONE;
-    test_association->shsnf_len = 2;
-    test_association->arsn_len  = 2;
+    test_association->shsnf_len = 0;
+    test_association->arsn_len  = 0;
     test_association->arsnw     = 5;
     test_association->iv_len    = 12;
 
@@ -175,7 +175,7 @@ UTEST(EP_KEY_MGMT, DEACTIVATE_142)
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h   = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
     char *buffer_nist_iv_h    = "b6ac8e4963f49207ffd6374b"; // The last valid IV that was seen by the SA
-    char *buffer_DEACTIVATE_h = "2003001c00ff000000001880d039000a197f0b00030002008e1f6d21c4555555555555";
+    char *buffer_DEACTIVATE_h = "2003001a00ff00001880d039000a197f0b00030002008e1f6d21c4555555555555";
 
     uint8_t *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_DEACTIVATE_b     = NULL;
     int      buffer_nist_iv_len, buffer_nist_key_len, buffer_DEACTIVATE_len = 0;
@@ -198,8 +198,8 @@ UTEST(EP_KEY_MGMT, DEACTIVATE_142)
     test_association->est       = 0;
     test_association->ast       = 0;
     test_association->iv_len    = 12;
-    test_association->shsnf_len = 2;
-    test_association->arsn_len  = 2;
+    test_association->shsnf_len = 0;
+    test_association->arsn_len  = 0;
     test_association->arsnw     = 5;
 
     // Insert key into keyring of SA 9
@@ -249,7 +249,7 @@ UTEST(EP_KEY_MGMT, INVENTORY_132_134)
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h  = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
     char *buffer_nist_iv_h   = "000000000000000000000000"; // The last valid IV that was seen by the SA
-    char *buffer_INVENTORY_h = "2003001e00ff000000001880d03b000a197f0b00070004008400861f6d82ebe4fc55555555";
+    char *buffer_INVENTORY_h = "2003001c00ff00001880d03b000a197f0b00070004008400861f6d82ebe4fc55555555";
 
     uint8_t *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_INVENTORY_b     = NULL;
     int      buffer_nist_iv_len, buffer_nist_key_len, buffer_INVENTORY_len = 0;
@@ -271,8 +271,8 @@ UTEST(EP_KEY_MGMT, INVENTORY_132_134)
     test_association->ecs       = CRYPTO_CIPHER_NONE;
     test_association->est       = 0;
     test_association->ast       = 0;
-    test_association->shsnf_len = 2;
-    test_association->arsn_len  = 2;
+    test_association->shsnf_len = 0;
+    test_association->arsn_len  = 0;
     test_association->arsnw     = 5;
     test_association->iv_len    = 12;
 
@@ -345,7 +345,7 @@ UTEST(EP_KEY_MGMT, VERIFY_132_134)
 
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
-    char *buffer_VERIFY_h = "2003003e00ff000000001880d03a002c197f0b00040024008471fc3ad5b1c36ad56bd5a5432315cdab008675c0"
+    char *buffer_VERIFY_h = "2003003c00ff00001880d03a002c197f0b00040024008471fc3ad5b1c36ad56bd5a5432315cdab008675c0"
                             "6302465bc6d5091a29957eebed35c00a6ed8";
     // TRUTH PDU
     char *buffer_TRUTH_RESPONSE_h =
@@ -372,8 +372,8 @@ UTEST(EP_KEY_MGMT, VERIFY_132_134)
     test_association->ecs            = CRYPTO_CIPHER_NONE;
     test_association->est            = 0;
     test_association->ast            = 0;
-    test_association->shsnf_len      = 2;
-    test_association->arsn_len       = 2;
+    test_association->shsnf_len      = 0;
+    test_association->arsn_len       = 0;
     test_association->arsnw_len      = 1;
     test_association->arsnw          = 5;
     test_association->shivf_len      = 0;
@@ -663,7 +663,7 @@ UTEST(EP_KEY_MGMT, DEACTIVATE_142_NO_PUS)
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h   = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
     char *buffer_nist_iv_h    = "b6ac8e4963f49207ffd6374b"; // The last valid IV that was seen by the SA
-    char *buffer_DEACTIVATE_h = "2003001c00ff000000001880d039000a030002008e1f6d21c4555555555555";
+    char *buffer_DEACTIVATE_h = "2003001a00ff00001880d039000a030002008e1f6d21c4555555555555";
 
     uint8_t *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_DEACTIVATE_b     = NULL;
     int      buffer_nist_iv_len, buffer_nist_key_len, buffer_DEACTIVATE_len = 0;
@@ -686,8 +686,8 @@ UTEST(EP_KEY_MGMT, DEACTIVATE_142_NO_PUS)
     test_association->est       = 0;
     test_association->ast       = 0;
     test_association->iv_len    = 12;
-    test_association->shsnf_len = 2;
-    test_association->arsn_len  = 2;
+    test_association->shsnf_len = 0;
+    test_association->arsn_len  = 0;
     test_association->arsnw     = 5;
 
     // Insert key into keyring of SA 9
@@ -744,7 +744,7 @@ UTEST(EP_KEY_MGMT, DEACTIVATE_142_NO_PUS_BAD_TLV)
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h   = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
     char *buffer_nist_iv_h    = "b6ac8e4963f49207ffd6374b"; // The last valid IV that was seen by the SA
-    char *buffer_DEACTIVATE_h = "2003001c00ff000000001880d039FFFF030002008e1f6d21c4555555555555";
+    char *buffer_DEACTIVATE_h = "2003001a00ff00001880d039FFFF030002008e1f6d21c4555555555555";
 
     uint8_t *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_DEACTIVATE_b     = NULL;
     int      buffer_nist_iv_len, buffer_nist_key_len, buffer_DEACTIVATE_len = 0;
@@ -766,8 +766,8 @@ UTEST(EP_KEY_MGMT, DEACTIVATE_142_NO_PUS_BAD_TLV)
     test_association->est       = 0;
     test_association->ast       = 0;
     test_association->iv_len    = 12;
-    test_association->shsnf_len = 2;
-    test_association->arsn_len  = 2;
+    test_association->shsnf_len = 0;
+    test_association->arsn_len  = 0;
     test_association->arsnw     = 5;
 
     // Insert key into keyring of SA 9
@@ -821,7 +821,7 @@ UTEST(EP_KEY_MGMT, DEACTIVATE_142_PUS_BAD_TLV)
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h   = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
     char *buffer_nist_iv_h    = "b6ac8e4963f49207ffd6374b"; // The last valid IV that was seen by the SA
-    char *buffer_DEACTIVATE_h = "2003001c00ff000000001880d039FFFF197f0b00030002008e1f6d21c4555555555555";
+    char *buffer_DEACTIVATE_h = "2003001a00ff00001880d039FFFF197f0b00030002008e1f6d21c4555555555555";
 
     uint8_t *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_DEACTIVATE_b     = NULL;
     int      buffer_nist_iv_len, buffer_nist_key_len, buffer_DEACTIVATE_len = 0;
@@ -844,8 +844,8 @@ UTEST(EP_KEY_MGMT, DEACTIVATE_142_PUS_BAD_TLV)
     test_association->est       = 0;
     test_association->ast       = 0;
     test_association->iv_len    = 12;
-    test_association->shsnf_len = 2;
-    test_association->arsn_len  = 2;
+    test_association->shsnf_len = 0;
+    test_association->arsn_len  = 0;
     test_association->arsnw     = 5;
 
     // Insert key into keyring of SA 9
