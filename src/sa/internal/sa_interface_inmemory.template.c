@@ -269,7 +269,7 @@ void sa_populate(void)
     // EKID = 2
     sa[2].spi             = 2;
     sa[2].ekid            = 2;
-    sa[2].sa_state        = SA_KEYED;
+    sa[2].sa_state        = SA_OPERATIONAL;
     sa[2].ecs_len         = 1;
     sa[2].ecs             = CRYPTO_CIPHER_AES256_GCM;
     sa[2].est             = 1;
@@ -281,7 +281,7 @@ void sa_populate(void)
     sa[2].arsn_len        = ((sa[2].arsnw * 2) + 1);
     sa[2].gvcid_blk.tfvn  = 0;
     sa[2].gvcid_blk.scid  = SCID & 0x3FF;
-    sa[2].gvcid_blk.vcid  = 0;
+    sa[2].gvcid_blk.vcid  = 2;
     sa[2].gvcid_blk.mapid = TYPE_TC;
 
     // TC - Authentication Only - HMAC_SHA512 (Keyed)
@@ -1569,21 +1569,8 @@ static int32_t sa_setARSN(TC_t *tc_frame)
     // Check SPI exists
     if (spi < NUM_SA)
     {
-        if (sa[spi].shivf_len > 0 && sa[spi].ecs == 1 && sa[spi].acs == 1)
-        { // Set IV - authenticated encryption
-#ifdef PDU_DEBUG
-            printf("SPI %d IV updated to: 0x", spi);
-#endif
-            for (x = 0; x < IV_SIZE; x++)
-            {
-                *(sa[spi].iv + x) = (uint8_t)sdls_frame.pdu.data[x + 2];
-#ifdef PDU_DEBUG
-                printf("%02x", *(sa[spi].iv + x));
-#endif
-            }
-            Crypto_increment(sa[spi].iv, sa[spi].shivf_len);
-        }
-        else
+        // Check if Auth or Auth Enc
+        if ((sa[spi].est == 1 && sa[spi].ast == 1) || sa[spi].ast == 1)
         { // Set SN
 #ifdef PDU_DEBUG
             printf("SPI %d ARSN updated to: 0x", spi);
@@ -1595,10 +1582,16 @@ static int32_t sa_setARSN(TC_t *tc_frame)
                 printf("%02x", *(sa[spi].arsn + x));
 #endif
             }
-        }
 #ifdef PDU_DEBUG
         printf("\n");
 #endif
+        }
+        else
+        {
+#ifdef PDU_DEBUG
+        printf("Failed setARSN on SPI %d, ECS %d, ACS %d\n", spi, sa[spi].ecs, sa[spi].acs);
+#endif
+        }
     }
     else
     {

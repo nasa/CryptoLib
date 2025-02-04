@@ -1,8 +1,5 @@
 name: CryptoLib
 
-global_env:
-  CODECOV_TOKEN: 71699f25-12a3-44a4-8a83-be777b9e577a
-
 on: 
   pull_request:
     branches: [ main, dev ]
@@ -57,7 +54,7 @@ jobs:
     - name: Upload 
       uses: codecov/codecov-action@v4
       env:
-        CODECOV_TOKEN: ${{ matrix.global_env.CODECOV_TOKEN }}
+        CODECOV_TOKEN: 71699f25-12a3-44a4-8a83-be777b9e577a
       with:
         files: 'coverage/*.c.gcov'
         verbose: true
@@ -106,7 +103,7 @@ jobs:
   #   - name: Upload 
   #     uses: codecov/codecov-action@v4
   #     env:
-  #       CODECOV_TOKEN: ${{ matrix.global_env.CODECOV_TOKEN }}
+  #       CODECOV_TOKEN: 71699f25-12a3-44a4-8a83-be777b9e577a
   #     with:
   #       files: 'coverage/*.c.gcov'
   #       verbose: true
@@ -159,7 +156,7 @@ jobs:
     - name: Upload 
       uses: codecov/codecov-action@v4
       env:
-        CODECOV_TOKEN: ${{ matrix.global_env.CODECOV_TOKEN }}
+        CODECOV_TOKEN: 71699f25-12a3-44a4-8a83-be777b9e577a
       with:
         files: 'coverage/*.c.gcov'
         verbose: true
@@ -213,7 +210,7 @@ jobs:
     - name: Upload 
       uses: codecov/codecov-action@v4
       env:
-        CODECOV_TOKEN: ${{ matrix.global_env.CODECOV_TOKEN }}
+        CODECOV_TOKEN: 71699f25-12a3-44a4-8a83-be777b9e577a
       with:
         files: 'coverage/*.c.gcov'
         verbose: true
@@ -247,7 +244,7 @@ jobs:
     - name: Upload 
       uses: codecov/codecov-action@v4
       env:
-        CODECOV_TOKEN: ${{ matrix.global_env.CODECOV_TOKEN }}
+        CODECOV_TOKEN: 71699f25-12a3-44a4-8a83-be777b9e577a
       with:
         files: 'coverage/*.c.gcov'
         verbose: true

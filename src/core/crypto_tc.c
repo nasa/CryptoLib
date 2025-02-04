@@ -323,7 +323,7 @@ int32_t Crypto_TC_Check_IV_Setup(SecurityAssociation_t *sa_ptr, uint8_t *p_new_e
 }
 
 /**
- * @brief Function: Crypto_TC_Do_Encrypt_PLAINTEXT
+ * @brief Function: Crypto_TC_Encrypt
  * Handles Plaintext TC Encryption
  * @param sa_service_type: uint8_t
  * @param sa_ptr: SecurityAssociation_t*
@@ -340,11 +340,11 @@ int32_t Crypto_TC_Check_IV_Setup(SecurityAssociation_t *sa_ptr, uint8_t *p_new_e
  * @param pkcs_padding:uint32_t
  * @return int32: Success/Failure
  **/
-int32_t Crypto_TC_Do_Encrypt_PLAINTEXT(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr, uint16_t *mac_loc,
-                                       uint16_t tf_payload_len, uint8_t segment_hdr_len, uint8_t *p_new_enc_frame,
-                                       crypto_key_t *ekp, uint8_t **aad, uint8_t ecs_is_aead_algorithm,
-                                       uint16_t *index_p, const uint8_t *p_in_frame, char *cam_cookies,
-                                       uint32_t pkcs_padding)
+int32_t Crypto_TC_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr, uint16_t *mac_loc,
+                          uint16_t tf_payload_len, uint8_t segment_hdr_len, uint8_t *p_new_enc_frame,
+                          crypto_key_t *ekp, uint8_t **aad, uint8_t ecs_is_aead_algorithm,
+                          uint16_t *index_p, const uint8_t *p_in_frame, char *cam_cookies,
+                          uint32_t pkcs_padding)
 {
     int32_t       status = CRYPTO_LIB_SUCCESS;
     uint16_t      index  = *index_p;
@@ -524,13 +524,13 @@ int32_t Crypto_TC_Do_Encrypt_PLAINTEXT(uint8_t sa_service_type, SecurityAssociat
 }
 
 /**
- * @brief Function: Crypto_TC_Do_Encrypt_NONPLAINTEXT
- * Handles NON-Plaintext TC Encryption
+ * @brief Function: Crypto_TC_Increment_IV_ARSN
+ * Handles Incrementing IV and ARSN of SA
  * @param sa_service_type: uint8_t
  * @param sa_ptr: SecurityAssociation_t*
  * @return int32: Success/Failure
  **/
-void Crypto_TC_Do_Encrypt_NONPLAINTEXT(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr)
+void Crypto_TC_Increment_IV_ARSN(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr)
 {
     if (sa_service_type != SA_PLAINTEXT)
     {
@@ -617,9 +617,9 @@ int32_t Crypto_TC_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
 {
     int32_t  status = CRYPTO_LIB_SUCCESS;
     uint16_t index  = *index_p;
-    status          = Crypto_TC_Do_Encrypt_PLAINTEXT(sa_service_type, sa_ptr, mac_loc, tf_payload_len, segment_hdr_len,
-                                                     p_new_enc_frame, ekp, aad, ecs_is_aead_algorithm, index_p, p_in_frame,
-                                                     cam_cookies, pkcs_padding);
+    status          = Crypto_TC_Encrypt(sa_service_type, sa_ptr, mac_loc, tf_payload_len, segment_hdr_len,
+                                        p_new_enc_frame, ekp, aad, ecs_is_aead_algorithm, index_p, p_in_frame,
+                                        cam_cookies, pkcs_padding);
     if (status != CRYPTO_LIB_SUCCESS)
     {
         Crypto_TC_Safe_Free_Ptr(*aad);
@@ -627,7 +627,7 @@ int32_t Crypto_TC_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
         return status;
     }
     // TODO:  Status?
-    Crypto_TC_Do_Encrypt_NONPLAINTEXT(sa_service_type, sa_ptr);
+    Crypto_TC_Increment_IV_ARSN(sa_service_type, sa_ptr);
     /*
     ** End Authentication / Encryption
     */
