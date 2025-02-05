@@ -231,6 +231,13 @@
 #define TM_CADU_SIZE TM_FRAME_DATA_SIZE
 #endif
 
+// AOS Behavior Defines
+// FHECF Calculation
+#define RS_SYMS 10   // Total symbols in codeword
+#define RS_DATA 6    // Data symbols
+#define RS_PARITY 4  // Parity symbols
+#define GF_SIZE 16   // 2^4
+
 // Logic Behavior Defines
 #define CRYPTO_FALSE 0
 #define CRYPTO_TRUE  1
