@@ -123,6 +123,21 @@ uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
 }
 
 /**
+ * @brief Function: Crypto_Is_ACS_Only_Algo
+ * Looks up cipher suite ID and determines if it's an ACS algorithm. Returns 1 if true, 0 if false;
+ * @param cipher_suite_id: uint8_t
+ * @return int: Success/Failure
+ **/
+uint8_t Crypto_Is_ACS_Only_Algo(uint8_t algo)
+{
+    if (algo > 0 && algo <= CRYPTO_ACS_MAX)
+    {
+        return CRYPTO_TRUE;
+    }
+    return CRYPTO_FALSE;
+}
+
+/**
  * @brief Function: Crypto_increment
  * Increments the bytes within a uint8_t array
  * @param num: uint8*
