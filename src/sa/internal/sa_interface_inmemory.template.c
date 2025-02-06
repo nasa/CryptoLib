@@ -332,15 +332,15 @@ void sa_populate(void)
     // IV = 0...0, IV-Len = 12, MAC-Len = 0, TFVN = 0, VCID = 0, ARSNW = 5
     // EKID = 5
     sa[5].spi             = 5;
-    sa[5].sa_state        = SA_KEYED;
+    sa[5].sa_state        = SA_OPERATIONAL;
     sa[5].est             = 0;
     sa[5].ast             = 0;
-    sa[5].shivf_len       = 12;
-    sa[5].iv_len          = 12;
-    sa[5].shsnf_len       = 2;
-    sa[5].arsnw           = 5;
-    sa[5].arsnw_len       = 1;
-    sa[5].arsn_len        = 2;
+    sa[5].shivf_len       = 0;
+    sa[5].iv_len          = 0;
+    sa[5].shsnf_len       = 0;
+    sa[5].arsnw           = 0;
+    sa[5].arsnw_len       = 0;
+    sa[5].arsn_len        = 0;
     sa[5].gvcid_blk.tfvn  = 0;
     sa[5].gvcid_blk.scid  = SCID & 0x3FF;
     sa[5].gvcid_blk.vcid  = 1;
