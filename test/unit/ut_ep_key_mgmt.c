@@ -899,10 +899,6 @@ UTEST(EP_KEY_MGMT, TLV_TESTS)
     crypto_key_t *ekp    = NULL;
     int           status = CRYPTO_LIB_SUCCESS;
 
-    // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_nist_key_h   = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
-    char *buffer_nist_iv_h    = "b6ac8e4963f49207ffd6374b"; // The last valid IV that was seen by the SA
-    
     // These assume a max TLV of 494 as defined by TLV_DATA_SIZE
     //                             2003001c00ff000000001880d039FFFF197f0b00030002008e1f6d21c4555555555555
     //                                                             197f0b00 - pus
@@ -910,16 +906,17 @@ UTEST(EP_KEY_MGMT, TLV_TESTS)
     //                                                                       0002 - length
     //                                                                           008e - value
 
-    char *buffer_TLV_OVERRUN_h =  "2003001c00ff000000001880d039FFFF197f0b0003FFFF008e1f6d21c4555555555555"; // FFFF = 65535
-    char *buffer_TLV_MAX_MINUS_h ="2003001c00ff000000001880d03901EE197f0b000301ED008e1f6d21c4555555555555"; // 01ED = 493
-    char *buffer_TLV_MAX_h =      "2003001c00ff000000001880d03901EE197f0b000301EE008e1f6d21c4555555555555"; // 01EE = 494
-    char *buffer_TLV_MAX_PLUS_h = "2003001c00ff000000001880d03901EF197f0b000301EF008e1f6d21c4555555555555"; // 01EF = 495
-    char *buffer_TLV_ONE_h =      "2003001c00ff000000001880d0390001197f0b0003000100811f6d21c4555555555555"; // 0001 = 1
-    char *buffer_TLV_ZERO_h =     "2003001c00ff000000001880d0390000197f0b00030000008e1f6d21c4555555555555"; // 0000 = 0
+    char *buffer_TLV_OVERRUN_h =     "2003001c00ff000000001880d039FFFF197f0b0003FFFF008e1f6d21c4555555555555"; // FFFF = 65535
+    char *buffer_TLV_ONE_KEY_h =     "2003001c00ff000000001880d0390012197f0b00030010008e1f6d21c4555555555555"; // 0010 = 16
+    char *buffer_TLV_MAX_h =         "2003003a00ff000000001880d03901ee197f0b000301000080008100820083008400850086008700880089008a008b008c008d008e008f1f6d21c4"; // 01EE = 494
+    char *buffer_TLV_MAX_BAD_LEN_h = "2003001a00ff000000001880d03901ee197f0b000301000080008100821f6d21c45555"; // 01EE = 494
+    char *buffer_TLV_TEN_KEYS_h =    "2003003400ff000000001880d0390024197f0b000300A000800081008200830084008500860087008800891f6d21c4555555555555"; // 00A0 = 160
+    char *buffer_TLV_ONE_BIT_LEN_h = "2003001c00ff000000001880d0390019197f0b00030001008e1f6d21c4555555555555"; // 0001 = 1
+    char *buffer_TLV_ZERO_h =        "2003001a00ff000000001880d0390017197f0b000300001f6d21c4555555555555"; // 0000 = 0
 
-    uint8_t *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_TLV_OVERRUN_b, *buffer_TLV_MAX_MINUS_b, *buffer_TLV_MAX_b,
-            *buffer_TLV_MAX_PLUS_b, *buffer_TLV_ONE_b, *buffer_TLV_ZERO_b     = NULL;
-    int      buffer_nist_iv_len, buffer_nist_key_len, buffer_TLV_OVERRUN_len, buffer_TLV_MAX_MINUS_len, buffer_TLV_MAX_len, 
+    uint8_t *buffer_TLV_OVERRUN_b, *buffer_TLV_ONE_KEY_b, *buffer_TLV_MAX_b, *buffer_TLV_MAX_BAD_LEN_b, 
+            *buffer_TLV_TEN_KEYS_b, *buffer_TLV_ONE_BIT_LEN_b, *buffer_TLV_ZERO_b     = NULL;
+    int      buffer_TLV_OVERRUN_len, buffer_TLV_MAX_MINUS_len, buffer_TLV_MAX_len, buffer_TLV_MAX_BAD_LEN_len, 
              buffer_TLV_MAX_PLUS_len, buffer_TLV_ONE_len, buffer_TLV_ZERO_len = 0;
 
     // Setup Processed Frame For Decryption
@@ -943,57 +940,73 @@ UTEST(EP_KEY_MGMT, TLV_TESTS)
     test_association->shsnf_len = 2;
     test_association->arsn_len  = 2;
     test_association->arsnw     = 5;
-
-    // Insert key into keyring of SA 9
-    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
-    ekp = key_if->get_key(142);
-    memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
-    ekp->key_state = KEY_ACTIVE;
+    
+    // set all keys to active
+    for (int x = 128; x <= 143; x++)
+    {
+        ekp = key_if->get_key(x);
+        ekp->key_state = KEY_ACTIVE;
+    }
 
     // Convert frames that will be processed
     hex_conversion(buffer_TLV_OVERRUN_h, (char **)&buffer_TLV_OVERRUN_b, &buffer_TLV_OVERRUN_len);
-    hex_conversion(buffer_TLV_MAX_MINUS_h, (char **)&buffer_TLV_MAX_MINUS_b, &buffer_TLV_MAX_MINUS_len);
+    hex_conversion(buffer_TLV_ONE_KEY_h, (char **)&buffer_TLV_ONE_KEY_b, &buffer_TLV_MAX_MINUS_len);
     hex_conversion(buffer_TLV_MAX_h, (char **)&buffer_TLV_MAX_b, &buffer_TLV_MAX_len);
-    hex_conversion(buffer_TLV_MAX_PLUS_h, (char **)&buffer_TLV_MAX_PLUS_b, &buffer_TLV_MAX_PLUS_len);
+    hex_conversion(buffer_TLV_MAX_BAD_LEN_h, (char **)&buffer_TLV_MAX_BAD_LEN_b, &buffer_TLV_MAX_BAD_LEN_len);
+    hex_conversion(buffer_TLV_TEN_KEYS_h, (char **)&buffer_TLV_TEN_KEYS_b, &buffer_TLV_MAX_PLUS_len);
     hex_conversion(buffer_TLV_ZERO_h, (char **)&buffer_TLV_ZERO_b, &buffer_TLV_ZERO_len);
-    hex_conversion(buffer_TLV_ONE_h, (char **)&buffer_TLV_ONE_b, &buffer_TLV_ONE_len);
-    // Convert/Set input IV
-    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
-    memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
+    hex_conversion(buffer_TLV_ONE_BIT_LEN_h, (char **)&buffer_TLV_ONE_BIT_LEN_b, &buffer_TLV_ONE_len);
 
     printf(KGRN "Checking for TLV overrun, should fail... \n" RESET);
     status = Crypto_TC_ProcessSecurity(buffer_TLV_OVERRUN_b, &buffer_TLV_OVERRUN_len, &tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_ERR_BAD_TLV_LENGTH, status);
 
-    printf(KGRN "Checking for TLV MAX - 1, should pass... \n" RESET);
-    status = Crypto_TC_ProcessSecurity(buffer_TLV_MAX_MINUS_b, &buffer_TLV_MAX_MINUS_len, &tc_nist_processed_frame);
+    printf(KGRN "Checking for 1 key (16 bits), should pass... \n" RESET);
+    status = Crypto_TC_ProcessSecurity(buffer_TLV_ONE_KEY_b, &buffer_TLV_MAX_MINUS_len, &tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     
-    printf(KGRN "Checking for TLV MAX, should pass... \n" RESET);
+    // set all keys to active
+    for (int x = 128; x <= 143; x++)
+    {
+        ekp = key_if->get_key(x);
+        ekp->key_state = KEY_ACTIVE;
+    }
+
+    printf(KGRN "Checking for 32 keys (494 bits), should pass... \n" RESET);
     status = Crypto_TC_ProcessSecurity(buffer_TLV_MAX_b, &buffer_TLV_MAX_len, &tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-    printf(KGRN "Checking for TLV MAX + 1, should fail... \n" RESET);
-    status = Crypto_TC_ProcessSecurity(buffer_TLV_MAX_PLUS_b, &buffer_TLV_MAX_PLUS_len, &tc_nist_processed_frame);
-    ASSERT_EQ(CRYPTO_LIB_ERR_BAD_TLV_LENGTH, status);
+    // set all keys to active
+    for (int x = 128; x <= 137; x++)
+    {
+        ekp = key_if->get_key(x);
+        ekp->key_state = KEY_ACTIVE;
+    }
 
-    printf(KGRN "Checking for TLV length of 1, should pass... \n" RESET);
-    status = Crypto_TC_ProcessSecurity(buffer_TLV_ONE_b, &buffer_TLV_ONE_len, &tc_nist_processed_frame);
+    printf(KGRN "Checking for 10 keys (160 bits), should pass... \n" RESET);
+    status = Crypto_TC_ProcessSecurity(buffer_TLV_TEN_KEYS_b, &buffer_TLV_MAX_PLUS_len, &tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-    printf(KGRN "Checking for TLV length of 0, should ????... \n" RESET);
-    status = Crypto_TC_ProcessSecurity(buffer_TLV_ONE_b, &buffer_TLV_ONE_len, &tc_nist_processed_frame);
-    ASSERT_EQ(-110000, status);
+    printf(KGRN "Checking for 3 keys with bad pdu len (512 bits), should fail... \n" RESET);
+    status = Crypto_TC_ProcessSecurity(buffer_TLV_MAX_BAD_LEN_b, &buffer_TLV_MAX_BAD_LEN_len, &tc_nist_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_ERR_BAD_TLV_LENGTH, status);
+
+    printf(KGRN "Checking for TLV length of 1 bit, should pass... \n" RESET);
+    status = Crypto_TC_ProcessSecurity(buffer_TLV_ONE_BIT_LEN_b, &buffer_TLV_ONE_len, &tc_nist_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    printf(KGRN "Checking for TLV length of 0 bits, should pass... \n" RESET);
+    status = Crypto_TC_ProcessSecurity(buffer_TLV_ZERO_b, &buffer_TLV_ZERO_len, &tc_nist_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     printf("\n");
     Crypto_Shutdown();
     free(ptr_enc_frame);
-    free(buffer_nist_iv_b);
-    free(buffer_nist_key_b);
-    free(buffer_TLV_MAX_MINUS_b);
+    free(buffer_TLV_ONE_KEY_b);
     free(buffer_TLV_MAX_b);
-    free(buffer_TLV_MAX_PLUS_b);
-    free(buffer_TLV_ONE_b);
+    free(buffer_TLV_MAX_BAD_LEN_b);
+    free(buffer_TLV_TEN_KEYS_b);
+    free(buffer_TLV_ONE_BIT_LEN_b);
     free(buffer_TLV_ZERO_b);
     free(buffer_TLV_OVERRUN_b);
 }

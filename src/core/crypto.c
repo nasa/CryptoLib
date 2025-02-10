@@ -837,13 +837,21 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
 
                     // Subtract headers from total frame length
                    // uint16_t max_tlv = tc_sdls_processed_frame->tc_header.fl - CCSDS_HDR_SIZE - CCSDS_PUS_SIZE - SDLS_TLV_HDR_SIZE;
+                    uint16_t max_tlv = (tc_sdls_processed_frame->tc_header.fl - CCSDS_HDR_SIZE - CCSDS_PUS_SIZE- SDLS_TLV_HDR_SIZE);
+                    len_ingest = len_ingest; // suppress error for now
 #ifdef CCSDS_DEBUG
                     printf("Printing lengths for sanity check:\n");
                     printf("\t Telecommand PDU Length: %d \n", tc_sdls_processed_frame->tc_pdu_len);
-                    printf("\t Received TLV Length: %d \n", 1);
-                    printf("\t Max possible TLV Length: %d \n", 1);
-                    printf("\t Calculated TLV length based on ");
+                    printf("\t Received TLV Length: %d \n", sdls_frame.tlv_pdu.hdr.pdu_len/8);
+                    printf("\t Max possible TLV Length: %d \n", max_tlv);
 #endif
+                    if ((sdls_frame.tlv_pdu.hdr.pdu_len/8) > max_tlv)
+                    {
+#ifdef PDU_DEBUG
+                        printf(KRED "PDU_LEN GT MAX_TLV\n" RESET);
+#endif                        
+                        return CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
+                    }
                     if (sdls_frame.hdr.pkt_length <= TLV_DATA_SIZE) // && (sdls_frame.hdr.pkt_length < max_tlv))
                     {
                         for (int x = 13; x < (13 + sdls_frame.hdr.pkt_length); x++)
@@ -853,6 +861,9 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                     }
                     else
                     {
+#ifdef PDU_DEBUG
+                        printf(KRED "Packet Header Length GT TLV_DATA_SIZE\n" RESET);
+#endif                        
                         status = CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
                         return status;
                     }
@@ -871,6 +882,16 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                     // Make sure TLV isn't larger than we have allocated, and it is sane given total frame length
                     uint16_t max_tlv = tc_sdls_processed_frame->tc_header.fl - CCSDS_HDR_SIZE - SDLS_TLV_HDR_SIZE;
                     len_ingest = len_ingest; // suppress error for now
+#ifdef PDU_DEBUG
+                    printf("PDU_LEN: %d\n",sdls_frame.tlv_pdu.hdr.pdu_len);
+#endif                    
+                    if ((sdls_frame.tlv_pdu.hdr.pdu_len / 8) > max_tlv)
+                    {
+#ifdef PDU_DEBUG
+                        printf(KRED "PDU_LEN GT MAX_TLV\n" RESET);
+#endif                        
+                        return CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
+                    }
                     if ((sdls_frame.hdr.pkt_length < TLV_DATA_SIZE) && (sdls_frame.hdr.pkt_length < max_tlv))
                     {
                         for (int x = 9; x < (9 + sdls_frame.hdr.pkt_length); x++)

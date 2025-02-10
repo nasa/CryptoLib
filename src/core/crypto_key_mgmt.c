@@ -212,23 +212,43 @@ int32_t Crypto_Key_update(uint8_t state)
 { // Local variables
     SDLS_KEY_BLK_t packet;
     int            count    = 0;
-    int            pdu_keys = sdls_frame.tlv_pdu.hdr.pdu_len / 2;
+    int            pdu_keys = (sdls_frame.tlv_pdu.hdr.pdu_len / 8) / 2;
     int32_t        status;
     crypto_key_t  *ekp = NULL;
     int            x;
+    int pdu_length   = sdls_frame.tlv_pdu.hdr.pdu_len / 8;
+    int frame_length = sdls_frame.hdr.pkt_length;
 
     if (key_if == NULL)
     {
         status = CRYPTOGRAPHY_UNSUPPORTED_OPERATION_FOR_KEY_RING;
         return status;
     }
-
+    if (pdu_keys == 0)
+    {
+#ifdef PDU_DEBUG
+        printf(KYEL "PDU Length not long enough to hold key values\n" RESET);
+#endif
+    }
+    if ((state == KEY_DEACTIVATED || state == KEY_ACTIVE) && (pdu_length > SDLS_MAX_KEY_UPDATE_LEN || pdu_length > frame_length))
+    {
+#ifdef PDU_DEBUG
+        printf(KRED "PDU Length Exceded!\n" RESET);
+#endif
+        return CRYPTO_LIB_ERROR;
+    }
 #ifdef PDU_DEBUG
     printf("Key(s) ");
 #endif
     // Read in PDU
     for (x = 0; x < pdu_keys; x++)
     {
+        if (x == SDLS_MAX_KEY_UPDATES)
+        {
+            printf(KRED "\nMax key updates exceded, exiting...\n" RESET);
+            return CRYPTO_LIB_ERROR;
+        }
+
         packet.kblk[x].kid = (sdls_frame.tlv_pdu.data[count] << BYTE_LEN) | (sdls_frame.tlv_pdu.data[count + 1]);
         count              = count + 2;
 #ifdef PDU_DEBUG
