@@ -1108,7 +1108,7 @@ static int32_t sa_stop(TC_t *tc_frame)
     control_spi = tc_frame->tc_sec_header.spi;
 
 #ifdef DEBUG
-    printf("control_spi = %d \n", spi);
+    printf("control_spi = %d \n", control_spi);
     printf("spi = %d \n", spi);
 #endif
 
@@ -1160,6 +1160,7 @@ static int32_t sa_stop(TC_t *tc_frame)
 #ifdef DEBUG
             printf(KRED "ERROR: SPI %d is not in the OPERATIONAL state.\n" RESET, spi);
 #endif
+            status = CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL;
         }
     }
     else
@@ -1167,6 +1168,7 @@ static int32_t sa_stop(TC_t *tc_frame)
 #ifdef DEBUG
         printf(KRED "ERROR: SPI %d does not exist.\n" RESET, spi);
 #endif
+        status = CRYPTO_LIB_ERR_SPI_INDEX_OOB;
     }
 
 #ifdef DEBUG
@@ -1483,12 +1485,44 @@ static int32_t sa_delete(TC_t *tc_frame)
 #endif
 
             // TODO: Zero entire SA
+            sa[spi].spi       = spi;
+            sa[spi].ekid      = spi;
+            sa[spi].akid      = spi;
+            sa[spi].sa_state  = SA_NONE;
+            sa[spi].ecs_len   = 0;
+            sa[spi].ecs       = 0;
+            sa[spi].shivf_len = 0;
+            for (int y = 0; y < IV_SIZE; y++)
+            {
+                sa[spi].iv[y] = 0;
+            }
+            sa[spi].iv_len = 0;
+            for (int y = 0; y < ABM_SIZE; y++)
+            {
+                sa[spi].abm[y] = 0;
+            }
+            for (int y = 0; y < REF_SIZE; y++)
+            {
+                sa[spi].ek_ref[y] = '\0';
+                sa[spi].ak_ref[y] = '\0';
+            }
+            sa[spi].abm_len    = 0;
+            sa[spi].acs_len    = 0;
+            sa[spi].acs        = 0;
+            sa[spi].shsnf_len  = 0;
+            sa[spi].arsn_len   = 0;
+            sa[spi].stmacf_len = 0;
+            for (int y = 0; y < ARSN_SIZE; y++)
+            {
+                sa[spi].arsn[y] = 0;
+            }
         }
         else
         {
 #ifdef DEBUG
             printf(KRED "ERROR: SPI %d is not in the UNKEYED state.\n" RESET, spi);
 #endif
+            status = CRYPTO_LIB_ERROR;
         }
     }
     else
@@ -1496,9 +1530,10 @@ static int32_t sa_delete(TC_t *tc_frame)
 #ifdef DEBUG
         printf(KRED "ERROR: SPI %d does not exist.\n" RESET, spi);
 #endif
+        status = CRYPTO_LIB_ERR_SPI_INDEX_OOB;
     }
 
-    return CRYPTO_LIB_SUCCESS;
+    return status;
 }
 
 /**
