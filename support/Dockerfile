@@ -60,6 +60,7 @@ RUN curl \
     && cd /tmp/libgpg-error-${GPG_ERROR_VERSION} \
     && ./configure \
     && make install \
+    && export LD_LIBRARY_PATH="$LD_LIBRARYPATH:/usr/local/lib" \
     && curl \ 
         -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-${GCRYPT_VERSION}.tar.bz2 \
         -o /tmp/libgcrypt-${GCRYPT_VERSION}.tar.bz2 \
@@ -67,7 +68,8 @@ RUN curl \
     && cd /tmp/libgcrypt-${GCRYPT_VERSION} \
     && ./configure \
     && make install \
-    && ldconfig
+    && ldconfig \
+    && rm -rf /tmp/*
 
 FROM cl1 AS cl2
 ARG WOLFSSL_VERSION=5.6.0-stable
