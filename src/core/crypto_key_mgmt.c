@@ -245,7 +245,9 @@ int32_t Crypto_Key_update(uint8_t state)
     {
         if (x == SDLS_MAX_KEY_UPDATES)
         {
+#ifdef PDU_DEBUG
             printf(KRED "\nMax key updates exceded, exiting...\n" RESET);
+#endif            
             return CRYPTO_LIB_ERROR;
         }
 
