@@ -522,7 +522,7 @@ UTEST(EP_KEY_MGMT, OTAR_0_140_142_MK_NOT_ACTIVE)
     printf(KGRN "Checking next valid IV && valid ARSN... should be able to receive it... \n" RESET);
     status = Crypto_TC_ProcessSecurity(buffer_OTAR_b, &buffer_OTAR_len, &tc_nist_processed_frame);
     // Not sure where it'll fail yet, but shouldn't be a success
-    ASSERT_NE(CRYPTO_LIB_SUCCESS, status);
+    ASSERT_EQ(CRYPTO_LIB_ERR_KEY_STATE_INVALID, status);
     printf("\n");
     Crypto_Shutdown();
     // free(buffer_nist_iv_b);
@@ -628,7 +628,7 @@ UTEST(EP_KEY_MGMT, OTAR_0_140_142_BAD_DECRYPT)
     printf(KGRN "Checking next valid IV && valid ARSN... should be able to receive it... \n" RESET);
     status = Crypto_TC_ProcessSecurity(buffer_OTAR_b, &buffer_OTAR_len, &tc_nist_processed_frame);
     // Not sure where it'll fail yet, but shouldn't be a success
-    ASSERT_NE(CRYPTO_LIB_SUCCESS, status);
+    ASSERT_EQ(CRYPTO_LIB_ERR_LIBGCRYPT_ERROR, status);
     printf("\n");
     Crypto_Shutdown();
     // free(buffer_nist_iv_b);
