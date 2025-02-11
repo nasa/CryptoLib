@@ -95,9 +95,19 @@ UTEST(EP_SA_MGMT, SA_START_6)
     //                                                                            |0003| = SCID (16 bits)
     //                                                                                |000000| = VCID (6 bits) (expanded)
     //                                                                                 |000000| = MAPID (6 bits) (expanded)                                                       
+    //                         
+    char *buffer_START_MAX_h = "2003020500ff000000001880d0ad01EE197f0b001b0F70000610003041"
+    "1000304210003043100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044"
+    "1000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044"
+    "1000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044"
+    "1000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044"
+    "1000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044"
+    "1000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304110003041100030411000304110003041100030401000304110003042"
+    "1000304310003044"
+    "f6f7a61a5555";
 
-    uint8_t *buffer_START_TC_b, *buffer_START_TM_b, *buffer_START_MAP_b, *buffer_START_AOS_b, *buffer_START_UK_b       = NULL;
-    int      buffer_START_TC_len, buffer_START_TM_len, buffer_START_MAP_len, buffer_START_AOS_len, buffer_START_UK_len = 0;
+    uint8_t *buffer_START_TC_b, *buffer_START_TM_b, *buffer_START_MAP_b, *buffer_START_AOS_b, *buffer_START_UK_b, *buffer_START_MAX_b        = NULL;
+    int      buffer_START_TC_len, buffer_START_TM_len, buffer_START_MAP_len, buffer_START_AOS_len, buffer_START_UK_len, buffer_START_MAX_len = 0;
 
     // Setup Processed Frame For Decryption
     TC_t tc_nist_processed_frame;
@@ -122,6 +132,7 @@ UTEST(EP_SA_MGMT, SA_START_6)
     hex_conversion(buffer_START_MAP_h, (char **)&buffer_START_MAP_b, &buffer_START_MAP_len);
     hex_conversion(buffer_START_AOS_h, (char **)&buffer_START_AOS_b, &buffer_START_AOS_len);
     hex_conversion(buffer_START_UK_h,  (char **)&buffer_START_UK_b,  &buffer_START_UK_len);
+    hex_conversion(buffer_START_MAX_h, (char **)&buffer_START_MAX_b, &buffer_START_MAX_len);
 
     // TFVN = 0, SCID = 3, VCID = 0, MAPID = 0
     status = Crypto_TC_ProcessSecurity(buffer_START_TC_b, &buffer_START_TC_len, &tc_nist_processed_frame);
@@ -153,6 +164,13 @@ UTEST(EP_SA_MGMT, SA_START_6)
 
     // TFVN = 1, SCID = 3, VCID = 1, MAPID = 4
     status = Crypto_TC_ProcessSecurity(buffer_START_UK_b, &buffer_START_UK_len, &tc_nist_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    sa_if->sa_get_from_spi(6, &test_association);
+    test_association->sa_state = SA_KEYED;
+
+    // TFVN = 1, SCID = 3, VCID = 1, MAPID = 4, max PDU length
+    status = Crypto_TC_ProcessSecurity(buffer_START_MAX_b, &buffer_START_MAX_len, &tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     printf("\n");

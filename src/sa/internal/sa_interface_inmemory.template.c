@@ -963,6 +963,9 @@ static int32_t sa_start(TC_t *tc_frame)
     crypto_gvcid_t gvcid;
     int            x;
     int            i;
+    int            num_gvcid = (((sdls_frame.tlv_pdu.hdr.pdu_len/8) - 2) / 4);
+
+    printf("\nParsed GVCID: %d\n", num_gvcid);
 
     // Read ingest
     spi = ((uint8_t)sdls_frame.tlv_pdu.data[0] << 8) | (uint8_t)sdls_frame.tlv_pdu.data[1];
@@ -983,7 +986,7 @@ static int32_t sa_start(TC_t *tc_frame)
         {
             count = 2;
 
-            for (x = 0; x <= (((sdls_frame.tlv_pdu.hdr.pdu_len/8) - 2) / 4); x++)
+            for (x = 0; x <= num_gvcid; x++)
             { // Read in GVCID
                 gvcid.tfvn = (sdls_frame.tlv_pdu.data[count] >> 4);
                 gvcid.scid = (sdls_frame.tlv_pdu.data[count] << 12) | (sdls_frame.tlv_pdu.data[count + 1] << 4) |
@@ -991,7 +994,7 @@ static int32_t sa_start(TC_t *tc_frame)
                 gvcid.vcid = ((sdls_frame.tlv_pdu.data[count + 2] << 4) | (sdls_frame.tlv_pdu.data[count + 3] & 0xC0) >> 6
                 );
                 
-                printf("\nParsed GVCID:\n\tTFVN: %d\n\tSCID: %d\n\tVCID: %d\n", gvcid.tfvn, gvcid.scid, gvcid.vcid);
+                printf("\nParsed GVCID %d:\n\tTFVN: %d\n\tSCID: %d\n\tVCID: %d\n", x, gvcid.tfvn, gvcid.scid, gvcid.vcid);
                 
                 if (current_managed_parameters_struct.has_segmentation_hdr == TC_HAS_SEGMENT_HDRS)
                 {
@@ -1001,7 +1004,8 @@ static int32_t sa_start(TC_t *tc_frame)
                 {
                     gvcid.mapid = 0;
                 }
-
+                
+                count += 4;
                 printf("\tMAPID: %d\n", gvcid.mapid);
 
                 // TC

@@ -842,7 +842,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
 #ifdef CCSDS_DEBUG
                     printf("Printing lengths for sanity check:\n");
                     printf("\t Telecommand PDU Length: %d \n", tc_sdls_processed_frame->tc_pdu_len);
-                    printf("\t Received TLV Length: %d \n", sdls_frame.tlv_pdu.hdr.pdu_len/8);
+                    printf("\t Received TLV Length: %d \n", sdls_frame.tlv_pdu.hdr.pdu_len);
                     printf("\t Max possible TLV Length: %d \n", max_tlv);
 #endif
                     if ((sdls_frame.tlv_pdu.hdr.pdu_len/8) > max_tlv)
