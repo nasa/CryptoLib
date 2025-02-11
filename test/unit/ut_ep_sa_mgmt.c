@@ -83,10 +83,21 @@ UTEST(EP_SA_MGMT, SA_START_6)
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_START_h = "2003002000ff000000001880d0ad000e197f0b001b0004000600003040f6f7a61a5555";
+    char *buffer_START_TC_h  = "2003002000ff000000001880d0ad000e197f0b001b0006000600003000f6f7a61a5555";
+    char *buffer_START_MAP_h = "2003002000ff000000001880d0ad000e197f0b001b0006000600003001f6f7a61a5555";
+    char *buffer_START_TM_h  = "2003002000ff000000001880d0ad000e197f0b001b0006000600003042f6f7a61a5555";
+    char *buffer_START_AOS_h = "2003002000ff000000001880d0ad000e197f0b001b0006000610003043f6f7a61a5555";
+    char *buffer_START_UK_h  = "2003002000ff000000001880d0ad000e197f0b001b0006000610003044f6f7a61a5555";
+    //                                                                   |0006000600003000|
+    //                                                                   |0006| = PDU Len
+    //                                                                       |0006| = SPI
+    //                                                                           |0| = TFVN (4 bits)
+    //                                                                            |0003| = SCID (16 bits)
+    //                                                                                |000000| = VCID (6 bits) (expanded)
+    //                                                                                 |000000| = MAPID (6 bits) (expanded)                                                       
 
-    uint8_t *buffer_START_b   = NULL;
-    int      buffer_START_len = 0;
+    uint8_t *buffer_START_TC_b, *buffer_START_TM_b, *buffer_START_MAP_b, *buffer_START_AOS_b, *buffer_START_UK_b       = NULL;
+    int      buffer_START_TC_len, buffer_START_TM_len, buffer_START_MAP_len, buffer_START_AOS_len, buffer_START_UK_len = 0;
 
     // Setup Processed Frame For Decryption
     TC_t tc_nist_processed_frame;
@@ -106,15 +117,51 @@ UTEST(EP_SA_MGMT, SA_START_6)
     test_association->gvcid_blk.scid  = SCID & 0x3FF;
 
     // Convert frames that will be processed
-    hex_conversion(buffer_START_h, (char **)&buffer_START_b, &buffer_START_len);
+    hex_conversion(buffer_START_TC_h,  (char **)&buffer_START_TC_b,  &buffer_START_TC_len);
+    hex_conversion(buffer_START_TM_h,  (char **)&buffer_START_TM_b,  &buffer_START_TM_len);
+    hex_conversion(buffer_START_MAP_h, (char **)&buffer_START_MAP_b, &buffer_START_MAP_len);
+    hex_conversion(buffer_START_AOS_h, (char **)&buffer_START_AOS_b, &buffer_START_AOS_len);
+    hex_conversion(buffer_START_UK_h,  (char **)&buffer_START_UK_b,  &buffer_START_UK_len);
 
-    status = Crypto_TC_ProcessSecurity(buffer_START_b, &buffer_START_len, &tc_nist_processed_frame);
+    // TFVN = 0, SCID = 3, VCID = 0, MAPID = 0
+    status = Crypto_TC_ProcessSecurity(buffer_START_TC_b, &buffer_START_TC_len, &tc_nist_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    sa_if->sa_get_from_spi(6, &test_association);
+    test_association->sa_state = SA_KEYED;
+
+    // TFVN = 0, SCID = 3, VCID = 0, MAPID = 1
+    status = Crypto_TC_ProcessSecurity(buffer_START_MAP_b, &buffer_START_MAP_len, &tc_nist_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    sa_if->sa_get_from_spi(6, &test_association);
+    test_association->sa_state = SA_KEYED;
+
+    // TFVN = 0, SCID = 3, VCID = 1, MAPID = 2
+    status = Crypto_TC_ProcessSecurity(buffer_START_TM_b, &buffer_START_TM_len, &tc_nist_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    sa_if->sa_get_from_spi(6, &test_association);
+    test_association->sa_state = SA_KEYED;
+
+    // TFVN = 1, SCID = 3, VCID = 1, MAPID = 3
+    status = Crypto_TC_ProcessSecurity(buffer_START_AOS_b, &buffer_START_AOS_len, &tc_nist_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    sa_if->sa_get_from_spi(6, &test_association);
+    test_association->sa_state = SA_KEYED;
+
+    // TFVN = 1, SCID = 3, VCID = 1, MAPID = 4
+    status = Crypto_TC_ProcessSecurity(buffer_START_UK_b, &buffer_START_UK_len, &tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     printf("\n");
     Crypto_Shutdown();
 
-    free(buffer_START_b);
+    free(buffer_START_TC_b);
+    free(buffer_START_MAP_b);
+    free(buffer_START_TM_b);
+    free(buffer_START_AOS_b);
 }
 
 UTEST(EP_SA_MGMT, SA_6_READ_ARSN)

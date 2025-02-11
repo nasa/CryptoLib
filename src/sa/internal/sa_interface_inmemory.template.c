@@ -983,20 +983,26 @@ static int32_t sa_start(TC_t *tc_frame)
         {
             count = 2;
 
-            for (x = 0; x <= ((sdls_frame.tlv_pdu.hdr.pdu_len - 2) / 4); x++)
+            for (x = 0; x <= (((sdls_frame.tlv_pdu.hdr.pdu_len/8) - 2) / 4); x++)
             { // Read in GVCID
                 gvcid.tfvn = (sdls_frame.tlv_pdu.data[count] >> 4);
                 gvcid.scid = (sdls_frame.tlv_pdu.data[count] << 12) | (sdls_frame.tlv_pdu.data[count + 1] << 4) |
                              (sdls_frame.tlv_pdu.data[count + 2] >> 4);
-                gvcid.vcid = (sdls_frame.tlv_pdu.data[count + 2] << 4) | (sdls_frame.tlv_pdu.data[count + 3] && 0x3F);
+                gvcid.vcid = ((sdls_frame.tlv_pdu.data[count + 2] << 4) | (sdls_frame.tlv_pdu.data[count + 3] & 0xC0) >> 6
+                );
+                
+                printf("\nParsed GVCID:\n\tTFVN: %d\n\tSCID: %d\n\tVCID: %d\n", gvcid.tfvn, gvcid.scid, gvcid.vcid);
+                
                 if (current_managed_parameters_struct.has_segmentation_hdr == TC_HAS_SEGMENT_HDRS)
                 {
-                    gvcid.mapid = (sdls_frame.tlv_pdu.data[count + 3]);
+                    gvcid.mapid = (sdls_frame.tlv_pdu.data[count + 3] & 0x3F);
                 }
                 else
                 {
                     gvcid.mapid = 0;
                 }
+
+                printf("\tMAPID: %d\n", gvcid.mapid);
 
                 // TC
                 if (gvcid.vcid != tc_frame->tc_header.vcid)
@@ -1059,6 +1065,9 @@ static int32_t sa_start(TC_t *tc_frame)
                         break;
                     case TYPE_TM:
                         printf("Type TM, ");
+                        break;
+                    case TYPE_AOS:
+                        printf("Type AOS, ");
                         break;
                     default:
                         printf("Type Unknown, ");
