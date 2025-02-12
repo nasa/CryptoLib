@@ -498,11 +498,14 @@ int32_t Crypto_TC_Do_Encrypt_PLAINTEXT(uint8_t sa_service_type, SecurityAssociat
             if (sa_service_type == SA_AUTHENTICATION)
             {
 
-                // Check that key length to be used ets the algorithm requirement
-                if ((int32_t)akp->key_len != Crypto_Get_ACS_Algo_Keylen(sa_ptr->acs))
+                if (crypto_config.key_type != KEY_TYPE_KMC)
                 {
-                    Crypto_TC_Safe_Free_Ptr(*aad);
-                    return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
+                    // Check that key length to be used ets the algorithm requirement
+                    if ((int32_t)akp->key_len != Crypto_Get_ACS_Algo_Keylen(sa_ptr->acs))
+                    {
+                        Crypto_TC_Safe_Free_Ptr(*aad);
+                        return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
+                    }
                 }
 
                 status = cryptography_if->cryptography_authenticate(
