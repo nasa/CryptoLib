@@ -2085,18 +2085,24 @@ static int32_t validate_sa_index(SecurityAssociation_t *sa)
     int32_t                returnval = 0;
     SecurityAssociation_t *temp_sa;
     sa_if->sa_get_from_spi(sa->spi, &temp_sa);
-#ifndef SA_MARIADB
+
+    // Do not validate sa index on KMC
+    if (crypto_config.sa_type == SA_TYPE_MARIADB)
+    {
+        return returnval;
+    }
+
     int sa_index = -1;
     sa_index     = (int)(sa - temp_sa); // Based on array memory location
 #ifdef DEBUG
     if (sa_index == 0)
         printf("SA Index matches SPI\n");
-    else
+    else if (sa_index != 0 && crypto_config.sa_type != SA_TYPE_MARIADB)
         printf("Malformed SA SPI based on SA Index!\n");
 #endif
     if (sa_index != 0)
         returnval = -1;
-#endif
+
     return returnval;
 }
 
