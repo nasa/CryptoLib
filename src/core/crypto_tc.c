@@ -2104,12 +2104,11 @@ static int32_t validate_sa_index(SecurityAssociation_t *sa)
  **/
 static int32_t crypto_tc_validate_sa(SecurityAssociation_t *sa)
 {
-#ifndef SA_MARIADB
+
     if (validate_sa_index(sa) != 0)
     {
         return CRYPTO_LIB_ERR_SPI_INDEX_MISMATCH;
     }
-#endif
     if (sa->sa_state != SA_OPERATIONAL)
     {
         return CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL;
