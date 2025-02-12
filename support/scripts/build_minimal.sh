@@ -10,5 +10,5 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 source $SCRIPT_DIR/env.sh
 
 rm $BASE_DIR/CMakeCache.txt
-
+export LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
 cmake $BASE_DIR && make && make test

@@ -54,13 +54,13 @@ FROM cl0 AS cl1
 ARG GPG_ERROR_VERSION=1.50
 ARG GCRYPT_VERSION=1.11.0
 RUN curl \ 
-    -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-${GPG_ERROR_VERSION}.tar.bz2 \
-    -o /tmp/libgpg-error-${GPG_ERROR_VERSION}.tar.bz2 \
+        -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-${GPG_ERROR_VERSION}.tar.bz2 \
+        -o /tmp/libgpg-error-${GPG_ERROR_VERSION}.tar.bz2 \
     && tar -xjf /tmp/libgpg-error-${GPG_ERROR_VERSION}.tar.bz2 -C /tmp/ \
     && cd /tmp/libgpg-error-${GPG_ERROR_VERSION} \
+    && export LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH" \
     && ./configure \
     && make install \
-    && export LD_LIBRARY_PATH="$LD_LIBRARYPATH:/usr/local/lib" \
     && curl \ 
         -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-${GCRYPT_VERSION}.tar.bz2 \
         -o /tmp/libgcrypt-${GCRYPT_VERSION}.tar.bz2 \
@@ -85,5 +85,4 @@ RUN curl \
     && cmake --build . \
     && make install \
     && ldconfig 
-
 
