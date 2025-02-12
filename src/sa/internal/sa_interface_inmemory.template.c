@@ -1035,7 +1035,7 @@ static int32_t sa_start(TC_t *tc_frame)
                 {                                        // Clear all GVCIDs for provided SPI
                     if (gvcid.mapid == TYPE_TM)
                     {
-                        for (i = 0; i < NUM_GVCID; i++)
+                        for (i = 0; i < NUM_GVCID; i++) // This is looping 
                         { // TM
                             sa[spi].gvcid_blk.tfvn  = 0;
                             sa[spi].gvcid_blk.scid  = 0;

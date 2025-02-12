@@ -777,7 +777,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     ingest = ingest; // Suppress unused variable error depending on build
-
+    len_ingest = len_ingest;
     // Check for null pointers
     if (tc_sdls_processed_frame == NULL)
     {
