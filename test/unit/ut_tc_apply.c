@@ -228,10 +228,11 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_CBC)
     printf("SPI: %d\n", test_association->spi);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ast      = 0;
+    test_association->shsnf_len = 0;
     test_association->arsn_len = 0;
-    // Set the Key
     test_association->ekid = 130;
-    sa_if->sa_get_from_spi(2, &test_association);
+    test_association->gvcid_blk.vcid = 0;
+    
     return_val =
         Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 

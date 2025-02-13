@@ -898,7 +898,8 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
 #else  // Received an EP command without EPs being built
             if (valid_ep_sa)
             {
-                status      = CRYPTO_LIB_ERR_SDLS_EP_NOT_BUILT;
+                status = CRYPTO_LIB_ERR_SDLS_EP_NOT_BUILT;
+                return status;
             }
             valid_ep_sa = valid_ep_sa; // Suppress build error
             status      = CRYPTO_LIB_SUCCESS;
