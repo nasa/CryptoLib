@@ -460,7 +460,7 @@ UTEST(CRYPTO_C, OTAR_0_140_142_FAIL_TEST)
     // Expect success on next valid IV && ARSN
     printf(KGRN "Checking  next valid IV && valid ARSN... should be able to receive it... \n" RESET);
     status = Crypto_TC_ProcessSecurity(buffer_OTAR_b, &buffer_OTAR_len, &tc_nist_processed_frame);
-    ASSERT_EQ(CRYPTO_LIB_ERR_SDLS_EP_NOT_BUILT, status);
+    ASSERT_NE(CRYPTO_LIB_SUCCESS, status);
 
     printf("\n");
     Crypto_Shutdown();

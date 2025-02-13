@@ -140,8 +140,10 @@
 #define CRYPTO_LIB_ERR_ABM_LEN_GREATER_THAN_MAX_ABM_SIZE                    (-67)
 #define CRYPTO_LIB_ERR_STMACF_LEN_GREATER_THAN_MAX_MAC_SIZE                 (-68)
 #define CRYPTO_LIB_ERR_SHPLF_LEN_GREATER_THAN_MAX_PAD_SIZE                  (-69)
+#define CRYPTO_LIB_ERR_INVALID_SVC_TYPE_WITH_ARSN                           (-70)
+#define CRYPTO_LIB_ERR_ARSN_LT_SHSNF                                        (-71)
 
-#define CRYPTO_CORE_ERROR_CODES_MAX -69
+#define CRYPTO_CORE_ERROR_CODES_MAX -71
 
 // Define codes for returning MDB Strings, and determining error based on strings
 #define CAM_ERROR_CODES     600
