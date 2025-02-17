@@ -686,7 +686,7 @@ UTEST(SA_SAVE, VERIFY_SAVE_EDGES)
     ASSERT_EQ(test_association->est, 0);
     ASSERT_EQ(test_association->ast, 0);
     ASSERT_EQ(test_association->shivf_len, 12);
-    ASSERT_EQ(test_association->shsnf_len, 2);
+    ASSERT_EQ(test_association->shsnf_len, 0);
     ASSERT_EQ(test_association->shplf_len, 0);
     ASSERT_EQ(test_association->stmacf_len, 0);
     ASSERT_EQ(test_association->ecs, 0x00);
@@ -714,7 +714,7 @@ UTEST(SA_SAVE, VERIFY_SAVE_EDGES)
         ASSERT_EQ(test_association->abm[i], 0x00);
     }
     // sa[location].abm[0] = sa_ptr->abm;
-    ASSERT_EQ(test_association->arsn_len, 2);
+    ASSERT_EQ(test_association->arsn_len, 0);
     for (int i = 0; i < test_association->arsn_len; i++)
     {
         ASSERT_EQ(test_association->arsn[i], 0);

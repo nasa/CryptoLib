@@ -31,7 +31,7 @@
 UTEST(CRYPTO_C, CALC_CRC16)
 {
     remove("sa_save_file.bin");
-    char    *data_h     = "2003002000ff000100001880d2c9000e197f0b001b0004000400003040d95e";
+    char    *data_h     = "2003002000ff000100001980d2c9000e197f0b001b0004000400003040d95e";
     uint8_t *data_b     = NULL;
     int      data_b_len = 0;
     Crypto_Init_TC_Unit_Test();
@@ -40,10 +40,10 @@ UTEST(CRYPTO_C, CALC_CRC16)
 
     int      size          = 31;
     uint16_t crc           = 0x00;
-    uint16_t validated_crc = 0xA61A;
+    uint16_t validated_crc = 0x73EC;
     crc                    = Crypto_Calc_CRC16(data_b, size);
 
-    // printf("CRC = 0x%04x\n", crc);
+    printf("CRC = 0x%04x\n", crc);
     ASSERT_EQ(crc, validated_crc);
 }
 
@@ -68,7 +68,7 @@ UTEST(CRYPTO_C, BAD_CC_FLAG)
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
 
     Crypto_Init();
-    char *raw_tc_sdls_ping_h   = "3003002000ff000100001880d2c9000e197f0b001b0004000400003040d95ea61a";
+    char *raw_tc_sdls_ping_h   = "3003002000ff000100001980d2c9000e197f0b001b0004000400003040d95ea61a";
     char *raw_tc_sdls_ping_b   = NULL;
     int   raw_tc_sdls_ping_len = 0;
 
@@ -424,7 +424,7 @@ UTEST(CRYPTO_C, OTAR_0_140_142_FAIL_TEST)
     char *buffer_nist_key_h = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
     // char* buffer_nist_iv_h = "b6ac8e4963f49207ffd6374b"; // The last valid IV that was seen by the SA
     char *buffer_OTAR_h =
-        "2003009e00ff000000001880d037008c197f0b000100840000344892bbc54f5395297d4c37172f2a3c46f6a81c1349e9e26ac80985d8bb"
+        "2003009e00ff000000001980d037008c197f0b000100840001344892bbc54f5395297d4c37172f2a3c46f6a81c1349e9e26ac80985d8bb"
         "d55a5814c662e49fba52f99ba09558cd21cf268b8e50b2184137e80f76122034c580464e2f06d2659a50508bdfe9e9a55990ba4148af89"
         "6d8a6eebe8b5d2258685d4ce217a20174fdd4f0efac62758c51b04e55710a47209c923b641d19a39001f9e986166f5ffd95555";
 

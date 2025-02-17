@@ -783,7 +783,7 @@ int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uin
  * @return int32: Success/Failure
  * @note TODO - Actually update based on variable config
  * @note Allows EPs to be processed one of two ways.
- * @note - 1) By using a packet layer with APID 0x1880
+ * @note - 1) By using a packet layer with APID 0x1980
  * @note - 2) By using a defined Virtual Channel ID
  * @note Requires this to happen on either SPI_MIN (0) or SPI_MAX (configurable)
  **/
@@ -809,8 +809,9 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
     if (status == CRYPTO_LIB_SUCCESS)
     {
         // Check for specific App ID for EPs - the CryptoLib Apid in this case
-        if ((tc_sdls_processed_frame->tc_pdu[0] == 0x18) && (tc_sdls_processed_frame->tc_pdu[1] == 0x80))
+        if ((tc_sdls_processed_frame->tc_pdu[0] == 0x19) && (tc_sdls_processed_frame->tc_pdu[1] == 0x80))
         {
+
 #ifdef CRYPTO_EPROC
             // Check validity of SAs used for EP
             if (valid_ep_sa == CRYPTO_TRUE)
@@ -911,8 +912,13 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
             }
 
 #else  // Received an EP command without EPs being built
+            if (valid_ep_sa)
+            {
+                status = CRYPTO_LIB_ERR_SDLS_EP_NOT_BUILT;
+                return status;
+            }
             valid_ep_sa = valid_ep_sa; // Suppress build error
-            status      = CRYPTO_LIB_ERR_SDLS_EP_NOT_BUILT;
+            status      = CRYPTO_LIB_SUCCESS;
 #endif // CRYPTO_EPROC
         }
 

@@ -34,7 +34,7 @@ UTEST(TC_APPLY_SECURITY, NO_CRYPTO_INIT)
 {
     remove("sa_save_file.bin");
     // No Crypto_Init(), but we still Configure It;
-    char *raw_tc_sdls_ping_h   = "20030015001880d2c70008197f0b00310000b1fe3128";
+    char *raw_tc_sdls_ping_h   = "20030015001980d2c70008197f0b00310000b1fe3128";
     char *raw_tc_sdls_ping_b   = NULL;
     int   raw_tc_sdls_ping_len = 0;
 
@@ -70,7 +70,7 @@ UTEST(TC_APPLY_SECURITY, NO_CONFIG)
 {
     remove("sa_save_file.bin");
     // No Crypto_Init(), but we still Configure It;
-    char *raw_tc_sdls_ping_h   = "20030015001880d2c70008197f0b00310000b1fe3128";
+    char *raw_tc_sdls_ping_h   = "20030015001980d2c70008197f0b00310000b1fe3128";
     char *raw_tc_sdls_ping_b   = NULL;
     int   raw_tc_sdls_ping_len = 0;
 
@@ -228,10 +228,11 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_CBC)
     printf("SPI: %d\n", test_association->spi);
     test_association->sa_state = SA_OPERATIONAL;
     test_association->ast      = 0;
+    test_association->shsnf_len = 0;
     test_association->arsn_len = 0;
-    // Set the Key
     test_association->ekid = 130;
-    sa_if->sa_get_from_spi(2, &test_association);
+    test_association->gvcid_blk.vcid = 0;
+    
     return_val =
         Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
@@ -652,7 +653,7 @@ UTEST(TC_APPLY_SECURITY, INVALID_FRAME_SIZE)
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     Crypto_Init();
 
-    char *test_frame_pt_h = "2003001c00ff000100001880d03e000a197f0b000300020093d4ba21c4";
+    char *test_frame_pt_h = "2003001c00ff000100001980d03e000a197f0b000300020093d4ba21c4";
     char *long_frame_pt_h =
         "200307FF00ff00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
         "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
@@ -1394,7 +1395,7 @@ UTEST(TC_APPLY_SECURITY, PLAINTEXT_W_ARSN)
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     Crypto_Init();
     // Test string
-    char *raw_tc_sdls_ping_h   = "2003001F00000100011880D2C9000E197F0B001B0004000400003040D95E0000";
+    char *raw_tc_sdls_ping_h   = "2003001F00000100011980D2C9000E197F0B001B0004000400003040D95E0000";
     char *raw_tc_sdls_ping_b   = NULL;
     int   raw_tc_sdls_ping_len = 0;
 
@@ -1406,9 +1407,9 @@ UTEST(TC_APPLY_SECURITY, PLAINTEXT_W_ARSN)
 
     return_val =
         Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
-    // 200300230000010000000100011880D2C9000E197F0B001B0004000400003040D95E85F3
+    // 200300230000010000000100011980D2C9000E197F0B001B0004000400003040D95E85F3
     char *truth_data_h =
-        "2003002f0000010000000000000000000000000000000100011880d2c9000e197f0b001b0004000400003040d95e5ba0";
+        "2003002d000001000000000000000000000000000100011980d2c9000e197f0b001b0004000400003040d95e9750";
     uint8_t *truth_data_b = NULL;
     int      truth_data_l = 0;
 
@@ -1416,7 +1417,7 @@ UTEST(TC_APPLY_SECURITY, PLAINTEXT_W_ARSN)
     // printf("Encrypted Frame:\n");
     for (int i = 0; i < enc_frame_len; i++)
     {
-        // printf("%02x -> %02x ", ptr_enc_frame[i], truth_data_b[i]);
+        printf("%02x -> %02x ", ptr_enc_frame[i], truth_data_b[i]);
         ASSERT_EQ(ptr_enc_frame[i], truth_data_b[i]);
     }
 

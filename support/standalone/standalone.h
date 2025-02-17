@@ -37,6 +37,7 @@ extern "C"
 #include <signal.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include "crypto.h"
