@@ -1409,7 +1409,7 @@ UTEST(TC_APPLY_SECURITY, PLAINTEXT_W_ARSN)
         Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
     // 200300230000010000000100011980D2C9000E197F0B001B0004000400003040D95E85F3
     char *truth_data_h =
-        "2003002f0000010000000000000000000000000000000100011980d2c9000e197f0b001b0004000400003040d95e8e56";
+        "2003002d000001000000000000000000000000000100011980d2c9000e197f0b001b0004000400003040d95e9750";
     uint8_t *truth_data_b = NULL;
     int      truth_data_l = 0;
 
@@ -1417,7 +1417,7 @@ UTEST(TC_APPLY_SECURITY, PLAINTEXT_W_ARSN)
     // printf("Encrypted Frame:\n");
     for (int i = 0; i < enc_frame_len; i++)
     {
-        // printf("%02x -> %02x ", ptr_enc_frame[i], truth_data_b[i]);
+        printf("%02x -> %02x ", ptr_enc_frame[i], truth_data_b[i]);
         ASSERT_EQ(ptr_enc_frame[i], truth_data_b[i]);
     }
 
