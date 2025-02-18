@@ -45,9 +45,17 @@ int32_t Crypto_Key_OTAR(void)
     int         y;
     int32_t     status = CRYPTO_LIB_SUCCESS;
     // uint16_t pdu_len = (uint16_t) sdls_frame.tlv_pdu.hdr.pdu_len[1] << 8 | sdls_frame.tlv_pdu.hdr.pdu_len[0];
-    int           pdu_keys = (sdls_frame.tlv_pdu.hdr.pdu_len - SDLS_KEYID_LEN - SDLS_IV_LEN - MAC_SIZE) / (SDLS_KEYID_LEN + SDLS_KEY_LEN);
+    int           pdu_keys = (sdls_frame.tlv_pdu.hdr.pdu_len/8 - SDLS_KEYID_LEN - SDLS_IV_LEN - MAC_SIZE) / (SDLS_KEYID_LEN + SDLS_KEY_LEN);
     int           w;
     crypto_key_t *ekp = NULL;
+    int expected_pdu_len = SDLS_KEYID_LEN + SDLS_IV_LEN + ((SDLS_KEYID_LEN + SDLS_KEY_LEN) * pdu_keys) + MAC_SIZE;
+#ifdef DEBUG
+    printf("Expected PDU Length: %d (%d keys)\n", expected_pdu_len, pdu_keys);
+#endif
+    if ((sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) < SDLS_KEYID_LEN + SDLS_IV_LEN + ((SDLS_KEYID_LEN + SDLS_KEY_LEN) * pdu_keys) + MAC_SIZE)
+    {
+        return CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
+    }
 
     // Master Key ID
     packet.mkid = (sdls_frame.tlv_pdu.data[0] << BYTE_LEN) | (sdls_frame.tlv_pdu.data[1]);
@@ -84,7 +92,7 @@ int32_t Crypto_Key_OTAR(void)
 #endif
     }
 
-    count = sdls_frame.tlv_pdu.hdr.pdu_len - MAC_SIZE;
+    count = (sdls_frame.tlv_pdu.hdr.pdu_len/8) - MAC_SIZE;
     for (w = 0; w < MAC_SIZE; w++)
     { // MAC
         packet.mac[w] = sdls_frame.tlv_pdu.data[count + w];
@@ -170,6 +178,9 @@ int32_t Crypto_Key_OTAR(void)
             }
 
             count = count + 2;
+#ifdef DEBUG
+            printf("\t Key %d = %d\n", x, packet.EKB[x].ekid);
+#endif
             for (y = count; y < (SDLS_KEY_LEN + count); y++)
             {
                 // Encrypted Key
