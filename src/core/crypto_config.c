@@ -72,7 +72,7 @@ int32_t Crypto_SC_Init(void)
 
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 4, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
-    TC_UT_Managed_Parameters.vcid = 4;
+    TC_UT_Managed_Parameters.vcid = 2;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
 
     // TM
@@ -80,6 +80,8 @@ int32_t Crypto_SC_Init(void)
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TM_UT_Managed_Parameters = {
         0, 0x0003, 1, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_HAS_OCF, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+    TM_UT_Managed_Parameters.vcid = 2;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
     status = Crypto_Init();
     return status;
@@ -103,6 +105,8 @@ int32_t Crypto_Init_TC_Unit_Test(void)
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    TC_UT_Managed_Parameters.vcid = 2;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 4;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
