@@ -386,6 +386,7 @@ int32_t Crypto_Key_inventory(uint8_t *ingest)
     sdls_frame.tlv_pdu.hdr.pdu_len = (SDLS_KEY_INVENTORY_RPLY_SIZE * (range)) * BYTE_LEN;
     sdls_frame.hdr.pkt_length =
         CCSDS_HDR_SIZE + CCSDS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1 + 2; // 2 = Num Keys Returned Field (2 Bytes)
+
     count = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
 
     sdls_ep_reply[count++] = ((range & 0xFF00) >> BYTE_LEN);
@@ -566,7 +567,7 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
         printf("\nKey Index %d Verification results:", i);
         printf("\n\tKID: %04X", sdls_ep_keyv_reply.blk[i].kid);
         printf("\n\tIV: ");
-        for (int j = 0; j < SDLS_KEY_LEN; j++)
+        for (int j = 0; j < SDLS_IV_LEN; j++)
         {
             printf("%02X", sdls_ep_keyv_reply.blk[i].iv[j]);
         }
