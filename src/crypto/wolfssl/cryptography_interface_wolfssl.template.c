@@ -93,6 +93,9 @@ static int32_t cryptography_config(void)
 
 static int32_t cryptography_init(void)
 {
+#ifdef DEBUG
+    printf(KYEL "Initializing WolfSSL...\n" RESET);
+#endif
     int32_t status = CRYPTO_LIB_SUCCESS;
 
     // Initialize WolfSSL
