@@ -26,7 +26,7 @@ UTEST(EP_SA_MGMT, SA_6_REKEY_133)
 
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_REKEY_h =
-        "2003002a00ff000000001880d0ac0018197f0b0016000c00060085000000000000000000000000da959fc8555555555555";
+        "2003002a00ff000000001880d0ac0018197f0b0016009000060085000000000000000000000000da959fc8555555555555";
   
     uint8_t *buffer_REKEY_b   = NULL;
     int      buffer_REKEY_len = 0;
@@ -623,7 +623,7 @@ UTEST(EP_SA_MGMT, SA_STOP_SELF)
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_STOP_h = "2003001c00ff000000001880d0b6000a197f0b001e00020000938f21c4555555555555";
+    char *buffer_STOP_h = "2003001c00ff000000001880d0b6000a197f0b001e00200000938f21c4555555555555";
 
     uint8_t *buffer_STOP_b   = NULL;
     int      buffer_STOP_len = 0;

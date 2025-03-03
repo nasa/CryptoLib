@@ -58,10 +58,6 @@ UTEST(EP_MC, MC_REGULAR_PING)
     test_association->arsn_len        = 2;
     test_association->gvcid_blk.scid  = SCID & 0x3FF;
 
-    // Modify SA 6
-    sa_if->sa_get_from_spi(6, &test_association);
-    test_association->sa_state = SA_UNKEYED;
-
     // Convert frames that will be processed
     hex_conversion(buffer_PING_h, (char **)&buffer_PING_b, &buffer_PING_len);
 

@@ -425,7 +425,7 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
 {
     // Local variables
     SDLS_KEYV_CMD_t packet;
-    int             pdu_keys = sdls_frame.tlv_pdu.hdr.pdu_len / SDLS_KEYV_CMD_BLK_SIZE;
+    int             pdu_keys = (sdls_frame.tlv_pdu.hdr.pdu_len/ 8) / SDLS_KEYV_CMD_BLK_SIZE;
     int             x;
     int             y;
     uint8_t         count  = 0;
@@ -446,7 +446,8 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
     // Read in PDU
     for (x = 0; x < pdu_keys; x++)
     {
-        // Key ID
+        // TODO: Failing to get correct key ID when more than 3 keys
+        // Key ID 
         packet.blk[x].kid = ((uint8_t)sdls_frame.tlv_pdu.data[count] << BYTE_LEN) | ((uint8_t)sdls_frame.tlv_pdu.data[count + 1]);
         count += 2;
 #ifdef PDU_DEBUG
