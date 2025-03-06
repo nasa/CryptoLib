@@ -52,10 +52,9 @@ jobs:
     #   run: make gcov
 
     - name: Upload 
-      uses: codecov/codecov-action@v4
-      env:
-        CODECOV_TOKEN: 71699f25-12a3-44a4-8a83-be777b9e577a
+      uses: codecov/codecov-action@v5
       with:
+        token: ${{ secrets.CODECOV_TOKEN }}
         files: 'coverage/*.c.gcov'
         verbose: true
 
@@ -102,9 +101,8 @@ jobs:
 
   #   - name: Upload 
   #     uses: codecov/codecov-action@v4
-  #     env:
-  #       CODECOV_TOKEN: 71699f25-12a3-44a4-8a83-be777b9e577a
   #     with:
+  #       token: ${{ secrets.CODECOV_TOKEN }}
   #       files: 'coverage/*.c.gcov'
   #       verbose: true
 
@@ -155,9 +153,8 @@ jobs:
 
     - name: Upload 
       uses: codecov/codecov-action@v4
-      env:
-        CODECOV_TOKEN: 71699f25-12a3-44a4-8a83-be777b9e577a
       with:
+        token: ${{ secrets.CODECOV_TOKEN }}
         files: 'coverage/*.c.gcov'
         verbose: true
       
@@ -209,9 +206,8 @@ jobs:
 
     - name: Upload 
       uses: codecov/codecov-action@v4
-      env:
-        CODECOV_TOKEN: 71699f25-12a3-44a4-8a83-be777b9e577a
       with:
+        token: ${{ secrets.CODECOV_TOKEN }}
         files: 'coverage/*.c.gcov'
         verbose: true
 
@@ -243,8 +239,7 @@ jobs:
 
     - name: Upload 
       uses: codecov/codecov-action@v4
-      env:
-        CODECOV_TOKEN: 71699f25-12a3-44a4-8a83-be777b9e577a
       with:
+        token: ${{ secrets.CODECOV_TOKEN }}
         files: 'coverage/*.c.gcov'
         verbose: true
