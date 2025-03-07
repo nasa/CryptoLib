@@ -906,7 +906,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     uint16_t               byte_idx = 0;
     uint8_t                ecs_is_aead_algorithm;
     uint32_t               encryption_cipher = 0;
-    uint8_t                iv_loc;
+    uint8_t                iv_loc            = 0;
     int                    mac_loc         = 0;
     uint16_t               pdu_len         = 1;
     uint8_t               *p_new_dec_frame = NULL;
@@ -1409,7 +1409,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     else if (sa_service_type == SA_PLAINTEXT)
     {
         memcpy(p_new_dec_frame + byte_idx, &(p_ingest[byte_idx]), pdu_len);
-        byte_idx += pdu_len;
+        // byte_idx += pdu_len; // byte_idx no longer read
     }
 
 #ifdef AOS_DEBUG

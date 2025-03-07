@@ -646,6 +646,7 @@ int32_t Crypto_SEC_MON_CTRL(uint8_t *ingest)
             printf(KRED "Error: Crypto_PDU failed interpreting MC Procedure Identification Field! \n" RESET);
             break;
 #endif
+            status = CRYPTO_LIB_SUCCESS;
     }
     return status;
 }

@@ -32,7 +32,6 @@
 int32_t Crypto_MC_ping(uint8_t *ingest)
 {
     uint8_t count = 0;
-    count         = count;
     ingest        = ingest;
 
     // Prepare for Reply
@@ -48,6 +47,7 @@ int32_t Crypto_MC_ping(uint8_t *ingest)
     }
     printf("\n\n");
 #endif
+    count = count; // Fix clang "variable not read after assignment" warning
 
     return CRYPTO_LIB_SUCCESS;
 }

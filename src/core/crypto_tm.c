@@ -694,9 +694,9 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer)
     int32_t                status  = CRYPTO_LIB_SUCCESS;
     int                    mac_loc = 0;
     uint8_t                aad[1786];
-    uint16_t               aad_len = 0;
-    int                    i       = 0;
-    uint16_t               data_loc;
+    uint16_t               aad_len  = 0;
+    int                    i        = 0;
+    uint16_t               data_loc = 0;
     uint16_t               idx             = 0;
     uint8_t                sa_service_type = -1;
     uint16_t               pdu_len         = -1;
@@ -1621,7 +1621,7 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     else if (sa_service_type == SA_PLAINTEXT)
     {
         memcpy(p_new_dec_frame + byte_idx, &(p_ingest[byte_idx]), pdu_len);
-        byte_idx += pdu_len;
+        // byte_idx += pdu_len; // not read
     }
 
 #ifdef TM_DEBUG
@@ -1699,7 +1699,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_
     uint16_t               byte_idx = 0;
     uint8_t                ecs_is_aead_algorithm;
     uint32_t               encryption_cipher = 0;
-    uint8_t                iv_loc;
+    uint8_t                iv_loc            = 0;
     int                    mac_loc           = 0;
     uint16_t               pdu_len           = 1;
     uint8_t               *p_new_dec_frame   = NULL;
@@ -1879,7 +1879,7 @@ void Crypto_TM_Print_CLCW(uint8_t *p_ingest, uint16_t byte_idx, uint16_t pdu_len
         clcw.spare1 = (p_ingest[byte_idx] >> 0) & 0x0001;
         byte_idx += 1;
         clcw.rv = (p_ingest[byte_idx]);
-        byte_idx += 1;
+        // byte_idx += 1; // not read
 
         Crypto_clcwPrint(&clcw);
     }
