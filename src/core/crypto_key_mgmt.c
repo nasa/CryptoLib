@@ -428,7 +428,7 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
     int             pdu_keys = (sdls_frame.tlv_pdu.hdr.pdu_len/ 8) / SDLS_KEYV_CMD_BLK_SIZE;
     int             x;
     int             y;
-    uint8_t         count  = 0;
+    uint16_t        count  = 0;
     int32_t         status = CRYPTO_LIB_SUCCESS;
     crypto_key_t   *ekp    = NULL;
     tc_frame               = tc_frame;
@@ -466,7 +466,7 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
 
     // Prepare for Reply
     sdls_frame.tlv_pdu.hdr.pdu_len =
-        pdu_keys * (SDLS_KEYV_KEY_ID_LEN + SDLS_IV_LEN + CHALLENGE_SIZE + CHALLENGE_MAC_SIZE) * BYTE_LEN;
+        pdu_keys * (SDLS_KEYV_KEY_ID_LEN + SDLS_IV_LEN + CHALLENGE_SIZE + MAC_SIZE) * BYTE_LEN;
 
     // length = pdu_len + HDR + PUS - 1 (per CCSDS Convention)
     if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
@@ -487,11 +487,9 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
         // Key ID
         sdls_ep_keyv_reply.blk[x].kid = packet.blk[x].kid;
 
-        sdls_frame.tlv_pdu.data[pdu_data_idx] = (packet.blk[x].kid & 0xFF00) >> BYTE_LEN;
         sdls_ep_reply[pdu_data_idx]       = (packet.blk[x].kid & 0xFF00) >> BYTE_LEN;
         pdu_data_idx += 1;
 
-        sdls_frame.tlv_pdu.data[pdu_data_idx] = (packet.blk[x].kid & 0x00FF);
         sdls_ep_reply[pdu_data_idx]       = (packet.blk[x].kid & 0x00FF);
         pdu_data_idx += 1;
         count += 2;
@@ -506,15 +504,13 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
         // Initialization Vector
         for (y = 0; y < SDLS_IV_LEN; y++)
         {
-            sdls_frame.tlv_pdu.data[pdu_data_idx] = 0x00; //= *(tc_frame->tc_sec_header.iv + y);
             sdls_ep_keyv_reply.blk[x].iv[y]   = 0x00; //= *(tc_frame->tc_sec_header.iv + y);
             sdls_ep_reply[pdu_data_idx]       = 0x00; //= *(tc_frame->tc_sec_header.iv + y);
             pdu_data_idx += 1;
             count += 1;
         }
         // ***** This increments the lowest bytes of the IVs so they aren't identical
-        sdls_frame.tlv_pdu.data[pdu_data_idx - 1] = sdls_frame.tlv_pdu.data[pdu_data_idx - 1] + x + 1;
-        sdls_ep_keyv_reply.blk[x].iv[11]      = sdls_ep_keyv_reply.blk[x].iv[SDLS_IV_LEN - 1] + x + 1;
+        sdls_ep_keyv_reply.blk[x].iv[SDLS_IV_LEN - 1]      = sdls_ep_keyv_reply.blk[x].iv[SDLS_IV_LEN - 1] + x + 1;
         sdls_ep_reply[pdu_data_idx - 1]       = sdls_ep_reply[pdu_data_idx - 1] + x + 1;
 
         // Encrypt challenge
@@ -529,7 +525,7 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
                                                    &(sdls_ep_keyv_reply.blk[x].iv[0]),         // IV
                                                    SDLS_IV_LEN,                                // IV Length
                                                    &(sdls_ep_keyv_reply.blk[x].mac[0]),        // MAC
-                                                   CHALLENGE_MAC_SIZE,                         // MAC Size
+                                                   MAC_SIZE,                                   // MAC Size
                                                    NULL, 0,
                                                    CRYPTO_TRUE,  // Encrypt
                                                    CRYPTO_TRUE,  // Authenticate
@@ -549,15 +545,14 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
         }
 
         // Copy from the KEYV Blocks into the output PDU
-        memcpy(&sdls_frame.tlv_pdu.data[pdu_data_idx], &(sdls_ep_keyv_reply.blk[x].challenged[0]), CHALLENGE_SIZE);
         memcpy(&sdls_ep_reply[pdu_data_idx], &(sdls_ep_keyv_reply.blk[x].challenged[0]), CHALLENGE_SIZE);
         pdu_data_idx += CHALLENGE_SIZE;
 
-        memcpy(&sdls_frame.tlv_pdu.data[pdu_data_idx], &(sdls_ep_keyv_reply.blk[x].mac[0]), CHALLENGE_MAC_SIZE);
-        memcpy(&sdls_ep_reply[pdu_data_idx], &(sdls_ep_keyv_reply.blk[x].mac[0]), CHALLENGE_MAC_SIZE);
-        pdu_data_idx += CHALLENGE_MAC_SIZE;
+        memcpy(&sdls_ep_reply[pdu_data_idx], &(sdls_ep_keyv_reply.blk[x].mac[0]), MAC_SIZE);
+        pdu_data_idx += MAC_SIZE;
 
-        count += CHALLENGE_SIZE + CHALLENGE_MAC_SIZE; // Don't forget to increment count!
+        count += CHALLENGE_SIZE + MAC_SIZE; // Don't forget to increment count!
+        printf("count = %d\n", count);
     }
 
 #ifdef PDU_DEBUG
@@ -578,7 +573,7 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
             printf("%02X", sdls_ep_keyv_reply.blk[i].challenged[j]);
         }
         printf("\n\tMAC: ");
-        for (int j = 0; j < CHALLENGE_MAC_SIZE; j++)
+        for (int j = 0; j < MAC_SIZE; j++)
         {
             printf("%02X", sdls_ep_keyv_reply.blk[i].mac[j]);
         }
