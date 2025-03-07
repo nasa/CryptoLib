@@ -841,6 +841,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                     len_ingest = len_ingest; // suppress error for now
 #ifdef CCSDS_DEBUG
                     printf("Printing lengths for sanity check:\n");
+                    printf("\t TC Frame Length (bytes): %d \n", tc_sdls_processed_frame->tc_header.fl);
                     printf("\t Telecommand PDU Length (bytes): %d \n", tc_sdls_processed_frame->tc_pdu_len);
                     printf("\t Received TLV Length (bits): %d \n", sdls_frame.tlv_pdu.hdr.pdu_len);
                     printf("\t Max possible TLV Length (bytes): %d \n", max_tlv);
