@@ -391,8 +391,6 @@ int32_t Crypto_Shutdown(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
-    crypto_free_config_structs();
-
     // current_managed_parameters = NULL;
     current_managed_parameters_struct = gvcid_null_struct;
     for (int i = 0; i <= gvcid_counter; i++)
@@ -426,6 +424,8 @@ int32_t Crypto_Shutdown(void)
         cryptography_if = NULL;
     }
 
+    crypto_free_config_structs();
+    
     return status;
 }
 
