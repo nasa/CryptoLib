@@ -125,7 +125,7 @@ void Crypto_TC_Get_Ciper_Mode_TCP(uint8_t sa_service_type, uint32_t *encryption_
                                   SecurityAssociation_t *sa_ptr);
 int32_t Crypto_TC_Get_Ciper_Mode_TCA(uint8_t sa_service_type, uint32_t *encryption_cipher,
                                      uint8_t *ecs_is_aead_algorithm, SecurityAssociation_t *sa_ptr);
-void    Crypto_TC_Calc_Lengths(uint8_t *fecf_len, uint8_t *segment_hdr_len);
+void    Crypto_TC_Calc_Lengths(uint8_t *fecf_len, uint8_t *segment_hdr_len, uint8_t *ocf_len);
 void    Crypto_TC_Set_Segment_Header(TC_t *tc_sdls_processed_frame, uint8_t *ingest, int *byte_idx);
 int32_t Crypto_TC_Check_CMD_Frame_Flag(uint8_t header_cc);
 int32_t Crypto_TC_Validate_SA_Service_Type(uint8_t sa_service_type);
