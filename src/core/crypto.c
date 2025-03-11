@@ -59,6 +59,8 @@ uint8_t badSPI  = 0;
 uint8_t badIV   = 0;
 uint8_t badMAC  = 0;
 uint8_t badFECF = 0;
+// FHECF
+uint8_t parity[RS_PARITY];
 //  CRC
 uint32_t crc32Table[CRC32TBL_SIZE];
 uint16_t crc16Table[CRC16TBL_SIZE];
@@ -402,21 +404,31 @@ uint8_t gf_mul(uint8_t a, uint8_t b)
 uint16_t Crypto_Calc_FHECF(uint8_t *data)
 {
     uint8_t feedback = 0;
+    uint16_t result = 0;
+    int i = 0;
+    int j = 0;
 
     // RS encoding
     memset(parity, 0, RS_PARITY);
-    for (int i = 0; i < RS_DATA; i++) 
+    for (i = 0; i < RS_DATA; i++) 
     {
         feedback = data[i] ^ parity[0];
         memmove(&parity[0], &parity[1], RS_PARITY - 1);
         parity[RS_PARITY - 1] = 0;
 
-        for (int j = 0; j < RS_PARITY; j++) 
+        for (j = 0; j < RS_PARITY; j++) 
         {
             parity[j] ^= gf_mul(feedback, gen_poly[j + 1]);
         }
     }
-    return 0;
+#ifdef AOS_DEBUG
+    for (i = 0; i < RS_PARITY; i++)
+    {
+        printf("Parity[%d] = 0x%01x\n", i, parity[i]);
+    }
+#endif
+    result = (parity[0] << 12) | (parity[1] << 8) | (parity[2] << 4) | (parity[3] << 0);
+    return result;
 }
 
 /*

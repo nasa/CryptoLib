@@ -123,6 +123,7 @@
 #define REF_SIZE            250
 #define OCF_SIZE            4
 #define MAC_SIZE            16 /* bytes */
+#define FHECF_SIZE          2
 #define FECF_SIZE           2
 #define TC_SEGMENT_HDR_SIZE 1
 #define ECS_SIZE            4    /* bytes */
