@@ -1022,6 +1022,14 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, const uint16_t in
     uint8_t fecf_len        = FECF_SIZE;
     Crypto_TC_Calc_Lengths(&fecf_len, &segment_hdr_len);
     // Calculate tf_payload length here to be used in other logic
+
+    if(temp_tc_header.fl <= TC_FRAME_HEADER_SIZE - segment_hdr_len - fecf_len + 1)
+    {
+        status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW;
+        mc_if->mc_log(status);
+        return status;
+    }
+
     tf_payload_len = temp_tc_header.fl - TC_FRAME_HEADER_SIZE - segment_hdr_len - fecf_len + 1;
 
     /**
