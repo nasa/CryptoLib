@@ -1871,6 +1871,13 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
 
     Crypto_TC_Calc_Lengths(&fecf_len, &segment_hdr_len);
 
+    if(tc_sdls_processed_frame->tc_header.fl <= TC_FRAME_HEADER_SIZE - segment_hdr_len - fecf_len + 1)
+    {
+        status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW;
+        mc_if->mc_log(status);
+        return status;
+    }
+
     // Parse & Check FECF
     Crypto_TC_Parse_Check_FECF(ingest, len_ingest, tc_sdls_processed_frame);
 
