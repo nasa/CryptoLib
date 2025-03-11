@@ -2129,48 +2129,58 @@ static int32_t crypto_handle_incrementing_nontransmitted_counter(uint8_t *dest, 
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     // Copy IV to temp
-    uint8_t *temp_counter = malloc(src_full_len);
-    memcpy(temp_counter, src, src_full_len);
+    uint8_t *temp_counter = NULL;
+    temp_counter = malloc(src_full_len);
 
-    // Increment temp_counter Until Transmitted Portion Matches Frame.
-    uint8_t counter_matches = CRYPTO_TRUE;
-    for (int i = 0; i < window; i++)
+    if(temp_counter == NULL)
     {
-        Crypto_increment(temp_counter, src_full_len);
-        for (int x = (src_full_len - transmitted_len); x < src_full_len; x++)
+        status = CRYPTO_LIB_ERR_MALLOC_FAILURE;
+    }
+    
+    if( status == CRYPTO_LIB_SUCCESS)
+    {
+        memcpy(temp_counter, src, src_full_len);
+
+        // Increment temp_counter Until Transmitted Portion Matches Frame.
+        uint8_t counter_matches = CRYPTO_TRUE;
+        for (int i = 0; i < window; i++)
         {
-            // This increment doesn't match the frame!
-            if (temp_counter[x] != dest[x])
+            Crypto_increment(temp_counter, src_full_len);
+            for (int x = (src_full_len - transmitted_len); x < src_full_len; x++)
             {
-                counter_matches = CRYPTO_FALSE;
+                // This increment doesn't match the frame!
+                if (temp_counter[x] != dest[x])
+                {
+                    counter_matches = CRYPTO_FALSE;
+                    break;
+                }
+            }
+            if (counter_matches == CRYPTO_TRUE)
+            {
                 break;
             }
+            else if (i < window - 1) // Only reset flag if there are more  windows to check.
+            {
+                counter_matches = CRYPTO_TRUE; // reset the flag, and continue the for loop for the next
+                continue;
+            }
         }
+
         if (counter_matches == CRYPTO_TRUE)
         {
-            break;
+            // Retrieve non-transmitted portion of incremented counter that matches (and may have rolled over/incremented)
+            memcpy(dest, temp_counter, src_full_len - transmitted_len);
+    #ifdef DEBUG
+            printf("Incremented IV is:\n");
+            Crypto_hexprint(temp_counter, src_full_len);
+    #endif
         }
-        else if (i < window - 1) // Only reset flag if there are more  windows to check.
+        else
         {
-            counter_matches = CRYPTO_TRUE; // reset the flag, and continue the for loop for the next
-            continue;
+            status = CRYPTO_LIB_ERR_FRAME_COUNTER_DOESNT_MATCH_SA;
         }
-    }
 
-    if (counter_matches == CRYPTO_TRUE)
-    {
-        // Retrieve non-transmitted portion of incremented counter that matches (and may have rolled over/incremented)
-        memcpy(dest, temp_counter, src_full_len - transmitted_len);
-#ifdef DEBUG
-        printf("Incremented IV is:\n");
-        Crypto_hexprint(temp_counter, src_full_len);
-#endif
-    }
-    else
-    {
-        status = CRYPTO_LIB_ERR_FRAME_COUNTER_DOESNT_MATCH_SA;
-    }
-    if (!temp_counter)
         free(temp_counter);
+    }
     return status;
 }
