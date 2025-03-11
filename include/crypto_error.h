@@ -143,7 +143,7 @@
 #define CRYPTO_LIB_ERR_INVALID_SVC_TYPE_WITH_ARSN                           (-70)
 #define CRYPTO_LIB_ERR_ARSN_LT_SHSNF                                        (-71)
 #define CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW                            (-72)
-#define CRYPTO_LIB_ERR_MALLOC_FAILURE                                       (-73)
+#define CRYPTO_LIB_ERR_IV_EXCEEDS_INCREMENT_SIZE                            (-73)
 #define CRYPTO_LIB_ERR_AOS_FRAME_LENGTH_UNDERFLOW                           (-74)
 #define CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW                            (-75)
 #define CRYPTO_LIB_ERR_AOS_FL_LT_MAX_FRAME_SIZE                             (-76)

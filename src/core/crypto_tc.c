@@ -2135,17 +2135,17 @@ static int32_t crypto_handle_incrementing_nontransmitted_counter(uint8_t *dest, 
                                                                  int transmitted_len, int window)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    // Copy IV to temp
-    uint8_t *temp_counter = NULL;
-    temp_counter = malloc(src_full_len);
 
-    if(temp_counter == NULL)
+    /* Note: This assumes a max IV / ARSN size of 32.  If a larger value is needed, adjust in crypto_config.h*/
+    if (src_full_len > MAX_IV_LEN)  //TODO:  Does a define exist already?  Is this the best method to put a bound on IV/ARSN Size?
     {
-        status = CRYPTO_LIB_ERR_MALLOC_FAILURE;
+        status = CRYPTO_LIB_ERR_IV_EXCEEDS_INCREMENT_SIZE;
     }
-    
+
     if( status == CRYPTO_LIB_SUCCESS)
     {
+        uint8_t temp_counter[MAX_IV_LEN];
+        // Copy IV to temp
         memcpy(temp_counter, src, src_full_len);
 
         // Increment temp_counter Until Transmitted Portion Matches Frame.
@@ -2186,8 +2186,6 @@ static int32_t crypto_handle_incrementing_nontransmitted_counter(uint8_t *dest, 
         {
             status = CRYPTO_LIB_ERR_FRAME_COUNTER_DOESNT_MATCH_SA;
         }
-
-        free(temp_counter);
     }
     return status;
 }
