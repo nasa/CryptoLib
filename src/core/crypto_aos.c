@@ -189,7 +189,23 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
     // Detect if optional 2 byte FHEC is present
     if (current_managed_parameters_struct.aos_has_fhec == AOS_HAS_FHEC)
     {
-        idx += 2;
+        uint16_t recieved_fhecf = (((pTfBuffer[idx] << 8) & 0xFF00) | (pTfBuffer[idx + 1] & 0x00FF));
+#ifdef AOS_DEBUG
+        printf("Recieved FHECF: %04x\n", recieved_fhecf);
+        printf(KYEL "Calculating FHECF...\n" RESET);
+#endif
+        uint16_t calculated_fhecf = Crypto_Calc_FHECF(pTfBuffer);
+
+        if (recieved_fhecf != calculated_fhecf)
+        {
+            status = CRYPTO_LIB_ERR_INVALID_FHECF;
+            mc_if->mc_log(status);
+            return status;
+        }
+
+        pTfBuffer[idx] = (calculated_fhecf >> 8) & 0x00FF ;
+        pTfBuffer[idx+1] = (calculated_fhecf) & 0x00FF ;
+        idx = 8;
     }
 
     // Detect if optional variable length Insert Zone is present
@@ -914,8 +930,6 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     SecurityAssociation_t *sa_ptr          = NULL;
     uint8_t                sa_service_type = -1;
     uint8_t                spi             = -1;
-    uint16_t               recieved_fhecf  = 0;
-    uint16_t               calculated_fhecf = 0;
     uint8_t                aos_hdr_len      = 6;
 
     // Bit math to give concise access to values in the ingest
@@ -980,11 +994,12 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     byte_idx = 6;
     if (current_managed_parameters_struct.aos_has_fhec == AOS_HAS_FHEC)
     {
-        recieved_fhecf = (((p_ingest[aos_hdr_len] << 8) & 0xFF00) | (p_ingest[aos_hdr_len + 1] & 0x00FF));
+        uint16_t recieved_fhecf = (((p_ingest[aos_hdr_len] << 8) & 0xFF00) | (p_ingest[aos_hdr_len + 1] & 0x00FF));
 #ifdef AOS_DEBUG
-        printf("Calculating FHECF...\n");
+        printf("Recieved FHECF: %04x\n", recieved_fhecf);
+        printf(KYEL "Calculating FHECF...\n" RESET);
 #endif
-        calculated_fhecf = Crypto_Calc_FHECF(p_ingest);
+        uint16_t calculated_fhecf = Crypto_Calc_FHECF(p_ingest);
 
         if (recieved_fhecf != calculated_fhecf)
         {
