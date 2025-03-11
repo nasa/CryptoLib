@@ -144,8 +144,9 @@
 #define CRYPTO_LIB_ERR_ARSN_LT_SHSNF                                        (-71)
 #define CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW                            (-72)
 #define CRYPTO_LIB_ERR_MALLOC_FAILURE                                       (-73)
+#define CRYPTO_LIB_ERR_AOS_FRAME_LENGTH_UNDERFLOW                           (-74)
 
-#define CRYPTO_CORE_ERROR_CODES_MAX -73
+#define CRYPTO_CORE_ERROR_CODES_MAX -74
 
 // Define codes for returning MDB Strings, and determining error based on strings
 #define CAM_ERROR_CODES     600

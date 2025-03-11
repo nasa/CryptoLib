@@ -329,6 +329,14 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
     data_loc = idx;
     // Calculate size of data to be encrypted
     pdu_len = current_managed_parameters_struct.max_frame_size - idx - sa_ptr->stmacf_len;
+
+    if (current_managed_parameters_struct.max_frame_size < idx - sa_ptr->stmacf_len)
+    {
+        status = CRYPTO_LIB_ERR_AOS_FRAME_LENGTH_UNDERFLOW;
+        mc_if->mc_log(status);
+        return status;
+    }
+
     // Check other managed parameter flags, subtract their lengths from data field if present
     if (current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
     {
@@ -337,6 +345,13 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
     if (current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
     {
         pdu_len -= 2;
+    }
+
+    if(current_managed_parameters_struct.max_frame_size < pdu_len)
+    {
+        status = CRYPTO_LIB_ERR_AOS_FRAME_LENGTH_UNDERFLOW;
+        mc_if->mc_log(status);
+        return status;
     }
 
 #ifdef AOS_DEBUG
@@ -1075,6 +1090,13 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
             break;
     }
 #endif
+
+    if (len_ingest < current_managed_parameters_struct.max_frame_size)
+    {
+        status = CRYPTO_LIB_ERR_AOS_FRAME_LENGTH_UNDERFLOW;
+        mc_if->mc_log(status);
+        return status;
+    }
 
     // Parse & Check FECF, if present, and update fecf length
     if (current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
