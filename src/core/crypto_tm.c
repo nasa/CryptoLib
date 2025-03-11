@@ -876,10 +876,26 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer)
      * ~~~Index currently at start of data field, AKA end of security header~~~
      **/
     data_loc = idx;
+
+    if (current_managed_parameters_struct.max_frame_size <= idx - sa_ptr->stmacf_len)
+    {
+        status = CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW;
+        mc_if->mc_log(status);
+        return status;
+    }
+
     // Calculate size of data to be encrypted
     pdu_len = current_managed_parameters_struct.max_frame_size - idx - sa_ptr->stmacf_len;
     // Check other managed parameter flags, subtract their lengths from data field if present
     Crypto_TM_Handle_Managed_Parameter_Flags(&pdu_len);
+
+    if(current_managed_parameters_struct.max_frame_size < pdu_len)
+    {
+        status = CRYPTO_LIB_ERR_AOS_FRAME_LENGTH_UNDERFLOW;
+        mc_if->mc_log(status);
+        return status;
+    }
+
     Crypto_TM_ApplySecurity_Debug_Print(idx, pdu_len, sa_ptr);
 
     // Get Key
@@ -1763,6 +1779,13 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_
         }
 #endif
 
+        if (current_managed_parameters_struct.max_frame_size <= byte_idx - sa_ptr->stmacf_len)
+        {
+            status = CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW;
+            mc_if->mc_log(status);
+            return status;
+        }
+
         // Parse & Check FECF, if present, and update fecf length
         status = Crypto_TM_FECF_Setup(p_ingest, len_ingest);
     }
@@ -1812,6 +1835,13 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_
         // Calculate size of the protocol data unit
         // NOTE: This size itself is not the length for authentication
         Crypto_TM_Calc_PDU_MAC(&pdu_len, byte_idx, sa_ptr, &mac_loc);
+
+        if(current_managed_parameters_struct.max_frame_size < pdu_len)
+        {
+            status = CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW;
+            mc_if->mc_log(status);
+            return status;
+        }
 
         Crypto_TM_Process_Debug_Print(byte_idx, pdu_len, sa_ptr);
 
