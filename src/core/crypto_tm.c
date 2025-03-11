@@ -767,7 +767,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     {
         if((current_managed_parameters_struct.max_frame_size - len_ingest) <= 16)
         {
-            cbc_padding = current_managed_parameters_struct.max_frame_size;
+            cbc_padding = current_managed_parameters_struct.max_frame_size - len_ingest;
         }
         else
         {

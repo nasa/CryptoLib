@@ -129,7 +129,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     {
         if((current_managed_parameters_struct.max_frame_size - len_ingest) <= 16)
         {
-            cbc_padding = current_managed_parameters_struct.max_frame_size;
+            cbc_padding = current_managed_parameters_struct.max_frame_size - len_ingest;
         }
         else
         {
@@ -1114,7 +1114,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
 
     if (len_ingest < current_managed_parameters_struct.max_frame_size)
     {
-        status = CRYPTO_LIB_ERR_AOS_FRAME_LENGTH_UNDERFLOW;
+        status = CRYPTO_LIB_ERR_AOS_FL_LT_MAX_FRAME_SIZE;
         mc_if->mc_log(status);
         return status;
     }

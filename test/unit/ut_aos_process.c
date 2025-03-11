@@ -1924,7 +1924,7 @@ UTEST(AOS_PROCESS, AOS_KEY_STATE_TEST)
     free(ptr_processed_frame);
 }
 
-UTEST(AOS_PROCESS, AOS_HEAP_OVERFLOW_TEST)
+UTEST(AOS_PROCESS, AOS_PROCESS_HEAP_UNDERFLOW_TEST)
 {
     // Local Variables
     int32_t  status              = CRYPTO_LIB_SUCCESS;
@@ -1961,7 +1961,7 @@ UTEST(AOS_PROCESS, AOS_HEAP_OVERFLOW_TEST)
 
     status =
         Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, &ptr_processed_frame, &processed_aos_len);
-    ASSERT_EQ(CRYPTO_LIB_ERR_AOS_FRAME_LENGTH_UNDERFLOW, status);
+    ASSERT_EQ(CRYPTO_LIB_ERR_AOS_FL_LT_MAX_FRAME_SIZE, status);
 
     Crypto_Shutdown();
     free(framed_aos_b);
