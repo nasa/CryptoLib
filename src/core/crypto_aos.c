@@ -41,7 +41,7 @@
  * called, the Security Header field is empty; i.e., the caller has not set any values in the
  * Security Header
  **/
-int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
+int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
 {
     int32_t                status  = CRYPTO_LIB_SUCCESS;
     int                    mac_loc = 0;
@@ -59,6 +59,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
     uint8_t                tfvn   = 0;
     uint16_t               scid   = 0;
     uint16_t               vcid   = 0;
+    uint16_t               cbc_padding = 0;
 
     // Passed a null, return an error
     if (!pTfBuffer)
@@ -118,9 +119,29 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
         return status;
     }
 
+    if((len_ingest < current_managed_parameters_struct.max_frame_size) && (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC) && (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC_MAC))
+    {
+        status = CRYPTO_LIB_ERR_AOS_FL_LT_MAX_FRAME_SIZE;
+        mc_if->mc_log(status);
+        return status;
+    }
+    else if ((sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC) || (sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC_MAC))
+    {
+        if((current_managed_parameters_struct.max_frame_size - len_ingest) <= 16)
+        {
+            cbc_padding = current_managed_parameters_struct.max_frame_size;
+        }
+        else
+        {
+            status = CRYPTO_LIB_ERR_AOS_FL_LT_MAX_FRAME_SIZE;
+            mc_if->mc_log(status);
+            return status;
+        }
+    }
+
 #ifdef AOS_DEBUG
     printf(KYEL "AOS BEFORE Apply Sec:\n\t" RESET);
-    for (int16_t i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int16_t i = 0; i < current_managed_parameters_struct.max_frame_size - cbc_padding; i++)
     {
         printf("%02X", pTfBuffer[i]);
     }

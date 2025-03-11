@@ -76,7 +76,7 @@ UTEST(TM_APPLY_SECURITY, NO_CRYPTO_INIT)
 
     hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);
 
-    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b);
+    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b, framed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_ERR_NO_CONFIG, status);
 
     char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
@@ -98,8 +98,9 @@ UTEST(TM_APPLY_SECURITY, NULL_BUFFER)
 
     // No Crypto_Init(), but we still Configure It;
     char *framed_tm_b = NULL;
+    int framed_tm_len = 0;
 
-    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b);
+    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b, framed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_ERR_NULL_BUFFER, status);
 
     char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
@@ -166,7 +167,7 @@ UTEST(TM_APPLY_SECURITY, NO_CONFIG)
     tm_frame_pri_hdr.scid = (((uint16_t)framed_tm_b[0] & 0x3F) << 4) | (((uint16_t)framed_tm_b[1] & 0xF0) >> 4);
     tm_frame_pri_hdr.vcid = ((uint8_t)framed_tm_b[1] & 0x0E) >> 1;
 
-    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b);
+    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b, framed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_ERR_NO_CONFIG, status);
 
     char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
@@ -279,7 +280,7 @@ UTEST(TM_APPLY_SECURITY, HAPPY_PATH_CLEAR_FECF)
         Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
                                                 gvcid_managed_parameters_array, &current_managed_parameters_struct);
 
-    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b);
+    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b, framed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
@@ -430,7 +431,7 @@ UTEST(TM_APPLY_SECURITY, HAPPY_PATH_CLEAR_FECF_LEFT_BLANK)
         Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
                                                 gvcid_managed_parameters_array, &current_managed_parameters_struct);
 
-    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b);
+    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b, framed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
@@ -568,7 +569,7 @@ UTEST(TM_APPLY_SECURITY, SECONDARY_HDR_PRESENT_PLAINTEXT)
         Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
                                                 gvcid_managed_parameters_array, &current_managed_parameters_struct);
 
-    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b);
+    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b, framed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
@@ -722,7 +723,7 @@ UTEST(TM_APPLY_SECURITY, SECONDARY_HDR_PRESENT_MAC)
         Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
                                                 gvcid_managed_parameters_array, &current_managed_parameters_struct);
 
-    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b);
+    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b, framed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
@@ -884,7 +885,7 @@ UTEST(TM_APPLY_SECURITY, AES_CMAC_256_TEST_0)
         Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
                                                 gvcid_managed_parameters_array, &current_managed_parameters_struct);
 
-    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b);
+    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b, framed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Byte by byte verify:
@@ -1061,7 +1062,7 @@ UTEST(TM_APPLY_SECURITY, AES_CMAC_256_TEST_1)
     // status = sa_if->sa_get_operational_sa_from_gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
     // tm_frame_pri_hdr.vcid, map_id, &sa_ptr);
 
-    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b);
+    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b, framed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Byte by byte verify:
@@ -1227,7 +1228,7 @@ UTEST(TM_APPLY_ENC_VAL, AES_HMAC_SHA_256_TEST_0)
         Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
                                                 gvcid_managed_parameters_array, &current_managed_parameters_struct);
 
-    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b);
+    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b, framed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Byte by byte verify:
@@ -1394,7 +1395,7 @@ UTEST(TM_APPLY_ENC_VAL, AES_HMAC_SHA_256_TEST_1)
         Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
                                                 gvcid_managed_parameters_array, &current_managed_parameters_struct);
 
-    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b);
+    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b, framed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Byte by byte verify:
@@ -1566,7 +1567,7 @@ UTEST(TM_APPLY_ENC_VAL, AES_HMAC_SHA_512_TEST_0)
     // status = sa_if->sa_get_operational_sa_from_gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
     // tm_frame_pri_hdr.vcid, map_id, &sa_ptr);
 
-    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b);
+    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b, framed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Byte by byte verify:
@@ -1739,7 +1740,7 @@ UTEST(TM_APPLY_ENC_VAL, AES_HMAC_SHA_512_TEST_1)
         Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
                                                 gvcid_managed_parameters_array, &current_managed_parameters_struct);
 
-    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b);
+    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b, framed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Byte by byte verify:
@@ -1893,7 +1894,7 @@ UTEST(TM_APPLY_ENC_VAL, AES_GCM_BITMASK_1)
     hex_conversion(iv_h, &iv_b, &iv_len);
     memcpy(sa_ptr->iv, iv_b, iv_len);
 
-    Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b);
+    Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b, framed_tm_len);
 
     printf("Static frame contents:\n\t");
     for (int i = 0; i < 1786; i++)
@@ -2076,7 +2077,7 @@ UTEST(TM_APPLY_ENC_VAL, AEAD_AES_GCM_BITMASK_1)
     hex_conversion(next_iv_h, &next_iv_b, &next_iv_len);
     ASSERT_EQ(next_iv_len, iv_len);
 
-    Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b);
+    Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b, framed_tm_len);
 
     printf("Static frame contents:\n\t");
     for (int i = 0; i < 1786; i++)
@@ -2263,7 +2264,7 @@ UTEST(TM_APPLY_ENC_VAL, TM_KEY_STATE_TEST)
     hex_conversion(next_iv_h, &next_iv_b, &next_iv_len);
     ASSERT_EQ(next_iv_len, iv_len);
 
-    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b);
+    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b, framed_tm_len);
     ASSERT_EQ(status, CRYPTO_LIB_ERR_KEY_STATE_INVALID);
 
     Crypto_Shutdown();
@@ -2271,6 +2272,63 @@ UTEST(TM_APPLY_ENC_VAL, TM_KEY_STATE_TEST)
     free(framed_tm_b);
     free(iv_b);
     free(next_iv_b);
+}
+
+UTEST(TM_APPLY_SECURITY, TM_APPLY_HEAP_UNDERFLOW_TEST)
+{
+    remove("sa_save_file.bin");
+    // Local Variables
+    int32_t  status = CRYPTO_LIB_SUCCESS;
+
+    // Configure Parameters
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // TM Tests
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+    status = Crypto_Init();
+
+    char *framed_tm_h   = "02C0000018000008414243444546FFFF";
+    char *framed_tm_b   = NULL;
+    int   framed_tm_len = 0;
+    hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);
+
+    SecurityAssociation_t  ta;
+    SecurityAssociation_t *sa_ptr = &ta;
+    sa_if->sa_get_from_spi(8, &sa_ptr);
+    sa_ptr->gvcid_blk.scid = 44;
+    sa_ptr->gvcid_blk.vcid = 0;
+    sa_ptr->arsn_len       = 0;
+    sa_ptr->abm_len        = 1786;
+    memset(sa_ptr->abm, 0xFF, (sa_ptr->abm_len * sizeof(uint8_t))); // Bitmask
+    sa_ptr->sa_state   = SA_OPERATIONAL;
+    sa_ptr->ast        = 1;
+    sa_ptr->ecs_len    = 1;
+    sa_ptr->ecs        = CRYPTO_CIPHER_AES256_CBC;
+    sa_ptr->acs_len    = 1;
+    sa_ptr->acs        = CRYPTO_MAC_NONE;
+    sa_ptr->iv_len     = 16;
+    sa_ptr->shivf_len  = 16;
+    sa_ptr->stmacf_len = 16;
+
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(sa_ptr->ekid);
+    ekp->key_state    = KEY_ACTIVE;
+
+    crypto_key_t *akp = NULL;
+    akp               = key_if->get_key(sa_ptr->akid);
+    akp->key_state    = KEY_ACTIVE;
+
+    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b, framed_tm_len);
+
+    ASSERT_EQ(CRYPTO_LIB_ERR_TM_FL_LT_MAX_FRAME_SIZE, status);
+    free(framed_tm_b);
+    Crypto_Shutdown();
 }
 
 UTEST_MAIN();
