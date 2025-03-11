@@ -1262,4 +1262,57 @@ UTEST(TC_PROCESS, TC_KEY_STATE_TEST)
     Crypto_Shutdown();
 }
 
+UTEST(TC_PROCESS, TC_HEAP_BUFFER_OVERFLOW_TEST)
+{
+    remove("sa_save_file.bin");
+    // Local Variables
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    // Configure Parameters
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // AOS Tests
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t AOS_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_Managed_Parameters);
+
+    status = Crypto_Init();
+
+    TC_t *tc_sdls_processed_frame;
+    tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
+    memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
+
+    // Test frame setup
+    char    *test_frame_pt_h = "080300007f0b000afd020202027fff02020202020202020202020202029bdd5f3c98dd1c50d27a430"
+                               "a4b6757aa33ec183952a9f76e504eb5f8001066ed6c00c8788e11997f2a058da1633e11fed9851d45"
+                               "7bb31a9637ec8f4f15bc8575a0e7104dba5c666b17f7cccdc2adbff9";
+    uint8_t *test_frame_pt_b = NULL;
+    int      test_frame_pt_len = 0;
+
+    SecurityAssociation_t *test_association;
+    sa_if->sa_get_from_spi(10, &test_association);
+    test_association->sa_state  = SA_OPERATIONAL;
+    test_association->est       = 1;
+    test_association->arsn_len  = 0;
+    test_association->shsnf_len = 0;
+
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(test_association->ekid);
+    ekp->key_state    = KEY_ACTIVE;
+
+    // Convert input test frame
+    hex_conversion(test_frame_pt_h, (char **)&test_frame_pt_b, &test_frame_pt_len);
+
+    status = Crypto_TC_ProcessSecurity(test_frame_pt_b, &test_frame_pt_len, tc_sdls_processed_frame);
+
+    ASSERT_EQ(CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW, status);
+    free(test_frame_pt_b);
+    free(tc_sdls_processed_frame);
+    Crypto_Shutdown();
+}
+
 UTEST_MAIN();
