@@ -1545,7 +1545,13 @@ int32_t Crypto_TC_Prep_AAD(TC_t *tc_sdls_processed_frame, uint8_t fecf_len, uint
     if ((sa_service_type == SA_AUTHENTICATION) || (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
     {
         uint16_t tc_mac_start_index = tc_sdls_processed_frame->tc_header.fl + 1 - fecf_len - sa_ptr->stmacf_len;
-
+        printf("Frame Length: %d\nMAC Index: %d\n", tc_sdls_processed_frame->tc_header.fl, tc_mac_start_index);
+        if (current_managed_parameters_struct.max_frame_size < tc_mac_start_index)
+        {
+            status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW;
+            mc_if->mc_log(status);
+            return status;
+        }
         // Parse the received MAC
         memcpy((tc_sdls_processed_frame->tc_sec_trailer.mac), &(ingest[tc_mac_start_index]), sa_ptr->stmacf_len);
 #ifdef DEBUG
@@ -1765,8 +1771,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
     uint8_t                ecs_is_aead_algorithm = -1;
     crypto_key_t          *ekp                   = NULL;
     crypto_key_t          *akp                   = NULL;
-
-    int byte_idx = 0;
+    int byte_idx                                 = 0;
 
     status = Crypto_TC_Process_Sanity_Check(len_ingest);
     if (status != CRYPTO_LIB_SUCCESS)
@@ -1808,6 +1813,13 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
         mc_if->mc_log(status);
         return status;
     } // Unable to get necessary Managed Parameters for TC TF -- return with error.
+
+    if (*len_ingest < current_managed_parameters_struct.max_frame_size || (tc_sdls_processed_frame->tc_header.fl + 1) < *len_ingest)
+    {
+        status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW;
+        mc_if->mc_log(status);
+        return status;
+    }
 
     // Segment Header
     Crypto_TC_Set_Segment_Header(tc_sdls_processed_frame, ingest, &byte_idx);

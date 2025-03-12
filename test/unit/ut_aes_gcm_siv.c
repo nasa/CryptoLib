@@ -163,6 +163,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_DEC_TEST_1)
 {
     remove("sa_save_file.bin");
     uint8_t *ptr_enc_frame = NULL;
+    int status = CRYPTO_LIB_SUCCESS;
 
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
@@ -173,13 +174,13 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_DEC_TEST_1)
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 43, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_NO_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_1_Managed_Parameters = {
-        0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 43, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
 
     Crypto_Init();
@@ -234,7 +235,8 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_DEC_TEST_1)
     // Convert input encryptedtext
     hex_conversion(buffer_rfc_et_h, (char **)&buffer_rfc_et_b, &buffer_rfc_et_len);
 
-    ASSERT_EQ(0, Crypto_TC_ProcessSecurity(buffer_rfc_et_b, &buffer_rfc_et_len, tc_rfc_processed_frame));
+    status = Crypto_TC_ProcessSecurity(buffer_rfc_et_b, &buffer_rfc_et_len, tc_rfc_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     for (int i = 0; i < tc_rfc_processed_frame->tc_pdu_len; i++)
     {
