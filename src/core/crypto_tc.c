@@ -1545,7 +1545,6 @@ int32_t Crypto_TC_Prep_AAD(TC_t *tc_sdls_processed_frame, uint8_t fecf_len, uint
     if ((sa_service_type == SA_AUTHENTICATION) || (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
     {
         uint16_t tc_mac_start_index = tc_sdls_processed_frame->tc_header.fl + 1 - fecf_len - sa_ptr->stmacf_len;
-        printf("Frame Length: %d\nMAC Index: %d\n", tc_sdls_processed_frame->tc_header.fl, tc_mac_start_index);
         if (current_managed_parameters_struct.max_frame_size < tc_mac_start_index)
         {
             status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW;
