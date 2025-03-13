@@ -92,7 +92,8 @@ char *crypto_enum_errlist_core[] = {(char *)"CRYPTO_LIB_SUCCESS",
                                     (char *)"CRYPTO_LIB_ERR_STMACF_LEN_GREATER_THAN_MAX_MAC_SIZE",
                                     (char *)"CRYPTO_LIB_ERR_SHPLF_LEN_GREATER_THAN_MAX_PAD_SIZE",
                                     (char *)"CRYPTO_LIB_ERR_INVALID_SVC_TYPE_WITH_ARSN",
-                                    (char *)"CRYPTO_LIB_ERR_ARSN_LT_SHSNF"};
+                                    (char *)"CRYPTO_LIB_ERR_ARSN_LT_SHSNF",
+                                    (char *)"CRYPTO_LIB_ERR_INVALID_FHECF"};
 
 char *crypto_enum_errlist_config[] = {
     (char *)"CRYPTO_CONFIGURATION_NOT_COMPLETE",

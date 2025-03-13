@@ -189,7 +189,23 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
     // Detect if optional 2 byte FHEC is present
     if (current_managed_parameters_struct.aos_has_fhec == AOS_HAS_FHEC)
     {
-        idx += 2;
+        uint16_t recieved_fhecf = (((pTfBuffer[idx] << 8) & 0xFF00) | (pTfBuffer[idx + 1] & 0x00FF));
+#ifdef AOS_DEBUG
+        printf("Recieved FHECF: %04x\n", recieved_fhecf);
+        printf(KYEL "Calculating FHECF...\n" RESET);
+#endif
+        uint16_t calculated_fhecf = Crypto_Calc_FHECF(pTfBuffer);
+
+        if (recieved_fhecf != calculated_fhecf)
+        {
+            status = CRYPTO_LIB_ERR_INVALID_FHECF;
+            mc_if->mc_log(status);
+            return status;
+        }
+
+        pTfBuffer[idx] = (calculated_fhecf >> 8) & 0x00FF ;
+        pTfBuffer[idx+1] = (calculated_fhecf) & 0x00FF ;
+        idx = 8;
     }
 
     // Detect if optional variable length Insert Zone is present
@@ -327,6 +343,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
      * ~~~Index currently at start of data field, AKA end of security header~~~
      **/
     data_loc = idx;
+    printf("IDX: %d", idx);
     // Calculate size of data to be encrypted
     pdu_len = current_managed_parameters_struct.max_frame_size - idx - sa_ptr->stmacf_len;
     // Check other managed parameter flags, subtract their lengths from data field if present
@@ -911,6 +928,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     SecurityAssociation_t *sa_ptr          = NULL;
     uint8_t                sa_service_type = -1;
     uint8_t                spi             = -1;
+    uint8_t                aos_hdr_len      = 6;
 
     // Bit math to give concise access to values in the ingest
     aos_frame_pri_hdr.tfvn = ((uint8_t)p_ingest[0] & 0xC0) >> 6;
@@ -921,7 +939,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     printf(KYEL "\n----- Crypto_AOS_ProcessSecurity START -----\n" RESET);
 #endif
 
-    if (len_ingest < 6) // Frame length doesn't even have enough bytes for header -- error out.
+    if (len_ingest < aos_hdr_len) // Frame length doesn't even have enough bytes for header -- error out.
     {
         status = CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_AOS_STANDARD;
         mc_if->mc_log(status);
@@ -974,7 +992,24 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     byte_idx = 6;
     if (current_managed_parameters_struct.aos_has_fhec == AOS_HAS_FHEC)
     {
+        uint16_t recieved_fhecf = (((p_ingest[aos_hdr_len] << 8) & 0xFF00) | (p_ingest[aos_hdr_len + 1] & 0x00FF));
+#ifdef AOS_DEBUG
+        printf("Recieved FHECF: %04x\n", recieved_fhecf);
+        printf(KYEL "Calculating FHECF...\n" RESET);
+#endif
+        uint16_t calculated_fhecf = Crypto_Calc_FHECF(p_ingest);
+
+        if (recieved_fhecf != calculated_fhecf)
+        {
+            status = CRYPTO_LIB_ERR_INVALID_FHECF;
+            mc_if->mc_log(status);
+            return status;
+        }
+
+        p_ingest[byte_idx] = (calculated_fhecf >> 8) & 0x00FF ;
+        p_ingest[byte_idx+1] = (calculated_fhecf) & 0x00FF ;
         byte_idx = 8;
+        aos_hdr_len = byte_idx;
     }
 
     // Determine if Insert Zone exists, increment past it if so
@@ -1105,7 +1140,6 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
 #ifdef FECF_DEBUG
                 printf(KYEL "FECF CALC MATCHES! - GOOD\n" RESET);
 #endif
-                ;
             }
         }
     }
@@ -1134,18 +1168,18 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
         return status;
     }
 
-    // Copy over AOS Primary Header (6 bytes)
-    memcpy(p_new_dec_frame, &p_ingest[0], 6);
+    // Copy over AOS Primary Header (6-8 bytes)
+    memcpy(p_new_dec_frame, &p_ingest[0], aos_hdr_len);
 
     // Copy over insert zone data, if it exists
     if (current_managed_parameters_struct.aos_has_iz == AOS_HAS_IZ)
     {
-        memcpy(p_new_dec_frame + 6, &p_ingest[6], current_managed_parameters_struct.aos_iz_len);
+        memcpy(p_new_dec_frame + aos_hdr_len, &p_ingest[aos_hdr_len], current_managed_parameters_struct.aos_iz_len);
 #ifdef AOS_DEBUG
         printf("Copied over the following:\n\t");
         for (int i = 0; i < current_managed_parameters_struct.aos_iz_len; i++)
         {
-            printf("%02X", p_ingest[6 + i]);
+            printf("%02X", p_ingest[aos_hdr_len + i]);
         }
         printf("\n");
 #endif
