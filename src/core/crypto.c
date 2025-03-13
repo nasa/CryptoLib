@@ -401,6 +401,8 @@ uint8_t gf_mul(uint8_t a, uint8_t b)
     }
 }
 
+// Frame Header Error Control Field
+// Reference: CCSDS 732.0-B-4 (AOS Space Data Link Protocol) Section 4.1.2.6
 uint16_t Crypto_Calc_FHECF(uint8_t *data)
 {
     uint8_t feedback = 0;
