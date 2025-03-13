@@ -437,32 +437,61 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
             }
             if (strcmp(field_names[i], "ast") == 0)
             {
-                sa->ast = atoi(row[i]);
                 continue;
             }
             if (strcmp(field_names[i], "shivf_len") == 0)
             {
                 sa->shivf_len = atoi(row[i]);
+                if(sa->shivf_len > IV_SIZE)
+                {
+                    status = SADB_INVALID_SA_FIELD_VALUE;
+                    mc_if->mc_log(status);
+                    return status;
+                }
                 continue;
             }
             if (strcmp(field_names[i], "iv_len") == 0)
             {
                 sa->iv_len = atoi(row[i]);
+                if(sa->iv_len > IV_SIZE)
+                {
+                    status = SADB_INVALID_SA_FIELD_VALUE;
+                    mc_if->mc_log(status);
+                    return status;
+                }
                 continue;
             }
             if (strcmp(field_names[i], "shsnf_len") == 0)
             {
                 sa->shsnf_len = atoi(row[i]);
+                if(sa->shsnf_len > ARSN_SIZE)
+                {
+                    status = SADB_INVALID_SA_FIELD_VALUE;
+                    mc_if->mc_log(status);
+                    return status;
+                }
                 continue;
             }
             if (strcmp(field_names[i], "shplf_len") == 0)
             {
                 sa->shplf_len = atoi(row[i]);
+                if(sa->shplf_len > PAD_SIZE)
+                {
+                    status = SADB_INVALID_SA_FIELD_VALUE;
+                    mc_if->mc_log(status);
+                    return status;
+                }
                 continue;
             }
             if (strcmp(field_names[i], "stmacf_len") == 0)
             {
                 sa->stmacf_len = atoi(row[i]);
+                if(sa->stmacf_len > MAC_SIZE)
+                {
+                    status = SADB_INVALID_SA_FIELD_VALUE;
+                    mc_if->mc_log(status);
+                    return status;
+                }
                 continue;
             }
             if (strcmp(field_names[i], "ecs_len") == 0)
@@ -494,6 +523,12 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
             if (strcmp(field_names[i], "abm_len") == 0)
             {
                 sa->abm_len = atoi(row[i]);
+                if(sa->abm_len > ABM_SIZE)
+                {
+                    status = SADB_INVALID_SA_FIELD_VALUE;
+                    mc_if->mc_log(status);
+                    return status;
+                }
                 continue;
             }
             if (strcmp(field_names[i], "HEX(abm)") == 0)
@@ -505,6 +540,12 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
             if (strcmp(field_names[i], "arsn_len") == 0)
             {
                 sa->arsn_len = atoi(row[i]);
+                if(sa->arsn_len > ARSN_SIZE)
+                {
+                    status = SADB_INVALID_SA_FIELD_VALUE;
+                    mc_if->mc_log(status);
+                    return status;
+                }
                 continue;
             }
             if (strcmp(field_names[i], "HEX(arsn)") == 0)
