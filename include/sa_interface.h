@@ -52,6 +52,5 @@ typedef struct
 SaInterface get_sa_interface_custom(void);
 SaInterface get_sa_interface_inmemory(void);
 SaInterface get_sa_interface_mariadb(void);
-// SaInterface init_parse_sa_routine(uint8_t* );
 
 #endif // CRYPTOLIB_SA_INTERFACE_H
