@@ -469,9 +469,7 @@ int32_t Crypto_TC_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr
                     &p_new_enc_frame[index], // ciphertext output
                     (size_t)tf_payload_len,
                     &p_new_enc_frame[index], // length of data
-                    //(uint8_t*)(p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), // plaintext input
                     (size_t)tf_payload_len, // in data length
-                    // new_frame_length,
                     &(ekp->value[0]),                        // Key
                     Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs), // Length of key derived from sa_ptr key_ref
                     sa_ptr,                                  // SA (for key reference)
@@ -1138,10 +1136,6 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, const uint16_t in
     /*
     ** End Security Header Fields
     */
-
-    // Copy in original TF data - except FECF
-    // Will be over-written if using encryption later
-    // tf_payload_len = temp_tc_header.fl - TC_FRAME_HEADER_SIZE - segment_hdr_len - fecf_len + 1;
 
     memcpy((p_new_enc_frame + index), (p_in_frame + TC_FRAME_HEADER_SIZE + segment_hdr_len), tf_payload_len);
     index += tf_payload_len;
@@ -1821,16 +1815,9 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
     }
 
     // Allocate the necessary byte arrays within the security header + trailer given the SA
-    // tc_sdls_processed_frame->tc_sec_header.iv = calloc(1, sa_ptr->iv_len);
-    // tc_sdls_processed_frame->tc_sec_header.sn = calloc(1, sa_ptr->arsn_len);
-    // tc_sdls_processed_frame->tc_sec_header.pad = calloc(1, sa_ptr->shplf_len);
-    // tc_sdls_processed_frame->tc_sec_trailer.mac = calloc(1, sa_ptr->stmacf_len);
-    // Set tc_sec_header + trailer fields for actual lengths from the SA (downstream apps won't know this length
-    // otherwise since they don't access the SADB!).
     tc_sdls_processed_frame->tc_sec_header.iv_field_len  = sa_ptr->iv_len;
     tc_sdls_processed_frame->tc_sec_header.sn_field_len  = sa_ptr->arsn_len;
     tc_sdls_processed_frame->tc_sec_header.pad_field_len = sa_ptr->shplf_len;
-    // sprintf(tc_sdls_processed_frame->tc_sec_header.pad, "%x", pkcs_padding);
 
     tc_sdls_processed_frame->tc_sec_trailer.mac_field_len = sa_ptr->stmacf_len;
     // Determine SA Service Type
@@ -1899,7 +1886,6 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
 #endif
 
     // Parse pad length
-    // tc_sdls_processed_frame->tc_sec_header.pad = malloc((sa_ptr->shplf_len * sizeof(uint8_t)));
     memcpy((tc_sdls_processed_frame->tc_sec_header.pad),
            &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len]),
            sa_ptr->shplf_len);
@@ -1972,38 +1958,6 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
     return status;
 }
 
-/**
- * @brief Function: Crypto_Get_tcPayloadLength
- * Returns the payload length of current tc_frame in BYTES!
- * @param tc_frame: TC_t*
- * @param sa_ptr: SecurityAssociation_t
- * @return int32, Length of TCPayload
- **/
-/*
-int32_t Crypto_Get_tcPayloadLength(TC_t* tc_frame, SecurityAssociation_t* sa_ptr)
-{
-    int tf_hdr = 5;
-    int seg_hdr = 0;if(current_managed_parameters_struct.has_segmentation_hdr==TC_HAS_SEGMENT_HDRS){seg_hdr=1;}
-    int fecf = 0;if(current_managed_parameters_struct.has_fecf==TC_HAS_FECF){fecf=FECF_SIZE;}
-    int spi = 2;
-    int iv_size = sa_ptr->shivf_len;
-    int mac_size = sa_ptr->stmacf_len;
-
-    #ifdef TC_DEBUG
-        printf("Get_tcPayloadLength Debug [byte lengths]:\n");
-        printf("\thdr.fl\t%d\n", tc_frame->tc_header.fl);
-        printf("\ttf_hdr\t%d\n",tf_hdr);
-        printf("\tSeg hdr\t%d\t\n",seg_hdr);
-        printf("\tspi \t%d\n",spi);
-        printf("\tiv_size\t%d\n",iv_size);
-        printf("\tmac\t%d\n",mac_size);
-        printf("\tfecf \t%d\n",fecf);
-        printf("\tTOTAL LENGTH: %d\n", (tc_frame->tc_header.fl - (tf_hdr + seg_hdr + spi + iv_size ) - (mac_size +
-fecf))); #endif
-
-    return (tc_frame->tc_header.fl + 1 - (tf_hdr + seg_hdr + spi + iv_size ) - (mac_size + fecf) );
-}
-*/
 
 /**
  * @brief Function: Crypto_Prepare_TC_AAD

@@ -32,16 +32,15 @@ CFS_MODULE_DECLARE_LIB(crypto);
 /*
 ** Global Variables
 */
-// crypto_key_t ak_ring[NUM_KEYS];
 // SDLS Replies
 SDLS_KEYV_RPLY_t sdls_ep_keyv_reply; // Reply block for challenged keys
 uint8_t          sdls_ep_reply[TC_MAX_FRAME_SIZE];
 CCSDS_t          sdls_frame;
-// TM_t tm_frame;
+// TM
 uint8_t                  tm_frame[TM_MAX_FRAME_SIZE]; // TM Global Frame
 TM_FramePrimaryHeader_t  tm_frame_pri_hdr;            // Used to reduce bit math duplication
 TM_FrameSecurityHeader_t tm_frame_sec_hdr;            // Used to reduce bit math duplication
-// AOS_t aos_frame
+// AOS
 uint8_t                   aos_frame[AOS_MAX_FRAME_SIZE]; // AOS Global Frame
 AOS_FramePrimaryHeader_t  aos_frame_pri_hdr;             // Used to reduce bit math duplication
 AOS_FrameSecurityHeader_t aos_frame_sec_hdr;             // Used to reduce bit math duplication
