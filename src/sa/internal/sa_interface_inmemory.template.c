@@ -722,10 +722,6 @@ static int32_t sa_get_from_spi(uint16_t spi, SecurityAssociation_t **security_as
         return CRYPTO_LIB_ERR_SPI_INDEX_OOB;
     }
     *security_association = &sa[spi];
-    // if (sa[spi].shivf_len > 0 && crypto_config.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
-    // {
-    //     return CRYPTO_LIB_ERR_NULL_IV;
-    // } // Must have IV if doing encryption or authentication
 
     if ((sa[spi].abm_len == 0) && sa[spi].ast)
     {
@@ -768,13 +764,6 @@ int32_t sa_get_operational_sa_from_gvcid_find_iv(uint8_t tfvn, uint16_t scid, ui
         {
             *security_association = &sa[i];
 
-            // Must have IV if using libgcrypt and auth/enc
-            // if (sa[i].iv == NULL && (sa[i].ast == 1 || sa[i].est == 1) && crypto_config.cryptography_type !=
-            // CRYPTOGRAPHY_TYPE_KMCCRYPTO)
-            // {
-            //     //status =  CRYPTO_LIB_ERR_NULL_IV;
-            //     //return status;
-            // }
             // Must have ABM if doing authentication
             if (sa[i].ast && sa[i].abm_len <= 0)
             {
@@ -1255,10 +1244,6 @@ static int32_t sa_rekey(TC_t *tc_frame)
             sa[spi].ekid = ((uint8_t)sdls_frame.pdu.data[count] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[count + 1];
             count        = count + 2;
 
-            // Authentication Key
-            // sa[spi].akid = ((uint8_t)sdls_frame.pdu.data[count] << 8) | (uint8_t)sdls_frame.pdu.data[count+1];
-            // count = count + 2;
-
             // Anti-Replay Seq Num
 #ifdef PDU_DEBUG
             printf("SPI %d IV updated to: 0x", spi);
@@ -1306,7 +1291,6 @@ static int32_t sa_rekey(TC_t *tc_frame)
 #ifdef PDU_DEBUG
     printf("\t spi  = %d \n", spi);
     printf("\t ekid = %d \n", sa[spi].ekid);
-    // printf("\t akid = %d \n", sa[spi].akid);
 #endif
 
     return CRYPTO_LIB_SUCCESS;

@@ -468,7 +468,6 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
                 ecs_byte_str = row[i];
                 continue;
             }
-            // if(strcmp(field_names[i],"HEX(iv)")==0){memcpy(&(sa->iv),&row[i],IV_SIZE);continue;}
             if (strcmp(field_names[i], "HEX(iv)") == 0)
             {
                 iv_byte_str = row[i];
@@ -494,7 +493,6 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
                 abm_byte_str = row[i];
                 continue;
             }
-            // if(strcmp(field_names[i],"HEX(abm)")==0){convert_hexstring_to_byte_array(row[i],sa->abm);continue;}
             if (strcmp(field_names[i], "arsn_len") == 0)
             {
                 sa->arsn_len = atoi(row[i]);
@@ -505,15 +503,12 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
                 arc_byte_str = row[i];
                 continue;
             }
-            // if(strcmp(field_names[i],"HEX(arsn)")==0){convert_hexstring_to_byte_array(row[i],sa->arsn);continue;}
             if (strcmp(field_names[i], "arsnw") == 0)
             {
                 sa->arsnw = atoi(row[i]);
                 continue;
             }
-            // printf("%s:%s ",field_names[i], row[i] ? row[i] : "NULL");
         }
-        // printf("\n");
     }
 
     if (iv_byte_str != NULL)
