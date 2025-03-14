@@ -891,7 +891,6 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer)
     return status;
 }
 
-
 /**
  * @brief Function: Crypto_TM_Process_Setup
  * Sets up TM Process Security.  Verifies ingest length, verifies pointers are not null,
@@ -1626,7 +1625,6 @@ int32_t Crypto_Get_tmLength(int len)
 
     return len;
 }
-
 
 /**
  * @brief Function: Crypto_TM_updateOCF

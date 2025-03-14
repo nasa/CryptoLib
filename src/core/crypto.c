@@ -403,9 +403,9 @@ uint16_t Crypto_Calc_CRC16(uint8_t *data, int size)
     return crc;
 }
 
-uint8_t gf_mul(uint8_t a, uint8_t b) 
+uint8_t gf_mul(uint8_t a, uint8_t b)
 {
-    if (a == 0 || b == 0) 
+    if (a == 0 || b == 0)
     {
         return 0;
     }
@@ -419,20 +419,20 @@ uint8_t gf_mul(uint8_t a, uint8_t b)
 // Reference: CCSDS 732.0-B-4 (AOS Space Data Link Protocol) Section 4.1.2.6
 uint16_t Crypto_Calc_FHECF(uint8_t *data)
 {
-    uint8_t feedback = 0;
-    uint16_t result = 0;
-    int i = 0;
-    int j = 0;
+    uint8_t  feedback = 0;
+    uint16_t result   = 0;
+    int      i        = 0;
+    int      j        = 0;
 
     // RS encoding
     memset(parity, 0, RS_PARITY);
-    for (i = 0; i < RS_DATA; i++) 
+    for (i = 0; i < RS_DATA; i++)
     {
         feedback = data[i] ^ parity[0];
         memmove(&parity[0], &parity[1], RS_PARITY - 1);
         parity[RS_PARITY - 1] = 0;
 
-        for (j = 0; j < RS_PARITY; j++) 
+        for (j = 0; j < RS_PARITY; j++)
         {
             parity[j] ^= gf_mul(feedback, gen_poly[j + 1]);
         }

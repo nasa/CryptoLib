@@ -226,13 +226,13 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_CBC)
     test_association->sa_state = SA_NONE;
     sa_if->sa_get_from_spi(2, &test_association);
     printf("SPI: %d\n", test_association->spi);
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->ast      = 0;
-    test_association->shsnf_len = 0;
-    test_association->arsn_len = 0;
-    test_association->ekid = 130;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ast            = 0;
+    test_association->shsnf_len      = 0;
+    test_association->arsn_len       = 0;
+    test_association->ekid           = 130;
     test_association->gvcid_blk.vcid = 0;
-    
+
     return_val =
         Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
@@ -1408,8 +1408,7 @@ UTEST(TC_APPLY_SECURITY, PLAINTEXT_W_ARSN)
     return_val =
         Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
     // 200300230000010000000100011980D2C9000E197F0B001B0004000400003040D95E85F3
-    char *truth_data_h =
-        "2003002d000001000000000000000000000000000100011980d2c9000e197f0b001b0004000400003040d95e9750";
+    char *truth_data_h = "2003002d000001000000000000000000000000000100011980d2c9000e197f0b001b0004000400003040d95e9750";
     uint8_t *truth_data_b = NULL;
     int      truth_data_l = 0;
 

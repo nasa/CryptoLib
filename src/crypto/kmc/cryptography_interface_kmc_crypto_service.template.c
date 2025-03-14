@@ -119,9 +119,9 @@ static const char *icv_verify_endpoint = "icv-verify?metadata=integrityCheckValu
 static const char *cam_kerberos_uri = "%s/cam-api/ssoToken?loginMethod=kerberos";
 
 // Supported KMC Cipher Transformation Strings
-static const char *AES_GCM_TRANSFORMATION = "AES/GCM/NoPadding";
-static const char *AES_CBC_TRANSFORMATION = "AES/CBC/PKCS5Padding";
-static const char *AES_CRYPTO_ALGORITHM   = "AES";
+static const char *AES_GCM_TRANSFORMATION  = "AES/GCM/NoPadding";
+static const char *AES_CBC_TRANSFORMATION  = "AES/CBC/PKCS5Padding";
+static const char *AES_CRYPTO_ALGORITHM    = "AES";
 static const char *AES_CMAC_TRANSFORMATION = "AESCMAC";
 static const char *HMAC_SHA256             = "HmacSHA256";
 static const char *HMAC_SHA512             = "HmacSHA512";

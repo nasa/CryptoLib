@@ -339,10 +339,9 @@ int32_t Crypto_TC_Check_IV_Setup(SecurityAssociation_t *sa_ptr, uint8_t *p_new_e
  * @return int32: Success/Failure
  **/
 int32_t Crypto_TC_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr, uint16_t *mac_loc,
-                          uint16_t tf_payload_len, uint8_t segment_hdr_len, uint8_t *p_new_enc_frame,
-                          crypto_key_t *ekp, uint8_t **aad, uint8_t ecs_is_aead_algorithm,
-                          uint16_t *index_p, const uint8_t *p_in_frame, char *cam_cookies,
-                          uint32_t pkcs_padding)
+                          uint16_t tf_payload_len, uint8_t segment_hdr_len, uint8_t *p_new_enc_frame, crypto_key_t *ekp,
+                          uint8_t **aad, uint8_t ecs_is_aead_algorithm, uint16_t *index_p, const uint8_t *p_in_frame,
+                          char *cam_cookies, uint32_t pkcs_padding)
 {
     int32_t       status = CRYPTO_LIB_SUCCESS;
     uint16_t      index  = *index_p;
@@ -468,8 +467,8 @@ int32_t Crypto_TC_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr
                 status = cryptography_if->cryptography_encrypt(
                     &p_new_enc_frame[index], // ciphertext output
                     (size_t)tf_payload_len,
-                    &p_new_enc_frame[index], // length of data
-                    (size_t)tf_payload_len, // in data length
+                    &p_new_enc_frame[index],                 // length of data
+                    (size_t)tf_payload_len,                  // in data length
                     &(ekp->value[0]),                        // Key
                     Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs), // Length of key derived from sa_ptr key_ref
                     sa_ptr,                                  // SA (for key reference)
@@ -613,9 +612,8 @@ int32_t Crypto_TC_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
 {
     int32_t  status = CRYPTO_LIB_SUCCESS;
     uint16_t index  = *index_p;
-    status          = Crypto_TC_Encrypt(sa_service_type, sa_ptr, mac_loc, tf_payload_len, segment_hdr_len,
-                                        p_new_enc_frame, ekp, aad, ecs_is_aead_algorithm, index_p, p_in_frame,
-                                        cam_cookies, pkcs_padding);
+    status = Crypto_TC_Encrypt(sa_service_type, sa_ptr, mac_loc, tf_payload_len, segment_hdr_len, p_new_enc_frame, ekp,
+                               aad, ecs_is_aead_algorithm, index_p, p_in_frame, cam_cookies, pkcs_padding);
     if (status != CRYPTO_LIB_SUCCESS)
     {
         Crypto_TC_Safe_Free_Ptr(*aad);
@@ -1957,7 +1955,6 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
     mc_if->mc_log(status);
     return status;
 }
-
 
 /**
  * @brief Function: Crypto_Prepare_TC_AAD

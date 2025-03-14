@@ -138,10 +138,9 @@ int32_t Crypto_TC_Accio_Buffer(uint8_t **p_new_enc_frame, uint16_t *p_enc_frame_
 int32_t Crypto_TC_ACS_Algo_Check(SecurityAssociation_t *sa_ptr);
 int32_t Crypto_TC_Check_IV_Setup(SecurityAssociation_t *sa_ptr, uint8_t *p_new_enc_frame, uint16_t *index);
 int32_t Crypto_TC_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr, uint16_t *mac_loc,
-                                       uint16_t tf_payload_len, uint8_t segment_hdr_len, uint8_t *p_new_enc_frame,
-                                       crypto_key_t *ekp, uint8_t **aad, uint8_t ecs_is_aead_algorithm,
-                                       uint16_t *index_p, const uint8_t *p_in_frame, char *cam_cookies,
-                                       uint32_t pkcs_padding);
+                          uint16_t tf_payload_len, uint8_t segment_hdr_len, uint8_t *p_new_enc_frame, crypto_key_t *ekp,
+                          uint8_t **aad, uint8_t ecs_is_aead_algorithm, uint16_t *index_p, const uint8_t *p_in_frame,
+                          char *cam_cookies, uint32_t pkcs_padding);
 void    Crypto_TC_Increment_IV_ARSN(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr);
 int32_t Crypto_TC_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr, uint16_t *mac_loc,
                              uint16_t tf_payload_len, uint8_t segment_hdr_len, uint8_t *p_new_enc_frame,
@@ -319,7 +318,7 @@ extern TM_FrameSecurityHeader_t tm_frame_sec_hdr; // Used to reduce bit math dup
 // exterm AOS_t aos_frame
 extern AOS_FramePrimaryHeader_t  aos_frame_pri_hdr;
 extern AOS_FrameSecurityHeader_t aos_frame_sec_hdr; // Used to reduce bit math duplication
-extern uint8_t                   parity[4]; // Used in FHECF calc
+extern uint8_t                   parity[4];         // Used in FHECF calc
 
 // Global configuration structs
 extern CryptoConfig_t                        crypto_config;
@@ -361,14 +360,10 @@ extern uint32_t crc32Table[CRC32TBL_SIZE];
 extern uint16_t crc16Table[CRC16TBL_SIZE];
 
 // GF(2^4) field and logarithm tables
-static const uint8_t gf_exp[30] = {
-    1, 2, 4, 8, 3, 6, 12, 11, 5, 10, 7, 14, 15, 13, 9, 1,
-    2, 4, 8, 3, 6, 12, 11, 5, 10, 7, 14, 15, 13, 9
-};
+static const uint8_t gf_exp[30] = {1, 2, 4, 8, 3, 6, 12, 11, 5, 10, 7, 14, 15, 13, 9,
+                                   1, 2, 4, 8, 3, 6, 12, 11, 5, 10, 7, 14, 15, 13, 9};
 
-static const uint8_t gf_log[GF_SIZE] = {
-    0, 0, 1, 4, 2, 8, 5, 10, 3, 14, 9, 7, 6, 13, 11, 12
-};
+static const uint8_t gf_log[GF_SIZE] = {0, 0, 1, 4, 2, 8, 5, 10, 3, 14, 9, 7, 6, 13, 11, 12};
 
 // Generator polynomial coefficients for g(x) = x^4 + a^3x^3 + ax^2 + a^3x + 1
 static const uint8_t gen_poly[RS_PARITY + 1] = {1, 8, 2, 8, 1};

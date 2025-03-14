@@ -222,11 +222,11 @@ int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char *
 int32_t crypto_host_to_ip(const char *hostname, char *ip)
 {
     struct addrinfo hints, *res, *p;
-    int status;
-    void *addr;
+    int             status;
+    void           *addr;
 
     memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_INET; // Uses IPV4 only.  AF_UNSPEC for IPV6 Support
+    hints.ai_family   = AF_INET; // Uses IPV4 only.  AF_UNSPEC for IPV6 Support
     hints.ai_socktype = SOCK_STREAM;
 
     if ((status = getaddrinfo(hostname, NULL, &hints, &res)) != 0)
@@ -237,7 +237,7 @@ int32_t crypto_host_to_ip(const char *hostname, char *ip)
     for (p = res; p != NULL; p = p->ai_next)
     {
         struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
-        addr = &(ipv4->sin_addr);
+        addr                     = &(ipv4->sin_addr);
 
         // Convert IP to String
         if (inet_ntop(p->ai_family, addr, ip, INET_ADDRSTRLEN) == NULL)

@@ -739,7 +739,7 @@ static int32_t sa_get_from_spi(uint16_t spi, SecurityAssociation_t **security_as
     {
         return CRYPTO_LIB_ERR_ARSN_LT_SHSNF;
     }
-    
+
 #ifdef SA_DEBUG
     printf(KYEL "DEBUG - Printing local copy of SA Entry for current SPI.\n" RESET);
     Crypto_saPrint(*security_association);
@@ -865,8 +865,8 @@ void sa_non_operational_sa(int *i_p, int32_t *status, uint8_t tfvn, uint16_t sci
 void sa_mismatched_arsn(int *i_p, int32_t *status, uint8_t tfvn, uint16_t scid, uint16_t vcid, uint8_t mapid)
 {
     int i = *i_p;
-    if ((sa[i].arsn_len > 0 && sa[i].ast == 0) && (sa[i].gvcid_blk.tfvn == tfvn) && (sa[i].gvcid_blk.scid == scid) && (sa[i].gvcid_blk.vcid == vcid) &&
-        (sa[i].gvcid_blk.mapid == mapid && sa[i].sa_state == SA_OPERATIONAL))
+    if ((sa[i].arsn_len > 0 && sa[i].ast == 0) && (sa[i].gvcid_blk.tfvn == tfvn) && (sa[i].gvcid_blk.scid == scid) &&
+        (sa[i].gvcid_blk.vcid == vcid) && (sa[i].gvcid_blk.mapid == mapid && sa[i].sa_state == SA_OPERATIONAL))
     {
 #ifdef SA_DEBUG
         printf(KRED "An operational SA (%d) was found - but invalid ARSN length.\n" RESET, sa[i].spi);
@@ -1600,13 +1600,13 @@ static int32_t sa_setARSN(TC_t *tc_frame)
 #endif
             }
 #ifdef PDU_DEBUG
-        printf("\n");
+            printf("\n");
 #endif
         }
         else
         {
 #ifdef PDU_DEBUG
-        printf("Failed setARSN on SPI %d, ECS %d, ACS %d\n", spi, sa[spi].ecs, sa[spi].acs);
+            printf("Failed setARSN on SPI %d, ECS %d, ACS %d\n", spi, sa[spi].ecs, sa[spi].acs);
 #endif
         }
     }

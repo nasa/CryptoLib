@@ -561,7 +561,6 @@ int32_t Crypto_Config_Add_Gvcid_Managed_Parameters(GvcidManagedParameters_t gvci
     return status;
 }
 
-
 int32_t crypto_free_config_structs(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -637,7 +636,6 @@ char *crypto_deep_copy_string(char *src_string)
     memcpy(deep_copied_str, src_string, strlen(src_string) + 1);
     return deep_copied_str;
 }
-
 
 /**
  * @brief Function: Crypto_Local_Config

@@ -270,7 +270,7 @@ int32_t Crypto_SA_readARSN(uint8_t *ingest)
         int                    status = CRYPTO_LIB_SUCCESS;
 
         // Read ingest
-        spi = ((uint8_t)sdls_frame.pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[1];
+        spi    = ((uint8_t)sdls_frame.pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[1];
         status = sa_if->sa_get_from_spi(spi, &sa_ptr);
 
         if (status != CRYPTO_LIB_SUCCESS)
