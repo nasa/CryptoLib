@@ -649,7 +649,6 @@ void *crypto_standalone_tm_process(void *socks)
 #ifdef CRYPTO_STANDALONE_HANDLE_FRAMING
 #ifdef TM_CADU_HAS_ASM
                 uint16_t spi = (0xFFFF & tm_process_in[11]) | tm_process_in[12];
-                // crypto_standalone_tm_frame(tm_process_in+4, tm_process_len-4, tm_framed, &tm_framed_len, spi);
                 crypto_standalone_tm_frame(tm_ptr, tm_out_len, tm_framed, &tm_framed_len, spi);
 #else
                 uint16_t spi = (0xFFFF & tm_process_in[7]) | tm_process_in[8];
@@ -751,8 +750,6 @@ int main(int argc, char *argv[])
 
     /* Startup delay */
     sleep(10);
-    // printf("Press enter once ground software has finished initializing...\n");
-    // fgets(input_buf, CRYPTO_MAX_INPUT_BUF, stdin);
 
     /* Initialize CryptoLib */
     status = crypto_reset();
@@ -847,12 +844,10 @@ int main(int argc, char *argv[])
             {
                 /* First token is command */
                 cmd = crypto_standalone_get_command(token_ptr);
-                // printf("CMD = %s %d\n",token_ptr,cmd);
             }
             else
             {
                 strncpy(input_tokens[num_input_tokens], token_ptr, CRYPTO_MAX_INPUT_TOKEN_SIZE);
-                // printf("Token[%d] = %s\n",num_input_tokens,token_ptr);
             }
             token_ptr = strtok(NULL, " \t\n");
             num_input_tokens++;
