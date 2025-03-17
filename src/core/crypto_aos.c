@@ -61,6 +61,9 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     uint16_t               vcid   = 0;
     uint16_t               cbc_padding = 0;
 
+    // Prevent set but unused error
+    cbc_padding = cbc_padding;
+
     // Passed a null, return an error
     if (!pTfBuffer)
     {
