@@ -136,6 +136,7 @@
 #define CHALLENGE_MAC_SIZE  16   /* bytes */
 #define BYTE_LEN            8    /* bits */
 #define CRYPTOLIB_APPID     128
+#define MAX_IV_LEN          32   /* bytes */
 
 // Monitoring and Control Defines
 #define EMV_SIZE 4  /* bytes */

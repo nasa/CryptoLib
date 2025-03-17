@@ -165,12 +165,12 @@ uint32_t Crypto_Get_FSR(void);
 void     Crypto_Set_FSR(uint8_t *p_ingest, uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t *sa_ptr);
 
 // Telemetry (TM)
-extern int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer);
+extern int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest);
 extern int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_t **pp_processed_frame,
                                          uint16_t *p_decrypted_length);
 
 // Advanced Orbiting Systems (AOS)
-extern int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer);
+extern int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest);
 extern int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_t **pp_processed_frame,
                                           uint16_t *p_decrypted_length);
 

@@ -93,6 +93,12 @@ char *crypto_enum_errlist_core[] = {(char *)"CRYPTO_LIB_SUCCESS",
                                     (char *)"CRYPTO_LIB_ERR_SHPLF_LEN_GREATER_THAN_MAX_PAD_SIZE",
                                     (char *)"CRYPTO_LIB_ERR_INVALID_SVC_TYPE_WITH_ARSN",
                                     (char *)"CRYPTO_LIB_ERR_ARSN_LT_SHSNF",
+                                    (char *)"CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW",
+                                    (char *)"CRYPTO_LIB_ERR_IV_EXCEEDS_INCREMENT_SIZE",
+                                    (char *)"CRYPTO_LIB_ERR_AOS_FRAME_LENGTH_UNDERFLOW",
+                                    (char *)"CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW",
+                                    (char *)"CRYPTO_LIB_ERR_AOS_FL_LT_MAX_FRAME_SIZE",
+                                    (char *)"CRYPTO_LIB_ERR_TM_FL_LT_MAX_FRAME_SIZE",
                                     (char *)"CRYPTO_LIB_ERR_INVALID_FHECF"};
 
 char *crypto_enum_errlist_config[] = {
