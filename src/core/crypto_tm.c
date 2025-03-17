@@ -707,6 +707,9 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     uint16_t               vcid   = 0;
     uint16_t               cbc_padding = 0;
 
+    // Prevent set but not used error
+    cbc_padding = cbc_padding;
+
     status = Crypto_TM_Sanity_Check(pTfBuffer);
     if (status != CRYPTO_LIB_SUCCESS)
     {
