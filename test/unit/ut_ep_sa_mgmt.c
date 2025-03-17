@@ -16,7 +16,7 @@ UTEST(EP_SA_MGMT, SA_6_REKEY_133)
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 41, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
     Crypto_Init();
@@ -26,7 +26,7 @@ UTEST(EP_SA_MGMT, SA_6_REKEY_133)
 
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_REKEY_h =
-        "2003002800ff00001980d0ac0018197f0b0016000c00060085000000000000000000000000da959fc8555555555555";
+        "2003002800ff00001980d0ac0018197f0b0016000c00060085000000000000000000000000da959fc8";
 
     uint8_t *buffer_REKEY_b   = NULL;
     int      buffer_REKEY_len = 0;
@@ -74,7 +74,7 @@ UTEST(EP_SA_MGMT, SA_START_6)
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 31, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
     Crypto_Init();
@@ -83,7 +83,7 @@ UTEST(EP_SA_MGMT, SA_START_6)
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_START_h = "2003001e00ff00001980d0ad000e197f0b001b0004000600003040f6f7a61a5555";
+    char *buffer_START_h = "2003001e00ff00001980d0ad000e197f0b001b0004000600003040f6f7a61a";
 
     uint8_t *buffer_START_b   = NULL;
     int      buffer_START_len = 0;
@@ -127,7 +127,7 @@ UTEST(EP_SA_MGMT, SA_4_READ_ARSN)
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 23, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
     Crypto_Init();
@@ -136,7 +136,7 @@ UTEST(EP_SA_MGMT, SA_4_READ_ARSN)
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_READ_h = "2003001a00ff00001980d0b0000a197f0b001000020004555555555555";
+    char *buffer_READ_h = "2003001600ff00001980d0b0000a197f0b001000020004";
 
     uint8_t *buffer_READ_b   = NULL;
     int      buffer_READ_len = 0;
@@ -216,7 +216,7 @@ UTEST(EP_SA_MGMT, SA_6_SET_ARSNW)
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 24, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
     Crypto_Init();
@@ -225,7 +225,7 @@ UTEST(EP_SA_MGMT, SA_6_SET_ARSNW)
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_SET_h = "2003001800ff00001980d0b1000a197f0b0015000400060955";
+    char *buffer_SET_h = "2003001700ff00001980d0b1000a197f0b00150004000609";
 
     uint8_t *buffer_SET_b   = NULL;
     int      buffer_SET_len = 0;
@@ -275,7 +275,7 @@ UTEST(EP_SA_MGMT, SA_6_SET_ARSN)
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 39, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
     Crypto_Init();
@@ -284,7 +284,7 @@ UTEST(EP_SA_MGMT, SA_6_SET_ARSN)
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_SET_h = "2003002600ff00001980d0b10016197f0b001a000a000600000000000000000000006413b5983e55";
+    char *buffer_SET_h = "2003002600ff00001980d0b10016197f0b001a000a000600000000000000000000006413b5983e";
 
     uint8_t *buffer_SET_b   = NULL;
     int      buffer_SET_len = 0;
@@ -338,7 +338,7 @@ UTEST(EP_SA_MGMT, SA_6_STATUS)
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 23, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
     Crypto_Init();
@@ -430,7 +430,7 @@ UTEST(EP_SA_MGMT, SA_STOP_6)
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 27, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
     Crypto_Init();
@@ -439,7 +439,7 @@ UTEST(EP_SA_MGMT, SA_STOP_6)
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_STOP_h = "2003001a00ff00001980d0b6000a197f0b001e00020006938f21c4555555555555";
+    char *buffer_STOP_h = "2003001a00ff00001980d0b6000a197f0b001e00020006938f21c4";
 
     uint8_t *buffer_STOP_b   = NULL;
     int      buffer_STOP_len = 0;
@@ -487,7 +487,7 @@ UTEST(EP_SA_MGMT, SA_EXPIRE_6)
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 27, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
     Crypto_Init();
@@ -495,7 +495,7 @@ UTEST(EP_SA_MGMT, SA_EXPIRE_6)
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_EXPIRE_h = "2003001a00ff00001980d0b7000a197f0b001900020006f72e21c4555555555555";
+    char *buffer_EXPIRE_h = "2003001a00ff00001980d0b7000a197f0b001900020006f72e21c4";
     //                      |2003001c00| = Primary Header
     //                                |ff| = Ext. Procs
     //                                  |0000| = SPI
@@ -551,7 +551,7 @@ UTEST(EP_SA_MGMT, SA_STOP_SELF)
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 27, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
     Crypto_Init();
@@ -560,7 +560,7 @@ UTEST(EP_SA_MGMT, SA_STOP_SELF)
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_STOP_h = "2003001a00ff00001980d0b6000a197f0b001e00020000938f21c4555555555555";
+    char *buffer_STOP_h = "2003001a00ff00001980d0b6000a197f0b001e00020000938f21c4";
 
     uint8_t *buffer_STOP_b   = NULL;
     int      buffer_STOP_len = 0;
