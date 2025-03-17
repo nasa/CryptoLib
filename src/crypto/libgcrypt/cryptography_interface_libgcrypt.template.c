@@ -85,7 +85,7 @@ static int32_t cryptography_init(void)
     // Initialize libgcrypt
     if (!gcry_check_version(GCRYPT_VERSION))
     {
-        fprintf(stderr, "Gcrypt Version: %s", GCRYPT_VERSION);
+        fprintf(stderr, "Gcrypt Version: %s\n", GCRYPT_VERSION);
         printf(KRED "\tERROR: gcrypt version mismatch! \n" RESET);
     }
     if (gcry_control(GCRYCTL_SELFTEST) != GPG_ERR_NO_ERROR)

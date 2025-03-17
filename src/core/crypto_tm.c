@@ -736,9 +736,9 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer)
     // No operational/valid SA found
     if (status != CRYPTO_LIB_SUCCESS)
     {
-#ifdef TM_DEBUG
+// #ifdef TM_DEBUG
         printf(KRED "Error: Could not retrieve an SA!\n" RESET);
-#endif
+// #endif
         mc_if->mc_log(status);
         return status;
     }
@@ -749,21 +749,24 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer)
     // No managed parameters found
     if (status != CRYPTO_LIB_SUCCESS)
     {
-#ifdef TM_DEBUG
+// #ifdef TM_DEBUG
         printf(KRED "Error: No managed parameters found!\n" RESET);
-#endif
+// #endif
         mc_if->mc_log(status);
         return status;
     }
 
-#ifdef TM_DEBUG
+    printf("Printing Managed Parameters!!!!\n");
+    Crypto_mpPrint(&current_managed_parameters_struct, 1);
+
+// #ifdef TM_DEBUG
     printf(KYEL "TM BEFORE Apply Sec:\n\t" RESET);
     for (int16_t i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
     {
         printf("%02X", pTfBuffer[i]);
     }
     printf("\n");
-#endif
+// #endif
 
 #ifdef SA_DEBUG
     printf(KYEL "DEBUG - Printing SA Entry for current frame.\n" RESET);
@@ -1635,7 +1638,6 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     }
     printf("\n");
 #endif
-
     *pp_processed_frame = p_new_dec_frame;
     // TODO maybe not just return this without doing the math ourselves
     *p_decrypted_length = current_managed_parameters_struct.max_frame_size;

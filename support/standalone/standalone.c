@@ -29,8 +29,8 @@
 static volatile uint8_t keepRunning = CRYPTO_LIB_SUCCESS;
 static volatile uint8_t tc_seq_num  = 0;
 static volatile uint8_t tc_vcid     = CRYPTO_STANDALONE_FRAMING_VCID;
-static volatile uint8_t tc_debug    = 0;
-static volatile uint8_t tm_debug    = 0;
+static volatile uint8_t tc_debug    = 1;
+static volatile uint8_t tm_debug    = 1;
 
 /*
 ** Functions
@@ -546,7 +546,7 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status_p, uint8_t *tm_ptr, uin
     if ((tm_ptr[0] >= 0x08) || ((tm_ptr[0] == 0x07) && tm_ptr[1] == 0xff))
     {
         spp_len = (((0xFFFF & tm_ptr[4]) << 8) | tm_ptr[5]) + 7;
-        printf("SPP Len calced as %d!\n", spp_len);
+        // printf("SPP Len calced as %d!\n", spp_len);
         // Send all SPP telemetry packets
         if (tm_ptr[0] >= 0x08)
         {
@@ -649,7 +649,7 @@ void *crypto_standalone_tm_process(void *socks)
             crypto_standalone_tm_debug_process(tm_process_in);
             // Account for ASM length
             status =
-                Crypto_TM_ProcessSecurity(tm_process_in + 4, (const uint16_t)tm_process_len - 4, &tm_ptr, &tm_out_len);
+                Crypto_TM_ProcessSecurity(tm_process_in + 4, (const uint16_t)tm_process_len-4, &tm_ptr, &tm_out_len);
 #else
             if (tm_debug == 1)
             {
@@ -687,8 +687,8 @@ void *crypto_standalone_tm_process(void *socks)
                     printf("Calcing SPI using these  values: idx[10]: 0x%02X and idx[11]: 0x%02x\n", tm_process_in[10], tm_process_in[11]);
                     printf("Standalone is using SPI 0x%04X (or decimal %d)\n", spi, spi);
                     printf("crypto_standalone_tm_process with asm: 2 - beginning after first header pointer - deframed[%d]: 0x",
-                           tm_process_len);
-                    for (int i = 0; i < tm_process_len; i++)
+                           tm_process_len - TM_ASM_LENGTH - TM_PRI_HDR_LENGTH);
+                    for (int i = 0; i < tm_process_len - TM_ASM_LENGTH - TM_PRI_HDR_LENGTH; i++)
                     {
                         printf("%02x", tm_framed[i]);
                     }

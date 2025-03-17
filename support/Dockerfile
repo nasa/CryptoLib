@@ -58,7 +58,7 @@ RUN curl \
     -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-${GPG_ERROR_VERSION}.tar.bz2 \
     -o /tmp/libgpg-error-${GPG_ERROR_VERSION}.tar.bz2 \
     && tar -xjf /tmp/libgpg-error-${GPG_ERROR_VERSION}.tar.bz2 -C /tmp/ \
-    && cd /tmp/libgpg-error-${GPG_ERROR_VERSION} \
+    && cd /tmp/libgpg-error-${GPG_ERROR_VERSION} \make
     && ./configure \
     && make install \
     && curl \ 

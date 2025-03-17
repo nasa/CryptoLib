@@ -170,8 +170,10 @@ endif()
 #
 # Project Specifics
 #
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -Wall -Wextra -Werror -g -O0")
-
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fstack-protector -Wall -Wextra -Werror -g -O0")
+#-fsanitize=address
+# add_compile_options(-fno-omit-frame-pointer -fsanitize=address -fsanitize=undefined)
+# add_link_options(-fno-omit-frame-pointer -fsanitize=address -fsanitize=undefined)
 include_directories(include)
 add_subdirectory(src)
 
