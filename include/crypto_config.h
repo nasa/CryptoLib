@@ -137,6 +137,7 @@
 #define BYTE_LEN            8    /* bits */
 #define CRYPTOLIB_APPID     128
 #define MAX_IV_LEN          32   /* bytes */
+#define CBC_MAX_PAD         16   /* bytes */
 
 // Monitoring and Control Defines
 #define EMV_SIZE 4  /* bytes */
@@ -198,6 +199,7 @@
 #define TC_SN_WINDOW       10               /* +/- value */
 #define TC_FRAME_DATA_SIZE 1019 /* bytes */ // 1024 - 5byte header
 #define TC_CADU_ASM_SIZE   4
+#define TC_BLOCK_SIZE 16
 
 // CCSDS PUS Defines
 #define TLV_DATA_SIZE 494 /* bytes */
@@ -248,10 +250,5 @@
 ** SAVE FILE NAME/LOCATION
 */
 #define CRYPTO_SA_SAVE "sa_save_file.bin"
-
-/*
-** TC_BLOCK_SIZE
-*/
-#define TC_BLOCK_SIZE 16
 
 #endif // CRYPTO_CONFIG_H

@@ -768,7 +768,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     }
     else if ((sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC) || (sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC_MAC))
     {
-        if((current_managed_parameters_struct.max_frame_size - len_ingest) <= 16)
+        if((current_managed_parameters_struct.max_frame_size - len_ingest) <= CBC_MAX_PAD)
         {
             cbc_padding = current_managed_parameters_struct.max_frame_size - len_ingest;
         }
