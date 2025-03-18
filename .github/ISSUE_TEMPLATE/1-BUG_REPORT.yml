@@ -1,6 +1,6 @@
-name: "🐛 Bug Report"
+name: "Bug Report"
 description: Create a new ticket for a bug.
-title: "🐛 [BUG] - <title>"
+title: ""
 labels: [
   "bug"
 ]
@@ -41,7 +41,6 @@ body:
       description: If applicable, add screenshots to help explain your problem.
       value: |
         ![DESCRIPTION](LINK.png)
-      render: bash
     validations:
       required: false
   - type: textarea
