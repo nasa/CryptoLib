@@ -1036,13 +1036,28 @@ UTEST(EP_KEY_MGMT, TLV_KEY_VERIFY_TESTS)
 
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
-    char *buffer_VERIFY_h = "200300e000ff000000001880d03a00ce197f0b00040650"
+                         //  Tf Pri Header (5 bytes)    
+    char *buffer_VERIFY_h = "200300DC00"
+                         //  Segment Header (1 byte)
+                            "ff"
+                         // Spi
+                            "0000"
+                         // Arsn
+                            "0000"
+                         //  Spp Header (6 bytes)
+                            "1880d03a00cc"
+                         //  ? Pus Header ? (4 bytes)  
+                            "197f0b00"
+                         //  Pdu Header (3 bytes)
+                            "040630"
+                         //  2x Key Verify per lines
                             "008071fc3ad5b1c36ad56bd5a5432315cdab008171fc3ad5b1c36ad56bd5a5432315cdab"
                             "008271fc3ad5b1c36ad56bd5a5432315cdab008371fc3ad5b1c36ad56bd5a5432315cdab"
                             "008471fc3ad5b1c36ad56bd5a5432315cdab008571fc3ad5b1c36ad56bd5a5432315cdab"
                             "008671fc3ad5b1c36ad56bd5a5432315cdab008771fc3ad5b1c36ad56bd5a5432315cdab"
                             "008871fc3ad5b1c36ad56bd5a5432315cdab000471fc3ad5b1c36ad56bd5a5432315cdab"
-                            "000971fc3ad5b1c36ad56bd5a5432315cdabc00a6ed8";
+                         //  1x Key Verify
+                            "000971fc3ad5b1c36ad56bd5a5432315cdab";
     // TRUTH PDU
     char *buffer_TRUTH_RESPONSE_h =
         "0880D03A0206197F0B00840FD000800000000000000000000000017359FCF378204BCED13B4EE9CEB3E50117F651040DDE44BAB565420A9F9903930081"
@@ -1055,8 +1070,54 @@ UTEST(EP_KEY_MGMT, TLV_KEY_VERIFY_TESTS)
         "000400000000000000000000000AA5440D1744A20486D826B879182DE4D4AA2613E7C81897B5B8200A3CA5F8BF0A000900000000000000000000000BF6"
         "057F21BB12079044702D4EED7B30D96C12CBE6E045C213291BBD473DA3FC7A";
 
-    uint8_t *buffer_nist_key_b, *buffer_VERIFY_b, *buffer_TRUTH_RESPONSE_b     = NULL;
-    int      buffer_nist_key_len, buffer_VERIFY_len, buffer_TRUTH_RESPONSE_len = 0;
+                             //  Tf Pri Header (5 bytes)    
+    char *buffer_TLV_SHORT_h = "200300DC00"
+                         //  Segment Header (1 byte)
+                            "ff"
+                         // Spi
+                            "0000"
+                         // Arsn
+                            "0000"
+                         //  Spp Header (6 bytes)
+                            "1880d03a00cc"
+                         //  ? Pus Header ? (4 bytes)  
+                            "197f0b00"
+                         //  Pdu Header (3 bytes)
+                            "040620" // TOO SHORT!
+                         //  2x Key Verify per lines
+                            "008071fc3ad5b1c36ad56bd5a5432315cdab008171fc3ad5b1c36ad56bd5a5432315cdab"
+                            "008271fc3ad5b1c36ad56bd5a5432315cdab008371fc3ad5b1c36ad56bd5a5432315cdab"
+                            "008471fc3ad5b1c36ad56bd5a5432315cdab008571fc3ad5b1c36ad56bd5a5432315cdab"
+                            "008671fc3ad5b1c36ad56bd5a5432315cdab008771fc3ad5b1c36ad56bd5a5432315cdab"
+                            "008871fc3ad5b1c36ad56bd5a5432315cdab000471fc3ad5b1c36ad56bd5a5432315cdab"
+                         //  1x Key Verify
+                            "000971fc3ad5b1c36ad56bd5a5432315cdab";
+
+                            //  Tf Pri Header (5 bytes)    
+    char *buffer_TLV_LONG_h = "200300DC00"
+                         //  Segment Header (1 byte)
+                            "ff"
+                         // Spi
+                            "0000"
+                         // Arsn
+                            "0000"
+                         //  Spp Header (6 bytes)
+                            "1880d03a00cc"
+                         //  ? Pus Header ? (4 bytes)  
+                            "197f0b00"
+                         //  Pdu Header (3 bytes)
+                            "040650" // TOO LONG!
+                         //  2x Key Verify per lines
+                            "008071fc3ad5b1c36ad56bd5a5432315cdab008171fc3ad5b1c36ad56bd5a5432315cdab"
+                            "008271fc3ad5b1c36ad56bd5a5432315cdab008371fc3ad5b1c36ad56bd5a5432315cdab"
+                            "008471fc3ad5b1c36ad56bd5a5432315cdab008571fc3ad5b1c36ad56bd5a5432315cdab"
+                            "008671fc3ad5b1c36ad56bd5a5432315cdab008771fc3ad5b1c36ad56bd5a5432315cdab"
+                            "008871fc3ad5b1c36ad56bd5a5432315cdab000471fc3ad5b1c36ad56bd5a5432315cdab"
+                         //  1x Key Verify
+                            "000971fc3ad5b1c36ad56bd5a5432315cdab";
+
+    uint8_t *buffer_nist_key_b, *buffer_VERIFY_b, *buffer_TRUTH_RESPONSE_b, *buffer_TLV_SHORT_b, *buffer_TLV_LONG_b     = NULL;
+    int      buffer_nist_key_len, buffer_VERIFY_len, buffer_TLV_SHORT_len, buffer_TLV_LONG_len, buffer_TRUTH_RESPONSE_len = 0;
 
     // Setup Processed Frame For Decryption
     TC_t tc_nist_processed_frame = {0};
@@ -1088,10 +1149,13 @@ UTEST(EP_KEY_MGMT, TLV_KEY_VERIFY_TESTS)
     ekp = key_if->get_key(test_association->ekid);
     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
-    // Convert frames that will be processed
+    // Convert valid frames that will be processed
     hex_conversion(buffer_VERIFY_h, (char **)&buffer_VERIFY_b, &buffer_VERIFY_len);
-
     hex_conversion(buffer_TRUTH_RESPONSE_h, (char **)&buffer_TRUTH_RESPONSE_b, &buffer_TRUTH_RESPONSE_len);
+
+    // Convert error cases that will attempt to process
+    hex_conversion(buffer_TLV_LONG_h, (char **)&buffer_TLV_LONG_b, &buffer_TLV_LONG_len);
+    hex_conversion(buffer_TLV_SHORT_h, (char **)&buffer_TLV_SHORT_b, &buffer_TLV_SHORT_len);
 
     // Expect success on next valid IV && ARSN
     status = Crypto_TC_ProcessSecurity(buffer_VERIFY_b, &buffer_VERIFY_len, &tc_nist_processed_frame);
@@ -1121,6 +1185,14 @@ UTEST(EP_KEY_MGMT, TLV_KEY_VERIFY_TESTS)
         ASSERT_EQ(buffer_TRUTH_RESPONSE_b[i], sdls_ep_reply_local[i]);
         ASSERT_EQ(buffer_TRUTH_RESPONSE_b[i], sdls_ep_reply[i]);
     }
+
+    // Expect ERRORS on these cases
+    printf(KYEL "\n*Testing TLV Too Long....\n" RESET);
+    status = Crypto_TC_ProcessSecurity(buffer_TLV_LONG_b, &buffer_TLV_LONG_len, &tc_nist_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_ERR_BAD_TLV_LENGTH, status);
+    printf(KYEL "\n*Testing TLV Too Short....\n" RESET);
+    status = Crypto_TC_ProcessSecurity(buffer_TLV_LONG_b, &buffer_TLV_LONG_len, &tc_nist_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_ERR_BAD_TLV_LENGTH, status);
 
     Crypto_Shutdown();
     free(buffer_nist_key_b);

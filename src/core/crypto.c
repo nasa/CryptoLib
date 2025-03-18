@@ -837,17 +837,18 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                         (tc_sdls_processed_frame->tc_pdu[11] << 8) | tc_sdls_processed_frame->tc_pdu[12];
 
                     // Subtract headers from total frame length
-                    uint16_t max_tlv = (tc_sdls_processed_frame->tc_header.fl - CCSDS_HDR_SIZE - SDLS_TLV_HDR_SIZE);
+                    uint16_t max_tlv = (tc_sdls_processed_frame->tc_pdu_len - CCSDS_HDR_SIZE - CCSDS_PUS_SIZE - SDLS_TLV_HDR_SIZE);
                     len_ingest = len_ingest; // suppress error for now
 #ifdef CCSDS_DEBUG
                     printf("Printing lengths for sanity check:\n");
-                    printf("\t TC Frame Length (bytes): %d \n", tc_sdls_processed_frame->tc_header.fl);
-                    printf("\t Telecommand PDU Length (bytes): %d \n", tc_sdls_processed_frame->tc_pdu_len);
+                    printf("\t TC Frame Header Length (bytes): %d \n", tc_sdls_processed_frame->tc_header.fl);
+                    printf("\t TC Frame Actual Length (bytes): %d \n", tc_sdls_processed_frame->tc_header.fl+1);
+                    printf("\t TC Frame Space Pkt Length (bytes): %d \n", tc_sdls_processed_frame->tc_pdu_len);
                     printf("\t Received TLV Length (bits): %d \n", sdls_frame.tlv_pdu.hdr.pdu_len);
                     printf("\t Max possible TLV Length (bytes): %d \n", max_tlv);
                     printf("\t Received TLV Length (bytes): %f \n", sdls_frame.tlv_pdu.hdr.pdu_len/8.0);
 #endif
-                    if ((double)(sdls_frame.tlv_pdu.hdr.pdu_len/8.0) > max_tlv)
+                    if ((double)(sdls_frame.tlv_pdu.hdr.pdu_len/8.0) != max_tlv)
                     {
 #ifdef PDU_DEBUG
                         printf(KRED "Packet PDU_LEN Not Equal To Calculated PDU Len\n" RESET);
