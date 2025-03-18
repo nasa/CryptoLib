@@ -1083,7 +1083,7 @@ UTEST(EP_KEY_MGMT, TLV_KEY_VERIFY_TESTS)
                          //  ? Pus Header ? (4 bytes)  
                             "197f0b00"
                          //  Pdu Header (3 bytes)
-                            "040620" // TOO SHORT!
+                            "040620" // TOO SHORT! to fit in the outer Space Pkt
                          //  2x Key Verify per lines
                             "008071fc3ad5b1c36ad56bd5a5432315cdab008171fc3ad5b1c36ad56bd5a5432315cdab"
                             "008271fc3ad5b1c36ad56bd5a5432315cdab008371fc3ad5b1c36ad56bd5a5432315cdab"
@@ -1106,7 +1106,7 @@ UTEST(EP_KEY_MGMT, TLV_KEY_VERIFY_TESTS)
                          //  ? Pus Header ? (4 bytes)  
                             "197f0b00"
                          //  Pdu Header (3 bytes)
-                            "040650" // TOO LONG!
+                            "040650" // TOO LONG to fit in the the outer Space Pkt!
                          //  2x Key Verify per lines
                             "008071fc3ad5b1c36ad56bd5a5432315cdab008171fc3ad5b1c36ad56bd5a5432315cdab"
                             "008271fc3ad5b1c36ad56bd5a5432315cdab008371fc3ad5b1c36ad56bd5a5432315cdab"

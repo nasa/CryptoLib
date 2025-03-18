@@ -385,7 +385,7 @@ int32_t Crypto_Key_inventory(uint8_t *ingest)
     range                      = packet.kid_last - packet.kid_first + 1;
     sdls_frame.tlv_pdu.hdr.pdu_len = (SDLS_KEY_INVENTORY_RPLY_SIZE * (range)) * BYTE_LEN;
     sdls_frame.hdr.pkt_length =
-        CCSDS_HDR_SIZE + CCSDS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1 + 2; // 2 = Num Keys Returned Field (2 Bytes)
+        CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1 + 2; // 2 = Num Keys Returned Field (2 Bytes)
 
     count = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
 
@@ -472,7 +472,7 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
     if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
     {
         sdls_frame.hdr.pkt_length =
-            CCSDS_HDR_SIZE + CCSDS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
+            CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
     }
     else
     {
