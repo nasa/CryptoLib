@@ -1899,7 +1899,11 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
     Crypto_TC_Calc_Lengths(&fecf_len, &segment_hdr_len);
 
     // Parse & Check FECF
-    Crypto_TC_Parse_Check_FECF(ingest, len_ingest, tc_sdls_processed_frame);
+    status = Crypto_TC_Parse_Check_FECF(ingest, len_ingest, tc_sdls_processed_frame);
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        return status;
+    }
 
     // Parse transmitted portion of IV from received frame (Will be Whole IV if iv_len==shivf_len)
     memcpy((tc_sdls_processed_frame->tc_sec_header.iv + (sa_ptr->iv_len - sa_ptr->shivf_len)),
