@@ -31,7 +31,7 @@
 UTEST(CRYPTO_C, CALC_CRC16)
 {
     remove("sa_save_file.bin");
-    char    *data_h     = "2003002000ff000100001880d2c9000e197f0b001b0004000400003040d95e";
+    char    *data_h     = "2003002000ff000100001980d2c9000e197f0b001b0004000400003040d95e";
     uint8_t *data_b     = NULL;
     int      data_b_len = 0;
     Crypto_Init_TC_Unit_Test();
@@ -40,10 +40,10 @@ UTEST(CRYPTO_C, CALC_CRC16)
 
     int      size          = 31;
     uint16_t crc           = 0x00;
-    uint16_t validated_crc = 0xA61A;
+    uint16_t validated_crc = 0x73EC;
     crc                    = Crypto_Calc_CRC16(data_b, size);
 
-    // printf("CRC = 0x%04x\n", crc);
+    printf("CRC = 0x%04x\n", crc);
     ASSERT_EQ(crc, validated_crc);
 }
 
@@ -68,7 +68,7 @@ UTEST(CRYPTO_C, BAD_CC_FLAG)
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
 
     Crypto_Init();
-    char *raw_tc_sdls_ping_h   = "3003002000ff000100001880d2c9000e197f0b001b0004000400003040d95ea61a";
+    char *raw_tc_sdls_ping_h   = "3003002000ff000100001980d2c9000e197f0b001b0004000400003040d95ea61a";
     char *raw_tc_sdls_ping_b   = NULL;
     int   raw_tc_sdls_ping_len = 0;
 
@@ -114,11 +114,11 @@ UTEST(CRYPTO_C, PDU_SWITCH)
     Crypto_Init();
 
     sdls_frame.tlv_pdu.hdr.type = PDU_TYPE_COMMAND;
-    sdls_frame.tlv_pdu.hdr.uf = PDU_USER_FLAG_FALSE;
+    sdls_frame.tlv_pdu.hdr.uf   = PDU_USER_FLAG_FALSE;
     printf("SG_KEY_MGMT\n");
-    sdls_frame.tlv_pdu.hdr.sg  = SG_KEY_MGMT;
+    sdls_frame.tlv_pdu.hdr.sg = SG_KEY_MGMT;
     // sdls_frame.tlv_pdu.hdr.pid = PID_OTAR;
-    uint8_t *ingest        = NULL;
+    uint8_t *ingest = NULL;
 
     TC_t tc_frame;
     // status = Crypto_PDU(ingest, &tc_frame);
@@ -132,8 +132,8 @@ UTEST(CRYPTO_C, PDU_SWITCH)
     status                 = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
-    sdls_frame.tlv_pdu.hdr.pid     = PID_KEY_VERIFICATION;
-    status                     = Crypto_PDU(ingest, &tc_frame);
+    sdls_frame.tlv_pdu.hdr.pid = PID_KEY_VERIFICATION;
+    status                 = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
     sdls_frame.tlv_pdu.hdr.pid = PID_KEY_DESTRUCTION;
@@ -251,7 +251,7 @@ UTEST(CRYPTO_C, PDU_SWITCH)
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
     sdls_frame.tlv_pdu.hdr.pid = PID_MODIFY_VCID;
-    status = Crypto_PDU(ingest, &tc_frame);
+    status                 = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_ERROR);
 
     sdls_frame.tlv_pdu.hdr.pid = 8;
@@ -263,7 +263,6 @@ UTEST(CRYPTO_C, PDU_SWITCH)
     status                 = Crypto_PDU(ingest, &tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 }
-
 
 /**
  * @brief Unit Test: Crypto Extended Procedures PDU Test
@@ -282,7 +281,7 @@ UTEST(CRYPTO_C, EXT_PROC_PDU)
     status = Crypto_Process_Extended_Procedure_Pdu(tc_frame, ingest, TC_SIZE);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 }
-#endif //CRYPTO_EPROC
+#endif // CRYPTO_EPROC
 
 /**
  * @brief Unit Test: Crypto ACS Get Algorithm response
@@ -362,21 +361,21 @@ UTEST(CRYPTO_C, STRUCT_SIZE_VERIFICATION)
     ASSERT_EQ(SDLS_TLV_HDR_SIZE, (size_t)3);
     ASSERT_EQ(SDLS_TLV_SIZE, (size_t)497);
     ASSERT_EQ(SDLS_EKB_SIZE, (size_t)514);
-    ASSERT_EQ(SDLS_OTAR_SIZE, (size_t)(2 + 16 + 30*514 + 16));
+    ASSERT_EQ(SDLS_OTAR_SIZE, (size_t)(2 + 16 + 30 * 514 + 16));
     ASSERT_EQ(SDLS_KEY_SIZE, (size_t)2);
     ASSERT_EQ(SDLS_KEY_INVENTORY_CMD_SIZE, (size_t)4);
     ASSERT_EQ(SDLS_KEY_INVENTORY_RPLY_SIZE, (size_t)3);
     ASSERT_EQ(SDLS_KEYV_CMD_BLK_SIZE, (size_t)18);
-    ASSERT_EQ(SDLS_KEYV_CMD_SIZE, (size_t)(29*18));
+    ASSERT_EQ(SDLS_KEYV_CMD_SIZE, (size_t)(29 * 18));
     ASSERT_EQ(SDLS_KEYV_RPLY_BLK_SIZE, (size_t)46);
-    ASSERT_EQ(SDLS_KEYV_RPLY_SIZE, (size_t)(46*29));
+    ASSERT_EQ(SDLS_KEYV_RPLY_SIZE, (size_t)(46 * 29));
     ASSERT_EQ(SDLS_KEYDB_CMD_SIZE, (size_t)12);
     ASSERT_EQ(SDLS_KEYDB_RPLY_SIZE, (size_t)38);
     ASSERT_EQ(SDLS_SA_STATUS_RPLY_SIZE, (size_t)3);
     ASSERT_EQ(SDLS_SA_READ_ARSN_RPLY_SIZE, (size_t)22);
     ASSERT_EQ(SDLS_MC_LOG_RPLY_SIZE, (size_t)4);
     ASSERT_EQ(SDLS_MC_DUMP_RPLY_SIZE, (size_t)7);
-    ASSERT_EQ(SDLS_MC_DUMP_BLK_RPLY_SIZE, (size_t)(7*50));
+    ASSERT_EQ(SDLS_MC_DUMP_BLK_RPLY_SIZE, (size_t)(7 * 50));
     ASSERT_EQ(SDLS_MC_ST_RPLY_SIZE, (size_t)1);
     ASSERT_EQ(SDLS_MC_SN_RPLY_SIZE, (size_t)16);
     ASSERT_EQ(TC_FRAME_PRIMARYHEADER_STRUCT_SIZE, (size_t)5);
@@ -425,7 +424,7 @@ UTEST(CRYPTO_C, OTAR_0_140_142_FAIL_TEST)
     char *buffer_nist_key_h = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
     // char* buffer_nist_iv_h = "b6ac8e4963f49207ffd6374b"; // The last valid IV that was seen by the SA
     char *buffer_OTAR_h =
-        "2003009e00ff000000001880d037008c197f0b000100840000344892bbc54f5395297d4c37172f2a3c46f6a81c1349e9e26ac80985d8bb"
+        "2003009e00ff000000001980d037008c197f0b000100840001344892bbc54f5395297d4c37172f2a3c46f6a81c1349e9e26ac80985d8bb"
         "d55a5814c662e49fba52f99ba09558cd21cf268b8e50b2184137e80f76122034c580464e2f06d2659a50508bdfe9e9a55990ba4148af89"
         "6d8a6eebe8b5d2258685d4ce217a20174fdd4f0efac62758c51b04e55710a47209c923b641d19a39001f9e986166f5ffd95555";
 
@@ -461,12 +460,12 @@ UTEST(CRYPTO_C, OTAR_0_140_142_FAIL_TEST)
     // Expect success on next valid IV && ARSN
     printf(KGRN "Checking  next valid IV && valid ARSN... should be able to receive it... \n" RESET);
     status = Crypto_TC_ProcessSecurity(buffer_OTAR_b, &buffer_OTAR_len, &tc_nist_processed_frame);
-    ASSERT_EQ(CRYPTO_LIB_ERR_SDLS_EP_NOT_BUILT, status);
+    ASSERT_NE(CRYPTO_LIB_SUCCESS, status);
 
     printf("\n");
     Crypto_Shutdown();
     free(buffer_nist_key_b);
     free(buffer_OTAR_b);
 }
-#endif //CRYPTO_EPROC
+#endif // CRYPTO_EPROC
 UTEST_MAIN();

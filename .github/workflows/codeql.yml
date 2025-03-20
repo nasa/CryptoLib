@@ -22,7 +22,7 @@ jobs:
     name: Analyze Build_Internal
     runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
     container:
-        image: ivvitc/cryptolib:20240814
+        image: ivvitc/cryptolib:20250102
     permissions:
       # required for all workflows
       security-events: write
@@ -74,7 +74,7 @@ jobs:
       name: Analyze Build_Minimal
       runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
       container:
-        image: ivvitc/cryptolib:20240814
+        image: ivvitc/cryptolib:20250102
       permissions:
         # required for all workflows
         security-events: write
@@ -126,7 +126,7 @@ jobs:
       name: Analyze Build_Wolf
       runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
       container:
-        image: ivvitc/cryptolib:20240814
+        image: ivvitc/cryptolib:20250102
       permissions:
         # required for all workflows
         security-events: write
@@ -166,9 +166,6 @@ jobs:
           apt-get update
           apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 autoconf libtool
 
-      - name: Install Python Libraries
-        run: pip install pycryptodome
-
       - name: Update Dependencies
         run: >
           curl -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 -o /tmp/libgpg-error-1.50.tar.bz2 
@@ -207,7 +204,7 @@ jobs:
       name: Analyze Build_RHEL
       runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
       container:
-        image: ivvitc/cryptolib:20240814
+        image: ivvitc/cryptolib:20250102
       permissions:
         # required for all workflows
         security-events: write
@@ -259,7 +256,7 @@ jobs:
     name: Analyze Build_EP
     runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
     container:
-        image: ivvitc/cryptolib:20240814
+        image: ivvitc/cryptolib:20250102
     permissions:
       # required for all workflows
       security-events: write

@@ -37,6 +37,7 @@ extern "C"
 #include <signal.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include "crypto.h"
@@ -75,7 +76,7 @@ extern "C"
 #define CRYPTO_MAX_INPUT_TOKENS     32
 #define CRYPTO_MAX_INPUT_TOKEN_SIZE 64
 
-#define CRYPTO_CMD_UNKNOWN  -1
+#define CRYPTO_CMD_UNKNOWN  (-1)
 #define CRYPTO_CMD_HELP     0
 #define CRYPTO_CMD_EXIT     1
 #define CRYPTO_CMD_NOOP     2
