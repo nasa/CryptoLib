@@ -65,6 +65,21 @@ OPTION(KMC_MDB_DB "KMC-MDB-Debian-Integration-Testing" OFF) #Disabled by default
 OPTION(KMC_CFFI_EXCLUDE "KMC-Exclude-Problematic-CFFI-Code" OFF) #Disabled by default, enable with: -DKMC_CFFI_EXCLUDE=ON
 
 OPTION(CRYPTO_EPROC "Enables the building and use of Extended Procedures" OFF) #Disabled by default, enable with -DCRYPTO_EPROC=ON
+OPTION(MAC_SIZE "The size of the max MAC buffer in bytes")
+OPTION(IV_SIZE "The size of the max IV buffer in bytes")
+
+#
+# Max Buffer Size Defines
+#
+if(MAC_SIZE)
+    add_compile_definitions(MAC_SIZE=${MAC_SIZE})
+    message(STATUS "MAC_SIZE set to: ${MAC_SIZE}")
+endif()
+
+if(IV_SIZE)
+    add_compile_definitions(IV_SIZE=${IV_SIZE})
+    message(STATUS "IV_SIZE set to: ${IV_SIZE}")
+endif()
 
 #
 # Custom Module Paths

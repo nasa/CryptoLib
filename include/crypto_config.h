@@ -118,11 +118,15 @@
 #define NUM_KEYS            256
 #define DISABLED            0
 #define ENABLED             1
-#define IV_SIZE             16 /* TM IV size bytes */
+#ifndef IV_SIZE
+   #define IV_SIZE          16 /* TM IV size bytes */
+#endif
 #define IV_SIZE_TC          4  /* TC IV size bytes */
 #define REF_SIZE            250
 #define OCF_SIZE            4
-#define MAC_SIZE            16 /* bytes */
+#ifndef MAC_SIZE
+   #define MAC_SIZE         16 /* bytes */
+#endif
 #define FHECF_SIZE          2
 #define FECF_SIZE           2
 #define TC_SEGMENT_HDR_SIZE 1
