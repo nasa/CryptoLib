@@ -16,7 +16,7 @@ UTEST(EP_SA_MGMT, SA_6_REKEY_133)
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 41, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
     Crypto_Init();
@@ -26,8 +26,8 @@ UTEST(EP_SA_MGMT, SA_6_REKEY_133)
 
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_REKEY_h =
-        "2003002a00ff000000001880d0ac0018197f0b0016009000060085000000000000000000000000da959fc8555555555555";
-  
+        "2003002800ff00001980d0ac0018197f0b001600A000060085000000000000000000000000da959fc8";
+
     uint8_t *buffer_REKEY_b   = NULL;
     int      buffer_REKEY_len = 0;
 
@@ -39,14 +39,14 @@ UTEST(EP_SA_MGMT, SA_6_REKEY_133)
 
     // Modify SA 0
     sa_if->sa_get_from_spi(0, &test_association);
-    test_association->shivf_len = 0;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->iv_len          = 12;
-    test_association->shsnf_len       = 2;
-    test_association->arsnw           = 5;
-    test_association->arsnw_len       = 1;
-    test_association->arsn_len        = 2;
-    test_association->gvcid_blk.scid  = SCID & 0x3FF;
+    test_association->shivf_len      = 0;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->iv_len         = 12;
+    test_association->shsnf_len      = 0;
+    test_association->arsnw          = 5;
+    test_association->arsnw_len      = 1;
+    test_association->arsn_len       = 0;
+    test_association->gvcid_blk.scid = SCID & 0x3FF;
 
     // Modify SA 6
     sa_if->sa_get_from_spi(6, &test_association);
@@ -74,7 +74,7 @@ UTEST(EP_SA_MGMT, SA_START_6)
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 31, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
     Crypto_Init();
@@ -83,11 +83,11 @@ UTEST(EP_SA_MGMT, SA_START_6)
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_START_TC_h  = "2003002000ff000000001880d0ad000e197f0b001b0006000600003000f6f7a61a5555";
-    char *buffer_START_MAP_h = "2003002000ff000000001880d0ad000e197f0b001b0006000600003001f6f7a61a5555";
-    char *buffer_START_TM_h  = "2003002000ff000000001880d0ad000e197f0b001b0006000600003042f6f7a61a5555";
-    char *buffer_START_AOS_h = "2003002000ff000000001880d0ad000e197f0b001b0006000610003043f6f7a61a5555";
-    char *buffer_START_UK_h  = "2003002000ff000000001880d0ad000e197f0b001b0006000610003044f6f7a61a5555";
+    char *buffer_START_TC_h  = "2003002000ff000000001880d0ad000e197f0b001b0060000600003000f6f7a61a";
+    char *buffer_START_MAP_h = "2003002000ff000000001880d0ad000e197f0b001b0006000600003001f6f7a61a";
+    char *buffer_START_TM_h  = "2003002000ff000000001880d0ad000e197f0b001b0006000600003042f6f7a61a";
+    char *buffer_START_AOS_h = "2003002000ff000000001880d0ad000e197f0b001b0006000610003043f6f7a61a";
+    char *buffer_START_UK_h  = "2003002000ff000000001880d0ad000e197f0b001b0006000610003044f6f7a61a";
     //                                                                   |0006000600003000|
     //                                                                   |0006| = PDU Len
     //                                                                       |0006| = SPI
@@ -96,7 +96,7 @@ UTEST(EP_SA_MGMT, SA_START_6)
     //                                                                                |000000| = VCID (6 bits) (expanded)
     //                                                                                 |000000| = MAPID (6 bits) (expanded)                                                       
     //                         
-    char *buffer_START_MAX_h = "2003020500ff000000001880d0ad01EE197f0b001b0F70000610003041"
+    char *buffer_START_MAX_h = "2003020800ff000000001880d0ad01EE197f0b001b0F90000610003041"
     "1000304210003043100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003042"
     "1000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003042"
     "1000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003042"
@@ -104,7 +104,7 @@ UTEST(EP_SA_MGMT, SA_START_6)
     "1000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003042"
     "1000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304110003041100030411000304110003041100030401000304110003042"
     "1000304310003044"
-    "f6f7a61a5555";
+    "f6f7a61a";
 
     uint8_t *buffer_START_TC_b, *buffer_START_TM_b, *buffer_START_MAP_b, *buffer_START_AOS_b, *buffer_START_UK_b, *buffer_START_MAX_b        = NULL;
     int      buffer_START_TC_len, buffer_START_TM_len, buffer_START_MAP_len, buffer_START_AOS_len, buffer_START_UK_len, buffer_START_MAX_len = 0;
@@ -117,14 +117,14 @@ UTEST(EP_SA_MGMT, SA_START_6)
 
     // Modify SA 0
     sa_if->sa_get_from_spi(0, &test_association);
-    test_association->shivf_len = 0;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->iv_len          = 12;
-    test_association->shsnf_len       = 2;
-    test_association->arsnw           = 5;
-    test_association->arsnw_len       = 1;
-    test_association->arsn_len        = 2;
-    test_association->gvcid_blk.scid  = SCID & 0x3FF;
+    test_association->shivf_len      = 0;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->iv_len         = 12;
+    test_association->shsnf_len      = 0;
+    test_association->arsnw          = 5;
+    test_association->arsnw_len      = 1;
+    test_association->arsn_len       = 0;
+    test_association->gvcid_blk.scid = SCID & 0x3FF;
 
     // Convert frames that will be processed
     hex_conversion(buffer_START_TC_h,  (char **)&buffer_START_TC_b,  &buffer_START_TC_len);
@@ -182,7 +182,7 @@ UTEST(EP_SA_MGMT, SA_START_6)
     free(buffer_START_AOS_b);
 }
 
-UTEST(EP_SA_MGMT, SA_6_READ_ARSN)
+UTEST(EP_SA_MGMT, SA_4_READ_ARSN)
 {
     remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
@@ -191,9 +191,8 @@ UTEST(EP_SA_MGMT, SA_6_READ_ARSN)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 23, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
     Crypto_Init();
@@ -202,7 +201,7 @@ UTEST(EP_SA_MGMT, SA_6_READ_ARSN)
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_READ_h = "2003001c00ff000000001880d0b0000a197f0b001000020006555555555555";
+    char *buffer_READ_h = "2003001600ff00001980d0b0000a197f0b001000100004";
 
     uint8_t *buffer_READ_b   = NULL;
     int      buffer_READ_len = 0;
@@ -215,22 +214,23 @@ UTEST(EP_SA_MGMT, SA_6_READ_ARSN)
 
     // Modify SA 0
     sa_if->sa_get_from_spi(0, &test_association);
-    test_association->shivf_len = 0;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->iv_len          = 12;
-    test_association->shsnf_len       = 2;
-    test_association->arsnw           = 5;
-    test_association->arsnw_len       = 1;
-    test_association->arsn_len        = 2;
-    test_association->gvcid_blk.scid  = SCID & 0x3FF;
+    test_association->shivf_len      = 0;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->iv_len         = 12;
+    test_association->shsnf_len      = 0;
+    test_association->arsnw          = 5;
+    test_association->arsnw_len      = 1;
+    test_association->arsn_len       = 0;
+    test_association->gvcid_blk.scid = SCID & 0x3FF;
 
     // Modify SA 6
-    sa_if->sa_get_from_spi(6, &test_association);
+    sa_if->sa_get_from_spi(4, &test_association);
     test_association->sa_state  = SA_OPERATIONAL;
     test_association->shivf_len = 0;
     test_association->iv_len    = 0;
     test_association->ecs       = 0;
     test_association->arsn_len  = 4;
+    test_association->shsnf_len = 0;
     test_association->arsn[0]   = 0xDE;
     test_association->arsn[1]   = 0xAD;
     test_association->arsn[2]   = 0xBE;
@@ -281,7 +281,7 @@ UTEST(EP_SA_MGMT, SA_6_SET_ARSNW)
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 24, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
     Crypto_Init();
@@ -290,7 +290,7 @@ UTEST(EP_SA_MGMT, SA_6_SET_ARSNW)
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_SET_h = "2003001a00ff000000001880d0b1000a197f0b0015000400060955";
+    char *buffer_SET_h = "2003001700ff00001980d0b1000a197f0b00150018000609";
 
     uint8_t *buffer_SET_b   = NULL;
     int      buffer_SET_len = 0;
@@ -303,14 +303,14 @@ UTEST(EP_SA_MGMT, SA_6_SET_ARSNW)
 
     // Modify SA 0
     sa_if->sa_get_from_spi(0, &test_association);
-    test_association->shivf_len = 0;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->iv_len          = 12;
-    test_association->shsnf_len       = 2;
-    test_association->arsnw           = 5;
-    test_association->arsnw_len       = 1;
-    test_association->arsn_len        = 2;
-    test_association->gvcid_blk.scid  = SCID & 0x3FF;
+    test_association->shivf_len      = 0;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->iv_len         = 12;
+    test_association->shsnf_len      = 0;
+    test_association->arsnw          = 5;
+    test_association->arsnw_len      = 1;
+    test_association->arsn_len       = 0;
+    test_association->gvcid_blk.scid = SCID & 0x3FF;
 
     // Modify SA 6
     sa_if->sa_get_from_spi(6, &test_association);
@@ -340,7 +340,7 @@ UTEST(EP_SA_MGMT, SA_6_SET_ARSN)
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 39, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
     Crypto_Init();
@@ -349,7 +349,7 @@ UTEST(EP_SA_MGMT, SA_6_SET_ARSN)
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_SET_h = "2003002800ff000000001880d0b10016197f0b001a000a000600000000000000000000006413b5983e55";
+    char *buffer_SET_h = "2003002600ff00001980d0b10016197f0b001a0090000600000000000000000000006413b5983e";
 
     uint8_t *buffer_SET_b   = NULL;
     int      buffer_SET_len = 0;
@@ -362,19 +362,19 @@ UTEST(EP_SA_MGMT, SA_6_SET_ARSN)
 
     // Modify SA 0
     sa_if->sa_get_from_spi(0, &test_association);
-    test_association->shivf_len = 0;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->iv_len          = 12;
-    test_association->shsnf_len       = 2;
-    test_association->arsnw           = 5;
-    test_association->arsnw_len       = 1;
-    test_association->arsn_len        = 2;
-    test_association->gvcid_blk.scid  = SCID & 0x3FF;    
+    test_association->shivf_len      = 0;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->iv_len         = 12;
+    test_association->shsnf_len      = 0;
+    test_association->arsnw          = 5;
+    test_association->arsnw_len      = 1;
+    test_association->arsn_len       = 0;
+    test_association->gvcid_blk.scid = SCID & 0x3FF;
 
     // Modify SA 6
-    sa_if->sa_get_from_spi(6, &test_association);
+    sa_if->sa_get_from_spi(7, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    test_association->arsn_len = 16;
+    test_association->arsn_len = 11;
 
     // Convert frames that will be processed
     hex_conversion(buffer_SET_h, (char **)&buffer_SET_b, &buffer_SET_len);
@@ -382,11 +382,14 @@ UTEST(EP_SA_MGMT, SA_6_SET_ARSN)
     status = Crypto_TC_ProcessSecurity(buffer_SET_b, &buffer_SET_len, &tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-    sa_if->sa_get_from_spi(6, &test_association);
-
+    printf("SA %d ARSN: 0x", test_association->spi);
+    for (int i = 0; i < test_association->arsn_len; i++)
+    {
+        printf("%02x", test_association->arsn[i]);
+    }
     printf("\n");
-    Crypto_Shutdown();
 
+    Crypto_Shutdown();
     free(buffer_SET_b);
 }
 
@@ -400,7 +403,7 @@ UTEST(EP_SA_MGMT, SA_6_STATUS)
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 23, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
     Crypto_Init();
@@ -409,12 +412,12 @@ UTEST(EP_SA_MGMT, SA_6_STATUS)
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_STATUS_h = "2003001800ff000000001880d0b00008197f0b001f00020006";
+    char *buffer_STATUS_h = "2003001600ff00001980d0b00008197f0b001f00100006";
     //                      |2003002000| = Primary Header
     //                                |ff| = Ext. Procs
     //                                  |0000| = SPI
     //                                      |0000| = ARSN
-    //                                          |1880| = CryptoLib App ID
+    //                                          |1980| = CryptoLib App ID
     //                                              |d0b0| = seq, pktid
     //                                                  |000e| = pkt_length
     //                                                      |197f| = pusv, ack, st
@@ -434,14 +437,14 @@ UTEST(EP_SA_MGMT, SA_6_STATUS)
 
     // Modify SA 0
     sa_if->sa_get_from_spi(0, &test_association);
-    test_association->shivf_len = 0;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->iv_len          = 12;
-    test_association->shsnf_len       = 2;
-    test_association->arsnw           = 5;
-    test_association->arsnw_len       = 1;
-    test_association->arsn_len        = 2;
-    test_association->gvcid_blk.scid  = SCID & 0x3FF;
+    test_association->shivf_len      = 0;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->iv_len         = 12;
+    test_association->shsnf_len      = 0;
+    test_association->arsnw          = 5;
+    test_association->arsnw_len      = 1;
+    test_association->arsn_len       = 0;
+    test_association->gvcid_blk.scid = SCID & 0x3FF;
 
     // Modify SA 6
     sa_if->sa_get_from_spi(6, &test_association);
@@ -492,7 +495,7 @@ UTEST(EP_SA_MGMT, SA_STOP_6)
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 27, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
     Crypto_Init();
@@ -501,7 +504,7 @@ UTEST(EP_SA_MGMT, SA_STOP_6)
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_STOP_h = "2003001c00ff000000001880d0b6000a197f0b001e00020006938f21c4555555555555";
+    char *buffer_STOP_h = "2003001a00ff00001980d0b6000a197f0b001e00300006938f21c4";
 
     uint8_t *buffer_STOP_b   = NULL;
     int      buffer_STOP_len = 0;
@@ -514,14 +517,14 @@ UTEST(EP_SA_MGMT, SA_STOP_6)
 
     // Modify SA 0
     sa_if->sa_get_from_spi(0, &test_association);
-    test_association->shivf_len = 0;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->iv_len          = 12;
-    test_association->shsnf_len       = 2;
-    test_association->arsnw           = 5;
-    test_association->arsnw_len       = 1;
-    test_association->arsn_len        = 2;
-    test_association->gvcid_blk.scid  = SCID & 0x3FF;
+    test_association->shivf_len      = 0;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->iv_len         = 12;
+    test_association->shsnf_len      = 0;
+    test_association->arsnw          = 5;
+    test_association->arsnw_len      = 1;
+    test_association->arsn_len       = 0;
+    test_association->gvcid_blk.scid = SCID & 0x3FF;
 
     // Modify SA 6
     sa_if->sa_get_from_spi(6, &test_association);
@@ -549,21 +552,20 @@ UTEST(EP_SA_MGMT, SA_EXPIRE_6)
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 27, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
     Crypto_Init();
 
-
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_EXPIRE_h = "2003001c00ff000000001880d0b7000a197f0b001900020006f72e21c4555555555555";
+    char *buffer_EXPIRE_h = "2003001a00ff00001980d0b7000a197f0b001900300006f72e21c4";
     //                      |2003001c00| = Primary Header
     //                                |ff| = Ext. Procs
     //                                  |0000| = SPI
     //                                      |0000| = ARSN
-    //                                          |1880| = CryptoLib App ID
+    //                                          |1980| = CryptoLib App ID
     //                                              |d0b7| = seq, pktid
     //                                                  |000a| = pkt_length
     //                                                      |197f| = pusv, ack, st
@@ -583,14 +585,14 @@ UTEST(EP_SA_MGMT, SA_EXPIRE_6)
 
     // Modify SA 0
     sa_if->sa_get_from_spi(0, &test_association);
-    test_association->shivf_len = 0;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->iv_len          = 12;
-    test_association->shsnf_len       = 2;
-    test_association->arsnw           = 5;
-    test_association->arsnw_len       = 1;
-    test_association->arsn_len        = 2;
-    test_association->gvcid_blk.scid  = SCID & 0x3FF;
+    test_association->shivf_len      = 0;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->iv_len         = 12;
+    test_association->shsnf_len      = 0;
+    test_association->arsnw          = 5;
+    test_association->arsnw_len      = 1;
+    test_association->arsn_len       = 0;
+    test_association->gvcid_blk.scid = SCID & 0x3FF;
 
     // Convert frames that will be processed
     hex_conversion(buffer_EXPIRE_h, (char **)&buffer_EXPIRE_b, &buffer_EXPIRE_len);
@@ -614,7 +616,7 @@ UTEST(EP_SA_MGMT, SA_STOP_SELF)
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 27, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
     Crypto_Init();
@@ -623,7 +625,7 @@ UTEST(EP_SA_MGMT, SA_STOP_SELF)
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_STOP_h = "2003001c00ff000000001880d0b6000a197f0b001e00200000938f21c4555555555555";
+    char *buffer_STOP_h = "2003001a00ff00001980d0b6000a197f0b001e00300000938f21c4";
 
     uint8_t *buffer_STOP_b   = NULL;
     int      buffer_STOP_len = 0;
@@ -636,14 +638,14 @@ UTEST(EP_SA_MGMT, SA_STOP_SELF)
 
     // Modify SA 0
     sa_if->sa_get_from_spi(0, &test_association);
-    test_association->shivf_len = 0;
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->iv_len          = 12;
-    test_association->shsnf_len       = 2;
-    test_association->arsnw           = 5;
-    test_association->arsnw_len       = 1;
-    test_association->arsn_len        = 2;
-    test_association->gvcid_blk.scid  = SCID & 0x3FF;
+    test_association->shivf_len      = 0;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->iv_len         = 12;
+    test_association->shsnf_len      = 0;
+    test_association->arsnw          = 5;
+    test_association->arsnw_len      = 1;
+    test_association->arsn_len       = 0;
+    test_association->gvcid_blk.scid = SCID & 0x3FF;
 
     // Modify SA 6
     sa_if->sa_get_from_spi(6, &test_association);

@@ -1,0 +1,1 @@
+/usr/bin/cc  -fprofile-arcs -ftest-coverage -Wall -Wextra -Werror -g -O0 CMakeFiles/ut_aes_gcm_siv.dir/unit/ut_aes_gcm_siv.c.o CMakeFiles/ut_aes_gcm_siv.dir/core/shared_util.c.o -o ut_aes_gcm_siv  -Wl,-rpath,/media/sf_code/CryptoLib/support/scripts/src ../src/libcryptolib.so -lpthread -lgcrypt 

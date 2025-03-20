@@ -85,7 +85,21 @@ char *crypto_enum_errlist_core[] = {(char *)"CRYPTO_LIB_SUCCESS",
                                     (char *)"CRYPTO_LIB_ERR_KEY_STATE_INVALID",
                                     (char *)"CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI",
                                     (char *)"CRYPTO_LIB_ERR_SDLS_EP_NOT_BUILT",
-                                    (char *)"CRYPTO_LIB_ERR_BAD_TLV_LENGTH"};
+                                    (char *)"CRYPTO_LIB_ERR_BAD_TLV_LENGTH",
+                                    (char *)"CRYPTO_LIB_ERR_SHIVF_LEN_GREATER_THAN_MAX_IV_SIZE",
+                                    (char *)"CRYPTO_LIB_ERR_SHSNF_LEN_GREATER_THAN_MAX_ARSN_SIZE",
+                                    (char *)"CRYPTO_LIB_ERR_ABM_LEN_GREATER_THAN_MAX_ABM_SIZE",
+                                    (char *)"CRYPTO_LIB_ERR_STMACF_LEN_GREATER_THAN_MAX_MAC_SIZE",
+                                    (char *)"CRYPTO_LIB_ERR_SHPLF_LEN_GREATER_THAN_MAX_PAD_SIZE",
+                                    (char *)"CRYPTO_LIB_ERR_INVALID_SVC_TYPE_WITH_ARSN",
+                                    (char *)"CRYPTO_LIB_ERR_ARSN_LT_SHSNF",
+                                    (char *)"CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW",
+                                    (char *)"CRYPTO_LIB_ERR_IV_EXCEEDS_INCREMENT_SIZE",
+                                    (char *)"CRYPTO_LIB_ERR_AOS_FRAME_LENGTH_UNDERFLOW",
+                                    (char *)"CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW",
+                                    (char *)"CRYPTO_LIB_ERR_AOS_FL_LT_MAX_FRAME_SIZE",
+                                    (char *)"CRYPTO_LIB_ERR_TM_FL_LT_MAX_FRAME_SIZE",
+                                    (char *)"CRYPTO_LIB_ERR_INVALID_FHECF"};
 
 char *crypto_enum_errlist_config[] = {
     (char *)"CRYPTO_CONFIGURATION_NOT_COMPLETE",

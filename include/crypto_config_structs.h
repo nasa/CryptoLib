@@ -184,7 +184,8 @@ typedef enum
     CRYPTO_MAC_NONE,
     CRYPTO_MAC_CMAC_AES256,
     CRYPTO_MAC_HMAC_SHA256,
-    CRYPTO_MAC_HMAC_SHA512
+    CRYPTO_MAC_HMAC_SHA512,
+    CRYPTO_ACS_MAX = 3
 } AuthCipherSuite;
 typedef enum
 {

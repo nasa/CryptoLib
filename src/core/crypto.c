@@ -59,6 +59,8 @@ uint8_t badSPI  = 0;
 uint8_t badIV   = 0;
 uint8_t badMAC  = 0;
 uint8_t badFECF = 0;
+// FHECF
+uint8_t parity[RS_PARITY];
 //  CRC
 uint32_t crc32Table[CRC32TBL_SIZE];
 uint16_t crc16Table[CRC16TBL_SIZE];
@@ -120,6 +122,21 @@ uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
         status = CRYPTO_FALSE;
     }
     return status;
+}
+
+/**
+ * @brief Function: Crypto_Is_ACS_Only_Algo
+ * Looks up cipher suite ID and determines if it's an ACS algorithm. Returns 1 if true, 0 if false;
+ * @param cipher_suite_id: uint8_t
+ * @return int: Success/Failure
+ **/
+uint8_t Crypto_Is_ACS_Only_Algo(uint8_t algo)
+{
+    if (algo > 0 && algo <= CRYPTO_ACS_MAX)
+    {
+        return CRYPTO_TRUE;
+    }
+    return CRYPTO_FALSE;
 }
 
 /**
@@ -296,23 +313,27 @@ int32_t Crypto_Get_Sdls_Ep_Reply(uint8_t *buffer, uint16_t *length)
     int32_t status = CRYPTO_LIB_SUCCESS;
     // Length to be pulled from packet header
     uint16_t pkt_length = 0;
+    printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
 
     // Check for NULL Inputs
     if (buffer == NULL || length == NULL)
     {
+        printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
         status = CRYPTO_LIB_ERR_NULL_BUFFER;
         return status;
     }
 
     pkt_length = sdls_frame.hdr.pkt_length + 1;
+    printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
 
     // Sanity Check on length
     if (pkt_length > TC_MAX_FRAME_SIZE)
     {
+        printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
         status = CRYPTO_LIB_ERR_TC_FRAME_SIZE_EXCEEDS_SPEC_LIMIT;
         return status;
     }
-
+    printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
     // Copy our length, which will fit in the buffer
     memcpy(buffer, sdls_ep_reply, (size_t)pkt_length);
 
@@ -385,6 +406,50 @@ uint16_t Crypto_Calc_CRC16(uint8_t *data, int size)
     }
 
     return crc;
+}
+
+uint8_t gf_mul(uint8_t a, uint8_t b) 
+{
+    if (a == 0 || b == 0) 
+    {
+        return 0;
+    }
+    else
+    {
+        return gf_exp[(gf_log[a] + gf_log[b]) % (GF_SIZE - 1)];
+    }
+}
+
+// Frame Header Error Control Field
+// Reference: CCSDS 732.0-B-4 (AOS Space Data Link Protocol) Section 4.1.2.6
+uint16_t Crypto_Calc_FHECF(uint8_t *data)
+{
+    uint8_t feedback = 0;
+    uint16_t result = 0;
+    int i = 0;
+    int j = 0;
+
+    // RS encoding
+    memset(parity, 0, RS_PARITY);
+    for (i = 0; i < RS_DATA; i++) 
+    {
+        feedback = data[i] ^ parity[0];
+        memmove(&parity[0], &parity[1], RS_PARITY - 1);
+        parity[RS_PARITY - 1] = 0;
+
+        for (j = 0; j < RS_PARITY; j++) 
+        {
+            parity[j] ^= gf_mul(feedback, gen_poly[j + 1]);
+        }
+    }
+#ifdef AOS_DEBUG
+    for (i = 0; i < RS_PARITY; i++)
+    {
+        printf("Parity[%d] = 0x%01x\n", i, parity[i]);
+    }
+#endif
+    result = (parity[0] << 12) | (parity[1] << 8) | (parity[2] << 4) | (parity[3] << 0);
+    return result;
 }
 
 /*
@@ -644,9 +709,8 @@ int32_t Crypto_SEC_MON_CTRL(uint8_t *ingest)
         default:
 #ifdef PDU_DEBUG
             printf(KRED "Error: Crypto_PDU failed interpreting MC Procedure Identification Field! \n" RESET);
-            break;
 #endif
-            status = CRYPTO_LIB_SUCCESS;
+            break;
     }
     return status;
 }
@@ -762,7 +826,6 @@ int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uin
     return status;
 }
 
-
 /**
  * @brief Function: Crypto_Process_Extended_Procedure_Pdu
  * @param tc_sdls_processed_frame: TC_t*
@@ -770,36 +833,40 @@ int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uin
  * @return int32: Success/Failure
  * @note TODO - Actually update based on variable config
  * @note Allows EPs to be processed one of two ways.
- * @note - 1) By using a packet layer with APID 0x1880
+ * @note - 1) By using a packet layer with APID 0x1980
  * @note - 2) By using a defined Virtual Channel ID
  * @note Requires this to happen on either SPI_MIN (0) or SPI_MAX (configurable)
  **/
 int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uint8_t *ingest, uint16_t len_ingest)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    ingest = ingest; // Suppress unused variable error depending on build
-    len_ingest = len_ingest;
+    ingest         = ingest; // Suppress unused variable error depending on build
+
     // Check for null pointers
     if (tc_sdls_processed_frame == NULL)
     {
         status = CRYPTO_LIB_ERR_NULL_BUFFER;
     }
-
+    printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
     // Validate correct SA for EPs
     uint8_t valid_ep_sa = CRYPTO_FALSE;
-    if ((tc_sdls_processed_frame->tc_sec_header.spi == SPI_MIN) || (tc_sdls_processed_frame->tc_sec_header.spi == SPI_MAX))
+    if ((tc_sdls_processed_frame->tc_sec_header.spi == SPI_MIN) ||
+        (tc_sdls_processed_frame->tc_sec_header.spi == SPI_MAX))
     {
+        printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
         valid_ep_sa = CRYPTO_TRUE;
     }
-
+    printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
     if (status == CRYPTO_LIB_SUCCESS)
     {
+        printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
         // Check for specific App ID for EPs - the CryptoLib Apid in this case
-        if ((tc_sdls_processed_frame->tc_pdu[0] == 0x18) && (tc_sdls_processed_frame->tc_pdu[1] == 0x80))
+        if ((tc_sdls_processed_frame->tc_pdu[0] == 0x19) && (tc_sdls_processed_frame->tc_pdu[1] == 0x80))
         {
+
 #ifdef CRYPTO_EPROC
             // Check validity of SAs used for EP
-            if(valid_ep_sa == CRYPTO_TRUE) 
+            if (valid_ep_sa == CRYPTO_TRUE)
             {
 #ifdef DEBUG
                 printf(KGRN "Received SDLS command w/ packet header:\n\t " RESET);
@@ -818,8 +885,8 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
 
                 // Using PUS Header
                 if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
-                {  
-                // If ECSS PUS Header is being used
+                {
+                    // If ECSS PUS Header is being used
                     sdls_frame.pus.shf   = (tc_sdls_processed_frame->tc_pdu[6] & 0x80) >> 7;
                     sdls_frame.pus.pusv  = (tc_sdls_processed_frame->tc_pdu[6] & 0x70) >> 4;
                     sdls_frame.pus.ack   = (tc_sdls_processed_frame->tc_pdu[6] & 0x0F);
@@ -837,7 +904,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                         (tc_sdls_processed_frame->tc_pdu[11] << 8) | tc_sdls_processed_frame->tc_pdu[12];
 
                     // Subtract headers from total frame length
-                    uint16_t max_tlv = (tc_sdls_processed_frame->tc_pdu_len - CCSDS_HDR_SIZE - ECSS_PUS_SIZE - SDLS_TLV_HDR_SIZE);
+                    uint16_t derived_tlv = (tc_sdls_processed_frame->tc_pdu_len - CCSDS_HDR_SIZE - ECSS_PUS_SIZE - SDLS_TLV_HDR_SIZE);
                     len_ingest = len_ingest; // suppress error for now
 #ifdef CCSDS_DEBUG
                     printf("Printing lengths for sanity check:\n");
@@ -845,17 +912,21 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                     printf("\t TC Frame Actual Length (bytes): %d \n", tc_sdls_processed_frame->tc_header.fl+1);
                     printf("\t TC Frame Space Pkt Length (bytes): %d \n", tc_sdls_processed_frame->tc_pdu_len);
                     printf("\t Received TLV Length (bits): %d \n", sdls_frame.tlv_pdu.hdr.pdu_len);
-                    printf("\t Max possible TLV Length (bytes): %d \n", max_tlv);
+                    printf("\t Derived TLV Length (bytes): %d \n", derived_tlv);
                     printf("\t Received TLV Length (bytes): %f \n", sdls_frame.tlv_pdu.hdr.pdu_len/8.0);
 #endif
-                    if ((double)(sdls_frame.tlv_pdu.hdr.pdu_len/8.0) != max_tlv)
+                    // Sanity check - does the length of the pdu header match the number of bytes we have?
+                    // CODE REVIEW - PDUs allow lengths in bits, it is plausible that only a few bits of a byte are needed
+                    // but would require a full byte for transmission. I can't find anything atm in docs to dispute this
+                    if (((double)(sdls_frame.tlv_pdu.hdr.pdu_len/8.0) != derived_tlv) &&  (floor((double)(sdls_frame.tlv_pdu.hdr.pdu_len/8.0)) != derived_tlv-1))
                     {
 #ifdef PDU_DEBUG
-                        printf(KRED "Packet PDU_LEN Not Equal To Calculated PDU Len\n" RESET);
+                        printf(KRED "Packet PDU_LEN Not Equal To Derived PDU Len\n" RESET);
 #endif                        
                         return CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
                     }
-                    if (sdls_frame.hdr.pkt_length <= TLV_DATA_SIZE) // && (sdls_frame.hdr.pkt_length < max_tlv))
+
+                    if (sdls_frame.hdr.pkt_length <= TLV_DATA_SIZE)
                     {
                         for (int x = 13; x < (13 + sdls_frame.hdr.pkt_length); x++)
                         {
@@ -874,14 +945,14 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                 // Not using PUS Header
                 else
                 {
-                // SDLS TLV PDU
+                    // SDLS TLV PDU
                     sdls_frame.tlv_pdu.hdr.type = (tc_sdls_processed_frame->tc_pdu[6] & 0x80) >> 7;
                     sdls_frame.tlv_pdu.hdr.uf   = (tc_sdls_processed_frame->tc_pdu[6] & 0x40) >> 6;
                     sdls_frame.tlv_pdu.hdr.sg   = (tc_sdls_processed_frame->tc_pdu[6] & 0x30) >> 4;
                     sdls_frame.tlv_pdu.hdr.pid  = (tc_sdls_processed_frame->tc_pdu[6] & 0x0F);
                     sdls_frame.tlv_pdu.hdr.pdu_len =
                         (tc_sdls_processed_frame->tc_pdu[7] << 8) | tc_sdls_processed_frame->tc_pdu[8];
-                    
+
                     // Make sure TLV isn't larger than we have allocated, and it is sane given total frame length
                     uint16_t max_tlv = tc_sdls_processed_frame->tc_header.fl - CCSDS_HDR_SIZE - SDLS_TLV_HDR_SIZE;
                     len_ingest = len_ingest; // suppress error for now
@@ -909,51 +980,56 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                     }
                 }
 
-                
-
 #ifdef CCSDS_DEBUG
                 Crypto_ccsdsPrint(&sdls_frame);
 #endif
-            
-            // Determine type of PDU
-            status = Crypto_PDU(ingest, tc_sdls_processed_frame);
+
+                // Determine type of PDU
+                status = Crypto_PDU(ingest, tc_sdls_processed_frame);
             }
             // Received EP PDU on invalid SA
             else
             {
 #ifdef CCSDS_DEBUG
-                printf(KRED "Received EP PDU on invalid SA! SPI %d\n" RESET, tc_sdls_processed_frame->tc_sec_header.spi);
+                printf(KRED "Received EP PDU on invalid SA! SPI %d\n" RESET,
+                       tc_sdls_processed_frame->tc_sec_header.spi);
 #endif
                 status = CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI;
             }
 
-            #else // Received an EP command without EPs being built
+#else  // Received an EP command without EPs being built
+            if (valid_ep_sa)
+            {
+                status = CRYPTO_LIB_ERR_SDLS_EP_NOT_BUILT;
+                return status;
+            }
             valid_ep_sa = valid_ep_sa; // Suppress build error
-            status = CRYPTO_LIB_ERR_SDLS_EP_NOT_BUILT;
-            #endif //CRYPTO_EPROC
+            status      = CRYPTO_LIB_SUCCESS;
+#endif // CRYPTO_EPROC
         }
 
         // If not a specific APID, check if using VCIDs for SDLS PDUs with no packet layer
-        else if (tc_sdls_processed_frame->tc_header.vcid == TC_SDLS_EP_VCID) 
+        else if (tc_sdls_processed_frame->tc_header.vcid == TC_SDLS_EP_VCID)
         {
-        #ifdef CRYPTO_EPROC
+#ifdef CRYPTO_EPROC
             // Check validity of SAs used for EP
-            if(valid_ep_sa == CRYPTO_TRUE)
-            { 
+            if (valid_ep_sa == CRYPTO_TRUE)
+            {
 #ifdef CCSDS_DEBUG
                 printf(KGRN "Received SDLS command (No Packet Header or PUS): " RESET);
 #endif
                 // No Packet HDR or PUS in these frames
                 // SDLS TLV PDU
-                sdls_frame.tlv_pdu.hdr.type    = (tc_sdls_processed_frame->tc_pdu[0] & 0x80) >> 7;
-                sdls_frame.tlv_pdu.hdr.uf      = (tc_sdls_processed_frame->tc_pdu[0] & 0x40) >> 6;
-                sdls_frame.tlv_pdu.hdr.sg      = (tc_sdls_processed_frame->tc_pdu[0] & 0x30) >> 4;
-                sdls_frame.tlv_pdu.hdr.pid     = (tc_sdls_processed_frame->tc_pdu[0] & 0x0F);
-                sdls_frame.tlv_pdu.hdr.pdu_len = (tc_sdls_processed_frame->tc_pdu[1] << 8) | tc_sdls_processed_frame->tc_pdu[2];
+                sdls_frame.hdr.type    = (tc_sdls_processed_frame->tc_pdu[0] & 0x80) >> 7;
+                sdls_frame.tlv_pdu.hdr.uf  = (tc_sdls_processed_frame->tc_pdu[0] & 0x40) >> 6;
+                sdls_frame.tlv_pdu.hdr.sg  = (tc_sdls_processed_frame->tc_pdu[0] & 0x30) >> 4;
+                sdls_frame.tlv_pdu.hdr.pid = (tc_sdls_processed_frame->tc_pdu[0] & 0x0F);
+                sdls_frame.tlv_pdu.hdr.pdu_len =
+                    (tc_sdls_processed_frame->tc_pdu[1] << 8) | tc_sdls_processed_frame->tc_pdu[2];
                 for (int x = 3; x < (3 + tc_sdls_processed_frame->tc_header.fl); x++)
                 {
-                    // Todo - Consider how this behaves with large OTAR PDUs that are larger than 1 TC in size. Most likely
-                    // fails. Must consider Uplink Sessions (sequence numbers).
+                    // Todo - Consider how this behaves with large OTAR PDUs that are larger than 1 TC in size. Most
+                    // likely fails. Must consider Uplink Sessions (sequence numbers).
                     sdls_frame.tlv_pdu.data[x - 3] = tc_sdls_processed_frame->tc_pdu[x];
                 }
 
@@ -964,13 +1040,13 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                 // Determine type of PDU
                 status = Crypto_PDU(ingest, tc_sdls_processed_frame);
             }
-            #else // Received an EP command without EPs being built
+#else // Received an EP command without EPs being built
 #ifdef CCSDS_DEBUG
             printf(KRED "PDU DEBUG %s %d\n" RESET, __FILE__, __LINE__);
 #endif
             valid_ep_sa = valid_ep_sa; // Suppress build error
-            status = CRYPTO_LIB_ERR_SDLS_EP_NOT_BUILT;
-            #endif //CRYPTO_EPROC
+            status      = CRYPTO_LIB_ERR_SDLS_EP_NOT_BUILT;
+#endif // CRYPTO_EPROC
         }
     }
     return status;
@@ -1287,7 +1363,8 @@ int32_t Crypto_Get_Security_Trailer_Length(SecurityAssociation_t *sa_ptr)
 
 void Crypto_Set_FSR(uint8_t *p_ingest, uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t *sa_ptr)
 {
-    if (current_managed_parameters_struct.has_ocf == TM_HAS_OCF || current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
+    if (current_managed_parameters_struct.has_ocf == TM_HAS_OCF ||
+        current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
     {
         Telemetry_Frame_Ocf_Fsr_t temp_report;
         byte_idx += (pdu_len + sa_ptr->stmacf_len);
@@ -1309,7 +1386,7 @@ void Crypto_Set_FSR(uint8_t *p_ingest, uint16_t byte_idx, uint16_t pdu_len, Secu
     }
 }
 
-uint32_t Crypto_Get_FSR()
+uint32_t Crypto_Get_FSR(void)
 {
     uint32_t fsr;
     fsr = (report.cwt << 31) |   // bit(s) 1

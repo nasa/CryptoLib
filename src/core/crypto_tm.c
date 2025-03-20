@@ -161,11 +161,9 @@ int32_t Crypto_TM_IV_Sanity_Check(uint8_t *sa_service_type, SecurityAssociation_
 
     if (sa_ptr->est == 0 && sa_ptr->ast == 1)
     {
-        if (sa_ptr->acs_len != 0)
+        if (sa_ptr->acs_len > 0)
         {
-            if ((sa_ptr->acs == CRYPTO_MAC_CMAC_AES256 || sa_ptr->acs == CRYPTO_MAC_HMAC_SHA256 ||
-                 sa_ptr->acs == CRYPTO_MAC_HMAC_SHA512) &&
-                sa_ptr->iv_len > 0)
+            if (Crypto_Is_ACS_Only_Algo(sa_ptr->acs) && sa_ptr->iv_len > 0)
             {
                 status = CRYPTO_LIB_ERR_IV_NOT_SUPPORTED_FOR_ACS_ALGO;
                 mc_if->mc_log(status);
@@ -689,7 +687,7 @@ void Crypto_TM_ApplySecurity_Debug_Print(uint16_t idx, uint16_t pdu_len, Securit
  * called, the Security Header field is empty; i.e., the caller has not set any values in the
  * Security Header
  **/
-int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer)
+int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
 {
     int32_t                status  = CRYPTO_LIB_SUCCESS;
     int                    mac_loc = 0;
@@ -707,6 +705,10 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer)
     uint8_t                tfvn   = 0;
     uint16_t               scid   = 0;
     uint16_t               vcid   = 0;
+    uint16_t               cbc_padding = 0;
+
+    // Prevent set but not used error
+    cbc_padding = cbc_padding;
 
     status = Crypto_TM_Sanity_Check(pTfBuffer);
     if (status != CRYPTO_LIB_SUCCESS)
@@ -758,9 +760,29 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer)
         return status;
     }
 
+    if((len_ingest < current_managed_parameters_struct.max_frame_size) && (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC) && (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC_MAC))
+    {
+        status = CRYPTO_LIB_ERR_TM_FL_LT_MAX_FRAME_SIZE;
+        mc_if->mc_log(status);
+        return status;
+    }
+    else if ((sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC) || (sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC_MAC))
+    {
+        if((current_managed_parameters_struct.max_frame_size - len_ingest) <= 16)
+        {
+            cbc_padding = current_managed_parameters_struct.max_frame_size - len_ingest;
+        }
+        else
+        {
+            status = CRYPTO_LIB_ERR_TM_FL_LT_MAX_FRAME_SIZE;
+            mc_if->mc_log(status);
+            return status;
+        }
+    }
+
 #ifdef TM_DEBUG
     printf(KYEL "TM BEFORE Apply Sec:\n\t" RESET);
-    for (int16_t i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int16_t i = 0; i < current_managed_parameters_struct.max_frame_size - cbc_padding; i++)
     {
         printf("%02X", pTfBuffer[i]);
     }
@@ -878,10 +900,26 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer)
      * ~~~Index currently at start of data field, AKA end of security header~~~
      **/
     data_loc = idx;
+
+    if (current_managed_parameters_struct.max_frame_size <= idx - sa_ptr->stmacf_len)
+    {
+        status = CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW;
+        mc_if->mc_log(status);
+        return status;
+    }
+
     // Calculate size of data to be encrypted
     pdu_len = current_managed_parameters_struct.max_frame_size - idx - sa_ptr->stmacf_len;
     // Check other managed parameter flags, subtract their lengths from data field if present
     Crypto_TM_Handle_Managed_Parameter_Flags(&pdu_len);
+
+    if(current_managed_parameters_struct.max_frame_size < pdu_len)
+    {
+        status = CRYPTO_LIB_ERR_AOS_FRAME_LENGTH_UNDERFLOW;
+        mc_if->mc_log(status);
+        return status;
+    }
+
     Crypto_TM_ApplySecurity_Debug_Print(idx, pdu_len, sa_ptr);
 
     // Get Key
@@ -1765,6 +1803,20 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_
         }
 #endif
 
+        if (current_managed_parameters_struct.max_frame_size <= byte_idx - sa_ptr->stmacf_len)
+        {
+            status = CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW;
+            mc_if->mc_log(status);
+            return status;
+        }
+
+        if (len_ingest < current_managed_parameters_struct.max_frame_size)
+        {
+            status = CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW;
+            mc_if->mc_log(status);
+            return status;
+        }
+
         // Parse & Check FECF, if present, and update fecf length
         status = Crypto_TM_FECF_Setup(p_ingest, len_ingest);
     }
@@ -1814,6 +1866,13 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_
         // Calculate size of the protocol data unit
         // NOTE: This size itself is not the length for authentication
         Crypto_TM_Calc_PDU_MAC(&pdu_len, byte_idx, sa_ptr, &mac_loc);
+
+        if(current_managed_parameters_struct.max_frame_size < pdu_len)
+        {
+            status = CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW;
+            mc_if->mc_log(status);
+            return status;
+        }
 
         Crypto_TM_Process_Debug_Print(byte_idx, pdu_len, sa_ptr);
 

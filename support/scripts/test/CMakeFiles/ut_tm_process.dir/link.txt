@@ -1,0 +1,1 @@
+/usr/bin/cc  -fprofile-arcs -ftest-coverage -Wall -Wextra -Werror -g -O0 CMakeFiles/ut_tm_process.dir/unit/ut_tm_process.c.o CMakeFiles/ut_tm_process.dir/core/shared_util.c.o -o ut_tm_process  -Wl,-rpath,/media/sf_code/CryptoLib/support/scripts/src ../src/libcryptolib.so -lpthread -lgcrypt 

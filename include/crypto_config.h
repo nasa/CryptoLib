@@ -109,7 +109,7 @@
 
 // Generic Defines
 #define NUM_SA              64
-#define SPI_LEN             2   /* bytes */
+#define SPI_LEN             2 /* bytes */
 #define SPI_MIN             0
 #define SPI_MAX             NUM_SA - 1
 #define KEY_SIZE            512 /* bytes */
@@ -123,6 +123,7 @@
 #define REF_SIZE            250
 #define OCF_SIZE            4
 #define MAC_SIZE            16 /* bytes */
+#define FHECF_SIZE          2
 #define FECF_SIZE           2
 #define TC_SEGMENT_HDR_SIZE 1
 #define ECS_SIZE            4    /* bytes */
@@ -134,7 +135,8 @@
 #define CHALLENGE_SIZE      16   /* bytes */
 #define CHALLENGE_MAC_SIZE  16   /* bytes */
 #define BYTE_LEN            8    /* bits */
-#define CRYPTOLIB_APPID     0x80
+#define CRYPTOLIB_APPID     128
+#define MAX_IV_LEN          32   /* bytes */
 
 // Monitoring and Control Defines
 #define EMV_SIZE 4  /* bytes */
@@ -232,6 +234,13 @@
 #else
 #define TM_CADU_SIZE TM_FRAME_DATA_SIZE
 #endif
+
+// AOS Behavior Defines
+// FHECF Calculation
+#define RS_SYMS 10   // Total symbols in codeword
+#define RS_DATA 6    // Data symbols
+#define RS_PARITY 4  // Parity symbols
+#define GF_SIZE 16   // 2^4
 
 // Logic Behavior Defines
 #define CRYPTO_FALSE 0
