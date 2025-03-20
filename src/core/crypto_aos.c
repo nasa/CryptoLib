@@ -213,19 +213,10 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     // Detect if optional 2 byte FHEC is present
     if (current_managed_parameters_struct.aos_has_fhec == AOS_HAS_FHEC)
     {
-        uint16_t recieved_fhecf = (((pTfBuffer[idx] << 8) & 0xFF00) | (pTfBuffer[idx + 1] & 0x00FF));
 #ifdef AOS_DEBUG
-        printf("Recieved FHECF: %04x\n", recieved_fhecf);
         printf(KYEL "Calculating FHECF...\n" RESET);
 #endif
         uint16_t calculated_fhecf = Crypto_Calc_FHECF(pTfBuffer);
-
-        if (recieved_fhecf != calculated_fhecf)
-        {
-            status = CRYPTO_LIB_ERR_INVALID_FHECF;
-            mc_if->mc_log(status);
-            return status;
-        }
 
         pTfBuffer[idx] = (calculated_fhecf >> 8) & 0x00FF ;
         pTfBuffer[idx+1] = (calculated_fhecf) & 0x00FF ;
