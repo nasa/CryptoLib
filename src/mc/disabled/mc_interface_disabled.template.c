@@ -33,16 +33,6 @@ McInterface get_mc_interface_disabled(void)
     mc_if_struct.mc_log        = mc_log;
     mc_if_struct.mc_shutdown   = mc_shutdown;
 
-    /* MC Interface, SDLS-EP */
-    /*
-    mc_if_struct.mc_ping = mc_ping;
-    mc_if_struct.mc_log_status = mc_log_status;
-    mc_if_struct.mc_dump_log = mc_dump_log;
-    mc_if_struct.mc_erase_log = mc_erase_log;
-    mc_if_struct.mc_self_test = mc_self_test;
-    mc_if_struct.mc_alarm_reset_flag = mc_alarm_reset_flag;
-    */
-
     return &mc_if_struct;
 }
 

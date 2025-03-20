@@ -44,8 +44,7 @@ int32_t Crypto_Key_OTAR(void)
     int         x     = 0;
     int         y;
     int32_t     status = CRYPTO_LIB_SUCCESS;
-    // uint16_t pdu_len = (uint16_t) sdls_frame.pdu.hdr.pdu_len[1] << 8 | sdls_frame.pdu.hdr.pdu_len[0];
-    int pdu_keys =
+    int         pdu_keys =
         (sdls_frame.pdu.hdr.pdu_len - SDLS_KEYID_LEN - SDLS_IV_LEN - MAC_SIZE) / (SDLS_KEYID_LEN + SDLS_KEY_LEN);
     int           w;
     crypto_key_t *ekp = NULL;
@@ -475,9 +474,9 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
         // Initialization Vector
         for (y = 0; y < SDLS_IV_LEN; y++)
         {
-            sdls_frame.pdu.data[pdu_data_idx] = 0x00; //= *(tc_frame->tc_sec_header.iv + y);
-            sdls_ep_keyv_reply.blk[x].iv[y]   = 0x00; //= *(tc_frame->tc_sec_header.iv + y);
-            sdls_ep_reply[pdu_data_idx]       = 0x00; //= *(tc_frame->tc_sec_header.iv + y);
+            sdls_frame.pdu.data[pdu_data_idx] = 0x00;
+            sdls_ep_keyv_reply.blk[x].iv[y]   = 0x00;
+            sdls_ep_reply[pdu_data_idx]       = 0x00;
             pdu_data_idx += 1;
             count += 1;
         }

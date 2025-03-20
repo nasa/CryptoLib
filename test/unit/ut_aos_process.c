@@ -476,8 +476,8 @@ UTEST(AOS_PROCESS, INSERT_ZONE_PRESENT_PLAINTEXT)
     sa_if->sa_get_from_spi(10, &sa_ptr); // Disable SPI 10
     sa_ptr->sa_state = SA_KEYED;
     sa_if->sa_get_from_spi(9, &sa_ptr); // Enable and setup 9
-    sa_ptr->sa_state = SA_OPERATIONAL;
-    sa_ptr->arsn_len = 0;
+    sa_ptr->sa_state  = SA_OPERATIONAL;
+    sa_ptr->arsn_len  = 0;
     sa_ptr->shsnf_len = 0;
 
     status =
@@ -1799,8 +1799,8 @@ UTEST(AOS_PROCESS, AOS_SA_NOT_OPERATIONAL)
     SecurityAssociation_t *sa_ptr = NULL;
     SaInterface            sa_if  = get_sa_interface_inmemory();
     sa_if->sa_get_from_spi(9, &sa_ptr); // Disable SPI 10
-    sa_ptr->sa_state = SA_NONE;
-    sa_ptr->arsn_len = 0;
+    sa_ptr->sa_state  = SA_NONE;
+    sa_ptr->arsn_len  = 0;
     sa_ptr->shsnf_len = 0;
 
     crypto_key_t *ekp = NULL;
@@ -2021,9 +2021,9 @@ UTEST(AOS_PROCESS, AOS_FHECF_TEST)
         Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, &ptr_processed_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-    for (int i = 6; i < 6+(RS_PARITY/2); i++) // bytes 6-8 of header
+    for (int i = 6; i < 6 + (RS_PARITY / 2); i++) // bytes 6-8 of header
     {
-        printf("Framed: %02x\nProcessed: %02x\n", (uint8_t)*(framed_aos_b+i), (uint8_t)ptr_processed_frame[i]);
+        printf("Framed: %02x\nProcessed: %02x\n", (uint8_t) * (framed_aos_b + i), (uint8_t)ptr_processed_frame[i]);
         ASSERT_EQ((uint8_t)ptr_processed_frame[i], (uint8_t) * (framed_aos_b + i));
     }
 
