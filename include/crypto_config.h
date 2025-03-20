@@ -108,25 +108,17 @@
 #define SA_AUTHENTICATED_ENCRYPTION 3
 
 // Generic Defines
-#define NUM_SA              64
 #define SPI_LEN             2 /* bytes */
 #define SPI_MIN             0
 #define SPI_MAX             NUM_SA - 1
 #define KEY_SIZE            512 /* bytes */
 #define KEY_ID_SIZE         8
 #define MKID_MAX            128
-#define NUM_KEYS            256
 #define DISABLED            0
 #define ENABLED             1
-#ifndef IV_SIZE
-   #define IV_SIZE          16 /* TM IV size bytes */
-#endif
 #define IV_SIZE_TC          4  /* TC IV size bytes */
 #define REF_SIZE            250
 #define OCF_SIZE            4
-#ifndef MAC_SIZE
-   #define MAC_SIZE         16 /* bytes */
-#endif
 #define FHECF_SIZE          2
 #define FECF_SIZE           2
 #define TC_SEGMENT_HDR_SIZE 1
@@ -141,6 +133,20 @@
 #define BYTE_LEN            8    /* bits */
 #define CRYPTOLIB_APPID     128
 #define MAX_IV_LEN          32   /* bytes */
+
+// Configurable via build flags
+#ifndef NUM_SA
+   #define NUM_SA              64
+#endif
+#ifndef MAC_SIZE
+   #define MAC_SIZE            16 /* bytes */
+#endif
+#ifndef IV_SIZE
+   #define IV_SIZE             16 /* TM IV size bytes */
+#endif
+#ifndef NUM_KEYS
+   #define NUM_KEYS            256
+#endif
 
 // Monitoring and Control Defines
 #define EMV_SIZE 4  /* bytes */
