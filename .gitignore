@@ -32,4 +32,7 @@ test/CMakeFiles/*
 Testing/Temporary/*
 docs/wiki/_build
 docs/wiki/_templates
+support/scripts/src/CmakeFiles/*
+support/scripts/test/CMakeFiles/*
+support/scripts/bin/*
 

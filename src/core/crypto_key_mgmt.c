@@ -45,8 +45,7 @@ int32_t Crypto_Key_OTAR(void)
     int         y;
     int32_t     status = CRYPTO_LIB_SUCCESS;
     // uint16_t pdu_len = (uint16_t) sdls_frame.tlv_pdu.hdr.pdu_len[1] << 8 | sdls_frame.tlv_pdu.hdr.pdu_len[0];
-    int pdu_keys =
-        (sdls_frame.tlv_pdu.hdr.pdu_len - SDLS_KEYID_LEN - SDLS_IV_LEN - MAC_SIZE) / (SDLS_KEYID_LEN + SDLS_KEY_LEN);
+    int pdu_keys = ((sdls_frame.tlv_pdu.hdr.pdu_len/BYTE_LEN) - SDLS_KEYID_LEN - SDLS_IV_LEN - MAC_SIZE) / (SDLS_KEYID_LEN + SDLS_KEY_LEN);
     int           w;
     crypto_key_t *ekp = NULL;
     int expected_pdu_len = SDLS_KEYID_LEN + SDLS_IV_LEN + ((SDLS_KEYID_LEN + SDLS_KEY_LEN) * pdu_keys) + MAC_SIZE;
@@ -55,7 +54,7 @@ int32_t Crypto_Key_OTAR(void)
 #endif
     if ((sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) < SDLS_KEYID_LEN + SDLS_IV_LEN + ((SDLS_KEYID_LEN + SDLS_KEY_LEN) * pdu_keys) + MAC_SIZE)
     {
-        return CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
+        return CRYPTO_LIB_ERR_OTAR_BAD_TLV_LENGTH;
     }
 
     // Master Key ID
