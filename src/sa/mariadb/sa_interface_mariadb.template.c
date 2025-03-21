@@ -437,6 +437,7 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
             }
             if (strcmp(field_names[i], "ast") == 0)
             {
+                sa->ast = atoi(row[i]);
                 continue;
             }
             if (strcmp(field_names[i], "shivf_len") == 0)
