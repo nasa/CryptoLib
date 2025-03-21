@@ -1324,7 +1324,7 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
             free(chunk_write);
         if (chunk_read != NULL)
             free(chunk_read);
-        if (encrypt_payload != NULL)
+        if (encrypt_payload != NULL && aad_bool == CRYPTO_TRUE) // only needs freed if it has aad
             free(encrypt_payload);
         return status;
     }
@@ -1351,7 +1351,7 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
             free(chunk_write);
         if (chunk_read != NULL)
             free(chunk_read);
-        if (encrypt_payload != NULL)
+        if (encrypt_payload != NULL && aad_bool == CRYPTO_TRUE) // only needs freed if it has aad)
             free(encrypt_payload);
         return status;
     }
@@ -1464,7 +1464,7 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
                     free(chunk_write);
                 if (chunk_read != NULL)
                     free(chunk_read);
-                if (encrypt_payload != NULL)
+                if (encrypt_payload != NULL && aad_bool == CRYPTO_TRUE) // only needs freed if it has aad)
                     free(encrypt_payload);
                 if (http_code_str != NULL)
                     free(http_code_str);
@@ -1491,7 +1491,7 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
             free(chunk_write);
         if (chunk_read != NULL)
             free(chunk_read);
-        if (encrypt_payload != NULL)
+        if (encrypt_payload != NULL && aad_bool == CRYPTO_TRUE) // only needs freed if it has aad)
             free(encrypt_payload);
         return status;
     }
