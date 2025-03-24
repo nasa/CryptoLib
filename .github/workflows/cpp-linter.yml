@@ -2,24 +2,32 @@ name: cpp-linter
 
 on:
   pull_request:
-    branches: [ main, dev ]
 
 jobs:
-  cpp-linter:
+  linter:
+    runs-on: ubuntu-latest
     permissions:
       pull-requests: write
       contents: write
       actions: write
-    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: cpp-linter/cpp-linter-action@v2
-        id: linter
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install clang-format
+        run: apt-get update && apt-get install -y clang-format
+
+      - name: Run Linter
+        uses: DoozyX/clang-format-lint-action@v0.15
         with:
-          style: 'file'
-          files-changed-only: false
-          verbosity: 'info'
-          step-summary: 'true'
-          no-lgtm: 'false'
-          passive-reviews: 'true'
-          ignore: 'test/include/utest.h'
+          source: '.'
+          extensions: 'c,h'
+          clangFormatVersion: 14
+          style: file
+          inplace: true
+
+      - name: Auto-Commit Formatting Changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit-message: 'style: auto-format via clang-format'
+        
