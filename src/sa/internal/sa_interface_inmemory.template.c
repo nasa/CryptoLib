@@ -735,7 +735,6 @@ static int32_t sa_get_from_spi(uint16_t spi, SecurityAssociation_t **security_as
     {
         printf("USING SA %d!\n", spi);
         printf("AST IS %d, snf_len is %d, arsn_len is %d\n", sa[spi].ast, sa[spi].shsnf_len, sa[spi].arsn_len);
-        printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
         return CRYPTO_LIB_ERR_INVALID_SVC_TYPE_WITH_ARSN;
     }
 

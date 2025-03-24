@@ -312,27 +312,22 @@ int32_t Crypto_Get_Sdls_Ep_Reply(uint8_t *buffer, uint16_t *length)
     int32_t status = CRYPTO_LIB_SUCCESS;
     // Length to be pulled from packet header
     uint16_t pkt_length = 0;
-    printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
 
     // Check for NULL Inputs
     if (buffer == NULL || length == NULL)
     {
-        printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
         status = CRYPTO_LIB_ERR_NULL_BUFFER;
         return status;
     }
 
     pkt_length = sdls_frame.hdr.pkt_length + 1;
-    printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
 
     // Sanity Check on length
     if (pkt_length > TC_MAX_FRAME_SIZE)
     {
-        printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
         status = CRYPTO_LIB_ERR_TC_FRAME_SIZE_EXCEEDS_SPEC_LIMIT;
         return status;
     }
-    printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
     // Copy our length, which will fit in the buffer
     memcpy(buffer, sdls_ep_reply, (size_t)pkt_length);
 
@@ -444,7 +439,7 @@ uint16_t Crypto_Calc_FHECF(uint8_t *data)
 #ifdef AOS_DEBUG
     for (i = 0; i < RS_PARITY; i++)
     {
-        printf("Parity[%d] = 0x%01x\n", i, parity[i]);
+        printf("Parity[%d] = 0x%02x\n", i, parity[i]);
     }
 #endif
     result = (parity[0] << 12) | (parity[1] << 8) | (parity[2] << 4) | (parity[3] << 0);
@@ -840,26 +835,22 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     ingest         = ingest; // Suppress unused variable error depending on build
-    len_ingest = len_ingest; // Suppress unused variable error depending on build
+    len_ingest = len_ingest; // suppress error for now
 
     // Check for null pointers
     if (tc_sdls_processed_frame == NULL)
     {
         status = CRYPTO_LIB_ERR_NULL_BUFFER;
     }
-    printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
     // Validate correct SA for EPs
     uint8_t valid_ep_sa = CRYPTO_FALSE;
     if ((tc_sdls_processed_frame->tc_sec_header.spi == SPI_MIN) ||
         (tc_sdls_processed_frame->tc_sec_header.spi == SPI_MAX))
     {
-        printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
         valid_ep_sa = CRYPTO_TRUE;
     }
-    printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
     if (status == CRYPTO_LIB_SUCCESS)
     {
-        printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
         // Check for specific App ID for EPs - the CryptoLib Apid in this case
         if ((tc_sdls_processed_frame->tc_pdu[0] == 0x19) && (tc_sdls_processed_frame->tc_pdu[1] == 0x80))
         {

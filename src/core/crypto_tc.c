@@ -1023,7 +1023,6 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, const uint16_t in
     if (temp_tc_header.fl <= TC_FRAME_HEADER_SIZE - segment_hdr_len - fecf_len + 1)
     {
         status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW;
-        printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
         mc_if->mc_log(status);
         return status;
     }
@@ -1542,7 +1541,6 @@ int32_t Crypto_TC_Prep_AAD(TC_t *tc_sdls_processed_frame, uint8_t fecf_len, uint
         if (current_managed_parameters_struct.max_frame_size < tc_mac_start_index)
         {
             status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW;
-            printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
             mc_if->mc_log(status);
             return status;
         }
@@ -1817,7 +1815,6 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
     if ((tc_sdls_processed_frame->tc_header.fl + 1) < *len_ingest)
     {
         status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW;
-        printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
         mc_if->mc_log(status);
         return status;
     }
@@ -1881,7 +1878,6 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
     if (tc_sdls_processed_frame->tc_header.fl <= TC_FRAME_HEADER_SIZE - segment_hdr_len - fecf_len + 1)
     {
         status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW;
-        printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
         mc_if->mc_log(status);
         return status;
     }
@@ -1925,7 +1921,6 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
     memcpy((tc_sdls_processed_frame->tc_sec_header.pad),
            &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len]),
            sa_ptr->shplf_len);
-    printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
     // Parse MAC, prepare AAD
     status = Crypto_TC_Prep_AAD(tc_sdls_processed_frame, fecf_len, sa_service_type, ecs_is_aead_algorithm, &aad_len,
                                 sa_ptr, segment_hdr_len, ingest, &aad);
@@ -1955,40 +1950,32 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
 #ifdef DEBUG
     printf(KYEL "TC PDU Calculated Length: %d \n" RESET, tc_sdls_processed_frame->tc_pdu_len);
 #endif
-    printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
     /* Get Key */
     status = Crypto_TC_Get_Keys(&ekp, &akp, sa_ptr);
     if (status != CRYPTO_LIB_SUCCESS)
     {
-        printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
         mc_if->mc_log(status);
         return status;
     }
-    printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
     status = Crypto_TC_Do_Decrypt(sa_service_type, ecs_is_aead_algorithm, ekp, sa_ptr, aad, tc_sdls_processed_frame,
                                   ingest, tc_enc_payload_start_index, aad_len, cam_cookies, akp, segment_hdr_len);
     if (status != CRYPTO_LIB_SUCCESS)
     {
-        printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
         Crypto_TC_Safe_Free_Ptr(aad);
         mc_if->mc_log(status);
         return status; // Cryptography IF call failed, return.
     }
-    printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
     // Now that MAC has been verified, check IV & ARSN if applicable
     status = Crypto_TC_Check_IV_ARSN(sa_ptr, tc_sdls_processed_frame);
     if (status != CRYPTO_LIB_SUCCESS)
     {
-        printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
         Crypto_TC_Safe_Free_Ptr(aad);
         mc_if->mc_log(status);
         return status; // Cryptography IF call failed, return.
     }
-    printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
     // Extended PDU processing, if applicable
     if (status == CRYPTO_LIB_SUCCESS && crypto_config.process_sdls_pdus == TC_PROCESS_SDLS_PDUS_TRUE)
     {
-        printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
         status = Crypto_Process_Extended_Procedure_Pdu(tc_sdls_processed_frame, ingest, *len_ingest);
     }
 
