@@ -1998,7 +1998,7 @@ UTEST(AOS_PROCESS, AOS_FHECF_TEST)
     status = Crypto_Init();
 
     // Test frame setup
-    char *framed_aos_h   = "42C00000000037730005000000000000000000000000FFFF";
+    char *framed_aos_h   = "42C000000000b3e50005000000000000000000000000FFFF";
     char *framed_aos_b   = NULL;
     int   framed_aos_len = 0;
     hex_conversion(framed_aos_h, &framed_aos_b, &framed_aos_len);

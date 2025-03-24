@@ -428,7 +428,7 @@ uint16_t Crypto_Calc_FHECF(uint8_t *data)
     for (i = 0; i < RS_DATA; i++)
     {
         feedback = data[i] ^ parity[0];
-        memmove(&parity[0], &parity[1], RS_PARITY - 1);
+        memcpy(&parity[0], &parity[1], RS_PARITY - 1);
         parity[RS_PARITY - 1] = 0;
 
         for (j = 0; j < RS_PARITY; j++)
