@@ -47,11 +47,11 @@ int32_t Crypto_Key_OTAR(void)
 
     int pdu_keys = ((sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - SDLS_KEYID_LEN - SDLS_IV_LEN - MAC_SIZE) /
                    (SDLS_KEYID_LEN + SDLS_KEY_LEN);
-
     int           w;
     crypto_key_t *ekp    = NULL;
-    int expected_pdu_len = SDLS_KEYID_LEN + SDLS_IV_LEN + ((SDLS_KEYID_LEN + SDLS_KEY_LEN) * pdu_keys) + MAC_SIZE;
+    
 #ifdef DEBUG
+    int expected_pdu_len = SDLS_KEYID_LEN + SDLS_IV_LEN + ((SDLS_KEYID_LEN + SDLS_KEY_LEN) * pdu_keys) + MAC_SIZE;
     printf("Expected PDU Length: %d (%d keys)\n", expected_pdu_len, pdu_keys);
 #endif
     if ((sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) <
