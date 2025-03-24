@@ -1492,14 +1492,13 @@ UTEST(TC_APPLY_SECURITY, TC_HEAP_BUFFER_OVERFLOW_TEST)
     char *test_frame_pt_b   = NULL;
     int   test_frame_pt_len = 0;
 
-    hex_conversion(test_frame_pt_h, (char**)&test_frame_pt_b, &test_frame_pt_len);
+    hex_conversion(test_frame_pt_h, (char **)&test_frame_pt_b, &test_frame_pt_len);
 
     uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     int32_t  return_val    = CRYPTO_LIB_ERROR;
 
-    return_val =
-        Crypto_TC_ApplySecurity((uint8_t *)test_frame_pt_b, test_frame_pt_len, &ptr_enc_frame, &enc_frame_len);
+    return_val = Crypto_TC_ApplySecurity((uint8_t *)test_frame_pt_b, test_frame_pt_len, &ptr_enc_frame, &enc_frame_len);
 
     Crypto_Shutdown();
     free(test_frame_pt_b);

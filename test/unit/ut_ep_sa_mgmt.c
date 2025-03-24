@@ -25,8 +25,7 @@ UTEST(EP_SA_MGMT, SA_6_REKEY_133)
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_REKEY_h =
-        "2003002800ff00001980d0ac0018197f0b0016000c00060085000000000000000000000000da959fc8";
+    char *buffer_REKEY_h = "2003002800ff00001980d0ac0018197f0b0016000c00060085000000000000000000000000da959fc8";
 
     uint8_t *buffer_REKEY_b   = NULL;
     int      buffer_REKEY_len = 0;

@@ -97,8 +97,8 @@ UTEST(TM_APPLY_SECURITY, NULL_BUFFER)
     int32_t status = CRYPTO_LIB_ERROR;
 
     // No Crypto_Init(), but we still Configure It;
-    char *framed_tm_b = NULL;
-    int framed_tm_len = 0;
+    char *framed_tm_b   = NULL;
+    int   framed_tm_len = 0;
 
     status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b, framed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_ERR_NULL_BUFFER, status);
@@ -2278,7 +2278,7 @@ UTEST(TM_APPLY_SECURITY, TM_APPLY_HEAP_UNDERFLOW_TEST)
 {
     remove("sa_save_file.bin");
     // Local Variables
-    int32_t  status = CRYPTO_LIB_SUCCESS;
+    int32_t status = CRYPTO_LIB_SUCCESS;
 
     // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,

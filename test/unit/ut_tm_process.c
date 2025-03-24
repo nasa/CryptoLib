@@ -2197,11 +2197,11 @@ UTEST(TM_PROCESS, TM_KEY_STATE_TEST)
 
     SecurityAssociation_t *sa_ptr;
     sa_if->sa_get_from_spi(8, &sa_ptr);
-    sa_ptr->sa_state = SA_OPERATIONAL;
-    sa_ptr->abm_len  = 8;
+    sa_ptr->sa_state   = SA_OPERATIONAL;
+    sa_ptr->abm_len    = 8;
     sa_ptr->stmacf_len = 0;
-    sa_ptr->shivf_len = 0;
-    sa_ptr->iv_len = 0;
+    sa_ptr->shivf_len  = 0;
+    sa_ptr->iv_len     = 0;
 
     crypto_key_t *ekp = NULL;
     ekp               = key_if->get_key(sa_ptr->ekid);
