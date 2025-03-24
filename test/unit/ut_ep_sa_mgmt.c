@@ -25,8 +25,7 @@ UTEST(EP_SA_MGMT, SA_6_REKEY_133)
     int status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_REKEY_h =
-        "2003002800ff00001980d0ac0018197f0b001600A000060085000000000000000000000000da959fc8";
+    char *buffer_REKEY_h = "2003002800ff00001980d0ac0018197f0b001600A000060085000000000000000000000000da959fc8";
 
     uint8_t *buffer_REKEY_b   = NULL;
     int      buffer_REKEY_len = 0;
@@ -93,21 +92,31 @@ UTEST(EP_SA_MGMT, SA_START_6)
     //                                                                       |0006| = SPI
     //                                                                           |0| = TFVN (4 bits)
     //                                                                            |0003| = SCID (16 bits)
-    //                                                                                |000000| = VCID (6 bits) (expanded)
-    //                                                                                 |000000| = MAPID (6 bits) (expanded)                                                       
-    //                         
+    //                                                                                |000000| = VCID (6 bits)
+    //                                                                                (expanded)
+    //                                                                                 |000000| = MAPID (6 bits)
+    //                                                                                 (expanded)
+    //
     char *buffer_START_MAX_h = "2003020800ff000000001880d0ad01EE197f0b001b0F90000610003041"
-    "1000304210003043100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003042"
-    "1000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003042"
-    "1000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003042"
-    "1000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003042"
-    "1000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304410003042"
-    "1000304410003044100030441000304410003044100030441000304410003044100030441000304410003044100030441000304110003041100030411000304110003041100030401000304110003042"
-    "1000304310003044"
-    "f6f7a61a";
+                               "100030421000304310003044100030441000304410003044100030441000304410003044100030441000304"
+                               "4100030441000304410003044100030441000304410003044100030441000304410003042"
+                               "100030441000304410003044100030441000304410003044100030441000304410003044100030441000304"
+                               "4100030441000304410003044100030441000304410003044100030441000304410003042"
+                               "100030441000304410003044100030441000304410003044100030441000304410003044100030441000304"
+                               "4100030441000304410003044100030441000304410003044100030441000304410003042"
+                               "100030441000304410003044100030441000304410003044100030441000304410003044100030441000304"
+                               "4100030441000304410003044100030441000304410003044100030441000304410003042"
+                               "100030441000304410003044100030441000304410003044100030441000304410003044100030441000304"
+                               "4100030441000304410003044100030441000304410003044100030441000304410003042"
+                               "100030441000304410003044100030441000304410003044100030441000304410003044100030441000304"
+                               "4100030441000304110003041100030411000304110003041100030401000304110003042"
+                               "1000304310003044"
+                               "f6f7a61a";
 
-    uint8_t *buffer_START_TC_b, *buffer_START_TM_b, *buffer_START_MAP_b, *buffer_START_AOS_b, *buffer_START_UK_b, *buffer_START_MAX_b        = NULL;
-    int      buffer_START_TC_len, buffer_START_TM_len, buffer_START_MAP_len, buffer_START_AOS_len, buffer_START_UK_len, buffer_START_MAX_len = 0;
+    uint8_t *buffer_START_TC_b, *buffer_START_TM_b, *buffer_START_MAP_b, *buffer_START_AOS_b, *buffer_START_UK_b,
+        *buffer_START_MAX_b = NULL;
+    int buffer_START_TC_len, buffer_START_TM_len, buffer_START_MAP_len, buffer_START_AOS_len, buffer_START_UK_len,
+        buffer_START_MAX_len = 0;
 
     // Setup Processed Frame For Decryption
     TC_t tc_nist_processed_frame;
@@ -127,11 +136,11 @@ UTEST(EP_SA_MGMT, SA_START_6)
     test_association->gvcid_blk.scid = SCID & 0x3FF;
 
     // Convert frames that will be processed
-    hex_conversion(buffer_START_TC_h,  (char **)&buffer_START_TC_b,  &buffer_START_TC_len);
-    hex_conversion(buffer_START_TM_h,  (char **)&buffer_START_TM_b,  &buffer_START_TM_len);
+    hex_conversion(buffer_START_TC_h, (char **)&buffer_START_TC_b, &buffer_START_TC_len);
+    hex_conversion(buffer_START_TM_h, (char **)&buffer_START_TM_b, &buffer_START_TM_len);
     hex_conversion(buffer_START_MAP_h, (char **)&buffer_START_MAP_b, &buffer_START_MAP_len);
     hex_conversion(buffer_START_AOS_h, (char **)&buffer_START_AOS_b, &buffer_START_AOS_len);
-    hex_conversion(buffer_START_UK_h,  (char **)&buffer_START_UK_b,  &buffer_START_UK_len);
+    hex_conversion(buffer_START_UK_h, (char **)&buffer_START_UK_b, &buffer_START_UK_len);
     hex_conversion(buffer_START_MAX_h, (char **)&buffer_START_MAX_b, &buffer_START_MAX_len);
 
     // TFVN = 0, SCID = 3, VCID = 0, MAPID = 0

@@ -345,8 +345,8 @@ UTEST(EP_KEY_MGMT, VERIFY_132_134)
 
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
-    char *buffer_VERIFY_h = "2003003c00ff00001980d03a002e197f0b00040140008471fc3ad5b1c36ad56bd5a5432315cdab008675c0"
-                            "6302465bc6d5091a29957eebed35c00a6ed8";
+    char *buffer_VERIFY_h   = "2003003c00ff00001980d03a002e197f0b00040140008471fc3ad5b1c36ad56bd5a5432315cdab008675c0"
+                              "6302465bc6d5091a29957eebed35c00a6ed8";
     // TRUTH PDU
     char *buffer_TRUTH_RESPONSE_h =
         "0880D03A0068197F0B008402E00084000000000000000000000001D8EAA795AFFAA0E951BB6CF0116192E16B1977D6723E92E01123CCEF"
@@ -455,7 +455,8 @@ UTEST(EP_KEY_MGMT, OTAR_0_140_142_MK_NOT_ACTIVE)
     // char* buffer_nist_iv_h = "b6ac8e4963f49207ffd6374b"; // The last valid IV that was seen by the SA
     char *buffer_OTAR_h =
         "2003009c00ff00001980d0350090197f0b00010440007F344892bbc54f5395297d4c37172f"
-        "2a3c46f6a81c1349e9e26ac80985d8bbd55a5814c662e49fba52f99ba09558cd21cf268b8e50b2184137e80f76122034c580464e2f06d2659a50508bdfe9e9a55990ba4148af89"
+        "2a3c46f6a81c1349e9e26ac80985d8bbd55a5814c662e49fba52f99ba09558cd21cf268b8e50b2184137e80f76122034c580464e2f06d2"
+        "659a50508bdfe9e9a55990ba4148af89"
         "6d8a6eebe8b5d2258685d4ce217a20174fdd4f0efac62758c51b04e55710a47209c923b641d19a39001f9e986366f5ffd9";
     //                    |2003009e00| = Primary Header
     //                              |ff| = Ext. Procs
@@ -473,7 +474,8 @@ UTEST(EP_KEY_MGMT, OTAR_0_140_142_MK_NOT_ACTIVE)
     //                                                                      |344892bbc54f5395297d4c37| = IV
     //                                                                                              |172f| = Encrypted
     //                                                                                              Key ID
-    //                                                                                                  |2a3c46f6a81c1349e9e26ac80985d8bbd55a5814c662e49fba52f99ba09558cd| = Encrypted Key
+    //                                                                                                  |2a3c46f6a81c1349e9e26ac80985d8bbd55a5814c662e49fba52f99ba09558cd|
+    //                                                                                                  = Encrypted Key
     //                                                                                                                                                                  |21cf| = Encrypted Key ID
     //                                                                                                                                                                      |268b8e50b2184137e80f76122034c580464e2f06d2659a50508bdfe9e9a55990| = Encrypted Key
     //                                                                                                                                                                                                                                      |ba41| = EKID
@@ -895,18 +897,40 @@ UTEST(EP_KEY_MGMT, TLV_KEY_DEACTIVATE_TESTS)
     //                                                                       0002 - length
     //                                                                           008e - value
 
-    char *buffer_TLV_OVERRUN_h =     "200303FF00ff00001980d039100F197f0b00031F58ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB"; // 0x1f58 = 8024 bits = 1003 bytes which is > 995 max spec size
-    char *buffer_TLV_ONE_KEY_h =     "2003001600ff00001980d0390009197f0b00030010008e"; // 0010 = 16
-    char *buffer_TLV_MAX_h =         "2003003400ff00001980d0390026197f0b000301000080008100820083008400850086008700880089008a008b008c008d008e008f"; // 0100 = 256
+    char *buffer_TLV_OVERRUN_h =
+        "200303FF00ff00001980d039100F197f0b00031F58ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB"
+        "ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB"
+        "ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB"
+        "ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB"
+        "ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB"
+        "ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB"
+        "ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB"
+        "ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB"
+        "ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB"
+        "ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB"
+        "ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB"
+        "ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB"
+        "ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB"
+        "ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB"
+        "ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB"
+        "ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB"
+        "ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB"
+        "ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB"
+        "ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB"; // 0x1f58 = 8024 bits = 1003 bytes which
+                                                                                // is > 995 max spec size
+    char *buffer_TLV_ONE_KEY_h = "2003001600ff00001980d0390009197f0b00030010008e"; // 0010 = 16
+    char *buffer_TLV_MAX_h = "2003003400ff00001980d0390026197f0b000301000080008100820083008400850086008700880089008a008"
+                             "b008c008d008e008f";                                              // 0100 = 256
     char *buffer_TLV_MAX_BAD_LEN_h = "2003001a00ff00001980d03901EE197f0b00030100008000810082"; // 01EE = 494
-    char *buffer_TLV_TEN_KEYS_h =    "2003002800ff00001980d039001A197f0b000300A00080008100820083008400850086008700880089"; // 00A0 = 160
-    char *buffer_TLV_ONE_BIT_LEN_h = "2003001500ff00001980d0390007197f0b0003000100"; // 0001 = 1
-    char *buffer_TLV_ZERO_h =        "2003001400ff00001980d0390006197f0b00030000"; // 0000 = 0
+    char *buffer_TLV_TEN_KEYS_h =
+        "2003002800ff00001980d039001A197f0b000300A00080008100820083008400850086008700880089"; // 00A0 = 160
+    char *buffer_TLV_ONE_BIT_LEN_h = "2003001500ff00001980d0390007197f0b0003000100";          // 0001 = 1
+    char *buffer_TLV_ZERO_h        = "2003001400ff00001980d0390006197f0b00030000";            // 0000 = 0
 
-    uint8_t *buffer_TLV_OVERRUN_b, *buffer_TLV_ONE_KEY_b, *buffer_TLV_MAX_b, *buffer_TLV_MAX_BAD_LEN_b, 
-            *buffer_TLV_TEN_KEYS_b, *buffer_TLV_ONE_BIT_LEN_b, *buffer_TLV_ZERO_b     = NULL;
-    int      buffer_TLV_OVERRUN_len, buffer_TLV_MAX_MINUS_len, buffer_TLV_MAX_len, buffer_TLV_MAX_BAD_LEN_len, 
-             buffer_TLV_MAX_PLUS_len, buffer_TLV_ONE_len, buffer_TLV_ZERO_len = 0;
+    uint8_t *buffer_TLV_OVERRUN_b, *buffer_TLV_ONE_KEY_b, *buffer_TLV_MAX_b, *buffer_TLV_MAX_BAD_LEN_b,
+        *buffer_TLV_TEN_KEYS_b, *buffer_TLV_ONE_BIT_LEN_b, *buffer_TLV_ZERO_b = NULL;
+    int buffer_TLV_OVERRUN_len, buffer_TLV_MAX_MINUS_len, buffer_TLV_MAX_len, buffer_TLV_MAX_BAD_LEN_len,
+        buffer_TLV_MAX_PLUS_len, buffer_TLV_ONE_len, buffer_TLV_ZERO_len = 0;
 
     // Setup Processed Frame For Decryption
     TC_t tc_nist_processed_frame;
@@ -922,14 +946,14 @@ UTEST(EP_KEY_MGMT, TLV_KEY_DEACTIVATE_TESTS)
     sa_if->sa_get_from_spi(0, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     // test_association->ecs_len = 1;
-    test_association->ecs       = CRYPTO_CIPHER_NONE;
-    test_association->est       = 0;
-    test_association->ast       = 0;
-    
+    test_association->ecs = CRYPTO_CIPHER_NONE;
+    test_association->est = 0;
+    test_association->ast = 0;
+
     // set all keys to active
     for (int x = 128; x <= 143; x++)
     {
-        ekp = key_if->get_key(x);
+        ekp            = key_if->get_key(x);
         ekp->key_state = KEY_ACTIVE;
     }
 
@@ -949,11 +973,11 @@ UTEST(EP_KEY_MGMT, TLV_KEY_DEACTIVATE_TESTS)
     printf(KGRN "Checking for 1 key (16 bits), should pass... \n" RESET);
     status = Crypto_TC_ProcessSecurity(buffer_TLV_ONE_KEY_b, &buffer_TLV_MAX_MINUS_len, &tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-    
+
     // set all keys to active
     for (int x = 128; x <= 143; x++)
     {
-        ekp = key_if->get_key(x);
+        ekp            = key_if->get_key(x);
         ekp->key_state = KEY_ACTIVE;
     }
 
@@ -964,7 +988,7 @@ UTEST(EP_KEY_MGMT, TLV_KEY_DEACTIVATE_TESTS)
     // set all keys to active
     for (int x = 128; x <= 137; x++)
     {
-        ekp = key_if->get_key(x);
+        ekp            = key_if->get_key(x);
         ekp->key_state = KEY_ACTIVE;
     }
 
@@ -1021,84 +1045,93 @@ UTEST(EP_KEY_MGMT, TLV_KEY_VERIFY_TESTS)
 
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
-                         //  Tf Pri Header (5 bytes)    
+    //  Tf Pri Header (5 bytes)
     char *buffer_VERIFY_h = "200300DA00"
-                         //  Segment Header (1 byte)
+                            //  Segment Header (1 byte)
                             "ff"
-                         // Spi
+                            // Spi
                             "0000"
-                        //  // Arsn
-                        //     "0000"
-                         //  Spp Header (6 bytes)
+                            //  // Arsn
+                            //     "0000"
+                            //  Spp Header (6 bytes)
                             "1980d03a00ca"
-                         //  ? Pus Header ? (4 bytes)  
+                            //  ? Pus Header ? (4 bytes)
                             "197f0b00"
-                         //  Pdu Header (3 bytes)
+                            //  Pdu Header (3 bytes)
                             "040630"
-                         //  2x Key Verify per lines
+                            //  2x Key Verify per lines
                             "008071fc3ad5b1c36ad56bd5a5432315cdab008171fc3ad5b1c36ad56bd5a5432315cdab"
                             "008271fc3ad5b1c36ad56bd5a5432315cdab008371fc3ad5b1c36ad56bd5a5432315cdab"
                             "008471fc3ad5b1c36ad56bd5a5432315cdab008571fc3ad5b1c36ad56bd5a5432315cdab"
                             "008671fc3ad5b1c36ad56bd5a5432315cdab008771fc3ad5b1c36ad56bd5a5432315cdab"
                             "008871fc3ad5b1c36ad56bd5a5432315cdab000471fc3ad5b1c36ad56bd5a5432315cdab"
-                         //  1x Key Verify
+                            //  1x Key Verify
                             "000971fc3ad5b1c36ad56bd5a5432315cdab";
     // TRUTH PDU
-    char *buffer_TRUTH_RESPONSE_h =
-        "0880D03A0206197F0B00840FD000800000000000000000000000017359FCF378204BCED13B4EE9CEB3E50117F651040DDE44BAB565420A9F9903930081"
-        "000000000000000000000002C59CBBDDBE2CE97DF86F0526F1894DE590DEB467B6BD3265F22C01B162AB22820082000000000000000000000003367BBE"
-        "86E9617F088E4CA30587E5EA03740C1CA01D76204C1459F060101D993900830000000000000000000000049A20A10557932C2E7BB81F58AB68BBF88A56"
-        "EAC6DF40B39D408408A5AF3C2A8C008400000000000000000000000545047BE75FD08EDD748D21EA3D0A8D773ED1787BDCF4891C5E17607013AA636D00"
-        "850000000000000000000000064090A8ABEA00D6E5D177C9A1BED2EC169DF4973A3689F27C173DA6A70813E71000860000000000000000000000071825"
-        "0F4D24C187DB4B79C546530D3C9EBFD9AE8C8308AB0DDE90B115715B5D4F00870000000000000000000000080AA17E230D01EB41B9B8365713111B879A"
-        "AE1756BE6C8B0B4722A3F29CCBCD560088000000000000000000000009EC61B575DF58107D35D0951143C28B1FC0C20C25B1C828C623E8F13FFD9C8B68"
-        "000400000000000000000000000AA5440D1744A20486D826B879182DE4D4AA2613E7C81897B5B8200A3CA5F8BF0A000900000000000000000000000BF6"
-        "057F21BB12079044702D4EED7B30D96C12CBE6E045C213291BBD473DA3FC7A";
+    char *buffer_TRUTH_RESPONSE_h = "0880D03A0206197F0B00840FD000800000000000000000000000017359FCF378204BCED13B4EE9CEB3"
+                                    "E50117F651040DDE44BAB565420A9F9903930081"
+                                    "000000000000000000000002C59CBBDDBE2CE97DF86F0526F1894DE590DEB467B6BD3265F22C01B162"
+                                    "AB22820082000000000000000000000003367BBE"
+                                    "86E9617F088E4CA30587E5EA03740C1CA01D76204C1459F060101D9939008300000000000000000000"
+                                    "00049A20A10557932C2E7BB81F58AB68BBF88A56"
+                                    "EAC6DF40B39D408408A5AF3C2A8C008400000000000000000000000545047BE75FD08EDD748D21EA3D"
+                                    "0A8D773ED1787BDCF4891C5E17607013AA636D00"
+                                    "850000000000000000000000064090A8ABEA00D6E5D177C9A1BED2EC169DF4973A3689F27C173DA6A7"
+                                    "0813E71000860000000000000000000000071825"
+                                    "0F4D24C187DB4B79C546530D3C9EBFD9AE8C8308AB0DDE90B115715B5D4F0087000000000000000000"
+                                    "0000080AA17E230D01EB41B9B8365713111B879A"
+                                    "AE1756BE6C8B0B4722A3F29CCBCD560088000000000000000000000009EC61B575DF58107D35D09511"
+                                    "43C28B1FC0C20C25B1C828C623E8F13FFD9C8B68"
+                                    "000400000000000000000000000AA5440D1744A20486D826B879182DE4D4AA2613E7C81897B5B8200A"
+                                    "3CA5F8BF0A000900000000000000000000000BF6"
+                                    "057F21BB12079044702D4EED7B30D96C12CBE6E045C213291BBD473DA3FC7A";
 
-                             //  Tf Pri Header (5 bytes)    
+    //  Tf Pri Header (5 bytes)
     char *buffer_TLV_SHORT_h = "200300Da00"
-                         //  Segment Header (1 byte)
-                            "ff"
-                         // Spi
-                            "0000"
-                         //  Spp Header (6 bytes)
-                            "1980d03a00c"
-                         //  ? Pus Header ? (4 bytes)  
-                            "197f0b00"
-                         //  Pdu Header (3 bytes)
-                            "040620" // TOO SHORT! to fit in the outer Space Pkt
-                         //  2x Key Verify per lines
-                            "008071fc3ad5b1c36ad56bd5a5432315cdab008171fc3ad5b1c36ad56bd5a5432315cdab"
-                            "008271fc3ad5b1c36ad56bd5a5432315cdab008371fc3ad5b1c36ad56bd5a5432315cdab"
-                            "008471fc3ad5b1c36ad56bd5a5432315cdab008571fc3ad5b1c36ad56bd5a5432315cdab"
-                            "008671fc3ad5b1c36ad56bd5a5432315cdab008771fc3ad5b1c36ad56bd5a5432315cdab"
-                            "008871fc3ad5b1c36ad56bd5a5432315cdab000471fc3ad5b1c36ad56bd5a5432315cdab"
-                         //  1x Key Verify
-                            "000971fc3ad5b1c36ad56bd5a5432315cdab";
+                               //  Segment Header (1 byte)
+                               "ff"
+                               // Spi
+                               "0000"
+                               //  Spp Header (6 bytes)
+                               "1980d03a00c"
+                               //  ? Pus Header ? (4 bytes)
+                               "197f0b00"
+                               //  Pdu Header (3 bytes)
+                               "040620" // TOO SHORT! to fit in the outer Space Pkt
+                                        //  2x Key Verify per lines
+                               "008071fc3ad5b1c36ad56bd5a5432315cdab008171fc3ad5b1c36ad56bd5a5432315cdab"
+                               "008271fc3ad5b1c36ad56bd5a5432315cdab008371fc3ad5b1c36ad56bd5a5432315cdab"
+                               "008471fc3ad5b1c36ad56bd5a5432315cdab008571fc3ad5b1c36ad56bd5a5432315cdab"
+                               "008671fc3ad5b1c36ad56bd5a5432315cdab008771fc3ad5b1c36ad56bd5a5432315cdab"
+                               "008871fc3ad5b1c36ad56bd5a5432315cdab000471fc3ad5b1c36ad56bd5a5432315cdab"
+                               //  1x Key Verify
+                               "000971fc3ad5b1c36ad56bd5a5432315cdab";
 
-                            //  Tf Pri Header (5 bytes)    
+    //  Tf Pri Header (5 bytes)
     char *buffer_TLV_LONG_h = "200300Da00"
-                         //  Segment Header (1 byte)
-                            "ff"
-                         // Spi
-                            "0000"
-                         //  Spp Header (6 bytes)
-                            "1980d03a00ca"
-                         //  ? Pus Header ? (4 bytes)  
-                            "197f0b00"
-                         //  Pdu Header (3 bytes)
-                            "040650" // TOO LONG to fit in the the outer Space Pkt!
-                         //  2x Key Verify per lines
-                            "008071fc3ad5b1c36ad56bd5a5432315cdab008171fc3ad5b1c36ad56bd5a5432315cdab"
-                            "008271fc3ad5b1c36ad56bd5a5432315cdab008371fc3ad5b1c36ad56bd5a5432315cdab"
-                            "008471fc3ad5b1c36ad56bd5a5432315cdab008571fc3ad5b1c36ad56bd5a5432315cdab"
-                            "008671fc3ad5b1c36ad56bd5a5432315cdab008771fc3ad5b1c36ad56bd5a5432315cdab"
-                            "008871fc3ad5b1c36ad56bd5a5432315cdab000471fc3ad5b1c36ad56bd5a5432315cdab"
-                         //  1x Key Verify
-                            "000971fc3ad5b1c36ad56bd5a5432315cdab";
+                              //  Segment Header (1 byte)
+                              "ff"
+                              // Spi
+                              "0000"
+                              //  Spp Header (6 bytes)
+                              "1980d03a00ca"
+                              //  ? Pus Header ? (4 bytes)
+                              "197f0b00"
+                              //  Pdu Header (3 bytes)
+                              "040650" // TOO LONG to fit in the the outer Space Pkt!
+                                       //  2x Key Verify per lines
+                              "008071fc3ad5b1c36ad56bd5a5432315cdab008171fc3ad5b1c36ad56bd5a5432315cdab"
+                              "008271fc3ad5b1c36ad56bd5a5432315cdab008371fc3ad5b1c36ad56bd5a5432315cdab"
+                              "008471fc3ad5b1c36ad56bd5a5432315cdab008571fc3ad5b1c36ad56bd5a5432315cdab"
+                              "008671fc3ad5b1c36ad56bd5a5432315cdab008771fc3ad5b1c36ad56bd5a5432315cdab"
+                              "008871fc3ad5b1c36ad56bd5a5432315cdab000471fc3ad5b1c36ad56bd5a5432315cdab"
+                              //  1x Key Verify
+                              "000971fc3ad5b1c36ad56bd5a5432315cdab";
 
-    uint8_t *buffer_nist_key_b, *buffer_VERIFY_b, *buffer_TRUTH_RESPONSE_b, *buffer_TLV_SHORT_b, *buffer_TLV_LONG_b     = NULL;
-    int      buffer_nist_key_len, buffer_VERIFY_len, buffer_TLV_SHORT_len, buffer_TLV_LONG_len, buffer_TRUTH_RESPONSE_len = 0;
+    uint8_t *buffer_nist_key_b, *buffer_VERIFY_b, *buffer_TRUTH_RESPONSE_b, *buffer_TLV_SHORT_b,
+        *buffer_TLV_LONG_b = NULL;
+    int buffer_nist_key_len, buffer_VERIFY_len, buffer_TLV_SHORT_len, buffer_TLV_LONG_len,
+        buffer_TRUTH_RESPONSE_len = 0;
 
     // Setup Processed Frame For Decryption
     TC_t tc_nist_processed_frame = {0};
@@ -1112,13 +1145,13 @@ UTEST(EP_KEY_MGMT, TLV_KEY_VERIFY_TESTS)
 
     // Activate SA 0
     sa_if->sa_get_from_spi(0, &test_association);
-    test_association->sa_state  = SA_OPERATIONAL;
-    test_association->ecs_len   = 0;
-    test_association->ecs       = CRYPTO_CIPHER_NONE;
-    test_association->est       = 0;
-    test_association->ast       = 0;
-    test_association->shivf_len = 0;
-    test_association->iv_len    = 0;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ecs_len        = 0;
+    test_association->ecs            = CRYPTO_CIPHER_NONE;
+    test_association->est            = 0;
+    test_association->ast            = 0;
+    test_association->shivf_len      = 0;
+    test_association->iv_len         = 0;
     test_association->gvcid_blk.scid = 0;
 
     // Insert key into keyring of SA 9

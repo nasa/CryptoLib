@@ -1298,10 +1298,10 @@ UTEST(TC_PROCESS, TC_HEAP_BUFFER_OVERFLOW_TEST)
     memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
 
     // Test frame setup
-    char    *test_frame_pt_h = "080300007f0b000afd020202027fff02020202020202020202020202029bdd5f3c98dd1c50d27a430"
-                               "a4b6757aa33ec183952a9f76e504eb5f8001066ed6c00c8788e11997f2a058da1633e11fed9851d45"
-                               "7bb31a9637ec8f4f15bc8575a0e7104dba5c666b17f7cccdc2adbff9";
-    uint8_t *test_frame_pt_b = NULL;
+    char    *test_frame_pt_h   = "080300007f0b000afd020202027fff02020202020202020202020202029bdd5f3c98dd1c50d27a430"
+                                 "a4b6757aa33ec183952a9f76e504eb5f8001066ed6c00c8788e11997f2a058da1633e11fed9851d45"
+                                 "7bb31a9637ec8f4f15bc8575a0e7104dba5c666b17f7cccdc2adbff9";
+    uint8_t *test_frame_pt_b   = NULL;
     int      test_frame_pt_len = 0;
 
     SecurityAssociation_t *test_association;
@@ -1351,20 +1351,20 @@ UTEST(TC_PROCESS, TC_PROCESS_PREP_AAD_UNDERFLOW_TEST)
     memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
 
     // Test frame setup
-    char    *test_frame_pt_h = "080300080B00000AE3B20E";
-    uint8_t *test_frame_pt_b = NULL;
+    char    *test_frame_pt_h   = "080300080B00000AE3B20E";
+    uint8_t *test_frame_pt_b   = NULL;
     int      test_frame_pt_len = 0;
 
     SecurityAssociation_t *test_association;
     sa_if->sa_get_from_spi(10, &test_association);
-    test_association->sa_state  = SA_OPERATIONAL;
+    test_association->sa_state = SA_OPERATIONAL;
 
     crypto_key_t *ekp = NULL;
     ekp               = key_if->get_key(test_association->ekid);
     ekp->key_state    = KEY_ACTIVE;
 
     // Convert input test frame
-    hex_conversion(test_frame_pt_h, (char**)&test_frame_pt_b, &test_frame_pt_len);
+    hex_conversion(test_frame_pt_h, (char **)&test_frame_pt_b, &test_frame_pt_len);
 
     status = Crypto_TC_ProcessSecurity(test_frame_pt_b, &test_frame_pt_len, tc_sdls_processed_frame);
 

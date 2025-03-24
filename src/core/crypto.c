@@ -298,8 +298,8 @@ uint8_t Crypto_Prep_Reply(uint8_t *reply, uint8_t appID)
     }
 
     // Fill reply with Tag and Length
-    reply[count++] = (sdls_frame.tlv_pdu.hdr.type << 7) | (sdls_frame.tlv_pdu.hdr.uf << 6) | (sdls_frame.tlv_pdu.hdr.sg << 4) |
-                     (sdls_frame.tlv_pdu.hdr.pid);
+    reply[count++] = (sdls_frame.tlv_pdu.hdr.type << 7) | (sdls_frame.tlv_pdu.hdr.uf << 6) |
+                     (sdls_frame.tlv_pdu.hdr.sg << 4) | (sdls_frame.tlv_pdu.hdr.pid);
     reply[count++] = (sdls_frame.tlv_pdu.hdr.pdu_len & 0xFF00) >> 8;
     reply[count++] = (sdls_frame.tlv_pdu.hdr.pdu_len & 0x00FF);
 
@@ -894,7 +894,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                     sdls_frame.pus.sid   = (tc_sdls_processed_frame->tc_pdu[9] & 0xF0) >> 4;
                     sdls_frame.pus.spare = (tc_sdls_processed_frame->tc_pdu[9] & 0x0F);
 
-                // SDLS TLV PDU
+                    // SDLS TLV PDU
                     sdls_frame.tlv_pdu.hdr.type = (tc_sdls_processed_frame->tc_pdu[10] & 0x80) >> 7;
                     sdls_frame.tlv_pdu.hdr.uf   = (tc_sdls_processed_frame->tc_pdu[10] & 0x40) >> 6;
                     sdls_frame.tlv_pdu.hdr.sg   = (tc_sdls_processed_frame->tc_pdu[10] & 0x30) >> 4;
@@ -903,25 +903,28 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                         (tc_sdls_processed_frame->tc_pdu[11] << 8) | tc_sdls_processed_frame->tc_pdu[12];
 
                     // Subtract headers from total frame length
-                    uint16_t derived_tlv = (tc_sdls_processed_frame->tc_pdu_len - CCSDS_HDR_SIZE - ECSS_PUS_SIZE - SDLS_TLV_HDR_SIZE);
+                    uint16_t derived_tlv =
+                        (tc_sdls_processed_frame->tc_pdu_len - CCSDS_HDR_SIZE - ECSS_PUS_SIZE - SDLS_TLV_HDR_SIZE);
                     len_ingest = len_ingest; // suppress error for now
 #ifdef CCSDS_DEBUG
                     printf("Printing lengths for sanity check:\n");
                     printf("\t TC Frame Header Length (bytes): %d \n", tc_sdls_processed_frame->tc_header.fl);
-                    printf("\t TC Frame Actual Length (bytes): %d \n", tc_sdls_processed_frame->tc_header.fl+1);
+                    printf("\t TC Frame Actual Length (bytes): %d \n", tc_sdls_processed_frame->tc_header.fl + 1);
                     printf("\t TC Frame Space Pkt Length (bytes): %d \n", tc_sdls_processed_frame->tc_pdu_len);
                     printf("\t Received TLV Length (bits): %d \n", sdls_frame.tlv_pdu.hdr.pdu_len);
                     printf("\t Derived TLV Length (bytes): %d \n", derived_tlv);
-                    printf("\t Received TLV Length (bytes): %f \n", sdls_frame.tlv_pdu.hdr.pdu_len/8.0);
+                    printf("\t Received TLV Length (bytes): %f \n", sdls_frame.tlv_pdu.hdr.pdu_len / 8.0);
 #endif
                     // Sanity check - does the length of the pdu header match the number of bytes we have?
-                    // CODE REVIEW - PDUs allow lengths in bits, it is plausible that only a few bits of a byte are needed
-                    // but would require a full byte for transmission. I can't find anything atm in docs to dispute this
-                    if (((double)(sdls_frame.tlv_pdu.hdr.pdu_len/8.0) != derived_tlv) &&  (floor((double)(sdls_frame.tlv_pdu.hdr.pdu_len/8.0)) != derived_tlv-1))
+                    // CODE REVIEW - PDUs allow lengths in bits, it is plausible that only a few bits of a byte are
+                    // needed but would require a full byte for transmission. I can't find anything atm in docs to
+                    // dispute this
+                    if (((double)(sdls_frame.tlv_pdu.hdr.pdu_len / 8.0) != derived_tlv) &&
+                        (floor((double)(sdls_frame.tlv_pdu.hdr.pdu_len / 8.0)) != derived_tlv - 1))
                     {
 #ifdef PDU_DEBUG
                         printf(KRED "Packet PDU_LEN Not Equal To Derived PDU Len\n" RESET);
-#endif                        
+#endif
                         return CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
                     }
 
@@ -936,7 +939,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                     {
 #ifdef PDU_DEBUG
                         printf(KRED "Packet Header Length GT TLV_DATA_SIZE\n" RESET);
-#endif                        
+#endif
                         status = CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
                         return status;
                     }
@@ -954,15 +957,15 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
 
                     // Make sure TLV isn't larger than we have allocated, and it is sane given total frame length
                     uint16_t max_tlv = tc_sdls_processed_frame->tc_header.fl - CCSDS_HDR_SIZE - SDLS_TLV_HDR_SIZE;
-                    len_ingest = len_ingest; // suppress error for now
+                    len_ingest       = len_ingest; // suppress error for now
 #ifdef PDU_DEBUG
-                    printf("PDU_LEN: %d\n",sdls_frame.tlv_pdu.hdr.pdu_len);
-#endif                    
+                    printf("PDU_LEN: %d\n", sdls_frame.tlv_pdu.hdr.pdu_len);
+#endif
                     if ((sdls_frame.tlv_pdu.hdr.pdu_len / 8) > max_tlv)
                     {
 #ifdef PDU_DEBUG
                         printf(KRED "PDU_LEN GT MAX_TLV\n" RESET);
-#endif                        
+#endif
                         return CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
                     }
                     if ((sdls_frame.hdr.pkt_length < TLV_DATA_SIZE) && (sdls_frame.hdr.pkt_length < max_tlv))
@@ -1019,7 +1022,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
 #endif
                 // No Packet HDR or PUS in these frames
                 // SDLS TLV PDU
-                sdls_frame.hdr.type    = (tc_sdls_processed_frame->tc_pdu[0] & 0x80) >> 7;
+                sdls_frame.hdr.type        = (tc_sdls_processed_frame->tc_pdu[0] & 0x80) >> 7;
                 sdls_frame.tlv_pdu.hdr.uf  = (tc_sdls_processed_frame->tc_pdu[0] & 0x40) >> 6;
                 sdls_frame.tlv_pdu.hdr.sg  = (tc_sdls_processed_frame->tc_pdu[0] & 0x30) >> 4;
                 sdls_frame.tlv_pdu.hdr.pid = (tc_sdls_processed_frame->tc_pdu[0] & 0x0F);

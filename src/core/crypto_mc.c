@@ -230,7 +230,7 @@ int32_t Crypto_MC_selftest(uint8_t *ingest)
     sdls_frame.hdr.pkt_length =
         CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
     sdls_frame.tlv_pdu.data[0] = result;
-    count                  = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
+    count                      = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
 
     sdls_ep_reply[count] = result;
     count++;
@@ -271,7 +271,7 @@ int32_t Crypto_SA_readARSN(uint8_t *ingest)
 
         // Read ingest
         spi = ((uint8_t)sdls_frame.tlv_pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.tlv_pdu.data[1];
-      
+
         status = sa_if->sa_get_from_spi(spi, &sa_ptr);
 
         if (status != CRYPTO_LIB_SUCCESS)

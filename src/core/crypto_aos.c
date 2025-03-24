@@ -55,10 +55,10 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     uint32_t               pkcs_padding    = 0;
     uint16_t               new_fecf        = 0x0000;
     uint8_t                ecs_is_aead_algorithm;
-    SecurityAssociation_t *sa_ptr = NULL;
-    uint8_t                tfvn   = 0;
-    uint16_t               scid   = 0;
-    uint16_t               vcid   = 0;
+    SecurityAssociation_t *sa_ptr      = NULL;
+    uint8_t                tfvn        = 0;
+    uint16_t               scid        = 0;
+    uint16_t               vcid        = 0;
     uint16_t               cbc_padding = 0;
 
     // Prevent set but unused error
@@ -122,7 +122,8 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         return status;
     }
 
-    if((len_ingest < current_managed_parameters_struct.max_frame_size) && (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC) && (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC_MAC))
+    if ((len_ingest < current_managed_parameters_struct.max_frame_size) && (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC) &&
+        (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC_MAC))
     {
         status = CRYPTO_LIB_ERR_AOS_FL_LT_MAX_FRAME_SIZE;
         mc_if->mc_log(status);
@@ -130,7 +131,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     }
     else if ((sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC) || (sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC_MAC))
     {
-        if((current_managed_parameters_struct.max_frame_size - len_ingest) <= 16)
+        if ((current_managed_parameters_struct.max_frame_size - len_ingest) <= 16)
         {
             cbc_padding = current_managed_parameters_struct.max_frame_size - len_ingest;
         }
@@ -217,9 +218,9 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         printf(KYEL "Calculating FHECF...\n" RESET);
 #endif
         uint16_t calculated_fhecf = Crypto_Calc_FHECF(pTfBuffer);
-        pTfBuffer[idx] = (calculated_fhecf >> 8) & 0x00FF ;
-        pTfBuffer[idx+1] = (calculated_fhecf) & 0x00FF ;
-        idx = 8;
+        pTfBuffer[idx]            = (calculated_fhecf >> 8) & 0x00FF;
+        pTfBuffer[idx + 1]        = (calculated_fhecf)&0x00FF;
+        idx                       = 8;
     }
 
     // Detect if optional variable length Insert Zone is present
@@ -378,7 +379,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         pdu_len -= 2;
     }
 
-    if(current_managed_parameters_struct.max_frame_size < pdu_len)
+    if (current_managed_parameters_struct.max_frame_size < pdu_len)
     {
         status = CRYPTO_LIB_ERR_AOS_FRAME_LENGTH_UNDERFLOW;
         mc_if->mc_log(status);
@@ -708,13 +709,13 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     uint8_t                ecs_is_aead_algorithm;
     uint32_t               encryption_cipher = 0;
     uint8_t                iv_loc            = 0;
-    int                    mac_loc         = 0;
-    uint16_t               pdu_len         = 1;
-    uint8_t               *p_new_dec_frame = NULL;
-    SecurityAssociation_t *sa_ptr          = NULL;
-    uint8_t                sa_service_type = -1;
-    uint8_t                spi             = -1;
-    uint8_t                aos_hdr_len     = 6;
+    int                    mac_loc           = 0;
+    uint16_t               pdu_len           = 1;
+    uint8_t               *p_new_dec_frame   = NULL;
+    SecurityAssociation_t *sa_ptr            = NULL;
+    uint8_t                sa_service_type   = -1;
+    uint8_t                spi               = -1;
+    uint8_t                aos_hdr_len       = 6;
 
     // Bit math to give concise access to values in the ingest
     aos_frame_pri_hdr.tfvn = ((uint8_t)p_ingest[0] & 0xC0) >> 6;

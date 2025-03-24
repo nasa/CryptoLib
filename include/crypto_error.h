@@ -151,7 +151,6 @@
 #define CRYPTO_LIB_ERR_TM_FL_LT_MAX_FRAME_SIZE                              (-78)
 #define CRYPTO_LIB_ERR_INVALID_FHECF                                        (-79)
 
-
 #define CRYPTO_CORE_ERROR_CODES_MAX -79
 
 // Define codes for returning MDB Strings, and determining error based on strings

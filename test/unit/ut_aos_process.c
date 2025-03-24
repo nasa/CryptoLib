@@ -1924,7 +1924,6 @@ UTEST(AOS_PROCESS, AOS_KEY_STATE_TEST)
     free(ptr_processed_frame);
 }
 
-
 UTEST(AOS_PROCESS, AOS_PROCESS_HEAP_UNDERFLOW_TEST)
 {
     remove("sa_save_file.bin");
@@ -1948,7 +1947,7 @@ UTEST(AOS_PROCESS, AOS_PROCESS_HEAP_UNDERFLOW_TEST)
     status = Crypto_Init();
 
     // Test frame setup
-    char *framed_aos_h   = "403030303030303030FF35DF4008EF";
+    char *framed_aos_h = "403030303030303030FF35DF4008EF";
 
     char *framed_aos_b   = NULL;
     int   framed_aos_len = 0;
@@ -1956,7 +1955,7 @@ UTEST(AOS_PROCESS, AOS_PROCESS_HEAP_UNDERFLOW_TEST)
 
     SecurityAssociation_t *sa_ptr = NULL;
     SaInterface            sa_if  = get_sa_interface_inmemory();
-  
+
     sa_if->sa_get_from_spi(48, &sa_ptr);
     sa_ptr->sa_state = SA_OPERATIONAL;
 
@@ -1974,7 +1973,6 @@ UTEST(AOS_PROCESS, AOS_PROCESS_HEAP_UNDERFLOW_TEST)
     free(ptr_processed_frame);
 }
 
-
 UTEST(AOS_PROCESS, AOS_FHECF_TEST)
 {
     remove("sa_save_file.bin");
@@ -1983,7 +1981,7 @@ UTEST(AOS_PROCESS, AOS_FHECF_TEST)
     uint8_t *ptr_processed_frame = NULL;
     uint16_t processed_aos_len;
 
-    for (int i=0; i<RS_PARITY; i++)
+    for (int i = 0; i < RS_PARITY; i++)
     {
         printf("Parity[%d] is: %01X\n", i, parity[i]);
     }

@@ -992,7 +992,7 @@ static int32_t sa_start(TC_t *tc_frame)
     crypto_gvcid_t gvcid;
     int            x;
     int            i;
-    int            num_gvcid = (((sdls_frame.tlv_pdu.hdr.pdu_len/8) - 2) / 4);
+    int            num_gvcid = (((sdls_frame.tlv_pdu.hdr.pdu_len / 8) - 2) / 4);
 
     printf("\nParsed GVCID: %d\n", num_gvcid);
 
@@ -1008,8 +1008,8 @@ static int32_t sa_start(TC_t *tc_frame)
         //   2 : User Flag (uf)
         // 3-4 : Service Group Field (sg)
         // 5-8 : Procedure Identification Field (pid)
-        sa[spi].lpid = (sdls_frame.tlv_pdu.hdr.type << 7) | (sdls_frame.tlv_pdu.hdr.uf << 6) | (sdls_frame.tlv_pdu.hdr.sg << 4) |
-                       sdls_frame.tlv_pdu.hdr.pid;
+        sa[spi].lpid = (sdls_frame.tlv_pdu.hdr.type << 7) | (sdls_frame.tlv_pdu.hdr.uf << 6) |
+                       (sdls_frame.tlv_pdu.hdr.sg << 4) | sdls_frame.tlv_pdu.hdr.pid;
 
         if (sa[spi].sa_state == SA_KEYED)
         {
@@ -1020,11 +1020,12 @@ static int32_t sa_start(TC_t *tc_frame)
                 gvcid.tfvn = (sdls_frame.tlv_pdu.data[count] >> 4);
                 gvcid.scid = (sdls_frame.tlv_pdu.data[count] << 12) | (sdls_frame.tlv_pdu.data[count + 1] << 4) |
                              (sdls_frame.tlv_pdu.data[count + 2] >> 4);
-                gvcid.vcid = ((sdls_frame.tlv_pdu.data[count + 2] << 4) | (sdls_frame.tlv_pdu.data[count + 3] & 0xC0) >> 6
-                );
-                
-                printf("\nParsed GVCID %d:\n\tTFVN: %d\n\tSCID: %d\n\tVCID: %d\n", x, gvcid.tfvn, gvcid.scid, gvcid.vcid);
-                
+                gvcid.vcid =
+                    ((sdls_frame.tlv_pdu.data[count + 2] << 4) | (sdls_frame.tlv_pdu.data[count + 3] & 0xC0) >> 6);
+
+                printf("\nParsed GVCID %d:\n\tTFVN: %d\n\tSCID: %d\n\tVCID: %d\n", x, gvcid.tfvn, gvcid.scid,
+                       gvcid.vcid);
+
                 if (current_managed_parameters_struct.has_segmentation_hdr == TC_HAS_SEGMENT_HDRS)
                 {
                     gvcid.mapid = (sdls_frame.tlv_pdu.data[count + 3] & 0x3F);
@@ -1033,7 +1034,7 @@ static int32_t sa_start(TC_t *tc_frame)
                 {
                     gvcid.mapid = 0;
                 }
-                
+
                 count += 4;
                 printf("\tMAPID: %d\n", gvcid.mapid);
 
@@ -1064,8 +1065,8 @@ static int32_t sa_start(TC_t *tc_frame)
                 {                                        // Clear all GVCIDs for provided SPI
                     if (gvcid.mapid == TYPE_TM)
                     {
-                        for (i = 0; i < NUM_GVCID; i++) // This is looping 
-                        { // TM
+                        for (i = 0; i < NUM_GVCID; i++) // This is looping
+                        {                               // TM
                             sa[spi].gvcid_blk.tfvn  = 0;
                             sa[spi].gvcid_blk.scid  = 0;
                             sa[spi].gvcid_blk.vcid  = 0;
@@ -1172,8 +1173,8 @@ static int32_t sa_stop(TC_t *tc_frame)
         //   2 : User Flag (uf)
         // 3-4 : Service Group Field (sg)
         // 5-8 : Procedure Identification Field (pid)
-        sa[spi].lpid = (sdls_frame.tlv_pdu.hdr.type << 7) | (sdls_frame.tlv_pdu.hdr.uf << 6) | (sdls_frame.tlv_pdu.hdr.sg << 4) |
-                       sdls_frame.tlv_pdu.hdr.pid;
+        sa[spi].lpid = (sdls_frame.tlv_pdu.hdr.type << 7) | (sdls_frame.tlv_pdu.hdr.uf << 6) |
+                       (sdls_frame.tlv_pdu.hdr.sg << 4) | sdls_frame.tlv_pdu.hdr.pid;
 
         if (sa[spi].sa_state == SA_OPERATIONAL)
         {
@@ -1256,13 +1257,14 @@ static int32_t sa_rekey(TC_t *tc_frame)
         //   2 : User Flag (uf)
         // 3-4 : Service Group Field (sg)
         // 5-8 : Procedure Identification Field (pid)
-        sa[spi].lpid = (sdls_frame.tlv_pdu.hdr.type << 7) | (sdls_frame.tlv_pdu.hdr.uf << 6) | (sdls_frame.tlv_pdu.hdr.sg << 4) |
-                       sdls_frame.tlv_pdu.hdr.pid;
+        sa[spi].lpid = (sdls_frame.tlv_pdu.hdr.type << 7) | (sdls_frame.tlv_pdu.hdr.uf << 6) |
+                       (sdls_frame.tlv_pdu.hdr.sg << 4) | sdls_frame.tlv_pdu.hdr.pid;
 
         if (sa[spi].sa_state == SA_UNKEYED)
         { // Encryption Key
-            sa[spi].ekid = ((uint8_t)sdls_frame.tlv_pdu.data[count] << BYTE_LEN) | (uint8_t)sdls_frame.tlv_pdu.data[count + 1];
-            count        = count + 2;
+            sa[spi].ekid =
+                ((uint8_t)sdls_frame.tlv_pdu.data[count] << BYTE_LEN) | (uint8_t)sdls_frame.tlv_pdu.data[count + 1];
+            count = count + 2;
 
             // Anti-Replay Seq Num
 #ifdef PDU_DEBUG
@@ -1349,8 +1351,8 @@ static int32_t sa_expire(TC_t *tc_frame)
         //   2 : User Flag (uf)
         // 3-4 : Service Group Field (sg)
         // 5-8 : Procedure Identification Field (pid)
-        sa[spi].lpid = (sdls_frame.tlv_pdu.hdr.type << 7) | (sdls_frame.tlv_pdu.hdr.uf << 6) | (sdls_frame.tlv_pdu.hdr.sg << 4) |
-                       sdls_frame.tlv_pdu.hdr.pid;
+        sa[spi].lpid = (sdls_frame.tlv_pdu.hdr.type << 7) | (sdls_frame.tlv_pdu.hdr.uf << 6) |
+                       (sdls_frame.tlv_pdu.hdr.sg << 4) | sdls_frame.tlv_pdu.hdr.pid;
 
         if (sa[spi].sa_state == SA_KEYED)
         { // Change to 'Unkeyed' state
@@ -1416,8 +1418,8 @@ static int32_t sa_create(TC_t *tc_frame)
         //   2 : User Flag (uf)
         // 3-4 : Service Group Field (sg)
         // 5-8 : Procedure Identification Field (pid)
-        temp_sa->lpid = (sdls_frame.tlv_pdu.hdr.type << 7) | (sdls_frame.tlv_pdu.hdr.uf << 6) | (sdls_frame.tlv_pdu.hdr.sg << 4) |
-                        sdls_frame.tlv_pdu.hdr.pid;
+        temp_sa->lpid = (sdls_frame.tlv_pdu.hdr.type << 7) | (sdls_frame.tlv_pdu.hdr.uf << 6) |
+                        (sdls_frame.tlv_pdu.hdr.sg << 4) | sdls_frame.tlv_pdu.hdr.pid;
 
         // Write SA Configuration
         temp_sa->est        = ((uint8_t)sdls_frame.tlv_pdu.data[2] & 0x80) >> 7;
@@ -1441,8 +1443,9 @@ static int32_t sa_create(TC_t *tc_frame)
         {
             temp_sa->acs = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
         }
-        temp_sa->abm_len = (uint8_t)((sdls_frame.tlv_pdu.data[count] << BYTE_LEN) | (sdls_frame.tlv_pdu.data[count + 1]));
-        count            = count + 2;
+        temp_sa->abm_len =
+            (uint8_t)((sdls_frame.tlv_pdu.data[count] << BYTE_LEN) | (sdls_frame.tlv_pdu.data[count + 1]));
+        count = count + 2;
         for (x = 0; x < temp_sa->abm_len; x++)
         {
             temp_sa->abm[x] = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
@@ -1546,8 +1549,8 @@ static int32_t sa_delete(TC_t *tc_frame)
         //   2 : User Flag (uf)
         // 3-4 : Service Group Field (sg)
         // 5-8 : Procedure Identification Field (pid)
-        sa[spi].lpid = (sdls_frame.tlv_pdu.hdr.type << 7) | (sdls_frame.tlv_pdu.hdr.uf << 6) | (sdls_frame.tlv_pdu.hdr.sg << 4) |
-                       sdls_frame.tlv_pdu.hdr.pid;
+        sa[spi].lpid = (sdls_frame.tlv_pdu.hdr.type << 7) | (sdls_frame.tlv_pdu.hdr.uf << 6) |
+                       (sdls_frame.tlv_pdu.hdr.sg << 4) | sdls_frame.tlv_pdu.hdr.pid;
 
         if (sa[spi].sa_state == SA_UNKEYED)
         { // Change to 'None' state

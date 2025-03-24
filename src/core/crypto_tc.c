@@ -1020,7 +1020,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, const uint16_t in
     Crypto_TC_Calc_Lengths(&fecf_len, &segment_hdr_len, &ocf_len);
     // Calculate tf_payload length here to be used in other logic
 
-    if(temp_tc_header.fl <= TC_FRAME_HEADER_SIZE - segment_hdr_len - fecf_len + 1)
+    if (temp_tc_header.fl <= TC_FRAME_HEADER_SIZE - segment_hdr_len - fecf_len + 1)
     {
         status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW;
         printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
@@ -1770,7 +1770,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
     uint8_t                ecs_is_aead_algorithm = -1;
     crypto_key_t          *ekp                   = NULL;
     crypto_key_t          *akp                   = NULL;
-    int byte_idx                                 = 0;
+    int                    byte_idx              = 0;
 
     status = Crypto_TC_Process_Sanity_Check(len_ingest);
     if (status != CRYPTO_LIB_SUCCESS)
@@ -1878,7 +1878,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
 
     Crypto_TC_Calc_Lengths(&fecf_len, &segment_hdr_len, &ocf_len);
 
-    if(tc_sdls_processed_frame->tc_header.fl <= TC_FRAME_HEADER_SIZE - segment_hdr_len - fecf_len + 1)
+    if (tc_sdls_processed_frame->tc_header.fl <= TC_FRAME_HEADER_SIZE - segment_hdr_len - fecf_len + 1)
     {
         status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW;
         printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
@@ -1941,8 +1941,8 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
 
     // Todo -- if encrypt only, ignore stmacf_len entirely to avoid erroring on SA misconfiguration... Or just throw a
     // warning/error indicating SA misconfiguration?
-    tc_sdls_processed_frame->tc_pdu_len =
-        tc_sdls_processed_frame->tc_header.fl + 1 - tc_enc_payload_start_index - sa_ptr->stmacf_len - fecf_len; // TODO: subtract FSR/OCF?
+    tc_sdls_processed_frame->tc_pdu_len = tc_sdls_processed_frame->tc_header.fl + 1 - tc_enc_payload_start_index -
+                                          sa_ptr->stmacf_len - fecf_len; // TODO: subtract FSR/OCF?
 
     if (tc_sdls_processed_frame->tc_pdu_len >
         tc_sdls_processed_frame->tc_header.fl) // invalid header parsed, sizes overflowed & make no sense!
@@ -1955,7 +1955,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
 #ifdef DEBUG
     printf(KYEL "TC PDU Calculated Length: %d \n" RESET, tc_sdls_processed_frame->tc_pdu_len);
 #endif
-printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
+    printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
     /* Get Key */
     status = Crypto_TC_Get_Keys(&ekp, &akp, sa_ptr);
     if (status != CRYPTO_LIB_SUCCESS)
@@ -1964,7 +1964,7 @@ printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
         mc_if->mc_log(status);
         return status;
     }
-printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
+    printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
     status = Crypto_TC_Do_Decrypt(sa_service_type, ecs_is_aead_algorithm, ekp, sa_ptr, aad, tc_sdls_processed_frame,
                                   ingest, tc_enc_payload_start_index, aad_len, cam_cookies, akp, segment_hdr_len);
     if (status != CRYPTO_LIB_SUCCESS)
@@ -1974,7 +1974,7 @@ printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
         mc_if->mc_log(status);
         return status; // Cryptography IF call failed, return.
     }
-printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
+    printf("FILE: %s, LINE: %d\n", __FILE__, __LINE__);
     // Now that MAC has been verified, check IV & ARSN if applicable
     status = Crypto_TC_Check_IV_ARSN(sa_ptr, tc_sdls_processed_frame);
     if (status != CRYPTO_LIB_SUCCESS)
@@ -2115,12 +2115,13 @@ static int32_t crypto_handle_incrementing_nontransmitted_counter(uint8_t *dest, 
     int32_t status = CRYPTO_LIB_SUCCESS;
 
     /* Note: This assumes a max IV / ARSN size of 32.  If a larger value is needed, adjust in crypto_config.h*/
-    if (src_full_len > MAX_IV_LEN)  //TODO:  Does a define exist already?  Is this the best method to put a bound on IV/ARSN Size?
+    if (src_full_len >
+        MAX_IV_LEN) // TODO:  Does a define exist already?  Is this the best method to put a bound on IV/ARSN Size?
     {
         status = CRYPTO_LIB_ERR_IV_EXCEEDS_INCREMENT_SIZE;
     }
 
-    if( status == CRYPTO_LIB_SUCCESS)
+    if (status == CRYPTO_LIB_SUCCESS)
     {
         uint8_t temp_counter[MAX_IV_LEN];
         // Copy IV to temp
@@ -2153,12 +2154,13 @@ static int32_t crypto_handle_incrementing_nontransmitted_counter(uint8_t *dest, 
 
         if (counter_matches == CRYPTO_TRUE)
         {
-            // Retrieve non-transmitted portion of incremented counter that matches (and may have rolled over/incremented)
+            // Retrieve non-transmitted portion of incremented counter that matches (and may have rolled
+            // over/incremented)
             memcpy(dest, temp_counter, src_full_len - transmitted_len);
-    #ifdef DEBUG
+#ifdef DEBUG
             printf("Incremented IV is:\n");
             Crypto_hexprint(temp_counter, src_full_len);
-    #endif
+#endif
         }
         else
         {

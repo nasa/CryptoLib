@@ -45,15 +45,17 @@ int32_t Crypto_Key_OTAR(void)
     int         y;
     int32_t     status = CRYPTO_LIB_SUCCESS;
 
-    int pdu_keys = ((sdls_frame.tlv_pdu.hdr.pdu_len/BYTE_LEN) - SDLS_KEYID_LEN - SDLS_IV_LEN - MAC_SIZE) / (SDLS_KEYID_LEN + SDLS_KEY_LEN);
+    int pdu_keys = ((sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - SDLS_KEYID_LEN - SDLS_IV_LEN - MAC_SIZE) /
+                   (SDLS_KEYID_LEN + SDLS_KEY_LEN);
 
     int           w;
-    crypto_key_t *ekp = NULL;
+    crypto_key_t *ekp    = NULL;
     int expected_pdu_len = SDLS_KEYID_LEN + SDLS_IV_LEN + ((SDLS_KEYID_LEN + SDLS_KEY_LEN) * pdu_keys) + MAC_SIZE;
 #ifdef DEBUG
     printf("Expected PDU Length: %d (%d keys)\n", expected_pdu_len, pdu_keys);
 #endif
-    if ((sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) < SDLS_KEYID_LEN + SDLS_IV_LEN + ((SDLS_KEYID_LEN + SDLS_KEY_LEN) * pdu_keys) + MAC_SIZE)
+    if ((sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) <
+        SDLS_KEYID_LEN + SDLS_IV_LEN + ((SDLS_KEYID_LEN + SDLS_KEY_LEN) * pdu_keys) + MAC_SIZE)
     {
         return CRYPTO_LIB_ERR_OTAR_BAD_TLV_LENGTH;
     }
@@ -93,7 +95,7 @@ int32_t Crypto_Key_OTAR(void)
 #endif
     }
 
-    count = (sdls_frame.tlv_pdu.hdr.pdu_len/8) - MAC_SIZE;
+    count = (sdls_frame.tlv_pdu.hdr.pdu_len / 8) - MAC_SIZE;
     for (w = 0; w < MAC_SIZE; w++)
     { // MAC
         packet.mac[w] = sdls_frame.tlv_pdu.data[count + w];
@@ -117,7 +119,7 @@ int32_t Crypto_Key_OTAR(void)
 
     uint8_t ecs = CRYPTO_CIPHER_AES256_GCM; // Per SDLS baseline
     status      = cryptography_if->cryptography_aead_decrypt(
-             &(sdls_frame.tlv_pdu.data[14]),                           // plaintext output
+             &(sdls_frame.tlv_pdu.data[14]),                       // plaintext output
              (size_t)(pdu_keys * (SDLS_KEYID_LEN + SDLS_KEY_LEN)), // length of data
              NULL,                                                 // in place decryption
              0,                                                    // in data length
@@ -229,8 +231,8 @@ int32_t Crypto_Key_update(uint8_t state)
     int32_t        status;
     crypto_key_t  *ekp = NULL;
     int            x;
-    int pdu_length   = sdls_frame.tlv_pdu.hdr.pdu_len / 8;
-    int frame_length = sdls_frame.hdr.pkt_length;
+    int            pdu_length   = sdls_frame.tlv_pdu.hdr.pdu_len / 8;
+    int            frame_length = sdls_frame.hdr.pkt_length;
 
     if (key_if == NULL)
     {
@@ -243,7 +245,8 @@ int32_t Crypto_Key_update(uint8_t state)
         printf(KYEL "PDU Length not long enough to hold key values\n" RESET);
 #endif
     }
-    if ((state == KEY_DEACTIVATED || state == KEY_ACTIVE) && (pdu_length > SDLS_MAX_KEY_UPDATE_LEN || pdu_length > frame_length))
+    if ((state == KEY_DEACTIVATED || state == KEY_ACTIVE) &&
+        (pdu_length > SDLS_MAX_KEY_UPDATE_LEN || pdu_length > frame_length))
     {
 #ifdef PDU_DEBUG
         printf(KRED "PDU Length Exceded!\n" RESET);
@@ -260,7 +263,7 @@ int32_t Crypto_Key_update(uint8_t state)
         {
 #ifdef PDU_DEBUG
             printf(KRED "\nMax key updates exceded, exiting...\n" RESET);
-#endif            
+#endif
             return CRYPTO_LIB_ERROR;
         }
 
@@ -378,15 +381,17 @@ int32_t Crypto_Key_inventory(uint8_t *ingest)
     }
 
     // Read in PDU
-    packet.kid_first = ((uint8_t)sdls_frame.tlv_pdu.data[count] << BYTE_LEN) | ((uint8_t)sdls_frame.tlv_pdu.data[count + 1]);
-    count            = count + 2;
-    packet.kid_last  = ((uint8_t)sdls_frame.tlv_pdu.data[count] << BYTE_LEN) | ((uint8_t)sdls_frame.tlv_pdu.data[count + 1]);
-    count            = count + 2;
+    packet.kid_first =
+        ((uint8_t)sdls_frame.tlv_pdu.data[count] << BYTE_LEN) | ((uint8_t)sdls_frame.tlv_pdu.data[count + 1]);
+    count = count + 2;
+    packet.kid_last =
+        ((uint8_t)sdls_frame.tlv_pdu.data[count] << BYTE_LEN) | ((uint8_t)sdls_frame.tlv_pdu.data[count + 1]);
+    count = count + 2;
 
     // Prepare for Reply
-    range                      = packet.kid_last - packet.kid_first + 1;
+    range                          = packet.kid_last - packet.kid_first + 1;
     sdls_frame.tlv_pdu.hdr.pdu_len = (SDLS_KEY_INVENTORY_RPLY_SIZE * (range)) * BYTE_LEN;
-    sdls_frame.hdr.pkt_length  = CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE +
+    sdls_frame.hdr.pkt_length      = CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE +
                                 (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1 +
                                 2; // 2 = Num Keys Returned Field (2 Bytes)
     count = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
@@ -427,7 +432,7 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
 {
     // Local variables
     SDLS_KEYV_CMD_t packet;
-    int             pdu_keys = (sdls_frame.tlv_pdu.hdr.pdu_len/ 8) / SDLS_KEYV_CMD_BLK_SIZE;
+    int             pdu_keys = (sdls_frame.tlv_pdu.hdr.pdu_len / 8) / SDLS_KEYV_CMD_BLK_SIZE;
     int             x;
     int             y;
     uint16_t        count  = 0;
@@ -475,11 +480,12 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
     {
         sdls_frame.hdr.pkt_length =
             CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
-            printf("NO PUS: sdls_frame.hdr.pkt_length Calced as %d\n", sdls_frame.hdr.pkt_length);
+        printf("NO PUS: sdls_frame.hdr.pkt_length Calced as %d\n", sdls_frame.hdr.pkt_length);
     }
     else
     {
-        sdls_frame.hdr.pkt_length = CCSDS_HDR_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
+        sdls_frame.hdr.pkt_length =
+            CCSDS_HDR_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
         printf("WITH PUS: sdls_frame.hdr.pkt_length Calced as %d\n", sdls_frame.hdr.pkt_length);
     }
 
@@ -491,10 +497,10 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
         // Key ID
         sdls_ep_keyv_reply.blk[x].kid = packet.blk[x].kid;
 
-        sdls_ep_reply[pdu_data_idx]       = (packet.blk[x].kid & 0xFF00) >> BYTE_LEN;
+        sdls_ep_reply[pdu_data_idx] = (packet.blk[x].kid & 0xFF00) >> BYTE_LEN;
         pdu_data_idx += 1;
 
-        sdls_ep_reply[pdu_data_idx]       = (packet.blk[x].kid & 0x00FF);
+        sdls_ep_reply[pdu_data_idx] = (packet.blk[x].kid & 0x00FF);
         pdu_data_idx += 1;
         count += 2;
 
@@ -508,14 +514,14 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
         // Initialization Vector
         for (y = 0; y < SDLS_IV_LEN; y++)
         {
-            sdls_ep_keyv_reply.blk[x].iv[y]   = 0x00; //= *(tc_frame->tc_sec_header.iv + y);
-            sdls_ep_reply[pdu_data_idx]       = 0x00; //= *(tc_frame->tc_sec_header.iv + y);
+            sdls_ep_keyv_reply.blk[x].iv[y] = 0x00; //= *(tc_frame->tc_sec_header.iv + y);
+            sdls_ep_reply[pdu_data_idx]     = 0x00; //= *(tc_frame->tc_sec_header.iv + y);
             pdu_data_idx += 1;
             count += 1;
         }
         // ***** This increments the lowest bytes of the IVs so they aren't identical
-        sdls_ep_keyv_reply.blk[x].iv[SDLS_IV_LEN - 1]      = sdls_ep_keyv_reply.blk[x].iv[SDLS_IV_LEN - 1] + x + 1;
-        sdls_ep_reply[pdu_data_idx - 1]       = sdls_ep_reply[pdu_data_idx - 1] + x + 1;
+        sdls_ep_keyv_reply.blk[x].iv[SDLS_IV_LEN - 1] = sdls_ep_keyv_reply.blk[x].iv[SDLS_IV_LEN - 1] + x + 1;
+        sdls_ep_reply[pdu_data_idx - 1]               = sdls_ep_reply[pdu_data_idx - 1] + x + 1;
 
         // Encrypt challenge
         uint8_t ecs = CRYPTO_CIPHER_AES256_GCM;
