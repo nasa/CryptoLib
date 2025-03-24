@@ -45,8 +45,13 @@ jobs:
       working-directory: ${{github.workspace}}
       run: |
         export CFLAGS="-fprofile-arcs -ftest-coverage -fcondition-coverage -g"
-        bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
+        SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+        source $SCRIPT_DIR/env.sh
+        rm $BASE_DIR/CMakeCache.txt
+        cmake -DCODECOV=1 -DDEBUG=1 -DMC_INTERNAL=1 -DTEST=1 -DSA_FILE=1 -DKEY_VALIDATION=0 && make
         bash ${GITHUB_WORKSPACE}/bin/ut_aos_apply
+        make test
+
 
     # - name: Code-Coverage
     #   working-directory: ${{github.workspace}}
