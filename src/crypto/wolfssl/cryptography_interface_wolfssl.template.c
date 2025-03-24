@@ -156,11 +156,6 @@ static int32_t cryptography_authenticate(
             {
                 status = wc_CmacUpdate(&cmac, aad, aad_len);
             }
-            // Commented out for now while assessing unit tests
-            // if (status == 0)
-            //{
-            //    status = wc_CmacUpdate(&cmac, data_in, len_data_in);
-            //}
             if (status == 0)
             {
                 status = wc_CmacFinal(&cmac, mac, &mac_size);
@@ -174,11 +169,6 @@ static int32_t cryptography_authenticate(
             {
                 status = wc_HmacUpdate(&hmac, aad, aad_len);
             }
-            // Commented out for now while assessing unit tests
-            // if (status == 0)
-            //{
-            //    status = wc_HmacUpdate(&hmac, data_in, len_data_in);
-            //}
             if (status == 0)
             {
                 status = wc_HmacFinal(&hmac, calc_mac);
@@ -195,11 +185,6 @@ static int32_t cryptography_authenticate(
             {
                 status = wc_HmacUpdate(&hmac, aad, aad_len);
             }
-            // Commented out for now while assessing unit tests
-            // if (status == 0)
-            //{
-            //    status = wc_HmacUpdate(&hmac, data_in, len_data_in);
-            //}
             if (status == 0)
             {
                 status = wc_HmacFinal(&hmac, calc_mac);
@@ -264,12 +249,6 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
                     status = wc_CmacUpdate(&cmac, aad, aad_len);
                 }
             }
-            // Commented out for now while assessing unit tests
-            // if (status == 0)
-            //{
-            //    status = wc_CmacUpdate(&cmac, data_in, len_data_in);
-            //    printf("    wc_CmacUpdate(data_in) returned %d \n", status);
-            //}
             if (status == 0)
             {
                 status = wc_CmacFinal(&cmac, calc_mac, &mac_size);
@@ -286,11 +265,6 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
                     status = wc_HmacUpdate(&hmac, aad, aad_len);
                 }
             }
-            // Commented out for now while assessing unit tests
-            // if (status == 0)
-            //{
-            //    status = wc_HmacUpdate(&hmac, data_in, len_data_in);
-            //}
             if (status == 0)
             {
                 status = wc_HmacFinal(&hmac, calc_mac);
@@ -306,11 +280,6 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
                     status = wc_HmacUpdate(&hmac, aad, aad_len);
                 }
             }
-            // Commented out for now while assessing unit tests
-            // if (status == 0)
-            //{
-            //    status = wc_HmacUpdate(&hmac, data_in, len_data_in);
-            //}
             if (status == 0)
             {
                 status = wc_HmacFinal(&hmac, calc_mac);

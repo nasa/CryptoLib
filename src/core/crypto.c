@@ -32,16 +32,15 @@ CFS_MODULE_DECLARE_LIB(crypto);
 /*
 ** Global Variables
 */
-// crypto_key_t ak_ring[NUM_KEYS];
 // SDLS Replies
 SDLS_KEYV_RPLY_t sdls_ep_keyv_reply; // Reply block for challenged keys
 uint8_t          sdls_ep_reply[TC_MAX_FRAME_SIZE];
 CCSDS_t          sdls_frame;
-// TM_t tm_frame;
+// TM
 uint8_t                  tm_frame[TM_MAX_FRAME_SIZE]; // TM Global Frame
 TM_FramePrimaryHeader_t  tm_frame_pri_hdr;            // Used to reduce bit math duplication
 TM_FrameSecurityHeader_t tm_frame_sec_hdr;            // Used to reduce bit math duplication
-// AOS_t aos_frame
+// AOS
 uint8_t                   aos_frame[AOS_MAX_FRAME_SIZE]; // AOS Global Frame
 AOS_FramePrimaryHeader_t  aos_frame_pri_hdr;             // Used to reduce bit math duplication
 AOS_FrameSecurityHeader_t aos_frame_sec_hdr;             // Used to reduce bit math duplication
@@ -408,9 +407,9 @@ uint16_t Crypto_Calc_CRC16(uint8_t *data, int size)
     return crc;
 }
 
-uint8_t gf_mul(uint8_t a, uint8_t b) 
+uint8_t gf_mul(uint8_t a, uint8_t b)
 {
-    if (a == 0 || b == 0) 
+    if (a == 0 || b == 0)
     {
         return 0;
     }
@@ -424,20 +423,20 @@ uint8_t gf_mul(uint8_t a, uint8_t b)
 // Reference: CCSDS 732.0-B-4 (AOS Space Data Link Protocol) Section 4.1.2.6
 uint16_t Crypto_Calc_FHECF(uint8_t *data)
 {
-    uint8_t feedback = 0;
-    uint16_t result = 0;
-    int i = 0;
-    int j = 0;
+    uint8_t  feedback = 0;
+    uint16_t result   = 0;
+    int      i        = 0;
+    int      j        = 0;
 
     // RS encoding
     memset(parity, 0, RS_PARITY);
-    for (i = 0; i < RS_DATA; i++) 
+    for (i = 0; i < RS_DATA; i++)
     {
         feedback = data[i] ^ parity[0];
         memmove(&parity[0], &parity[1], RS_PARITY - 1);
         parity[RS_PARITY - 1] = 0;
 
-        for (j = 0; j < RS_PARITY; j++) 
+        for (j = 0; j < RS_PARITY; j++)
         {
             parity[j] ^= gf_mul(feedback, gen_poly[j + 1]);
         }

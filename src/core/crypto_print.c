@@ -67,34 +67,6 @@ void Crypto_tmPrint(TM_t *tm_frame)
     printf("Current TM in memory is: \n");
     printf("\t Header\n");
     printf("\t**** THIS IS BLANKED OUT CURRENTLY!!!!!!!***\n");
-    // printf("\t\t tfvn   = 0x%01x \n", tm_frame->tm_header.tfvn);
-    // printf("\t\t scid   = 0x%02x \n", tm_frame->tm_header.scid);
-    // printf("\t\t vcid   = 0x%01x \n", tm_frame->tm_header.vcid);
-    // printf("\t\t ocff   = 0x%01x \n", tm_frame->tm_header.ocff);
-    // printf("\t\t mcfc   = 0x%02x \n", tm_frame->tm_header.mcfc);
-    // printf("\t\t vcfc   = 0x%02x \n", tm_frame->tm_header.vcfc);
-    // printf("\t\t tfsh   = 0x%01x \n", tm_frame->tm_header.tfsh);
-    // printf("\t\t sf     = 0x%01x \n", tm_frame->tm_header.sf);
-    // printf("\t\t pof    = 0x%01x \n", tm_frame->tm_header.pof);
-    // printf("\t\t slid   = 0x%01x \n", tm_frame->tm_header.slid);
-    // printf("\t\t fhp    = 0x%03x \n", tm_frame->tm_header.fhp);
-    // // // printf("\t\t tfshvn = 0x%01x \n", tm_frame.tm_header.tfshvn);
-    // // // printf("\t\t tfshlen= 0x%02x \n", tm_frame.tm_header.tfshlen);
-    // printf("\t SDLS Header\n");
-    // printf("\t\t spi    = 0x%04x \n", tm_frame->tm_sec_header.spi);
-    // printf("\t\t iv[%d]  = 0x%02x \n", (IV_SIZE - 1), tm_frame->tm_sec_header.iv[IV_SIZE - 1]);
-    // printf("\t Payload \n");
-    // printf("\t\t data[0]= 0x%02x \n", tm_frame->tm_pdu[0]);
-    // printf("\t\t data[1]= 0x%02x \n", tm_frame->tm_pdu[1]);
-    // printf("\t\t data[2]= 0x%02x \n", tm_frame->tm_pdu[2]);
-    // printf("\t\t data[3]= 0x%02x \n", tm_frame->tm_pdu[3]);
-    // printf("\t\t data[4]= 0x%02x \n", tm_frame->tm_pdu[4]);
-    // printf("\t SDLS Trailer\n");
-    // printf("\t\t OCF[0] = 0x%02x \n", tm_frame->tm_sec_trailer.ocf[0]);
-    // printf("\t\t OCF[1] = 0x%02x \n", tm_frame->tm_sec_trailer.ocf[1]);
-    // printf("\t\t OCF[2] = 0x%02x \n", tm_frame->tm_sec_trailer.ocf[2]);
-    // printf("\t\t OCF[3] = 0x%02x \n", tm_frame->tm_sec_trailer.ocf[3]);
-    // printf("\t\t FECF   = 0x%02x \n", tm_frame->tm_sec_trailer.fecf);
     printf("\n");
 }
 
@@ -223,10 +195,6 @@ void Crypto_saPrint(SecurityAssociation_t *sa)
     printf("SA status: \n");
     printf("\t spi   = %d \n", sa->spi);
     printf("\t sa_state   = 0x%01x \n", sa->sa_state);
-    // printf("\t gvcid[0]   = 0x%02x \n", sa->gvcid_blk[spi].gvcid[0]);
-    // printf("\t gvcid[1]   = 0x%02x \n", sa->gvcid_blk[spi].gvcid[1]);
-    // printf("\t gvcid[2]   = 0x%02x \n", sa->gvcid_blk[spi].gvcid[2]);
-    // printf("\t gvcid[3]   = 0x%02x \n", sa->gvcid_blk[spi].gvcid[3]);
     printf("\t est        = 0x%01x \n", sa->est);
     printf("\t ast        = 0x%01x \n", sa->ast);
     printf("\t shivf_len  = %d \n", sa->shivf_len);
@@ -341,9 +309,5 @@ void Crypto_mpPrint(GvcidManagedParameters_t *managed_parameters, uint8_t print_
         printf("\t max_frame_size: %d\n", managed_parameters->max_frame_size);
         printf("\t TM has ocf %d\n", managed_parameters->has_ocf);
     }
-    // if (managed_parameters->next != NULL && print_children != 0)
-    // {
-    //     Crypto_mpPrint(managed_parameters->next, print_children);
-    // }
 }
 #endif
