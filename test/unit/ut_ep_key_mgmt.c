@@ -437,14 +437,10 @@ UTEST(EP_KEY_MGMT, OTAR_0_140_142_MK_NOT_ACTIVE)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 159, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_1_Managed_Parameters = {
         0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 159, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
@@ -458,8 +454,8 @@ UTEST(EP_KEY_MGMT, OTAR_0_140_142_MK_NOT_ACTIVE)
     char *buffer_nist_key_h = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
     // char* buffer_nist_iv_h = "b6ac8e4963f49207ffd6374b"; // The last valid IV that was seen by the SA
     char *buffer_OTAR_h =
-        "200300a000ff000000001980d0370090197f0b000104500084007F344892bbc54f5395297d4c37172f2a3c46f6a81c1349e9e26ac80985d8bb"
-        "d55a5814c662e49fba52f99ba09558cd21cf268b8e50b2184137e80f76122034c580464e2f06d2659a50508bdfe9e9a55990ba4148af89"
+        "2003009c00ff00001980d0350090197f0b00010440007F344892bbc54f5395297d4c37172f"
+        "2a3c46f6a81c1349e9e26ac80985d8bbd55a5814c662e49fba52f99ba09558cd21cf268b8e50b2184137e80f76122034c580464e2f06d2659a50508bdfe9e9a55990ba4148af89"
         "6d8a6eebe8b5d2258685d4ce217a20174fdd4f0efac62758c51b04e55710a47209c923b641d19a39001f9e986366f5ffd9";
     //                    |2003009e00| = Primary Header
     //                              |ff| = Ext. Procs
@@ -470,15 +466,14 @@ UTEST(EP_KEY_MGMT, OTAR_0_140_142_MK_NOT_ACTIVE)
     //                                                |008c| = pkt_length
     //                                                    |197f| = pusv, ack, st
     //                                                        |0b| = sst, sid, spare
-    //                                                          |0001| = PDU Tag
-    //                                                              |0084| = PDU Length
+    //                                                          |01| = PDU Tag
+    //                                                              |0450| = PDU Length
     //                                                                  |007F| = Master Key ID - Valid id, invalid that
     //                                                                  it isn't set up in the keyring!
     //                                                                      |344892bbc54f5395297d4c37| = IV
     //                                                                                              |172f| = Encrypted
     //                                                                                              Key ID
-    //                                                                                                  |2a3c46f6a81c1349e9e26ac80985d8bbd55a5814c662e49fba52f99ba09558cd|
-    //                                                                                                  = Encrypted Key
+    //                                                                                                  |2a3c46f6a81c1349e9e26ac80985d8bbd55a5814c662e49fba52f99ba09558cd| = Encrypted Key
     //                                                                                                                                                                  |21cf| = Encrypted Key ID
     //                                                                                                                                                                      |268b8e50b2184137e80f76122034c580464e2f06d2659a50508bdfe9e9a55990| = Encrypted Key
     //                                                                                                                                                                                                                                      |ba41| = EKID
@@ -560,13 +555,13 @@ UTEST(EP_KEY_MGMT, OTAR_0_140_142_BAD_DECRYPT)
     char *buffer_nist_key_h = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
     // char* buffer_nist_iv_h = "b6ac8e4963f49207ffd6374b"; // The last valid IV that was seen by the SA
     char *buffer_OTAR_h =
-        "2003009e00ff000000001980d037008c197f0b00010084007F344892bbc54f5395297d4c37172f2a3c46f6a81c1349e9e26ac80985d8bb"
+        "2003009c00ff00001980d035008c197f0b00010440007F344892bbc54f5395297d4c37172f2a3c46f6a81c1349e9e26ac80985d8bb"
         "d55a5814c662e49fba52f99ba09558cd21cf268b8e50b2184137e80f76122034c580464e2f06d2659a50508bdfe9e9a55990ba4148af89"
         "6d8a6eebe8b5d2258685d4ce217a20174fdd4f0efac62758c51b04e55710a47209c923b641d19a39001f9e986366f5ffd9";
     //                    |2003009e00| = Primary Header
     //                              |ff| = Ext. Procs
     //                                |0000| = SPI
-    //                                    |0000| = ARSN
+    //                                    |0000| = ARSN  -- DO NOT DELETE!
     //                                        |1980| = CryptoLib App ID
     //                                            |d037| = seq, pktid
     //                                                |008c| = pkt_length
