@@ -1,1 +1,0 @@
-/usr/bin/cc  -fprofile-arcs -ftest-coverage -Wall -Wextra -Werror -g -O0 CMakeFiles/ut_sadb_err_cases_kmc_crypto.dir/unit/ut_sadb_err_cases_kmc_crypto.c.o CMakeFiles/ut_sadb_err_cases_kmc_crypto.dir/core/shared_util.c.o -o ut_sadb_err_cases_kmc_crypto  -Wl,-rpath,/media/sf_code/CryptoLib/support/scripts/src ../src/libcryptolib.so -lpthread -lgcrypt 
