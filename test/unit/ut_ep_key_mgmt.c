@@ -1000,9 +1000,9 @@ UTEST(EP_KEY_MGMT, TLV_KEY_DEACTIVATE_TESTS)
     status = Crypto_TC_ProcessSecurity(buffer_TLV_MAX_BAD_LEN_b, &buffer_TLV_MAX_BAD_LEN_len, &tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_ERR_BAD_TLV_LENGTH, status);
 
-    printf(KGRN "Checking for TLV length of 1 bit, should pass... \n" RESET);
+    printf(KGRN "Checking for TLV length of 1 bit, should FAIL... \n" RESET);
     status = Crypto_TC_ProcessSecurity(buffer_TLV_ONE_BIT_LEN_b, &buffer_TLV_ONE_len, &tc_nist_processed_frame);
-    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    ASSERT_EQ(CRYPTO_LIB_ERR_BAD_TLV_LENGTH, status);
 
     printf(KGRN "Checking for TLV length of 0 bits, should pass... \n" RESET);
     status = Crypto_TC_ProcessSecurity(buffer_TLV_ZERO_b, &buffer_TLV_ZERO_len, &tc_nist_processed_frame);
