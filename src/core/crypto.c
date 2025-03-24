@@ -910,13 +910,20 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                     // CODE REVIEW - PDUs allow lengths in bits, it is plausible that only a few bits of a byte are
                     // needed but would require a full byte for transmission. I can't find anything atm in docs to
                     // dispute this
-                    if (((double)(sdls_frame.tlv_pdu.hdr.pdu_len / 8.0) != derived_tlv) &&
-                        (floor((double)(sdls_frame.tlv_pdu.hdr.pdu_len / 8.0)) != derived_tlv - 1))
+                    if ((double)(sdls_frame.tlv_pdu.hdr.pdu_len / 8.0) != derived_tlv)
                     {
 #ifdef PDU_DEBUG
                         printf(KRED "Packet PDU_LEN Not Equal To Derived PDU Len\n" RESET);
 #endif
                         return CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
+                    }
+
+                    if (sdls_frame.tlv_pdu.hdr.pdu_len % 8 != 0)
+                    {
+#ifdef PDU_DEBUG
+                        printf(KRED "Packet PDU_LEN Not multiple of 8 bits\n" RESET);
+#endif
+                        return CRYPTO_LIB_ERR_BAD_TLV_LENGTH;            
                     }
 
                     if (sdls_frame.hdr.pkt_length <= TLV_DATA_SIZE)
