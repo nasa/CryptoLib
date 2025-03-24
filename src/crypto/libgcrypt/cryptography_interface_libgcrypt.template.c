@@ -477,15 +477,6 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
 #endif
 
     gcry_error = gcry_cipher_encrypt(tmp_hd, data_in, len_data_in, NULL, 0);
-    // TODO:  Add PKCS#7 padding to data_in, and increment len_data_in to match necessary block size
-    // TODO:  Remember to remove the padding.
-    // TODO:  Does this interfere with max frame size?  Does that need to be taken into account?
-    // gcry_error = gcry_cipher_encrypt(tmp_hd,
-    //                                     data_out,              // ciphertext output
-    //                                     len_data_out,                // length of data
-    //                                     data_in, // plaintext input
-    //                                     len_data_in                 // in data length
-    // );
 
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
@@ -934,32 +925,6 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
 
     if (authenticate_bool == CRYPTO_TRUE)
     {
-        /*
-        ** *** !!!WARNING!!!
-        ** *** This Debug block cannot be enabled during normal use, gettag fundamentally changes the
-        ** *** gettag output
-        */
-        // #ifdef MAC_DEBUG
-        //         printf("Received MAC is: \n\t0x:");
-        //         for (uint32_t i =0; i<mac_size; i++)
-        //         {
-        //             printf("%02X", mac[i]);
-        //         }
-        // #endif
-        //         gcry_error = gcry_cipher_gettag(tmp_hd,
-        //                                 mac,  // tag output
-        //                                 mac_size // tag size
-        //         );
-        // #ifdef MAC_DEBUG
-        //         printf("\nCalculated MAC is: \n\t0x:");
-        //         for (uint32_t i =0; i<mac_size; i++)
-        //         {
-        //             printf("%02X", mac[i]);
-        //         }
-        // #endif
-        /*
-        ** *** End debug block
-        */
         gcry_error = gcry_cipher_checktag(tmp_hd,
                                           mac,     // tag input
                                           mac_size // tag size

@@ -222,11 +222,11 @@ int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char *
 int32_t crypto_host_to_ip(const char *hostname, char *ip)
 {
     struct addrinfo hints, *res, *p;
-    int status;
-    void *addr;
+    int             status;
+    void           *addr;
 
     memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_INET; // Uses IPV4 only.  AF_UNSPEC for IPV6 Support
+    hints.ai_family   = AF_INET; // Uses IPV4 only.  AF_UNSPEC for IPV6 Support
     hints.ai_socktype = SOCK_STREAM;
 
     if ((status = getaddrinfo(hostname, NULL, &hints, &res)) != 0)
@@ -237,7 +237,7 @@ int32_t crypto_host_to_ip(const char *hostname, char *ip)
     for (p = res; p != NULL; p = p->ai_next)
     {
         struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
-        addr = &(ipv4->sin_addr);
+        addr                     = &(ipv4->sin_addr);
 
         // Convert IP to String
         if (inet_ntop(p->ai_family, addr, ip, INET_ADDRSTRLEN) == NULL)
@@ -649,7 +649,6 @@ void *crypto_standalone_tm_process(void *socks)
 #ifdef CRYPTO_STANDALONE_HANDLE_FRAMING
 #ifdef TM_CADU_HAS_ASM
                 uint16_t spi = (0xFFFF & tm_process_in[11]) | tm_process_in[12];
-                // crypto_standalone_tm_frame(tm_process_in+4, tm_process_len-4, tm_framed, &tm_framed_len, spi);
                 crypto_standalone_tm_frame(tm_ptr, tm_out_len, tm_framed, &tm_framed_len, spi);
 #else
                 uint16_t spi = (0xFFFF & tm_process_in[7]) | tm_process_in[8];
@@ -751,8 +750,6 @@ int main(int argc, char *argv[])
 
     /* Startup delay */
     sleep(10);
-    // printf("Press enter once ground software has finished initializing...\n");
-    // fgets(input_buf, CRYPTO_MAX_INPUT_BUF, stdin);
 
     /* Initialize CryptoLib */
     status = crypto_reset();
@@ -847,12 +844,10 @@ int main(int argc, char *argv[])
             {
                 /* First token is command */
                 cmd = crypto_standalone_get_command(token_ptr);
-                // printf("CMD = %s %d\n",token_ptr,cmd);
             }
             else
             {
                 strncpy(input_tokens[num_input_tokens], token_ptr, CRYPTO_MAX_INPUT_TOKEN_SIZE);
-                // printf("Token[%d] = %s\n",num_input_tokens,token_ptr);
             }
             token_ptr = strtok(NULL, " \t\n");
             num_input_tokens++;

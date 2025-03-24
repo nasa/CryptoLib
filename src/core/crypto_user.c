@@ -168,7 +168,6 @@ int32_t Crypto_User_ModifyActiveTM(void)
  **/
 int32_t Crypto_User_ModifyVCID(void)
 {
-    // tm_frame.tm_header.vcid = (uint8_t)sdls_frame.tlv_pdu.data[0];
     // Check this
     tm_frame_pri_hdr.vcid = (uint8_t)sdls_frame.tlv_pdu.data[0];
     SecurityAssociation_t *sa_ptr;
@@ -188,7 +187,7 @@ int32_t Crypto_User_ModifyVCID(void)
             if (sa_ptr->gvcid_blk.mapid == TYPE_TM)
             {
 
-                if (sa_ptr->gvcid_blk.vcid == tm_frame_pri_hdr.vcid) //.tm_header.vcid)
+                if (sa_ptr->gvcid_blk.vcid == tm_frame_pri_hdr.vcid)
                 {
                     // TODO Check this
                     tm_frame_sec_hdr.spi = i;
