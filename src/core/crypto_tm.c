@@ -1258,7 +1258,6 @@ int32_t Crypto_TM_Process_Setup(uint16_t len_ingest, uint16_t *byte_idx, uint8_t
     // Check if secondary header is present within frame
     // Note: Secondary headers are static only for a mission phase, not guaranteed static
     // over the life of a mission Per CCSDS 132.0-B.3 Section 4.1.2.7.2.3
-
     if (status == CRYPTO_LIB_SUCCESS)
     {
         // Secondary Header flag is 1st bit of 5th byte (index 4)
@@ -1277,6 +1276,30 @@ int32_t Crypto_TM_Process_Setup(uint16_t len_ingest, uint16_t *byte_idx, uint8_t
 #ifdef TM_DEBUG
             printf(KYEL "Secondary Header Length is decoded as: %d\n", *secondary_hdr_len);
 #endif
+            // We have a secondary header length now, is it sane?
+            // Does it violate spec maximum?
+            // Reference CCSDS 1320b3 4.1.3.1.3
+            // TODO: Add a test
+            if (*secondary_hdr_len > TM_SECONDARY_HDR_MAX_VALUE)
+            {
+                status = CRYPTO_LIB_ERR_TM_SECONDARY_HDR_SIZE;
+                mc_if->mc_log(status);
+                return status;
+            }
+
+            // Does it 'fit' in the overall frame correctly?
+            // We can't validate it down to the byte yet,
+            // we don't know the variable lengths from the SA yet
+            // Protects from overruns on very short max frame sizes
+            // Smallest frame here is Header | Secondary Header | SPI | 1 byte data
+            // TODO: Add a test
+            if (len_ingest < (*byte_idx + *secondary_hdr_len + SPI_LEN + 1))
+            {
+                status = CRYPTO_LIB_ERR_TM_SECONDARY_HDR_SIZE;
+                mc_if->mc_log(status);
+                return status;
+            }
+
             // Increment from current byte (1st byte of secondary header),
             // to where the SPI would start
             *byte_idx += *secondary_hdr_len;
@@ -1286,6 +1309,7 @@ int32_t Crypto_TM_Process_Setup(uint16_t len_ingest, uint16_t *byte_idx, uint8_t
             // No Secondary header, carry on as usual and increment to SPI start
             *byte_idx = 6;
         }
+
     }
 
     return status;
@@ -1754,6 +1778,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_
     tm_frame_pri_hdr.vcid = ((uint8_t)p_ingest[1] & 0x0E) >> 1;
 
     status = Crypto_TM_Process_Setup(len_ingest, &byte_idx, p_ingest, &secondary_hdr_len);
+
     if (status == CRYPTO_LIB_SUCCESS)
     {
         /**
@@ -1803,6 +1828,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_
         }
 #endif
 
+
         if (current_managed_parameters_struct.max_frame_size <= byte_idx - sa_ptr->stmacf_len)
         {
             status = CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW;
@@ -1810,6 +1836,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_
             return status;
         }
 
+        // Received the wrong amount of bytes from mandated frame size
         if (len_ingest < current_managed_parameters_struct.max_frame_size)
         {
             status = CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW;
