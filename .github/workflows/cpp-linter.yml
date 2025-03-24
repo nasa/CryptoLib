@@ -25,5 +25,5 @@ jobs:
       - name: Auto-Commit Formatting Changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit-message: 'style: auto-format via clang-format'
+          commit_message: 'style: auto-format via clang-format'
         
