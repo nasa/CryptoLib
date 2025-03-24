@@ -840,6 +840,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     ingest         = ingest; // Suppress unused variable error depending on build
+    len_ingest = len_ingest; // Suppress unused variable error depending on build
 
     // Check for null pointers
     if (tc_sdls_processed_frame == NULL)
@@ -905,7 +906,6 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                     // Subtract headers from total frame length
                     uint16_t derived_tlv =
                         (tc_sdls_processed_frame->tc_pdu_len - CCSDS_HDR_SIZE - ECSS_PUS_SIZE - SDLS_TLV_HDR_SIZE);
-                    len_ingest = len_ingest; // suppress error for now
 #ifdef CCSDS_DEBUG
                     printf("Printing lengths for sanity check:\n");
                     printf("\t TC Frame Header Length (bytes): %d \n", tc_sdls_processed_frame->tc_header.fl);
