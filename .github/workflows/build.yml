@@ -46,6 +46,7 @@ jobs:
       run: |
         export CFLAGS="-fprofile-arcs -ftest-coverage -fcondition-coverage -g"
         bash ${GITHUB_WORKSPACE}/support/scripts/build_internal.sh
+        bash ${GITHUB_WORKSPACE}/bin/ut_aos_apply
 
     # - name: Code-Coverage
     #   working-directory: ${{github.workspace}}
@@ -232,6 +233,7 @@ jobs:
       run: |
         export CFLAGS="-fprofile-arcs -ftest-coverage -fcondition-coverage -g"
         bash ${GITHUB_WORKSPACE}/support/scripts/build_ep.sh
+        bash ${GITHUB_WORKSPACE}/bin/ut_aos_process
 
     # - name: Code-Coverage
     #   working-directory: ${{github.workspace}}
