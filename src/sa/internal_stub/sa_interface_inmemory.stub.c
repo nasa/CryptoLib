@@ -18,7 +18,7 @@ static SaInterfaceStruct sa_routine;
 
 SaInterface get_sa_interface_inmemory(void)
 {
-    fprintf(stderr, "ERROR: Loading internal stub source code. Rebuild CryptoLib with -DSA_MARIADB=OFF to use proper "
+    fprintf(stderr, "ERROR: Loading internal stub source code. Rebuild CryptoLib with -DSA_INTERNAL=ON to use proper "
                     "internal implementation.\n");
     return &sa_routine;
 }

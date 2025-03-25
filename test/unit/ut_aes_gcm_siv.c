@@ -31,7 +31,7 @@ UTEST(AES_GCM_SIV, GET_ECS_ALGO_KEY_LEN_SIV)
     remove("sa_save_file.bin");
     int32_t algo_keylen = -1;
     uint8_t crypto_algo = CRYPTO_CIPHER_AES256_GCM_SIV;
-    algo_keylen         = Crypto_Get_ACS_Algo_Keylen(crypto_algo);
+    algo_keylen         = Crypto_Get_ECS_Algo_Keylen(crypto_algo);
     ASSERT_EQ(algo_keylen, 32);
     Crypto_Shutdown();
 }
@@ -61,6 +61,7 @@ UTEST(AES_GCM_SIV, GET_ECS_ALGO_SIV)
 UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_1)
 {
     remove("sa_save_file.bin");
+    int      status        = CRYPTO_LIB_SUCCESS;
     uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
@@ -81,7 +82,8 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_1)
         0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
 
-    Crypto_Init();
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     SaInterface   sa_if = get_sa_interface_inmemory();
     crypto_key_t *ekp   = NULL;
 
@@ -183,7 +185,8 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_DEC_TEST_1)
         0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 43, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
 
-    Crypto_Init();
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     SaInterface   sa_if = get_sa_interface_inmemory();
     crypto_key_t *ekp   = NULL;
 
@@ -286,7 +289,8 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_2)
         0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
 
-    Crypto_Init();
+    int status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     SaInterface   sa_if = get_sa_interface_inmemory();
     crypto_key_t *ekp   = NULL;
 
@@ -387,7 +391,8 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_20_WITH_AAD_ENC_TEST_1)
         0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
 
-    Crypto_Init();
+    int status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     SaInterface   sa_if = get_sa_interface_inmemory();
     crypto_key_t *ekp   = NULL;
 
@@ -487,7 +492,8 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_20_WITH_AAD_DEC_TEST_1)
         0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
 
-    Crypto_Init();
+    int status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     SaInterface   sa_if = get_sa_interface_inmemory();
     crypto_key_t *ekp   = NULL;
 

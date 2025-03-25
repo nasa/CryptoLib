@@ -281,20 +281,29 @@ int32_t Crypto_Init(void)
     // Determine which cryptographic module is in use
     if (cryptography_if == NULL)
     {
-        cryptography_if = get_cryptography_interface_libgcrypt();
-        if (cryptography_if == NULL)
+        if (crypto_config.cryptography_type == CRYPTOGRAPHY_TYPE_LIBGCRYPT)
+        {
+            cryptography_if = get_cryptography_interface_libgcrypt();
+        }
+        else if (crypto_config.cryptography_type == CRYPTOGRAPHY_TYPE_WOLFSSL)
         {
             cryptography_if = get_cryptography_interface_wolfssl();
         }
-        if (cryptography_if == NULL)
+        else if (crypto_config.cryptography_type == CRYPTOGRAPHY_TYPE_CUSTOM)
         {
             cryptography_if = get_cryptography_interface_custom();
         }
-        if (cryptography_if == NULL)
-        { // Note this needs to be the last option in the chain due to addition configuration required
+        else if (crypto_config.cryptography_type == CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+        {
             if (cryptography_kmc_crypto_config != NULL)
             {
                 cryptography_if = get_cryptography_interface_kmc_crypto_service();
+            }
+            else
+            {
+#ifdef DEBUG
+                printf("KMC Crypto_Service not configured\n");
+#endif
             }
         }
         if (cryptography_if == NULL)
@@ -303,6 +312,7 @@ int32_t Crypto_Init(void)
             printf("Fatal Error: Unable to identify Cryptography Interface!\n");
 #endif
             status = CRYPTOGRAPHY_INVALID_CRYPTO_INTERFACE_TYPE;
+            return status;
         }
     }
 
@@ -372,8 +382,6 @@ int32_t Crypto_Shutdown(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
-    crypto_free_config_structs();
-
     // current_managed_parameters = NULL;
     current_managed_parameters_struct = gvcid_null_struct;
     for (int i = 0; i <= gvcid_counter; i++)
@@ -406,6 +414,8 @@ int32_t Crypto_Shutdown(void)
         cryptography_if->cryptography_shutdown();
         cryptography_if = NULL;
     }
+
+    crypto_free_config_structs();
 
     return status;
 }

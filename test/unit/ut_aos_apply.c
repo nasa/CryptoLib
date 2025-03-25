@@ -302,6 +302,7 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FECF_LEFT_BLANK)
     // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0003, 0, AOS_HAS_FECF, TM_SEGMENT_HDRS_NA, AOS_HAS_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test Frame Setup
     // 6 byte header, 2 byte blank SPI, data, FECF
@@ -438,6 +439,7 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FHEC_FECF)
     // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0003, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_HAS_OCF, 1786,
     // AOS_HAS_FHEC, AOS_NO_IZ, 0);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test Frame Setup
     // 8 byte header (Including FHEC stubbed as 0x8888), 2 byte blank SPI, data, FECF
@@ -575,6 +577,7 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FHEC_OID_FECF)
     // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0003, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_HAS_OCF, 1786,
     // AOS_HAS_FHEC, AOS_HAS_IZ, 6);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test Frame Setup
     // 8 byte header (Including FHEC stubbed as 0x8888), 2 byte blank SPI, data, FECF
@@ -715,6 +718,7 @@ UTEST(AOS_APPLY, AES_CMAC_256_TEST_BITMASK_1)
     // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0003, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_NO_OCF, 1786,
     // AOS_NO_FHEC, AOS_NO_IZ, 0);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Test Frame Setup
     // 6 byte header, 2 byte blank SPI, data, 16 byte MAC, FECF
     char *test_aos_h =
@@ -860,6 +864,7 @@ UTEST(AOS_APPLY, AES_CMAC_256_TEST_BITMASK_0)
     // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0003, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_NO_OCF, 1786,
     // AOS_NO_FHEC, AOS_NO_IZ, 0);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Test Frame Setup
     // 6 byte header, 2 byte blank SPI, data, 16 byte MAC, FECF
     char *test_aos_h =
@@ -1025,6 +1030,7 @@ UTEST(AOS_APPLY, AES_GCM)
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
 
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Test Frame Setup
     // 6 byte header, 2 byte blank SPI, 16 byte blank IV (CCC...), data, FECF
     //                  |  Header  |SPI|
@@ -1166,6 +1172,7 @@ UTEST(AOS_APPLY, AOS_KEY_STATE_TEST)
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
 
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Test Frame Setup
     // 6 byte header, 2 byte blank SPI, 16 byte blank IV (CCC...), data, MAC, FECF
     //                  |  Header  |SPI|
@@ -1315,6 +1322,7 @@ UTEST(AOS_APPLY, AEAD_GCM_BITMASK_1)
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
 
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Test Frame Setup
     // 6 byte header, 2 byte blank SPI, 16 byte blank IV (CCC...), data, MAC, FECF
     //                  |  Header  |SPI|

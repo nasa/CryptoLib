@@ -200,6 +200,7 @@ UTEST(AOS_PROCESS, HAPPY_PATH_CLEAR_FECF)
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
 
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test frame setup
     // Note: SPI 14 (0x0E)
@@ -392,6 +393,7 @@ UTEST(AOS_PROCESS, INSERT_ZONE_PRESENT_PLAINTEXT)
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
 
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test frame setup  | 6 byte hdr | 10 byte insert zn|spi|data -----> FECF
     char *framed_aos_h =
@@ -525,6 +527,7 @@ UTEST(AOS_PROCESS, AES_CMAC_256_TEST_0)
         1, 0x002c, 0, AOS_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, AOS_SEGMENT_HDRS_NA, 1786, AOS_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test frame setup
     // Note: SPI 11 (0x0B)
@@ -672,6 +675,7 @@ UTEST(AOS_PROCESS, AES_CMAC_256_TEST_1)
         1, 0x002c, 0, AOS_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, AOS_SEGMENT_HDRS_NA, 1786, AOS_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test frame setup
     // Note: SPI 11 (0x0B)
@@ -820,6 +824,7 @@ UTEST(AOS_PROCESS, AES_HMAC_256_TEST_0)
         1, 0x002c, 0, AOS_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, AOS_SEGMENT_HDRS_NA, 1786, AOS_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test frame setup
     // Note: SPI 11 (0x0B)
@@ -971,6 +976,7 @@ UTEST(AOS_PROCESS, AES_HMAC_256_TEST_1)
         1, 0x002c, 0, AOS_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, AOS_SEGMENT_HDRS_NA, 1786, AOS_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test frame setup
     // Note: SPI 11 (0x0B)
@@ -1120,6 +1126,7 @@ UTEST(AOS_PROCESS, AES_HMAC_512_TEST_0)
         1, 0x002c, 0, AOS_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, AOS_SEGMENT_HDRS_NA, 1786, AOS_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test frame setup
     // Note: SPI 11 (0x0B)
@@ -1269,6 +1276,7 @@ UTEST(AOS_PROCESS, AES_HMAC_512_TEST_1)
         1, 0x002c, 0, AOS_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, AOS_SEGMENT_HDRS_NA, 1786, AOS_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test frame setup
     // Note: SPI 11 (0x0B)
@@ -1414,7 +1422,8 @@ UTEST(AOS_PROCESS, AES_GCM_DEC_ONLY)
         1, 0x002c, 0, AOS_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, AOS_SEGMENT_HDRS_NA, 1786, AOS_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
 
-    Crypto_Init();
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     SaInterface sa_if = get_sa_interface_inmemory();
 
     // Test frame setup    Header     |SPI|    IV                         |    Data
@@ -1609,6 +1618,7 @@ UTEST(AOS_PROCESS, AEAD_GCM_BITMASK_1)
         1, 0x002c, 0, AOS_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, AOS_SEGMENT_HDRS_NA, 1786, AOS_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test frame setup
     // Note: SPI 17 (0x0011)
@@ -1752,6 +1762,7 @@ UTEST(AOS_PROCESS, AOS_SA_SEGFAULT_TEST)
         1, 0x002c, 0, AOS_HAS_FECF, AOS_NO_FHEC, AOS_HAS_IZ, 10, AOS_SEGMENT_HDRS_NA, 1786, AOS_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test frame setup
     char *framed_aos_h   = "42C00000000000000000000000000000FFFF";
@@ -1789,6 +1800,7 @@ UTEST(AOS_PROCESS, AOS_SA_NOT_OPERATIONAL)
         1, 0x002c, 0, AOS_HAS_FECF, AOS_NO_FHEC, AOS_HAS_IZ, 0, AOS_SEGMENT_HDRS_NA, 18, AOS_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test frame setup
     char *framed_aos_h   = "42C00000000800090000000000000000FFFF";
@@ -1839,6 +1851,7 @@ UTEST(AOS_PROCESS, AOS_OCF_TEST)
         1, 0x002c, 0, AOS_HAS_FECF, AOS_NO_FHEC, AOS_HAS_IZ, 0, AOS_SEGMENT_HDRS_NA, 22, AOS_HAS_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test frame setup
     char *framed_aos_h   = "42C00000000800090000000000000000DEADBEEFFFFF";
@@ -1889,6 +1902,7 @@ UTEST(AOS_PROCESS, AOS_KEY_STATE_TEST)
         1, 0x002c, 0, AOS_HAS_FECF, AOS_NO_FHEC, AOS_HAS_IZ, 0, AOS_SEGMENT_HDRS_NA, 18, AOS_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test frame setup
     char *framed_aos_h   = "42C00000000000050000000000000000FFFF";
