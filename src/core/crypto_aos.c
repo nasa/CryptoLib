@@ -55,10 +55,10 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     uint32_t               pkcs_padding    = 0;
     uint16_t               new_fecf        = 0x0000;
     uint8_t                ecs_is_aead_algorithm;
-    SecurityAssociation_t *sa_ptr = NULL;
-    uint8_t                tfvn   = 0;
-    uint16_t               scid   = 0;
-    uint16_t               vcid   = 0;
+    SecurityAssociation_t *sa_ptr      = NULL;
+    uint8_t                tfvn        = 0;
+    uint16_t               scid        = 0;
+    uint16_t               vcid        = 0;
     uint16_t               cbc_padding = 0;
 
     // Prevent set but unused error
@@ -122,7 +122,8 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         return status;
     }
 
-    if((len_ingest < current_managed_parameters_struct.max_frame_size) && (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC) && (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC_MAC))
+    if ((len_ingest < current_managed_parameters_struct.max_frame_size) && (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC) &&
+        (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC_MAC))
     {
         status = CRYPTO_LIB_ERR_AOS_FL_LT_MAX_FRAME_SIZE;
         mc_if->mc_log(status);
@@ -130,7 +131,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     }
     else if ((sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC) || (sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC_MAC))
     {
-        if((current_managed_parameters_struct.max_frame_size - len_ingest) <= 16)
+        if ((current_managed_parameters_struct.max_frame_size - len_ingest) <= 16)
         {
             cbc_padding = current_managed_parameters_struct.max_frame_size - len_ingest;
         }
@@ -388,7 +389,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         pdu_len -= 2;
     }
 
-    if(current_managed_parameters_struct.max_frame_size < pdu_len)
+    if (current_managed_parameters_struct.max_frame_size < pdu_len)
     {
         status = CRYPTO_LIB_ERR_AOS_FRAME_LENGTH_UNDERFLOW;
         mc_if->mc_log(status);

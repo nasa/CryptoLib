@@ -1398,7 +1398,7 @@ UTEST(AOS_APPLY, AOS_APPLY_BUFFER_OVERFLOW_TEST)
 {
     remove("sa_save_file.bin");
     // Local variables
-    int32_t                status = CRYPTO_LIB_SUCCESS;
+    int32_t status = CRYPTO_LIB_SUCCESS;
 
     // Configure, Add Managed Params, and Init
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
@@ -1416,8 +1416,7 @@ UTEST(AOS_APPLY, AOS_APPLY_BUFFER_OVERFLOW_TEST)
     // Test Frame Setup
     // 6 byte header, 2 byte blank SPI, 16 byte blank IV (CCC...), data, MAC, FECF
     //                  |  Header  |SPI|
-    char *test_aos_h =
-        "40C0000000000000CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCFFFF";
+    char *test_aos_h   = "40C0000000000000CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCFFFF";
     char *test_aos_b   = NULL;
     int   test_aos_len = 0;
     hex_conversion(test_aos_h, &test_aos_b, &test_aos_len);

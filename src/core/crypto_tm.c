@@ -701,10 +701,10 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     uint32_t               pkcs_padding    = 0;
     uint16_t               new_fecf        = 0x0000;
     uint8_t                ecs_is_aead_algorithm;
-    SecurityAssociation_t *sa_ptr = NULL;
-    uint8_t                tfvn   = 0;
-    uint16_t               scid   = 0;
-    uint16_t               vcid   = 0;
+    SecurityAssociation_t *sa_ptr      = NULL;
+    uint8_t                tfvn        = 0;
+    uint16_t               scid        = 0;
+    uint16_t               vcid        = 0;
     uint16_t               cbc_padding = 0;
 
     // Prevent set but not used error
@@ -760,7 +760,8 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         return status;
     }
 
-    if((len_ingest < current_managed_parameters_struct.max_frame_size) && (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC) && (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC_MAC))
+    if ((len_ingest < current_managed_parameters_struct.max_frame_size) && (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC) &&
+        (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC_MAC))
     {
         status = CRYPTO_LIB_ERR_TM_FL_LT_MAX_FRAME_SIZE;
         mc_if->mc_log(status);
@@ -768,7 +769,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     }
     else if ((sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC) || (sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC_MAC))
     {
-        if((current_managed_parameters_struct.max_frame_size - len_ingest) <= 16)
+        if ((current_managed_parameters_struct.max_frame_size - len_ingest) <= 16)
         {
             cbc_padding = current_managed_parameters_struct.max_frame_size - len_ingest;
         }
@@ -827,7 +828,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     // Note: Secondary headers are static only for a mission phase, not guaranteed static
     // over the life of a mission Per CCSDS 132.0-B.3 Section 4.1.2.7.2.3
     // Secondary Header flag is 1st bit of 5th byte (index 4)
-    uint8_t secondary_hdr_start = 6; // starts at 6th byte
+    uint8_t secondary_hdr_start = 6;                       // starts at 6th byte
     Crypto_TM_Check_For_Secondary_Header(pTfBuffer, &idx); // Sets idx to 6 + secondary_hdr_len + 1
 
     uint16_t secondary_hdr_len = idx - secondary_hdr_start;
@@ -855,7 +856,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
 
     // Protects from overruns on very short max frame sizes
     // Smallest frame here is Header | Secondary Header | 1 byte data
-    if (len_ingest < ( TM_FRAME_PRIMARYHEADER_SIZE + secondary_hdr_len + 1))
+    if (len_ingest < (TM_FRAME_PRIMARYHEADER_SIZE + secondary_hdr_len + 1))
     {
 #ifdef TM_DEBUG
 #endif
@@ -936,7 +937,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     // Check other managed parameter flags, subtract their lengths from data field if present
     Crypto_TM_Handle_Managed_Parameter_Flags(&pdu_len);
 
-    if(current_managed_parameters_struct.max_frame_size < pdu_len)
+    if (current_managed_parameters_struct.max_frame_size < pdu_len)
     {
         status = CRYPTO_LIB_ERR_AOS_FRAME_LENGTH_UNDERFLOW;
         mc_if->mc_log(status);
@@ -1086,7 +1087,7 @@ int32_t Crypto_TM_Process_Setup(uint16_t len_ingest, uint16_t *byte_idx, uint8_t
             // we don't know the variable lengths from the SA yet
             // Protects from overruns on very short max frame sizes
             // Smallest frame here is Header | Secondary Header | 1 byte data
-            if (len_ingest < ( TM_FRAME_PRIMARYHEADER_SIZE + *secondary_hdr_len + 1))
+            if (len_ingest < (TM_FRAME_PRIMARYHEADER_SIZE + *secondary_hdr_len + 1))
             {
                 status = CRYPTO_LIB_ERR_TM_SECONDARY_HDR_SIZE;
                 mc_if->mc_log(status);
@@ -1102,7 +1103,6 @@ int32_t Crypto_TM_Process_Setup(uint16_t len_ingest, uint16_t *byte_idx, uint8_t
             // No Secondary header, carry on as usual and increment to SPI start
             *byte_idx = 6;
         }
-
     }
 
     return status;
@@ -1609,7 +1609,6 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_
         }
 #endif
 
-
         if (current_managed_parameters_struct.max_frame_size <= byte_idx - sa_ptr->stmacf_len)
         {
             status = CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW;
@@ -1675,7 +1674,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_
         // NOTE: This size itself is not the length for authentication
         Crypto_TM_Calc_PDU_MAC(&pdu_len, byte_idx, sa_ptr, &mac_loc);
 
-        if(current_managed_parameters_struct.max_frame_size < pdu_len)
+        if (current_managed_parameters_struct.max_frame_size < pdu_len)
         {
             status = CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW;
             mc_if->mc_log(status);
