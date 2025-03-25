@@ -31,7 +31,7 @@ UTEST(AES_GCM_SIV, GET_ECS_ALGO_KEY_LEN_SIV)
     remove("sa_save_file.bin");
     int32_t algo_keylen = -1;
     uint8_t crypto_algo = CRYPTO_CIPHER_AES256_GCM_SIV;
-    algo_keylen = Crypto_Get_ACS_Algo_Keylen(crypto_algo);
+    algo_keylen         = Crypto_Get_ACS_Algo_Keylen(crypto_algo);
     ASSERT_EQ(algo_keylen, 32);
     Crypto_Shutdown();
 }
