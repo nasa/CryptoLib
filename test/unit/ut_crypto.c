@@ -111,7 +111,7 @@ UTEST(CRYPTO_C, PDU_SWITCH)
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
 
-    uint32_t status = Crypto_Init();
+    status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     sdls_frame.pdu.hdr.type = PDU_TYPE_COMMAND;

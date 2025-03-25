@@ -185,7 +185,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_DEC_TEST_1)
         0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 43, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
 
-    int status = Crypto_Init();
+    status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     SaInterface   sa_if = get_sa_interface_inmemory();
     crypto_key_t *ekp   = NULL;
