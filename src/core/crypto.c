@@ -834,8 +834,8 @@ int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uin
 int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uint8_t *ingest, uint16_t len_ingest)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    ingest         = ingest; // Suppress unused variable error depending on build
-    len_ingest = len_ingest; // suppress error for now
+    ingest         = ingest;     // Suppress unused variable error depending on build
+    len_ingest     = len_ingest; // suppress error for now
 
     // Check for null pointers
     if (tc_sdls_processed_frame == NULL)
@@ -923,7 +923,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
 #ifdef PDU_DEBUG
                         printf(KRED "Packet PDU_LEN Not multiple of 8 bits\n" RESET);
 #endif
-                        return CRYPTO_LIB_ERR_BAD_TLV_LENGTH;            
+                        return CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
                     }
 
                     if (sdls_frame.hdr.pkt_length <= TLV_DATA_SIZE)
