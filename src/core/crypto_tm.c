@@ -827,8 +827,42 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     // Note: Secondary headers are static only for a mission phase, not guaranteed static
     // over the life of a mission Per CCSDS 132.0-B.3 Section 4.1.2.7.2.3
     // Secondary Header flag is 1st bit of 5th byte (index 4)
+    uint8_t secondary_hdr_start = 6; // starts at 6th byte
+    Crypto_TM_Check_For_Secondary_Header(pTfBuffer, &idx); // Sets idx to 6 + secondary_hdr_len + 1
 
-    Crypto_TM_Check_For_Secondary_Header(pTfBuffer, &idx);
+    uint16_t secondary_hdr_len = idx - secondary_hdr_start;
+    // Determine Secondary Header Version Number, should always be 0b00
+    uint8_t shvn = (pTfBuffer[secondary_hdr_start] & 0xC0) >> 6;
+#ifdef TM_DEBUG
+    printf("Secondary Header Version Number: %d\n", shvn);
+    printf("len_ingest: %d \n", len_ingest);
+    printf("byte_idx: %d\n", idx);
+    printf("Actual secondary header length: %d\n", secondary_hdr_len);
+#endif
+    if (shvn > 0 && idx > secondary_hdr_start) // idx will be > 6 if secondary header is present
+    {
+        status = CRYPTO_LIB_ERR_TM_SECONDARY_HDR_VN;
+        mc_if->mc_log(status);
+        return status;
+    }
+
+    if (secondary_hdr_len > TM_SECONDARY_HDR_MAX_VALUE)
+    {
+        status = CRYPTO_LIB_ERR_TM_SECONDARY_HDR_SIZE;
+        mc_if->mc_log(status);
+        return status;
+    }
+
+    // Protects from overruns on very short max frame sizes
+    // Smallest frame here is Header | Secondary Header | 1 byte data
+    if (len_ingest < ( TM_FRAME_PRIMARYHEADER_SIZE + secondary_hdr_len + 1))
+    {
+#ifdef TM_DEBUG
+#endif
+        status = CRYPTO_LIB_ERR_TM_SECONDARY_HDR_SIZE;
+        mc_if->mc_log(status);
+        return status;
+    }
 
     /**
      * Begin Security Header Fields
@@ -1004,7 +1038,6 @@ int32_t Crypto_TM_Process_Setup(uint16_t len_ingest, uint16_t *byte_idx, uint8_t
     // Check if secondary header is present within frame
     // Note: Secondary headers are static only for a mission phase, not guaranteed static
     // over the life of a mission Per CCSDS 132.0-B.3 Section 4.1.2.7.2.3
-
     if (status == CRYPTO_LIB_SUCCESS)
     {
         // Secondary Header flag is 1st bit of 5th byte (index 4)
@@ -1016,13 +1049,50 @@ int32_t Crypto_TM_Process_Setup(uint16_t len_ingest, uint16_t *byte_idx, uint8_t
 #endif
             // Secondary header is present
             *byte_idx = 6;
+
+            // Determine Secondary Header Version Number, should always be 0b00
+            uint8_t shvn = (p_ingest[*byte_idx] & 0xC0) >> 6;
+#ifdef TM_DEBUG
+            printf("Secondary Header Version Number: %d\n", shvn);
+#endif
+            if (shvn > 0)
+            {
+                status = CRYPTO_LIB_ERR_TM_SECONDARY_HDR_VN;
+                mc_if->mc_log(status);
+                return status;
+            }
             // Determine length of secondary header
             // Length coded as total length of secondary header - 1
             // Reference CCSDS 132.0-B-2 4.1.3.2.3
             *secondary_hdr_len = (p_ingest[*byte_idx] & 0x3F) + 1;
 #ifdef TM_DEBUG
-            printf(KYEL "Secondary Header Length is decoded as: %d\n", *secondary_hdr_len);
+            printf(KYEL "Secondary Header Length is decoded as: %d\n", *secondary_hdr_len - 1);
+            printf("len_ingest: %d \n", len_ingest);
+            printf("byte_idx: %d\n", *byte_idx);
+            printf("Actual secondary header length: %d\n", *secondary_hdr_len);
 #endif
+            // We have a secondary header length now, is it sane?
+            // Does it violate spec maximum?
+            // Reference CCSDS 1320b3 4.1.3.1.3
+            if (*secondary_hdr_len > TM_SECONDARY_HDR_MAX_VALUE + 1)
+            {
+                status = CRYPTO_LIB_ERR_TM_SECONDARY_HDR_SIZE;
+                mc_if->mc_log(status);
+                return status;
+            }
+
+            // Does it 'fit' in the overall frame correctly?
+            // We can't validate it down to the byte yet,
+            // we don't know the variable lengths from the SA yet
+            // Protects from overruns on very short max frame sizes
+            // Smallest frame here is Header | Secondary Header | 1 byte data
+            if (len_ingest < ( TM_FRAME_PRIMARYHEADER_SIZE + *secondary_hdr_len + 1))
+            {
+                status = CRYPTO_LIB_ERR_TM_SECONDARY_HDR_SIZE;
+                mc_if->mc_log(status);
+                return status;
+            }
+
             // Increment from current byte (1st byte of secondary header),
             // to where the SPI would start
             *byte_idx += *secondary_hdr_len;
@@ -1032,6 +1102,7 @@ int32_t Crypto_TM_Process_Setup(uint16_t len_ingest, uint16_t *byte_idx, uint8_t
             // No Secondary header, carry on as usual and increment to SPI start
             *byte_idx = 6;
         }
+
     }
 
     return status;
@@ -1488,6 +1559,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_
     tm_frame_pri_hdr.vcid = ((uint8_t)p_ingest[1] & 0x0E) >> 1;
 
     status = Crypto_TM_Process_Setup(len_ingest, &byte_idx, p_ingest, &secondary_hdr_len);
+
     if (status == CRYPTO_LIB_SUCCESS)
     {
         /**
@@ -1537,6 +1609,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_
         }
 #endif
 
+
         if (current_managed_parameters_struct.max_frame_size <= byte_idx - sa_ptr->stmacf_len)
         {
             status = CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW;
@@ -1544,6 +1617,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_
             return status;
         }
 
+        // Received the wrong amount of bytes from mandated frame size
         if (len_ingest < current_managed_parameters_struct.max_frame_size)
         {
             status = CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW;

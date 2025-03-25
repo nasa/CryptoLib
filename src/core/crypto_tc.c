@@ -1805,7 +1805,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
         return status;
     } // Unable to get necessary Managed Parameters for TC TF -- return with error.
 
-    if (*len_ingest < current_managed_parameters_struct.max_frame_size || (tc_sdls_processed_frame->tc_header.fl + 1) < *len_ingest)
+    if ((tc_sdls_processed_frame->tc_header.fl + 1) < *len_ingest)
     {
         status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW;
         mc_if->mc_log(status);

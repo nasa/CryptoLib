@@ -206,6 +206,7 @@
 #define TM_FRAME_DATA_SIZE 1786 /* bytes */
 #define TM_FILL_SIZE       1145 /* bytes */
 #define TM_PAD_SIZE        2    /* bytes */
+#define TM_SECONDARY_HDR_MAX_VALUE 63
 
 // AOS Defines
 #define AOS_FRAME_DATA_SIZE 1786 /* bytes */

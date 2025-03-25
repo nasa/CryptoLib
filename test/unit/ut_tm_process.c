@@ -345,9 +345,6 @@ UTEST(TM_PROCESS_SECURITY, SECONDARY_HDR_PRESENT_PLAINTEXT)
         0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
-
     status = Crypto_Init();
 
     // Test frame setup
@@ -2137,10 +2134,6 @@ UTEST(TM_PROCESS, TM_SA_NOT_OPERATIONAL)
 
     status = Crypto_Init();
 
-    TC_t *tc_sdls_processed_frame;
-    tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
-    memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
-
     char *framed_tm_h   = "02C000001800002C414243444546";
     char *framed_tm_b   = NULL;
     int   framed_tm_len = 0;
@@ -2161,7 +2154,6 @@ UTEST(TM_PROCESS, TM_SA_NOT_OPERATIONAL)
 
     ASSERT_EQ(CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL, status);
     free(framed_tm_b);
-    free(tc_sdls_processed_frame);
     Crypto_Shutdown();
 }
 
@@ -2185,10 +2177,6 @@ UTEST(TM_PROCESS, TM_KEY_STATE_TEST)
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
     status = Crypto_Init();
-
-    TC_t *tc_sdls_processed_frame;
-    tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
-    memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
 
     char *framed_tm_h   = "02C0000018000008414243444546";
     char *framed_tm_b   = NULL;
@@ -2215,10 +2203,12 @@ UTEST(TM_PROCESS, TM_KEY_STATE_TEST)
 
     ASSERT_EQ(CRYPTO_LIB_ERR_KEY_STATE_INVALID, status);
     free(framed_tm_b);
-    free(tc_sdls_processed_frame);
     Crypto_Shutdown();
 }
 
+/*
+** Test that we won't process a TM frame that is obviously too small
+*/
 UTEST(TM_PROCESS, TM_PROCESS_HEAP_UNDERFLOW_TEST)
 {
     // Local Variables
@@ -2232,17 +2222,11 @@ UTEST(TM_PROCESS, TM_PROCESS_HEAP_UNDERFLOW_TEST)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TM Tests
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TM_UT_Managed_Parameters = {
         0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
     status = Crypto_Init();
-
-    TC_t *tc_sdls_processed_frame;
-    tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
-    memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
 
     char *framed_tm_h   = "02C0000018000008414243444546";
     char *framed_tm_b   = NULL;
@@ -2262,7 +2246,111 @@ UTEST(TM_PROCESS, TM_PROCESS_HEAP_UNDERFLOW_TEST)
 
     ASSERT_EQ(CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW, status);
     free(framed_tm_b);
-    free(tc_sdls_processed_frame);
+    Crypto_Shutdown();
+}
+
+/*
+** Test that a Secondary Header that violates spec, or doesn't leave room for a single byte
+** of data, won't pass.
+*/
+UTEST(TM_PROCESS, TM_PROCESS_Secondary_Hdr_OVERFLOW_TEST)
+{
+    // Local Variables
+    int32_t  status              = CRYPTO_LIB_SUCCESS;
+    uint8_t *ptr_processed_frame = NULL;
+    uint16_t processed_tm_len;
+
+    // Configure Parameters
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // TM Tests
+    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 7, TM_NO_OCF, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+
+    status = Crypto_Init();
+    
+    char *framed_tm_h   = "02C00009800FF";
+    char *framed_tm_b   = NULL;
+    int   framed_tm_len = 0;
+    hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);
+
+    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &ptr_processed_frame, &processed_tm_len);
+
+    ASSERT_EQ(CRYPTO_LIB_ERR_TM_SECONDARY_HDR_SIZE, status);
+    free(framed_tm_b);
+    Crypto_Shutdown();
+}
+
+/*
+** Test a Secondary Header that violates spec catches the error
+*/
+UTEST(TM_PROCESS, TM_PROCESS_Secondary_Hdr_Spec_Violation)
+{
+    // Local Variables
+    int32_t  status              = CRYPTO_LIB_SUCCESS;
+    uint8_t *ptr_processed_frame = NULL;
+    uint16_t processed_tm_len;
+
+    // Configure Parameters
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // TM Tests
+    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 8, TM_NO_OCF, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+
+    status = Crypto_Init();
+    
+    // Secondary header length set to 0x40, overflows into secondary header version number
+    char *framed_tm_h   = "02C00009800040BB";
+    char *framed_tm_b   = NULL;
+    int   framed_tm_len = 0;
+    hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);
+
+    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &ptr_processed_frame, &processed_tm_len);
+
+    ASSERT_EQ(CRYPTO_LIB_ERR_TM_SECONDARY_HDR_VN, status);
+    free(framed_tm_b);
+    Crypto_Shutdown();
+}
+
+/*
+** Test a Secondary Header that is too big relative to the bytes received
+*/
+UTEST(TM_PROCESS, TM_PROCESS_Secondary_Hdr_One_Too_Big)
+{
+    // Local Variables
+    int32_t  status              = CRYPTO_LIB_SUCCESS;
+    uint8_t *ptr_processed_frame = NULL;
+    uint16_t processed_tm_len;
+
+    // Configure Parameters
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // TM Tests
+    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x002c, 0, TM_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 8, TM_NO_OCF, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+
+    status = Crypto_Init();
+    // 6 byte header + 2 byte secondary header
+    // The Header length should be 0 (hdr len -1), with one byte of data after
+    char *framed_tm_h   = "02C00008800001BB";
+    char *framed_tm_b   = NULL;
+    int   framed_tm_len = 0;
+    hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);
+
+    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &ptr_processed_frame, &processed_tm_len);
+
+    ASSERT_EQ(CRYPTO_LIB_ERR_TM_SECONDARY_HDR_SIZE, status);
+    free(framed_tm_b);
     Crypto_Shutdown();
 }
 
