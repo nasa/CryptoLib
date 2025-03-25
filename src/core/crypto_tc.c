@@ -351,34 +351,40 @@ int32_t Crypto_TC_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr
 
     if (sa_ptr->est == 1)
     {
-        ekp = key_if->get_key(sa_ptr->ekid);
-        if (ekp == NULL)
+        if (crypto_config.key_type != KEY_TYPE_KMC)
         {
-            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-            mc_if->mc_log(status);
-            return status;
-        }
-        if (ekp->key_state != KEY_ACTIVE)
-        {
-            status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
-            mc_if->mc_log(status);
-            return status;
+            ekp = key_if->get_key(sa_ptr->ekid);
+            if (ekp == NULL)
+            {
+                status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+                mc_if->mc_log(status);
+                return status;
+            }
+            if (ekp->key_state != KEY_ACTIVE)
+            {
+                status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
+                mc_if->mc_log(status);
+                return status;
+            }
         }
     }
     if (sa_ptr->ast == 1)
     {
-        akp = key_if->get_key(sa_ptr->akid);
-        if (akp == NULL)
+        if (crypto_config.key_type != KEY_TYPE_KMC)
         {
-            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-            mc_if->mc_log(status);
-            return status;
-        }
-        if (akp->key_state != KEY_ACTIVE)
-        {
-            status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
-            mc_if->mc_log(status);
-            return status;
+            akp = key_if->get_key(sa_ptr->akid);
+            if (akp == NULL)
+            {
+                status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+                mc_if->mc_log(status);
+                return status;
+            }
+            if (akp->key_state != KEY_ACTIVE)
+            {
+                status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
+                mc_if->mc_log(status);
+                return status;
+            }
         }
     }
 
@@ -424,13 +430,16 @@ int32_t Crypto_TC_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr
 
         if (ecs_is_aead_algorithm == CRYPTO_TRUE)
         {
-            // Check that key length to be used ets the algorithm requirement
-            if ((int32_t)ekp->key_len != Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs))
+            if (crypto_config.key_type != KEY_TYPE_KMC)
             {
-                Crypto_TC_Safe_Free_Ptr(*aad);
-                status = CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
-                mc_if->mc_log(status);
-                return status;
+                // Check that key length to be used ets the algorithm requirement
+                if ((int32_t)ekp->key_len != Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs))
+                {
+                    Crypto_TC_Safe_Free_Ptr(*aad);
+                    status = CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
+                    mc_if->mc_log(status);
+                    return status;
+                }
             }
 
             status = cryptography_if->cryptography_aead_encrypt(
@@ -457,11 +466,14 @@ int32_t Crypto_TC_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr
             // TODO - implement non-AEAD algorithm logic
             if (sa_service_type == SA_ENCRYPTION)
             {
-                // Check that key length to be used ets the algorithm requirement
-                if ((int32_t)ekp->key_len != Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs))
+                if (crypto_config.key_type != KEY_TYPE_KMC)
                 {
-                    Crypto_TC_Safe_Free_Ptr(*aad);
-                    return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
+                    // Check that key length to be used ets the algorithm requirement
+                    if ((int32_t)ekp->key_len != Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs))
+                    {
+                        Crypto_TC_Safe_Free_Ptr(*aad);
+                        return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
+                    }
                 }
 
                 status = cryptography_if->cryptography_encrypt(
@@ -481,11 +493,14 @@ int32_t Crypto_TC_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr
             if (sa_service_type == SA_AUTHENTICATION)
             {
 
-                // Check that key length to be used ets the algorithm requirement
-                if ((int32_t)akp->key_len != Crypto_Get_ACS_Algo_Keylen(sa_ptr->acs))
+                if (crypto_config.key_type != KEY_TYPE_KMC)
                 {
-                    Crypto_TC_Safe_Free_Ptr(*aad);
-                    return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
+                    // Check that key length to be used ets the algorithm requirement
+                    if ((int32_t)akp->key_len != Crypto_Get_ACS_Algo_Keylen(sa_ptr->acs))
+                    {
+                        Crypto_TC_Safe_Free_Ptr(*aad);
+                        return CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
+                    }
                 }
 
                 status = cryptography_if->cryptography_authenticate(
@@ -1376,12 +1391,14 @@ int32_t Crypto_TC_Do_Decrypt(uint8_t sa_service_type, uint8_t ecs_is_aead_algori
     if (sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_TRUE)
     {
         // Check that key length to be used meets the algorithm requirement
-
-        status = Crypto_TC_Check_ECS_Keylen(ekp, sa_ptr);
-        if (status != CRYPTO_LIB_SUCCESS)
+        if (crypto_config.key_type != KEY_TYPE_KMC)
         {
-            Crypto_TC_Safe_Free_Ptr(aad);
-            return status;
+            status = Crypto_TC_Check_ECS_Keylen(ekp, sa_ptr);
+            if (status != CRYPTO_LIB_SUCCESS)
+            {
+                Crypto_TC_Safe_Free_Ptr(aad);
+                return status;
+            }
         }
 
         status = cryptography_if->cryptography_aead_decrypt(
@@ -1411,12 +1428,15 @@ int32_t Crypto_TC_Do_Decrypt(uint8_t sa_service_type, uint8_t ecs_is_aead_algori
         // TODO - implement non-AEAD algorithm logic
         if (sa_service_type == SA_AUTHENTICATION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
         {
-            // Check that key length to be used ets the algorithm requirement
-            status = Crypto_TC_Check_ACS_Keylen(akp, sa_ptr);
-            if (status != CRYPTO_LIB_SUCCESS)
+            if (crypto_config.key_type != KEY_TYPE_KMC)
             {
-                Crypto_TC_Safe_Free_Ptr(aad);
-                return status;
+                // Check that key length to be used ets the algorithm requirement
+                status = Crypto_TC_Check_ACS_Keylen(akp, sa_ptr);
+                if (status != CRYPTO_LIB_SUCCESS)
+                {
+                    Crypto_TC_Safe_Free_Ptr(aad);
+                    return status;
+                }
             }
 
             status = cryptography_if->cryptography_validate_authentication(
@@ -1440,13 +1460,16 @@ int32_t Crypto_TC_Do_Decrypt(uint8_t sa_service_type, uint8_t ecs_is_aead_algori
         }
         if (sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
         {
-            // Check that key length to be used emets the algorithm requirement
-            if ((int32_t)ekp->key_len != Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs))
+            if (crypto_config.key_type != KEY_TYPE_KMC)
             {
-                Crypto_TC_Safe_Free_Ptr(aad);
-                status = CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
-                mc_if->mc_log(status);
-                return status;
+                // Check that key length to be used emets the algorithm requirement
+                if ((int32_t)ekp->key_len != Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs))
+                {
+                    Crypto_TC_Safe_Free_Ptr(aad);
+                    status = CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
+                    mc_if->mc_log(status);
+                    return status;
+                }
             }
 
             status =
@@ -1582,33 +1605,43 @@ int32_t Crypto_TC_Prep_AAD(TC_t *tc_sdls_processed_frame, uint8_t fecf_len, uint
 int32_t Crypto_TC_Get_Keys(crypto_key_t **ekp, crypto_key_t **akp, SecurityAssociation_t *sa_ptr)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    *ekp           = key_if->get_key(sa_ptr->ekid);
-    *akp           = key_if->get_key(sa_ptr->akid);
+
+    if (crypto_config.key_type != KEY_TYPE_KMC)
+    {
+        *ekp = key_if->get_key(sa_ptr->ekid);
+        *akp = key_if->get_key(sa_ptr->akid);
+    }
 
     if (sa_ptr->est == 1)
     {
-        if (*ekp == NULL)
+        if (crypto_config.key_type != KEY_TYPE_KMC)
         {
-            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-            mc_if->mc_log(status);
-        }
-        if ((*ekp)->key_state != KEY_ACTIVE && (status == CRYPTO_LIB_SUCCESS))
-        {
-            status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
-            mc_if->mc_log(status);
+            if (*ekp == NULL)
+            {
+                status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+                mc_if->mc_log(status);
+            }
+            if ((*ekp)->key_state != KEY_ACTIVE && (status == CRYPTO_LIB_SUCCESS))
+            {
+                status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
+                mc_if->mc_log(status);
+            }
         }
     }
     if (sa_ptr->ast == 1 && status == CRYPTO_LIB_SUCCESS)
     {
-        if ((*akp == NULL) && (status == CRYPTO_LIB_SUCCESS))
+        if (crypto_config.key_type != KEY_TYPE_KMC)
         {
-            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-            mc_if->mc_log(status);
-        }
-        if ((*akp)->key_state != KEY_ACTIVE && (status == CRYPTO_LIB_SUCCESS))
-        {
-            status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
-            mc_if->mc_log(status);
+            if ((*akp == NULL) && (status == CRYPTO_LIB_SUCCESS))
+            {
+                status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+                mc_if->mc_log(status);
+            }
+            if ((*akp)->key_state != KEY_ACTIVE && (status == CRYPTO_LIB_SUCCESS))
+            {
+                status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
+                mc_if->mc_log(status);
+            }
         }
     }
 
@@ -1883,7 +1916,11 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
     }
 
     // Parse & Check FECF
-    Crypto_TC_Parse_Check_FECF(ingest, len_ingest, tc_sdls_processed_frame);
+    status = Crypto_TC_Parse_Check_FECF(ingest, len_ingest, tc_sdls_processed_frame);
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        return status;
+    }
 
     // Parse transmitted portion of IV from received frame (Will be Whole IV if iv_len==shivf_len)
     memcpy((tc_sdls_processed_frame->tc_sec_header.iv + (sa_ptr->iv_len - sa_ptr->shivf_len)),
@@ -2027,19 +2064,27 @@ uint8_t *Crypto_Prepare_TC_AAD(uint8_t *buffer, uint16_t len_aad, uint8_t *abm_b
 
 static int32_t validate_sa_index(SecurityAssociation_t *sa)
 {
-    int32_t                returnval = -1;
+    int32_t                returnval = 0;
     SecurityAssociation_t *temp_sa;
     sa_if->sa_get_from_spi(sa->spi, &temp_sa);
+
+    // Do not validate sa index on KMC
+    if (crypto_config.sa_type == SA_TYPE_MARIADB)
+    {
+        return returnval;
+    }
+
     int sa_index = -1;
     sa_index     = (int)(sa - temp_sa); // Based on array memory location
 #ifdef DEBUG
     if (sa_index == 0)
         printf("SA Index matches SPI\n");
-    else
+    else if (sa_index != 0 && crypto_config.sa_type != SA_TYPE_MARIADB)
         printf("Malformed SA SPI based on SA Index!\n");
 #endif
-    if (sa_index == 0)
-        returnval = 0;
+    if (sa_index != 0)
+        returnval = -1;
+
     return returnval;
 }
 

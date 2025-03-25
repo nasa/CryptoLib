@@ -100,7 +100,9 @@ char *crypto_enum_errlist_core[] = {(char *)"CRYPTO_LIB_SUCCESS",
                                     (char *)"CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW",
                                     (char *)"CRYPTO_LIB_ERR_AOS_FL_LT_MAX_FRAME_SIZE",
                                     (char *)"CRYPTO_LIB_ERR_TM_FL_LT_MAX_FRAME_SIZE",
-                                    (char *)"CRYPTO_LIB_ERR_INVALID_FHECF"};
+                                    (char *)"CRYPTO_LIB_ERR_INVALID_FHECF",
+                                    (char *)"CRYPTO_LIB_ERR_TM_SECONDARY_HDR_SIZE",
+                                    (char *)"CRYPTO_LIB_ERR_TM_SECONDARY_HDR_VN"};
 
 char *crypto_enum_errlist_config[] = {
     (char *)"CRYPTO_CONFIGURATION_NOT_COMPLETE",
@@ -114,10 +116,9 @@ char *crypto_enum_errlist_sa_if[] = {
     (char *)"SADB_NULL_SA_USED",
 };
 char *crypto_enum_errlist_sa_mariadb[] = {
-    (char *)"SADB_MARIADB_CONNECTION_FAILED",
-    (char *)"SADB_QUERY_FAILED",
-    (char *)"SADB_QUERY_EMPTY_RESULTS",
-    (char *)"SADB_INSERT_FAILED",
+    (char *)"SADB_MARIADB_CONNECTION_FAILED", (char *)"SADB_QUERY_FAILED",
+    (char *)"SADB_QUERY_EMPTY_RESULTS",       (char *)"SADB_INSERT_FAILED",
+    (char *)"SADB_INVALID_SA_FIELD_VALUE",
 };
 char *crypto_enum_errlist_crypto_if[] = {
     (char *)"CRYPTOGRAPHY_INVALID_CRYPTO_INTERFACE_TYPE",

@@ -375,7 +375,8 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_STATIC_IV_ROLLOVER)
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    Crypto_Init();
+    int status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     char *raw_tc_sdls_ping_h = "20030015000080d2c70008197f0b00310000b1fe3128";
     char *raw_tc_sdls_ping_b = NULL;
 
@@ -651,7 +652,8 @@ UTEST(TC_APPLY_SECURITY, INVALID_FRAME_SIZE)
     GvcidManagedParameters_t TC_UT_Managed_Parameters = {
         0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 0, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    Crypto_Init();
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     char *test_frame_pt_h = "2003001c00ff000100001980d03e000a197f0b000300020093d4ba21c4";
     char *long_frame_pt_h =
@@ -1393,7 +1395,8 @@ UTEST(TC_APPLY_SECURITY, PLAINTEXT_W_ARSN)
     GvcidManagedParameters_t TC_UT_Managed_Parameters = {
         0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    Crypto_Init();
+    int status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Test string
     char *raw_tc_sdls_ping_h   = "2003001F00000100011980D2C9000E197F0B001B0004000400003040D95E0000";
     char *raw_tc_sdls_ping_b   = NULL;
@@ -1438,7 +1441,8 @@ UTEST(TC_APPLY_SECURITY, TC_KEY_STATE_TEST)
     GvcidManagedParameters_t TC_UT_Managed_Parameters = {
         0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    Crypto_Init();
+    int status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Test string
     char *raw_tc_sdls_ping_h   = "20030015000080d2c70008197f0b00310000b1fe3128";
     char *raw_tc_sdls_ping_b   = NULL;

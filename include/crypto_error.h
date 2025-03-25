@@ -36,6 +36,7 @@
 #define SADB_QUERY_FAILED              301
 #define SADB_QUERY_EMPTY_RESULTS       302
 #define SADB_INSERT_FAILED             303
+#define SADB_INVALID_SA_FIELD_VALUE    304
 
 #define CRYPTOGRAPHY_INVALID_CRYPTO_INTERFACE_TYPE      400
 #define CRYPTOGRAPHY_UNSUPPORTED_OPERATION_FOR_KEY_RING 401
@@ -150,8 +151,10 @@
 #define CRYPTO_LIB_ERR_AOS_FL_LT_MAX_FRAME_SIZE                             (-77)
 #define CRYPTO_LIB_ERR_TM_FL_LT_MAX_FRAME_SIZE                              (-78)
 #define CRYPTO_LIB_ERR_INVALID_FHECF                                        (-79)
+#define CRYPTO_LIB_ERR_TM_SECONDARY_HDR_SIZE                                (-80)
+#define CRYPTO_LIB_ERR_TM_SECONDARY_HDR_VN                                  (-81)
 
-#define CRYPTO_CORE_ERROR_CODES_MAX -79
+#define CRYPTO_CORE_ERROR_CODES_MAX -81
 
 // Define codes for returning MDB Strings, and determining error based on strings
 #define CAM_ERROR_CODES     600
@@ -164,7 +167,7 @@
 #define CRYPTO_INTERFACE_ERROR_CODES_MAX 402
 
 #define SADB_ERROR_CODES     300
-#define SADB_ERROR_CODES_MAX 303
+#define SADB_ERROR_CODES_MAX 304
 
 #define SADB_INTERFACE_ERROR_CODES     200
 #define SADB_INTERFACE_ERROR_CODES_MAX 201
