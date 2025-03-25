@@ -100,7 +100,8 @@ char *crypto_enum_errlist_core[] = {(char *)"CRYPTO_LIB_SUCCESS",
                                     (char *)"CRYPTO_LIB_ERR_AOS_FL_LT_MAX_FRAME_SIZE",
                                     (char *)"CRYPTO_LIB_ERR_TM_FL_LT_MAX_FRAME_SIZE",
                                     (char *)"CRYPTO_LIB_ERR_INVALID_FHECF",
-                                    (char *)"CRYPTO_LIB_ERR_TM_SECONDARY_HDR_SIZE"};
+                                    (char *)"CRYPTO_LIB_ERR_TM_SECONDARY_HDR_SIZE",
+                                    (char *)"CRYPTO_LIB_ERR_TM_SECONDARY_HDR_VN"};
 
 char *crypto_enum_errlist_config[] = {
     (char *)"CRYPTO_CONFIGURATION_NOT_COMPLETE",

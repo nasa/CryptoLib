@@ -2274,14 +2274,15 @@ UTEST(TM_PROCESS, TM_PROCESS_Secondary_Hdr_Spec_Violation)
 
     status = Crypto_Init();
     
-    char *framed_tm_h   = "02C000098000FFBB";
+    // Secondary header length set to 0x40, overflows into secondary header version number
+    char *framed_tm_h   = "02C00009800040BB";
     char *framed_tm_b   = NULL;
     int   framed_tm_len = 0;
     hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);
 
     status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &ptr_processed_frame, &processed_tm_len);
 
-    ASSERT_EQ(CRYPTO_LIB_ERR_TM_SECONDARY_HDR_SIZE, status);
+    ASSERT_EQ(CRYPTO_LIB_ERR_TM_SECONDARY_HDR_VN, status);
     free(framed_tm_b);
     Crypto_Shutdown();
 }
