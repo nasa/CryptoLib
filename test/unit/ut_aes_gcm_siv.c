@@ -61,7 +61,7 @@ UTEST(AES_GCM_SIV, GET_ECS_ALGO_SIV)
 UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_1)
 {
     remove("sa_save_file.bin");
-    int status = CRYPTO_LIB_SUCCESS;
+    int      status        = CRYPTO_LIB_SUCCESS;
     uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib

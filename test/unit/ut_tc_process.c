@@ -51,9 +51,9 @@ UTEST(TC_PROCESS, EXERCISE_IV)
 
     int status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-    SaInterface   sa_if  = get_sa_interface_inmemory();
-    crypto_key_t *ekp    = NULL;
-    status = 0;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *ekp   = NULL;
+    status              = 0;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -180,9 +180,9 @@ UTEST(TC_PROCESS, EXERCISE_ARSN)
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     int status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-    SaInterface   sa_if  = get_sa_interface_inmemory();
-    crypto_key_t *akp    = NULL;
-    status = 0;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *akp   = NULL;
+    status              = 0;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext

@@ -95,9 +95,9 @@ UTEST(EP_KEY_MGMT, ACTIVATE_141_142)
 
     int status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-    SaInterface   sa_if  = get_sa_interface_inmemory();
-    crypto_key_t *ekp    = NULL;
-    status = CRYPTO_LIB_SUCCESS;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *ekp   = NULL;
+    status              = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
@@ -171,9 +171,9 @@ UTEST(EP_KEY_MGMT, DEACTIVATE_142)
 
     int status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-    SaInterface   sa_if  = get_sa_interface_inmemory();
-    crypto_key_t *ekp    = NULL;
-    status = CRYPTO_LIB_SUCCESS;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *ekp   = NULL;
+    status              = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h   = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
@@ -560,9 +560,9 @@ UTEST(EP_KEY_MGMT, OTAR_0_140_142_BAD_DECRYPT)
 
     int status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-    SaInterface   sa_if  = get_sa_interface_inmemory();
-    crypto_key_t *ekp    = NULL;
-    status = CRYPTO_LIB_SUCCESS;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *ekp   = NULL;
+    status              = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
@@ -662,9 +662,9 @@ UTEST(EP_KEY_MGMT, DEACTIVATE_142_NO_PUS)
 
     int status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-    SaInterface   sa_if  = get_sa_interface_inmemory();
-    crypto_key_t *ekp    = NULL;
-    status = CRYPTO_LIB_SUCCESS;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *ekp   = NULL;
+    status              = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h   = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
@@ -744,9 +744,9 @@ UTEST(EP_KEY_MGMT, DEACTIVATE_142_NO_PUS_BAD_TLV)
 
     int status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-    SaInterface   sa_if  = get_sa_interface_inmemory();
-    crypto_key_t *ekp    = NULL;
-    status = CRYPTO_LIB_SUCCESS;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *ekp   = NULL;
+    status              = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h   = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
@@ -822,9 +822,9 @@ UTEST(EP_KEY_MGMT, DEACTIVATE_142_PUS_BAD_TLV)
 
     int status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-    SaInterface   sa_if  = get_sa_interface_inmemory();
-    crypto_key_t *ekp    = NULL;
-    status = CRYPTO_LIB_SUCCESS;
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *ekp   = NULL;
+    status              = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h   = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";

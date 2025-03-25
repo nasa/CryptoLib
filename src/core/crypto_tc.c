@@ -1607,8 +1607,8 @@ int32_t Crypto_TC_Get_Keys(crypto_key_t **ekp, crypto_key_t **akp, SecurityAssoc
 
     if (crypto_config.key_type != KEY_TYPE_KMC)
     {
-        *ekp           = key_if->get_key(sa_ptr->ekid);
-        *akp           = key_if->get_key(sa_ptr->akid);
+        *ekp = key_if->get_key(sa_ptr->ekid);
+        *akp = key_if->get_key(sa_ptr->akid);
     }
 
     if (sa_ptr->est == 1)

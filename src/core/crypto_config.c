@@ -313,7 +313,7 @@ int32_t Crypto_Init(void)
 #endif
             status = CRYPTOGRAPHY_INVALID_CRYPTO_INTERFACE_TYPE;
             return status;
-        }       
+        }
     }
 
     if (status == CRYPTO_LIB_SUCCESS)
@@ -416,7 +416,7 @@ int32_t Crypto_Shutdown(void)
     }
 
     crypto_free_config_structs();
-    
+
     return status;
 }
 

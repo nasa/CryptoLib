@@ -417,9 +417,9 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     crypto_key_t *akp = NULL;
     if (crypto_config.key_type != KEY_TYPE_KMC)
     {
-        ekp               = key_if->get_key(sa_ptr->ekid);
-        akp               = key_if->get_key(sa_ptr->akid);
-    
+        ekp = key_if->get_key(sa_ptr->ekid);
+        akp = key_if->get_key(sa_ptr->akid);
+
         if (ekp == NULL || akp == NULL)
         {
             status = CRYPTO_LIB_ERR_KEY_ID_ERROR;

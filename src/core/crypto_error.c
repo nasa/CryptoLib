@@ -115,10 +115,8 @@ char *crypto_enum_errlist_sa_if[] = {
     (char *)"SADB_NULL_SA_USED",
 };
 char *crypto_enum_errlist_sa_mariadb[] = {
-    (char *)"SADB_MARIADB_CONNECTION_FAILED",
-    (char *)"SADB_QUERY_FAILED",
-    (char *)"SADB_QUERY_EMPTY_RESULTS",
-    (char *)"SADB_INSERT_FAILED",
+    (char *)"SADB_MARIADB_CONNECTION_FAILED", (char *)"SADB_QUERY_FAILED",
+    (char *)"SADB_QUERY_EMPTY_RESULTS",       (char *)"SADB_INSERT_FAILED",
     (char *)"SADB_INVALID_SA_FIELD_VALUE",
 };
 char *crypto_enum_errlist_crypto_if[] = {
