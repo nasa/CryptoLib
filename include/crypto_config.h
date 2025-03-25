@@ -116,7 +116,7 @@
 #define MKID_MAX            128
 #define DISABLED            0
 #define ENABLED             1
-#define IV_SIZE_TC          4  /* TC IV size bytes */
+#define IV_SIZE_TC          4 /* TC IV size bytes */
 #define REF_SIZE            250
 #define OCF_SIZE            4
 #define FHECF_SIZE          2
@@ -136,16 +136,16 @@
 
 // Configurable via build flags
 #ifndef NUM_SA
-   #define NUM_SA              64
+#define NUM_SA 64
 #endif
 #ifndef MAC_SIZE
-   #define MAC_SIZE            16 /* bytes */
+#define MAC_SIZE 16 /* bytes */
 #endif
 #ifndef IV_SIZE
-   #define IV_SIZE             16 /* TM IV size bytes */
+#define IV_SIZE 16 /* TM IV size bytes */
 #endif
 #ifndef NUM_KEYS
-   #define NUM_KEYS            256
+#define NUM_KEYS 256
 #endif
 
 // Monitoring and Control Defines
@@ -213,9 +213,9 @@
 #define TLV_DATA_SIZE 494 /* bytes */
 
 // TM Defines
-#define TM_FRAME_DATA_SIZE 1786 /* bytes */
-#define TM_FILL_SIZE       1145 /* bytes */
-#define TM_PAD_SIZE        2    /* bytes */
+#define TM_FRAME_DATA_SIZE         1786 /* bytes */
+#define TM_FILL_SIZE               1145 /* bytes */
+#define TM_PAD_SIZE                2    /* bytes */
 #define TM_SECONDARY_HDR_MAX_VALUE 63
 
 // AOS Defines

@@ -2271,7 +2271,7 @@ UTEST(TM_PROCESS, TM_PROCESS_Secondary_Hdr_OVERFLOW_TEST)
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
     status = Crypto_Init();
-    
+
     char *framed_tm_h   = "02C00009800FF";
     char *framed_tm_b   = NULL;
     int   framed_tm_len = 0;
@@ -2305,7 +2305,7 @@ UTEST(TM_PROCESS, TM_PROCESS_Secondary_Hdr_Spec_Violation)
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
     status = Crypto_Init();
-    
+
     // Secondary header length set to 0x40, overflows into secondary header version number
     char *framed_tm_h   = "02C00009800040BB";
     char *framed_tm_b   = NULL;

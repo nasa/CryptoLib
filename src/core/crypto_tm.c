@@ -828,7 +828,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     // Note: Secondary headers are static only for a mission phase, not guaranteed static
     // over the life of a mission Per CCSDS 132.0-B.3 Section 4.1.2.7.2.3
     // Secondary Header flag is 1st bit of 5th byte (index 4)
-    uint8_t secondary_hdr_start = 6; // starts at 6th byte
+    uint8_t secondary_hdr_start = 6;                       // starts at 6th byte
     Crypto_TM_Check_For_Secondary_Header(pTfBuffer, &idx); // Sets idx to 6 + secondary_hdr_len + 1
 
     uint16_t secondary_hdr_len = idx - secondary_hdr_start;
@@ -856,7 +856,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
 
     // Protects from overruns on very short max frame sizes
     // Smallest frame here is Header | Secondary Header | 1 byte data
-    if (len_ingest < ( TM_FRAME_PRIMARYHEADER_SIZE + secondary_hdr_len + 1))
+    if (len_ingest < (TM_FRAME_PRIMARYHEADER_SIZE + secondary_hdr_len + 1))
     {
 #ifdef TM_DEBUG
 #endif
@@ -1087,7 +1087,7 @@ int32_t Crypto_TM_Process_Setup(uint16_t len_ingest, uint16_t *byte_idx, uint8_t
             // we don't know the variable lengths from the SA yet
             // Protects from overruns on very short max frame sizes
             // Smallest frame here is Header | Secondary Header | 1 byte data
-            if (len_ingest < ( TM_FRAME_PRIMARYHEADER_SIZE + *secondary_hdr_len + 1))
+            if (len_ingest < (TM_FRAME_PRIMARYHEADER_SIZE + *secondary_hdr_len + 1))
             {
                 status = CRYPTO_LIB_ERR_TM_SECONDARY_HDR_SIZE;
                 mc_if->mc_log(status);
@@ -1103,7 +1103,6 @@ int32_t Crypto_TM_Process_Setup(uint16_t len_ingest, uint16_t *byte_idx, uint8_t
             // No Secondary header, carry on as usual and increment to SPI start
             *byte_idx = 6;
         }
-
     }
 
     return status;
@@ -1609,7 +1608,6 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_
                 break;
         }
 #endif
-
 
         if (current_managed_parameters_struct.max_frame_size <= byte_idx - sa_ptr->stmacf_len)
         {
