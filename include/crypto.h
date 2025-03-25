@@ -59,6 +59,7 @@
 /*
 ** User Prototypes
 */
+uint8_t gf_mul(uint8_t a, uint8_t b);
 
 // Crypto Library Configuration functions
 extern int32_t Crypto_Config_CryptoLib(uint8_t key_type, uint8_t mc_type, uint8_t sa_type, uint8_t cryptography_type,
@@ -136,12 +137,11 @@ int32_t Crypto_TC_Frame_Validation(uint16_t *p_enc_frame_len);
 int32_t Crypto_TC_Accio_Buffer(uint8_t **p_new_enc_frame, uint16_t *p_enc_frame_len);
 int32_t Crypto_TC_ACS_Algo_Check(SecurityAssociation_t *sa_ptr);
 int32_t Crypto_TC_Check_IV_Setup(SecurityAssociation_t *sa_ptr, uint8_t *p_new_enc_frame, uint16_t *index);
-int32_t Crypto_TC_Do_Encrypt_PLAINTEXT(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr, uint16_t *mac_loc,
-                                       uint16_t tf_payload_len, uint8_t segment_hdr_len, uint8_t *p_new_enc_frame,
-                                       crypto_key_t *ekp, uint8_t **aad, uint8_t ecs_is_aead_algorithm,
-                                       uint16_t *index_p, const uint8_t *p_in_frame, char *cam_cookies,
-                                       uint32_t pkcs_padding);
-void    Crypto_TC_Do_Encrypt_NONPLAINTEXT(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr);
+int32_t Crypto_TC_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr, uint16_t *mac_loc,
+                          uint16_t tf_payload_len, uint8_t segment_hdr_len, uint8_t *p_new_enc_frame, crypto_key_t *ekp,
+                          uint8_t **aad, uint8_t ecs_is_aead_algorithm, uint16_t *index_p, const uint8_t *p_in_frame,
+                          char *cam_cookies, uint32_t pkcs_padding);
+void    Crypto_TC_Increment_IV_ARSN(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr);
 int32_t Crypto_TC_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr, uint16_t *mac_loc,
                              uint16_t tf_payload_len, uint8_t segment_hdr_len, uint8_t *p_new_enc_frame,
                              crypto_key_t *ekp, uint8_t **aad, uint8_t ecs_is_aead_algorithm, uint16_t *index_p,
@@ -164,12 +164,12 @@ uint32_t Crypto_Get_FSR(void);
 void     Crypto_Set_FSR(uint8_t *p_ingest, uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t *sa_ptr);
 
 // Telemetry (TM)
-extern int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer);
+extern int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest);
 extern int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_t **pp_processed_frame,
                                          uint16_t *p_decrypted_length);
 
 // Advanced Orbiting Systems (AOS)
-extern int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer);
+extern int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest);
 extern int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_t **pp_processed_frame,
                                           uint16_t *p_decrypted_length);
 
@@ -240,11 +240,13 @@ void           Crypto_Local_Config(void);
 void           Crypto_Local_Init(void);
 int32_t        Crypto_window(uint8_t *actual, uint8_t *expected, int length, int window);
 uint16_t       Crypto_Calc_FECF(const uint8_t *ingest, int len_ingest);
+uint16_t       Crypto_Calc_FHECF(uint8_t *data);
 void           Crypto_Calc_CRC_Init_Table(void);
 uint16_t       Crypto_Calc_CRC16(uint8_t *data, int size);
 int32_t        Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, uint8_t *iv);
 int32_t        Crypto_Get_ECS_Algo_Keylen(uint8_t algo);
 int32_t        Crypto_Get_ACS_Algo_Keylen(uint8_t algo);
+uint8_t        Crypto_Is_ACS_Only_Algo(uint8_t algo);
 
 int32_t Crypto_Check_Anti_Replay_Verify_Pointers(SecurityAssociation_t *sa_ptr, uint8_t *arsn, uint8_t *iv);
 int32_t Crypto_Check_Anti_Replay_ARSNW(SecurityAssociation_t *sa_ptr, uint8_t *arsn, int8_t *arsn_valid);
@@ -316,6 +318,7 @@ extern TM_FrameSecurityHeader_t tm_frame_sec_hdr; // Used to reduce bit math dup
 // exterm AOS_t aos_frame
 extern AOS_FramePrimaryHeader_t  aos_frame_pri_hdr;
 extern AOS_FrameSecurityHeader_t aos_frame_sec_hdr; // Used to reduce bit math duplication
+extern uint8_t                   parity[4];         // Used in FHECF calc
 
 // Global configuration structs
 extern CryptoConfig_t                        crypto_config;
@@ -355,5 +358,14 @@ extern uint8_t badFECF;
 //  CRC
 extern uint32_t crc32Table[CRC32TBL_SIZE];
 extern uint16_t crc16Table[CRC16TBL_SIZE];
+
+// GF(2^4) field and logarithm tables
+static const uint8_t gf_exp[30] = {1, 2, 4, 8, 3, 6, 12, 11, 5, 10, 7, 14, 15, 13, 9,
+                                   1, 2, 4, 8, 3, 6, 12, 11, 5, 10, 7, 14, 15, 13, 9};
+
+static const uint8_t gf_log[GF_SIZE] = {0, 0, 1, 4, 2, 8, 5, 10, 3, 14, 9, 7, 6, 13, 11, 12};
+
+// Generator polynomial coefficients for g(x) = x^4 + a^3x^3 + ax^2 + a^3x + 1
+static const uint8_t gen_poly[RS_PARITY + 1] = {1, 8, 2, 8, 1};
 
 #endif // CRYPTO_H

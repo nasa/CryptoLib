@@ -255,10 +255,10 @@ void sa_populate(void)
     sa[1].ast             = 0;
     sa[1].shivf_len       = 12;
     sa[1].iv_len          = 12;
-    sa[1].shsnf_len       = 2;
+    sa[1].shsnf_len       = 0;
     sa[1].arsnw           = 5;
     sa[1].arsnw_len       = 1;
-    sa[1].arsn_len        = 2;
+    sa[1].arsn_len        = 0;
     sa[1].gvcid_blk.tfvn  = 0;
     sa[1].gvcid_blk.scid  = SCID & 0x3FF;
     sa[1].gvcid_blk.vcid  = 0;
@@ -269,7 +269,7 @@ void sa_populate(void)
     // EKID = 2
     sa[2].spi             = 2;
     sa[2].ekid            = 2;
-    sa[2].sa_state        = SA_KEYED;
+    sa[2].sa_state        = SA_OPERATIONAL;
     sa[2].ecs_len         = 1;
     sa[2].ecs             = CRYPTO_CIPHER_AES256_GCM;
     sa[2].est             = 1;
@@ -278,10 +278,10 @@ void sa_populate(void)
     sa[2].iv_len          = 12;
     sa[2].arsnw_len       = 1;
     sa[2].arsnw           = 5;
-    sa[2].arsn_len        = ((sa[2].arsnw * 2) + 1);
+    sa[2].arsn_len        = 0;
     sa[2].gvcid_blk.tfvn  = 0;
     sa[2].gvcid_blk.scid  = SCID & 0x3FF;
-    sa[2].gvcid_blk.vcid  = 0;
+    sa[2].gvcid_blk.vcid  = 2;
     sa[2].gvcid_blk.mapid = TYPE_TC;
 
     // TC - Authentication Only - HMAC_SHA512 (Keyed)
@@ -722,15 +722,24 @@ static int32_t sa_get_from_spi(uint16_t spi, SecurityAssociation_t **security_as
         return CRYPTO_LIB_ERR_SPI_INDEX_OOB;
     }
     *security_association = &sa[spi];
-    // if (sa[spi].shivf_len > 0 && crypto_config.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
-    // {
-    //     return CRYPTO_LIB_ERR_NULL_IV;
-    // } // Must have IV if doing encryption or authentication
 
     if ((sa[spi].abm_len == 0) && sa[spi].ast)
     {
         return CRYPTO_LIB_ERR_NULL_ABM;
     } // Must have abm if doing authentication
+
+    // ARSN must be 0 octets in length if not using Auth/Auth Enc
+    if (sa[spi].ast == 0 && sa[spi].arsn_len != 0)
+    {
+        return CRYPTO_LIB_ERR_INVALID_SVC_TYPE_WITH_ARSN;
+    }
+
+    // ARSN length cannot be less than shsnf length
+    if (sa[spi].shsnf_len > sa[spi].arsn_len)
+    {
+        return CRYPTO_LIB_ERR_ARSN_LT_SHSNF;
+    }
+
 #ifdef SA_DEBUG
     printf(KYEL "DEBUG - Printing local copy of SA Entry for current SPI.\n" RESET);
     Crypto_saPrint(*security_association);
@@ -755,13 +764,6 @@ int32_t sa_get_operational_sa_from_gvcid_find_iv(uint8_t tfvn, uint16_t scid, ui
         {
             *security_association = &sa[i];
 
-            // Must have IV if using libgcrypt and auth/enc
-            // if (sa[i].iv == NULL && (sa[i].ast == 1 || sa[i].est == 1) && crypto_config.cryptography_type !=
-            // CRYPTOGRAPHY_TYPE_KMCCRYPTO)
-            // {
-            //     //status =  CRYPTO_LIB_ERR_NULL_IV;
-            //     //return status;
-            // }
             // Must have ABM if doing authentication
             if (sa[i].ast && sa[i].abm_len <= 0)
             {
@@ -860,6 +862,20 @@ void sa_non_operational_sa(int *i_p, int32_t *status, uint8_t tfvn, uint16_t sci
     *i_p = i;
 }
 
+void sa_mismatched_arsn(int *i_p, int32_t *status, uint8_t tfvn, uint16_t scid, uint16_t vcid, uint8_t mapid)
+{
+    int i = *i_p;
+    if ((sa[i].arsn_len > 0 && sa[i].ast == 0) && (sa[i].gvcid_blk.tfvn == tfvn) && (sa[i].gvcid_blk.scid == scid) &&
+        (sa[i].gvcid_blk.vcid == vcid) && (sa[i].gvcid_blk.mapid == mapid && sa[i].sa_state == SA_OPERATIONAL))
+    {
+#ifdef SA_DEBUG
+        printf(KRED "An operational SA (%d) was found - but invalid ARSN length.\n" RESET, sa[i].spi);
+#endif
+        *status = CRYPTO_LIB_ERR_INVALID_SVC_TYPE_WITH_ARSN;
+    }
+    *i_p = i;
+}
+
 void sa_debug_block(uint8_t tfvn, uint16_t scid, uint16_t vcid, uint8_t mapid)
 {
 // Detailed debug block
@@ -917,6 +933,12 @@ int32_t sa_get_operational_sa_from_gvcid_generate_error(int32_t *status, uint8_t
                 return *status;
             }
             sa_non_operational_sa(&i, status, tfvn, scid, vcid, mapid);
+            if (*status != CRYPTO_LIB_SUCCESS)
+            {
+                sa_debug_block(tfvn, scid, vcid, mapid);
+                return *status;
+            }
+            sa_mismatched_arsn(&i, status, tfvn, scid, vcid, mapid);
             if (*status != CRYPTO_LIB_SUCCESS)
             {
                 sa_debug_block(tfvn, scid, vcid, mapid);
@@ -1222,10 +1244,6 @@ static int32_t sa_rekey(TC_t *tc_frame)
             sa[spi].ekid = ((uint8_t)sdls_frame.pdu.data[count] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[count + 1];
             count        = count + 2;
 
-            // Authentication Key
-            // sa[spi].akid = ((uint8_t)sdls_frame.pdu.data[count] << 8) | (uint8_t)sdls_frame.pdu.data[count+1];
-            // count = count + 2;
-
             // Anti-Replay Seq Num
 #ifdef PDU_DEBUG
             printf("SPI %d IV updated to: 0x", spi);
@@ -1273,7 +1291,6 @@ static int32_t sa_rekey(TC_t *tc_frame)
 #ifdef PDU_DEBUG
     printf("\t spi  = %d \n", spi);
     printf("\t ekid = %d \n", sa[spi].ekid);
-    // printf("\t akid = %d \n", sa[spi].akid);
 #endif
 
     return CRYPTO_LIB_SUCCESS;
@@ -1569,21 +1586,8 @@ static int32_t sa_setARSN(TC_t *tc_frame)
     // Check SPI exists
     if (spi < NUM_SA)
     {
-        if (sa[spi].shivf_len > 0 && sa[spi].ecs == 1 && sa[spi].acs == 1)
-        { // Set IV - authenticated encryption
-#ifdef PDU_DEBUG
-            printf("SPI %d IV updated to: 0x", spi);
-#endif
-            for (x = 0; x < IV_SIZE; x++)
-            {
-                *(sa[spi].iv + x) = (uint8_t)sdls_frame.pdu.data[x + 2];
-#ifdef PDU_DEBUG
-                printf("%02x", *(sa[spi].iv + x));
-#endif
-            }
-            Crypto_increment(sa[spi].iv, sa[spi].shivf_len);
-        }
-        else
+        // Check if Auth or Auth Enc
+        if ((sa[spi].est == 1 && sa[spi].ast == 1) || sa[spi].ast == 1)
         { // Set SN
 #ifdef PDU_DEBUG
             printf("SPI %d ARSN updated to: 0x", spi);
@@ -1595,10 +1599,16 @@ static int32_t sa_setARSN(TC_t *tc_frame)
                 printf("%02x", *(sa[spi].arsn + x));
 #endif
             }
-        }
 #ifdef PDU_DEBUG
-        printf("\n");
+            printf("\n");
 #endif
+        }
+        else
+        {
+#ifdef PDU_DEBUG
+            printf("Failed setARSN on SPI %d, ECS %d, ACS %d\n", spi, sa[spi].ecs, sa[spi].acs);
+#endif
+        }
     }
     else
     {

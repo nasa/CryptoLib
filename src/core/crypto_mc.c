@@ -267,17 +267,18 @@ int32_t Crypto_SA_readARSN(uint8_t *ingest)
         uint16_t               spi = 0x0000;
         SecurityAssociation_t *sa_ptr;
         int                    x;
+        int                    status = CRYPTO_LIB_SUCCESS;
 
         // Read ingest
-        spi = ((uint8_t)sdls_frame.pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[1];
+        spi    = ((uint8_t)sdls_frame.pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[1];
+        status = sa_if->sa_get_from_spi(spi, &sa_ptr);
 
-        if (sa_if->sa_get_from_spi(spi, &sa_ptr) != CRYPTO_LIB_SUCCESS)
+        if (status != CRYPTO_LIB_SUCCESS)
         {
             // TODO - Error handling
-            status = CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL; // Error -- unable to get SA from SPI.
+            return status; // Error -- unable to get SA from SPI.
         }
-
-        if (status == CRYPTO_LIB_SUCCESS)
+        else
         {
             // Prepare for Reply
             sdls_frame.pdu.hdr.pdu_len = (SPI_LEN + sa_ptr->arsn_len) * BYTE_LEN; // bits

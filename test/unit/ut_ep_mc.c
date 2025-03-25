@@ -14,7 +14,7 @@ UTEST(EP_MC, MC_REGULAR_PING)
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 25, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
     int status = Crypto_Init();
@@ -24,12 +24,12 @@ UTEST(EP_MC, MC_REGULAR_PING)
     status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_PING_h = "2003001a00ff000000001880d2c70008197f0b00310000b1fe312855";
+    char *buffer_PING_h = "2003001800ff00001980d2c70008197f0b00310000b1fe3128";
     //                    |2003001a00| = Primary Header
     //                              |ff| = Ext. Procs
     //                                |0000| = SPI
     //                                    |0000| = ARSN
-    //                                        |1880| = CryptoLib App ID
+    //                                        |1980| = CryptoLib App ID
     //                                            |d2c7| = seq, pktid
     //                                                |0008| = pkt_length
     //                                                    |197f| = pusv, ack, st
@@ -37,7 +37,6 @@ UTEST(EP_MC, MC_REGULAR_PING)
     //                                                          |0031| = PDU Tag
     //                                                              |0000| = PDU Length
     //                                                                  |b1fe3128| = FSR
-    //                                                                          |55| = Padding
 
     uint8_t *buffer_PING_b   = NULL;
     int      buffer_PING_len = 0;
@@ -53,15 +52,17 @@ UTEST(EP_MC, MC_REGULAR_PING)
     test_association->shivf_len      = 0;
     test_association->sa_state       = SA_OPERATIONAL;
     test_association->iv_len         = 12;
-    test_association->shsnf_len      = 2;
+    test_association->shsnf_len      = 0;
     test_association->arsnw          = 5;
     test_association->arsnw_len      = 1;
-    test_association->arsn_len       = 2;
+    test_association->arsn_len       = 0;
     test_association->gvcid_blk.scid = SCID & 0x3FF;
 
     // Modify SA 6
     sa_if->sa_get_from_spi(6, &test_association);
-    test_association->sa_state = SA_UNKEYED;
+    test_association->sa_state  = SA_UNKEYED;
+    test_association->arsn_len  = 0;
+    test_association->shsnf_len = 0;
 
     // Convert frames that will be processed
     hex_conversion(buffer_PING_h, (char **)&buffer_PING_b, &buffer_PING_len);
@@ -112,7 +113,7 @@ UTEST(EP_MC, MC_STATUS)
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 25, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
     int status = Crypto_Init();
@@ -122,7 +123,7 @@ UTEST(EP_MC, MC_STATUS)
     status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_STATUS_h = "2003001a00ff000000001880d2c70008197f0b00320000b1fe312855";
+    char *buffer_STATUS_h = "2003001800ff00001980d2c70008197f0b00320000b1fe3128";
 
     uint8_t *buffer_STATUS_b   = NULL;
     int      buffer_STATUS_len = 0;
@@ -138,10 +139,10 @@ UTEST(EP_MC, MC_STATUS)
     test_association->shivf_len      = 0;
     test_association->sa_state       = SA_OPERATIONAL;
     test_association->iv_len         = 12;
-    test_association->shsnf_len      = 2;
+    test_association->shsnf_len      = 0;
     test_association->arsnw          = 5;
     test_association->arsnw_len      = 1;
-    test_association->arsn_len       = 2;
+    test_association->arsn_len       = 0;
     test_association->gvcid_blk.scid = SCID & 0x3FF;
 
     // Modify SA 6
@@ -195,7 +196,7 @@ UTEST(EP_MC, MC_DUMP)
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 25, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
     int status = Crypto_Init();
@@ -204,7 +205,7 @@ UTEST(EP_MC, MC_DUMP)
 
     status = CRYPTO_LIB_SUCCESS;
 
-    char *buffer_DUMP_h = "2003001a00ff000000001880d2c70008197f0b00330000b1fe312855";
+    char *buffer_DUMP_h = "2003001800ff00001980d2c70008197f0b00330000b1fe3128";
 
     uint8_t *buffer_DUMP_b   = NULL;
     int      buffer_DUMP_len = 0;
@@ -220,10 +221,10 @@ UTEST(EP_MC, MC_DUMP)
     test_association->shivf_len      = 0;
     test_association->sa_state       = SA_OPERATIONAL;
     test_association->iv_len         = 12;
-    test_association->shsnf_len      = 2;
+    test_association->shsnf_len      = 0;
     test_association->arsnw          = 5;
     test_association->arsnw_len      = 1;
-    test_association->arsn_len       = 2;
+    test_association->arsn_len       = 0;
     test_association->gvcid_blk.scid = SCID & 0x3FF;
 
     // Modify SA 6
@@ -279,7 +280,7 @@ UTEST(EP_MC, MC_ERASE)
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 25, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
     int status = Crypto_Init();
@@ -289,7 +290,7 @@ UTEST(EP_MC, MC_ERASE)
     status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_ERASE_h = "2003001a00ff000000001880d2c70008197f0b00340000b1fe312855";
+    char *buffer_ERASE_h = "2003001800ff00001980d2c70008197f0b00340000b1fe3128";
 
     uint8_t *buffer_ERASE_b   = NULL;
     int      buffer_ERASE_len = 0;
@@ -305,10 +306,10 @@ UTEST(EP_MC, MC_ERASE)
     test_association->shivf_len      = 0;
     test_association->sa_state       = SA_OPERATIONAL;
     test_association->iv_len         = 12;
-    test_association->shsnf_len      = 2;
+    test_association->shsnf_len      = 0;
     test_association->arsnw          = 5;
     test_association->arsnw_len      = 1;
-    test_association->arsn_len       = 2;
+    test_association->arsn_len       = 0;
     test_association->gvcid_blk.scid = SCID & 0x3FF;
 
     // Modify SA 6
@@ -362,7 +363,7 @@ UTEST(EP_MC, MC_SELF_TEST)
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 25, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
     int status = Crypto_Init();
@@ -372,7 +373,7 @@ UTEST(EP_MC, MC_SELF_TEST)
     status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_SELF_h = "2003001a00ff000000001880d2c70008197f0b00350000b1fe312855";
+    char *buffer_SELF_h = "2003001800ff00001980d2c70008197f0b00350000b1fe3128";
 
     uint8_t *buffer_SELF_b   = NULL;
     int      buffer_SELF_len = 0;
@@ -389,10 +390,10 @@ UTEST(EP_MC, MC_SELF_TEST)
     test_association->shivf_len      = 0;
     test_association->sa_state       = SA_OPERATIONAL;
     test_association->iv_len         = 12;
-    test_association->shsnf_len      = 2;
+    test_association->shsnf_len      = 0;
     test_association->arsnw          = 5;
     test_association->arsnw_len      = 1;
-    test_association->arsn_len       = 2;
+    test_association->arsn_len       = 0;
     test_association->gvcid_blk.scid = SCID & 0x3FF;
 
     // Modify SA 6
@@ -446,7 +447,7 @@ UTEST(EP_MC, MC_ALARM_FLAG_RESET)
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 25, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
     int status = Crypto_Init();
@@ -456,7 +457,7 @@ UTEST(EP_MC, MC_ALARM_FLAG_RESET)
     status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_ALARM_h = "2003001a00ff000000001880d2c70008197f0b00370000b1fe312855";
+    char *buffer_ALARM_h = "2003001800ff00001980d2c70008197f0b00370000b1fe3128";
 
     uint8_t *buffer_ALARM_b   = NULL;
     int      buffer_ALARM_len = 0;
@@ -472,10 +473,10 @@ UTEST(EP_MC, MC_ALARM_FLAG_RESET)
     test_association->shivf_len      = 0;
     test_association->sa_state       = SA_OPERATIONAL;
     test_association->iv_len         = 12;
-    test_association->shsnf_len      = 2;
+    test_association->shsnf_len      = 0;
     test_association->arsnw          = 5;
     test_association->arsnw_len      = 1;
-    test_association->arsn_len       = 2;
+    test_association->arsn_len       = 0;
     test_association->gvcid_blk.scid = SCID & 0x3FF;
 
     // Modify SA 6
