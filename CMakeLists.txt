@@ -56,15 +56,37 @@ option(SA_MARIADB "Security Association - MariaDB" OFF)
 option(SUPPORT "Support" OFF)
 option(SYSTEM_INSTALL "SystemInstall" OFF)
 option(TEST "Test" OFF)
-# option(TEST_ENC "Tests - Encryption" OFF)
 option(SA_FILE "Save Security Association to File" OFF)
 option(KEY_VALIDATION "Validate existance of key duplication" OFF)
-
 OPTION(KMC_MDB_RH "KMC-MDB-RedHat-Integration-Testing" OFF) #Disabled by default, enable with: -DKMC_MDB_RH=ON
 OPTION(KMC_MDB_DB "KMC-MDB-Debian-Integration-Testing" OFF) #Disabled by default, enable with: -DKMC_MDB_DB=ON
 OPTION(KMC_CFFI_EXCLUDE "KMC-Exclude-Problematic-CFFI-Code" OFF) #Disabled by default, enable with: -DKMC_CFFI_EXCLUDE=ON
-
 OPTION(CRYPTO_EPROC "Enables the building and use of Extended Procedures" OFF) #Disabled by default, enable with -DCRYPTO_EPROC=ON
+
+OPTION(MAC_SIZE "The size of the max MAC buffer in bytes")
+OPTION(IV_SIZE "The size of the max IV buffer in bytes")
+Option(NUM_SA "The max number of SAs that will be used")
+Option(NUM_KEYS "The max number of keys that will be used")
+
+#
+# Max Size Defines
+#
+if(NUM_SA)
+    add_compile_definitions(NUM_SA=${NUM_SA})
+    message(STATUS "NUM_SA set to: ${NUM_SA}")
+endif()
+if(MAC_SIZE)
+    add_compile_definitions(MAC_SIZE=${MAC_SIZE})
+    message(STATUS "MAC_SIZE set to: ${MAC_SIZE}")
+endif()
+if(IV_SIZE)
+    add_compile_definitions(IV_SIZE=${IV_SIZE})
+    message(STATUS "IV_SIZE set to: ${IV_SIZE}")
+endif()
+if(NUM_KEYS)
+    add_compile_definitions(NUM_KEYS=${NUM_KEYS})
+    message(STATUS "NUM_KEYS set to: ${NUM_KEYS}")
+endif()
 
 #
 # Custom Module Paths
