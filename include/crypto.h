@@ -360,8 +360,7 @@ extern uint32_t crc32Table[CRC32TBL_SIZE];
 extern uint16_t crc16Table[CRC16TBL_SIZE];
 
 // GF(2^4) field and logarithm tables
-static const uint8_t gf_exp[30] = {1, 2, 4, 8, 3, 6, 12, 11, 5, 10, 7, 14, 15, 13, 9,
-                                   1, 2, 4, 8, 3, 6, 12, 11, 5, 10, 7, 14, 15, 13, 9};
+static const uint8_t gf_exp[30] = {1, 2, 4, 8, 3, 6, 12, 11, 5, 10, 7, 14, 15, 13, 9, 1, 2, 4, 8, 3, 6, 12, 11, 5, 10, 7, 14, 15, 13, 9};
 
 static const uint8_t gf_log[GF_SIZE] = {0, 0, 1, 4, 2, 8, 5, 10, 3, 14, 9, 7, 6, 13, 11, 12};
 
