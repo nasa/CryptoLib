@@ -100,29 +100,6 @@ static int32_t cryptography_init(void)
 static int32_t cryptography_shutdown(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-
-    gvcid_counter = 0;
-
-    if (key_if != NULL)
-    {
-        key_if = NULL;
-    }
-
-    if (mc_if != NULL)
-    {
-        mc_if = NULL;
-    }
-
-    if (sa_if != NULL)
-    {
-        sa_if = NULL;
-    }
-
-    if (cryptography_if != NULL)
-    {
-        cryptography_if = NULL;
-    }
-
     return status;
 }
 

@@ -315,13 +315,20 @@ int32_t Crypto_Init(void)
             {
                 cryptography_if = get_cryptography_interface_kmc_crypto_service();
             }
+            else
+            {
+#ifdef DEBUG
+                printf("KMC Crypto_Service not configured\n");
+#endif
+            }
         }
-        else
+        if (cryptography_if == NULL)
         {
 #ifdef DEBUG
             printf("Fatal Error: Unable to identify Cryptography Interface!\n");
 #endif
             status = CRYPTOGRAPHY_INVALID_CRYPTO_INTERFACE_TYPE;
+            return status;
         }       
     }
 

@@ -207,6 +207,7 @@ UTEST(TM_PROCESS_SECURITY, HAPPY_PATH_CLEAR_FECF)
     // Crypto_Config_Add_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test frame setup
     // Note: SPI 5 (0x05)
@@ -350,6 +351,7 @@ UTEST(TM_PROCESS_SECURITY, SECONDARY_HDR_PRESENT_PLAINTEXT)
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
 
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test frame setup
     char *framed_tm_h =
@@ -507,6 +509,7 @@ UTEST(TM_PROCESS_SECURITY, SECONDARY_HDR_PRESENT_MAC)
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
 
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test frame setup
     char *framed_tm_h =
@@ -667,6 +670,7 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_0)
     // Crypto_Config_Add_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     SaInterface sa_if = get_sa_interface_inmemory();
     // Test frame setup
@@ -842,6 +846,7 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_1)
     // Crypto_Config_Add_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     SaInterface sa_if = get_sa_interface_inmemory();
 
@@ -1018,6 +1023,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_0)
     // Crypto_Config_Add_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     SaInterface sa_if = get_sa_interface_inmemory();
     // Test frame setup
@@ -1193,6 +1199,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_1)
     // Crypto_Config_Add_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     SaInterface sa_if = get_sa_interface_inmemory();
     // Test frame setup
@@ -1368,6 +1375,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_0)
     // Crypto_Config_Add_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     SaInterface   sa_if = get_sa_interface_inmemory();
     crypto_key_t *akp   = NULL;
@@ -1546,6 +1554,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_1)
     // Crypto_Config_Add_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     SaInterface   sa_if = get_sa_interface_inmemory();
     crypto_key_t *akp   = NULL;
@@ -1723,7 +1732,8 @@ UTEST(TM_PROCESS_ENC_VAL, AES_GCM_BITMASK_1)
 
     // Crypto_Config_Add_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
-    Crypto_Init();
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     SaInterface sa_if = get_sa_interface_inmemory();
 
     // Test frame setup    Header   |SPI|    IV                         |    Data
@@ -1906,7 +1916,8 @@ UTEST(TM_PROCESS_ENC_VAL, AEAD_AES_GCM_BITMASK_1)
 
     // Crypto_Config_Add_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
-    Crypto_Init();
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     SaInterface sa_if = get_sa_interface_inmemory();
 
     // Test frame setup    Header   |SPI|    IV                         |    Data |            MAC                | FECF
@@ -2078,6 +2089,7 @@ UTEST(TM_PROCESS, TM_SA_SEGFAULT_TEST)
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test frame setup
     char *framed_tm_h   = "02C00000180000FFFFFF";
@@ -2111,7 +2123,8 @@ UTEST(TM_PROCESS, TM_OCF_TEST)
     GvcidManagedParameters_t TM_UT_Managed_Parameters = {
         0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 16, TM_HAS_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
-    Crypto_Init();
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test frame setup
     char *framed_tm_h   = "02C0000D180000000000DEADBEEFFFFF";
@@ -2157,6 +2170,7 @@ UTEST(TM_PROCESS, TM_SA_NOT_OPERATIONAL)
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     TC_t *tc_sdls_processed_frame;
     tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
@@ -2206,6 +2220,7 @@ UTEST(TM_PROCESS, TM_KEY_STATE_TEST)
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     TC_t *tc_sdls_processed_frame;
     tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);

@@ -49,10 +49,11 @@ UTEST(TC_PROCESS, EXERCISE_IV)
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
 
-    Crypto_Init();
+    int status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     SaInterface   sa_if  = get_sa_interface_inmemory();
     crypto_key_t *ekp    = NULL;
-    int           status = 0;
+    status = 0;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -177,10 +178,11 @@ UTEST(TC_PROCESS, EXERCISE_ARSN)
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    Crypto_Init();
+    int status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     SaInterface   sa_if  = get_sa_interface_inmemory();
     crypto_key_t *akp    = NULL;
-    int           status = 0;
+    status = 0;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -307,7 +309,8 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_STATIC_IV_ROLLOVER)
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    Crypto_Init();
+    int status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     SaInterface sa_if = get_sa_interface_inmemory();
 
     char *dec_test_fe_h =
@@ -404,7 +407,8 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_NONTRANSMITTED_INCREMENTING_IV_ROLLOVER)
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    Crypto_Init();
+    int status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     SaInterface sa_if = get_sa_interface_inmemory();
 
     char *dec_test_fe_h =
@@ -512,7 +516,8 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_NONTRANSMITTED_INCREMENTING_ARSN_ROLLOVER)
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    Crypto_Init();
+    int status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     SaInterface sa_if = get_sa_interface_inmemory();
 
@@ -930,10 +935,11 @@ UTEST(TC_PROCESS, GCM_IV_AND_ARSN)
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 3;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    Crypto_Init();
+    int status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     SaInterface   sa_if  = get_sa_interface_inmemory();
     crypto_key_t *ekp    = NULL;
-    int           status = 0;
+    status = 0;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -1145,6 +1151,7 @@ UTEST(TC_PROCESS, TC_SA_SEGFAULT_TEST)
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_Managed_Parameters);
 
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     TC_t *tc_sdls_processed_frame;
     tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
@@ -1185,6 +1192,7 @@ UTEST(TC_PROCESS, TC_SA_NOT_OPERATIONAL)
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_Managed_Parameters);
 
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     TC_t *tc_sdls_processed_frame;
     tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
@@ -1225,6 +1233,7 @@ UTEST(TC_PROCESS, TC_KEY_STATE_TEST)
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_Managed_Parameters);
 
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     TC_t *tc_sdls_processed_frame;
     tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);

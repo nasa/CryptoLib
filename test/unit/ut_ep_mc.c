@@ -17,10 +17,11 @@ UTEST(EP_MC, MC_REGULAR_PING)
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
-    Crypto_Init();
+    int status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     SaInterface sa_if = get_sa_interface_inmemory();
 
-    int status = CRYPTO_LIB_SUCCESS;
+    status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_PING_h = "2003001a00ff000000001880d2c70008197f0b00310000b1fe312855";
@@ -114,10 +115,11 @@ UTEST(EP_MC, MC_STATUS)
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
-    Crypto_Init();
+    int status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     SaInterface sa_if = get_sa_interface_inmemory();
 
-    int status = CRYPTO_LIB_SUCCESS;
+    status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_STATUS_h = "2003001a00ff000000001880d2c70008197f0b00320000b1fe312855";
@@ -196,10 +198,11 @@ UTEST(EP_MC, MC_DUMP)
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
-    Crypto_Init();
+    int status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     SaInterface sa_if = get_sa_interface_inmemory();
 
-    int status = CRYPTO_LIB_SUCCESS;
+    status = CRYPTO_LIB_SUCCESS;
 
     char *buffer_DUMP_h = "2003001a00ff000000001880d2c70008197f0b00330000b1fe312855";
 
@@ -279,10 +282,11 @@ UTEST(EP_MC, MC_ERASE)
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
-    Crypto_Init();
+    int status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     SaInterface sa_if = get_sa_interface_inmemory();
 
-    int status = CRYPTO_LIB_SUCCESS;
+    status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_ERASE_h = "2003001a00ff000000001880d2c70008197f0b00340000b1fe312855";
@@ -361,10 +365,11 @@ UTEST(EP_MC, MC_SELF_TEST)
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
-    Crypto_Init();
+    int status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     SaInterface sa_if = get_sa_interface_inmemory();
 
-    int status = CRYPTO_LIB_SUCCESS;
+    status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_SELF_h = "2003001a00ff000000001880d2c70008197f0b00350000b1fe312855";
@@ -444,10 +449,11 @@ UTEST(EP_MC, MC_ALARM_FLAG_RESET)
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
-    Crypto_Init();
+    int status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     SaInterface sa_if = get_sa_interface_inmemory();
 
-    int status = CRYPTO_LIB_SUCCESS;
+    status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_ALARM_h = "2003001a00ff000000001880d2c70008197f0b00370000b1fe312855";
