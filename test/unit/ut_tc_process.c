@@ -1231,7 +1231,7 @@ UTEST(TC_PROCESS, TC_KEY_STATE_TEST)
     memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
 
     // Test frame setup
-    char    *test_frame_pt_h = "2003002A0000000100000000000000000000000000000000025364F9BC3344AF359DA06CA886748F59A0AB";
+    char    *test_frame_pt_h = "2003002A0000000100000000000000000000000000000000025364F9BC3344AF359DA06CA886748F5939DE";
     uint8_t *test_frame_pt_b = NULL;
     int      test_frame_pt_len = 0;
 
