@@ -154,10 +154,10 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_CBC_KMC)
 {
     reload_db();
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE, MC_TYPE, SA_TYPE, CRYPTO_TYPE,
-                            IV_CRYPTO_MODULE, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_CryptoLib(KEY_TYPE, MC_TYPE, SA_TYPE, CRYPTO_TYPE, IV_CRYPTO_MODULE, CRYPTO_TC_CREATE_FECF_TRUE,
+                            TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR, TC_IGNORE_SA_STATE_FALSE,
+                            TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F,
+                            SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
                           CLIENT_CERTIFICATE_KEY, NULL, "root", "changeit");
     Crypto_Config_Kmc_Crypto_Service("https", "itc-kmc.nasa.gov", 8443, "crypto-service", "/certs/ammos-ca-bundle.crt",

@@ -65,10 +65,10 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_1)
     uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE, MC_TYPE, SA_TYPE, CRYPTO_TYPE,
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_CryptoLib(KEY_TYPE, MC_TYPE, SA_TYPE, CRYPTO_TYPE, IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE,
+                            TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR, TC_IGNORE_SA_STATE_FALSE,
+                            TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F,
+                            SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
@@ -168,10 +168,10 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_DEC_TEST_1)
     int      status        = CRYPTO_LIB_SUCCESS;
 
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE, MC_TYPE, SA_TYPE, CRYPTO_TYPE,
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
+    Crypto_Config_CryptoLib(KEY_TYPE, MC_TYPE, SA_TYPE, CRYPTO_TYPE, IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE,
+                            TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR, TC_IGNORE_SA_STATE_FALSE,
+                            TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F,
+                            SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
 
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
@@ -272,10 +272,10 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_2)
     uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE, MC_TYPE, SA_TYPE, CRYPTO_TYPE,
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_NO_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_CryptoLib(KEY_TYPE, MC_TYPE, SA_TYPE, CRYPTO_TYPE, IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE,
+                            TC_PROCESS_SDLS_PDUS_TRUE, TC_NO_PUS_HDR, TC_IGNORE_SA_STATE_FALSE,
+                            TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F,
+                            SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
@@ -374,10 +374,10 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_20_WITH_AAD_ENC_TEST_1)
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
     // Crypto_Init_TC_Unit_Test();
-    Crypto_Config_CryptoLib(KEY_TYPE, MC_TYPE, SA_TYPE, CRYPTO_TYPE,
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_FALSE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_CryptoLib(KEY_TYPE, MC_TYPE, SA_TYPE, CRYPTO_TYPE, IV_INTERNAL, CRYPTO_TC_CREATE_FECF_FALSE,
+                            TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR, TC_IGNORE_SA_STATE_FALSE,
+                            TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_FALSE, 0x3F,
+                            SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
@@ -475,10 +475,10 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_20_WITH_AAD_DEC_TEST_1)
     uint8_t *ptr_enc_frame = NULL;
 
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE, MC_TYPE, SA_TYPE, CRYPTO_TYPE,
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
+    Crypto_Config_CryptoLib(KEY_TYPE, MC_TYPE, SA_TYPE, CRYPTO_TYPE, IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE,
+                            TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR, TC_IGNORE_SA_STATE_FALSE,
+                            TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F,
+                            SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
 
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
