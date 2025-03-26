@@ -89,6 +89,77 @@ if(NUM_KEYS)
 endif()
 
 #
+# Crypto Module Defines
+#
+if(CRYPTO_LIBGCRYPT)
+    add_compile_definitions(CRYPTO_MODULE=CRYPTOGRAPHY_TYPE_LIBGCRYPT)
+    message(STATUS "CRYPTO_MODULE set to: CRYPTOGRAPHY_TYPE_LIBGCRYPT")
+elseif(CRYPTO_KMC)
+    add_compile_definitions(CRYPTO_MODULE=CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+    message(STATUS "CRYPTO_MODULE set to: CRYPTOGRAPHY_TYPE_KMCCRYPTO")
+elseif(CRYPTO_WOLFSSL)
+    add_compile_definitions(CRYPTO_MODULE=CRYPTOGRAPHY_TYPE_WOLFSSL)
+    message(STATUS "CRYPTO_MODULE set to: CRYPTOGRAPHY_TYPE_WOLFSSL")
+elseif(CRYPTO_CUSTOM)
+    add_compile_definitions(CRYPTO_MODULE=CRYPTOGRAPHY_TYPE_CUSTOM)
+    message(STATUS "CRYPTO_MODULE set to: CRYPTOGRAPHY_TYPE_CUSTOM")
+else()
+    message(FATAL_ERROR "CRYPTO_MODULE not set!")
+    break()
+endif()
+
+#
+# Key Module Defines
+#
+if(KEY_INTERNAL)
+    add_compile_definitions(KEY_MODULE=KEY_TYPE_INTERNAL)
+    message(STATUS "KEY_MODULE set to: KEY_TYPE_INTERNAL")
+elseif(KEY_KMC)
+    add_compile_definitions(KEY_MODULE=KEY_TYPE_KMC)
+    message(STATUS "KEY_MODULE set to: KEY_TYPE_KMC")
+elseif(KEY_CUSTOM)
+    add_compile_definitions(KEY_MODULE=KEY_TYPE_CUSTOM)
+    message(STATUS "KEY_MODULE set to: KEY_TYPE_CUSTOM")
+else()
+    message(FATAL_ERROR "KEY_MODULE not set!")
+    break()
+endif()
+
+#
+# MC Module Defines
+#
+if(MC_INTERNAL)
+    add_compile_definitions(MC_MODULE=MC_TYPE_INTERNAL)
+    message(STATUS "MC_MODULE set to: MC_TYPE_INTERNAL")
+elseif(MC_CUSTOM)
+    add_compile_definitions(MC_MODULE=MC_TYPE_CUSTOM)
+    message(STATUS "MC_MODULE set to: MC_TYPE_CUSTOM")
+elseif(MC_DISABLED)
+    add_compile_definitions(MC_MODULE=MC_TYPE_DISABLED)
+    message(STATUS "MC_MODULE set to: MC_TYPE_DISABLED")
+else()
+    message(FATAL_ERROR "MC_MODULE not set!")
+    break()
+endif()
+
+#
+# SA Module Defines
+#
+if(SA_INTERNAL)
+    add_compile_definitions(SA_MODULE=SA_TYPE_INMEMORY)
+    message(STATUS "SA_MODULE set to: SA_INTERNAL")
+elseif(SA_CUSTOM)
+    add_compile_definitions(SA_MODULE=SA_TYPE_CUSTOM)
+    message(STATUS "SA_MODULE set to: SA_CUSTOM")
+elseif(SA_MARIADB)
+    add_compile_definitions(SA_MODULE=SA_TYPE_MARIADB)
+    message(STATUS "SA_MODULE set to: SA_MARIADB")
+else()
+    message(FATAL_ERROR "SA_MODULE not set!")
+    break()
+endif()
+
+#
 # Custom Module Paths
 #
 if(KEY_CUSTOM)

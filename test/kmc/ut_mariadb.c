@@ -82,7 +82,7 @@
 //                                 ssl_capath, ssl_cert, ssl_key, client_key_password, mysql_username, mysql_password);
 //     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-//     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+//     Crypto_Config_CryptoLib(KEY_TYPE, MC_TYPE, SA_TYPE, CRYPTO_TYPE,
 //                         IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
 //                         TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
 //                         TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -121,7 +121,7 @@
 //                                 ssl_capath, ssl_cert, ssl_key, client_key_password, mysql_username, mysql_password);
 //     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-//     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+//     Crypto_Config_CryptoLib(KEY_TYPE, MC_TYPE, SA_TYPE, CRYPTO_TYPE,
 //                         IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
 //                         TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
 //                         TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -172,7 +172,7 @@
 //                                 ssl_capath, ssl_cert, ssl_key, client_key_password, mysql_username, mysql_password);
 //     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-//     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+//     Crypto_Config_CryptoLib(KEY_TYPE, MC_TYPE, SA_TYPE, CRYPTO_TYPE,
 //                         IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
 //                         TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
 //                         TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -230,7 +230,7 @@
 //                                 ssl_capath, ssl_cert, ssl_key, client_key_password, mysql_username, mysql_password);
 //     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-//     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+//     Crypto_Config_CryptoLib(KEY_TYPE, MC_TYPE, SA_TYPE, CRYPTO_TYPE,
 //                         IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
 //                         TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
 //                         TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -281,7 +281,7 @@
 //                                 ssl_capath, ssl_cert, ssl_key, client_key_password, mysql_username, mysql_password);
 //     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-//     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+//     Crypto_Config_CryptoLib(KEY_TYPE, MC_TYPE, SA_TYPE, CRYPTO_TYPE,
 //                         IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
 //                         TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
 //                         TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -363,7 +363,7 @@
 //                                 ssl_capath, ssl_cert, ssl_key, client_key_password, mysql_username, mysql_password);
 //     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-//     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+//     Crypto_Config_CryptoLib(KEY_TYPE, MC_TYPE, SA_TYPE, CRYPTO_TYPE,
 //                         IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
 //                         TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
 //                         TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -446,7 +446,7 @@
 //                                 ssl_capath, ssl_cert, ssl_key, client_key_password, mysql_username, mysql_password);
 //     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-//     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+//     Crypto_Config_CryptoLib(KEY_TYPE, MC_TYPE, SA_TYPE, CRYPTO_TYPE,
 //                         IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
 //                         TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
 //                         TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
@@ -557,7 +557,7 @@
 //                                 ssl_capath, ssl_cert, ssl_key, client_key_password, mysql_username, mysql_password);
 //     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-//     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+//     Crypto_Config_CryptoLib(KEY_TYPE, MC_TYPE, SA_TYPE, CRYPTO_TYPE,
 //                         IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
 //                         TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
 //                         TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
