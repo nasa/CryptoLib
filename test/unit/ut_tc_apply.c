@@ -1284,7 +1284,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_NULL_IV)
     // TODO: LIBGCRYPT and WOLFSSL have different truth data
     for (int i = 0; i < truth_data_l; i++)
     {
-        //printf("%02x -> %02x \n", ptr_enc_frame[i], truth_data_b[i]);
+        // printf("%02x -> %02x \n", ptr_enc_frame[i], truth_data_b[i]);
         ASSERT_EQ(ptr_enc_frame[i], truth_data_b[i]);
     }
     // printf("\n");
