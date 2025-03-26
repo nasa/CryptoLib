@@ -1520,11 +1520,11 @@ UTEST(TC_APPLY_SECURITY, TC_HEAP_BUFFER_OVERFLOW_TEST_2)
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_UT_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     Crypto_Init();
     // Test string
-    char *test_frame_pt_h   = "200300061931FA2A79206F7F0DAD55CE54899DD37FA6D007B4E86DB4E86DA4B4E867";
+    char *test_frame_pt_h   = "20030006190031FA2A79206F7F0DAD55CE54899DD37FA6D007B4E86DB4E86DA4B4E867";
     char *test_frame_pt_b   = NULL;
     int   test_frame_pt_len = 0;
 
