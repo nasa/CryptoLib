@@ -1041,7 +1041,17 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, const uint16_t in
         return status;
     }
 
-    tf_payload_len = temp_tc_header.fl - TC_FRAME_HEADER_SIZE - segment_hdr_len - fecf_len + 1;
+    int16_t payload_calc = temp_tc_header.fl - TC_FRAME_HEADER_SIZE - segment_hdr_len - fecf_len + 1;
+    if (payload_calc < 0)
+    {
+#ifdef TC_DEBUG
+        printf("Payload Calculation Underflow: %d\n", payload_calc);
+#endif
+        status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW;
+        mc_if->mc_log(status);
+        return status;
+    }
+    tf_payload_len = (uint16_t)payload_calc;
 
     /**
      * A note on plaintext: Take a permissive approach to allow the lengths of fields that aren't going to be used.
