@@ -223,12 +223,14 @@
 #define AOS_FILL_SIZE       1145 /* bytes */
 
 // SDLS Behavior Defines
-#define SDLS_OTAR_IV_OFFSET  2
-#define SDLS_KEYV_MAX_KEYS   21 /* keys */
-#define SDLS_IV_LEN          12 /* bytes */
-#define SDLS_KEYV_KEY_ID_LEN 2  /* bytes */
-#define SDLS_KEY_LEN         32 /* bytes */
-#define SDLS_KEYID_LEN       2  /* bytes */
+#define SDLS_OTAR_IV_OFFSET     2
+#define SDLS_MAX_KEY_UPDATES    16 /* keys */
+#define SDLS_KEYV_MAX_KEYS      21 /* keys */
+#define SDLS_MAX_KEY_UPDATE_LEN 35 /* bytes */
+#define SDLS_IV_LEN             12 /* bytes */
+#define SDLS_KEYV_KEY_ID_LEN    2  /* bytes */
+#define SDLS_KEY_LEN            32 /* bytes */
+#define SDLS_KEYID_LEN          2  /* bytes */
 
 // TC Behavior Defines
 #define TC_SDLS_EP_VCID \
