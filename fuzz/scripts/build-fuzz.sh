@@ -14,11 +14,12 @@ echo "🏠 Working from project root: $PROJECT_ROOT"
 # === Check for AFL++ and select best compiler ===
 echo "🔍 Checking for AFL++ compilers..."
 
-if command -v afl-clang-lto &> /dev/null; then
-    echo "✅ Found afl-clang-lto (recommended LTO mode)"
-    CC=afl-clang-lto
-    CXX=afl-clang-lto++
-elif command -v afl-clang-fast &> /dev/null; then
+# TODO: Resolve `alf-clang-lto` errors
+#if command -v afl-clang-lto &> /dev/null; then
+#    echo "✅ Found afl-clang-lto (recommended LTO mode)"
+#    CC=afl-clang-lto
+#    CXX=afl-clang-lto++
+if command -v afl-clang-fast &> /dev/null; then
     echo "✅ Found afl-clang-fast (LLVM mode)"
     CC=afl-clang-fast
     CXX=afl-clang-fast++

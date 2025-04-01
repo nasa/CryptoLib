@@ -39,4 +39,4 @@ support/scripts/src/*
 support/scripts/test/*
 support/scripts/bin/*
 support/scripts/CMakeFiles/*
-
+output/*
