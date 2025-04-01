@@ -992,6 +992,13 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, const uint16_t in
         return status;
     }
 
+    if (temp_tc_header.fl + 1 != in_frame_length)
+    {
+        status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_MISMATCH;
+        mc_if->mc_log(status);
+        return status;
+    }
+
 #ifdef SA_DEBUG
     printf(KYEL "DEBUG - Printing SA Entry for current frame.\n" RESET);
     Crypto_saPrint(sa_ptr);
@@ -1033,16 +1040,20 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, const uint16_t in
     uint8_t fecf_len        = FECF_SIZE;
     uint8_t ocf_len         = TELEMETRY_FRAME_OCF_CLCW_SIZE;
     Crypto_TC_Calc_Lengths(&fecf_len, &segment_hdr_len, &ocf_len);
+    
     // Calculate tf_payload length here to be used in other logic
-
-    if (temp_tc_header.fl <= TC_FRAME_HEADER_SIZE - segment_hdr_len - fecf_len + 1)
+    int16_t payload_calc = temp_tc_header.fl - TC_FRAME_HEADER_SIZE - segment_hdr_len - fecf_len + 1;
+    //check if payload length underflows
+    if (payload_calc < 0)
     {
+#ifdef TC_DEBUG
+        printf("Payload Calculation Underflow: %d\n", payload_calc);
+#endif
         status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW;
         mc_if->mc_log(status);
         return status;
     }
-
-    tf_payload_len = temp_tc_header.fl - TC_FRAME_HEADER_SIZE - segment_hdr_len - fecf_len + 1;
+    tf_payload_len = (uint16_t)payload_calc;
 
     /**
      * A note on plaintext: Take a permissive approach to allow the lengths of fields that aren't going to be used.
@@ -1826,9 +1837,9 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
     tc_sdls_processed_frame->tc_header.fsn = (uint8_t)ingest[byte_idx];
     byte_idx++;
 
-    if (*len_ingest < tc_sdls_processed_frame->tc_header.fl + 1) // Specified frame length larger than provided frame!
+    if (tc_sdls_processed_frame->tc_header.fl + 1 != *len_ingest) // Specified frame length larger than provided frame!
     {
-        status = CRYPTO_LIB_ERR_INPUT_FRAME_LENGTH_SHORTER_THAN_FRAME_HEADERS_LENGTH;
+        status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_MISMATCH;
         mc_if->mc_log(status);
         return status;
     }
@@ -1843,14 +1854,6 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
         mc_if->mc_log(status);
         return status;
     } // Unable to get necessary Managed Parameters for TC TF -- return with error.
-
-    // The frame thinks it should be size X, but we received <X bytes
-    if ((tc_sdls_processed_frame->tc_header.fl + 1) < *len_ingest)
-    {
-        status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW;
-        mc_if->mc_log(status);
-        return status;
-    }
 
     // Segment Header
     Crypto_TC_Set_Segment_Header(tc_sdls_processed_frame, ingest, &byte_idx);
@@ -1907,13 +1910,6 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
     uint8_t segment_hdr_len = TC_SEGMENT_HDR_SIZE;
 
     Crypto_TC_Calc_Lengths(&fecf_len, &segment_hdr_len, &ocf_len);
-
-    if (tc_sdls_processed_frame->tc_header.fl <= TC_FRAME_HEADER_SIZE - segment_hdr_len - fecf_len + 1)
-    {
-        status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW;
-        mc_if->mc_log(status);
-        return status;
-    }
 
     // Parse & Check FECF
     status = Crypto_TC_Parse_Check_FECF(ingest, len_ingest, tc_sdls_processed_frame);
