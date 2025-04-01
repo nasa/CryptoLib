@@ -12,6 +12,7 @@ __pycache__
 *.dat
 *.so
 build/
+build-*/
 venv
 vgcore*
 core.*
@@ -23,6 +24,8 @@ DartConfiguration.tcl
 sa_save_file.bin
 bin/*
 CMakeFiles/*
+fuzz/corpus/
+fuzz/output/
 src/cmake_install.cmake
 src/CTestTestfile.cmake
 src/CMakeFiles/*

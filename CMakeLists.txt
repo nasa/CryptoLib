@@ -41,6 +41,7 @@ option(CRYPTO_WOLFSSL "Cryptography Module - WolfSSL" OFF)
 option(CRYPTO_CUSTOM "Cryptography Module - CUSTOM" OFF)
 option(CRYPTO_CUSTOM_PATH "Cryptography Module - CUSTOM PATH" OFF)
 option(DEBUG "Debug" OFF)
+option(ENABLE_FUZZING "Enable fuzz testing" OFF)
 option(KEY_CUSTOM "Key Module - Custom" OFF)
 option(KEY_CUSTOM_PATH "Custom Key Path" OFF)
 option(KEY_INTERNAL "Key Module - Internal" OFF)
@@ -191,7 +192,13 @@ endif()
 #
 # Project Specifics
 #
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror -g -O0")
+if(ENABLE_FUZZING) 
+    # More permissive flags for fuzzing (afl compiler fails with -Werror for self-assign warnings)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wno-self-assign -g -O0")
+else()
+    # Stricter flags for normal builds (treat warnings as errors)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror -g -O0")
+endif()
 
 include_directories(include)
 add_subdirectory(src)
@@ -202,4 +209,8 @@ endif()
 
 if(TEST)
     add_subdirectory(test)
+endif()
+
+if(ENABLE_FUZZING)
+    add_subdirectory(fuzz)
 endif()
