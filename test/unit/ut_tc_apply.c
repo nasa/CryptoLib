@@ -1480,6 +1480,7 @@ UTEST(TC_APPLY_SECURITY, TC_KEY_STATE_TEST)
 UTEST(TC_APPLY_SECURITY, TC_HEAP_BUFFER_OVERFLOW_TEST)
 {
     remove("sa_save_file.bin");
+    int status = CRYPTO_LIB_SUCCESS;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
@@ -1490,7 +1491,8 @@ UTEST(TC_APPLY_SECURITY, TC_HEAP_BUFFER_OVERFLOW_TEST)
     GvcidManagedParameters_t TC_UT_Managed_Parameters = {
         1, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    Crypto_Init();
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Test string
     char *test_frame_pt_h   = "6403000000";
     char *test_frame_pt_b   = NULL;
@@ -1506,7 +1508,41 @@ UTEST(TC_APPLY_SECURITY, TC_HEAP_BUFFER_OVERFLOW_TEST)
 
     Crypto_Shutdown();
     free(test_frame_pt_b);
-    ASSERT_EQ(CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW, return_val);
+    ASSERT_EQ(CRYPTO_LIB_ERR_TC_FRAME_LENGTH_MISMATCH, return_val);
+}
+
+UTEST(TC_APPLY_SECURITY, TC_HEAP_BUFFER_OVERFLOW_TEST_2)
+{
+    remove("sa_save_file.bin");
+    int status = CRYPTO_LIB_SUCCESS;
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    // Test string
+    char *test_frame_pt_h   = "20030006190031FA2A79206F7F0DAD55CE54899DD37FA6D007B4E86DB4E86DA4B4E867";
+    char *test_frame_pt_b   = NULL;
+    int   test_frame_pt_len = 0;
+
+    hex_conversion(test_frame_pt_h, (char **)&test_frame_pt_b, &test_frame_pt_len);
+
+    uint8_t *ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+    int32_t  return_val    = CRYPTO_LIB_ERROR;
+
+    return_val = Crypto_TC_ApplySecurity((uint8_t *)test_frame_pt_b, test_frame_pt_len, &ptr_enc_frame, &enc_frame_len);
+
+    Crypto_Shutdown();
+    free(test_frame_pt_b);
+    ASSERT_EQ(CRYPTO_LIB_ERR_TC_FRAME_LENGTH_MISMATCH, return_val);
 }
 
 UTEST_MAIN();
