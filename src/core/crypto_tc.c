@@ -1040,10 +1040,10 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, const uint16_t in
     uint8_t fecf_len        = FECF_SIZE;
     uint8_t ocf_len         = TELEMETRY_FRAME_OCF_CLCW_SIZE;
     Crypto_TC_Calc_Lengths(&fecf_len, &segment_hdr_len, &ocf_len);
-    
+
     // Calculate tf_payload length here to be used in other logic
     int16_t payload_calc = temp_tc_header.fl - TC_FRAME_HEADER_SIZE - segment_hdr_len - fecf_len + 1;
-    //check if payload length underflows
+    // check if payload length underflows
     if (payload_calc < 0)
     {
 #ifdef TC_DEBUG

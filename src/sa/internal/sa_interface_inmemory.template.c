@@ -1019,11 +1019,8 @@ static int32_t sa_start(TC_t *tc_frame)
                 gvcid.tfvn = (sdls_frame.tlv_pdu.data[count] >> 4);
                 gvcid.scid = (sdls_frame.tlv_pdu.data[count] << 12) | (sdls_frame.tlv_pdu.data[count + 1] << 4) |
                              (sdls_frame.tlv_pdu.data[count + 2] >> 4);
-                gvcid.vcid =
-                    ((sdls_frame.tlv_pdu.data[count + 2] << 4) | (sdls_frame.tlv_pdu.data[count + 3] & 0xC0) >> 6);
-
-                printf("\nParsed GVCID %d:\n\tTFVN: %d\n\tSCID: %d\n\tVCID: %d\n", x, gvcid.tfvn, gvcid.scid,
-                       gvcid.vcid);
+                gvcid.vcid = (((sdls_frame.tlv_pdu.data[count + 2] & 0x0F) << 2) |
+                              (sdls_frame.tlv_pdu.data[count + 3] & 0xC0) >> 6);
 
                 if (current_managed_parameters_struct.has_segmentation_hdr == TC_HAS_SEGMENT_HDRS)
                 {

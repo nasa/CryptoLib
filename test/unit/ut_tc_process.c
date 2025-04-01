@@ -656,7 +656,7 @@ UTEST(TC_PROCESS, ERROR_TC_INPUT_FRAME_TOO_SHORT_FOR_SPECIFIED_FRAME_LENGTH_HEAD
     tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
 
-    char    *test_frame_pt_h   = "200304260000020000000000000000000000309e09deeaa375487983a89f3ed7519a230baf22";//
+    char    *test_frame_pt_h   = "200304260000020000000000000000000000309e09deeaa375487983a89f3ed7519a230baf22"; //
     uint8_t *test_frame_pt_b   = NULL;
     int      test_frame_pt_len = 0;
 
@@ -1403,9 +1403,9 @@ UTEST(TC_PROCESS, TC_HEAP_BUFFER_OVERFLOW_TEST_2)
     memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
 
     // Test string
-    char *test_frame_pt_h   = "20030006190031FA2A79206F7F0DAD55CE54899DD37FA6D007B4E86DB4E86DA4B4E867";
+    char    *test_frame_pt_h   = "20030006190031FA2A79206F7F0DAD55CE54899DD37FA6D007B4E86DB4E86DA4B4E867";
     uint8_t *test_frame_pt_b   = NULL;
-    int   test_frame_pt_len = 0;
+    int      test_frame_pt_len = 0;
 
     hex_conversion(test_frame_pt_h, (char **)&test_frame_pt_b, &test_frame_pt_len);
 
