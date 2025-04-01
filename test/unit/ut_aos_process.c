@@ -1995,14 +1995,17 @@ UTEST(AOS_PROCESS, AOS_FHECF_TEST)
     uint8_t *ptr_processed_frame = NULL;
     uint16_t processed_aos_len;
 
+    for (int i = 0; i < RS_PARITY; i++)
+    {
+        printf("Parity[%d] is: %01X\n", i, parity[i]);
+    }
+
     // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL, CRYPTO_AOS_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    // AOS Tests
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x002c, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_NO_OCF, 1786,
-    // AOS_NO_FHEC, AOS_HAS_IZ, 10);
+    // AOS Test
     GvcidManagedParameters_t AOS_UT_Managed_Parameters = {
         1, 0x002c, 0, AOS_HAS_FECF, AOS_HAS_FHEC, AOS_HAS_IZ, 0, AOS_SEGMENT_HDRS_NA, 24, AOS_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);

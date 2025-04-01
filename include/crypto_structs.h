@@ -182,9 +182,9 @@ typedef struct
 typedef struct
 {
     uint16_t kid : 16;                   // Key ID
-    uint8_t  iv[IV_SIZE];                // Key Initialization Vector
+    uint8_t  iv[SDLS_IV_LEN];            // Key Initialization Vector
     uint8_t  challenged[CHALLENGE_SIZE]; // Encrypted Challenge
-    uint8_t  mac[CHALLENGE_MAC_SIZE];    // Challenge Message Authentication Code
+    uint8_t  mac[MAC_SIZE];              // Challenge Message Authentication Code
 } SDLS_KEYV_RPLY_BLK_t;
 #define SDLS_KEYV_RPLY_BLK_SIZE (sizeof(SDLS_KEYV_RPLY_BLK_t))
 
@@ -311,6 +311,24 @@ typedef struct
 #define TC_SIZE (sizeof(TC_t))
 
 /*
+** ECSS Definitions
+** European Cooperation for Space Standardization
+** Note: Early CryptoLib Testing Utilized ECSS PUS Headers
+*/
+
+typedef struct
+{
+    uint8_t shf : 1;  // Secondary Header Flag
+    uint8_t pusv : 3; // TC Packet PUS Version Number
+    uint8_t ack : 4;  // Acknowledgement
+    uint8_t st : 8;   // Service Type
+    uint8_t sst : 8;  // Service Subtype
+    uint8_t sid : 4;  // Source ID
+    uint8_t spare : 4;
+} ECSS_PUS_t;
+#define ECSS_PUS_SIZE (sizeof(ECSS_PUS_t))
+
+/*
 ** CCSDS Definitions
 */
 typedef struct
@@ -322,26 +340,14 @@ typedef struct
     uint8_t  seq : 2;         // Sequence Flags
     uint16_t pktid : 14;      // Sequence Count
     uint16_t pkt_length : 16; // Packet Length
-} CCSDS_HDR_t;
-#define CCSDS_HDR_SIZE (sizeof(CCSDS_HDR_t))
+} CCSDS_SPP_HDR_t;
+#define CCSDS_HDR_SIZE (sizeof(CCSDS_SPP_HDR_t))
 
 typedef struct
 {
-    uint8_t shf : 1;  // Secondary Header Flag
-    uint8_t pusv : 3; // TC Packet PUS Version Number
-    uint8_t ack : 4;  // Acknowledgement
-    uint8_t st : 8;   // Service Type
-    uint8_t sst : 8;  // Service Subtype
-    uint8_t sid : 4;  // Source ID
-    uint8_t spare : 4;
-} CCSDS_PUS_t;
-#define CCSDS_PUS_SIZE (sizeof(CCSDS_PUS_t))
-
-typedef struct
-{
-    CCSDS_HDR_t hdr;
-    CCSDS_PUS_t pus;
-    SDLS_TLV_t  pdu;
+    CCSDS_SPP_HDR_t hdr;
+    ECSS_PUS_t      pus;
+    SDLS_TLV_t      tlv_pdu;
 } __attribute__((packed)) CCSDS_t;
 #define CCSDS_SIZE (sizeof(CCSDS_t))
 
