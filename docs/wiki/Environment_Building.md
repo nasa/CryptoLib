@@ -96,6 +96,5 @@ The two flags (DEBUG and TEST_ENC) can be used simultaneously, or separately.
 
 > * KMC_MDB_RH "KMC-MDB-RedHat-Integration-Testing" -- Default OFF 
 > * KMC_MDB_DB "KMC-MDB-Debian-Integration-Testing" -- Default OFF 
-> * KMC_CFFI_EXCLUDE "KMC-Exclude-Problematic-CFFI-Code" -- Default OFF
 
 > * CRYPTO_EPROC "Enables building of Extended Procedures -- Default OFF (CURRENTLY A WIP - Not ready for Operations)
