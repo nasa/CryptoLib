@@ -1130,12 +1130,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP_1)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
-    // TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0,
-    // 0x0003, 2, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 3, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+    
     GvcidManagedParameters_t TC_UT_Managed_Parameters = {
         0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
@@ -1152,18 +1147,9 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP_1)
     char *raw_tc_sdls_ping_b   = NULL;
     int   raw_tc_sdls_ping_len = 0;
 
-    char *new_iv_h = "FFEEDDCCBBAA";
-    char *new_iv_b = NULL;
-
-    // char* expected_iv_h = "000000000001000000000001";
-    // char* expected_iv_b = NULL;
-
-    int new_iv_len = 12;
-    // int expected_iv_len = 0;
     SaInterface sa_if = get_sa_interface_inmemory();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
-    hex_conversion(new_iv_h, &new_iv_b, &new_iv_len);
 
     uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
@@ -1179,23 +1165,24 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP_1)
     test_association->ecs       = CRYPTO_CIPHER_AES256_CBC;
     test_association->ast       = 0;
     test_association->arsn_len  = 0;
+    test_association->shplf_len = 1;
     test_association->iv_len    = 12;
     test_association->shivf_len = 12;
-    memcpy(test_association->iv + (test_association->iv_len - test_association->shivf_len), new_iv_b, new_iv_len);
-    sa_if->sa_get_from_spi(4, &test_association);
+    
+    sa_if->sa_setIV(test_association->spi, "FFEEDDCCBBAA");
+    
     return_val =
         Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
-    char    *truth_data_h = "200300260000000BFFEEDDCCBBAA00000000000001BD8722C9D22E0CB109AC402748F672067D37";
+    char    *truth_data_h = "2003003600000004000000000000ffeeddccbbaa01db7cd0cea536980f6af1bbfc4ec0d705000000000000000000000000000000005FC0";
     uint8_t *truth_data_b = NULL;
     int      truth_data_l = 0;
 
     hex_conversion(truth_data_h, (char **)&truth_data_b, &truth_data_l);
-    // printf("Encrypted Frame:\n");
     for (int i = 0; i < enc_frame_len; i++)
     {
         printf("%02x", ptr_enc_frame[i]);
-        // ASSERT_EQ(ptr_enc_frame[i], truth_data_b[i]);
+        ASSERT_EQ(ptr_enc_frame[i], truth_data_b[i]);
     }
     printf("\n");
 
@@ -1217,12 +1204,6 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_NULL_IV)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
-    // TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0,
-    // 0x0003, 2, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 3, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_UT_Managed_Parameters = {
         0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
@@ -1240,17 +1221,10 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_NULL_IV)
     int   raw_tc_sdls_ping_len = 0;
 
     char *new_iv_h = "FFEEDDCCBBAA";
-    char *new_iv_b = NULL;
 
-    // char* expected_iv_h = "000000000001000000000001";
-    // char* expected_iv_b = NULL;
-
-    int new_iv_len = 12;
-    // int expected_iv_len = 0;
     SaInterface sa_if = get_sa_interface_inmemory();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
-    hex_conversion(new_iv_h, &new_iv_b, &new_iv_len);
 
     uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
@@ -1268,6 +1242,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_NULL_IV)
     test_association->shivf_len = 0;
     test_association->ecs       = CRYPTO_CIPHER_AES256_CBC;
     test_association->shplf_len = 1;
+    sa_if->sa_setIV(test_association->spi, new_iv_h);
     return_val =
         Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
@@ -1301,12 +1276,6 @@ UTEST(TC_APPLY_SECURITY, CBC_NULL_IV_W_IVH)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
-    // TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0,
-    // 0x0003, 2, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 3, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_UT_Managed_Parameters = {
         0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
@@ -1324,17 +1293,10 @@ UTEST(TC_APPLY_SECURITY, CBC_NULL_IV_W_IVH)
     int   raw_tc_sdls_ping_len = 0;
 
     char *new_iv_h = "FFEEDDCCBBAA";
-    char *new_iv_b = NULL;
 
-    // char* expected_iv_h = "000000000001000000000001";
-    // char* expected_iv_b = NULL;
-
-    int new_iv_len = 12;
-    // int expected_iv_len = 0;
     SaInterface sa_if = get_sa_interface_inmemory();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
-    hex_conversion(new_iv_h, &new_iv_b, &new_iv_len);
 
     uint8_t  enc_frame[2048];
     uint8_t *ptr_enc_frame = &enc_frame[0];
@@ -1354,6 +1316,8 @@ UTEST(TC_APPLY_SECURITY, CBC_NULL_IV_W_IVH)
     test_association->arsn_len  = 0;
     test_association->iv_len    = 16;
     test_association->shivf_len = 16;
+    sa_if->sa_setIV(test_association->spi, new_iv_h);
+
     return_val =
         Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 

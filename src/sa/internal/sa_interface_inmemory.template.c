@@ -24,6 +24,7 @@ static int32_t sa_close(void);
 static int32_t sa_get_from_spi(uint16_t, SecurityAssociation_t **);
 static int32_t sa_get_operational_sa_from_gvcid(uint8_t, uint16_t, uint16_t, uint8_t, SecurityAssociation_t **);
 static int32_t sa_save_sa(SecurityAssociation_t *sa);
+static int32_t sa_setIV(uint16_t spi, char *iv);
 // Security Association Utility Functions
 static int32_t sa_stop(TC_t *tc_frame);
 static int32_t sa_start(TC_t *tc_frame);
@@ -65,6 +66,7 @@ SaInterface get_sa_interface_inmemory(void)
     sa_if_struct.sa_setARSN                       = sa_setARSN;
     sa_if_struct.sa_setARSNW                      = sa_setARSNW;
     sa_if_struct.sa_delete                        = sa_delete;
+    sa_if_struct.sa_setIV                         = sa_setIV;
     return &sa_if_struct;
 }
 
@@ -1805,5 +1807,55 @@ int32_t sa_verify_data(SecurityAssociation_t *sa_ptr)
     {
         status = CRYPTO_LIB_ERR_SHPLF_LEN_GREATER_THAN_MAX_PAD_SIZE;
     }
+    return status;
+}
+
+static int32_t sa_setIV(uint16_t spi, char *iv)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    if (iv == NULL) // NULL pointer
+    {
+        status = CRYPTO_LIB_ERR_NULL_BUFFER;
+        mc_if->mc_log(status);
+        return status;
+    }
+
+    uint16_t iv_len = strlen(iv) / 2;
+
+    if (iv_len > IV_SIZE)
+    {
+#ifdef SA_DEBUG
+        printf("Specified IV longer than Config Maximum");
+#endif
+        status = CRYPTO_LIB_ERROR;
+        mc_if->mc_log(status);
+        return status;
+    }
+
+    SecurityAssociation_t *sa;
+    sa_get_from_spi(spi, &sa);
+
+    if (sa->iv_len == 0) // nothing to do, just return
+    {
+        return status;
+    }
+
+    uint16_t offset = sa->iv_len - iv_len;
+    unsigned int byte;
+    for (int i = 0; i < (int)strlen(iv); i+=2)
+    {
+        sscanf(&iv[i], "%02x", &byte);
+        sa->iv[i/2 + offset] = byte;
+    }
+    
+#ifdef SA_DEBUG
+    printf(KYEL "IV set to: ");
+    for (int i = 0; i < sa->iv_len; i++)
+    {
+        printf("%02x", sa->iv[i]);
+    }
+    printf("\n" RESET);
+#endif
     return status;
 }
