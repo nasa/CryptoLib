@@ -721,13 +721,17 @@ static int32_t sa_get_from_spi(uint16_t spi, SecurityAssociation_t **security_as
 #ifdef SA_DEBUG
         printf(KRED "sa_get_from_spi: SPI: %d > NUM_SA: %d.\n" RESET, spi, NUM_SA);
 #endif
-        return CRYPTO_LIB_ERR_SPI_INDEX_OOB;
+        status = CRYPTO_LIB_ERR_SPI_INDEX_OOB;
+        mc_if->mc_log(status);
+        return status;
     }
     *security_association = &sa[spi];
 
     if ((sa[spi].abm_len == 0) && sa[spi].ast)
     {
-        return CRYPTO_LIB_ERR_NULL_ABM;
+        status = CRYPTO_LIB_ERR_NULL_ABM;
+        mc_if->mc_log(status);
+        return status;
     } // Must have abm if doing authentication
 
     // ARSN must be 0 octets in length if not using Auth/Auth Enc
@@ -735,15 +739,21 @@ static int32_t sa_get_from_spi(uint16_t spi, SecurityAssociation_t **security_as
     // CCSDS 3550b2 Section 4.1.1.4.4
     if (sa[spi].ast == 0 && sa[spi].shsnf_len != 0 && sa[spi].arsn_len != 0)
     {
+#ifdef SA_DEBUG
         printf("USING SA %d!\n", spi);
-        printf("AST IS %d, snf_len is %d, arsn_len is %d\n", sa[spi].ast, sa[spi].shsnf_len, sa[spi].arsn_len);
-        return CRYPTO_LIB_ERR_INVALID_SVC_TYPE_WITH_ARSN;
+        printf("AST IS %d, shsnf_len is %d, arsn_len is %d\n", sa[spi].ast, sa[spi].shsnf_len, sa[spi].arsn_len);
+#endif
+        status = CRYPTO_LIB_ERR_INVALID_SVC_TYPE_WITH_ARSN;
+        mc_if->mc_log(status);
+        return status;
     }
 
     // ARSN length cannot be less than shsnf length
     if (sa[spi].shsnf_len > sa[spi].arsn_len)
     {
-        return CRYPTO_LIB_ERR_ARSN_LT_SHSNF;
+        status = CRYPTO_LIB_ERR_ARSN_LT_SHSNF;
+        mc_if->mc_log(status);
+        return status;
     }
 
 #ifdef SA_DEBUG
@@ -1836,12 +1846,13 @@ static int32_t sa_setIV(uint16_t spi, char *iv)
     SecurityAssociation_t *sa;
     sa_get_from_spi(spi, &sa);
 
-    if (sa->iv_len == 0) // nothing to do, just return
+    if (sa->iv_len < iv_len) // make sure it wont underflow
     {
-        return status;
+        iv_len = sa->iv_len;
     }
 
-    uint16_t offset = sa->iv_len - iv_len;
+    int offset = sa->iv_len - iv_len;
+
     unsigned int byte;
     for (int i = 0; i < (int)strlen(iv); i+=2)
     {
