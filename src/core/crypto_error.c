@@ -103,7 +103,8 @@ char *crypto_enum_errlist_core[] = {(char *)"CRYPTO_LIB_SUCCESS",
                                     (char *)"CRYPTO_LIB_ERR_INVALID_FHECF",
                                     (char *)"CRYPTO_LIB_ERR_TM_SECONDARY_HDR_SIZE",
                                     (char *)"CRYPTO_LIB_ERR_TM_SECONDARY_HDR_VN",
-                                    (char *)"CRYPTO_LIB_ERR_TC_FRAME_LENGTH_MISMATCH"};
+                                    (char *)"CRYPTO_LIB_ERR_TC_FRAME_LENGTH_MISMATCH",
+                                    (char *)"CRYPTO_LIB_ERR_SHPLF_LEN_LESS_THAN_MIN_PAD_SIZE"};
 
 char *crypto_enum_errlist_config[] = {
     (char *)"CRYPTO_CONFIGURATION_NOT_COMPLETE",
