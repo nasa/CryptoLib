@@ -1130,7 +1130,6 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP_1)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    
     GvcidManagedParameters_t TC_UT_Managed_Parameters = {
         0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
@@ -1168,13 +1167,14 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP_1)
     test_association->shplf_len = 1;
     test_association->iv_len    = 12;
     test_association->shivf_len = 12;
-    
+
     sa_if->sa_setIV(test_association->spi, "FFEEDDCCBBAA");
-    
+
     return_val =
         Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
-    char    *truth_data_h = "2003003600000004000000000000ffeeddccbbaa01db7cd0cea536980f6af1bbfc4ec0d705000000000000000000000000000000005FC0";
+    char *truth_data_h = "2003003600000004000000000000ffeeddccbbaa01db7cd0cea536980f6af1bbfc4ec0d7050000000000000000000"
+                         "00000000000005FC0";
     uint8_t *truth_data_b = NULL;
     int      truth_data_l = 0;
 

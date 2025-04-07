@@ -1854,12 +1854,12 @@ static int32_t sa_setIV(uint16_t spi, char *iv)
     int offset = sa->iv_len - iv_len;
 
     unsigned int byte;
-    for (int i = 0; i < (int)strlen(iv); i+=2)
+    for (int i = 0; i < (int)strlen(iv); i += 2)
     {
         sscanf(&iv[i], "%02x", &byte);
-        sa->iv[i/2 + offset] = byte;
+        sa->iv[i / 2 + offset] = byte;
     }
-    
+
 #ifdef SA_DEBUG
     printf(KYEL "IV set to: ");
     for (int i = 0; i < sa->iv_len; i++)
