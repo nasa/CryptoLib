@@ -17,9 +17,16 @@
 */
 
 /*
+** CCSDS Compliance Reference:
+** This file implements key management functions compliant with:
+** - CCSDS 355.0-B-2 (Space Data Link Security Protocol) Section 6.2 (Key Management)
+*/
+
+/*
 ** Includes
 */
 #include "crypto.h"
+#include <string.h>
 
 /*
 ** Key Management Services

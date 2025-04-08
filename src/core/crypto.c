@@ -23,6 +23,15 @@
 #include <string.h>
 
 /*
+** CCSDS Compliance Reference:
+** This file implements security features compliant with:
+** - CCSDS 232.0-B-3 (TC Space Data Link Protocol)
+** - CCSDS 132.0-B-2 (TM Space Data Link Protocol)
+** - CCSDS 732.0-B-4 (AOS Space Data Link Protocol)
+** - CCSDS 355.0-B-2 (Space Data Link Security Protocol)
+*/
+
+/*
 ** Static Library Declaration
 */
 #ifdef BUILD_STATIC
@@ -99,6 +108,8 @@ void clean_akref(SecurityAssociation_t *sa)
  * Looks up cipher suite ID and determines if it's an AEAD algorithm. Returns 1 if true, 0 if false;
  * @param cipher_suite_id: uint32
  * @return int: Success/Failure
+ * 
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.4.2 (Cryptographic Algorithms)
  **/
 uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
 {
@@ -128,6 +139,8 @@ uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
  * Looks up cipher suite ID and determines if it's an ACS algorithm. Returns 1 if true, 0 if false;
  * @param cipher_suite_id: uint8_t
  * @return int: Success/Failure
+ * 
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.4.2 (Cryptographic Algorithms)
  **/
 uint8_t Crypto_Is_ACS_Only_Algo(uint8_t algo)
 {
@@ -184,6 +197,8 @@ int32_t Crypto_increment(uint8_t *num, int length)
  * @param length: int
  * @param window: int
  * @return int32: Success/Failure
+ * 
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
  **/
 int32_t Crypto_window(uint8_t *actual, uint8_t *expected, int length, int window)
 {

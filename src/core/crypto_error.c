@@ -16,8 +16,18 @@
    jstar-development-team@mail.nasa.gov
 */
 
-#include "crypto_error.h"
+/*
+** Includes
+*/
 #include "crypto.h"
+
+/*
+** CCSDS Compliance Reference:
+** This file implements error handling functions supporting:
+** - CCSDS 355.0-B-2 (Space Data Link Security Protocol) Section 8 (Security Error Detection)
+*/
+
+#include "crypto_error.h"
 
 #define CRYPTO_UNDEFINED_ERROR (char *)"CRYPTO_UNDEFINED_ERROR_CODE"
 

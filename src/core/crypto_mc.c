@@ -22,6 +22,12 @@
 #include "crypto.h"
 
 /*
+** CCSDS Compliance Reference:
+** This file implements monitoring and control functions compliant with:
+** - CCSDS 355.0-B-2 (Space Data Link Security Protocol) Section 7 (Management)
+*/
+
+/*
 ** Security Association Monitoring and Control
 */
 /**

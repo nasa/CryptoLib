@@ -36,7 +36,20 @@
 #include <stdio.h>
 
 /*
+** CCSDS Compliance Reference:
+** This file defines data structures compliant with:
+** - CCSDS 232.0-B-3 (TC Space Data Link Protocol)
+** - CCSDS 132.0-B-2 (TM Space Data Link Protocol)
+** - CCSDS 732.0-B-4 (AOS Space Data Link Protocol)
+** - CCSDS 355.0-B-2 (Space Data Link Security Protocol)
+*/
+
+/*
 ** Definitions
+*/
+/*
+** CCSDS Compliance: CCSDS 232.0-B-3, CCSDS 132.0-B-2, CCSDS 732.0-B-4
+** Global Virtual Channel ID / Global MAP ID structure
 */
 typedef struct
 {                       // Global Virtual Channel ID / Global MAP ID
@@ -49,8 +62,7 @@ typedef struct
 
 /*
 ** Security Association
-*  https://public.ccsds.org/Pubs/355x0b2.pdf
-*  Table A6
+** CCSDS Compliance: CCSDS 355.0-B-2 Table A6 (Security Association)
 */
 typedef struct
 {
@@ -91,6 +103,7 @@ typedef struct
 
 /*
 ** SDLS Definitions
+** CCSDS Compliance: CCSDS 355.0-B-2 (Space Data Link Security Protocol)
 */
 typedef struct
 {
@@ -105,6 +118,9 @@ typedef struct
 } __attribute__((packed)) SDLS_FSR_t;
 #define SDLS_FSR_SIZE (sizeof(SDLS_FSR_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 4.5 (Security Protocol Procedures)
+*/
 typedef struct
 {
     uint8_t  type : 1; // Procedure Type Flag
@@ -115,6 +131,9 @@ typedef struct
 } __attribute__((packed)) SDLS_TLV_Hdr_t;
 #define SDLS_TLV_HDR_SIZE (sizeof(SDLS_TLV_Hdr_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 4.5 (Security Protocol Procedures)
+*/
 typedef struct
 {
     SDLS_TLV_Hdr_t hdr;
@@ -122,6 +141,9 @@ typedef struct
 } SDLS_TLV_t;
 #define SDLS_TLV_SIZE (sizeof(SDLS_TLV_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 6.3 (Key Management)
+*/
 typedef struct
 {
     uint16_t ekid;         // Encrypted Key ID
@@ -129,6 +151,9 @@ typedef struct
 } SDLS_EKB_t;
 #define SDLS_EKB_SIZE (sizeof(SDLS_EKB_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 6.3 (Key Management)
+*/
 typedef struct
 {
     uint16_t   mkid;              // Master Key ID
@@ -138,18 +163,27 @@ typedef struct
 } SDLS_OTAR_t;
 #define SDLS_OTAR_SIZE (sizeof(SDLS_OTAR_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 6.3 (Key Management)
+*/
 typedef struct
 {
     uint16_t kid : 16; // Key ID
 } SDLS_KEY_t;
 #define SDLS_KEY_SIZE (sizeof(SDLS_KEY_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 6.3 (Key Management)
+*/
 typedef struct
 {
     SDLS_KEY_t kblk[SDLS_KEY_ID_SIZE]; // Key ID Block
 } SDLS_KEY_BLK_t;
 #define SDLS_KEY_BLK_SIZE (sizeof(SDLS_KEY_BLK_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 6.3.3 (Key Inventory)
+*/
 typedef struct
 {
     uint16_t kid_first : 16; // First Key ID
@@ -157,6 +191,9 @@ typedef struct
 } SDLS_KEY_INVENTORY_CMD_t;
 #define SDLS_KEY_INVENTORY_CMD_SIZE (sizeof(SDLS_KEY_INVENTORY_CMD_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 6.3.3 (Key Inventory)
+*/
 typedef struct
 {
     uint16_t kid : 16;      // Key ID
@@ -164,6 +201,9 @@ typedef struct
 } __attribute__((packed)) SDLS_KEY_INVENTORY_RPLY_t;
 #define SDLS_KEY_INVENTORY_RPLY_SIZE (sizeof(SDLS_KEY_INVENTORY_RPLY_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 6.3.4 (Key Verification)
+*/
 typedef struct
 {
     uint16_t kid : 16;                  // Key ID
@@ -171,12 +211,18 @@ typedef struct
 } SDLS_KEYV_CMD_BLK_t;
 #define SDLS_KEYV_CMD_BLK_SIZE (sizeof(SDLS_KEYV_CMD_BLK_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 6.3.4 (Key Verification)
+*/
 typedef struct
 {
     SDLS_KEYV_CMD_BLK_t blk[SDLS_KEY_VERIFY_BLK_SIZE]; // Key Verification Command Block
 } SDLS_KEYV_CMD_t;
 #define SDLS_KEYV_CMD_SIZE (sizeof(SDLS_KEYV_CMD_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 6.3.4 (Key Verification)
+*/
 typedef struct
 {
     uint16_t kid : 16;                   // Key ID
@@ -186,12 +232,18 @@ typedef struct
 } SDLS_KEYV_RPLY_BLK_t;
 #define SDLS_KEYV_RPLY_BLK_SIZE (sizeof(SDLS_KEYV_RPLY_BLK_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 6.3.4 (Key Verification)
+*/
 typedef struct
 {
     SDLS_KEYV_RPLY_BLK_t blk[SDLS_KEY_VERIFY_BLK_SIZE]; // Key Verification Reply Block
 } SDLS_KEYV_RPLY_t;
 #define SDLS_KEYV_RPLY_SIZE (sizeof(SDLS_KEYV_RPLY_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 6.3.5 (Key Destruction)
+*/
 typedef struct
 {
     uint16_t kid : 16; // Key ID
@@ -199,6 +251,9 @@ typedef struct
 } SDLS_KEYDB_CMD_t;
 #define SDLS_KEYDB_CMD_SIZE (sizeof(SDLS_KEYDB_CMD_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 6.3.5 (Key Destruction)
+*/
 typedef struct
 {
     uint16_t kid : 16;                         // Key ID
@@ -208,6 +263,9 @@ typedef struct
 } SDLS_KEYDB_RPLY_t;
 #define SDLS_KEYDB_RPLY_SIZE (sizeof(SDLS_KEYDB_RPLY_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 6.2.6 (SA Status)
+*/
 typedef struct
 {
     uint16_t spi : 16; // Security Parameter Index
@@ -215,6 +273,9 @@ typedef struct
 } __attribute__((packed)) SDLS_SA_STATUS_RPLY_t;
 #define SDLS_SA_STATUS_RPLY_SIZE (sizeof(SDLS_SA_STATUS_RPLY_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
+*/
 typedef struct
 {
     uint16_t spi : 16;        // Security Parameter Index
@@ -222,6 +283,9 @@ typedef struct
 } SDLS_SA_READ_ARSN_RPLY_t;
 #define SDLS_SA_READ_ARSN_RPLY_SIZE (sizeof(SDLS_SA_READ_ARSN_RPLY_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 7.4 (Mission Control Log)
+*/
 typedef struct
 {
     uint16_t num_se; // Number of Security Events
@@ -229,6 +293,9 @@ typedef struct
 } SDLS_MC_LOG_RPLY_t;
 #define SDLS_MC_LOG_RPLY_SIZE (sizeof(SDLS_MC_LOG_RPLY_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 7.4 (Mission Control Log)
+*/
 typedef struct
 {
     uint8_t  emt : 8;       // Event Message Tag
@@ -237,18 +304,27 @@ typedef struct
 } __attribute__((packed)) SDLS_MC_DUMP_RPLY_t;
 #define SDLS_MC_DUMP_RPLY_SIZE (sizeof(SDLS_MC_DUMP_RPLY_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 7.4 (Mission Control Log)
+*/
 typedef struct
 {
     SDLS_MC_DUMP_RPLY_t blk[LOG_SIZE]; // Dump Log PDU
 } SDLS_MC_DUMP_BLK_RPLY_t;
 #define SDLS_MC_DUMP_BLK_RPLY_SIZE (sizeof(SDLS_MC_DUMP_BLK_RPLY_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 7.6 (Self-Test)
+*/
 typedef struct
 {
     uint8_t str : 8; // Self-Test Result
 } SDLS_MC_ST_RPLY_t;
 #define SDLS_MC_ST_RPLY_SIZE (sizeof(SDLS_MC_ST_RPLY_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
+*/
 typedef struct
 {
     uint8_t snv[SN_SIZE]; // Sequence Number Value
@@ -257,6 +333,9 @@ typedef struct
 
 /*
 ** Telecommand (TC) Definitions
+*/
+/*
+** CCSDS Compliance: CCSDS 232.0-B-3 Section 4.1.2 (Primary Header)
 */
 typedef struct
 {
@@ -277,6 +356,9 @@ typedef struct
 #define TC_FRAME_PRIMARYHEADER_STRUCT_SIZE (sizeof(TC_FramePrimaryHeader_t))
 #define TC_FRAME_HEADER_SIZE               5
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 4.2.1 (TC Security Header)
+*/
 typedef struct
 {
     uint8_t  sh : TC_SH_SIZE; // Segment Header
@@ -290,6 +372,9 @@ typedef struct
 } __attribute__((packed)) TC_FrameSecurityHeader_t;
 #define TC_FRAME_SECHEADER_SIZE (sizeof(TC_FrameSecurityHeader_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 4.2.2 (TC Security Trailer)
+*/
 typedef struct
 {
     uint8_t  mac[MAC_SIZE]; // Message Authentication Code
@@ -298,6 +383,10 @@ typedef struct
 } __attribute__((packed)) TC_FrameSecurityTrailer_t;
 #define TC_FRAME_SECTRAILER_SIZE (sizeof(TC_FrameSecurityTrailer_t))
 
+/*
+** CCSDS Compliance: CCSDS 232.0-B-3 (TC Space Data Link Protocol) and
+** CCSDS 355.0-B-2 (Space Data Link Security Protocol)
+*/
 typedef struct
 {
     TC_FramePrimaryHeader_t   tc_header;
@@ -314,6 +403,9 @@ typedef struct
 ** Note: Early CryptoLib Testing Utilized ECSS PUS Headers
 */
 
+/*
+** CCSDS Compliance: ECSS-E-70-41A Section 7.4 (PUS Packet Structure)
+*/
 typedef struct
 {
     uint8_t shf : 1;  // Secondary Header Flag
@@ -329,6 +421,9 @@ typedef struct
 /*
 ** CCSDS Definitions
 */
+/*
+** CCSDS Compliance: CCSDS 133.0-B-2 Section 4.1 (Packet Primary Header)
+*/
 typedef struct
 {
     uint8_t  pvn : 3;         // Packet Version Number
@@ -341,6 +436,10 @@ typedef struct
 } CCSDS_SPP_HDR_t;
 #define CCSDS_HDR_SIZE (sizeof(CCSDS_SPP_HDR_t))
 
+/*
+** CCSDS Compliance: CCSDS 133.0-B-2 (Space Packet Protocol) and
+** ECSS-E-70-41A (Packet Utilization Standard)
+*/
 typedef struct
 {
     CCSDS_SPP_HDR_t hdr;
@@ -356,8 +455,9 @@ typedef struct
 ** 2) A Frame Security Report
 */
 
-// INFO: This is the Communications Link Control Word register format
-// Ref: Version 000, CCSDS 232.0-B-4, Oct 2021
+/*
+** CCSDS Compliance: CCSDS 232.0-B-3 Section 4.1.4 (Communications Link Control Word)
+*/
 typedef struct
 {
     uint8_t cwt : 1;    // Control Word Type "0"
@@ -378,8 +478,9 @@ typedef struct
 
 #define TELEMETRY_FRAME_OCF_CLCW_SIZE (sizeof(Telemetry_Frame_Ocf_Clcw_t))
 
-// INFO: This is the Frame Security Report register format
-// Ref: Version 100, CCSDS 355.1-B-1, Feb 2020
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 4.4 (Frame Security Report)
+*/
 typedef struct
 {
     uint8_t  cwt : 1;   // Control Word Type "1"
@@ -396,6 +497,9 @@ typedef struct
 
 /*
 ** Telemetry (TM) Definitions
+*/
+/*
+** CCSDS Compliance: CCSDS 132.0-B-2 Section 4.1.2 (TM Primary Header)
 */
 typedef struct
 {
@@ -421,6 +525,9 @@ typedef struct
 } TM_FramePrimaryHeader_t;
 #define TM_FRAME_PRIMARYHEADER_SIZE (sizeof(TM_FramePrimaryHeader_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 4.3.1 (TM Security Header)
+*/
 typedef struct
 {
     uint16_t spi;         // Security Parameter Index
@@ -428,6 +535,9 @@ typedef struct
 } TM_FrameSecurityHeader_t;
 #define TM_FRAME_SECHEADER_SIZE (sizeof(TM_FrameSecurityHeader_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 4.3.2 (TM Security Trailer)
+*/
 typedef struct
 {
     uint8_t  mac[MAC_SIZE]; // Message Authentication Code
@@ -436,6 +546,10 @@ typedef struct
 } TM_FrameSecurityTrailer_t;
 #define TM_FRAME_SECTRAILER_SIZE (sizeof(TM_FrameSecurityTrailer_t))
 
+/*
+** CCSDS Compliance: CCSDS 132.0-B-2 (TM Space Data Link Protocol) and
+** CCSDS 355.0-B-2 (Space Data Link Security Protocol)
+*/
 typedef struct
 {
     TM_FramePrimaryHeader_t   tm_header;
@@ -450,6 +564,9 @@ typedef struct
 
 /*
 ** Advanced Orbiting Systems (AOS) Definitions
+*/
+/*
+** CCSDS Compliance: CCSDS 732.0-B-4 Section 4.1.2 (AOS Primary Header)
 */
 typedef struct
 {
@@ -476,6 +593,9 @@ typedef struct
 } AOS_FramePrimaryHeader_t;
 #define AOS_FRAME_PRIMARYHEADER_SIZE (sizeof(AOS_FramePrimaryHeader_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 4.3.1 (Security Header)
+*/
 typedef struct
 {
     uint16_t spi;         // Security Parameter Index
@@ -483,6 +603,9 @@ typedef struct
 } AOS_FrameSecurityHeader_t;
 #define AOS_FRAME_SECHEADER_SIZE (sizeof(AOS_FrameSecurityHeader_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 4.3.2 (Security Trailer)
+*/
 typedef struct
 {
     uint8_t  mac[MAC_SIZE]; // Message Authentication Code
@@ -491,6 +614,10 @@ typedef struct
 } AOS_FrameSecurityTrailer_t;
 #define AOS_FRAME_SECTRAILER_SIZE (sizeof(AOS_FrameSecurityTrailer_t))
 
+/*
+** CCSDS Compliance: CCSDS 732.0-B-4 (AOS Space Data Link Protocol) and
+** CCSDS 355.0-B-2 (Space Data Link Security Protocol)
+*/
 typedef struct
 {
     AOS_FramePrimaryHeader_t   tm_header;

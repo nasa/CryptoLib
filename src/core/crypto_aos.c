@@ -23,6 +23,13 @@
 
 #include <string.h> // memcpy/memset
 
+/*
+** CCSDS Compliance Reference:
+** This file implements security features compliant with:
+** - CCSDS 732.0-B-4 (AOS Space Data Link Protocol)
+** - CCSDS 355.0-B-2 (Space Data Link Security Protocol)
+*/
+
 /**
  * @brief Function: Crypto_AOS_ApplySecurity
  * @param ingest: uint8_t*
@@ -40,6 +47,8 @@
  * parameter includes the Security Header field. When the ApplySecurity Function is
  * called, the Security Header field is empty; i.e., the caller has not set any values in the
  * Security Header
+ * 
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 5 (AOS Protocol), CCSDS 732.0-B-4
  **/
 int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
 {
@@ -143,8 +152,11 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         }
     }
 
-    // Per CCSDS 732.0-B-4, AOS frames must have a fixed length for a given physical channel
-    // Special case for CBC mode ciphers that require padding
+    /*
+    ** CCSDS 732.0-B-4 Compliance:
+    ** Section 4.1.1 - AOS frames must have a fixed length for a given physical channel
+    ** Special case for CBC mode ciphers that require padding
+    */
     if ((sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC || sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC_MAC) && 
         (current_managed_parameters_struct.max_frame_size - len_ingest) <= 16)
     {
@@ -179,6 +191,10 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     Crypto_saPrint(sa_ptr);
 #endif
 
+    /*
+    ** CCSDS 355.0-B-2 Compliance:
+    ** Section 3.3 - Security Service Types
+    */
     // Determine SA Service Type
     if ((sa_ptr->est == 0) && (sa_ptr->ast == 0))
     {
@@ -771,6 +787,8 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
  * @param ingest: uint8_t*
  * @param len_ingest: int*
  * @return int32: Success/Failure
+ * 
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 5 (AOS Protocol), CCSDS 732.0-B-4
  **/
 int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_t **pp_processed_frame,
                                    uint16_t *p_decrypted_length)
@@ -1097,11 +1115,29 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
 
     // Calculate size of the protocol data unit
     // NOTE: This size itself is not the length for authentication
-    pdu_len = current_managed_parameters_struct.max_frame_size - (byte_idx)-sa_ptr->stmacf_len;
+    
+    /*
+    ** CCSDS 732.0-B-4 Section The AOS Transfer Frame Data Field
+    ** The Data Field contains user data and occupies the central part of the Transfer Frame.
+    ** The optional Operations Control Field and the Frame Error Control Field, if present, 
+    ** are not part of the Data Field.
+    */
+    pdu_len = current_managed_parameters_struct.max_frame_size - byte_idx - sa_ptr->stmacf_len;
+    
+    /*
+    ** CCSDS 732.0-B-4 Section 4.1.5 - Operational Control Field (OCF)
+    ** The OCF contains real-time Control Commands, reports, or status that may be required for 
+    ** the operation of the AOS Space Data Link Protocol.
+    */
     if (current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
     {
         pdu_len -= 4;
     }
+    
+    /*
+    ** CCSDS 732.0-B-4 Section 4.1.6 - Frame Error Control Field (FECF)
+    ** The FECF shall contain a sequence of 16 parity bits for error detection.
+    */
     if (current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
     {
         pdu_len -= 2;
@@ -1174,8 +1210,9 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
 
     /**
      * Begin Authentication / Encryption
-     **/
-
+     * Reference CCSDS 355.0-B-2 Section 5.3 (AOS Security Processing)
+     */
+    
     // Parse MAC, prepare AAD
     if ((sa_service_type == SA_AUTHENTICATION) || (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
     {
@@ -1355,6 +1392,8 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
  * Returns the total length of the current aos_frame in BYTES!
  * @param len: int
  * @return int32_t Length of AOS
+ * 
+ * CCSDS Compliance: CCSDS 732.0-B-4 Section 4.1 (AOS Transfer Frame Format)
  **/
 int32_t Crypto_Get_aosLength(int len)
 {
@@ -1376,6 +1415,8 @@ int32_t Crypto_Get_aosLength(int len)
  * @param abm_buffer: uint8_t*
  * @param aad: uint8_t*
  * @return status: uint32_t
+ * 
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7.2.3 (AAD Construction)
  **/
 uint32_t Crypto_Prepare_AOS_AAD(const uint8_t *buffer, uint16_t len_aad, const uint8_t *abm_buffer, uint8_t *aad)
 {

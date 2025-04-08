@@ -21,6 +21,13 @@
 */
 #include <string.h>
 #include "crypto.h"
+#include "crypto_events.h"
+
+/*
+** CCSDS Compliance Reference:
+** This file implements security configuration functions compliant with:
+** - CCSDS 355.0-B-2 (Space Data Link Security Protocol) Section 7 (Management)
+*/
 
 /*
 ** Global Variables
