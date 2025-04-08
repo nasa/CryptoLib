@@ -42,7 +42,7 @@
  * b- Set of Encrypted Upload Keys (Integer[Size of set of Key ID]; unmanaged)
  * c- Agreed Cryptographic Algorithm (managed)
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.2.2 (Key Transport)
  **/
 int32_t Crypto_Key_OTAR(void)
@@ -231,7 +231,7 @@ int32_t Crypto_Key_OTAR(void)
  * Updates the state of the all keys in the received SDLS EP PDU
  * @param state: uint8
  * @return uint32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.2.3 (Key Activation)
  **/
 int32_t Crypto_Key_update(uint8_t state)
@@ -375,7 +375,7 @@ int32_t Crypto_Key_update(uint8_t state)
  * Returns the complete list of existing keys and their states
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.2.1 (Key Management)
  **/
 int32_t Crypto_Key_inventory(uint8_t *ingest)
@@ -442,7 +442,7 @@ int32_t Crypto_Key_inventory(uint8_t *ingest)
  * Verifies the integrity of a key in storage and the KeyStore
  * @param tc_frame: TC_t*
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.2.5 (Key Verification)
  **/
 int32_t Crypto_Key_verify(TC_t *tc_frame)
