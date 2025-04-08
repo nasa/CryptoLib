@@ -143,6 +143,28 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         }
     }
 
+    // Per CCSDS 732.0-B-4, AOS frames must have a fixed length for a given physical channel
+    // Special case for CBC mode ciphers that require padding
+    if ((sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC || sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC_MAC) && 
+        (current_managed_parameters_struct.max_frame_size - len_ingest) <= 16)
+    {
+        // For CBC mode, allow frames that are slightly shorter to account for padding
+        cbc_padding = current_managed_parameters_struct.max_frame_size - len_ingest;
+        #ifdef AOS_DEBUG
+        printf(KYEL "CBC padding of %d bytes will be applied\n" RESET, cbc_padding);
+        #endif
+    }
+    else if ((current_managed_parameters_struct.max_frame_size - len_ingest) != 0)
+    {
+        #ifdef AOS_DEBUG
+        printf(KRED "Frame length %d does not match required fixed length %d\n" RESET, 
+              len_ingest, current_managed_parameters_struct.max_frame_size);
+        #endif
+        status = CRYPTO_LIB_ERR_AOS_FL_LT_MAX_FRAME_SIZE;
+        mc_if->mc_log(status);
+        return status;
+    }
+
 #ifdef AOS_DEBUG
     printf(KYEL "AOS BEFORE Apply Sec:\n\t" RESET);
     for (int16_t i = 0; i < current_managed_parameters_struct.max_frame_size - cbc_padding; i++)
@@ -224,8 +246,27 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     }
 
     // Detect if optional variable length Insert Zone is present
+    // Per CCSDS 732.0-B-4 Section 4.1.3, Insert Zone is optional but fixed length for a physical channel
     if (current_managed_parameters_struct.aos_has_iz == AOS_HAS_IZ)
     {
+        // Section 4.1.3.2 - Validate Insert Zone length
+        if (current_managed_parameters_struct.aos_iz_len <= 0)
+        {
+            status = CRYPTO_LIB_ERR_INVALID_AOS_IZ_LENGTH;
+            #ifdef AOS_DEBUG
+            printf(KRED "Error: Invalid Insert Zone length %d. Must be between 1 and 65535 octets.\n" RESET, 
+                   current_managed_parameters_struct.aos_iz_len);
+            #endif
+            mc_if->mc_log(status);
+            return status;
+        }
+        
+        // Section 4.1.3.2.3 - All bits of the Insert Zone shall be set by the sending end 
+        // Based on the managed parameter configuration, we're not modifying the Insert Zone contents
+        #ifdef AOS_DEBUG
+        printf(KYEL "Insert Zone present with length %d octets\n" RESET, current_managed_parameters_struct.aos_iz_len);
+        #endif
+        
         idx += current_managed_parameters_struct.aos_iz_len;
     }
 
@@ -583,25 +624,32 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
 
     if (sa_service_type != SA_PLAINTEXT)
     {
-#ifdef INCREMENT
-        if (crypto_config.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
-        {
-            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0)
-            {
-                Crypto_increment(sa_ptr->iv, sa_ptr->iv_len);
-            }
-        }
-        else // SA_INCREMENT_NONTRANSMITTED_IV_FALSE
-        {
-            // Only increment the transmitted portion
-            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0)
-            {
-                Crypto_increment(sa_ptr->iv + (sa_ptr->iv_len - sa_ptr->shivf_len), sa_ptr->shivf_len);
-            }
-        }
+        // Implement proper anti-replay sequence number handling per CCSDS 355.0-B-2
         if (sa_ptr->shsnf_len > 0)
         {
+            // Section 4.2.5 of CCSDS 355.0-B-2: Sequence numbers shall be incremented by one for each frame
             Crypto_increment(sa_ptr->arsn, sa_ptr->arsn_len);
+            
+            // Check for sequence number rollover
+            int is_all_zeros = CRYPTO_TRUE;
+            for (i = 0; i < sa_ptr->arsn_len; i++)
+            {
+                if (*(sa_ptr->arsn + i) != 0)
+                {
+                    is_all_zeros = CRYPTO_FALSE;
+                    break;
+                }
+            }
+            
+            // Section 4.2.5.3: If a rollover is detected, SA must be re-established
+            if (is_all_zeros)
+            {
+                #ifdef SA_DEBUG
+                printf(KRED "ARSN has rolled over! SA should be re-established.\n" RESET);
+                #endif
+                // Mark the SA for rekeying
+                sa_ptr->sa_state = SA_NONE;
+            }
         }
 
 #ifdef SA_DEBUG
@@ -633,7 +681,6 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         }
         printf("\n" RESET);
 #endif
-#endif
     }
 
     // Move idx to mac location
@@ -651,7 +698,31 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     }
 #endif
 
-    // TODO OCF - ? Here, elsewhere?
+    // Handle OCF (Operational Control Field) per CCSDS 732.0-B-4 Section 4.1.4
+    if (current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
+    {
+        // Section 4.1.4.2 - OCF is always 4 octets
+        uint16_t ocf_location = idx + pdu_len + sa_ptr->stmacf_len;
+        
+        #ifdef AOS_DEBUG
+        printf(KYEL "OCF present at location %d\n" RESET, ocf_location);
+        #endif
+
+        // If Idle data is being transmitted (no real data), set CLCW flag accordingly
+        // Per Section 6.4.1 - we're handling Type-1 Report which corresponds to CLCW
+        if (pdu_len == 0)
+        {
+            // Set Control Word Type Flag to 0 for CLCW
+            pTfBuffer[ocf_location] &= 0x7F;
+            
+            #ifdef AOS_DEBUG
+            printf(KYEL "Setting OCF CLCW flag for idle data\n" RESET);
+            #endif
+        }
+        
+        // Note: We don't modify other OCF fields as they should be handled by upper layers
+        // This just ensures the OCF is properly accounted for in the frame structure
+    }
 
     /**
      * End Authentication / Encryption
@@ -802,9 +873,28 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
         aos_hdr_len            = byte_idx;
     }
 
-    // Determine if Insert Zone exists, increment past it if so
-    if (current_managed_parameters_struct.aos_has_iz)
+    // Detect if optional variable length Insert Zone is present
+    // Per CCSDS 732.0-B-4 Section 4.1.3, Insert Zone is optional but fixed length for a physical channel
+    if (current_managed_parameters_struct.aos_has_iz == AOS_HAS_IZ)
     {
+        // Section 4.1.3.2 - Validate Insert Zone length
+        if (current_managed_parameters_struct.aos_iz_len <= 0)
+        {
+            status = CRYPTO_LIB_ERR_INVALID_AOS_IZ_LENGTH;
+            #ifdef AOS_DEBUG
+            printf(KRED "Error: Invalid Insert Zone length %d. Must be between 1 and 65535 octets.\n" RESET, 
+                   current_managed_parameters_struct.aos_iz_len);
+            #endif
+            mc_if->mc_log(status);
+            return status;
+        }
+        
+        // Section 4.1.3.2.3 - All bits of the Insert Zone shall be set by the sending end 
+        // Based on the managed parameter configuration, we're not modifying the Insert Zone contents
+        #ifdef AOS_DEBUG
+        printf(KYEL "Insert Zone present with length %d octets\n" RESET, current_managed_parameters_struct.aos_iz_len);
+        #endif
+        
         byte_idx += current_managed_parameters_struct.aos_iz_len;
     }
 
@@ -1101,12 +1191,19 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
         {
             aad_len = mac_loc;
         }
+        
+        // CCSDS 355.0-B-2 Section 4.2.3.4 - Authentication bit mask must be sufficient for AAD
         if (sa_ptr->abm_len < aad_len)
         {
+            free(p_new_dec_frame); // Add cleanup
             status = CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
+            #ifdef MAC_DEBUG
+            printf(KRED "Error: ABM length %d is shorter than required AAD length %d\n" RESET, sa_ptr->abm_len, aad_len);
+            #endif
             mc_if->mc_log(status);
             return status;
         }
+        
         // Use ingest and abm to create aad
         Crypto_Prepare_AOS_AAD(p_ingest, aad_len, sa_ptr->abm, &aad[0]);
 
@@ -1126,6 +1223,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
 #ifdef DEBUG
         printf(KRED "Error: SA Not Operational \n" RESET);
 #endif
+        free(p_new_dec_frame); // Add cleanup
         return CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL;
     }
 
@@ -1199,7 +1297,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
             // Check that key length to be used emets the algorithm requirement
             if ((int32_t)ekp->key_len != Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs))
             {
-                // free(aad); - non-heap object
+                free(p_new_dec_frame); // Add cleanup
                 status = CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
                 mc_if->mc_log(status);
                 return status;
