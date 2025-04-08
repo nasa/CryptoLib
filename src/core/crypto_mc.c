@@ -34,6 +34,8 @@
  * @brief Function: Crypto_MC_ping
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
+ * 
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7.3.1 (Management Service Primitives)
  **/
 int32_t Crypto_MC_ping(uint8_t *ingest)
 {
@@ -63,6 +65,8 @@ int32_t Crypto_MC_ping(uint8_t *ingest)
  * @brief Function: Crypto_MC_status
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
+ * 
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7.3.2 (Status Reporting)
  **/
 int32_t Crypto_MC_status(uint8_t *ingest)
 {
@@ -103,6 +107,8 @@ int32_t Crypto_MC_status(uint8_t *ingest)
  * @brief Function: Crypto_MC_dump
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
+ * 
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7.3.3 (Event Logging)
  **/
 int32_t Crypto_MC_dump(uint8_t *ingest)
 {
@@ -162,6 +168,8 @@ int32_t Crypto_MC_dump(uint8_t *ingest)
  * @brief Function: Crypto_MC_erase
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
+ * 
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7.3.3 (Event Logging)
  **/
 int32_t Crypto_MC_erase(uint8_t *ingest)
 {
@@ -221,6 +229,8 @@ int32_t Crypto_MC_erase(uint8_t *ingest)
  * @brief Function: Crypto_MC_selftest
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
+ * 
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7.3.4 (Self-Test Diagnostics)
  **/
 int32_t Crypto_MC_selftest(uint8_t *ingest)
 {
@@ -254,9 +264,11 @@ int32_t Crypto_MC_selftest(uint8_t *ingest)
 }
 
 /**
- * @brief Function: Crypto_SA_readASRN
+ * @brief Function: Crypto_SA_readARSN
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
+ * 
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7.2.4 (Anti-Replay Processing)
  **/
 int32_t Crypto_SA_readARSN(uint8_t *ingest)
 {
@@ -356,7 +368,10 @@ int32_t Crypto_SA_readARSN(uint8_t *ingest)
 
 /**
  * @brief Function: Crypto_MC_resetalarm
+ * Reset all alarm flags
  * @return int32: Success/Failure
+ * 
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7.3.5 (Alarm Management)
  **/
 int32_t Crypto_MC_resetalarm(void)
 { // Reset all alarm flags
