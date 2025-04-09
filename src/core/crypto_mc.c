@@ -21,22 +21,23 @@
 */
 #include "crypto.h"
 
-/*
-** CCSDS Compliance Reference:
-** This file implements monitoring and control functions compliant with:
-** - CCSDS 355.0-B-2 (Space Data Link Security Protocol) Section 7 (Management)
-*/
+/**
+ * CCSDS Compliance Reference:
+ * This file implements monitoring and control functions compliant with:
+ * - SDLSP-EP 355.1-B-1 (Space Data Link Security Protocol - Extended Procedures) Section 7 (Management)
+ */
 
-/*
-** Security Association Monitoring and Control
-*/
+/**
+ * Security Association Monitoring and Control
+ */
+
 /**
  * @brief Function: Crypto_MC_ping
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
  * 
- * CCSDS Compliance: CCSDS 355.0-B-2 Section 7.3.1 (Management Service Primitives)
- **/
+ * CCSDS Compliance: SDLSP-EP 355.1-B-1 Section 7.3.1 (Management Service Primitives)
+ */
 int32_t Crypto_MC_ping(uint8_t *ingest)
 {
     uint8_t count = 0;
@@ -66,8 +67,8 @@ int32_t Crypto_MC_ping(uint8_t *ingest)
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
  * 
- * CCSDS Compliance: CCSDS 355.0-B-2 Section 7.3.2 (Status Reporting)
- **/
+ * CCSDS Compliance: SDLSP-EP 355.1-B-1 Section 7.3.2 (Status Reporting)
+ */
 int32_t Crypto_MC_status(uint8_t *ingest)
 {
     if (ingest == NULL)
@@ -108,8 +109,8 @@ int32_t Crypto_MC_status(uint8_t *ingest)
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
  * 
- * CCSDS Compliance: CCSDS 355.0-B-2 Section 7.3.3 (Event Logging)
- **/
+ * CCSDS Compliance: SDLSP-EP 355.1-B-1 Section 7.3.3 (Event Logging)
+ */
 int32_t Crypto_MC_dump(uint8_t *ingest)
 {
     if (ingest == NULL)
@@ -169,8 +170,8 @@ int32_t Crypto_MC_dump(uint8_t *ingest)
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
  * 
- * CCSDS Compliance: CCSDS 355.0-B-2 Section 7.3.3 (Event Logging)
- **/
+ * CCSDS Compliance: SDLSP-EP 355.1-B-1 Section 7.3.3 (Event Logging)
+ */
 int32_t Crypto_MC_erase(uint8_t *ingest)
 {
     if (ingest == NULL)
@@ -230,8 +231,8 @@ int32_t Crypto_MC_erase(uint8_t *ingest)
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
  * 
- * CCSDS Compliance: CCSDS 355.0-B-2 Section 7.3.4 (Self-Test Diagnostics)
- **/
+ * CCSDS Compliance: SDLSP-EP 355.1-B-1 Section 7.3.4 (Self-Test Diagnostics)
+ */
 int32_t Crypto_MC_selftest(uint8_t *ingest)
 {
     if (ingest == NULL)
@@ -268,8 +269,8 @@ int32_t Crypto_MC_selftest(uint8_t *ingest)
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
  * 
- * CCSDS Compliance: CCSDS 355.0-B-2 Section 7.2.4 (Anti-Replay Processing)
- **/
+ * CCSDS Compliance: SDLSP-EP 355.1-B-1 Section 7.2.4 (Anti-Replay Processing)
+ */
 int32_t Crypto_SA_readARSN(uint8_t *ingest)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -371,8 +372,8 @@ int32_t Crypto_SA_readARSN(uint8_t *ingest)
  * Reset all alarm flags
  * @return int32: Success/Failure
  * 
- * CCSDS Compliance: CCSDS 355.0-B-2 Section 7.3.5 (Alarm Management)
- **/
+ * CCSDS Compliance: SDLSP-EP 355.1-B-1 Section 7.3.5 (Alarm Management)
+ */
 int32_t Crypto_MC_resetalarm(void)
 { // Reset all alarm flags
     report.af    = 0;

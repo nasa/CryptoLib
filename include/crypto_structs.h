@@ -35,20 +35,20 @@
 #include <stdint.h>
 #include <stdio.h>
 
-/*
-** CCSDS Compliance Reference:
-** This file defines data structures compliant with:
-** - CCSDS 232.0-B-3 (TC Space Data Link Protocol)
-** - CCSDS 132.0-B-2 (TM Space Data Link Protocol)
-** - CCSDS 732.0-B-4 (AOS Space Data Link Protocol)
-** - CCSDS 355.0-B-2 (Space Data Link Security Protocol)
-*/
+/**
+ * CCSDS Compliance Reference:
+ * This file implements security features compliant with:
+ * - CCSDS 232.0-B-3 (TC Space Data Link Protocol)
+ * - CCSDS 132.0-B-3 (TM Space Data Link Protocol)
+ * - CCSDS 732.0-B-4 (AOS Space Data Link Protocol)
+ * - CCSDS 355.0-B-2 (Space Data Link Security Protocol)
+ */
 
 /*
 ** Definitions
 */
 /*
-** CCSDS Compliance: CCSDS 232.0-B-3, CCSDS 132.0-B-2, CCSDS 732.0-B-4
+** CCSDS Compliance: CCSDS 232.0-B-3, CCSDS 132.0-B-3, CCSDS 732.0-B-4
 ** Global Virtual Channel ID / Global MAP ID structure
 */
 typedef struct
@@ -103,7 +103,7 @@ typedef struct
 
 /*
 ** SDLS Definitions
-** CCSDS Compliance: CCSDS 355.0-B-2 (Space Data Link Security Protocol)
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 2.4 (Frame Security Report)
 */
 typedef struct
 {
@@ -142,7 +142,7 @@ typedef struct
 #define SDLS_TLV_SIZE (sizeof(SDLS_TLV_t))
 
 /*
-** CCSDS Compliance: CCSDS 355.0-B-2 Section 6.3 (Key Management)
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.4 (Key Management)
 */
 typedef struct
 {
@@ -152,7 +152,7 @@ typedef struct
 #define SDLS_EKB_SIZE (sizeof(SDLS_EKB_t))
 
 /*
-** CCSDS Compliance: CCSDS 355.0-B-2 Section 6.3 (Key Management)
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.4 (Key Management)
 */
 typedef struct
 {
@@ -164,7 +164,7 @@ typedef struct
 #define SDLS_OTAR_SIZE (sizeof(SDLS_OTAR_t))
 
 /*
-** CCSDS Compliance: CCSDS 355.0-B-2 Section 6.3 (Key Management)
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.4 (Key Management)
 */
 typedef struct
 {
@@ -173,7 +173,7 @@ typedef struct
 #define SDLS_KEY_SIZE (sizeof(SDLS_KEY_t))
 
 /*
-** CCSDS Compliance: CCSDS 355.0-B-2 Section 6.3 (Key Management)
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.4 (Key Management)
 */
 typedef struct
 {
@@ -182,7 +182,7 @@ typedef struct
 #define SDLS_KEY_BLK_SIZE (sizeof(SDLS_KEY_BLK_t))
 
 /*
-** CCSDS Compliance: CCSDS 355.0-B-2 Section 6.3.3 (Key Inventory)
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.4 (Key Management)
 */
 typedef struct
 {
@@ -192,7 +192,7 @@ typedef struct
 #define SDLS_KEY_INVENTORY_CMD_SIZE (sizeof(SDLS_KEY_INVENTORY_CMD_t))
 
 /*
-** CCSDS Compliance: CCSDS 355.0-B-2 Section 6.3.3 (Key Inventory)
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.4 (Key Management)
 */
 typedef struct
 {
@@ -202,7 +202,7 @@ typedef struct
 #define SDLS_KEY_INVENTORY_RPLY_SIZE (sizeof(SDLS_KEY_INVENTORY_RPLY_t))
 
 /*
-** CCSDS Compliance: CCSDS 355.0-B-2 Section 6.3.4 (Key Verification)
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.4 (Key Management)
 */
 typedef struct
 {
@@ -212,7 +212,7 @@ typedef struct
 #define SDLS_KEYV_CMD_BLK_SIZE (sizeof(SDLS_KEYV_CMD_BLK_t))
 
 /*
-** CCSDS Compliance: CCSDS 355.0-B-2 Section 6.3.4 (Key Verification)
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.4 (Key Management)
 */
 typedef struct
 {
@@ -221,7 +221,7 @@ typedef struct
 #define SDLS_KEYV_CMD_SIZE (sizeof(SDLS_KEYV_CMD_t))
 
 /*
-** CCSDS Compliance: CCSDS 355.0-B-2 Section 6.3.4 (Key Verification)
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.4 (Key Management)
 */
 typedef struct
 {
@@ -233,7 +233,7 @@ typedef struct
 #define SDLS_KEYV_RPLY_BLK_SIZE (sizeof(SDLS_KEYV_RPLY_BLK_t))
 
 /*
-** CCSDS Compliance: CCSDS 355.0-B-2 Section 6.3.4 (Key Verification)
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.4 (Key Management)
 */
 typedef struct
 {
@@ -242,7 +242,7 @@ typedef struct
 #define SDLS_KEYV_RPLY_SIZE (sizeof(SDLS_KEYV_RPLY_t))
 
 /*
-** CCSDS Compliance: CCSDS 355.0-B-2 Section 6.3.5 (Key Destruction)
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.4 (Key Management)
 */
 typedef struct
 {
@@ -252,7 +252,7 @@ typedef struct
 #define SDLS_KEYDB_CMD_SIZE (sizeof(SDLS_KEYDB_CMD_t))
 
 /*
-** CCSDS Compliance: CCSDS 355.0-B-2 Section 6.3.5 (Key Destruction)
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.4 (Key Management)
 */
 typedef struct
 {
@@ -264,7 +264,7 @@ typedef struct
 #define SDLS_KEYDB_RPLY_SIZE (sizeof(SDLS_KEYDB_RPLY_t))
 
 /*
-** CCSDS Compliance: CCSDS 355.0-B-2 Section 6.2.6 (SA Status)
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.5 (SA Management)
 */
 typedef struct
 {
@@ -274,7 +274,7 @@ typedef struct
 #define SDLS_SA_STATUS_RPLY_SIZE (sizeof(SDLS_SA_STATUS_RPLY_t))
 
 /*
-** CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.5 (SA Management)
 */
 typedef struct
 {
@@ -284,7 +284,7 @@ typedef struct
 #define SDLS_SA_READ_ARSN_RPLY_SIZE (sizeof(SDLS_SA_READ_ARSN_RPLY_t))
 
 /*
-** CCSDS Compliance: CCSDS 355.0-B-2 Section 7.4 (Mission Control Log)
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.6 (Monitoring and Control)
 */
 typedef struct
 {
@@ -294,7 +294,7 @@ typedef struct
 #define SDLS_MC_LOG_RPLY_SIZE (sizeof(SDLS_MC_LOG_RPLY_t))
 
 /*
-** CCSDS Compliance: CCSDS 355.0-B-2 Section 7.4 (Mission Control Log)
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.6 (Monitoring and Control)
 */
 typedef struct
 {
@@ -305,7 +305,7 @@ typedef struct
 #define SDLS_MC_DUMP_RPLY_SIZE (sizeof(SDLS_MC_DUMP_RPLY_t))
 
 /*
-** CCSDS Compliance: CCSDS 355.0-B-2 Section 7.4 (Mission Control Log)
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.6 (Monitoring and Control)
 */
 typedef struct
 {
@@ -314,7 +314,7 @@ typedef struct
 #define SDLS_MC_DUMP_BLK_RPLY_SIZE (sizeof(SDLS_MC_DUMP_BLK_RPLY_t))
 
 /*
-** CCSDS Compliance: CCSDS 355.0-B-2 Section 7.6 (Self-Test)
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.6 (Monitoring and Control)
 */
 typedef struct
 {
@@ -323,7 +323,7 @@ typedef struct
 #define SDLS_MC_ST_RPLY_SIZE (sizeof(SDLS_MC_ST_RPLY_t))
 
 /*
-** CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.6 (Monitoring and Control)
 */
 typedef struct
 {
@@ -335,7 +335,7 @@ typedef struct
 ** Telecommand (TC) Definitions
 */
 /*
-** CCSDS Compliance: CCSDS 232.0-B-3 Section 4.1.2 (Primary Header)
+** CCSDS Compliance: CCSDS 232.0-B-3 Section 4.1.2 (TC Primary Header)
 */
 typedef struct
 {
@@ -403,9 +403,6 @@ typedef struct
 ** Note: Early CryptoLib Testing Utilized ECSS PUS Headers
 */
 
-/*
-** CCSDS Compliance: ECSS-E-70-41A Section 7.4 (PUS Packet Structure)
-*/
 typedef struct
 {
     uint8_t shf : 1;  // Secondary Header Flag
@@ -437,8 +434,7 @@ typedef struct
 #define CCSDS_HDR_SIZE (sizeof(CCSDS_SPP_HDR_t))
 
 /*
-** CCSDS Compliance: CCSDS 133.0-B-2 (Space Packet Protocol) and
-** ECSS-E-70-41A (Packet Utilization Standard)
+** CCSDS Compliance: CCSDS 133.0-B-2 (Space Packet Protocol)
 */
 typedef struct
 {
@@ -499,7 +495,7 @@ typedef struct
 ** Telemetry (TM) Definitions
 */
 /*
-** CCSDS Compliance: CCSDS 132.0-B-2 Section 4.1.2 (TM Primary Header)
+** CCSDS Compliance: CCSDS 132.0-B-3 Section 4.1.2 (TM Primary Header)
 */
 typedef struct
 {
@@ -547,7 +543,7 @@ typedef struct
 #define TM_FRAME_SECTRAILER_SIZE (sizeof(TM_FrameSecurityTrailer_t))
 
 /*
-** CCSDS Compliance: CCSDS 132.0-B-2 (TM Space Data Link Protocol) and
+** CCSDS Compliance: CCSDS 132.0-B-3 (TM Space Data Link Protocol) and
 ** CCSDS 355.0-B-2 (Space Data Link Security Protocol)
 */
 typedef struct

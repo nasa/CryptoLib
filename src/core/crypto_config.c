@@ -23,11 +23,11 @@
 #include "crypto.h"
 #include "crypto_events.h"
 
-/*
-** CCSDS Compliance Reference:
-** This file implements security configuration functions compliant with:
-** - CCSDS 355.0-B-2 (Space Data Link Security Protocol) Section 7 (Management)
-*/
+/**
+ * CCSDS Compliance Reference:
+ * This file implements security configuration functions compliant with:
+ * - CCSDS 355.0-B-2 (Space Data Link Security Protocol) Section 7 (Management)
+ */
 
 /*
 ** Global Variables
@@ -52,7 +52,11 @@ GvcidManagedParameters_t current_managed_parameters_struct = {0, 0, 0, 0, 0, 0, 
 // GvcidManagedParameters_t* gvcid_managed_parameters = NULL;
 //  GvcidManagedParameters_t* current_managed_parameters = NULL;
 
-// Free all configuration structs
+/**
+ * @brief Function: crypto_free_config_structs
+ * 
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t crypto_free_config_structs(void);
 
 /*
@@ -60,9 +64,10 @@ int32_t crypto_free_config_structs(void);
 */
 
 /**
- * @brief Function: Crypto_Init_TC_Unit_Test
- * @return int32: status
- **/
+ * @brief Function: Crypto_SC_Init
+ * 
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t Crypto_SC_Init(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -96,8 +101,9 @@ int32_t Crypto_SC_Init(void)
 
 /**
  * @brief Function: Crypto_Init_TC_Unit_Test
- * @return int32: status
- **/
+ * 
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t Crypto_Init_TC_Unit_Test(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -121,8 +127,9 @@ int32_t Crypto_Init_TC_Unit_Test(void)
 
 /**
  * @brief Function: Crypto_Init_TM_Unit_Test
- * @return int32: status
- **/
+ * 
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t Crypto_Init_TM_Unit_Test(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -149,8 +156,9 @@ int32_t Crypto_Init_TM_Unit_Test(void)
 
 /**
  * @brief Function: Crypto_Init_AOS_Unit_Test
- * @return int32: status
- **/
+ * 
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t Crypto_Init_AOS_Unit_Test(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -176,11 +184,9 @@ int32_t Crypto_Init_AOS_Unit_Test(void)
 
 /**
  * @brief Function: Crypto_Init_With_Configs
- * @param crypto_config_p: CryptoConfig_t*
- * @param gvcid_managed_parameters_p: GvcidManagedParameters_t*
- * @param sa_mariadb_config_p: SadbMariaDBConfig_t*
- * @return int32: Success/Failure
- **/
+ * 
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t Crypto_Init_With_Configs(CryptoConfig_t *crypto_config_p, GvcidManagedParameters_t *gvcid_managed_parameters_p,
                                  SadbMariaDBConfig_t                  *sa_mariadb_config_p,
                                  CryptographyKmcCryptoServiceConfig_t *cryptography_kmc_crypto_config_p)
@@ -199,9 +205,10 @@ int32_t Crypto_Init_With_Configs(CryptoConfig_t *crypto_config_p, GvcidManagedPa
 }
 
 /**
- * @brief Function Crypto_Init
- * Initializes libgcrypt, Security Associations
- **/
+ * @brief Function: Crypto_Init
+ * 
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t Crypto_Init(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -382,9 +389,9 @@ int32_t Crypto_Init(void)
 
 /**
  * @brief Function: Crypto_Shutdown
- * Free memory objects & restore pointers to NULL for re-initialization
- * @return int32: Success/Failure
- **/
+ * 
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t Crypto_Shutdown(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -429,19 +436,9 @@ int32_t Crypto_Shutdown(void)
 
 /**
  * @brief Function: Crypto_Config_CryptoLib
- * @param key_type: uint8
- * @param sa_type: uint8
- * @param iv_type: uint8
- * @param crypto_create_fecf: uint8
- * @param process_sdls_pdus: uint8
- * @param has_pus_hdr: uint8
- * @param ignore_sa_state: uint8
- * @param ignore_anti_replay: uint8
- * @param unique_sa_per_mapid: uint8
- * @param crypto_check_fecf: uint8
- * @param vcid_bitmask: uint8
- * @return int32: Success/Failure
- **/
+ * 
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t Crypto_Config_CryptoLib(uint8_t key_type, uint8_t mc_type, uint8_t sa_type, uint8_t cryptography_type,
                                 uint8_t iv_type, uint8_t crypto_create_fecf, uint8_t process_sdls_pdus,
                                 uint8_t has_pus_hdr, uint8_t ignore_sa_state, uint8_t ignore_anti_replay,
@@ -469,14 +466,9 @@ int32_t Crypto_Config_CryptoLib(uint8_t key_type, uint8_t mc_type, uint8_t sa_ty
 
 /**
  * @brief Function: Crypto_Config_MariaDB
- * @param mysql_username: char*
- * @param mysql_password: char*
- * @param mysql_hostname: char*
- * @param mysql_database: char*
- * @param mysql_port: uint16
- * @return int32: Success/Failure
- **/
-/*set parameters for an encrypted TLS connection*/
+ * 
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t Crypto_Config_MariaDB(char *mysql_hostname, char *mysql_database, uint16_t mysql_port,
                               uint8_t mysql_require_secure_transport, uint8_t mysql_tls_verify_server,
                               char *mysql_tls_ca, char *mysql_tls_capath, char *mysql_mtls_cert, char *mysql_mtls_key,
@@ -540,12 +532,9 @@ int32_t Crypto_Config_Kmc_Crypto_Service(char *protocol, char *kmc_crypto_hostna
 
 /**
  * @brief Function: Crypto_Config_Cam
- * @param cam_enabled: uint8_t
- * @param cookie_file_path: char*
- * @param keytab_file_path: char*
- * @param login_method: uint8_t
- * @return int32_t: Success/Failure
- **/
+ * 
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t Crypto_Config_Cam(uint8_t cam_enabled, char *cookie_file_path, char *keytab_file_path, uint8_t login_method,
                           char *access_manager_uri, char *username, char *cam_home)
 {
@@ -578,6 +567,11 @@ int32_t Crypto_Config_Add_Gvcid_Managed_Parameters(GvcidManagedParameters_t gvci
     return status;
 }
 
+/**
+ * @brief Function: crypto_free_config_structs
+ * 
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t crypto_free_config_structs(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -656,8 +650,9 @@ char *crypto_deep_copy_string(char *src_string)
 
 /**
  * @brief Function: Crypto_Local_Config
- * Initalizes TM Configuration, Log, and Keyrings
- **/
+ * 
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 void Crypto_Local_Config(void)
 {
     // Initial TM configuration
@@ -688,8 +683,9 @@ void Crypto_Local_Config(void)
 
 /**
  * @brief Function: Crypto_Local_Init
- * Initalize TM Frame, CLCW
- **/
+ * 
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 void Crypto_Local_Init(void)
 {
     // Initialize CLCW
@@ -721,8 +717,9 @@ void Crypto_Local_Init(void)
 
 /**
  * @brief Function: Crypto_Calc_CRC_Init_Table
- * Initialize CRC Table
- **/
+ * 
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 void Crypto_Calc_CRC_Init_Table(void)
 {
     uint16_t     val;

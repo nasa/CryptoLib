@@ -22,6 +22,13 @@
 #include "crypto.h"
 #include <string.h> // memcpy/memset
 
+/**
+ * CCSDS Compliance Reference:
+ * This file implements security features compliant with:
+ * - CCSDS 132.0-B-3 (TM Space Data Link Protocol)
+ * - CCSDS 355.0-B-2 (Space Data Link Security Protocol)
+ */
+
 // Forward declarations
 static int32_t Crypto_TM_Validate_Auth_Mask(const uint8_t* abm_buffer, uint16_t abm_len, uint16_t frame_len);
 static uint16_t Crypto_TM_FECF_Calculate(const uint8_t* data, uint16_t length, uint8_t is_encrypted);
@@ -34,6 +41,8 @@ int32_t Crypto_TM_FECF_Validate(uint8_t *p_ingest, uint16_t len_ingest, Security
  * Verify that needed buffers and settings are not null
  * @param pTfBuffer: uint8_t*
  * @return int32: Success/Failure
+ * 
+ * CCSDS Compliance: CCSDS 132.0-B-3 Section 4.1 (TM Transfer Frame Format)
  **/
 int32_t Crypto_TM_Sanity_Check(uint8_t *pTfBuffer)
 {
@@ -102,7 +111,7 @@ int32_t Crypto_TM_Determine_SA_Service_Type(uint8_t *sa_service_type, SecurityAs
  * @param pTfBuffer: uint8_t*
  * @param idx: uint16_t*
  * 
- * CCSDS Compliance: CCSDS 132.0-B-2 Section 4.1.3.2.3 (Secondary Header Format)
+ * CCSDS Compliance: CCSDS 132.0-B-3 Section 4.1.3.2.3 (Secondary Header Format)
  **/
 void Crypto_TM_Check_For_Secondary_Header(uint8_t *pTfBuffer, uint16_t *idx)
 {
@@ -116,7 +125,7 @@ void Crypto_TM_Check_For_Secondary_Header(uint8_t *pTfBuffer, uint16_t *idx)
         *idx = 6;
         // Determine length of secondary header
         // Length coded as total length of secondary header - 1
-        // Reference CCSDS 132.0-B-2 4.1.3.2.3
+        // Reference CCSDS 132.0-B-3 4.1.3.2.3
         uint8_t secondary_hdr_len = (pTfBuffer[*idx] & 0x3F);
 #ifdef TM_DEBUG
         printf(KYEL "Secondary Header Length is decoded as: %d\n", secondary_hdr_len);
@@ -269,7 +278,7 @@ void Crypto_TM_PKCS_Padding(uint32_t *pkcs_padding, SecurityAssociation_t *sa_pt
  * Handles pdu length while dealing with ocf/fecf
  * @param pdu_len: uint16_t*
  * 
- * CCSDS Compliance: CCSDS 132.0-B-2 Section 4.1.3 (Transfer Frame Primary Header)
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 2.4 (Managed Parameters)
  **/
 void Crypto_TM_Handle_Managed_Parameter_Flags(uint16_t *pdu_len)
 {
@@ -1142,7 +1151,7 @@ int32_t Crypto_TM_Process_Setup(uint16_t len_ingest, uint16_t *byte_idx, uint8_t
             }
             // Determine length of secondary header
             // Length coded as total length of secondary header - 1
-            // Reference CCSDS 132.0-B-2 4.1.3.2.3
+            // Reference CCSDS 132.0-B-3 4.1.3.2.3
             *secondary_hdr_len = (p_ingest[*byte_idx] & 0x3F) + 1;
 #ifdef TM_DEBUG
             printf(KYEL "Secondary Header Length is decoded as: %d\n", *secondary_hdr_len - 1);
@@ -1838,7 +1847,7 @@ void Crypto_TM_Print_CLCW(uint8_t *p_ingest, uint16_t byte_idx, uint16_t pdu_len
  * @param len: int
  * @return int32_t Length of TM
  * 
- * CCSDS Compliance: CCSDS 132.0-B-2 Section 4.1 (TM Transfer Frame Format)
+ * CCSDS Compliance: CCSDS 132.0-B-3 Section 4.1 (TM Transfer Frame Format)
  **/
 int32_t Crypto_Get_tmLength(int len)
 {
@@ -1855,7 +1864,7 @@ int32_t Crypto_Get_tmLength(int len)
  * @brief Function: Crypto_TM_updateOCF
  * Update the TM OCF
  * 
- * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.4 (Frame Security Report)
+ * CCSDS Compliance: CCSDS 355.1-B-1 Section 2.4 (Frame Security Report)
  **/
 void Crypto_TM_updateOCF(Telemetry_Frame_Ocf_Fsr_t *report, TM_t *tm_frame)
 {
@@ -1961,13 +1970,13 @@ uint32_t Crypto_Prepare_TM_AAD(const uint8_t *buffer, uint16_t len_aad, const ui
 
 /**
  * @brief Function: Crypto_TM_FECF_Calculate
- * Calculates FECF over frame data per CCSDS 132.0-B-2
- * @param data: uint8_t* - Frame data
- * @param length: uint16_t - Length of data
- * @param is_encrypted: uint8_t - Whether data is encrypted
- * @return uint16_t - Calculated FECF
+ * Calculates FECF over frame data per CCSDS 132.0-B-3
+ * @param data: const uint8_t*
+ * @param length: uint16_t
+ * @param is_encrypted: uint8_t
+ * @return uint16_t: Calculated FECF
  * 
- * CCSDS Compliance: CCSDS 132.0-B-2 Section 4.1.4 (Frame Error Control Field)
+ * CCSDS Compliance: CCSDS 132.0-B-3 Section 4.1.4 (Frame Error Control Field)
  **/
 static uint16_t Crypto_TM_FECF_Calculate(const uint8_t* data, uint16_t length, uint8_t is_encrypted)
 {
@@ -2006,7 +2015,7 @@ static uint16_t Crypto_TM_FECF_Calculate(const uint8_t* data, uint16_t length, u
  * @param sa_ptr: SecurityAssociation_t* - Security association
  * @return int32_t: Success/Failure
  * 
- * CCSDS Compliance: CCSDS 132.0-B-2 Section 4.1.4 (Frame Error Control Field)
+ * CCSDS Compliance: CCSDS 132.0-B-3 Section 4.1.4 (Frame Error Control Field)
  **/
 int32_t Crypto_TM_FECF_Validate(uint8_t *p_ingest, uint16_t len_ingest, SecurityAssociation_t *sa_ptr)
 {

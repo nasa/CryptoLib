@@ -20,14 +20,13 @@
 ** Includes
 */
 #include "crypto.h"
-
-/*
-** CCSDS Compliance Reference:
-** This file implements error handling functions supporting:
-** - CCSDS 355.0-B-2 (Space Data Link Security Protocol) Section 8 (Security Error Detection)
-*/
-
 #include "crypto_error.h"
+
+/**
+ * CCSDS Compliance Reference:
+ * This file implements error handling functions supporting:
+ * - CCSDS 355.0-B-2 (Space Data Link Security Protocol) Section 8 (Security Error Detection)
+ */
 
 #define CRYPTO_UNDEFINED_ERROR (char *)"CRYPTO_UNDEFINED_ERROR_CODE"
 
@@ -175,6 +174,11 @@ char *crypto_enum_errlist_crypto_cam[] = {
 ** @param: int32_t, int32_t, char*
 * @return: char*
 */
+/**
+ * @brief Function: Crypto_Get_Crypto_Error_Code_String
+ * 
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 8 (Security Error Detection)
+ */
 char *Crypto_Get_Crypto_Error_Code_String(int32_t crypto_error_code, int32_t crypto_error_code_max,
                                           char *valid_output_string)
 {
@@ -190,6 +194,11 @@ char *Crypto_Get_Crypto_Error_Code_String(int32_t crypto_error_code, int32_t cry
 ** @param: int32_t, int32_t, char*
 * @return: char*
 */
+/**
+ * @brief Function: Crypto_Get_Error_Code_String
+ * 
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 8 (Security Error Detection)
+ */
 char *Crypto_Get_Error_Code_String(int32_t crypto_error_code, int32_t crypto_error_code_max, char *valid_output_string)
 {
     if (crypto_error_code > crypto_error_code_max)
@@ -204,6 +213,11 @@ char *Crypto_Get_Error_Code_String(int32_t crypto_error_code, int32_t crypto_err
 ** @param: int32_t
 * @return: char*
 */
+/**
+ * @brief Function: Crypto_Get_Error_Code_Enum_String
+ * 
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 8 (Security Error Detection)
+ */
 char *Crypto_Get_Error_Code_Enum_String(int32_t crypto_error_code)
 {
     char *return_string = CRYPTO_UNDEFINED_ERROR;

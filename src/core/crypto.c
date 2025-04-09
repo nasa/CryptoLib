@@ -22,14 +22,14 @@
 #include "crypto.h"
 #include <string.h>
 
-/*
-** CCSDS Compliance Reference:
-** This file implements security features compliant with:
-** - CCSDS 232.0-B-3 (TC Space Data Link Protocol)
-** - CCSDS 132.0-B-2 (TM Space Data Link Protocol)
-** - CCSDS 732.0-B-4 (AOS Space Data Link Protocol)
-** - CCSDS 355.0-B-2 (Space Data Link Security Protocol)
-*/
+/**
+ * CCSDS Compliance Reference:
+ * This file implements security features compliant with:
+ * - CCSDS 232.0-B-3 (TC Space Data Link Protocol)
+ * - CCSDS 132.0-B-3 (TM Space Data Link Protocol)
+ * - CCSDS 732.0-B-4 (AOS Space Data Link Protocol)
+ * - CCSDS 355.0-B-2 (Space Data Link Security Protocol)
+ */
 
 /*
 ** Static Library Declaration

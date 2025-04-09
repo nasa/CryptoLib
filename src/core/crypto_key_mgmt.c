@@ -16,11 +16,11 @@
    jstar-development-team@mail.nasa.gov
 */
 
-/*
-** CCSDS Compliance Reference:
-** This file implements key management functions compliant with:
-** - CCSDS 355.0-B-2 (Space Data Link Security Protocol) Section 6.2 (Key Management)
-*/
+/**
+ * CCSDS Compliance Reference:
+ * This file implements key management functions compliant with:
+ * - SDLSP-EP 355.1-B-1 (Space Data Link Security Protocol - Extended Procedures) Section 6.2 (Key Management)
+ */
 
 /*
 ** Includes
@@ -43,7 +43,7 @@
  * c- Agreed Cryptographic Algorithm (managed)
  * @return int32: Success/Failure
  * 
- * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.2.2 (Key Transport)
+ * CCSDS Compliance: SDLSP-EP 355.1-B-1 Section 6.2.2 (Key Transport)
  **/
 int32_t Crypto_Key_OTAR(void)
 {
@@ -232,7 +232,7 @@ int32_t Crypto_Key_OTAR(void)
  * @param state: uint8
  * @return uint32: Success/Failure
  * 
- * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.2.3 (Key Activation)
+ * CCSDS Compliance: SDLSP-EP 355.1-B-1 Section 6.2.3 (Key Activation)
  **/
 int32_t Crypto_Key_update(uint8_t state)
 { // Local variables
@@ -376,7 +376,7 @@ int32_t Crypto_Key_update(uint8_t state)
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
  * 
- * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.2.1 (Key Management)
+ * CCSDS Compliance: SDLSP-EP 355.1-B-1 Section 6.2.1 (Key Management)
  **/
 int32_t Crypto_Key_inventory(uint8_t *ingest)
 {
@@ -443,7 +443,7 @@ int32_t Crypto_Key_inventory(uint8_t *ingest)
  * @param tc_frame: TC_t*
  * @return int32: Success/Failure
  * 
- * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.2.5 (Key Verification)
+ * CCSDS Compliance: SDLSP-EP 355.1-B-1 Section 6.2.5 (Key Verification)
  **/
 int32_t Crypto_Key_verify(TC_t *tc_frame)
 {
