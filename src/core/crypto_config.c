@@ -54,7 +54,7 @@ GvcidManagedParameters_t current_managed_parameters_struct = {0, 0, 0, 0, 0, 0, 
 
 /**
  * @brief Function: crypto_free_config_structs
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
  */
 int32_t crypto_free_config_structs(void);
@@ -65,7 +65,7 @@ int32_t crypto_free_config_structs(void);
 
 /**
  * @brief Function: Crypto_SC_Init
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
  */
 int32_t Crypto_SC_Init(void)
@@ -101,7 +101,7 @@ int32_t Crypto_SC_Init(void)
 
 /**
  * @brief Function: Crypto_Init_TC_Unit_Test
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
  */
 int32_t Crypto_Init_TC_Unit_Test(void)
@@ -127,7 +127,7 @@ int32_t Crypto_Init_TC_Unit_Test(void)
 
 /**
  * @brief Function: Crypto_Init_TM_Unit_Test
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
  */
 int32_t Crypto_Init_TM_Unit_Test(void)
@@ -156,7 +156,7 @@ int32_t Crypto_Init_TM_Unit_Test(void)
 
 /**
  * @brief Function: Crypto_Init_AOS_Unit_Test
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
  */
 int32_t Crypto_Init_AOS_Unit_Test(void)
@@ -184,7 +184,7 @@ int32_t Crypto_Init_AOS_Unit_Test(void)
 
 /**
  * @brief Function: Crypto_Init_With_Configs
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
  */
 int32_t Crypto_Init_With_Configs(CryptoConfig_t *crypto_config_p, GvcidManagedParameters_t *gvcid_managed_parameters_p,
@@ -206,7 +206,7 @@ int32_t Crypto_Init_With_Configs(CryptoConfig_t *crypto_config_p, GvcidManagedPa
 
 /**
  * @brief Function: Crypto_Init
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
  */
 int32_t Crypto_Init(void)
@@ -389,7 +389,7 @@ int32_t Crypto_Init(void)
 
 /**
  * @brief Function: Crypto_Shutdown
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
  */
 int32_t Crypto_Shutdown(void)
@@ -436,7 +436,7 @@ int32_t Crypto_Shutdown(void)
 
 /**
  * @brief Function: Crypto_Config_CryptoLib
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
  */
 int32_t Crypto_Config_CryptoLib(uint8_t key_type, uint8_t mc_type, uint8_t sa_type, uint8_t cryptography_type,
@@ -466,7 +466,7 @@ int32_t Crypto_Config_CryptoLib(uint8_t key_type, uint8_t mc_type, uint8_t sa_ty
 
 /**
  * @brief Function: Crypto_Config_MariaDB
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
  */
 int32_t Crypto_Config_MariaDB(char *mysql_hostname, char *mysql_database, uint16_t mysql_port,
@@ -532,7 +532,7 @@ int32_t Crypto_Config_Kmc_Crypto_Service(char *protocol, char *kmc_crypto_hostna
 
 /**
  * @brief Function: Crypto_Config_Cam
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
  */
 int32_t Crypto_Config_Cam(uint8_t cam_enabled, char *cookie_file_path, char *keytab_file_path, uint8_t login_method,
@@ -569,7 +569,7 @@ int32_t Crypto_Config_Add_Gvcid_Managed_Parameters(GvcidManagedParameters_t gvci
 
 /**
  * @brief Function: crypto_free_config_structs
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
  */
 int32_t crypto_free_config_structs(void)
@@ -650,7 +650,7 @@ char *crypto_deep_copy_string(char *src_string)
 
 /**
  * @brief Function: Crypto_Local_Config
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
  */
 void Crypto_Local_Config(void)
@@ -683,7 +683,7 @@ void Crypto_Local_Config(void)
 
 /**
  * @brief Function: Crypto_Local_Init
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
  */
 void Crypto_Local_Init(void)
@@ -717,7 +717,7 @@ void Crypto_Local_Init(void)
 
 /**
  * @brief Function: Crypto_Calc_CRC_Init_Table
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
  */
 void Crypto_Calc_CRC_Init_Table(void)

@@ -176,7 +176,7 @@ char *crypto_enum_errlist_crypto_cam[] = {
 */
 /**
  * @brief Function: Crypto_Get_Crypto_Error_Code_String
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 8 (Security Error Detection)
  */
 char *Crypto_Get_Crypto_Error_Code_String(int32_t crypto_error_code, int32_t crypto_error_code_max,
@@ -196,7 +196,7 @@ char *Crypto_Get_Crypto_Error_Code_String(int32_t crypto_error_code, int32_t cry
 */
 /**
  * @brief Function: Crypto_Get_Error_Code_String
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 8 (Security Error Detection)
  */
 char *Crypto_Get_Error_Code_String(int32_t crypto_error_code, int32_t crypto_error_code_max, char *valid_output_string)
@@ -215,7 +215,7 @@ char *Crypto_Get_Error_Code_String(int32_t crypto_error_code, int32_t crypto_err
 */
 /**
  * @brief Function: Crypto_Get_Error_Code_Enum_String
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 8 (Security Error Detection)
  */
 char *Crypto_Get_Error_Code_Enum_String(int32_t crypto_error_code)
