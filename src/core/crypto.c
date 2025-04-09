@@ -108,7 +108,7 @@ void clean_akref(SecurityAssociation_t *sa)
  * Looks up cipher suite ID and determines if it's an AEAD algorithm. Returns 1 if true, 0 if false;
  * @param cipher_suite_id: uint32
  * @return int: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.4.2 (Cryptographic Algorithms)
  **/
 uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
@@ -139,7 +139,7 @@ uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
  * Looks up cipher suite ID and determines if it's an ACS algorithm. Returns 1 if true, 0 if false;
  * @param cipher_suite_id: uint8_t
  * @return int: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.4.2 (Cryptographic Algorithms)
  **/
 uint8_t Crypto_Is_ACS_Only_Algo(uint8_t algo)
@@ -157,7 +157,7 @@ uint8_t Crypto_Is_ACS_Only_Algo(uint8_t algo)
  * @param num: uint8*
  * @param length: int
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
  **/
 int32_t Crypto_increment(uint8_t *num, int length)
@@ -199,7 +199,7 @@ int32_t Crypto_increment(uint8_t *num, int length)
  * @param length: int
  * @param window: int
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
  **/
 int32_t Crypto_window(uint8_t *actual, uint8_t *expected, int length, int window)
@@ -281,7 +281,7 @@ int32_t Crypto_window(uint8_t *actual, uint8_t *expected, int length, int window
  * @param reply: uint8_t*
  * @param appID: uint8
  * @return uint8: Count
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 7.4 (Management)
  **/
 uint8_t Crypto_Prep_Reply(uint8_t *reply, uint8_t appID)
@@ -332,7 +332,7 @@ uint8_t Crypto_Prep_Reply(uint8_t *reply, uint8_t appID)
  * @param buffer: uint8_t*
  * @param length: uint16_t*
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.2 (Protocol Description)
  **/
 int32_t Crypto_Get_Sdls_Ep_Reply(uint8_t *buffer, uint16_t *length)
@@ -371,7 +371,7 @@ int32_t Crypto_Get_Sdls_Ep_Reply(uint8_t *buffer, uint16_t *length)
  * @param ingest: uint8_t*
  * @param len_ingest: int
  * @return uint16: FECF
- * 
+ *
  * CCSDS Compliance: CCSDS 232.0-B-3 Section 4.1.4 (Error Control Field)
  **/
 uint16_t Crypto_Calc_FECF(const uint8_t *ingest, int len_ingest)
@@ -419,7 +419,7 @@ uint16_t Crypto_Calc_FECF(const uint8_t *ingest, int len_ingest)
  * @param data: uint8_t*
  * @param size: int
  * @return uint16: CRC
- * 
+ *
  * CCSDS Compliance: CCSDS 232.0-B-3 Section 4.1.4 (Error Control Field)
  **/
 uint16_t Crypto_Calc_CRC16(uint8_t *data, int size)
@@ -451,7 +451,7 @@ uint8_t gf_mul(uint8_t a, uint8_t b)
  * Frame Header Error Control Field
  * @param data: uint8_t*
  * @return uint16: FHECF
- * 
+ *
  * CCSDS Compliance: CCSDS 732.0-B-4 Section 4.1.2.6 (Frame Header Error Control Field)
  **/
 uint16_t Crypto_Calc_FHECF(uint8_t *data)
@@ -493,7 +493,7 @@ uint16_t Crypto_Calc_FHECF(uint8_t *data)
  * @param ingest: uint8_t*
  * @param tc_frame: TC_t*
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.4.3 (Procedure Type)
  **/
 int32_t Crypto_PDU(uint8_t *ingest, TC_t *tc_frame)
@@ -560,7 +560,7 @@ int32_t Crypto_PDU(uint8_t *ingest, TC_t *tc_frame)
  * @param ingest: uint8_t*
  * @param tc_frame: TC_t*
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.2 (Key Management)
  **/
 int32_t Crypto_SG_KEY_MGMT(uint8_t *ingest, TC_t *tc_frame)
@@ -620,7 +620,7 @@ int32_t Crypto_SG_KEY_MGMT(uint8_t *ingest, TC_t *tc_frame)
  * @param ingest: uint8_t*
  * @param tc_frame: TC_t*
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 7.2 (Security Association Management)
  **/
 int32_t Crypto_SG_SA_MGMT(uint8_t *ingest, TC_t *tc_frame)
@@ -702,7 +702,7 @@ int32_t Crypto_SG_SA_MGMT(uint8_t *ingest, TC_t *tc_frame)
  * Handles security monitoring and control procedures
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 7.3 (Security Monitoring and Control)
  **/
 int32_t Crypto_SEC_MON_CTRL(uint8_t *ingest)
@@ -760,7 +760,7 @@ int32_t Crypto_SEC_MON_CTRL(uint8_t *ingest)
  * Parses User Defined Procedure from PID
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.4.3.3 (User-Defined Procedures)
  **/
 int32_t Crypto_USER_DEFINED_CMD(uint8_t *ingest)
@@ -833,7 +833,7 @@ int32_t Crypto_USER_DEFINED_CMD(uint8_t *ingest)
  * @param managed_parameters_in: GvcidManagedParameters_t*
  * @param managed_parameters_out: GvcidManagedParameters_t*
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 2.4 (Managed Parameters)
  **/
 int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
@@ -881,7 +881,7 @@ int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uin
  * @note - 1) By using a packet layer with APID 0x1980
  * @note - 2) By using a defined Virtual Channel ID
  * @note Requires this to happen on either SPI_MIN (0) or SPI_MAX (configurable)
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.2 (Protocol Description)
  **/
 int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uint8_t *ingest, uint16_t len_ingest)
@@ -1112,7 +1112,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
  * @param arsn: uint8_t*
  * @param iv: uint8_t*
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
  **/
 int32_t Crypto_Check_Anti_Replay_Verify_Pointers(SecurityAssociation_t *sa_ptr, uint8_t *arsn, uint8_t *iv)
@@ -1143,7 +1143,7 @@ int32_t Crypto_Check_Anti_Replay_Verify_Pointers(SecurityAssociation_t *sa_ptr, 
  * @param arsn: uint8_t*
  * @param arsn_valid: uint8_t*
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
  **/
 int32_t Crypto_Check_Anti_Replay_ARSNW(SecurityAssociation_t *sa_ptr, uint8_t *arsn, int8_t *arsn_valid)
@@ -1195,7 +1195,7 @@ int32_t Crypto_Check_Anti_Replay_ARSNW(SecurityAssociation_t *sa_ptr, uint8_t *a
  * @param iv: uint8_t*
  * @param iv_valid: uint8_t*
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
  **/
 int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t *sa_ptr, uint8_t *iv, int8_t *iv_valid)
@@ -1257,7 +1257,7 @@ int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t *sa_ptr, uint8_t *iv,
  * @param arsn: uint8_t*
  * @param iv: uint8_t*
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
  **/
 int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, uint8_t *iv)
@@ -1319,7 +1319,7 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
  * For a given ECS algorithm, return the associated key length in bytes
  * @param algo: uint8_t
  * @return int32: Key Length
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.4.2 (Cryptographic Algorithms)
  **/
 int32_t Crypto_Get_ECS_Algo_Keylen(uint8_t algo)
@@ -1352,7 +1352,7 @@ int32_t Crypto_Get_ECS_Algo_Keylen(uint8_t algo)
  * For a given ACS algorithm, return the associated key length in bytes
  * @param algo: uint8_t
  * @return int32: Key Length
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.4.2 (Cryptographic Algorithms)
  **/
 int32_t Crypto_Get_ACS_Algo_Keylen(uint8_t algo)
@@ -1382,7 +1382,7 @@ int32_t Crypto_Get_ACS_Algo_Keylen(uint8_t algo)
  * Return Security Header Length
  * @param sa_ptr: SecurityAssociation_t*
  * @return int32: Security Header Length
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.3.2 (Security Header)
  **/
 int32_t Crypto_Get_Security_Header_Length(SecurityAssociation_t *sa_ptr)
@@ -1413,7 +1413,7 @@ int32_t Crypto_Get_Security_Header_Length(SecurityAssociation_t *sa_ptr)
  * Return Security Trailer Length
  * @param sa_ptr: SecurityAssociation_t*
  * @return int32: Security Trailer Length
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.3.3 (Security Trailer)
  **/
 int32_t Crypto_Get_Security_Trailer_Length(SecurityAssociation_t *sa_ptr)
@@ -1439,7 +1439,7 @@ int32_t Crypto_Get_Security_Trailer_Length(SecurityAssociation_t *sa_ptr)
  * @param byte_idx: uint16_t
  * @param pdu_len: uint16_t
  * @param sa_ptr: SecurityAssociation_t*
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.5.2 (Alarms Reporting)
  **/
 void Crypto_Set_FSR(uint8_t *p_ingest, uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t *sa_ptr)
@@ -1471,7 +1471,7 @@ void Crypto_Set_FSR(uint8_t *p_ingest, uint16_t byte_idx, uint16_t pdu_len, Secu
  * @brief: Function: Crypto_Get_FSR
  * Gets the Frame Security Report
  * @return uint32: FSR
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.5.2 (Alarms Reporting)
  **/
 uint32_t Crypto_Get_FSR(void)

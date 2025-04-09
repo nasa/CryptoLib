@@ -36,11 +36,11 @@ static int32_t crypto_handle_incrementing_nontransmitted_counter(uint8_t *dest, 
                                                                  int transmitted_len, int window);
 
 // Forward declarations for new functions
-static int32_t Crypto_TC_Validate_Auth_Mask(const uint8_t* abm_buffer, uint16_t abm_len, uint16_t frame_len);
+static int32_t Crypto_TC_Validate_Auth_Mask(const uint8_t *abm_buffer, uint16_t abm_len, uint16_t frame_len);
 
 // Error code definitions for new TC validations
-#define CRYPTO_LIB_ERR_TC_FRAME_TOO_SHORT             -200
-#define CRYPTO_LIB_ERR_TC_AUTH_MASK_INVALID           -201
+#define CRYPTO_LIB_ERR_TC_FRAME_TOO_SHORT   -200
+#define CRYPTO_LIB_ERR_TC_AUTH_MASK_INVALID -201
 
 /**
  * @brief Function: Crypto_TC_Get_SA_Service_Type
@@ -48,7 +48,7 @@ static int32_t Crypto_TC_Validate_Auth_Mask(const uint8_t* abm_buffer, uint16_t 
  * @param sa_service_type: uint8*
  * @param sa_ptr: SecurityAssociation_t*
  * @return int32: ENUM - Service type
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.3 (Security Service Types)
  **/
 int32_t Crypto_TC_Get_SA_Service_Type(uint8_t *sa_service_type, SecurityAssociation_t *sa_ptr)
@@ -91,7 +91,7 @@ int32_t Crypto_TC_Get_SA_Service_Type(uint8_t *sa_service_type, SecurityAssociat
  * @param ecs_is_aead_algorithm: uint8_t*
  * @param sa_ptr: SecurityAssociation_t*
  * @return int32: Cipher Mode or Error Enum
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.4.2 (Cryptographic Algorithms)
  **/
 int32_t Crypto_TC_Get_Ciper_Mode_TCA(uint8_t sa_service_type, uint32_t *encryption_cipher,
@@ -129,8 +129,8 @@ int32_t Crypto_TC_Get_Ciper_Mode_TCA(uint8_t sa_service_type, uint32_t *encrypti
  * Validates the Command Frame Flag
  * @param header_cc: uint8_t
  * @return int32: Success/Failure
- * 
- * CCSDS Compliance: CCSDS 232.0-B-3 Section 6.3.1 
+ *
+ * CCSDS Compliance: CCSDS 232.0-B-3 Section 6.3.1
  * "Type-C frames do not have the Security Header and Security Trailer."
  **/
 int32_t Crypto_TC_Check_CMD_Frame_Flag(uint8_t header_cc)
@@ -158,7 +158,7 @@ int32_t Crypto_TC_Check_CMD_Frame_Flag(uint8_t header_cc)
  * Validates the SA service type
  * @param sa_service_type: uint8_t
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.3 (Security Service Types)
  **/
 int32_t Crypto_TC_Validate_SA_Service_Type(uint8_t sa_service_type)
@@ -184,7 +184,7 @@ int32_t Crypto_TC_Validate_SA_Service_Type(uint8_t sa_service_type)
  * @param tf_payload_len: uint16_t
  * @param sa_ptr: SecurityAssociation_t*
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.2.3 (TC Encryption Processing)
  **/
 int32_t Crypto_TC_Handle_Enc_Padding(uint8_t sa_service_type, uint32_t *pkcs_padding, uint16_t *p_enc_frame_len,
@@ -232,7 +232,7 @@ int32_t Crypto_TC_Handle_Enc_Padding(uint8_t sa_service_type, uint32_t *pkcs_pad
 int32_t Crypto_TC_Frame_Validation(uint16_t *p_enc_frame_len)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    
+
     // Check minimum frame size per CCSDS 232.0-B-3
     if (*p_enc_frame_len < TC_MIN_FRAME_SIZE)
     {
@@ -241,7 +241,7 @@ int32_t Crypto_TC_Frame_Validation(uint16_t *p_enc_frame_len)
         mc_if->mc_log(status);
         return status;
     }
-    
+
     // Check maximum managed parameter size
     if (*p_enc_frame_len > current_managed_parameters_struct.max_frame_size)
     {
@@ -276,7 +276,7 @@ int32_t Crypto_TC_Accio_Buffer(uint8_t **p_new_enc_frame, uint16_t *p_enc_frame_
 {
     int32_t status   = CRYPTO_LIB_SUCCESS;
     *p_new_enc_frame = (uint8_t *)malloc((*p_enc_frame_len) * sizeof(uint8_t));
-    if (!(*p_new_enc_frame))  // Fix the check to properly verify the allocation
+    if (!(*p_new_enc_frame)) // Fix the check to properly verify the allocation
     {
         printf(KRED "Error: Malloc for encrypted output buffer failed! \n" RESET);
         status = CRYPTO_LIB_ERROR;
@@ -292,7 +292,7 @@ int32_t Crypto_TC_Accio_Buffer(uint8_t **p_new_enc_frame, uint16_t *p_enc_frame_
  * Validates authentication cipher
  * @param sa_ptr: SecurityAssociation_t*
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.4.2 (Cryptographic Algorithms)
  **/
 int32_t Crypto_TC_ACS_Algo_Check(SecurityAssociation_t *sa_ptr)
@@ -319,7 +319,7 @@ int32_t Crypto_TC_ACS_Algo_Check(SecurityAssociation_t *sa_ptr)
  * @param p_new_enc_frame: uint8_t*
  * @param index: uint16_t*
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.2.4 (IV Format and Processing)
  **/
 int32_t Crypto_TC_Check_IV_Setup(SecurityAssociation_t *sa_ptr, uint8_t *p_new_enc_frame, uint16_t *index)
@@ -376,7 +376,7 @@ int32_t Crypto_TC_Check_IV_Setup(SecurityAssociation_t *sa_ptr, uint8_t *p_new_e
  * @param cam_cookies: char*
  * @param pkcs_padding: uint32_t
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.2.3 (TC Encryption Processing)
  **/
 int32_t Crypto_TC_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr, uint16_t *mac_loc,
@@ -585,7 +585,7 @@ int32_t Crypto_TC_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr
  * Increments the IV or ARSN
  * @param sa_service_type: uint8_t
  * @param sa_ptr: SecurityAssociation_t*
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
  **/
 void Crypto_TC_Increment_IV_ARSN(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr)
@@ -666,7 +666,7 @@ void Crypto_TC_Increment_IV_ARSN(uint8_t sa_service_type, SecurityAssociation_t 
  * @param new_enc_frame_header_field_length: uint16_t
  * @param new_fecf: uint16_t*
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.2.3 (TC Encryption Processing)
  **/
 int32_t Crypto_TC_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr, uint16_t *mac_loc,
@@ -719,7 +719,7 @@ int32_t Crypto_TC_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
  * Initial setup and validation for TC frames
  * @param in_frame_length: uint16_t
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 232.0-B-3 Section 4.1 (Frame Format)
  **/
 int32_t Crypto_TC_Check_Init_Setup(uint16_t in_frame_length)
@@ -750,7 +750,7 @@ int32_t Crypto_TC_Check_Init_Setup(uint16_t in_frame_length)
  * @param p_in_frame: const uint8_t*
  * @param in_frame_length: const uint16_t
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 232.0-B-3 Section 4.1 (Frame Format)
  **/
 int32_t Crypto_TC_Sanity_Setup(const uint8_t *p_in_frame, const uint16_t in_frame_length)
@@ -797,7 +797,7 @@ int32_t Crypto_TC_Sanity_Setup(const uint8_t *p_in_frame, const uint16_t in_fram
  * @param segmentation_hdr: uint8_t*
  * @param sa_ptr: SecurityAssociation_t**
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 232.0-B-3 Section 4.1.2 (Primary Header)
  **/
 int32_t Crytpo_TC_Validate_TC_Temp_Header(const uint16_t in_frame_length, TC_FramePrimaryHeader_t temp_tc_header,
@@ -866,7 +866,7 @@ int32_t Crytpo_TC_Validate_TC_Temp_Header(const uint16_t in_frame_length, TC_Fra
  * @param sa_ptr: SecurityAssociation_t**
  * @param p_new_enc_frame: uint8_t**
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.2 (TC Security)
  **/
 int32_t Crypto_TC_Finalize_Frame_Setup(uint8_t sa_service_type, uint32_t *pkcs_padding, uint16_t *p_enc_frame_len,
@@ -905,7 +905,7 @@ int32_t Crypto_TC_Finalize_Frame_Setup(uint8_t sa_service_type, uint32_t *pkcs_p
  * @param sa_ptr: SecurityAssociation_t*
  * @param p_new_enc_frame: uint8_t*
  * @param index: uint16_t*
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.2.5 (Padding)
  **/
 void Crypto_TC_Handle_Padding(uint32_t pkcs_padding, SecurityAssociation_t *sa_ptr, uint8_t *p_new_enc_frame,
@@ -942,7 +942,7 @@ void Crypto_TC_Handle_Padding(uint32_t pkcs_padding, SecurityAssociation_t *sa_p
  * @param p_new_enc_frame: uint8_t*
  * @param index: uint16_t*
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.2.4 (IV Format and Processing)
  **/
 int32_t Crypto_TC_Set_IV(SecurityAssociation_t *sa_ptr, uint8_t *p_new_enc_frame, uint16_t *index)
@@ -987,7 +987,7 @@ int32_t Crypto_TC_Set_IV(SecurityAssociation_t *sa_ptr, uint8_t *p_new_enc_frame
  * @param pp_in_frame: uint8_t**
  * @param p_enc_frame_len: uint16_t*
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.2 (TC Security)
  **/
 int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_frame_length, uint8_t **pp_in_frame,
@@ -1005,7 +1005,7 @@ int32_t Crypto_TC_ApplySecurity(const uint8_t *p_in_frame, const uint16_t in_fra
  * @param p_enc_frame_len: uint16_t*
  * @param cam_cookies: char*
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.2 (TC Security)
  **/
 int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, const uint16_t in_frame_length, uint8_t **pp_in_frame,
@@ -1289,7 +1289,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, const uint16_t in
  * @param len_ingest: int*
  * @param tc_sdls_processed_frame: TC_t*
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.2 (TC Security)
  **/
 int32_t Crypto_TC_ProcessSecurity(uint8_t *ingest, int *len_ingest, TC_t *tc_sdls_processed_frame)
@@ -1305,7 +1305,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t *ingest, int *len_ingest, TC_t *tc_sdl
  * @param len_ingest: int*
  * @param tc_sdls_processed_frame: TC_t*
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 232.0-B-3 Section 4.1.4 (Frame Error Control Field)
  **/
 int32_t Crypto_TC_Parse_Check_FECF(uint8_t *ingest, int *len_ingest, TC_t *tc_sdls_processed_frame)
@@ -1344,7 +1344,7 @@ int32_t Crypto_TC_Parse_Check_FECF(uint8_t *ingest, int *len_ingest, TC_t *tc_sd
  * @param sa_ptr: SecurityAssociation_t*
  * @param tc_sdls_processed_frame: TC_t*
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
  **/
 int32_t Crypto_TC_Nontransmitted_IV_Increment(SecurityAssociation_t *sa_ptr, TC_t *tc_sdls_processed_frame)
@@ -1377,7 +1377,7 @@ int32_t Crypto_TC_Nontransmitted_IV_Increment(SecurityAssociation_t *sa_ptr, TC_
  * @param sa_ptr: SecurityAssociation_t*
  * @param tc_sdls_processed_frame: TC_t*
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
  **/
 int32_t Crypto_TC_Nontransmitted_SN_Increment(SecurityAssociation_t *sa_ptr, TC_t *tc_sdls_processed_frame)
@@ -1407,7 +1407,7 @@ int32_t Crypto_TC_Nontransmitted_SN_Increment(SecurityAssociation_t *sa_ptr, TC_
  * @param akp: crypto_key_t*
  * @param sa_ptr: SecurityAssociation_t*
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.4.2 (Cryptographic Algorithms)
  **/
 int32_t Crypto_TC_Check_ACS_Keylen(crypto_key_t *akp, SecurityAssociation_t *sa_ptr)
@@ -1427,7 +1427,7 @@ int32_t Crypto_TC_Check_ACS_Keylen(crypto_key_t *akp, SecurityAssociation_t *sa_
  * @param ekp: crypto_key_t*
  * @param sa_ptr: SecurityAssociation_t*
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.4.2 (Cryptographic Algorithms)
  **/
 int32_t Crypto_TC_Check_ECS_Keylen(crypto_key_t *ekp, SecurityAssociation_t *sa_ptr)
@@ -1448,7 +1448,7 @@ int32_t Crypto_TC_Check_ECS_Keylen(crypto_key_t *ekp, SecurityAssociation_t *sa_
  **/
 void Crypto_TC_Safe_Free_Ptr(uint8_t *ptr)
 {
-    if (ptr)  // Fix the logic to free only if ptr is NOT NULL
+    if (ptr) // Fix the logic to free only if ptr is NOT NULL
         free(ptr);
 }
 
@@ -1468,7 +1468,7 @@ void Crypto_TC_Safe_Free_Ptr(uint8_t *ptr)
  * @param akp: crypto_key_t*
  * @param segment_hdr_len: uint8_t
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.3 (TC Security Processing)
  **/
 int32_t Crypto_TC_Do_Decrypt(uint8_t sa_service_type, uint8_t ecs_is_aead_algorithm, crypto_key_t *ekp,
@@ -1603,7 +1603,7 @@ int32_t Crypto_TC_Do_Decrypt(uint8_t sa_service_type, uint8_t ecs_is_aead_algori
  * Performs sanity checks on TC frame
  * @param len_ingest: int*
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 232.0-B-3 Section 4.1 (Frame Format)
  **/
 int32_t Crypto_TC_Process_Sanity_Check(int *len_ingest)
@@ -1642,7 +1642,7 @@ int32_t Crypto_TC_Process_Sanity_Check(int *len_ingest)
  * @param ingest: uint8_t*
  * @param aad: uint8_t**
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.3.3 (TC Authentication Processing)
  **/
 int32_t Crypto_TC_Prep_AAD(TC_t *tc_sdls_processed_frame, uint8_t fecf_len, uint8_t sa_service_type,
@@ -1700,7 +1700,7 @@ int32_t Crypto_TC_Prep_AAD(TC_t *tc_sdls_processed_frame, uint8_t fecf_len, uint
  * @param akp: crypto_key_t**
  * @param sa_ptr: SecurityAssociation_t*
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.2 (Key Management)
  **/
 int32_t Crypto_TC_Get_Keys(crypto_key_t **ekp, crypto_key_t **akp, SecurityAssociation_t *sa_ptr)
@@ -1755,7 +1755,7 @@ int32_t Crypto_TC_Get_Keys(crypto_key_t **ekp, crypto_key_t **akp, SecurityAssoc
  * @param sa_ptr: SecurityAssociation_t*
  * @param tc_sdls_processed_frame: TC_t*
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
  **/
 int32_t Crypto_TC_Check_IV_ARSN(SecurityAssociation_t *sa_ptr, TC_t *tc_sdls_processed_frame)
@@ -1801,7 +1801,7 @@ int32_t Crypto_TC_Check_IV_ARSN(SecurityAssociation_t *sa_ptr, TC_t *tc_sdls_pro
  * @param tc_sdls_processed_frame: TC_t*
  * @param sa_ptr: SecurityAssociation_t**
  * @return uint32: Status code
- * 
+ *
  * CCSDS Compliance: CCSDS 232.0-B-3 Section 4.1 (Frame Format)
  **/
 uint32_t Crypto_TC_Sanity_Validations(TC_t *tc_sdls_processed_frame, SecurityAssociation_t **sa_ptr)
@@ -1830,7 +1830,7 @@ uint32_t Crypto_TC_Sanity_Validations(TC_t *tc_sdls_processed_frame, SecurityAss
  * @param encryption_cipher: uint32_t*
  * @param ecs_is_aead_algorithm: uint8_t*
  * @param sa_ptr: SecurityAssociation_t*
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.4.2 (Cryptographic Algorithms)
  **/
 void Crypto_TC_Get_Ciper_Mode_TCP(uint8_t sa_service_type, uint32_t *encryption_cipher, uint8_t *ecs_is_aead_algorithm,
@@ -1849,7 +1849,7 @@ void Crypto_TC_Get_Ciper_Mode_TCP(uint8_t sa_service_type, uint32_t *encryption_
  * @param fecf_len: uint8_t*
  * @param segment_hdr_len: uint8_t*
  * @param ocf_len: uint8_t*
- * 
+ *
  * CCSDS Compliance: CCSDS 232.0-B-3 Section 4.1 (Frame Format)
  **/
 void Crypto_TC_Calc_Lengths(uint8_t *fecf_len, uint8_t *segment_hdr_len, uint8_t *ocf_len)
@@ -1876,7 +1876,7 @@ void Crypto_TC_Calc_Lengths(uint8_t *fecf_len, uint8_t *segment_hdr_len, uint8_t
  * @param tc_sdls_processed_frame: TC_t*
  * @param ingest: uint8_t*
  * @param byte_idx: int*
- * 
+ *
  * CCSDS Compliance: CCSDS 232.0-B-3 Section 4.1.3 (Segment Header)
  **/
 void Crypto_TC_Set_Segment_Header(TC_t *tc_sdls_processed_frame, uint8_t *ingest, int *byte_idx)
@@ -1898,7 +1898,7 @@ void Crypto_TC_Set_Segment_Header(TC_t *tc_sdls_processed_frame, uint8_t *ingest
  * @param tc_sdls_processed_frame: TC_t*
  * @param cam_cookies: char*
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.3 (TC Security Processing)
  **/
 int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc_sdls_processed_frame,
@@ -2136,14 +2136,14 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
  * @param len_aad: uint16_t
  * @param abm_buffer: const uint8_t*
  * @return uint8_t*: AAD buffer
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.3.3 (TC Authentication Processing)
  **/
 uint8_t *Crypto_Prepare_TC_AAD(const uint8_t *buffer, uint16_t len_aad, const uint8_t *abm_buffer)
 {
-    int32_t   status = CRYPTO_LIB_SUCCESS;
-    int       i;
-    uint8_t  *aad;
+    int32_t  status = CRYPTO_LIB_SUCCESS;
+    int      i;
+    uint8_t *aad;
 
     // Validate inputs
     if (buffer == NULL || abm_buffer == NULL)
@@ -2225,7 +2225,7 @@ static int32_t validate_sa_index(SecurityAssociation_t *sa)
  * Validates Security Association for TC
  * @param sa: SecurityAssociation_t*
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Table A6 (Security Association)
  **/
 static int32_t crypto_tc_validate_sa(SecurityAssociation_t *sa)
@@ -2273,7 +2273,7 @@ static int32_t crypto_tc_validate_sa(SecurityAssociation_t *sa)
  * @param transmitted_len: int
  * @param window: int
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
  **/
 static int32_t crypto_handle_incrementing_nontransmitted_counter(uint8_t *dest, uint8_t *src, int src_full_len,
@@ -2344,10 +2344,10 @@ static int32_t crypto_handle_incrementing_nontransmitted_counter(uint8_t *dest, 
  * @param abm_len: uint16_t
  * @param frame_len: uint16_t
  * @return int32: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.3.3 (TC Authentication Processing)
  **/
-static int32_t Crypto_TC_Validate_Auth_Mask(const uint8_t* abm_buffer, uint16_t abm_len, uint16_t frame_len)
+static int32_t Crypto_TC_Validate_Auth_Mask(const uint8_t *abm_buffer, uint16_t abm_len, uint16_t frame_len)
 {
     if (abm_buffer == NULL)
     {

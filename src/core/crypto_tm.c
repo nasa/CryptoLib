@@ -30,11 +30,9 @@
  */
 
 // Forward declarations
-static int32_t Crypto_TM_Validate_Auth_Mask(const uint8_t* abm_buffer, uint16_t abm_len, uint16_t frame_len);
-static uint16_t Crypto_TM_FECF_Calculate(const uint8_t* data, uint16_t length, uint8_t is_encrypted);
-int32_t Crypto_TM_FECF_Validate(uint8_t *p_ingest, uint16_t len_ingest, SecurityAssociation_t *sa_ptr);
-
-
+static int32_t  Crypto_TM_Validate_Auth_Mask(const uint8_t *abm_buffer, uint16_t abm_len, uint16_t frame_len);
+static uint16_t Crypto_TM_FECF_Calculate(const uint8_t *data, uint16_t length, uint8_t is_encrypted);
+int32_t         Crypto_TM_FECF_Validate(uint8_t *p_ingest, uint16_t len_ingest, SecurityAssociation_t *sa_ptr);
 
 /**
  * @brief Function: Crypto_TM_Sanity_Check
@@ -69,7 +67,7 @@ int32_t Crypto_TM_Sanity_Check(uint8_t *pTfBuffer)
  * @param sa_service_type: uint8_t*
  * @param sa_ptr: SecurityAssociation_t*
  * @return int32_t: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.3 (Security Service Types)
  **/
 int32_t Crypto_TM_Determine_SA_Service_Type(uint8_t *sa_service_type, SecurityAssociation_t *sa_ptr)
@@ -147,7 +145,7 @@ void Crypto_TM_Check_For_Secondary_Header(uint8_t *pTfBuffer, uint16_t *idx)
  * @param sa_service_type: uint8_t*
  * @param sa_ptr: SecurityAssociation_t*
  * @return int32_t: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.2.4 (IV Format and Processing)
  **/
 int32_t Crypto_TM_IV_Sanity_Check(uint8_t *sa_service_type, SecurityAssociation_t *sa_ptr)
@@ -201,7 +199,7 @@ int32_t Crypto_TM_IV_Sanity_Check(uint8_t *sa_service_type, SecurityAssociation_
  * @param cipher: uint32_t - Encryption cipher
  * @param data_len: uint16_t - Length of data to pad
  * @return uint32_t: Required padding in bytes
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.3.3 (TM Encryption Processing)
  **/
 uint32_t Crypto_TM_Calculate_Padding(uint32_t cipher, uint16_t data_len)
@@ -215,8 +213,9 @@ uint32_t Crypto_TM_Calculate_Padding(uint32_t cipher, uint16_t data_len)
         case CRYPTO_CIPHER_AES256_CBC:
         case CRYPTO_CIPHER_AES256_CBC_MAC:
             block_size = 16; // AES block size is 16 bytes
-            padding = block_size - (data_len % block_size);
-            if (padding == block_size) padding = 0;
+            padding    = block_size - (data_len % block_size);
+            if (padding == block_size)
+                padding = 0;
             break;
 
         case CRYPTO_CIPHER_AES256_GCM:
@@ -240,12 +239,12 @@ uint32_t Crypto_TM_Calculate_Padding(uint32_t cipher, uint16_t data_len)
  * @param sa_ptr: SecurityAssociation_t* - Security association
  * @param pTfBuffer: uint8_t* - Frame buffer
  * @param idx_p: uint16_t* - Current index
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.3.3 (TM Encryption Processing)
  **/
 void Crypto_TM_PKCS_Padding(uint32_t *pkcs_padding, SecurityAssociation_t *sa_ptr, uint8_t *pTfBuffer, uint16_t *idx_p)
 {
-    uint16_t idx = *idx_p;
+    uint16_t idx      = *idx_p;
     uint16_t data_len = current_managed_parameters_struct.max_frame_size - idx - sa_ptr->stmacf_len;
 
     // Calculate required padding based on cipher
@@ -254,7 +253,7 @@ void Crypto_TM_PKCS_Padding(uint32_t *pkcs_padding, SecurityAssociation_t *sa_pt
     if (*pkcs_padding > 0)
     {
         uint8_t hex_padding[3] = {0};
-        *pkcs_padding = *pkcs_padding & 0x00FFFFFF; // Truncate to max 3 bytes
+        *pkcs_padding          = *pkcs_padding & 0x00FFFFFF; // Truncate to max 3 bytes
 
         // Convert padding to bytes
         hex_padding[0] = (*pkcs_padding >> 16) & 0xFF;
@@ -299,7 +298,7 @@ void Crypto_TM_Handle_Managed_Parameter_Flags(uint16_t *pdu_len)
  * @param akp: crypto_key_t**
  * @param sa_ptr: SecurityAssociation_t*
  * @return int32_t: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.3 (Key Management)
  **/
 int32_t Crypto_TM_Get_Keys(crypto_key_t **ekp, crypto_key_t **akp, SecurityAssociation_t *sa_ptr)
@@ -359,7 +358,7 @@ int32_t Crypto_TM_Get_Keys(crypto_key_t **ekp, crypto_key_t **akp, SecurityAssoc
  * @param aad: uint8_t*
  * @param sa_ptr: SecurityAssociation_t*
  * @return int32_t: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.3.3 (TM Encryption Processing)
  **/
 int32_t Crypto_TM_Do_Encrypt_NONPLAINTEXT(uint8_t sa_service_type, uint16_t *aad_len, int *mac_loc, uint16_t *idx_p,
@@ -424,7 +423,7 @@ int32_t Crypto_TM_Do_Encrypt_NONPLAINTEXT(uint8_t sa_service_type, uint16_t *aad
  * @param aad: uint8_t*
  * @param sa_ptr: SecurityAssociation_t*
  * @return int32_t: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.3.3 (TM Encryption Processing)
  **/
 int32_t Crypto_TM_Do_Encrypt_NONPLAINTEXT_AEAD_Logic(uint8_t sa_service_type, uint8_t ecs_is_aead_algorithm,
@@ -545,7 +544,7 @@ int32_t Crypto_TM_Do_Encrypt_NONPLAINTEXT_AEAD_Logic(uint8_t sa_service_type, ui
  * @param sa_service_type: uint8_t
  * @param sa_ptr: SecurityAssociation_t*
  * @return int32_t: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
  **/
 int32_t Crypto_TM_Do_Encrypt_Handle_Increment(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr)
@@ -626,7 +625,7 @@ int32_t Crypto_TM_Do_Encrypt_Handle_Increment(uint8_t sa_service_type, SecurityA
  * @param pkcs_padding: uint32_t
  * @param new_fecf: uint16_t*
  * @return int32_t: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.3.3 (TM Encryption Processing)
  **/
 int32_t Crypto_TM_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr, uint16_t *aad_len, int *mac_loc,
@@ -770,7 +769,7 @@ void Crypto_TM_ApplySecurity_Debug_Print(uint16_t idx, uint16_t pdu_len, Securit
  * parameter includes the Security Header field. When the ApplySecurity Function is
  * called, the Security Header field is empty; i.e., the caller has not set any values in the
  * Security Header
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.2 (SDLS Protocol)
  **/
 int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
@@ -1362,7 +1361,7 @@ int32_t Crypto_TM_Parse_Mac_Prep_AAD(uint8_t sa_service_type, uint8_t *p_ingest,
  * @param aad_len: uint16_t
  * @param aad:  uint8_t*
  * @return int32_t: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.3.4 (TM Decryption Processing)
  */
 int32_t Crypto_TM_Do_Decrypt_AEAD(uint8_t sa_service_type, uint8_t *p_ingest, uint8_t *p_new_dec_frame,
@@ -1426,7 +1425,7 @@ int32_t Crypto_TM_Do_Decrypt_AEAD(uint8_t sa_service_type, uint8_t *p_ingest, ui
  * @param aad_len: uint16_t
  * @param aad: uint8_t
  * @return int32_t: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.3.4 (TM Decryption Processing)
  */
 int32_t Crypto_TM_Do_Decrypt_NONAEAD(uint8_t sa_service_type, uint16_t pdu_len, uint8_t *p_new_dec_frame,
@@ -1495,7 +1494,7 @@ int32_t Crypto_TM_Do_Decrypt_NONAEAD(uint8_t sa_service_type, uint16_t pdu_len, 
  * @param sa_ptr: SecurityAssociation_t*
  * @param mac_loc: int*
  * @return int32_t: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.3.2 (TM Security Trailer)
  */
 void Crypto_TM_Calc_PDU_MAC(uint16_t *pdu_len, uint16_t byte_idx, SecurityAssociation_t *sa_ptr, int *mac_loc)
@@ -1886,10 +1885,10 @@ void Crypto_TM_updateOCF(Telemetry_Frame_Ocf_Fsr_t *report, TM_t *tm_frame)
  * @param abm_len: uint16_t - Length of authentication bit mask
  * @param frame_len: uint16_t - Length of frame to be authenticated
  * @return int32_t: Success/Failure
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 7.2 (Authentication Processing)
  **/
-static int32_t Crypto_TM_Validate_Auth_Mask(const uint8_t* abm_buffer, uint16_t abm_len, uint16_t frame_len)
+static int32_t Crypto_TM_Validate_Auth_Mask(const uint8_t *abm_buffer, uint16_t abm_len, uint16_t frame_len)
 {
     if (abm_buffer == NULL)
     {
@@ -1920,7 +1919,7 @@ static int32_t Crypto_TM_Validate_Auth_Mask(const uint8_t* abm_buffer, uint16_t 
  * @param abm_buffer: uint8_t*
  * @param aad: uint8_t*
  * @return status: uint32_t
- * 
+ *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 7.2.3 (AAD Construction)
  **/
 uint32_t Crypto_Prepare_TM_AAD(const uint8_t *buffer, uint16_t len_aad, const uint8_t *abm_buffer, uint8_t *aad)
@@ -1967,7 +1966,6 @@ uint32_t Crypto_Prepare_TM_AAD(const uint8_t *buffer, uint16_t len_aad, const ui
     return status;
 }
 
-
 /**
  * @brief Function: Crypto_TM_FECF_Calculate
  * Calculates FECF over frame data per CCSDS 132.0-B-3
@@ -1978,11 +1976,11 @@ uint32_t Crypto_Prepare_TM_AAD(const uint8_t *buffer, uint16_t len_aad, const ui
  * 
  * CCSDS Compliance: CCSDS 132.0-B-3 Section 4.1.4 (Frame Error Control Field)
  **/
-static uint16_t Crypto_TM_FECF_Calculate(const uint8_t* data, uint16_t length, uint8_t is_encrypted)
+static uint16_t Crypto_TM_FECF_Calculate(const uint8_t *data, uint16_t length, uint8_t is_encrypted)
 {
     uint16_t crc = 0xFFFF;
     uint16_t i;
-    uint8_t byte;
+    uint8_t  byte;
 
     // For encrypted data, FECF is calculated over the ciphertext
     // This parameter allows for future encryption-specific FECF calculation if needed
@@ -1996,7 +1994,7 @@ static uint16_t Crypto_TM_FECF_Calculate(const uint8_t* data, uint16_t length, u
         {
             if (crc & 0x8000)
             {
-                crc = (crc << 1) ^ 0x1021;  // CRC-16-CCITT polynomial
+                crc = (crc << 1) ^ 0x1021; // CRC-16-CCITT polynomial
             }
             else
             {
@@ -2029,7 +2027,7 @@ int32_t Crypto_TM_FECF_Validate(uint8_t *p_ingest, uint16_t len_ingest, Security
         if (crypto_config.crypto_check_fecf == TM_CHECK_FECF_TRUE)
         {
             // Calculate FECF over appropriate data
-            uint8_t is_encrypted = (sa_ptr->est == 1);
+            uint8_t  is_encrypted    = (sa_ptr->est == 1);
             uint16_t calculated_fecf = Crypto_TM_FECF_Calculate(p_ingest, len_ingest - 2, is_encrypted);
 
             // Compare FECFs
@@ -2057,4 +2055,3 @@ int32_t Crypto_TM_FECF_Validate(uint8_t *p_ingest, uint16_t len_ingest, Security
     }
     return status;
 }
-
