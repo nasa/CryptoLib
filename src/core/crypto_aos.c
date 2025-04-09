@@ -87,9 +87,9 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         return status; // return immediately so a NULL crypto_config is not dereferenced later
     }
 
-    tfvn = ((uint8_t)pTfBuffer[0] & 0xC0) >> 6;
-    scid = (((uint16_t)pTfBuffer[0] & 0x3F) << 2) | (((uint16_t)pTfBuffer[1] & 0xC0) >> 6);
-    vcid = ((uint8_t)pTfBuffer[1] & 0x3F);
+    tfvn = (pTfBuffer[0] & 0xC0) >> 6;
+    scid = ((pTfBuffer[0] & 0x3F) << 2) | ((pTfBuffer[1] & 0xC0) >> 6);
+    vcid = (pTfBuffer[1] & 0x3F);
 
 #ifdef AOS_DEBUG
     printf(KYEL "\n----- Crypto_AOS_ApplySecurity START -----\n" RESET);
@@ -101,7 +101,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     printf("\tPriHdr as follows:\n\t\t");
     for (int i = 0; i < 6; i++)
     {
-        printf("%02X", (uint8_t)pTfBuffer[i]);
+        printf("%02X", pTfBuffer[i]);
     }
     printf("\n");
 #endif
@@ -375,47 +375,33 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
      * cryptographic process, consisting of an integral number of octets. - CCSDS 3550b1
      **/
     // TODO: Set this depending on crypto cipher used
-
-    if (pkcs_padding)
+    int padding_length = 0;
+    if (sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC || sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC_MAC)
     {
-        uint8_t hex_padding[3] = {0};                       // TODO: Create #Define for the 3
-        pkcs_padding           = pkcs_padding & 0x00FFFFFF; // Truncate to be maxiumum of 3 bytes in size
-
-        // Byte Magic
-        hex_padding[0] = (pkcs_padding >> 16) & 0xFF;
-        hex_padding[1] = (pkcs_padding >> 8) & 0xFF;
-        hex_padding[2] = (pkcs_padding)&0xFF;
-
-        uint8_t padding_start = 0;
-        padding_start         = 3 - sa_ptr->shplf_len;
-
         for (i = 0; i < sa_ptr->shplf_len; i++)
         {
-            pTfBuffer[idx] = hex_padding[padding_start++];
+            padding_length =  (padding_length << 8) | (uint8_t)pTfBuffer[idx];
             idx++;
         }
+        pkcs_padding = padding_length;
     }
 
+    if (pkcs_padding < cbc_padding)
+    {
+        status = CRYPTO_LIB_ERROR;
+        printf(KRED "Error: pkcs_padding length %d is less than required %d\n" RESET, pkcs_padding, cbc_padding);
+        mc_if->mc_log(status);
+        return status;
+    }
     /**
      * End Security Header Fields
      **/
 
-    // TODO: Padding handled here, or TO?
-    //  for (uint32_t i = 0; i < pkcs_padding; i++)
-    //  {
-    //      /** 4.1.1.5.2 The Pad Length field shall contain the count of fill bytes used in the
-    //       * cryptographic process, consisting of an integral number of octets. - CCSDS 3550b1
-    //       **/
-    //      // TODO: Set this depending on crypto cipher used
-    //     * (p_new_enc_frame + index + i) = (uint8_t)pkcs_padding; // How much padding is needed?
-    //      // index++;
-    //  }
 
     /**
      * ~~~Index currently at start of data field, AKA end of security header~~~
      **/
     data_loc = idx;
-    printf("IDX: %d", idx);
     // Calculate size of data to be encrypted
     pdu_len = current_managed_parameters_struct.max_frame_size - idx - sa_ptr->stmacf_len;
 
@@ -458,6 +444,35 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         printf(KYEL "FECF Location is: %d\n" RESET, current_managed_parameters_struct.max_frame_size - 2);
     }
 #endif
+
+    int padding_location = idx + pdu_len;
+    // done with data field, now add padding
+    if (pkcs_padding)
+    {
+        uint8_t hex_padding[3]    = {0};                       // TODO: Create #Define for the 3
+        hex_padding[0]            = 0x00;               // Prevent set but not used warning
+        hex_padding[1]            = 0x00;               // Prevent set but not used warning
+        hex_padding[2]            = 0x00;               // Prevent set but not used warning
+        pkcs_padding              = pkcs_padding & 0x00FFFFFF; // Truncate to be maxiumum of 3 bytes in size
+
+        for (i = 0; i < sa_ptr->shplf_len; i++){
+            hex_padding[i] = (pkcs_padding >> (8 * (sa_ptr->shplf_len - i - 1))) & 0xFF;
+        }
+
+#ifdef AOS_DEBUG
+        printf("pkcs_padding: %d\n", (int)pkcs_padding);
+#endif
+        for (i = 0; i < (int)pkcs_padding; i++)
+        {
+            for (int j = 0; j < sa_ptr->shplf_len; j++){
+                pTfBuffer[padding_location] = hex_padding[j];
+                padding_location++;
+                if (j != sa_ptr->shplf_len - 1){
+                    i++;
+                }
+            }
+        }
+    }
 
     // Get Key
     crypto_key_t *ekp = NULL;
@@ -615,7 +630,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
                             sa_ptr->iv,     // IV
                             sa_ptr->iv_len, // IV Length
                             &sa_ptr->ecs,   // encryption cipher
-                            pkcs_padding,   // authentication cipher
+                            pkcs_padding,   // padding length
                             NULL);
             }
         }
