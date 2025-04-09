@@ -380,7 +380,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     {
         for (i = 0; i < sa_ptr->shplf_len; i++)
         {
-            padding_length =  (padding_length << 8) | (uint8_t)pTfBuffer[idx];
+            padding_length = (padding_length << 8) | (uint8_t)pTfBuffer[idx];
             idx++;
         }
         pkcs_padding = padding_length;
@@ -396,7 +396,6 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     /**
      * End Security Header Fields
      **/
-
 
     /**
      * ~~~Index currently at start of data field, AKA end of security header~~~
@@ -449,13 +448,14 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     // done with data field, now add padding
     if (pkcs_padding)
     {
-        uint8_t hex_padding[3]    = {0};                       // TODO: Create #Define for the 3
-        hex_padding[0]            = 0x00;               // Prevent set but not used warning
-        hex_padding[1]            = 0x00;               // Prevent set but not used warning
-        hex_padding[2]            = 0x00;               // Prevent set but not used warning
-        pkcs_padding              = pkcs_padding & 0x00FFFFFF; // Truncate to be maxiumum of 3 bytes in size
+        uint8_t hex_padding[3] = {0};                       // TODO: Create #Define for the 3
+        hex_padding[0]         = 0x00;                      // Prevent set but not used warning
+        hex_padding[1]         = 0x00;                      // Prevent set but not used warning
+        hex_padding[2]         = 0x00;                      // Prevent set but not used warning
+        pkcs_padding           = pkcs_padding & 0x00FFFFFF; // Truncate to be maxiumum of 3 bytes in size
 
-        for (i = 0; i < sa_ptr->shplf_len; i++){
+        for (i = 0; i < sa_ptr->shplf_len; i++)
+        {
             hex_padding[i] = (pkcs_padding >> (8 * (sa_ptr->shplf_len - i - 1))) & 0xFF;
         }
 
@@ -464,10 +464,12 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
 #endif
         for (i = 0; i < (int)pkcs_padding; i++)
         {
-            for (int j = 0; j < sa_ptr->shplf_len; j++){
+            for (int j = 0; j < sa_ptr->shplf_len; j++)
+            {
                 pTfBuffer[padding_location] = hex_padding[j];
                 padding_location++;
-                if (j != sa_ptr->shplf_len - 1){
+                if (j != sa_ptr->shplf_len - 1)
+                {
                     i++;
                 }
             }
