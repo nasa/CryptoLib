@@ -10,7 +10,7 @@
 static jmp_buf crash_jmp_buf;
 
 #define TC_MAX_FRAME_SIZE 1024
-#define MAX_FRAME_SIZE 1786
+#define MAX_FRAME_SIZE    1786
 static uint8_t tc_frame_buffer[TC_MAX_FRAME_SIZE];
 static uint8_t tm_frame_buffer[MAX_FRAME_SIZE];
 static uint8_t aos_frame_buffer[MAX_FRAME_SIZE];
@@ -75,18 +75,18 @@ static uint8_t *create_tc_frame(const uint8_t *data, size_t size, size_t *out_si
 
     if (frame_size > TC_MAX_FRAME_SIZE)
     {
-        frame_size = TC_MAX_FRAME_SIZE-1;
+        frame_size = TC_MAX_FRAME_SIZE - 1;
     }
     *out_size = frame_size;
 
     if (size < MIN_TC_SIZE)
     {
         memset(tc_frame_buffer, 0, MIN_TC_SIZE);
-        tc_frame_buffer[0] = 0x20; // Version 1, Type TC
-        tc_frame_buffer[1] = 0x03; // SCID
+        tc_frame_buffer[0] = 0x20;                              // Version 1, Type TC
+        tc_frame_buffer[1] = 0x03;                              // SCID
         tc_frame_buffer[2] = 0x00 | ((uint8_t)frame_size >> 8); // VCID
-        tc_frame_buffer[3] = ((uint8_t)frame_size) & 0xFF; // Frame length
-        tc_frame_buffer[4] = 0x00; // Frame Sequence Number
+        tc_frame_buffer[3] = ((uint8_t)frame_size) & 0xFF;      // Frame length
+        tc_frame_buffer[4] = 0x00;                              // Frame Sequence Number
     }
     else
     {
@@ -99,12 +99,12 @@ static uint8_t *create_tc_frame(const uint8_t *data, size_t size, size_t *out_si
 static uint8_t *create_tm_frame(const uint8_t *data, size_t size, size_t *out_size)
 {
     const size_t MIN_TM_SIZE = 1786;
-                 size        = MIN_TM_SIZE;
-    size_t       frame_size  = (size < MIN_TM_SIZE) ? MIN_TM_SIZE : size;
+    size                     = MIN_TM_SIZE;
+    size_t frame_size        = (size < MIN_TM_SIZE) ? MIN_TM_SIZE : size;
 
     if (frame_size > MAX_FRAME_SIZE)
     {
-        frame_size = MAX_FRAME_SIZE-1;
+        frame_size = MAX_FRAME_SIZE - 1;
     }
     *out_size = frame_size;
 
@@ -128,12 +128,12 @@ static uint8_t *create_tm_frame(const uint8_t *data, size_t size, size_t *out_si
 static uint8_t *create_aos_frame(const uint8_t *data, size_t size, size_t *out_size)
 {
     const size_t MIN_AOS_SIZE = 1786;
-                 size = MIN_AOS_SIZE;
-    size_t       frame_size   = (size < MIN_AOS_SIZE) ? MIN_AOS_SIZE : size;
+    size                      = MIN_AOS_SIZE;
+    size_t frame_size         = (size < MIN_AOS_SIZE) ? MIN_AOS_SIZE : size;
 
     if (frame_size > MAX_FRAME_SIZE)
     {
-        frame_size = MAX_FRAME_SIZE-1;
+        frame_size = MAX_FRAME_SIZE - 1;
     }
     *out_size = frame_size;
 
