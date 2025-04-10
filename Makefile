@@ -21,9 +21,6 @@ all:
 
 clean:
 	rm -rf ./build
-	rm -rf ./build-asan
-	rm -rf ./build-cmplog
-	rm -rf ./build-compcov
 	rm -rf ./docs/wiki/_build
 
 debug:

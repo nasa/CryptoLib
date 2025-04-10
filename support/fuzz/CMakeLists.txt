@@ -1,10 +1,9 @@
 # Include necessary directories
-include_directories(include)
-include_directories(../include)
-include_directories(../test/include)
+include_directories(../../include)
+include_directories(../../test/include)
 
 # Create shared utils library from test code
-add_library(shared_utils STATIC ../test/core/shared_util.c)
+add_library(shared_utils STATIC ../../test/core/shared_util.c)
 
 # Build the fuzzing harness
 add_executable(fuzz_harness src/fuzz_harness.c)

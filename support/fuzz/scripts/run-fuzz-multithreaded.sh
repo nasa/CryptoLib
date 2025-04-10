@@ -4,10 +4,10 @@
 # MEM_LIMIT=128                                       # Memory limit for AFL++
 SEEDS_DIR="../corpus"                                 # Directory containing grammar mutator seed files
 OUT_DIR="../output"                                   # AFL++ output directory
-TARGET_BINARY="../../build/bin/fuzz_harness"          # Default build target
-ASAN_BINARY="../../build-asan/bin/fuzz_harness"       # ASan build target
-CMPLOG_BINARY="../../build-cmplog/bin/fuzz_harness"   # CMPLOG build target
-COMPCOV_BINARY="../../build-compcov/bin/fuzz_harness" # CompCov (laf-intel) build target
+TARGET_BINARY="../../../build/fuzz/bin/fuzz_harness"          # Default build target
+ASAN_BINARY="../../../build/fuzz-asan/bin/fuzz_harness"       # ASan build target
+CMPLOG_BINARY="../../../build/fuzz-cmplog/bin/fuzz_harness"   # CMPLOG build target
+COMPCOV_BINARY="../../../build/fuzz-compcov/bin/fuzz_harness" # CompCov (laf-intel) build target
 NUM_CORES=$(($(nproc) - 2))                           # Use all cores except 2 for OS
 
 # === CHECK IF AFL++ AND SCREEN ARE INSTALLED ===

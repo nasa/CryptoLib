@@ -6,7 +6,8 @@
 ENABLE_OPTIMIZATIONS=1
 
 # Navigate to project root directory
-PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+cd ../../..
+PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$PROJECT_ROOT"
 echo "🏠 Working from project root: $PROJECT_ROOT"
 
@@ -58,8 +59,8 @@ fi
 # === Compile without ASan ===
 echo "🔨 Compiling CryptoLib without ASan..."
 rm -rf build
-mkdir build && cd build
-cmake .. -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX \
+mkdir -p build/fuzz && cd build/fuzz
+cmake $PROJECT_ROOT -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX \
   -DCMAKE_C_FLAGS="$OPT_FLAGS" \
   -DCMAKE_CXX_FLAGS="$OPT_FLAGS" \
   -DCMAKE_EXE_LINKER_FLAGS="-flto" \
@@ -74,9 +75,9 @@ cd ..
 
 # === Compile with ASan ===
 echo "🔨 Compiling CryptoLib with ASan..."
-rm -rf build-asan
-mkdir build-asan && cd build-asan
-cmake .. -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX \
+rm -rf fuzz-asan
+mkdir fuzz-asan && cd fuzz-asan
+cmake $PROJECT_ROOT -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX \
   -DCMAKE_C_FLAGS="-fsanitize=address $OPT_FLAGS" \
   -DCMAKE_CXX_FLAGS="-fsanitize=address $OPT_FLAGS" \
   -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address -flto" \
@@ -91,10 +92,10 @@ cd ..
 
 # === Compile with CmpLog ===
 echo "🔨 Compiling CryptoLib with CmpLog instrumentation..."
-rm -rf build-cmplog
-mkdir build-cmplog && cd build-cmplog
+rm -rf fuzz-cmplog
+mkdir fuzz-cmplog && cd fuzz-cmplog
 export AFL_LLVM_CMPLOG=1 # Enable CmpLog instrumentation
-cmake .. -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX \
+cmake $PROJECT_ROOT -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX \
   -DCMAKE_C_FLAGS="$OPT_FLAGS" \
   -DCMAKE_CXX_FLAGS="$OPT_FLAGS" \
   -DCRYPTO_LIBGCRYPT=ON \
@@ -109,10 +110,10 @@ cd ..
 
 # === Compile with CompCov (laf-intel) ===
 echo "🔨 Compiling CryptoLib with CompCov (laf-intel) instrumentation..."
-rm -rf build-compcov
-mkdir build-compcov && cd build-compcov
+rm -rf fuzz-compcov
+mkdir fuzz-compcov && cd fuzz-compcov
 export AFL_LLVM_LAF_ALL=1 # Enable CompCov instrumentation
-cmake .. -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX \
+cmake $PROJECT_ROOT -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX \
   -DCMAKE_C_FLAGS="$OPT_FLAGS" \
   -DCMAKE_CXX_FLAGS="$OPT_FLAGS" \
   -DCRYPTO_LIBGCRYPT=ON \
@@ -127,10 +128,10 @@ cd ..
 
 # === Final Status ===
 echo "✅ Build complete!"
-echo "📂 Non-ASan build:     'build/'"
-echo "📂 ASan build:         'build-asan/'"
-echo "📂 CmpLog build:       'build-cmplog/'"
-echo "📂 CompCov (laf-intel) build: 'build-compcov/'"
+echo "📂 Non-ASan build:     'build/fuzz/'"
+echo "📂 ASan build:         'build/fuzz-asan/'"
+echo "📂 CmpLog build:       'build/fuzz-cmplog/'"
+echo "📂 CompCov (laf-intel) build: 'build/fuzz-compcov/'"
 echo ""
 echo "To run fuzzing with AFL++:"
 echo "$(dirname "$0")/run-fuzz-multithreaded.sh"

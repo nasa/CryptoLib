@@ -212,5 +212,5 @@ if(TEST)
 endif()
 
 if(ENABLE_FUZZING)
-    add_subdirectory(fuzz)
+    add_subdirectory(./support/fuzz)
 endif()

@@ -24,8 +24,6 @@ DartConfiguration.tcl
 sa_save_file.bin
 bin/*
 CMakeFiles/*
-fuzz/corpus/
-fuzz/output/
 src/cmake_install.cmake
 src/CTestTestfile.cmake
 src/CMakeFiles/*
@@ -35,6 +33,8 @@ test/CMakeFiles/*
 Testing/Temporary/*
 docs/wiki/_build
 docs/wiki/_templates
+support/fuzz/corpus/
+support/fuzz/output/
 support/scripts/src/*
 support/scripts/test/*
 support/scripts/bin/*
