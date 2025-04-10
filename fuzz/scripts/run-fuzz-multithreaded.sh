@@ -21,6 +21,15 @@ if ! command -v screen &>/dev/null; then
   exit 1
 fi
 
+# === CHECK IF USING VIRTUALBOX SHARED FOLDERS ===
+TARGET_GROUP="vboxsf"
+SCRIPT_PATH=$(readlink -f "$0")
+SCRIPT_GROUP=$(stat -c "%G" "$SCRIPT_PATH")
+if [ "$SCRIPT_GROUP" = "$TARGET_GROUP" ]; then
+  echo "ERROR - This script belongs to the group: $TARGET_GROUP - fuzzer not compatible with shared folders!"
+  exit 0
+fi
+
 # === EXPORT GLOBAL ENVIRONMENT VARIABLES ===
 export AFL_TESTCACHE_SIZE=100     # Enable caching of test cases
 export AFL_IMPORT_FIRST=1         # Prioritize loading test cases from other fuzzers
