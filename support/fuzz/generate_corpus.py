@@ -2,7 +2,6 @@
 
 import os
 import random
-import struct
 import argparse
 from pathlib import Path
 
@@ -18,53 +17,42 @@ def generate_random_bytes(min_size, max_size):
     return bytes(random.randint(0, 255) for _ in range(size))
 
 
-def generate_tc_frame(random_content=True):
+def generate_tc_frame():
     """Generate a TC frame with valid-looking header"""
-    if random_content:
-        frame_size = random.randint(10, 200)
-        frame = bytearray(generate_random_bytes(frame_size, frame_size))
-    else:
-        frame_size = 10
-        frame = bytearray(frame_size)
+    frame_size = random.randint(6, 1024)
+    frame = bytearray(generate_random_bytes(frame_size, frame_size))
 
     # Set basic TC frame header fields
     frame[0] = 0x20  # Version 1, Type TC
     frame[1] = 0x03  # SCID
-    frame[2] = 0x00  # VCID
-    frame[3] = (frame_size - 5) & 0xFF  # Frame length
+    frame[2] = 0x00 | ((frame_size - 1) >> 8); # VCID
+    frame[3] = (frame_size - 1) & 0xFF; # Frame length
+    frame[4] = 0x00; # Frame Sequence Number
 
     return frame
 
 
-def generate_tm_frame(random_content=True):
+def generate_tm_frame():
     """Generate a TM frame with valid-looking header"""
-    if random_content:
-        frame_size = random.randint(12, 200)
-        frame = bytearray(generate_random_bytes(frame_size, frame_size))
-    else:
-        frame_size = 12
-        frame = bytearray(frame_size)
+    frame_size = 1786
+    frame = bytearray(generate_random_bytes(frame_size, frame_size))
 
     # Set basic TM frame header fields
-    frame[0] = 0x08  # Version 1, TM
-    frame[1] = 0x03  # SCID
+    frame[0] = 0x02  # Version 1, TM
+    frame[1] = 0xC0  # SCID
     frame[2] = 0x00  # VCID
 
     return frame
 
 
-def generate_aos_frame(random_content=True):
+def generate_aos_frame():
     """Generate an AOS frame with valid-looking header"""
-    if random_content:
-        frame_size = random.randint(14, 200)
-        frame = bytearray(generate_random_bytes(frame_size, frame_size))
-    else:
-        frame_size = 14
-        frame = bytearray(frame_size)
+    frame_size = 1786
+    frame = bytearray(generate_random_bytes(frame_size, frame_size))
 
     # Set basic AOS frame header fields
-    frame[0] = 0x10  # Version 1, AOS
-    frame[1] = 0x03  # SCID
+    frame[0] = 0x40  # Version 1, AOS
+    frame[1] = 0xC0  # SCID
     frame[2] = 0x00  # VCID
 
     return frame
@@ -79,16 +67,16 @@ def generate_corpus(output_dir, num_samples_per_selector=5):
         for i in range(num_samples_per_selector):
             # File naming: selector_type_variant.bin
             if selector in [0, 1]:  # TC frame operations
-                frame = generate_tc_frame(random_content=(i != 0))
+                frame = generate_tc_frame()
                 file_name = f"{selector:02d}_tc_{i:02d}.bin"
             elif selector in [2, 5]:  # TM frame operations
-                frame = generate_tm_frame(random_content=(i != 0))
+                frame = generate_tm_frame()
                 file_name = f"{selector:02d}_tm_{i:02d}.bin"
             elif selector in [3, 4]:  # AOS frame operations
-                frame = generate_aos_frame(random_content=(i != 0))
+                frame = generate_aos_frame()
                 file_name = f"{selector:02d}_aos_{i:02d}.bin"
             else:  # selector == 6, TC frame for FECF check
-                frame = generate_tc_frame(random_content=(i != 0))
+                frame = generate_tc_frame()
                 file_name = f"{selector:02d}_tc_fecf_{i:02d}.bin"
 
             # Add the selector byte at the beginning

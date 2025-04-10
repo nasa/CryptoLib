@@ -9,8 +9,9 @@
 // Global variables
 static jmp_buf crash_jmp_buf;
 
-#define MAX_FRAME_SIZE 2048
-static uint8_t tc_frame_buffer[MAX_FRAME_SIZE];
+#define TC_MAX_FRAME_SIZE 1024
+#define MAX_FRAME_SIZE 1786
+static uint8_t tc_frame_buffer[TC_MAX_FRAME_SIZE];
 static uint8_t tm_frame_buffer[MAX_FRAME_SIZE];
 static uint8_t aos_frame_buffer[MAX_FRAME_SIZE];
 
@@ -48,7 +49,7 @@ static int32_t init_cryptolib_for_fuzzing(void)
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_Parameters);
 
     GvcidManagedParameters_t TM_Parameters = {
-        0, 0x0003, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
+        0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_Parameters);
 
     GvcidManagedParameters_t AOS_Parameters = {
@@ -69,12 +70,12 @@ static void reset_cryptolib(void)
 // Modify create_tc_frame to use static buffer
 static uint8_t *create_tc_frame(const uint8_t *data, size_t size, size_t *out_size)
 {
-    const size_t MIN_TC_SIZE = 10;
-    size_t       frame_size  = (size < MIN_TC_SIZE) ? MIN_TC_SIZE : size;
+    const size_t MIN_TC_SIZE = 6;
+    uint16_t     frame_size  = (size < MIN_TC_SIZE) ? MIN_TC_SIZE : size;
 
-    if (frame_size > MAX_FRAME_SIZE)
+    if (frame_size > TC_MAX_FRAME_SIZE)
     {
-        frame_size = MAX_FRAME_SIZE;
+        frame_size = TC_MAX_FRAME_SIZE-1;
     }
     *out_size = frame_size;
 
@@ -83,8 +84,9 @@ static uint8_t *create_tc_frame(const uint8_t *data, size_t size, size_t *out_si
         memset(tc_frame_buffer, 0, MIN_TC_SIZE);
         tc_frame_buffer[0] = 0x20; // Version 1, Type TC
         tc_frame_buffer[1] = 0x03; // SCID
-        tc_frame_buffer[2] = 0x00; // VCID
-        tc_frame_buffer[3] = 0x02; // Frame length
+        tc_frame_buffer[2] = 0x00 | ((uint8_t)frame_size >> 8); // VCID
+        tc_frame_buffer[3] = ((uint8_t)frame_size) & 0xFF; // Frame length
+        tc_frame_buffer[4] = 0x00; // Frame Sequence Number
     }
     else
     {
@@ -96,21 +98,25 @@ static uint8_t *create_tc_frame(const uint8_t *data, size_t size, size_t *out_si
 // Similarly modify create_tm_frame and create_aos_frame
 static uint8_t *create_tm_frame(const uint8_t *data, size_t size, size_t *out_size)
 {
-    const size_t MIN_TM_SIZE = 12;
+    const size_t MIN_TM_SIZE = 1786;
+                 size        = MIN_TM_SIZE;
     size_t       frame_size  = (size < MIN_TM_SIZE) ? MIN_TM_SIZE : size;
 
     if (frame_size > MAX_FRAME_SIZE)
     {
-        frame_size = MAX_FRAME_SIZE;
+        frame_size = MAX_FRAME_SIZE-1;
     }
     *out_size = frame_size;
 
     if (size < MIN_TM_SIZE)
     {
         memset(tm_frame_buffer, 0, MIN_TM_SIZE);
-        tm_frame_buffer[0] = 0x08; // Version 1, TM
-        tm_frame_buffer[1] = 0x03; // SCID
+        tm_frame_buffer[0] = 0x02; // Version 1, TM
+        tm_frame_buffer[1] = 0xC0; // SCID
         tm_frame_buffer[2] = 0x00; // VCID
+        tm_frame_buffer[3] = 0x00; // VC Frame Count
+        tm_frame_buffer[4] = 0x00; // TF Data Field Status (upper)
+        tm_frame_buffer[5] = 0x00; // TF Data Field Status (lower)
     }
     else
     {
@@ -121,21 +127,25 @@ static uint8_t *create_tm_frame(const uint8_t *data, size_t size, size_t *out_si
 
 static uint8_t *create_aos_frame(const uint8_t *data, size_t size, size_t *out_size)
 {
-    const size_t MIN_AOS_SIZE = 14;
+    const size_t MIN_AOS_SIZE = 1786;
+                 size = MIN_AOS_SIZE;
     size_t       frame_size   = (size < MIN_AOS_SIZE) ? MIN_AOS_SIZE : size;
 
     if (frame_size > MAX_FRAME_SIZE)
     {
-        frame_size = MAX_FRAME_SIZE;
+        frame_size = MAX_FRAME_SIZE-1;
     }
     *out_size = frame_size;
 
     if (size < MIN_AOS_SIZE)
     {
         memset(aos_frame_buffer, 0, MIN_AOS_SIZE);
-        aos_frame_buffer[0] = 0x10; // Version 1, AOS
-        aos_frame_buffer[1] = 0x03; // SCID
-        aos_frame_buffer[2] = 0x00; // VCID
+        aos_frame_buffer[0] = 0x40; // TFVN = 2
+        aos_frame_buffer[1] = 0xC0; // SCID = 3, VCID = 0
+        aos_frame_buffer[2] = 0x00; // VC Frame Count (1)
+        aos_frame_buffer[3] = 0x00; // VC Frame Count (2)
+        aos_frame_buffer[4] = 0x00; // VC Frame Count (3)
+        aos_frame_buffer[5] = 0x00; // Signaling Field
     }
     else
     {
