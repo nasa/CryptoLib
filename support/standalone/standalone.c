@@ -149,7 +149,9 @@ int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char *
                 {
                     SaInterface            sa_if            = get_sa_interface_inmemory();
                     SecurityAssociation_t *test_association = NULL;
-                    sa_if->sa_get_from_spi(vcid, &test_association);
+                    int32_t status = CRYPTO_LIB_SUCCESS;
+
+                    status = sa_if->sa_get_from_spi(vcid, &test_association);
 
                     /* Handle special case for VCID */
                     if (vcid == 1)
@@ -158,7 +160,7 @@ int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char *
                         vcid = 0;
                     }
 
-                    if ((test_association->sa_state == SA_OPERATIONAL) &&
+                    if ((test_association->sa_state == SA_OPERATIONAL) && (status == CRYPTO_LIB_SUCCESS) &&
                         (test_association->gvcid_blk.mapid == TYPE_TC) && (test_association->gvcid_blk.scid == SCID))
                     {
                         tc_vcid = vcid;
@@ -456,9 +458,10 @@ void crypto_standalone_tm_frame(uint8_t *in_data, uint16_t in_length, uint8_t *o
 {
     SaInterface            sa_if  = get_sa_interface_inmemory();
     SecurityAssociation_t *sa_ptr = NULL;
+    int32_t status = CRYPTO_LIB_SUCCESS;
 
-    sa_if->sa_get_from_spi(spi, &sa_ptr);
-    if (!sa_ptr)
+    status = sa_if->sa_get_from_spi(spi, &sa_ptr);
+    if (status != CRYPTO_LIB_SUCCESS)
     {
         printf("WARNING - SA IS NULL!\n");
     }
@@ -514,7 +517,7 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status_p, uint8_t *tm_ptr, uin
 
     udp_info_t *tm_write_sock = &tm_socks->write;
 
-    if ((tm_ptr[0] == 0x08) || ((tm_ptr[0] == 0x03) && tm_ptr[1] == 0xff))
+    if ((tm_ptr[0] == 0x09) || ((tm_ptr[0] == 0x03) && tm_ptr[1] == 0xff))
     {
         spp_len = (((0xFFFF & tm_ptr[4]) << 8) | tm_ptr[5]) + 7;
 #ifdef CRYPTO_STANDALONE_TM_PROCESS_DEBUG
@@ -526,7 +529,7 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status_p, uint8_t *tm_ptr, uin
         printf("\n");
 #endif
         // Send all SPP telemetry packets
-        if (tm_ptr[0] == 0x08)
+        if (tm_ptr[0] == 0x09)
         {
             status = sendto(tm_write_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr *)&tm_write_sock->saddr,
                             sizeof(tm_write_sock->saddr));

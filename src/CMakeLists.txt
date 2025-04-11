@@ -128,7 +128,7 @@ endif()
 
 # Create the app module
 if(DEFINED CFE_SYSTEM_PSPNAME)
-    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/cpu${TGTSYS_${SYSVAR}}/${INSTALL_SUBDIR}")
+    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${TGTSYS_${SYSVAR}}/${INSTALL_SUBDIR}/components/cryptolib")
     add_cfe_app(crypto ${LIB_SRC_FILES})
     target_include_directories(crypto PUBLIC ../include)
 else() 
@@ -162,11 +162,11 @@ set_target_properties(crypto PROPERTIES PUBLIC_HEADER "${CRYPTO_INCLUDES}")
 # This causes the library to be installed as libcryptolib.so while still being
 # referred to as crypto from CMake. Without this, the library filename would be
 # libcrypto.so which would conflict with openssl
-set_target_properties(crypto PROPERTIES OUTPUT_NAME "cryptolib")
+set_target_properties(crypto PROPERTIES OUTPUT_NAME "libcryptolib")
 
 add_custom_command(TARGET crypto POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:crypto> ${PROJECT_BINARY_DIR}/src/libcryptolib.so
-        COMMENT "Created ${PROJECT_BINARY_DIR}/src/libcryptolib.so"
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:crypto> ${PROJECT_BINARY_DIR}/components/cryptolib/libcryptolib.so
+        COMMENT "Created ${PROJECT_BINARY_DIR}/components/cryptolib/libcryptolib.so"
         )
 
 if(DEFINED CFE_SYSTEM_PSPNAME)
@@ -175,7 +175,7 @@ if(DEFINED CFE_SYSTEM_PSPNAME)
             PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/host)
 else()
     install(TARGETS crypto
-            DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/components/cryptolib
             PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 endif()
 
