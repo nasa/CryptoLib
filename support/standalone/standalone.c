@@ -331,8 +331,8 @@ void crypto_standalone_tc_frame(uint8_t *in_data, uint16_t in_length, uint8_t *o
     /* TC Header */
     out_data[0] = 0x20;
     out_data[1] = CRYPTO_STANDALONE_FRAMING_SCID;
-    out_data[2] = ((tc_vcid << 2) & 0xFC) | (((uint16_t)CRYPTO_STANDALONE_FRAMING_TC_DATA_LEN >> 8) & 0x03);
-    out_data[3] = (uint16_t)CRYPTO_STANDALONE_FRAMING_TC_DATA_LEN & 0x00FF;
+    out_data[2] = ((tc_vcid << 2) & 0xFC) | (((*out_length - 1) >> 8) & 0x03);
+    out_data[3] = (*out_length - 1) & 0xFF;
     out_data[4] = tc_seq_num++;
 
     /* Segement Header */
