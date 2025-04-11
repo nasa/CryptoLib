@@ -165,8 +165,8 @@ set_target_properties(crypto PROPERTIES PUBLIC_HEADER "${CRYPTO_INCLUDES}")
 set_target_properties(crypto PROPERTIES OUTPUT_NAME "cryptolib")
 
 add_custom_command(TARGET crypto POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:crypto> ${PROJECT_BINARY_DIR}/lib/libcrypto.so
-        COMMENT "Created ${PROJECT_BINARY_DIR}/lib/libCrypto.so"
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:crypto> ${PROJECT_BINARY_DIR}/src/libcryptolib.so
+        COMMENT "Created ${PROJECT_BINARY_DIR}/src/libcryptolib.so"
         )
 
 if(DEFINED CFE_SYSTEM_PSPNAME)
