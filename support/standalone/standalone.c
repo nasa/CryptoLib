@@ -65,6 +65,7 @@ void crypto_standalone_print_help(void)
                          "help                               - Display help                     \n"
                          "noop                               - No operation command to device   \n"
                          "reset                              - Reset CryptoLib                  \n"
+                         "active                             - Displays all operational SAs     \n"
                          "tc                                 - Toggle TC debug prints           \n"
                          "tm                                 - Toggle TM debug prints           \n"
                          "vcid #                             - Change active TC virtual channel \n"
@@ -106,6 +107,10 @@ int32_t crypto_standalone_get_command(const char *str)
     else if (strcmp(lcmd, "tm") == 0)
     {
         status = CRYPTO_CMD_TM_DEBUG;
+    }
+    else if (strcmp(lcmd, "active") == 0)
+    {
+        status = CRYPTO_CMD_ACTIVE;
     }
     return status;
 }
@@ -151,17 +156,13 @@ int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char *
                     SecurityAssociation_t *test_association = NULL;
                     int32_t status = CRYPTO_LIB_SUCCESS;
 
-                    status = sa_if->sa_get_from_spi(vcid, &test_association);
-                    Crypto_saPrint(test_association);
-
-                    /* Handle special case for VCID */
-                    if (vcid == 1)
+                    status = sa_if->sa_get_operational_sa_from_gvcid(0, SCID, vcid, 0, &test_association);
+                    if (status == CRYPTO_LIB_SUCCESS) 
                     {
-                        printf("Special case for VCID 1! \n");
-                        vcid = 0;
+                        Crypto_saPrint(test_association);
                     }
 
-                    if ((test_association->sa_state == SA_OPERATIONAL) && (status == CRYPTO_LIB_SUCCESS) &&
+                    if ((status == CRYPTO_LIB_SUCCESS) && (test_association->sa_state == SA_OPERATIONAL) && 
                         (test_association->gvcid_blk.mapid == TYPE_TC) && (test_association->gvcid_blk.scid == SCID))
                     {
                         tc_vcid = vcid;
@@ -171,6 +172,7 @@ int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char *
                     {
                         printf("Error - virtual channel (VCID) %d is invalid! Sticking with prior vcid %d \n", vcid,
                                tc_vcid);
+                        status = CRYPTO_LIB_SUCCESS;
                     }
                 }
                 else
@@ -210,6 +212,42 @@ int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char *
                     tm_debug = 0;
                     printf("Disabled TM debug prints! \n");
                 }
+            }
+            break;
+
+        case CRYPTO_CMD_ACTIVE:
+            if (crypto_standalone_check_number_arguments(num_tokens, 0) == CRYPTO_LIB_SUCCESS)
+            {
+                SaInterface            sa_if            = get_sa_interface_inmemory();
+                SecurityAssociation_t *test_association = NULL;
+
+                printf("Active SAs: \n\t");
+                for (int i = 0; i < NUM_SA; i++)
+                {
+                    sa_if->sa_get_from_spi(i, &test_association);
+                    if (test_association->sa_state == SA_OPERATIONAL)
+                    {
+                        if(i<5)
+                        {
+                            printf("TC  - ");
+                        }
+                        if(i>4 && i<9)
+                        {
+                            printf("TM  - ");
+                        }
+                        if(i>8 && i<13)
+                        {
+                            printf("AOS - ");
+                        }
+                        if(i>12 && i<16)
+                        {
+                            printf("ExProc - ");
+                        }
+
+                        printf("SPI %d - VCID %d - EST %d - AST %d\n\t", i, test_association->gvcid_blk.vcid, test_association->est, test_association->ast);
+                    }
+                }
+                printf("\n");
             }
             break;
 

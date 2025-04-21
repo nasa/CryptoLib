@@ -85,6 +85,7 @@ extern "C"
 #define CRYPTO_CMD_VCID     4
 #define CRYPTO_CMD_TC_DEBUG 5
 #define CRYPTO_CMD_TM_DEBUG 6
+#define CRYPTO_CMD_ACTIVE   7
 
     /*
     ** Structures
