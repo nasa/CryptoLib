@@ -17,5 +17,5 @@ mkdir $BASE_DIR/build/internal > /dev/null 2>&1
 
 echo "Internal build and test..."
 $DFLAGS -v $BASE_DIR:$BASE_DIR -w $BASE_DIR/build/internal $DBOX bash -c \
-    "../../support/scripts/build_support.sh"
+    "../../support/scripts/build_internal.sh"
 echo ""

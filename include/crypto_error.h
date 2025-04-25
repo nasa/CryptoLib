@@ -36,6 +36,7 @@
 #define SADB_QUERY_FAILED              301
 #define SADB_QUERY_EMPTY_RESULTS       302
 #define SADB_INSERT_FAILED             303
+#define SADB_INVALID_SA_FIELD_VALUE    304
 
 #define CRYPTOGRAPHY_INVALID_CRYPTO_INTERFACE_TYPE      400
 #define CRYPTOGRAPHY_UNSUPPORTED_OPERATION_FOR_KEY_RING 401
@@ -135,13 +136,26 @@
 #define CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI                                    (-62)
 #define CRYPTO_LIB_ERR_SDLS_EP_NOT_BUILT                                    (-63)
 #define CRYPTO_LIB_ERR_BAD_TLV_LENGTH                                       (-64)
-#define CRYPTO_LIB_ERR_SHIVF_LEN_GREATER_THAN_MAX_IV_SIZE                   (-65)
-#define CRYPTO_LIB_ERR_SHSNF_LEN_GREATER_THAN_MAX_ARSN_SIZE                 (-66)
-#define CRYPTO_LIB_ERR_ABM_LEN_GREATER_THAN_MAX_ABM_SIZE                    (-67)
-#define CRYPTO_LIB_ERR_STMACF_LEN_GREATER_THAN_MAX_MAC_SIZE                 (-68)
-#define CRYPTO_LIB_ERR_SHPLF_LEN_GREATER_THAN_MAX_PAD_SIZE                  (-69)
+#define CRYPTO_LIB_ERR_OTAR_BAD_TLV_LENGTH                                  (-65)
+#define CRYPTO_LIB_ERR_SHIVF_LEN_GREATER_THAN_MAX_IV_SIZE                   (-66)
+#define CRYPTO_LIB_ERR_SHSNF_LEN_GREATER_THAN_MAX_ARSN_SIZE                 (-67)
+#define CRYPTO_LIB_ERR_ABM_LEN_GREATER_THAN_MAX_ABM_SIZE                    (-68)
+#define CRYPTO_LIB_ERR_STMACF_LEN_GREATER_THAN_MAX_MAC_SIZE                 (-69)
+#define CRYPTO_LIB_ERR_SHPLF_LEN_GREATER_THAN_MAX_PAD_SIZE                  (-70)
+#define CRYPTO_LIB_ERR_INVALID_SVC_TYPE_WITH_ARSN                           (-71)
+#define CRYPTO_LIB_ERR_ARSN_LT_SHSNF                                        (-72)
+#define CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW                            (-73)
+#define CRYPTO_LIB_ERR_IV_EXCEEDS_INCREMENT_SIZE                            (-74)
+#define CRYPTO_LIB_ERR_AOS_FRAME_LENGTH_UNDERFLOW                           (-75)
+#define CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW                            (-76)
+#define CRYPTO_LIB_ERR_AOS_FL_LT_MAX_FRAME_SIZE                             (-77)
+#define CRYPTO_LIB_ERR_TM_FL_LT_MAX_FRAME_SIZE                              (-78)
+#define CRYPTO_LIB_ERR_INVALID_FHECF                                        (-79)
+#define CRYPTO_LIB_ERR_TM_SECONDARY_HDR_SIZE                                (-80)
+#define CRYPTO_LIB_ERR_TM_SECONDARY_HDR_VN                                  (-81)
+#define CRYPTO_LIB_ERR_TC_FRAME_LENGTH_MISMATCH                             (-82)
 
-#define CRYPTO_CORE_ERROR_CODES_MAX -69
+#define CRYPTO_CORE_ERROR_CODES_MAX -82
 
 // Define codes for returning MDB Strings, and determining error based on strings
 #define CAM_ERROR_CODES     600
@@ -154,7 +168,7 @@
 #define CRYPTO_INTERFACE_ERROR_CODES_MAX 402
 
 #define SADB_ERROR_CODES     300
-#define SADB_ERROR_CODES_MAX 303
+#define SADB_ERROR_CODES_MAX 304
 
 #define SADB_INTERFACE_ERROR_CODES     200
 #define SADB_INTERFACE_ERROR_CODES_MAX 201
