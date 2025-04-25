@@ -1434,10 +1434,10 @@ UTEST(AOS_APPLY, AES_CBC_256_ENCRYPT_AUTH_16B_PADDING)
     int32_t status = CRYPTO_LIB_SUCCESS;
 
     // Configure, Add Managed Params, and Init
-    Crypto_Config_CryptoLib(KEY_TYPE, MC_TYPE, SA_TYPE, CRYPTO_TYPE,
-                            IV_INTERNAL, CRYPTO_AOS_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            AOS_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_CryptoLib(KEY_TYPE, MC_TYPE, SA_TYPE, CRYPTO_TYPE, IV_INTERNAL, CRYPTO_AOS_CREATE_FECF_TRUE,
+                            TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR, TC_IGNORE_SA_STATE_FALSE,
+                            TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, AOS_CHECK_FECF_TRUE, 0x3F,
+                            SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
     // Set up the managed parameters
     GvcidManagedParameters_t AOS_UT_Managed_Parameters = {

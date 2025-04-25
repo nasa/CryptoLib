@@ -880,10 +880,10 @@ UTEST(EP_KEY_MGMT, TLV_KEY_DEACTIVATE_TESTS)
     remove("sa_save_file.bin");
     uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE, MC_TYPE, SA_TYPE, CRYPTO_TYPE,
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_CryptoLib(KEY_TYPE, MC_TYPE, SA_TYPE, CRYPTO_TYPE, IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE,
+                            TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR, TC_IGNORE_SA_STATE_FALSE,
+                            TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_FALSE, 0x3F,
+                            SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
@@ -1032,10 +1032,10 @@ UTEST(EP_KEY_MGMT, TLV_KEY_VERIFY_TESTS)
 {
     remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
-    Crypto_Config_CryptoLib(KEY_TYPE, MC_TYPE, SA_TYPE, CRYPTO_TYPE,
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_CryptoLib(KEY_TYPE, MC_TYPE, SA_TYPE, CRYPTO_TYPE, IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE,
+                            TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR, TC_IGNORE_SA_STATE_FALSE,
+                            TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_FALSE, 0x3F,
+                            SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
