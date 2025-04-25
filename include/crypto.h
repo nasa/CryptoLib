@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #endif
 
+#include <math.h>
 #include <string.h>
 #include "crypto_config.h"
 #include "crypto_config_structs.h"
@@ -131,7 +132,7 @@ void Crypto_TC_Get_Ciper_Mode_TCP(uint8_t sa_service_type, uint32_t *encryption_
                                   SecurityAssociation_t *sa_ptr);
 int32_t Crypto_TC_Get_Ciper_Mode_TCA(uint8_t sa_service_type, uint32_t *encryption_cipher,
                                      uint8_t *ecs_is_aead_algorithm, SecurityAssociation_t *sa_ptr);
-void    Crypto_TC_Calc_Lengths(uint8_t *fecf_len, uint8_t *segment_hdr_len);
+void    Crypto_TC_Calc_Lengths(uint8_t *fecf_len, uint8_t *segment_hdr_len, uint8_t *ocf_len);
 void    Crypto_TC_Set_Segment_Header(TC_t *tc_sdls_processed_frame, uint8_t *ingest, int *byte_idx);
 int32_t Crypto_TC_Check_CMD_Frame_Flag(uint8_t header_cc);
 int32_t Crypto_TC_Validate_SA_Service_Type(uint8_t sa_service_type);
@@ -238,7 +239,7 @@ int32_t        Crypto_Get_tmLength(int len);
 uint8_t        Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id);
 void           Crypto_TM_updatePDU(uint8_t *ingest, int len_ingest);
 void           Crypto_TM_updateOCF(Telemetry_Frame_Ocf_Fsr_t *report, TM_t *tm_frame);
-uint8_t       *Crypto_Prepare_TC_AAD(uint8_t *buffer, uint16_t len_aad, uint8_t *abm_buffer);
+uint8_t       *Crypto_Prepare_TC_AAD(const uint8_t *buffer, uint16_t len_aad, const uint8_t *abm_buffer);
 uint32_t       Crypto_Prepare_TM_AAD(const uint8_t *buffer, uint16_t len_aad, const uint8_t *abm_buffer, uint8_t *aad);
 uint32_t       Crypto_Prepare_AOS_AAD(const uint8_t *buffer, uint16_t len_aad, const uint8_t *abm_buffer, uint8_t *aad);
 void           Crypto_Local_Config(void);
@@ -295,7 +296,7 @@ void clean_ekref(SecurityAssociation_t *sa);
 void clean_akref(SecurityAssociation_t *sa);
 
 // Determine Payload Data Unit
-int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uint8_t *ingest);
+int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uint8_t *ingest, uint16_t len_ingest);
 int32_t Crypto_PDU(uint8_t *ingest, TC_t *tc_frame);
 int32_t Crypto_SG_KEY_MGMT(uint8_t *ingest, TC_t *tc_frame);
 int32_t Crypto_SG_SA_MGMT(uint8_t *ingest, TC_t *tc_frame);

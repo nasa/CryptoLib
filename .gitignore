@@ -12,6 +12,7 @@ __pycache__
 *.dat
 *.so
 build/
+build-*/
 venv
 vgcore*
 core.*
@@ -32,4 +33,10 @@ test/CMakeFiles/*
 Testing/Temporary/*
 docs/wiki/_build
 docs/wiki/_templates
-
+support/fuzz/corpus/
+support/fuzz/output/
+support/scripts/src/*
+support/scripts/test/*
+support/scripts/bin/*
+support/scripts/CMakeFiles/*
+output/*

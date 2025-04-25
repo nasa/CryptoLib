@@ -194,6 +194,9 @@ static int32_t cryptography_config(void)
 }
 static int32_t cryptography_init(void)
 {
+#ifdef DEBUG
+    printf(KYEL "Initializing KMC...\n" RESET);
+#endif
     int32_t status = CRYPTO_LIB_SUCCESS;
     curl           = curl_easy_init();
     curl_global_init(CURL_GLOBAL_ALL);

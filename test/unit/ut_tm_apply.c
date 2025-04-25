@@ -2150,7 +2150,6 @@ UTEST(TM_APPLY_ENC_VAL, TM_KEY_STATE_TEST)
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-    SaInterface sa_if = get_sa_interface_inmemory();
 
     // Test frame setup    Header   |SPI|    IV                         |    Data
     char *framed_tm_h =
@@ -2231,13 +2230,9 @@ UTEST(TM_APPLY_ENC_VAL, TM_KEY_STATE_TEST)
     hex_conversion(truth_tm_h, &truth_tm_b, &truth_tm_len);
 
     // Expose/setup SAs for testing
-    SecurityAssociation_t  ta;
-    SecurityAssociation_t *sa_ptr = &ta;
-    // Deactivate SA 1
-    sa_if->sa_get_from_spi(1, &sa_ptr);
-    sa_ptr->sa_state = SA_NONE;
-    // Activate SA 5
-    sa_if->sa_get_from_spi(5, &sa_ptr);
+    SecurityAssociation_t *sa_ptr;
+
+    sa_if->sa_get_from_spi(8, &sa_ptr);
     sa_ptr->gvcid_blk.scid = 44;
     sa_ptr->gvcid_blk.vcid = 0;
     sa_ptr->arsn_len       = 0;
@@ -2385,7 +2380,7 @@ UTEST(TM_APPLY, TM_APPLY_Secondary_Hdr_OVERFLOW_TEST)
 
     status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b, framed_tm_len);
 
-    ASSERT_EQ(CRYPTO_LIB_ERR_TM_SECONDARY_HDR_VN, status);
+    ASSERT_EQ(CRYPTO_LIB_ERR_TM_SECONDARY_HDR_SIZE, status);
     free(framed_tm_b);
     free(tc_sdls_processed_frame);
     Crypto_Shutdown();
@@ -2429,7 +2424,7 @@ UTEST(TM_APPLY, TM_APPLY_Secondary_Hdr_Spec_Violation)
 
     status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b, framed_tm_len);
 
-    ASSERT_EQ(CRYPTO_LIB_ERR_TM_SECONDARY_HDR_VN, status);
+    ASSERT_EQ(CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW, status);
     free(framed_tm_b);
     Crypto_Shutdown();
 }

@@ -24,7 +24,7 @@ UTEST(EP_MC, MC_REGULAR_PING)
     status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_PING_h = "2003001800ff00001980d2c70008197f0b00310000b1fe3128";
+    char *buffer_PING_h = "2003001800ff00001980d2c70008197f0b00310020b1fe3128";
     //                    |2003001a00| = Primary Header
     //                              |ff| = Ext. Procs
     //                                |0000| = SPI
@@ -33,10 +33,10 @@ UTEST(EP_MC, MC_REGULAR_PING)
     //                                            |d2c7| = seq, pktid
     //                                                |0008| = pkt_length
     //                                                    |197f| = pusv, ack, st
-    //                                                        |0b| = sst, sid, spare
-    //                                                          |0031| = PDU Tag
-    //                                                              |0000| = PDU Length
-    //                                                                  |b1fe3128| = FSR
+    //                                                        |0b00| = sst, sid, spare
+    //                                                            |31| = PDU Tag
+    //                                                              |0020| = PDU Length
+    //                                                                  |b1fe3128| = PDU Data
 
     uint8_t *buffer_PING_b   = NULL;
     int      buffer_PING_len = 0;
@@ -123,7 +123,7 @@ UTEST(EP_MC, MC_STATUS)
     status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_STATUS_h = "2003001800ff00001980d2c70008197f0b00320000b1fe3128";
+    char *buffer_STATUS_h = "2003001800ff00001980d2c70008197f0b00320020b1fe3128";
 
     uint8_t *buffer_STATUS_b   = NULL;
     int      buffer_STATUS_len = 0;
@@ -205,7 +205,7 @@ UTEST(EP_MC, MC_DUMP)
 
     status = CRYPTO_LIB_SUCCESS;
 
-    char *buffer_DUMP_h = "2003001800ff00001980d2c70008197f0b00330000b1fe3128";
+    char *buffer_DUMP_h = "2003001800ff00001980d2c70008197f0b00330020b1fe3128";
 
     uint8_t *buffer_DUMP_b   = NULL;
     int      buffer_DUMP_len = 0;
@@ -290,7 +290,7 @@ UTEST(EP_MC, MC_ERASE)
     status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_ERASE_h = "2003001800ff00001980d2c70008197f0b00340000b1fe3128";
+    char *buffer_ERASE_h = "2003001800ff00001980d2c70008197f0b00340020b1fe3128";
 
     uint8_t *buffer_ERASE_b   = NULL;
     int      buffer_ERASE_len = 0;
@@ -373,7 +373,7 @@ UTEST(EP_MC, MC_SELF_TEST)
     status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_SELF_h = "2003001800ff00001980d2c70008197f0b00350000b1fe3128";
+    char *buffer_SELF_h = "2003001800ff00001980d2c70008197f0b00350020b1fe3128";
 
     uint8_t *buffer_SELF_b   = NULL;
     int      buffer_SELF_len = 0;
@@ -457,7 +457,7 @@ UTEST(EP_MC, MC_ALARM_FLAG_RESET)
     status = CRYPTO_LIB_SUCCESS;
 
     // NOTE: Added Transfer Frame header to the plaintext
-    char *buffer_ALARM_h = "2003001800ff00001980d2c70008197f0b00370000b1fe3128";
+    char *buffer_ALARM_h = "2003001800ff00001980d2c70008197f0b00370020b1fe3128";
 
     uint8_t *buffer_ALARM_b   = NULL;
     int      buffer_ALARM_len = 0;
