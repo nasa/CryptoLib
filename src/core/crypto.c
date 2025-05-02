@@ -22,6 +22,15 @@
 #include "crypto.h"
 #include <string.h>
 
+/**
+ * CCSDS Compliance Reference:
+ * This file implements security features compliant with:
+ * - CCSDS 232.0-B-3 (TC Space Data Link Protocol)
+ * - CCSDS 132.0-B-3 (TM Space Data Link Protocol)
+ * - CCSDS 732.0-B-4 (AOS Space Data Link Protocol)
+ * - CCSDS 355.0-B-2 (Space Data Link Security Protocol)
+ */
+
 /*
 ** Static Library Declaration
 */
@@ -32,23 +41,22 @@ CFS_MODULE_DECLARE_LIB(crypto);
 /*
 ** Global Variables
 */
-// crypto_key_t ak_ring[NUM_KEYS];
 // SDLS Replies
 SDLS_KEYV_RPLY_t sdls_ep_keyv_reply; // Reply block for challenged keys
 uint8_t          sdls_ep_reply[TC_MAX_FRAME_SIZE];
 CCSDS_t          sdls_frame;
-// TM_t tm_frame;
+// TM
 uint8_t                  tm_frame[TM_MAX_FRAME_SIZE]; // TM Global Frame
 TM_FramePrimaryHeader_t  tm_frame_pri_hdr;            // Used to reduce bit math duplication
 TM_FrameSecurityHeader_t tm_frame_sec_hdr;            // Used to reduce bit math duplication
-// AOS_t aos_frame
+// AOS
 uint8_t                   aos_frame[AOS_MAX_FRAME_SIZE]; // AOS Global Frame
 AOS_FramePrimaryHeader_t  aos_frame_pri_hdr;             // Used to reduce bit math duplication
 AOS_FrameSecurityHeader_t aos_frame_sec_hdr;             // Used to reduce bit math duplication
 // OCF
-uint8_t                ocf = 0;
-SDLS_FSR_t             report;
-Telemetry_Frame_Clcw_t clcw;
+uint8_t                    ocf = 0;
+Telemetry_Frame_Ocf_Fsr_t  report;
+Telemetry_Frame_Ocf_Clcw_t clcw;
 // Flags
 SDLS_MC_LOG_RPLY_t      log_summary;
 SDLS_MC_DUMP_BLK_RPLY_t mc_log;
@@ -59,6 +67,8 @@ uint8_t badSPI  = 0;
 uint8_t badIV   = 0;
 uint8_t badMAC  = 0;
 uint8_t badFECF = 0;
+// FHECF
+uint8_t parity[RS_PARITY];
 //  CRC
 uint32_t crc32Table[CRC32TBL_SIZE];
 uint16_t crc16Table[CRC16TBL_SIZE];
@@ -98,6 +108,8 @@ void clean_akref(SecurityAssociation_t *sa)
  * Looks up cipher suite ID and determines if it's an AEAD algorithm. Returns 1 if true, 0 if false;
  * @param cipher_suite_id: uint32
  * @return int: Success/Failure
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.4.2 (Cryptographic Algorithms)
  **/
 uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
 {
@@ -123,11 +135,30 @@ uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
 }
 
 /**
+ * @brief Function: Crypto_Is_ACS_Only_Algo
+ * Looks up cipher suite ID and determines if it's an ACS algorithm. Returns 1 if true, 0 if false;
+ * @param cipher_suite_id: uint8_t
+ * @return int: Success/Failure
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.4.2 (Cryptographic Algorithms)
+ **/
+uint8_t Crypto_Is_ACS_Only_Algo(uint8_t algo)
+{
+    if (algo > 0 && algo <= CRYPTO_ACS_MAX)
+    {
+        return CRYPTO_TRUE;
+    }
+    return CRYPTO_FALSE;
+}
+
+/**
  * @brief Function: Crypto_increment
  * Increments the bytes within a uint8_t array
  * @param num: uint8*
  * @param length: int
  * @return int32: Success/Failure
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
  **/
 int32_t Crypto_increment(uint8_t *num, int length)
 {
@@ -168,6 +199,8 @@ int32_t Crypto_increment(uint8_t *num, int length)
  * @param length: int
  * @param window: int
  * @return int32: Success/Failure
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
  **/
 int32_t Crypto_window(uint8_t *actual, uint8_t *expected, int length, int window)
 {
@@ -248,6 +281,8 @@ int32_t Crypto_window(uint8_t *actual, uint8_t *expected, int length, int window
  * @param reply: uint8_t*
  * @param appID: uint8
  * @return uint8: Count
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7.4 (Management)
  **/
 uint8_t Crypto_Prep_Reply(uint8_t *reply, uint8_t appID)
 {
@@ -261,7 +296,7 @@ uint8_t Crypto_Prep_Reply(uint8_t *reply, uint8_t appID)
     sdls_frame.hdr.shdr  = 1;
     sdls_frame.hdr.appID = appID;
 
-    sdls_frame.pdu.hdr.type = 1;
+    sdls_frame.tlv_pdu.hdr.type = 1;
 
     // Fill reply with reply header
     reply[count++] = (sdls_frame.hdr.pvn << 5) | (sdls_frame.hdr.type << 4) | (sdls_frame.hdr.shdr << 3) |
@@ -282,14 +317,24 @@ uint8_t Crypto_Prep_Reply(uint8_t *reply, uint8_t appID)
     }
 
     // Fill reply with Tag and Length
-    reply[count++] = (sdls_frame.pdu.hdr.type << 7) | (sdls_frame.pdu.hdr.uf << 6) | (sdls_frame.pdu.hdr.sg << 4) |
-                     (sdls_frame.pdu.hdr.pid);
-    reply[count++] = (sdls_frame.pdu.hdr.pdu_len & 0xFF00) >> 8;
-    reply[count++] = (sdls_frame.pdu.hdr.pdu_len & 0x00FF);
+    reply[count++] = (sdls_frame.tlv_pdu.hdr.type << 7) | (sdls_frame.tlv_pdu.hdr.uf << 6) |
+                     (sdls_frame.tlv_pdu.hdr.sg << 4) | (sdls_frame.tlv_pdu.hdr.pid);
+    reply[count++] = (sdls_frame.tlv_pdu.hdr.pdu_len & 0xFF00) >> 8;
+    reply[count++] = (sdls_frame.tlv_pdu.hdr.pdu_len & 0x00FF);
 
+    sdls_frame.tlv_pdu.hdr.type = 0;
     return count;
 }
 
+/**
+ * @brief Function: Crypto_Get_Sdls_Ep_Reply
+ * Retrieves SDLS EP Reply
+ * @param buffer: uint8_t*
+ * @param length: uint16_t*
+ * @return int32: Success/Failure
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.2 (Protocol Description)
+ **/
 int32_t Crypto_Get_Sdls_Ep_Reply(uint8_t *buffer, uint16_t *length)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -311,7 +356,6 @@ int32_t Crypto_Get_Sdls_Ep_Reply(uint8_t *buffer, uint16_t *length)
         status = CRYPTO_LIB_ERR_TC_FRAME_SIZE_EXCEEDS_SPEC_LIMIT;
         return status;
     }
-
     // Copy our length, which will fit in the buffer
     memcpy(buffer, sdls_ep_reply, (size_t)pkt_length);
 
@@ -327,6 +371,8 @@ int32_t Crypto_Get_Sdls_Ep_Reply(uint8_t *buffer, uint16_t *length)
  * @param ingest: uint8_t*
  * @param len_ingest: int
  * @return uint16: FECF
+ *
+ * CCSDS Compliance: CCSDS 232.0-B-3 Section 4.1.4 (Error Control Field)
  **/
 uint16_t Crypto_Calc_FECF(const uint8_t *ingest, int len_ingest)
 {
@@ -373,6 +419,8 @@ uint16_t Crypto_Calc_FECF(const uint8_t *ingest, int len_ingest)
  * @param data: uint8_t*
  * @param size: int
  * @return uint16: CRC
+ *
+ * CCSDS Compliance: CCSDS 232.0-B-3 Section 4.1.4 (Error Control Field)
  **/
 uint16_t Crypto_Calc_CRC16(uint8_t *data, int size)
 { // Code provided by ESA
@@ -386,6 +434,56 @@ uint16_t Crypto_Calc_CRC16(uint8_t *data, int size)
     return crc;
 }
 
+uint8_t gf_mul(uint8_t a, uint8_t b)
+{
+    if (a == 0 || b == 0)
+    {
+        return 0;
+    }
+    else
+    {
+        return gf_exp[(gf_log[a] + gf_log[b]) % (GF_SIZE - 1)];
+    }
+}
+
+/**
+ * @brief Function: Crypto_Calc_FHECF
+ * Frame Header Error Control Field
+ * @param data: uint8_t*
+ * @return uint16: FHECF
+ *
+ * CCSDS Compliance: CCSDS 732.0-B-4 Section 4.1.2.6 (Frame Header Error Control Field)
+ **/
+uint16_t Crypto_Calc_FHECF(uint8_t *data)
+{
+    uint8_t  feedback = 0;
+    uint16_t result   = 0;
+    int      i        = 0;
+    int      j        = 0;
+
+    // RS encoding
+    memset(parity, 0, RS_PARITY);
+    for (i = 0; i < RS_DATA; i++)
+    {
+        feedback = data[i] ^ parity[0];
+        memcpy(&parity[0], &parity[1], RS_PARITY - 1);
+        parity[RS_PARITY - 1] = 0;
+
+        for (j = 0; j < RS_PARITY; j++)
+        {
+            parity[j] ^= gf_mul(feedback, gen_poly[j + 1]);
+        }
+    }
+#ifdef AOS_DEBUG
+    for (i = 0; i < RS_PARITY; i++)
+    {
+        printf("Parity[%d] = 0x%02x\n", i, parity[i]);
+    }
+#endif
+    result = (parity[0] << 12) | (parity[1] << 8) | (parity[2] << 4) | (parity[3] << 0);
+    return result;
+}
+
 /*
 ** Procedures Specifications
 */
@@ -395,6 +493,8 @@ uint16_t Crypto_Calc_CRC16(uint8_t *data, int size)
  * @param ingest: uint8_t*
  * @param tc_frame: TC_t*
  * @return int32: Success/Failure
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.4.3 (Procedure Type)
  **/
 int32_t Crypto_PDU(uint8_t *ingest, TC_t *tc_frame)
 {
@@ -408,13 +508,13 @@ int32_t Crypto_PDU(uint8_t *ingest, TC_t *tc_frame)
 
     if (status == CRYPTO_LIB_SUCCESS)
     {
-        switch (sdls_frame.pdu.hdr.type)
+        switch (sdls_frame.tlv_pdu.hdr.type)
         {
             case PDU_TYPE_COMMAND:
-                switch (sdls_frame.pdu.hdr.uf)
+                switch (sdls_frame.tlv_pdu.hdr.uf)
                 {
                     case PDU_USER_FLAG_FALSE: // CCSDS Defined Command
-                        switch (sdls_frame.pdu.hdr.sg)
+                        switch (sdls_frame.tlv_pdu.hdr.sg)
                         {
                             case SG_KEY_MGMT: // Key Management Procedure
                                 status = Crypto_SG_KEY_MGMT(ingest, tc_frame);
@@ -434,7 +534,7 @@ int32_t Crypto_PDU(uint8_t *ingest, TC_t *tc_frame)
                         break;
 
                     case PDU_USER_FLAG_TRUE: // User Defined Command
-                        switch (sdls_frame.pdu.hdr.sg)
+                        switch (sdls_frame.tlv_pdu.hdr.sg)
                         {
                             default:
                                 status = Crypto_USER_DEFINED_CMD(ingest);
@@ -456,15 +556,17 @@ int32_t Crypto_PDU(uint8_t *ingest, TC_t *tc_frame)
 
 /**
  * @brief Function: Crypto_SG_KEY_MGMT
- * Parses Key Management Procedure from PID
+ * Handles key management procedures
  * @param ingest: uint8_t*
  * @param tc_frame: TC_t*
  * @return int32: Success/Failure
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.2 (Key Management)
  **/
 int32_t Crypto_SG_KEY_MGMT(uint8_t *ingest, TC_t *tc_frame)
 {
     int status = CRYPTO_LIB_SUCCESS;
-    switch (sdls_frame.pdu.hdr.pid)
+    switch (sdls_frame.tlv_pdu.hdr.pid)
     {
         case PID_OTAR:
 #ifdef PDU_DEBUG
@@ -514,51 +616,53 @@ int32_t Crypto_SG_KEY_MGMT(uint8_t *ingest, TC_t *tc_frame)
 
 /**
  * @brief Function: Crypto_SG_SA_MGMT
- * Parses SA Management Procedure from PID
+ * Handles security association management procedures
  * @param ingest: uint8_t*
  * @param tc_frame: TC_t*
  * @return int32: Success/Failure
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7.2 (Security Association Management)
  **/
 int32_t Crypto_SG_SA_MGMT(uint8_t *ingest, TC_t *tc_frame)
 {
     int status = CRYPTO_LIB_SUCCESS;
-    switch (sdls_frame.pdu.hdr.pid)
+    switch (sdls_frame.tlv_pdu.hdr.pid)
     {
         case PID_CREATE_SA:
 #ifdef PDU_DEBUG
             printf(KGRN "SA Create\n" RESET);
 #endif
-            status = sa_if->sa_create();
+            status = sa_if->sa_create(tc_frame);
             break;
         case PID_DELETE_SA:
 #ifdef PDU_DEBUG
             printf(KGRN "SA Delete\n" RESET);
 #endif
-            status = sa_if->sa_delete();
+            status = sa_if->sa_delete(tc_frame);
             break;
         case PID_SET_ARSNW:
 #ifdef PDU_DEBUG
             printf(KGRN "SA setARSNW\n" RESET);
 #endif
-            status = sa_if->sa_setARSNW();
+            status = sa_if->sa_setARSNW(tc_frame);
             break;
         case PID_REKEY_SA:
 #ifdef PDU_DEBUG
             printf(KGRN "SA Rekey\n" RESET);
 #endif
-            status = sa_if->sa_rekey();
+            status = sa_if->sa_rekey(tc_frame);
             break;
         case PID_EXPIRE_SA:
 #ifdef PDU_DEBUG
             printf(KGRN "SA Expire\n" RESET);
 #endif
-            status = sa_if->sa_expire();
+            status = sa_if->sa_expire(tc_frame);
             break;
         case PID_SET_ARSN:
 #ifdef PDU_DEBUG
             printf(KGRN "SA SetARSN\n" RESET);
 #endif
-            status = sa_if->sa_setARSN();
+            status = sa_if->sa_setARSN(tc_frame);
             break;
         case PID_START_SA:
 #ifdef PDU_DEBUG
@@ -570,7 +674,7 @@ int32_t Crypto_SG_SA_MGMT(uint8_t *ingest, TC_t *tc_frame)
 #ifdef PDU_DEBUG
             printf(KGRN "SA Stop\n" RESET);
 #endif
-            status = sa_if->sa_stop();
+            status = sa_if->sa_stop(tc_frame);
             break;
         case PID_READ_ARSN:
 #ifdef PDU_DEBUG
@@ -595,14 +699,16 @@ int32_t Crypto_SG_SA_MGMT(uint8_t *ingest, TC_t *tc_frame)
 
 /**
  * @brief Function: Crypto_SEC_MON_CTRL
- * Parses MC Procedure from PID
+ * Handles security monitoring and control procedures
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7.3 (Security Monitoring and Control)
  **/
 int32_t Crypto_SEC_MON_CTRL(uint8_t *ingest)
 {
     int status = CRYPTO_LIB_SUCCESS;
-    switch (sdls_frame.pdu.hdr.pid)
+    switch (sdls_frame.tlv_pdu.hdr.pid)
     {
         case PID_PING:
 #ifdef PDU_DEBUG
@@ -643,8 +749,8 @@ int32_t Crypto_SEC_MON_CTRL(uint8_t *ingest)
         default:
 #ifdef PDU_DEBUG
             printf(KRED "Error: Crypto_PDU failed interpreting MC Procedure Identification Field! \n" RESET);
-            break;
 #endif
+            break;
     }
     return status;
 }
@@ -654,11 +760,13 @@ int32_t Crypto_SEC_MON_CTRL(uint8_t *ingest)
  * Parses User Defined Procedure from PID
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.4.3.3 (User-Defined Procedures)
  **/
 int32_t Crypto_USER_DEFINED_CMD(uint8_t *ingest)
 {
     int status = CRYPTO_LIB_SUCCESS;
-    switch (sdls_frame.pdu.hdr.pid)
+    switch (sdls_frame.tlv_pdu.hdr.pid)
     {
         case PID_IDLE_FRAME_TRIGGER:
 #ifdef PDU_DEBUG
@@ -718,13 +826,15 @@ int32_t Crypto_USER_DEFINED_CMD(uint8_t *ingest)
 }
 
 /**
- * @brief Function: Crypto_Process_Extended_Procedure_Pdu
+ * @brief Function: Crypto_Get_Managed_Parameters_For_Gvcid
  * @param tfvn: uint8_t
  * @param scid: uint16_t
  * @param vcid: uint8_t
  * @param managed_parameters_in: GvcidManagedParameters_t*
  * @param managed_parameters_out: GvcidManagedParameters_t*
  * @return int32: Success/Failure
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 2.4 (Managed Parameters)
  **/
 int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
                                                 GvcidManagedParameters_t *managed_parameters_in,
@@ -764,27 +874,46 @@ int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uin
  * @brief Function: Crypto_Process_Extended_Procedure_Pdu
  * @param tc_sdls_processed_frame: TC_t*
  * @param ingest: uint8_t*
+ * @param len_ingest: uint16_t
  * @return int32: Success/Failure
  * @note TODO - Actually update based on variable config
+ * @note Allows EPs to be processed one of two ways.
+ * @note - 1) By using a packet layer with APID 0x1980
+ * @note - 2) By using a defined Virtual Channel ID
+ * @note Requires this to happen on either SPI_MIN (0) or SPI_MAX (configurable)
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.2 (Protocol Description)
  **/
-int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uint8_t *ingest)
+int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uint8_t *ingest, uint16_t len_ingest)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    int     x;
+    ingest         = ingest;     // Suppress unused variable error depending on build
+    len_ingest     = len_ingest; // suppress error for now
+
     // Check for null pointers
     if (tc_sdls_processed_frame == NULL)
     {
         status = CRYPTO_LIB_ERR_NULL_BUFFER;
     }
+    // Validate correct SA for EPs
+    uint8_t valid_ep_sa = CRYPTO_FALSE;
+    if ((tc_sdls_processed_frame->tc_sec_header.spi == SPI_MIN) ||
+        (tc_sdls_processed_frame->tc_sec_header.spi == SPI_MAX))
+    {
+        valid_ep_sa = CRYPTO_TRUE;
+    }
     if (status == CRYPTO_LIB_SUCCESS)
     {
-        if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
+        // Check for specific App ID for EPs - the CryptoLib Apid in this case
+        if ((tc_sdls_processed_frame->tc_pdu[0] == 0x19) && (tc_sdls_processed_frame->tc_pdu[1] == 0x80))
         {
-            if ((tc_sdls_processed_frame->tc_pdu[0] == 0x18) && (tc_sdls_processed_frame->tc_pdu[1] == 0x80))
-            // Crypto Lib Application ID
+
+#ifdef CRYPTO_EPROC
+            // Check validity of SAs used for EP
+            if (valid_ep_sa == CRYPTO_TRUE)
             {
 #ifdef DEBUG
-                printf(KGRN "Received SDLS command: " RESET);
+                printf(KGRN "Received SDLS command w/ packet header:\n\t " RESET);
 #endif
                 // CCSDS Header
                 sdls_frame.hdr.pvn  = (tc_sdls_processed_frame->tc_pdu[0] & 0xE0) >> 5;
@@ -798,25 +927,110 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                 sdls_frame.hdr.pkt_length =
                     (tc_sdls_processed_frame->tc_pdu[4] << 8) | tc_sdls_processed_frame->tc_pdu[5];
 
-                // CCSDS PUS
-                sdls_frame.pus.shf   = (tc_sdls_processed_frame->tc_pdu[6] & 0x80) >> 7;
-                sdls_frame.pus.pusv  = (tc_sdls_processed_frame->tc_pdu[6] & 0x70) >> 4;
-                sdls_frame.pus.ack   = (tc_sdls_processed_frame->tc_pdu[6] & 0x0F);
-                sdls_frame.pus.st    = tc_sdls_processed_frame->tc_pdu[7];
-                sdls_frame.pus.sst   = tc_sdls_processed_frame->tc_pdu[8];
-                sdls_frame.pus.sid   = (tc_sdls_processed_frame->tc_pdu[9] & 0xF0) >> 4;
-                sdls_frame.pus.spare = (tc_sdls_processed_frame->tc_pdu[9] & 0x0F);
-
-                // SDLS TLV PDU
-                sdls_frame.pdu.hdr.type = (tc_sdls_processed_frame->tc_pdu[10] & 0x80) >> 7;
-                sdls_frame.pdu.hdr.uf   = (tc_sdls_processed_frame->tc_pdu[10] & 0x40) >> 6;
-                sdls_frame.pdu.hdr.sg   = (tc_sdls_processed_frame->tc_pdu[10] & 0x30) >> 4;
-                sdls_frame.pdu.hdr.pid  = (tc_sdls_processed_frame->tc_pdu[10] & 0x0F);
-                sdls_frame.pdu.hdr.pdu_len =
-                    (tc_sdls_processed_frame->tc_pdu[11] << 8) | tc_sdls_processed_frame->tc_pdu[12];
-                for (x = 13; x < (13 + sdls_frame.hdr.pkt_length); x++)
+                // Using PUS Header
+                if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
                 {
-                    sdls_frame.pdu.data[x - 13] = tc_sdls_processed_frame->tc_pdu[x];
+                    // If ECSS PUS Header is being used
+                    sdls_frame.pus.shf   = (tc_sdls_processed_frame->tc_pdu[6] & 0x80) >> 7;
+                    sdls_frame.pus.pusv  = (tc_sdls_processed_frame->tc_pdu[6] & 0x70) >> 4;
+                    sdls_frame.pus.ack   = (tc_sdls_processed_frame->tc_pdu[6] & 0x0F);
+                    sdls_frame.pus.st    = tc_sdls_processed_frame->tc_pdu[7];
+                    sdls_frame.pus.sst   = tc_sdls_processed_frame->tc_pdu[8];
+                    sdls_frame.pus.sid   = (tc_sdls_processed_frame->tc_pdu[9] & 0xF0) >> 4;
+                    sdls_frame.pus.spare = (tc_sdls_processed_frame->tc_pdu[9] & 0x0F);
+
+                    // SDLS TLV PDU
+                    sdls_frame.tlv_pdu.hdr.type = (tc_sdls_processed_frame->tc_pdu[10] & 0x80) >> 7;
+                    sdls_frame.tlv_pdu.hdr.uf   = (tc_sdls_processed_frame->tc_pdu[10] & 0x40) >> 6;
+                    sdls_frame.tlv_pdu.hdr.sg   = (tc_sdls_processed_frame->tc_pdu[10] & 0x30) >> 4;
+                    sdls_frame.tlv_pdu.hdr.pid  = (tc_sdls_processed_frame->tc_pdu[10] & 0x0F);
+                    sdls_frame.tlv_pdu.hdr.pdu_len =
+                        (tc_sdls_processed_frame->tc_pdu[11] << 8) | tc_sdls_processed_frame->tc_pdu[12];
+
+                    // Subtract headers from total frame length
+                    uint16_t derived_tlv =
+                        (tc_sdls_processed_frame->tc_pdu_len - CCSDS_HDR_SIZE - ECSS_PUS_SIZE - SDLS_TLV_HDR_SIZE);
+#ifdef CCSDS_DEBUG
+                    printf("Printing lengths for sanity check:\n");
+                    printf("\t TC Frame Header Length (bytes): %d \n", tc_sdls_processed_frame->tc_header.fl);
+                    printf("\t TC Frame Actual Length (bytes): %d \n", tc_sdls_processed_frame->tc_header.fl + 1);
+                    printf("\t TC Frame Space Pkt Length (bytes): %d \n", tc_sdls_processed_frame->tc_pdu_len);
+                    printf("\t Received TLV Length (bits): %d \n", sdls_frame.tlv_pdu.hdr.pdu_len);
+                    printf("\t Derived TLV Length (bytes): %d \n", derived_tlv);
+                    printf("\t Received TLV Length (bytes): %f \n", sdls_frame.tlv_pdu.hdr.pdu_len / 8.0);
+#endif
+                    // Sanity check - does the length of the pdu header match the number of bytes we have?
+                    // CODE REVIEW - PDUs allow lengths in bits, it is plausible that only a few bits of a byte are
+                    // needed but would require a full byte for transmission. I can't find anything atm in docs to
+                    // dispute this
+                    if ((double)(sdls_frame.tlv_pdu.hdr.pdu_len / 8.0) != derived_tlv)
+                    {
+#ifdef PDU_DEBUG
+                        printf(KRED "Packet PDU_LEN Not Equal To Derived PDU Len\n" RESET);
+#endif
+                        return CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
+                    }
+
+                    if (sdls_frame.tlv_pdu.hdr.pdu_len % 8 != 0)
+                    {
+#ifdef PDU_DEBUG
+                        printf(KRED "Packet PDU_LEN Not multiple of 8 bits\n" RESET);
+#endif
+                        return CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
+                    }
+
+                    if (sdls_frame.hdr.pkt_length <= TLV_DATA_SIZE)
+                    {
+                        for (int x = 13; x < (13 + sdls_frame.hdr.pkt_length); x++)
+                        {
+                            sdls_frame.tlv_pdu.data[x - 13] = tc_sdls_processed_frame->tc_pdu[x];
+                        }
+                    }
+                    else
+                    {
+#ifdef PDU_DEBUG
+                        printf(KRED "Packet Header Length GT TLV_DATA_SIZE\n" RESET);
+#endif
+                        status = CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
+                        return status;
+                    }
+                }
+                // Not using PUS Header
+                else
+                {
+                    // SDLS TLV PDU
+                    sdls_frame.tlv_pdu.hdr.type = (tc_sdls_processed_frame->tc_pdu[6] & 0x80) >> 7;
+                    sdls_frame.tlv_pdu.hdr.uf   = (tc_sdls_processed_frame->tc_pdu[6] & 0x40) >> 6;
+                    sdls_frame.tlv_pdu.hdr.sg   = (tc_sdls_processed_frame->tc_pdu[6] & 0x30) >> 4;
+                    sdls_frame.tlv_pdu.hdr.pid  = (tc_sdls_processed_frame->tc_pdu[6] & 0x0F);
+                    sdls_frame.tlv_pdu.hdr.pdu_len =
+                        (tc_sdls_processed_frame->tc_pdu[7] << 8) | tc_sdls_processed_frame->tc_pdu[8];
+
+                    // Make sure TLV isn't larger than we have allocated, and it is sane given total frame length
+                    uint16_t max_tlv = tc_sdls_processed_frame->tc_header.fl - CCSDS_HDR_SIZE - SDLS_TLV_HDR_SIZE;
+                    len_ingest       = len_ingest; // suppress error for now
+#ifdef PDU_DEBUG
+                    printf("PDU_LEN: %d\n", sdls_frame.tlv_pdu.hdr.pdu_len);
+#endif
+                    if ((sdls_frame.tlv_pdu.hdr.pdu_len / 8) > max_tlv)
+                    {
+#ifdef PDU_DEBUG
+                        printf(KRED "PDU_LEN GT MAX_TLV\n" RESET);
+#endif
+                        return CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
+                    }
+                    if ((sdls_frame.hdr.pkt_length < TLV_DATA_SIZE) && (sdls_frame.hdr.pkt_length < max_tlv))
+                    {
+                        for (int x = 9; x < (9 + sdls_frame.hdr.pkt_length); x++)
+                        {
+                            sdls_frame.tlv_pdu.data[x - 9] = tc_sdls_processed_frame->tc_pdu[x];
+                        }
+                    }
+                    else
+                    {
+                        status = CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
+                        return status;
+                    }
                 }
 
 #ifdef CCSDS_DEBUG
@@ -826,36 +1040,66 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                 // Determine type of PDU
                 status = Crypto_PDU(ingest, tc_sdls_processed_frame);
             }
-        }
-        else if (tc_sdls_processed_frame->tc_header.vcid == TC_SDLS_EP_VCID) // TC SDLS PDU with no packet layer
-        {
-#ifdef DEBUG
-            printf(KGRN "Received SDLS command (No Packet Header or PUS): " RESET);
-#endif
-            // No Packet HDR or PUS in these frames
-            // SDLS TLV PDU
-            sdls_frame.hdr.type        = (tc_sdls_processed_frame->tc_pdu[0] & 0x80) >> 7;
-            sdls_frame.pdu.hdr.uf      = (tc_sdls_processed_frame->tc_pdu[0] & 0x40) >> 6;
-            sdls_frame.pdu.hdr.sg      = (tc_sdls_processed_frame->tc_pdu[0] & 0x30) >> 4;
-            sdls_frame.pdu.hdr.pid     = (tc_sdls_processed_frame->tc_pdu[0] & 0x0F);
-            sdls_frame.pdu.hdr.pdu_len = (tc_sdls_processed_frame->tc_pdu[1] << 8) | tc_sdls_processed_frame->tc_pdu[2];
-            for (x = 3; x < (3 + tc_sdls_processed_frame->tc_header.fl); x++)
+            // Received EP PDU on invalid SA
+            else
             {
-                // Todo - Consider how this behaves with large OTAR PDUs that are larger than 1 TC in size. Most likely
-                // fails. Must consider Uplink Sessions (sequence numbers).
-                sdls_frame.pdu.data[x - 3] = tc_sdls_processed_frame->tc_pdu[x];
+#ifdef CCSDS_DEBUG
+                printf(KRED "Received EP PDU on invalid SA! SPI %d\n" RESET,
+                       tc_sdls_processed_frame->tc_sec_header.spi);
+#endif
+                status = CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI;
             }
 
+#else  // Received an EP command without EPs being built
+            if (valid_ep_sa)
+            {
+                status = CRYPTO_LIB_ERR_SDLS_EP_NOT_BUILT;
+                return status;
+            }
+            valid_ep_sa = valid_ep_sa; // Suppress build error
+            status      = CRYPTO_LIB_SUCCESS;
+#endif // CRYPTO_EPROC
+        }
+
+        // If not a specific APID, check if using VCIDs for SDLS PDUs with no packet layer
+        else if (tc_sdls_processed_frame->tc_header.vcid == TC_SDLS_EP_VCID)
+        {
+#ifdef CRYPTO_EPROC
+            // Check validity of SAs used for EP
+            if (valid_ep_sa == CRYPTO_TRUE)
+            {
 #ifdef CCSDS_DEBUG
-            Crypto_ccsdsPrint(&sdls_frame);
+                printf(KGRN "Received SDLS command (No Packet Header or PUS): " RESET);
+#endif
+                // No Packet HDR or PUS in these frames
+                // SDLS TLV PDU
+                sdls_frame.hdr.type        = (tc_sdls_processed_frame->tc_pdu[0] & 0x80) >> 7;
+                sdls_frame.tlv_pdu.hdr.uf  = (tc_sdls_processed_frame->tc_pdu[0] & 0x40) >> 6;
+                sdls_frame.tlv_pdu.hdr.sg  = (tc_sdls_processed_frame->tc_pdu[0] & 0x30) >> 4;
+                sdls_frame.tlv_pdu.hdr.pid = (tc_sdls_processed_frame->tc_pdu[0] & 0x0F);
+                sdls_frame.tlv_pdu.hdr.pdu_len =
+                    (tc_sdls_processed_frame->tc_pdu[1] << 8) | tc_sdls_processed_frame->tc_pdu[2];
+                for (int x = 3; x < (3 + tc_sdls_processed_frame->tc_header.fl); x++)
+                {
+                    // Todo - Consider how this behaves with large OTAR PDUs that are larger than 1 TC in size. Most
+                    // likely fails. Must consider Uplink Sessions (sequence numbers).
+                    sdls_frame.tlv_pdu.data[x - 3] = tc_sdls_processed_frame->tc_pdu[x];
+                }
+
+#ifdef CCSDS_DEBUG
+                Crypto_ccsdsPrint(&sdls_frame);
 #endif
 
-            // Determine type of PDU
-            status = Crypto_PDU(ingest, tc_sdls_processed_frame);
-        }
-        else
-        {
-            // TODO - Process SDLS PDU with Packet Layer without PUS_HDR
+                // Determine type of PDU
+                status = Crypto_PDU(ingest, tc_sdls_processed_frame);
+            }
+#else // Received an EP command without EPs being built
+#ifdef CCSDS_DEBUG
+            printf(KRED "PDU DEBUG %s %d\n" RESET, __FILE__, __LINE__);
+#endif
+            valid_ep_sa = valid_ep_sa; // Suppress build error
+            status      = CRYPTO_LIB_ERR_SDLS_EP_NOT_BUILT;
+#endif // CRYPTO_EPROC
         }
     }
     return status;
@@ -863,11 +1107,13 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
 
 /**
  * @brief Function: Crypto_Check_Anti_Replay_Verify_Pointers
- * Sanity Check, validates pointers, verifies non-null
+ * Sanity Check, validates passed in pointers
  * @param sa_ptr: SecurityAssociation_t*
  * @param arsn: uint8_t*
  * @param iv: uint8_t*
  * @return int32: Success/Failure
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
  **/
 int32_t Crypto_Check_Anti_Replay_Verify_Pointers(SecurityAssociation_t *sa_ptr, uint8_t *arsn, uint8_t *iv)
 {
@@ -897,6 +1143,8 @@ int32_t Crypto_Check_Anti_Replay_Verify_Pointers(SecurityAssociation_t *sa_ptr, 
  * @param arsn: uint8_t*
  * @param arsn_valid: uint8_t*
  * @return int32: Success/Failure
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
  **/
 int32_t Crypto_Check_Anti_Replay_ARSNW(SecurityAssociation_t *sa_ptr, uint8_t *arsn, int8_t *arsn_valid)
 {
@@ -947,6 +1195,8 @@ int32_t Crypto_Check_Anti_Replay_ARSNW(SecurityAssociation_t *sa_ptr, uint8_t *a
  * @param iv: uint8_t*
  * @param iv_valid: uint8_t*
  * @return int32: Success/Failure
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
  **/
 int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t *sa_ptr, uint8_t *iv, int8_t *iv_valid)
 {
@@ -1007,6 +1257,8 @@ int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t *sa_ptr, uint8_t *iv,
  * @param arsn: uint8_t*
  * @param iv: uint8_t*
  * @return int32: Success/Failure
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
  **/
 int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, uint8_t *iv)
 {
@@ -1067,6 +1319,8 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
  * For a given ECS algorithm, return the associated key length in bytes
  * @param algo: uint8_t
  * @return int32: Key Length
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.4.2 (Cryptographic Algorithms)
  **/
 int32_t Crypto_Get_ECS_Algo_Keylen(uint8_t algo)
 {
@@ -1098,6 +1352,8 @@ int32_t Crypto_Get_ECS_Algo_Keylen(uint8_t algo)
  * For a given ACS algorithm, return the associated key length in bytes
  * @param algo: uint8_t
  * @return int32: Key Length
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.4.2 (Cryptographic Algorithms)
  **/
 int32_t Crypto_Get_ACS_Algo_Keylen(uint8_t algo)
 {
@@ -1119,4 +1375,115 @@ int32_t Crypto_Get_ACS_Algo_Keylen(uint8_t algo)
     }
 
     return retval;
+}
+
+/**
+ * @brief: Function: Crypto_Get_Security_Header_Length
+ * Return Security Header Length
+ * @param sa_ptr: SecurityAssociation_t*
+ * @return int32: Security Header Length
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.3.2 (Security Header)
+ **/
+int32_t Crypto_Get_Security_Header_Length(SecurityAssociation_t *sa_ptr)
+{
+    /* Narrator's Note: Leaving this here for future work
+    ** eventually we need a way to reconcile cryptolib managed parameters with TO managed parameters
+    GvcidManagedParameters_t* temp_current_managed_parameters = NULL;
+    Crypto_Get_Managed_Parameters_For_Gvcid(tfvn, scid, vcid,
+                                            gvcid_managed_parameters, temp_current_managed_parameters);
+    */
+
+    if (!sa_ptr)
+    {
+#ifdef DEBUG
+        printf(KRED "Get_Security_Header_Length passed Null SA!\n" RESET);
+#endif
+        return CRYPTO_LIB_ERR_NULL_SA;
+    }
+    uint16_t securityHeaderLength = 2; // Start with SPI
+
+    securityHeaderLength += sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;
+
+    return securityHeaderLength;
+}
+
+/**
+ * @brief: Function: Crypto_Get_Security_Trailer_Length
+ * Return Security Trailer Length
+ * @param sa_ptr: SecurityAssociation_t*
+ * @return int32: Security Trailer Length
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.3.3 (Security Trailer)
+ **/
+int32_t Crypto_Get_Security_Trailer_Length(SecurityAssociation_t *sa_ptr)
+{
+    if (!sa_ptr)
+    {
+#ifdef DEBUG
+        printf(KRED "Get_Trailer_Trailer_Length passed Null SA!\n" RESET);
+#endif
+        return CRYPTO_LIB_ERR_NULL_SA;
+    }
+    uint16_t securityTrailerLength = 0;
+
+    securityTrailerLength = sa_ptr->stmacf_len;
+
+    return securityTrailerLength;
+}
+
+/**
+ * @brief: Function: Crypto_Set_FSR
+ * Sets the Frame Security Report
+ * @param p_ingest: uint8_t*
+ * @param byte_idx: uint16_t
+ * @param pdu_len: uint16_t
+ * @param sa_ptr: SecurityAssociation_t*
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.5.2 (Alarms Reporting)
+ **/
+void Crypto_Set_FSR(uint8_t *p_ingest, uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t *sa_ptr)
+{
+    if (current_managed_parameters_struct.has_ocf == TM_HAS_OCF ||
+        current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
+    {
+        Telemetry_Frame_Ocf_Fsr_t temp_report;
+        byte_idx += (pdu_len + sa_ptr->stmacf_len);
+        temp_report.cwt   = (p_ingest[byte_idx] >> 7) & 0x01;
+        temp_report.fvn   = (p_ingest[byte_idx] >> 4) & 0x07;
+        temp_report.af    = (p_ingest[byte_idx] >> 3) & 0x01;
+        temp_report.bsnf  = (p_ingest[byte_idx] >> 2) & 0x01;
+        temp_report.bmacf = (p_ingest[byte_idx] >> 1) & 0x01;
+        temp_report.bsaf  = (p_ingest[byte_idx] & 0x01);
+        byte_idx += 1;
+        temp_report.lspi = (p_ingest[byte_idx] << 8) | (p_ingest[byte_idx + 1]);
+        byte_idx += 2;
+        temp_report.snval = (p_ingest[byte_idx]);
+        byte_idx++;
+        report = temp_report;
+#ifdef DEBUG
+        Crypto_fsrPrint(&report);
+#endif
+    }
+}
+
+/**
+ * @brief: Function: Crypto_Get_FSR
+ * Gets the Frame Security Report
+ * @return uint32: FSR
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.5.2 (Alarms Reporting)
+ **/
+uint32_t Crypto_Get_FSR(void)
+{
+    uint32_t fsr;
+    fsr = (report.cwt << 31) |   // bit(s) 1
+          (report.fvn << 28) |   // bit(s) 2-4
+          (report.af << 27) |    // bit(s) 5
+          (report.bsnf << 26) |  // bit(s) 6
+          (report.bmacf << 25) | // bit(s) 7
+          (report.bsaf << 24) |  // bit(s) 8
+          (report.lspi << 8) |   // bit(s) 9-24
+          (report.snval << 0);   // bit(s) 25-32
+    return fsr;
 }

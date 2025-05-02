@@ -31,14 +31,25 @@
 #include "common_types.h"
 #endif // Assume build outside of NOS3/cFS infrastructure
 
-#ifndef KMC_CFFI_EXCLUDE // Exclude libraries that CFFI parser can’t process
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
-#endif
+
+/**
+ * CCSDS Compliance Reference:
+ * This file implements security features compliant with:
+ * - CCSDS 232.0-B-3 (TC Space Data Link Protocol)
+ * - CCSDS 132.0-B-3 (TM Space Data Link Protocol)
+ * - CCSDS 732.0-B-4 (AOS Space Data Link Protocol)
+ * - CCSDS 355.0-B-2 (Space Data Link Security Protocol)
+ */
 
 /*
 ** Definitions
+*/
+/*
+** CCSDS Compliance: CCSDS 232.0-B-3, CCSDS 132.0-B-3, CCSDS 732.0-B-4
+** Global Virtual Channel ID / Global MAP ID structure
 */
 typedef struct
 {                       // Global Virtual Channel ID / Global MAP ID
@@ -46,13 +57,12 @@ typedef struct
     uint16_t scid : 16; // Spacecraft ID
     uint16_t vcid : 6;  // Virtual Channel ID
     uint8_t  mapid : 6; // Multiplexer Access Point ID
-} crypto_gvcid_t;
+} __attribute__((packed)) crypto_gvcid_t;
 #define CRYPTO_GVCID_SIZE (sizeof(crypto_gvcid_t))
 
 /*
 ** Security Association
-*  https://public.ccsds.org/Pubs/355x0b2.pdf
-*  Table A6
+** CCSDS Compliance: CCSDS 355.0-B-2 Table A6 (Security Association)
 */
 typedef struct
 {
@@ -88,11 +98,12 @@ typedef struct
     uint8_t  arsnw_len : 8;   // Anti-Replay Seq Num Window Length
     uint16_t arsnw;           // Anti-Replay Seq Num Window
 
-} SecurityAssociation_t;
+} __attribute__((packed)) SecurityAssociation_t;
 #define SA_SIZE (sizeof(SecurityAssociation_t))
 
 /*
 ** SDLS Definitions
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 2.4 (Frame Security Report)
 */
 typedef struct
 {
@@ -104,9 +115,12 @@ typedef struct
     uint8_t  ispif : 1;  // Invalid SPI Flag
     uint16_t lspiu : 16; // Last SPI Used
     uint8_t  snval : 8;  // SN Value (LSB)
-} SDLS_FSR_t;
+} __attribute__((packed)) SDLS_FSR_t;
 #define SDLS_FSR_SIZE (sizeof(SDLS_FSR_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 4.5 (Security Protocol Procedures)
+*/
 typedef struct
 {
     uint8_t  type : 1; // Procedure Type Flag
@@ -117,6 +131,9 @@ typedef struct
 } __attribute__((packed)) SDLS_TLV_Hdr_t;
 #define SDLS_TLV_HDR_SIZE (sizeof(SDLS_TLV_Hdr_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 4.5 (Security Protocol Procedures)
+*/
 typedef struct
 {
     SDLS_TLV_Hdr_t hdr;
@@ -124,6 +141,9 @@ typedef struct
 } SDLS_TLV_t;
 #define SDLS_TLV_SIZE (sizeof(SDLS_TLV_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.4 (Key Management)
+*/
 typedef struct
 {
     uint16_t ekid;         // Encrypted Key ID
@@ -131,6 +151,9 @@ typedef struct
 } SDLS_EKB_t;
 #define SDLS_EKB_SIZE (sizeof(SDLS_EKB_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.4 (Key Management)
+*/
 typedef struct
 {
     uint16_t   mkid;              // Master Key ID
@@ -140,18 +163,27 @@ typedef struct
 } SDLS_OTAR_t;
 #define SDLS_OTAR_SIZE (sizeof(SDLS_OTAR_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.4 (Key Management)
+*/
 typedef struct
 {
     uint16_t kid : 16; // Key ID
 } SDLS_KEY_t;
 #define SDLS_KEY_SIZE (sizeof(SDLS_KEY_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.4 (Key Management)
+*/
 typedef struct
 {
     SDLS_KEY_t kblk[SDLS_KEY_ID_SIZE]; // Key ID Block
 } SDLS_KEY_BLK_t;
 #define SDLS_KEY_BLK_SIZE (sizeof(SDLS_KEY_BLK_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.4 (Key Management)
+*/
 typedef struct
 {
     uint16_t kid_first : 16; // First Key ID
@@ -159,6 +191,9 @@ typedef struct
 } SDLS_KEY_INVENTORY_CMD_t;
 #define SDLS_KEY_INVENTORY_CMD_SIZE (sizeof(SDLS_KEY_INVENTORY_CMD_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.4 (Key Management)
+*/
 typedef struct
 {
     uint16_t kid : 16;      // Key ID
@@ -166,6 +201,9 @@ typedef struct
 } __attribute__((packed)) SDLS_KEY_INVENTORY_RPLY_t;
 #define SDLS_KEY_INVENTORY_RPLY_SIZE (sizeof(SDLS_KEY_INVENTORY_RPLY_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.4 (Key Management)
+*/
 typedef struct
 {
     uint16_t kid : 16;                  // Key ID
@@ -173,27 +211,39 @@ typedef struct
 } SDLS_KEYV_CMD_BLK_t;
 #define SDLS_KEYV_CMD_BLK_SIZE (sizeof(SDLS_KEYV_CMD_BLK_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.4 (Key Management)
+*/
 typedef struct
 {
     SDLS_KEYV_CMD_BLK_t blk[SDLS_KEY_VERIFY_BLK_SIZE]; // Key Verification Command Block
 } SDLS_KEYV_CMD_t;
 #define SDLS_KEYV_CMD_SIZE (sizeof(SDLS_KEYV_CMD_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.4 (Key Management)
+*/
 typedef struct
 {
     uint16_t kid : 16;                   // Key ID
-    uint8_t  iv[IV_SIZE];                // Key Initialization Vector
+    uint8_t  iv[SDLS_IV_LEN];            // Key Initialization Vector
     uint8_t  challenged[CHALLENGE_SIZE]; // Encrypted Challenge
-    uint8_t  mac[CHALLENGE_MAC_SIZE];    // Challenge Message Authentication Code
+    uint8_t  mac[MAC_SIZE];              // Challenge Message Authentication Code
 } SDLS_KEYV_RPLY_BLK_t;
 #define SDLS_KEYV_RPLY_BLK_SIZE (sizeof(SDLS_KEYV_RPLY_BLK_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.4 (Key Management)
+*/
 typedef struct
 {
     SDLS_KEYV_RPLY_BLK_t blk[SDLS_KEY_VERIFY_BLK_SIZE]; // Key Verification Reply Block
 } SDLS_KEYV_RPLY_t;
 #define SDLS_KEYV_RPLY_SIZE (sizeof(SDLS_KEYV_RPLY_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.4 (Key Management)
+*/
 typedef struct
 {
     uint16_t kid : 16; // Key ID
@@ -201,6 +251,9 @@ typedef struct
 } SDLS_KEYDB_CMD_t;
 #define SDLS_KEYDB_CMD_SIZE (sizeof(SDLS_KEYDB_CMD_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.4 (Key Management)
+*/
 typedef struct
 {
     uint16_t kid : 16;                         // Key ID
@@ -210,6 +263,9 @@ typedef struct
 } SDLS_KEYDB_RPLY_t;
 #define SDLS_KEYDB_RPLY_SIZE (sizeof(SDLS_KEYDB_RPLY_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.5 (SA Management)
+*/
 typedef struct
 {
     uint16_t spi : 16; // Security Parameter Index
@@ -217,6 +273,9 @@ typedef struct
 } __attribute__((packed)) SDLS_SA_STATUS_RPLY_t;
 #define SDLS_SA_STATUS_RPLY_SIZE (sizeof(SDLS_SA_STATUS_RPLY_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.5 (SA Management)
+*/
 typedef struct
 {
     uint16_t spi : 16;        // Security Parameter Index
@@ -224,6 +283,9 @@ typedef struct
 } SDLS_SA_READ_ARSN_RPLY_t;
 #define SDLS_SA_READ_ARSN_RPLY_SIZE (sizeof(SDLS_SA_READ_ARSN_RPLY_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.6 (Monitoring and Control)
+*/
 typedef struct
 {
     uint16_t num_se; // Number of Security Events
@@ -231,6 +293,9 @@ typedef struct
 } SDLS_MC_LOG_RPLY_t;
 #define SDLS_MC_LOG_RPLY_SIZE (sizeof(SDLS_MC_LOG_RPLY_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.6 (Monitoring and Control)
+*/
 typedef struct
 {
     uint8_t  emt : 8;       // Event Message Tag
@@ -239,18 +304,27 @@ typedef struct
 } __attribute__((packed)) SDLS_MC_DUMP_RPLY_t;
 #define SDLS_MC_DUMP_RPLY_SIZE (sizeof(SDLS_MC_DUMP_RPLY_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.6 (Monitoring and Control)
+*/
 typedef struct
 {
     SDLS_MC_DUMP_RPLY_t blk[LOG_SIZE]; // Dump Log PDU
 } SDLS_MC_DUMP_BLK_RPLY_t;
 #define SDLS_MC_DUMP_BLK_RPLY_SIZE (sizeof(SDLS_MC_DUMP_BLK_RPLY_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.6 (Monitoring and Control)
+*/
 typedef struct
 {
     uint8_t str : 8; // Self-Test Result
 } SDLS_MC_ST_RPLY_t;
 #define SDLS_MC_ST_RPLY_SIZE (sizeof(SDLS_MC_ST_RPLY_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.1-B-1 Section 5.6 (Monitoring and Control)
+*/
 typedef struct
 {
     uint8_t snv[SN_SIZE]; // Sequence Number Value
@@ -259,6 +333,9 @@ typedef struct
 
 /*
 ** Telecommand (TC) Definitions
+*/
+/*
+** CCSDS Compliance: CCSDS 232.0-B-3 Section 4.1.2 (TC Primary Header)
 */
 typedef struct
 {
@@ -275,10 +352,13 @@ typedef struct
     uint8_t  vcid : 6;  // Virtual Channel ID
     uint16_t fl : 10;   // The whole transfer frame length (max 1024)
     uint8_t  fsn : 8;   // Frame sequence number, also N(S), zeroed on Type-B frames
-} TC_FramePrimaryHeader_t;
+} __attribute__((packed)) TC_FramePrimaryHeader_t;
 #define TC_FRAME_PRIMARYHEADER_STRUCT_SIZE (sizeof(TC_FramePrimaryHeader_t))
 #define TC_FRAME_HEADER_SIZE               5
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 4.2.1 (TC Security Header)
+*/
 typedef struct
 {
     uint8_t  sh : TC_SH_SIZE; // Segment Header
@@ -289,17 +369,24 @@ typedef struct
     uint8_t  sn_field_len;
     uint8_t  pad[PAD_SIZE]; // Count of the used fill Bytes
     uint8_t  pad_field_len;
-} TC_FrameSecurityHeader_t;
+} __attribute__((packed)) TC_FrameSecurityHeader_t;
 #define TC_FRAME_SECHEADER_SIZE (sizeof(TC_FrameSecurityHeader_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 4.2.2 (TC Security Trailer)
+*/
 typedef struct
 {
     uint8_t  mac[MAC_SIZE]; // Message Authentication Code
     uint8_t  mac_field_len;
     uint16_t fecf; // Frame Error Control Field
-} TC_FrameSecurityTrailer_t;
+} __attribute__((packed)) TC_FrameSecurityTrailer_t;
 #define TC_FRAME_SECTRAILER_SIZE (sizeof(TC_FrameSecurityTrailer_t))
 
+/*
+** CCSDS Compliance: CCSDS 232.0-B-3 (TC Space Data Link Protocol) and
+** CCSDS 355.0-B-2 (Space Data Link Security Protocol)
+*/
 typedef struct
 {
     TC_FramePrimaryHeader_t   tc_header;
@@ -307,23 +394,14 @@ typedef struct
     uint8_t                   tc_pdu[TC_FRAME_DATA_SIZE];
     uint16_t                  tc_pdu_len;
     TC_FrameSecurityTrailer_t tc_sec_trailer;
-} TC_t;
+} __attribute__((packed)) TC_t;
 #define TC_SIZE (sizeof(TC_t))
 
 /*
-** CCSDS Definitions
+** ECSS Definitions
+** European Cooperation for Space Standardization
+** Note: Early CryptoLib Testing Utilized ECSS PUS Headers
 */
-typedef struct
-{
-    uint8_t  pvn : 3;         // Packet Version Number
-    uint8_t  type : 1;        // Type = 1
-    uint8_t  shdr : 1;        // Data Field Header Flag
-    uint16_t appID : 11;      // Application ID
-    uint8_t  seq : 2;         // Sequence Flags
-    uint16_t pktid : 14;      // Sequence Count
-    uint16_t pkt_length : 16; // Packet Length
-} CCSDS_HDR_t;
-#define CCSDS_HDR_SIZE (sizeof(CCSDS_HDR_t))
 
 typedef struct
 {
@@ -334,25 +412,48 @@ typedef struct
     uint8_t sst : 8;  // Service Subtype
     uint8_t sid : 4;  // Source ID
     uint8_t spare : 4;
-} CCSDS_PUS_t;
-#define CCSDS_PUS_SIZE (sizeof(CCSDS_PUS_t))
+} ECSS_PUS_t;
+#define ECSS_PUS_SIZE (sizeof(ECSS_PUS_t))
 
+/*
+** CCSDS Definitions
+*/
+/*
+** CCSDS Compliance: CCSDS 133.0-B-2 Section 4.1 (Packet Primary Header)
+*/
 typedef struct
 {
-    CCSDS_HDR_t hdr;
-    CCSDS_PUS_t pus;
-    SDLS_TLV_t  pdu;
-} CCSDS_t;
+    uint8_t  pvn : 3;         // Packet Version Number
+    uint8_t  type : 1;        // Type = 1
+    uint8_t  shdr : 1;        // Data Field Header Flag
+    uint16_t appID : 11;      // Application ID
+    uint8_t  seq : 2;         // Sequence Flags
+    uint16_t pktid : 14;      // Sequence Count
+    uint16_t pkt_length : 16; // Packet Length
+} CCSDS_SPP_HDR_t;
+#define CCSDS_HDR_SIZE (sizeof(CCSDS_SPP_HDR_t))
+
+/*
+** CCSDS Compliance: CCSDS 133.0-B-2 (Space Packet Protocol)
+*/
+typedef struct
+{
+    CCSDS_SPP_HDR_t hdr;
+    ECSS_PUS_t      pus;
+    SDLS_TLV_t      tlv_pdu;
+} __attribute__((packed)) CCSDS_t;
 #define CCSDS_SIZE (sizeof(CCSDS_t))
 
 /*
-** Operational Control Field definition
+** Operational Control Field definitions
 ** Telemetry frames can reply with either of these in their OCF field:
 ** 1) A Communications Control Link Word -or-
 ** 2) A Frame Security Report
 */
 
-// INFO: This is the Communications Link Control Word register format
+/*
+** CCSDS Compliance: CCSDS 232.0-B-3 Section 4.1.4 (Communications Link Control Word)
+*/
 typedef struct
 {
     uint8_t cwt : 1;    // Control Word Type "0"
@@ -360,36 +461,41 @@ typedef struct
     uint8_t sf : 3;     // Status Field
     uint8_t cie : 2;    // COP In Effect
     uint8_t vci : 6;    // Virtual Channel Identification
-    uint8_t spare0 : 2; // Reserved Spare
-    uint8_t nrfa : 1;   // No RF Avaliable Flag
-    uint8_t nbl : 1;    // No Bit Lock Flag
-    uint8_t lo : 1;     // Lock-Out Flag
-    uint8_t wait : 1;   // Wait Flag
-    uint8_t rt : 1;     // Retransmit Flag
+    uint8_t spare0 : 2; // Reserved Spare "00"
+    uint8_t nrfaf : 1;  // No RF Avaliable Flag
+    uint8_t nblf : 1;   // No Bit Lock Flag
+    uint8_t lof : 1;    // Lock-Out Flag
+    uint8_t waitf : 1;  // Wait Flag
+    uint8_t rtf : 1;    // Retransmit Flag
     uint8_t fbc : 2;    // FARM-B Counter
-    uint8_t spare1 : 1; // Reserved Spare
+    uint8_t spare1 : 1; // Reserved Spare "0"
     uint8_t rv : 8;     // Report Value
-} Telemetry_Frame_Clcw_t;
+} __attribute__((packed)) Telemetry_Frame_Ocf_Clcw_t;
 
-#define TM_FRAME_CLCW_SIZE (sizeof(Telemetry_Frame_Clcw_t))
+#define TELEMETRY_FRAME_OCF_CLCW_SIZE (sizeof(Telemetry_Frame_Ocf_Clcw_t))
 
-// INFO: This is the Frame Security Report register format
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 4.4 (Frame Security Report)
+*/
 typedef struct
 {
     uint8_t  cwt : 1;   // Control Word Type "1"
     uint8_t  fvn : 3;   // FSR Version Number "100"
     uint8_t  af : 1;    // Alarm Flag
     uint8_t  bsnf : 1;  // Bad Sequence Number Flag
-    uint8_t  bmf : 1;   // Bad Mac Flag
+    uint8_t  bmacf : 1; // Bad Mac Flag
     uint8_t  bsaf : 1;  // Bad Security Association Flag
     uint16_t lspi : 16; // Last SPI Used
-    uint8_t  snv : 8;   // Sequence Number Value (LSB)
-} Telemetry_Frame_Fsr_t;
+    uint8_t  snval : 8; // Sequence Number Value (LSB)
+} __attribute__((packed)) Telemetry_Frame_Ocf_Fsr_t;
 
-#define TELEMETRY_FRAME_OCF_SIZE (sizeof(Telemetry_Frame_Fsr_t))
+#define TELEMETRY_FRAME_OCF_FSR_SIZE (sizeof(Telemetry_Frame_Ocf_Fsr_t))
 
 /*
 ** Telemetry (TM) Definitions
+*/
+/*
+** CCSDS Compliance: CCSDS 132.0-B-3 Section 4.1.2 (TM Primary Header)
 */
 typedef struct
 {
@@ -415,6 +521,9 @@ typedef struct
 } TM_FramePrimaryHeader_t;
 #define TM_FRAME_PRIMARYHEADER_SIZE (sizeof(TM_FramePrimaryHeader_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 4.3.1 (TM Security Header)
+*/
 typedef struct
 {
     uint16_t spi;         // Security Parameter Index
@@ -422,6 +531,9 @@ typedef struct
 } TM_FrameSecurityHeader_t;
 #define TM_FRAME_SECHEADER_SIZE (sizeof(TM_FrameSecurityHeader_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 4.3.2 (TM Security Trailer)
+*/
 typedef struct
 {
     uint8_t  mac[MAC_SIZE]; // Message Authentication Code
@@ -430,6 +542,10 @@ typedef struct
 } TM_FrameSecurityTrailer_t;
 #define TM_FRAME_SECTRAILER_SIZE (sizeof(TM_FrameSecurityTrailer_t))
 
+/*
+** CCSDS Compliance: CCSDS 132.0-B-3 (TM Space Data Link Protocol) and
+** CCSDS 355.0-B-2 (Space Data Link Security Protocol)
+*/
 typedef struct
 {
     TM_FramePrimaryHeader_t   tm_header;
@@ -444,6 +560,9 @@ typedef struct
 
 /*
 ** Advanced Orbiting Systems (AOS) Definitions
+*/
+/*
+** CCSDS Compliance: CCSDS 732.0-B-4 Section 4.1.2 (AOS Primary Header)
 */
 typedef struct
 {
@@ -461,15 +580,18 @@ typedef struct
     uint8_t spare : 2; // Reserved Spare
                        // 0 = Shall be set to 0
                        // Sync Flag 1 = Undefined
-    uint8_t vfcc : 2;  // VC Frame Count cycle
+    uint8_t vfcc : 4;  // VC Frame Count cycle
                        // Sync Flag 0 = Shall be 11
                        // Sync Flag 1 = Undefined
-    uint16_t fhp : 11; // First Header Pointer
+    uint16_t fhp : 16; // First Header Pointer
                        // Sync Flag 0 = Contains position of the first byte of the first packet in the data field
                        // Sync Flag 1 = undefined
 } AOS_FramePrimaryHeader_t;
 #define AOS_FRAME_PRIMARYHEADER_SIZE (sizeof(AOS_FramePrimaryHeader_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 4.3.1 (Security Header)
+*/
 typedef struct
 {
     uint16_t spi;         // Security Parameter Index
@@ -477,6 +599,9 @@ typedef struct
 } AOS_FrameSecurityHeader_t;
 #define AOS_FRAME_SECHEADER_SIZE (sizeof(AOS_FrameSecurityHeader_t))
 
+/*
+** CCSDS Compliance: CCSDS 355.0-B-2 Section 4.3.2 (Security Trailer)
+*/
 typedef struct
 {
     uint8_t  mac[MAC_SIZE]; // Message Authentication Code
@@ -485,13 +610,17 @@ typedef struct
 } AOS_FrameSecurityTrailer_t;
 #define AOS_FRAME_SECTRAILER_SIZE (sizeof(AOS_FrameSecurityTrailer_t))
 
+/*
+** CCSDS Compliance: CCSDS 732.0-B-4 (AOS Space Data Link Protocol) and
+** CCSDS 355.0-B-2 (Space Data Link Security Protocol)
+*/
 typedef struct
 {
     AOS_FramePrimaryHeader_t   tm_header;
     AOS_FrameSecurityHeader_t  tm_sec_header;
     uint8_t                    aos_pdu[AOS_FRAME_DATA_SIZE];
     AOS_FrameSecurityTrailer_t aos_sec_trailer;
-} AOS_t;
+} __attribute__((packed)) AOS_t;
 #define AOS_SIZE (sizeof(AOS_t))
 
 #define AOS_MIN_SIZE \

@@ -119,14 +119,12 @@ static const char *icv_verify_endpoint = "icv-verify?metadata=integrityCheckValu
 static const char *cam_kerberos_uri = "%s/cam-api/ssoToken?loginMethod=kerberos";
 
 // Supported KMC Cipher Transformation Strings
-static const char *AES_GCM_TRANSFORMATION = "AES/GCM/NoPadding";
-static const char *AES_CBC_TRANSFORMATION = "AES/CBC/PKCS5Padding";
-static const char *AES_CRYPTO_ALGORITHM   = "AES";
-// static const char* AES_CBC_TRANSFORMATION="AES/CBC/PKCS5Padding";
+static const char *AES_GCM_TRANSFORMATION  = "AES/GCM/NoPadding";
+static const char *AES_CBC_TRANSFORMATION  = "AES/CBC/PKCS5Padding";
+static const char *AES_CRYPTO_ALGORITHM    = "AES";
 static const char *AES_CMAC_TRANSFORMATION = "AESCMAC";
 static const char *HMAC_SHA256             = "HmacSHA256";
 static const char *HMAC_SHA512             = "HmacSHA512";
-// static const char* AES_DES_CMAC_TRANSFORMATION="DESedeCMAC";
 
 CryptographyInterface get_cryptography_interface_kmc_crypto_service(void)
 {
@@ -191,59 +189,20 @@ static int32_t cryptography_config(void)
         printf("\tSSL Client Key: %s\n", cryptography_kmc_crypto_config->mtls_client_key_path);
         printf("\tSSL CA Bundle: %s\n", cryptography_kmc_crypto_config->mtls_ca_bundle);
 #endif
-        // status = configure_curl_connect_opts(curl, NULL);
-        // if(status != CRYPTO_LIB_SUCCESS)
-        //{
-        //     return status;
-        // }
-        // curl_easy_setopt(curl, CURLOPT_URL, status_uri);
-
-        // memory_write* chunk = calloc(1,MEMORY_WRITE_SIZE);
-        ///* send all data to this function  */
-        // curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
-        ///* we pass our 'chunk' struct to the callback function */
-        // curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void* )chunk);
-
-        // CURLcode res;
-        // res = curl_easy_perform(curl);
-
-        // if(res != CURLE_OK) // This is not return code, this is successful response!
-        //{
-        //     status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_CONNECTION_ERROR;
-        //     fprintf(stderr, "curl_easy_perform() failed: %s\n",
-        //             curl_easy_strerror(res));
-        //     free(status_uri);
-        //     free(kmc_root_uri);
-        //     return status;
-        // }
-
-        // if(chunk->response == NULL) // No response, possibly because service is CAM secured.
-        //{
-        //     status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_EMPTY_RESPONSE;
-        //     fprintf(stderr, "curl_easy_perform() unexpected empty response: \n%s\n",
-        //             "Empty Crypto Service response can be caused by CAM security, is CAM configured?");
-        //     free(status_uri);
-        //     return status;
-        // }
-
-        //#ifdef DEBUG
-        //        printf("cURL response:\n\t %s\n",chunk->response);
-        //#endif
-        // free(status_uri);
     }
     return status;
 }
 static int32_t cryptography_init(void)
 {
+#ifdef DEBUG
+    printf(KYEL "Initializing KMC...\n" RESET);
+#endif
     int32_t status = CRYPTO_LIB_SUCCESS;
     curl           = curl_easy_init();
     curl_global_init(CURL_GLOBAL_ALL);
     http_headers_list = NULL;
     // Prepare HTTP headers list
     http_headers_list = curl_slist_append(http_headers_list, "Content-Type: application/octet-stream");
-    // http_headers_list = curl_slist_append(http_headers_list, "Accept: application/json");
-    // curl_slist_append(http_headers_list, "Content-Type: application/json");
-    // http_headers_list = curl_slist_append(http_headers_list, "charset: utf-8");
 
     if (curl == NULL)
     {
@@ -1324,7 +1283,7 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
             free(chunk_write);
         if (chunk_read != NULL)
             free(chunk_read);
-        if (encrypt_payload != NULL)
+        if (encrypt_payload != NULL && aad_bool == CRYPTO_TRUE) // only needs freed if it has aad
             free(encrypt_payload);
         return status;
     }
@@ -1351,7 +1310,7 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
             free(chunk_write);
         if (chunk_read != NULL)
             free(chunk_read);
-        if (encrypt_payload != NULL)
+        if (encrypt_payload != NULL && aad_bool == CRYPTO_TRUE) // only needs freed if it has aad)
             free(encrypt_payload);
         return status;
     }
@@ -1368,7 +1327,6 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
             ciphertext_IV_base64    = malloc(len_ciphertext + 1);
             memcpy(ciphertext_IV_base64, chunk_write->response + t[json_idx + 1].start, len_ciphertext);
             ciphertext_IV_base64[len_ciphertext] = '\0';
-            // printf("%s\n", ciphertext_IV_base64);
 
             char *line;
             char *token;
@@ -1464,7 +1422,7 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
                     free(chunk_write);
                 if (chunk_read != NULL)
                     free(chunk_read);
-                if (encrypt_payload != NULL)
+                if (encrypt_payload != NULL && aad_bool == CRYPTO_TRUE) // only needs freed if it has aad)
                     free(encrypt_payload);
                 if (http_code_str != NULL)
                     free(http_code_str);
@@ -1491,7 +1449,7 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
             free(chunk_write);
         if (chunk_read != NULL)
             free(chunk_read);
-        if (encrypt_payload != NULL)
+        if (encrypt_payload != NULL && aad_bool == CRYPTO_TRUE) // only needs freed if it has aad)
             free(encrypt_payload);
         return status;
     }
@@ -1537,7 +1495,6 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
         free(iv_base64);
     if (encrypt_uri != NULL)
         free(encrypt_uri);
-    // if (encrypt_payload != NULL) free(encrypt_payload);
     if (chunk_write->response != NULL)
         free(chunk_write->response);
     if (chunk_write != NULL)
@@ -1923,7 +1880,6 @@ static int32_t configure_curl_connect_opts(CURL *curl_handle, char *cam_cookies)
         return status;
     }
 
-    // curl_easy_setopt(curl_handle, CURLOPT_PROTOCOLS,CURLPROTO_HTTPS); // use default CURLPROTO_ALL
 #ifdef DEBUG
     printf("KMC Crypto Port: %d\n", cryptography_kmc_crypto_config->kmc_crypto_port);
     printf("KMC mTLS Client Cert Path: %s\n", cryptography_kmc_crypto_config->mtls_client_cert_path);

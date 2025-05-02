@@ -8,60 +8,45 @@
 #
 # Follow multi-arch instructions: https://www.docker.com/blog/multi-arch-images/
 #   docker login
-#   docker buildx create --name clbuilder
-#   docker buildx use clbuilder
-#   docker buildx build --platform linux/amd64 -t ivvitc/cryptolib:dev --push .
-#
-# TODO:
+#   docker buildx create --name clb
+#   docker buildx use clb
 #   docker buildx build --platform linux/amd64,linux/arm64 -t ivvitc/cryptolib:dev --push .
 # 
 
-ARG WOLFSSL_VERSION=5.6.0-stable
-FROM ubuntu:jammy-20240530 AS cl0
-
+FROM ubuntu:noble-20250127 AS cl0
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -y \
     && apt-get install -y \
         autoconf \
         automake \
+        build-essential \
         ca-certificates \
         cmake \
         curl \
         gettext \
         git \
         gdb\
+        gcc-14 \
         lcov \
         libcurl4-openssl-dev \
+        libgcrypt20-dev \
         libmariadb-dev \
         libmariadb-dev-compat \
         libtool \
         make \
         python3-dev \
         python3-pip \
+        python3-sphinx \
+        python3-sphinx-rtd-theme \
+        python3-myst-parser \
         unzip \
-    && rm -rf /var/lib/apt/lists/* \
-    && pip3 install pycryptodome
+    && rm -rf /var/lib/apt/lists/* 
+RUN ldconfig \
+    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 60 \
+    && update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-14 60
 
 FROM cl0 AS cl1
-ARG GPG_ERROR_VERSION=1.50
-ARG GCRYPT_VERSION=1.11.0
-RUN curl \ 
-    -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-${GPG_ERROR_VERSION}.tar.bz2 \
-    -o /tmp/libgpg-error-${GPG_ERROR_VERSION}.tar.bz2 \
-    && tar -xjf /tmp/libgpg-error-${GPG_ERROR_VERSION}.tar.bz2 -C /tmp/ \
-    && cd /tmp/libgpg-error-${GPG_ERROR_VERSION} \
-    && ./configure \
-    && make install \
-    && curl \ 
-        -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-${GCRYPT_VERSION}.tar.bz2 \
-        -o /tmp/libgcrypt-${GCRYPT_VERSION}.tar.bz2 \
-    && tar -xjf /tmp/libgcrypt-${GCRYPT_VERSION}.tar.bz2 -C /tmp/ \
-    && cd /tmp/libgcrypt-${GCRYPT_VERSION} \
-    && ./configure \
-    && make install
-
-FROM cl1 AS cl2
-ARG WOLFSSL_VERSION=5.6.0-stable
+ARG WOLFSSL_VERSION=5.7.6-stable
 RUN curl \
         -LS https://github.com/wolfSSL/wolfssl/archive/v${WOLFSSL_VERSION}.zip \
         -o v${WOLFSSL_VERSION}.zip \
@@ -74,3 +59,34 @@ RUN curl \
     && cmake --build . \
     && make install \
     && ldconfig 
+
+FROM cl1 AS cl2
+ARG DEBIAN_FRONTEND=noninteractive
+RUN apt-get update -y \
+    && apt-get install -y \
+        build-essential \
+        python3-dev \
+        automake \
+        cmake \
+        git \
+        flex \
+        bison \
+        libglib2.0-dev \
+        libpixman-1-dev \
+        python3-setuptools \
+        cargo \
+        libgtk-3-dev \
+        lld-14 \
+        llvm-14 \
+        llvm-14-dev \
+        clang-14 \
+        gcc-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-plugin-dev \
+        libstdc++-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-dev \
+        ninja-build \
+        screen \
+    && rm -rf /var/lib/apt/lists/* \
+    && git clone https://github.com/AFLplusplus/AFLplusplus -b v4.31c /tmp/AFLplusplus \
+    && cd /tmp/AFLplusplus \
+    && make distrib \
+    && make install \
+    && rm -rf /tmp/AFLplusplus

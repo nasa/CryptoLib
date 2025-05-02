@@ -35,36 +35,60 @@ set(CRYPTO_CUSTOM_PATH_DEFAULT "../../crypto/custom")
 # For flags with the same prefix, one or more may be enabled
 #
 option(CODECOV "Code Coverage" OFF)
-option(CRYPTO_LIBGCRYPT "Cryptography Module - Libgcrypt" ON)
+option(CRYPTO_LIBGCRYPT "Cryptography Module - Libgcrypt" OFF)
 option(CRYPTO_KMC "Cryptography Module - KMC" OFF)
 option(CRYPTO_WOLFSSL "Cryptography Module - WolfSSL" OFF)
 option(CRYPTO_CUSTOM "Cryptography Module - CUSTOM" OFF)
 option(CRYPTO_CUSTOM_PATH "Cryptography Module - CUSTOM PATH" OFF)
 option(DEBUG "Debug" OFF)
+option(ENABLE_FUZZING "Enable fuzz testing" OFF)
 option(KEY_CUSTOM "Key Module - Custom" OFF)
 option(KEY_CUSTOM_PATH "Custom Key Path" OFF)
-option(KEY_INTERNAL "Key Module - Internal" ON)
+option(KEY_INTERNAL "Key Module - Internal" OFF)
 option(KEY_KMC "Key Module - KMC" OFF)
 option(MC_CUSTOM "Monitoring and Control - Custom" OFF)
 option(MC_CUSTOM_PATH "Custom Monitoring and Control path" OFF)
 option(MC_DISABLED "Monitoring and Control - Disabled" OFF)
-option(MC_INTERNAL "Monitoring and Control - Internal" ON)
+option(MC_INTERNAL "Monitoring and Control - Internal" OFF)
 option(SA_CUSTOM "Security Association - Custom" OFF)
 option(SA_CUSTOM_PATH "Custom Security Association Path" OFF)
-option(SA_INTERNAL "Security Association - Internal" ON)
+option(SA_INTERNAL "Security Association - Internal" OFF)
 option(SA_MARIADB "Security Association - MariaDB" OFF)
 option(SUPPORT "Support" OFF)
 option(SYSTEM_INSTALL "SystemInstall" OFF)
 option(TEST "Test" OFF)
-option(TEST_ENC "Tests - Encryption" OFF)
 option(SA_FILE "Save Security Association to File" OFF)
 option(KEY_VALIDATION "Validate existance of key duplication" OFF)
 option(FIPS_MODE "Enables FIPS mode where applicable" OFF)
 
 OPTION(KMC_MDB_RH "KMC-MDB-RedHat-Integration-Testing" OFF) #Disabled by default, enable with: -DKMC_MDB_RH=ON
 OPTION(KMC_MDB_DB "KMC-MDB-Debian-Integration-Testing" OFF) #Disabled by default, enable with: -DKMC_MDB_DB=ON
-OPTION(KMC_CFFI_EXCLUDE "KMC-Exclude-Problematic-CFFI-Code" OFF) #Disabled by default, enable with: -DKMC_CFFI_EXCLUDE=ON
+OPTION(CRYPTO_EPROC "Enables the building and use of Extended Procedures" OFF) #Disabled by default, enable with -DCRYPTO_EPROC=ON
 
+OPTION(MAC_SIZE "The size of the max MAC buffer in bytes")
+OPTION(IV_SIZE "The size of the max IV buffer in bytes")
+Option(NUM_SA "The max number of SAs that will be used")
+Option(NUM_KEYS "The max number of keys that will be used")
+
+#
+# Max Size Defines
+#
+if(NUM_SA)
+    add_compile_definitions(NUM_SA=${NUM_SA})
+    message(STATUS "NUM_SA set to: ${NUM_SA}")
+endif()
+if(MAC_SIZE)
+    add_compile_definitions(MAC_SIZE=${MAC_SIZE})
+    message(STATUS "MAC_SIZE set to: ${MAC_SIZE}")
+endif()
+if(IV_SIZE)
+    add_compile_definitions(IV_SIZE=${IV_SIZE})
+    message(STATUS "IV_SIZE set to: ${IV_SIZE}")
+endif()
+if(NUM_KEYS)
+    add_compile_definitions(NUM_KEYS=${NUM_KEYS})
+    message(STATUS "NUM_KEYS set to: ${NUM_KEYS}")
+endif()
 
 #
 # Custom Module Paths
@@ -135,13 +159,16 @@ endif()
 
 IF(KMC_MDB_RH)
     ADD_DEFINITIONS(-DKMC_MDB_RH)
-    ADD_DEFINITIONS(-DKMC_CFFI_EXCLUDE)
 ENDIF(KMC_MDB_RH)
 
 IF(KMC_MDB_DB)
     ADD_DEFINITIONS(-DKMC_MDB_DB)
-    ADD_DEFINITIONS(-DKMC_CFFI_EXCLUDE)
 ENDIF(KMC_MDB_DB)
+
+IF(CRYPTO_EPROC)
+    ADD_DEFINITIONS(-DCRYPTO_EPROC)
+    message(WARNING "Cryptolib Extended Procedures NOT complete.  NOT Fully tested.  Use at own risk!")
+ENDIF(CRYPTO_EPROC)
 
 if(SYSTEM_INSTALL)
     # The library will be installed to /usr/local unless overridden with
@@ -155,10 +182,10 @@ elseif(NOT DEFINED CFE_SYSTEM_PSPNAME)
     set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}/install)
 endif()
 
-if(TEST_ENC)
-    # Can't run an additional set of tests without `TEST` enabled
-    set(TEST ON)
-endif()
+# if(TEST_ENC)
+#     # Can't run an additional set of tests without `TEST` enabled
+#     set(TEST ON)
+# endif()
 
 if(TEST)
     include(CTest)
@@ -168,7 +195,13 @@ endif()
 #
 # Project Specifics
 #
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror -g -O0")
+if(ENABLE_FUZZING) 
+    # More permissive flags for fuzzing (afl compiler fails with -Werror for self-assign warnings)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wno-self-assign -g -O0")
+else()
+    # Stricter flags for normal builds (treat warnings as errors)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror -g -O0")
+endif()
 
 include_directories(include)
 add_subdirectory(src)
@@ -179,4 +212,8 @@ endif()
 
 if(TEST)
     add_subdirectory(test)
+endif()
+
+if(ENABLE_FUZZING)
+    add_subdirectory(./support/fuzz)
 endif()

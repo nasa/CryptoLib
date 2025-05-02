@@ -37,6 +37,7 @@ extern "C"
 #include <signal.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include "crypto.h"
@@ -52,9 +53,6 @@ extern "C"
 #define TC_APPLY_FWD_PORT   8010
 #define TM_PROCESS_PORT     8011
 #define TM_PROCESS_FWD_PORT 6011
-
-    //#define CRYPTO_STANDALONE_TC_APPLY_DEBUG
-    //#define CRYPTO_STANDALONE_TM_PROCESS_DEBUG
 
 #define CRYPTO_STANDALONE_HANDLE_FRAMING
 #define CRYPTO_STANDALONE_FRAMING_SCID        3
@@ -75,7 +73,7 @@ extern "C"
 #define CRYPTO_MAX_INPUT_TOKENS     32
 #define CRYPTO_MAX_INPUT_TOKEN_SIZE 64
 
-#define CRYPTO_CMD_UNKNOWN  -1
+#define CRYPTO_CMD_UNKNOWN  (-1)
 #define CRYPTO_CMD_HELP     0
 #define CRYPTO_CMD_EXIT     1
 #define CRYPTO_CMD_NOOP     2
