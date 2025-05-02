@@ -148,7 +148,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC)
     test_association->ekid           = 130;
     test_association->gvcid_blk.vcid = 0;
     test_association->sa_state       = SA_OPERATIONAL;
-    test_association->ast            = 0;
+    test_association->ast            = 1;
     test_association->arsn_len       = 0;
 
     return_val =
@@ -167,7 +167,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_BAD_SPI)
     remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     Crypto_Init_TC_Unit_Test();
-    char       *raw_tc_sdls_ping_h   = "20030015000080d2c70008197f0b00310000b1fe3128";
+    char       *raw_tc_sdls_ping_h   = "2003001500000000000000000000000000000000000080d2c70008197f0b00310000b1fe3128";
     char       *raw_tc_sdls_ping_b   = NULL;
     int         raw_tc_sdls_ping_len = 0;
     SaInterface sa_if                = get_sa_interface_inmemory();
@@ -224,14 +224,13 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_CBC)
     // Expose the SADB Security Association for test edits.
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
-    sa_if->sa_get_from_spi(2, &test_association);
-    printf("SPI: %d\n", test_association->spi);
-    test_association->sa_state       = SA_OPERATIONAL;
-    test_association->ast            = 0;
-    test_association->shsnf_len      = 0;
-    test_association->arsn_len       = 0;
+    sa_if->sa_get_from_spi(4, &test_association);
+    // Set the Key
     test_association->ekid           = 130;
     test_association->gvcid_blk.vcid = 0;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ast            = 1;
+    test_association->arsn_len       = 0;
 
     return_val =
         Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
