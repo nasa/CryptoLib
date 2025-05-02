@@ -11,4 +11,4 @@ source $SCRIPT_DIR/env.sh
 
 rm $BASE_DIR/CMakeCache.txt
 
-cmake $BASE_DIR && make && make test
+cmake $BASE_DIR -DMC_DISABLED=1 -DCRYPTO_LIBGCRYPT=1 -DKEY_INTERNAL=1 -DSA_INTERNAL=1 && make && make test
