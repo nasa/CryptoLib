@@ -906,7 +906,6 @@ UTEST(AOS_PROCESS, AES_HMAC_256_TEST_0)
     int   truth_aos_len = 0;
     hex_conversion(truth_aos_h, &truth_aos_b, &truth_aos_len);
 
-    SaInterface sa_if = get_sa_interface_inmemory();
     sa_if->sa_get_from_spi(10, &sa_ptr); // Disable SPI 10
     sa_ptr->sa_state = SA_KEYED;
 
@@ -1057,10 +1056,6 @@ UTEST(AOS_PROCESS, AES_HMAC_256_TEST_1)
     char *truth_aos_b   = NULL;
     int   truth_aos_len = 0;
     hex_conversion(truth_aos_h, &truth_aos_b, &truth_aos_len);
-
-    SaInterface sa_if = get_sa_interface_inmemory();
-    sa_if->sa_get_from_spi(10, &sa_ptr); // Disable SPI 10
-    sa_ptr->sa_state = SA_KEYED;
 
     sa_if->sa_get_from_spi(11, &sa_ptr); // Enable and setup 11
     sa_ptr->sa_state       = SA_OPERATIONAL;
@@ -1584,6 +1579,7 @@ UTEST(AOS_PROCESS, AES_GCM_DEC_ONLY)
 
     // printf("\n\n");
     Crypto_Shutdown();
+    free(ptr_processed_frame);
     free(truth_aos_b);
     free(framed_aos_b);
     free(iv_b);
@@ -1911,7 +1907,6 @@ UTEST(AOS_PROCESS, AOS_KEY_STATE_TEST)
     hex_conversion(framed_aos_h, &framed_aos_b, &framed_aos_len);
 
     SecurityAssociation_t *sa_ptr = NULL;
-    SaInterface            sa_if  = get_sa_interface_inmemory();
     sa_if->sa_get_from_spi(10, &sa_ptr); // Disable SPI 10
     sa_ptr->sa_state = SA_KEYED;
     sa_if->sa_get_from_spi(5, &sa_ptr); // Enable and setup 5

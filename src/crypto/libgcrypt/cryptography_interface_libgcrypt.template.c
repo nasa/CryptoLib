@@ -314,6 +314,7 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
     {
         printf(KRED "ERROR: gcry_mac_read error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
         status = CRYPTO_LIB_ERR_MAC_RETRIEVAL_ERROR;
+        free(tmac);
         return status;
     }
 
@@ -329,7 +330,7 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
         printf("%02X", tmac[i]);
     }
     printf("\n");
-    if (!tmac)
+    if (tmac)
         free(tmac);
 
     printf("Received MAC:\n\t");
@@ -338,7 +339,6 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
         printf("%02X", mac[i]);
     }
     printf("\n");
-    free(tmac);
 #endif
 
     // Compare computed mac with MAC in frame

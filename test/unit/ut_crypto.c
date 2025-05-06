@@ -45,6 +45,7 @@ UTEST(CRYPTO_C, CALC_CRC16)
 
     printf("CRC = 0x%04x\n", crc);
     ASSERT_EQ(crc, validated_crc);
+    free(data_b);
 }
 
 /**
