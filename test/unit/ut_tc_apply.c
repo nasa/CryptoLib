@@ -813,12 +813,6 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP)
     GvcidManagedParameters_t TC_UT_Managed_Parameters = {
         0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    TC_UT_Managed_Parameters.vcid = 1;
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    TC_UT_Managed_Parameters.vcid = 2;
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    TC_UT_Managed_Parameters.vcid = 3;
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     int32_t return_val = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
 
@@ -1139,12 +1133,6 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP_1)
     GvcidManagedParameters_t TC_UT_Managed_Parameters = {
         0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    TC_UT_Managed_Parameters.vcid = 1;
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    TC_UT_Managed_Parameters.vcid = 2;
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    TC_UT_Managed_Parameters.vcid = 3;
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     int32_t return_val = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
 
@@ -1155,12 +1143,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP_1)
     char *new_iv_h = "FFEEDDCCBBAA";
     char *new_iv_b = NULL;
 
-    // char* expected_iv_h = "000000000001000000000001";
-    // char* expected_iv_b = NULL;
-
     int new_iv_len = 12;
-    // int expected_iv_len = 0;
-    SaInterface sa_if = get_sa_interface_inmemory();
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
     hex_conversion(new_iv_h, &new_iv_b, &new_iv_len);
@@ -1200,6 +1183,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP_1)
     printf("\n");
 
     Crypto_Shutdown();
+    free(new_iv_b);
     free(truth_data_b);
     free(raw_tc_sdls_ping_b);
     free(ptr_enc_frame);
@@ -1285,6 +1269,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_NULL_IV)
     // printf("\n");
 
     Crypto_Shutdown();
+    free(new_iv_b);
     free(truth_data_b);
     free(raw_tc_sdls_ping_b);
     free(ptr_enc_frame);
@@ -1374,6 +1359,7 @@ UTEST(TC_APPLY_SECURITY, CBC_NULL_IV_W_IVH)
     printf("\n");
 
     Crypto_Shutdown();
+    free(new_iv_b);
     free(truth_data_b);
     free(raw_tc_sdls_ping_b);
 }
@@ -1424,6 +1410,8 @@ UTEST(TC_APPLY_SECURITY, PLAINTEXT_W_ARSN)
     }
 
     Crypto_Shutdown();
+    free(truth_data_b);
+    free(ptr_enc_frame);
     free(raw_tc_sdls_ping_b);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
 }
@@ -1470,9 +1458,13 @@ UTEST(TC_APPLY_SECURITY, TC_KEY_STATE_TEST)
     akp->key_state    = KEY_DEACTIVATED;
 
     return_val =
-        Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+        Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, 
+        raw_tc_sdls_ping_len, 
+        &ptr_enc_frame, 
+        &enc_frame_len);
 
     Crypto_Shutdown();
+    free(ptr_enc_frame);
     free(raw_tc_sdls_ping_b);
     ASSERT_EQ(CRYPTO_LIB_ERR_KEY_STATE_INVALID, return_val);
 }
