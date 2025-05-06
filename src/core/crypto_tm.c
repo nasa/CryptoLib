@@ -1785,6 +1785,11 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_
 
         // Get Key
         status = Crypto_TM_Get_Keys(&ekp, &akp, sa_ptr);
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+            free(p_new_dec_frame);
+            return status;
+        }
     }
 
     if (status == CRYPTO_LIB_SUCCESS)
@@ -1801,6 +1806,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_
 #ifdef DEBUG
             printf(KRED "Error: SA Not Operational \n" RESET);
 #endif
+            free(p_new_dec_frame);
             return CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL;
         }
 
