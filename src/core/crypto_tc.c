@@ -252,7 +252,6 @@ int32_t Crypto_TC_Frame_Validation(uint16_t *p_enc_frame_len)
         printf(KRED "Error: New frame would violate maximum tc frame managed parameter! \n" RESET);
         status = CRYPTO_LIB_ERR_TC_FRAME_SIZE_EXCEEDS_MANAGED_PARAM_MAX_LIMIT;
         mc_if->mc_log(status);
-        printf("STATUS=%d\n", status);
         return status;
     }
     // Ensure the frame to be created will not violate spec max length
@@ -261,6 +260,7 @@ int32_t Crypto_TC_Frame_Validation(uint16_t *p_enc_frame_len)
         printf(KRED "Error: New frame would violate specification max TC frame size! \n" RESET);
         status = CRYPTO_LIB_ERR_TC_FRAME_SIZE_EXCEEDS_SPEC_LIMIT;
         mc_if->mc_log(status);
+        return status;
     }
     return status;
 }
@@ -1111,7 +1111,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, const uint16_t in
     Crypto_TC_Calc_Lengths(&fecf_len, &segment_hdr_len, &ocf_len);
 
     // Calculate tf_payload length here to be used in other logic
-    int16_t payload_calc = temp_tc_header.fl - TC_FRAME_HEADER_SIZE - segment_hdr_len - fecf_len + 1;
+    int16_t payload_calc = temp_tc_header.fl - TC_FRAME_HEADER_SIZE - segment_hdr_len - ocf_len - fecf_len + 1;
     // check if payload length underflows
     if (payload_calc < 0)
     {
@@ -1138,7 +1138,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, const uint16_t in
 
     // Calculate frame lengths based on SA fields
     *p_enc_frame_len =
-        temp_tc_header.fl + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len + sa_ptr->stmacf_len;
+        temp_tc_header.fl + 1 + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len + sa_ptr->stmacf_len + ocf_len + fecf_len ;
     new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
 
     // Finalize frame setup
