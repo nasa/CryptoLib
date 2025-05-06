@@ -99,7 +99,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_1)
 
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association = NULL;
-    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
@@ -138,7 +138,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_1)
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
     // Calc payload index: total length - pt length
     uint16_t enc_data_idx = enc_frame_len - buffer_rfc_ct_len;
-    Crypto_Shutdown();
+
     for (int i = 0; i < buffer_rfc_pt_len - 7; i++)
     {
         printf("[%d]: %02x -> %02x \n", i, *(ptr_enc_frame + enc_data_idx), buffer_rfc_ct_b[i]);
@@ -146,6 +146,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_1)
         enc_data_idx++;
     }
     // ASSERT_EQ(1,0);
+    Crypto_Shutdown();
     free(ptr_enc_frame);
     free(buffer_rfc_pt_b);
     free(buffer_rfc_aad_b);
@@ -206,7 +207,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_DEC_TEST_1)
 
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association = NULL;
-    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
@@ -251,6 +252,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_DEC_TEST_1)
         ASSERT_EQ(buffer_rfc_pt_b[i + 5], tc_rfc_processed_frame->tc_pdu[i]);
     }
     Crypto_Shutdown();
+    free(tc_rfc_processed_frame);
     free(ptr_enc_frame);
     free(buffer_rfc_pt_b);
     free(buffer_rfc_nonce_b);
@@ -306,7 +308,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_2)
 
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association = NULL;
-    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
@@ -408,7 +410,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_20_WITH_AAD_ENC_TEST_1)
 
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association = NULL;
-    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
@@ -512,7 +514,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_20_WITH_AAD_DEC_TEST_1)
 
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association = NULL;
-    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
@@ -550,6 +552,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_20_WITH_AAD_DEC_TEST_1)
     }
 
     Crypto_Shutdown();
+    free(tc_rfc_processed_frame);
     free(ptr_enc_frame);
     free(buffer_rfc_pt_b);
     free(buffer_rfc_et_b);
