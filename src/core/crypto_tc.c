@@ -399,12 +399,14 @@ int32_t Crypto_TC_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr
             {
                 status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
                 mc_if->mc_log(status);
+                free(p_new_enc_frame);
                 return status;
             }
             if (ekp->key_state != KEY_ACTIVE)
             {
                 status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
                 mc_if->mc_log(status);
+                free(p_new_enc_frame);
                 return status;
             }
         }
@@ -418,12 +420,14 @@ int32_t Crypto_TC_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr
             {
                 status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
                 mc_if->mc_log(status);
+                free(p_new_enc_frame);
                 return status;
             }
             if (akp->key_state != KEY_ACTIVE)
             {
                 status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
                 mc_if->mc_log(status);
+                free(p_new_enc_frame);
                 return status;
             }
         }

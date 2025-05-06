@@ -1457,11 +1457,7 @@ UTEST(TC_APPLY_SECURITY, TC_KEY_STATE_TEST)
     akp               = key_if->get_key(test_association->akid);
     akp->key_state    = KEY_DEACTIVATED;
 
-    return_val =
-        Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, 
-        raw_tc_sdls_ping_len, 
-        &ptr_enc_frame, 
-        &enc_frame_len);
+    return_val = Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
     Crypto_Shutdown();
     free(ptr_enc_frame);
