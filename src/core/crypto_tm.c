@@ -926,7 +926,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     printf("Actual secondary header length: %d\n", secondary_hdr_len);
 #endif
     // Only validate SHVN if secondary header is present
-    if (idx > secondary_hdr_start && shvn > 3) // SHVN is 2 bits, so max value is 3
+    if (idx > secondary_hdr_start && shvn > 0) // SHVN is 2 bits, 0b00 is the only allowed value
     {
         status = CRYPTO_LIB_ERR_TM_SECONDARY_HDR_VN;
         mc_if->mc_log(status);
@@ -957,9 +957,10 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
      **/
 
     // Set SPI
-    pTfBuffer[idx]     = ((sa_ptr->spi & 0xFF00) >> 8);
-    pTfBuffer[idx + 1] = (sa_ptr->spi & 0x00FF);
-    idx += 2;
+    pTfBuffer[idx] = (uint8_t)(sa_ptr->spi >> 8);
+    idx++;
+    pTfBuffer[idx] = (sa_ptr->spi & 0xFF);
+    idx++;
 
     // Set initialization vector if specified
     status = Crypto_TM_IV_Sanity_Check(&sa_service_type, sa_ptr);
