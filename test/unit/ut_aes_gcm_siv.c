@@ -207,7 +207,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_DEC_TEST_1)
 
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association = NULL;
-    
+
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
@@ -308,7 +308,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_2)
 
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association = NULL;
-    
+
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
@@ -410,7 +410,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_20_WITH_AAD_ENC_TEST_1)
 
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association = NULL;
-    
+
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
@@ -514,7 +514,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_20_WITH_AAD_DEC_TEST_1)
 
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association = NULL;
-    
+
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
