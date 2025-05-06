@@ -338,6 +338,7 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
         printf("%02X", mac[i]);
     }
     printf("\n");
+    free(tmac);
 #endif
 
     // Compare computed mac with MAC in frame
