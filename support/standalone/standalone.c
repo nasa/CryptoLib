@@ -32,6 +32,8 @@ static volatile uint8_t tc_vcid     = CRYPTO_STANDALONE_FRAMING_VCID;
 static volatile uint8_t tc_debug    = 1;
 static volatile uint8_t tm_debug    = 1;
 
+static volatile uint8_t crypto_use_tcp = 1; // 1 = TCP, 0 = UDP
+
 /*
 ** Functions
 */
@@ -177,7 +179,7 @@ int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char *
                 }
                 else
                 {
-                    printf("Error - virtual channl (VCID) %d must be less than 64! Sticking with prior vcid %d \n",
+                    printf("Error - virtual channel (VCID) %d must be less than 64! Sticking with prior vcid %d \n",
                            vcid, tc_vcid);
                 }
             }
@@ -294,7 +296,7 @@ int32_t crypto_host_to_ip(const char *hostname, char *ip)
     return 1; // IP NOT Found
 }
 
-int32_t crypto_standalone_udp_init(udp_info_t *sock, int32_t port, uint8_t bind_sock)
+int32_t crypto_standalone_socket_init(udp_info_t *sock, int32_t port, uint8_t bind_sock)
 {
     int       status = CRYPTO_LIB_SUCCESS;
     int       optval;
@@ -302,11 +304,14 @@ int32_t crypto_standalone_udp_init(udp_info_t *sock, int32_t port, uint8_t bind_
 
     sock->port = port;
 
-    /* Create */
-    sock->sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
+    /* Create socket */
+    int sock_type = crypto_use_tcp ? SOCK_STREAM : SOCK_DGRAM;
+    sock->sockfd = socket(AF_INET, sock_type, IPPROTO_IP);
+
     if (sock->sockfd == -1)
     {
-        printf("udp_init:  Socket create error port %d \n", sock->port);
+        printf("socket_init: Socket create error on port %d\n", sock->port);
+        return CRYPTO_LIB_ERROR;
     }
 
     /* Determine IP */
@@ -318,32 +323,79 @@ int32_t crypto_standalone_udp_init(udp_info_t *sock, int32_t port, uint8_t bind_
     else
     {
         char ip[16];
-        int  check = crypto_host_to_ip(sock->ip_address, ip);
+        int check = crypto_host_to_ip(sock->ip_address, ip);
         if (check == 0)
         {
             sock->saddr.sin_addr.s_addr = inet_addr(ip);
         }
+        else
+        {
+            printf("socket_init: Failed to resolve hostname '%s'\n", sock->ip_address);
+            return CRYPTO_LIB_ERROR;
+        }
     }
     sock->saddr.sin_port = htons(sock->port);
 
-    /* Bind */
-    if (bind_sock > 0)
+    if (crypto_use_tcp)
     {
-        status = bind(sock->sockfd, (struct sockaddr *)&sock->saddr, sizeof(sock->saddr));
-        if (status != 0)
+        if (bind_sock)
         {
-            printf(" udp_init:  Socket bind error with port %d \n", sock->port);
-            status = CRYPTO_LIB_ERROR;
+            // TCP server: bind, listen, accept
+            if (bind(sock->sockfd, (struct sockaddr *)&sock->saddr, sizeof(sock->saddr)) != 0)
+            {
+                printf("tcp_init: Bind failed on port %d\n", sock->port);
+                return CRYPTO_LIB_ERROR;
+            }
+
+            if (listen(sock->sockfd, 1) != 0)
+            {
+                printf("tcp_init: Listen failed on port %d\n", sock->port);
+                return CRYPTO_LIB_ERROR;
+            }
+
+            int clientfd = accept(sock->sockfd, NULL, NULL);
+            if (clientfd < 0)
+            {
+                printf("tcp_init: Accept failed on port %d\n", sock->port);
+                return CRYPTO_LIB_ERROR;
+            }
+
+            // Replace listener with connected client socket
+            close(sock->sockfd);
+            sock->sockfd = clientfd;
+        }
+        else
+        {
+            // TCP client: connect
+            if (connect(sock->sockfd, (struct sockaddr *)&sock->saddr, sizeof(sock->saddr)) < 0)
+            {
+                printf("tcp_init: Connect failed to %s:%d\n", sock->ip_address, sock->port);
+                return CRYPTO_LIB_ERROR;
+            }
+        }
+    }
+    else
+    {
+        // UDP: bind only if needed
+        if (bind_sock)
+        {
+            status = bind(sock->sockfd, (struct sockaddr *)&sock->saddr, sizeof(sock->saddr));
+            if (status != 0)
+            {
+                printf("udp_init: Bind failed on port %d\n", sock->port);
+                return CRYPTO_LIB_ERROR;
+            }
         }
     }
 
-    /* Keep Alive */
+    // Keep-alive socket option (not harmful for UDP, useful for TCP)
     optval = 1;
     optlen = sizeof(optval);
     setsockopt(sock->sockfd, SOL_SOCKET, SO_KEEPALIVE, &optval, optlen);
 
     return status;
 }
+
 
 int32_t crypto_reset(void)
 {
@@ -411,8 +463,15 @@ void *crypto_standalone_tc_apply(void *socks)
     while (keepRunning == CRYPTO_LIB_SUCCESS)
     {
         /* Receive */
-        status = recvfrom(tc_read_sock->sockfd, tc_apply_in, sizeof(tc_apply_in), 0,
-                          (struct sockaddr *)&tc_read_sock->ip_address, (socklen_t *)&sockaddr_size);
+        if (crypto_use_tcp)
+        {
+            status = recv(tc_read_sock->sockfd, tc_apply_in, sizeof(tc_apply_in), 0);
+        }
+        else
+        {
+            status = recvfrom(tc_read_sock->sockfd, tc_apply_in, sizeof(tc_apply_in), 0,
+                            (struct sockaddr *)&tc_read_sock->ip_address, (socklen_t *)&sockaddr_size);
+        }
         if (status != -1)
         {
             tc_in_len = status;
@@ -458,8 +517,15 @@ void *crypto_standalone_tc_apply(void *socks)
                 }
 
                 /* Reply */
-                status = sendto(tc_write_sock->sockfd, tc_out_ptr, tc_out_len, 0,
-                                (struct sockaddr *)&tc_write_sock->saddr, sizeof(tc_write_sock->saddr));
+                if (crypto_use_tcp)
+                {
+                    status = send(tc_write_sock->sockfd, tc_out_ptr, tc_out_len, 0);
+                }
+                else
+                {
+                    status = sendto(tc_write_sock->sockfd, tc_out_ptr, tc_out_len, 0,
+                                    (struct sockaddr *)&tc_write_sock->saddr, sizeof(tc_write_sock->saddr));
+                }
                 if ((status == -1) || (status != tc_out_len))
                 {
                     printf("crypto_standalone_tc_apply - Reply error %d \n", status);
@@ -487,8 +553,8 @@ void *crypto_standalone_tc_apply(void *socks)
         /* Delay */
         usleep(100);
     }
-    close(tc_read_sock->port);
-    close(tc_write_sock->port);
+    close(tc_read_sock->sockfd);
+    close(tc_write_sock->sockfd);
     return tc_read_sock;
 }
 
@@ -575,8 +641,16 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status_p, uint8_t *tm_ptr, uin
         // 0x09 for HK/Device TLM Packets (Generic Components)
         if (tm_ptr[0] == 0x08 || tm_ptr[0] == 0x09)
         {
-            status = sendto(tm_write_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr *)&tm_write_sock->saddr,
-                            sizeof(tm_write_sock->saddr));
+            if (crypto_use_tcp)
+            {
+                status = send(tm_write_sock->sockfd, tm_ptr, spp_len, 0);
+            }
+            else
+            {
+                status = sendto(tm_write_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr *)&tm_write_sock->saddr,
+                            sizeof(tm_write_sock->saddr));  
+            }
+            
         }
         // Only send idle packets if configured to do so
         else
@@ -585,8 +659,15 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status_p, uint8_t *tm_ptr, uin
             // Don't forward idle packets
             status = spp_len;
 #else
-            status = sendto(tm_write_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr *)&tm_write_sock->saddr,
-                            sizeof(tm_write_sock->saddr));
+            if (crypto_use_tcp)
+            {
+                status = send(tm_write_sock->sockfd, tm_ptr, spp_len, 0);
+            }
+            else
+            {
+                status = sendto(tm_write_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr *)&tm_write_sock->saddr,
+                            sizeof(tm_write_sock->saddr));  
+            }
 #endif
         }
 
@@ -608,8 +689,15 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status_p, uint8_t *tm_ptr, uin
         // Don't forward idle frame
         status = spp_len;
 #else
-        status = sendto(tm_write_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr *)&tm_write_sock->saddr,
+        if (crypto_use_tcp)
+        {
+            status = send(tm_write_sock->sockfd, tm_ptr, spp_len, 0);
+        }
+        else
+        {
+            status = sendto(tm_write_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr *)&tm_write_sock->saddr,
                         sizeof(tm_write_sock->saddr));
+        }        
         if ((status == -1) || (status != spp_len))
         {
             printf("crypto_standalone_tm_process - Reply error %d \n", status);
@@ -652,8 +740,15 @@ void *crypto_standalone_tm_process(void *socks)
     while (keepRunning == CRYPTO_LIB_SUCCESS)
     {
         /* Receive */
-        status = recvfrom(tm_read_sock->sockfd, tm_process_in, sizeof(tm_process_in), 0,
-                          (struct sockaddr *)&tm_read_sock->ip_address, (socklen_t *)&sockaddr_size);
+        if (crypto_use_tcp)
+        {
+            status = recv(tm_read_sock->sockfd, tm_process_in, sizeof(tm_process_in), 0);
+        }
+        else
+        {
+            status = recvfrom(tm_read_sock->sockfd, tm_process_in, sizeof(tm_process_in), 0,
+                              (struct sockaddr *)&tm_read_sock->ip_address, (socklen_t *)&sockaddr_size);
+        }
         if (status != -1)
         {
             tm_process_len = status;
@@ -742,8 +837,8 @@ void *crypto_standalone_tm_process(void *socks)
         /* Delay */
         usleep(100);
     }
-    close(tm_read_sock->port);
-    close(tm_write_sock->port);
+    close(tm_read_sock->sockfd);
+    close(tm_write_sock->sockfd);
     return tm_read_sock;
 }
 
@@ -791,6 +886,7 @@ int main(int argc, char *argv[])
         printf("Invalid number of arguments! \n");
         printf("  Expected zero but received: %s \n", argv[1]);
     }
+    printf("CryptoLib using %s sockets\n", crypto_use_tcp ? "TCP" : "UDP");
 
     /* Catch CTRL+C */
     signal(SIGINT, crypto_standalone_cleanup);
@@ -809,18 +905,18 @@ int main(int argc, char *argv[])
     /* Initialize sockets */
     if (keepRunning == CRYPTO_LIB_SUCCESS)
     {
-        status = crypto_standalone_udp_init(&tc_apply.read, TC_APPLY_PORT, 1);
+        status = crypto_standalone_socket_init(&tc_apply.read, TC_APPLY_PORT, 1);
         if (status != CRYPTO_LIB_SUCCESS)
         {
-            printf("crypto_standalone_udp_init tc_apply.read failed with status %d \n", status);
+            printf("crypto_standalone_socket_init tc_apply.read failed with status %d \n", status);
             keepRunning = CRYPTO_LIB_ERROR;
         }
         else
         {
-            status = crypto_standalone_udp_init(&tc_apply.write, TC_APPLY_FWD_PORT, 0);
+            status = crypto_standalone_socket_init(&tc_apply.write, TC_APPLY_FWD_PORT, 0);
             if (status != CRYPTO_LIB_SUCCESS)
             {
-                printf("crypto_standalone_udp_init tc_apply.write failed with status %d \n", status);
+                printf("crypto_standalone_socket_init tc_apply.write failed with status %d \n", status);
                 keepRunning = CRYPTO_LIB_ERROR;
             }
         }
@@ -828,18 +924,18 @@ int main(int argc, char *argv[])
 
     if (keepRunning == CRYPTO_LIB_SUCCESS)
     {
-        status = crypto_standalone_udp_init(&tm_process.read, TM_PROCESS_PORT, 1);
+        status = crypto_standalone_socket_init(&tm_process.read, TM_PROCESS_PORT, 1);
         if (status != CRYPTO_LIB_SUCCESS)
         {
-            printf("crypto_standalone_udp_init tm_apply.read failed with status %d \n", status);
+            printf("crypto_standalone_socket_init tm_apply.read failed with status %d \n", status);
             keepRunning = CRYPTO_LIB_ERROR;
         }
         else
         {
-            status = crypto_standalone_udp_init(&tm_process.write, TM_PROCESS_FWD_PORT, 0);
+            status = crypto_standalone_socket_init(&tm_process.write, TM_PROCESS_FWD_PORT, 0);
             if (status != CRYPTO_LIB_SUCCESS)
             {
-                printf("crypto_standalone_udp_init tc_apply.write failed with status %d \n", status);
+                printf("crypto_standalone_socket_init tc_apply.write failed with status %d \n", status);
                 keepRunning = CRYPTO_LIB_ERROR;
             }
         }
@@ -908,10 +1004,10 @@ int main(int argc, char *argv[])
     }
 
     /* Cleanup */
-    close(tc_apply.read.port);
-    close(tc_apply.write.port);
-    close(tm_process.read.port);
-    close(tm_process.write.port);
+    close(tc_apply.read.sockfd);
+    close(tc_apply.write.sockfd);
+    close(tm_process.read.sockfd);
+    close(tm_process.write.sockfd);
 
     Crypto_Shutdown();
 
