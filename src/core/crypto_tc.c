@@ -779,8 +779,8 @@ int32_t Crypto_TC_Sanity_Setup(const uint8_t *p_in_frame, const uint16_t in_fram
     printf("\nPrinted %d bytes\n", in_frame_length);
 #else
     // TODO - Find another way to know this and remove this argument
-    uint16_t tmp = in_frame_length;
-    tmp          = tmp;
+    uint16_t tmp     = in_frame_length;
+    tmp              = tmp;
 #endif
     status = Crypto_TC_Check_Init_Setup(in_frame_length);
     if (status != CRYPTO_LIB_SUCCESS)

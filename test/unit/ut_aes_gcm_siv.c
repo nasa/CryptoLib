@@ -77,15 +77,15 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_1)
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-    crypto_key_t *ekp   = NULL;
+    crypto_key_t *ekp = NULL;
 
     // RFC supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char    *buffer_rfc_pt_h    = "2003000c000100000000000000";
-    char    *buffer_rfc_aad_h   = "";
-    char    *buffer_rfc_key_h   = "0100000000000000000000000000000000000000000000000000000000000000";
-    char    *buffer_rfc_nonce_h = "030000000000000000000000";
-    char    *buffer_rfc_ct_h    = "4fa7a4cb7d3434f8a2855b40016daccb62a454551878fc26";
+    char *buffer_rfc_pt_h    = "2003000c000100000000000000";
+    char *buffer_rfc_aad_h   = "";
+    char *buffer_rfc_key_h   = "0100000000000000000000000000000000000000000000000000000000000000";
+    char *buffer_rfc_nonce_h = "030000000000000000000000";
+    char *buffer_rfc_ct_h    = "4fa7a4cb7d3434f8a2855b40016daccb62a454551878fc26";
     // 2003002A000009030000000000000000000000C2EF328E5C71C83B00000000000000000000000000000000
     uint8_t *buffer_rfc_pt_b, *buffer_rfc_aad_b, *buffer_rfc_key_b, *buffer_rfc_nonce_b, *buffer_rfc_ct_b       = NULL;
     int      buffer_rfc_pt_len, buffer_rfc_aad_len, buffer_rfc_key_len, buffer_rfc_nonce_len, buffer_rfc_ct_len = 0;
@@ -185,7 +185,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_DEC_TEST_1)
 
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-    crypto_key_t *ekp   = NULL;
+    crypto_key_t *ekp = NULL;
 
     // rfc supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -202,14 +202,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_DEC_TEST_1)
 
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association = NULL;
-<<<<<<< Updated upstream
-
-    // Deactivate SA 1
-    sa_if->sa_get_from_spi(1, &test_association);
-    test_association->sa_state = SA_NONE;
-=======
     
->>>>>>> Stashed changes
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
     test_association->arsn_len       = 0;

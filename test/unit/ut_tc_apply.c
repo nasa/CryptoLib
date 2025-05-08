@@ -809,8 +809,8 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP)
     int32_t return_val = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
 
-    char       *raw_tc_sdls_ping_h   = "2003001300" // header
-                                       "BBCCBBCCBBCCBBCCBBCCBBCCBBCCBB"; // data
+    char *raw_tc_sdls_ping_h = "2003001300"                      // header
+                               "BBCCBBCCBBCCBBCCBBCCBBCCBBCCBB"; // data
     char       *raw_tc_sdls_ping_b   = NULL;
     int         raw_tc_sdls_ping_len = 0;
     SaInterface sa_if                = get_sa_interface_inmemory();
@@ -825,7 +825,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP)
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     sa_if->sa_get_from_spi(4, &test_association);
-    
+
     test_association->sa_state   = SA_OPERATIONAL;
     test_association->ekid       = 1;
     test_association->shivf_len  = 12;
@@ -838,7 +838,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP)
     test_association->ecs_len    = 1;
     test_association->ecs        = CRYPTO_CIPHER_AES256_CBC;
     test_association->abm_len    = 1024;
-    
+
     return_val =
         Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
@@ -921,7 +921,8 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_16BP)
     return_val =
         Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
-    char *truth_data_h = "200300360000000400000000000000000000000010F67583B4B3E950C4D0FA7FACE905D7F2BE7083ED9A62DB3786FAEDC0669953653FE0";
+    char *truth_data_h = "200300360000000400000000000000000000000010F67583B4B3E950C4D0FA7FACE905D7F2BE7083ED9A62DB3786F"
+                         "AEDC0669953653FE0";
     uint8_t *truth_data_b = NULL;
     int      truth_data_l = 0;
 
@@ -1392,15 +1393,15 @@ UTEST(TC_APPLY_SECURITY, PLAINTEXT_W_ARSN)
 
     SecurityAssociation_t *test_association;
     sa_if->sa_get_from_spi(1, &test_association);
-    test_association->arsn_len = 2;
+    test_association->arsn_len  = 2;
     test_association->shsnf_len = 2;
-    test_association->arsn[0] = 0xDE;
-    test_association->arsn[1] = 0xAD;
+    test_association->arsn[0]   = 0xDE;
+    test_association->arsn[1]   = 0xAD;
 
     return_val =
         Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
-    
-    char *truth_data_h = "2003002B000001000000000000000000000000DEAD1980D2C9000E197F0B001B0004000400003040D95E4E59";
+
+    char    *truth_data_h = "2003002B000001000000000000000000000000DEAD1980D2C9000E197F0B001B0004000400003040D95E4E59";
     uint8_t *truth_data_b = NULL;
     int      truth_data_l = 0;
 
