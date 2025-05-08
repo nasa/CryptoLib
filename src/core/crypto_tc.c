@@ -1107,11 +1107,11 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, const uint16_t in
     // Determine if segment header exists and FECF exists
     uint8_t segment_hdr_len = TC_SEGMENT_HDR_SIZE;
     uint8_t fecf_len        = FECF_SIZE;
-    uint8_t ocf_len         = TELEMETRY_FRAME_OCF_CLCW_SIZE;
+    uint8_t ocf_len         = OCF_SIZE;
     Crypto_TC_Calc_Lengths(&fecf_len, &segment_hdr_len, &ocf_len);
 
     // Calculate tf_payload length here to be used in other logic
-    int16_t payload_calc = temp_tc_header.fl - TC_FRAME_HEADER_SIZE - segment_hdr_len - ocf_len - fecf_len + 1;
+    int16_t payload_calc = temp_tc_header.fl - TC_FRAME_HEADER_SIZE - segment_hdr_len + 1;
     // check if payload length underflows
     if (payload_calc < 0)
     {
@@ -1137,8 +1137,13 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, const uint16_t in
     */
 
     // Calculate frame lengths based on SA fields
+<<<<<<< Updated upstream
     *p_enc_frame_len = temp_tc_header.fl + 1 + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len +
                        sa_ptr->stmacf_len + ocf_len + fecf_len;
+=======
+    *p_enc_frame_len =
+        temp_tc_header.fl + 1 + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len + sa_ptr->stmacf_len + ocf_len + fecf_len;
+>>>>>>> Stashed changes
     new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
 
     // Finalize frame setup
