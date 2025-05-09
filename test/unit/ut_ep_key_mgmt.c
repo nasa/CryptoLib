@@ -246,7 +246,7 @@ UTEST(EP_KEY_MGMT, INVENTORY_132_134)
     int status = CRYPTO_LIB_SUCCESS;
     status     = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-    crypto_key_t *ekp   = NULL;
+    crypto_key_t *ekp = NULL;
 
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h  = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
@@ -1219,7 +1219,7 @@ UTEST(EP_KEY_MGMT, TLV_KEY_VERIFY_TESTS)
     free(buffer_TRUTH_RESPONSE_b);
     free(buffer_TLV_LONG_b);
     free(buffer_TLV_SHORT_b);
-    //free(tc_nist_processed_frame);
+    // free(tc_nist_processed_frame);
 }
 
 UTEST_MAIN();
