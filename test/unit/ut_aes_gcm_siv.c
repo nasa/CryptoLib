@@ -481,7 +481,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_20_WITH_AAD_DEC_TEST_1)
 
     int status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-    crypto_key_t *ekp   = NULL;
+    crypto_key_t *ekp = NULL;
 
     // rfc supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
