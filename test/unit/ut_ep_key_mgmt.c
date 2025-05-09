@@ -246,7 +246,6 @@ UTEST(EP_KEY_MGMT, INVENTORY_132_134)
     int status = CRYPTO_LIB_SUCCESS;
     status     = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-    SaInterface   sa_if = get_sa_interface_inmemory();
     crypto_key_t *ekp   = NULL;
 
     // NOTE: Added Transfer Frame header to the plaintext
@@ -320,7 +319,7 @@ UTEST(EP_KEY_MGMT, INVENTORY_132_134)
     Crypto_Shutdown();
     free(buffer_nist_iv_b);
     free(buffer_nist_key_b);
-    ASSERT_EQ(0, 0);
+    free(buffer_INVENTORY_b);
 }
 
 UTEST(EP_KEY_MGMT, VERIFY_132_134)
@@ -426,6 +425,7 @@ UTEST(EP_KEY_MGMT, VERIFY_132_134)
     Crypto_Shutdown();
     free(buffer_nist_key_b);
     free(buffer_VERIFY_b);
+    free(buffer_TRUTH_RESPONSE_b);
 }
 
 /*
@@ -1101,7 +1101,7 @@ UTEST(EP_KEY_MGMT, TLV_KEY_VERIFY_TESTS)
                                // Spi
                                "0000"
                                //  Spp Header (6 bytes)
-                               "1980d03a00c"
+                               "1980d03a00"
                                //  ? Pus Header ? (4 bytes)
                                "197f0b00"
                                //  Pdu Header (3 bytes)
@@ -1216,6 +1216,10 @@ UTEST(EP_KEY_MGMT, TLV_KEY_VERIFY_TESTS)
     Crypto_Shutdown();
     free(buffer_nist_key_b);
     free(buffer_VERIFY_b);
+    free(buffer_TRUTH_RESPONSE_b);
+    free(buffer_TLV_LONG_b);
+    free(buffer_TLV_SHORT_b);
+    //free(tc_nist_processed_frame);
 }
 
 UTEST_MAIN();

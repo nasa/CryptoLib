@@ -281,6 +281,7 @@ UTEST(CRYPTO_C, EXT_PROC_PDU)
     tc_frame->tc_header.fl    = 1;
 
     status = Crypto_Process_Extended_Procedure_Pdu(tc_frame, ingest, TC_SIZE);
+    free(tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 }
 #endif // CRYPTO_EPROC
