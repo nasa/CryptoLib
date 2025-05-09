@@ -199,7 +199,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_DEC_TEST_1)
 
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association = NULL;
-    
+
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
     test_association->arsn_len       = 0;
