@@ -172,7 +172,7 @@ jobs:
     - name: Update
       run: yum update -y
     - name: Install Dependencies
-      run: yum install -y --enablerepo=devel python3-pip python3-devel epel-release libcurl-devel git cmake gcc java-11-openjdk-devel openssl wget bzip2 ldconfig mariadb-devel mariadb-common mariadb-connector-c mariadb-connector-c-config mariadb-errmsg mariadb-gssapi-server libasan libasan-devel
+      run: yum install -y --enablerepo=devel python3-pip python3-devel epel-release libcurl-devel git cmake gcc java-11-openjdk-devel openssl wget bzip2 ldconfig mariadb-devel mariadb-common mariadb-connector-c mariadb-connector-c-config mariadb-errmsg mariadb-gssapi-server libasan
       # Might want to trim this down, but these dependencies should work for KMC
     - name: install lcov
       run: yum install -y --enablerepo=epel lcov
