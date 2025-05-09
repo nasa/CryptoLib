@@ -684,7 +684,7 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FHEC_OID_FECF)
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
     for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
     {
-        //printf("Checking %02x against %02X\n", (uint8_t)test_aos_b[i], (uint8_t)truth_aos_b[i]);
+        // printf("Checking %02x against %02X\n", (uint8_t)test_aos_b[i], (uint8_t)truth_aos_b[i]);
         ASSERT_EQ((uint8_t)test_aos_b[i], (uint8_t) * (truth_aos_b + i));
     }
 
