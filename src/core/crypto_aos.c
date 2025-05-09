@@ -255,9 +255,9 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
 #ifdef AOS_DEBUG
         printf(KYEL "Calculating FHECF...\n" RESET);
 #endif
-        // uint16_t calculated_fhecf = Crypto_Calc_FHECF(pTfBuffer);
-        // pTfBuffer[idx]            = (calculated_fhecf >> 8) & 0x00FF;
-        // pTfBuffer[idx + 1]        = (calculated_fhecf)&0x00FF;
+        uint16_t calculated_fhecf = Crypto_Calc_FHECF(pTfBuffer);
+        pTfBuffer[idx]            = (calculated_fhecf >> 8) & 0x00FF;
+        pTfBuffer[idx + 1]        = (calculated_fhecf)&0x00FF;
         idx = 8;
     }
 
@@ -888,23 +888,22 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     byte_idx = 6;
     if (current_managed_parameters_struct.aos_has_fhec == AOS_HAS_FHEC)
     {
-        //         uint16_t recieved_fhecf = (((p_ingest[aos_hdr_len] << 8) & 0xFF00) | (p_ingest[aos_hdr_len + 1] &
-        //         0x00FF));
-        // #ifdef AOS_DEBUG
-        //         printf("Recieved FHECF: %04x\n", recieved_fhecf);
-        //         printf(KYEL "Calculating FHECF...\n" RESET);
-        // #endif
-        //         uint16_t calculated_fhecf = Crypto_Calc_FHECF(p_ingest);
+        uint16_t recieved_fhecf = (((p_ingest[aos_hdr_len] << 8) & 0xFF00) | (p_ingest[aos_hdr_len + 1] & 0x00FF));
+#ifdef AOS_DEBUG
+        printf("Recieved FHECF: %04x\n", recieved_fhecf);
+        printf(KYEL "Calculating FHECF...\n" RESET);
+#endif
+        uint16_t calculated_fhecf = Crypto_Calc_FHECF(p_ingest);
 
-        //         if (recieved_fhecf != calculated_fhecf)
-        //         {
-        //             status = CRYPTO_LIB_ERR_INVALID_FHECF;
-        //             mc_if->mc_log(status);
-        //             return status;
-        //         }
+        if (recieved_fhecf != calculated_fhecf)
+        {
+            status = CRYPTO_LIB_ERR_INVALID_FHECF;
+            mc_if->mc_log(status);
+            return status;
+        }
 
-        //         p_ingest[byte_idx]     = (calculated_fhecf >> 8) & 0x00FF;
-        //         p_ingest[byte_idx + 1] = (calculated_fhecf)&0x00FF;
+        p_ingest[byte_idx]     = (calculated_fhecf >> 8) & 0x00FF;
+        p_ingest[byte_idx + 1] = (calculated_fhecf)&0x00FF;
         byte_idx    = 8;
         aos_hdr_len = byte_idx;
     }

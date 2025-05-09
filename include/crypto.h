@@ -241,7 +241,7 @@ void           Crypto_Local_Config(void);
 void           Crypto_Local_Init(void);
 int32_t        Crypto_window(uint8_t *actual, uint8_t *expected, int length, int window);
 uint16_t       Crypto_Calc_FECF(const uint8_t *ingest, int len_ingest);
-// uint16_t       Crypto_Calc_FHECF(uint8_t *data);
+uint16_t       Crypto_Calc_FHECF(uint8_t *data);
 void     Crypto_Calc_CRC_Init_Table(void);
 uint16_t Crypto_Calc_CRC16(uint8_t *data, int size);
 int32_t  Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, uint8_t *iv);
@@ -361,8 +361,7 @@ extern uint32_t crc32Table[CRC32TBL_SIZE];
 extern uint16_t crc16Table[CRC16TBL_SIZE];
 
 // GF(2^4) field and logarithm tables
-static const uint8_t gf_exp[30] = {1, 2, 4, 8, 3, 6, 12, 11, 5, 10, 7, 14, 15, 13, 9,
-                                   1, 2, 4, 8, 3, 6, 12, 11, 5, 10, 7, 14, 15, 13, 9};
+static const uint8_t gf_exp[15] = {1, 2, 4, 8, 3, 6, 12, 11, 5, 10, 7, 14, 15, 13, 9};
 
 static const uint8_t gf_log[GF_SIZE] = {0, 0, 1, 4, 2, 8, 5, 10, 3, 14, 9, 7, 6, 13, 11, 12};
 
