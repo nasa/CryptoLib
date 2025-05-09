@@ -129,7 +129,8 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_1)
     // Convert input ciphertext
     hex_conversion(buffer_rfc_ct_h, (char **)&buffer_rfc_ct_b, &buffer_rfc_ct_len);
 
-    Crypto_TC_ApplySecurity(buffer_rfc_pt_b, buffer_rfc_pt_len, &ptr_enc_frame, &enc_frame_len);
+    status = Crypto_TC_ApplySecurity(buffer_rfc_pt_b, buffer_rfc_pt_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
     // Calc payload index: total length - pt length
     uint16_t enc_data_idx = enc_frame_len - buffer_rfc_ct_len - FECF_SIZE;
@@ -333,7 +334,8 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_2)
     // Convert input ciphertext
     hex_conversion(buffer_rfc_ct_h, (char **)&buffer_rfc_ct_b, &buffer_rfc_ct_len);
 
-    Crypto_TC_ApplySecurity(buffer_rfc_pt_b, buffer_rfc_pt_len, &ptr_enc_frame, &enc_frame_len);
+    status = Crypto_TC_ApplySecurity(buffer_rfc_pt_b, buffer_rfc_pt_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
     // Calc payload index: total length - pt length
     uint16_t enc_data_idx = enc_frame_len - buffer_rfc_ct_len;
@@ -435,7 +437,8 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_20_WITH_AAD_ENC_TEST_1)
     // Convert input ciphertext
     hex_conversion(buffer_rfc_ct_h, (char **)&buffer_rfc_ct_b, &buffer_rfc_ct_len);
 
-    Crypto_TC_ApplySecurity(buffer_rfc_pt_b, buffer_rfc_pt_len, &ptr_enc_frame, &enc_frame_len);
+    status = Crypto_TC_ApplySecurity(buffer_rfc_pt_b, buffer_rfc_pt_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
     // Calc payload index: total length - pt length
     uint16_t enc_data_idx = enc_frame_len - buffer_rfc_ct_len;
@@ -472,21 +475,12 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_20_WITH_AAD_DEC_TEST_1)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_NO_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_1_Managed_Parameters = {
-        0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
-
     int status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-    SaInterface   sa_if = get_sa_interface_inmemory();
     crypto_key_t *ekp   = NULL;
 
     // rfc supplied vectors
@@ -530,7 +524,8 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_20_WITH_AAD_DEC_TEST_1)
     // Convert input encryptedtext
     hex_conversion(buffer_rfc_et_h, (char **)&buffer_rfc_et_b, &buffer_rfc_et_len);
 
-    Crypto_TC_ProcessSecurity(buffer_rfc_et_b, &buffer_rfc_et_len, tc_rfc_processed_frame);
+    status = Crypto_TC_ProcessSecurity(buffer_rfc_et_b, &buffer_rfc_et_len, tc_rfc_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     for (int i = 0; i < tc_rfc_processed_frame->tc_pdu_len; i++)
     {

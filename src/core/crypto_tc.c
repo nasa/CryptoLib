@@ -685,7 +685,6 @@ int32_t Crypto_TC_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
                                aad, ecs_is_aead_algorithm, index_p, p_in_frame, cam_cookies, pkcs_padding);
     if (status != CRYPTO_LIB_SUCCESS)
     {
-        Crypto_TC_Safe_Free_Ptr(*aad);
         mc_if->mc_log(status);
         return status;
     }
