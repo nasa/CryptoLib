@@ -560,17 +560,7 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status_p, uint8_t *tm_ptr, uin
 
     udp_info_t *tm_write_sock = &tm_socks->write;
 
-    if (tm_ptr[0] == 0x0F && tm_ptr[1] == 0xFD) // for custom CFDP debugging
-    {
-        spp_len = (((0xFFFF & tm_ptr[4]) << 8) | tm_ptr[5]) + 7;
-        printf("crypto_standalone_tm_process - SPP[%d]: 0x", spp_len);
-        for (int i = 0; i < spp_len; i++)
-        {
-            printf("%02x", tm_ptr[i]);
-        }
-        printf("\n");
-    }
-    if ((tm_ptr[0] == 0x08) || (tm_ptr[0] == 0x09) || ((tm_ptr[0] == 0x07) && tm_ptr[1] == 0xff))
+    if ((tm_ptr[0] == 0x08) || (tm_ptr[0] == 0x09) || ((tm_ptr[0] == 0x07) && (tm_ptr[1] == 0xff)) || (tm_ptr[0] == 0x0F && tm_ptr[1] == 0xFD))
     {
         spp_len = (((0xFFFF & tm_ptr[4]) << 8) | tm_ptr[5]) + 7;
 #ifdef CRYPTO_STANDALONE_TM_PROCESS_DEBUG
