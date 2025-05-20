@@ -154,8 +154,9 @@
 #define CRYPTO_LIB_ERR_TM_SECONDARY_HDR_SIZE                                (-80)
 #define CRYPTO_LIB_ERR_TM_SECONDARY_HDR_VN                                  (-81)
 #define CRYPTO_LIB_ERR_TC_FRAME_LENGTH_MISMATCH                             (-82)
+#define CRYPTO_LIB_ERR_INVALID_AOS_IZ_LENGTH                                (-83)
 
-#define CRYPTO_CORE_ERROR_CODES_MAX -82
+#define CRYPTO_CORE_ERROR_CODES_MAX -83
 
 // Define codes for returning MDB Strings, and determining error based on strings
 #define CAM_ERROR_CODES     600
