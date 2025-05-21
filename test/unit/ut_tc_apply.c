@@ -1411,7 +1411,7 @@ UTEST(TC_APPLY_SECURITY, PLAINTEXT_W_ARSN)
     return_val =
         Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
     // 200300230000010000000100011980D2C9000E197F0B001B0004000400003040D95E85F3
-    char *truth_data_h = "20030021000001000100011980D2C9000E197F0B001B0004000400003040D95EE1F1";
+    char    *truth_data_h = "20030021000001000100011980D2C9000E197F0B001B0004000400003040D95EE1F1";
     uint8_t *truth_data_b = NULL;
     int      truth_data_l = 0;
 
