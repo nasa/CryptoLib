@@ -74,8 +74,8 @@ extern "C"
 #define CRYPTO_MAX_INPUT_TOKEN_SIZE 64
 
 #define TM_PRI_HDR_LENGTH 6
-#define TM_ASM_LENGTH 4
-#define SDLS_SPI_LENGTH 2
+#define TM_ASM_LENGTH     4
+#define SDLS_SPI_LENGTH   2
 
 #define CRYPTO_CMD_UNKNOWN  (-1)
 #define CRYPTO_CMD_HELP     0

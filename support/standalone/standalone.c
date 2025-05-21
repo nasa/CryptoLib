@@ -154,15 +154,15 @@ int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char *
                 {
                     SaInterface            sa_if            = get_sa_interface_inmemory();
                     SecurityAssociation_t *test_association = NULL;
-                    int32_t status = CRYPTO_LIB_SUCCESS;
+                    int32_t                status           = CRYPTO_LIB_SUCCESS;
 
                     status = sa_if->sa_get_operational_sa_from_gvcid(0, SCID, vcid, 0, &test_association);
-                    if (status == CRYPTO_LIB_SUCCESS) 
+                    if (status == CRYPTO_LIB_SUCCESS)
                     {
                         Crypto_saPrint(test_association);
                     }
 
-                    if ((status == CRYPTO_LIB_SUCCESS) && (test_association->sa_state == SA_OPERATIONAL) && 
+                    if ((status == CRYPTO_LIB_SUCCESS) && (test_association->sa_state == SA_OPERATIONAL) &&
                         (test_association->gvcid_blk.mapid == TYPE_TC) && (test_association->gvcid_blk.scid == SCID))
                     {
                         tc_vcid = vcid;
@@ -227,24 +227,25 @@ int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char *
                     sa_if->sa_get_from_spi(i, &test_association);
                     if (test_association->sa_state == SA_OPERATIONAL)
                     {
-                        if(i<5)
+                        if (i < 5)
                         {
                             printf("TC  - ");
                         }
-                        if(i>4 && i<9)
+                        if (i > 4 && i < 9)
                         {
                             printf("TM  - ");
                         }
-                        if(i>8 && i<13)
+                        if (i > 8 && i < 13)
                         {
                             printf("AOS - ");
                         }
-                        if(i>12 && i<16)
+                        if (i > 12 && i < 16)
                         {
                             printf("ExProc - ");
                         }
 
-                        printf("SPI %d - VCID %d - EST %d - AST %d\n\t", i, test_association->gvcid_blk.vcid, test_association->est, test_association->ast);
+                        printf("SPI %d - VCID %d - EST %d - AST %d\n\t", i, test_association->gvcid_blk.vcid,
+                               test_association->est, test_association->ast);
                     }
                 }
                 printf("\n");
@@ -497,7 +498,7 @@ void crypto_standalone_tm_frame(uint8_t *in_data, uint16_t in_length, uint8_t *o
 {
     SaInterface            sa_if  = get_sa_interface_inmemory();
     SecurityAssociation_t *sa_ptr = NULL;
-    int32_t status = CRYPTO_LIB_SUCCESS;
+    int32_t                status = CRYPTO_LIB_SUCCESS;
 
     status = sa_if->sa_get_from_spi(spi, &sa_ptr);
     if (status != CRYPTO_LIB_SUCCESS)
@@ -506,7 +507,8 @@ void crypto_standalone_tm_frame(uint8_t *in_data, uint16_t in_length, uint8_t *o
     }
 
     // Calculate security headers and trailers
-    uint8_t header_length  = TM_PRI_HDR_LENGTH + SDLS_SPI_LENGTH + sa_ptr->shivf_len + sa_ptr->shplf_len + sa_ptr->shsnf_len; // TODO: Why +40?
+    uint8_t header_length = TM_PRI_HDR_LENGTH + SDLS_SPI_LENGTH + sa_ptr->shivf_len + sa_ptr->shplf_len +
+                            sa_ptr->shsnf_len; // TODO: Why +40?
     uint8_t trailer_length = sa_ptr->stmacf_len;
     if (current_managed_parameters_struct.has_fecf == TM_HAS_FECF)
     {
@@ -560,7 +562,8 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status_p, uint8_t *tm_ptr, uin
 
     udp_info_t *tm_write_sock = &tm_socks->write;
 
-    if ((tm_ptr[0] == 0x08) || (tm_ptr[0] == 0x09) || ((tm_ptr[0] == 0x07) && (tm_ptr[1] == 0xff)) || (tm_ptr[0] == 0x0F && tm_ptr[1] == 0xFD))
+    if ((tm_ptr[0] == 0x08) || (tm_ptr[0] == 0x09) || ((tm_ptr[0] == 0x07) && (tm_ptr[1] == 0xff)) ||
+        (tm_ptr[0] == 0x0F && tm_ptr[1] == 0xFD))
     {
         spp_len = (((0xFFFF & tm_ptr[4]) << 8) | tm_ptr[5]) + 7;
 #ifdef CRYPTO_STANDALONE_TM_PROCESS_DEBUG
@@ -599,7 +602,7 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status_p, uint8_t *tm_ptr, uin
         tm_process_len = tm_process_len - spp_len;
     }
     else if ((tm_ptr[0] == 0xFF && tm_ptr[1] == 0x48) || (tm_ptr[0] == 0x00 && tm_ptr[1] == 0x00) ||
-             (tm_ptr[0] == 0x02 && tm_ptr[1] == 0x00) || (tm_ptr[0] == 0xFF && tm_ptr[1] == 0xFF)) 
+             (tm_ptr[0] == 0x02 && tm_ptr[1] == 0x00) || (tm_ptr[0] == 0xFF && tm_ptr[1] == 0xFF))
     {
         // TODO: Why 0x0200?
         // Idle Frame
