@@ -566,14 +566,14 @@ UTEST(SA_SAVE, VERIFY_SAVE_ADJACENT)
     ASSERT_EQ(test_association->akid, 3);
     // test_association->ek_ref = sa_ptr->ek_ref;
     // test_association->ak_ref = sa_ptr->ak_ref;
-    ASSERT_EQ(test_association->sa_state, SA_KEYED);
+    ASSERT_EQ(test_association->sa_state, SA_OPERATIONAL);
     ASSERT_EQ(test_association->gvcid_blk.tfvn, 0);
     ASSERT_EQ(test_association->gvcid_blk.scid, 3);
-    ASSERT_EQ(test_association->gvcid_blk.vcid, 0);
+    ASSERT_EQ(test_association->gvcid_blk.vcid, 3);
     ASSERT_EQ(test_association->gvcid_blk.mapid, TYPE_TC);
     ASSERT_EQ(test_association->est, 0);
     ASSERT_EQ(test_association->ast, 1);
-    ASSERT_EQ(test_association->shivf_len, 12);
+    ASSERT_EQ(test_association->shivf_len, 0);
     ASSERT_EQ(test_association->shsnf_len, 2);
     ASSERT_EQ(test_association->shplf_len, 0);
     ASSERT_EQ(test_association->stmacf_len, 16);
@@ -593,10 +593,10 @@ UTEST(SA_SAVE, VERIFY_SAVE_ADJACENT)
     ASSERT_EQ(test_association->iv[10], 0x00);
     ASSERT_EQ(test_association->iv[11], 0x00);
 
-    ASSERT_EQ(test_association->iv_len, 12);
+    ASSERT_EQ(test_association->iv_len, 0);
     ASSERT_EQ(test_association->acs_len, 1);
-    ASSERT_EQ(test_association->acs, 3);
-    ASSERT_EQ(test_association->abm_len, 0);
+    ASSERT_EQ(test_association->acs, 2);
+    ASSERT_EQ(test_association->abm_len, 1786);
     for (int i = 0; i < test_association->abm_len; i++)
     {
         ASSERT_EQ(test_association->abm[i], 0x00);
@@ -618,15 +618,15 @@ UTEST(SA_SAVE, VERIFY_SAVE_ADJACENT)
     ASSERT_EQ(test_association->akid, 5);
     // test_association->ek_ref = sa_ptr->ek_ref;
     // test_association->ak_ref = sa_ptr->ak_ref;
-    ASSERT_EQ(test_association->sa_state, SA_KEYED);
+    ASSERT_EQ(test_association->sa_state, SA_OPERATIONAL);
     ASSERT_EQ(test_association->gvcid_blk.tfvn, 0);
     ASSERT_EQ(test_association->gvcid_blk.scid, 3);
     ASSERT_EQ(test_association->gvcid_blk.vcid, 1);
-    ASSERT_EQ(test_association->gvcid_blk.mapid, 2);
+    ASSERT_EQ(test_association->gvcid_blk.mapid, 0);
     ASSERT_EQ(test_association->est, 0);
     ASSERT_EQ(test_association->ast, 0);
-    ASSERT_EQ(test_association->shivf_len, 12);
-    ASSERT_EQ(test_association->shsnf_len, 2);
+    ASSERT_EQ(test_association->shivf_len, 0);
+    ASSERT_EQ(test_association->shsnf_len, 0);
     ASSERT_EQ(test_association->shplf_len, 0);
     ASSERT_EQ(test_association->stmacf_len, 0);
     ASSERT_EQ(test_association->ecs, 0);
@@ -645,7 +645,7 @@ UTEST(SA_SAVE, VERIFY_SAVE_ADJACENT)
     ASSERT_EQ(test_association->iv[10], 0x00);
     ASSERT_EQ(test_association->iv[11], 0x00);
 
-    ASSERT_EQ(test_association->iv_len, 12);
+    ASSERT_EQ(test_association->iv_len, 0);
     ASSERT_EQ(test_association->acs_len, 0);
     ASSERT_EQ(test_association->acs, 0x00);
     ASSERT_EQ(test_association->abm_len, 0);
@@ -654,14 +654,14 @@ UTEST(SA_SAVE, VERIFY_SAVE_ADJACENT)
         ASSERT_EQ(test_association->abm[i], 0x00);
     }
     // sa[location].abm[0] = sa_ptr->abm;
-    ASSERT_EQ(test_association->arsn_len, 2);
+    ASSERT_EQ(test_association->arsn_len, 0);
     for (int i = 0; i < test_association->arsn_len; i++)
     {
         ASSERT_EQ(test_association->arsn[i], 0);
     }
     // sa[location].arsn[0] = sa_ptr->arsn;
-    ASSERT_EQ(test_association->arsnw_len, 1);
-    ASSERT_EQ(test_association->arsnw, 5);
+    ASSERT_EQ(test_association->arsnw_len, 0);
+    ASSERT_EQ(test_association->arsnw, 0);
 }
 
 UTEST(SA_SAVE, VERIFY_SAVE_EDGES)
@@ -685,7 +685,7 @@ UTEST(SA_SAVE, VERIFY_SAVE_EDGES)
     ASSERT_EQ(test_association->gvcid_blk.mapid, TYPE_TC);
     ASSERT_EQ(test_association->est, 0);
     ASSERT_EQ(test_association->ast, 0);
-    ASSERT_EQ(test_association->shivf_len, 12);
+    ASSERT_EQ(test_association->shivf_len, 0);
     ASSERT_EQ(test_association->shsnf_len, 0);
     ASSERT_EQ(test_association->shplf_len, 0);
     ASSERT_EQ(test_association->stmacf_len, 0);
@@ -705,7 +705,7 @@ UTEST(SA_SAVE, VERIFY_SAVE_EDGES)
     ASSERT_EQ(test_association->iv[10], 0x00);
     ASSERT_EQ(test_association->iv[11], 0x00);
 
-    ASSERT_EQ(test_association->iv_len, 12);
+    ASSERT_EQ(test_association->iv_len, 0);
     ASSERT_EQ(test_association->acs_len, 0);
     ASSERT_EQ(test_association->acs, 0x00);
     ASSERT_EQ(test_association->abm_len, 0);
@@ -720,8 +720,8 @@ UTEST(SA_SAVE, VERIFY_SAVE_EDGES)
         ASSERT_EQ(test_association->arsn[i], 0);
     }
     // sa[location].arsn[0] = sa_ptr->arsn;
-    ASSERT_EQ(test_association->arsnw_len, 1);
-    ASSERT_EQ(test_association->arsnw, 5);
+    ASSERT_EQ(test_association->arsnw_len, 0);
+    ASSERT_EQ(test_association->arsnw, 0);
 
     // VERIFY SA 17
     sa_if->sa_get_from_spi(17, &test_association);

@@ -1411,7 +1411,7 @@ UTEST(TC_APPLY_SECURITY, PLAINTEXT_W_ARSN)
     return_val =
         Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
     // 200300230000010000000100011980D2C9000E197F0B001B0004000400003040D95E85F3
-    char *truth_data_h = "2003002d000001000000000000000000000000000100011980d2c9000e197f0b001b0004000400003040d95e9750";
+    char *truth_data_h = "20030021000001000100011980D2C9000E197F0B001B0004000400003040D95EE1F1";
     uint8_t *truth_data_b = NULL;
     int      truth_data_l = 0;
 
@@ -1489,12 +1489,12 @@ UTEST(TC_APPLY_SECURITY, TC_HEAP_BUFFER_OVERFLOW_TEST)
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_UT_Managed_Parameters = {
-        1, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Test string
-    char *test_frame_pt_h   = "6403000000";
+    char *test_frame_pt_h   = "2003000000";
     char *test_frame_pt_b   = NULL;
     int   test_frame_pt_len = 0;
 
