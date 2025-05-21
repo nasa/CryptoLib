@@ -1196,6 +1196,8 @@ UTEST(AOS_APPLY, AES_CBC_256_ENCRYPT_AUTH_16B_PADDING)
 
     // Setup security association
     SecurityAssociation_t *sa_ptr;
+    sa_if->sa_get_from_spi(9, &sa_ptr);
+    sa_ptr->sa_state   = SA_NONE;
     sa_if->sa_get_from_spi(10, &sa_ptr);
     sa_ptr->sa_state   = SA_OPERATIONAL;
     sa_ptr->est        = 1;                        // Encryption on
