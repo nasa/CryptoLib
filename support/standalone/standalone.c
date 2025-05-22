@@ -296,7 +296,7 @@ int32_t crypto_host_to_ip(const char *hostname, char *ip)
     return 1; // IP NOT Found
 }
 
-int32_t crypto_standalone_socket_init(udp_info_t *sock, int32_t port, uint8_t bind_sock)
+int32_t crypto_standalone_socket_init(udp_info_t *sock, int32_t port, uint8_t bind_sock, int connection)
 {
     int       status = CRYPTO_LIB_SUCCESS;
     int       optval;
@@ -304,37 +304,66 @@ int32_t crypto_standalone_socket_init(udp_info_t *sock, int32_t port, uint8_t bi
 
     sock->port = port;
 
-    /* Create socket */
-    int sock_type = crypto_use_tcp ? SOCK_STREAM : SOCK_DGRAM;
-    sock->sockfd = socket(AF_INET, sock_type, IPPROTO_IP);
+    if(connection == 0)
+    {
+        /* Create socket */
+        sock->sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
 
-    if (sock->sockfd == -1)
-    {
-        printf("socket_init: Socket create error on port %d\n", sock->port);
-        return CRYPTO_LIB_ERROR;
-    }
-
-    /* Determine IP */
-    sock->saddr.sin_family = AF_INET;
-    if (inet_addr(sock->ip_address) != INADDR_NONE)
-    {
-        sock->saddr.sin_addr.s_addr = inet_addr(sock->ip_address);
-    }
-    else
-    {
-        char ip[16];
-        int check = crypto_host_to_ip(sock->ip_address, ip);
-        if (check == 0)
+        if (sock->sockfd == -1)
         {
-            sock->saddr.sin_addr.s_addr = inet_addr(ip);
+            printf("socket_init: Socket create error on port %d\n", sock->port);
+            return CRYPTO_LIB_ERROR;
+        }
+
+        /* Determine IP */
+        sock->saddr.sin_family = AF_INET;
+        if (inet_addr(sock->ip_address) != INADDR_NONE)
+        {
+            sock->saddr.sin_addr.s_addr = inet_addr(sock->ip_address);
         }
         else
         {
-            printf("socket_init: Failed to resolve hostname '%s'\n", sock->ip_address);
-            return CRYPTO_LIB_ERROR;
+            char ip[16];
+            int check = crypto_host_to_ip(sock->ip_address, ip);
+            if (check == 0)
+            {
+                sock->saddr.sin_addr.s_addr = inet_addr(ip);
+            }
+            else
+            {
+                printf("socket_init: Failed to resolve hostname '%s'\n", sock->ip_address);
+                return CRYPTO_LIB_ERROR;
+            }
         }
+        sock->saddr.sin_port = htons(sock->port);
     }
-    sock->saddr.sin_port = htons(sock->port);
+    else
+    {
+        /* Create */
+        sock->sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
+        if (sock->sockfd == -1)
+        {
+            printf("udp_init:  Socket create error port %d \n", sock->port);
+        }
+
+        /* Determine IP */
+        sock->saddr.sin_family = AF_INET;
+        if (inet_addr(sock->ip_address) != INADDR_NONE)
+        {
+            sock->saddr.sin_addr.s_addr = inet_addr(sock->ip_address);
+        }
+        else
+        {
+            char ip[16];
+            int  check = crypto_host_to_ip(sock->ip_address, ip);
+            if (check == 0)
+            {
+                sock->saddr.sin_addr.s_addr = inet_addr(ip);
+            }
+        }
+        sock->saddr.sin_port = htons(sock->port);
+    }
+        
 
     if (crypto_use_tcp && ((sock->port == 8010 || sock->port == 8011)) )
     {
@@ -361,11 +390,12 @@ int32_t crypto_standalone_socket_init(udp_info_t *sock, int32_t port, uint8_t bi
             }
 
             // Replace listener with connected client socket
-            // close(sock->sockfd);
+            // close(sock->sockfd); //may be needed
             sock->sockfd = clientfd;
         }
         else
         {
+            printf("connecting to port %d\n", sock->port);
             // TCP client: connect
             if (connect(sock->sockfd, (struct sockaddr *)&sock->saddr, sizeof(sock->saddr)) < 0)
             {
@@ -379,13 +409,21 @@ int32_t crypto_standalone_socket_init(udp_info_t *sock, int32_t port, uint8_t bi
         // UDP: bind only if needed
         if (bind_sock == 0)
         {
-            status = bind(sock->sockfd, (struct sockaddr *)&sock->saddr, sizeof(sock->saddr));
-            if (status != 0)
+            printf(" udp trying to connect to ip %s and port %d \n",sock->ip_address, sock->port);
+            if (sock->port == 6011)
             {
-                perror("bind");
-                
-                printf("udp_init: Bind failed on port %d\n", sock->port);
-                return CRYPTO_LIB_ERROR;
+                printf("dont bind to udp port, gsw handles it");
+            }
+            else
+            {
+                status = bind(sock->sockfd, (struct sockaddr *)&sock->saddr, sizeof(sock->saddr));
+                if (status != 0)
+                {
+                    perror("bind");
+                    
+                    printf("udp_init: Bind failed on port %d\n", sock->port);
+                    return CRYPTO_LIB_ERROR;
+                }
             }
         }
     }
@@ -907,7 +945,7 @@ int main(int argc, char *argv[])
     /* Initialize sockets */
     if (keepRunning == CRYPTO_LIB_SUCCESS)
     {
-        status = crypto_standalone_socket_init(&tc_apply.read, TC_APPLY_PORT, 0); //udp 6010
+        status = crypto_standalone_socket_init(&tc_apply.read, TC_APPLY_PORT, 0, 1); //udp 6010
         if (status != CRYPTO_LIB_SUCCESS)
         {
             printf("crypto_standalone_socket_init tc_apply.read failed with status %d \n", status);
@@ -915,7 +953,8 @@ int main(int argc, char *argv[])
         }
         else
         {
-            status = crypto_standalone_socket_init(&tc_apply.write, TC_APPLY_FWD_PORT, 0); //tcp, connect() 8010
+            printf("made it here to tc apply write zl!!!!!\n");
+            status = crypto_standalone_socket_init(&tc_apply.write, TC_APPLY_FWD_PORT, 0, 0); //tcp, connect() 8010
             if (status != CRYPTO_LIB_SUCCESS)
             {
                 printf("crypto_standalone_socket_init tc_apply.write failed with status %d \n", status);
@@ -926,7 +965,7 @@ int main(int argc, char *argv[])
 
     if (keepRunning == CRYPTO_LIB_SUCCESS)
     {
-        status = crypto_standalone_socket_init(&tm_process.read, TM_PROCESS_PORT, 1); //tcp, accept() 8011
+        status = crypto_standalone_socket_init(&tm_process.read, TM_PROCESS_PORT, 1, 0); //tcp, accept() 8011
         if (status != CRYPTO_LIB_SUCCESS)
         {
             printf("crypto_standalone_socket_init tm_apply.read failed with status %d \n", status);
@@ -934,7 +973,8 @@ int main(int argc, char *argv[])
         }
         else
         {
-            status = crypto_standalone_socket_init(&tm_process.write, TM_PROCESS_FWD_PORT, 0); //udp 6011
+            printf("udp port tryint to set 6011 zl!!!! in else\n");
+            status = crypto_standalone_socket_init(&tm_process.write, TM_PROCESS_FWD_PORT, 0, 1); //udp 6011
             if (status != CRYPTO_LIB_SUCCESS)
             {
                 printf("crypto_standalone_socket_init tc_apply.write failed with status %d \n", status);
