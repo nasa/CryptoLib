@@ -502,16 +502,16 @@ void *crypto_standalone_tc_apply(void *socks)
 
     while (keepRunning == CRYPTO_LIB_SUCCESS)
     {
-        /* Receive */
-        if (crypto_use_tcp)
-        {
-            status = recv(tc_read_sock->sockfd, tc_apply_in, sizeof(tc_apply_in), 0);
-        }
-        else
-        {
-            status = recvfrom(tc_read_sock->sockfd, tc_apply_in, sizeof(tc_apply_in), 0,
+        // /* Receive */
+        // if (crypto_use_tcp)
+        // {
+        //     status = recv(tc_read_sock->sockfd, tc_apply_in, sizeof(tc_apply_in), 0);
+        // }
+        // else
+        // {
+        status = recvfrom(tc_read_sock->sockfd, tc_apply_in, sizeof(tc_apply_in), 0,
                             (struct sockaddr *)&tc_read_sock->ip_address, (socklen_t *)&sockaddr_size);
-        }
+        // }
         if (status != -1)
         {
             tc_in_len = status;
@@ -681,15 +681,15 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status_p, uint8_t *tm_ptr, uin
         // 0x09 for HK/Device TLM Packets (Generic Components)
         if (tm_ptr[0] == 0x08 || tm_ptr[0] == 0x09)
         {
-            if (crypto_use_tcp)
-            {
-                status = send(tm_write_sock->sockfd, tm_ptr, spp_len, 0);
-            }
-            else
-            {
-                status = sendto(tm_write_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr *)&tm_write_sock->saddr,
+            // if (crypto_use_tcp)
+            // {
+            //     status = send(tm_write_sock->sockfd, tm_ptr, spp_len, 0);
+            // }
+            // else
+            // {
+            status = sendto(tm_write_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr *)&tm_write_sock->saddr,
                             sizeof(tm_write_sock->saddr));  
-            }
+            // }
             
         }
         // Only send idle packets if configured to do so
@@ -699,15 +699,15 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status_p, uint8_t *tm_ptr, uin
             // Don't forward idle packets
             status = spp_len;
 #else
-            if (crypto_use_tcp)
-            {
-                status = send(tm_write_sock->sockfd, tm_ptr, spp_len, 0);
-            }
-            else
-            {
-                status = sendto(tm_write_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr *)&tm_write_sock->saddr,
+            // if (crypto_use_tcp)
+            // {
+            //     status = send(tm_write_sock->sockfd, tm_ptr, spp_len, 0);
+            // }
+            // else
+            // {
+            status = sendto(tm_write_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr *)&tm_write_sock->saddr,
                             sizeof(tm_write_sock->saddr));  
-            }
+            // }
 #endif
         }
 
@@ -729,15 +729,15 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status_p, uint8_t *tm_ptr, uin
         // Don't forward idle frame
         status = spp_len;
 #else
-        if (crypto_use_tcp)
-        {
-            status = send(tm_write_sock->sockfd, tm_ptr, spp_len, 0);
-        }
-        else
-        {
-            status = sendto(tm_write_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr *)&tm_write_sock->saddr,
+        // if (crypto_use_tcp)
+        // {
+        //     status = send(tm_write_sock->sockfd, tm_ptr, spp_len, 0);
+        // }
+        // else
+        // {
+        status = sendto(tm_write_sock->sockfd, tm_ptr, spp_len, 0, (struct sockaddr *)&tm_write_sock->saddr,
                         sizeof(tm_write_sock->saddr));
-        }        
+        // }        
         if ((status == -1) || (status != spp_len))
         {
             printf("crypto_standalone_tm_process - Reply error %d \n", status);
