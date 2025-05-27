@@ -783,6 +783,9 @@ void *crypto_standalone_tm_process(void *socks)
         if (crypto_use_tcp)
         {
             status = recv(tm_read_sock->sockfd, tm_process_in, sizeof(tm_process_in), 0);
+            if (status == -1){
+                printf(" problem with tcp to udp tm proccess: status = %d  !!!!!!!!\n", status);
+            }
         }
         else
         {
@@ -799,14 +802,19 @@ void *crypto_standalone_tm_process(void *socks)
             // Process Security skipping prepended ASM
             crypto_standalone_tm_debug_process(tm_process_in);
             // Account for ASM length
-            status =
-                Crypto_TM_ProcessSecurity(tm_process_in + 4, (const uint16_t)tm_process_len - 4, &tm_ptr, &tm_out_len);
+            status = Crypto_TM_ProcessSecurity(tm_process_in + 4, (const uint16_t)tm_process_len - 4, &tm_ptr, &tm_out_len);
+            if (status != 0){
+                printf("problem process security crypto call!!!!!!!!\n");
+            }
 #else
             if (tm_debug == 1)
             {
                 printf("Processing frame without ASM...\n");
             }
             status = Crypto_TM_ProcessSecurity(tm_process_in, (const uint16_t)tm_process_len, &tm_ptr, &tm_out_len);
+            if (status != 0){
+                printf("problem process security crypto call 2!!!!!!!!\n");
+            }
 #endif
             if (status == CRYPTO_LIB_SUCCESS)
             {
