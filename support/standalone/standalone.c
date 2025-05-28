@@ -304,14 +304,14 @@ int32_t crypto_standalone_socket_init(udp_info_t *sock, int32_t port, uint8_t bi
 
     sock->port = port;
 
-    if(connection == 0)
+    if(connection == 1)
     {
-        /* Create socket */
+        /* Creating TCP socket */
         sock->sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
 
         if (sock->sockfd == -1)
         {
-            printf("socket_init: Socket create error on port %d\n", sock->port);
+            printf("tcp_init: Socket create error on port %d\n", sock->port);
             return CRYPTO_LIB_ERROR;
         }
 
@@ -339,7 +339,7 @@ int32_t crypto_standalone_socket_init(udp_info_t *sock, int32_t port, uint8_t bi
     }
     else
     {
-        /* Create */
+        /* Create UDP socket */
         sock->sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
         if (sock->sockfd == -1)
         {
@@ -395,7 +395,6 @@ int32_t crypto_standalone_socket_init(udp_info_t *sock, int32_t port, uint8_t bi
         }
         else
         {
-            printf("connecting to port %d\n", sock->port);
             // TCP client: connect
             if (connect(sock->sockfd, (struct sockaddr *)&sock->saddr, sizeof(sock->saddr)) < 0)
             {
@@ -407,24 +406,23 @@ int32_t crypto_standalone_socket_init(udp_info_t *sock, int32_t port, uint8_t bi
     else
     {
         // UDP: bind only if needed
-        if (bind_sock == 0)
+        if (bind_sock == 0 && sock->port != 6011 && sock->port != 8010)
         {
-            printf(" udp trying to connect to ip %s and port %d \n",sock->ip_address, sock->port);
-            if (sock->port == 6011)
+            // if (sock->port == 6011)
+            // {
+            //     printf("dont bind to udp port 6011, GSW handles it\n");
+            // }
+            // else
+            // {
+            status = bind(sock->sockfd, (struct sockaddr *)&sock->saddr, sizeof(sock->saddr));
+            if (status != 0)
             {
-                printf("dont bind to udp port, gsw handles it");
+                perror("bind");
+                
+                printf("udp_init: Bind failed on port %d\n", sock->port);
+                return CRYPTO_LIB_ERROR;
             }
-            else
-            {
-                status = bind(sock->sockfd, (struct sockaddr *)&sock->saddr, sizeof(sock->saddr));
-                if (status != 0)
-                {
-                    perror("bind");
-                    
-                    printf("udp_init: Bind failed on port %d\n", sock->port);
-                    return CRYPTO_LIB_ERROR;
-                }
-            }
+            // }
         }
     }
 
@@ -784,7 +782,7 @@ void *crypto_standalone_tm_process(void *socks)
         {
             status = recv(tm_read_sock->sockfd, tm_process_in, sizeof(tm_process_in), 0);
             if (status == -1){
-                printf(" problem with tcp to udp tm proccess: status = %d  !!!!!!!!\n", status);
+                printf(" Problem with recv TCP tm_proccess: status = %d \n", status);
             }
         }
         else
@@ -804,7 +802,7 @@ void *crypto_standalone_tm_process(void *socks)
             // Account for ASM length
             status = Crypto_TM_ProcessSecurity(tm_process_in + 4, (const uint16_t)tm_process_len - 4, &tm_ptr, &tm_out_len);
             if (status != 0){
-                printf("problem process security crypto call!!!!!!!!\n");
+                printf("Crypto_TM_ProcessSecurity Failed with status = %d\n", status);
             }
 #else
             if (tm_debug == 1)
@@ -813,7 +811,7 @@ void *crypto_standalone_tm_process(void *socks)
             }
             status = Crypto_TM_ProcessSecurity(tm_process_in, (const uint16_t)tm_process_len, &tm_ptr, &tm_out_len);
             if (status != 0){
-                printf("problem process security crypto call 2!!!!!!!!\n");
+                printf("Crypto_TM_ProcessSecurity Failed with status = %d\n", status);
             }
 #endif
             if (status == CRYPTO_LIB_SUCCESS)
@@ -953,7 +951,7 @@ int main(int argc, char *argv[])
     /* Initialize sockets */
     if (keepRunning == CRYPTO_LIB_SUCCESS)
     {
-        status = crypto_standalone_socket_init(&tc_apply.read, TC_APPLY_PORT, 0, 1); //udp 6010
+        status = crypto_standalone_socket_init(&tc_apply.read, TC_APPLY_PORT, 0, 0); //udp 6010
         if (status != CRYPTO_LIB_SUCCESS)
         {
             printf("crypto_standalone_socket_init tc_apply.read failed with status %d \n", status);
@@ -961,8 +959,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            printf("made it here to tc apply write zl!!!!!\n");
-            status = crypto_standalone_socket_init(&tc_apply.write, TC_APPLY_FWD_PORT, 0, 0); //tcp, connect() 8010
+            status = crypto_standalone_socket_init(&tc_apply.write, TC_APPLY_FWD_PORT, 0, crypto_use_tcp); //tcp, connect() 8010
             if (status != CRYPTO_LIB_SUCCESS)
             {
                 printf("crypto_standalone_socket_init tc_apply.write failed with status %d \n", status);
@@ -973,7 +970,7 @@ int main(int argc, char *argv[])
 
     if (keepRunning == CRYPTO_LIB_SUCCESS)
     {
-        status = crypto_standalone_socket_init(&tm_process.read, TM_PROCESS_PORT, 1, 0); //tcp, accept() 8011
+        status = crypto_standalone_socket_init(&tm_process.read, TM_PROCESS_PORT, 1, crypto_use_tcp); //tcp, accept() 8011
         if (status != CRYPTO_LIB_SUCCESS)
         {
             printf("crypto_standalone_socket_init tm_apply.read failed with status %d \n", status);
@@ -981,8 +978,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            printf("udp port tryint to set 6011 zl!!!! in else\n");
-            status = crypto_standalone_socket_init(&tm_process.write, TM_PROCESS_FWD_PORT, 0, 1); //udp 6011
+            status = crypto_standalone_socket_init(&tm_process.write, TM_PROCESS_FWD_PORT, 0, 0); //udp 6011
             if (status != CRYPTO_LIB_SUCCESS)
             {
                 printf("crypto_standalone_socket_init tc_apply.write failed with status %d \n", status);
@@ -996,9 +992,9 @@ int main(int argc, char *argv[])
     {
         printf("  TC Apply \n");
         printf("    Read, UDP - %s : %d \n", tc_apply.read.ip_address, tc_apply.read.port);
-        printf("    Write, UDP - %s : %d \n", tc_apply.write.ip_address, tc_apply.write.port);
+        printf("    Write, %s - %s : %d \n", crypto_use_tcp ? "TCP" : "UDP", tc_apply.write.ip_address, tc_apply.write.port);
         printf("  TM Process \n");
-        printf("    Read, UDP - %s : %d \n", tm_process.read.ip_address, tm_process.read.port);
+        printf("    Read, %s - %s : %d \n", crypto_use_tcp ? "TCP" : "UDP", tm_process.read.ip_address, tm_process.read.port);
         printf("    Write, UDP - %s : %d \n", tm_process.write.ip_address, tm_process.write.port);
         printf("\n");
 
