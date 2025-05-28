@@ -408,12 +408,6 @@ int32_t crypto_standalone_socket_init(udp_info_t *sock, int32_t port, uint8_t bi
         // UDP: bind only if needed
         if (bind_sock == 0 && sock->port != 6011 && sock->port != 8010)
         {
-            // if (sock->port == 6011)
-            // {
-            //     printf("dont bind to udp port 6011, GSW handles it\n");
-            // }
-            // else
-            // {
             status = bind(sock->sockfd, (struct sockaddr *)&sock->saddr, sizeof(sock->saddr));
             if (status != 0)
             {
@@ -423,6 +417,20 @@ int32_t crypto_standalone_socket_init(udp_info_t *sock, int32_t port, uint8_t bi
                 return CRYPTO_LIB_ERROR;
             }
             // }
+        }
+        else
+        {
+            if (crypto_use_tcp == 0 && bind_sock == 1 && sock->port == 8011)
+            {
+                status = bind(sock->sockfd, (struct sockaddr *)&sock->saddr, sizeof(sock->saddr));
+                if (status != 0)
+                {
+                    perror("bind");
+
+                    printf("udp_init: Bind failed on port %d\n", sock->port);
+                    return CRYPTO_LIB_ERROR;
+                }
+            }
         }
     }
 
