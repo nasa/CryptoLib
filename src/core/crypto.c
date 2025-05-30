@@ -1444,8 +1444,8 @@ int32_t Crypto_Get_Security_Trailer_Length(SecurityAssociation_t *sa_ptr)
  **/
 void Crypto_Set_FSR(uint8_t *p_ingest, uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t *sa_ptr)
 {
-    if (current_managed_parameters_struct.has_ocf == TM_HAS_OCF ||
-        current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
+    if (tm_current_managed_parameters_struct.has_ocf == TM_HAS_OCF ||
+        aos_current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
     {
         Telemetry_Frame_Ocf_Fsr_t temp_report;
         byte_idx += (pdu_len + sa_ptr->stmacf_len);

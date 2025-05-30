@@ -47,7 +47,9 @@ CamConfig_t                          *cam_config                     = NULL;
 GvcidManagedParameters_t gvcid_managed_parameters_array[GVCID_MAN_PARAM_SIZE];
 int                      gvcid_counter                     = 0;
 GvcidManagedParameters_t gvcid_null_struct                 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-GvcidManagedParameters_t current_managed_parameters_struct = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+GvcidManagedParameters_t tc_current_managed_parameters_struct = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+GvcidManagedParameters_t tm_current_managed_parameters_struct = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+GvcidManagedParameters_t aos_current_managed_parameters_struct = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 // GvcidManagedParameters_t* gvcid_managed_parameters = NULL;
 //  GvcidManagedParameters_t* current_managed_parameters = NULL;
@@ -394,7 +396,9 @@ int32_t Crypto_Shutdown(void)
     int32_t status = CRYPTO_LIB_SUCCESS;
 
     // current_managed_parameters = NULL;
-    current_managed_parameters_struct = gvcid_null_struct;
+    tc_current_managed_parameters_struct = gvcid_null_struct;
+    tm_current_managed_parameters_struct = gvcid_null_struct;
+    aos_current_managed_parameters_struct = gvcid_null_struct;
     for (int i = 0; i <= gvcid_counter; i++)
     {
         gvcid_managed_parameters_array[i] = gvcid_null_struct;

@@ -308,9 +308,9 @@ UTEST(TM_PROCESS_SECURITY, HAPPY_PATH_CLEAR_FECF)
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &current_managed_parameters_struct);
+                                                gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < tm_current_managed_parameters_struct.max_frame_size; i++)
     {
         // printf("Checking %02x against %02X\n", (uint8_t)ptr_processed_frame[i], (uint8_t)*(truth_tm_b + i));
         ASSERT_EQ((uint8_t)ptr_processed_frame[i], (uint8_t) * (truth_tm_b + i));
@@ -462,9 +462,9 @@ UTEST(TM_PROCESS_SECURITY, SECONDARY_HDR_PRESENT_PLAINTEXT)
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &current_managed_parameters_struct);
+                                                gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < tm_current_managed_parameters_struct.max_frame_size; i++)
     {
         // printf("Checking %02x against %02X\n", tm_frame[i], (uint8_t)*(truth_tm_b + i));
         ASSERT_EQ(ptr_processed_frame[i], (uint8_t) * (truth_tm_b + i));
@@ -630,7 +630,7 @@ UTEST(TM_PROCESS_SECURITY, SECONDARY_HDR_PRESENT_MAC)
     status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &ptr_processed_frame, &processed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < tm_current_managed_parameters_struct.max_frame_size; i++)
     {
         // printf("Checking %02x against %02X\n", ptr_processed_frame[i], (uint8_t)*(truth_tm_b + i));
         ASSERT_EQ(ptr_processed_frame[i], (uint8_t) * (truth_tm_b + i));
@@ -789,7 +789,7 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_0)
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &current_managed_parameters_struct);
+                                                gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
     // Determine security association by GVCID, which nominally happens in TO
     // status = sa_if->sa_get_operational_sa_from_gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
     // tm_frame_pri_hdr.vcid, map_id, &sa_ptr);
@@ -805,7 +805,7 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_0)
     // 2) SPI is set correctly
     // 3) MAC is calculated and placed correctly
     // 4) FECF is re-calculated and updated
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < tm_current_managed_parameters_struct.max_frame_size; i++)
     {
         // printf("Checking %02x against %02X\n", ptr_processed_frame[i], (uint8_t)*(truth_tm_b + i));
         ASSERT_EQ(ptr_processed_frame[i], (uint8_t) * (truth_tm_b + i));
@@ -967,7 +967,7 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_1)
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &current_managed_parameters_struct);
+                                                gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
     // Determine security association by GVCID, which nominally happens in TO
     // status = sa_if->sa_get_operational_sa_from_gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
     // tm_frame_pri_hdr.vcid, map_id, &sa_ptr);
@@ -983,7 +983,7 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_1)
     // 2) SPI is zeroed
     // 3) MAC is zeroed
     // 4) FECF is zeroed
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < tm_current_managed_parameters_struct.max_frame_size; i++)
     {
         // printf("Checking %02x against %02X\n", ptr_processed_frame[i], (uint8_t)*(truth_tm_b + i));
         ASSERT_EQ(ptr_processed_frame[i], (uint8_t) * (truth_tm_b + i));
@@ -1143,7 +1143,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_0)
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &current_managed_parameters_struct);
+                                                gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
     // Determine security association by GVCID, which nominally happens in TO
     // status = sa_if->sa_get_operational_sa_from_gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
     // tm_frame_pri_hdr.vcid, map_id, &sa_ptr);
@@ -1159,7 +1159,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_0)
     // 2) SPI is set correctly
     // 3) MAC is calculated and placed correctly
     // 4) FECF is re-calculated and updated
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < tm_current_managed_parameters_struct.max_frame_size; i++)
     {
         // printf("Checking %02x against %02X\n", ptr_processed_frame[i], (uint8_t)*(truth_tm_b + i));
         ASSERT_EQ(ptr_processed_frame[i], (uint8_t) * (truth_tm_b + i));
@@ -1319,7 +1319,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_1)
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &current_managed_parameters_struct);
+                                                gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
     // Determine security association by GVCID, which nominally happens in TO
     // status = sa_if->sa_get_operational_sa_from_gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
     // tm_frame_pri_hdr.vcid, map_id, &sa_ptr);
@@ -1335,7 +1335,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_1)
     // 2) SPI is set correctly
     // 3) MAC is calculated and placed correctly
     // 4) FECF is re-calculated and updated
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < tm_current_managed_parameters_struct.max_frame_size; i++)
     {
         // printf("Checking %02x against %02X\n", ptr_processed_frame[i], (uint8_t)*(truth_tm_b + i));
         ASSERT_EQ(ptr_processed_frame[i], (uint8_t) * (truth_tm_b + i));
@@ -1498,7 +1498,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_0)
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &current_managed_parameters_struct);
+                                                gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
     // Determine security association by GVCID, which nominally happens in TO
     // status = sa_if->sa_get_operational_sa_from_gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
     // tm_frame_pri_hdr.vcid, map_id, &sa_ptr);
@@ -1514,7 +1514,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_0)
     // 2) SPI is set correctly
     // 3) MAC is calculated and placed correctly
     // 4) FECF is re-calculated and updated
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < tm_current_managed_parameters_struct.max_frame_size; i++)
     {
         // printf("Checking %02x against %02X\n", ptr_processed_frame[i], (uint8_t)*(truth_tm_b + i));
         ASSERT_EQ(ptr_processed_frame[i], (uint8_t) * (truth_tm_b + i));
@@ -1677,7 +1677,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_1)
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &current_managed_parameters_struct);
+                                                gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
     // Determine security association by GVCID, which nominally happens in TO
     // status = sa_if->sa_get_operational_sa_from_gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
     // tm_frame_pri_hdr.vcid, map_id, &sa_ptr);
@@ -1693,7 +1693,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_1)
     // 2) SPI is set correctly
     // 3) MAC is calculated and placed correctly
     // 4) FECF is re-calculated and updated
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < tm_current_managed_parameters_struct.max_frame_size; i++)
     {
         // printf("Checking %02x against %02X\n", ptr_processed_frame[i], (uint8_t)*(truth_tm_b + i));
         ASSERT_EQ(ptr_processed_frame[i], (uint8_t) * (truth_tm_b + i));
@@ -1981,7 +1981,7 @@ UTEST(TM_PROCESS_ENC_VAL, AEAD_AES_GCM_BITMASK_1)
     // Determine managed parameters by GVCID, which nominally happens in TO
     // status =
     //     Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
-    //                                             gvcid_managed_parameters_array, &current_managed_parameters_struct);
+    //                                             gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
 
     // Expose/setup SAs for testing
     SecurityAssociation_t  ta;

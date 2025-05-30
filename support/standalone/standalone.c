@@ -32,6 +32,8 @@ static volatile uint8_t tc_vcid     = CRYPTO_STANDALONE_FRAMING_VCID;
 static volatile uint8_t tc_debug    = 1;
 static volatile uint8_t tm_debug    = 0;
 
+#define DYNAMIC_LENGTHS 1
+
 /*
 ** Functions
 */
@@ -177,7 +179,7 @@ int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char *
                 }
                 else
                 {
-                    printf("Error - virtual channl (VCID) %d must be less than 64! Sticking with prior vcid %d \n",
+                    printf("Error - virtual channel (VCID) %d must be less than 64! Sticking with prior vcid %d \n",
                            vcid, tc_vcid);
                 }
             }
@@ -368,7 +370,28 @@ int32_t crypto_reset(void)
 void crypto_standalone_tc_frame(uint8_t *in_data, uint16_t in_length, uint8_t *out_data, uint16_t *out_length)
 {
     /* TC Length */
-    *out_length = (uint16_t)CRYPTO_STANDALONE_FRAMING_TC_DATA_LEN + 6;
+    if (DYNAMIC_LENGTHS)
+    {
+        uint8_t segment_hdr_len = tc_current_managed_parameters_struct.has_segmentation_hdr ? 1 : 0;
+        uint8_t fecf_len = tc_current_managed_parameters_struct.has_fecf ? 2 : 0;
+
+        SecurityAssociation_t *sa_ptr;
+        sa_if->sa_get_from_spi(tc_vcid, &sa_ptr);
+
+        *out_length = TC_FRAME_HEADER_SIZE +
+                        segment_hdr_len +
+                        sa_ptr->arsn_len +
+                        sa_ptr->shivf_len +
+                        sa_ptr->shplf_len +
+                        sa_ptr->shsnf_len +
+                        in_length +
+                        sa_ptr->stmacf_len +
+                        fecf_len;
+    }
+    else
+    {
+        *out_length = CRYPTO_STANDALONE_FRAMING_TC_DATA_LEN + 6;
+    }
 
     /* TC Header */
     out_data[0] = 0x20;
@@ -378,7 +401,7 @@ void crypto_standalone_tc_frame(uint8_t *in_data, uint16_t in_length, uint8_t *o
     out_data[4] = tc_seq_num++;
 
     /* Segement Header */
-    out_data[5] = 0x00;
+    out_data[5] = 0xC0;
 
     /* SDLS Header */
 
@@ -401,7 +424,7 @@ void *crypto_standalone_tc_apply(void *socks)
     uint16_t tc_out_len = 0;
 
 #ifdef CRYPTO_STANDALONE_HANDLE_FRAMING
-    uint8_t tc_framed[TC_MAX_FRAME_SIZE];
+    uint8_t tc_framed[TC_MAX_FRAME_SIZE] = {0};
 #endif
 
     int sockaddr_size = sizeof(struct sockaddr_in);
@@ -473,6 +496,7 @@ void *crypto_standalone_tc_apply(void *socks)
 
             /* Reset */
             memset(tc_apply_in, 0x00, sizeof(tc_apply_in));
+            memset(tc_framed, 0x00, sizeof(tc_framed));
             tc_in_len  = 0;
             tc_out_len = 0;
             if (!tc_out_ptr)
@@ -510,11 +534,11 @@ void crypto_standalone_tm_frame(uint8_t *in_data, uint16_t in_length, uint8_t *o
     uint8_t header_length = TM_PRI_HDR_LENGTH + SDLS_SPI_LENGTH + sa_ptr->shivf_len + sa_ptr->shplf_len +
                             sa_ptr->shsnf_len; // TODO: Why +40?
     uint8_t trailer_length = sa_ptr->stmacf_len;
-    if (current_managed_parameters_struct.has_fecf == TM_HAS_FECF)
+    if (tm_current_managed_parameters_struct.has_fecf == TM_HAS_FECF)
     {
         trailer_length += 2;
     }
-    if (current_managed_parameters_struct.has_ocf == TM_HAS_OCF)
+    if (tm_current_managed_parameters_struct.has_ocf == TM_HAS_OCF)
     {
         trailer_length += 4;
     }
@@ -563,7 +587,7 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status_p, uint8_t *tm_ptr, uin
     udp_info_t *tm_write_sock = &tm_socks->write;
 
     if ((tm_ptr[0] == 0x08) || (tm_ptr[0] == 0x09) || ((tm_ptr[0] == 0x07) && (tm_ptr[1] == 0xff)) ||
-        (tm_ptr[0] == 0x0F && tm_ptr[1] == 0xFD))
+        (tm_ptr[0] == 0x0F && tm_ptr[1] == 0xFD)   || (tm_ptr[0] == 0x1F && tm_ptr[1] == 0xFD))
     {
         spp_len = (((0xFFFF & tm_ptr[4]) << 8) | tm_ptr[5]) + 7;
 #ifdef CRYPTO_STANDALONE_TM_PROCESS_DEBUG
@@ -574,6 +598,7 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status_p, uint8_t *tm_ptr, uin
         }
         printf("\n");
 #endif
+
         // Send all SPP telemetry packets
         // 0x09 for HK/Device TLM Packets (Generic Components)
         if (tm_ptr[0] == 0x08 || tm_ptr[0] == 0x09 || (tm_ptr[0] == 0x0f && tm_ptr[1] == 0xfd))
@@ -602,7 +627,8 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status_p, uint8_t *tm_ptr, uin
         tm_process_len = tm_process_len - spp_len;
     }
     else if ((tm_ptr[0] == 0xFF && tm_ptr[1] == 0x48) || (tm_ptr[0] == 0x00 && tm_ptr[1] == 0x00) ||
-             (tm_ptr[0] == 0x02 && tm_ptr[1] == 0x00) || (tm_ptr[0] == 0xFF && tm_ptr[1] == 0xFF))
+             (tm_ptr[0] == 0x02 && tm_ptr[1] == 0x00) || (tm_ptr[0] == 0xFF && tm_ptr[1] == 0xFF) ||
+             (tm_ptr[0] == 0x1F && tm_ptr[1] == 0xFE))
     {
         // TODO: Why 0x0200?
         // Idle Frame
@@ -680,7 +706,7 @@ void *crypto_standalone_tm_process(void *socks)
             {
                 if (tm_debug == 1)
                 {
-                    if ((tm_ptr[4] == 0x07) && (tm_ptr[5] == 0xFE))
+                    if ((tm_ptr[4] == 0x07) && (tm_ptr[5] == 0xFF))
                     {
                         // OID Frame
                     }
