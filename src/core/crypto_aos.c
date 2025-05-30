@@ -131,8 +131,8 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         return status;
     }
 
-    if ((len_ingest < aos_current_managed_parameters_struct.max_frame_size) && (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC) &&
-        (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC_MAC))
+    if ((len_ingest < aos_current_managed_parameters_struct.max_frame_size) &&
+        (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC) && (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC_MAC))
     {
         status = CRYPTO_LIB_ERR_AOS_FL_LT_MAX_FRAME_SIZE;
         mc_if->mc_log(status);
@@ -280,7 +280,8 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
 // Section 4.1.3.2.3 - All bits of the Insert Zone shall be set by the sending end
 // Based on the managed parameter configuration, we're not modifying the Insert Zone contents
 #ifdef AOS_DEBUG
-        printf(KYEL "Insert Zone present with length %d octets\n" RESET, aos_current_managed_parameters_struct.aos_iz_len);
+        printf(KYEL "Insert Zone present with length %d octets\n" RESET,
+               aos_current_managed_parameters_struct.aos_iz_len);
 #endif
 
         idx += aos_current_managed_parameters_struct.aos_iz_len;
@@ -927,7 +928,8 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
 // Section 4.1.3.2.3 - All bits of the Insert Zone shall be set by the sending end
 // Based on the managed parameter configuration, we're not modifying the Insert Zone contents
 #ifdef AOS_DEBUG
-        printf(KYEL "Insert Zone present with length %d octets\n" RESET, aos_current_managed_parameters_struct.aos_iz_len);
+        printf(KYEL "Insert Zone present with length %d octets\n" RESET,
+               aos_current_managed_parameters_struct.aos_iz_len);
 #endif
 
         byte_idx += aos_current_managed_parameters_struct.aos_iz_len;

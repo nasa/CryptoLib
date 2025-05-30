@@ -373,20 +373,13 @@ void crypto_standalone_tc_frame(uint8_t *in_data, uint16_t in_length, uint8_t *o
     if (DYNAMIC_LENGTHS)
     {
         uint8_t segment_hdr_len = tc_current_managed_parameters_struct.has_segmentation_hdr ? 1 : 0;
-        uint8_t fecf_len = tc_current_managed_parameters_struct.has_fecf ? 2 : 0;
+        uint8_t fecf_len        = tc_current_managed_parameters_struct.has_fecf ? 2 : 0;
 
         SecurityAssociation_t *sa_ptr;
         sa_if->sa_get_from_spi(tc_vcid, &sa_ptr);
 
-        *out_length = TC_FRAME_HEADER_SIZE +
-                        segment_hdr_len +
-                        sa_ptr->arsn_len +
-                        sa_ptr->shivf_len +
-                        sa_ptr->shplf_len +
-                        sa_ptr->shsnf_len +
-                        in_length +
-                        sa_ptr->stmacf_len +
-                        fecf_len;
+        *out_length = TC_FRAME_HEADER_SIZE + segment_hdr_len + sa_ptr->arsn_len + sa_ptr->shivf_len +
+                      sa_ptr->shplf_len + sa_ptr->shsnf_len + in_length + sa_ptr->stmacf_len + fecf_len;
     }
     else
     {
@@ -587,7 +580,7 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status_p, uint8_t *tm_ptr, uin
     udp_info_t *tm_write_sock = &tm_socks->write;
 
     if ((tm_ptr[0] == 0x08) || (tm_ptr[0] == 0x09) || ((tm_ptr[0] == 0x07) && (tm_ptr[1] == 0xff)) ||
-        (tm_ptr[0] == 0x0F && tm_ptr[1] == 0xFD)   || (tm_ptr[0] == 0x1F && tm_ptr[1] == 0xFD))
+        (tm_ptr[0] == 0x0F && tm_ptr[1] == 0xFD) || (tm_ptr[0] == 0x1F && tm_ptr[1] == 0xFD))
     {
         spp_len = (((0xFFFF & tm_ptr[4]) << 8) | tm_ptr[5]) + 7;
 #ifdef CRYPTO_STANDALONE_TM_PROCESS_DEBUG
