@@ -86,7 +86,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_1)
     char *buffer_rfc_key_h   = "0100000000000000000000000000000000000000000000000000000000000000";
     char *buffer_rfc_nonce_h = "030000000000000000000000";
     char *buffer_rfc_ct_h    = "4fa7a4cb7d3434f8a2855b40016daccb62a454551878fc26";
-    
+
     uint8_t *buffer_rfc_pt_b, *buffer_rfc_aad_b, *buffer_rfc_key_b, *buffer_rfc_nonce_b, *buffer_rfc_ct_b       = NULL;
     int      buffer_rfc_pt_len, buffer_rfc_aad_len, buffer_rfc_key_len, buffer_rfc_nonce_len, buffer_rfc_ct_len = 0;
 

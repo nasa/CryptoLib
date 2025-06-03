@@ -809,7 +809,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP)
     int32_t return_val = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
 
-    char *raw_tc_sdls_ping_h = "2003001500"                      // header
+    char *raw_tc_sdls_ping_h = "2003001500"                          // header
                                "BBCCBBCCBBCCBBCCBBCCBBCCBBCCBB0000"; // data
     char       *raw_tc_sdls_ping_b   = NULL;
     int         raw_tc_sdls_ping_len = 0;
@@ -921,7 +921,8 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_16BP)
     return_val =
         Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
-    char *truth_data_h = "200300360000000400000000000000000000000010341FCD0C33C83D836E22CDE670697CD1A53B3279FD57A84861A96C578CB47A6274BA";
+    char *truth_data_h = "200300360000000400000000000000000000000010341FCD0C33C83D836E22CDE670697CD1A53B3279FD57A84861A"
+                         "96C578CB47A6274BA";
     uint8_t *truth_data_b = NULL;
     int      truth_data_l = 0;
 
