@@ -1555,7 +1555,7 @@ UTEST(TC_APPLY_SECURITY, TC_HEAP_BUFFER_OVERFLOW_TEST_IV)
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Test string
-    char *test_frame_pt_h   = "20030009de0000000000";
+    char *test_frame_pt_h   = "20030009dec000000000";
     char *test_frame_pt_b   = NULL;
     int   test_frame_pt_len = 0;
 
