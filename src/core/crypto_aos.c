@@ -258,7 +258,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         uint16_t calculated_fhecf = Crypto_Calc_FHECF(pTfBuffer);
         pTfBuffer[idx]            = (calculated_fhecf >> 8) & 0x00FF;
         pTfBuffer[idx + 1]        = (calculated_fhecf)&0x00FF;
-        idx = 8;
+        idx                       = 8;
     }
 
     // Detect if optional variable length Insert Zone is present
@@ -904,8 +904,8 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
 
         p_ingest[byte_idx]     = (calculated_fhecf >> 8) & 0x00FF;
         p_ingest[byte_idx + 1] = (calculated_fhecf)&0x00FF;
-        byte_idx    = 8;
-        aos_hdr_len = byte_idx;
+        byte_idx               = 8;
+        aos_hdr_len            = byte_idx;
     }
 
     // Detect if optional variable length Insert Zone is present
