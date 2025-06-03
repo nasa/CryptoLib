@@ -71,7 +71,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_1)
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
     status = Crypto_Init();
@@ -86,7 +86,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_1)
     char *buffer_rfc_key_h   = "0100000000000000000000000000000000000000000000000000000000000000";
     char *buffer_rfc_nonce_h = "030000000000000000000000";
     char *buffer_rfc_ct_h    = "4fa7a4cb7d3434f8a2855b40016daccb62a454551878fc26";
-    // 2003002A000009030000000000000000000000C2EF328E5C71C83B00000000000000000000000000000000
+    
     uint8_t *buffer_rfc_pt_b, *buffer_rfc_aad_b, *buffer_rfc_key_b, *buffer_rfc_nonce_b, *buffer_rfc_ct_b       = NULL;
     int      buffer_rfc_pt_len, buffer_rfc_aad_len, buffer_rfc_key_len, buffer_rfc_nonce_len, buffer_rfc_ct_len = 0;
 
@@ -133,7 +133,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_1)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
     // Calc payload index: total length - pt length
-    uint16_t enc_data_idx = enc_frame_len - buffer_rfc_ct_len - FECF_SIZE;
+    uint16_t enc_data_idx = enc_frame_len - buffer_rfc_ct_len;
 
     for (int i = 0; i < buffer_rfc_pt_len - 7; i++)
     {

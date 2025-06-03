@@ -809,8 +809,8 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP)
     int32_t return_val = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
 
-    char *raw_tc_sdls_ping_h = "2003001300"                      // header
-                               "BBCCBBCCBBCCBBCCBBCCBBCCBBCCBB"; // data
+    char *raw_tc_sdls_ping_h = "2003001500"                      // header
+                               "BBCCBBCCBBCCBBCCBBCCBBCCBBCCBB0000"; // data
     char       *raw_tc_sdls_ping_b   = NULL;
     int         raw_tc_sdls_ping_len = 0;
     SaInterface sa_if                = get_sa_interface_inmemory();
@@ -893,7 +893,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_16BP)
     int32_t return_val = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
 
-    char       *raw_tc_sdls_ping_h   = "20030015000080d2c70008197f0b0031000000003128";
+    char       *raw_tc_sdls_ping_h   = "20030017000080d2c70008197f0b00310000000000003128";
     char       *raw_tc_sdls_ping_b   = NULL;
     int         raw_tc_sdls_ping_len = 0;
     SaInterface sa_if                = get_sa_interface_inmemory();
@@ -921,8 +921,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_16BP)
     return_val =
         Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
-    char *truth_data_h = "200300360000000400000000000000000000000010F67583B4B3E950C4D0FA7FACE905D7F2BE7083ED9A62DB3786F"
-                         "AEDC0669953653FE0";
+    char *truth_data_h = "200300360000000400000000000000000000000010341FCD0C33C83D836E22CDE670697CD1A53B3279FD57A84861A96C578CB47A6274BA";
     uint8_t *truth_data_b = NULL;
     int      truth_data_l = 0;
 
@@ -1401,7 +1400,7 @@ UTEST(TC_APPLY_SECURITY, PLAINTEXT_W_ARSN)
     return_val =
         Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
-    char    *truth_data_h = "2003002B000001000000000000000000000000DEAD1980D2C9000E197F0B001B0004000400003040D95E4E59";
+    char    *truth_data_h = "20030029000001000000000000000000000000DEAD1980D2C9000E197F0B001B0004000400003040DF99";
     uint8_t *truth_data_b = NULL;
     int      truth_data_l = 0;
 

@@ -1137,7 +1137,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, const uint16_t in
 
     // Calculate frame lengths based on SA fields
     *p_enc_frame_len = temp_tc_header.fl + 1 + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len +
-                       sa_ptr->stmacf_len + ocf_len + fecf_len;
+                       sa_ptr->stmacf_len + ocf_len;
     new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
 
     // Finalize frame setup
@@ -1326,13 +1326,13 @@ int32_t Crypto_TC_Parse_Check_FECF(uint8_t *ingest, int *len_ingest, TC_t *tc_sd
             // Calculate our own
             uint16_t calculated_fecf = Crypto_Calc_FECF(ingest, *len_ingest - 2);
             // Compare
+#ifdef DEBUG
+            printf("Received FECF is 0x%04X\n", received_fecf);
+            printf("Calculated FECF is 0x%04X\n", calculated_fecf);
+            printf("FECF was Calced over %d bytes\n", *len_ingest - 2);
+#endif
             if (received_fecf != calculated_fecf)
             {
-#ifdef DEBUG
-                printf("Received FECF is 0x%04X\n", received_fecf);
-                printf("Calculated FECF is 0x%04X\n", calculated_fecf);
-                printf("FECF was Calced over %d bytes\n", *len_ingest - 2);
-#endif
                 status = CRYPTO_LIB_ERR_INVALID_FECF;
                 mc_if->mc_log(status);
             }
