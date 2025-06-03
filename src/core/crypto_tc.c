@@ -399,12 +399,14 @@ int32_t Crypto_TC_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr
             {
                 status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
                 mc_if->mc_log(status);
+                free(p_new_enc_frame);
                 return status;
             }
             if (ekp->key_state != KEY_ACTIVE)
             {
                 status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
                 mc_if->mc_log(status);
+                free(p_new_enc_frame);
                 return status;
             }
         }
@@ -418,12 +420,14 @@ int32_t Crypto_TC_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr
             {
                 status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
                 mc_if->mc_log(status);
+                free(p_new_enc_frame);
                 return status;
             }
             if (akp->key_state != KEY_ACTIVE)
             {
                 status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
                 mc_if->mc_log(status);
+                free(p_new_enc_frame);
                 return status;
             }
         }
@@ -1107,7 +1111,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, const uint16_t in
     Crypto_TC_Calc_Lengths(&fecf_len, &segment_hdr_len, &ocf_len);
 
     // Calculate tf_payload length here to be used in other logic
-    int16_t payload_calc = temp_tc_header.fl - TC_FRAME_HEADER_SIZE - segment_hdr_len - fecf_len + 1;
+    int16_t payload_calc = (temp_tc_header.fl + 1) - TC_FRAME_HEADER_SIZE - segment_hdr_len - ocf_len - fecf_len;
     // check if payload length underflows
     if (payload_calc < 0)
     {
@@ -1133,8 +1137,9 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, const uint16_t in
     */
 
     // Calculate frame lengths based on SA fields
+    // fecf is added after the frame during apply
     *p_enc_frame_len =
-        temp_tc_header.fl + 1 + 2 + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len + sa_ptr->stmacf_len;
+        temp_tc_header.fl + 1 + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len + sa_ptr->stmacf_len + ocf_len;
     new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
 
     // Finalize frame setup

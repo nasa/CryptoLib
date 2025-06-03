@@ -304,33 +304,33 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
     }
 
 #ifdef MAC_DEBUG
-    uint32_t *tmac_size = &mac_size;
-    uint8_t  *tmac      = calloc(1, *tmac_size);
-    gcry_error          = gcry_mac_read(tmp_mac_hd,
-                                        tmac,               // tag output
-                                        (size_t *)tmac_size // tag size
-             );
-    if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-    {
-        printf(KRED "ERROR: gcry_mac_read error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-        status = CRYPTO_LIB_ERR_MAC_RETRIEVAL_ERROR;
-        return status;
-    }
+    // uint32_t *tmac_size = &mac_size;
+    // uint8_t  *tmac      = calloc(1, *tmac_size);
+    // gcry_error          = gcry_mac_read(tmp_mac_hd,
+    //                                     tmac,               // tag output
+    //                                     (size_t *)tmac_size // tag size
+    //          );
+    // if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
+    // {
+    //     printf(KRED "ERROR: gcry_mac_read error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+    //     status = CRYPTO_LIB_ERR_MAC_RETRIEVAL_ERROR;
+    //     return status;
+    // }
 
-    printf("Calculated Mac Size: %d\n", *tmac_size);
-    printf("Calculated MAC (full length):\n\t");
-    for (uint32_t i = 0; i < *tmac_size; i++)
-    {
-        printf("%02X", tmac[i]);
-    }
-    printf("\nCalculated MAC (truncated to sa_ptr->stmacf_len):\n\t");
-    for (uint32_t i = 0; i < mac_size; i++)
-    {
-        printf("%02X", tmac[i]);
-    }
-    printf("\n");
-    if (!tmac)
-        free(tmac);
+    // printf("Calculated Mac Size: %d\n", *tmac_size);
+    // printf("Calculated MAC (full length):\n\t");
+    // for (uint32_t i = 0; i < *tmac_size; i++)
+    // {
+    //     printf("%02X", tmac[i]);
+    // }
+    // printf("\nCalculated MAC (truncated to sa_ptr->stmacf_len):\n\t");
+    // for (uint32_t i = 0; i < mac_size; i++)
+    // {
+    //     printf("%02X", tmac[i]);
+    // }
+    // printf("\n");
+    // if (!tmac)
+    //     free(tmac);
 
     printf("Received MAC:\n\t");
     for (uint32_t i = 0; i < mac_size; i++)
