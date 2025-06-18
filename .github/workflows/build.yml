@@ -85,8 +85,7 @@ jobs:
       run: apt-get install -y libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 openjdk-17-jdk-headless openjdk-17-jre-headless cmake swig maven podman
     - name: Install Python Libraries
       run: |
-        pip3 install --upgrade pip
-        pip3 install pycryptodome cffi invoke
+        pip3 install --break-system-packages pycryptodome cffi invoke
     - name: clone DCS, update Cryptolib
       run: |
         git clone https://github.com/NASA-AMMOS/DCS.git
