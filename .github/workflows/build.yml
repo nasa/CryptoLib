@@ -74,7 +74,6 @@ jobs:
       with:
         repository: NASA-AMMOS/DCS
         path: DCS
-        fetch-depth: 0
     - name: setup python
       uses: actions/setup-python@v5
       with:
