@@ -90,10 +90,12 @@ jobs:
     - name: update Cryptolib
       run: |
         cd DCS/ammos-cryptolib/CryptoLib
+        git fetch origin && git pull
         git checkout $BRANCH_NAME || echo "Branch $BRANCH_NAME not found in submodule"
     - name: build DCS
       run: |
         cd ./DCS
+        export JAVA_HOME=/lib/jvm/java-17-openjdk-amd64
         ./kmc-resources/scripts/build.sh
 
   #
