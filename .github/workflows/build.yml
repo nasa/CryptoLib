@@ -96,7 +96,7 @@ jobs:
         git -C CryptoLib checkout $BRANCH_NAME || echo "Branch $BRANCH_NAME not found in submodule"
     - name: build DCS
       run: |
-        cd ../..
+        ls -la
         ./kmc-resources/scripts/build.sh
 
   #
