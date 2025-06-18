@@ -84,7 +84,7 @@ jobs:
     - name: Update
       run: apt-get update
     - name: Install Dependencies
-      run: apt-get install -y libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 openjdk-17-jdk-headless openjdk-17-jre-headless cmake swig maven podman
+      run: apt-get install -y libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 openjdk-17-jdk openjdk-17-jre cmake swig maven podman default-jdk
     - name: Install Python Libraries
       run: |
         pip3 install --break-system-packages pycryptodome cffi invoke
@@ -94,6 +94,7 @@ jobs:
         cd DCS/ammos-cryptolib
         rm -rf CryptoLib
         git clone --single-branch --branch $BRANCH_NAME https://github.com/nasa/CryptoLib.git
+        ls -la ./CryptoLib
     - name: build DCS
       run: |
         cd ./DCS
