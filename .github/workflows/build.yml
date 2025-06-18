@@ -89,6 +89,7 @@ jobs:
     - name: clone DCS, update Cryptolib
       run: |
         git clone https://github.com/NASA-AMMOS/DCS.git
+        ls -la
         cd DCS/ammos-cryptolib/Cryptolib
         git config -f .gitmodules submodule.Cryptolib.branch $BRANCH_NAME
         git submodule update --remote
