@@ -72,6 +72,8 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
+        repository: NASA-AMMOS/DCS
+        path: DCS
         fetch-depth: 0
     - name: setup python
       uses: actions/setup-python@v5
@@ -86,15 +88,12 @@ jobs:
     - name: Install Python Libraries
       run: |
         pip3 install --break-system-packages pycryptodome cffi invoke
-    - name: clone DCS, update Cryptolib
+    - name: update Cryptolib
       run: |
-        git clone https://github.com/NASA-AMMOS/DCS.git
-        ls -la ./DCS
-        ls -la ./DCS/ammos-cryptolib
-        cd DCS/ammos-cryptolib/Cryptolib
-        git config -f .gitmodules submodule.Cryptolib.branch $BRANCH_NAME
+        cd DCS/ammos-cryptolib/CryptoLib
+        git config -f .gitmodules submodule.CryptoLib.branch $BRANCH_NAME
         git submodule update --remote
-        git -C Cryptolib checkout $BRANCH_NAME || echo "Branch $BRANCH_NAME not found in submodule"
+        git -C CryptoLib checkout $BRANCH_NAME || echo "Branch $BRANCH_NAME not found in submodule"
     - name: build DCS
       run: |
         cd ../..
