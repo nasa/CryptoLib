@@ -90,11 +90,9 @@ jobs:
         pip3 install --break-system-packages pycryptodome cffi invoke
     - name: update Cryptolib
       run: |
-        ls -la
         cd DCS/ammos-cryptolib
         rm -rf CryptoLib
         git clone --single-branch --branch $BRANCH_NAME https://github.com/nasa/CryptoLib.git
-        ls -la ./CryptoLib
     - name: add required jars
       run: |
         cd DCS/ammos-cryptolib/kmc_sdls/kmc_sdls_java/kmc_sdls_java_test
