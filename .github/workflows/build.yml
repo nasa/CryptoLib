@@ -3,6 +3,8 @@ name: CryptoLib
 on: 
   pull_request:
     branches: [ main, dev ]
+  push:
+    branches: [ 469-dcs-ci-workflow ]
 
 jobs:
   #
@@ -62,50 +64,34 @@ jobs:
   #
   # KMC Build
   #
-  # kmc_build:
-  #   # Container Setup
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v4
-  #   - name: Update
-  #     run: sudo apt-get update
-  #   - name: Install Dependencies
-  #     run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3
-  #   - name: Install Python Libraries
-  #     run: sudo pip install pycryptodome
-  #   - name: Install Libgcrypt
-  #     run: >
-  #       curl  
-  #       -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 
-  #       -o /tmp/libgpg-error-1.50.tar.bz2 
-  #       && tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/ 
-  #       && cd /tmp/libgpg-error-1.50 
-  #       && sudo ./configure 
-  #       && sudo make install 
-  #       && curl  
-  #       -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 
-  #       -o /tmp/libgcrypt-1.11.0.tar.bz2 
-  #       && tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ 
-  #       && cd /tmp/libgcrypt-1.11.0 
-  #       && sudo ./configure 
-  #       && sudo make install
-  #       && sudo ldconfig
-  #   # End Container Setup
-    
-  #   - name: KMC Build Script
-  #     working-directory: ${{github.workspace}}
-  #     run: bash ${GITHUB_WORKSPACE}/support/scripts/build_kmc.sh
-    
-  #   - name: Code-Coverage
-  #     working-directory: ${{github.workspace}}
-  #     run: make gcov
-
-  #   - name: Upload 
-  #     uses: codecov/codecov-action@v4
-  #     with:
-  #       token: ${{ secrets.CODECOV_TOKEN }}
-  #       files: 'coverage/*.c.gcov'
-  #       verbose: true
+  kmc_build:
+    # Container Setup
+    runs-on: ubuntu-latest
+    container:
+        image: ivvitc/cryptolib:20250108
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Set current branch
+      run: echo "BRANCH_NAME=$(echo ${{ github.head_ref || github.ref_name }})" >> $GITHUB_ENV
+    - name: Update
+      run: sudo apt-get update
+    - name: Install Dependencies
+      run: sudo apt-get install -y libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 openjdk-17-jdk-headless openjdk-17-jre-headless cmake swig maven podman
+    - name: Install Python Libraries
+      run: sudo pip install pycryptodome cffi invoke
+    - name: clone DCS, update Cryptolib
+      run: |
+        git clone https://github.com/NASA-AMMOS/DCS.git
+        cd DCS/ammos-cryptolib/Cryptolib
+        git config -f .gitmodules submodule.Cryptolib.branch $BRANCH_NAME
+        git submodule update --remote
+        git -C Cryptolib checkout $BRANCH_NAME || echo "Branch $BRANCH_NAME not found in submodule"
+    - name: build DCS
+      run: |
+        cd ../..
+        ./kmc-resources/scripts/build.sh
 
   #
   # Wolf Build
