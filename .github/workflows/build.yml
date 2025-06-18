@@ -73,6 +73,10 @@ jobs:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
+    - name: setup python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
     - name: Set current branch
       run: echo "BRANCH_NAME=$(echo ${{ github.head_ref || github.ref_name }})" >> $GITHUB_ENV
     - name: Update
@@ -80,7 +84,9 @@ jobs:
     - name: Install Dependencies
       run: apt-get install -y libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 openjdk-17-jdk-headless openjdk-17-jre-headless cmake swig maven podman
     - name: Install Python Libraries
-      run: pip install pycryptodome cffi invoke
+      run: |
+        pip install --upgrade pip
+        pip install pycryptodome cffi invoke
     - name: clone DCS, update Cryptolib
       run: |
         git clone https://github.com/NASA-AMMOS/DCS.git
