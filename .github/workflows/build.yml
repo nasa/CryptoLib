@@ -89,7 +89,6 @@ jobs:
     - name: clone DCS, update Cryptolib
       run: |
         git clone https://github.com/NASA-AMMOS/DCS.git
-        git submodule update --init --recursive
         ls -la ./DCS
         ls -la ./DCS/ammos-cryptolib
         cd DCS/ammos-cryptolib/Cryptolib
