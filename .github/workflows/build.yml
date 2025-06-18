@@ -76,11 +76,11 @@ jobs:
     - name: Set current branch
       run: echo "BRANCH_NAME=$(echo ${{ github.head_ref || github.ref_name }})" >> $GITHUB_ENV
     - name: Update
-      run: sudo apt-get update
+      run: apt-get update
     - name: Install Dependencies
-      run: sudo apt-get install -y libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 openjdk-17-jdk-headless openjdk-17-jre-headless cmake swig maven podman
+      run: apt-get install -y libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 openjdk-17-jdk-headless openjdk-17-jre-headless cmake swig maven podman
     - name: Install Python Libraries
-      run: sudo pip install pycryptodome cffi invoke
+      run: pip install pycryptodome cffi invoke
     - name: clone DCS, update Cryptolib
       run: |
         git clone https://github.com/NASA-AMMOS/DCS.git
