@@ -216,29 +216,17 @@ static int32_t sa_save_sa(SecurityAssociation_t *sa)
     char  update_sa_query[2048];
     char *iv_h = malloc(sa->iv_len * 2 + 1);
 
-    if (sa->iv != NULL)
-    {
-        convert_byte_array_to_hexstring(sa->iv, sa->iv_len, iv_h);
-    }
+    convert_byte_array_to_hexstring(sa->iv, sa->iv_len, iv_h);
 
     char *arsn_h = malloc(sa->arsn_len * 2 + 1);
     convert_byte_array_to_hexstring(sa->arsn, sa->arsn_len, arsn_h);
 
-    if (sa->iv != NULL)
-    {
-        snprintf(update_sa_query, sizeof(update_sa_query), SQL_SADB_UPDATE_IV_ARC_BY_SPI, iv_h, arsn_h, sa->spi,
-                 sa->gvcid_blk.tfvn, sa->gvcid_blk.scid, sa->gvcid_blk.vcid, sa->gvcid_blk.mapid);
+    snprintf(update_sa_query, sizeof(update_sa_query), SQL_SADB_UPDATE_IV_ARC_BY_SPI, iv_h, arsn_h, sa->spi,
+             sa->gvcid_blk.tfvn, sa->gvcid_blk.scid, sa->gvcid_blk.vcid, sa->gvcid_blk.mapid);
 
-        free(iv_h);
-    }
-    else
-    {
-        snprintf(update_sa_query, sizeof(update_sa_query), SQL_SADB_UPDATE_IV_ARC_BY_SPI_NULL_IV, arsn_h, sa->spi,
-                 sa->gvcid_blk.tfvn, sa->gvcid_blk.scid, sa->gvcid_blk.vcid, sa->gvcid_blk.mapid);
-        free(iv_h);
-    }
-
+    free(iv_h);
     free(arsn_h);
+    
 #ifdef SA_DEBUG
     fprintf(stderr, "MySQL Insert SA Query: %s \n", update_sa_query);
 #endif
