@@ -91,11 +91,9 @@ jobs:
     - name: update Cryptolib
       run: |
         ls -la
-        cd DCS/ammos-cryptolib/CryptoLib
-        ls -la
-        git fetch origin && git pull
-        git config --global pull.rebase true
-        git checkout $BRANCH_NAME || echo "Branch $BRANCH_NAME not found in submodule"
+        cd DCS/ammos-cryptolib
+        rm -rf CryptoLib
+        git clone --single-branch --branch $BRANCH_NAME https://github.com/nasa/CryptoLib.git
     - name: build DCS
       run: |
         cd ./DCS
