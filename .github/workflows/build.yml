@@ -95,6 +95,11 @@ jobs:
         rm -rf CryptoLib
         git clone --single-branch --branch $BRANCH_NAME https://github.com/nasa/CryptoLib.git
         ls -la ./CryptoLib
+    - name: add required jars
+      run: |
+        cd DCS/ammos-cryptolib/kmc_sdls/kmc_sdls_java/kmc_sdls_java_test
+        curl -LS https://repo1.maven.org/maven2/junit/junit/4.13.2/junit-4.13.2.jar -o ./junit-4.13.2.jar 
+        curl -LS https://repo1.maven.org/maven2/org/hamcrest/hamcrest/2.2/hamcrest-2.2.jar -o ./hamcrest-2.2.jar
     - name: build DCS
       run: |
         cd ./DCS
