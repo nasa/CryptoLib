@@ -91,8 +91,6 @@ jobs:
     - name: update Cryptolib
       run: |
         cd DCS/ammos-cryptolib/CryptoLib
-        git config -f .gitmodules submodule.CryptoLib.branch $BRANCH_NAME
-        git submodule update --remote
         git checkout $BRANCH_NAME || echo "Branch $BRANCH_NAME not found in submodule"
     - name: build DCS
       run: |
