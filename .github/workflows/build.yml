@@ -94,6 +94,7 @@ jobs:
         cd DCS/ammos-cryptolib/CryptoLib
         ls -la
         git fetch origin && git pull
+        git config --global pull.rebase true
         git checkout $BRANCH_NAME || echo "Branch $BRANCH_NAME not found in submodule"
     - name: build DCS
       run: |
