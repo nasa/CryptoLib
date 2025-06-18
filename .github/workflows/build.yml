@@ -3,8 +3,6 @@ name: CryptoLib
 on: 
   pull_request:
     branches: [ main, dev ]
-  push:
-    branches: [ 469-dcs-ci-workflow ]
 
 jobs:
   #
