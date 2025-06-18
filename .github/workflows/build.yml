@@ -85,8 +85,6 @@ jobs:
       run: apt-get install -y libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 openjdk-17-jdk-headless openjdk-17-jre-headless cmake swig maven podman
     - name: Install Python Libraries
       run: |
-        python -m venv venv
-        source venv/bin/activate
         pip3 install --upgrade pip
         pip3 install pycryptodome cffi invoke
     - name: clone DCS, update Cryptolib
