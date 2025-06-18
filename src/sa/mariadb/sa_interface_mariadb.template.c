@@ -58,10 +58,10 @@ static const char *SQL_SADB_UPDATE_IV_ARC_BY_SPI =
     "UPDATE security_associations"
     " SET iv=X'%s', arsn=X'%s'"
     " WHERE spi='%d' AND tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d'";
-static const char *SQL_SADB_UPDATE_IV_ARC_BY_SPI_NULL_IV =
-    "UPDATE security_associations"
-    " SET arsn=X'%s'"
-    " WHERE spi='%d' AND tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d'";
+// static const char *SQL_SADB_UPDATE_IV_ARC_BY_SPI_NULL_IV =
+//     "UPDATE security_associations"
+//     " SET arsn=X'%s'"
+//     " WHERE spi='%d' AND tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d'";
 
 // sa_if mariaDB private helper functions
 static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **security_association);
@@ -226,7 +226,7 @@ static int32_t sa_save_sa(SecurityAssociation_t *sa)
 
     free(iv_h);
     free(arsn_h);
-    
+
 #ifdef SA_DEBUG
     fprintf(stderr, "MySQL Insert SA Query: %s \n", update_sa_query);
 #endif
