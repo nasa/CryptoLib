@@ -1633,14 +1633,24 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     }
     byte_idx += sa_ptr->stmacf_len;
     pp_processed_frame->tm_sec_trailer.mac_field_len = sa_ptr->stmacf_len;
-    for (int i = 0; i < OCF_SIZE; i++)
+    if (current_managed_parameters_struct.has_ocf == TM_HAS_OCF)
     {
-        memcpy(pp_processed_frame->tm_sec_trailer.ocf + i, &p_new_dec_frame[byte_idx + i], 1);
+        for (int i = 0; i < OCF_SIZE; i++)
+        {
+            memcpy(pp_processed_frame->tm_sec_trailer.ocf + i, &p_new_dec_frame[byte_idx + i], 1);
+        }
+        byte_idx += OCF_SIZE;
+        pp_processed_frame->tm_sec_trailer.ocf_field_len = OCF_SIZE;
     }
-    byte_idx += OCF_SIZE;
-    pp_processed_frame->tm_sec_trailer.ocf_field_len = OCF_SIZE;
-    pp_processed_frame->tm_sec_trailer.fecf = ((uint16_t)p_new_dec_frame[byte_idx] << 8) | p_new_dec_frame[byte_idx + 1];
-
+    else
+    {
+        pp_processed_frame->tm_sec_trailer.ocf_field_len = 0;
+    }
+    if (current_managed_parameters_struct.has_fecf == TM_HAS_FECF)
+    {
+        pp_processed_frame->tm_sec_trailer.fecf = ((uint16_t)p_new_dec_frame[byte_idx] << 8) | p_new_dec_frame[byte_idx + 1];
+    }
+    free(p_new_dec_frame);
 
 #ifdef DEBUG
     printf(KYEL "----- Crypto_TM_ProcessSecurity END -----\n" RESET);

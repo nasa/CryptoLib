@@ -39,6 +39,10 @@ UTEST(TM_PROCESS_SECURITY, NO_CRYPTO_INIT)
     
     uint16_t processed_tm_len;
 
+    TM_t *tm_frame;
+    tm_frame = malloc(sizeof(uint8_t) * TM_SIZE);
+    memset(tm_frame, 0, (sizeof(uint8_t) * TM_SIZE));
+
     char *framed_tm_h =
         "02C000001800000C08010000000F00112233445566778899AABBCCDDEEFFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAA"
         "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
@@ -101,12 +105,13 @@ UTEST(TM_PROCESS_SECURITY, NO_CRYPTO_INIT)
     //                                                 (uint8_t)framed_tm_b[1],
     //                                                 (((uint8_t)framed_tm_b[2] & 0xFC) >> 2), map_id, &sa);
 
-    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_h, framed_tm_len, &tm_frame, &processed_tm_len);
+    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_h, framed_tm_len, tm_frame, &processed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_ERR_NO_CONFIG, status);
 
     char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
     ASSERT_STREQ("CRYPTO_LIB_ERR_NO_CONFIG", error_enum);
     free(framed_tm_b);
+    free(tm_frame);
     Crypto_Shutdown();
 }
 
@@ -120,6 +125,10 @@ UTEST(TM_PROCESS_SECURITY, NO_CONFIG)
     int32_t  status              = CRYPTO_LIB_ERROR;
     int      framed_tm_len       = 0;
     uint16_t processed_tm_len;
+
+    TM_t *tm_frame;
+    tm_frame = malloc(sizeof(uint8_t) * TM_SIZE);
+    memset(tm_frame, 0, (sizeof(uint8_t) * TM_SIZE));
 
     char *framed_tm_h =
         "02C000001800000C08010000000F00112233445566778899AABBCCDDEEFFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAA"
@@ -170,13 +179,14 @@ UTEST(TM_PROCESS_SECURITY, NO_CONFIG)
     // Determine security association by GVCID, which nominally happens in TO
     // status = sa_if->sa_get_operational_sa_from_gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
     // tm_frame_pri_hdr.vcid, map_id, &sa_ptr); printf("STATUS is %d\n", status);
-    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_h, framed_tm_len, &tm_frame, &processed_tm_len);
+    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_h, framed_tm_len, tm_frame, &processed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_ERR_NO_CONFIG, status);
 
     char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
     ASSERT_STREQ("CRYPTO_LIB_ERR_NO_CONFIG", error_enum);
 
     free(framed_tm_b);
+    free(tm_frame);
     Crypto_Shutdown();
 }
 
@@ -207,6 +217,10 @@ UTEST(TM_PROCESS_SECURITY, HAPPY_PATH_CLEAR_FECF)
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    TM_t *tm_frame;
+    tm_frame = malloc(sizeof(uint8_t) * TM_SIZE);
+    memset(tm_frame, 0, (sizeof(uint8_t) * TM_SIZE));
 
     // Test frame setup
     // Note: SPI 5 (0x05)
@@ -302,7 +316,7 @@ UTEST(TM_PROCESS_SECURITY, HAPPY_PATH_CLEAR_FECF)
     akp               = key_if->get_key(sa_ptr->akid);
     akp->key_state    = KEY_ACTIVE;
 
-    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &tm_frame, &processed_tm_len);
+    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, tm_frame, &processed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
@@ -311,16 +325,16 @@ UTEST(TM_PROCESS_SECURITY, HAPPY_PATH_CLEAR_FECF)
     
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
     uint16_t offset = TM_FRAME_PRIMARYHEADER_SIZE + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len; 
-    for (int i = 0; i < tm_frame.tm_pdu_len; i++)
+    for (int i = 0; i < tm_frame->tm_pdu_len; i++)
     {
-        printf("Checking %02x against %02X\n", (uint8_t)tm_frame.tm_pdu[i], (uint8_t)*(truth_tm_b + offset + i));
-        ASSERT_EQ((uint8_t)tm_frame.tm_pdu[i], (uint8_t) * (truth_tm_b + offset + i));
+        printf("Checking %02x against %02X\n", (uint8_t)tm_frame->tm_pdu[i], (uint8_t)*(truth_tm_b + offset + i));
+        ASSERT_EQ((uint8_t)tm_frame->tm_pdu[i], (uint8_t) * (truth_tm_b + offset + i));
     }
 
     Crypto_Shutdown();
     free(framed_tm_b);
     free(truth_tm_b);
-    
+    free(tm_frame);
 }
 
 /**
@@ -458,7 +472,11 @@ UTEST(TM_PROCESS_SECURITY, SECONDARY_HDR_PRESENT_PLAINTEXT)
     akp               = key_if->get_key(sa_ptr->akid);
     akp->key_state    = KEY_ACTIVE;
 
-    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &tm_frame, &processed_tm_len);
+    TM_t *tm_frame;
+    tm_frame = malloc(sizeof(uint8_t) * TM_SIZE);
+    memset(tm_frame, 0, (sizeof(uint8_t) * TM_SIZE));
+
+    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, tm_frame, &processed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
@@ -467,16 +485,16 @@ UTEST(TM_PROCESS_SECURITY, SECONDARY_HDR_PRESENT_PLAINTEXT)
     
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
     uint16_t offset = TM_FRAME_PRIMARYHEADER_SIZE + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len; 
-    for (int i = 0; i < tm_frame.tm_pdu_len; i++)
+    for (int i = 0; i < tm_frame->tm_pdu_len; i++)
     {
         // printf("Checking %02x against %02X\n", tm_frame[i], (uint8_t)*(truth_tm_b + i));
-        ASSERT_EQ(tm_frame.tm_pdu[i], (uint8_t) * (truth_tm_b + offset + i));
+        ASSERT_EQ(tm_frame->tm_pdu[i], (uint8_t) * (truth_tm_b + offset + i));
     }
 
     Crypto_Shutdown();
     free(framed_tm_b);
     free(truth_tm_b);
-    
+    free(tm_frame);
 }
 
 /**
@@ -589,8 +607,9 @@ UTEST(TM_PROCESS_SECURITY, SECONDARY_HDR_PRESENT_MAC)
     int   truth_tm_len = 0;
     hex_conversion(truth_tm_h, &truth_tm_b, &truth_tm_len);
 
-    // Memcpy test frame into static TM - Make STATIC BLOCK size of standard max
-    memcpy(&tm_frame, framed_tm_b, framed_tm_len);
+    TM_t *tm_frame;
+    tm_frame = malloc(sizeof(uint8_t) * TM_SIZE);
+    memset(tm_frame, 0, (sizeof(uint8_t) * TM_SIZE));
 
     // Bit math to give concise access to values already set in the static transfer frame
     tm_frame_pri_hdr.tfvn = ((uint8_t)framed_tm_b[0] & 0xC0) >> 6;
@@ -630,20 +649,20 @@ UTEST(TM_PROCESS_SECURITY, SECONDARY_HDR_PRESENT_MAC)
     // status = Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
     // tm_frame_pri_hdr.vcid,
     //                                                gvcid_managed_parameters, &current_managed_parameters);
-    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &tm_frame, &processed_tm_len);
+    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, tm_frame, &processed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
     uint16_t offset = TM_FRAME_PRIMARYHEADER_SIZE + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len; 
-    for (int i = 0; i < tm_frame.tm_pdu_len; i++)
+    for (int i = 0; i < tm_frame->tm_pdu_len; i++)
     {
         // printf("Checking %02x against %02X\n", ptr_processed_frame[i], (uint8_t)*(truth_tm_b + i));
-        ASSERT_EQ(tm_frame.tm_pdu[i], (uint8_t) * (truth_tm_b + offset + i));
+        ASSERT_EQ(tm_frame->tm_pdu[i], (uint8_t) * (truth_tm_b + offset + i));
     }
 
     Crypto_Shutdown();
     free(framed_tm_b);
     free(truth_tm_b);
-    
+    free(tm_frame);
 }
 
 /**
@@ -753,9 +772,6 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_0)
     int   truth_tm_len = 0;
     hex_conversion(truth_tm_h, &truth_tm_b, &truth_tm_len);
 
-    // Memcpy test frame into static TM - Make STATIC BLOCK size of standard max
-    memcpy(&tm_frame, framed_tm_b, framed_tm_len);
-
     // Expose/setup SA for testing
     // Configure SA 12
     sa_if->sa_get_from_spi(12, &sa_ptr);
@@ -798,10 +814,14 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_0)
     // status = sa_if->sa_get_operational_sa_from_gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
     // tm_frame_pri_hdr.vcid, map_id, &sa_ptr);
 
+    TM_t *tm_frame;
+    tm_frame = malloc(sizeof(uint8_t) * TM_SIZE);
+    memset(tm_frame, 0, (sizeof(uint8_t) * TM_SIZE));
+
     // Pass these references to ProcessSecurity to avoid duplications of call in real setup onboard
     // e.g. so TO doesn't make the call, and then it's doubled within ProcessSecurity
     // managed_parameters are a global, don't need passed
-    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &tm_frame, &processed_tm_len);
+    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, tm_frame, &processed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Byte by byte verify:
@@ -810,16 +830,16 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_0)
     // 3) MAC is calculated and placed correctly
     // 4) FECF is re-calculated and updated
     uint16_t offset = TM_FRAME_PRIMARYHEADER_SIZE + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len; 
-    for (int i = 0; i < tm_frame.tm_pdu_len; i++)
+    for (int i = 0; i < tm_frame->tm_pdu_len; i++)
     {
         // printf("Checking %02x against %02X\n", ptr_processed_frame[i], (uint8_t)*(truth_tm_b + i));
-        ASSERT_EQ(tm_frame.tm_pdu[i], (uint8_t) * (truth_tm_b + offset + i));
+        ASSERT_EQ(tm_frame->tm_pdu[i], (uint8_t) * (truth_tm_b + offset + i));
     }
 
     Crypto_Shutdown();
     free(framed_tm_b);
     free(truth_tm_b);
-    
+    free(tm_frame);
 }
 
 /**
@@ -931,9 +951,6 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_1)
     int   truth_tm_len = 0;
     hex_conversion(truth_tm_h, &truth_tm_b, &truth_tm_len);
 
-    // Memcpy test frame into static TM - Make STATIC BLOCK size of standard max
-    memcpy(&tm_frame, framed_tm_b, framed_tm_len);
-
     // Expose/setup SA for testing
     // Configure SA 12
     sa_if->sa_get_from_spi(12, &sa_ptr);
@@ -977,10 +994,14 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_1)
     // status = sa_if->sa_get_operational_sa_from_gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
     // tm_frame_pri_hdr.vcid, map_id, &sa_ptr);
 
+    TM_t *tm_frame;
+    tm_frame = malloc(sizeof(uint8_t) * TM_SIZE);
+    memset(tm_frame, 0, (sizeof(uint8_t) * TM_SIZE));
+
     // Pass these references to ProcessSecurity to avoid duplications of call in real setup onboard
     // e.g. so TO doesn't make the call, and then it's doubled within ProcessSecurity
     // managed_parameters are a global, don't need passed
-    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &tm_frame, &processed_tm_len);
+    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, tm_frame, &processed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Byte by byte verify:
@@ -989,16 +1010,16 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_1)
     // 3) MAC is zeroed
     // 4) FECF is zeroed
     uint16_t offset = TM_FRAME_PRIMARYHEADER_SIZE + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len; 
-    for (int i = 0; i < tm_frame.tm_pdu_len; i++)
+    for (int i = 0; i < tm_frame->tm_pdu_len; i++)
     {
         // printf("Checking %02x against %02X\n", ptr_processed_frame[i], (uint8_t)*(truth_tm_b + i));
-        ASSERT_EQ(tm_frame.tm_pdu[i], (uint8_t) * (truth_tm_b + offset + i));
+        ASSERT_EQ(tm_frame->tm_pdu[i], (uint8_t) * (truth_tm_b + offset + i));
     }
 
     Crypto_Shutdown();
     free(framed_tm_b);
     free(truth_tm_b);
-    
+    free(tm_frame);
 }
 
 /**
@@ -1108,9 +1129,6 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_0)
     int   truth_tm_len = 0;
     hex_conversion(truth_tm_h, &truth_tm_b, &truth_tm_len);
 
-    // Memcpy test frame into static TM - Make STATIC BLOCK size of standard max
-    memcpy(&tm_frame, framed_tm_b, framed_tm_len);
-
     // Expose/setup SA for testing
     // Configure SA 12
     sa_if->sa_get_from_spi(12, &sa_ptr);
@@ -1154,10 +1172,14 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_0)
     // status = sa_if->sa_get_operational_sa_from_gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
     // tm_frame_pri_hdr.vcid, map_id, &sa_ptr);
 
+    TM_t *tm_frame;
+    tm_frame = malloc(sizeof(uint8_t) * TM_SIZE);
+    memset(tm_frame, 0, (sizeof(uint8_t) * TM_SIZE));
+
     // Pass these references to ProcessSecurity to avoid duplications of call in real setup onboard
     // e.g. so TO doesn't make the call, and then it's doubled within ProcessSecurity
     // managed_parameters are a global, don't need passed
-    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &tm_frame, &processed_tm_len);
+    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, tm_frame, &processed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Byte by byte verify:
@@ -1166,15 +1188,16 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_0)
     // 3) MAC is calculated and placed correctly
     // 4) FECF is re-calculated and updated
     uint16_t offset = TM_FRAME_PRIMARYHEADER_SIZE + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len; 
-    for (int i = 0; i < tm_frame.tm_pdu_len; i++)
+    for (int i = 0; i < tm_frame->tm_pdu_len; i++)
     {
         // printf("Checking %02x against %02X\n", ptr_processed_frame[i], (uint8_t)*(truth_tm_b + i));
-        ASSERT_EQ(tm_frame.tm_pdu[i], (uint8_t) * (truth_tm_b + offset + i));
+        ASSERT_EQ(tm_frame->tm_pdu[i], (uint8_t) * (truth_tm_b + offset + i));
     }
 
     Crypto_Shutdown();
     free(framed_tm_b);
     free(truth_tm_b);
+    free(tm_frame);
 }
 
 /**
@@ -1284,9 +1307,6 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_1)
     int   truth_tm_len = 0;
     hex_conversion(truth_tm_h, &truth_tm_b, &truth_tm_len);
 
-    // Memcpy test frame into static TM - Make STATIC BLOCK size of standard max
-    memcpy(&tm_frame, framed_tm_b, framed_tm_len);
-
     // Expose/setup SA for testing
     // Configure SA 12
     sa_if->sa_get_from_spi(12, &sa_ptr);
@@ -1330,10 +1350,14 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_1)
     // status = sa_if->sa_get_operational_sa_from_gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
     // tm_frame_pri_hdr.vcid, map_id, &sa_ptr);
 
+    TM_t *tm_frame;
+    tm_frame = malloc(sizeof(uint8_t) * TM_SIZE);
+    memset(tm_frame, 0, (sizeof(uint8_t) * TM_SIZE));
+
     // Pass these references to ProcessSecurity to avoid duplications of call in real setup onboard
     // e.g. so TO doesn't make the call, and then it's doubled within ProcessSecurity
     // managed_parameters are a global, don't need passed
-    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &tm_frame, &processed_tm_len);
+    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, tm_frame, &processed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Byte by byte verify:
@@ -1342,15 +1366,16 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_1)
     // 3) MAC is calculated and placed correctly
     // 4) FECF is re-calculated and updated
     uint16_t offset = TM_FRAME_PRIMARYHEADER_SIZE + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len; 
-    for (int i = 0; i < tm_frame.tm_pdu_len; i++)
+    for (int i = 0; i < tm_frame->tm_pdu_len; i++)
     {
         // printf("Checking %02x against %02X\n", ptr_processed_frame[i], (uint8_t)*(truth_tm_b + i));
-        ASSERT_EQ(tm_frame.tm_pdu[i], (uint8_t) * (truth_tm_b + offset + i));
+        ASSERT_EQ(tm_frame->tm_pdu[i], (uint8_t) * (truth_tm_b + offset + i));
     }
 
     Crypto_Shutdown();
     free(framed_tm_b);
     free(truth_tm_b);
+    free(tm_frame);
 }
 
 /**
@@ -1462,9 +1487,6 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_0)
     int   truth_tm_len = 0;
     hex_conversion(truth_tm_h, &truth_tm_b, &truth_tm_len);
 
-    // Memcpy test frame into static TM - Make STATIC BLOCK size of standard max
-    memcpy(&tm_frame, framed_tm_b, framed_tm_len);
-
     // Expose/setup SA for testing
     // Configure SA 12
     sa_if->sa_get_from_spi(12, &sa_ptr);
@@ -1509,10 +1531,14 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_0)
     // status = sa_if->sa_get_operational_sa_from_gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
     // tm_frame_pri_hdr.vcid, map_id, &sa_ptr);
 
+    TM_t *tm_frame;
+    tm_frame = malloc(sizeof(uint8_t) * TM_SIZE);
+    memset(tm_frame, 0, (sizeof(uint8_t) * TM_SIZE));
+
     // Pass these references to ProcessSecurity to avoid duplications of call in real setup onboard
     // e.g. so TO doesn't make the call, and then it's doubled within ProcessSecurity
     // managed_parameters are a global, don't need passed
-    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &tm_frame, &processed_tm_len);
+    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, tm_frame, &processed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Byte by byte verify:
@@ -1521,15 +1547,16 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_0)
     // 3) MAC is calculated and placed correctly
     // 4) FECF is re-calculated and updated
     uint16_t offset = TM_FRAME_PRIMARYHEADER_SIZE + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len; 
-    for (int i = 0; i < tm_frame.tm_pdu_len; i++)
+    for (int i = 0; i < tm_frame->tm_pdu_len; i++)
     {
         // printf("Checking %02x against %02X\n", ptr_processed_frame[i], (uint8_t)*(truth_tm_b + i));
-        ASSERT_EQ(tm_frame.tm_pdu[i], (uint8_t) * (truth_tm_b + offset + i));
+        ASSERT_EQ(tm_frame->tm_pdu[i], (uint8_t) * (truth_tm_b + offset + i));
     }
 
     Crypto_Shutdown();
     free(framed_tm_b);
     free(truth_tm_b);
+    free(tm_frame);
 }
 
 /**
@@ -1641,9 +1668,6 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_1)
     int   truth_tm_len = 0;
     hex_conversion(truth_tm_h, &truth_tm_b, &truth_tm_len);
 
-    // Memcpy test frame into static TM - Make STATIC BLOCK size of standard max
-    memcpy(&tm_frame, framed_tm_b, framed_tm_len);
-
     // Expose/setup SA for testing
     // Configure SA 12
     sa_if->sa_get_from_spi(12, &sa_ptr);
@@ -1688,10 +1712,14 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_1)
     // status = sa_if->sa_get_operational_sa_from_gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
     // tm_frame_pri_hdr.vcid, map_id, &sa_ptr);
 
+    TM_t *tm_frame;
+    tm_frame = malloc(sizeof(uint8_t) * TM_SIZE);
+    memset(tm_frame, 0, (sizeof(uint8_t) * TM_SIZE));
+
     // Pass these references to ProcessSecurity to avoid duplications of call in real setup onboard
     // e.g. so TO doesn't make the call, and then it's doubled within ProcessSecurity
     // managed_parameters are a global, don't need passed
-    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &tm_frame, &processed_tm_len);
+    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, tm_frame, &processed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Byte by byte verify:
@@ -1700,15 +1728,16 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_1)
     // 3) MAC is calculated and placed correctly
     // 4) FECF is re-calculated and updated
     uint16_t offset = TM_FRAME_PRIMARYHEADER_SIZE + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len; 
-    for (int i = 0; i < tm_frame.tm_pdu_len; i++)
+    for (int i = 0; i < tm_frame->tm_pdu_len; i++)
     {
         // printf("Checking %02x against %02X\n", ptr_processed_frame[i], (uint8_t)*(truth_tm_b + i));
-        ASSERT_EQ(tm_frame.tm_pdu[i], (uint8_t) * (truth_tm_b + offset + i));
+        ASSERT_EQ(tm_frame->tm_pdu[i], (uint8_t) * (truth_tm_b + offset + i));
     }
 
     Crypto_Shutdown();
     free(framed_tm_b);
     free(truth_tm_b);
+    free(tm_frame);
 }
 
 /**
@@ -1839,7 +1868,11 @@ UTEST(TM_PROCESS_ENC_VAL, AES_GCM_BITMASK_1)
     ekp               = key_if->get_key(test_association->ekid);
     ekp->key_state    = KEY_ACTIVE;
 
-    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &tm_frame, &processed_tm_len);
+    TM_t *tm_frame;
+    tm_frame = malloc(sizeof(uint8_t) * TM_SIZE);
+    memset(tm_frame, 0, (sizeof(uint8_t) * TM_SIZE));
+
+    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, tm_frame, &processed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // printf("Decrypted frame contents:\n\t");
@@ -1861,17 +1894,17 @@ UTEST(TM_PROCESS_ENC_VAL, AES_GCM_BITMASK_1)
 
     printf("\nDoing final checks:\n\t");
     uint16_t offset = TM_FRAME_PRIMARYHEADER_SIZE + SPI_LEN + test_association->shivf_len + test_association->shsnf_len + test_association->shplf_len; 
-    for (int i = 0; i < tm_frame.tm_pdu_len; i++)
+    for (int i = 0; i < tm_frame->tm_pdu_len; i++)
     {
-        printf("%02x", tm_frame.tm_pdu[i]);
-        ASSERT_EQ(tm_frame.tm_pdu[i], (uint8_t) * (truth_tm_b + offset + i));
+        printf("%02x", tm_frame->tm_pdu[i]);
+        ASSERT_EQ(tm_frame->tm_pdu[i], (uint8_t) * (truth_tm_b + offset + i));
     }
 
     printf("\n\n");
 
     free(truth_tm_b);
     free(framed_tm_b);
-    free(ptr_processed_frame);
+    free(tm_frame);
     // free(iv_b);
 }
 
@@ -2029,7 +2062,11 @@ UTEST(TM_PROCESS_ENC_VAL, AEAD_AES_GCM_BITMASK_1)
     // hex_conversion(iv_h, &iv_b, &iv_len);
     // memcpy(test_association->iv, iv_b, iv_len);
 
-    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &tm_frame, &processed_tm_len);
+    TM_t *tm_frame;
+    tm_frame = malloc(sizeof(uint8_t) * TM_SIZE);
+    memset(tm_frame, 0, (sizeof(uint8_t) * TM_SIZE));
+
+    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, tm_frame, &processed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // printf("Decrypted frame contents:\n\t");
@@ -2040,10 +2077,10 @@ UTEST(TM_PROCESS_ENC_VAL, AEAD_AES_GCM_BITMASK_1)
 
     printf("\nDoing final checks:\n\t");
     uint16_t offset = TM_FRAME_PRIMARYHEADER_SIZE + SPI_LEN + test_association->shivf_len + test_association->shsnf_len + test_association->shplf_len; 
-    for (int i = 0; i < tm_frame.tm_pdu_len; i++)
+    for (int i = 0; i < tm_frame->tm_pdu_len; i++)
     {
-        printf("%02x", tm_frame.tm_pdu[i]);
-        ASSERT_EQ(tm_frame.tm_pdu[i], (uint8_t) *(truth_tm_b + offset + i));
+        printf("%02x", tm_frame->tm_pdu[i]);
+        ASSERT_EQ(tm_frame->tm_pdu[i], (uint8_t) *(truth_tm_b + offset + i));
     }
 
     printf("\n\n");
@@ -2051,7 +2088,7 @@ UTEST(TM_PROCESS_ENC_VAL, AEAD_AES_GCM_BITMASK_1)
     Crypto_Shutdown();
     free(truth_tm_b);
     free(framed_tm_b);
-    free(ptr_processed_frame);
+    free(tm_frame);
     // free(iv_b);
 }
 
@@ -2083,11 +2120,16 @@ UTEST(TM_PROCESS, TM_SA_SEGFAULT_TEST)
     int   framed_tm_len = 0;
     hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);
 
-    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &tm_frame, &processed_tm_len);
+    TM_t *tm_frame;
+    tm_frame = malloc(sizeof(uint8_t) * TM_SIZE);
+    memset(tm_frame, 0, (sizeof(uint8_t) * TM_SIZE));
+
+    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, tm_frame, &processed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_ERR_SPI_INDEX_OOB, status);
 
     Crypto_Shutdown();
     free(framed_tm_b);
+    free(tm_frame);
 }
 
 UTEST(TM_PROCESS, TM_OCF_TEST)
@@ -2111,6 +2153,10 @@ UTEST(TM_PROCESS, TM_OCF_TEST)
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
+    TM_t *tm_frame;
+    tm_frame = malloc(sizeof(uint8_t) * TM_SIZE);
+    memset(tm_frame, 0, (sizeof(uint8_t) * TM_SIZE));
+
     // Test frame setup
     char *framed_tm_h   = "02C0000D180000000000DEADBEEFFFFF";
     char *framed_tm_b   = NULL;
@@ -2125,13 +2171,14 @@ UTEST(TM_PROCESS, TM_OCF_TEST)
     sa_if->sa_get_from_spi(0, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
 
-    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &tm_frame, &processed_tm_len);
+    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, tm_frame, &processed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     printf("FSR: %08X\n", Crypto_Get_FSR());
 
     Crypto_Shutdown();
     free(framed_tm_b);
+    free(tm_frame);
 }
 
 UTEST(TM_PROCESS, TM_SA_NOT_OPERATIONAL)
@@ -2172,10 +2219,15 @@ UTEST(TM_PROCESS, TM_SA_NOT_OPERATIONAL)
     akp               = key_if->get_key(sa_ptr->akid);
     akp->key_state    = KEY_ACTIVE;
 
-    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &tm_frame, &processed_tm_len);
+    TM_t *tm_frame;
+    tm_frame = malloc(sizeof(uint8_t) * TM_SIZE);
+    memset(tm_frame, 0, (sizeof(uint8_t) * TM_SIZE));
+
+    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, tm_frame, &processed_tm_len);
 
     ASSERT_EQ(CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL, status);
     free(framed_tm_b);
+    free(tm_frame);
     Crypto_Shutdown();
 }
 
@@ -2222,10 +2274,15 @@ UTEST(TM_PROCESS, TM_KEY_STATE_TEST)
     akp               = key_if->get_key(sa_ptr->akid);
     akp->key_state    = KEY_DEACTIVATED;
 
-    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &tm_frame, &processed_tm_len);
+    TM_t *tm_frame;
+    tm_frame = malloc(sizeof(uint8_t) * TM_SIZE);
+    memset(tm_frame, 0, (sizeof(uint8_t) * TM_SIZE));
+
+    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, tm_frame, &processed_tm_len);
 
     ASSERT_EQ(CRYPTO_LIB_ERR_KEY_STATE_INVALID, status);
     free(framed_tm_b);
+    free(tm_frame);
     Crypto_Shutdown();
 }
 
@@ -2265,10 +2322,15 @@ UTEST(TM_PROCESS, TM_PROCESS_HEAP_UNDERFLOW_TEST)
     ekp               = key_if->get_key(sa_ptr->ekid);
     ekp->key_state    = KEY_ACTIVE;
 
-    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &tm_frame, &processed_tm_len);
+    TM_t *tm_frame;
+    tm_frame = malloc(sizeof(uint8_t) * TM_SIZE);
+    memset(tm_frame, 0, (sizeof(uint8_t) * TM_SIZE));
+
+    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, tm_frame, &processed_tm_len);
 
     ASSERT_EQ(CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW, status);
     free(framed_tm_b);
+    free(tm_frame);
     Crypto_Shutdown();
 }
 
@@ -2300,10 +2362,15 @@ UTEST(TM_PROCESS, TM_PROCESS_Secondary_Hdr_OVERFLOW_TEST)
     int   framed_tm_len = 0;
     hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);
 
-    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &tm_frame, &processed_tm_len);
+    TM_t *tm_frame;
+    tm_frame = malloc(sizeof(uint8_t) * TM_SIZE);
+    memset(tm_frame, 0, (sizeof(uint8_t) * TM_SIZE));
+
+    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, tm_frame, &processed_tm_len);
 
     ASSERT_EQ(CRYPTO_LIB_ERR_TM_SECONDARY_HDR_SIZE, status);
     free(framed_tm_b);
+    free(tm_frame);
     Crypto_Shutdown();
 }
 
@@ -2335,10 +2402,15 @@ UTEST(TM_PROCESS, TM_PROCESS_Secondary_Hdr_Spec_Violation)
     int   framed_tm_len = 0;
     hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);
 
-    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &tm_frame, &processed_tm_len);
+    TM_t *tm_frame;
+    tm_frame = malloc(sizeof(uint8_t) * TM_SIZE);
+    memset(tm_frame, 0, (sizeof(uint8_t) * TM_SIZE));
+
+    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, tm_frame, &processed_tm_len);
 
     ASSERT_EQ(CRYPTO_LIB_ERR_TM_SECONDARY_HDR_VN, status);
     free(framed_tm_b);
+    free(tm_frame);
     Crypto_Shutdown();
 }
 
@@ -2370,10 +2442,15 @@ UTEST(TM_PROCESS, TM_PROCESS_Secondary_Hdr_One_Too_Big)
     int   framed_tm_len = 0;
     hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);
 
-    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &tm_frame, &processed_tm_len);
+    TM_t *tm_frame;
+    tm_frame = malloc(sizeof(uint8_t) * TM_SIZE);
+    memset(tm_frame, 0, (sizeof(uint8_t) * TM_SIZE));
+
+    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, tm_frame, &processed_tm_len);
 
     ASSERT_EQ(CRYPTO_LIB_ERR_TM_SECONDARY_HDR_SIZE, status);
     free(framed_tm_b);
+    free(tm_frame);
     Crypto_Shutdown();
 }
 
