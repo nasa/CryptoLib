@@ -95,6 +95,46 @@ void Crypto_tmPrint(TM_t *tm_frame)
     printf("\n");
 }
 
+/**
+ * @brief Function: Crypto_aosPrint
+ * Prints the current AOS in memory.
+ * @param aos_frame: AOS_t*
+ **/
+void Crypto_aosPrint(AOS_t *aos_frame)
+{
+    printf("Current AOS in memory is: \n");
+    printf("\t Header\n");
+    printf("\t\t tfvn   = %d \n", aos_frame->aos_header.tfvn);
+    printf("\t\t scid   = %d \n", aos_frame->aos_header.scid);
+    printf("\t\t vcid   = %d \n", aos_frame->aos_header.vcid);
+    printf("\t\t vcfc   = %d \n", aos_frame->aos_header.vcfc);
+    printf("\t\t rf     = %d \n", aos_frame->aos_header.rf);
+    printf("\t\t sf     = %d \n", aos_frame->aos_header.sf);
+    printf("\t\t spare  = %d \n", aos_frame->aos_header.spare);
+    printf("\t\t vfcc   = %d \n", aos_frame->aos_header.vfcc);
+    printf("\t\t fhecf  = 0x%04x \n", aos_frame->aos_header.fhecf);
+    printf("\t SDLS Header\n");
+    printf("\t\t iz[0]  = 0x%02x \n", aos_frame->aos_sec_header.iz[0]);
+    printf("\t\t spi    = %d \n", aos_frame->aos_sec_header.spi);
+    printf("\t\t iv[0]  = 0x%02x \n", aos_frame->aos_sec_header.iv[0]);
+    printf("\t\t iv_len = %d \n", aos_frame->aos_sec_header.iv_field_len);
+    printf("\t\t sn[0]  = 0x%02x \n", aos_frame->aos_sec_header.sn[0]);
+    printf("\t\t sn_len = %d \n", aos_frame->aos_sec_header.sn_field_len);
+    printf("\t\t pad    = %d \n", aos_frame->aos_sec_header.pad);
+    printf("\t\t pad_len= %d \n", aos_frame->aos_sec_header.pad_field_len);
+    printf("\t Payload \n");
+    printf("\t\t data[0]= 0x%02x \n", aos_frame->aos_pdu[0]);
+    printf("\t\t data[1]= 0x%02x \n", aos_frame->aos_pdu[1]);
+    printf("\t\t data[2]= 0x%02x \n", aos_frame->aos_pdu[2]);
+    printf("\t SDLS Trailer\n");
+    printf("\t\t MAC[0] = 0x%02x \n", aos_frame->aos_sec_trailer.mac[0]);
+    printf("\t\t MAC_len= %d \n", aos_frame->aos_sec_trailer.mac_field_len);
+    printf("\t\t OCF[0] = 0x%02x \n", aos_frame->aos_sec_trailer.ocf[0]);
+    printf("\t\t OCF_len= %d \n", aos_frame->aos_sec_trailer.ocf_field_len);
+    printf("\t\t FECF   = 0x%04x \n", aos_frame->aos_sec_trailer.fecf);
+    printf("\n");
+}
+
 void Crypto_Print_Sdls_Ep_Reply(void)
 {
     // Length to be pulled from packet header

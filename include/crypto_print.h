@@ -44,6 +44,13 @@ void Crypto_tcPrint(TC_t *tc_frame);
 void Crypto_tmPrint(TM_t *tm_frame);
 
 /**
+ * @brief Function: Crypto_aosPrint
+ * Prints the current AOS in memory.
+ * @param aos_frame: AOS_t*
+ **/
+void Crypto_aosPrint(AOS_t *aos_frame);
+
+/**
  * @brief Function: Crypto_clcwPrint
  * @param clcw: Telemetry_Frame_Clcw_t*
  * Prints the contents of the clcw

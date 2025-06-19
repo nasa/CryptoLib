@@ -828,8 +828,8 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
 
     // Bit math to give concise access to values in the ingest
     aos_frame_pri_hdr.tfvn = ((uint8_t)p_ingest[0] & 0xC0) >> 6;
-    aos_frame_pri_hdr.scid = (((uint16_t)p_ingest[0] & 0x3F) << 4) | (((uint16_t)p_ingest[1] & 0xF0) >> 4);
-    aos_frame_pri_hdr.vcid = ((uint8_t)p_ingest[1] & 0x0E) >> 1;
+    aos_frame_pri_hdr.scid = (((uint16_t)p_ingest[0] & 0x3F) << 2) | (((uint16_t)p_ingest[1] & 0xC0) >> 6);
+    aos_frame_pri_hdr.vcid = ((uint8_t)p_ingest[1] & 0x3F);
 
 #ifdef DEBUG
     printf(KYEL "\n----- Crypto_AOS_ProcessSecurity START -----\n" RESET);
@@ -938,6 +938,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
      * Reference CCSDS SDLP 3550b1 4.1.1.1.3
      **/
     // Get SPI
+    printf("byte_idx: %d\n", byte_idx);
     spi = (uint8_t)p_ingest[byte_idx] << 8 | (uint8_t)p_ingest[byte_idx + 1];
     // Move index to past the SPI
     byte_idx += 2;
@@ -1486,7 +1487,6 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     
     if (current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
     {
-        printf("Byte_idx: %d\n", byte_idx);
         pp_processed_frame->aos_sec_trailer.fecf = (uint16_t)(p_new_dec_frame[byte_idx] << 8) | p_new_dec_frame[byte_idx + 1];
     }
     free(p_new_dec_frame);
