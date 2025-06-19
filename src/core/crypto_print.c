@@ -60,13 +60,38 @@ void Crypto_tcPrint(TC_t *tc_frame)
  * Prints the current TM in memory.
  * @param tm_frame: TM_t*
  **/
-// TODO - START HERE WORK ON PRINT HERE
 void Crypto_tmPrint(TM_t *tm_frame)
 {
-    tm_frame = tm_frame;
     printf("Current TM in memory is: \n");
     printf("\t Header\n");
-    printf("\t**** THIS IS BLANKED OUT CURRENTLY!!!!!!!***\n");
+    printf("\t\t tfvn   = %d \n", tm_frame->tm_header.tfvn);
+    printf("\t\t scid   = %d \n", tm_frame->tm_header.scid);
+    printf("\t\t vcid   = %d \n", tm_frame->tm_header.vcid);
+    printf("\t\t ocff   = %d \n", tm_frame->tm_header.ocff);
+    printf("\t\t mcfc   = %d \n", tm_frame->tm_header.mcfc);
+    printf("\t\t vcfc   = %d \n", tm_frame->tm_header.vcfc);
+    printf("\t\t sf     = %d \n", tm_frame->tm_header.sf);
+    printf("\t\t pof    = %d \n", tm_frame->tm_header.pof);
+    printf("\t\t slid   = %d \n", tm_frame->tm_header.slid);
+    printf("\t\t fhp    = %d \n", tm_frame->tm_header.fhp);
+    printf("\t SDLS Header\n");
+    printf("\t\t spi    = %d \n", tm_frame->tm_sec_header.spi);
+    printf("\t\t iv[0]  = 0x%02x \n", tm_frame->tm_sec_header.iv[0]);
+    printf("\t\t iv_len = %d \n", tm_frame->tm_sec_header.iv_field_len);
+    printf("\t\t sn[0]  = 0x%02x \n", tm_frame->tm_sec_header.sn[0]);
+    printf("\t\t sn_len = %d \n", tm_frame->tm_sec_header.sn_field_len);
+    printf("\t\t pad    = %d \n", tm_frame->tm_sec_header.pad);
+    printf("\t\t pad_len= %d \n", tm_frame->tm_sec_header.pad_field_len);
+    printf("\t Payload \n");
+    printf("\t\t data[0]= 0x%02x \n", tm_frame->tm_pdu[0]);
+    printf("\t\t data[1]= 0x%02x \n", tm_frame->tm_pdu[1]);
+    printf("\t\t data[2]= 0x%02x \n", tm_frame->tm_pdu[2]);
+    printf("\t SDLS Trailer\n");
+    printf("\t\t MAC[0] = 0x%02x \n", tm_frame->tm_sec_trailer.mac[0]);
+    printf("\t\t MAC_len= %d \n", tm_frame->tm_sec_trailer.mac_field_len);
+    printf("\t\t OCF[0] = 0x%02x \n", tm_frame->tm_sec_trailer.ocf[0]);
+    printf("\t\t OCF_len= %d \n", tm_frame->tm_sec_trailer.ocf_field_len);
+    printf("\t\t FECF   = 0x%04x \n", tm_frame->tm_sec_trailer.fecf);
     printf("\n");
 }
 

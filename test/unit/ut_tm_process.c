@@ -331,6 +331,8 @@ UTEST(TM_PROCESS_SECURITY, HAPPY_PATH_CLEAR_FECF)
         ASSERT_EQ((uint8_t)tm_frame->tm_pdu[i], (uint8_t) * (truth_tm_b + offset + i));
     }
 
+    Crypto_tmPrint(tm_frame);
+
     Crypto_Shutdown();
     free(framed_tm_b);
     free(truth_tm_b);
@@ -490,6 +492,8 @@ UTEST(TM_PROCESS_SECURITY, SECONDARY_HDR_PRESENT_PLAINTEXT)
         // printf("Checking %02x against %02X\n", tm_frame[i], (uint8_t)*(truth_tm_b + i));
         ASSERT_EQ(tm_frame->tm_pdu[i], (uint8_t) * (truth_tm_b + offset + i));
     }
+
+    Crypto_tmPrint(tm_frame);
 
     Crypto_Shutdown();
     free(framed_tm_b);
@@ -658,6 +662,8 @@ UTEST(TM_PROCESS_SECURITY, SECONDARY_HDR_PRESENT_MAC)
         // printf("Checking %02x against %02X\n", ptr_processed_frame[i], (uint8_t)*(truth_tm_b + i));
         ASSERT_EQ(tm_frame->tm_pdu[i], (uint8_t) * (truth_tm_b + offset + i));
     }
+
+    Crypto_tmPrint(tm_frame);
 
     Crypto_Shutdown();
     free(framed_tm_b);
@@ -835,6 +841,8 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_0)
         // printf("Checking %02x against %02X\n", ptr_processed_frame[i], (uint8_t)*(truth_tm_b + i));
         ASSERT_EQ(tm_frame->tm_pdu[i], (uint8_t) * (truth_tm_b + offset + i));
     }
+
+    Crypto_tmPrint(tm_frame);
 
     Crypto_Shutdown();
     free(framed_tm_b);
@@ -1016,6 +1024,8 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_1)
         ASSERT_EQ(tm_frame->tm_pdu[i], (uint8_t) * (truth_tm_b + offset + i));
     }
 
+    Crypto_tmPrint(tm_frame);
+
     Crypto_Shutdown();
     free(framed_tm_b);
     free(truth_tm_b);
@@ -1194,6 +1204,8 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_0)
         ASSERT_EQ(tm_frame->tm_pdu[i], (uint8_t) * (truth_tm_b + offset + i));
     }
 
+    Crypto_tmPrint(tm_frame);
+
     Crypto_Shutdown();
     free(framed_tm_b);
     free(truth_tm_b);
@@ -1371,6 +1383,8 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_1)
         // printf("Checking %02x against %02X\n", ptr_processed_frame[i], (uint8_t)*(truth_tm_b + i));
         ASSERT_EQ(tm_frame->tm_pdu[i], (uint8_t) * (truth_tm_b + offset + i));
     }
+
+    Crypto_tmPrint(tm_frame);
 
     Crypto_Shutdown();
     free(framed_tm_b);
@@ -1553,6 +1567,8 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_0)
         ASSERT_EQ(tm_frame->tm_pdu[i], (uint8_t) * (truth_tm_b + offset + i));
     }
 
+    Crypto_tmPrint(tm_frame);
+
     Crypto_Shutdown();
     free(framed_tm_b);
     free(truth_tm_b);
@@ -1734,6 +1750,8 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_1)
         ASSERT_EQ(tm_frame->tm_pdu[i], (uint8_t) * (truth_tm_b + offset + i));
     }
 
+    Crypto_tmPrint(tm_frame);
+
     Crypto_Shutdown();
     free(framed_tm_b);
     free(truth_tm_b);
@@ -1770,7 +1788,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_GCM_BITMASK_1)
 
     // Test frame setup    Header   |SPI|    IV                         |    Data
     char *framed_tm_h =
-        "02c0000018000006deadbeefdeadbeefdeadbeefdeadbeef0b355a29091cc09b6434ca743273c0a1f0529d44cedd32f09b9dbb45ab35c4"
+        "02c0B0B018000006deadbeefdeadbeefdeadbeefdeadbeef0b355a29091cc09b6434ca743273c0a1f0529d44cedd32f09b9dbb45ab35c4"
         "b607c4783aaefe7068f6924f069e335dacbf11cb0aba3268b6e1f5b12d6a9ce5e26bf249125ce02cecd90f17f642a9ed8524e73cbca4a1"
         "25d16a00babca86146b264f2e36d3f81a8645b8b8a66214c473efdbf6f8faa435c9dc3b839bde4fadea2d8a5c9edfd7e1db8b1ba6c1b10"
         "e20f82d98c3959104e826c5dc4f63228f5d3fda431adcb775a2300000113e3fee4b87f2f87550b66fa001494c23357a2f095f3593790f6"
@@ -1901,6 +1919,8 @@ UTEST(TM_PROCESS_ENC_VAL, AES_GCM_BITMASK_1)
     }
 
     printf("\n\n");
+
+    Crypto_tmPrint(tm_frame);
 
     free(truth_tm_b);
     free(framed_tm_b);
@@ -2084,6 +2104,7 @@ UTEST(TM_PROCESS_ENC_VAL, AEAD_AES_GCM_BITMASK_1)
     }
 
     printf("\n\n");
+    Crypto_tmPrint(tm_frame);
 
     Crypto_Shutdown();
     free(truth_tm_b);
@@ -2175,6 +2196,8 @@ UTEST(TM_PROCESS, TM_OCF_TEST)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     printf("FSR: %08X\n", Crypto_Get_FSR());
+
+    Crypto_tmPrint(tm_frame);
 
     Crypto_Shutdown();
     free(framed_tm_b);
