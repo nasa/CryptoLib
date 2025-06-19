@@ -465,7 +465,6 @@ uint16_t Crypto_Calc_FHECF(uint8_t *data)
     memset(parity, 0, RS_PARITY);
     for (i = 0; i < RS_DATA; i++)
     {
-        printf("data[%d] = 0x%02x\n", i, data[i]);
         feedback = (data[i] ^ parity[0]) % (GF_SIZE - 1);
         for (j = 0; j < RS_PARITY - 1; j++)
         {
