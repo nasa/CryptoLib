@@ -134,6 +134,7 @@
 #define BYTE_LEN            8    /* bits */
 #define CRYPTOLIB_APPID     128
 #define MAX_IV_LEN          32 /* bytes */
+#define MAX_IZ_LEN          32
 
 // Configurable via build flags
 #ifndef NUM_SA

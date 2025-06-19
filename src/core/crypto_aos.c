@@ -807,7 +807,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
  *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 5 (AOS Protocol), CCSDS 732.0-B-4
  **/
-int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_t **pp_processed_frame,
+int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t *pp_processed_frame,
                                    uint16_t *p_decrypted_length)
 {
     // Local Variables
@@ -1115,12 +1115,12 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     }
     // Increment byte_idx past Security Header Fields based on SA values
     byte_idx += sa_ptr->shivf_len;
-    byte_idx += (sa_ptr->arsn_len - sa_ptr->shsnf_len);
+    byte_idx += sa_ptr->shsnf_len;
     byte_idx += sa_ptr->shplf_len;
 
 #ifdef SA_DEBUG
     printf(KYEL "IV length of %d bytes\n" RESET, sa_ptr->shivf_len);
-    printf(KYEL "ARSN length of %d bytes\n" RESET, sa_ptr->arsn_len - sa_ptr->shsnf_len);
+    printf(KYEL "SHSNF length of %d bytes\n" RESET, sa_ptr->shsnf_len);
     printf(KYEL "PAD length field of %d bytes\n" RESET, sa_ptr->shplf_len);
     printf(KYEL "First byte past Security Header is at index %d\n" RESET, byte_idx);
 #endif
@@ -1398,9 +1398,98 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     printf("\n");
 #endif
 
-    *pp_processed_frame = p_new_dec_frame;
     // TODO maybe not just return this without doing the math ourselves
     *p_decrypted_length = current_managed_parameters_struct.max_frame_size;
+
+    // Copy data into struct
+    byte_idx = 0;
+
+    // Primary Header
+    pp_processed_frame->aos_header.tfvn  = (p_new_dec_frame[0] & 0xC0) >> 6;
+    pp_processed_frame->aos_header.scid  = (((uint16_t)p_new_dec_frame[0] & 0x3F) << 2) | (((uint16_t)p_new_dec_frame[1] & 0xC0) >> 6);
+    pp_processed_frame->aos_header.vcid  = (p_new_dec_frame[1] & 0x3F);
+    pp_processed_frame->aos_header.vcfc  = (p_new_dec_frame[2] << 16) | (p_new_dec_frame[3] << 8) | (p_new_dec_frame[4]);
+    pp_processed_frame->aos_header.rf    = (p_new_dec_frame[5] & 0x80) >> 7;
+    pp_processed_frame->aos_header.sf    = (p_new_dec_frame[5] & 0x40) >> 6;
+    pp_processed_frame->aos_header.spare = (p_new_dec_frame[5] & 0x30) >> 4;
+    pp_processed_frame->aos_header.vfcc  = (p_new_dec_frame[5] & 0x0F);
+    if (current_managed_parameters_struct.aos_has_fhec == AOS_HAS_FHEC)
+    {
+        pp_processed_frame->aos_header.fhecf = (p_new_dec_frame[6] << 8) | p_new_dec_frame[7];
+        byte_idx += 8;
+    }
+    else
+    {
+        byte_idx += 6;
+    }
+
+    // Security Header
+    if (current_managed_parameters_struct.aos_has_iz == AOS_HAS_IZ)
+    {
+        for (int i = 0; i < current_managed_parameters_struct.aos_iz_len; i++)
+        {
+            memcpy(pp_processed_frame->aos_sec_header.iz + i, &p_new_dec_frame[byte_idx + i], 1);
+        }
+        byte_idx += current_managed_parameters_struct.aos_iz_len;
+    }
+
+    pp_processed_frame->aos_sec_header.spi = (((uint16_t)p_new_dec_frame[byte_idx]) << 8) | ((uint16_t)p_new_dec_frame[byte_idx + 1]);
+    byte_idx += 2;
+
+    for (int i = 0; i < sa_ptr->shivf_len; i++)
+    {
+        memcpy(pp_processed_frame->aos_sec_header.iv + i, &p_new_dec_frame[byte_idx + i], 1);
+    }
+    byte_idx += sa_ptr->shivf_len;
+    pp_processed_frame->aos_sec_header.iv_field_len = sa_ptr->shivf_len;
+
+    for (int i = 0; i < sa_ptr->shsnf_len; i++)
+    {
+        memcpy(pp_processed_frame->aos_sec_header.sn + i, &p_new_dec_frame[byte_idx + i], 1);
+    }
+    byte_idx += sa_ptr->shsnf_len;
+    pp_processed_frame->aos_sec_header.sn_field_len = sa_ptr->shsnf_len;
+
+    for (int i = 0; i < sa_ptr->shplf_len; i++)
+    {
+        pp_processed_frame->aos_sec_header.pad += (p_new_dec_frame[byte_idx + i] << ((sa_ptr->shplf_len - 1 - i) * 8));
+    }
+    byte_idx += sa_ptr->shplf_len;
+    pp_processed_frame->aos_sec_header.pad_field_len = sa_ptr->shplf_len;
+
+    // PDU
+    memcpy(pp_processed_frame->aos_pdu, &p_new_dec_frame[byte_idx], pdu_len);
+    pp_processed_frame->aos_pdu_len = pdu_len;
+    byte_idx += pdu_len;
+
+    // Security Trailer
+    for (int i = 0; i < sa_ptr->stmacf_len; i++)
+    {
+        memcpy(pp_processed_frame->aos_sec_trailer.mac + i, &p_new_dec_frame[byte_idx + i], 1);
+    }
+    byte_idx += sa_ptr->stmacf_len;
+    pp_processed_frame->aos_sec_trailer.mac_field_len = sa_ptr->stmacf_len;
+
+    if (current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
+    {
+        for (int i = 0; i < OCF_SIZE; i++)
+        {
+            memcpy(pp_processed_frame->aos_sec_trailer.ocf + i, &p_new_dec_frame[byte_idx + i], 1);
+        }
+        byte_idx += OCF_SIZE;
+        pp_processed_frame->aos_sec_trailer.ocf_field_len = OCF_SIZE;
+    }
+    else
+    {
+        pp_processed_frame->aos_sec_trailer.ocf_field_len = 0;
+    }
+    
+    if (current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
+    {
+        printf("Byte_idx: %d\n", byte_idx);
+        pp_processed_frame->aos_sec_trailer.fecf = (uint16_t)(p_new_dec_frame[byte_idx] << 8) | p_new_dec_frame[byte_idx + 1];
+    }
+    free(p_new_dec_frame);
 
 #ifdef DEBUG
     printf(KYEL "----- Crypto_AOS_ProcessSecurity END -----\n" RESET);
@@ -1409,25 +1498,6 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     return status;
 }
 
-/**
- * @brief Function: Crypto_Get_aosLength
- * Returns the total length of the current aos_frame in BYTES!
- * @param len: int
- * @return int32_t Length of AOS
- *
- * CCSDS Compliance: CCSDS 732.0-B-4 Section 4.1 (AOS Transfer Frame Format)
- **/
-int32_t Crypto_Get_aosLength(int len)
-{
-#ifdef FILL
-    len = AOS_FILL_SIZE;
-#else
-    len =
-        AOS_FRAME_PRIMARYHEADER_SIZE + AOS_FRAME_SECHEADER_SIZE + len + AOS_FRAME_SECTRAILER_SIZE + AOS_FRAME_CLCW_SIZE;
-#endif
-
-    return len;
-}
 
 /**
  * @brief Function: Crypto_Prepare_AOS_AAD

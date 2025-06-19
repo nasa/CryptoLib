@@ -171,7 +171,7 @@ extern int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest,
 
 // Advanced Orbiting Systems (AOS)
 extern int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest);
-extern int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_t **pp_processed_frame,
+extern int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t *pp_processed_frame,
                                           uint16_t *p_decrypted_length);
 
 // Crypo Error Support Functions
