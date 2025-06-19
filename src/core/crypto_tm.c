@@ -1539,7 +1539,7 @@ void Crypto_TM_Calc_PDU_MAC(uint16_t *pdu_len, uint16_t byte_idx, SecurityAssoci
 int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr, uint8_t ecs_is_aead_algorithm,
                              uint16_t byte_idx, uint8_t *p_new_dec_frame, uint16_t pdu_len, uint8_t *p_ingest,
                              crypto_key_t *ekp, crypto_key_t *akp, uint8_t iv_loc, int mac_loc, uint16_t aad_len,
-                             uint8_t *aad, uint8_t **pp_processed_frame, uint16_t *p_decrypted_length)
+                             uint8_t *aad, TM_t *pp_processed_frame, uint16_t *p_decrypted_length)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     if (sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_TRUE)
@@ -1576,9 +1576,70 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     printf("\n");
 #endif
 
-    *pp_processed_frame = p_new_dec_frame;
+    // pp_processed_frame = p_new_dec_frame;
+
     // TODO maybe not just return this without doing the math ourselves
     *p_decrypted_length = current_managed_parameters_struct.max_frame_size;
+
+    // Copy data into struct
+    byte_idx = 0;
+
+    // Primary Header
+    pp_processed_frame->tm_header.tfvn = (p_new_dec_frame[0] & 0xC0) >> 6;
+    pp_processed_frame->tm_header.scid = (((uint16_t)p_new_dec_frame[0] & 0x3F) << 4) | (((uint16_t)p_new_dec_frame[1] & 0xF0) >> 4);
+    pp_processed_frame->tm_header.vcid = (p_new_dec_frame[1] & 0x0E) >> 1;
+    pp_processed_frame->tm_header.ocff = (p_new_dec_frame[1] & 0x01);
+    pp_processed_frame->tm_header.mcfc = (p_new_dec_frame[2]);
+    pp_processed_frame->tm_header.vcfc = (p_new_dec_frame[3]);
+    pp_processed_frame->tm_header.tfsh = (p_new_dec_frame[4] & 0x80) >> 7;
+    pp_processed_frame->tm_header.sf   = (p_new_dec_frame[4] & 0x40) >> 6;
+    pp_processed_frame->tm_header.pof  = (p_new_dec_frame[4] & 0x20) >> 5;
+    pp_processed_frame->tm_header.slid = ((p_new_dec_frame[4] & 0x18) >> 3);
+    pp_processed_frame->tm_header.fhp  = (((uint16_t)p_new_dec_frame[4] & 0x07) << 8) | p_new_dec_frame[5];
+    byte_idx += 6;
+
+    // Security Header
+    pp_processed_frame->tm_sec_header.spi = (((uint16_t)p_new_dec_frame[byte_idx]) << 8) | ((uint16_t)p_new_dec_frame[byte_idx + 1]);
+    byte_idx += 2;
+    for (int i = 0; i < sa_ptr->shivf_len; i++)
+    {
+        memcpy(pp_processed_frame->tm_sec_header.iv + i, &p_new_dec_frame[byte_idx + i], 1);
+    }
+    byte_idx += sa_ptr->shivf_len;
+    pp_processed_frame->tm_sec_header.iv_field_len = sa_ptr->shivf_len;
+    for (int i = 0; i < sa_ptr->shsnf_len; i++)
+    {
+        memcpy(pp_processed_frame->tm_sec_header.sn + i, &p_new_dec_frame[byte_idx + i], 1);
+    }
+    byte_idx += sa_ptr->shsnf_len;
+    pp_processed_frame->tm_sec_header.sn_field_len = sa_ptr->shsnf_len;
+    for (int i = 0; i < sa_ptr->shplf_len; i++)
+    {
+        pp_processed_frame->tm_sec_header.pad += p_new_dec_frame[byte_idx + i];
+    }
+    byte_idx += sa_ptr->shplf_len;
+    pp_processed_frame->tm_sec_header.pad_field_len = sa_ptr->shplf_len;
+
+    // PDU
+    memcpy(pp_processed_frame->tm_pdu, &p_new_dec_frame[byte_idx], pdu_len);
+    pp_processed_frame->tm_pdu_len = pdu_len;
+    byte_idx += pdu_len;
+
+    // Security Trailer
+    for (int i = 0; i < sa_ptr->stmacf_len; i++)
+    {
+        memcpy(pp_processed_frame->tm_sec_trailer.mac + i, &p_new_dec_frame[byte_idx + i], 1);
+    }
+    byte_idx += sa_ptr->stmacf_len;
+    pp_processed_frame->tm_sec_trailer.mac_field_len = sa_ptr->stmacf_len;
+    for (int i = 0; i < OCF_SIZE; i++)
+    {
+        memcpy(pp_processed_frame->tm_sec_trailer.ocf + i, &p_new_dec_frame[byte_idx + i], 1);
+    }
+    byte_idx += OCF_SIZE;
+    pp_processed_frame->tm_sec_trailer.ocf_field_len = OCF_SIZE;
+    pp_processed_frame->tm_sec_trailer.fecf = ((uint16_t)p_new_dec_frame[byte_idx] << 8) | p_new_dec_frame[byte_idx + 1];
+
 
 #ifdef DEBUG
     printf(KYEL "----- Crypto_TM_ProcessSecurity END -----\n" RESET);
@@ -1627,7 +1688,7 @@ void Crypto_TM_Process_Debug_Print(uint16_t byte_idx, uint16_t pdu_len, Security
  * @param len_ingest: int*
  * @return int32: Success/Failure
  **/
-int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_t **pp_processed_frame,
+int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *pp_processed_frame,
                                   uint16_t *p_decrypted_length)
 {
     // Local Variables
@@ -1663,6 +1724,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_
          **/
         // Get SPI
         spi = (uint8_t)p_ingest[byte_idx] << 8 | (uint8_t)p_ingest[byte_idx + 1];
+        pp_processed_frame->tm_sec_header.spi = spi;
         // Move index to past the SPI
         byte_idx += 2;
 

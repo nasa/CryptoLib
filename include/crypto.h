@@ -166,7 +166,7 @@ void     Crypto_Set_FSR(uint8_t *p_ingest, uint16_t byte_idx, uint16_t pdu_len, 
 
 // Telemetry (TM)
 extern int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest);
-extern int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_t **pp_processed_frame,
+extern int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *pp_processed_frame,
                                          uint16_t *p_decrypted_length);
 
 // Advanced Orbiting Systems (AOS)
@@ -226,7 +226,7 @@ void    Crypto_TM_Calc_PDU_MAC(uint16_t *pdu_len, uint16_t byte_idx, SecurityAss
 int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr, uint8_t ecs_is_aead_algorithm,
                              uint16_t byte_idx, uint8_t *p_new_dec_frame, uint16_t pdu_len, uint8_t *p_ingest,
                              crypto_key_t *ekp, crypto_key_t *akp, uint8_t iv_loc, int mac_loc, uint16_t aad_len,
-                             uint8_t *aad, uint8_t **pp_processed_frame, uint16_t *p_decrypted_length);
+                             uint8_t *aad, TM_t *pp_processed_frame, uint16_t *p_decrypted_length);
 void    Crypto_TM_Process_Debug_Print(uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t *sa_ptr);
 
 extern int32_t Crypto_increment(uint8_t *num, int length);
@@ -312,8 +312,8 @@ extern char *crypto_deep_copy_string(char *src_string);
 extern CCSDS_t          sdls_frame;
 extern SDLS_KEYV_RPLY_t sdls_ep_keyv_reply;
 extern uint8_t          sdls_ep_reply[TC_MAX_FRAME_SIZE];
-// extern TM_t tm_frame;
-extern uint8_t                  tm_frame[1786];
+extern TM_t tm_frame;
+//extern uint8_t                  tm_frame[1786];
 extern TM_FramePrimaryHeader_t  tm_frame_pri_hdr;
 extern TM_FrameSecurityHeader_t tm_frame_sec_hdr; // Used to reduce bit math duplication
 // exterm AOS_t aos_frame

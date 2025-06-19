@@ -526,8 +526,13 @@ typedef struct
 */
 typedef struct
 {
-    uint16_t spi;         // Security Parameter Index
-    uint8_t  iv[IV_SIZE]; // Initialization Vector for encryption
+    uint16_t spi;             // Security Parameter Index
+    uint8_t  iv[IV_SIZE];     // Initialization Vector for encryption
+    uint8_t  iv_field_len;
+    uint8_t  sn[SN_SIZE]; // Sequence Number for anti-replay
+    uint8_t  sn_field_len;
+    uint8_t  pad; // Count of the used fill Bytes
+    uint8_t  pad_field_len;
 } TM_FrameSecurityHeader_t;
 #define TM_FRAME_SECHEADER_SIZE (sizeof(TM_FrameSecurityHeader_t))
 
@@ -537,7 +542,9 @@ typedef struct
 typedef struct
 {
     uint8_t  mac[MAC_SIZE]; // Message Authentication Code
+    uint8_t  mac_field_len;
     uint8_t  ocf[OCF_SIZE]; // Operational Control Field
+    uint8_t  ocf_field_len;
     uint16_t fecf;          // Frame Error Control Field
 } TM_FrameSecurityTrailer_t;
 #define TM_FRAME_SECTRAILER_SIZE (sizeof(TM_FrameSecurityTrailer_t))
@@ -551,6 +558,7 @@ typedef struct
     TM_FramePrimaryHeader_t   tm_header;
     TM_FrameSecurityHeader_t  tm_sec_header;
     uint8_t                   tm_pdu[TM_FRAME_DATA_SIZE];
+    uint16_t                  tm_pdu_len;
     TM_FrameSecurityTrailer_t tm_sec_trailer;
 } TM_t;
 #define TM_SIZE (sizeof(TM_t))
@@ -616,9 +624,10 @@ typedef struct
 */
 typedef struct
 {
-    AOS_FramePrimaryHeader_t   tm_header;
-    AOS_FrameSecurityHeader_t  tm_sec_header;
+    AOS_FramePrimaryHeader_t   aos_header;
+    AOS_FrameSecurityHeader_t  aos_sec_header;
     uint8_t                    aos_pdu[AOS_FRAME_DATA_SIZE];
+    uint16_t                   aos_pdu_len;
     AOS_FrameSecurityTrailer_t aos_sec_trailer;
 } __attribute__((packed)) AOS_t;
 #define AOS_SIZE (sizeof(AOS_t))
