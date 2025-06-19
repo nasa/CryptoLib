@@ -45,6 +45,7 @@ UTEST(CRYPTO_C, CALC_CRC16)
 
     printf("CRC = 0x%04x\n", crc);
     ASSERT_EQ(crc, validated_crc);
+    free(data_b);
 }
 
 /**
@@ -280,6 +281,7 @@ UTEST(CRYPTO_C, EXT_PROC_PDU)
     tc_frame->tc_header.fl    = 1;
 
     status = Crypto_Process_Extended_Procedure_Pdu(tc_frame, ingest, TC_SIZE);
+    free(tc_frame);
     ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 }
 #endif // CRYPTO_EPROC

@@ -422,10 +422,10 @@ void sa_populate(void)
     sa[9].ast             = 0;
     sa[9].shivf_len       = 12;
     sa[9].iv_len          = 12;
-    sa[9].shsnf_len       = 2;
+    sa[9].shsnf_len       = 0;
     sa[9].arsnw           = 5;
     sa[9].arsnw_len       = 1;
-    sa[9].arsn_len        = 2;
+    sa[9].arsn_len        = 0;
     sa[9].gvcid_blk.tfvn  = 0x01;
     sa[9].gvcid_blk.scid  = SCID & 0x3FF;
     sa[9].gvcid_blk.vcid  = 0;
