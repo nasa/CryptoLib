@@ -1406,12 +1406,13 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     byte_idx = 0;
 
     // Primary Header
-    pp_processed_frame->aos_header.tfvn  = (p_new_dec_frame[0] & 0xC0) >> 6;
-    pp_processed_frame->aos_header.scid  = (((uint16_t)p_new_dec_frame[0] & 0x3F) << 2) | (((uint16_t)p_new_dec_frame[1] & 0xC0) >> 6);
-    pp_processed_frame->aos_header.vcid  = (p_new_dec_frame[1] & 0x3F);
-    pp_processed_frame->aos_header.vcfc  = (p_new_dec_frame[2] << 16) | (p_new_dec_frame[3] << 8) | (p_new_dec_frame[4]);
-    pp_processed_frame->aos_header.rf    = (p_new_dec_frame[5] & 0x80) >> 7;
-    pp_processed_frame->aos_header.sf    = (p_new_dec_frame[5] & 0x40) >> 6;
+    pp_processed_frame->aos_header.tfvn = (p_new_dec_frame[0] & 0xC0) >> 6;
+    pp_processed_frame->aos_header.scid =
+        (((uint16_t)p_new_dec_frame[0] & 0x3F) << 2) | (((uint16_t)p_new_dec_frame[1] & 0xC0) >> 6);
+    pp_processed_frame->aos_header.vcid = (p_new_dec_frame[1] & 0x3F);
+    pp_processed_frame->aos_header.vcfc = (p_new_dec_frame[2] << 16) | (p_new_dec_frame[3] << 8) | (p_new_dec_frame[4]);
+    pp_processed_frame->aos_header.rf   = (p_new_dec_frame[5] & 0x80) >> 7;
+    pp_processed_frame->aos_header.sf   = (p_new_dec_frame[5] & 0x40) >> 6;
     pp_processed_frame->aos_header.spare = (p_new_dec_frame[5] & 0x30) >> 4;
     pp_processed_frame->aos_header.vfcc  = (p_new_dec_frame[5] & 0x0F);
     if (current_managed_parameters_struct.aos_has_fhec == AOS_HAS_FHEC)
@@ -1434,7 +1435,8 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
         byte_idx += current_managed_parameters_struct.aos_iz_len;
     }
 
-    pp_processed_frame->aos_sec_header.spi = (((uint16_t)p_new_dec_frame[byte_idx]) << 8) | ((uint16_t)p_new_dec_frame[byte_idx + 1]);
+    pp_processed_frame->aos_sec_header.spi =
+        (((uint16_t)p_new_dec_frame[byte_idx]) << 8) | ((uint16_t)p_new_dec_frame[byte_idx + 1]);
     byte_idx += 2;
 
     for (int i = 0; i < sa_ptr->shivf_len; i++)
@@ -1484,10 +1486,11 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     {
         pp_processed_frame->aos_sec_trailer.ocf_field_len = 0;
     }
-    
+
     if (current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
     {
-        pp_processed_frame->aos_sec_trailer.fecf = (uint16_t)(p_new_dec_frame[byte_idx] << 8) | p_new_dec_frame[byte_idx + 1];
+        pp_processed_frame->aos_sec_trailer.fecf =
+            (uint16_t)(p_new_dec_frame[byte_idx] << 8) | p_new_dec_frame[byte_idx + 1];
     }
     free(p_new_dec_frame);
 
@@ -1497,7 +1500,6 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     mc_if->mc_log(status);
     return status;
 }
-
 
 /**
  * @brief Function: Crypto_Prepare_AOS_AAD

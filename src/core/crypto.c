@@ -46,9 +46,9 @@ SDLS_KEYV_RPLY_t sdls_ep_keyv_reply; // Reply block for challenged keys
 uint8_t          sdls_ep_reply[TC_MAX_FRAME_SIZE];
 CCSDS_t          sdls_frame;
 // TM
-//TM_t                     tm_frame;                    // TM Global Frame
-TM_FramePrimaryHeader_t  tm_frame_pri_hdr;            // Used to reduce bit math duplication
-TM_FrameSecurityHeader_t tm_frame_sec_hdr;            // Used to reduce bit math duplication
+// TM_t                     tm_frame;                    // TM Global Frame
+TM_FramePrimaryHeader_t  tm_frame_pri_hdr; // Used to reduce bit math duplication
+TM_FrameSecurityHeader_t tm_frame_sec_hdr; // Used to reduce bit math duplication
 // AOS
 uint8_t                   aos_frame[AOS_MAX_FRAME_SIZE]; // AOS Global Frame
 AOS_FramePrimaryHeader_t  aos_frame_pri_hdr;             // Used to reduce bit math duplication

@@ -312,8 +312,8 @@ extern char *crypto_deep_copy_string(char *src_string);
 extern CCSDS_t          sdls_frame;
 extern SDLS_KEYV_RPLY_t sdls_ep_keyv_reply;
 extern uint8_t          sdls_ep_reply[TC_MAX_FRAME_SIZE];
-//extern TM_t tm_frame;
-//extern uint8_t                  tm_frame[1786];
+// extern TM_t tm_frame;
+// extern uint8_t                  tm_frame[1786];
 extern TM_FramePrimaryHeader_t  tm_frame_pri_hdr;
 extern TM_FrameSecurityHeader_t tm_frame_sec_hdr; // Used to reduce bit math duplication
 // exterm AOS_t aos_frame
