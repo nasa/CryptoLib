@@ -1587,7 +1587,8 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
 
     // Primary Header
     pp_processed_frame->tm_header.tfvn = (p_new_dec_frame[0] & 0xC0) >> 6;
-    pp_processed_frame->tm_header.scid = (((uint16_t)p_new_dec_frame[0] & 0x3F) << 4) | (((uint16_t)p_new_dec_frame[1] & 0xF0) >> 4);
+    pp_processed_frame->tm_header.scid =
+        (((uint16_t)p_new_dec_frame[0] & 0x3F) << 4) | (((uint16_t)p_new_dec_frame[1] & 0xF0) >> 4);
     pp_processed_frame->tm_header.vcid = (p_new_dec_frame[1] & 0x0E) >> 1;
     pp_processed_frame->tm_header.ocff = (p_new_dec_frame[1] & 0x01);
     pp_processed_frame->tm_header.mcfc = (p_new_dec_frame[2]);
@@ -1600,7 +1601,8 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     byte_idx += 6;
 
     // Security Header
-    pp_processed_frame->tm_sec_header.spi = (((uint16_t)p_new_dec_frame[byte_idx]) << 8) | ((uint16_t)p_new_dec_frame[byte_idx + 1]);
+    pp_processed_frame->tm_sec_header.spi =
+        (((uint16_t)p_new_dec_frame[byte_idx]) << 8) | ((uint16_t)p_new_dec_frame[byte_idx + 1]);
     byte_idx += 2;
     for (int i = 0; i < sa_ptr->shivf_len; i++)
     {
@@ -1648,7 +1650,8 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     }
     if (current_managed_parameters_struct.has_fecf == TM_HAS_FECF)
     {
-        pp_processed_frame->tm_sec_trailer.fecf = ((uint16_t)p_new_dec_frame[byte_idx] << 8) | p_new_dec_frame[byte_idx + 1];
+        pp_processed_frame->tm_sec_trailer.fecf =
+            ((uint16_t)p_new_dec_frame[byte_idx] << 8) | p_new_dec_frame[byte_idx + 1];
     }
     free(p_new_dec_frame);
 
@@ -1734,7 +1737,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
          * Reference CCSDS SDLP 3550b1 4.1.1.1.3
          **/
         // Get SPI
-        spi = (uint8_t)p_ingest[byte_idx] << 8 | (uint8_t)p_ingest[byte_idx + 1];
+        spi                                   = (uint8_t)p_ingest[byte_idx] << 8 | (uint8_t)p_ingest[byte_idx + 1];
         pp_processed_frame->tm_sec_header.spi = spi;
         // Move index to past the SPI
         byte_idx += 2;
