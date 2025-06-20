@@ -1618,7 +1618,7 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     pp_processed_frame->tm_sec_header.sn_field_len = sa_ptr->shsnf_len;
     for (int i = 0; i < sa_ptr->shplf_len; i++)
     {
-        pp_processed_frame->tm_sec_header.pad += p_new_dec_frame[byte_idx + i];
+        pp_processed_frame->tm_sec_header.pad += (p_new_dec_frame[byte_idx + i] << ((sa_ptr->shplf_len - 1 - i) * 8));
     }
     byte_idx += sa_ptr->shplf_len;
     pp_processed_frame->tm_sec_header.pad_field_len = sa_ptr->shplf_len;

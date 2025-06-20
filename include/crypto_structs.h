@@ -531,7 +531,7 @@ typedef struct
     uint8_t  iv_field_len;
     uint8_t  sn[SN_SIZE]; // Sequence Number for anti-replay
     uint8_t  sn_field_len;
-    uint8_t  pad; // Count of the used fill Bytes
+    uint16_t pad; // Count of the used fill Bytes
     uint8_t  pad_field_len;
 } __attribute__((packed)) TM_FrameSecurityHeader_t;
 #define TM_FRAME_SECHEADER_SIZE (sizeof(TM_FrameSecurityHeader_t))
@@ -605,7 +605,7 @@ typedef struct
     uint8_t  iv_field_len;
     uint8_t  sn[SN_SIZE]; // Sequence Number for anti-replay
     uint8_t  sn_field_len;
-    uint8_t  pad; // Count of the used fill Bytes
+    uint16_t pad; // Count of the used fill Bytes
     uint8_t  pad_field_len;
 } __attribute__((packed)) AOS_FrameSecurityHeader_t;
 #define AOS_FRAME_SECHEADER_SIZE (sizeof(AOS_FrameSecurityHeader_t))

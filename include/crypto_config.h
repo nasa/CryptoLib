@@ -128,7 +128,7 @@
 #define ARSN_SIZE           20   /* total messages */
 #define ARSNW_SIZE          1    /* bytes */
 #define SN_SIZE             16   /* bytes */
-#define PAD_SIZE            32   /* bytes */
+#define PAD_SIZE            2    /* bytes */ // Max shplf len takes up 2 bytes
 #define CHALLENGE_SIZE      16   /* bytes */
 #define CHALLENGE_MAC_SIZE  16   /* bytes */
 #define BYTE_LEN            8    /* bits */
