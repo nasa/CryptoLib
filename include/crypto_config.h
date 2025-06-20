@@ -123,15 +123,15 @@
 #define FHECF_SIZE          2
 #define FECF_SIZE           2
 #define TC_SEGMENT_HDR_SIZE 1
-#define ECS_SIZE            4    /* bytes */
-#define ABM_SIZE            1786 /* bytes */
-#define ARSN_SIZE           20   /* total messages */
-#define ARSNW_SIZE          1    /* bytes */
-#define SN_SIZE             16   /* bytes */
-#define PAD_SIZE            2    /* bytes */ // Max shplf len takes up 2 bytes
-#define CHALLENGE_SIZE      16   /* bytes */
-#define CHALLENGE_MAC_SIZE  16   /* bytes */
-#define BYTE_LEN            8    /* bits */
+#define ECS_SIZE            4             /* bytes */
+#define ABM_SIZE            1786          /* bytes */
+#define ARSN_SIZE           20            /* total messages */
+#define ARSNW_SIZE          1             /* bytes */
+#define SN_SIZE             16            /* bytes */
+#define PAD_SIZE            2 /* bytes */ // Max shplf len takes up 2 bytes
+#define CHALLENGE_SIZE      16            /* bytes */
+#define CHALLENGE_MAC_SIZE  16            /* bytes */
+#define BYTE_LEN            8             /* bits */
 #define CRYPTOLIB_APPID     128
 #define MAX_IV_LEN          32 /* bytes */
 #define MAX_IZ_LEN          32
