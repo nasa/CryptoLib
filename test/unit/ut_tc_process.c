@@ -449,19 +449,7 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_NONTRANSMITTED_INCREMENTING_IV_ROLLOVER)
     test_association->shivf_len      = 6;
     test_association->iv_len         = 12;
     test_association->ekid           = 130;
-    // IV = "000000000000FFFFFFFFFFFE"
-    test_association->iv[0]    = 0x00;
-    test_association->iv[1]    = 0x00;
-    test_association->iv[2]    = 0x00;
-    test_association->iv[3]    = 0x00;
-    test_association->iv[4]    = 0x00;
-    test_association->iv[5]    = 0x00;
-    test_association->iv[6]    = 0xFF;
-    test_association->iv[7]    = 0xFF;
-    test_association->iv[8]    = 0xFF;
-    test_association->iv[9]    = 0xFF;
-    test_association->iv[10]   = 0xFF;
-    test_association->iv[11]   = 0xFD;
+    sa_if->sa_setIV(test_association->spi, "000000000000FFFFFFFFFFFD");
     test_association->ast      = 1;
     test_association->est      = 1;
     test_association->sa_state = SA_OPERATIONAL;
