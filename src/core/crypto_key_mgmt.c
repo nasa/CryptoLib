@@ -16,10 +16,17 @@
    jstar-development-team@mail.nasa.gov
 */
 
+/**
+ * CCSDS Compliance Reference:
+ * This file implements key management functions compliant with:
+ * - SDLSP-EP 355.1-B-1 (Space Data Link Security Protocol - Extended Procedures) Section 6.2 (Key Management)
+ */
+
 /*
 ** Includes
 */
 #include "crypto.h"
+#include <string.h>
 
 /*
 ** Key Management Services
@@ -35,6 +42,8 @@
  * b- Set of Encrypted Upload Keys (Integer[Size of set of Key ID]; unmanaged)
  * c- Agreed Cryptographic Algorithm (managed)
  * @return int32: Success/Failure
+ *
+ * CCSDS Compliance: SDLSP-EP 355.1-B-1 Section 6.2.2 (Key Transport)
  **/
 int32_t Crypto_Key_OTAR(void)
 {
@@ -222,6 +231,8 @@ int32_t Crypto_Key_OTAR(void)
  * Updates the state of the all keys in the received SDLS EP PDU
  * @param state: uint8
  * @return uint32: Success/Failure
+ *
+ * CCSDS Compliance: SDLSP-EP 355.1-B-1 Section 6.2.3 (Key Activation)
  **/
 int32_t Crypto_Key_update(uint8_t state)
 { // Local variables
@@ -361,8 +372,11 @@ int32_t Crypto_Key_update(uint8_t state)
 
 /**
  * @brief Function: Crypto_Key_inventory
+ * Returns the complete list of existing keys and their states
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
+ *
+ * CCSDS Compliance: SDLSP-EP 355.1-B-1 Section 6.2.1 (Key Management)
  **/
 int32_t Crypto_Key_inventory(uint8_t *ingest)
 {
@@ -425,8 +439,11 @@ int32_t Crypto_Key_inventory(uint8_t *ingest)
 
 /**
  * @brief Function: Crypto_Key_verify
+ * Verifies the integrity of a key in storage and the KeyStore
  * @param tc_frame: TC_t*
  * @return int32: Success/Failure
+ *
+ * CCSDS Compliance: SDLSP-EP 355.1-B-1 Section 6.2.5 (Key Verification)
  **/
 int32_t Crypto_Key_verify(TC_t *tc_frame)
 {
