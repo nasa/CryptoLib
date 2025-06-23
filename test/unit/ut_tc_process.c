@@ -934,35 +934,35 @@ UTEST(TC_PROCESS, GCM_IV_AND_ARSN)
     char *buffer_arsn_h     = "0123"; // The last valid ARSN that was seen by the SA
     char *buffer_nist_key_h = "ef9f9284cf599eac3b119905a7d18851e7e374cf63aea04358586b0f757670f8";
     char *buffer_nist_iv_h  = "b6ac8e4963f49207ffd6374b"; // The last valid IV that was seen by the SA
-    char *buffer_replay_h =
-        "2003003500FF0009B6AC8E4963F49207FFD6374B1224DFEFB72A20D49E09256908874979DFC1711E5265126421be41438096b6415a4b"; // IV is one less than library
-                                                                                        // expects
-    char *buffer_outside_window_h =
-        "2003003500FF0009B6AC8E4963F49207FFD6375C1224DFEFB72A20D49E09256908874979B36E00000000000000000000000000000000"; // IV is outside the positive
-                                                                                        // window
-    char *buffer_bad_iv_bad_arsn_h =
-        "2003003500FF0009B6AC8E4963F49207FFD6374C01231224DFEFB72A20D49E0925690887497951E393DBFEB6FBBC2FF8486D8050B099"; // IV isa replay, ARSN is a
-                                                                                        // replay
-    char *buffer_good_iv_bad_arsn_h =
-        "2003003500FF0009B6AC8E4963F49207FFD6374C01231224DFEFB72A20D49E0925690887497951E393DBFEB6FBBC2FF8486D8050B099"; // IV is the next one expected,
-                                                                                        // ARSN is a replay
-    char *buffer_bad_iv_good_arsn_h =
-        "2003003500FF0009B6AC8E4963F49207FFD6374B01241224DFEFB72A20D49E09256908874979ED73F3B3363E24D6A3400BAFA8AE3F86"; // IV is a replay, ARSN is next
-                                                                                        // expected
-    char *buffer_good_iv_with_gap_h =
-        "2003003500FF0009B6AC8E4963F49207FFD6374F1224DFEFB72A20D49E092569088749799C4900000000000000000000000000000000"; // IV is valid, but not next one
-                                                                                        // expected
-    char *buffer_high_iv_good_arsn_h =
-        "2003003500FF0009B6AC8E4963F49207FFD6374B01241224DFEFB72A20D49E09256908874979ED73F3B3363E24D6A3400BAFA8AE3F86"; // IV is outside upper bounds,
-                                                                                        // ARSN is next expected
-    char *buffer_good_iv_high_arsn_h =
-        "2003003500FF0009B6AC8E4963F49207FFD6374BFFFE1224DFEFB72A20D49E09256908874979ED73F3B3363E24D6A3400BAFA8AE3F86"; // IV is next expected, ARSN is
-                                                                                        // outside upper bounds
-    char *buffer_good_iv_good_arsn_h =
-        "2003003500FF0009B6AC8E4963F49207FFD6374C01241224DFEFB72A20D49E0925690887497951E393DBFEB6FBBC2FF8486D8050B099"; // IV is next expected, ARSN is
-                                                                                        // next expected
-    char *buffer_good_iv_gap_good_arsn_gap_h =
-        "2003003500FF0009B6AC8E4963F49207FFD6375101291224DFEFB72A20D49E09256908874979E825D7A95C2A3106D97FA136847968EA"; // IV is next expected, ARSN is
+    char *buffer_replay_h = "2003003500FF0009B6AC8E4963F49207FFD6374B1224DFEFB72A20D49E09256908874979DFC1711E5265126421"
+                            "be41438096b6415a4b"; // IV is one less than library
+                                                  // expects
+    char *buffer_outside_window_h = "2003003500FF0009B6AC8E4963F49207FFD6375C1224DFEFB72A20D49E09256908874979B36E000000"
+                                    "00000000000000000000000000"; // IV is outside the positive
+                                                                  // window
+    char *buffer_bad_iv_bad_arsn_h = "2003003500FF0009B6AC8E4963F49207FFD6374C01231224DFEFB72A20D49E0925690887497951E39"
+                                     "3DBFEB6FBBC2FF8486D8050B099"; // IV isa replay, ARSN is a
+                                                                    // replay
+    char *buffer_good_iv_bad_arsn_h = "2003003500FF0009B6AC8E4963F49207FFD6374C01231224DFEFB72A20D49E0925690887497951E3"
+                                      "93DBFEB6FBBC2FF8486D8050B099"; // IV is the next one expected,
+                                                                      // ARSN is a replay
+    char *buffer_bad_iv_good_arsn_h = "2003003500FF0009B6AC8E4963F49207FFD6374B01241224DFEFB72A20D49E09256908874979ED73"
+                                      "F3B3363E24D6A3400BAFA8AE3F86"; // IV is a replay, ARSN is next
+                                                                      // expected
+    char *buffer_good_iv_with_gap_h = "2003003500FF0009B6AC8E4963F49207FFD6374F1224DFEFB72A20D49E092569088749799C490000"
+                                      "0000000000000000000000000000"; // IV is valid, but not next one
+                                                                      // expected
+    char *buffer_high_iv_good_arsn_h = "2003003500FF0009B6AC8E4963F49207FFD6374B01241224DFEFB72A20D49E09256908874979ED7"
+                                       "3F3B3363E24D6A3400BAFA8AE3F86"; // IV is outside upper bounds,
+                                                                        // ARSN is next expected
+    char *buffer_good_iv_high_arsn_h = "2003003500FF0009B6AC8E4963F49207FFD6374BFFFE1224DFEFB72A20D49E09256908874979ED7"
+                                       "3F3B3363E24D6A3400BAFA8AE3F86"; // IV is next expected, ARSN is
+                                                                        // outside upper bounds
+    char *buffer_good_iv_good_arsn_h = "2003003500FF0009B6AC8E4963F49207FFD6374C01241224DFEFB72A20D49E0925690887497951E"
+                                       "393DBFEB6FBBC2FF8486D8050B099"; // IV is next expected, ARSN is
+                                                                        // next expected
+    char *buffer_good_iv_gap_good_arsn_gap_h = "2003003500FF0009B6AC8E4963F49207FFD6375101291224DFEFB72A20D49E092569088"
+                                               "74979E825D7A95C2A3106D97FA136847968EA"; // IV is next expected, ARSN is
                                                                                         // next expected
 
     uint8_t *buffer_replay_b, *buffer_outside_window_b, *buffer_bad_iv_bad_arsn_b, *buffer_good_iv_bad_arsn_b,
@@ -1032,8 +1032,8 @@ UTEST(TC_PROCESS, GCM_IV_AND_ARSN)
 
     // Expect to fail on ARSN (Bad IV, bad ARSN)
     printf(KGRN "Checking replay - using previous received ARSN and previous IV...\n" RESET);
-    status = Crypto_TC_ProcessSecurity(buffer_bad_iv_bad_arsn_b, &buffer_bad_iv_bad_arsn_len,
-    tc_nist_processed_frame); ASSERT_EQ(CRYPTO_LIB_ERR_ARSN_OUTSIDE_WINDOW, status);
+    status = Crypto_TC_ProcessSecurity(buffer_bad_iv_bad_arsn_b, &buffer_bad_iv_bad_arsn_len, tc_nist_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_ERR_ARSN_OUTSIDE_WINDOW, status);
 
     // Expect to fail on ARSN (Good IV, bad ARSN)
     printf(KGRN "Checking replay - using previous received ARSN...\n" RESET);
@@ -1061,23 +1061,20 @@ UTEST(TC_PROCESS, GCM_IV_AND_ARSN)
     // Check w/ Mike
     printf(KGRN "Checking replay - using IV outside (above) the window...\n" RESET);
     status =
-        Crypto_TC_ProcessSecurity(buffer_high_iv_good_arsn_b, &buffer_high_iv_good_arsn_len,
-        tc_nist_processed_frame);
+        Crypto_TC_ProcessSecurity(buffer_high_iv_good_arsn_b, &buffer_high_iv_good_arsn_len, tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_ERR_IV_OUTSIDE_WINDOW, status);
 
     // Expect to fail on ARSN counter being too high
     // Check w/ Mike
     printf(KGRN "Checking replay - using ARSN outside (above) the window...\n" RESET);
     status =
-        Crypto_TC_ProcessSecurity(buffer_good_iv_high_arsn_b, &buffer_good_iv_high_arsn_len,
-        tc_nist_processed_frame);
+        Crypto_TC_ProcessSecurity(buffer_good_iv_high_arsn_b, &buffer_good_iv_high_arsn_len, tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_ERR_ARSN_OUTSIDE_WINDOW, status);
 
     // Expect success on next valid IV && ARSN
     printf(KGRN "Checking  next valid IV && valid ARSN... should be able to receive it... \n" RESET);
     status =
-        Crypto_TC_ProcessSecurity(buffer_good_iv_good_arsn_b, &buffer_good_iv_good_arsn_len,
-        tc_nist_processed_frame);
+        Crypto_TC_ProcessSecurity(buffer_good_iv_good_arsn_b, &buffer_good_iv_good_arsn_len, tc_nist_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Verify IV LSB incremented
     ASSERT_EQ(test_association->iv[test_association->iv_len - 1], 0x4C);
