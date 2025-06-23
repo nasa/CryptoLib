@@ -1170,7 +1170,6 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP_1)
     printf("\n");
 
     Crypto_Shutdown();
-    free(new_iv_b);
     free(truth_data_b);
     free(raw_tc_sdls_ping_b);
     free(ptr_enc_frame);
@@ -1244,7 +1243,6 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_NULL_IV)
     // printf("\n");
 
     Crypto_Shutdown();
-    free(new_iv_b);
     free(truth_data_b);
     free(raw_tc_sdls_ping_b);
     free(ptr_enc_frame);
@@ -1323,7 +1321,6 @@ UTEST(TC_APPLY_SECURITY, CBC_NULL_IV_W_IVH)
     printf("\n");
 
     Crypto_Shutdown();
-    free(new_iv_b);
     free(truth_data_b);
     free(raw_tc_sdls_ping_b);
 }
