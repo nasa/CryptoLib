@@ -1099,6 +1099,13 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, const uint16_t in
             break;
     }
 #endif
+    if ((encryption_cipher == CRYPTO_CIPHER_AES256_CBC || encryption_cipher == CRYPTO_CIPHER_AES256_CBC_MAC) &&
+        sa_ptr->shplf_len == 0)
+    {
+        status = CRYPTO_LIB_ERR_SHPLF_LEN_LESS_THAN_MIN_PAD_SIZE;
+        mc_if->mc_log(status);
+        return status;
+    }
 
     // Determine if segment header exists and FECF exists
     uint8_t segment_hdr_len = TC_SEGMENT_HDR_SIZE;

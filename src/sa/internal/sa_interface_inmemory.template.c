@@ -24,6 +24,7 @@ static int32_t sa_close(void);
 static int32_t sa_get_from_spi(uint16_t, SecurityAssociation_t **);
 static int32_t sa_get_operational_sa_from_gvcid(uint8_t, uint16_t, uint16_t, uint8_t, SecurityAssociation_t **);
 static int32_t sa_save_sa(SecurityAssociation_t *sa);
+static int32_t sa_setIV(uint16_t spi, char *iv);
 // Security Association Utility Functions
 static int32_t sa_stop(TC_t *tc_frame);
 static int32_t sa_start(TC_t *tc_frame);
@@ -65,6 +66,7 @@ SaInterface get_sa_interface_inmemory(void)
     sa_if_struct.sa_setARSN                       = sa_setARSN;
     sa_if_struct.sa_setARSNW                      = sa_setARSNW;
     sa_if_struct.sa_delete                        = sa_delete;
+    sa_if_struct.sa_setIV                         = sa_setIV;
     return &sa_if_struct;
 }
 
@@ -719,13 +721,17 @@ static int32_t sa_get_from_spi(uint16_t spi, SecurityAssociation_t **security_as
 #ifdef SA_DEBUG
         printf(KRED "sa_get_from_spi: SPI: %d > NUM_SA: %d.\n" RESET, spi, NUM_SA);
 #endif
-        return CRYPTO_LIB_ERR_SPI_INDEX_OOB;
+        status = CRYPTO_LIB_ERR_SPI_INDEX_OOB;
+        mc_if->mc_log(status);
+        return status;
     }
     *security_association = &sa[spi];
 
     if ((sa[spi].abm_len == 0) && sa[spi].ast)
     {
-        return CRYPTO_LIB_ERR_NULL_ABM;
+        status = CRYPTO_LIB_ERR_NULL_ABM;
+        mc_if->mc_log(status);
+        return status;
     } // Must have abm if doing authentication
 
     // ARSN must be 0 octets in length if not using Auth/Auth Enc
@@ -733,15 +739,21 @@ static int32_t sa_get_from_spi(uint16_t spi, SecurityAssociation_t **security_as
     // CCSDS 3550b2 Section 4.1.1.4.4
     if (sa[spi].ast == 0 && sa[spi].shsnf_len != 0 && sa[spi].arsn_len != 0)
     {
+#ifdef SA_DEBUG
         printf("USING SA %d!\n", spi);
-        printf("AST IS %d, snf_len is %d, arsn_len is %d\n", sa[spi].ast, sa[spi].shsnf_len, sa[spi].arsn_len);
-        return CRYPTO_LIB_ERR_INVALID_SVC_TYPE_WITH_ARSN;
+        printf("AST IS %d, shsnf_len is %d, arsn_len is %d\n", sa[spi].ast, sa[spi].shsnf_len, sa[spi].arsn_len);
+#endif
+        status = CRYPTO_LIB_ERR_INVALID_SVC_TYPE_WITH_ARSN;
+        mc_if->mc_log(status);
+        return status;
     }
 
     // ARSN length cannot be less than shsnf length
     if (sa[spi].shsnf_len > sa[spi].arsn_len)
     {
-        return CRYPTO_LIB_ERR_ARSN_LT_SHSNF;
+        status = CRYPTO_LIB_ERR_ARSN_LT_SHSNF;
+        mc_if->mc_log(status);
+        return status;
     }
 
 #ifdef SA_DEBUG
@@ -1805,5 +1817,56 @@ int32_t sa_verify_data(SecurityAssociation_t *sa_ptr)
     {
         status = CRYPTO_LIB_ERR_SHPLF_LEN_GREATER_THAN_MAX_PAD_SIZE;
     }
+    return status;
+}
+
+static int32_t sa_setIV(uint16_t spi, char *iv)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    if (iv == NULL) // NULL pointer
+    {
+        status = CRYPTO_LIB_ERR_NULL_BUFFER;
+        mc_if->mc_log(status);
+        return status;
+    }
+
+    uint16_t iv_len = strlen(iv) / 2;
+
+    if (iv_len > IV_SIZE)
+    {
+#ifdef SA_DEBUG
+        printf("Specified IV longer than Config Maximum");
+#endif
+        status = CRYPTO_LIB_ERROR;
+        mc_if->mc_log(status);
+        return status;
+    }
+
+    SecurityAssociation_t *sa;
+    sa_get_from_spi(spi, &sa);
+
+    if (sa->iv_len < iv_len) // make sure it wont underflow
+    {
+        iv_len = sa->iv_len;
+    }
+
+    int offset = sa->iv_len - iv_len;
+
+    unsigned int byte;
+    for (int i = 0; i < (int)strlen(iv); i += 2)
+    {
+        sscanf(&iv[i], "%02x", &byte);
+        sa->iv[i / 2 + offset] = byte;
+    }
+
+#ifdef SA_DEBUG
+    printf(KYEL "IV set to: ");
+    for (int i = 0; i < sa->iv_len; i++)
+    {
+        printf("%02x", sa->iv[i]);
+    }
+    printf("\n" RESET);
+#endif
     return status;
 }
