@@ -1195,12 +1195,14 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
             {
                 status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
                 mc_if->mc_log(status);
+                free(p_new_dec_frame);
                 return status;
             }
             if (ekp->key_state != KEY_ACTIVE)
             {
                 status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
                 mc_if->mc_log(status);
+                free(p_new_dec_frame);
                 return status;
             }
         }
@@ -1214,12 +1216,14 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
             {
                 status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
                 mc_if->mc_log(status);
+                free(p_new_dec_frame);
                 return status;
             }
             if (akp->key_state != KEY_ACTIVE)
             {
                 status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
                 mc_if->mc_log(status);
+                free(p_new_dec_frame);
                 return status;
             }
         }

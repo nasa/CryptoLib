@@ -2360,7 +2360,7 @@ UTEST(TM_APPLY, TM_APPLY_Secondary_Hdr_OVERFLOW_TEST)
     tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
 
-    char *framed_tm_h   = "02C200009800FF";
+    char *framed_tm_h   = "02C2000098003F";
     char *framed_tm_b   = NULL;
     int   framed_tm_len = 0;
     hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);
@@ -2404,7 +2404,7 @@ UTEST(TM_APPLY, TM_APPLY_Secondary_Hdr_Spec_Violation)
     status = Crypto_Init();
 
     // Secondary header length set to 0x40, overflows into secondary header version number
-    char *framed_tm_h   = "02C20009800040BB";
+    char *framed_tm_h   = "02C20009800040FF";
     char *framed_tm_b   = NULL;
     int   framed_tm_len = 0;
     hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);
@@ -2424,7 +2424,7 @@ UTEST(TM_APPLY, TM_APPLY_Secondary_Hdr_Spec_Violation)
 
     status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b, framed_tm_len);
 
-    ASSERT_EQ(CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW, status);
+    ASSERT_EQ(CRYPTO_LIB_ERR_TM_SECONDARY_HDR_VN, status);
     free(framed_tm_b);
     Crypto_Shutdown();
 }

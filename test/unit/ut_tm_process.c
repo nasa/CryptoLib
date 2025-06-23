@@ -1864,6 +1864,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_GCM_BITMASK_1)
 
     free(truth_tm_b);
     free(framed_tm_b);
+    free(ptr_processed_frame);
     // free(iv_b);
 }
 
@@ -2042,6 +2043,7 @@ UTEST(TM_PROCESS_ENC_VAL, AEAD_AES_GCM_BITMASK_1)
     Crypto_Shutdown();
     free(truth_tm_b);
     free(framed_tm_b);
+    free(ptr_processed_frame);
     // free(iv_b);
 }
 
@@ -2282,12 +2284,12 @@ UTEST(TM_PROCESS, TM_PROCESS_Secondary_Hdr_OVERFLOW_TEST)
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TM Tests
     GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 7, TM_NO_OCF, 1};
+        0, 0x002c, 1, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 7, TM_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
     status = Crypto_Init();
 
-    char *framed_tm_h   = "02C00009800FF";
+    char *framed_tm_h   = "02C2000098003F";
     char *framed_tm_b   = NULL;
     int   framed_tm_len = 0;
     hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);

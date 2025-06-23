@@ -60,7 +60,8 @@ fi
 echo "🔨 Compiling CryptoLib without ASan..."
 rm -rf build
 mkdir -p build/fuzz && cd build/fuzz
-cmake $PROJECT_ROOT -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX \
+cmake $PROJECT_ROOT -B $PROJECT_ROOT/build/fuzz \
+  -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX \
   -DCMAKE_C_FLAGS="$OPT_FLAGS" \
   -DCMAKE_CXX_FLAGS="$OPT_FLAGS" \
   -DCMAKE_EXE_LINKER_FLAGS="-flto" \
@@ -77,7 +78,8 @@ cd ..
 echo "🔨 Compiling CryptoLib with ASan..."
 rm -rf fuzz-asan
 mkdir fuzz-asan && cd fuzz-asan
-cmake $PROJECT_ROOT -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX \
+cmake $PROJECT_ROOT -B $PROJECT_ROOT/build/fuzz-asan \
+  -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX \
   -DCMAKE_C_FLAGS="-fsanitize=address $OPT_FLAGS" \
   -DCMAKE_CXX_FLAGS="-fsanitize=address $OPT_FLAGS" \
   -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address -flto" \
@@ -95,7 +97,8 @@ echo "🔨 Compiling CryptoLib with CmpLog instrumentation..."
 rm -rf fuzz-cmplog
 mkdir fuzz-cmplog && cd fuzz-cmplog
 export AFL_LLVM_CMPLOG=1 # Enable CmpLog instrumentation
-cmake $PROJECT_ROOT -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX \
+cmake $PROJECT_ROOT -B $PROJECT_ROOT/build/fuzz-cmplog \
+  -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX \
   -DCMAKE_C_FLAGS="$OPT_FLAGS" \
   -DCMAKE_CXX_FLAGS="$OPT_FLAGS" \
   -DCRYPTO_LIBGCRYPT=ON \
@@ -113,7 +116,8 @@ echo "🔨 Compiling CryptoLib with CompCov (laf-intel) instrumentation..."
 rm -rf fuzz-compcov
 mkdir fuzz-compcov && cd fuzz-compcov
 export AFL_LLVM_LAF_ALL=1 # Enable CompCov instrumentation
-cmake $PROJECT_ROOT -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX \
+cmake $PROJECT_ROOT -B $PROJECT_ROOT/build/fuzz-compcov \
+  -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX \
   -DCMAKE_C_FLAGS="$OPT_FLAGS" \
   -DCMAKE_CXX_FLAGS="$OPT_FLAGS" \
   -DCRYPTO_LIBGCRYPT=ON \

@@ -1400,6 +1400,7 @@ UTEST(TC_PROCESS, TC_HEAP_BUFFER_OVERFLOW_TEST_2)
     status = Crypto_TC_ProcessSecurity(test_frame_pt_b, &test_frame_pt_len, tc_sdls_processed_frame);
 
     Crypto_Shutdown();
+    free(tc_sdls_processed_frame);
     free(test_frame_pt_b);
     ASSERT_EQ(CRYPTO_LIB_ERR_TC_FRAME_LENGTH_MISMATCH, status);
 }
