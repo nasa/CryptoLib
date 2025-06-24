@@ -1828,10 +1828,13 @@ static int32_t sa_setIV(uint16_t spi, char *iv)
     {
         status = CRYPTO_LIB_ERR_NULL_BUFFER;
         mc_if->mc_log(status);
-        return status;
+        goto end_of_function;
     }
 
     uint16_t iv_len = strlen(iv) / 2;
+#ifdef SA_DEBUG
+    printf("Setting IV with len of: %d\n", iv_len);
+#endif
 
     if (iv_len > IV_SIZE)
     {
@@ -1840,7 +1843,7 @@ static int32_t sa_setIV(uint16_t spi, char *iv)
 #endif
         status = CRYPTO_LIB_ERROR;
         mc_if->mc_log(status);
-        return status;
+        goto end_of_function;
     }
 
     SecurityAssociation_t *sa;
@@ -1848,7 +1851,7 @@ static int32_t sa_setIV(uint16_t spi, char *iv)
 
     if (sa->iv_len < iv_len) // make sure it wont underflow
     {
-        iv_len = sa->iv_len;
+        goto end_of_function;
     }
 
     int offset = sa->iv_len - iv_len;
@@ -1868,5 +1871,7 @@ static int32_t sa_setIV(uint16_t spi, char *iv)
     }
     printf("\n" RESET);
 #endif
+
+end_of_function:
     return status;
 }

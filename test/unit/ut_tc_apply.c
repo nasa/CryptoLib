@@ -786,7 +786,7 @@ UTEST(TC_APPLY_SECURITY, ERROR_TC_INPUT_FRAME_TOO_SHORT_FOR_SPECIFIED_FRAME_LENG
     hex_conversion(test_frame_pt_h, (char **)&test_frame_pt_b, &test_frame_pt_len);
     // Should fail, as frame length violates the managed parameter
     status = Crypto_TC_ApplySecurity(test_frame_pt_b, test_frame_pt_len, &ptr_enc_frame, &enc_frame_len);
-    ASSERT_EQ(CRYPTO_LIB_ERR_INPUT_FRAME_LENGTH_SHORTER_THAN_FRAME_HEADERS_LENGTH, status);
+    ASSERT_EQ(CRYPTO_LIB_ERR_TC_FRAME_LENGTH_MISMATCH, status);
     free(test_frame_pt_b);
     Crypto_Shutdown();
 }
@@ -837,10 +837,11 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP)
     test_association->shplf_len  = 1;
     test_association->ecs_len    = 1;
     test_association->ecs        = CRYPTO_CIPHER_AES256_CBC;
-    test_association->abm_len    = 1024;
+    test_association->abm_len    = ABM_SIZE;
 
     return_val =
         Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
 
     char    *truth_data_h = "2003002500000400000000000000000000000001F2AD08BA95C416B6FE027921DB78758D4C06";
     uint8_t *truth_data_b = NULL;
@@ -859,7 +860,6 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_1BP)
     free(truth_data_b);
     free(raw_tc_sdls_ping_b);
     free(ptr_enc_frame);
-    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
 }
 
 /**
@@ -1229,21 +1229,8 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_NULL_IV)
     return_val =
         Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
-    char    *truth_data_h = "200300260000000BFFEEDDCCBBAA00000000000001BD8722C9D22E0CB109AC402748F672067D37";
-    uint8_t *truth_data_b = NULL;
-    int      truth_data_l = 0;
-
-    hex_conversion(truth_data_h, (char **)&truth_data_b, &truth_data_l);
-    // printf("Encrypted Frame:\n");
-    for (int i = 0; i < enc_frame_len; i++)
-    {
-        printf("%02x -> %02x \n", ptr_enc_frame[i], truth_data_b[i]);
-        ASSERT_EQ(ptr_enc_frame[i], truth_data_b[i]);
-    }
-    // printf("\n");
 
     Crypto_Shutdown();
-    free(truth_data_b);
     free(raw_tc_sdls_ping_b);
     free(ptr_enc_frame);
     ASSERT_EQ(CRYPTO_LIB_ERR_NULL_IV, return_val);

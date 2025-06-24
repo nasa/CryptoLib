@@ -1490,3 +1490,17 @@ uint32_t Crypto_Get_FSR(void)
           (report.snval << 0);   // bit(s) 25-32
     return fsr;
 }
+
+
+int32_t Crypto_Check_Padding_Length(SecurityAssociation_t *sa_ptr)
+{
+    int status = CRYPTO_LIB_SUCCESS;
+
+    if ((sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC || sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC_MAC) &&
+        sa_ptr->shplf_len == 0)
+    {
+        status = CRYPTO_LIB_ERR_SHPLF_LEN_LESS_THAN_MIN_PAD_SIZE;
+    }
+
+    return status;
+}
