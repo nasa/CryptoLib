@@ -687,7 +687,8 @@ int32_t Crypto_TM_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
             {
                 *new_fecf =
                     Crypto_Calc_FECF((uint8_t *)pTfBuffer, tm_current_managed_parameters_struct.max_frame_size - 2);
-                pTfBuffer[tm_current_managed_parameters_struct.max_frame_size - 2] = (uint8_t)((*new_fecf & 0xFF00) >> 8);
+                pTfBuffer[tm_current_managed_parameters_struct.max_frame_size - 2] =
+                    (uint8_t)((*new_fecf & 0xFF00) >> 8);
                 pTfBuffer[tm_current_managed_parameters_struct.max_frame_size - 1] = (uint8_t)(*new_fecf & 0x00FF);
             }
             else // CRYPTO_TC_CREATE_FECF_FALSE
@@ -845,8 +846,8 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         return status;
     }
 
-    if ((len_ingest < tm_current_managed_parameters_struct.max_frame_size) && (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC) &&
-        (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC_MAC))
+    if ((len_ingest < tm_current_managed_parameters_struct.max_frame_size) &&
+        (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC) && (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC_MAC))
     {
         status = CRYPTO_LIB_ERR_TM_FL_LT_MAX_FRAME_SIZE;
         mc_if->mc_log(status);
@@ -1106,9 +1107,9 @@ int32_t Crypto_TM_Process_Setup(uint16_t len_ingest, uint16_t *byte_idx, uint8_t
     // Lookup-retrieve managed parameters for frame via gvcid:
     if (status == CRYPTO_LIB_SUCCESS)
     {
-        status =
-            Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
-                                                    gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
+        status = Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
+                                                         tm_frame_pri_hdr.vcid, gvcid_managed_parameters_array,
+                                                         &tm_current_managed_parameters_struct);
     }
 
     if (status != CRYPTO_LIB_SUCCESS)

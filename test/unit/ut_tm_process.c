@@ -1982,7 +1982,8 @@ UTEST(TM_PROCESS_ENC_VAL, AEAD_AES_GCM_BITMASK_1)
     // Determine managed parameters by GVCID, which nominally happens in TO
     // status =
     //     Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
-    //                                             gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
+    //                                             gvcid_managed_parameters_array,
+    //                                             &tm_current_managed_parameters_struct);
 
     // Expose/setup SAs for testing
     SecurityAssociation_t  ta;
