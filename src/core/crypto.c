@@ -55,7 +55,7 @@ AOS_FramePrimaryHeader_t  aos_frame_pri_hdr;             // Used to reduce bit m
 AOS_FrameSecurityHeader_t aos_frame_sec_hdr;             // Used to reduce bit math duplication
 // OCF
 uint8_t                    ocf = 0;
-Telemetry_Frame_Ocf_Fsr_t  report;
+Telemetry_Frame_Fsr_t  report;
 Telemetry_Frame_Ocf_Clcw_t clcw;
 // Flags
 SDLS_MC_LOG_RPLY_t      log_summary;
@@ -1450,7 +1450,7 @@ void Crypto_Set_FSR(uint8_t *p_ingest, uint16_t byte_idx, uint16_t pdu_len, Secu
     if (current_managed_parameters_struct.has_ocf == TM_HAS_OCF ||
         current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
     {
-        Telemetry_Frame_Ocf_Fsr_t temp_report;
+        Telemetry_Frame_Fsr_t temp_report;
         byte_idx += (pdu_len + sa_ptr->stmacf_len);
         temp_report.cwt   = (p_ingest[byte_idx] >> 7) & 0x01;
         temp_report.fvn   = (p_ingest[byte_idx] >> 4) & 0x07;

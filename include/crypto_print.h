@@ -55,7 +55,7 @@ void Crypto_clcwPrint(Telemetry_Frame_Ocf_Clcw_t *clcw);
  * @param report: SDLS_FSR_t*
  * Prints the contents of current FSR in memory
  **/
-void Crypto_fsrPrint(Telemetry_Frame_Ocf_Fsr_t *report);
+void Crypto_fsrPrint(Telemetry_Frame_Fsr_t *report);
 
 /**
  * @brief Function: Crypto_ccsdsPrint

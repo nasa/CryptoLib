@@ -123,9 +123,9 @@ void Crypto_clcwPrint(Telemetry_Frame_Ocf_Clcw_t *clcw)
 /**
  * @brief Function: Crypto_fsrPrint
  * Prints the current FSR in memory.
- * @param report: Telemetry_Frame_Ocf_Fsr_t*
+ * @param report: Telemetry_Frame_Fsr_t*
  **/
-void Crypto_fsrPrint(Telemetry_Frame_Ocf_Fsr_t *report)
+void Crypto_fsrPrint(Telemetry_Frame_Fsr_t *report)
 {
     printf("Current FSR in memory is: \n");
     printf("\t cwt    = 0x%01x \n", report->cwt);

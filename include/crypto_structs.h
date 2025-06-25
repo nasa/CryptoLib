@@ -487,9 +487,9 @@ typedef struct
     uint8_t  bsaf : 1;  // Bad Security Association Flag
     uint16_t lspi : 16; // Last SPI Used
     uint8_t  snval : 8; // Sequence Number Value (LSB)
-} __attribute__((packed)) Telemetry_Frame_Ocf_Fsr_t;
+} __attribute__((packed)) Telemetry_Frame_Fsr_t;
 
-#define TELEMETRY_FRAME_OCF_FSR_SIZE (sizeof(Telemetry_Frame_Ocf_Fsr_t))
+#define TELEMETRY_FRAME_FSR_SIZE (sizeof(Telemetry_Frame_Fsr_t))
 
 /*
 ** Telemetry (TM) Definitions

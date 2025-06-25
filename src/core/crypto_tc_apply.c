@@ -21,22 +21,12 @@
 */
 #include "crypto.h"
 
-#include <string.h> // memcpy
-
 /*
 ** CCSDS Compliance Reference:
 ** This file implements security features compliant with:
 ** - CCSDS 232.0-B-3 (TC Space Data Link Protocol)
 ** - CCSDS 355.0-B-2 (Space Data Link Security Protocol)
 */
-
-// Forward declarations for new functions
-static int32_t Crypto_TC_Validate_Auth_Mask(const uint8_t *abm_buffer, uint16_t abm_len, uint16_t frame_len);
-
-// Error code definitions for new TC validations
-#define CRYPTO_LIB_ERR_TC_FRAME_TOO_SHORT   -200
-#define CRYPTO_LIB_ERR_TC_AUTH_MASK_INVALID -201
-
 
 /**
  * @brief Function: Crypto_TC_ApplySecurity
@@ -1414,7 +1404,7 @@ uint8_t *Crypto_Prepare_TC_AAD(const uint8_t *buffer, uint16_t len_aad, const ui
     }
 
     // Validate authentication mask per CCSDS requirements
-    status = Crypto_TC_Validate_Auth_Mask(abm_buffer, len_aad, len_aad);
+    status = Crypto_TCA_Validate_Auth_Mask(abm_buffer, len_aad, len_aad);
     if (status != CRYPTO_LIB_SUCCESS)
     {
         mc_if->mc_log(status);
@@ -1490,44 +1480,53 @@ static int32_t validate_sa_index(SecurityAssociation_t *sa)
  **/
 int32_t Crypto_TC_Validate_SA(SecurityAssociation_t *sa)
 {
+    int32_t status = CRYPTO_LIB_SUCCESS;
     if (validate_sa_index(sa) != 0)
     {
-        return CRYPTO_LIB_ERR_SPI_INDEX_MISMATCH;
+        status = CRYPTO_LIB_ERR_SPI_INDEX_MISMATCH;
+        goto end_of_function;
     }
     if (sa->sa_state != SA_OPERATIONAL)
     {
-        return CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL;
+        status = CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL;
+        goto end_of_function;
     }
     if (sa->shivf_len > 0 && crypto_config.iv_type == IV_CRYPTO_MODULE &&
         crypto_config.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
-        return CRYPTO_LIB_ERR_NULL_IV;
+        status = CRYPTO_LIB_ERR_NULL_IV;
+        goto end_of_function;
     }
     if (sa->iv_len - sa->shivf_len < 0)
     {
-        return CRYPTO_LIB_ERR_IV_LEN_SHORTER_THAN_SEC_HEADER_LENGTH;
+        status = CRYPTO_LIB_ERR_IV_LEN_SHORTER_THAN_SEC_HEADER_LENGTH;
+        goto end_of_function;
     }
     if (sa->iv_len > 0 && crypto_config.iv_type == IV_CRYPTO_MODULE &&
         crypto_config.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
-        return CRYPTO_LIB_ERR_NULL_IV;
+        status = CRYPTO_LIB_ERR_NULL_IV;
+        goto end_of_function;
     }
     if (crypto_config.iv_type == IV_CRYPTO_MODULE && crypto_config.cryptography_type == CRYPTOGRAPHY_TYPE_LIBGCRYPT)
     {
-        return CRYPTO_LIB_ERR_NULL_IV;
+        status = CRYPTO_LIB_ERR_NULL_IV;
+        goto end_of_function;
     }
     if (sa->arsn_len - sa->shsnf_len < 0)
     {
-        return CRYPTO_LIB_ERR_ARSN_LEN_SHORTER_THAN_SEC_HEADER_LENGTH;
+        status = CRYPTO_LIB_ERR_ARSN_LEN_SHORTER_THAN_SEC_HEADER_LENGTH;
+        goto end_of_function;
     }
 
-    return CRYPTO_LIB_SUCCESS;
+end_of_function:
+    return status;
 }
 
 
 
 /**
- * @brief Function: Crypto_TC_Validate_Auth_Mask
+ * @brief Function: Crypto_TCA_Validate_Auth_Mask
  * Validates Authentication Bit Mask
  * @param abm_buffer: const uint8_t*
  * @param abm_len: uint16_t
@@ -1536,7 +1535,7 @@ int32_t Crypto_TC_Validate_SA(SecurityAssociation_t *sa)
  *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.3.3 (TC Authentication Processing)
  **/
-static int32_t Crypto_TC_Validate_Auth_Mask(const uint8_t *abm_buffer, uint16_t abm_len, uint16_t frame_len)
+int32_t Crypto_TCA_Validate_Auth_Mask(const uint8_t *abm_buffer, uint16_t abm_len, uint16_t frame_len)
 {
     if (abm_buffer == NULL)
     {
