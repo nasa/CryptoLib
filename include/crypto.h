@@ -49,7 +49,7 @@
 ** Crypto Version
 */
 #define CRYPTO_LIB_MAJOR_VERSION 1
-#define CRYPTO_LIB_MINOR_VERSION 3
+#define CRYPTO_LIB_MINOR_VERSION 4
 #define CRYPTO_LIB_REVISION      1
 #define CRYPTO_LIB_MISSION_REV   0
 
@@ -329,7 +329,9 @@ extern CamConfig_t                          *cam_config;
 extern GvcidManagedParameters_t             *gvcid_managed_parameters;
 extern GvcidManagedParameters_t             *current_managed_parameters;
 extern GvcidManagedParameters_t              gvcid_managed_parameters_array[GVCID_MAX_PARAM_SIZE];
-extern GvcidManagedParameters_t              current_managed_parameters_struct;
+extern GvcidManagedParameters_t              tc_current_managed_parameters_struct;
+extern GvcidManagedParameters_t              tm_current_managed_parameters_struct;
+extern GvcidManagedParameters_t              aos_current_managed_parameters_struct;
 extern int                                   gvcid_counter;
 extern KeyInterface                          key_if;
 extern McInterface                           mc_if;
