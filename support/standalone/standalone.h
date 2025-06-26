@@ -48,7 +48,7 @@ extern "C"
 */
 #define CRYPTOLIB_HOSTNAME  "cryptolib"
 #define GSW_HOSTNAME        "cosmos"
-#define SC_HOSTNAME         "radio-sim"
+#define SC_HOSTNAME         "radio_sim"
 #define TC_APPLY_PORT       6010
 #define TC_APPLY_FWD_PORT   8010
 #define TM_PROCESS_PORT     8011

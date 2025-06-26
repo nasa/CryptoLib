@@ -326,13 +326,15 @@ int32_t crypto_reset(void)
 void crypto_standalone_tc_frame(uint8_t *in_data, uint16_t in_length, uint8_t *out_data, uint16_t *out_length)
 {
     /* TC Length */
-    *out_length = (uint16_t)CRYPTO_STANDALONE_FRAMING_TC_DATA_LEN + 6;
+    *out_length = (uint16_t)in_length + 6;
+
+    uint16_t fh_length = *out_length-1;
 
     /* TC Header */
     out_data[0] = 0x20;
     out_data[1] = CRYPTO_STANDALONE_FRAMING_SCID;
-    out_data[2] = ((tc_vcid << 2) & 0xFC) | (((uint16_t)CRYPTO_STANDALONE_FRAMING_TC_DATA_LEN >> 8) & 0x03);
-    out_data[3] = (uint16_t)CRYPTO_STANDALONE_FRAMING_TC_DATA_LEN & 0x00FF;
+    out_data[2] = ((tc_vcid << 2) & 0xFC) | (((uint16_t)fh_length >> 8) & 0x03);
+    out_data[3] = (uint16_t)fh_length & 0x00FF;
     out_data[4] = tc_seq_num++;
 
     /* Segement Header */
@@ -415,7 +417,7 @@ void *crypto_standalone_tc_apply(void *socks)
                     }
                     printf("\n");
                 }
-
+                printf("About to write to port %d!\n", tc_write_sock->port);
                 /* Reply */
                 status = sendto(tc_write_sock->sockfd, tc_out_ptr, tc_out_len, 0,
                                 (struct sockaddr *)&tc_write_sock->saddr, sizeof(tc_write_sock->saddr));
@@ -423,6 +425,7 @@ void *crypto_standalone_tc_apply(void *socks)
                 {
                     printf("crypto_standalone_tc_apply - Reply error %d \n", status);
                 }
+                printf("Allegedly wrote %d bytes to port %d!\n", tc_out_len, tc_write_sock->port);
             }
             else
             {
