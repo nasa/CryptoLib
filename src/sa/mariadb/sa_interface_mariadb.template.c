@@ -148,16 +148,13 @@ static int32_t sa_init(void)
                 // 0,NULL,0 are port number, unix socket, client flag
                 finish_with_error(&con, SADB_MARIADB_CONNECTION_FAILED);
                 status = CRYPTO_LIB_ERROR;
+                goto end_of_function;
             }
             else
             {
-                status = CRYPTO_LIB_SUCCESS;
-                if (status == CRYPTO_LIB_SUCCESS)
-                {
 #ifdef DEBUG
-                    printf("sa_init created mysql connection successfully. \n");
+                printf("sa_init created mysql connection successfully. \n");
 #endif
-                }
             }
         }
         else
@@ -167,6 +164,8 @@ static int32_t sa_init(void)
                     "Error: sa_init() MySQL API function mysql_init() returned a connection object that is NULL\n");
         }
     }
+
+end_of_function:
     return status;
 } // end int32_t sa_init()
 

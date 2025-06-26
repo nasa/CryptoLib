@@ -54,19 +54,19 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
                                       char *cam_cookies)
 {
     // Local Variables
-    cam_cookies                            = cam_cookies;
-    int32_t                status          = CRYPTO_LIB_SUCCESS;
-    SecurityAssociation_t *sa_ptr          = NULL;
-    uint8_t                sa_service_type = -1;
-    uint8_t               *aad             = NULL;
-    uint8_t                ecs_is_aead_algorithm = -1;
-    crypto_key_t          *ekp                   = NULL;
-    crypto_key_t          *akp                   = NULL;
-    int                    byte_idx              = 0;
-    uint8_t fecf_len        = FECF_SIZE;
-    uint8_t ocf_len         = TELEMETRY_FRAME_OCF_CLCW_SIZE;
-    uint8_t segment_hdr_len = TC_SEGMENT_HDR_SIZE;
-    uint16_t tc_enc_payload_start_index = 0;
+    cam_cookies                                       = cam_cookies;
+    int32_t                status                     = CRYPTO_LIB_SUCCESS;
+    SecurityAssociation_t *sa_ptr                     = NULL;
+    uint8_t                sa_service_type            = -1;
+    uint8_t               *aad                        = NULL;
+    uint8_t                ecs_is_aead_algorithm      = -1;
+    crypto_key_t          *ekp                        = NULL;
+    crypto_key_t          *akp                        = NULL;
+    int                    byte_idx                   = 0;
+    uint8_t                fecf_len                   = FECF_SIZE;
+    uint8_t                ocf_len                    = TELEMETRY_FRAME_OCF_CLCW_SIZE;
+    uint8_t                segment_hdr_len            = TC_SEGMENT_HDR_SIZE;
+    uint16_t               tc_enc_payload_start_index = 0;
     uint16_t               aad_len;
     uint32_t               encryption_cipher;
 
@@ -170,14 +170,14 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
 
     // Parse MAC, prepare AAD
     status = Crypto_TCP_Prep_AAD(tc_sdls_processed_frame, fecf_len, sa_service_type, ecs_is_aead_algorithm, &aad_len,
-                                sa_ptr, segment_hdr_len, ingest, &aad);
+                                 sa_ptr, segment_hdr_len, ingest, &aad);
     if (status != CRYPTO_LIB_SUCCESS)
     {
         goto end_of_function;
     }
 
     Crypto_TCP_Calc_Payload_Start_Idx(&tc_enc_payload_start_index, segment_hdr_len, sa_ptr);
-    
+
     // Todo -- if encrypt only, ignore stmacf_len entirely to avoid erroring on SA misconfiguration... Or just throw a
     // warning/error indicating SA misconfiguration?
     Crypto_TCP_Copy_PDU_Len(tc_sdls_processed_frame, tc_enc_payload_start_index, sa_ptr, fecf_len);
@@ -199,7 +199,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
         goto end_of_function;
     }
     status = Crypto_TCP_Do_Decrypt(sa_service_type, ecs_is_aead_algorithm, ekp, sa_ptr, aad, tc_sdls_processed_frame,
-                                  ingest, tc_enc_payload_start_index, aad_len, cam_cookies, akp, segment_hdr_len);
+                                   ingest, tc_enc_payload_start_index, aad_len, cam_cookies, akp, segment_hdr_len);
     if (status != CRYPTO_LIB_SUCCESS)
     {
         goto end_of_function;
@@ -215,7 +215,6 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
     {
         status = Crypto_Process_Extended_Procedure_Pdu(tc_sdls_processed_frame, ingest, *len_ingest);
     }
-
 
 end_of_function:
     Crypto_TC_Safe_Free_Ptr(aad);
@@ -248,8 +247,7 @@ int32_t Crypto_TCP_Sanity_Check(int *len_ingest)
         status = CRYPTO_LIB_ERR_NO_CONFIG;
         goto end_of_function;
     }
-    if ((*len_ingest < 5) &&
-        (status == CRYPTO_LIB_SUCCESS)) // Frame length doesn't even have enough bytes for header -- error out.
+    if (*len_ingest < 5) // Frame length doesn't even have enough bytes for header -- error out.
     {
         status = CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_TC_STANDARD;
         goto end_of_function;
@@ -290,7 +288,7 @@ void Crypto_TCA_Set_Segment_Header(TC_t *tc_sdls_processed_frame, uint8_t *inges
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 3.4.2 (Cryptographic Algorithms)
  **/
 void Crypto_TCP_Get_Cipher_Mode(uint8_t sa_service_type, uint32_t *encryption_cipher, uint8_t *ecs_is_aead_algorithm,
-                                  SecurityAssociation_t *sa_ptr)
+                                SecurityAssociation_t *sa_ptr)
 {
     if (sa_service_type != SA_PLAINTEXT)
     {
@@ -357,27 +355,37 @@ void Crypto_TCP_Set_Security_Trailer(TC_FrameSecurityTrailer_t *tc_sec_trailer, 
     tc_sec_trailer->mac_field_len = sa_ptr->stmacf_len;
 }
 
-void Crypto_TCP_Copy_IV(TC_FrameSecurityHeader_t *tc_sec_header, uint8_t* ingest, uint8_t segment_hdr_len, SecurityAssociation_t *sa_ptr)
+void Crypto_TCP_Copy_IV(TC_FrameSecurityHeader_t *tc_sec_header, uint8_t *ingest, uint8_t segment_hdr_len,
+                        SecurityAssociation_t *sa_ptr)
 {
-    memcpy(tc_sec_header->iv + (sa_ptr->iv_len - sa_ptr->shivf_len), &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN]), sa_ptr->shivf_len);
+    memcpy(tc_sec_header->iv + (sa_ptr->iv_len - sa_ptr->shivf_len),
+           &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN]), sa_ptr->shivf_len);
 }
 
-void Crypto_TCP_Copy_ARSN(TC_FrameSecurityHeader_t *tc_sec_header, uint8_t* ingest, uint8_t segment_hdr_len, SecurityAssociation_t *sa_ptr)
+void Crypto_TCP_Copy_ARSN(TC_FrameSecurityHeader_t *tc_sec_header, uint8_t *ingest, uint8_t segment_hdr_len,
+                          SecurityAssociation_t *sa_ptr)
 {
-    memcpy(tc_sec_header->sn + (sa_ptr->arsn_len - sa_ptr->shsnf_len), &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len]), sa_ptr->shsnf_len);
+    memcpy(tc_sec_header->sn + (sa_ptr->arsn_len - sa_ptr->shsnf_len),
+           &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len]), sa_ptr->shsnf_len);
 }
 
-void Crypto_TCP_Copy_Pad(TC_FrameSecurityHeader_t *tc_sec_header, uint8_t* ingest, uint8_t segment_hdr_len, SecurityAssociation_t *sa_ptr)
+void Crypto_TCP_Copy_Pad(TC_FrameSecurityHeader_t *tc_sec_header, uint8_t *ingest, uint8_t segment_hdr_len,
+                         SecurityAssociation_t *sa_ptr)
 {
-    memcpy((tc_sec_header->pad), &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len]), sa_ptr->shplf_len);
+    memcpy((tc_sec_header->pad),
+           &(ingest[TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len]),
+           sa_ptr->shplf_len);
 }
 
-void Crypto_TCP_Calc_Payload_Start_Idx(uint16_t *tc_enc_payload_start_index, uint8_t segment_hdr_len, SecurityAssociation_t *sa_ptr)
+void Crypto_TCP_Calc_Payload_Start_Idx(uint16_t *tc_enc_payload_start_index, uint8_t segment_hdr_len,
+                                       SecurityAssociation_t *sa_ptr)
 {
-    *tc_enc_payload_start_index = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;
+    *tc_enc_payload_start_index =
+        TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;
 }
 
-void Crypto_TCP_Copy_PDU_Len(TC_t *tc_sdls_processed_frame, uint16_t tc_enc_payload_start_index, SecurityAssociation_t *sa_ptr, uint8_t fecf_len)
+void Crypto_TCP_Copy_PDU_Len(TC_t *tc_sdls_processed_frame, uint16_t tc_enc_payload_start_index,
+                             SecurityAssociation_t *sa_ptr, uint8_t fecf_len)
 {
     tc_sdls_processed_frame->tc_pdu_len = tc_sdls_processed_frame->tc_header.fl + 1 - tc_enc_payload_start_index -
                                           sa_ptr->stmacf_len - fecf_len; // TODO: subtract FSR/OCF?
@@ -386,7 +394,8 @@ void Crypto_TCP_Copy_PDU_Len(TC_t *tc_sdls_processed_frame, uint16_t tc_enc_payl
 int32_t Crypto_TCP_Validate_PDU_Len(TC_t *tc_sdls_processed_frame)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    if (tc_sdls_processed_frame->tc_pdu_len > tc_sdls_processed_frame->tc_header.fl) // invalid header parsed, sizes overflowed & make no sense!
+    if (tc_sdls_processed_frame->tc_pdu_len >
+        tc_sdls_processed_frame->tc_header.fl) // invalid header parsed, sizes overflowed & make no sense!
     {
         status = CRYPTO_LIB_ERR_INVALID_HEADER;
     }
@@ -413,9 +422,9 @@ int32_t Crypto_TCP_Validate_PDU_Len(TC_t *tc_sdls_processed_frame)
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.3 (TC Security Processing)
  **/
 int32_t Crypto_TCP_Do_Decrypt(uint8_t sa_service_type, uint8_t ecs_is_aead_algorithm, crypto_key_t *ekp,
-                             SecurityAssociation_t *sa_ptr, uint8_t *aad, TC_t *tc_sdls_processed_frame,
-                             uint8_t *ingest, uint16_t tc_enc_payload_start_index, uint16_t aad_len, char *cam_cookies,
-                             crypto_key_t *akp, uint8_t segment_hdr_len)
+                              SecurityAssociation_t *sa_ptr, uint8_t *aad, TC_t *tc_sdls_processed_frame,
+                              uint8_t *ingest, uint16_t tc_enc_payload_start_index, uint16_t aad_len, char *cam_cookies,
+                              crypto_key_t *akp, uint8_t segment_hdr_len)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
@@ -537,7 +546,6 @@ end_of_function:
     return status;
 }
 
-
 /**
  * @brief Function: Crypto_TCP_Nontransmitted_IV_Increment
  * Increments non-transmitted part of IV
@@ -588,8 +596,8 @@ int32_t Crypto_TCP_Nontransmitted_IV_Increment(SecurityAssociation_t *sa_ptr, TC
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.3.3 (TC Authentication Processing)
  **/
 int32_t Crypto_TCP_Prep_AAD(TC_t *tc_sdls_processed_frame, uint8_t fecf_len, uint8_t sa_service_type,
-                           uint8_t ecs_is_aead_algorithm, uint16_t *aad_len, SecurityAssociation_t *sa_ptr,
-                           uint8_t segment_hdr_len, uint8_t *ingest, uint8_t **aad)
+                            uint8_t ecs_is_aead_algorithm, uint16_t *aad_len, SecurityAssociation_t *sa_ptr,
+                            uint8_t segment_hdr_len, uint8_t *ingest, uint8_t **aad)
 {
     int32_t  status       = CRYPTO_LIB_SUCCESS;
     uint16_t aad_len_temp = *aad_len;
@@ -649,20 +657,21 @@ uint32_t Crypto_TCP_Sanity_Validations(TC_t *tc_sdls_processed_frame, SecurityAs
     uint32_t status = CRYPTO_LIB_SUCCESS;
 
     status = sa_if->sa_get_from_spi(tc_sdls_processed_frame->tc_sec_header.spi, sa_ptr);
-    // If no valid SPI, return
-    if (status == CRYPTO_LIB_SUCCESS)
-    {
-        // Try to assure SA is sane
-        status = Crypto_TC_Validate_SA(*sa_ptr);
-    }
     if (status != CRYPTO_LIB_SUCCESS)
     {
-        mc_if->mc_log(status);
+        goto end_of_function;
     }
 
+    // Try to assure SA is sane
+    status = Crypto_TC_Validate_SA(*sa_ptr);
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        goto end_of_function;
+    }
+
+end_of_function:
     return status;
 }
-
 
 /**
  * @brief Function: Crypto_TCP_Check_IV_ARSN
@@ -677,23 +686,20 @@ int32_t Crypto_TCP_Check_IV_ARSN(SecurityAssociation_t *sa_ptr, TC_t *tc_sdls_pr
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
-    if (crypto_config.ignore_anti_replay == TC_IGNORE_ANTI_REPLAY_FALSE && status == CRYPTO_LIB_SUCCESS)
+    if (crypto_config.ignore_anti_replay == TC_IGNORE_ANTI_REPLAY_FALSE)
     {
         status = Crypto_Check_Anti_Replay(sa_ptr, tc_sdls_processed_frame->tc_sec_header.sn,
                                           tc_sdls_processed_frame->tc_sec_header.iv);
-
         if (status != CRYPTO_LIB_SUCCESS)
         {
-            mc_if->mc_log(status);
+            goto end_of_function;
         }
-        if (status == CRYPTO_LIB_SUCCESS) // else
+
+        // Only save the SA (IV/ARSN) if checking the anti-replay counter; Otherwise we don't update.
+        status = sa_if->sa_save_sa(sa_ptr);
+        if (status != CRYPTO_LIB_SUCCESS)
         {
-            // Only save the SA (IV/ARSN) if checking the anti-replay counter; Otherwise we don't update.
-            status = sa_if->sa_save_sa(sa_ptr);
-            if (status != CRYPTO_LIB_SUCCESS)
-            {
-                mc_if->mc_log(status);
-            }
+            goto end_of_function;
         }
     }
     else
@@ -707,9 +713,10 @@ int32_t Crypto_TCP_Check_IV_ARSN(SecurityAssociation_t *sa_ptr, TC_t *tc_sdls_pr
             free(sa_ptr);
         }
     }
+
+end_of_function:
     return status;
 }
-
 
 /**
  * @brief Function: Crypto_TCP_Get_Keys
@@ -733,40 +740,34 @@ int32_t Crypto_TCP_Get_Keys(crypto_key_t **ekp, crypto_key_t **akp, SecurityAsso
 
     if (sa_ptr->est == 1)
     {
-        if (crypto_config.key_type != KEY_TYPE_KMC)
+        if (*ekp == NULL)
         {
-            if (*ekp == NULL)
-            {
-                status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-                mc_if->mc_log(status);
-            }
-            if ((*ekp)->key_state != KEY_ACTIVE && (status == CRYPTO_LIB_SUCCESS))
-            {
-                status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
-                mc_if->mc_log(status);
-            }
+            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+            goto end_of_function;
+        }
+        if ((*ekp)->key_state != KEY_ACTIVE)
+        {
+            status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
+            goto end_of_function;
         }
     }
-    if (sa_ptr->ast == 1 && status == CRYPTO_LIB_SUCCESS)
+    if (sa_ptr->ast == 1)
     {
-        if (crypto_config.key_type != KEY_TYPE_KMC)
+        if (*akp == NULL)
         {
-            if ((*akp == NULL) && (status == CRYPTO_LIB_SUCCESS))
-            {
-                status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-                mc_if->mc_log(status);
-            }
-            if ((*akp)->key_state != KEY_ACTIVE && (status == CRYPTO_LIB_SUCCESS))
-            {
-                status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
-                mc_if->mc_log(status);
-            }
+            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+            goto end_of_function;
+        }
+        if ((*akp)->key_state != KEY_ACTIVE)
+        {
+            status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
+            goto end_of_function;
         }
     }
 
+end_of_function:
     return status;
 }
-
 
 /**
  * @brief Function: Crypto_TCP_Nontransmitted_SN_Increment
@@ -782,9 +783,9 @@ int32_t Crypto_TCP_Nontransmitted_SN_Increment(SecurityAssociation_t *sa_ptr, TC
     int32_t status = CRYPTO_LIB_SUCCESS;
     if (sa_ptr->shsnf_len < sa_ptr->arsn_len && crypto_config.ignore_anti_replay == TC_IGNORE_ANTI_REPLAY_FALSE)
     {
-        status =
-            Crypto_TCP_Handle_Incrementing_Nontransmitted_Counter(tc_sdls_processed_frame->tc_sec_header.sn, sa_ptr->arsn,
-                                                              sa_ptr->arsn_len, sa_ptr->shsnf_len, sa_ptr->arsnw);
+        status = Crypto_TCP_Handle_Incrementing_Nontransmitted_Counter(tc_sdls_processed_frame->tc_sec_header.sn,
+                                                                       sa_ptr->arsn, sa_ptr->arsn_len,
+                                                                       sa_ptr->shsnf_len, sa_ptr->arsnw);
         if (status != CRYPTO_LIB_SUCCESS)
         {
             mc_if->mc_log(status);
@@ -797,7 +798,6 @@ int32_t Crypto_TCP_Nontransmitted_SN_Increment(SecurityAssociation_t *sa_ptr, TC
     }
     return status;
 }
-
 
 /**
  * @brief Function: Crypto_TCP_Check_ACS_Keylen
@@ -852,7 +852,7 @@ int32_t Crypto_TCP_Check_ECS_Keylen(crypto_key_t *ekp, SecurityAssociation_t *sa
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
  **/
 int32_t Crypto_TCP_Handle_Incrementing_Nontransmitted_Counter(uint8_t *dest, uint8_t *src, int src_full_len,
-                                                                 int transmitted_len, int window)
+                                                              int transmitted_len, int window)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
@@ -861,53 +861,54 @@ int32_t Crypto_TCP_Handle_Incrementing_Nontransmitted_Counter(uint8_t *dest, uin
         MAX_IV_LEN) // TODO:  Does a define exist already?  Is this the best method to put a bound on IV/ARSN Size?
     {
         status = CRYPTO_LIB_ERR_IV_EXCEEDS_INCREMENT_SIZE;
+        goto end_of_function;
     }
 
-    if (status == CRYPTO_LIB_SUCCESS)
-    {
-        uint8_t temp_counter[MAX_IV_LEN];
-        // Copy IV to temp
-        memcpy(temp_counter, src, src_full_len);
+    uint8_t temp_counter[MAX_IV_LEN];
+    // Copy IV to temp
+    memcpy(temp_counter, src, src_full_len);
 
-        // Increment temp_counter Until Transmitted Portion Matches Frame.
-        uint8_t counter_matches = CRYPTO_TRUE;
-        for (int i = 0; i < window; i++)
+    // Increment temp_counter Until Transmitted Portion Matches Frame.
+    uint8_t counter_matches = CRYPTO_TRUE;
+    for (int i = 0; i < window; i++)
+    {
+        Crypto_increment(temp_counter, src_full_len);
+        for (int x = (src_full_len - transmitted_len); x < src_full_len; x++)
         {
-            Crypto_increment(temp_counter, src_full_len);
-            for (int x = (src_full_len - transmitted_len); x < src_full_len; x++)
+            // This increment doesn't match the frame!
+            if (temp_counter[x] != dest[x])
             {
-                // This increment doesn't match the frame!
-                if (temp_counter[x] != dest[x])
-                {
-                    counter_matches = CRYPTO_FALSE;
-                    break;
-                }
-            }
-            if (counter_matches == CRYPTO_TRUE)
-            {
+                counter_matches = CRYPTO_FALSE;
                 break;
             }
-            else if (i < window - 1) // Only reset flag if there are more  windows to check.
-            {
-                counter_matches = CRYPTO_TRUE; // reset the flag, and continue the for loop for the next
-                continue;
-            }
         }
-
         if (counter_matches == CRYPTO_TRUE)
         {
-            // Retrieve non-transmitted portion of incremented counter that matches (and may have rolled
-            // over/incremented)
-            memcpy(dest, temp_counter, src_full_len - transmitted_len);
-#ifdef DEBUG
-            printf("Incremented IV is:\n");
-            Crypto_hexprint(temp_counter, src_full_len);
-#endif
+            break;
         }
-        else
+        else if (i < window - 1) // Only reset flag if there are more  windows to check.
         {
-            status = CRYPTO_LIB_ERR_FRAME_COUNTER_DOESNT_MATCH_SA;
+            counter_matches = CRYPTO_TRUE; // reset the flag, and continue the for loop for the next
+            continue;
         }
     }
+
+    if (counter_matches == CRYPTO_TRUE)
+    {
+        // Retrieve non-transmitted portion of incremented counter that matches (and may have rolled
+        // over/incremented)
+        memcpy(dest, temp_counter, src_full_len - transmitted_len);
+#ifdef DEBUG
+        printf("Incremented IV is:\n");
+        Crypto_hexprint(temp_counter, src_full_len);
+#endif
+    }
+    else
+    {
+        status = CRYPTO_LIB_ERR_FRAME_COUNTER_DOESNT_MATCH_SA;
+        goto end_of_function;
+    }
+
+end_of_function:
     return status;
 }

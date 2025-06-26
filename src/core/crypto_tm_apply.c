@@ -28,7 +28,6 @@
  * - CCSDS 355.0-B-2 (Space Data Link Security Protocol)
  */
 
-
 /**
  * @brief Function: Crypto_TM_ApplySecurity
  * @param ingest: uint8_t*
@@ -119,32 +118,14 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         goto end_of_function;
     }
 
-    if ((len_ingest < current_managed_parameters_struct.max_frame_size) && (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC) &&
-        (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC_MAC))
+    status = Crypto_TMA_Check_Frame_Lengths(len_ingest, sa_ptr, &cbc_padding);
+    if (status != CRYPTO_LIB_SUCCESS)
     {
-        status = CRYPTO_LIB_ERR_TM_FL_LT_MAX_FRAME_SIZE;
         goto end_of_function;
-    }
-    else if ((sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC) || (sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC_MAC))
-    {
-        if ((current_managed_parameters_struct.max_frame_size - len_ingest) <= 16)
-        {
-            cbc_padding = current_managed_parameters_struct.max_frame_size - len_ingest;
-        }
-        else
-        {
-            status = CRYPTO_LIB_ERR_TM_FL_LT_MAX_FRAME_SIZE;
-            goto end_of_function;
-        }
     }
 
 #ifdef TM_DEBUG
-    printf(KYEL "TM BEFORE Apply Sec:\n\t" RESET);
-    for (int16_t i = 0; i < current_managed_parameters_struct.max_frame_size - cbc_padding; i++)
-    {
-        printf("%02X", pTfBuffer[i]);
-    }
-    printf("\n");
+    Crypto_TMA_Ingest_Debug_Print(pTfBuffer, cbc_padding);
 #endif
 
 #ifdef SA_DEBUG
@@ -282,7 +263,6 @@ end_of_function:
     return status;
 }
 
-
 /**
  * @brief Function: Crypto_TM_Sanity_Check
  * Verify that needed buffers and settings are not null
@@ -294,19 +274,21 @@ end_of_function:
 int32_t Crypto_TM_Sanity_Check(uint8_t *pTfBuffer)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    // Passed a null, return an error
+
     if (!pTfBuffer)
     {
         status = CRYPTO_LIB_ERR_NULL_BUFFER;
+        goto end_of_function;
     }
 
-    if ((status == CRYPTO_LIB_SUCCESS) &&
-        ((crypto_config.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL)))
+    if ((crypto_config.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
     {
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
         status = CRYPTO_LIB_ERR_NO_CONFIG;
-        // Can't mc_log since it's not configured
+        goto end_of_function;
     }
+
+end_of_function:
     return status;
 }
 
@@ -830,7 +812,7 @@ int32_t Crypto_TM_Do_Encrypt_Handle_Increment(uint8_t sa_service_type, SecurityA
             }
         }
 
-        if (sa_ptr->shsnf_len > 0 && status == CRYPTO_LIB_SUCCESS)
+        if (sa_ptr->shsnf_len > 0)
         {
             status = Crypto_increment(sa_ptr->arsn, sa_ptr->arsn_len);
             if (status != CRYPTO_LIB_SUCCESS)
@@ -913,9 +895,9 @@ int32_t Crypto_TM_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
         goto end_of_function;
     }
     // AEAD Algorithm Logic
-    status = Crypto_TM_Do_Encrypt_NONPLAINTEXT_AEAD_Logic(sa_service_type, ecs_is_aead_algorithm, pTfBuffer,
-                                                              pdu_len, data_loc, ekp, akp, pkcs_padding, mac_loc,
-                                                              aad_len, aad, sa_ptr);
+    status =
+        Crypto_TM_Do_Encrypt_NONPLAINTEXT_AEAD_Logic(sa_service_type, ecs_is_aead_algorithm, pTfBuffer, pdu_len,
+                                                     data_loc, ekp, akp, pkcs_padding, mac_loc, aad_len, aad, sa_ptr);
     if (status != CRYPTO_LIB_SUCCESS)
     {
         goto end_of_function;
@@ -964,8 +946,7 @@ int32_t Crypto_TM_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
 #endif
         if (crypto_config.crypto_create_fecf == CRYPTO_TM_CREATE_FECF_TRUE)
         {
-            *new_fecf =
-                Crypto_Calc_FECF((uint8_t *)pTfBuffer, current_managed_parameters_struct.max_frame_size - 2);
+            *new_fecf = Crypto_Calc_FECF((uint8_t *)pTfBuffer, current_managed_parameters_struct.max_frame_size - 2);
             pTfBuffer[current_managed_parameters_struct.max_frame_size - 2] = (uint8_t)((*new_fecf & 0xFF00) >> 8);
             pTfBuffer[current_managed_parameters_struct.max_frame_size - 1] = (uint8_t)(*new_fecf & 0x00FF);
         }
@@ -985,7 +966,7 @@ int32_t Crypto_TM_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     }
     printf("\n");
 #endif
-    
+
     status = sa_if->sa_save_sa(sa_ptr);
     if (status != CRYPTO_LIB_SUCCESS)
     {
@@ -995,7 +976,7 @@ int32_t Crypto_TM_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     *idx_p = idx;
 
 #ifdef DEBUG
-        printf(KYEL "----- Crypto_TM_ApplySecurity END -----\n" RESET);
+    printf(KYEL "----- Crypto_TM_ApplySecurity END -----\n" RESET);
 #endif
 
 end_of_function:
@@ -1033,7 +1014,6 @@ void Crypto_TM_ApplySecurity_Debug_Print(uint16_t idx, uint16_t pdu_len, Securit
     }
 #endif
 }
-
 
 /**
  * @brief Function: Crypto_TM_FECF_Setup
@@ -1091,7 +1071,6 @@ int32_t Crypto_TM_FECF_Setup(uint8_t *p_ingest, uint16_t len_ingest)
     return status;
 }
 
-
 void Crypto_TM_Print_CLCW(uint8_t *p_ingest, uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t *sa_ptr)
 {
     if (current_managed_parameters_struct.has_ocf == TM_HAS_OCF)
@@ -1120,7 +1099,6 @@ void Crypto_TM_Print_CLCW(uint8_t *p_ingest, uint16_t byte_idx, uint16_t pdu_len
         Crypto_clcwPrint(&clcw);
     }
 }
-
 
 /**
  * @brief Function: Crypto_TM_updateOCF
@@ -1229,8 +1207,8 @@ uint32_t Crypto_Prepare_TM_AAD(const uint8_t *buffer, uint16_t len_aad, const ui
     return status;
 }
 
-
-void Crypto_TMA_Secondary_Header_Debug_Print(uint8_t shvn, uint16_t len_ingest, uint16_t idx, uint16_t secondary_hdr_len)
+void Crypto_TMA_Secondary_Header_Debug_Print(uint8_t shvn, uint16_t len_ingest, uint16_t idx,
+                                             uint16_t secondary_hdr_len)
 {
     printf("Secondary Header Version Number: %d\n", shvn);
     printf("len_ingest: %d \n", len_ingest);
@@ -1238,8 +1216,8 @@ void Crypto_TMA_Secondary_Header_Debug_Print(uint8_t shvn, uint16_t len_ingest, 
     printf("Actual secondary header length: %d\n", secondary_hdr_len);
 }
 
-
-int32_t Crypto_TMA_Verify_Secondary_Header(uint16_t idx, uint8_t secondary_hdr_start, uint8_t shvn, uint16_t secondary_hdr_len, uint16_t len_ingest)
+int32_t Crypto_TMA_Verify_Secondary_Header(uint16_t idx, uint8_t secondary_hdr_start, uint8_t shvn,
+                                           uint16_t secondary_hdr_len, uint16_t len_ingest)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
@@ -1266,7 +1244,6 @@ int32_t Crypto_TMA_Verify_Secondary_Header(uint16_t idx, uint8_t secondary_hdr_s
 end_of_function:
     return status;
 }
-
 
 void Crypto_TMA_Set_SPI(uint8_t *pTfBuffer, uint16_t *idx, SecurityAssociation_t *sa_ptr)
 {
@@ -1296,8 +1273,41 @@ void Crypto_TMA_Set_ARSN(uint8_t *pTfBuffer, SecurityAssociation_t *sa_ptr, uint
     }
 }
 
-
 uint16_t Crypto_TMA_Calc_PDU_Length(uint16_t idx, SecurityAssociation_t *sa_ptr)
 {
     return current_managed_parameters_struct.max_frame_size - idx - sa_ptr->stmacf_len;
+}
+
+int32_t Crypto_TMA_Check_Frame_Lengths(uint16_t len_ingest, SecurityAssociation_t *sa_ptr, uint16_t *cbc_padding)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    if ((len_ingest < current_managed_parameters_struct.max_frame_size) && (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC) &&
+        (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC_MAC))
+    {
+        status = CRYPTO_LIB_ERR_TM_FL_LT_MAX_FRAME_SIZE;
+    }
+    else if ((sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC) || (sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC_MAC))
+    {
+        if ((current_managed_parameters_struct.max_frame_size - len_ingest) <= 16)
+        {
+            *cbc_padding = current_managed_parameters_struct.max_frame_size - len_ingest;
+        }
+        else
+        {
+            status = CRYPTO_LIB_ERR_TM_FL_LT_MAX_FRAME_SIZE;
+        }
+    }
+
+    return status;
+}
+
+void Crypto_TMA_Ingest_Debug_Print(uint8_t *pTfBuffer, uint16_t cbc_padding)
+{
+    printf(KYEL "TM BEFORE Apply Sec:\n\t" RESET);
+    for (int16_t i = 0; i < current_managed_parameters_struct.max_frame_size - cbc_padding; i++)
+    {
+        printf("%02X", pTfBuffer[i]);
+    }
+    printf("\n");
 }

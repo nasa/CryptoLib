@@ -141,7 +141,7 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_INVALID_SADB)
                                       cryptography_kmc_crypto_config_p);
     free(crypto_config_p);
     free(sa_mariadb_config_p);
-    ASSERT_EQ(SADB_INVALID_SADB_TYPE, status);
+    ASSERT_EQ(INVALID_SA_INTERFACE, status);
 }
 
 /**

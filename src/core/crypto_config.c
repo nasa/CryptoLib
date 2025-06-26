@@ -217,13 +217,13 @@ int32_t Crypto_Init(void)
     {
         status = CRYPTO_CONFIGURATION_NOT_COMPLETE;
         printf(KRED "ERROR: CryptoLib must be configured before intializing!\n" RESET);
-        return status; // No configuration set -- return!
+        goto end_of_function; // No configuration set -- return!
     }
     if (gvcid_managed_parameters_array[0].set_flag == 0)
     {
         status = CRYPTO_MANAGED_PARAM_CONFIGURATION_NOT_COMPLETE;
         printf(KRED "ERROR: CryptoLib  Managed Parameters must be configured before intializing!\n" RESET);
-        return status; // No Managed Parameter configuration set -- return!
+        goto end_of_function; // No Managed Parameter configuration set -- return!
     }
 
     /* Key Interface */
@@ -237,9 +237,15 @@ int32_t Crypto_Init(void)
         {
             key_if = get_key_interface_internal();
         }
-        else // KEY_TYPE_KMC
+        else if (crypto_config.key_type == KEY_TYPE_KMC)
         {
             key_if = get_key_interface_kmc();
+        }
+
+        if (key_if == NULL)
+        {
+            status = CRYPTO_LIB_ERROR;
+            goto end_of_function;
         }
     }
     key_if->key_init();
@@ -255,9 +261,15 @@ int32_t Crypto_Init(void)
         {
             mc_if = get_mc_interface_disabled();
         }
-        else // MC_TYPE_INTERNAL
+        else if (crypto_config.mc_type == MC_TYPE_INTERNAL)
         {
             mc_if = get_mc_interface_internal();
+        }
+
+        if (mc_if == NULL)
+        {
+            status = CRYPTO_LIB_ERROR;
+            goto end_of_function;
         }
     }
     mc_if->mc_initialize();
@@ -284,11 +296,12 @@ int32_t Crypto_Init(void)
             }
             sa_if = get_sa_interface_mariadb();
         }
-        else
+
+        if (sa_if == NULL)
         {
-            status = SADB_INVALID_SADB_TYPE;
-            return status;
-        } // TODO: Error stack
+            status = INVALID_SA_INTERFACE;
+            goto end_of_function;
+        }
     }
 
     /* Crypto Interface */
@@ -320,70 +333,64 @@ int32_t Crypto_Init(void)
 #endif
             }
         }
+
         if (cryptography_if == NULL)
         {
 #ifdef DEBUG
             printf("Fatal Error: Unable to identify Cryptography Interface!\n");
 #endif
             status = CRYPTOGRAPHY_INVALID_CRYPTO_INTERFACE_TYPE;
-            return status;
+            goto end_of_function;
         }
     }
 
-    if (status == CRYPTO_LIB_SUCCESS)
+    // Initialize the cryptography library.
+    status = cryptography_if->cryptography_init();
+    if (status != CRYPTO_LIB_SUCCESS)
     {
-        // Initialize the cryptography library.
-        status = cryptography_if->cryptography_init();
-        if (status != CRYPTO_LIB_SUCCESS)
-        {
 #ifdef DEBUG
-            fprintf(stderr, "Fatal Error: Unable to initialize Cryptography Interface.\n");
+        fprintf(stderr, "Fatal Error: Unable to initialize Cryptography Interface.\n");
 #endif
-        }
-        if (status == CRYPTO_LIB_SUCCESS)
-        {
-            // Configure the cryptography library.
-            status = cryptography_if->cryptography_config();
-        }
-
-        if (status != CRYPTO_LIB_SUCCESS)
-        {
-#ifdef DEBUG
-            fprintf(stderr, "Fatal Error: Unable to configure Cryptography Interface.\n");
-#endif
-        }
-        if (status == CRYPTO_LIB_SUCCESS)
-        {
-            // Init Security Associations
-            status = sa_if->sa_init();
-            if (status == CRYPTO_LIB_SUCCESS)
-            {
-                status = sa_if->sa_config();
-
-                Crypto_Local_Init();
-                Crypto_Local_Config();
-
-                // TODO - Add error checking
-
-                // Init table for CRC calculations
-                Crypto_Calc_CRC_Init_Table();
-
-                // cFS Standard Initialized Message
-#ifdef DEBUG
-                printf(KBLU "Crypto Lib Intialized.  Version %d.%d.%d.%d\n" RESET, CRYPTO_LIB_MAJOR_VERSION,
-                       CRYPTO_LIB_MINOR_VERSION, CRYPTO_LIB_REVISION, CRYPTO_LIB_MISSION_REV);
-#endif
-            }
-            else
-            {
-#ifdef DEBUG
-                printf(KBLU "Error, Crypto Lib NOT Intialized, sa_init() returned error:%d.  Version .%d.%d.%d\n" RESET,
-                       CRYPTO_LIB_MAJOR_VERSION, CRYPTO_LIB_MINOR_VERSION, CRYPTO_LIB_REVISION, CRYPTO_LIB_MISSION_REV);
-#endif
-            }
-        }
+        goto end_of_function;
     }
 
+    status = cryptography_if->cryptography_config();
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+#ifdef DEBUG
+        fprintf(stderr, "Fatal Error: Unable to configure Cryptography Interface.\n");
+#endif
+        goto end_of_function;
+    }
+
+    // Init Security Associations
+    status = sa_if->sa_init();
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        goto end_of_function;
+    }
+
+    status = sa_if->sa_config();
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        goto end_of_function;
+    }
+
+    Crypto_Local_Init();
+    Crypto_Local_Config();
+
+    // TODO - Add error checking
+
+    // Init table for CRC calculations
+    Crypto_Calc_CRC_Init_Table();
+
+    // cFS Standard Initialized Message
+#ifdef DEBUG
+    printf(KBLU "Crypto Lib Intialized.  Version %d.%d.%d.%d\n" RESET, CRYPTO_LIB_MAJOR_VERSION,
+           CRYPTO_LIB_MINOR_VERSION, CRYPTO_LIB_REVISION, CRYPTO_LIB_MISSION_REV);
+#endif
+
+end_of_function:
     return status;
 }
 

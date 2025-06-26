@@ -186,7 +186,7 @@ UTEST(CRYPTO_C, PDU_SWITCH)
 
     sdls_frame.tlv_pdu.hdr.pid = PID_READ_ARSN;
     status                     = Crypto_PDU(ingest, &tc_frame);
-    ASSERT_EQ(status, CRYPTO_LIB_ERROR);
+    ASSERT_EQ(status, CRYPTO_LIB_ERR_NULL_BUFFER);
 
     sdls_frame.tlv_pdu.hdr.pid = PID_SA_STATUS;
     status                     = Crypto_PDU(ingest, &tc_frame);

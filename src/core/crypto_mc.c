@@ -273,97 +273,89 @@ int32_t Crypto_MC_selftest(uint8_t *ingest)
  */
 int32_t Crypto_SA_readARSN(uint8_t *ingest)
 {
-    int32_t status = CRYPTO_LIB_SUCCESS;
+    int32_t                status = CRYPTO_LIB_SUCCESS;
+    uint16_t               spi    = 0x0000;
+    SecurityAssociation_t *sa_ptr;
+    int                    x;
 
     if (ingest == NULL)
     {
-        status = CRYPTO_LIB_ERROR;
+        status = CRYPTO_LIB_ERR_NULL_BUFFER;
+        goto end_of_function;
     }
 
-    if (status == CRYPTO_LIB_SUCCESS)
+    // Read ingest
+    spi = ((uint8_t)sdls_frame.tlv_pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.tlv_pdu.data[1];
+
+    status = sa_if->sa_get_from_spi(spi, &sa_ptr);
+    if (status != CRYPTO_LIB_SUCCESS)
     {
-        // uint8_t count = 0;
-        uint16_t               spi = 0x0000;
-        SecurityAssociation_t *sa_ptr;
-        int                    x;
-        int                    status = CRYPTO_LIB_SUCCESS;
+        goto end_of_function;
+    }
 
-        // Read ingest
-        spi = ((uint8_t)sdls_frame.tlv_pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.tlv_pdu.data[1];
+    // Prepare for Reply
+    sdls_frame.tlv_pdu.hdr.pdu_len = (SPI_LEN + sa_ptr->arsn_len) * BYTE_LEN; // bits
+    sdls_frame.hdr.pkt_length =
+        CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
+    uint8_t count = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
 
-        status = sa_if->sa_get_from_spi(spi, &sa_ptr);
+    // Write SPI to reply
+    sdls_ep_reply[count] = (spi & 0xFF00) >> BYTE_LEN;
+    count++;
+    sdls_ep_reply[count] = (spi & 0x00FF);
+    count++;
 
-        if (status != CRYPTO_LIB_SUCCESS)
+    for (x = 0; x < sa_ptr->arsn_len; x++)
+    {
+        sdls_ep_reply[count] = *(sa_ptr->arsn + x);
+        count++;
+    }
+
+    if (sa_ptr->shivf_len > 0 && sa_ptr->ecs == 1 && sa_ptr->acs == 1)
+    { // Set IV - authenticated encryption
+        for (x = 0; x < sa_ptr->shivf_len - 1; x++)
         {
-            // TODO - Error handling
-            return status; // Error -- unable to get SA from SPI.
+            sdls_ep_reply[count] = *(sa_ptr->iv + x);
+            count++;
+        }
+
+        // TODO: Do we need this?
+        if (*(sa_ptr->iv + sa_ptr->shivf_len - 1) > 0)
+        { // Adjust to report last received, not expected
+            sdls_ep_reply[count] = *(sa_ptr->iv + sa_ptr->shivf_len - 1) - 1;
+            count++;
         }
         else
         {
-            // Prepare for Reply
-            sdls_frame.tlv_pdu.hdr.pdu_len = (SPI_LEN + sa_ptr->arsn_len) * BYTE_LEN; // bits
-            sdls_frame.hdr.pkt_length =
-                CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
-            uint8_t count = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
-
-            // Write SPI to reply
-            sdls_ep_reply[count] = (spi & 0xFF00) >> BYTE_LEN;
+            sdls_ep_reply[count] = *(sa_ptr->iv + sa_ptr->shivf_len - 1);
             count++;
-            sdls_ep_reply[count] = (spi & 0x00FF);
-            count++;
-
-            for (x = 0; x < sa_ptr->arsn_len; x++)
-            {
-                sdls_ep_reply[count] = *(sa_ptr->arsn + x);
-                count++;
-            }
-
-            if (sa_ptr->shivf_len > 0 && sa_ptr->ecs == 1 && sa_ptr->acs == 1)
-            { // Set IV - authenticated encryption
-                for (x = 0; x < sa_ptr->shivf_len - 1; x++)
-                {
-                    sdls_ep_reply[count] = *(sa_ptr->iv + x);
-                    count++;
-                }
-
-                // TODO: Do we need this?
-                if (*(sa_ptr->iv + sa_ptr->shivf_len - 1) > 0)
-                { // Adjust to report last received, not expected
-                    sdls_ep_reply[count] = *(sa_ptr->iv + sa_ptr->shivf_len - 1) - 1;
-                    count++;
-                }
-                else
-                {
-                    sdls_ep_reply[count] = *(sa_ptr->iv + sa_ptr->shivf_len - 1);
-                    count++;
-                }
-            }
-            else
-            {
-                // TODO
-            }
-#ifdef PDU_DEBUG
-            printf("spi = %d \n", spi);
-            printf("ARSN_LEN: %d\n", sa_ptr->arsn_len);
-            if (sa_ptr->arsn_len > 0)
-            {
-                printf("ARSN = 0x");
-                for (x = 0; x < sa_ptr->arsn_len; x++)
-                {
-                    printf("%02x", *(sa_ptr->arsn + x));
-                }
-                printf("\n");
-            }
-            printf("Read ARSN Reply:   0x");
-            for (int x = 0; x < count; x++)
-            {
-                printf("%02X", sdls_ep_reply[x]);
-            }
-            printf("\n");
-#endif
         }
     }
+    else
+    {
+        // TODO
+    }
+#ifdef PDU_DEBUG
+    printf("spi = %d \n", spi);
+    printf("ARSN_LEN: %d\n", sa_ptr->arsn_len);
+    if (sa_ptr->arsn_len > 0)
+    {
+        printf("ARSN = 0x");
+        for (x = 0; x < sa_ptr->arsn_len; x++)
+        {
+            printf("%02x", *(sa_ptr->arsn + x));
+        }
+        printf("\n");
+    }
+    printf("Read ARSN Reply:   0x");
+    for (int x = 0; x < count; x++)
+    {
+        printf("%02X", sdls_ep_reply[x]);
+    }
+    printf("\n");
+#endif
 
+end_of_function:
     return status;
 }
 

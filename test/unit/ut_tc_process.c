@@ -1244,6 +1244,8 @@ UTEST(TC_PROCESS, TC_KEY_STATE_TEST)
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state  = SA_OPERATIONAL;
     test_association->est       = 1;
+    test_association->ecs = 1;
+    test_association->ecs_len = 1;
     test_association->arsn_len  = 0;
     test_association->shsnf_len = 0;
 

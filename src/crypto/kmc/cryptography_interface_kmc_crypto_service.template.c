@@ -2179,20 +2179,19 @@ int32_t curl_perform_with_cam_retries(CURL *curl_handle, memory_write *chunk_wri
         {
             status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE;
             fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-            break; // Go to Post retry loop cleanup and return status.
+            goto end_of_function; // Go to Post retry loop cleanup and return status.
         }
 
         status = curl_response_error_check(curl_handle, chunk_write->response);
-
-        if (status == CRYPTO_LIB_SUCCESS) // Crypto Service REST call worked! Break out of retry loop.
-        {
-            break;
-        }
-        else
+        if (status != CRYPTO_LIB_SUCCESS) // Crypto Service REST call worked! Break out of retry loop.
         {
             // Zero out chunk_write/chunk_read for next cURL perform call
             memset(chunk_write, 0, MEMORY_WRITE_SIZE);
             memset(chunk_read, 0, MEMORY_READ_SIZE);
+        }
+        else
+        {
+            goto end_of_function;
         }
 
         if (status == CAM_AUTHENTICATION_REQUIRED) // CAM_AUTHENTICATION_REQUIRED code indicates CAM config setup for
@@ -2208,13 +2207,17 @@ int32_t curl_perform_with_cam_retries(CURL *curl_handle, memory_write *chunk_wri
             }
             else if (status != CRYPTO_LIB_SUCCESS)
             {
-                return status; // Fatal getSsoToken error, break
+                goto end_of_function; // Fatal getSsoToken error, break
             }
             else if (status == CRYPTO_LIB_SUCCESS)
             {
                 // Re-handle CAM cookie file, when cookie file is regenerated above, the existing curl_handle doesn't
                 // recognize it
                 status = handle_cam_cookies(curl_handle, NULL);
+                if (status != CRYPTO_LIB_SUCCESS)
+                {
+                    goto end_of_function;
+                }
             }
         }
         else // Conditions not met for CAM retry! Break out of retry loop.
@@ -2225,10 +2228,12 @@ int32_t curl_perform_with_cam_retries(CURL *curl_handle, memory_write *chunk_wri
         if (cam_retry == CAM_MAX_AUTH_RETRIES)
         {
             status = CAM_MAX_AUTH_RETRIES_REACHED;
+            goto end_of_function;
         }
     }
-    if (status == CRYPTO_LIB_SUCCESS &&
-        chunk_write->response == NULL) // no error case detected, but invalid NULL response!
+
+end_of_function:
+    if (status == CRYPTO_LIB_SUCCESS && chunk_write->response == NULL) // no error case detected, but invalid NULL response!
     {
         status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_EMPTY_RESPONSE;
     }

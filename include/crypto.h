@@ -104,74 +104,84 @@ extern int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, const uint
                                            uint8_t **pp_enc_frame, uint16_t *p_enc_frame_len, char *cam_cookies);
 extern int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc_sdls_processed_frame,
                                              char *cam_cookies);
-int32_t  Crypto_TC_Validate_SA(SecurityAssociation_t *sa);
-int32_t  Crypto_TC_Get_SA_Service_Type(uint8_t *sa_service_type, SecurityAssociation_t *sa_ptr);
-int32_t  Crypto_TC_Parse_Check_FECF(uint8_t *ingest, int *len_ingest, TC_t *tc_sdls_processed_frame);
-void Crypto_TC_Calc_Lengths(uint8_t *fecf_len, uint8_t *segment_hdr_len, uint8_t *ocf_len);
-void Crypto_TC_Set_Primary_Header(const uint8_t *p_in_frame, TC_FramePrimaryHeader_t *temp_tc_header);
-void     Crypto_TC_Safe_Free_Ptr(uint8_t *ptr);
+int32_t        Crypto_TC_Validate_SA(SecurityAssociation_t *sa);
+int32_t        Crypto_TC_Get_SA_Service_Type(uint8_t *sa_service_type, SecurityAssociation_t *sa_ptr);
+int32_t        Crypto_TC_Parse_Check_FECF(uint8_t *ingest, int *len_ingest, TC_t *tc_sdls_processed_frame);
+void           Crypto_TC_Calc_Lengths(uint8_t *fecf_len, uint8_t *segment_hdr_len, uint8_t *ocf_len);
+void           Crypto_TC_Set_Primary_Header(const uint8_t *p_in_frame, TC_FramePrimaryHeader_t *temp_tc_header);
+void           Crypto_TC_Safe_Free_Ptr(uint8_t *ptr);
 
 // Debug Prints
 void Crypto_TC_Updated_Header_Debug_Print(uint8_t *p_new_enc_frame, uint16_t new_enc_frame_header_field_length);
 void Crypto_TC_SA_Service_Type_Debug_Print(uint8_t sa_service_type);
-void Crypto_TC_Frame_Params_Debug_Print(TC_FramePrimaryHeader_t temp_tc_header, SecurityAssociation_t *sa_ptr, uint16_t *p_enc_frame_len, uint8_t segment_hdr_len);
-void Crypto_TC_New_Frame_Debug_Print(uint8_t *p_new_enc_frame, uint16_t *p_enc_frame_len, uint16_t new_enc_frame_header_field_length);
+void Crypto_TC_Frame_Params_Debug_Print(TC_FramePrimaryHeader_t temp_tc_header, SecurityAssociation_t *sa_ptr,
+                                        uint16_t *p_enc_frame_len, uint8_t segment_hdr_len);
+void Crypto_TC_New_Frame_Debug_Print(uint8_t *p_new_enc_frame, uint16_t *p_enc_frame_len,
+                                     uint16_t new_enc_frame_header_field_length);
 
 // TC Apply
-int32_t Crypto_TCA_Get_Cipher_Mode(uint8_t sa_service_type, uint32_t *encryption_cipher,
-                                     uint8_t *ecs_is_aead_algorithm, SecurityAssociation_t *sa_ptr);
+int32_t Crypto_TCA_Get_Cipher_Mode(uint8_t sa_service_type, uint32_t *encryption_cipher, uint8_t *ecs_is_aead_algorithm,
+                                   SecurityAssociation_t *sa_ptr);
 int32_t Crypto_TCA_Check_CMD_Frame_Flag(uint8_t header_cc);
 int32_t Crypto_TCA_Validate_SA_Service_Type(uint8_t sa_service_type);
 int32_t Crypto_TCA_Handle_Enc_Padding(uint8_t sa_service_type, uint32_t *pkcs_padding, uint16_t *p_enc_frame_len,
-                                     uint16_t *new_enc_frame_header_field_length, uint16_t tf_payload_len,
-                                     SecurityAssociation_t *sa_ptr);
+                                      uint16_t *new_enc_frame_header_field_length, uint16_t tf_payload_len,
+                                      SecurityAssociation_t *sa_ptr);
 int32_t Crypto_TCA_Frame_Validation(uint16_t *p_enc_frame_len);
 int32_t Crypto_TCA_Accio_Buffer(uint8_t **p_new_enc_frame, uint16_t *p_enc_frame_len);
 int32_t Crypto_TCA_ACS_Algo_Check(SecurityAssociation_t *sa_ptr);
 int32_t Crypto_TCA_Check_IV_Setup(SecurityAssociation_t *sa_ptr, uint8_t *p_new_enc_frame, uint16_t *index);
 int32_t Crypto_TCA_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr, uint16_t *mac_loc,
-                          uint16_t tf_payload_len, uint8_t segment_hdr_len, uint8_t *p_new_enc_frame, crypto_key_t *ekp,
-                          uint8_t **aad, uint8_t ecs_is_aead_algorithm, uint16_t *index_p, const uint8_t *p_in_frame,
-                          char *cam_cookies, uint32_t pkcs_padding);
+                           uint16_t tf_payload_len, uint8_t segment_hdr_len, uint8_t *p_new_enc_frame,
+                           crypto_key_t *ekp, uint8_t **aad, uint8_t ecs_is_aead_algorithm, uint16_t *index_p,
+                           const uint8_t *p_in_frame, char *cam_cookies, uint32_t pkcs_padding);
 int32_t Crypto_TCA_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr, uint16_t *mac_loc,
-                             uint16_t tf_payload_len, uint8_t segment_hdr_len, uint8_t *p_new_enc_frame,
-                             crypto_key_t *ekp, uint8_t **aad, uint8_t ecs_is_aead_algorithm, uint16_t *index_p,
-                             const uint8_t *p_in_frame, char *cam_cookies, uint32_t pkcs_padding,
-                             uint16_t new_enc_frame_header_field_length, uint16_t *new_fecf);
+                              uint16_t tf_payload_len, uint8_t segment_hdr_len, uint8_t *p_new_enc_frame,
+                              crypto_key_t *ekp, uint8_t **aad, uint8_t ecs_is_aead_algorithm, uint16_t *index_p,
+                              const uint8_t *p_in_frame, char *cam_cookies, uint32_t pkcs_padding,
+                              uint16_t new_enc_frame_header_field_length, uint16_t *new_fecf);
 int32_t Crypto_TCA_Check_Init_Setup(uint16_t in_frame_length);
 int32_t Crypto_TCA_Sanity_Setup(const uint8_t *p_in_frame, const uint16_t in_frame_length);
 int32_t Crypto_TCA_Validate_Temp_Header(const uint16_t in_frame_length, TC_FramePrimaryHeader_t temp_tc_header,
-                                          const uint8_t *p_in_frame, uint8_t *map_id, uint8_t *segmentation_hdr,
-                                          SecurityAssociation_t **sa_ptr);
+                                        const uint8_t *p_in_frame, uint8_t *map_id, uint8_t *segmentation_hdr,
+                                        SecurityAssociation_t **sa_ptr);
 int32_t Crypto_TCA_Finalize_Frame_Setup(uint8_t sa_service_type, uint32_t *pkcs_padding, uint16_t *p_enc_frame_len,
-                                       uint16_t *new_enc_frame_header_field_length, uint16_t tf_payload_len,
-                                       SecurityAssociation_t **sa_ptr, uint8_t **p_new_enc_frame);
+                                        uint16_t *new_enc_frame_header_field_length, uint16_t tf_payload_len,
+                                        SecurityAssociation_t **sa_ptr, uint8_t **p_new_enc_frame);
 int32_t Crypto_TCA_Set_IV(SecurityAssociation_t *sa_ptr, uint8_t *p_new_enc_frame, uint16_t *index);
-int32_t Crypto_TCA_Calc_Payload_Length(TC_FramePrimaryHeader_t temp_tc_header, uint16_t *tf_payload_len, uint8_t segment_hdr_len, uint8_t ocf_len, uint8_t fecf_len);
+int32_t Crypto_TCA_Calc_Payload_Length(TC_FramePrimaryHeader_t temp_tc_header, uint16_t *tf_payload_len,
+                                       uint8_t segment_hdr_len, uint8_t ocf_len, uint8_t fecf_len);
 int32_t Crypto_TCA_Validate_Auth_Mask(const uint8_t *abm_buffer, uint16_t abm_len, uint16_t frame_len);
 void    Crypto_TCA_Increment_IV_ARSN(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr);
-void    Crypto_TCA_Calc_Enc_Frame_Lengths(uint16_t *p_enc_frame_len, uint16_t *new_enc_frame_header_field_length, TC_FramePrimaryHeader_t temp_tc_header, SecurityAssociation_t *sa_ptr, uint8_t ocf_len);
+void    Crypto_TCA_Calc_Enc_Frame_Lengths(uint16_t *p_enc_frame_len, uint16_t *new_enc_frame_header_field_length,
+                                          TC_FramePrimaryHeader_t temp_tc_header, SecurityAssociation_t *sa_ptr,
+                                          uint8_t ocf_len);
 void    Crypto_TCA_Set_New_TF_Length(uint8_t *p_new_enc_frame, uint16_t new_enc_frame_header_field_length);
 void    Crypto_TCA_Set_SPI(uint8_t *p_new_enc_frame, uint16_t *index, SecurityAssociation_t *sa_ptr);
 void    Crypto_TCA_Set_ARSN(uint8_t *p_new_enc_frame, uint16_t *index, SecurityAssociation_t *sa_ptr);
 void    Crypto_TCA_Insert_Padding(uint8_t *p_new_enc_frame, uint32_t index, uint32_t pkcs_padding);
 void    Crypto_TCA_Set_Segment_Header(TC_t *tc_sdls_processed_frame, uint8_t *ingest, int *byte_idx);
 void    Crypto_TCA_Handle_Padding(uint32_t pkcs_padding, SecurityAssociation_t *sa_ptr, uint8_t *p_new_enc_frame,
-                                 uint16_t *index);
-
+                                  uint16_t *index);
 
 // TC Process
-void    Crypto_TCP_Copy_IV(TC_FrameSecurityHeader_t *tc_sec_header, uint8_t* ingest, uint8_t segment_hdr_len, SecurityAssociation_t *sa_ptr);
+void    Crypto_TCP_Copy_IV(TC_FrameSecurityHeader_t *tc_sec_header, uint8_t *ingest, uint8_t segment_hdr_len,
+                           SecurityAssociation_t *sa_ptr);
 void    Crypto_TCP_Set_Security_Trailer(TC_FrameSecurityTrailer_t *tc_sec_trailer, SecurityAssociation_t *sa_ptr);
 void    Crypto_TCP_Set_Security_Header(TC_FrameSecurityHeader_t *tc_sec_header, SecurityAssociation_t *sa_ptr);
 void    Crypto_TCP_Set_SPI(uint8_t *p_new_enc_frame, int *index, TC_FrameSecurityHeader_t *header);
-void    Crypto_TCP_Copy_IV(TC_FrameSecurityHeader_t *tc_sec_header, uint8_t* ingest, uint8_t segment_hdr_len, SecurityAssociation_t *sa_ptr);
-void    Crypto_TCP_Copy_ARSN(TC_FrameSecurityHeader_t *tc_sec_header, uint8_t* ingest, uint8_t segment_hdr_len, SecurityAssociation_t *sa_ptr);
-void    Crypto_TCP_Copy_Pad(TC_FrameSecurityHeader_t *tc_sec_header, uint8_t* ingest, uint8_t segment_hdr_len, SecurityAssociation_t *sa_ptr);
-void    Crypto_TCP_Calc_Payload_Start_Idx(uint16_t *tc_enc_payload_start_index, uint8_t segment_hdr_len, SecurityAssociation_t *sa_ptr);
-void    Crypto_TCP_Copy_PDU_Len(TC_t *tc_sdls_processed_frame, uint16_t tc_enc_payload_start_index, SecurityAssociation_t *sa_ptr, uint8_t fecf_len);
+void    Crypto_TCP_Copy_IV(TC_FrameSecurityHeader_t *tc_sec_header, uint8_t *ingest, uint8_t segment_hdr_len,
+                           SecurityAssociation_t *sa_ptr);
+void    Crypto_TCP_Copy_ARSN(TC_FrameSecurityHeader_t *tc_sec_header, uint8_t *ingest, uint8_t segment_hdr_len,
+                             SecurityAssociation_t *sa_ptr);
+void    Crypto_TCP_Copy_Pad(TC_FrameSecurityHeader_t *tc_sec_header, uint8_t *ingest, uint8_t segment_hdr_len,
+                            SecurityAssociation_t *sa_ptr);
+void    Crypto_TCP_Calc_Payload_Start_Idx(uint16_t *tc_enc_payload_start_index, uint8_t segment_hdr_len,
+                                          SecurityAssociation_t *sa_ptr);
+void    Crypto_TCP_Copy_PDU_Len(TC_t *tc_sdls_processed_frame, uint16_t tc_enc_payload_start_index,
+                                SecurityAssociation_t *sa_ptr, uint8_t fecf_len);
 void    Crypto_TCP_Get_Cipher_Mode(uint8_t sa_service_type, uint32_t *encryption_cipher, uint8_t *ecs_is_aead_algorithm,
-                                  SecurityAssociation_t *sa_ptr);
+                                   SecurityAssociation_t *sa_ptr);
 int32_t Crypto_TCP_Sanity_Check(int *len_ingest);
 int32_t Crypto_TCP_Validate_PDU_Len(TC_t *tc_sdls_processed_frame);
 int32_t Crypto_TCP_Do_Decrypt(uint8_t sa_service_type, uint8_t ecs_is_aead_algorithm, crypto_key_t *ekp,
@@ -182,14 +192,14 @@ int32_t Crypto_TCP_Nontransmitted_IV_Increment(SecurityAssociation_t *sa_ptr, TC
 int32_t Crypto_TCP_Prep_AAD(TC_t *tc_sdls_processed_frame, uint8_t fecf_len, uint8_t sa_service_type,
                             uint8_t ecs_is_aead_algorithm, uint16_t *aad_len, SecurityAssociation_t *sa_ptr,
                             uint8_t segment_hdr_len, uint8_t *ingest, uint8_t **aad);
-int32_t  Crypto_TCP_Get_Keys(crypto_key_t **ekp, crypto_key_t **akp, SecurityAssociation_t *sa_ptr);
-int32_t  Crypto_TCP_Check_IV_ARSN(SecurityAssociation_t *sa_ptr, TC_t *tc_sdls_processed_frame);
-int32_t  Crypto_TCP_Nontransmitted_SN_Increment(SecurityAssociation_t *sa_ptr, TC_t *tc_sdls_processed_frame);
-int32_t  Crypto_TCP_Check_ACS_Keylen(crypto_key_t *akp, SecurityAssociation_t *sa_ptr);
-int32_t  Crypto_TCP_Check_ECS_Keylen(crypto_key_t *ekp, SecurityAssociation_t *sa_ptr);
-int32_t  Crypto_TCP_Handle_Incrementing_Nontransmitted_Counter(uint8_t *dest, uint8_t *src, int src_full_len, int transmitted_len, int window);
+int32_t Crypto_TCP_Get_Keys(crypto_key_t **ekp, crypto_key_t **akp, SecurityAssociation_t *sa_ptr);
+int32_t Crypto_TCP_Check_IV_ARSN(SecurityAssociation_t *sa_ptr, TC_t *tc_sdls_processed_frame);
+int32_t Crypto_TCP_Nontransmitted_SN_Increment(SecurityAssociation_t *sa_ptr, TC_t *tc_sdls_processed_frame);
+int32_t Crypto_TCP_Check_ACS_Keylen(crypto_key_t *akp, SecurityAssociation_t *sa_ptr);
+int32_t Crypto_TCP_Check_ECS_Keylen(crypto_key_t *ekp, SecurityAssociation_t *sa_ptr);
+int32_t Crypto_TCP_Handle_Incrementing_Nontransmitted_Counter(uint8_t *dest, uint8_t *src, int src_full_len,
+                                                              int transmitted_len, int window);
 uint32_t Crypto_TCP_Sanity_Validations(TC_t *tc_sdls_processed_frame, SecurityAssociation_t **sa_ptr);
-
 
 // OCF
 uint32_t Crypto_Get_FSR(void);
@@ -220,12 +230,12 @@ int32_t Crypto_Get_Security_Trailer_Length(SecurityAssociation_t *sa_ptr);
 */
 // Telemetry (TM)
 extern int32_t Crypto_increment(uint8_t *num, int length);
-int32_t Crypto_TMP_FECF_Validate(uint8_t *p_ingest, uint16_t len_ingest, SecurityAssociation_t *sa_ptr);
-int32_t Crypto_TM_Validate_Auth_Mask(const uint8_t *abm_buffer, uint16_t abm_len, uint16_t frame_len);
-int32_t Crypto_TM_Sanity_Check(uint8_t *pTfBuffer);
-int32_t Crypto_TM_Determine_SA_Service_Type(uint8_t *sa_service_type, SecurityAssociation_t *sa_ptr);
-int32_t Crypto_TM_IV_Sanity_Check(uint8_t *sa_service_type, SecurityAssociation_t *sa_ptr);
-int32_t Crypto_TM_Get_Keys(crypto_key_t **ekp, crypto_key_t **akp, SecurityAssociation_t *sa_ptr);
+int32_t        Crypto_TMP_FECF_Validate(uint8_t *p_ingest, uint16_t len_ingest, SecurityAssociation_t *sa_ptr);
+int32_t        Crypto_TM_Validate_Auth_Mask(const uint8_t *abm_buffer, uint16_t abm_len, uint16_t frame_len);
+int32_t        Crypto_TM_Sanity_Check(uint8_t *pTfBuffer);
+int32_t        Crypto_TM_Determine_SA_Service_Type(uint8_t *sa_service_type, SecurityAssociation_t *sa_ptr);
+int32_t        Crypto_TM_IV_Sanity_Check(uint8_t *sa_service_type, SecurityAssociation_t *sa_ptr);
+int32_t        Crypto_TM_Get_Keys(crypto_key_t **ekp, crypto_key_t **akp, SecurityAssociation_t *sa_ptr);
 int32_t Crypto_TM_Do_Encrypt_NONPLAINTEXT(uint8_t sa_service_type, uint16_t *aad_len, int *mac_loc, uint16_t *idx_p,
                                           uint16_t pdu_len, uint8_t *pTfBuffer, uint8_t *aad,
                                           SecurityAssociation_t *sa_ptr);
@@ -242,7 +252,8 @@ int32_t Crypto_TM_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
 int32_t Crypto_TM_Process_Setup(uint16_t len_ingest, uint16_t *byte_idx, uint8_t *p_ingest, uint8_t *secondary_hdr_len);
 int32_t Crypto_TM_FECF_Setup(uint8_t *p_ingest, uint16_t len_ingest);
 int32_t Crypto_TMP_Parse_Mac_Prep_AAD(uint8_t sa_service_type, uint8_t *p_ingest, int mac_loc,
-                                     SecurityAssociation_t *sa_ptr, uint16_t *aad_len, uint16_t byte_idx, uint8_t *aad);
+                                      SecurityAssociation_t *sa_ptr, uint16_t *aad_len, uint16_t byte_idx,
+                                      uint8_t *aad);
 int32_t Crypto_TM_Do_Decrypt_AEAD(uint8_t sa_service_type, uint8_t *p_ingest, uint8_t *p_new_dec_frame,
                                   uint16_t byte_idx, uint16_t pdu_len, crypto_key_t *ekp, SecurityAssociation_t *sa_ptr,
                                   uint8_t iv_loc, int mac_loc, uint16_t aad_len, uint8_t *aad);
@@ -255,28 +266,32 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
                              crypto_key_t *ekp, crypto_key_t *akp, uint8_t iv_loc, int mac_loc, uint16_t aad_len,
                              uint8_t *aad, uint8_t **pp_processed_frame, uint16_t *p_decrypted_length);
 uint16_t Crypto_TMP_FECF_Calculate(const uint8_t *data, uint16_t length, uint8_t is_encrypted);
-void    Crypto_TM_Process_Debug_Print(uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t *sa_ptr);
-void    Crypto_TM_PKCS_Padding(uint32_t *pkcs_padding, SecurityAssociation_t *sa_ptr, uint8_t *pTfBuffer, uint16_t *idx_p);
-void    Crypto_TM_Handle_Managed_Parameter_Flags(uint16_t *pdu_len);
-void    Crypto_TM_ApplySecurity_Debug_Print(uint16_t idx, uint16_t pdu_len, SecurityAssociation_t *sa_ptr);
-void    Crypto_TMP_Calc_PDU_MAC(uint16_t *pdu_len, uint16_t byte_idx, SecurityAssociation_t *sa_ptr, int *mac_loc);
-void    Crypto_TM_Check_For_Secondary_Header(uint8_t *pTfBuffer, uint16_t *idx);
-void    Crypto_TM_updatePDU(uint8_t *ingest, int len_ingest);
+void     Crypto_TM_Process_Debug_Print(uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t *sa_ptr);
+void Crypto_TM_PKCS_Padding(uint32_t *pkcs_padding, SecurityAssociation_t *sa_ptr, uint8_t *pTfBuffer, uint16_t *idx_p);
+void Crypto_TM_Handle_Managed_Parameter_Flags(uint16_t *pdu_len);
+void Crypto_TM_ApplySecurity_Debug_Print(uint16_t idx, uint16_t pdu_len, SecurityAssociation_t *sa_ptr);
+void Crypto_TMP_Calc_PDU_MAC(uint16_t *pdu_len, uint16_t byte_idx, SecurityAssociation_t *sa_ptr, int *mac_loc);
+void Crypto_TM_Check_For_Secondary_Header(uint8_t *pTfBuffer, uint16_t *idx);
+void Crypto_TM_updatePDU(uint8_t *ingest, int len_ingest);
 
 // TM Debug Prints
 void Crypto_TM_SA_Service_Type_Debug_Print(uint8_t sa_service_type);
 
 // TM Apply
-int32_t Crypto_TMA_Verify_Secondary_Header(uint16_t idx, uint8_t secondary_hdr_start, uint8_t shvn, uint16_t secondary_hdr_len, uint16_t len_ingest);
-void Crypto_TMA_Secondary_Header_Debug_Print(uint8_t shvn, uint16_t len_ingest, uint16_t idx, uint16_t secondary_hdr_len);
-void Crypto_TMA_Set_SPI(uint8_t *pTfBuffer, uint16_t *idx, SecurityAssociation_t *sa_ptr);
-void Crypto_TMA_Set_IV(uint8_t *pTfBuffer, SecurityAssociation_t *sa_ptr, uint16_t *idx);
-void Crypto_TMA_Set_ARSN(uint8_t *pTfBuffer, SecurityAssociation_t *sa_ptr, uint16_t *idx);
+int32_t  Crypto_TMA_Verify_Secondary_Header(uint16_t idx, uint8_t secondary_hdr_start, uint8_t shvn,
+                                            uint16_t secondary_hdr_len, uint16_t len_ingest);
+void     Crypto_TMA_Secondary_Header_Debug_Print(uint8_t shvn, uint16_t len_ingest, uint16_t idx,
+                                                 uint16_t secondary_hdr_len);
+void     Crypto_TMA_Set_SPI(uint8_t *pTfBuffer, uint16_t *idx, SecurityAssociation_t *sa_ptr);
+void     Crypto_TMA_Set_IV(uint8_t *pTfBuffer, SecurityAssociation_t *sa_ptr, uint16_t *idx);
+void     Crypto_TMA_Set_ARSN(uint8_t *pTfBuffer, SecurityAssociation_t *sa_ptr, uint16_t *idx);
 uint16_t Crypto_TMA_Calc_PDU_Length(uint16_t idx, SecurityAssociation_t *sa_ptr);
+int32_t Crypto_TMA_Check_Frame_Lengths(uint16_t len_ingest, SecurityAssociation_t *sa_ptr, uint16_t *cbc_padding);
+void Crypto_TMA_Ingest_Debug_Print(uint8_t *pTfBuffer, uint16_t cbc_padding);
 
 // TM Process
 int32_t Crypto_TMP_Determine_Cipher_Mode(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr,
-                                        uint32_t *encryption_cipher, uint8_t *ecs_is_aead_algorithm);
+                                         uint32_t *encryption_cipher, uint8_t *ecs_is_aead_algorithm);
 int32_t Crypto_TMP_Verify_Frame_Size(uint16_t byte_idx, uint16_t len_ingest, SecurityAssociation_t *sa_ptr);
 uint8_t Crypto_TMP_Get_SPI(uint8_t *p_ingest, uint16_t *byte_idx);
 
@@ -392,7 +407,7 @@ extern GvcidManagedParameters_t *current_managed_parameters;
 
 // OCF
 extern uint8_t                    ocf;
-extern Telemetry_Frame_Fsr_t  report;
+extern Telemetry_Frame_Fsr_t      report;
 extern Telemetry_Frame_Ocf_Clcw_t clcw;
 
 // Flags

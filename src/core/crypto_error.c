@@ -126,7 +126,7 @@ char *crypto_enum_errlist_config[] = {
 };
 
 char *crypto_enum_errlist_sa_if[] = {
-    (char *)"SADB_INVALID_SADB_TYPE",
+    (char *)"INVALID_SA_INTERFACE",
     (char *)"SADB_NULL_SA_USED",
 };
 char *crypto_enum_errlist_sa_mariadb[] = {

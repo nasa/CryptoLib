@@ -88,6 +88,7 @@ int32_t sa_load_file(void)
         printf("Unable to open sa_save_file!\n");
 #endif
         status = CRYPTO_LIB_ERR_FAIL_SA_LOAD;
+        goto end_of_function;
     }
     else
     {
@@ -95,25 +96,22 @@ int32_t sa_load_file(void)
         printf("Opened sa_save_file successfully!\n");
 #endif
     }
-    if (status == CRYPTO_LIB_SUCCESS)
+
+    success_flag = fread(&sa[0], SA_SIZE, NUM_SA, sa_save_file);
+    if (!success_flag)
     {
-        success_flag = fread(&sa[0], SA_SIZE, NUM_SA, sa_save_file);
-        if (success_flag)
-        {
-            status = CRYPTO_LIB_SUCCESS;
+        status = CRYPTO_LIB_ERR_FAIL_SA_LOAD;
 #ifdef SA_DEBUG
-            printf("SA Load Successfull!\n");
+        printf("SA Load Failure!\n");
 #endif
-        }
-        else
-        {
-            status = CRYPTO_LIB_ERR_FAIL_SA_LOAD;
-#ifdef SA_DEBUG
-            printf("SA Load Failure!\n");
-#endif
-        }
+        goto end_of_function;
     }
 
+#ifdef SA_DEBUG
+    printf("SA Load Successfull!\n");
+#endif
+
+end_of_function:
     if (sa_save_file != NULL)
         fclose(sa_save_file);
     return status;
@@ -176,34 +174,31 @@ int32_t sa_perform_save(SecurityAssociation_t *sa_ptr)
     update_sa_from_ptr(sa_ptr);
 
     sa_save_file = fopen(CRYPTO_SA_SAVE, "wb");
-
     if (sa_save_file == NULL)
     {
         status = CRYPTO_LIB_ERR_FAIL_SA_SAVE;
+        goto end_of_function;
     }
 
-    if (status == CRYPTO_LIB_SUCCESS)
+    success_flag = fwrite(sa, SA_SIZE, NUM_SA, sa_save_file);
+    if (!success_flag)
     {
-        success_flag = fwrite(sa, SA_SIZE, NUM_SA, sa_save_file);
-
-        if (success_flag)
-        {
-            status = CRYPTO_LIB_SUCCESS;
-
+        status = CRYPTO_LIB_ERR_FAIL_SA_SAVE;
 #ifdef SA_DEBUG
-            printf("SA Written Successfully to file!\n");
+        printf("ERROR: SA Write FAILED!\n");
 #endif
-        }
-        else
-        {
-            status = CRYPTO_LIB_ERR_FAIL_SA_SAVE;
-#ifdef SA_DEBUG
-            printf("ERROR: SA Write FAILED!\n");
-#endif
-        }
+        goto end_of_function;
     }
-    fclose(sa_save_file);
 
+#ifdef SA_DEBUG
+    printf("SA Written Successfully to file!\n");
+#endif
+
+end_of_function:
+    if (sa_save_file != NULL)
+    {
+        fclose(sa_save_file);
+    }
     return status;
 }
 
@@ -1412,7 +1407,7 @@ static int32_t sa_create(TC_t *tc_frame)
         printf(KRED "ERROR: Cannot modify SA in use\n" RESET);
 #endif
         status = CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI;
-        return status;
+        goto end_of_function;
     }
 
     // Check if valid SPI
@@ -1474,38 +1469,39 @@ static int32_t sa_create(TC_t *tc_frame)
 
         // Verify data
         status = sa_verify_data(temp_sa);
-
-        if (status == CRYPTO_LIB_SUCCESS)
+        if (status != CRYPTO_LIB_SUCCESS)
         {
-            // Copy data from temp_sa to sa[spi]
-            sa[spi].lpid       = temp_sa->lpid;
-            sa[spi].est        = temp_sa->est;
-            sa[spi].ast        = temp_sa->ast;
-            sa[spi].shivf_len  = temp_sa->shivf_len;
-            sa[spi].shsnf_len  = temp_sa->shsnf_len;
-            sa[spi].shplf_len  = temp_sa->shplf_len;
-            sa[spi].stmacf_len = temp_sa->stmacf_len;
-            sa[spi].ecs_len    = temp_sa->ecs_len;
-            sa[spi].ecs        = temp_sa->ecs;
-            for (x = 0; x < sa[spi].shivf_len; x++)
-            {
-                sa[spi].iv[x] = temp_sa->iv[x];
-            }
-            sa[spi].acs     = temp_sa->acs;
-            sa[spi].abm_len = temp_sa->abm_len;
-            for (x = 0; x < sa[spi].abm_len; x++)
-            {
-                sa[spi].abm[x] = temp_sa->abm[x];
-            }
-            sa[spi].arsn_len = temp_sa->arsn_len;
-            for (x = 0; x < sa[spi].arsn_len; x++)
-            {
-                *(sa[spi].arsn + x) = *(temp_sa->arsn + x);
-            }
-            sa[spi].arsnw_len = temp_sa->arsnw_len;
-            sa[spi].arsnw     = temp_sa->arsnw;
-            sa[spi].sa_state  = temp_sa->sa_state;
+            goto end_of_function;
         }
+
+        // Copy data from temp_sa to sa[spi]
+        sa[spi].lpid       = temp_sa->lpid;
+        sa[spi].est        = temp_sa->est;
+        sa[spi].ast        = temp_sa->ast;
+        sa[spi].shivf_len  = temp_sa->shivf_len;
+        sa[spi].shsnf_len  = temp_sa->shsnf_len;
+        sa[spi].shplf_len  = temp_sa->shplf_len;
+        sa[spi].stmacf_len = temp_sa->stmacf_len;
+        sa[spi].ecs_len    = temp_sa->ecs_len;
+        sa[spi].ecs        = temp_sa->ecs;
+        for (x = 0; x < sa[spi].shivf_len; x++)
+        {
+            sa[spi].iv[x] = temp_sa->iv[x];
+        }
+        sa[spi].acs     = temp_sa->acs;
+        sa[spi].abm_len = temp_sa->abm_len;
+        for (x = 0; x < sa[spi].abm_len; x++)
+        {
+            sa[spi].abm[x] = temp_sa->abm[x];
+        }
+        sa[spi].arsn_len = temp_sa->arsn_len;
+        for (x = 0; x < sa[spi].arsn_len; x++)
+        {
+            *(sa[spi].arsn + x) = *(temp_sa->arsn + x);
+        }
+        sa[spi].arsnw_len = temp_sa->arsnw_len;
+        sa[spi].arsnw     = temp_sa->arsnw;
+        sa[spi].sa_state  = temp_sa->sa_state;
 
 #ifdef PDU_DEBUG
         Crypto_saPrint(&sa[spi]);
@@ -1518,6 +1514,7 @@ static int32_t sa_create(TC_t *tc_frame)
 #endif
     }
 
+end_of_function:
     return status;
 }
 
@@ -1745,52 +1742,49 @@ static int32_t sa_status(uint8_t *ingest)
     if (ingest == NULL)
     {
         status = CRYPTO_LIB_ERROR;
+        goto end_of_function;
     }
 
-    if (status == CRYPTO_LIB_SUCCESS)
+    // Local variables
+    int      count = 0;
+    uint16_t spi   = 0x0000;
+
+    // Read ingest
+    spi = ((uint8_t)sdls_frame.tlv_pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.tlv_pdu.data[1];
+    printf("spi = %d \n", spi);
+
+    // Check SPI exists
+    if (spi < NUM_SA)
     {
-        // Local variables
-        int      count = 0;
-        uint16_t spi   = 0x0000;
-
-        // Read ingest
-        spi = ((uint8_t)sdls_frame.tlv_pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.tlv_pdu.data[1];
-        printf("spi = %d \n", spi);
-
-        // Check SPI exists
-        if (spi < NUM_SA)
-        {
-            printf("SIZE: %ld\n", SDLS_SA_STATUS_RPLY_SIZE);
-            // Prepare for Reply
-            sdls_frame.tlv_pdu.hdr.pdu_len = SDLS_SA_STATUS_RPLY_SIZE * BYTE_LEN;
-            sdls_frame.hdr.pkt_length =
-                CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
-            count = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
-            // PDU
-            sdls_ep_reply[count++] = (spi & 0xFF00) >> BYTE_LEN;
-            sdls_ep_reply[count++] = (spi & 0x00FF);
-            sdls_ep_reply[count++] = sa[spi].lpid;
-        }
-        else
-        {
-            printf("sa_status ERROR: SPI %d does not exist.\n", spi);
-            status = CRYPTO_LIB_ERR_SPI_INDEX_OOB;
-        }
+        printf("SIZE: %ld\n", SDLS_SA_STATUS_RPLY_SIZE);
+        // Prepare for Reply
+        sdls_frame.tlv_pdu.hdr.pdu_len = SDLS_SA_STATUS_RPLY_SIZE * BYTE_LEN;
+        sdls_frame.hdr.pkt_length =
+            CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
+        count = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
+        // PDU
+        sdls_ep_reply[count++] = (spi & 0xFF00) >> BYTE_LEN;
+        sdls_ep_reply[count++] = (spi & 0x00FF);
+        sdls_ep_reply[count++] = sa[spi].lpid;
+    }
+    else
+    {
+        printf("sa_status ERROR: SPI %d does not exist.\n", spi);
+        status = CRYPTO_LIB_ERR_SPI_INDEX_OOB;
+        goto end_of_function;
+    }
 
 #ifdef SA_DEBUG
-        Crypto_saPrint(&sa[spi]);
-        if (status == CRYPTO_LIB_SUCCESS)
-        {
-            printf("SA Status Reply:   0x");
-            for (int x = 0; x < count; x++)
-            {
-                printf("%02X", sdls_ep_reply[x]);
-            }
-            printf("\n\n");
-        }
-#endif
+    Crypto_saPrint(&sa[spi]);
+    printf("SA Status Reply:   0x");
+    for (int x = 0; x < count; x++)
+    {
+        printf("%02X", sdls_ep_reply[x]);
     }
+    printf("\n\n");
+#endif
 
+end_of_function:
     return status;
 }
 
