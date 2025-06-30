@@ -1755,13 +1755,13 @@ static int32_t sa_status(uint8_t *ingest)
 
         // Read ingest
         spi = ((uint8_t)sdls_frame.tlv_pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.tlv_pdu.data[1];
-        printf("spi = %d \n", spi);
+        // printf("spi = %d \n", spi);
 
         // Check SPI exists
         if (spi < NUM_SA)
         {
-            printf("SIZE: %ld\n", SDLS_SA_STATUS_RPLY_SIZE);
-            // Prepare for Reply
+            // printf("SIZE: %ld\n", SDLS_SA_STATUS_RPLY_SIZE);
+            //  Prepare for Reply
             sdls_frame.tlv_pdu.hdr.pdu_len = SDLS_SA_STATUS_RPLY_SIZE * BYTE_LEN;
             sdls_frame.hdr.pkt_length =
                 CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
