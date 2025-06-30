@@ -245,7 +245,7 @@ uint32_t Crypto_TM_Calculate_Padding(uint32_t cipher, uint16_t data_len)
 void Crypto_TM_PKCS_Padding(uint32_t *pkcs_padding, SecurityAssociation_t *sa_ptr, uint8_t *pTfBuffer, uint16_t *idx_p)
 {
     uint16_t idx      = *idx_p;
-    uint16_t data_len = current_managed_parameters_struct.max_frame_size - idx - sa_ptr->stmacf_len;
+    uint16_t data_len = tm_current_managed_parameters_struct.max_frame_size - idx - sa_ptr->stmacf_len;
 
     // Calculate required padding based on cipher
     *pkcs_padding = Crypto_TM_Calculate_Padding(sa_ptr->ecs, data_len);
@@ -281,11 +281,11 @@ void Crypto_TM_PKCS_Padding(uint32_t *pkcs_padding, SecurityAssociation_t *sa_pt
  **/
 void Crypto_TM_Handle_Managed_Parameter_Flags(uint16_t *pdu_len)
 {
-    if (current_managed_parameters_struct.has_ocf == TM_HAS_OCF)
+    if (tm_current_managed_parameters_struct.has_ocf == TM_HAS_OCF)
     {
         *pdu_len -= 4;
     }
-    if (current_managed_parameters_struct.has_fecf == TM_HAS_FECF)
+    if (tm_current_managed_parameters_struct.has_fecf == TM_HAS_FECF)
     {
         *pdu_len -= 2;
     }
@@ -678,29 +678,30 @@ int32_t Crypto_TM_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
          **/
 
         // Only calculate & insert FECF if CryptoLib is configured to do so & gvcid includes FECF.
-        if (current_managed_parameters_struct.has_fecf == TM_HAS_FECF)
+        if (tm_current_managed_parameters_struct.has_fecf == TM_HAS_FECF)
         {
 #ifdef FECF_DEBUG
-            printf(KCYN "Calcing FECF over %d bytes\n" RESET, current_managed_parameters_struct.max_frame_size - 2);
+            printf(KCYN "Calcing FECF over %d bytes\n" RESET, tm_current_managed_parameters_struct.max_frame_size - 2);
 #endif
             if (crypto_config.crypto_create_fecf == CRYPTO_TM_CREATE_FECF_TRUE)
             {
                 *new_fecf =
-                    Crypto_Calc_FECF((uint8_t *)pTfBuffer, current_managed_parameters_struct.max_frame_size - 2);
-                pTfBuffer[current_managed_parameters_struct.max_frame_size - 2] = (uint8_t)((*new_fecf & 0xFF00) >> 8);
-                pTfBuffer[current_managed_parameters_struct.max_frame_size - 1] = (uint8_t)(*new_fecf & 0x00FF);
+                    Crypto_Calc_FECF((uint8_t *)pTfBuffer, tm_current_managed_parameters_struct.max_frame_size - 2);
+                pTfBuffer[tm_current_managed_parameters_struct.max_frame_size - 2] =
+                    (uint8_t)((*new_fecf & 0xFF00) >> 8);
+                pTfBuffer[tm_current_managed_parameters_struct.max_frame_size - 1] = (uint8_t)(*new_fecf & 0x00FF);
             }
             else // CRYPTO_TC_CREATE_FECF_FALSE
             {
-                pTfBuffer[current_managed_parameters_struct.max_frame_size - 2] = (uint8_t)0x00;
-                pTfBuffer[current_managed_parameters_struct.max_frame_size - 1] = (uint8_t)0x00;
+                pTfBuffer[tm_current_managed_parameters_struct.max_frame_size - 2] = (uint8_t)0x00;
+                pTfBuffer[tm_current_managed_parameters_struct.max_frame_size - 1] = (uint8_t)0x00;
             }
             idx += 2;
         }
 
 #ifdef TM_DEBUG
         printf(KYEL "Printing new TM frame:\n\t");
-        for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+        for (int i = 0; i < tm_current_managed_parameters_struct.max_frame_size; i++)
         {
             printf("%02X", pTfBuffer[i]);
         }
@@ -739,15 +740,15 @@ void Crypto_TM_ApplySecurity_Debug_Print(uint16_t idx, uint16_t pdu_len, Securit
     printf(KYEL "Data location starts at: %d\n" RESET, idx);
     printf(KYEL "Data size is: %d\n" RESET, pdu_len);
     printf(KYEL "Index at end of SPI is: %d\n", idx);
-    if (current_managed_parameters_struct.has_ocf == TM_HAS_OCF)
+    if (tm_current_managed_parameters_struct.has_ocf == TM_HAS_OCF)
     {
         // If OCF exists, comes immediately after MAC
         printf(KYEL "OCF Location is: %d\n" RESET, idx + pdu_len + sa_ptr->stmacf_len);
     }
-    if (current_managed_parameters_struct.has_fecf == TM_HAS_FECF)
+    if (tm_current_managed_parameters_struct.has_fecf == TM_HAS_FECF)
     {
         // If FECF exists, comes just before end of the frame
-        printf(KYEL "FECF Location is: %d\n" RESET, current_managed_parameters_struct.max_frame_size - 2);
+        printf(KYEL "FECF Location is: %d\n" RESET, tm_current_managed_parameters_struct.max_frame_size - 2);
     }
 #endif
 }
@@ -833,7 +834,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     }
 
     status = Crypto_Get_Managed_Parameters_For_Gvcid(tfvn, scid, vcid, gvcid_managed_parameters_array,
-                                                     &current_managed_parameters_struct);
+                                                     &tm_current_managed_parameters_struct);
 
     // No managed parameters found
     if (status != CRYPTO_LIB_SUCCESS)
@@ -845,8 +846,8 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         return status;
     }
 
-    if ((len_ingest < current_managed_parameters_struct.max_frame_size) && (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC) &&
-        (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC_MAC))
+    if ((len_ingest < tm_current_managed_parameters_struct.max_frame_size) &&
+        (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC) && (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC_MAC))
     {
         status = CRYPTO_LIB_ERR_TM_FL_LT_MAX_FRAME_SIZE;
         mc_if->mc_log(status);
@@ -854,9 +855,9 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     }
     else if ((sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC) || (sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC_MAC))
     {
-        if ((current_managed_parameters_struct.max_frame_size - len_ingest) <= 16)
+        if ((tm_current_managed_parameters_struct.max_frame_size - len_ingest) <= 16)
         {
-            cbc_padding = current_managed_parameters_struct.max_frame_size - len_ingest;
+            cbc_padding = tm_current_managed_parameters_struct.max_frame_size - len_ingest;
         }
         else
         {
@@ -868,7 +869,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
 
 #ifdef TM_DEBUG
     printf(KYEL "TM BEFORE Apply Sec:\n\t" RESET);
-    for (int16_t i = 0; i < current_managed_parameters_struct.max_frame_size - cbc_padding; i++)
+    for (int16_t i = 0; i < tm_current_managed_parameters_struct.max_frame_size - cbc_padding; i++)
     {
         printf("%02X", pTfBuffer[i]);
     }
@@ -1012,7 +1013,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
      **/
     data_loc = idx;
 
-    if (current_managed_parameters_struct.max_frame_size <= idx - sa_ptr->stmacf_len)
+    if (tm_current_managed_parameters_struct.max_frame_size <= idx - sa_ptr->stmacf_len)
     {
         status = CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW;
         mc_if->mc_log(status);
@@ -1020,11 +1021,11 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     }
 
     // Calculate size of data to be encrypted
-    pdu_len = current_managed_parameters_struct.max_frame_size - idx - sa_ptr->stmacf_len;
+    pdu_len = tm_current_managed_parameters_struct.max_frame_size - idx - sa_ptr->stmacf_len;
     // Check other managed parameter flags, subtract their lengths from data field if present
     Crypto_TM_Handle_Managed_Parameter_Flags(&pdu_len);
 
-    if (current_managed_parameters_struct.max_frame_size < pdu_len)
+    if (tm_current_managed_parameters_struct.max_frame_size < pdu_len)
     {
         status = CRYPTO_LIB_ERR_AOS_FRAME_LENGTH_UNDERFLOW;
         mc_if->mc_log(status);
@@ -1106,9 +1107,9 @@ int32_t Crypto_TM_Process_Setup(uint16_t len_ingest, uint16_t *byte_idx, uint8_t
     // Lookup-retrieve managed parameters for frame via gvcid:
     if (status == CRYPTO_LIB_SUCCESS)
     {
-        status =
-            Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
-                                                    gvcid_managed_parameters_array, &current_managed_parameters_struct);
+        status = Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
+                                                         tm_frame_pri_hdr.vcid, gvcid_managed_parameters_array,
+                                                         &tm_current_managed_parameters_struct);
     }
 
     if (status != CRYPTO_LIB_SUCCESS)
@@ -1246,10 +1247,10 @@ int32_t Crypto_TM_FECF_Setup(uint8_t *p_ingest, uint16_t len_ingest)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
-    if (current_managed_parameters_struct.has_fecf == TM_HAS_FECF)
+    if (tm_current_managed_parameters_struct.has_fecf == TM_HAS_FECF)
     {
-        uint16_t received_fecf = (((p_ingest[current_managed_parameters_struct.max_frame_size - 2] << 8) & 0xFF00) |
-                                  (p_ingest[current_managed_parameters_struct.max_frame_size - 1] & 0x00FF));
+        uint16_t received_fecf = (((p_ingest[tm_current_managed_parameters_struct.max_frame_size - 2] << 8) & 0xFF00) |
+                                  (p_ingest[tm_current_managed_parameters_struct.max_frame_size - 1] & 0x00FF));
 
         if (crypto_config.crypto_check_fecf == TM_CHECK_FECF_TRUE)
         {
@@ -1278,12 +1279,12 @@ int32_t Crypto_TM_FECF_Setup(uint8_t *p_ingest, uint16_t len_ingest)
         }
     }
     // Needs to be TM_HAS_FECF (checked above_ or TM_NO_FECF)
-    else if (current_managed_parameters_struct.has_fecf != TM_NO_FECF)
+    else if (tm_current_managed_parameters_struct.has_fecf != TM_NO_FECF)
     {
 #ifdef TM_DEBUG
         printf(KRED "TM_Process Error...tfvn: %d scid: 0x%04X vcid: 0x%02X fecf_enum: %d\n" RESET,
-               current_managed_parameters_struct.tfvn, current_managed_parameters_struct.scid,
-               current_managed_parameters_struct.vcid, current_managed_parameters_struct.has_fecf);
+               tm_current_managed_parameters_struct.tfvn, tm_current_managed_parameters_struct.scid,
+               tm_current_managed_parameters_struct.vcid, tm_current_managed_parameters_struct.has_fecf);
 #endif
         status = CRYPTO_LIB_ERR_TC_ENUM_USED_FOR_TM_CONFIG;
         mc_if->mc_log(status);
@@ -1500,12 +1501,12 @@ int32_t Crypto_TM_Do_Decrypt_NONAEAD(uint8_t sa_service_type, uint16_t pdu_len, 
  */
 void Crypto_TM_Calc_PDU_MAC(uint16_t *pdu_len, uint16_t byte_idx, SecurityAssociation_t *sa_ptr, int *mac_loc)
 {
-    *pdu_len = current_managed_parameters_struct.max_frame_size - (byte_idx)-sa_ptr->stmacf_len;
-    if (current_managed_parameters_struct.has_ocf == TM_HAS_OCF)
+    *pdu_len = tm_current_managed_parameters_struct.max_frame_size - (byte_idx)-sa_ptr->stmacf_len;
+    if (tm_current_managed_parameters_struct.has_ocf == TM_HAS_OCF)
     {
         *pdu_len -= 4;
     }
-    if (current_managed_parameters_struct.has_fecf == TM_HAS_FECF)
+    if (tm_current_managed_parameters_struct.has_fecf == TM_HAS_FECF)
     {
         *pdu_len -= 2;
     }
@@ -1565,12 +1566,12 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
 
 #ifdef TM_DEBUG
     printf(KYEL "Printing received frame:\n\t" RESET);
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < tm_current_managed_parameters_struct.max_frame_size; i++)
     {
         printf(KYEL "%02X", p_ingest[i]);
     }
     printf(KYEL "\nPrinting PROCESSED frame:\n\t" RESET);
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < tm_current_managed_parameters_struct.max_frame_size; i++)
     {
         printf(KYEL "%02X", p_new_dec_frame[i]);
     }
@@ -1579,7 +1580,7 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
 
     *pp_processed_frame = p_new_dec_frame;
     // TODO maybe not just return this without doing the math ourselves
-    *p_decrypted_length = current_managed_parameters_struct.max_frame_size;
+    *p_decrypted_length = tm_current_managed_parameters_struct.max_frame_size;
 
 #ifdef DEBUG
     printf(KYEL "----- Crypto_TM_ProcessSecurity END -----\n" RESET);
@@ -1609,15 +1610,15 @@ void Crypto_TM_Process_Debug_Print(uint16_t byte_idx, uint16_t pdu_len, Security
 #ifdef TM_DEBUG
     printf(KYEL "Index / data location starts at: %d\n" RESET, byte_idx);
     printf(KYEL "Data size is: %d\n" RESET, pdu_len);
-    if (current_managed_parameters_struct.has_ocf == TM_HAS_OCF)
+    if (tm_current_managed_parameters_struct.has_ocf == TM_HAS_OCF)
     {
         // If OCF exists, comes immediately after MAC
         printf(KYEL "OCF Location is: %d\n" RESET, byte_idx + pdu_len + sa_ptr->stmacf_len);
     }
-    if (current_managed_parameters_struct.has_fecf == TM_HAS_FECF)
+    if (tm_current_managed_parameters_struct.has_fecf == TM_HAS_FECF)
     {
         // If FECF exists, comes just before end of the frame
-        printf(KYEL "FECF Location is: %d\n" RESET, current_managed_parameters_struct.max_frame_size - 2);
+        printf(KYEL "FECF Location is: %d\n" RESET, tm_current_managed_parameters_struct.max_frame_size - 2);
     }
 #endif
 }
@@ -1707,7 +1708,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_
         }
 #endif
 
-        if (current_managed_parameters_struct.max_frame_size <= byte_idx - sa_ptr->stmacf_len)
+        if (tm_current_managed_parameters_struct.max_frame_size <= byte_idx - sa_ptr->stmacf_len)
         {
             status = CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW;
             mc_if->mc_log(status);
@@ -1715,7 +1716,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_
         }
 
         // Received the wrong amount of bytes from mandated frame size
-        if (len_ingest < current_managed_parameters_struct.max_frame_size)
+        if (len_ingest < tm_current_managed_parameters_struct.max_frame_size)
         {
             status = CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW;
             mc_if->mc_log(status);
@@ -1772,7 +1773,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_
         // NOTE: This size itself is not the length for authentication
         Crypto_TM_Calc_PDU_MAC(&pdu_len, byte_idx, sa_ptr, &mac_loc);
 
-        if (current_managed_parameters_struct.max_frame_size < pdu_len)
+        if (tm_current_managed_parameters_struct.max_frame_size < pdu_len)
         {
             status = CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW;
             mc_if->mc_log(status);
@@ -1820,7 +1821,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_
 
 void Crypto_TM_Print_CLCW(uint8_t *p_ingest, uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t *sa_ptr)
 {
-    if (current_managed_parameters_struct.has_ocf == TM_HAS_OCF)
+    if (tm_current_managed_parameters_struct.has_ocf == TM_HAS_OCF)
     {
         byte_idx += (pdu_len + sa_ptr->stmacf_len);
         Telemetry_Frame_Ocf_Clcw_t clcw;
@@ -2026,10 +2027,10 @@ int32_t Crypto_TM_FECF_Validate(uint8_t *p_ingest, uint16_t len_ingest, Security
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
-    if (current_managed_parameters_struct.has_fecf == TM_HAS_FECF)
+    if (tm_current_managed_parameters_struct.has_fecf == TM_HAS_FECF)
     {
-        uint16_t received_fecf = (((p_ingest[current_managed_parameters_struct.max_frame_size - 2] << 8) & 0xFF00) |
-                                  (p_ingest[current_managed_parameters_struct.max_frame_size - 1] & 0x00FF));
+        uint16_t received_fecf = (((p_ingest[tm_current_managed_parameters_struct.max_frame_size - 2] << 8) & 0xFF00) |
+                                  (p_ingest[tm_current_managed_parameters_struct.max_frame_size - 1] & 0x00FF));
 
         if (crypto_config.crypto_check_fecf == TM_CHECK_FECF_TRUE)
         {
@@ -2050,12 +2051,12 @@ int32_t Crypto_TM_FECF_Validate(uint8_t *p_ingest, uint16_t len_ingest, Security
             }
         }
     }
-    else if (current_managed_parameters_struct.has_fecf != TM_NO_FECF)
+    else if (tm_current_managed_parameters_struct.has_fecf != TM_NO_FECF)
     {
 #ifdef TM_DEBUG
         printf(KRED "TM_Process Error...tfvn: %d scid: 0x%04X vcid: 0x%02X fecf_enum: %d\n" RESET,
-               current_managed_parameters_struct.tfvn, current_managed_parameters_struct.scid,
-               current_managed_parameters_struct.vcid, current_managed_parameters_struct.has_fecf);
+               tm_current_managed_parameters_struct.tfvn, tm_current_managed_parameters_struct.scid,
+               tm_current_managed_parameters_struct.vcid, tm_current_managed_parameters_struct.has_fecf);
 #endif
         status = CRYPTO_LIB_ERR_TC_ENUM_USED_FOR_TM_CONFIG;
         mc_if->mc_log(status);

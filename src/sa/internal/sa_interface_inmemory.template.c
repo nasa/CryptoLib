@@ -1034,7 +1034,7 @@ static int32_t sa_start(TC_t *tc_frame)
                 gvcid.vcid = (((sdls_frame.tlv_pdu.data[count + 2] & 0x0F) << 2) |
                               (sdls_frame.tlv_pdu.data[count + 3] & 0xC0) >> 6);
 
-                if (current_managed_parameters_struct.has_segmentation_hdr == TC_HAS_SEGMENT_HDRS)
+                if (tc_current_managed_parameters_struct.has_segmentation_hdr == TC_HAS_SEGMENT_HDRS)
                 {
                     gvcid.mapid = (sdls_frame.tlv_pdu.data[count + 3] & 0x3F);
                 }

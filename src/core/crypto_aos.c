@@ -119,7 +119,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     }
 
     status = Crypto_Get_Managed_Parameters_For_Gvcid(tfvn, scid, vcid, gvcid_managed_parameters_array,
-                                                     &current_managed_parameters_struct);
+                                                     &aos_current_managed_parameters_struct);
 
     // No managed parameters found
     if (status != CRYPTO_LIB_SUCCESS)
@@ -131,8 +131,8 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         return status;
     }
 
-    if ((len_ingest < current_managed_parameters_struct.max_frame_size) && (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC) &&
-        (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC_MAC))
+    if ((len_ingest < aos_current_managed_parameters_struct.max_frame_size) &&
+        (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC) && (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC_MAC))
     {
         status = CRYPTO_LIB_ERR_AOS_FL_LT_MAX_FRAME_SIZE;
         mc_if->mc_log(status);
@@ -140,9 +140,9 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     }
     else if ((sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC) || (sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC_MAC))
     {
-        if ((current_managed_parameters_struct.max_frame_size - len_ingest) <= 16)
+        if ((aos_current_managed_parameters_struct.max_frame_size - len_ingest) <= 16)
         {
-            cbc_padding = current_managed_parameters_struct.max_frame_size - len_ingest;
+            cbc_padding = aos_current_managed_parameters_struct.max_frame_size - len_ingest;
         }
         else
         {
@@ -158,19 +158,19 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     ** Special case for CBC mode ciphers that require padding
     */
     if ((sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC || sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC_MAC) &&
-        (current_managed_parameters_struct.max_frame_size - len_ingest) <= 16)
+        (aos_current_managed_parameters_struct.max_frame_size - len_ingest) <= 16)
     {
         // For CBC mode, allow frames that are slightly shorter to account for padding
-        cbc_padding = current_managed_parameters_struct.max_frame_size - len_ingest;
+        cbc_padding = aos_current_managed_parameters_struct.max_frame_size - len_ingest;
 #ifdef AOS_DEBUG
         printf(KYEL "CBC padding of %d bytes will be applied\n" RESET, cbc_padding);
 #endif
     }
-    else if ((current_managed_parameters_struct.max_frame_size - len_ingest) != 0)
+    else if ((aos_current_managed_parameters_struct.max_frame_size - len_ingest) != 0)
     {
 #ifdef AOS_DEBUG
         printf(KRED "Frame length %d does not match required fixed length %d\n" RESET, len_ingest,
-               current_managed_parameters_struct.max_frame_size);
+               aos_current_managed_parameters_struct.max_frame_size);
 #endif
         status = CRYPTO_LIB_ERR_AOS_FL_LT_MAX_FRAME_SIZE;
         mc_if->mc_log(status);
@@ -179,7 +179,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
 
 #ifdef AOS_DEBUG
     printf(KYEL "AOS BEFORE Apply Sec:\n\t" RESET);
-    for (int16_t i = 0; i < current_managed_parameters_struct.max_frame_size - cbc_padding; i++)
+    for (int16_t i = 0; i < aos_current_managed_parameters_struct.max_frame_size - cbc_padding; i++)
     {
         printf("%02X", pTfBuffer[i]);
     }
@@ -250,7 +250,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     idx = 6;
 
     // Detect if optional 2 byte FHEC is present
-    if (current_managed_parameters_struct.aos_has_fhec == AOS_HAS_FHEC)
+    if (aos_current_managed_parameters_struct.aos_has_fhec == AOS_HAS_FHEC)
     {
 #ifdef AOS_DEBUG
         printf(KYEL "Calculating FHECF...\n" RESET);
@@ -263,15 +263,15 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
 
     // Detect if optional variable length Insert Zone is present
     // Per CCSDS 732.0-B-4 Section 4.1.3, Insert Zone is optional but fixed length for a physical channel
-    if (current_managed_parameters_struct.aos_has_iz == AOS_HAS_IZ)
+    if (aos_current_managed_parameters_struct.aos_has_iz == AOS_HAS_IZ)
     {
         // Section 4.1.3.2 - Validate Insert Zone length
-        if (current_managed_parameters_struct.aos_iz_len <= 0)
+        if (aos_current_managed_parameters_struct.aos_iz_len <= 0)
         {
             status = CRYPTO_LIB_ERR_INVALID_AOS_IZ_LENGTH;
 #ifdef AOS_DEBUG
             printf(KRED "Error: Invalid Insert Zone length %d. Must be between 1 and 65535 octets.\n" RESET,
-                   current_managed_parameters_struct.aos_iz_len);
+                   aos_current_managed_parameters_struct.aos_iz_len);
 #endif
             mc_if->mc_log(status);
             return status;
@@ -280,10 +280,11 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
 // Section 4.1.3.2.3 - All bits of the Insert Zone shall be set by the sending end
 // Based on the managed parameter configuration, we're not modifying the Insert Zone contents
 #ifdef AOS_DEBUG
-        printf(KYEL "Insert Zone present with length %d octets\n" RESET, current_managed_parameters_struct.aos_iz_len);
+        printf(KYEL "Insert Zone present with length %d octets\n" RESET,
+               aos_current_managed_parameters_struct.aos_iz_len);
 #endif
 
-        idx += current_managed_parameters_struct.aos_iz_len;
+        idx += aos_current_managed_parameters_struct.aos_iz_len;
     }
 
     // Idx is now at SPI location
@@ -402,9 +403,9 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
      **/
     data_loc = idx;
     // Calculate size of data to be encrypted
-    pdu_len = current_managed_parameters_struct.max_frame_size - idx - sa_ptr->stmacf_len;
+    pdu_len = aos_current_managed_parameters_struct.max_frame_size - idx - sa_ptr->stmacf_len;
 
-    if (current_managed_parameters_struct.max_frame_size < idx - sa_ptr->stmacf_len)
+    if (aos_current_managed_parameters_struct.max_frame_size < idx - sa_ptr->stmacf_len)
     {
         status = CRYPTO_LIB_ERR_AOS_FRAME_LENGTH_UNDERFLOW;
         mc_if->mc_log(status);
@@ -412,16 +413,16 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     }
 
     // Check other managed parameter flags, subtract their lengths from data field if present
-    if (current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
+    if (aos_current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
     {
         pdu_len -= 4;
     }
-    if (current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
+    if (aos_current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
     {
         pdu_len -= 2;
     }
 
-    if (current_managed_parameters_struct.max_frame_size < pdu_len)
+    if (aos_current_managed_parameters_struct.max_frame_size < pdu_len)
     {
         status = CRYPTO_LIB_ERR_AOS_FRAME_LENGTH_UNDERFLOW;
         mc_if->mc_log(status);
@@ -432,15 +433,15 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     printf(KYEL "Data location starts at: %d\n" RESET, idx);
     printf(KYEL "Data size is: %d\n" RESET, pdu_len);
     printf(KYEL "Index at end of SPI is: %d\n", idx);
-    if (current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
+    if (aos_current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
     {
         // If OCF exists, comes immediately after MAC
         printf(KYEL "OCF Location is: %d" RESET, idx + pdu_len + sa_ptr->stmacf_len);
     }
-    if (current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
+    if (aos_current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
     {
         // If FECF exists, comes just before end of the frame
-        printf(KYEL "FECF Location is: %d\n" RESET, current_managed_parameters_struct.max_frame_size - 2);
+        printf(KYEL "FECF Location is: %d\n" RESET, aos_current_managed_parameters_struct.max_frame_size - 2);
     }
 #endif
 
@@ -732,7 +733,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
 #endif
 
     // Handle OCF (Operational Control Field) per CCSDS 732.0-B-4 Section 4.1.4
-    if (current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
+    if (aos_current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
     {
         // Section 4.1.4.2 - OCF is always 4 octets
         uint16_t ocf_location = idx + pdu_len + sa_ptr->stmacf_len;
@@ -762,28 +763,28 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
      **/
 
     // Only calculate & insert FECF if CryptoLib is configured to do so & gvcid includes FECF.
-    if (current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
+    if (aos_current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
     {
 #ifdef FECF_DEBUG
-        printf(KCYN "Calcing FECF over %d bytes\n" RESET, current_managed_parameters_struct.max_frame_size - 2);
+        printf(KCYN "Calcing FECF over %d bytes\n" RESET, aos_current_managed_parameters_struct.max_frame_size - 2);
 #endif
         if (crypto_config.crypto_create_fecf == CRYPTO_AOS_CREATE_FECF_TRUE)
         {
-            new_fecf = Crypto_Calc_FECF((uint8_t *)pTfBuffer, current_managed_parameters_struct.max_frame_size - 2);
-            pTfBuffer[current_managed_parameters_struct.max_frame_size - 2] = (uint8_t)((new_fecf & 0xFF00) >> 8);
-            pTfBuffer[current_managed_parameters_struct.max_frame_size - 1] = (uint8_t)(new_fecf & 0x00FF);
+            new_fecf = Crypto_Calc_FECF((uint8_t *)pTfBuffer, aos_current_managed_parameters_struct.max_frame_size - 2);
+            pTfBuffer[aos_current_managed_parameters_struct.max_frame_size - 2] = (uint8_t)((new_fecf & 0xFF00) >> 8);
+            pTfBuffer[aos_current_managed_parameters_struct.max_frame_size - 1] = (uint8_t)(new_fecf & 0x00FF);
         }
         else // CRYPTO_TC_CREATE_FECF_FALSE
         {
-            pTfBuffer[current_managed_parameters_struct.max_frame_size - 2] = (uint8_t)0x00;
-            pTfBuffer[current_managed_parameters_struct.max_frame_size - 1] = (uint8_t)0x00;
+            pTfBuffer[aos_current_managed_parameters_struct.max_frame_size - 2] = (uint8_t)0x00;
+            pTfBuffer[aos_current_managed_parameters_struct.max_frame_size - 1] = (uint8_t)0x00;
         }
         idx += 2;
     }
 
 #ifdef AOS_DEBUG
     printf(KYEL "Printing new AOS frame:\n\t");
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < aos_current_managed_parameters_struct.max_frame_size; i++)
     {
         printf("%02X", pTfBuffer[i]);
     }
@@ -873,7 +874,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     // Lookup-retrieve managed parameters for frame via gvcid:
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &current_managed_parameters_struct);
+                                                gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
 
     if (status != CRYPTO_LIB_SUCCESS)
     {
@@ -886,7 +887,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
 
     // Increment to end of Primary Header start, depends on FHECF presence
     byte_idx = 6;
-    if (current_managed_parameters_struct.aos_has_fhec == AOS_HAS_FHEC)
+    if (aos_current_managed_parameters_struct.aos_has_fhec == AOS_HAS_FHEC)
     {
         uint16_t recieved_fhecf = (((p_ingest[aos_hdr_len] << 8) & 0xFF00) | (p_ingest[aos_hdr_len + 1] & 0x00FF));
 #ifdef AOS_DEBUG
@@ -910,15 +911,15 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
 
     // Detect if optional variable length Insert Zone is present
     // Per CCSDS 732.0-B-4 Section 4.1.3, Insert Zone is optional but fixed length for a physical channel
-    if (current_managed_parameters_struct.aos_has_iz == AOS_HAS_IZ)
+    if (aos_current_managed_parameters_struct.aos_has_iz == AOS_HAS_IZ)
     {
         // Section 4.1.3.2 - Validate Insert Zone length
-        if (current_managed_parameters_struct.aos_iz_len <= 0)
+        if (aos_current_managed_parameters_struct.aos_iz_len <= 0)
         {
             status = CRYPTO_LIB_ERR_INVALID_AOS_IZ_LENGTH;
 #ifdef AOS_DEBUG
             printf(KRED "Error: Invalid Insert Zone length %d. Must be between 1 and 65535 octets.\n" RESET,
-                   current_managed_parameters_struct.aos_iz_len);
+                   aos_current_managed_parameters_struct.aos_iz_len);
 #endif
             mc_if->mc_log(status);
             return status;
@@ -927,10 +928,11 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
 // Section 4.1.3.2.3 - All bits of the Insert Zone shall be set by the sending end
 // Based on the managed parameter configuration, we're not modifying the Insert Zone contents
 #ifdef AOS_DEBUG
-        printf(KYEL "Insert Zone present with length %d octets\n" RESET, current_managed_parameters_struct.aos_iz_len);
+        printf(KYEL "Insert Zone present with length %d octets\n" RESET,
+               aos_current_managed_parameters_struct.aos_iz_len);
 #endif
 
-        byte_idx += current_managed_parameters_struct.aos_iz_len;
+        byte_idx += aos_current_managed_parameters_struct.aos_iz_len;
     }
 
     /**
@@ -1026,7 +1028,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     }
 #endif
 
-    if (len_ingest < current_managed_parameters_struct.max_frame_size)
+    if (len_ingest < aos_current_managed_parameters_struct.max_frame_size)
     {
         status = CRYPTO_LIB_ERR_AOS_FL_LT_MAX_FRAME_SIZE;
         mc_if->mc_log(status);
@@ -1034,10 +1036,10 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     }
 
     // Parse & Check FECF, if present, and update fecf length
-    if (current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
+    if (aos_current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
     {
-        uint16_t received_fecf = (((p_ingest[current_managed_parameters_struct.max_frame_size - 2] << 8) & 0xFF00) |
-                                  (p_ingest[current_managed_parameters_struct.max_frame_size - 1] & 0x00FF));
+        uint16_t received_fecf = (((p_ingest[aos_current_managed_parameters_struct.max_frame_size - 2] << 8) & 0xFF00) |
+                                  (p_ingest[aos_current_managed_parameters_struct.max_frame_size - 1] & 0x00FF));
 
         if (crypto_config.crypto_check_fecf == AOS_CHECK_FECF_TRUE)
         {
@@ -1066,12 +1068,12 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
         }
     }
     // Needs to be AOS_HAS_FECF (checked above, or AOS_NO_FECF)
-    else if (current_managed_parameters_struct.has_fecf != AOS_NO_FECF)
+    else if (aos_current_managed_parameters_struct.has_fecf != AOS_NO_FECF)
     {
 #ifdef AOS_DEBUG
         printf(KRED "AOS_Process Error...tfvn: %d scid: 0x%04X vcid: 0x%02X fecf_enum: %d\n" RESET,
-               current_managed_parameters_struct.tfvn, current_managed_parameters_struct.scid,
-               current_managed_parameters_struct.vcid, current_managed_parameters_struct.has_fecf);
+               aos_current_managed_parameters_struct.tfvn, aos_current_managed_parameters_struct.scid,
+               aos_current_managed_parameters_struct.vcid, aos_current_managed_parameters_struct.has_fecf);
 #endif
         status = CRYPTO_LIB_ERR_TC_ENUM_USED_FOR_AOS_CONFIG;
         mc_if->mc_log(status);
@@ -1094,12 +1096,12 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     memcpy(p_new_dec_frame, &p_ingest[0], aos_hdr_len);
 
     // Copy over insert zone data, if it exists
-    if (current_managed_parameters_struct.aos_has_iz == AOS_HAS_IZ)
+    if (aos_current_managed_parameters_struct.aos_has_iz == AOS_HAS_IZ)
     {
-        memcpy(p_new_dec_frame + aos_hdr_len, &p_ingest[aos_hdr_len], current_managed_parameters_struct.aos_iz_len);
+        memcpy(p_new_dec_frame + aos_hdr_len, &p_ingest[aos_hdr_len], aos_current_managed_parameters_struct.aos_iz_len);
 #ifdef AOS_DEBUG
         printf("Copied over the following:\n\t");
-        for (int i = 0; i < current_managed_parameters_struct.aos_iz_len; i++)
+        for (int i = 0; i < aos_current_managed_parameters_struct.aos_iz_len; i++)
         {
             printf("%02X", p_ingest[aos_hdr_len + i]);
         }
@@ -1139,14 +1141,14 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     ** The optional Operations Control Field and the Frame Error Control Field, if present,
     ** are not part of the Data Field.
     */
-    pdu_len = current_managed_parameters_struct.max_frame_size - byte_idx - sa_ptr->stmacf_len;
+    pdu_len = aos_current_managed_parameters_struct.max_frame_size - byte_idx - sa_ptr->stmacf_len;
 
     /*
     ** CCSDS 732.0-B-4 Section 4.1.5 - Operational Control Field (OCF)
     ** The OCF contains real-time Control Commands, reports, or status that may be required for
     ** the operation of the AOS Space Data Link Protocol.
     */
-    if (current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
+    if (aos_current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
     {
         pdu_len -= 4;
     }
@@ -1155,7 +1157,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     ** CCSDS 732.0-B-4 Section 4.1.6 - Frame Error Control Field (FECF)
     ** The FECF shall contain a sequence of 16 parity bits for error detection.
     */
-    if (current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
+    if (aos_current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
     {
         pdu_len -= 2;
     }
@@ -1170,15 +1172,15 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
 #ifdef AOS_DEBUG
     printf(KYEL "Index / data location starts at: %d\n" RESET, byte_idx);
     printf(KYEL "Data size is: %d\n" RESET, pdu_len);
-    if (current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
+    if (aos_current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
     {
         // If OCF exists, comes immediately after MAC
         printf(KYEL "OCF Location is: %d" RESET, byte_idx + pdu_len + sa_ptr->stmacf_len);
     }
-    if (current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
+    if (aos_current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
     {
         // If FECF exists, comes just before end of the frame
-        printf(KYEL "FECF Location is: %d\n" RESET, current_managed_parameters_struct.max_frame_size - 2);
+        printf(KYEL "FECF Location is: %d\n" RESET, aos_current_managed_parameters_struct.max_frame_size - 2);
     }
 #endif
 
@@ -1386,12 +1388,12 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
 
 #ifdef AOS_DEBUG
     printf(KYEL "\nPrinting received frame:\n\t" RESET);
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < aos_current_managed_parameters_struct.max_frame_size; i++)
     {
         printf(KYEL "%02X", p_ingest[i]);
     }
     printf(KYEL "\nPrinting PROCESSED frame:\n\t" RESET);
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < aos_current_managed_parameters_struct.max_frame_size; i++)
     {
         printf(KYEL "%02X", p_new_dec_frame[i]);
     }
@@ -1400,7 +1402,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
 
     *pp_processed_frame = p_new_dec_frame;
     // TODO maybe not just return this without doing the math ourselves
-    *p_decrypted_length = current_managed_parameters_struct.max_frame_size;
+    *p_decrypted_length = aos_current_managed_parameters_struct.max_frame_size;
 
 #ifdef DEBUG
     printf(KYEL "----- Crypto_AOS_ProcessSecurity END -----\n" RESET);

@@ -62,50 +62,45 @@ jobs:
   #
   # KMC Build
   #
-  # kmc_build:
-  #   # Container Setup
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v4
-  #   - name: Update
-  #     run: sudo apt-get update
-  #   - name: Install Dependencies
-  #     run: sudo apt-get install -y lcov libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3
-  #   - name: Install Python Libraries
-  #     run: sudo pip install pycryptodome
-  #   - name: Install Libgcrypt
-  #     run: >
-  #       curl  
-  #       -LS https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2 
-  #       -o /tmp/libgpg-error-1.50.tar.bz2 
-  #       && tar -xjf /tmp/libgpg-error-1.50.tar.bz2 -C /tmp/ 
-  #       && cd /tmp/libgpg-error-1.50 
-  #       && sudo ./configure 
-  #       && sudo make install 
-  #       && curl  
-  #       -LS https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2 
-  #       -o /tmp/libgcrypt-1.11.0.tar.bz2 
-  #       && tar -xjf /tmp/libgcrypt-1.11.0.tar.bz2 -C /tmp/ 
-  #       && cd /tmp/libgcrypt-1.11.0 
-  #       && sudo ./configure 
-  #       && sudo make install
-  #       && sudo ldconfig
-  #   # End Container Setup
-    
-  #   - name: KMC Build Script
-  #     working-directory: ${{github.workspace}}
-  #     run: bash ${GITHUB_WORKSPACE}/support/scripts/build_kmc.sh
-    
-  #   - name: Code-Coverage
-  #     working-directory: ${{github.workspace}}
-  #     run: make gcov
-
-  #   - name: Upload 
-  #     uses: codecov/codecov-action@v4
-  #     with:
-  #       token: ${{ secrets.CODECOV_TOKEN }}
-  #       files: 'coverage/*.c.gcov'
-  #       verbose: true
+  kmc_build:
+    # Container Setup
+    runs-on: ubuntu-latest
+    container:
+        image: ivvitc/cryptolib:20250108
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        repository: NASA-AMMOS/DCS
+        path: DCS
+        submodules: recursive
+    - name: setup python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Set current branch
+      run: echo "BRANCH_NAME=$(echo ${{ github.head_ref || github.ref_name }})" >> $GITHUB_ENV
+    - name: Update
+      run: apt-get update
+    - name: Install Dependencies
+      run: apt-get install -y libcurl4-openssl-dev libmariadb-dev libmariadb-dev-compat python3 openjdk-17-jdk openjdk-17-jre cmake swig maven podman default-jdk
+    - name: Install Python Libraries
+      run: |
+        pip3 install --break-system-packages pycryptodome cffi invoke
+    - name: update Cryptolib
+      run: |
+        cd DCS/ammos-cryptolib
+        rm -rf CryptoLib
+        git clone --single-branch --branch $BRANCH_NAME https://github.com/nasa/CryptoLib.git
+    - name: add required jars
+      run: |
+        cd DCS/ammos-cryptolib/kmc_sdls/kmc_sdls_java/kmc_sdls_java_test
+        curl -LS https://repo1.maven.org/maven2/junit/junit/4.13.2/junit-4.13.2.jar -o ./junit-4.13.2.jar 
+        curl -LS https://repo1.maven.org/maven2/org/hamcrest/hamcrest/2.2/hamcrest-2.2.jar -o ./hamcrest-2.2.jar
+    - name: build DCS
+      run: |
+        cd ./DCS
+        export JAVA_HOME=/lib/jvm/java-17-openjdk-amd64
+        ./kmc-resources/scripts/build.sh
 
   #
   # Wolf Build
