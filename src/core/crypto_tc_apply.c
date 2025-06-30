@@ -429,7 +429,6 @@ int32_t Crypto_TC_Get_SA_Service_Type(uint8_t *sa_service_type, SecurityAssociat
         // Leaving for now as it would be cleaner in SA to have an association enum returned I believe
         printf(KRED "Error: SA Service Type is not defined! \n" RESET);
         status = CRYPTO_LIB_ERROR;
-        mc_if->mc_log(status);
         return status;
     }
     return status;

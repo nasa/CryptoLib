@@ -214,6 +214,37 @@ extern int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest,
 extern int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest);
 extern int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_t **pp_processed_frame,
                                           uint16_t *p_decrypted_length);
+int32_t        Crypto_AOS_Get_SA_Service_Type(uint8_t *sa_service_type, SecurityAssociation_t *sa_ptr);
+void           Crypto_AOS_SA_Service_Type_Debug_Print(uint8_t sa_service_type);
+void           Crypto_AOSA_Handle_FHEC(uint8_t *pTfBuffer, uint16_t *idx);
+int32_t        Crypto_AOSA_Handle_IZ(uint16_t *idx);
+void           Crypto_AOSA_Set_SPI(uint8_t *pTfBuffer, uint16_t *idx, SecurityAssociation_t *sa_ptr);
+void           Crypto_AOS_IV_Debug_Print(SecurityAssociation_t *sa_ptr);
+void           Crypto_AOSA_Set_IV(uint8_t *pTfBuffer, SecurityAssociation_t *sa_ptr, uint16_t *idx);
+void           Crypto_AOSA_Set_ARSN(uint8_t *pTfBuffer, SecurityAssociation_t *sa_ptr, uint16_t *idx);
+int32_t Crypto_AOSA_Check_Frame_Lengths(uint16_t len_ingest, SecurityAssociation_t *sa_ptr, uint16_t *cbc_padding);
+int32_t Crypto_AOS_Get_Keys(SecurityAssociation_t *sa_ptr, crypto_key_t **ekp, crypto_key_t **akp);
+void    Crypto_AOSA_Apply_Padding(uint8_t *pTfBuffer, uint16_t pdu_len, SecurityAssociation_t *sa_ptr, uint16_t idx,
+                                  uint32_t pkcs_padding);
+int32_t Crypto_AOSA_Calc_PDU_Length(uint16_t *pdu_len, uint16_t idx, SecurityAssociation_t *sa_ptr);
+int32_t Crypto_AOSA_Check_Padding_Lengths(uint8_t *pTfBuffer, uint16_t *idx, SecurityAssociation_t *sa_ptr,
+                                          uint32_t *pkcs_padding, uint16_t cbc_padding);
+int32_t Crypto_AOSA_Handle_MAC_AAD(uint8_t sa_service_type, int *mac_loc, uint8_t *aad, uint16_t *aad_len,
+                                   SecurityAssociation_t *sa_ptr, uint16_t idx, uint16_t pdu_len, uint8_t *pTfBuffer);
+void    Crypto_AOSA_Handle_FECF(uint8_t *pTfBuffer, uint16_t *idx);
+void    Crypto_AOSA_IV_ARSN_Debug_Print(SecurityAssociation_t *sa_ptr);
+void    Crypto_AOSA_MAC_Debug_Print(SecurityAssociation_t *sa_ptr, uint16_t pdu_len, uint16_t idx);
+void    Crypto_AOSA_Handle_OCF(uint8_t *pTfBuffer, SecurityAssociation_t *sa_ptr, uint16_t *idx, uint16_t pdu_len);
+void    Crypto_AOSA_Increment_ARSN(SecurityAssociation_t *sa_ptr);
+int32_t Crypto_AOSA_Service_Type_Verify_Lengths(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr);
+int32_t Crypto_AOSA_Initial_Error_Checks(uint8_t *pTfBuffer);
+void    Crypto_AOSA_Parse_Header(uint8_t *pTfBuffer, uint8_t *tfvn, uint16_t *scid, uint16_t *vcid);
+int32_t Crypto_AOS_Encrypt(uint8_t sa_service_type, uint8_t ecs_is_aead_algorithm, uint8_t *pTfBuffer,
+                           uint16_t data_loc, uint16_t pdu_len, crypto_key_t *ekp, crypto_key_t *akp,
+                           SecurityAssociation_t *sa_ptr, uint32_t pkcs_padding, uint8_t *aad, uint16_t aad_len,
+                           int mac_loc);
+int32_t Crypto_AOSA_Handle_Security_Header(uint8_t *pTfBuffer, uint16_t *idx, SecurityAssociation_t *sa_ptr, uint8_t sa_service_type, uint32_t *pkcs_padding, uint16_t cbc_padding);
+void Crypto_AOSA_Handle_Security_Trailer(uint8_t *pTfBuffer, SecurityAssociation_t *sa_ptr, uint16_t *idx, uint16_t pdu_len);
 
 // Crypo Error Support Functions
 extern char *Crypto_Get_Error_Code_Enum_String(int32_t crypto_error_code);
@@ -286,8 +317,8 @@ void     Crypto_TMA_Set_SPI(uint8_t *pTfBuffer, uint16_t *idx, SecurityAssociati
 void     Crypto_TMA_Set_IV(uint8_t *pTfBuffer, SecurityAssociation_t *sa_ptr, uint16_t *idx);
 void     Crypto_TMA_Set_ARSN(uint8_t *pTfBuffer, SecurityAssociation_t *sa_ptr, uint16_t *idx);
 uint16_t Crypto_TMA_Calc_PDU_Length(uint16_t idx, SecurityAssociation_t *sa_ptr);
-int32_t Crypto_TMA_Check_Frame_Lengths(uint16_t len_ingest, SecurityAssociation_t *sa_ptr, uint16_t *cbc_padding);
-void Crypto_TMA_Ingest_Debug_Print(uint8_t *pTfBuffer, uint16_t cbc_padding);
+int32_t  Crypto_TMA_Check_Frame_Lengths(uint16_t len_ingest, SecurityAssociation_t *sa_ptr, uint16_t *cbc_padding);
+void     Crypto_TMA_Ingest_Debug_Print(uint8_t *pTfBuffer, uint16_t cbc_padding);
 
 // TM Process
 int32_t Crypto_TMP_Determine_Cipher_Mode(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr,
