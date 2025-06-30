@@ -255,8 +255,8 @@ void sa_populate(void)
     sa[1].sa_state        = SA_OPERATIONAL;
     sa[1].est             = 0;
     sa[1].ast             = 0;
-    sa[1].shivf_len       = 0;
-    sa[1].iv_len          = 0;
+    sa[1].shivf_len       = 12;
+    sa[1].iv_len          = 12;
     sa[1].shsnf_len       = 0;
     sa[1].arsnw           = 5;
     sa[1].arsnw_len       = 1;
