@@ -473,7 +473,7 @@ void *crypto_standalone_tc_apply(void *socks)
                     }
                     printf("\n");
                 }
-                printf("About to write to port %d!\n", tc_write_sock->port);
+                //printf("About to write to port %d!\n", tc_write_sock->port);
                 /* Reply */
                 status = sendto(tc_write_sock->sockfd, tc_out_ptr, tc_out_len, 0,
                                 (struct sockaddr *)&tc_write_sock->saddr, sizeof(tc_write_sock->saddr));
@@ -481,7 +481,7 @@ void *crypto_standalone_tc_apply(void *socks)
                 {
                     printf("crypto_standalone_tc_apply - Reply error %d \n", status);
                 }
-                printf("Allegedly wrote %d bytes to port %d!\n", tc_out_len, tc_write_sock->port);
+                //printf("Allegedly wrote %d bytes to port %d!\n", tc_out_len, tc_write_sock->port);
             }
             else
             {
