@@ -2087,7 +2087,8 @@ UTEST(TM_APPLY_ENC_VAL, AEAD_AES_GCM_BITMASK_1)
     hex_conversion(next_iv_h, &next_iv_b, &next_iv_len);
     ASSERT_EQ(next_iv_len, iv_len);
 
-    Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b, framed_tm_len);
+    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b, framed_tm_len);
+    ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
 
     printf("Static frame contents:\n\t");
     for (int i = 0; i < 1786; i++)

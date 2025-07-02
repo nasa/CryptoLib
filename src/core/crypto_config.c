@@ -88,13 +88,36 @@ int32_t Crypto_SC_Init(void)
 
     // TM
     GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x0003, 1, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
+        0, 0x0003, 1, TM_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
     TM_UT_Managed_Parameters.vcid = 4;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
     TM_UT_Managed_Parameters.vcid = 5;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
     status = Crypto_Init();
+
+    SecurityAssociation_t *sa_ptr = NULL;
+    sa_if->sa_get_from_spi(1, &sa_ptr);
+    sa_ptr->gvcid_blk.vcid = 0;
+    sa_if->sa_get_from_spi(2, &sa_ptr);
+    sa_ptr->gvcid_blk.vcid = 2;
+    sa_if->sa_get_from_spi(3, &sa_ptr);
+    sa_ptr->sa_state       = SA_OPERATIONAL;
+    sa_ptr->gvcid_blk.vcid = 3;
+    sa_ptr->abm_len        = ABM_SIZE;
+    sa_if->sa_get_from_spi(5, &sa_ptr);
+    sa_ptr->sa_state       = SA_OPERATIONAL;
+    sa_ptr->shsnf_len      = 0;
+    sa_ptr->arsn_len       = 0;
+    sa_ptr->gvcid_blk.vcid = 1;
+    sa_if->sa_get_from_spi(6, &sa_ptr);
+    sa_ptr->sa_state       = SA_OPERATIONAL;
+    sa_ptr->gvcid_blk.vcid = 4;
+    sa_if->sa_get_from_spi(7, &sa_ptr);
+    sa_ptr->sa_state       = SA_OPERATIONAL;
+    sa_ptr->abm_len        = ABM_SIZE;
+    sa_ptr->gvcid_blk.vcid = 5;
+
     return status;
 }
 
