@@ -373,15 +373,15 @@ void sa_populate(void)
     // TM - Authentication Only HMAC_SHA512 (Keyed)
     // IV = 0...0, IV-Len = 12, MAC-Len = 16, TFVN = 0, VCID = 0, ARSNW = 5
     // AKID = 7
-    sa[7].spi       = 7;
-    sa[7].akid      = 7;
-    sa[7].sa_state  = SA_KEYED;
-    sa[7].acs_len   = 1;
-    sa[7].acs       = CRYPTO_MAC_HMAC_SHA512;
-    sa[7].est       = 0;
-    sa[7].ast       = 1;
-    sa[7].shivf_len = 12;
-    sa[7].iv_len    = 12;
+    sa[7].spi             = 7;
+    sa[7].akid            = 7;
+    sa[7].sa_state        = SA_KEYED;
+    sa[7].acs_len         = 1;
+    sa[7].acs             = CRYPTO_MAC_HMAC_SHA512;
+    sa[7].est             = 0;
+    sa[7].ast             = 1;
+    sa[7].shivf_len       = 12;
+    sa[7].iv_len          = 12;
     sa[7].shsnf_len       = 2;
     sa[7].arsn_len        = 2;
     sa[7].arsnw_len       = 1;
