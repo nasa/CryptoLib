@@ -163,7 +163,7 @@ int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char *
                     {
                         Crypto_saPrint(test_association);
                     }
-
+                    printf("Get_SA_Status: %d\n", status);
                     if ((status == CRYPTO_LIB_SUCCESS) && (test_association->sa_state == SA_OPERATIONAL) &&
                         (test_association->gvcid_blk.mapid == TYPE_TC) && (test_association->gvcid_blk.scid == SCID))
                     {

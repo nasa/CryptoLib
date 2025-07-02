@@ -255,11 +255,11 @@ void sa_populate(void)
     sa[1].sa_state        = SA_OPERATIONAL;
     sa[1].est             = 0;
     sa[1].ast             = 0;
-    sa[1].shivf_len       = 0;
-    sa[1].iv_len          = 0;
+    sa[1].shivf_len       = 12;
+    sa[1].iv_len          = 12;
     sa[1].shsnf_len       = 0;
-    sa[1].arsnw           = 0;
-    sa[1].arsnw_len       = 0;
+    sa[1].arsnw           = 5;
+    sa[1].arsnw_len       = 1;
     sa[1].arsn_len        = 0;
     sa[1].gvcid_blk.tfvn  = 0;
     sa[1].gvcid_blk.scid  = SCID & 0x3FF;
@@ -293,11 +293,11 @@ void sa_populate(void)
     sa[3].akid            = 3;
     sa[3].sa_state        = SA_OPERATIONAL;
     sa[3].acs_len         = 1;
-    sa[3].acs             = CRYPTO_MAC_HMAC_SHA256;
+    sa[3].acs             = CRYPTO_MAC_HMAC_SHA512;
     sa[3].est             = 0;
     sa[3].ast             = 1;
-    sa[3].shivf_len       = 0;
-    sa[3].iv_len          = 0;
+    sa[3].shivf_len       = 12;
+    sa[3].iv_len          = 12;
     sa[3].abm_len         = ABM_SIZE;
     sa[3].shsnf_len       = 2;
     sa[3].arsn_len        = 2;
@@ -306,7 +306,7 @@ void sa_populate(void)
     sa[3].stmacf_len      = 16;
     sa[3].gvcid_blk.tfvn  = 0;
     sa[3].gvcid_blk.scid  = SCID & 0x3FF;
-    sa[3].gvcid_blk.vcid  = 3;
+    sa[3].gvcid_blk.vcid  = 0;
     sa[3].gvcid_blk.mapid = TYPE_TC;
 
     // TC - Authenticated Encryption - AES-GCM-256 (Keyed)
@@ -338,11 +338,11 @@ void sa_populate(void)
     sa[5].sa_state        = SA_OPERATIONAL;
     sa[5].est             = 0;
     sa[5].ast             = 0;
-    sa[5].shivf_len       = 0;
-    sa[5].iv_len          = 0;
+    sa[5].shivf_len       = 12;
+    sa[5].iv_len          = 12;
     sa[5].shsnf_len       = 0;
-    sa[5].arsnw           = 0;
-    sa[5].arsnw_len       = 0;
+    sa[5].arsnw           = 5;
+    sa[5].arsnw_len       = 1;
     sa[5].arsn_len        = 0;
     sa[5].gvcid_blk.tfvn  = 0;
     sa[5].gvcid_blk.scid  = SCID & 0x3FF;
@@ -356,19 +356,19 @@ void sa_populate(void)
     sa[6].ekid            = 6;
     sa[6].sa_state        = SA_OPERATIONAL;
     sa[6].ecs_len         = 1;
-    sa[6].ecs             = CRYPTO_CIPHER_AES256_GCM;
+    sa[6].ecs             = CRYPTO_CIPHER_AES256_CBC;
     sa[6].est             = 1;
     sa[6].ast             = 0;
-    sa[6].shivf_len       = 12;
-    sa[6].iv_len          = 12;
-    sa[6].shplf_len       = 0;
+    sa[6].shivf_len       = 16;
+    sa[6].iv_len          = 16;
+    sa[6].shplf_len       = 1;
     sa[6].stmacf_len      = 0;
     sa[6].arsn_len        = 0;
-    sa[6].arsnw_len       = 0;
-    sa[6].arsnw           = 0;
+    sa[6].arsnw_len       = 1;
+    sa[6].arsnw           = 5;
     sa[6].gvcid_blk.tfvn  = 0;
     sa[6].gvcid_blk.scid  = SCID & 0x3FF;
-    sa[6].gvcid_blk.vcid  = 4;
+    sa[6].gvcid_blk.vcid  = 0;
     sa[6].gvcid_blk.mapid = TYPE_TC;
 
     // TM - Authentication Only HMAC_SHA512 (Keyed)
@@ -378,11 +378,12 @@ void sa_populate(void)
     sa[7].akid            = 7;
     sa[7].sa_state        = SA_OPERATIONAL;
     sa[7].acs_len         = 1;
-    sa[7].acs             = CRYPTO_MAC_HMAC_SHA256;
+    sa[7].acs             = CRYPTO_MAC_HMAC_SHA512;
     sa[7].est             = 0;
     sa[7].ast             = 1;
     sa[7].shivf_len       = 12;
     sa[7].iv_len          = 12;
+    sa[7].abm_len         = ABM_SIZE;
     sa[7].shsnf_len       = 2;
     sa[7].arsn_len        = 2;
     sa[7].arsnw_len       = 1;
@@ -390,7 +391,7 @@ void sa_populate(void)
     sa[7].stmacf_len      = 16;
     sa[7].gvcid_blk.tfvn  = 0;
     sa[7].gvcid_blk.scid  = SCID & 0x3FF;
-    sa[7].gvcid_blk.vcid  = 5;
+    sa[7].gvcid_blk.vcid  = 0;
     sa[7].gvcid_blk.mapid = TYPE_TC;
 
     // TM - Authenticated Encryption AES-CBC-256 (Keyed)
