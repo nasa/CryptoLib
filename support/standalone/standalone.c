@@ -573,7 +573,7 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status, uint8_t *tm_ptr, uint1
     udp_info_t *tm_write_sock = &tm_socks->write;
 
     if ((tm_ptr[0] == 0x08) || (tm_ptr[0] == 0x09) || ((tm_ptr[0] == 0x07) && (tm_ptr[1] == 0xff)) ||
-        (tm_ptr[0] == 0x0F && tm_ptr[1] == 0xFD) || (tm_ptr[0] == 0x1F && tm_ptr[1] == 0xFD))
+        (tm_ptr[0] == 0x0F && tm_ptr[1] == 0xFD))
     {
         *spp_len = (((0xFFFF & tm_ptr[4]) << 8) | tm_ptr[5]) + 7;
 #ifdef CRYPTO_STANDALONE_TM_PROCESS_DEBUG
@@ -584,15 +584,6 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status, uint8_t *tm_ptr, uint1
         }
         printf("\n");
 #endif
-        if ((tm_ptr[0] == 0x0f && tm_ptr[1] == 0xfd) || (tm_ptr[0] == 0x08 && tm_ptr[1] == 0xb3))
-        {
-            printf("crypto_standalone_tm_process - SPP[%d]: 0x", *spp_len);
-            for (int i = 0; i < *spp_len; i++)
-            {
-                printf("%02x", tm_ptr[i]);
-            }
-            printf("\n");
-        }
         // Send all SPP telemetry packets
         // 0x09 for HK/Device TLM Packets (Generic Components)
         // 0x0FFD = CFDP
@@ -637,7 +628,6 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status, uint8_t *tm_ptr, uint1
         {
             printf("crypto_standalone_tm_process - Reply error %d \n", *status);
         }
-        tm_ptr = &tm_ptr[*spp_len];
 #endif
         *tm_process_len = 0;
     }
@@ -687,10 +677,10 @@ void *crypto_standalone_tm_process(void *socks)
             status =
                 Crypto_TM_ProcessSecurity(tm_process_in + 4, (const uint16_t)tm_process_len - 4, &tm_ptr, &tm_out_len);
 #else
-            // if (tm_debug == 1)
-            // {
-            //     printf("Processing frame without ASM...\n");
-            // }
+            if (tm_debug == 1)
+            {
+                printf("Processing frame without ASM...\n");
+            }
             status = Crypto_TM_ProcessSecurity(tm_process_in, (const uint16_t)tm_process_len, &tm_ptr, &tm_out_len);
 #endif
             if (status == CRYPTO_LIB_SUCCESS)
@@ -703,12 +693,12 @@ void *crypto_standalone_tm_process(void *socks)
                     }
                     else
                     {
-                        // printf("crypto_standalone_tm_process: 1 - status = %d, decrypted[%d]: 0x", status,
-                        // tm_out_len); for (int i = 0; i < tm_out_len; i++)
-                        // {
-                        //     printf("%02x", tm_ptr[i]);
-                        // }
-                        // printf("\n");
+                        printf("crypto_standalone_tm_process: 1 - status = %d, decrypted[%d]: 0x", status,
+                        tm_out_len); for (int i = 0; i < tm_out_len; i++)
+                        {
+                            printf("%02x", tm_ptr[i]);
+                        }
+                        printf("\n");
                     }
                 }
 
@@ -728,14 +718,12 @@ void *crypto_standalone_tm_process(void *socks)
                 if (tm_debug == 1)
                 // Note: Need logic to allow broken packet assembly
                 {
-                    // printf("crypto_standalone_tm_process: 2 - beginning after first header pointer - deframed[%d]:
-                    // 0x",
-                    //        tm_process_len);
-                    // for (int i = 0; i < tm_process_len; i++)
-                    // {
-                    //     printf("%02x", tm_framed[i]);
-                    // }
-                    // printf("\n");
+                    printf("crypto_standalone_tm_process: 2 - beginning after first header pointer - deframed[%d]: 0x", tm_process_len);
+                    for (int i = 0; i < tm_process_len; i++)
+                    {
+                        printf("%02x", tm_framed[i]);
+                    }
+                    printf("\n");
                 }
 #endif
 
