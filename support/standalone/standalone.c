@@ -694,8 +694,8 @@ void *crypto_standalone_tm_process(void *socks)
                     }
                     else
                     {
-                        printf("crypto_standalone_tm_process: 1 - status = %d, decrypted[%d]: 0x", status,
-                        tm_out_len); for (int i = 0; i < tm_out_len; i++)
+                        printf("crypto_standalone_tm_process: 1 - status = %d, decrypted[%d]: 0x", status, tm_out_len);
+                        for (int i = 0; i < tm_out_len; i++)
                         {
                             printf("%02x", tm_ptr[i]);
                         }
@@ -719,7 +719,8 @@ void *crypto_standalone_tm_process(void *socks)
                 if (tm_debug == 1)
                 // Note: Need logic to allow broken packet assembly
                 {
-                    printf("crypto_standalone_tm_process: 2 - beginning after first header pointer - deframed[%d]: 0x", tm_process_len);
+                    printf("crypto_standalone_tm_process: 2 - beginning after first header pointer - deframed[%d]: 0x",
+                           tm_process_len);
                     for (int i = 0; i < tm_process_len; i++)
                     {
                         printf("%02x", tm_framed[i]);
