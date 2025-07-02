@@ -595,14 +595,8 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status, uint8_t *tm_ptr, uint1
         }
         // Send all SPP telemetry packets
         // 0x09 for HK/Device TLM Packets (Generic Components)
-<<<<<<< HEAD
         // 0x0FFD = CFDP
         if (tm_ptr[0] == 0x08 || tm_ptr[0] == 0x09 || (tm_ptr[0] == 0x0f && tm_ptr[1] == 0xfd))
-=======
-        // 0x(0/1)FFD = CFDP
-        if (tm_ptr[0] == 0x08 || tm_ptr[0] == 0x09 || (tm_ptr[0] == 0x0f && tm_ptr[1] == 0xfd) ||
-            (tm_ptr[0] == 0x1f && tm_ptr[1] == 0xfd) || (tm_ptr[0] == 0x1F && tm_ptr[1] == 0xFE))
->>>>>>> 71e4b3df1f6cc35379870d8eb1d421dacfe28d5a
         {
             *status = sendto(tm_write_sock->sockfd, tm_ptr, *spp_len, 0, (struct sockaddr *)&tm_write_sock->saddr,
                             sizeof(tm_write_sock->saddr));
