@@ -298,7 +298,6 @@ void sa_populate(void)
     sa[3].ast             = 1;
     sa[3].shivf_len       = 12;
     sa[3].iv_len          = 12;
-    sa[3].abm_len         = 0;
     sa[3].shsnf_len       = 2;
     sa[3].arsn_len        = 2;
     sa[3].arsnw_len       = 1;
@@ -383,7 +382,6 @@ void sa_populate(void)
     sa[7].ast       = 1;
     sa[7].shivf_len = 12;
     sa[7].iv_len    = 12;
-    // sa[7].abm_len         = ABM_SIZE;
     sa[7].shsnf_len       = 2;
     sa[7].arsn_len        = 2;
     sa[7].arsnw_len       = 1;

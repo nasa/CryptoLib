@@ -102,12 +102,20 @@ int32_t Crypto_SC_Init(void)
     sa_if->sa_get_from_spi(2, &sa_ptr);
     sa_ptr->gvcid_blk.vcid = 2;
     sa_if->sa_get_from_spi(3, &sa_ptr);
+    sa_ptr->sa_state = SA_OPERATIONAL;
     sa_ptr->gvcid_blk.vcid = 3;
+    sa_ptr->abm_len         = ABM_SIZE;
     sa_if->sa_get_from_spi(5, &sa_ptr);
+    sa_ptr->sa_state = SA_OPERATIONAL;
+    sa_ptr->shsnf_len = 0;
+    sa_ptr->arsn_len = 0;
     sa_ptr->gvcid_blk.vcid = 1;
     sa_if->sa_get_from_spi(6, &sa_ptr);
+    sa_ptr->sa_state = SA_OPERATIONAL;
     sa_ptr->gvcid_blk.vcid = 4;
     sa_if->sa_get_from_spi(7, &sa_ptr);
+    sa_ptr->sa_state = SA_OPERATIONAL;
+    sa_ptr->abm_len         = ABM_SIZE;
     sa_ptr->gvcid_blk.vcid = 5;
 
     return status;
