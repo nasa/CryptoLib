@@ -434,7 +434,7 @@ uint16_t Crypto_Calc_CRC16(uint8_t *data, int size)
     return crc;
 }
 
-uint8_t gf_mul(uint8_t a, uint8_t b)
+uint8_t Crypto_gf_mul(uint8_t a, uint8_t b)
 {
     if (a == 0 || b == 0)
     {
@@ -442,7 +442,7 @@ uint8_t gf_mul(uint8_t a, uint8_t b)
     }
     else
     {
-        return gf_exp[(gf_log[a] + gf_log[b]) % (GF_SIZE - 1)];
+        return crypto_gf_exp[(crypto_gf_log[a] + crypto_gf_log[b]) % (GF_SIZE - 1)];
     }
 }
 
@@ -465,13 +465,16 @@ uint16_t Crypto_Calc_FHECF(uint8_t *data)
     memset(parity, 0, RS_PARITY);
     for (i = 0; i < RS_DATA; i++)
     {
-        feedback = data[i] ^ parity[0];
-        memcpy(&parity[0], &parity[1], RS_PARITY - 1);
+        feedback = (data[i] ^ parity[0]) % (GF_SIZE - 1);
+        for (j = 0; j < RS_PARITY - 1; j++)
+        {
+            parity[j] = parity[j + 1];
+        }
         parity[RS_PARITY - 1] = 0;
 
         for (j = 0; j < RS_PARITY; j++)
         {
-            parity[j] ^= gf_mul(feedback, gen_poly[j + 1]);
+            parity[j] ^= Crypto_gf_mul(feedback, crypto_gen_poly[j + 1]);
         }
     }
 #ifdef AOS_DEBUG

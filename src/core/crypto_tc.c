@@ -252,7 +252,6 @@ int32_t Crypto_TC_Frame_Validation(uint16_t *p_enc_frame_len)
         printf(KRED "Error: New frame would violate maximum tc frame managed parameter! \n" RESET);
         status = CRYPTO_LIB_ERR_TC_FRAME_SIZE_EXCEEDS_MANAGED_PARAM_MAX_LIMIT;
         mc_if->mc_log(status);
-        printf("STATUS=%d\n", status);
         return status;
     }
     // Ensure the frame to be created will not violate spec max length
@@ -261,6 +260,7 @@ int32_t Crypto_TC_Frame_Validation(uint16_t *p_enc_frame_len)
         printf(KRED "Error: New frame would violate specification max TC frame size! \n" RESET);
         status = CRYPTO_LIB_ERR_TC_FRAME_SIZE_EXCEEDS_SPEC_LIMIT;
         mc_if->mc_log(status);
+        return status;
     }
     return status;
 }
@@ -685,7 +685,6 @@ int32_t Crypto_TC_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
                                aad, ecs_is_aead_algorithm, index_p, p_in_frame, cam_cookies, pkcs_padding);
     if (status != CRYPTO_LIB_SUCCESS)
     {
-        Crypto_TC_Safe_Free_Ptr(*aad);
         mc_if->mc_log(status);
         return status;
     }
@@ -1103,11 +1102,18 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, const uint16_t in
             break;
     }
 #endif
+    if ((encryption_cipher == CRYPTO_CIPHER_AES256_CBC || encryption_cipher == CRYPTO_CIPHER_AES256_CBC_MAC) &&
+        sa_ptr->shplf_len == 0)
+    {
+        status = CRYPTO_LIB_ERR_SHPLF_LEN_LESS_THAN_MIN_PAD_SIZE;
+        mc_if->mc_log(status);
+        return status;
+    }
 
     // Determine if segment header exists and FECF exists
     uint8_t segment_hdr_len = TC_SEGMENT_HDR_SIZE;
     uint8_t fecf_len        = FECF_SIZE;
-    uint8_t ocf_len         = TELEMETRY_FRAME_OCF_CLCW_SIZE;
+    uint8_t ocf_len         = OCF_SIZE;
     Crypto_TC_Calc_Lengths(&fecf_len, &segment_hdr_len, &ocf_len);
 
     // Calculate tf_payload length here to be used in other logic
@@ -1137,7 +1143,6 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, const uint16_t in
     */
 
     // Calculate frame lengths based on SA fields
-    // fecf is added after the frame during apply
     *p_enc_frame_len = temp_tc_header.fl + 1 + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len +
                        sa_ptr->stmacf_len + ocf_len;
     new_enc_frame_header_field_length = (*p_enc_frame_len) - 1;
@@ -1328,13 +1333,13 @@ int32_t Crypto_TC_Parse_Check_FECF(uint8_t *ingest, int *len_ingest, TC_t *tc_sd
             // Calculate our own
             uint16_t calculated_fecf = Crypto_Calc_FECF(ingest, *len_ingest - 2);
             // Compare
+#ifdef DEBUG
+            printf("Received FECF is 0x%04X\n", received_fecf);
+            printf("Calculated FECF is 0x%04X\n", calculated_fecf);
+            printf("FECF was Calced over %d bytes\n", *len_ingest - 2);
+#endif
             if (received_fecf != calculated_fecf)
             {
-#ifdef DEBUG
-                printf("Received FECF is 0x%04X\n", received_fecf);
-                printf("Calculated FECF is 0x%04X\n", calculated_fecf);
-                printf("FECF was Calced over %d bytes\n", *len_ingest - 2);
-#endif
                 status = CRYPTO_LIB_ERR_INVALID_FECF;
                 mc_if->mc_log(status);
             }

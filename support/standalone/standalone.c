@@ -469,7 +469,7 @@ void *crypto_standalone_tc_apply(void *socks)
                     }
                     printf("\n");
                 }
-
+                // printf("About to write to port %d!\n", tc_write_sock->port);
                 /* Reply */
                 status = sendto(tc_write_sock->sockfd, tc_out_ptr, tc_out_len, 0,
                                 (struct sockaddr *)&tc_write_sock->saddr, sizeof(tc_write_sock->saddr));
@@ -477,6 +477,7 @@ void *crypto_standalone_tc_apply(void *socks)
                 {
                     printf("crypto_standalone_tc_apply - Reply error %d \n", status);
                 }
+                // printf("Allegedly wrote %d bytes to port %d!\n", tc_out_len, tc_write_sock->port);
             }
             else
             {
@@ -520,8 +521,8 @@ void crypto_standalone_tm_frame(uint8_t *in_data, uint16_t in_length, uint8_t *o
     }
 
     // Calculate security headers and trailers
-    uint8_t header_length = TM_PRI_HDR_LENGTH + SDLS_SPI_LENGTH + sa_ptr->shivf_len + sa_ptr->shplf_len +
-                            sa_ptr->shsnf_len;
+    uint8_t header_length =
+        TM_PRI_HDR_LENGTH + SDLS_SPI_LENGTH + sa_ptr->shivf_len + sa_ptr->shplf_len + sa_ptr->shsnf_len;
 
     uint8_t trailer_length = sa_ptr->stmacf_len;
     if (tm_current_managed_parameters_struct.has_fecf == TM_HAS_FECF)
@@ -567,8 +568,8 @@ void crypto_standalone_tm_debug_process(uint8_t *tm_process_in)
     }
 }
 
-void crypto_standalone_spp_telem_or_idle(int32_t *status, uint8_t *tm_ptr, uint16_t *spp_len,
-                                         udp_interface_t *tm_socks, int *tm_process_len)
+void crypto_standalone_spp_telem_or_idle(int32_t *status, uint8_t *tm_ptr, uint16_t *spp_len, udp_interface_t *tm_socks,
+                                         int *tm_process_len)
 {
     udp_info_t *tm_write_sock = &tm_socks->write;
 
@@ -590,7 +591,7 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status, uint8_t *tm_ptr, uint1
         if (tm_ptr[0] == 0x08 || tm_ptr[0] == 0x09 || (tm_ptr[0] == 0x0f && tm_ptr[1] == 0xfd))
         {
             *status = sendto(tm_write_sock->sockfd, tm_ptr, *spp_len, 0, (struct sockaddr *)&tm_write_sock->saddr,
-                            sizeof(tm_write_sock->saddr));
+                             sizeof(tm_write_sock->saddr));
         }
         // Only send idle packets if configured to do so
         else
@@ -609,7 +610,7 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status, uint8_t *tm_ptr, uint1
         {
             printf("crypto_standalone_tm_process - Reply error %d \n", *status);
         }
-        
+
         *tm_process_len -= *spp_len;
     }
     else if ((tm_ptr[0] == 0xFF && tm_ptr[1] == 0x48) || (tm_ptr[0] == 0x00 && tm_ptr[1] == 0x00) ||
