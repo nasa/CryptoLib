@@ -191,6 +191,8 @@ UTEST(EP_SA_MGMT, SA_START_6)
     free(buffer_START_MAP_b);
     free(buffer_START_TM_b);
     free(buffer_START_AOS_b);
+    free(buffer_START_UK_b);
+    free(buffer_START_MAX_b);
 }
 
 UTEST(EP_SA_MGMT, SA_4_READ_ARSN)
