@@ -95,7 +95,7 @@ int32_t Crypto_SC_Init(void)
     TM_UT_Managed_Parameters.vcid = 5;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
     status = Crypto_Init();
-    
+
     SecurityAssociation_t *sa_ptr = NULL;
     sa_if->sa_get_from_spi(1, &sa_ptr);
     sa_ptr->gvcid_blk.vcid = 0;
