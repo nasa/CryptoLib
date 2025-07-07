@@ -48,7 +48,7 @@ extern "C"
 */
 #define CRYPTOLIB_HOSTNAME  "cryptolib"
 #define GSW_HOSTNAME        "cosmos"
-#define SC_HOSTNAME         "radio_sim"
+#define SC_HOSTNAME         "radio-sim"
 #define TC_APPLY_PORT       6010
 #define TC_APPLY_FWD_PORT   8010
 #define TM_PROCESS_PORT     8011
@@ -74,8 +74,8 @@ extern "C"
 #define CRYPTO_MAX_INPUT_TOKEN_SIZE 64
 
 #define TM_PRI_HDR_LENGTH 6
-#define TM_ASM_LENGTH 4
-#define SDLS_SPI_LENGTH 2
+#define TM_ASM_LENGTH     4
+#define SDLS_SPI_LENGTH   2
 
 #define CRYPTO_CMD_UNKNOWN  (-1)
 #define CRYPTO_CMD_HELP     0

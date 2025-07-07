@@ -24,6 +24,7 @@ static int32_t sa_close(void);
 static int32_t sa_get_from_spi(uint16_t, SecurityAssociation_t **);
 static int32_t sa_get_operational_sa_from_gvcid(uint8_t, uint16_t, uint16_t, uint8_t, SecurityAssociation_t **);
 static int32_t sa_save_sa(SecurityAssociation_t *sa);
+static int32_t sa_setIV(uint16_t spi, char *iv);
 // Security Association Utility Functions
 static int32_t sa_stop(TC_t *tc_frame);
 static int32_t sa_start(TC_t *tc_frame);
@@ -65,6 +66,7 @@ SaInterface get_sa_interface_inmemory(void)
     sa_if_struct.sa_setARSN                       = sa_setARSN;
     sa_if_struct.sa_setARSNW                      = sa_setARSNW;
     sa_if_struct.sa_delete                        = sa_delete;
+    sa_if_struct.sa_setIV                         = sa_setIV;
     return &sa_if_struct;
 }
 
@@ -253,18 +255,18 @@ void sa_populate(void)
     sa[1].sa_state        = SA_OPERATIONAL;
     sa[1].est             = 0;
     sa[1].ast             = 0;
-    sa[1].shivf_len       = 0;
-    sa[1].iv_len          = 0;
+    sa[1].shivf_len       = 12;
+    sa[1].iv_len          = 12;
     sa[1].shsnf_len       = 0;
-    sa[1].arsnw           = 0;
-    sa[1].arsnw_len       = 0;
+    sa[1].arsnw           = 5;
+    sa[1].arsnw_len       = 1;
     sa[1].arsn_len        = 0;
     sa[1].gvcid_blk.tfvn  = 0;
     sa[1].gvcid_blk.scid  = SCID & 0x3FF;
     sa[1].gvcid_blk.vcid  = 0;
     sa[1].gvcid_blk.mapid = TYPE_TC;
 
-    // TC - Encryption Only - AES-GCM-256 (Operational)
+    // TC - Encryption Only - AES-GCM-256 (Keyed)
     // IV = 0...0, IV-Len = 12, TFVN = 0, VCID = 0; MAC-Len = 0, ARSNW = 5
     // EKID = 2
     sa[2].spi             = 2;
@@ -289,14 +291,13 @@ void sa_populate(void)
     // AKID = 3
     sa[3].spi             = 3;
     sa[3].akid            = 3;
-    sa[3].sa_state        = SA_OPERATIONAL;
+    sa[3].sa_state        = SA_KEYED;
     sa[3].acs_len         = 1;
-    sa[3].acs             = CRYPTO_MAC_HMAC_SHA256;
+    sa[3].acs             = CRYPTO_MAC_HMAC_SHA512;
     sa[3].est             = 0;
     sa[3].ast             = 1;
-    sa[3].abm_len         = ABM_SIZE;
-    sa[3].shivf_len       = 0;
-    sa[3].iv_len          = 0;
+    sa[3].shivf_len       = 12;
+    sa[3].iv_len          = 12;
     sa[3].shsnf_len       = 2;
     sa[3].arsn_len        = 2;
     sa[3].arsnw_len       = 1;
@@ -304,7 +305,7 @@ void sa_populate(void)
     sa[3].stmacf_len      = 16;
     sa[3].gvcid_blk.tfvn  = 0;
     sa[3].gvcid_blk.scid  = SCID & 0x3FF;
-    sa[3].gvcid_blk.vcid  = 3;
+    sa[3].gvcid_blk.vcid  = 0;
     sa[3].gvcid_blk.mapid = TYPE_TC;
 
     // TC - Authenticated Encryption - AES-GCM-256 (Keyed)
@@ -329,45 +330,44 @@ void sa_populate(void)
     sa[4].gvcid_blk.vcid  = 0;
     sa[4].gvcid_blk.mapid = TYPE_TC;
 
-    // TM - CLEAR MODE (Operational)
+    // TM - CLEAR MODE (Keyed)
     // IV = 0...0, IV-Len = 12, MAC-Len = 0, TFVN = 0, VCID = 0, ARSNW = 5
     // EKID = 5
     sa[5].spi             = 5;
-    sa[5].sa_state        = SA_OPERATIONAL;
+    sa[5].sa_state        = SA_KEYED;
     sa[5].est             = 0;
     sa[5].ast             = 0;
-    sa[5].shivf_len       = 0;
-    sa[5].iv_len          = 0;
-    sa[5].shsnf_len       = 0;
-    sa[5].arsnw           = 0;
-    sa[5].arsnw_len       = 0;
-    sa[5].arsn_len        = 0;
+    sa[5].shivf_len       = 12;
+    sa[5].iv_len          = 12;
+    sa[5].shsnf_len       = 2;
+    sa[5].arsnw           = 5;
+    sa[5].arsnw_len       = 1;
+    sa[5].arsn_len        = 2;
     sa[5].gvcid_blk.tfvn  = 0;
     sa[5].gvcid_blk.scid  = SCID & 0x3FF;
     sa[5].gvcid_blk.vcid  = 1;
     sa[5].gvcid_blk.mapid = TYPE_TC;
 
-    // TM - Encryption Only - AES-GCM-256 (Keyed)
+    // TM - Encryption Only - AES-CBC-256 (Keyed)
     // IV = 0...0, IV-Len = 16, TFVN = 0, VCID = 0; MAC-Len = 0, ARSNW = 5
     // EKID = 6
     sa[6].spi             = 6;
     sa[6].ekid            = 6;
-    sa[6].sa_state        = SA_OPERATIONAL;
+    sa[6].sa_state        = SA_KEYED;
     sa[6].ecs_len         = 1;
-    sa[6].ecs             = CRYPTO_CIPHER_AES256_GCM;
+    sa[6].ecs             = CRYPTO_CIPHER_AES256_CBC;
     sa[6].est             = 1;
     sa[6].ast             = 0;
-    sa[6].shivf_len       = 12;
-    sa[6].iv_len          = 12;
-    sa[6].shplf_len       = 0;
+    sa[6].shivf_len       = 16;
+    sa[6].iv_len          = 16;
+    sa[6].shplf_len       = 1;
     sa[6].stmacf_len      = 0;
-    sa[6].arsn_len        = 0;
-    sa[6].shsnf_len       = 0;
+    sa[6].arsn_len        = 2;
     sa[6].arsnw_len       = 1;
     sa[6].arsnw           = 5;
     sa[6].gvcid_blk.tfvn  = 0;
     sa[6].gvcid_blk.scid  = SCID & 0x3FF;
-    sa[6].gvcid_blk.vcid  = 4;
+    sa[6].gvcid_blk.vcid  = 0;
     sa[6].gvcid_blk.mapid = TYPE_TC;
 
     // TM - Authentication Only HMAC_SHA512 (Keyed)
@@ -375,9 +375,9 @@ void sa_populate(void)
     // AKID = 7
     sa[7].spi             = 7;
     sa[7].akid            = 7;
-    sa[7].sa_state        = SA_OPERATIONAL;
+    sa[7].sa_state        = SA_KEYED;
     sa[7].acs_len         = 1;
-    sa[7].acs             = CRYPTO_MAC_HMAC_SHA256;
+    sa[7].acs             = CRYPTO_MAC_HMAC_SHA512;
     sa[7].est             = 0;
     sa[7].ast             = 1;
     sa[7].shivf_len       = 12;
@@ -389,7 +389,7 @@ void sa_populate(void)
     sa[7].stmacf_len      = 16;
     sa[7].gvcid_blk.tfvn  = 0;
     sa[7].gvcid_blk.scid  = SCID & 0x3FF;
-    sa[7].gvcid_blk.vcid  = 5;
+    sa[7].gvcid_blk.vcid  = 0;
     sa[7].gvcid_blk.mapid = TYPE_TC;
 
     // TM - Authenticated Encryption AES-CBC-256 (Keyed)
@@ -419,19 +419,19 @@ void sa_populate(void)
     // IV = 0...0, IV-Len = 12, MAC-Len = 0, TFVN = 1, VCID = 0, ARSNW = 5
     // EKID = 9
     sa[9].spi             = 9;
-    sa[9].sa_state        = SA_OPERATIONAL;
+    sa[9].sa_state        = SA_KEYED;
     sa[9].est             = 0;
     sa[9].ast             = 0;
     sa[9].shivf_len       = 12;
     sa[9].iv_len          = 12;
-    sa[9].shsnf_len       = 2;
+    sa[9].shsnf_len       = 0;
     sa[9].arsnw           = 5;
-    sa[9].arsnw_len       = 0;
+    sa[9].arsnw_len       = 1;
     sa[9].arsn_len        = 0;
     sa[9].gvcid_blk.tfvn  = 0x01;
     sa[9].gvcid_blk.scid  = SCID & 0x3FF;
     sa[9].gvcid_blk.vcid  = 0;
-    sa[9].gvcid_blk.mapid = TYPE_TC;
+    sa[9].gvcid_blk.mapid = 0;
 
     // AOS - Authentication Only, HMAC_SHA512 (Keyed)
     // IV = 0...0, IV-Len = 16, MAC-Len = 16, TFVN = 1, VCID = 0, ARSNW = 5
@@ -451,14 +451,14 @@ void sa_populate(void)
     sa[10].gvcid_blk.tfvn  = 0x01;
     sa[10].gvcid_blk.scid  = SCID & 0x3FF;
     sa[10].gvcid_blk.vcid  = 0;
-    sa[10].gvcid_blk.mapid = TYPE_TC;
+    sa[10].gvcid_blk.mapid = 0;
 
     // AOS  - Encryption Only, AES-GCM-256 (Keyed)
     // IV = 0...0, IV-Len = 16, MAC-Len = 0, TFVN = 1, VCID = 0, ARSNW = 5
     // EKID = 11
     sa[11].spi             = 11;
     sa[11].ekid            = 11;
-    sa[11].sa_state        = SA_OPERATIONAL;
+    sa[11].sa_state        = SA_KEYED;
     sa[11].est             = 1;
     sa[11].ast             = 0;
     sa[11].ecs_len         = 1;
@@ -467,14 +467,14 @@ void sa_populate(void)
     sa[11].iv_len          = 16;
     sa[11].shivf_len       = 16;
     sa[11].stmacf_len      = 0;
-    sa[11].shsnf_len       = 0;
-    sa[11].arsn_len        = 0;
+    sa[11].shsnf_len       = 2;
+    sa[11].arsn_len        = 2;
     sa[11].arsnw_len       = 1;
     sa[11].arsnw           = 5;
     sa[11].gvcid_blk.tfvn  = 0x01;
     sa[11].gvcid_blk.scid  = SCID & 0x3FF;
     sa[11].gvcid_blk.vcid  = 0;
-    sa[11].gvcid_blk.mapid = TYPE_TC;
+    sa[11].gvcid_blk.mapid = 0;
 
     // AOS - Authenticated Encryption, AES-CBC-256 (Keyed)
     // IV = 0...0, IV-Len = 16, MAC-Len = 16, TFVN = 1, VCID = 0, ARSNW = 5
@@ -495,7 +495,7 @@ void sa_populate(void)
     sa[12].arsnw          = 5;
     sa[12].gvcid_blk.tfvn = 0x01;
     sa[12].gvcid_blk.scid = SCID & 0x3FF;
-    sa[12].gvcid_blk.vcid = TYPE_TC;
+    sa[12].gvcid_blk.vcid = 0;
 
     // EP - Testing SAs
 
@@ -506,10 +506,10 @@ void sa_populate(void)
     sa[13].ast             = 0;
     sa[13].shivf_len       = 12;
     sa[13].iv_len          = 12;
-    sa[13].shsnf_len       = 0;
+    sa[13].shsnf_len       = 2;
     sa[13].arsnw           = 5;
     sa[13].arsnw_len       = 1;
-    sa[13].arsn_len        = 0;
+    sa[13].arsn_len        = 2;
     sa[13].gvcid_blk.tfvn  = 2;
     sa[13].gvcid_blk.scid  = SCID & 0x3FF;
     sa[13].gvcid_blk.vcid  = 0;
@@ -523,10 +523,10 @@ void sa_populate(void)
     sa[14].ast             = 0;
     sa[14].shivf_len       = 12;
     sa[14].iv_len          = 12;
-    sa[14].shsnf_len       = 0;
+    sa[14].shsnf_len       = 2;
     sa[14].arsnw           = 5;
     sa[14].arsnw_len       = 1;
-    sa[14].arsn_len        = 0;
+    sa[14].arsn_len        = 2;
     sa[14].gvcid_blk.tfvn  = 2;
     sa[14].gvcid_blk.scid  = SCID & 0x3FF;
     sa[14].gvcid_blk.vcid  = 2;
@@ -540,13 +540,13 @@ void sa_populate(void)
     sa[15].ast             = 0;
     sa[15].shivf_len       = 12;
     sa[15].iv_len          = 12;
-    sa[15].shsnf_len       = 0;
+    sa[15].shsnf_len       = 2;
     sa[15].arsnw           = 5;
     sa[15].arsnw_len       = 1;
-    sa[15].arsn_len        = 0;
+    sa[15].arsn_len        = 2;
     sa[15].gvcid_blk.tfvn  = 2;
     sa[15].gvcid_blk.scid  = SCID & 0x3FF;
-    sa[15].gvcid_blk.vcid  = 3;
+    sa[15].gvcid_blk.vcid  = 7;
     sa[15].gvcid_blk.mapid = TYPE_TC;
 
     sa_perform_save(&sa[0]);
@@ -721,13 +721,17 @@ static int32_t sa_get_from_spi(uint16_t spi, SecurityAssociation_t **security_as
 #ifdef SA_DEBUG
         printf(KRED "sa_get_from_spi: SPI: %d > NUM_SA: %d.\n" RESET, spi, NUM_SA);
 #endif
-        return CRYPTO_LIB_ERR_SPI_INDEX_OOB;
+        status = CRYPTO_LIB_ERR_SPI_INDEX_OOB;
+        mc_if->mc_log(status);
+        return status;
     }
     *security_association = &sa[spi];
 
     if ((sa[spi].abm_len == 0) && sa[spi].ast)
     {
-        return CRYPTO_LIB_ERR_NULL_ABM;
+        status = CRYPTO_LIB_ERR_NULL_ABM;
+        mc_if->mc_log(status);
+        return status;
     } // Must have abm if doing authentication
 
     // ARSN must be 0 octets in length if not using Auth/Auth Enc
@@ -735,15 +739,21 @@ static int32_t sa_get_from_spi(uint16_t spi, SecurityAssociation_t **security_as
     // CCSDS 3550b2 Section 4.1.1.4.4
     if (sa[spi].ast == 0 && sa[spi].shsnf_len != 0 && sa[spi].arsn_len != 0)
     {
+#ifdef SA_DEBUG
         printf("USING SA %d!\n", spi);
-        printf("AST IS %d, snf_len is %d, arsn_len is %d\n", sa[spi].ast, sa[spi].shsnf_len, sa[spi].arsn_len);
-        return CRYPTO_LIB_ERR_INVALID_SVC_TYPE_WITH_ARSN;
+        printf("AST IS %d, shsnf_len is %d, arsn_len is %d\n", sa[spi].ast, sa[spi].shsnf_len, sa[spi].arsn_len);
+#endif
+        status = CRYPTO_LIB_ERR_INVALID_SVC_TYPE_WITH_ARSN;
+        mc_if->mc_log(status);
+        return status;
     }
 
     // ARSN length cannot be less than shsnf length
     if (sa[spi].shsnf_len > sa[spi].arsn_len)
     {
-        return CRYPTO_LIB_ERR_ARSN_LT_SHSNF;
+        status = CRYPTO_LIB_ERR_ARSN_LT_SHSNF;
+        mc_if->mc_log(status);
+        return status;
     }
 
 #ifdef SA_DEBUG
@@ -1024,7 +1034,7 @@ static int32_t sa_start(TC_t *tc_frame)
                 gvcid.vcid = (((sdls_frame.tlv_pdu.data[count + 2] & 0x0F) << 2) |
                               (sdls_frame.tlv_pdu.data[count + 3] & 0xC0) >> 6);
 
-                if (current_managed_parameters_struct.has_segmentation_hdr == TC_HAS_SEGMENT_HDRS)
+                if (tc_current_managed_parameters_struct.has_segmentation_hdr == TC_HAS_SEGMENT_HDRS)
                 {
                     gvcid.mapid = (sdls_frame.tlv_pdu.data[count + 3] & 0x3F);
                 }
@@ -1745,13 +1755,13 @@ static int32_t sa_status(uint8_t *ingest)
 
         // Read ingest
         spi = ((uint8_t)sdls_frame.tlv_pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.tlv_pdu.data[1];
-        printf("spi = %d \n", spi);
+        // printf("spi = %d \n", spi);
 
         // Check SPI exists
         if (spi < NUM_SA)
         {
-            printf("SIZE: %ld\n", SDLS_SA_STATUS_RPLY_SIZE);
-            // Prepare for Reply
+            // printf("SIZE: %ld\n", SDLS_SA_STATUS_RPLY_SIZE);
+            //  Prepare for Reply
             sdls_frame.tlv_pdu.hdr.pdu_len = SDLS_SA_STATUS_RPLY_SIZE * BYTE_LEN;
             sdls_frame.hdr.pkt_length =
                 CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
@@ -1807,5 +1817,56 @@ int32_t sa_verify_data(SecurityAssociation_t *sa_ptr)
     {
         status = CRYPTO_LIB_ERR_SHPLF_LEN_GREATER_THAN_MAX_PAD_SIZE;
     }
+    return status;
+}
+
+static int32_t sa_setIV(uint16_t spi, char *iv)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    if (iv == NULL) // NULL pointer
+    {
+        status = CRYPTO_LIB_ERR_NULL_BUFFER;
+        mc_if->mc_log(status);
+        return status;
+    }
+
+    uint16_t iv_len = strlen(iv) / 2;
+
+    if (iv_len > IV_SIZE)
+    {
+#ifdef SA_DEBUG
+        printf("Specified IV longer than Config Maximum");
+#endif
+        status = CRYPTO_LIB_ERROR;
+        mc_if->mc_log(status);
+        return status;
+    }
+
+    SecurityAssociation_t *sa;
+    sa_get_from_spi(spi, &sa);
+
+    if (sa->iv_len < iv_len) // make sure it wont underflow
+    {
+        iv_len = sa->iv_len;
+    }
+
+    int offset = sa->iv_len - iv_len;
+
+    unsigned int byte;
+    for (int i = 0; i < (int)strlen(iv); i += 2)
+    {
+        sscanf(&iv[i], "%02x", &byte);
+        sa->iv[i / 2 + offset] = byte;
+    }
+
+#ifdef SA_DEBUG
+    printf(KYEL "IV set to: ");
+    for (int i = 0; i < sa->iv_len; i++)
+    {
+        printf("%02x", sa->iv[i]);
+    }
+    printf("\n" RESET);
+#endif
     return status;
 }

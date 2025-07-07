@@ -21,6 +21,13 @@
 */
 #include <string.h>
 #include "crypto.h"
+#include "crypto_events.h"
+
+/**
+ * CCSDS Compliance Reference:
+ * This file implements security configuration functions compliant with:
+ * - CCSDS 355.0-B-2 (Space Data Link Security Protocol) Section 7 (Management)
+ */
 
 /*
 ** Global Variables
@@ -38,14 +45,20 @@ CryptographyKmcCryptoServiceConfig_t *cryptography_kmc_crypto_config = NULL;
 CamConfig_t                          *cam_config                     = NULL;
 
 GvcidManagedParameters_t gvcid_managed_parameters_array[GVCID_MAN_PARAM_SIZE];
-int                      gvcid_counter                     = 0;
-GvcidManagedParameters_t gvcid_null_struct                 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-GvcidManagedParameters_t current_managed_parameters_struct = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+int                      gvcid_counter                         = 0;
+GvcidManagedParameters_t gvcid_null_struct                     = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+GvcidManagedParameters_t tc_current_managed_parameters_struct  = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+GvcidManagedParameters_t tm_current_managed_parameters_struct  = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+GvcidManagedParameters_t aos_current_managed_parameters_struct = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 // GvcidManagedParameters_t* gvcid_managed_parameters = NULL;
 //  GvcidManagedParameters_t* current_managed_parameters = NULL;
 
-// Free all configuration structs
+/**
+ * @brief Function: crypto_free_config_structs
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t crypto_free_config_structs(void);
 
 /*
@@ -53,9 +66,10 @@ int32_t crypto_free_config_structs(void);
 */
 
 /**
- * @brief Function: Crypto_Init_TC_Unit_Test
- * @return int32: status
- **/
+ * @brief Function: Crypto_SC_Init
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t Crypto_SC_Init(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -65,7 +79,7 @@ int32_t Crypto_SC_Init(void)
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TC
     GvcidManagedParameters_t TC_UT_Managed_Parameters = {
-        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 2;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
@@ -74,20 +88,44 @@ int32_t Crypto_SC_Init(void)
 
     // TM
     GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x0003, 1, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
+        0, 0x0003, 1, TM_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
     TM_UT_Managed_Parameters.vcid = 4;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
     TM_UT_Managed_Parameters.vcid = 5;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
     status = Crypto_Init();
+
+    SecurityAssociation_t *sa_ptr = NULL;
+    sa_if->sa_get_from_spi(1, &sa_ptr);
+    sa_ptr->gvcid_blk.vcid = 0;
+    sa_if->sa_get_from_spi(2, &sa_ptr);
+    sa_ptr->gvcid_blk.vcid = 2;
+    sa_if->sa_get_from_spi(3, &sa_ptr);
+    sa_ptr->sa_state       = SA_OPERATIONAL;
+    sa_ptr->gvcid_blk.vcid = 3;
+    sa_ptr->abm_len        = ABM_SIZE;
+    sa_if->sa_get_from_spi(5, &sa_ptr);
+    sa_ptr->sa_state       = SA_OPERATIONAL;
+    sa_ptr->shsnf_len      = 0;
+    sa_ptr->arsn_len       = 0;
+    sa_ptr->gvcid_blk.vcid = 1;
+    sa_if->sa_get_from_spi(6, &sa_ptr);
+    sa_ptr->sa_state       = SA_OPERATIONAL;
+    sa_ptr->gvcid_blk.vcid = 4;
+    sa_if->sa_get_from_spi(7, &sa_ptr);
+    sa_ptr->sa_state       = SA_OPERATIONAL;
+    sa_ptr->abm_len        = ABM_SIZE;
+    sa_ptr->gvcid_blk.vcid = 5;
+
     return status;
 }
 
 /**
  * @brief Function: Crypto_Init_TC_Unit_Test
- * @return int32: status
- **/
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t Crypto_Init_TC_Unit_Test(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -111,8 +149,9 @@ int32_t Crypto_Init_TC_Unit_Test(void)
 
 /**
  * @brief Function: Crypto_Init_TM_Unit_Test
- * @return int32: status
- **/
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t Crypto_Init_TM_Unit_Test(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -139,8 +178,9 @@ int32_t Crypto_Init_TM_Unit_Test(void)
 
 /**
  * @brief Function: Crypto_Init_AOS_Unit_Test
- * @return int32: status
- **/
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t Crypto_Init_AOS_Unit_Test(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -166,11 +206,9 @@ int32_t Crypto_Init_AOS_Unit_Test(void)
 
 /**
  * @brief Function: Crypto_Init_With_Configs
- * @param crypto_config_p: CryptoConfig_t*
- * @param gvcid_managed_parameters_p: GvcidManagedParameters_t*
- * @param sa_mariadb_config_p: SadbMariaDBConfig_t*
- * @return int32: Success/Failure
- **/
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t Crypto_Init_With_Configs(CryptoConfig_t *crypto_config_p, GvcidManagedParameters_t *gvcid_managed_parameters_p,
                                  SadbMariaDBConfig_t                  *sa_mariadb_config_p,
                                  CryptographyKmcCryptoServiceConfig_t *cryptography_kmc_crypto_config_p)
@@ -189,9 +227,10 @@ int32_t Crypto_Init_With_Configs(CryptoConfig_t *crypto_config_p, GvcidManagedPa
 }
 
 /**
- * @brief Function Crypto_Init
- * Initializes libgcrypt, Security Associations
- **/
+ * @brief Function: Crypto_Init
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t Crypto_Init(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -372,15 +411,17 @@ int32_t Crypto_Init(void)
 
 /**
  * @brief Function: Crypto_Shutdown
- * Free memory objects & restore pointers to NULL for re-initialization
- * @return int32: Success/Failure
- **/
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t Crypto_Shutdown(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
     // current_managed_parameters = NULL;
-    current_managed_parameters_struct = gvcid_null_struct;
+    tc_current_managed_parameters_struct  = gvcid_null_struct;
+    tm_current_managed_parameters_struct  = gvcid_null_struct;
+    aos_current_managed_parameters_struct = gvcid_null_struct;
     for (int i = 0; i <= gvcid_counter; i++)
     {
         gvcid_managed_parameters_array[i] = gvcid_null_struct;
@@ -419,19 +460,9 @@ int32_t Crypto_Shutdown(void)
 
 /**
  * @brief Function: Crypto_Config_CryptoLib
- * @param key_type: uint8
- * @param sa_type: uint8
- * @param iv_type: uint8
- * @param crypto_create_fecf: uint8
- * @param process_sdls_pdus: uint8
- * @param has_pus_hdr: uint8
- * @param ignore_sa_state: uint8
- * @param ignore_anti_replay: uint8
- * @param unique_sa_per_mapid: uint8
- * @param crypto_check_fecf: uint8
- * @param vcid_bitmask: uint8
- * @return int32: Success/Failure
- **/
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t Crypto_Config_CryptoLib(uint8_t key_type, uint8_t mc_type, uint8_t sa_type, uint8_t cryptography_type,
                                 uint8_t iv_type, uint8_t crypto_create_fecf, uint8_t process_sdls_pdus,
                                 uint8_t has_pus_hdr, uint8_t ignore_sa_state, uint8_t ignore_anti_replay,
@@ -459,14 +490,9 @@ int32_t Crypto_Config_CryptoLib(uint8_t key_type, uint8_t mc_type, uint8_t sa_ty
 
 /**
  * @brief Function: Crypto_Config_MariaDB
- * @param mysql_username: char*
- * @param mysql_password: char*
- * @param mysql_hostname: char*
- * @param mysql_database: char*
- * @param mysql_port: uint16
- * @return int32: Success/Failure
- **/
-/*set parameters for an encrypted TLS connection*/
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t Crypto_Config_MariaDB(char *mysql_hostname, char *mysql_database, uint16_t mysql_port,
                               uint8_t mysql_require_secure_transport, uint8_t mysql_tls_verify_server,
                               char *mysql_tls_ca, char *mysql_tls_capath, char *mysql_mtls_cert, char *mysql_mtls_key,
@@ -530,12 +556,9 @@ int32_t Crypto_Config_Kmc_Crypto_Service(char *protocol, char *kmc_crypto_hostna
 
 /**
  * @brief Function: Crypto_Config_Cam
- * @param cam_enabled: uint8_t
- * @param cookie_file_path: char*
- * @param keytab_file_path: char*
- * @param login_method: uint8_t
- * @return int32_t: Success/Failure
- **/
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t Crypto_Config_Cam(uint8_t cam_enabled, char *cookie_file_path, char *keytab_file_path, uint8_t login_method,
                           char *access_manager_uri, char *username, char *cam_home)
 {
@@ -568,6 +591,11 @@ int32_t Crypto_Config_Add_Gvcid_Managed_Parameters(GvcidManagedParameters_t gvci
     return status;
 }
 
+/**
+ * @brief Function: crypto_free_config_structs
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t crypto_free_config_structs(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -646,8 +674,9 @@ char *crypto_deep_copy_string(char *src_string)
 
 /**
  * @brief Function: Crypto_Local_Config
- * Initalizes TM Configuration, Log, and Keyrings
- **/
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 void Crypto_Local_Config(void)
 {
     // Initial TM configuration
@@ -678,8 +707,9 @@ void Crypto_Local_Config(void)
 
 /**
  * @brief Function: Crypto_Local_Init
- * Initalize TM Frame, CLCW
- **/
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 void Crypto_Local_Init(void)
 {
     // Initialize CLCW
@@ -711,8 +741,9 @@ void Crypto_Local_Init(void)
 
 /**
  * @brief Function: Crypto_Calc_CRC_Init_Table
- * Initialize CRC Table
- **/
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 void Crypto_Calc_CRC_Init_Table(void)
 {
     uint16_t     val;
