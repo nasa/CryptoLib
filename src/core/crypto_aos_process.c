@@ -74,119 +74,41 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
                                                 gvcid_managed_parameters_array, &current_managed_parameters_struct);
-
-    if (len_ingest < aos_hdr_len) // Frame length doesn't even have enough bytes for header -- error out.
-    {
-        status = CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_AOS_STANDARD;
-        mc_if->mc_log(status);
-        return status;
-    }
-
-    if (len_ingest < current_managed_parameters_struct.max_frame_size)
-    {
-        status = CRYPTO_LIB_ERR_AOS_FL_LT_MAX_FRAME_SIZE;
-        mc_if->mc_log(status);
-        return status;
-    }
-
-    if ((crypto_config.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
-    {
-#ifdef AOS_DEBUG
-        printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
-#endif
-        status = CRYPTO_LIB_ERR_NO_CONFIG;
-        // Can't mc_log if it's not configured
-        if (mc_if != NULL)
-        {
-            mc_if->mc_log(status);
-        }
-        return status;
-    }
-
-    // Query SA DB for active SA / SDLS parameters
-    if (sa_if == NULL) // This should not happen, but tested here for safety
-    {
-        printf(KRED "ERROR: SA DB Not initalized! -- CRYPTO_LIB_ERR_NO_INIT, Will Exit\n" RESET);
-        status = CRYPTO_LIB_ERR_NO_INIT;
-        return status;
-    }
-
     if (status != CRYPTO_LIB_SUCCESS)
     {
 #ifdef AOS_DEBUG
         printf(KRED "**NO LUCK WITH GVCID!\n" RESET);
 #endif
-        mc_if->mc_log(status);
-        return status;
+        goto end_of_function;
     } // Unable to get necessary Managed Parameters for AOS TF -- return with error.
 
-    // Increment to end of Primary Header start, depends on FHECF presence
-    byte_idx = 6;
-    if (current_managed_parameters_struct.aos_has_fhec == AOS_HAS_FHEC)
+    status = Crypto_AOSP_Initial_Length_Checks(len_ingest, aos_hdr_len);
+    if (status != CRYPTO_LIB_SUCCESS)
     {
-        uint16_t recieved_fhecf = (((p_ingest[aos_hdr_len] << 8) & 0xFF00) | (p_ingest[aos_hdr_len + 1] & 0x00FF));
-#ifdef AOS_DEBUG
-        printf("Recieved FHECF: %04x\n", recieved_fhecf);
-        printf(KYEL "Calculating FHECF...\n" RESET);
-#endif
-        uint16_t calculated_fhecf = Crypto_Calc_FHECF(p_ingest);
-
-        if (recieved_fhecf != calculated_fhecf)
-        {
-            status = CRYPTO_LIB_ERR_INVALID_FHECF;
-            mc_if->mc_log(status);
-            return status;
-        }
-
-        p_ingest[byte_idx]     = (calculated_fhecf >> 8) & 0x00FF;
-        p_ingest[byte_idx + 1] = (calculated_fhecf)&0x00FF;
-        byte_idx               = 8;
-        aos_hdr_len            = byte_idx;
+        goto end_of_function;
     }
+    // Increment to end of Primary Header start, depends on FHECF presence
+    byte_idx = aos_hdr_len;
+
+    Crypto_AOSP_Handle_FHEC(&p_ingest[0], &byte_idx, &aos_hdr_len);
 
     // Detect if optional variable length Insert Zone is present
     // Per CCSDS 732.0-B-4 Section 4.1.3, Insert Zone is optional but fixed length for a physical channel
-    if (current_managed_parameters_struct.aos_has_iz == AOS_HAS_IZ)
+    status = Crypto_AOSP_Handle_IZ(&byte_idx);
+    if (status != CRYPTO_LIB_SUCCESS)
     {
-        // Section 4.1.3.2 - Validate Insert Zone length
-        if (current_managed_parameters_struct.aos_iz_len <= 0)
-        {
-            status = CRYPTO_LIB_ERR_INVALID_AOS_IZ_LENGTH;
-#ifdef AOS_DEBUG
-            printf(KRED "Error: Invalid Insert Zone length %d. Must be between 1 and 65535 octets.\n" RESET,
-                   current_managed_parameters_struct.aos_iz_len);
-#endif
-            mc_if->mc_log(status);
-            return status;
-        }
-
-// Section 4.1.3.2.3 - All bits of the Insert Zone shall be set by the sending end
-// Based on the managed parameter configuration, we're not modifying the Insert Zone contents
-#ifdef AOS_DEBUG
-        printf(KYEL "Insert Zone present with length %d octets\n" RESET, current_managed_parameters_struct.aos_iz_len);
-#endif
-
-        byte_idx += current_managed_parameters_struct.aos_iz_len;
+        goto end_of_function;
     }
 
     /**
      * Begin Security Header Fields
      * Reference CCSDS SDLP 3550b1 4.1.1.1.3
      **/
-    printf("Byte IDX = %d\n", byte_idx);
     // Get SPI
-    spi = (uint8_t)p_ingest[byte_idx] << 8 | (uint8_t)p_ingest[byte_idx + 1];
-    // Move index to past the SPI
-    byte_idx += 2;
-
-    printf("SPI = %04x\n", spi);
-
-    status = sa_if->sa_get_from_spi(spi, &sa_ptr);
-    // If no valid SPI, return
+    status = Crypto_AOSP_Get_SPI(&p_ingest[0], &byte_idx, &spi, sa_ptr);
     if (status != CRYPTO_LIB_SUCCESS)
     {
-        mc_if->mc_log(status);
-        return status;
+        goto end_of_function;
     }
 
 #ifdef SA_DEBUG
@@ -194,34 +116,12 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     Crypto_saPrint(sa_ptr);
 #endif
     // Determine SA Service Type
-    if ((sa_ptr->est == 0) && (sa_ptr->ast == 0))
+    status = Crypto_AOS_Get_SA_Service_Type(&sa_service_type, sa_ptr);
+    if (status != CRYPTO_LIB_SUCCESS)
     {
-        sa_service_type = SA_PLAINTEXT;
+        goto end_of_function;
     }
-    else if ((sa_ptr->est == 0) && (sa_ptr->ast == 1))
-    {
-        sa_service_type = SA_AUTHENTICATION;
-    }
-    else if ((sa_ptr->est == 1) && (sa_ptr->ast == 0))
-    {
-        sa_service_type = SA_ENCRYPTION;
-    }
-    else if ((sa_ptr->est == 1) && (sa_ptr->ast == 1))
-    {
-        sa_service_type = SA_AUTHENTICATED_ENCRYPTION;
-    }
-    else
-    {
-        // Probably unnecessary check
-        // Leaving for now as it would be cleaner in SA to have an association enum returned I believe
-#ifdef SA_DEBUG
-        printf(KRED "Error: SA Service Type is not defined! \n" RESET);
-#endif
-        status = CRYPTO_LIB_ERROR;
-        mc_if->mc_log(status);
-        return status;
-    }
-
+    
     // Determine Algorithm cipher & mode. // TODO - Parse authentication_cipher, and handle AEAD cases properly
     if (sa_service_type != SA_PLAINTEXT)
     {
@@ -637,7 +537,12 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
 #ifdef DEBUG
     printf(KYEL "----- Crypto_AOS_ProcessSecurity END -----\n" RESET);
 #endif
-    mc_if->mc_log(status);
+
+end_of_function:
+    if (mc_if != NULL)
+    {
+        mc_if->mc_log(status);
+    }
     return status;
 }
 
@@ -683,4 +588,120 @@ uint32_t Crypto_Prepare_AOS_AAD(const uint8_t *buffer, uint16_t len_aad, const u
 #endif
 
     return status;
+}
+
+
+int32_t Crypto_AOSP_Initial_Length_Checks(uint16_t len_ingest, uint8_t aos_hdr_len)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    if (len_ingest < aos_hdr_len) // Frame length doesn't even have enough bytes for header -- error out.
+    {
+        status = CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_AOS_STANDARD;
+        mc_if->mc_log(status);
+        goto end_of_function;
+    }
+
+    if (len_ingest < current_managed_parameters_struct.max_frame_size)
+    {
+        status = CRYPTO_LIB_ERR_AOS_FL_LT_MAX_FRAME_SIZE;
+        mc_if->mc_log(status);
+        goto end_of_function;
+    }
+
+    if ((crypto_config.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
+    {
+#ifdef AOS_DEBUG
+        printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
+#endif
+        status = CRYPTO_LIB_ERR_NO_CONFIG;
+        // Can't mc_log if it's not configured
+        goto end_of_function;
+    }
+
+    // Query SA DB for active SA / SDLS parameters
+    if (sa_if == NULL) // This should not happen, but tested here for safety
+    {
+        printf(KRED "ERROR: SA DB Not initalized! -- CRYPTO_LIB_ERR_NO_INIT, Will Exit\n" RESET);
+        status = CRYPTO_LIB_ERR_NO_INIT;
+        goto end_of_function;
+    }
+
+
+end_of_function: 
+    return status;
+}
+
+
+int32_t Crypto_AOSP_Handle_FHEC(uint8_t *p_ingest, uint16_t *byte_idx, uint8_t *aos_hdr_len)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    if (current_managed_parameters_struct.aos_has_fhec == AOS_HAS_FHEC)
+    {
+        uint16_t recieved_fhecf = (((p_ingest[*aos_hdr_len] << 8) & 0xFF00) | (p_ingest[*aos_hdr_len + 1] & 0x00FF));
+#ifdef AOS_DEBUG
+        printf("Recieved FHECF: %04x\n", recieved_fhecf);
+        printf(KYEL "Calculating FHECF...\n" RESET);
+#endif
+        uint16_t calculated_fhecf = Crypto_Calc_FHECF(p_ingest);
+
+        if (recieved_fhecf != calculated_fhecf)
+        {
+            status = CRYPTO_LIB_ERR_INVALID_FHECF;
+            mc_if->mc_log(status);
+            return status;
+        }
+
+        p_ingest[*byte_idx]     = (calculated_fhecf >> 8) & 0x00FF;
+        p_ingest[*byte_idx + 1] = (calculated_fhecf)&0x00FF;
+        *byte_idx               = 8;
+        *aos_hdr_len            = *byte_idx;
+    }
+}
+
+
+int32_t Crypto_AOSP_Handle_IZ(uint16_t *byte_idx)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    if (current_managed_parameters_struct.aos_has_iz == AOS_HAS_IZ)
+    {
+        // Section 4.1.3.2 - Validate Insert Zone length
+        if (current_managed_parameters_struct.aos_iz_len <= 0)
+        {
+            status = CRYPTO_LIB_ERR_INVALID_AOS_IZ_LENGTH;
+#ifdef AOS_DEBUG
+            printf(KRED "Error: Invalid Insert Zone length %d. Must be between 1 and 65535 octets.\n" RESET,
+                   current_managed_parameters_struct.aos_iz_len);
+#endif
+            goto end_of_function;
+        }
+
+// Section 4.1.3.2.3 - All bits of the Insert Zone shall be set by the sending end
+// Based on the managed parameter configuration, we're not modifying the Insert Zone contents
+#ifdef AOS_DEBUG
+        printf(KYEL "Insert Zone present with length %d octets\n" RESET, current_managed_parameters_struct.aos_iz_len);
+#endif
+        *byte_idx += current_managed_parameters_struct.aos_iz_len;
+    }
+
+end_of_function:
+    return status;
+}
+
+
+int32_t Crypto_AOSP_Get_SPI(uint8_t *p_ingest, uint16_t *byte_idx, uint16_t *spi, SecurityAssociation_t *sa_ptr)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    *spi = (uint8_t)p_ingest[*byte_idx] << 8 | (uint8_t)p_ingest[*byte_idx + 1];
+    // Move index to past the SPI
+    *byte_idx += 2;
+
+    status = sa_if->sa_get_from_spi(*spi, &sa_ptr);
+    // If no valid SPI, return
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        return status;
+    }
 }

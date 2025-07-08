@@ -246,6 +246,8 @@ int32_t Crypto_AOS_Encrypt(uint8_t sa_service_type, uint8_t ecs_is_aead_algorith
 int32_t Crypto_AOSA_Handle_Security_Header(uint8_t *pTfBuffer, uint16_t *idx, SecurityAssociation_t *sa_ptr, uint8_t sa_service_type, uint32_t *pkcs_padding, uint16_t cbc_padding);
 void Crypto_AOSA_Handle_Security_Trailer(uint8_t *pTfBuffer, SecurityAssociation_t *sa_ptr, uint16_t *idx, uint16_t pdu_len);
 
+
+int32_t Crypto_AOSP_Initial_Length_Checks(uint16_t len_ingest, uint8_t aos_hdr_len);
 // Crypo Error Support Functions
 extern char *Crypto_Get_Error_Code_Enum_String(int32_t crypto_error_code);
 
