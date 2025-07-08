@@ -285,7 +285,6 @@ int32_t Crypto_TCA_Sanity_Setup(const uint8_t *p_in_frame, const uint16_t in_fra
         printf(KRED "Error: Input Buffer NULL! \n" RESET);
 #endif
         status = CRYPTO_LIB_ERR_NULL_BUFFER;
-        // No Logging - as MC might not be initialized
         goto end_of_function;
     }
 
@@ -303,7 +302,6 @@ int32_t Crypto_TCA_Sanity_Setup(const uint8_t *p_in_frame, const uint16_t in_fra
     status = Crypto_TCA_Check_Init_Setup(in_frame_length);
     if (status != CRYPTO_LIB_SUCCESS)
     {
-        // No Logging - as MC might not be initialized
         goto end_of_function;
     }
 
@@ -354,8 +352,7 @@ int32_t Crypto_TCA_Validate_Temp_Header(const uint16_t in_frame_length, TC_Frame
     if (temp_tc_header.fl + 1 != in_frame_length)
     {
         status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_MISMATCH;
-        mc_if->mc_log(status);
-        return status;
+        goto end_of_function;
     }
 
     // Lookup-retrieve managed parameters for frame via gvcid:
@@ -365,8 +362,7 @@ int32_t Crypto_TCA_Validate_Temp_Header(const uint16_t in_frame_length, TC_Frame
 
     if (status != CRYPTO_LIB_SUCCESS)
     {
-        mc_if->mc_log(status);
-        return status;
+        goto end_of_function;
     } // Unable to get necessary Managed Parameters for TC TF -- return with error.
 
     if (current_managed_parameters_struct.has_segmentation_hdr == TC_HAS_SEGMENT_HDRS)
@@ -378,25 +374,24 @@ int32_t Crypto_TCA_Validate_Temp_Header(const uint16_t in_frame_length, TC_Frame
     status = Crypto_TCA_Check_CMD_Frame_Flag(temp_tc_header.cc);
     if (status != CRYPTO_LIB_SUCCESS)
     {
-        mc_if->mc_log(status);
-        return status;
+        goto end_of_function;
     }
     status = sa_if->sa_get_operational_sa_from_gvcid(temp_tc_header.tfvn, temp_tc_header.scid, temp_tc_header.vcid,
                                                      *map_id, sa_ptr);
     // If unable to get operational SA, can return
     if (status != CRYPTO_LIB_SUCCESS)
     {
-        mc_if->mc_log(status);
-        return status;
+        goto end_of_function;
     }
 
     // Try to assure SA is sane
     status = Crypto_TC_Validate_SA(*sa_ptr);
     if (status != CRYPTO_LIB_SUCCESS)
     {
-        mc_if->mc_log(status);
-        return status;
+        goto end_of_function;
     }
+
+    end_of_function:
 
     return status;
 }
@@ -477,7 +472,6 @@ int32_t Crypto_TCA_Get_Cipher_Mode(uint8_t sa_service_type, uint32_t *encryption
     if (*encryption_cipher == CRYPTO_CIPHER_NONE && sa_ptr->est == 1)
     {
         status = CRYPTO_LIB_ERR_NO_ECS_SET_FOR_ENCRYPTION_MODE;
-        mc_if->mc_log(status);
     }
     return status;
 }
@@ -695,7 +689,6 @@ int32_t Crypto_TCA_Handle_Enc_Padding(uint8_t sa_service_type, uint32_t *pkcs_pa
             if (*p_enc_frame_len > TC_MAX_FRAME_SIZE)
             {
                 status = CRYPTO_LIB_ERR_TC_FRAME_SIZE_EXCEEDS_SPEC_LIMIT;
-                mc_if->mc_log(status);
             }
         }
     }
@@ -758,10 +751,15 @@ int32_t Crypto_TCA_Accio_Buffer(uint8_t **p_new_enc_frame, uint16_t *p_enc_frame
     {
         printf(KRED "Error: Malloc for encrypted output buffer failed! \n" RESET);
         status = CRYPTO_LIB_ERROR;
-        mc_if->mc_log(status);
-        return status;
+        goto end_of_function;
     }
     memset(*p_new_enc_frame, 0, *p_enc_frame_len);
+
+end_of_function:
+    if(status != CRYPTO_LIB_SUCCESS)
+    {
+        Crypto_TC_Safe_Free_Ptr(*p_new_enc_frame);
+    }
     return status;
 }
 
