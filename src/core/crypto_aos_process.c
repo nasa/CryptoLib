@@ -60,6 +60,16 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     aos_frame_pri_hdr.scid = (((uint16_t)p_ingest[0] & 0x3F) << 2) | (((uint16_t)p_ingest[1] & 0xC0) >> 6);
     aos_frame_pri_hdr.vcid = ((uint8_t)p_ingest[1] & 0x3F);
 
+    if ((crypto_config.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
+    {
+#ifdef AOS_DEBUG
+        printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
+#endif
+        status = CRYPTO_LIB_ERR_NO_CONFIG;
+        // Can't mc_log if it's not configured
+        goto end_of_function;
+    }
+    
 #ifdef DEBUG
     printf(KYEL "\n----- Crypto_AOS_ProcessSecurity START -----\n" RESET);
 #endif
@@ -87,6 +97,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     {
         goto end_of_function;
     }
+
     // Increment to end of Primary Header start, depends on FHECF presence
     byte_idx = aos_hdr_len;
 
@@ -105,7 +116,13 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
      * Reference CCSDS SDLP 3550b1 4.1.1.1.3
      **/
     // Get SPI
-    status = Crypto_AOSP_Get_SPI(&p_ingest[0], &byte_idx, &spi, sa_ptr);
+    status = Crypto_AOSP_Get_SPI(&p_ingest[0], &byte_idx, &spi);
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        goto end_of_function;
+    }
+
+    status = sa_if->sa_get_from_spi(spi, &sa_ptr);
     if (status != CRYPTO_LIB_SUCCESS)
     {
         goto end_of_function;
@@ -115,6 +132,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     printf(KYEL "DEBUG - Printing SA Entry for current frame.\n" RESET);
     Crypto_saPrint(sa_ptr);
 #endif
+
     // Determine SA Service Type
     status = Crypto_AOS_Get_SA_Service_Type(&sa_service_type, sa_ptr);
     if (status != CRYPTO_LIB_SUCCESS)
@@ -602,31 +620,15 @@ int32_t Crypto_AOSP_Initial_Length_Checks(uint16_t len_ingest, uint8_t aos_hdr_l
         goto end_of_function;
     }
 
-    if (len_ingest < current_managed_parameters_struct.max_frame_size)
+    if (len_ingest != current_managed_parameters_struct.max_frame_size)
     {
+#ifdef AOS_DEBUG
+        printf("Received length of %d, but expected %d!\n", len_ingest, current_managed_parameters_struct.max_frame_size);
+#endif
         status = CRYPTO_LIB_ERR_AOS_FL_LT_MAX_FRAME_SIZE;
         mc_if->mc_log(status);
         goto end_of_function;
     }
-
-    if ((crypto_config.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
-    {
-#ifdef AOS_DEBUG
-        printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
-#endif
-        status = CRYPTO_LIB_ERR_NO_CONFIG;
-        // Can't mc_log if it's not configured
-        goto end_of_function;
-    }
-
-    // Query SA DB for active SA / SDLS parameters
-    if (sa_if == NULL) // This should not happen, but tested here for safety
-    {
-        printf(KRED "ERROR: SA DB Not initalized! -- CRYPTO_LIB_ERR_NO_INIT, Will Exit\n" RESET);
-        status = CRYPTO_LIB_ERR_NO_INIT;
-        goto end_of_function;
-    }
-
 
 end_of_function: 
     return status;
@@ -657,6 +659,8 @@ int32_t Crypto_AOSP_Handle_FHEC(uint8_t *p_ingest, uint16_t *byte_idx, uint8_t *
         *byte_idx               = 8;
         *aos_hdr_len            = *byte_idx;
     }
+
+    return status;
 }
 
 
@@ -690,7 +694,7 @@ end_of_function:
 }
 
 
-int32_t Crypto_AOSP_Get_SPI(uint8_t *p_ingest, uint16_t *byte_idx, uint16_t *spi, SecurityAssociation_t *sa_ptr)
+int32_t Crypto_AOSP_Get_SPI(uint8_t *p_ingest, uint16_t *byte_idx, uint16_t *spi)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
@@ -698,10 +702,5 @@ int32_t Crypto_AOSP_Get_SPI(uint8_t *p_ingest, uint16_t *byte_idx, uint16_t *spi
     // Move index to past the SPI
     *byte_idx += 2;
 
-    status = sa_if->sa_get_from_spi(*spi, &sa_ptr);
-    // If no valid SPI, return
-    if (status != CRYPTO_LIB_SUCCESS)
-    {
-        return status;
-    }
+    return status;
 }

@@ -248,6 +248,11 @@ void Crypto_AOSA_Handle_Security_Trailer(uint8_t *pTfBuffer, SecurityAssociation
 
 
 int32_t Crypto_AOSP_Initial_Length_Checks(uint16_t len_ingest, uint8_t aos_hdr_len);
+int32_t Crypto_AOSP_Get_SPI(uint8_t *p_ingest, uint16_t *byte_idx, uint16_t *spi);
+int32_t Crypto_AOSP_Handle_IZ(uint16_t *byte_idx);
+int32_t Crypto_AOSP_Handle_FHEC(uint8_t *p_ingest, uint16_t *byte_idx, uint8_t *aos_hdr_len);
+
+
 // Crypo Error Support Functions
 extern char *Crypto_Get_Error_Code_Enum_String(int32_t crypto_error_code);
 
