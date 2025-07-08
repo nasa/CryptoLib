@@ -756,10 +756,6 @@ int32_t Crypto_TCA_Accio_Buffer(uint8_t **p_new_enc_frame, uint16_t *p_enc_frame
     memset(*p_new_enc_frame, 0, *p_enc_frame_len);
 
 end_of_function:
-    if(status != CRYPTO_LIB_SUCCESS)
-    {
-        Crypto_TC_Safe_Free_Ptr(*p_new_enc_frame);
-    }
     return status;
 }
 
@@ -781,7 +777,6 @@ int32_t Crypto_TCA_ACS_Algo_Check(SecurityAssociation_t *sa_ptr)
             if (Crypto_Is_ACS_Only_Algo(sa_ptr->acs) && sa_ptr->iv_len > 0)
             {
                 status = CRYPTO_LIB_ERR_IV_NOT_SUPPORTED_FOR_ACS_ALGO;
-                mc_if->mc_log(status);
             }
         }
     }
@@ -827,8 +822,6 @@ int32_t Crypto_TCA_Check_IV_Setup(SecurityAssociation_t *sa_ptr, uint8_t *p_new_
         else
         {
             status = CRYPTO_LIB_ERR_NULL_IV;
-            mc_if->mc_log(status);
-            return status;
         }
     }
     *index = index_temp;
