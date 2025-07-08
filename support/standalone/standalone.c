@@ -26,15 +26,15 @@
 /*
 ** Global Variables
 */
-static volatile uint8_t keepRunning = CRYPTO_LIB_SUCCESS;
-static volatile uint8_t tc_seq_num  = 0;
-static volatile uint8_t tc_vcid     = CRYPTO_STANDALONE_FRAMING_VCID;
-static volatile uint8_t tc_debug    = 1;
-static volatile uint8_t tm_debug    = 0;
-
 #define DYNAMIC_LENGTHS 1
 
-static volatile uint8_t crypto_use_tcp = 1; // 1 = TCP, 0 = UDP
+static volatile uint8_t keepRunning    = CRYPTO_LIB_SUCCESS;
+static volatile uint8_t tc_seq_num     = 0;
+static volatile uint8_t tc_vcid        = CRYPTO_STANDALONE_FRAMING_VCID;
+static volatile uint8_t tc_debug       = 1;
+static volatile uint8_t tm_debug       = 0;
+
+#define crypto_use_tcp STANDALONE_TCP
 
 /*
 ** Functions
