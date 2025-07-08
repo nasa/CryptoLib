@@ -311,19 +311,26 @@ end_of_function:
     return status;
 }
 
-void Crypto_TC_Set_Primary_Header(const uint8_t *p_in_frame, TC_FramePrimaryHeader_t *temp_tc_header)
+
+/**
+ * @brief Function: Crypto_TC_Set_Primary_Header
+ * Parses and sets TC Header Structure Fields from uint8 array
+ * @param p_in_frame: const uint8_t*
+ * @param tc_header: TC_FramePrimaryHeader_t*
+ */
+void Crypto_TC_Set_Primary_Header(const uint8_t *p_in_frame, TC_FramePrimaryHeader_t *tc_header)
 {
 
-    temp_tc_header->tfvn   = ((uint8_t)p_in_frame[0] & 0xC0) >> 6;
-    temp_tc_header->bypass = ((uint8_t)p_in_frame[0] & 0x20) >> 5;
-    temp_tc_header->cc     = ((uint8_t)p_in_frame[0] & 0x10) >> 4;
-    temp_tc_header->spare  = ((uint8_t)p_in_frame[0] & 0x0C) >> 2;
-    temp_tc_header->scid   = ((uint8_t)p_in_frame[0] & 0x03) << 8;
-    temp_tc_header->scid   = temp_tc_header->scid | (uint8_t)p_in_frame[1];
-    temp_tc_header->vcid   = ((uint8_t)p_in_frame[2] & 0xFC) >> 2 & crypto_config.vcid_bitmask;
-    temp_tc_header->fl     = ((uint8_t)p_in_frame[2] & 0x03) << 8;
-    temp_tc_header->fl     = temp_tc_header->fl | (uint8_t)p_in_frame[3];
-    temp_tc_header->fsn    = (uint8_t)p_in_frame[4];
+    tc_header->tfvn   = ((uint8_t)p_in_frame[0] & 0xC0) >> 6;
+    tc_header->bypass = ((uint8_t)p_in_frame[0] & 0x20) >> 5;
+    tc_header->cc     = ((uint8_t)p_in_frame[0] & 0x10) >> 4;
+    tc_header->spare  = ((uint8_t)p_in_frame[0] & 0x0C) >> 2;
+    tc_header->scid   = ((uint8_t)p_in_frame[0] & 0x03) << 8;
+    tc_header->scid   = tc_header->scid | (uint8_t)p_in_frame[1];
+    tc_header->vcid   = ((uint8_t)p_in_frame[2] & 0xFC) >> 2 & crypto_config.vcid_bitmask;
+    tc_header->fl     = ((uint8_t)p_in_frame[2] & 0x03) << 8;
+    tc_header->fl     = tc_header->fl | (uint8_t)p_in_frame[3];
+    tc_header->fsn    = (uint8_t)p_in_frame[4];
 }
 
 /**
