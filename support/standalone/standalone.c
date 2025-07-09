@@ -33,8 +33,7 @@ static volatile uint8_t tc_seq_num  = 0;
 static volatile uint8_t tc_vcid     = CRYPTO_STANDALONE_FRAMING_VCID;
 static volatile uint8_t tc_debug    = 1;
 static volatile uint8_t tm_debug    = 0;
-
-#define crypto_use_tcp STANDALONE_TCP
+static volatile uint8_t crypto_use_tcp = STANDALONE_TCP ? 1 : 0;
 
 /*
 ** Functions
@@ -977,7 +976,7 @@ int main(int argc, char *argv[])
             status = crypto_standalone_socket_init(&tm_process.write, TM_PROCESS_FWD_PORT, 0, 0); // udp 6011
             if (status != CRYPTO_LIB_SUCCESS)
             {
-                printf("crypto_standalone_socket_init tc_apply.write failed with status %d \n", status);
+                printf("crypto_standalone_socket_init tm_process.write failed with status %d \n", status);
                 keepRunning = CRYPTO_LIB_ERROR;
             }
         }
