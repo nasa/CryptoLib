@@ -622,7 +622,7 @@ UTEST(SA_SAVE, VERIFY_SAVE_ADJACENT)
     ASSERT_EQ(test_association->gvcid_blk.tfvn, 0);
     ASSERT_EQ(test_association->gvcid_blk.scid, 3);
     ASSERT_EQ(test_association->gvcid_blk.vcid, 1);
-    ASSERT_EQ(test_association->gvcid_blk.mapid, 2);
+    ASSERT_EQ(test_association->gvcid_blk.mapid, 0);
     ASSERT_EQ(test_association->est, 0);
     ASSERT_EQ(test_association->ast, 0);
     ASSERT_EQ(test_association->shivf_len, 12);

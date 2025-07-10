@@ -36,6 +36,7 @@ typedef struct
     int32_t (*sa_get_from_spi)(uint16_t, SecurityAssociation_t **);
     int32_t (*sa_get_operational_sa_from_gvcid)(uint8_t, uint16_t, uint16_t, uint8_t, SecurityAssociation_t **);
     int32_t (*sa_save_sa)(SecurityAssociation_t *);
+    int32_t (*sa_setIV)(uint16_t, char *);
     // Security Association Utility Functions
     int32_t (*sa_stop)(TC_t *tc_frame);
     int32_t (*sa_start)(TC_t *tc_frame);
@@ -52,6 +53,5 @@ typedef struct
 SaInterface get_sa_interface_custom(void);
 SaInterface get_sa_interface_inmemory(void);
 SaInterface get_sa_interface_mariadb(void);
-// SaInterface init_parse_sa_routine(uint8_t* );
 
 #endif // CRYPTOLIB_SA_INTERFACE_H

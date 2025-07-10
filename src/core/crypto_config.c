@@ -21,6 +21,13 @@
 */
 #include <string.h>
 #include "crypto.h"
+#include "crypto_events.h"
+
+/**
+ * CCSDS Compliance Reference:
+ * This file implements security configuration functions compliant with:
+ * - CCSDS 355.0-B-2 (Space Data Link Security Protocol) Section 7 (Management)
+ */
 
 /*
 ** Global Variables
@@ -38,14 +45,20 @@ CryptographyKmcCryptoServiceConfig_t *cryptography_kmc_crypto_config = NULL;
 CamConfig_t                          *cam_config                     = NULL;
 
 GvcidManagedParameters_t gvcid_managed_parameters_array[GVCID_MAN_PARAM_SIZE];
-int                      gvcid_counter                     = 0;
-GvcidManagedParameters_t gvcid_null_struct                 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-GvcidManagedParameters_t current_managed_parameters_struct = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+int                      gvcid_counter                         = 0;
+GvcidManagedParameters_t gvcid_null_struct                     = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+GvcidManagedParameters_t tc_current_managed_parameters_struct  = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+GvcidManagedParameters_t tm_current_managed_parameters_struct  = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+GvcidManagedParameters_t aos_current_managed_parameters_struct = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 // GvcidManagedParameters_t* gvcid_managed_parameters = NULL;
 //  GvcidManagedParameters_t* current_managed_parameters = NULL;
 
-// Free all configuration structs
+/**
+ * @brief Function: crypto_free_config_structs
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t crypto_free_config_structs(void);
 
 /*
@@ -53,44 +66,66 @@ int32_t crypto_free_config_structs(void);
 */
 
 /**
- * @brief Function: Crypto_Init_TC_Unit_Test
- * @return int32: status
- **/
+ * @brief Function: Crypto_SC_Init
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t Crypto_SC_Init(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_NO_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TC
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_UT_Managed_Parameters = {
-        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 4, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     TC_UT_Managed_Parameters.vcid = 2;
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    TC_UT_Managed_Parameters.vcid = 3;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
 
     // TM
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_HAS_OCF, 1786,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x0003, 1, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_HAS_OCF, 1};
+        0, 0x0003, 1, TM_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
-    TM_UT_Managed_Parameters.vcid = 2;
+    TM_UT_Managed_Parameters.vcid = 4;
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+    TM_UT_Managed_Parameters.vcid = 5;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
     status = Crypto_Init();
+
+    SecurityAssociation_t *sa_ptr = NULL;
+    sa_if->sa_get_from_spi(1, &sa_ptr);
+    sa_ptr->gvcid_blk.vcid = 0;
+    sa_if->sa_get_from_spi(2, &sa_ptr);
+    sa_ptr->gvcid_blk.vcid = 2;
+    sa_if->sa_get_from_spi(3, &sa_ptr);
+    sa_ptr->sa_state       = SA_OPERATIONAL;
+    sa_ptr->gvcid_blk.vcid = 3;
+    sa_ptr->abm_len        = ABM_SIZE;
+    sa_if->sa_get_from_spi(5, &sa_ptr);
+    sa_ptr->sa_state       = SA_OPERATIONAL;
+    sa_ptr->shsnf_len      = 0;
+    sa_ptr->arsn_len       = 0;
+    sa_ptr->gvcid_blk.vcid = 1;
+    sa_if->sa_get_from_spi(6, &sa_ptr);
+    sa_ptr->sa_state       = SA_OPERATIONAL;
+    sa_ptr->gvcid_blk.vcid = 4;
+    sa_if->sa_get_from_spi(7, &sa_ptr);
+    sa_ptr->sa_state       = SA_OPERATIONAL;
+    sa_ptr->abm_len        = ABM_SIZE;
+    sa_ptr->gvcid_blk.vcid = 5;
+
     return status;
 }
 
 /**
  * @brief Function: Crypto_Init_TC_Unit_Test
- * @return int32: status
- **/
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t Crypto_Init_TC_Unit_Test(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -101,8 +136,6 @@ int32_t Crypto_Init_TC_Unit_Test(void)
     // TC Tests
     GvcidManagedParameters_t TC_UT_Managed_Parameters = {
         0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
@@ -110,17 +143,15 @@ int32_t Crypto_Init_TC_Unit_Test(void)
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 4;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 4, TC_HAS_FECF,
-    // TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
     status = Crypto_Init();
     return status;
 }
 
 /**
  * @brief Function: Crypto_Init_TM_Unit_Test
- * @return int32: status
- **/
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t Crypto_Init_TM_Unit_Test(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -129,20 +160,14 @@ int32_t Crypto_Init_TM_Unit_Test(void)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TM_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TM Tests
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TM_UT_Managed_Parameters = {
         0, 0x0003, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002c, 0, TM_NO_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     TM_UT_Managed_Parameters.scid     = 0x002c;
     TM_UT_Managed_Parameters.has_fecf = TM_NO_FECF;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0042, 0, TM_NO_FECF, TM_SEGMENT_HDRS_NA, TM_HAS_OCF, 1786,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     TM_UT_Managed_Parameters.scid    = 0x0042;
     TM_UT_Managed_Parameters.has_ocf = TM_HAS_OCF;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
@@ -153,8 +178,9 @@ int32_t Crypto_Init_TM_Unit_Test(void)
 
 /**
  * @brief Function: Crypto_Init_AOS_Unit_Test
- * @return int32: status
- **/
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t Crypto_Init_AOS_Unit_Test(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -163,20 +189,14 @@ int32_t Crypto_Init_AOS_Unit_Test(void)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             AOS_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0003, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_NO_OCF, 1786,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t AOS_UT_Managed_Parameters = {
         1, 0x0003, 0, AOS_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, AOS_SEGMENT_HDRS_NA, 1786, AOS_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x002c, 0, AOS_NO_FECF, AOS_SEGMENT_HDRS_NA, AOS_NO_OCF, 1786,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     AOS_UT_Managed_Parameters.scid     = 0x002c;
     AOS_UT_Managed_Parameters.has_fecf = AOS_NO_FECF;
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0042, 0, AOS_NO_FECF, AOS_SEGMENT_HDRS_NA, AOS_HAS_OCF, 1786,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     AOS_UT_Managed_Parameters.scid    = 0x0042;
     AOS_UT_Managed_Parameters.has_ocf = AOS_HAS_OCF;
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
@@ -186,11 +206,9 @@ int32_t Crypto_Init_AOS_Unit_Test(void)
 
 /**
  * @brief Function: Crypto_Init_With_Configs
- * @param crypto_config_p: CryptoConfig_t*
- * @param gvcid_managed_parameters_p: GvcidManagedParameters_t*
- * @param sa_mariadb_config_p: SadbMariaDBConfig_t*
- * @return int32: Success/Failure
- **/
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t Crypto_Init_With_Configs(CryptoConfig_t *crypto_config_p, GvcidManagedParameters_t *gvcid_managed_parameters_p,
                                  SadbMariaDBConfig_t                  *sa_mariadb_config_p,
                                  CryptographyKmcCryptoServiceConfig_t *cryptography_kmc_crypto_config_p)
@@ -209,9 +227,10 @@ int32_t Crypto_Init_With_Configs(CryptoConfig_t *crypto_config_p, GvcidManagedPa
 }
 
 /**
- * @brief Function Crypto_Init
- * Initializes libgcrypt, Security Associations
- **/
+ * @brief Function: Crypto_Init
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t Crypto_Init(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -229,9 +248,6 @@ int32_t Crypto_Init(void)
         return status; // No Managed Parameter configuration set -- return!
     }
 
-    // #ifdef TC_DEBUG
-    // Crypto_mpPrint(gvcid_managed_parameters, 1);
-    // #endif
     /* Key Interface */
     if (key_if == NULL)
     {
@@ -301,20 +317,29 @@ int32_t Crypto_Init(void)
     // Determine which cryptographic module is in use
     if (cryptography_if == NULL)
     {
-        cryptography_if = get_cryptography_interface_libgcrypt();
-        if (cryptography_if == NULL)
+        if (crypto_config.cryptography_type == CRYPTOGRAPHY_TYPE_LIBGCRYPT)
+        {
+            cryptography_if = get_cryptography_interface_libgcrypt();
+        }
+        else if (crypto_config.cryptography_type == CRYPTOGRAPHY_TYPE_WOLFSSL)
         {
             cryptography_if = get_cryptography_interface_wolfssl();
         }
-        if (cryptography_if == NULL)
+        else if (crypto_config.cryptography_type == CRYPTOGRAPHY_TYPE_CUSTOM)
         {
             cryptography_if = get_cryptography_interface_custom();
         }
-        if (cryptography_if == NULL)
-        { // Note this needs to be the last option in the chain due to addition configuration required
+        else if (crypto_config.cryptography_type == CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+        {
             if (cryptography_kmc_crypto_config != NULL)
             {
                 cryptography_if = get_cryptography_interface_kmc_crypto_service();
+            }
+            else
+            {
+#ifdef DEBUG
+                printf("KMC Crypto_Service not configured\n");
+#endif
             }
         }
         if (cryptography_if == NULL)
@@ -323,6 +348,7 @@ int32_t Crypto_Init(void)
             printf("Fatal Error: Unable to identify Cryptography Interface!\n");
 #endif
             status = CRYPTOGRAPHY_INVALID_CRYPTO_INTERFACE_TYPE;
+            return status;
         }
     }
 
@@ -385,17 +411,17 @@ int32_t Crypto_Init(void)
 
 /**
  * @brief Function: Crypto_Shutdown
- * Free memory objects & restore pointers to NULL for re-initialization
- * @return int32: Success/Failure
- **/
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t Crypto_Shutdown(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
-    crypto_free_config_structs();
-
     // current_managed_parameters = NULL;
-    current_managed_parameters_struct = gvcid_null_struct;
+    tc_current_managed_parameters_struct  = gvcid_null_struct;
+    tm_current_managed_parameters_struct  = gvcid_null_struct;
+    aos_current_managed_parameters_struct = gvcid_null_struct;
     for (int i = 0; i <= gvcid_counter; i++)
     {
         gvcid_managed_parameters_array[i] = gvcid_null_struct;
@@ -427,24 +453,16 @@ int32_t Crypto_Shutdown(void)
         cryptography_if = NULL;
     }
 
+    crypto_free_config_structs();
+
     return status;
 }
 
 /**
  * @brief Function: Crypto_Config_CryptoLib
- * @param key_type: uint8
- * @param sa_type: uint8
- * @param iv_type: uint8
- * @param crypto_create_fecf: uint8
- * @param process_sdls_pdus: uint8
- * @param has_pus_hdr: uint8
- * @param ignore_sa_state: uint8
- * @param ignore_anti_replay: uint8
- * @param unique_sa_per_mapid: uint8
- * @param crypto_check_fecf: uint8
- * @param vcid_bitmask: uint8
- * @return int32: Success/Failure
- **/
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t Crypto_Config_CryptoLib(uint8_t key_type, uint8_t mc_type, uint8_t sa_type, uint8_t cryptography_type,
                                 uint8_t iv_type, uint8_t crypto_create_fecf, uint8_t process_sdls_pdus,
                                 uint8_t has_pus_hdr, uint8_t ignore_sa_state, uint8_t ignore_anti_replay,
@@ -472,14 +490,9 @@ int32_t Crypto_Config_CryptoLib(uint8_t key_type, uint8_t mc_type, uint8_t sa_ty
 
 /**
  * @brief Function: Crypto_Config_MariaDB
- * @param mysql_username: char*
- * @param mysql_password: char*
- * @param mysql_hostname: char*
- * @param mysql_database: char*
- * @param mysql_port: uint16
- * @return int32: Success/Failure
- **/
-/*set parameters for an encrypted TLS connection*/
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t Crypto_Config_MariaDB(char *mysql_hostname, char *mysql_database, uint16_t mysql_port,
                               uint8_t mysql_require_secure_transport, uint8_t mysql_tls_verify_server,
                               char *mysql_tls_ca, char *mysql_tls_capath, char *mysql_mtls_cert, char *mysql_mtls_key,
@@ -543,12 +556,9 @@ int32_t Crypto_Config_Kmc_Crypto_Service(char *protocol, char *kmc_crypto_hostna
 
 /**
  * @brief Function: Crypto_Config_Cam
- * @param cam_enabled: uint8_t
- * @param cookie_file_path: char*
- * @param keytab_file_path: char*
- * @param login_method: uint8_t
- * @return int32_t: Success/Failure
- **/
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t Crypto_Config_Cam(uint8_t cam_enabled, char *cookie_file_path, char *keytab_file_path, uint8_t login_method,
                           char *access_manager_uri, char *username, char *cam_home)
 {
@@ -582,60 +592,10 @@ int32_t Crypto_Config_Add_Gvcid_Managed_Parameters(GvcidManagedParameters_t gvci
 }
 
 /**
- * @brief Function: Crypto_Config_Add_Gvcid_Managed_Parameter
- * @param tfvn: uint8
- * @param scid: uint16
- * @param vcid: uint8
- * @param has_fecf: uint8
- * @param has_segmentation_hdr: uint8
- * @param has_ocf: uint8
- * @param max_frame_size: uint16
- * @param aos_has_fhec: uint8
- * @param aos_has_iz: uint8
- * @param aos_iz_len: uint16
- * @return int32: Success/Failure
- **/
-// int32_t Crypto_Config_Add_Gvcid_Managed_Parameter(uint8_t tfvn, uint16_t scid, uint8_t vcid, uint8_t has_fecf,
-//                                                   uint8_t has_segmentation_hdr, uint8_t has_ocf, uint16_t
-//                                                   max_frame_size, uint8_t aos_has_fhec, uint8_t aos_has_iz, uint16_t
-//                                                   aos_iz_len)
-// {
-//     int32_t status = CRYPTO_LIB_SUCCESS;
-
-//     if (gvcid_managed_parameters == NULL)
-//     { // case: Global Root Node not Set
-//         gvcid_managed_parameters = (GvcidManagedParameters_t* )calloc(1, GVCID_MANAGED_PARAMETERS_SIZE);
-//         if(gvcid_managed_parameters != NULL)
-//         {
-//             gvcid_managed_parameters->tfvn = tfvn;
-//             gvcid_managed_parameters->scid = scid;
-//             gvcid_managed_parameters->vcid = vcid;
-//             gvcid_managed_parameters->has_fecf = has_fecf;
-//             gvcid_managed_parameters->has_segmentation_hdr = has_segmentation_hdr;
-//             gvcid_managed_parameters->has_ocf = has_ocf;
-//             gvcid_managed_parameters->max_frame_size = max_frame_size;
-//             gvcid_managed_parameters->aos_has_fhec = aos_has_fhec;
-//             gvcid_managed_parameters->aos_has_iz = aos_has_iz;
-//             gvcid_managed_parameters->aos_iz_len = aos_iz_len;
-//             gvcid_managed_parameters->next = NULL;
-//             return status;
-//         }
-//         else
-//         {
-//             // calloc failed - return error
-//             status = CRYPTO_LIB_ERR_NULL_BUFFER;
-//             return status;
-//         }
-//     }
-//     else
-//     { // Recurse through nodes and add at end
-//         return crypto_config_add_gvcid_managed_parameter_recursion(tfvn, scid, vcid, has_fecf, has_segmentation_hdr,
-//         has_ocf,
-//                                                                    max_frame_size, aos_has_fhec, aos_has_iz,
-//                                                                    aos_iz_len, gvcid_managed_parameters);
-//     }
-// }
-
+ * @brief Function: crypto_free_config_structs
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 int32_t crypto_free_config_structs(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -713,49 +673,10 @@ char *crypto_deep_copy_string(char *src_string)
 }
 
 /**
- * @brief Function: crypto_config_add_gvcid_managed_parameter_recursion
- * @param tfvn: uint8
- * @param scid: uint16
- * @param vcid: uint8
- * @param has_fecf: uint8
- * @param has_segmentation_hdr: uint8
- * @param max_frame_size: uint16
- * @param managed_parameter: GvcidManagedParameters_t*
- * @return int32: Success/Failure
- **/
-// int32_t crypto_config_add_gvcid_managed_parameter_recursion(uint8_t tfvn, uint16_t scid, uint8_t vcid, uint8_t
-// has_fecf,
-//                                                             uint8_t has_segmentation_hdr, uint8_t has_ocf, uint16_t
-//                                                             max_frame_size, uint8_t aos_has_fhec, uint8_t aos_has_iz,
-//                                                             uint16_t aos_iz_len, GvcidManagedParameters_t*
-//                                                             managed_parameter)
-// {
-//     if (managed_parameter->next != NULL)
-//     {
-//         return crypto_config_add_gvcid_managed_parameter_recursion(tfvn, scid, vcid, has_fecf, has_segmentation_hdr,
-//         has_ocf,
-//                                                                    max_frame_size, aos_has_fhec, aos_has_iz,
-//                                                                    aos_iz_len, managed_parameter->next);
-//     }
-//     else
-//     {
-//         managed_parameter->next = (GvcidManagedParameters_t* )calloc(1, GVCID_MANAGED_PARAMETERS_SIZE);
-//         managed_parameter->next->tfvn = tfvn;
-//         managed_parameter->next->scid = scid;
-//         managed_parameter->next->vcid = vcid;
-//         managed_parameter->next->has_fecf = has_fecf;
-//         managed_parameter->next->has_segmentation_hdr = has_segmentation_hdr;
-//         managed_parameter->next->has_ocf = has_ocf;
-//         managed_parameter->next->max_frame_size = max_frame_size;
-//         managed_parameter->next->next = NULL;
-//         return CRYPTO_LIB_SUCCESS;
-//     }
-// }
-
-/**
  * @brief Function: Crypto_Local_Config
- * Initalizes TM Configuration, Log, and Keyrings
- **/
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 void Crypto_Local_Config(void)
 {
     // Initial TM configuration
@@ -786,52 +707,11 @@ void Crypto_Local_Config(void)
 
 /**
  * @brief Function: Crypto_Local_Init
- * Initalize TM Frame, CLCW
- **/
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 void Crypto_Local_Init(void)
 {
-    // int x;
-
-    // Possibly just zero out the entire frame here
-    // since copying in entire test frame
-
-    /***
-    // Initialize TM Frame
-    // TM Header
-    tm_frame.tm_header.tfvn = 0; // Shall be 00 for TM-/TC-SDLP
-    tm_frame.tm_header.scid = SCID & 0x3FF;
-    tm_frame.tm_header.vcid = 0;
-    tm_frame.tm_header.ocff = 1;
-    tm_frame.tm_header.mcfc = 1;
-    tm_frame.tm_header.vcfc = 1;
-    tm_frame.tm_header.tfsh = 0;
-    tm_frame.tm_header.sf = 0;
-    tm_frame.tm_header.pof = 0;  // Shall be set to 0
-    tm_frame.tm_header.slid = 3; // Shall be set to 11
-    tm_frame.tm_header.fhp = 0;
-    // TM Security Header
-    tm_frame.tm_sec_header.spi = 0x0000;
-    for (x = 0; x < IV_SIZE; x++)
-    { // Initialization Vector
-        *(tm_frame.tm_sec_header.iv + x) = 0x00;
-    }
-    // TM Payload Data Unit
-    for (x = 0; x < TM_FRAME_DATA_SIZE; x++)
-    { // Zero TM PDU
-        tm_frame.tm_pdu[x] = 0x00;
-    }
-    // TM Security Trailer
-    for (x = 0; x < MAC_SIZE; x++)
-    { // Zero TM Message Authentication Code
-        tm_frame.tm_sec_trailer.mac[x] = 0x00;
-    }
-    for (x = 0; x < OCF_SIZE; x++)
-    { // Zero TM Operational Control Field
-        tm_frame.tm_sec_trailer.ocf[x] = 0x00;
-    }
-    tm_frame.tm_sec_trailer.fecf = 0xFECF;
-    **/
-
     // Initialize CLCW
     clcw.cwt    = 0; // Control Word Type "0"
     clcw.cvn    = 0; // CLCW Version Number "00"
@@ -861,8 +741,9 @@ void Crypto_Local_Init(void)
 
 /**
  * @brief Function: Crypto_Calc_CRC_Init_Table
- * Initialize CRC Table
- **/
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
+ */
 void Crypto_Calc_CRC_Init_Table(void)
 {
     uint16_t     val;
@@ -880,7 +761,6 @@ void Crypto_Calc_CRC_Init_Table(void)
             crc = (crc >> 1) ^ (-(int)(crc & 1) & poly);
         }
         crc32Table[i] = crc;
-        // printf("crc32Table[%d] = 0x%08x \n", i, crc32Table[i]);
     }
 
     // Code provided by ESA
@@ -904,6 +784,5 @@ void Crypto_Calc_CRC_Init_Table(void)
         if ((i & 128) != 0)
             val ^= 0x9188;
         crc16Table[i] = val;
-        // printf("crc16Table[%d] = 0x%04x \n", i, crc16Table[i]);
     }
 }

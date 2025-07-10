@@ -24,6 +24,13 @@
 #include <string.h> // memcpy/memset
 
 /**
+ * CCSDS Compliance Reference:
+ * This file implements security features compliant with:
+ * - CCSDS 732.0-B-4 (AOS Space Data Link Protocol)
+ * - CCSDS 355.0-B-2 (Space Data Link Security Protocol)
+ */
+
+/**
  * @brief Function: Crypto_AOS_ApplySecurity
  * @param ingest: uint8_t*
  * @param len_ingest: int*
@@ -40,8 +47,10 @@
  * parameter includes the Security Header field. When the ApplySecurity Function is
  * called, the Security Header field is empty; i.e., the caller has not set any values in the
  * Security Header
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 5 (AOS Protocol), CCSDS 732.0-B-4
  **/
-int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
+int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
 {
     int32_t                status  = CRYPTO_LIB_SUCCESS;
     int                    mac_loc = 0;
@@ -55,10 +64,14 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
     uint32_t               pkcs_padding    = 0;
     uint16_t               new_fecf        = 0x0000;
     uint8_t                ecs_is_aead_algorithm;
-    SecurityAssociation_t *sa_ptr = NULL;
-    uint8_t                tfvn   = 0;
-    uint16_t               scid   = 0;
-    uint16_t               vcid   = 0;
+    SecurityAssociation_t *sa_ptr      = NULL;
+    uint8_t                tfvn        = 0;
+    uint16_t               scid        = 0;
+    uint16_t               vcid        = 0;
+    uint16_t               cbc_padding = 0;
+
+    // Prevent set but unused error
+    cbc_padding = cbc_padding;
 
     // Passed a null, return an error
     if (!pTfBuffer)
@@ -74,9 +87,9 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
         return status; // return immediately so a NULL crypto_config is not dereferenced later
     }
 
-    tfvn = ((uint8_t)pTfBuffer[0] & 0xC0) >> 6;
-    scid = (((uint16_t)pTfBuffer[0] & 0x3F) << 2) | (((uint16_t)pTfBuffer[1] & 0xC0) >> 6);
-    vcid = ((uint8_t)pTfBuffer[1] & 0x3F);
+    tfvn = (pTfBuffer[0] & 0xC0) >> 6;
+    scid = ((pTfBuffer[0] & 0x3F) << 2) | ((pTfBuffer[1] & 0xC0) >> 6);
+    vcid = (pTfBuffer[1] & 0x3F);
 
 #ifdef AOS_DEBUG
     printf(KYEL "\n----- Crypto_AOS_ApplySecurity START -----\n" RESET);
@@ -88,7 +101,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
     printf("\tPriHdr as follows:\n\t\t");
     for (int i = 0; i < 6; i++)
     {
-        printf("%02X", (uint8_t)pTfBuffer[i]);
+        printf("%02X", pTfBuffer[i]);
     }
     printf("\n");
 #endif
@@ -106,7 +119,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
     }
 
     status = Crypto_Get_Managed_Parameters_For_Gvcid(tfvn, scid, vcid, gvcid_managed_parameters_array,
-                                                     &current_managed_parameters_struct);
+                                                     &aos_current_managed_parameters_struct);
 
     // No managed parameters found
     if (status != CRYPTO_LIB_SUCCESS)
@@ -118,9 +131,55 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
         return status;
     }
 
+    if ((len_ingest < aos_current_managed_parameters_struct.max_frame_size) &&
+        (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC) && (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC_MAC))
+    {
+        status = CRYPTO_LIB_ERR_AOS_FL_LT_MAX_FRAME_SIZE;
+        mc_if->mc_log(status);
+        return status;
+    }
+    else if ((sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC) || (sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC_MAC))
+    {
+        if ((aos_current_managed_parameters_struct.max_frame_size - len_ingest) <= 16)
+        {
+            cbc_padding = aos_current_managed_parameters_struct.max_frame_size - len_ingest;
+        }
+        else
+        {
+            status = CRYPTO_LIB_ERR_AOS_FL_LT_MAX_FRAME_SIZE;
+            mc_if->mc_log(status);
+            return status;
+        }
+    }
+
+    /*
+    ** CCSDS 732.0-B-4 Compliance:
+    ** Section 4.1.1 - AOS frames must have a fixed length for a given physical channel
+    ** Special case for CBC mode ciphers that require padding
+    */
+    if ((sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC || sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC_MAC) &&
+        (aos_current_managed_parameters_struct.max_frame_size - len_ingest) <= 16)
+    {
+        // For CBC mode, allow frames that are slightly shorter to account for padding
+        cbc_padding = aos_current_managed_parameters_struct.max_frame_size - len_ingest;
+#ifdef AOS_DEBUG
+        printf(KYEL "CBC padding of %d bytes will be applied\n" RESET, cbc_padding);
+#endif
+    }
+    else if ((aos_current_managed_parameters_struct.max_frame_size - len_ingest) != 0)
+    {
+#ifdef AOS_DEBUG
+        printf(KRED "Frame length %d does not match required fixed length %d\n" RESET, len_ingest,
+               aos_current_managed_parameters_struct.max_frame_size);
+#endif
+        status = CRYPTO_LIB_ERR_AOS_FL_LT_MAX_FRAME_SIZE;
+        mc_if->mc_log(status);
+        return status;
+    }
+
 #ifdef AOS_DEBUG
     printf(KYEL "AOS BEFORE Apply Sec:\n\t" RESET);
-    for (int16_t i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int16_t i = 0; i < aos_current_managed_parameters_struct.max_frame_size - cbc_padding; i++)
     {
         printf("%02X", pTfBuffer[i]);
     }
@@ -132,6 +191,10 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
     Crypto_saPrint(sa_ptr);
 #endif
 
+    /*
+    ** CCSDS 355.0-B-2 Compliance:
+    ** Section 3.3 - Security Service Types
+    */
     // Determine SA Service Type
     if ((sa_ptr->est == 0) && (sa_ptr->ast == 0))
     {
@@ -187,15 +250,41 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
     idx = 6;
 
     // Detect if optional 2 byte FHEC is present
-    if (current_managed_parameters_struct.aos_has_fhec == AOS_HAS_FHEC)
+    if (aos_current_managed_parameters_struct.aos_has_fhec == AOS_HAS_FHEC)
     {
-        idx += 2;
+#ifdef AOS_DEBUG
+        printf(KYEL "Calculating FHECF...\n" RESET);
+#endif
+        uint16_t calculated_fhecf = Crypto_Calc_FHECF(pTfBuffer);
+        pTfBuffer[idx]            = (calculated_fhecf >> 8) & 0x00FF;
+        pTfBuffer[idx + 1]        = (calculated_fhecf)&0x00FF;
+        idx                       = 8;
     }
 
     // Detect if optional variable length Insert Zone is present
-    if (current_managed_parameters_struct.aos_has_iz == AOS_HAS_IZ)
+    // Per CCSDS 732.0-B-4 Section 4.1.3, Insert Zone is optional but fixed length for a physical channel
+    if (aos_current_managed_parameters_struct.aos_has_iz == AOS_HAS_IZ)
     {
-        idx += current_managed_parameters_struct.aos_iz_len;
+        // Section 4.1.3.2 - Validate Insert Zone length
+        if (aos_current_managed_parameters_struct.aos_iz_len <= 0)
+        {
+            status = CRYPTO_LIB_ERR_INVALID_AOS_IZ_LENGTH;
+#ifdef AOS_DEBUG
+            printf(KRED "Error: Invalid Insert Zone length %d. Must be between 1 and 65535 octets.\n" RESET,
+                   aos_current_managed_parameters_struct.aos_iz_len);
+#endif
+            mc_if->mc_log(status);
+            return status;
+        }
+
+// Section 4.1.3.2.3 - All bits of the Insert Zone shall be set by the sending end
+// Based on the managed parameter configuration, we're not modifying the Insert Zone contents
+#ifdef AOS_DEBUG
+        printf(KYEL "Insert Zone present with length %d octets\n" RESET,
+               aos_current_managed_parameters_struct.aos_iz_len);
+#endif
+
+        idx += aos_current_managed_parameters_struct.aos_iz_len;
     }
 
     // Idx is now at SPI location
@@ -287,102 +376,138 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
      * cryptographic process, consisting of an integral number of octets. - CCSDS 3550b1
      **/
     // TODO: Set this depending on crypto cipher used
-
-    if (pkcs_padding)
+    int padding_length = 0;
+    if (sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC || sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC_MAC)
     {
-        uint8_t hex_padding[3] = {0};                       // TODO: Create #Define for the 3
-        pkcs_padding           = pkcs_padding & 0x00FFFFFF; // Truncate to be maxiumum of 3 bytes in size
-
-        // Byte Magic
-        hex_padding[0] = (pkcs_padding >> 16) & 0xFF;
-        hex_padding[1] = (pkcs_padding >> 8) & 0xFF;
-        hex_padding[2] = (pkcs_padding)&0xFF;
-
-        uint8_t padding_start = 0;
-        padding_start         = 3 - sa_ptr->shplf_len;
-
         for (i = 0; i < sa_ptr->shplf_len; i++)
         {
-            pTfBuffer[idx] = hex_padding[padding_start++];
+            padding_length = (padding_length << 8) | (uint8_t)pTfBuffer[idx];
             idx++;
         }
+        pkcs_padding = padding_length;
     }
 
+    if (pkcs_padding < cbc_padding)
+    {
+        status = CRYPTO_LIB_ERROR;
+        printf(KRED "Error: pkcs_padding length %d is less than required %d\n" RESET, pkcs_padding, cbc_padding);
+        mc_if->mc_log(status);
+        return status;
+    }
     /**
      * End Security Header Fields
      **/
-
-    // TODO: Padding handled here, or TO?
-    //  for (uint32_t i = 0; i < pkcs_padding; i++)
-    //  {
-    //      /** 4.1.1.5.2 The Pad Length field shall contain the count of fill bytes used in the
-    //       * cryptographic process, consisting of an integral number of octets. - CCSDS 3550b1
-    //       **/
-    //      // TODO: Set this depending on crypto cipher used
-    //     * (p_new_enc_frame + index + i) = (uint8_t)pkcs_padding; // How much padding is needed?
-    //      // index++;
-    //  }
 
     /**
      * ~~~Index currently at start of data field, AKA end of security header~~~
      **/
     data_loc = idx;
     // Calculate size of data to be encrypted
-    pdu_len = current_managed_parameters_struct.max_frame_size - idx - sa_ptr->stmacf_len;
+    pdu_len = aos_current_managed_parameters_struct.max_frame_size - idx - sa_ptr->stmacf_len;
+
+    if (aos_current_managed_parameters_struct.max_frame_size < idx - sa_ptr->stmacf_len)
+    {
+        status = CRYPTO_LIB_ERR_AOS_FRAME_LENGTH_UNDERFLOW;
+        mc_if->mc_log(status);
+        return status;
+    }
+
     // Check other managed parameter flags, subtract their lengths from data field if present
-    if (current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
+    if (aos_current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
     {
         pdu_len -= 4;
     }
-    if (current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
+    if (aos_current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
     {
         pdu_len -= 2;
+    }
+
+    if (aos_current_managed_parameters_struct.max_frame_size < pdu_len)
+    {
+        status = CRYPTO_LIB_ERR_AOS_FRAME_LENGTH_UNDERFLOW;
+        mc_if->mc_log(status);
+        return status;
     }
 
 #ifdef AOS_DEBUG
     printf(KYEL "Data location starts at: %d\n" RESET, idx);
     printf(KYEL "Data size is: %d\n" RESET, pdu_len);
     printf(KYEL "Index at end of SPI is: %d\n", idx);
-    if (current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
+    if (aos_current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
     {
         // If OCF exists, comes immediately after MAC
         printf(KYEL "OCF Location is: %d" RESET, idx + pdu_len + sa_ptr->stmacf_len);
     }
-    if (current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
+    if (aos_current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
     {
         // If FECF exists, comes just before end of the frame
-        printf(KYEL "FECF Location is: %d\n" RESET, current_managed_parameters_struct.max_frame_size - 2);
+        printf(KYEL "FECF Location is: %d\n" RESET, aos_current_managed_parameters_struct.max_frame_size - 2);
     }
 #endif
+
+    int padding_location = idx + pdu_len;
+    // done with data field, now add padding
+    if (pkcs_padding)
+    {
+        uint8_t hex_padding[3] = {0};                       // TODO: Create #Define for the 3
+        hex_padding[0]         = 0x00;                      // Prevent set but not used warning
+        hex_padding[1]         = 0x00;                      // Prevent set but not used warning
+        hex_padding[2]         = 0x00;                      // Prevent set but not used warning
+        pkcs_padding           = pkcs_padding & 0x00FFFFFF; // Truncate to be maxiumum of 3 bytes in size
+
+        for (i = 0; i < sa_ptr->shplf_len; i++)
+        {
+            hex_padding[i] = (pkcs_padding >> (8 * (sa_ptr->shplf_len - i - 1))) & 0xFF;
+        }
+
+#ifdef AOS_DEBUG
+        printf("pkcs_padding: %d\n", (int)pkcs_padding);
+#endif
+        for (i = 0; i < (int)pkcs_padding; i++)
+        {
+            for (int j = 0; j < sa_ptr->shplf_len; j++)
+            {
+                pTfBuffer[padding_location] = hex_padding[j];
+                padding_location++;
+                if (j != sa_ptr->shplf_len - 1)
+                {
+                    i++;
+                }
+            }
+        }
+    }
 
     // Get Key
     crypto_key_t *ekp = NULL;
     crypto_key_t *akp = NULL;
-    ekp               = key_if->get_key(sa_ptr->ekid);
-    akp               = key_if->get_key(sa_ptr->akid);
+    if (crypto_config.key_type != KEY_TYPE_KMC)
+    {
+        ekp = key_if->get_key(sa_ptr->ekid);
+        akp = key_if->get_key(sa_ptr->akid);
 
-    if (ekp == NULL || akp == NULL)
-    {
-        status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-        mc_if->mc_log(status);
-        return status;
-    }
-    if (sa_ptr->est == 1)
-    {
-        if (ekp->key_state != KEY_ACTIVE)
+        if (ekp == NULL || akp == NULL)
         {
-            status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
+            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
             mc_if->mc_log(status);
             return status;
         }
-    }
-    if (sa_ptr->ast == 1)
-    {
-        if (akp->key_state != KEY_ACTIVE)
+        if (sa_ptr->est == 1)
         {
-            status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
-            mc_if->mc_log(status);
-            return status;
+            if (ekp->key_state != KEY_ACTIVE)
+            {
+                status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
+                mc_if->mc_log(status);
+                return status;
+            }
+        }
+        if (sa_ptr->ast == 1)
+        {
+            if (akp->key_state != KEY_ACTIVE)
+            {
+                status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
+                mc_if->mc_log(status);
+                return status;
+            }
         }
     }
 
@@ -508,7 +633,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
                             sa_ptr->iv,     // IV
                             sa_ptr->iv_len, // IV Length
                             &sa_ptr->ecs,   // encryption cipher
-                            pkcs_padding,   // authentication cipher
+                            pkcs_padding,   // padding length
                             NULL);
             }
         }
@@ -533,25 +658,32 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
 
     if (sa_service_type != SA_PLAINTEXT)
     {
-#ifdef INCREMENT
-        if (crypto_config.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
-        {
-            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0)
-            {
-                Crypto_increment(sa_ptr->iv, sa_ptr->iv_len);
-            }
-        }
-        else // SA_INCREMENT_NONTRANSMITTED_IV_FALSE
-        {
-            // Only increment the transmitted portion
-            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0)
-            {
-                Crypto_increment(sa_ptr->iv + (sa_ptr->iv_len - sa_ptr->shivf_len), sa_ptr->shivf_len);
-            }
-        }
+        // Implement proper anti-replay sequence number handling per CCSDS 355.0-B-2
         if (sa_ptr->shsnf_len > 0)
         {
+            // Section 4.2.5 of CCSDS 355.0-B-2: Sequence numbers shall be incremented by one for each frame
             Crypto_increment(sa_ptr->arsn, sa_ptr->arsn_len);
+
+            // Check for sequence number rollover
+            int is_all_zeros = CRYPTO_TRUE;
+            for (i = 0; i < sa_ptr->arsn_len; i++)
+            {
+                if (*(sa_ptr->arsn + i) != 0)
+                {
+                    is_all_zeros = CRYPTO_FALSE;
+                    break;
+                }
+            }
+
+            // Section 4.2.5.3: If a rollover is detected, SA must be re-established
+            if (is_all_zeros)
+            {
+#ifdef SA_DEBUG
+                printf(KRED "ARSN has rolled over! SA should be re-established.\n" RESET);
+#endif
+                // Mark the SA for rekeying
+                sa_ptr->sa_state = SA_NONE;
+            }
         }
 
 #ifdef SA_DEBUG
@@ -583,7 +715,6 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
         }
         printf("\n" RESET);
 #endif
-#endif
     }
 
     // Move idx to mac location
@@ -601,35 +732,59 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
     }
 #endif
 
-    // TODO OCF - ? Here, elsewhere?
+    // Handle OCF (Operational Control Field) per CCSDS 732.0-B-4 Section 4.1.4
+    if (aos_current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
+    {
+        // Section 4.1.4.2 - OCF is always 4 octets
+        uint16_t ocf_location = idx + pdu_len + sa_ptr->stmacf_len;
+
+#ifdef AOS_DEBUG
+        printf(KYEL "OCF present at location %d\n" RESET, ocf_location);
+#endif
+
+        // If Idle data is being transmitted (no real data), set CLCW flag accordingly
+        // Per Section 6.4.1 - we're handling Type-1 Report which corresponds to CLCW
+        if (pdu_len == 0)
+        {
+            // Set Control Word Type Flag to 0 for CLCW
+            pTfBuffer[ocf_location] &= 0x7F;
+
+#ifdef AOS_DEBUG
+            printf(KYEL "Setting OCF CLCW flag for idle data\n" RESET);
+#endif
+        }
+
+        // Note: We don't modify other OCF fields as they should be handled by upper layers
+        // This just ensures the OCF is properly accounted for in the frame structure
+    }
 
     /**
      * End Authentication / Encryption
      **/
 
     // Only calculate & insert FECF if CryptoLib is configured to do so & gvcid includes FECF.
-    if (current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
+    if (aos_current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
     {
 #ifdef FECF_DEBUG
-        printf(KCYN "Calcing FECF over %d bytes\n" RESET, current_managed_parameters_struct.max_frame_size - 2);
+        printf(KCYN "Calcing FECF over %d bytes\n" RESET, aos_current_managed_parameters_struct.max_frame_size - 2);
 #endif
         if (crypto_config.crypto_create_fecf == CRYPTO_AOS_CREATE_FECF_TRUE)
         {
-            new_fecf = Crypto_Calc_FECF((uint8_t *)pTfBuffer, current_managed_parameters_struct.max_frame_size - 2);
-            pTfBuffer[current_managed_parameters_struct.max_frame_size - 2] = (uint8_t)((new_fecf & 0xFF00) >> 8);
-            pTfBuffer[current_managed_parameters_struct.max_frame_size - 1] = (uint8_t)(new_fecf & 0x00FF);
+            new_fecf = Crypto_Calc_FECF((uint8_t *)pTfBuffer, aos_current_managed_parameters_struct.max_frame_size - 2);
+            pTfBuffer[aos_current_managed_parameters_struct.max_frame_size - 2] = (uint8_t)((new_fecf & 0xFF00) >> 8);
+            pTfBuffer[aos_current_managed_parameters_struct.max_frame_size - 1] = (uint8_t)(new_fecf & 0x00FF);
         }
         else // CRYPTO_TC_CREATE_FECF_FALSE
         {
-            pTfBuffer[current_managed_parameters_struct.max_frame_size - 2] = (uint8_t)0x00;
-            pTfBuffer[current_managed_parameters_struct.max_frame_size - 1] = (uint8_t)0x00;
+            pTfBuffer[aos_current_managed_parameters_struct.max_frame_size - 2] = (uint8_t)0x00;
+            pTfBuffer[aos_current_managed_parameters_struct.max_frame_size - 1] = (uint8_t)0x00;
         }
         idx += 2;
     }
 
 #ifdef AOS_DEBUG
     printf(KYEL "Printing new AOS frame:\n\t");
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < aos_current_managed_parameters_struct.max_frame_size; i++)
     {
         printf("%02X", pTfBuffer[i]);
     }
@@ -645,254 +800,13 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer)
     return status;
 }
 
-/** Preserving for now
-    // Check for idle frame trigger
-    if (((uint8_t)ingest[0] == 0x08) && ((uint8_t)ingest[1] == 0x90))
-    { // Zero ingest
-        for (x = 0; x <*len_ingest; x++)
-        {
-            ingest[x] = 0;
-        }
-        // Update AOS First Header Pointer
-        aos_frame.tm_header.fhp = 0xFE;
-    }
-    else
-    { // Update the length of the ingest from the CCSDS header
-       *len_ingest = (ingest[4] << 8) | ingest[5];
-        ingest[5] = ingest[5] - 5;
-        // Remove outgoing secondary space packet header flag
-        ingest[0] = 0x00;
-        // Change sequence flags to 0xFFFF
-        ingest[2] = 0xFF;
-        ingest[3] = 0xFF;
-        // Add 2 bytes of CRC to space packet
-        spp_crc = Crypto_Calc_CRC16((uint8_t*)ingest,*len_ingest);
-        ingest[*len_ingest] = (spp_crc & 0xFF00) >> 8;
-        ingest[*len_ingest + 1] = (spp_crc & 0x00FF);
-       *len_ingest =*len_ingest + 2;
-        // Update AOS First Header Pointer
-        aos_frame.tm_header.fhp = aos_offset;
-#ifdef AOS_DEBUG
-        printf("tm_offset = %d \n", aos_offset);
-#endif
-    }
-    printf("LINE: %d\n",__LINE__);
-    // Update Current Telemetry Frame in Memory
-    // Counters
-    aos_frame.tm_header.mcfc++;
-    aos_frame.tm_header.vcfc++;
-    printf("LINE: %d\n",__LINE__);
-    // Operational Control Field
-    Crypto_AOS_updateOCF();
-    printf("LINE: %d\n",__LINE__);
-    // Payload Data Unit
-    Crypto_AOS_updatePDU(ingest,*len_ingest);
-    printf("LINE: %d\n",__LINE__);
-    if (sa_if->sa_get_from_spi(spi, &sa_ptr) != CRYPTO_LIB_SUCCESS)
-    {
-        // TODO - Error handling
-        status = CRYPTO_LIB_ERROR;
-        mc_if->mc_log(status);
-        return status; // Error -- unable to get SA from SPI.
-    }
-    printf("LINE: %d\n",__LINE__);
-    // Check test flags
-    if (badSPI == 1)
-    {
-        aos_frame.tm_sec_header.spi++;
-    }
-    if (badIV == 1)
-    {
-       * (sa_ptr->iv + sa_ptr->shivf_len - 1) =* (sa_ptr->iv + sa_ptr->shivf_len - 1) + 1;
-    }
-    if (badMAC == 1)
-    {
-        aos_frame.tm_sec_trailer.mac[MAC_SIZE - 1]++;
-    }
-    printf("LINE: %d\n",__LINE__);
-    // Initialize the temporary AOS frame
-    // Header
-    tempAOS[count++] = (uint8_t)((tm_frame.tm_header.tfvn << 6) | ((tm_frame.tm_header.scid & 0x3F0) >> 4));
-    printf("LINE: %d\n",__LINE__);
-    tempAOS[count++] = (uint8_t)(((tm_frame.tm_header.scid & 0x00F) << 4) | (tm_frame.tm_header.vcid << 1) |
-                                (tm_frame.tm_header.ocff));
-    tempAOS[count++] = (uint8_t)(tm_frame.tm_header.mcfc);
-    tempAOS[count++] = (uint8_t)(tm_frame.tm_header.vcfc);
-    tempAOS[count++] =
-        (uint8_t)((tm_frame.tm_header.tfsh << 7) | (tm_frame.tm_header.sf << 6) | (tm_frame.tm_header.pof << 5) |
-                  (tm_frame.tm_header.slid << 3) | ((tm_frame.tm_header.fhp & 0x700) >> 8));
-    tempAOS[count++] = (uint8_t)(tm_frame.tm_header.fhp & 0x0FF);
-    //	tempAOS[count++] = (uint8_t) ((tm_frame.tm_header.tfshvn << 6) | aos_frame.tm_header.tfshlen);
-    // Security Header
-    printf("LINE: %d\n",__LINE__);
-    tempAOS[count++] = (uint8_t)((spi & 0xFF00) >> 8);
-    tempAOS[count++] = (uint8_t)((spi & 0x00FF));
-    if(sa_ptr->shivf_len > 0)
-    {
-        memcpy(tm_frame.tm_sec_header.iv, sa_ptr->iv, sa_ptr->shivf_len);
-    }
-    printf("LINE: %d\n",__LINE__);
-    // TODO: Troubleshoot
-    // Padding Length
-    // pad_len = Crypto_Get_tmLength(*len_ingest) - AOS_MIN_SIZE + IV_SIZE + AOS_PAD_SIZE -*len_ingest;
-    printf("LINE: %d\n",__LINE__);
-    // Only add IV for authenticated encryption
-    if ((sa_ptr->est == 1) && (sa_ptr->ast == 1))
-    { // Initialization Vector
-#ifdef INCREMENT
-        printf("LINE: %d\n",__LINE__);
-        Crypto_increment(sa_ptr->iv, sa_ptr->shivf_len);
-#endif
-        if ((sa_ptr->est == 1) || (sa_ptr->ast == 1))
-        {
-            printf("LINE: %d\n",__LINE__);
-            for (x = 0; x < IV_SIZE; x++)
-            {
-                tempAOS[count++] =* (sa_ptr->iv + x);
-            }
-        }
-        pdu_loc = count;
-        pad_len = pad_len - IV_SIZE - AOS_PAD_SIZE + OCF_SIZE;
-        pdu_len =*len_ingest + pad_len;
-    }
-    else
-    {                           // Include padding length bytes - hard coded per ESA testing
-        printf("LINE: %d\n",__LINE__);
-        tempAOS[count++] = 0x00; // pad_len >> 8;
-        tempAOS[count++] = 0x1A; // pad_len
-        pdu_loc = count;
-        pdu_len =*len_ingest + pad_len;
-    }
-    printf("LINE: %d\n",__LINE__);
-    // Payload Data Unit
-    for (x = 0; x < (pdu_len); x++)
-    {
-        tempAOS[count++] = (uint8_t)tm_frame.tm_pdu[x];
-    }
-    // Message Authentication Code
-    mac_loc = count;
-    for (x = 0; x < MAC_SIZE; x++)
-    {
-        tempAOS[count++] = 0x00;
-    }
-    printf("LINE: %d\n",__LINE__);
-    // Operational Control Field
-    for (x = 0; x < OCF_SIZE; x++)
-    {
-        tempAOS[count++] = (uint8_t)tm_frame.tm_sec_trailer.ocf[x];
-    }
-    printf("LINE: %d\n",__LINE__);
-    // Frame Error Control Field
-    fecf_loc = count;
-    aos_frame.tm_sec_trailer.fecf = Crypto_Calc_FECF((uint8_t*)tempAOS, count);
-    tempAOS[count++] = (uint8_t)((tm_frame.tm_sec_trailer.fecf & 0xFF00) >> 8);
-    tempAOS[count++] = (uint8_t)(tm_frame.tm_sec_trailer.fecf & 0x00FF);
-
-    // Determine Mode
-    // Clear
-    if ((sa_ptr->est == 0) && (sa_ptr->ast == 0))
-    {
-#ifdef DEBUG
-        printf(KBLU "Creating a AOS - CLEAR! \n" RESET);
-#endif
-        // Copy temporary frame to ingest
-        memcpy(ingest, tempAOS, count);
-    }
-    // Authenticated Encryption
-    else if ((sa_ptr->est == 1) && (sa_ptr->ast == 1))
-    {
-#ifdef DEBUG
-        printf(KBLU "Creating a AOS - AUTHENTICATED ENCRYPTION! \n" RESET);
-#endif
-
-        // Copy AOS to ingest
-        memcpy(ingest, tempAOS, pdu_loc);
-
-#ifdef MAC_DEBUG
-        printf("AAD = 0x");
-#endif
-        // Prepare additional authenticated data
-        for (y = 0; y < sa_ptr->abm_len; y++)
-        {
-            aad[y] = ingest[y] &* (sa_ptr->abm + y);
-#ifdef MAC_DEBUG
-            printf("%02x", aad[y]);
-#endif
-        }
-#ifdef MAC_DEBUG
-        printf("\n");
-#endif
-
-        status = cryptography_if->cryptography_aead_encrypt(&(ingest[pdu_loc]), // ciphertext output
-                                                           (size_t)pdu_len,            // length of data
-                                                           &(tempAOS[pdu_loc]), // plaintext input
-                                                           (size_t)pdu_len,             // in data length
-                                                           &(ekp->value[0]), // Key
-                                                           KEY_SIZE,
-                                                           sa_ptr,
-                                                           sa_ptr->iv,
-                                                           sa_ptr->shivf_len,
-                                                           &(ingest[mac_loc]),
-                                                           MAC_SIZE,
-                                                           &(aad[0]), // AAD Input location
-                                                           sa_ptr->abm_len, // AAD is size of ABM in this case
-                                                           CRYPTO_TRUE, // Encrypt
-                                                           CRYPTO_FALSE, // Authenticate // TODO -- Set to SA value,
-manually setting to false here so existing tests pass. Existing data was generated with authenticate then encrypt, when
-it should have been encrypt then authenticate. CRYPTO_TRUE, // Use AAD sa_ptr->ecs, // encryption cipher sa_ptr->acs, //
-authentication cipher NULL // cam_cookies (not supported in AOS functions yet)
-                                                           );
-
-
-        // Update OCF
-        y = 0;
-        for (x = OCF_SIZE; x > 0; x--)
-        {
-            ingest[fecf_loc - x] = aos_frame.tm_sec_trailer.ocf[y++];
-        }
-
-        // Update FECF
-        aos_frame.tm_sec_trailer.fecf = Crypto_Calc_FECF((uint8_t*)ingest, fecf_loc - 1);
-        ingest[fecf_loc] = (uint8_t)((tm_frame.tm_sec_trailer.fecf & 0xFF00) >> 8);
-        ingest[fecf_loc + 1] = (uint8_t)(tm_frame.tm_sec_trailer.fecf & 0x00FF);
-    }
-    // Authentication
-    else if ((sa_ptr->est == 0) && (sa_ptr->ast == 1))
-    {
-#ifdef DEBUG
-        printf(KBLU "Creating a AOS - AUTHENTICATED! \n" RESET);
-#endif
-        // TODO: Future work. Operationally same as clear.
-        memcpy(ingest, tempAOS, count);
-    }
-    // Encryption
-    else if ((sa_ptr->est == 1) && (sa_ptr->ast == 0))
-    {
-#ifdef DEBUG
-        printf(KBLU "Creating a AOS - ENCRYPTED! \n" RESET);
-#endif
-        // TODO: Future work. Operationally same as clear.
-        memcpy(ingest, tempAOS, count);
-    }
-
-#ifdef AOS_DEBUG
-    Crypto_tmPrint(&tm_frame);
-#endif
-
-#ifdef DEBUG
-    printf(KYEL "----- Crypto_AOS_ApplySecurity END -----\n" RESET);
-#endif
-
-   *len_ingest = count;
-    mc_if->mc_log(status);
-    return status;
-}  **/
-
 /**
  * @brief Function: Crypto_AOS_ProcessSecurity
  * @param ingest: uint8_t*
  * @param len_ingest: int*
  * @return int32: Success/Failure
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 5 (AOS Protocol), CCSDS 732.0-B-4
  **/
 int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_t **pp_processed_frame,
                                    uint16_t *p_decrypted_length)
@@ -904,13 +818,14 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     uint16_t               byte_idx = 0;
     uint8_t                ecs_is_aead_algorithm;
     uint32_t               encryption_cipher = 0;
-    uint8_t                iv_loc;
-    int                    mac_loc         = 0;
-    uint16_t               pdu_len         = 1;
-    uint8_t               *p_new_dec_frame = NULL;
-    SecurityAssociation_t *sa_ptr          = NULL;
-    uint8_t                sa_service_type = -1;
-    uint8_t                spi             = -1;
+    uint8_t                iv_loc            = 0;
+    int                    mac_loc           = 0;
+    uint16_t               pdu_len           = 1;
+    uint8_t               *p_new_dec_frame   = NULL;
+    SecurityAssociation_t *sa_ptr            = NULL;
+    uint8_t                sa_service_type   = -1;
+    uint8_t                spi               = -1;
+    uint8_t                aos_hdr_len       = 6;
 
     // Bit math to give concise access to values in the ingest
     aos_frame_pri_hdr.tfvn = ((uint8_t)p_ingest[0] & 0xC0) >> 6;
@@ -921,7 +836,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     printf(KYEL "\n----- Crypto_AOS_ProcessSecurity START -----\n" RESET);
 #endif
 
-    if (len_ingest < 6) // Frame length doesn't even have enough bytes for header -- error out.
+    if (len_ingest < aos_hdr_len) // Frame length doesn't even have enough bytes for header -- error out.
     {
         status = CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_AOS_STANDARD;
         mc_if->mc_log(status);
@@ -959,7 +874,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     // Lookup-retrieve managed parameters for frame via gvcid:
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &current_managed_parameters_struct);
+                                                gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
 
     if (status != CRYPTO_LIB_SUCCESS)
     {
@@ -972,15 +887,52 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
 
     // Increment to end of Primary Header start, depends on FHECF presence
     byte_idx = 6;
-    if (current_managed_parameters_struct.aos_has_fhec == AOS_HAS_FHEC)
+    if (aos_current_managed_parameters_struct.aos_has_fhec == AOS_HAS_FHEC)
     {
-        byte_idx = 8;
+        uint16_t recieved_fhecf = (((p_ingest[aos_hdr_len] << 8) & 0xFF00) | (p_ingest[aos_hdr_len + 1] & 0x00FF));
+#ifdef AOS_DEBUG
+        printf("Recieved FHECF: %04x\n", recieved_fhecf);
+        printf(KYEL "Calculating FHECF...\n" RESET);
+#endif
+        uint16_t calculated_fhecf = Crypto_Calc_FHECF(p_ingest);
+
+        if (recieved_fhecf != calculated_fhecf)
+        {
+            status = CRYPTO_LIB_ERR_INVALID_FHECF;
+            mc_if->mc_log(status);
+            return status;
+        }
+
+        p_ingest[byte_idx]     = (calculated_fhecf >> 8) & 0x00FF;
+        p_ingest[byte_idx + 1] = (calculated_fhecf)&0x00FF;
+        byte_idx               = 8;
+        aos_hdr_len            = byte_idx;
     }
 
-    // Determine if Insert Zone exists, increment past it if so
-    if (current_managed_parameters_struct.aos_has_iz)
+    // Detect if optional variable length Insert Zone is present
+    // Per CCSDS 732.0-B-4 Section 4.1.3, Insert Zone is optional but fixed length for a physical channel
+    if (aos_current_managed_parameters_struct.aos_has_iz == AOS_HAS_IZ)
     {
-        byte_idx += current_managed_parameters_struct.aos_iz_len;
+        // Section 4.1.3.2 - Validate Insert Zone length
+        if (aos_current_managed_parameters_struct.aos_iz_len <= 0)
+        {
+            status = CRYPTO_LIB_ERR_INVALID_AOS_IZ_LENGTH;
+#ifdef AOS_DEBUG
+            printf(KRED "Error: Invalid Insert Zone length %d. Must be between 1 and 65535 octets.\n" RESET,
+                   aos_current_managed_parameters_struct.aos_iz_len);
+#endif
+            mc_if->mc_log(status);
+            return status;
+        }
+
+// Section 4.1.3.2.3 - All bits of the Insert Zone shall be set by the sending end
+// Based on the managed parameter configuration, we're not modifying the Insert Zone contents
+#ifdef AOS_DEBUG
+        printf(KYEL "Insert Zone present with length %d octets\n" RESET,
+               aos_current_managed_parameters_struct.aos_iz_len);
+#endif
+
+        byte_idx += aos_current_managed_parameters_struct.aos_iz_len;
     }
 
     /**
@@ -1076,11 +1028,18 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     }
 #endif
 
-    // Parse & Check FECF, if present, and update fecf length
-    if (current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
+    if (len_ingest < aos_current_managed_parameters_struct.max_frame_size)
     {
-        uint16_t received_fecf = (((p_ingest[current_managed_parameters_struct.max_frame_size - 2] << 8) & 0xFF00) |
-                                  (p_ingest[current_managed_parameters_struct.max_frame_size - 1] & 0x00FF));
+        status = CRYPTO_LIB_ERR_AOS_FL_LT_MAX_FRAME_SIZE;
+        mc_if->mc_log(status);
+        return status;
+    }
+
+    // Parse & Check FECF, if present, and update fecf length
+    if (aos_current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
+    {
+        uint16_t received_fecf = (((p_ingest[aos_current_managed_parameters_struct.max_frame_size - 2] << 8) & 0xFF00) |
+                                  (p_ingest[aos_current_managed_parameters_struct.max_frame_size - 1] & 0x00FF));
 
         if (crypto_config.crypto_check_fecf == AOS_CHECK_FECF_TRUE)
         {
@@ -1105,17 +1064,16 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
 #ifdef FECF_DEBUG
                 printf(KYEL "FECF CALC MATCHES! - GOOD\n" RESET);
 #endif
-                ;
             }
         }
     }
     // Needs to be AOS_HAS_FECF (checked above, or AOS_NO_FECF)
-    else if (current_managed_parameters_struct.has_fecf != AOS_NO_FECF)
+    else if (aos_current_managed_parameters_struct.has_fecf != AOS_NO_FECF)
     {
 #ifdef AOS_DEBUG
         printf(KRED "AOS_Process Error...tfvn: %d scid: 0x%04X vcid: 0x%02X fecf_enum: %d\n" RESET,
-               current_managed_parameters_struct.tfvn, current_managed_parameters_struct.scid,
-               current_managed_parameters_struct.vcid, current_managed_parameters_struct.has_fecf);
+               aos_current_managed_parameters_struct.tfvn, aos_current_managed_parameters_struct.scid,
+               aos_current_managed_parameters_struct.vcid, aos_current_managed_parameters_struct.has_fecf);
 #endif
         status = CRYPTO_LIB_ERR_TC_ENUM_USED_FOR_AOS_CONFIG;
         mc_if->mc_log(status);
@@ -1134,18 +1092,18 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
         return status;
     }
 
-    // Copy over AOS Primary Header (6 bytes)
-    memcpy(p_new_dec_frame, &p_ingest[0], 6);
+    // Copy over AOS Primary Header (6-8 bytes)
+    memcpy(p_new_dec_frame, &p_ingest[0], aos_hdr_len);
 
     // Copy over insert zone data, if it exists
-    if (current_managed_parameters_struct.aos_has_iz == AOS_HAS_IZ)
+    if (aos_current_managed_parameters_struct.aos_has_iz == AOS_HAS_IZ)
     {
-        memcpy(p_new_dec_frame + 6, &p_ingest[6], current_managed_parameters_struct.aos_iz_len);
+        memcpy(p_new_dec_frame + aos_hdr_len, &p_ingest[aos_hdr_len], aos_current_managed_parameters_struct.aos_iz_len);
 #ifdef AOS_DEBUG
         printf("Copied over the following:\n\t");
-        for (int i = 0; i < current_managed_parameters_struct.aos_iz_len; i++)
+        for (int i = 0; i < aos_current_managed_parameters_struct.aos_iz_len; i++)
         {
-            printf("%02X", p_ingest[6 + i]);
+            printf("%02X", p_ingest[aos_hdr_len + i]);
         }
         printf("\n");
 #endif
@@ -1176,12 +1134,30 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
 
     // Calculate size of the protocol data unit
     // NOTE: This size itself is not the length for authentication
-    pdu_len = current_managed_parameters_struct.max_frame_size - (byte_idx)-sa_ptr->stmacf_len;
-    if (current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
+
+    /*
+    ** CCSDS 732.0-B-4 Section The AOS Transfer Frame Data Field
+    ** The Data Field contains user data and occupies the central part of the Transfer Frame.
+    ** The optional Operations Control Field and the Frame Error Control Field, if present,
+    ** are not part of the Data Field.
+    */
+    pdu_len = aos_current_managed_parameters_struct.max_frame_size - byte_idx - sa_ptr->stmacf_len;
+
+    /*
+    ** CCSDS 732.0-B-4 Section 4.1.5 - Operational Control Field (OCF)
+    ** The OCF contains real-time Control Commands, reports, or status that may be required for
+    ** the operation of the AOS Space Data Link Protocol.
+    */
+    if (aos_current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
     {
         pdu_len -= 4;
     }
-    if (current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
+
+    /*
+    ** CCSDS 732.0-B-4 Section 4.1.6 - Frame Error Control Field (FECF)
+    ** The FECF shall contain a sequence of 16 parity bits for error detection.
+    */
+    if (aos_current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
     {
         pdu_len -= 2;
     }
@@ -1196,15 +1172,15 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
 #ifdef AOS_DEBUG
     printf(KYEL "Index / data location starts at: %d\n" RESET, byte_idx);
     printf(KYEL "Data size is: %d\n" RESET, pdu_len);
-    if (current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
+    if (aos_current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
     {
         // If OCF exists, comes immediately after MAC
         printf(KYEL "OCF Location is: %d" RESET, byte_idx + pdu_len + sa_ptr->stmacf_len);
     }
-    if (current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
+    if (aos_current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
     {
         // If FECF exists, comes just before end of the frame
-        printf(KYEL "FECF Location is: %d\n" RESET, current_managed_parameters_struct.max_frame_size - 2);
+        printf(KYEL "FECF Location is: %d\n" RESET, aos_current_managed_parameters_struct.max_frame_size - 2);
     }
 #endif
 
@@ -1214,47 +1190,51 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
 
     if (sa_ptr->est == 1)
     {
-        ekp = key_if->get_key(sa_ptr->ekid);
-        if (ekp == NULL)
+        if (crypto_config.key_type != KEY_TYPE_KMC)
         {
-            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-            mc_if->mc_log(status);
-            return status;
-        }
-        if (ekp->key_state != KEY_ACTIVE)
-        {
-            status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
-            mc_if->mc_log(status);
-            return status;
+            ekp = key_if->get_key(sa_ptr->ekid);
+            if (ekp == NULL)
+            {
+                status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+                mc_if->mc_log(status);
+                free(p_new_dec_frame);
+                return status;
+            }
+            if (ekp->key_state != KEY_ACTIVE)
+            {
+                status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
+                mc_if->mc_log(status);
+                free(p_new_dec_frame);
+                return status;
+            }
         }
     }
     if (sa_ptr->ast == 1)
     {
-        akp = key_if->get_key(sa_ptr->akid);
-        if (akp == NULL)
+        if (crypto_config.key_type != KEY_TYPE_KMC)
         {
-            status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-            mc_if->mc_log(status);
-            return status;
-        }
-        if (akp->key_state != KEY_ACTIVE)
-        {
-            status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
-            mc_if->mc_log(status);
-            return status;
+            akp = key_if->get_key(sa_ptr->akid);
+            if (akp == NULL)
+            {
+                status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
+                mc_if->mc_log(status);
+                free(p_new_dec_frame);
+                return status;
+            }
+            if (akp->key_state != KEY_ACTIVE)
+            {
+                status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
+                mc_if->mc_log(status);
+                free(p_new_dec_frame);
+                return status;
+            }
         }
     }
 
     /**
      * Begin Authentication / Encryption
-     **/
-
-    // if(sa_service_type != SA_PLAINTEXT)
-    // {
-    // status = CRYPTO_LIB_ERR_NULL_CIPHERS;
-    // mc_if->mc_log(status);
-    // return status;
-    // }
+     * Reference CCSDS 355.0-B-2 Section 5.3 (AOS Security Processing)
+     */
 
     // Parse MAC, prepare AAD
     if ((sa_service_type == SA_AUTHENTICATION) || (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
@@ -1271,12 +1251,20 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
         {
             aad_len = mac_loc;
         }
+
+        // CCSDS 355.0-B-2 Section 4.2.3.4 - Authentication bit mask must be sufficient for AAD
         if (sa_ptr->abm_len < aad_len)
         {
+            free(p_new_dec_frame); // Add cleanup
             status = CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
+#ifdef MAC_DEBUG
+            printf(KRED "Error: ABM length %d is shorter than required AAD length %d\n" RESET, sa_ptr->abm_len,
+                   aad_len);
+#endif
             mc_if->mc_log(status);
             return status;
         }
+
         // Use ingest and abm to create aad
         Crypto_Prepare_AOS_AAD(p_ingest, aad_len, sa_ptr->abm, &aad[0]);
 
@@ -1296,6 +1284,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
 #ifdef DEBUG
         printf(KRED "Error: SA Not Operational \n" RESET);
 #endif
+        free(p_new_dec_frame); // Add cleanup
         return CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL;
     }
 
@@ -1369,7 +1358,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
             // Check that key length to be used emets the algorithm requirement
             if ((int32_t)ekp->key_len != Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs))
             {
-                // free(aad); - non-heap object
+                free(p_new_dec_frame); // Add cleanup
                 status = CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
                 mc_if->mc_log(status);
                 return status;
@@ -1387,18 +1376,6 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
                                                            &sa_ptr->ecs,      // encryption cipher
                                                            &sa_ptr->acs,      // authentication cipher
                                                            NULL);
-
-            // //Handle Padding Removal
-            // if(sa_ptr->shplf_len != 0)
-            // {
-            //     int padding_location = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len +
-            //                             sa_ptr->shsnf_len;
-            //     uint16_t padding_amount = 0;
-            //     // Get Padding Amount from ingest frame
-            //     padding_amount = (int)ingest[padding_location];
-            //     // Remove Padding from final decrypted portion
-            //     tc_sdls_processed_frame->tc_pdu_len -= padding_amount;
-            // }
         }
     }
 
@@ -1406,17 +1383,17 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     else if (sa_service_type == SA_PLAINTEXT)
     {
         memcpy(p_new_dec_frame + byte_idx, &(p_ingest[byte_idx]), pdu_len);
-        byte_idx += pdu_len;
+        // byte_idx += pdu_len; // byte_idx no longer read
     }
 
 #ifdef AOS_DEBUG
     printf(KYEL "\nPrinting received frame:\n\t" RESET);
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < aos_current_managed_parameters_struct.max_frame_size; i++)
     {
         printf(KYEL "%02X", p_ingest[i]);
     }
     printf(KYEL "\nPrinting PROCESSED frame:\n\t" RESET);
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < aos_current_managed_parameters_struct.max_frame_size; i++)
     {
         printf(KYEL "%02X", p_new_dec_frame[i]);
     }
@@ -1425,7 +1402,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
 
     *pp_processed_frame = p_new_dec_frame;
     // TODO maybe not just return this without doing the math ourselves
-    *p_decrypted_length = current_managed_parameters_struct.max_frame_size;
+    *p_decrypted_length = aos_current_managed_parameters_struct.max_frame_size;
 
 #ifdef DEBUG
     printf(KYEL "----- Crypto_AOS_ProcessSecurity END -----\n" RESET);
@@ -1439,6 +1416,8 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
  * Returns the total length of the current aos_frame in BYTES!
  * @param len: int
  * @return int32_t Length of AOS
+ *
+ * CCSDS Compliance: CCSDS 732.0-B-4 Section 4.1 (AOS Transfer Frame Format)
  **/
 int32_t Crypto_Get_aosLength(int len)
 {
@@ -1453,195 +1432,6 @@ int32_t Crypto_Get_aosLength(int len)
 }
 
 /**
- * @brief Function: Crypto_AOS_updatePDU
- * Update the Telemetry Payload Data Unit
- * @param ingest: uint8_t*
- * @param len_ingest: int
- **/
-/**
-void Crypto_AOS_updatePDU(uint8_t* ingest, int len_ingest)
-{ // Copy ingest to PDU
-    int x = 0;
-    // int y = 0;
-    // int fill_size = 0;
-    SecurityAssociation_t* sa_ptr;
-
-    // Consider a helper function here, or elsewhere, to do all the 'math' in one spot as a global accessible list of
-variables if (sa_if->sa_get_from_spi(tm_frame[0], &sa_ptr) != CRYPTO_LIB_SUCCESS) // modify
-    {
-        // TODO - Error handling
-        printf(KRED"Update PDU Error!\n");
-        return; // Error -- unable to get SA from SPI.
-    }
-    if ((sa_ptr->est == 1) && (sa_ptr->ast == 1))
-    {
-        // fill_size = 1129 - MAC_SIZE - IV_SIZE + 2; // +2 for padding bytes
-    }
-    else
-    {
-        // fill_size = 1129;
-    }
-#ifdef AOS_ZERO_FILL
-    for (x = 0; x < AOS_FILL_SIZE; x++)
-    {
-        if (x < len_ingest)
-        { // Fill
-            aos_frame.tm_pdu[x] = (uint8_t)ingest[x];
-        }
-        else
-        { // Zero
-            aos_frame.tm_pdu[x] = 0x00;
-        }
-    }
-#else
-    // Pre-append remaining packet if exist
-    // if (tm_offset == 63)
-    // {
-    //     aos_frame.tm_pdu[x++] = 0xff;
-    //     aos_offset--;
-    // }
-    // if (tm_offset == 62)
-    // {
-    //     aos_frame.tm_pdu[x++] = 0x00;
-    //     aos_offset--;
-    // }
-    // if (tm_offset == 61)
-    // {
-    //     aos_frame.tm_pdu[x++] = 0x00;
-    //     aos_offset--;
-    // }
-    // if (tm_offset == 60)
-    // {
-    //     aos_frame.tm_pdu[x++] = 0x00;
-    //     aos_offset--;
-    // }
-    // if (tm_offset == 59)
-    // {
-    //     aos_frame.tm_pdu[x++] = 0x39;
-    //     aos_offset--;
-    // }
-    // while (x < aos_offset)
-    // {
-    //     aos_frame.tm_pdu[x] = 0x00;
-    //     x++;
-    // }
-    // Copy actual packet
-    while (x < len_ingest + aos_offset)
-    {
-        // printf("%s, Line: %d\n", __FILE__, __LINE__);
-        // printf("ingest[x - aos_offset] = 0x%02x \n", (uint8_t)ingest[x - aos_offset]);
-        printf("%02X", (uint8_t)ingest[x - aos_offset]);
-        // aos_frame.tm_pdu[x] = (uint8_t)ingest[x - aos_offset];
-        x++;
-    }
-#ifdef AOS_IDLE_FILL
-    // Check for idle frame trigger
-    if (((uint8_t)ingest[0] == 0x08) && ((uint8_t)ingest[1] == 0x90))
-    {
-        // Don't fill idle frames
-    }
-    else
-    {
-        // while (x < (fill_size - 64))
-        // {
-        //     aos_frame.tm_pdu[x++] = 0x07;
-        //     aos_frame.tm_pdu[x++] = 0xff;
-        //     aos_frame.tm_pdu[x++] = 0x00;
-        //     aos_frame.tm_pdu[x++] = 0x00;
-        //     aos_frame.tm_pdu[x++] = 0x00;
-        //     aos_frame.tm_pdu[x++] = 0x39;
-        //     for (y = 0; y < 58; y++)
-        //     {
-        //         aos_frame.tm_pdu[x++] = 0x00;
-        //     }
-        // }
-        // Add partial packet, if possible, and set offset
-        // if (x < fill_size)
-        // {
-        //     aos_frame.tm_pdu[x++] = 0x07;
-        //     aos_offset = 63;
-        // }
-        // if (x < fill_size)
-        // {
-        //     aos_frame.tm_pdu[x++] = 0xff;
-        //     aos_offset--;
-        // }
-        // if (x < fill_size)
-        // {
-        //     aos_frame.tm_pdu[x++] = 0x00;
-        //     aos_offset--;
-        // }
-        // if (x < fill_size)
-        // {
-        //     aos_frame.tm_pdu[x++] = 0x00;
-        //     aos_offset--;
-        // }
-        // if (x < fill_size)
-        // {
-        //     aos_frame.tm_pdu[x++] = 0x00;
-        //     aos_offset--;
-        // }
-        // if (x < fill_size)
-        // {
-        //     aos_frame.tm_pdu[x++] = 0x39;
-        //     aos_offset--;
-        // }
-        // for (y = 0; x < fill_size; y++)
-        // {
-        //     aos_frame.tm_pdu[x++] = 00;
-        //     aos_offset--;
-        // }
-    }
-    // while (x < AOS_FILL_SIZE)
-    // {
-    //     aos_frame.tm_pdu[x++] = 0x00;
-    // }
-#endif
-#endif
-
-    return;
-}
-  **/
-/**
- * @brief Function: Crypto_AOS_updateOCF
- * Update the AOS OCF
- **/
-/**
-void Crypto_AOS_updateOCF(void)
-{
-    // TODO
-    if (ocf == 0)
-    { // CLCW
-        clcw.vci = aos_frame.tm_header.vcid;
-
-        aos_frame.tm_sec_trailer.ocf[0] = (clcw.cwt << 7) | (clcw.cvn << 5) | (clcw.sf << 2) | (clcw.cie);
-        aos_frame.tm_sec_trailer.ocf[1] = (clcw.vci << 2) | (clcw.spare0);
-        aos_frame.tm_sec_trailer.ocf[2] = (clcw.nrfa << 7) | (clcw.nbl << 6) | (clcw.lo << 5) | (clcw.wait << 4) |
-                                         (clcw.rt << 3) | (clcw.fbc << 1) | (clcw.spare1);
-        aos_frame.tm_sec_trailer.ocf[3] = (clcw.rv);
-        // Alternate OCF
-        ocf = 1;
-#ifdef OCF_DEBUG
-        Crypto_clcwPrint(&clcw);
-#endif
-    }
-    else
-    { // FSR
-        aos_frame.tm_sec_trailer.ocf[0] = (report.cwt << 7) | (report.vnum << 4) | (report.af << 3) |
-                                         (report.bsnf << 2) | (report.bmacf << 1) | (report.ispif);
-        aos_frame.tm_sec_trailer.ocf[1] = (report.lspiu & 0xFF00) >> 8;
-        aos_frame.tm_sec_trailer.ocf[2] = (report.lspiu & 0x00FF);
-        aos_frame.tm_sec_trailer.ocf[3] = (report.snval);
-        // Alternate OCF
-        ocf = 0;
-#ifdef OCF_DEBUG
-        Crypto_fsrPrint(&report);
-#endif
-    }
-}
-  **/
-
-/**
  * @brief Function: Crypto_Prepare_AOS_AAD
  * Bitwise ANDs buffer with abm, placing results in aad buffer
  * @param buffer: uint8_t*
@@ -1649,6 +1439,8 @@ void Crypto_AOS_updateOCF(void)
  * @param abm_buffer: uint8_t*
  * @param aad: uint8_t*
  * @return status: uint32_t
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 7.2.3 (AAD Construction)
  **/
 uint32_t Crypto_Prepare_AOS_AAD(const uint8_t *buffer, uint16_t len_aad, const uint8_t *abm_buffer, uint8_t *aad)
 {

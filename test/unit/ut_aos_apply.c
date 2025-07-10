@@ -46,7 +46,7 @@ UTEST(AOS_APPLY, NULL_BUFFER)
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_HAS_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
 
-    status = Crypto_AOS_ApplySecurity(&ingest[0]);
+    status = Crypto_AOS_ApplySecurity(&ingest[0], 0);
 
     ASSERT_EQ(CRYPTO_LIB_ERR_NULL_BUFFER, status);
 
@@ -64,7 +64,7 @@ UTEST(AOS_APPLY, NO_CONFIG)
     int32_t status       = CRYPTO_LIB_ERROR;
     uint8_t ingest[1786] = {0};
 
-    status = Crypto_AOS_ApplySecurity(&ingest[0]);
+    status = Crypto_AOS_ApplySecurity(&ingest[0], 0);
 
     ASSERT_EQ(CRYPTO_LIB_ERR_NO_CONFIG, status);
 
@@ -143,7 +143,7 @@ UTEST(AOS_APPLY, NO_INIT)
     ASSERT_EQ(aos_frame_pri_hdr.scid, 0x03); // SCID 3
     ASSERT_EQ(aos_frame_pri_hdr.vcid, 0x00); // VCID 0
 
-    status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
+    status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b, test_aos_len);
     ASSERT_EQ(CRYPTO_LIB_ERR_NO_CONFIG, status);
 
     char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
@@ -263,18 +263,19 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FECF)
     akp               = key_if->get_key(test_association->akid);
     akp->key_state    = KEY_ACTIVE;
 
-    status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
+    status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b, test_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
     ASSERT_STREQ("CRYPTO_LIB_SUCCESS", error_enum);
     // Now, byte by byte verify the static frame in memory is what we expect (updated SPI and FECF)
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < aos_current_managed_parameters_struct.max_frame_size; i++)
     {
         printf("Checking %02x against %02X\n", (uint8_t)test_aos_b[i], (uint8_t) * (truth_aos_b + i));
         ASSERT_EQ((uint8_t)test_aos_b[i], (uint8_t) * (truth_aos_b + i));
     }
 
     free(test_aos_b);
+    free(truth_aos_b);
     Crypto_Shutdown();
 }
 
@@ -302,6 +303,7 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FECF_LEFT_BLANK)
     // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0003, 0, AOS_HAS_FECF, TM_SEGMENT_HDRS_NA, AOS_HAS_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test Frame Setup
     // 6 byte header, 2 byte blank SPI, data, FECF
@@ -398,20 +400,21 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FECF_LEFT_BLANK)
     akp               = key_if->get_key(test_association->akid);
     akp->key_state    = KEY_ACTIVE;
 
-    status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
+    status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b, test_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
     ASSERT_STREQ("CRYPTO_LIB_SUCCESS", error_enum);
 
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < aos_current_managed_parameters_struct.max_frame_size; i++)
     {
         printf("Checking %02x against %02X\n", (uint8_t)test_aos_b[i], (uint8_t) * (truth_aos_b + i));
         ASSERT_EQ((uint8_t)test_aos_b[i], (uint8_t) * (truth_aos_b + i));
     }
 
     free(test_aos_b);
+    free(truth_aos_b);
     Crypto_Shutdown();
 }
 
@@ -438,6 +441,7 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FHEC_FECF)
     // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0003, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_HAS_OCF, 1786,
     // AOS_HAS_FHEC, AOS_NO_IZ, 0);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test Frame Setup
     // 8 byte header (Including FHEC stubbed as 0x8888), 2 byte blank SPI, data, FECF
@@ -481,7 +485,7 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FHEC_FECF)
 
     // Truth frame setup
     char *truth_aos_h =
-        "40C0000000008888000A112233445566778899AABBCCDDEEFFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
+        "40C000000000DA84000A112233445566778899AABBCCDDEEFFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
         "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
         "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
         "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
@@ -513,7 +517,7 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FHEC_FECF)
         "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
         "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
         "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
-        "BBAABBAA3756F72DE2633CF59B14F1D89A5A7C67BBAABBAAD055";
+        "BBAABBAA3756F72DE2633CF59B14F1D89A5A7C67BBAABBAAE86A";
     char *truth_aos_b   = NULL;
     int   truth_aos_len = 0;
     hex_conversion(truth_aos_h, &truth_aos_b, &truth_aos_len);
@@ -534,20 +538,18 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FHEC_FECF)
     akp               = key_if->get_key(test_association->akid);
     akp->key_state    = KEY_ACTIVE;
 
-    status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
+    status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b, test_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-    char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
-    ASSERT_STREQ("CRYPTO_LIB_SUCCESS", error_enum);
-
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < aos_current_managed_parameters_struct.max_frame_size; i++)
     {
         // printf("Checking %02x against %02X\n", (uint8_t)test_aos_b[i], (uint8_t)*(truth_aos_b + i));
         ASSERT_EQ((uint8_t)test_aos_b[i], (uint8_t) * (truth_aos_b + i));
     }
 
     free(test_aos_b);
+    free(truth_aos_b);
     Crypto_Shutdown();
 }
 
@@ -575,11 +577,12 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FHEC_OID_FECF)
     // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0003, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_HAS_OCF, 1786,
     // AOS_HAS_FHEC, AOS_HAS_IZ, 6);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test Frame Setup
     // 8 byte header (Including FHEC stubbed as 0x8888), 2 byte blank SPI, data, FECF
     char *test_aos_h =
-        "40C00000000088886666666666660000112233445566778899AABBCCDDEEFFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABB"
+        "40C000000000da846666666666660000112233445566778899AABBCCDDEEFFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABB"
         "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
         "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
         "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
@@ -611,14 +614,14 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FHEC_OID_FECF)
         "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
         "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
         "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
-        "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAAFFFF";
+        "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA29ea";
     char *test_aos_b   = NULL;
     int   test_aos_len = 0;
     hex_conversion(test_aos_h, &test_aos_b, &test_aos_len);
 
     // Truth frame setup
     char *truth_aos_h =
-        "40C0000000008888666666666666000E112233445566778899AABBCCDDEEFFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABB"
+        "40C000000000da84666666666666000A112233445566778899AABBCCDDEEFFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABB"
         "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
         "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
         "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
@@ -650,7 +653,8 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FHEC_OID_FECF)
         "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
         "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
         "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
-        "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA748e";
+        "BBAABBAA3756F72DE2633CF59B14F1D89A5A7C67BBAABBAA29ea";
+
     char *truth_aos_b   = NULL;
     int   truth_aos_len = 0;
     hex_conversion(truth_aos_h, &truth_aos_b, &truth_aos_len);
@@ -671,20 +675,21 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FHEC_OID_FECF)
     akp               = key_if->get_key(test_association->akid);
     akp->key_state    = KEY_ACTIVE;
 
-    status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
+    status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b, test_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
     ASSERT_STREQ("CRYPTO_LIB_SUCCESS", error_enum);
 
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < aos_current_managed_parameters_struct.max_frame_size; i++)
     {
-        printf("Checking %02x against %02X\n", (uint8_t)test_aos_b[i], (uint8_t)truth_aos_b[i]);
-        // ASSERT_EQ((uint8_t)test_aos_b[i], (uint8_t)*(truth_aos_b + i));
+        // printf("Checking %02x against %02X\n", (uint8_t)test_aos_b[i], (uint8_t)truth_aos_b[i]);
+        ASSERT_EQ((uint8_t)test_aos_b[i], (uint8_t) * (truth_aos_b + i));
     }
 
     free(test_aos_b);
+    free(truth_aos_b);
     Crypto_Shutdown();
 }
 
@@ -715,6 +720,7 @@ UTEST(AOS_APPLY, AES_CMAC_256_TEST_BITMASK_1)
     // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0003, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_NO_OCF, 1786,
     // AOS_NO_FHEC, AOS_NO_IZ, 0);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Test Frame Setup
     // 6 byte header, 2 byte blank SPI, data, 16 byte MAC, FECF
     char *test_aos_h =
@@ -789,7 +795,7 @@ UTEST(AOS_APPLY, AES_CMAC_256_TEST_BITMASK_1)
         "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
         "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
         "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
-        "BBAABBAABBAABBAA778A1E133306963F1D9DCA32D6D60C23966A";
+        "BBAABBAABBAABBAA0F26598F192575B11A7762D2FB02C9714160";
     char *truth_aos_b   = NULL;
     int   truth_aos_len = 0;
     hex_conversion(truth_aos_h, &truth_aos_b, &truth_aos_len);
@@ -798,11 +804,6 @@ UTEST(AOS_APPLY, AES_CMAC_256_TEST_BITMASK_1)
     aos_frame_pri_hdr.tfvn = ((uint8_t)test_aos_b[0] & 0xC0) >> 6;
     aos_frame_pri_hdr.scid = (((uint16_t)test_aos_b[0] & 0x3F) << 2) | (((uint16_t)test_aos_b[1] & 0xC0) >> 6);
     aos_frame_pri_hdr.vcid = ((uint8_t)test_aos_b[1] & 0x3F);
-
-    // Expose/setup SA for testing
-    // Configure SA 14 off
-    sa_if->sa_get_from_spi(14, &sa_ptr);
-    sa_ptr->sa_state = SA_KEYED;
 
     // Configure SA 15 on
     sa_if->sa_get_from_spi(10, &sa_ptr);
@@ -816,20 +817,22 @@ UTEST(AOS_APPLY, AES_CMAC_256_TEST_BITMASK_1)
     akp               = key_if->get_key(sa_ptr->akid);
     akp->key_state    = KEY_ACTIVE;
 
-    status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
+    sa_ptr->ast = 1;
+    sa_ptr->acs = CRYPTO_MAC_CMAC_AES256;
+    sa_ptr->est = 0;
+
+    status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b, test_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-    char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
-    ASSERT_STREQ("CRYPTO_LIB_SUCCESS", error_enum);
-
     // Now, byte by byte verify the static frame in memory is what we expect (updated SPI and FECF)
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < aos_current_managed_parameters_struct.max_frame_size; i++)
     {
         // printf("Checking %02x against %02X\n", (uint8_t)test_aos_b[i], (uint8_t)*(truth_aos_b + i));
         ASSERT_EQ((uint8_t)test_aos_b[i], (uint8_t) * (truth_aos_b + i));
     }
 
     free(test_aos_b);
+    free(truth_aos_b);
     Crypto_Shutdown();
 }
 
@@ -860,6 +863,7 @@ UTEST(AOS_APPLY, AES_CMAC_256_TEST_BITMASK_0)
     // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0003, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_NO_OCF, 1786,
     // AOS_NO_FHEC, AOS_NO_IZ, 0);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Test Frame Setup
     // 6 byte header, 2 byte blank SPI, data, 16 byte MAC, FECF
     char *test_aos_h =
@@ -902,7 +906,7 @@ UTEST(AOS_APPLY, AES_CMAC_256_TEST_BITMASK_0)
 
     // Truth frame setup
     char *truth_aos_h =
-        "40C000000000000B112233445566778899AABBCCDDEEFFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
+        "40C000000000000A112233445566778899AABBCCDDEEFFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
         "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
         "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
         "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
@@ -934,7 +938,7 @@ UTEST(AOS_APPLY, AES_CMAC_256_TEST_BITMASK_0)
         "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
         "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
         "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
-        "BBAABBAABBAABBAA5DB19EB46F096B17BBE72C50448218D93872";
+        "BBAABBAABBAABBAA0F26598F192575B11A7762D2FB02C9714160";
     char *truth_aos_b   = NULL;
     int   truth_aos_len = 0;
     hex_conversion(truth_aos_h, &truth_aos_b, &truth_aos_len);
@@ -945,55 +949,37 @@ UTEST(AOS_APPLY, AES_CMAC_256_TEST_BITMASK_0)
     aos_frame_pri_hdr.vcid = ((uint8_t)test_aos_b[1] & 0x3F);
 
     // Expose/setup SA for testing
-    sa_if->sa_get_from_spi(10, &sa_ptr); // Disable SPI 10
-    sa_ptr->sa_state = SA_KEYED;
+    sa_if->sa_get_from_spi(10, &sa_ptr);
+    sa_ptr->sa_state = SA_OPERATIONAL;
 
-    sa_if->sa_get_from_spi(11, &sa_ptr); // Enable and setup 11
-    sa_ptr->sa_state       = SA_OPERATIONAL;
-    sa_ptr->akid           = 130;
-    sa_ptr->ekid           = 0;
-    sa_ptr->est            = 0;
-    sa_ptr->ast            = 1;
-    sa_ptr->acs_len        = 1;
-    sa_ptr->ecs_len        = 0;
-    sa_ptr->acs            = CRYPTO_MAC_CMAC_AES256;
-    sa_ptr->stmacf_len     = 16;
-    sa_ptr->abm_len        = ABM_SIZE;
-    sa_ptr->gvcid_blk.scid = SCID & 0x3FF;
-    sa_ptr->iv_len         = 0;
-    sa_ptr->shivf_len      = 0;
-    sa_ptr->shsnf_len      = 0;
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(sa_ptr->ekid);
+    ekp->key_state    = KEY_ACTIVE;
+
+    crypto_key_t *akp = NULL;
+    akp               = key_if->get_key(sa_ptr->akid);
+    akp->key_state    = KEY_ACTIVE;
+
+    sa_ptr->ast = 1;
+    sa_ptr->acs = CRYPTO_MAC_CMAC_AES256;
+    sa_ptr->est = 0;
     memset(sa_ptr->abm, 0x00, (sa_ptr->abm_len * sizeof(uint8_t))); // Bitmask of ones
 
-    // sa_if->sa_get_from_spi(10, &sa_ptr);
-    // sa_ptr->sa_state = SA_KEYED;
-
-    // sa_if->sa_get_from_spi(11, &sa_ptr);
-    // sa_ptr->sa_state = SA_OPERATIONAL;
-    // sa_ptr->akid=130;
-    // sa_ptr->est = 0;
-    // sa_ptr->ast = 1;
-    // sa_ptr->acs_len = 1;
-    // sa_ptr->acs = CRYPTO_MAC_CMAC_AES256;
-    // sa_ptr->stmacf_len = 16;
-    // sa_ptr->abm_len = ABM_SIZE;
-
-    memset(sa_ptr->abm, 0x00, (sa_ptr->abm_len * sizeof(uint8_t))); // Bitmask
-
-    status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
+    status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b, test_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
     ASSERT_STREQ("CRYPTO_LIB_SUCCESS", error_enum);
 
     // Now, byte by byte verify the static frame in memory is what we expect (updated SPI and FECF)
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < aos_current_managed_parameters_struct.max_frame_size; i++)
     {
         // printf("%d: Checking %02x against %02X\n", i, (uint8_t)test_aos_b[i], (uint8_t)truth_aos_b[i]);
         ASSERT_EQ((uint8_t)test_aos_b[i], (uint8_t)truth_aos_b[i]);
     }
 
     free(test_aos_b);
+    free(truth_aos_b);
     Crypto_Shutdown();
 }
 
@@ -1025,6 +1011,7 @@ UTEST(AOS_APPLY, AES_GCM)
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
 
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Test Frame Setup
     // 6 byte header, 2 byte blank SPI, 16 byte blank IV (CCC...), data, FECF
     //                  |  Header  |SPI|
@@ -1119,20 +1106,21 @@ UTEST(AOS_APPLY, AES_GCM)
     akp               = key_if->get_key(sa_ptr->akid);
     akp->key_state    = KEY_ACTIVE;
 
-    status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
+    status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b, test_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
     ASSERT_STREQ("CRYPTO_LIB_SUCCESS", error_enum);
 
     // Now, byte by byte verify the static frame in memory is what we expect (updated SPI and FECF)
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < aos_current_managed_parameters_struct.max_frame_size; i++)
     {
         // printf("Checking %02x against %02X\n", (uint8_t)test_aos_b[i], (uint8_t)*(truth_aos_b + i));
         ASSERT_EQ((uint8_t)test_aos_b[i], (uint8_t) * (truth_aos_b + i));
     }
 
     free(test_aos_b);
+    free(truth_aos_b);
     Crypto_Shutdown();
 }
 
@@ -1166,6 +1154,7 @@ UTEST(AOS_APPLY, AOS_KEY_STATE_TEST)
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
 
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Test Frame Setup
     // 6 byte header, 2 byte blank SPI, 16 byte blank IV (CCC...), data, MAC, FECF
     //                  |  Header  |SPI|
@@ -1257,7 +1246,7 @@ UTEST(AOS_APPLY, AOS_KEY_STATE_TEST)
     sa_ptr->sa_state = SA_KEYED;
 
     // Configure SA 17 on
-    sa_if->sa_get_from_spi(11, &sa_ptr);
+    sa_if->sa_get_from_spi(10, &sa_ptr);
     sa_ptr->sa_state = SA_OPERATIONAL;
     sa_ptr->ekid     = 130;
     sa_ptr->ecs      = CRYPTO_CIPHER_AES256_GCM;
@@ -1271,26 +1260,17 @@ UTEST(AOS_APPLY, AOS_KEY_STATE_TEST)
 
     crypto_key_t *ekp = NULL;
     ekp               = key_if->get_key(sa_ptr->ekid);
-    ekp->key_state    = KEY_ACTIVE;
+    ekp->key_state    = KEY_DEACTIVATED;
 
     crypto_key_t *akp = NULL;
     akp               = key_if->get_key(sa_ptr->akid);
-    akp->key_state    = KEY_ACTIVE;
+    akp->key_state    = KEY_DEACTIVATED;
 
-    status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
-    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-
-    char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
-    ASSERT_STREQ("CRYPTO_LIB_SUCCESS", error_enum);
-
-    // Now, byte by byte verify the static frame in memory is what we expect (updated SPI and FECF)
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
-    {
-        // printf("Checking %02x against %02X\n", (uint8_t)test_aos_b[i], (uint8_t)*(truth_aos_b + i));
-        ASSERT_EQ((uint8_t)test_aos_b[i], (uint8_t) * (truth_aos_b + i));
-    }
+    status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b, test_aos_len);
+    ASSERT_EQ(CRYPTO_LIB_ERR_KEY_STATE_INVALID, status);
 
     free(test_aos_b);
+    free(truth_aos_b);
     Crypto_Shutdown();
 }
 
@@ -1315,11 +1295,12 @@ UTEST(AOS_APPLY, AEAD_GCM_BITMASK_1)
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
 
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Test Frame Setup
     // 6 byte header, 2 byte blank SPI, 16 byte blank IV (CCC...), data, MAC, FECF
     //                  |  Header  |SPI|
     char *test_aos_h =
-        "40C0000000000000CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC112233445566778899AABBCCDDEEFFA107FF000006D2AABBAABBAABBAABBAA"
+        "40C00000000030F4CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC112233445566778899AABBCCDDEEFFA107FF000006D2AABBAABBAABBAABBAA"
         "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
         "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
         "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
@@ -1367,7 +1348,7 @@ UTEST(AOS_APPLY, AEAD_GCM_BITMASK_1)
     sa_ptr->sa_state = SA_KEYED;
 
     // Configure SA 17 on
-    sa_if->sa_get_from_spi(11, &sa_ptr);
+    sa_if->sa_get_from_spi(10, &sa_ptr);
     sa_ptr->sa_state = SA_OPERATIONAL;
     sa_ptr->ekid     = 130;
     sa_ptr->ecs      = CRYPTO_CIPHER_AES256_GCM;
@@ -1381,17 +1362,108 @@ UTEST(AOS_APPLY, AEAD_GCM_BITMASK_1)
 
     crypto_key_t *ekp = NULL;
     ekp               = key_if->get_key(sa_ptr->ekid);
-    ekp->key_state    = KEY_DEACTIVATED;
+    ekp->key_state    = KEY_ACTIVE;
 
     crypto_key_t *akp = NULL;
     akp               = key_if->get_key(sa_ptr->akid);
-    akp->key_state    = KEY_DEACTIVATED;
+    akp->key_state    = KEY_ACTIVE;
 
-    status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b);
-    ASSERT_EQ(CRYPTO_LIB_ERR_KEY_STATE_INVALID, status);
+    status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b, test_aos_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     free(test_aos_b);
     Crypto_Shutdown();
 }
+
+UTEST(AOS_APPLY, AOS_APPLY_BUFFER_OVERFLOW_TEST)
+{
+    remove("sa_save_file.bin");
+    // Local variables
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    // Configure, Add Managed Params, and Init
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL, CRYPTO_AOS_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            AOS_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // AOS Tests
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0003, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_NO_OCF, 1786,
+    // AOS_NO_FHEC, AOS_NO_IZ, 0);
+    GvcidManagedParameters_t AOS_UT_Managed_Parameters = {
+        1, 0x0003, 0, AOS_HAS_FECF, AOS_NO_FHEC, AOS_NO_IZ, 0, AOS_SEGMENT_HDRS_NA, 1786, AOS_NO_OCF, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
+
+    status = Crypto_Init();
+    // Test Frame Setup
+    // 6 byte header, 2 byte blank SPI, 16 byte blank IV (CCC...), data, MAC, FECF
+    //                  |  Header  |SPI|
+    char *test_aos_h   = "40C0000000000000CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCFFFF";
+    char *test_aos_b   = NULL;
+    int   test_aos_len = 0;
+    hex_conversion(test_aos_h, &test_aos_b, &test_aos_len);
+
+    status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b, test_aos_len);
+    ASSERT_EQ(CRYPTO_LIB_ERR_AOS_FL_LT_MAX_FRAME_SIZE, status);
+
+    free(test_aos_b);
+    Crypto_Shutdown();
+}
+
+// UTEST(AOS_APPLY, AES_CBC_256_ENCRYPT_AUTH_16B_PADDING)
+// {
+//     remove("sa_save_file.bin");
+//     // Local variables
+//     int32_t status = CRYPTO_LIB_SUCCESS;
+
+//     // Configure, Add Managed Params, and Init
+//     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+//                             IV_INTERNAL, CRYPTO_AOS_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+//                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+//                             AOS_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+
+//     // Set up the managed parameters
+//     GvcidManagedParameters_t AOS_UT_Managed_Parameters = {
+//         1, 0x0003, 0, AOS_HAS_FECF, AOS_NO_FHEC, AOS_NO_IZ, 0, AOS_SEGMENT_HDRS_NA, 176, AOS_NO_OCF, 1};
+//     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
+//     status = Crypto_Init();
+//     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+//     // Test Frame Setup - includes header, SPI, IV, data, and space for MAC+FECF
+//     char *test_aos_h        = "40C0000000000008CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC10112233445566778899AABBCCDDEE"
+//                               "FFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
+//                               "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
+//                               "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
+//                               "AABBAABB";
+//     char *test_aos_b        = NULL;
+//     int   test_frame_length = 0;
+//     hex_conversion(test_aos_h, &test_aos_b, &test_frame_length);
+
+//     // Setup security association
+//     SecurityAssociation_t *sa_ptr;
+//     sa_if->sa_get_from_spi(10, &sa_ptr);
+//     sa_ptr->sa_state   = SA_OPERATIONAL;
+//     sa_ptr->est        = 1;                        // Encryption on
+//     sa_ptr->ast        = 1;                        // Authentication on
+//     sa_ptr->ecs        = CRYPTO_CIPHER_AES256_CBC; // Using CBC mode
+//     sa_ptr->iv_len     = 16;                       // 16 byte IV
+//     sa_ptr->shivf_len  = 16;                       // 16 byte IV field
+//     sa_ptr->stmacf_len = 16;                       // 16 byte MAC field
+//     sa_ptr->shplf_len  = 1;                        // 1 byte padding length field
+//     sa_ptr->ekid       = 130;                      // Encryption key ID
+//     sa_ptr->akid       = 130;                      // Authentication key ID
+
+//     // Activate the keys
+//     crypto_key_t *ekp = key_if->get_key(sa_ptr->ekid);
+//     ekp->key_state    = KEY_ACTIVE;
+//     crypto_key_t *akp = key_if->get_key(sa_ptr->akid);
+//     akp->key_state    = KEY_ACTIVE;
+
+//     // Apply security (encrypt)
+//     status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b, test_frame_length);
+//     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+//     free(test_aos_b);
+//     Crypto_Shutdown();
+// }
 
 UTEST_MAIN();

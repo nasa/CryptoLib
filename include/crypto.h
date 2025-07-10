@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #endif
 
+#include <math.h>
 #include <string.h>
 #include "crypto_config.h"
 #include "crypto_config_structs.h"
@@ -48,7 +49,7 @@
 ** Crypto Version
 */
 #define CRYPTO_LIB_MAJOR_VERSION 1
-#define CRYPTO_LIB_MINOR_VERSION 3
+#define CRYPTO_LIB_MINOR_VERSION 4
 #define CRYPTO_LIB_REVISION      1
 #define CRYPTO_LIB_MISSION_REV   0
 
@@ -59,6 +60,7 @@
 /*
 ** User Prototypes
 */
+uint8_t Crypto_gf_mul(uint8_t a, uint8_t b);
 
 // Crypto Library Configuration functions
 extern int32_t Crypto_Config_CryptoLib(uint8_t key_type, uint8_t mc_type, uint8_t sa_type, uint8_t cryptography_type,
@@ -125,7 +127,7 @@ void Crypto_TC_Get_Ciper_Mode_TCP(uint8_t sa_service_type, uint32_t *encryption_
                                   SecurityAssociation_t *sa_ptr);
 int32_t Crypto_TC_Get_Ciper_Mode_TCA(uint8_t sa_service_type, uint32_t *encryption_cipher,
                                      uint8_t *ecs_is_aead_algorithm, SecurityAssociation_t *sa_ptr);
-void    Crypto_TC_Calc_Lengths(uint8_t *fecf_len, uint8_t *segment_hdr_len);
+void    Crypto_TC_Calc_Lengths(uint8_t *fecf_len, uint8_t *segment_hdr_len, uint8_t *ocf_len);
 void    Crypto_TC_Set_Segment_Header(TC_t *tc_sdls_processed_frame, uint8_t *ingest, int *byte_idx);
 int32_t Crypto_TC_Check_CMD_Frame_Flag(uint8_t header_cc);
 int32_t Crypto_TC_Validate_SA_Service_Type(uint8_t sa_service_type);
@@ -137,10 +139,9 @@ int32_t Crypto_TC_Accio_Buffer(uint8_t **p_new_enc_frame, uint16_t *p_enc_frame_
 int32_t Crypto_TC_ACS_Algo_Check(SecurityAssociation_t *sa_ptr);
 int32_t Crypto_TC_Check_IV_Setup(SecurityAssociation_t *sa_ptr, uint8_t *p_new_enc_frame, uint16_t *index);
 int32_t Crypto_TC_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr, uint16_t *mac_loc,
-                                       uint16_t tf_payload_len, uint8_t segment_hdr_len, uint8_t *p_new_enc_frame,
-                                       crypto_key_t *ekp, uint8_t **aad, uint8_t ecs_is_aead_algorithm,
-                                       uint16_t *index_p, const uint8_t *p_in_frame, char *cam_cookies,
-                                       uint32_t pkcs_padding);
+                          uint16_t tf_payload_len, uint8_t segment_hdr_len, uint8_t *p_new_enc_frame, crypto_key_t *ekp,
+                          uint8_t **aad, uint8_t ecs_is_aead_algorithm, uint16_t *index_p, const uint8_t *p_in_frame,
+                          char *cam_cookies, uint32_t pkcs_padding);
 void    Crypto_TC_Increment_IV_ARSN(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr);
 int32_t Crypto_TC_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr, uint16_t *mac_loc,
                              uint16_t tf_payload_len, uint8_t segment_hdr_len, uint8_t *p_new_enc_frame,
@@ -164,12 +165,12 @@ uint32_t Crypto_Get_FSR(void);
 void     Crypto_Set_FSR(uint8_t *p_ingest, uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t *sa_ptr);
 
 // Telemetry (TM)
-extern int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer);
+extern int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest);
 extern int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_t **pp_processed_frame,
                                          uint16_t *p_decrypted_length);
 
 // Advanced Orbiting Systems (AOS)
-extern int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer);
+extern int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest);
 extern int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_t **pp_processed_frame,
                                           uint16_t *p_decrypted_length);
 
@@ -233,13 +234,14 @@ int32_t        Crypto_Get_tmLength(int len);
 uint8_t        Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id);
 void           Crypto_TM_updatePDU(uint8_t *ingest, int len_ingest);
 void           Crypto_TM_updateOCF(Telemetry_Frame_Ocf_Fsr_t *report, TM_t *tm_frame);
-uint8_t       *Crypto_Prepare_TC_AAD(uint8_t *buffer, uint16_t len_aad, uint8_t *abm_buffer);
+uint8_t       *Crypto_Prepare_TC_AAD(const uint8_t *buffer, uint16_t len_aad, const uint8_t *abm_buffer);
 uint32_t       Crypto_Prepare_TM_AAD(const uint8_t *buffer, uint16_t len_aad, const uint8_t *abm_buffer, uint8_t *aad);
 uint32_t       Crypto_Prepare_AOS_AAD(const uint8_t *buffer, uint16_t len_aad, const uint8_t *abm_buffer, uint8_t *aad);
 void           Crypto_Local_Config(void);
 void           Crypto_Local_Init(void);
 int32_t        Crypto_window(uint8_t *actual, uint8_t *expected, int length, int window);
 uint16_t       Crypto_Calc_FECF(const uint8_t *ingest, int len_ingest);
+uint16_t       Crypto_Calc_FHECF(uint8_t *data);
 void           Crypto_Calc_CRC_Init_Table(void);
 uint16_t       Crypto_Calc_CRC16(uint8_t *data, int size);
 int32_t        Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, uint8_t *iv);
@@ -289,7 +291,7 @@ void clean_ekref(SecurityAssociation_t *sa);
 void clean_akref(SecurityAssociation_t *sa);
 
 // Determine Payload Data Unit
-int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uint8_t *ingest);
+int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uint8_t *ingest, uint16_t len_ingest);
 int32_t Crypto_PDU(uint8_t *ingest, TC_t *tc_frame);
 int32_t Crypto_SG_KEY_MGMT(uint8_t *ingest, TC_t *tc_frame);
 int32_t Crypto_SG_SA_MGMT(uint8_t *ingest, TC_t *tc_frame);
@@ -317,6 +319,7 @@ extern TM_FrameSecurityHeader_t tm_frame_sec_hdr; // Used to reduce bit math dup
 // exterm AOS_t aos_frame
 extern AOS_FramePrimaryHeader_t  aos_frame_pri_hdr;
 extern AOS_FrameSecurityHeader_t aos_frame_sec_hdr; // Used to reduce bit math duplication
+extern uint8_t                   parity[4];         // Used in FHECF calc
 
 // Global configuration structs
 extern CryptoConfig_t                        crypto_config;
@@ -326,7 +329,9 @@ extern CamConfig_t                          *cam_config;
 extern GvcidManagedParameters_t             *gvcid_managed_parameters;
 extern GvcidManagedParameters_t             *current_managed_parameters;
 extern GvcidManagedParameters_t              gvcid_managed_parameters_array[GVCID_MAX_PARAM_SIZE];
-extern GvcidManagedParameters_t              current_managed_parameters_struct;
+extern GvcidManagedParameters_t              tc_current_managed_parameters_struct;
+extern GvcidManagedParameters_t              tm_current_managed_parameters_struct;
+extern GvcidManagedParameters_t              aos_current_managed_parameters_struct;
 extern int                                   gvcid_counter;
 extern KeyInterface                          key_if;
 extern McInterface                           mc_if;
@@ -356,5 +361,13 @@ extern uint8_t badFECF;
 //  CRC
 extern uint32_t crc32Table[CRC32TBL_SIZE];
 extern uint16_t crc16Table[CRC16TBL_SIZE];
+
+// GF(2^4) field and logarithm tables
+static const uint8_t crypto_gf_exp[15] = {1, 2, 4, 8, 3, 6, 12, 11, 5, 10, 7, 14, 15, 13, 9};
+
+static const uint8_t crypto_gf_log[GF_SIZE] = {0, 0, 1, 4, 2, 8, 5, 10, 3, 14, 9, 7, 6, 13, 11, 12};
+
+// Generator polynomial coefficients for g(x) = x^4 + a^3x^3 + ax^2 + a^3x + 1
+static const uint8_t crypto_gen_poly[RS_PARITY + 1] = {1, 8, 2, 8, 1};
 
 #endif // CRYPTO_H

@@ -31,7 +31,7 @@ UTEST(AES_GCM_SIV, GET_ECS_ALGO_KEY_LEN_SIV)
     remove("sa_save_file.bin");
     int32_t algo_keylen = -1;
     uint8_t crypto_algo = CRYPTO_CIPHER_AES256_GCM_SIV;
-    algo_keylen         = Crypto_Get_ACS_Algo_Keylen(crypto_algo);
+    algo_keylen         = Crypto_Get_ECS_Algo_Keylen(crypto_algo);
     ASSERT_EQ(algo_keylen, 32);
     Crypto_Shutdown();
 }
@@ -61,57 +61,54 @@ UTEST(AES_GCM_SIV, GET_ECS_ALGO_SIV)
 UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_1)
 {
     remove("sa_save_file.bin");
+    int      status        = CRYPTO_LIB_SUCCESS;
     uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_NO_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_NO_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_1_Managed_Parameters = {
-        0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-    Crypto_Init();
-    SaInterface   sa_if = get_sa_interface_inmemory();
-    crypto_key_t *ekp   = NULL;
+    crypto_key_t *ekp = NULL;
 
     // RFC supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
-    char    *buffer_rfc_pt_h    = "2003000c000100000000000000";
-    char    *buffer_rfc_aad_h   = "";
-    char    *buffer_rfc_key_h   = "0100000000000000000000000000000000000000000000000000000000000000";
-    char    *buffer_rfc_nonce_h = "030000000000000000000000";
-    char    *buffer_rfc_ct_h    = "4fa7a4cb7d3434f8a2855b40016daccb62a454551878fc26";
+    char *buffer_rfc_pt_h    = "2003000c000100000000000000";
+    char *buffer_rfc_aad_h   = "";
+    char *buffer_rfc_key_h   = "0100000000000000000000000000000000000000000000000000000000000000";
+    char *buffer_rfc_nonce_h = "030000000000000000000000";
+    char *buffer_rfc_ct_h    = "4fa7a4cb7d3434f8a2855b40016daccb62a454551878fc26";
+
     uint8_t *buffer_rfc_pt_b, *buffer_rfc_aad_b, *buffer_rfc_key_b, *buffer_rfc_nonce_b, *buffer_rfc_ct_b       = NULL;
     int      buffer_rfc_pt_len, buffer_rfc_aad_len, buffer_rfc_key_len, buffer_rfc_nonce_len, buffer_rfc_ct_len = 0;
 
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association = NULL;
-    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
-    // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
     test_association->arsn_len       = 0;
+    test_association->arsnw_len      = 1;
+    test_association->arsnw          = 5;
     test_association->shsnf_len      = 0;
     test_association->sa_state       = SA_OPERATIONAL;
+    test_association->shivf_len      = 12;
+    test_association->iv_len         = 12;
     test_association->ast            = 1;
     test_association->est            = 1;
     test_association->ecs_len        = 1;
     test_association->ecs            = CRYPTO_CIPHER_AES256_GCM_SIV;
-    test_association->acs_len        = 1;
-    test_association->acs            = CRYPTO_MAC_CMAC_AES256;
+    test_association->acs_len        = 0;
+    test_association->acs            = 0;
     test_association->stmacf_len     = 16;
     test_association->gvcid_blk.tfvn = 0;
     test_association->abm_len        = 1024;
@@ -119,24 +116,25 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_1)
     // Insert key into keyring of SA 9
     hex_conversion(buffer_rfc_key_h, (char **)&buffer_rfc_key_b, &buffer_rfc_key_len);
     ekp = key_if->get_key(test_association->ekid);
-    memcpy(ekp->value, buffer_rfc_key_b, buffer_rfc_key_len);
+    memcpy(&ekp->value[0], buffer_rfc_key_b, buffer_rfc_key_len);
 
     // Convert input plaintext
     // TODO: Account for length of header and FECF (5+2)
     hex_conversion(buffer_rfc_pt_h, (char **)&buffer_rfc_pt_b, &buffer_rfc_pt_len);
     // Convert/Set input AAD
     hex_conversion(buffer_rfc_aad_h, (char **)&buffer_rfc_aad_b, &buffer_rfc_aad_len);
-    memcpy(test_association->abm, buffer_rfc_aad_b + 5, buffer_rfc_aad_len);
+    // memcpy(test_association->abm, buffer_rfc_aad_b + 5, buffer_rfc_aad_len);
     hex_conversion(buffer_rfc_nonce_h, (char **)&buffer_rfc_nonce_b, &buffer_rfc_nonce_len);
     memcpy(test_association->iv, buffer_rfc_nonce_b, buffer_rfc_nonce_len);
     // Convert input ciphertext
     hex_conversion(buffer_rfc_ct_h, (char **)&buffer_rfc_ct_b, &buffer_rfc_ct_len);
 
-    Crypto_TC_ApplySecurity(buffer_rfc_pt_b, buffer_rfc_pt_len, &ptr_enc_frame, &enc_frame_len);
+    status = Crypto_TC_ApplySecurity(buffer_rfc_pt_b, buffer_rfc_pt_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
     // Calc payload index: total length - pt length
     uint16_t enc_data_idx = enc_frame_len - buffer_rfc_ct_len;
-    Crypto_Shutdown();
+
     for (int i = 0; i < buffer_rfc_pt_len - 7; i++)
     {
         printf("[%d]: %02x -> %02x \n", i, *(ptr_enc_frame + enc_data_idx), buffer_rfc_ct_b[i]);
@@ -144,6 +142,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_1)
         enc_data_idx++;
     }
     // ASSERT_EQ(1,0);
+    Crypto_Shutdown();
     free(ptr_enc_frame);
     free(buffer_rfc_pt_b);
     free(buffer_rfc_aad_b);
@@ -162,7 +161,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_1)
 UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_DEC_TEST_1)
 {
     remove("sa_save_file.bin");
-    uint8_t *ptr_enc_frame = NULL;
+    int status = CRYPTO_LIB_SUCCESS;
 
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
@@ -173,18 +172,18 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_DEC_TEST_1)
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 43, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_NO_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_1_Managed_Parameters = {
-        0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 43, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
 
-    Crypto_Init();
-    SaInterface   sa_if = get_sa_interface_inmemory();
-    crypto_key_t *ekp   = NULL;
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    crypto_key_t *ekp = NULL;
 
     // rfc supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -197,25 +196,23 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_DEC_TEST_1)
     int      buffer_rfc_pt_len, buffer_rfc_nonce_len, buffer_rfc_et_len, buffer_rfc_key_len, buffer_rfc_aad_len = 0;
 
     // Setup Processed Frame For Decryption
-    TC_t *tc_rfc_processed_frame;
-    tc_rfc_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
+    TC_t *tc_rfc_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
 
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association = NULL;
-    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
-    // Deactivate SA 1
-    sa_if->sa_get_from_spi(1, &test_association);
-    test_association->sa_state = SA_NONE;
+
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
     test_association->arsn_len       = 0;
+    test_association->shsnf_len      = 0;
     test_association->sa_state       = SA_OPERATIONAL;
     test_association->ast            = 1;
     test_association->est            = 1;
     test_association->ecs_len        = 1;
     test_association->ecs            = CRYPTO_CIPHER_AES256_GCM_SIV;
+    test_association->acs_len        = 0;
+    test_association->acs            = 0;
     test_association->stmacf_len     = 16;
-    test_association->shsnf_len      = 0;
     test_association->gvcid_blk.tfvn = 0;
     test_association->abm_len        = 1024;
 
@@ -234,7 +231,8 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_DEC_TEST_1)
     // Convert input encryptedtext
     hex_conversion(buffer_rfc_et_h, (char **)&buffer_rfc_et_b, &buffer_rfc_et_len);
 
-    ASSERT_EQ(0, Crypto_TC_ProcessSecurity(buffer_rfc_et_b, &buffer_rfc_et_len, tc_rfc_processed_frame));
+    status = Crypto_TC_ProcessSecurity(buffer_rfc_et_b, &buffer_rfc_et_len, tc_rfc_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     for (int i = 0; i < tc_rfc_processed_frame->tc_pdu_len; i++)
     {
@@ -246,12 +244,12 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_DEC_TEST_1)
         ASSERT_EQ(buffer_rfc_pt_b[i + 5], tc_rfc_processed_frame->tc_pdu[i]);
     }
     Crypto_Shutdown();
-    free(ptr_enc_frame);
     free(buffer_rfc_pt_b);
     free(buffer_rfc_nonce_b);
     free(buffer_rfc_aad_b);
     free(buffer_rfc_et_b);
     free(buffer_rfc_key_b);
+    free(tc_rfc_processed_frame);
 }
 
 /**
@@ -284,7 +282,8 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_2)
         0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
 
-    Crypto_Init();
+    int status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     SaInterface   sa_if = get_sa_interface_inmemory();
     crypto_key_t *ekp   = NULL;
 
@@ -300,7 +299,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_2)
 
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association = NULL;
-    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
@@ -313,7 +312,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_2)
     test_association->ecs_len        = 1;
     test_association->ecs            = CRYPTO_CIPHER_AES256_GCM_SIV;
     test_association->acs_len        = 1;
-    test_association->acs            = CRYPTO_MAC_CMAC_AES256;
+    test_association->acs            = 0;
     test_association->stmacf_len     = 16;
     test_association->shsnf_len      = 0;
     test_association->gvcid_blk.tfvn = 0;
@@ -335,7 +334,8 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_8_ENC_TEST_2)
     // Convert input ciphertext
     hex_conversion(buffer_rfc_ct_h, (char **)&buffer_rfc_ct_b, &buffer_rfc_ct_len);
 
-    Crypto_TC_ApplySecurity(buffer_rfc_pt_b, buffer_rfc_pt_len, &ptr_enc_frame, &enc_frame_len);
+    status = Crypto_TC_ApplySecurity(buffer_rfc_pt_b, buffer_rfc_pt_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
     // Calc payload index: total length - pt length
     uint16_t enc_data_idx = enc_frame_len - buffer_rfc_ct_len;
@@ -385,7 +385,8 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_20_WITH_AAD_ENC_TEST_1)
         0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
 
-    Crypto_Init();
+    int status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     SaInterface   sa_if = get_sa_interface_inmemory();
     crypto_key_t *ekp   = NULL;
 
@@ -401,7 +402,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_20_WITH_AAD_ENC_TEST_1)
 
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association = NULL;
-    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
@@ -414,7 +415,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_20_WITH_AAD_ENC_TEST_1)
     test_association->ecs_len        = 1;
     test_association->ecs            = CRYPTO_CIPHER_AES256_GCM_SIV;
     test_association->acs_len        = 1;
-    test_association->acs            = CRYPTO_MAC_CMAC_AES256;
+    test_association->acs            = 0;
     test_association->stmacf_len     = 16;
     test_association->shsnf_len      = 0;
     test_association->gvcid_blk.tfvn = 0;
@@ -436,7 +437,8 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_20_WITH_AAD_ENC_TEST_1)
     // Convert input ciphertext
     hex_conversion(buffer_rfc_ct_h, (char **)&buffer_rfc_ct_b, &buffer_rfc_ct_len);
 
-    Crypto_TC_ApplySecurity(buffer_rfc_pt_b, buffer_rfc_pt_len, &ptr_enc_frame, &enc_frame_len);
+    status = Crypto_TC_ApplySecurity(buffer_rfc_pt_b, buffer_rfc_pt_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Note: For comparison, interested in the TF payload (exclude headers and FECF if present)
     // Calc payload index: total length - pt length
     uint16_t enc_data_idx = enc_frame_len - buffer_rfc_ct_len;
@@ -473,21 +475,13 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_20_WITH_AAD_DEC_TEST_1)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_0_Managed_Parameters = {
         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_NO_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_1_Managed_Parameters = {
-        0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
-
-    Crypto_Init();
-    SaInterface   sa_if = get_sa_interface_inmemory();
-    crypto_key_t *ekp   = NULL;
+    int status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    crypto_key_t *ekp = NULL;
 
     // rfc supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -504,7 +498,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_20_WITH_AAD_DEC_TEST_1)
 
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association = NULL;
-    test_association                        = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+
     // Deactivate SA 1
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
@@ -530,7 +524,8 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_20_WITH_AAD_DEC_TEST_1)
     // Convert input encryptedtext
     hex_conversion(buffer_rfc_et_h, (char **)&buffer_rfc_et_b, &buffer_rfc_et_len);
 
-    Crypto_TC_ProcessSecurity(buffer_rfc_et_b, &buffer_rfc_et_len, tc_rfc_processed_frame);
+    status = Crypto_TC_ProcessSecurity(buffer_rfc_et_b, &buffer_rfc_et_len, tc_rfc_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     for (int i = 0; i < tc_rfc_processed_frame->tc_pdu_len; i++)
     {
@@ -542,6 +537,7 @@ UTEST(AES_GCM_SIV, AES_GCM_SIV_256_KEY_32_PT_20_WITH_AAD_DEC_TEST_1)
     }
 
     Crypto_Shutdown();
+    free(tc_rfc_processed_frame);
     free(ptr_enc_frame);
     free(buffer_rfc_pt_b);
     free(buffer_rfc_et_b);

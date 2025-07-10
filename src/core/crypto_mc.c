@@ -21,24 +21,32 @@
 */
 #include "crypto.h"
 
-/*
-** Security Association Monitoring and Control
-*/
+/**
+ * CCSDS Compliance Reference:
+ * This file implements monitoring and control functions compliant with:
+ * - SDLSP-EP 355.1-B-1 (Space Data Link Security Protocol - Extended Procedures) Section 7 (Management)
+ */
+
+/**
+ * Security Association Monitoring and Control
+ */
+
 /**
  * @brief Function: Crypto_MC_ping
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
- **/
+ *
+ * CCSDS Compliance: SDLSP-EP 355.1-B-1 Section 7.3.1 (Management Service Primitives)
+ */
 int32_t Crypto_MC_ping(uint8_t *ingest)
 {
     uint8_t count = 0;
-    count         = count;
     ingest        = ingest;
 
     // Prepare for Reply
-    sdls_frame.pdu.hdr.pdu_len = 0;
+    sdls_frame.tlv_pdu.hdr.pdu_len = 0;
     sdls_frame.hdr.pkt_length =
-        CCSDS_HDR_SIZE + CCSDS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.pdu.hdr.pdu_len / BYTE_LEN) - 1;
+        CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
     count = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
 
 #ifdef PDU_DEBUG
@@ -49,6 +57,7 @@ int32_t Crypto_MC_ping(uint8_t *ingest)
     }
     printf("\n\n");
 #endif
+    count = count; // Fix clang "variable not read after assignment" warning
 
     return CRYPTO_LIB_SUCCESS;
 }
@@ -57,7 +66,9 @@ int32_t Crypto_MC_ping(uint8_t *ingest)
  * @brief Function: Crypto_MC_status
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
- **/
+ *
+ * CCSDS Compliance: SDLSP-EP 355.1-B-1 Section 7.3.2 (Status Reporting)
+ */
 int32_t Crypto_MC_status(uint8_t *ingest)
 {
     if (ingest == NULL)
@@ -65,9 +76,9 @@ int32_t Crypto_MC_status(uint8_t *ingest)
     uint8_t count = 0;
 
     // Prepare for Reply
-    sdls_frame.pdu.hdr.pdu_len = SDLS_MC_LOG_RPLY_SIZE * BYTE_LEN;
+    sdls_frame.tlv_pdu.hdr.pdu_len = SDLS_MC_LOG_RPLY_SIZE * BYTE_LEN;
     sdls_frame.hdr.pkt_length =
-        CCSDS_HDR_SIZE + CCSDS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.pdu.hdr.pdu_len / BYTE_LEN) - 1;
+        CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
     count = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
     // PDU
     sdls_ep_reply[count] = (log_summary.num_se & 0xFF00) >> BYTE_LEN;
@@ -97,7 +108,9 @@ int32_t Crypto_MC_status(uint8_t *ingest)
  * @brief Function: Crypto_MC_dump
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
- **/
+ *
+ * CCSDS Compliance: SDLSP-EP 355.1-B-1 Section 7.3.3 (Event Logging)
+ */
 int32_t Crypto_MC_dump(uint8_t *ingest)
 {
     if (ingest == NULL)
@@ -107,9 +120,9 @@ int32_t Crypto_MC_dump(uint8_t *ingest)
     int     y;
 
     // Prepare for Reply
-    sdls_frame.pdu.hdr.pdu_len = (SDLS_MC_DUMP_RPLY_SIZE * log_count) * BYTE_LEN;
+    sdls_frame.tlv_pdu.hdr.pdu_len = (SDLS_MC_DUMP_RPLY_SIZE * log_count) * BYTE_LEN;
     sdls_frame.hdr.pkt_length =
-        CCSDS_HDR_SIZE + CCSDS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.pdu.hdr.pdu_len / BYTE_LEN) - 1;
+        CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
     count = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
     // PDU
     for (x = 0; x < log_count; x++)
@@ -156,7 +169,9 @@ int32_t Crypto_MC_dump(uint8_t *ingest)
  * @brief Function: Crypto_MC_erase
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
- **/
+ *
+ * CCSDS Compliance: SDLSP-EP 355.1-B-1 Section 7.3.3 (Event Logging)
+ */
 int32_t Crypto_MC_erase(uint8_t *ingest)
 {
     if (ingest == NULL)
@@ -182,9 +197,9 @@ int32_t Crypto_MC_erase(uint8_t *ingest)
     log_summary.rs     = LOG_SIZE;
 
     // Prepare for Reply
-    sdls_frame.pdu.hdr.pdu_len = SDLS_MC_LOG_RPLY_SIZE * BYTE_LEN; // 4
+    sdls_frame.tlv_pdu.hdr.pdu_len = SDLS_MC_LOG_RPLY_SIZE * BYTE_LEN; // 4
     sdls_frame.hdr.pkt_length =
-        CCSDS_HDR_SIZE + CCSDS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.pdu.hdr.pdu_len / BYTE_LEN) - 1;
+        CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
     count = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
     // PDU
     sdls_ep_reply[count] = (log_summary.num_se & 0xFF00) >> BYTE_LEN;
@@ -215,7 +230,9 @@ int32_t Crypto_MC_erase(uint8_t *ingest)
  * @brief Function: Crypto_MC_selftest
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
- **/
+ *
+ * CCSDS Compliance: SDLSP-EP 355.1-B-1 Section 7.3.4 (Self-Test Diagnostics)
+ */
 int32_t Crypto_MC_selftest(uint8_t *ingest)
 {
     if (ingest == NULL)
@@ -226,11 +243,11 @@ int32_t Crypto_MC_selftest(uint8_t *ingest)
     // TODO: Perform test
 
     // Prepare for Reply
-    sdls_frame.pdu.hdr.pdu_len = SDLS_MC_ST_RPLY_SIZE * BYTE_LEN;
+    sdls_frame.tlv_pdu.hdr.pdu_len = SDLS_MC_ST_RPLY_SIZE * BYTE_LEN;
     sdls_frame.hdr.pkt_length =
-        CCSDS_HDR_SIZE + CCSDS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.pdu.hdr.pdu_len / BYTE_LEN) - 1;
-    sdls_frame.pdu.data[0] = result;
-    count                  = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
+        CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
+    sdls_frame.tlv_pdu.data[0] = result;
+    count                      = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
 
     sdls_ep_reply[count] = result;
     count++;
@@ -248,10 +265,12 @@ int32_t Crypto_MC_selftest(uint8_t *ingest)
 }
 
 /**
- * @brief Function: Crypto_SA_readASRN
+ * @brief Function: Crypto_SA_readARSN
  * @param ingest: uint8_t*
  * @return int32: Success/Failure
- **/
+ *
+ * CCSDS Compliance: SDLSP-EP 355.1-B-1 Section 7.2.4 (Anti-Replay Processing)
+ */
 int32_t Crypto_SA_readARSN(uint8_t *ingest)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -270,7 +289,8 @@ int32_t Crypto_SA_readARSN(uint8_t *ingest)
         int                    status = CRYPTO_LIB_SUCCESS;
 
         // Read ingest
-        spi = ((uint8_t)sdls_frame.pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.pdu.data[1];
+        spi = ((uint8_t)sdls_frame.tlv_pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.tlv_pdu.data[1];
+
         status = sa_if->sa_get_from_spi(spi, &sa_ptr);
 
         if (status != CRYPTO_LIB_SUCCESS)
@@ -281,9 +301,9 @@ int32_t Crypto_SA_readARSN(uint8_t *ingest)
         else
         {
             // Prepare for Reply
-            sdls_frame.pdu.hdr.pdu_len = (SPI_LEN + sa_ptr->arsn_len) * BYTE_LEN; // bits
+            sdls_frame.tlv_pdu.hdr.pdu_len = (SPI_LEN + sa_ptr->arsn_len) * BYTE_LEN; // bits
             sdls_frame.hdr.pkt_length =
-                CCSDS_HDR_SIZE + CCSDS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.pdu.hdr.pdu_len / BYTE_LEN) - 1;
+                CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
             uint8_t count = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
 
             // Write SPI to reply
@@ -349,8 +369,11 @@ int32_t Crypto_SA_readARSN(uint8_t *ingest)
 
 /**
  * @brief Function: Crypto_MC_resetalarm
+ * Reset all alarm flags
  * @return int32: Success/Failure
- **/
+ *
+ * CCSDS Compliance: SDLSP-EP 355.1-B-1 Section 7.3.5 (Alarm Management)
+ */
 int32_t Crypto_MC_resetalarm(void)
 { // Reset all alarm flags
     report.af    = 0;

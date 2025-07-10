@@ -49,10 +49,11 @@ UTEST(TC_PROCESS, EXERCISE_IV)
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
 
-    Crypto_Init();
-    SaInterface   sa_if  = get_sa_interface_inmemory();
-    crypto_key_t *ekp    = NULL;
-    int           status = 0;
+    int status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *ekp   = NULL;
+    status              = 0;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -177,10 +178,11 @@ UTEST(TC_PROCESS, EXERCISE_ARSN)
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    Crypto_Init();
-    SaInterface   sa_if  = get_sa_interface_inmemory();
-    crypto_key_t *akp    = NULL;
-    int           status = 0;
+    int status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    SaInterface   sa_if = get_sa_interface_inmemory();
+    crypto_key_t *akp   = NULL;
+    status              = 0;
 
     // NIST supplied vectors
     // NOTE: Added Transfer Frame header to the plaintext
@@ -307,7 +309,8 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_STATIC_IV_ROLLOVER)
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    Crypto_Init();
+    int status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     SaInterface sa_if = get_sa_interface_inmemory();
 
     char *dec_test_fe_h =
@@ -404,7 +407,8 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_NONTRANSMITTED_INCREMENTING_IV_ROLLOVER)
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    Crypto_Init();
+    int status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     SaInterface sa_if = get_sa_interface_inmemory();
 
     char *dec_test_fe_h =
@@ -445,19 +449,7 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_NONTRANSMITTED_INCREMENTING_IV_ROLLOVER)
     test_association->shivf_len      = 6;
     test_association->iv_len         = 12;
     test_association->ekid           = 130;
-    // IV = "000000000000FFFFFFFFFFFE"
-    test_association->iv[0]    = 0x00;
-    test_association->iv[1]    = 0x00;
-    test_association->iv[2]    = 0x00;
-    test_association->iv[3]    = 0x00;
-    test_association->iv[4]    = 0x00;
-    test_association->iv[5]    = 0x00;
-    test_association->iv[6]    = 0xFF;
-    test_association->iv[7]    = 0xFF;
-    test_association->iv[8]    = 0xFF;
-    test_association->iv[9]    = 0xFF;
-    test_association->iv[10]   = 0xFF;
-    test_association->iv[11]   = 0xFD;
+    sa_if->sa_setIV(test_association->spi, "000000000000FFFFFFFFFFFD");
     test_association->ast      = 1;
     test_association->est      = 1;
     test_association->sa_state = SA_OPERATIONAL;
@@ -512,7 +504,8 @@ UTEST(TC_PROCESS, HAPPY_PATH_PROCESS_NONTRANSMITTED_INCREMENTING_ARSN_ROLLOVER)
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 1;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    Crypto_Init();
+    int status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     SaInterface sa_if = get_sa_interface_inmemory();
 
@@ -651,7 +644,7 @@ UTEST(TC_PROCESS, ERROR_TC_INPUT_FRAME_TOO_SHORT_FOR_SPECIFIED_FRAME_LENGTH_HEAD
     tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
 
-    char    *test_frame_pt_h   = "200304260000020000000000000000000000309e09deeaa375487983a89f3ed7519a230baf22";
+    char    *test_frame_pt_h   = "200304260000020000000000000000000000309e09deeaa375487983a89f3ed7519a230baf22"; //
     uint8_t *test_frame_pt_b   = NULL;
     int      test_frame_pt_len = 0;
 
@@ -665,7 +658,7 @@ UTEST(TC_PROCESS, ERROR_TC_INPUT_FRAME_TOO_SHORT_FOR_SPECIFIED_FRAME_LENGTH_HEAD
     hex_conversion(test_frame_pt_h, (char **)&test_frame_pt_b, &test_frame_pt_len);
     // Should fail, as frame length violates the managed parameter
     status = Crypto_TC_ProcessSecurity(test_frame_pt_b, &test_frame_pt_len, tc_sdls_processed_frame);
-    ASSERT_EQ(CRYPTO_LIB_ERR_INPUT_FRAME_LENGTH_SHORTER_THAN_FRAME_HEADERS_LENGTH, status);
+    ASSERT_EQ(CRYPTO_LIB_ERR_TC_FRAME_LENGTH_MISMATCH, status);
 
     Crypto_Shutdown();
     free(test_frame_pt_b);
@@ -909,223 +902,231 @@ UTEST(TC_PROCESS, DECRYPT_CBC_16B)
  * Test Cases: Replay, outside of window
  **/
 // TODO: Removed due to ARSN only being allowed with Auth/Auth Enc. Must rework!
-// UTEST(TC_PROCESS, GCM_IV_AND_ARSN)
-// {
-//     remove("sa_save_file.bin");
-//     uint8_t *ptr_enc_frame = NULL;
-//     // Setup & Initialize CryptoLib
-//     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-//                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-//                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-//                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-//     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-//     // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_NO_FECF,
-//     // TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
+UTEST(TC_PROCESS, GCM_IV_AND_ARSN)
+{
+    remove("sa_save_file.bin");
+    uint8_t *ptr_enc_frame = NULL;
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_NO_FECF,
+    // TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
 
-//     GvcidManagedParameters_t TC_UT_Managed_Parameters = {
-//         0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
-//     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-//     TC_UT_Managed_Parameters.vcid = 1;
-//     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-//     TC_UT_Managed_Parameters.vcid = 2;
-//     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-//     TC_UT_Managed_Parameters.vcid = 3;
-//     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-//     Crypto_Init();
-//     SaInterface   sa_if  = get_sa_interface_inmemory();
-//     crypto_key_t *ekp    = NULL;
-//     int           status = 0;
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    TC_UT_Managed_Parameters.vcid = 1;
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    TC_UT_Managed_Parameters.vcid = 2;
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    TC_UT_Managed_Parameters.vcid = 3;
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    Crypto_Init();
+    SaInterface   sa_if  = get_sa_interface_inmemory();
+    crypto_key_t *ekp    = NULL;
+    int           status = 0;
 
-//     // NIST supplied vectors
-//     // NOTE: Added Transfer Frame header to the plaintext
-//     char *buffer_arsn_h     = "0123"; // The last valid ARSN that was seen by the SA
-//     char *buffer_nist_key_h = "ef9f9284cf599eac3b119905a7d18851e7e374cf63aea04358586b0f757670f8";
-//     char *buffer_nist_iv_h  = "b6ac8e4963f49207ffd6374b"; // The last valid IV that was seen by the SA
-//     char *buffer_replay_h =
-//         "2003002500FF0009B6AC8E4963F49207FFD6374B1224DFEFB72A20D49E09256908874979DFC1"; // IV is one less than library
-//                                                                                         // expects
-//     char *buffer_outside_window_h =
-//         "2003002500FF0009B6AC8E4963F49207FFD6375C1224DFEFB72A20D49E09256908874979B36E"; // IV is outside the positive
-//                                                                                         // window
-//     char *buffer_bad_iv_bad_arsn_h =
-//         "2003002500FF0009B6AC8E4963F49207FFD6374C01231224DFEFB72A20D49E09256908874979"; // IV isa replay, ARSN is a
-//                                                                                         // replay
-//     char *buffer_good_iv_bad_arsn_h =
-//         "2003002500FF0009B6AC8E4963F49207FFD6374C01231224DFEFB72A20D49E09256908874979"; // IV is the next one expected,
-//                                                                                         // ARSN is a replay
-//     char *buffer_bad_iv_good_arsn_h =
-//         "2003002500FF0009B6AC8E4963F49207FFD6374B01241224DFEFB72A20D49E09256908874979"; // IV is a replay, ARSN is next
-//                                                                                         // expected
-//     char *buffer_good_iv_with_gap_h =
-//         "2003002500FF0009B6AC8E4963F49207FFD6374F1224DFEFB72A20D49E092569088749799C49"; // IV is valid, but not next one
-//                                                                                         // expected
-//     char *buffer_high_iv_good_arsn_h =
-//         "2003002500FF0009B6AC8E4963F49207FFD6374B01241224DFEFB72A20D49E09256908874979"; // IV is outside upper bounds,
-//                                                                                         // ARSN is next expected
-//     char *buffer_good_iv_high_arsn_h =
-//         "2003002500FF0009B6AC8E4963F49207FFD6374BFFFE1224DFEFB72A20D49E09256908874979"; // IV is next expected, ARSN is
-//                                                                                         // outside upper bounds
-//     char *buffer_good_iv_good_arsn_h =
-//         "2003002500FF0009B6AC8E4963F49207FFD6374C01241224DFEFB72A20D49E09256908874979"; // IV is next expected, ARSN is
-//                                                                                         // next expected
-//     char *buffer_good_iv_gap_good_arsn_gap_h =
-//         "2003002500FF0009B6AC8E4963F49207FFD6375101291224DFEFB72A20D49E09256908874979"; // IV is next expected, ARSN is
-//                                                                                         // next expected
+    // NIST supplied vectors
+    // NOTE: Added Transfer Frame header to the plaintext
+    char *buffer_arsn_h     = "0123"; // The last valid ARSN that was seen by the SA
+    char *buffer_nist_key_h = "ef9f9284cf599eac3b119905a7d18851e7e374cf63aea04358586b0f757670f8";
+    char *buffer_nist_iv_h  = "b6ac8e4963f49207ffd6374b"; // The last valid IV that was seen by the SA
+    char *buffer_replay_h = "2003003500FF0009B6AC8E4963F49207FFD6374B1224DFEFB72A20D49E09256908874979DFC1711E5265126421"
+                            "be41438096b6415a4b"; // IV is one less than library
+                                                  // expects
+    char *buffer_outside_window_h = "2003003500FF0009B6AC8E4963F49207FFD6375C1224DFEFB72A20D49E09256908874979B36E000000"
+                                    "00000000000000000000000000"; // IV is outside the positive
+                                                                  // window
+    char *buffer_bad_iv_bad_arsn_h = "2003003500FF0009B6AC8E4963F49207FFD6374C01231224DFEFB72A20D49E0925690887497951E39"
+                                     "3DBFEB6FBBC2FF8486D8050B099"; // IV isa replay, ARSN is a
+                                                                    // replay
+    char *buffer_good_iv_bad_arsn_h = "2003003500FF0009B6AC8E4963F49207FFD6374C01231224DFEFB72A20D49E0925690887497951E3"
+                                      "93DBFEB6FBBC2FF8486D8050B099"; // IV is the next one expected,
+                                                                      // ARSN is a replay
+    char *buffer_bad_iv_good_arsn_h = "2003003500FF0009B6AC8E4963F49207FFD6374B01241224DFEFB72A20D49E09256908874979ED73"
+                                      "F3B3363E24D6A3400BAFA8AE3F86"; // IV is a replay, ARSN is next
+                                                                      // expected
+    char *buffer_good_iv_with_gap_h = "2003003500FF0009B6AC8E4963F49207FFD6374F1224DFEFB72A20D49E092569088749799C490000"
+                                      "0000000000000000000000000000"; // IV is valid, but not next one
+                                                                      // expected
+    char *buffer_high_iv_good_arsn_h = "2003003500FF0009B6AC8E4963F49207FFD6374B01241224DFEFB72A20D49E09256908874979ED7"
+                                       "3F3B3363E24D6A3400BAFA8AE3F86"; // IV is outside upper bounds,
+                                                                        // ARSN is next expected
+    char *buffer_good_iv_high_arsn_h = "2003003500FF0009B6AC8E4963F49207FFD6374BFFFE1224DFEFB72A20D49E09256908874979ED7"
+                                       "3F3B3363E24D6A3400BAFA8AE3F86"; // IV is next expected, ARSN is
+                                                                        // outside upper bounds
+    char *buffer_good_iv_good_arsn_h = "2003003500FF0009B6AC8E4963F49207FFD6374C01241224DFEFB72A20D49E0925690887497951E"
+                                       "393DBFEB6FBBC2FF8486D8050B099"; // IV is next expected, ARSN is
+                                                                        // next expected
+    char *buffer_good_iv_gap_good_arsn_gap_h = "2003003500FF0009B6AC8E4963F49207FFD6375101291224DFEFB72A20D49E092569088"
+                                               "74979E825D7A95C2A3106D97FA136847968EA"; // IV is next expected, ARSN is
+                                                                                        // next expected
 
-//     uint8_t *buffer_replay_b, *buffer_outside_window_b, *buffer_bad_iv_bad_arsn_b, *buffer_good_iv_bad_arsn_b,
-//         *buffer_bad_iv_good_arsn_b, *buffer_good_iv_with_gap_b, *buffer_high_iv_good_arsn_b,
-//         *buffer_good_iv_high_arsn_b, *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_good_iv_good_arsn_b,
-//         *buffer_good_iv_gap_good_arsn_gap_b, *buffer_arsn_b = NULL;
-//     int buffer_replay_len, buffer_outside_window_len, buffer_bad_iv_bad_arsn_len, buffer_good_iv_bad_arsn_len,
-//         buffer_bad_iv_good_arsn_len, buffer_good_iv_with_gap_len, buffer_high_iv_good_arsn_len,
-//         buffer_good_iv_high_arsn_len, buffer_nist_iv_len, buffer_nist_key_len, buffer_good_iv_good_arsn_len,
-//         buffer_good_iv_gap_good_arsn_gap_len, buffer_arsn_len = 0;
+    uint8_t *buffer_replay_b, *buffer_outside_window_b, *buffer_bad_iv_bad_arsn_b, *buffer_good_iv_bad_arsn_b,
+        *buffer_bad_iv_good_arsn_b, *buffer_good_iv_with_gap_b, *buffer_high_iv_good_arsn_b,
+        *buffer_good_iv_high_arsn_b, *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_good_iv_good_arsn_b,
+        *buffer_good_iv_gap_good_arsn_gap_b, *buffer_arsn_b = NULL;
+    int buffer_replay_len, buffer_outside_window_len, buffer_bad_iv_bad_arsn_len, buffer_good_iv_bad_arsn_len,
+        buffer_bad_iv_good_arsn_len, buffer_good_iv_with_gap_len, buffer_high_iv_good_arsn_len,
+        buffer_good_iv_high_arsn_len, buffer_nist_iv_len, buffer_nist_key_len, buffer_good_iv_good_arsn_len,
+        buffer_good_iv_gap_good_arsn_gap_len, buffer_arsn_len = 0;
 
-//     // Setup Processed Frame For Decryption
-//     TC_t *tc_nist_processed_frame;
-//     tc_nist_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
+    // Setup Processed Frame For Decryption
+    TC_t *tc_nist_processed_frame;
+    tc_nist_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
 
-//     // Expose/setup SAs for testing
-//     SecurityAssociation_t *test_association;
-//     // Deactivate SA 1
-//     sa_if->sa_get_from_spi(1, &test_association);
-//     test_association->sa_state = SA_NONE;
-//     // Activate SA 9
-//     sa_if->sa_get_from_spi(9, &test_association);
-//     test_association->sa_state   = SA_OPERATIONAL;
-//     test_association->ecs_len    = 1;
-//     test_association->ecs        = CRYPTO_CIPHER_AES256_GCM;
-//     test_association->acs        = 0;
-//     test_association->shsnf_len  = 2;
-//     test_association->arsn_len   = 2;
-//     test_association->arsnw      = 5;
-//     test_association->est        = 1;
-//     test_association->ast        = 0;
-//     test_association->ekid       = 136;
-//     test_association->akid       = 0;
-//     test_association->shivf_len  = 12;
-//     test_association->iv_len     = 12;
-//     test_association->shplf_len  = 1;
-//     test_association->arsnw_len  = 1;
-//     test_association->stmacf_len = 0;
-//     test_association->abm_len    = 1024;
+    // Expose/setup SAs for testing
+    SecurityAssociation_t *test_association;
+    // Deactivate SA 1
+    sa_if->sa_get_from_spi(1, &test_association);
+    test_association->sa_state = SA_NONE;
+    // Activate SA 9
+    sa_if->sa_get_from_spi(9, &test_association);
+    test_association->sa_state   = SA_OPERATIONAL;
+    test_association->ecs_len    = 1;
+    test_association->ecs        = CRYPTO_CIPHER_AES256_GCM;
+    test_association->acs        = CRYPTO_MAC_HMAC_SHA256;
+    test_association->shsnf_len  = 2;
+    test_association->arsn_len   = 2;
+    test_association->arsnw      = 5;
+    test_association->est        = 1;
+    test_association->ast        = 1;
+    test_association->ekid       = 136;
+    test_association->akid       = 0;
+    test_association->shivf_len  = 12;
+    test_association->iv_len     = 12;
+    test_association->shplf_len  = 0;
+    test_association->arsnw_len  = 1;
+    test_association->stmacf_len = 0;
+    test_association->abm_len    = 1024;
+    test_association->stmacf_len = 16;
 
-//     // Insert key into keyring of SA 9
-//     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
-//     ekp = key_if->get_key(test_association->ekid);
-//     memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
+    // Insert key into keyring of SA 9
+    hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
+    ekp = key_if->get_key(test_association->ekid);
+    memcpy(ekp->value, buffer_nist_key_b, buffer_nist_key_len);
 
-//     ekp->key_state = KEY_ACTIVE;
+    ekp->key_state = KEY_ACTIVE;
 
-//     // Convert frames that will be processed
-//     hex_conversion(buffer_replay_h, (char **)&buffer_replay_b, &buffer_replay_len);
-//     hex_conversion(buffer_outside_window_h, (char **)&buffer_outside_window_b, &buffer_outside_window_len);
-//     hex_conversion(buffer_bad_iv_bad_arsn_h, (char **)&buffer_bad_iv_bad_arsn_b, &buffer_bad_iv_bad_arsn_len);
-//     hex_conversion(buffer_good_iv_bad_arsn_h, (char **)&buffer_good_iv_bad_arsn_b, &buffer_good_iv_bad_arsn_len);
-//     hex_conversion(buffer_bad_iv_good_arsn_h, (char **)&buffer_bad_iv_good_arsn_b, &buffer_bad_iv_good_arsn_len);
-//     hex_conversion(buffer_good_iv_with_gap_h, (char **)&buffer_good_iv_with_gap_b, &buffer_good_iv_with_gap_len);
-//     hex_conversion(buffer_high_iv_good_arsn_h, (char **)&buffer_high_iv_good_arsn_b, &buffer_high_iv_good_arsn_len);
-//     hex_conversion(buffer_good_iv_high_arsn_h, (char **)&buffer_good_iv_high_arsn_b, &buffer_good_iv_high_arsn_len);
-//     hex_conversion(buffer_good_iv_good_arsn_h, (char **)&buffer_good_iv_good_arsn_b, &buffer_good_iv_good_arsn_len);
-//     hex_conversion(buffer_good_iv_gap_good_arsn_gap_h, (char **)&buffer_good_iv_gap_good_arsn_gap_b,
-//                    &buffer_good_iv_gap_good_arsn_gap_len);
-//     // Convert/Set input IV
-//     hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
-//     memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
-//     // Convert/Set input ARSN
-//     hex_conversion(buffer_arsn_h, (char **)&buffer_arsn_b, &buffer_arsn_len);
-//     memcpy(test_association->arsn, buffer_arsn_b, buffer_arsn_len);
+    // Convert frames that will be processed
+    hex_conversion(buffer_replay_h, (char **)&buffer_replay_b, &buffer_replay_len);
+    hex_conversion(buffer_outside_window_h, (char **)&buffer_outside_window_b, &buffer_outside_window_len);
+    hex_conversion(buffer_bad_iv_bad_arsn_h, (char **)&buffer_bad_iv_bad_arsn_b, &buffer_bad_iv_bad_arsn_len);
+    hex_conversion(buffer_good_iv_bad_arsn_h, (char **)&buffer_good_iv_bad_arsn_b, &buffer_good_iv_bad_arsn_len);
+    hex_conversion(buffer_bad_iv_good_arsn_h, (char **)&buffer_bad_iv_good_arsn_b, &buffer_bad_iv_good_arsn_len);
+    hex_conversion(buffer_good_iv_with_gap_h, (char **)&buffer_good_iv_with_gap_b, &buffer_good_iv_with_gap_len);
+    hex_conversion(buffer_high_iv_good_arsn_h, (char **)&buffer_high_iv_good_arsn_b, &buffer_high_iv_good_arsn_len);
+    hex_conversion(buffer_good_iv_high_arsn_h, (char **)&buffer_good_iv_high_arsn_b, &buffer_good_iv_high_arsn_len);
+    hex_conversion(buffer_good_iv_good_arsn_h, (char **)&buffer_good_iv_good_arsn_b, &buffer_good_iv_good_arsn_len);
+    hex_conversion(buffer_good_iv_gap_good_arsn_gap_h, (char **)&buffer_good_iv_gap_good_arsn_gap_b,
+                   &buffer_good_iv_gap_good_arsn_gap_len);
+    // Convert/Set input IV
+    hex_conversion(buffer_nist_iv_h, (char **)&buffer_nist_iv_b, &buffer_nist_iv_len);
+    memcpy(test_association->iv, buffer_nist_iv_b, buffer_nist_iv_len);
+    // Convert/Set input ARSN
+    hex_conversion(buffer_arsn_h, (char **)&buffer_arsn_b, &buffer_arsn_len);
+    memcpy(test_association->arsn, buffer_arsn_b, buffer_arsn_len);
 
-//     // Expect to fail on ARSN (Bad IV, bad ARSN)
-//     printf(KGRN "Checking replay - using previous received ARSN and previous IV...\n" RESET);
-//     status = Crypto_TC_ProcessSecurity(buffer_bad_iv_bad_arsn_b, &buffer_bad_iv_bad_arsn_len, tc_nist_processed_frame);
-//     ASSERT_EQ(CRYPTO_LIB_ERR_ARSN_OUTSIDE_WINDOW, status);
+    // Expect to fail on ARSN (Bad IV, bad ARSN)
+    printf(KGRN "Checking replay - using previous received ARSN and previous IV...\n" RESET);
+    status = Crypto_TC_ProcessSecurity(buffer_bad_iv_bad_arsn_b, &buffer_bad_iv_bad_arsn_len, tc_nist_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_ERR_ARSN_OUTSIDE_WINDOW, status);
 
-//     // Expect to fail on ARSN (Good IV, bad ARSN)
-//     printf(KGRN "Checking replay - using previous received ARSN...\n" RESET);
-//     status =
-//         Crypto_TC_ProcessSecurity(buffer_good_iv_bad_arsn_b, &buffer_good_iv_bad_arsn_len, tc_nist_processed_frame);
-//     ASSERT_EQ(CRYPTO_LIB_ERR_ARSN_OUTSIDE_WINDOW, status);
-//     // Verify IV did not increment since ARSN was bad
-//     for (int i = 0; i < test_association->iv_len; i++)
-//     {
-//         ASSERT_EQ(test_association->iv[i], buffer_nist_iv_b[i]);
-//     }
+    // Expect to fail on ARSN (Good IV, bad ARSN)
+    printf(KGRN "Checking replay - using previous received ARSN...\n" RESET);
+    status =
+        Crypto_TC_ProcessSecurity(buffer_good_iv_bad_arsn_b, &buffer_good_iv_bad_arsn_len, tc_nist_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_ERR_ARSN_OUTSIDE_WINDOW, status);
+    // Verify IV did not increment since ARSN was bad
+    for (int i = 0; i < test_association->iv_len; i++)
+    {
+        ASSERT_EQ(test_association->iv[i], buffer_nist_iv_b[i]);
+    }
 
-//     // Expect to fail on IV (Bad IV, Good ARSN)
-//     printf(KGRN "Checking replay - using previous received IV...\n" RESET);
-//     status =
-//         Crypto_TC_ProcessSecurity(buffer_bad_iv_good_arsn_b, &buffer_bad_iv_good_arsn_len, tc_nist_processed_frame);
-//     ASSERT_EQ(CRYPTO_LIB_ERR_IV_OUTSIDE_WINDOW, status);
-//     // Verify ARSN did not increment since IV was bad
-//     for (int i = 0; i < test_association->arsn_len; i++)
-//     {
-//         ASSERT_EQ(test_association->arsn[i], buffer_arsn_b[i]);
-//     }
+    // Expect to fail on IV (Bad IV, Good ARSN)
+    printf(KGRN "Checking replay - using previous received IV...\n" RESET);
+    status =
+        Crypto_TC_ProcessSecurity(buffer_bad_iv_good_arsn_b, &buffer_bad_iv_good_arsn_len, tc_nist_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_ERR_IV_OUTSIDE_WINDOW, status);
+    // Verify ARSN did not increment since IV was bad
+    for (int i = 0; i < test_association->arsn_len; i++)
+    {
+        ASSERT_EQ(test_association->arsn[i], buffer_arsn_b[i]);
+    }
 
-//     // Expect to fail on IV counter being too high
-//     // Check w/ Mike
-//     printf(KGRN "Checking replay - using IV outside (above) the window...\n" RESET);
-//     status =
-//         Crypto_TC_ProcessSecurity(buffer_high_iv_good_arsn_b, &buffer_high_iv_good_arsn_len, tc_nist_processed_frame);
-//     ASSERT_EQ(CRYPTO_LIB_ERR_IV_OUTSIDE_WINDOW, status);
+    // Expect to fail on IV counter being too high
+    // Check w/ Mike
+    printf(KGRN "Checking replay - using IV outside (above) the window...\n" RESET);
+    status =
+        Crypto_TC_ProcessSecurity(buffer_high_iv_good_arsn_b, &buffer_high_iv_good_arsn_len, tc_nist_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_ERR_IV_OUTSIDE_WINDOW, status);
 
-//     // Expect to fail on ARSN counter being too high
-//     // Check w/ Mike
-//     printf(KGRN "Checking replay - using ARSN outside (above) the window...\n" RESET);
-//     status =
-//         Crypto_TC_ProcessSecurity(buffer_good_iv_high_arsn_b, &buffer_good_iv_high_arsn_len, tc_nist_processed_frame);
-//     ASSERT_EQ(CRYPTO_LIB_ERR_ARSN_OUTSIDE_WINDOW, status);
+    // Expect to fail on ARSN counter being too high
+    // Check w/ Mike
+    printf(KGRN "Checking replay - using ARSN outside (above) the window...\n" RESET);
+    status =
+        Crypto_TC_ProcessSecurity(buffer_good_iv_high_arsn_b, &buffer_good_iv_high_arsn_len, tc_nist_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_ERR_ARSN_OUTSIDE_WINDOW, status);
 
-//     // Expect success on next valid IV && ARSN
-//     printf(KGRN "Checking  next valid IV && valid ARSN... should be able to receive it... \n" RESET);
-//     status =
-//         Crypto_TC_ProcessSecurity(buffer_good_iv_good_arsn_b, &buffer_good_iv_good_arsn_len, tc_nist_processed_frame);
-//     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
-//     // Verify IV LSB incremented
-//     ASSERT_EQ(test_association->iv[test_association->iv_len - 1], 0x4C);
-//     // Verify ARSN LSB incremented
-//     ASSERT_EQ(test_association->arsn[test_association->arsn_len - 1], 0x24);
+    // Expect success on next valid IV && ARSN
+    printf(KGRN "Checking  next valid IV && valid ARSN... should be able to receive it... \n" RESET);
+    status =
+        Crypto_TC_ProcessSecurity(buffer_good_iv_good_arsn_b, &buffer_good_iv_good_arsn_len, tc_nist_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    // Verify IV LSB incremented
+    ASSERT_EQ(test_association->iv[test_association->iv_len - 1], 0x4C);
+    // Verify ARSN LSB incremented
+    ASSERT_EQ(test_association->arsn[test_association->arsn_len - 1], 0x24);
 
-//     // Expect success on valid IV and ARSNs within window, but have a gap
-//     printf(KGRN "Checking valid IV and ARSN within window... should be able to receive it... \n" RESET);
-//     status = Crypto_TC_ProcessSecurity(buffer_good_iv_gap_good_arsn_gap_b, &buffer_good_iv_gap_good_arsn_gap_len,
-//                                        tc_nist_processed_frame);
-//     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    // Expect success on valid IV and ARSNs within window, but have a gap
+    printf(KGRN "Checking valid IV and ARSN within window... should be able to receive it... \n" RESET);
+    status = Crypto_TC_ProcessSecurity(buffer_good_iv_gap_good_arsn_gap_b, &buffer_good_iv_gap_good_arsn_gap_len,
+                                       tc_nist_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-//     // Validate that the SA IV is updated to the most recently received IV
-//     // IV length in this testing is 12 bytes
-//     printf(KGRN "Verifying IV updated correctly...\n" RESET);
-//     printf("SA IV is now:\t");
-//     for (int i = 0; i < test_association->shivf_len; i++)
-//     {
-//         ASSERT_EQ(*(test_association->iv + i),
-//                   *(buffer_good_iv_gap_good_arsn_gap_b + 8 + i)); // 8 is IV offset into packet
-//         printf("%02X", *(test_association->iv + i));
-//     }
-//     printf("\n");
-//     // Validate that the SA ARSN is updated to the most recently received IV
-//     // ARSN length in this testing is 2 bytes
-//     printf(KGRN "Verifying ARSN updated correctly...\n" RESET);
-//     printf("SA ARSN is now:\t");
-//     for (int i = 0; i < test_association->arsn_len; i++)
-//     {
-//         ASSERT_EQ(*(test_association->arsn + i),
-//                   *(buffer_good_iv_gap_good_arsn_gap_b + 8 + test_association->shivf_len +
-//                     i)); // 8 + shivf is IV offset into packet
-//         printf("%02X", *(test_association->arsn + i));
-//     }
-//     printf("\n");
-//     Crypto_Shutdown();
-//     free(buffer_replay_b);
-//     free(buffer_outside_window_b);
-//     free(buffer_good_iv_bad_arsn_b);
-//     free(buffer_good_iv_with_gap_b);
-//     free(ptr_enc_frame);
-//     free(buffer_nist_iv_b);
-//     free(buffer_nist_key_b);
-//     free(tc_nist_processed_frame);
-// }
+    // Validate that the SA IV is updated to the most recently received IV
+    // IV length in this testing is 12 bytes
+    printf(KGRN "Verifying IV updated correctly...\n" RESET);
+    printf("SA IV is now:\t");
+    for (int i = 0; i < test_association->shivf_len; i++)
+    {
+        ASSERT_EQ(*(test_association->iv + i),
+                  *(buffer_good_iv_gap_good_arsn_gap_b + 8 + i)); // 8 is IV offset into packet
+        printf("%02X", *(test_association->iv + i));
+    }
+    printf("\n");
+    // Validate that the SA ARSN is updated to the most recently received IV
+    // ARSN length in this testing is 2 bytes
+    printf(KGRN "Verifying ARSN updated correctly...\n" RESET);
+    printf("SA ARSN is now:\t");
+    for (int i = 0; i < test_association->arsn_len; i++)
+    {
+        ASSERT_EQ(*(test_association->arsn + i),
+                  *(buffer_good_iv_gap_good_arsn_gap_b + 8 + test_association->shivf_len +
+                    i)); // 8 + shivf is IV offset into packet
+        printf("%02X", *(test_association->arsn + i));
+    }
+    printf("\n");
+    Crypto_Shutdown();
+    free(buffer_replay_b);
+    free(buffer_outside_window_b);
+    free(buffer_bad_iv_bad_arsn_b);
+    free(buffer_good_iv_bad_arsn_b);
+    free(buffer_bad_iv_good_arsn_b);
+    free(buffer_good_iv_with_gap_b);
+    free(buffer_high_iv_good_arsn_b);
+    free(buffer_good_iv_high_arsn_b);
+    free(buffer_good_iv_good_arsn_b);
+    free(buffer_good_iv_gap_good_arsn_gap_b);
+    free(buffer_arsn_b);
+    free(ptr_enc_frame);
+    free(buffer_nist_iv_b);
+    free(buffer_nist_key_b);
+    free(tc_nist_processed_frame);
+}
 
 UTEST(TC_PROCESS, TC_SA_SEGFAULT_TEST)
 {
@@ -1144,7 +1145,6 @@ UTEST(TC_PROCESS, TC_SA_SEGFAULT_TEST)
     GvcidManagedParameters_t AOS_Managed_Parameters = {
         0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_Managed_Parameters);
-
     status = Crypto_Init();
 
     TC_t *tc_sdls_processed_frame;
@@ -1226,13 +1226,14 @@ UTEST(TC_PROCESS, TC_KEY_STATE_TEST)
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_Managed_Parameters);
 
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     TC_t *tc_sdls_processed_frame;
     tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
 
     // Test frame setup
-    char    *test_frame_pt_h = "2003002A0000000100000000000000000000000000000000025364F9BC3344AF359DA06CA886748F59A0AB";
+    char    *test_frame_pt_h = "2003002A0000000100000000000000000000000000000000025364F9BC3344AF359DA06CA886748F5939DE";
     uint8_t *test_frame_pt_b = NULL;
     int      test_frame_pt_len = 0;
 
@@ -1260,6 +1261,145 @@ UTEST(TC_PROCESS, TC_KEY_STATE_TEST)
     free(test_frame_pt_b);
     free(tc_sdls_processed_frame);
     Crypto_Shutdown();
+}
+
+UTEST(TC_PROCESS, TC_HEAP_BUFFER_OVERFLOW_TEST)
+{
+    remove("sa_save_file.bin");
+    // Local Variables
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    // Configure Parameters
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // AOS Tests
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t AOS_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_Managed_Parameters);
+
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    TC_t *tc_sdls_processed_frame;
+    tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
+    memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
+
+    // Test frame setup
+    char    *test_frame_pt_h   = "080300007f0b000afd020202027fff02020202020202020202020202029bdd5f3c98dd1c50d27a430"
+                                 "a4b6757aa33ec183952a9f76e504eb5f8001066ed6c00c8788e11997f2a058da1633e11fed9851d45"
+                                 "7bb31a9637ec8f4f15bc8575a0e7104dba5c666b17f7cccdc2adbff9";
+    uint8_t *test_frame_pt_b   = NULL;
+    int      test_frame_pt_len = 0;
+
+    SecurityAssociation_t *test_association;
+    sa_if->sa_get_from_spi(10, &test_association);
+    test_association->sa_state  = SA_OPERATIONAL;
+    test_association->est       = 1;
+    test_association->arsn_len  = 0;
+    test_association->shsnf_len = 0;
+
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(test_association->ekid);
+    ekp->key_state    = KEY_ACTIVE;
+
+    // Convert input test frame
+    hex_conversion(test_frame_pt_h, (char **)&test_frame_pt_b, &test_frame_pt_len);
+
+    status = Crypto_TC_ProcessSecurity(test_frame_pt_b, &test_frame_pt_len, tc_sdls_processed_frame);
+
+    ASSERT_EQ(CRYPTO_LIB_ERR_TC_FRAME_LENGTH_MISMATCH, status);
+    free(test_frame_pt_b);
+    free(tc_sdls_processed_frame);
+    Crypto_Shutdown();
+}
+
+UTEST(TC_PROCESS, TC_PROCESS_PREP_AAD_UNDERFLOW_TEST)
+{
+    remove("sa_save_file.bin");
+    // Local Variables
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    // Configure Parameters
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // AOS Tests
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t AOS_Managed_Parameters = {
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_Managed_Parameters);
+
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    TC_t *tc_sdls_processed_frame;
+    tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
+    memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
+
+    // Test frame setup
+    char    *test_frame_pt_h   = "080300080B00000AE3B20E";
+    uint8_t *test_frame_pt_b   = NULL;
+    int      test_frame_pt_len = 0;
+
+    SecurityAssociation_t *test_association;
+    sa_if->sa_get_from_spi(10, &test_association);
+    test_association->sa_state = SA_OPERATIONAL;
+
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(test_association->ekid);
+    ekp->key_state    = KEY_ACTIVE;
+
+    // Convert input test frame
+    hex_conversion(test_frame_pt_h, (char **)&test_frame_pt_b, &test_frame_pt_len);
+
+    status = Crypto_TC_ProcessSecurity(test_frame_pt_b, &test_frame_pt_len, tc_sdls_processed_frame);
+
+    ASSERT_EQ(CRYPTO_LIB_ERR_TC_FRAME_LENGTH_MISMATCH, status);
+    free(test_frame_pt_b);
+    free(tc_sdls_processed_frame);
+    Crypto_Shutdown();
+}
+
+UTEST(TC_PROCESS, TC_HEAP_BUFFER_OVERFLOW_TEST_2)
+{
+    remove("sa_save_file.bin");
+    int status = CRYPTO_LIB_SUCCESS;
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    TC_t *tc_sdls_processed_frame;
+    tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
+    memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
+
+    // Test string
+    char    *test_frame_pt_h   = "20030006190031FA2A79206F7F0DAD55CE54899DD37FA6D007B4E86DB4E86DA4B4E867";
+    uint8_t *test_frame_pt_b   = NULL;
+    int      test_frame_pt_len = 0;
+
+    hex_conversion(test_frame_pt_h, (char **)&test_frame_pt_b, &test_frame_pt_len);
+
+    status = Crypto_TC_ProcessSecurity(test_frame_pt_b, &test_frame_pt_len, tc_sdls_processed_frame);
+
+    Crypto_Shutdown();
+    free(tc_sdls_processed_frame);
+    free(test_frame_pt_b);
+    ASSERT_EQ(CRYPTO_LIB_ERR_TC_FRAME_LENGTH_MISMATCH, status);
 }
 
 UTEST_MAIN();

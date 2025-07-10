@@ -207,6 +207,7 @@ UTEST(TM_PROCESS_SECURITY, HAPPY_PATH_CLEAR_FECF)
     // Crypto_Config_Add_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test frame setup
     // Note: SPI 5 (0x05)
@@ -290,7 +291,7 @@ UTEST(TM_PROCESS_SECURITY, HAPPY_PATH_CLEAR_FECF)
     SecurityAssociation_t *sa_ptr;
     // Activate SA 5
     sa_if->sa_get_from_spi(5, &sa_ptr);
-    sa_ptr->sa_state = SA_OPERATIONAL;
+    sa_ptr->sa_state  = SA_OPERATIONAL;
     sa_ptr->arsn_len  = 0;
     sa_ptr->shsnf_len = 0;
 
@@ -307,9 +308,9 @@ UTEST(TM_PROCESS_SECURITY, HAPPY_PATH_CLEAR_FECF)
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &current_managed_parameters_struct);
+                                                gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < tm_current_managed_parameters_struct.max_frame_size; i++)
     {
         // printf("Checking %02x against %02X\n", (uint8_t)ptr_processed_frame[i], (uint8_t)*(truth_tm_b + i));
         ASSERT_EQ((uint8_t)ptr_processed_frame[i], (uint8_t) * (truth_tm_b + i));
@@ -345,10 +346,8 @@ UTEST(TM_PROCESS_SECURITY, SECONDARY_HDR_PRESENT_PLAINTEXT)
         0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
-
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test frame setup
     char *framed_tm_h =
@@ -463,9 +462,9 @@ UTEST(TM_PROCESS_SECURITY, SECONDARY_HDR_PRESENT_PLAINTEXT)
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &current_managed_parameters_struct);
+                                                gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < tm_current_managed_parameters_struct.max_frame_size; i++)
     {
         // printf("Checking %02x against %02X\n", tm_frame[i], (uint8_t)*(truth_tm_b + i));
         ASSERT_EQ(ptr_processed_frame[i], (uint8_t) * (truth_tm_b + i));
@@ -507,6 +506,7 @@ UTEST(TM_PROCESS_SECURITY, SECONDARY_HDR_PRESENT_MAC)
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
 
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test frame setup
     char *framed_tm_h =
@@ -630,7 +630,7 @@ UTEST(TM_PROCESS_SECURITY, SECONDARY_HDR_PRESENT_MAC)
     status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &ptr_processed_frame, &processed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < tm_current_managed_parameters_struct.max_frame_size; i++)
     {
         // printf("Checking %02x against %02X\n", ptr_processed_frame[i], (uint8_t)*(truth_tm_b + i));
         ASSERT_EQ(ptr_processed_frame[i], (uint8_t) * (truth_tm_b + i));
@@ -667,6 +667,7 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_0)
     // Crypto_Config_Add_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     SaInterface sa_if = get_sa_interface_inmemory();
     // Test frame setup
@@ -788,7 +789,7 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_0)
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &current_managed_parameters_struct);
+                                                gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
     // Determine security association by GVCID, which nominally happens in TO
     // status = sa_if->sa_get_operational_sa_from_gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
     // tm_frame_pri_hdr.vcid, map_id, &sa_ptr);
@@ -804,7 +805,7 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_0)
     // 2) SPI is set correctly
     // 3) MAC is calculated and placed correctly
     // 4) FECF is re-calculated and updated
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < tm_current_managed_parameters_struct.max_frame_size; i++)
     {
         // printf("Checking %02x against %02X\n", ptr_processed_frame[i], (uint8_t)*(truth_tm_b + i));
         ASSERT_EQ(ptr_processed_frame[i], (uint8_t) * (truth_tm_b + i));
@@ -842,6 +843,7 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_1)
     // Crypto_Config_Add_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     SaInterface sa_if = get_sa_interface_inmemory();
 
@@ -965,7 +967,7 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_1)
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &current_managed_parameters_struct);
+                                                gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
     // Determine security association by GVCID, which nominally happens in TO
     // status = sa_if->sa_get_operational_sa_from_gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
     // tm_frame_pri_hdr.vcid, map_id, &sa_ptr);
@@ -981,7 +983,7 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_1)
     // 2) SPI is zeroed
     // 3) MAC is zeroed
     // 4) FECF is zeroed
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < tm_current_managed_parameters_struct.max_frame_size; i++)
     {
         // printf("Checking %02x against %02X\n", ptr_processed_frame[i], (uint8_t)*(truth_tm_b + i));
         ASSERT_EQ(ptr_processed_frame[i], (uint8_t) * (truth_tm_b + i));
@@ -1018,6 +1020,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_0)
     // Crypto_Config_Add_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     SaInterface sa_if = get_sa_interface_inmemory();
     // Test frame setup
@@ -1140,7 +1143,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_0)
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &current_managed_parameters_struct);
+                                                gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
     // Determine security association by GVCID, which nominally happens in TO
     // status = sa_if->sa_get_operational_sa_from_gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
     // tm_frame_pri_hdr.vcid, map_id, &sa_ptr);
@@ -1156,7 +1159,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_0)
     // 2) SPI is set correctly
     // 3) MAC is calculated and placed correctly
     // 4) FECF is re-calculated and updated
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < tm_current_managed_parameters_struct.max_frame_size; i++)
     {
         // printf("Checking %02x against %02X\n", ptr_processed_frame[i], (uint8_t)*(truth_tm_b + i));
         ASSERT_EQ(ptr_processed_frame[i], (uint8_t) * (truth_tm_b + i));
@@ -1193,6 +1196,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_1)
     // Crypto_Config_Add_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     SaInterface sa_if = get_sa_interface_inmemory();
     // Test frame setup
@@ -1315,7 +1319,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_1)
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &current_managed_parameters_struct);
+                                                gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
     // Determine security association by GVCID, which nominally happens in TO
     // status = sa_if->sa_get_operational_sa_from_gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
     // tm_frame_pri_hdr.vcid, map_id, &sa_ptr);
@@ -1331,7 +1335,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_1)
     // 2) SPI is set correctly
     // 3) MAC is calculated and placed correctly
     // 4) FECF is re-calculated and updated
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < tm_current_managed_parameters_struct.max_frame_size; i++)
     {
         // printf("Checking %02x against %02X\n", ptr_processed_frame[i], (uint8_t)*(truth_tm_b + i));
         ASSERT_EQ(ptr_processed_frame[i], (uint8_t) * (truth_tm_b + i));
@@ -1368,6 +1372,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_0)
     // Crypto_Config_Add_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     SaInterface   sa_if = get_sa_interface_inmemory();
     crypto_key_t *akp   = NULL;
@@ -1493,7 +1498,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_0)
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &current_managed_parameters_struct);
+                                                gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
     // Determine security association by GVCID, which nominally happens in TO
     // status = sa_if->sa_get_operational_sa_from_gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
     // tm_frame_pri_hdr.vcid, map_id, &sa_ptr);
@@ -1509,7 +1514,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_0)
     // 2) SPI is set correctly
     // 3) MAC is calculated and placed correctly
     // 4) FECF is re-calculated and updated
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < tm_current_managed_parameters_struct.max_frame_size; i++)
     {
         // printf("Checking %02x against %02X\n", ptr_processed_frame[i], (uint8_t)*(truth_tm_b + i));
         ASSERT_EQ(ptr_processed_frame[i], (uint8_t) * (truth_tm_b + i));
@@ -1546,6 +1551,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_1)
     // Crypto_Config_Add_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     SaInterface   sa_if = get_sa_interface_inmemory();
     crypto_key_t *akp   = NULL;
@@ -1671,7 +1677,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_1)
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &current_managed_parameters_struct);
+                                                gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
     // Determine security association by GVCID, which nominally happens in TO
     // status = sa_if->sa_get_operational_sa_from_gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
     // tm_frame_pri_hdr.vcid, map_id, &sa_ptr);
@@ -1687,7 +1693,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_1)
     // 2) SPI is set correctly
     // 3) MAC is calculated and placed correctly
     // 4) FECF is re-calculated and updated
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < tm_current_managed_parameters_struct.max_frame_size; i++)
     {
         // printf("Checking %02x against %02X\n", ptr_processed_frame[i], (uint8_t)*(truth_tm_b + i));
         ASSERT_EQ(ptr_processed_frame[i], (uint8_t) * (truth_tm_b + i));
@@ -1723,7 +1729,8 @@ UTEST(TM_PROCESS_ENC_VAL, AES_GCM_BITMASK_1)
 
     // Crypto_Config_Add_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
-    Crypto_Init();
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     SaInterface sa_if = get_sa_interface_inmemory();
 
     // Test frame setup    Header   |SPI|    IV                         |    Data
@@ -1767,7 +1774,39 @@ UTEST(TM_PROCESS_ENC_VAL, AES_GCM_BITMASK_1)
 
     // Truth frame setup
     char *truth_tm_h =
-        "02c00000180000000000000000000000000000000000000000200b5f5dd262db1cd3d1dbeb406c8d10111256a140fe3444b96a9c580f6f9a2a7a7cea29f43e8bd16168a78c9880784060e41e1644280ab75c8b3dc8d3d9a962fe3a2e7e644eabb916663202c9075ebd964a65cc369f1a982fa33f035f4e821a99e536372206debdf94407de6f2a7c3a4b290bfddf070e2f61b9715ed3f22e662ff4d2dc449bb0b11152f8d8366ea87c42039c6ade651af1ba49cce8629a54120a516f704904c2881084a9def40ae362976a64ae0dc96e25149cf2b2907180f540e81ced17363b25771c3a2517f09ebf99888dc93b16c15392a02b3bdc369a79504edb181bbd93dfcff64a40e878ff366e2d5fa37bcc95bf0540d94b6be8df31bb63e20d581fad51c9fbf3cfd503bd1cb222931a646aff35ed6d248a6d1efac165f10cc58cd4163da93e6a5aa9a4c4430729fb09bec6c35cd3b6a687aeb60e9d40119170d52124802fe2c07bf1df092952f2f54b08083b9073f8ec8d2b41843292b1bc2100dbc4c1dd3e7af90f113d05375f7787b3d5acaffd7570c389b1f91bc24ce311a039ee40c674d6e335073ba69df310e90b9347bd2428ca6cb39facef4e7ab23ef7e885f3b14b68d5bc6f6bb82175e9b303f424bd372ddefbd31d5a81cf8297b889b2a115f3b623b5a480f006678857d6797ba5bf3fe86223dfb5e2f63e34339d8874605ee567ded852cc12acfa93594048a2360e0cc98cc6ee3ab7578195a6fb82e216380995c8c110dcd2b76e506995d13aff08ea03958c3246e8f26dc08149209accbec1cabf03355ac197aa08f59a7d1b1423e49a0bb34c7599c4989e0ff2d5252b384e2f949a37700ce3893dbd020735ac4fefcc4bd856497e0dfcabf6e18246ebeb9328e7627916a55034f6f79c563cca3938f4aa7f130df5e4e65b6d42a3fc7fd7083e56b7398097374bb71d7fdc570bb634be837de56705ab229b563d0cdd6f71baf13995e82d15388f4da4b0653b90b913df0dd18407a963f75d74848cc2eb538110faeafd9504de3108703ddbd171ea3cd0c763b98eec9f5e1dd90bd587ab7a6479d24098178d88f884f637e17aed88f181574e5568a8000e37c0480c87814cb0affe2b31a67c577d41707b9d243a6da7762aac54667d57f0295ad13f83fe9a3abcdd96cd123a01c237260452c3eda2653e76a531d2f6afc806f2fab0a9e75a77be6dc5dc41a1c2acbb0eb7bd2bebec817e9047f2ae0b7c11d8e89c53ab05638c96935b56f1d2e8822b12a6c0421e882f47fd5877fd19d077ae487d11270deb0308083455672787622449475be950ed5ffd5a63a9832fefd79403fc649e0b860987a41dfa98587513c480b5c2e491565b18193ab246b0d3cbc0f53fc44aa4ae0ea03e358764814b5e7848b2a9cf220db5ddd1017308cfa97b55b380ad2aba90e9fe589419ae2c0d844638e960a55ede96dffa778687e31f3042761f9edfe550b2d192cbdcfbc0f5cf11f190eebbf96783b74e007c0763fe8dae1a8752638ccd503666e06f4865a5af3f9f8d76195acc267631567d4a66102c4bdb732cea41110cd13436806a7bfc31b66b258f6b2755cd09b2aa2f98571c3f308cc632572aff9fe90014a135d2032901a779af29d8fb34584680a924bdfe8c9108dcf977bb3b88230e974926cb916669d6579c0cc06e1a40528bf9072cbd647fb92980fbb5a47d13c2b5c2251605e63eb923556716bbd0717f624d34367b614009798bb79c4f7a7262caa7b52daa7e46407a24f4fc13094c3ef63481cb99edd118c565dcdbf74698121e985d74c6ce70093ffe73c9ac58ca2fd64a53e840cfb843bc9ec695eab7af50d3c2a05d7e69906379e0c2486828a8ac13655ab41b0b08358e9ed4ccc0c4eed4dca7190315ea025a917d45b4e5e35e2c9df1f993fba9ecac30c71871f947a0f038b31761f56df24eab00ee103bcb1784a517710dd40b35472d7176390e70a7890f4d169a59eb8115edad9dcb60fa1ef6cd52efa8069ad612c0301d0a912425bdee29482c7deabaa03125ff9d91cdcc310b17b5453b80f875c053ae1c9e93c51eb10f44e645638e2f6b7a186a68d19e588691a31d299ad1dac56f05e34114f2387c00b779b1f7f95b024d12e7222b4b96095550ba5c03c0ad4cd5bf52da76875970421a7dc51214fb83a664a65422b97d7c43aeaedf771fa0c72d381f561364304345c4b7cc2b95b1923282293e18297b3b88c5755960f0dcd09d1665b453c32a00f39ff1b54009215e02be43150eb4cf3dbba72ba23bc80d02826e1c34a19660bcdae6a26cbb6f6d0d72106c1f2153924903323e0197e46e706a6bf56d4b8c7af0c3b23b2c774590ffe93e4a8298ba372591802a17718ca9174eb31d488fe34583e6300d427cb97a0cce46dfcfbeff73f0bcd6165b61053599af2646b925028ac76164bcd68b9f4af98c0dde866063d809115fc45d05fe1944685f964529d85b48cbf3188386721a51d5f945136f432c303454fa0000";
+        "02c00000180000000000000000000000000000000000000000200b5f5dd262db1cd3d1dbeb406c8d10111256a140fe3444b96a9c580f6f"
+        "9a2a7a7cea29f43e8bd16168a78c9880784060e41e1644280ab75c8b3dc8d3d9a962fe3a2e7e644eabb916663202c9075ebd964a65cc36"
+        "9f1a982fa33f035f4e821a99e536372206debdf94407de6f2a7c3a4b290bfddf070e2f61b9715ed3f22e662ff4d2dc449bb0b11152f8d8"
+        "366ea87c42039c6ade651af1ba49cce8629a54120a516f704904c2881084a9def40ae362976a64ae0dc96e25149cf2b2907180f540e81c"
+        "ed17363b25771c3a2517f09ebf99888dc93b16c15392a02b3bdc369a79504edb181bbd93dfcff64a40e878ff366e2d5fa37bcc95bf0540"
+        "d94b6be8df31bb63e20d581fad51c9fbf3cfd503bd1cb222931a646aff35ed6d248a6d1efac165f10cc58cd4163da93e6a5aa9a4c44307"
+        "29fb09bec6c35cd3b6a687aeb60e9d40119170d52124802fe2c07bf1df092952f2f54b08083b9073f8ec8d2b41843292b1bc2100dbc4c1"
+        "dd3e7af90f113d05375f7787b3d5acaffd7570c389b1f91bc24ce311a039ee40c674d6e335073ba69df310e90b9347bd2428ca6cb39fac"
+        "ef4e7ab23ef7e885f3b14b68d5bc6f6bb82175e9b303f424bd372ddefbd31d5a81cf8297b889b2a115f3b623b5a480f006678857d6797b"
+        "a5bf3fe86223dfb5e2f63e34339d8874605ee567ded852cc12acfa93594048a2360e0cc98cc6ee3ab7578195a6fb82e216380995c8c110"
+        "dcd2b76e506995d13aff08ea03958c3246e8f26dc08149209accbec1cabf03355ac197aa08f59a7d1b1423e49a0bb34c7599c4989e0ff2"
+        "d5252b384e2f949a37700ce3893dbd020735ac4fefcc4bd856497e0dfcabf6e18246ebeb9328e7627916a55034f6f79c563cca3938f4aa"
+        "7f130df5e4e65b6d42a3fc7fd7083e56b7398097374bb71d7fdc570bb634be837de56705ab229b563d0cdd6f71baf13995e82d15388f4d"
+        "a4b0653b90b913df0dd18407a963f75d74848cc2eb538110faeafd9504de3108703ddbd171ea3cd0c763b98eec9f5e1dd90bd587ab7a64"
+        "79d24098178d88f884f637e17aed88f181574e5568a8000e37c0480c87814cb0affe2b31a67c577d41707b9d243a6da7762aac54667d57"
+        "f0295ad13f83fe9a3abcdd96cd123a01c237260452c3eda2653e76a531d2f6afc806f2fab0a9e75a77be6dc5dc41a1c2acbb0eb7bd2beb"
+        "ec817e9047f2ae0b7c11d8e89c53ab05638c96935b56f1d2e8822b12a6c0421e882f47fd5877fd19d077ae487d11270deb030808345567"
+        "2787622449475be950ed5ffd5a63a9832fefd79403fc649e0b860987a41dfa98587513c480b5c2e491565b18193ab246b0d3cbc0f53fc4"
+        "4aa4ae0ea03e358764814b5e7848b2a9cf220db5ddd1017308cfa97b55b380ad2aba90e9fe589419ae2c0d844638e960a55ede96dffa77"
+        "8687e31f3042761f9edfe550b2d192cbdcfbc0f5cf11f190eebbf96783b74e007c0763fe8dae1a8752638ccd503666e06f4865a5af3f9f"
+        "8d76195acc267631567d4a66102c4bdb732cea41110cd13436806a7bfc31b66b258f6b2755cd09b2aa2f98571c3f308cc632572aff9fe9"
+        "0014a135d2032901a779af29d8fb34584680a924bdfe8c9108dcf977bb3b88230e974926cb916669d6579c0cc06e1a40528bf9072cbd64"
+        "7fb92980fbb5a47d13c2b5c2251605e63eb923556716bbd0717f624d34367b614009798bb79c4f7a7262caa7b52daa7e46407a24f4fc13"
+        "094c3ef63481cb99edd118c565dcdbf74698121e985d74c6ce70093ffe73c9ac58ca2fd64a53e840cfb843bc9ec695eab7af50d3c2a05d"
+        "7e69906379e0c2486828a8ac13655ab41b0b08358e9ed4ccc0c4eed4dca7190315ea025a917d45b4e5e35e2c9df1f993fba9ecac30c718"
+        "71f947a0f038b31761f56df24eab00ee103bcb1784a517710dd40b35472d7176390e70a7890f4d169a59eb8115edad9dcb60fa1ef6cd52"
+        "efa8069ad612c0301d0a912425bdee29482c7deabaa03125ff9d91cdcc310b17b5453b80f875c053ae1c9e93c51eb10f44e645638e2f6b"
+        "7a186a68d19e588691a31d299ad1dac56f05e34114f2387c00b779b1f7f95b024d12e7222b4b96095550ba5c03c0ad4cd5bf52da768759"
+        "70421a7dc51214fb83a664a65422b97d7c43aeaedf771fa0c72d381f561364304345c4b7cc2b95b1923282293e18297b3b88c5755960f0"
+        "dcd09d1665b453c32a00f39ff1b54009215e02be43150eb4cf3dbba72ba23bc80d02826e1c34a19660bcdae6a26cbb6f6d0d72106c1f21"
+        "53924903323e0197e46e706a6bf56d4b8c7af0c3b23b2c774590ffe93e4a8298ba372591802a17718ca9174eb31d488fe34583e6300d42"
+        "7cb97a0cce46dfcfbeff73f0bcd6165b61053599af2646b925028ac76164bcd68b9f4af98c0dde866063d809115fc45d05fe1944685f96"
+        "4529d85b48cbf3188386721a51d5f945136f432c303454fa0000";
     char *truth_tm_b   = NULL;
     int   truth_tm_len = 0;
     hex_conversion(truth_tm_h, &truth_tm_b, &truth_tm_len);
@@ -1780,7 +1819,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_GCM_BITMASK_1)
     test_association->sa_state = SA_NONE;
     // Activate SA 5
     sa_if->sa_get_from_spi(6, &test_association);
-    test_association->abm_len  = 1786;
+    test_association->abm_len = 1786;
     memset(test_association->abm, 0xFF, (test_association->abm_len * sizeof(uint8_t))); // Bitmask
     test_association->sa_state  = SA_OPERATIONAL;
     test_association->ecs_len   = 1;
@@ -1808,7 +1847,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_GCM_BITMASK_1)
     for (int i = 0; i < 1786; i++)
     {
         // printf("[%d]: %02x -> %02x \n", i, tm_frame[i], truth_tm_b[i]);
-        printf("%02x", (uint8_t)*(truth_tm_b+i));
+        printf("%02x", (uint8_t) * (truth_tm_b + i));
         // ASSERT_EQ(*(ptr_enc_frame + enc_data_idx), buffer_nist_ct_b[i]);
         // enc_data_idx++;
     }
@@ -1818,13 +1857,14 @@ UTEST(TM_PROCESS_ENC_VAL, AES_GCM_BITMASK_1)
     for (int i = 0; i < 1786; i++)
     {
         printf("%02x", ptr_processed_frame[i]);
-        ASSERT_EQ(ptr_processed_frame[i], (uint8_t )*(truth_tm_b + i));
+        ASSERT_EQ(ptr_processed_frame[i], (uint8_t) * (truth_tm_b + i));
     }
 
     printf("\n\n");
 
     free(truth_tm_b);
     free(framed_tm_b);
+    free(ptr_processed_frame);
     // free(iv_b);
 }
 
@@ -1852,7 +1892,8 @@ UTEST(TM_PROCESS_ENC_VAL, AEAD_AES_GCM_BITMASK_1)
 
     // Crypto_Config_Add_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
-    Crypto_Init();
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     SaInterface sa_if = get_sa_interface_inmemory();
 
     // Test frame setup    Header   |SPI|    IV                         |    Data |            MAC                | FECF
@@ -1941,7 +1982,8 @@ UTEST(TM_PROCESS_ENC_VAL, AEAD_AES_GCM_BITMASK_1)
     // Determine managed parameters by GVCID, which nominally happens in TO
     // status =
     //     Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
-    //                                             gvcid_managed_parameters_array, &current_managed_parameters_struct);
+    //                                             gvcid_managed_parameters_array,
+    //                                             &tm_current_managed_parameters_struct);
 
     // Expose/setup SAs for testing
     SecurityAssociation_t  ta;
@@ -2002,6 +2044,7 @@ UTEST(TM_PROCESS_ENC_VAL, AEAD_AES_GCM_BITMASK_1)
     Crypto_Shutdown();
     free(truth_tm_b);
     free(framed_tm_b);
+    free(ptr_processed_frame);
     // free(iv_b);
 }
 
@@ -2025,6 +2068,7 @@ UTEST(TM_PROCESS, TM_SA_SEGFAULT_TEST)
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
     status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test frame setup
     char *framed_tm_h   = "02C00000180000FFFFFF";
@@ -2058,7 +2102,8 @@ UTEST(TM_PROCESS, TM_OCF_TEST)
     GvcidManagedParameters_t TM_UT_Managed_Parameters = {
         0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 16, TM_HAS_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
-    Crypto_Init();
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test frame setup
     char *framed_tm_h   = "02C0000D180000000000DEADBEEFFFFF";
@@ -2100,14 +2145,11 @@ UTEST(TM_PROCESS, TM_SA_NOT_OPERATIONAL)
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
+        0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 14, TM_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
     status = Crypto_Init();
-
-    TC_t *tc_sdls_processed_frame;
-    tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
-    memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     char *framed_tm_h   = "02C000001800002C414243444546";
     char *framed_tm_b   = NULL;
@@ -2129,7 +2171,6 @@ UTEST(TM_PROCESS, TM_SA_NOT_OPERATIONAL)
 
     ASSERT_EQ(CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL, status);
     free(framed_tm_b);
-    free(tc_sdls_processed_frame);
     Crypto_Shutdown();
 }
 
@@ -2149,14 +2190,11 @@ UTEST(TM_PROCESS, TM_KEY_STATE_TEST)
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
+        0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 14, TM_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
     status = Crypto_Init();
-
-    TC_t *tc_sdls_processed_frame;
-    tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
-    memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     char *framed_tm_h   = "02C0000018000008414243444546";
     char *framed_tm_b   = NULL;
@@ -2165,8 +2203,11 @@ UTEST(TM_PROCESS, TM_KEY_STATE_TEST)
 
     SecurityAssociation_t *sa_ptr;
     sa_if->sa_get_from_spi(8, &sa_ptr);
-    sa_ptr->sa_state = SA_OPERATIONAL;
-    sa_ptr->abm_len  = 8;
+    sa_ptr->sa_state   = SA_OPERATIONAL;
+    sa_ptr->abm_len    = 8;
+    sa_ptr->stmacf_len = 0;
+    sa_ptr->shivf_len  = 0;
+    sa_ptr->iv_len     = 0;
 
     crypto_key_t *ekp = NULL;
     ekp               = key_if->get_key(sa_ptr->ekid);
@@ -2180,7 +2221,154 @@ UTEST(TM_PROCESS, TM_KEY_STATE_TEST)
 
     ASSERT_EQ(CRYPTO_LIB_ERR_KEY_STATE_INVALID, status);
     free(framed_tm_b);
-    free(tc_sdls_processed_frame);
+    Crypto_Shutdown();
+}
+
+/*
+** Test that we won't process a TM frame that is obviously too small
+*/
+UTEST(TM_PROCESS, TM_PROCESS_HEAP_UNDERFLOW_TEST)
+{
+    // Local Variables
+    int32_t  status              = CRYPTO_LIB_SUCCESS;
+    uint8_t *ptr_processed_frame = NULL;
+    uint16_t processed_tm_len;
+
+    // Configure Parameters
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // TM Tests
+    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+
+    status = Crypto_Init();
+
+    char *framed_tm_h   = "02C0000018000008414243444546";
+    char *framed_tm_b   = NULL;
+    int   framed_tm_len = 0;
+    hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);
+
+    SecurityAssociation_t *sa_ptr;
+    sa_if->sa_get_from_spi(8, &sa_ptr);
+    sa_ptr->sa_state = SA_OPERATIONAL;
+    sa_ptr->abm_len  = 8;
+
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(sa_ptr->ekid);
+    ekp->key_state    = KEY_ACTIVE;
+
+    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &ptr_processed_frame, &processed_tm_len);
+
+    ASSERT_EQ(CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW, status);
+    free(framed_tm_b);
+    Crypto_Shutdown();
+}
+
+/*
+** Test that a Secondary Header that violates spec, or doesn't leave room for a single byte
+** of data, won't pass.
+*/
+UTEST(TM_PROCESS, TM_PROCESS_Secondary_Hdr_OVERFLOW_TEST)
+{
+    // Local Variables
+    int32_t  status              = CRYPTO_LIB_SUCCESS;
+    uint8_t *ptr_processed_frame = NULL;
+    uint16_t processed_tm_len;
+
+    // Configure Parameters
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // TM Tests
+    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x002c, 1, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 7, TM_NO_OCF, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+
+    status = Crypto_Init();
+
+    char *framed_tm_h   = "02C2000098003F";
+    char *framed_tm_b   = NULL;
+    int   framed_tm_len = 0;
+    hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);
+
+    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &ptr_processed_frame, &processed_tm_len);
+
+    ASSERT_EQ(CRYPTO_LIB_ERR_TM_SECONDARY_HDR_SIZE, status);
+    free(framed_tm_b);
+    Crypto_Shutdown();
+}
+
+/*
+** Test a Secondary Header that violates spec catches the error
+*/
+UTEST(TM_PROCESS, TM_PROCESS_Secondary_Hdr_Spec_Violation)
+{
+    // Local Variables
+    int32_t  status              = CRYPTO_LIB_SUCCESS;
+    uint8_t *ptr_processed_frame = NULL;
+    uint16_t processed_tm_len;
+
+    // Configure Parameters
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // TM Tests
+    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 8, TM_NO_OCF, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+
+    status = Crypto_Init();
+
+    // Secondary header length set to 0x40, overflows into secondary header version number
+    char *framed_tm_h   = "02C00009800040BB";
+    char *framed_tm_b   = NULL;
+    int   framed_tm_len = 0;
+    hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);
+
+    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &ptr_processed_frame, &processed_tm_len);
+
+    ASSERT_EQ(CRYPTO_LIB_ERR_TM_SECONDARY_HDR_VN, status);
+    free(framed_tm_b);
+    Crypto_Shutdown();
+}
+
+/*
+** Test a Secondary Header that is too big relative to the bytes received
+*/
+UTEST(TM_PROCESS, TM_PROCESS_Secondary_Hdr_One_Too_Big)
+{
+    // Local Variables
+    int32_t  status              = CRYPTO_LIB_SUCCESS;
+    uint8_t *ptr_processed_frame = NULL;
+    uint16_t processed_tm_len;
+
+    // Configure Parameters
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // TM Tests
+    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x002c, 0, TM_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 8, TM_NO_OCF, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+
+    status = Crypto_Init();
+    // 6 byte header + 2 byte secondary header
+    // The Header length should be 0 (hdr len -1), with one byte of data after
+    char *framed_tm_h   = "02C00008800001BB";
+    char *framed_tm_b   = NULL;
+    int   framed_tm_len = 0;
+    hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);
+
+    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, &ptr_processed_frame, &processed_tm_len);
+
+    ASSERT_EQ(CRYPTO_LIB_ERR_TM_SECONDARY_HDR_SIZE, status);
+    free(framed_tm_b);
     Crypto_Shutdown();
 }
 

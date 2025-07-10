@@ -32,15 +32,15 @@ static int32_t sa_get_from_spi(uint16_t, SecurityAssociation_t **);
 static int32_t sa_get_operational_sa_from_gvcid(uint8_t, uint16_t, uint16_t, uint8_t, SecurityAssociation_t **);
 static int32_t sa_save_sa(SecurityAssociation_t *sa);
 // Security Association Utility Functions
-static int32_t sa_stop(void);
+static int32_t sa_stop(TC_t *tc_frame);
 static int32_t sa_start(TC_t *tc_frame);
-static int32_t sa_expire(void);
-static int32_t sa_rekey(void);
+static int32_t sa_expire(TC_t *tc_frame);
+static int32_t sa_rekey(TC_t *tc_frame);
 static int32_t sa_status(uint8_t *);
-static int32_t sa_create(void);
-static int32_t sa_setARSN(void);
-static int32_t sa_setARSNW(void);
-static int32_t sa_delete(void);
+static int32_t sa_create(TC_t *tc_frame);
+static int32_t sa_setARSN(TC_t *tc_frame);
+static int32_t sa_setARSNW(TC_t *tc_frame);
+static int32_t sa_delete(TC_t *tc_frame);
 // MySQL local functions
 static int32_t finish_with_error(MYSQL **con_loc, int err);
 // MySQL Queries
@@ -58,10 +58,10 @@ static const char *SQL_SADB_UPDATE_IV_ARC_BY_SPI =
     "UPDATE security_associations"
     " SET iv=X'%s', arsn=X'%s'"
     " WHERE spi='%d' AND tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d'";
-static const char *SQL_SADB_UPDATE_IV_ARC_BY_SPI_NULL_IV =
-    "UPDATE security_associations"
-    " SET arsn=X'%s'"
-    " WHERE spi='%d' AND tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d'";
+// static const char *SQL_SADB_UPDATE_IV_ARC_BY_SPI_NULL_IV =
+//     "UPDATE security_associations"
+//     " SET arsn=X'%s'"
+//     " WHERE spi='%d' AND tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d'";
 
 // sa_if mariaDB private helper functions
 static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **security_association);
@@ -216,29 +216,17 @@ static int32_t sa_save_sa(SecurityAssociation_t *sa)
     char  update_sa_query[2048];
     char *iv_h = malloc(sa->iv_len * 2 + 1);
 
-    if (sa->iv != NULL)
-    {
-        convert_byte_array_to_hexstring(sa->iv, sa->iv_len, iv_h);
-    }
+    convert_byte_array_to_hexstring(sa->iv, sa->iv_len, iv_h);
 
     char *arsn_h = malloc(sa->arsn_len * 2 + 1);
     convert_byte_array_to_hexstring(sa->arsn, sa->arsn_len, arsn_h);
 
-    if (sa->iv != NULL)
-    {
-        snprintf(update_sa_query, sizeof(update_sa_query), SQL_SADB_UPDATE_IV_ARC_BY_SPI, iv_h, arsn_h, sa->spi,
-                 sa->gvcid_blk.tfvn, sa->gvcid_blk.scid, sa->gvcid_blk.vcid, sa->gvcid_blk.mapid);
+    snprintf(update_sa_query, sizeof(update_sa_query), SQL_SADB_UPDATE_IV_ARC_BY_SPI, iv_h, arsn_h, sa->spi,
+             sa->gvcid_blk.tfvn, sa->gvcid_blk.scid, sa->gvcid_blk.vcid, sa->gvcid_blk.mapid);
 
-        free(iv_h);
-    }
-    else
-    {
-        snprintf(update_sa_query, sizeof(update_sa_query), SQL_SADB_UPDATE_IV_ARC_BY_SPI_NULL_IV, arsn_h, sa->spi,
-                 sa->gvcid_blk.tfvn, sa->gvcid_blk.scid, sa->gvcid_blk.vcid, sa->gvcid_blk.mapid);
-        free(iv_h);
-    }
-
+    free(iv_h);
     free(arsn_h);
+
 #ifdef SA_DEBUG
     fprintf(stderr, "MySQL Insert SA Query: %s \n", update_sa_query);
 #endif
@@ -260,8 +248,9 @@ static int32_t sa_save_sa(SecurityAssociation_t *sa)
     return status;
 }
 // Security Association Utility Functions
-static int32_t sa_stop(void)
+static int32_t sa_stop(TC_t *tc_frame)
 {
+    tc_frame = tc_frame;
     return CRYPTO_LIB_SUCCESS;
 }
 static int32_t sa_start(TC_t *tc_frame)
@@ -269,12 +258,14 @@ static int32_t sa_start(TC_t *tc_frame)
     tc_frame = tc_frame;
     return CRYPTO_LIB_SUCCESS;
 }
-static int32_t sa_expire(void)
+static int32_t sa_expire(TC_t *tc_frame)
 {
+    tc_frame = tc_frame;
     return CRYPTO_LIB_SUCCESS;
 }
-static int32_t sa_rekey(void)
+static int32_t sa_rekey(TC_t *tc_frame)
 {
+    tc_frame = tc_frame;
     return CRYPTO_LIB_SUCCESS;
 }
 static int32_t sa_status(uint8_t *ingest)
@@ -282,20 +273,24 @@ static int32_t sa_status(uint8_t *ingest)
     ingest = ingest;
     return CRYPTO_LIB_SUCCESS;
 }
-static int32_t sa_create(void)
+static int32_t sa_create(TC_t *tc_frame)
 {
+    tc_frame = tc_frame;
     return CRYPTO_LIB_SUCCESS;
 }
-static int32_t sa_setARSN(void)
+static int32_t sa_setARSN(TC_t *tc_frame)
 {
+    tc_frame = tc_frame;
     return CRYPTO_LIB_SUCCESS;
 }
-static int32_t sa_setARSNW(void)
+static int32_t sa_setARSNW(TC_t *tc_frame)
 {
+    tc_frame = tc_frame;
     return CRYPTO_LIB_SUCCESS;
 }
-static int32_t sa_delete(void)
+static int32_t sa_delete(TC_t *tc_frame)
 {
+    tc_frame = tc_frame;
     return CRYPTO_LIB_SUCCESS;
 }
 
@@ -436,26 +431,56 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
             if (strcmp(field_names[i], "shivf_len") == 0)
             {
                 sa->shivf_len = atoi(row[i]);
+                if (sa->shivf_len > IV_SIZE)
+                {
+                    status = SADB_INVALID_SA_FIELD_VALUE;
+                    mc_if->mc_log(status);
+                    return status;
+                }
                 continue;
             }
             if (strcmp(field_names[i], "iv_len") == 0)
             {
                 sa->iv_len = atoi(row[i]);
+                if (sa->iv_len > IV_SIZE)
+                {
+                    status = SADB_INVALID_SA_FIELD_VALUE;
+                    mc_if->mc_log(status);
+                    return status;
+                }
                 continue;
             }
             if (strcmp(field_names[i], "shsnf_len") == 0)
             {
                 sa->shsnf_len = atoi(row[i]);
+                if (sa->shsnf_len > ARSN_SIZE)
+                {
+                    status = SADB_INVALID_SA_FIELD_VALUE;
+                    mc_if->mc_log(status);
+                    return status;
+                }
                 continue;
             }
             if (strcmp(field_names[i], "shplf_len") == 0)
             {
                 sa->shplf_len = atoi(row[i]);
+                if (sa->shplf_len > PAD_SIZE)
+                {
+                    status = SADB_INVALID_SA_FIELD_VALUE;
+                    mc_if->mc_log(status);
+                    return status;
+                }
                 continue;
             }
             if (strcmp(field_names[i], "stmacf_len") == 0)
             {
                 sa->stmacf_len = atoi(row[i]);
+                if (sa->stmacf_len > MAC_SIZE)
+                {
+                    status = SADB_INVALID_SA_FIELD_VALUE;
+                    mc_if->mc_log(status);
+                    return status;
+                }
                 continue;
             }
             if (strcmp(field_names[i], "ecs_len") == 0)
@@ -468,7 +493,6 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
                 ecs_byte_str = row[i];
                 continue;
             }
-            // if(strcmp(field_names[i],"HEX(iv)")==0){memcpy(&(sa->iv),&row[i],IV_SIZE);continue;}
             if (strcmp(field_names[i], "HEX(iv)") == 0)
             {
                 iv_byte_str = row[i];
@@ -487,6 +511,12 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
             if (strcmp(field_names[i], "abm_len") == 0)
             {
                 sa->abm_len = atoi(row[i]);
+                if (sa->abm_len > ABM_SIZE)
+                {
+                    status = SADB_INVALID_SA_FIELD_VALUE;
+                    mc_if->mc_log(status);
+                    return status;
+                }
                 continue;
             }
             if (strcmp(field_names[i], "HEX(abm)") == 0)
@@ -494,10 +524,15 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
                 abm_byte_str = row[i];
                 continue;
             }
-            // if(strcmp(field_names[i],"HEX(abm)")==0){convert_hexstring_to_byte_array(row[i],sa->abm);continue;}
             if (strcmp(field_names[i], "arsn_len") == 0)
             {
                 sa->arsn_len = atoi(row[i]);
+                if (sa->arsn_len > ARSN_SIZE)
+                {
+                    status = SADB_INVALID_SA_FIELD_VALUE;
+                    mc_if->mc_log(status);
+                    return status;
+                }
                 continue;
             }
             if (strcmp(field_names[i], "HEX(arsn)") == 0)
@@ -505,15 +540,12 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
                 arc_byte_str = row[i];
                 continue;
             }
-            // if(strcmp(field_names[i],"HEX(arsn)")==0){convert_hexstring_to_byte_array(row[i],sa->arsn);continue;}
             if (strcmp(field_names[i], "arsnw") == 0)
             {
                 sa->arsnw = atoi(row[i]);
                 continue;
             }
-            // printf("%s:%s ",field_names[i], row[i] ? row[i] : "NULL");
         }
-        // printf("\n");
     }
 
     if (iv_byte_str != NULL)
