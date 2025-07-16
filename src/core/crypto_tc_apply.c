@@ -830,7 +830,7 @@ int32_t Crypto_TCA_Check_IV_Setup(SecurityAssociation_t *sa_ptr, uint8_t *p_new_
 
 /**
  * @brief Function: Crypto_TCA_Encrypt
- * Encrypts TC frame
+ * Encrypts TC frame - This function is NOT responsible for freeing p_new_enc_frame!
  * @param sa_service_type: uint8_t
  * @param sa_ptr: SecurityAssociation_t*
  * @param mac_loc: uint16_t*
@@ -867,16 +867,12 @@ int32_t Crypto_TCA_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_pt
             if (ekp == NULL)
             {
                 status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-                mc_if->mc_log(status);
-                free(p_new_enc_frame);
-                return status;
+                goto end_of_function;
             }
             if (ekp->key_state != KEY_ACTIVE)
             {
                 status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
-                mc_if->mc_log(status);
-                free(p_new_enc_frame);
-                return status;
+                goto end_of_function;
             }
         }
     }
@@ -888,16 +884,12 @@ int32_t Crypto_TCA_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_pt
             if (akp == NULL)
             {
                 status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-                mc_if->mc_log(status);
-                free(p_new_enc_frame);
-                return status;
+                goto end_of_function;
             }
             if (akp->key_state != KEY_ACTIVE)
             {
                 status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
-                mc_if->mc_log(status);
-                free(p_new_enc_frame);
-                return status;
+                goto end_of_function;
             }
         }
     }
@@ -931,15 +923,13 @@ int32_t Crypto_TCA_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_pt
             if (sa_ptr->abm_len < aad_len)
             {
                 status = CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
-                mc_if->mc_log(status);
-                return status;
+                goto end_of_function;
             }
             *aad = Crypto_Prepare_TC_AAD(p_new_enc_frame, aad_len, sa_ptr->abm);
             if (*aad == NULL)
             {
                 status = CRYPTO_LIB_ERROR;
-                mc_if->mc_log(status);
-                return status;
+                goto end_of_function;
             }
         }
 
@@ -1044,6 +1034,10 @@ int32_t Crypto_TCA_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_pt
     }
 
 end_of_function:
+    if(status != CRYPTO_LIB_SUCCESS)
+    {
+        mc_if->mc_log(status);
+    } 
     return status;
 }
 
