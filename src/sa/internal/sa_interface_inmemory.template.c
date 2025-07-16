@@ -717,16 +717,14 @@ static int32_t sa_get_from_spi(uint16_t spi, SecurityAssociation_t **security_as
         printf(KRED "sa_get_from_spi: SPI: %d > NUM_SA: %d.\n" RESET, spi, NUM_SA);
 #endif
         status = CRYPTO_LIB_ERR_SPI_INDEX_OOB;
-        mc_if->mc_log(status);
-        return status;
+        goto end_of_function;
     }
     *security_association = &sa[spi];
 
     if ((sa[spi].abm_len == 0) && sa[spi].ast)
     {
         status = CRYPTO_LIB_ERR_NULL_ABM;
-        mc_if->mc_log(status);
-        return status;
+        goto end_of_function;
     } // Must have abm if doing authentication
 
     // ARSN must be 0 octets in length if not using Auth/Auth Enc
@@ -739,22 +737,23 @@ static int32_t sa_get_from_spi(uint16_t spi, SecurityAssociation_t **security_as
         printf("AST IS %d, shsnf_len is %d, arsn_len is %d\n", sa[spi].ast, sa[spi].shsnf_len, sa[spi].arsn_len);
 #endif
         status = CRYPTO_LIB_ERR_INVALID_SVC_TYPE_WITH_ARSN;
-        mc_if->mc_log(status);
-        return status;
+        goto end_of_function;
     }
 
     // ARSN length cannot be less than shsnf length
     if (sa[spi].shsnf_len > sa[spi].arsn_len)
     {
         status = CRYPTO_LIB_ERR_ARSN_LT_SHSNF;
-        mc_if->mc_log(status);
-        return status;
+        goto end_of_function;
     }
 
 #ifdef SA_DEBUG
     printf(KYEL "DEBUG - Printing local copy of SA Entry for current SPI.\n" RESET);
     Crypto_saPrint(*security_association);
 #endif
+
+end_of_function:
+    mc_if->mc_log(status);
     return status;
 }
 
@@ -1821,7 +1820,6 @@ static int32_t sa_setIV(uint16_t spi, char *iv)
     if (iv == NULL) // NULL pointer
     {
         status = CRYPTO_LIB_ERR_NULL_BUFFER;
-        mc_if->mc_log(status);
         goto end_of_function;
     }
 
@@ -1836,7 +1834,6 @@ static int32_t sa_setIV(uint16_t spi, char *iv)
         printf("Specified IV longer than Config Maximum");
 #endif
         status = CRYPTO_LIB_ERROR;
-        mc_if->mc_log(status);
         goto end_of_function;
     }
 

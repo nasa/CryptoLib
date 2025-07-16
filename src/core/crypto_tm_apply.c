@@ -327,10 +327,7 @@ int32_t Crypto_TM_Determine_SA_Service_Type(uint8_t *sa_service_type, SecurityAs
         printf(KRED "Error: SA Service Type is not defined! \n" RESET);
         status = CRYPTO_LIB_ERROR;
     }
-    if (status != CRYPTO_LIB_SUCCESS)
-    {
-        mc_if->mc_log(status);
-    }
+
     return status;
 }
 
@@ -405,8 +402,7 @@ int32_t Crypto_TM_IV_Sanity_Check(uint8_t *sa_service_type, SecurityAssociation_
 #ifdef TM_DEBUG
         printf(KRED "CRYPTO_LIB_ERR_NULL_CIPHERS, Invalid cipher lengths, %d\n" RESET, CRYPTO_LIB_ERR_NULL_CIPHERS);
 #endif
-        mc_if->mc_log(status);
-        return status;
+        goto end_of_function;
     }
 
     if (sa_ptr->est == 0 && sa_ptr->ast == 1)
@@ -416,11 +412,11 @@ int32_t Crypto_TM_IV_Sanity_Check(uint8_t *sa_service_type, SecurityAssociation_
             if (Crypto_Is_ACS_Only_Algo(sa_ptr->acs) && sa_ptr->iv_len > 0)
             {
                 status = CRYPTO_LIB_ERR_IV_NOT_SUPPORTED_FOR_ACS_ALGO;
-                mc_if->mc_log(status);
-                return status;
+                goto end_of_function;
             }
         }
     }
+end_of_function:
     return status;
 }
 
@@ -544,14 +540,13 @@ int32_t Crypto_TM_Get_Keys(crypto_key_t **ekp, crypto_key_t **akp, SecurityAssoc
             if (*ekp == NULL)
             {
                 status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-                mc_if->mc_log(status);
-                return status;
+                goto end_of_function;
+
             }
             if ((*ekp)->key_state != KEY_ACTIVE)
             {
                 status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
-                mc_if->mc_log(status);
-                return status;
+                goto end_of_function;
             }
         }
     }
@@ -563,17 +558,16 @@ int32_t Crypto_TM_Get_Keys(crypto_key_t **ekp, crypto_key_t **akp, SecurityAssoc
             if (*akp == NULL)
             {
                 status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-                mc_if->mc_log(status);
-                return status;
+                goto end_of_function;
             }
             if ((*akp)->key_state != KEY_ACTIVE)
             {
                 status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
-                mc_if->mc_log(status);
-                return status;
+                goto end_of_function;
             }
         }
     }
+end_of_function:
     return status;
 }
 
@@ -1045,7 +1039,7 @@ int32_t Crypto_TM_FECF_Setup(uint8_t *p_ingest, uint16_t len_ingest)
                 printf("FECF was Calced over %d bytes\n", len_ingest - 2);
 #endif
                 status = CRYPTO_LIB_ERR_INVALID_FECF;
-                mc_if->mc_log(status);
+                goto end_of_function;
             }
             // Valid FECF, zero out the field
             else
@@ -1053,7 +1047,6 @@ int32_t Crypto_TM_FECF_Setup(uint8_t *p_ingest, uint16_t len_ingest)
 #ifdef FECF_DEBUG
                 printf(KYEL "FECF CALC MATCHES! - GOOD\n" RESET);
 #endif
-                ;
             }
         }
     }
@@ -1066,8 +1059,9 @@ int32_t Crypto_TM_FECF_Setup(uint8_t *p_ingest, uint16_t len_ingest)
                current_managed_parameters_struct.vcid, current_managed_parameters_struct.has_fecf);
 #endif
         status = CRYPTO_LIB_ERR_TC_ENUM_USED_FOR_TM_CONFIG;
-        mc_if->mc_log(status);
+        goto end_of_function;
     }
+end_of_function:
     return status;
 }
 

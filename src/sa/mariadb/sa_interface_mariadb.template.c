@@ -445,8 +445,7 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
                 if (sa->shivf_len > IV_SIZE)
                 {
                     status = SADB_INVALID_SA_FIELD_VALUE;
-                    mc_if->mc_log(status);
-                    return status;
+                    goto end_of_function;
                 }
                 continue;
             }
@@ -456,8 +455,7 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
                 if (sa->iv_len > IV_SIZE)
                 {
                     status = SADB_INVALID_SA_FIELD_VALUE;
-                    mc_if->mc_log(status);
-                    return status;
+                    goto end_of_function;
                 }
                 continue;
             }
@@ -467,8 +465,7 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
                 if (sa->shsnf_len > ARSN_SIZE)
                 {
                     status = SADB_INVALID_SA_FIELD_VALUE;
-                    mc_if->mc_log(status);
-                    return status;
+                    goto end_of_function;
                 }
                 continue;
             }
@@ -478,8 +475,7 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
                 if (sa->shplf_len > PAD_SIZE)
                 {
                     status = SADB_INVALID_SA_FIELD_VALUE;
-                    mc_if->mc_log(status);
-                    return status;
+                    goto end_of_function;
                 }
                 continue;
             }
@@ -489,8 +485,7 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
                 if (sa->stmacf_len > MAC_SIZE)
                 {
                     status = SADB_INVALID_SA_FIELD_VALUE;
-                    mc_if->mc_log(status);
-                    return status;
+                    goto end_of_function;
                 }
                 continue;
             }
@@ -525,8 +520,7 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
                 if (sa->abm_len > ABM_SIZE)
                 {
                     status = SADB_INVALID_SA_FIELD_VALUE;
-                    mc_if->mc_log(status);
-                    return status;
+                    goto end_of_function;
                 }
                 continue;
             }
@@ -541,8 +535,7 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
                 if (sa->arsn_len > ARSN_SIZE)
                 {
                     status = SADB_INVALID_SA_FIELD_VALUE;
-                    mc_if->mc_log(status);
-                    return status;
+                    goto end_of_function;
                 }
                 continue;
             }
@@ -585,6 +578,7 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
     *security_association = sa;
     mysql_free_result(result);
 
+end_of_function:
     return status;
 }
 static int32_t convert_hexstring_to_byte_array(char *source_str, uint8_t *dest_buffer)

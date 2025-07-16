@@ -762,7 +762,7 @@ int32_t Crypto_TMP_FECF_Validate(uint8_t *p_ingest, uint16_t len_ingest, Securit
                 printf("FECF was Calced over %d bytes\n", len_ingest - 2);
 #endif
                 status = CRYPTO_LIB_ERR_INVALID_FECF;
-                mc_if->mc_log(status);
+                goto end_of_function;
             }
         }
     }
@@ -774,8 +774,9 @@ int32_t Crypto_TMP_FECF_Validate(uint8_t *p_ingest, uint16_t len_ingest, Securit
                current_managed_parameters_struct.vcid, current_managed_parameters_struct.has_fecf);
 #endif
         status = CRYPTO_LIB_ERR_TC_ENUM_USED_FOR_TM_CONFIG;
-        mc_if->mc_log(status);
+        goto end_of_function;
     }
+end_of_function:
     return status;
 }
 

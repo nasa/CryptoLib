@@ -161,8 +161,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     if (encryption_cipher == CRYPTO_CIPHER_NONE && sa_ptr->est == 1)
     {
         status = CRYPTO_LIB_ERR_NO_ECS_SET_FOR_ENCRYPTION_MODE;
-        mc_if->mc_log(status);
-        return status;
+        goto end_of_function;
     }
 
 #ifdef AOS_DEBUG
@@ -203,8 +202,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
                 printf("FECF was Calced over %d bytes\n", len_ingest - 2);
 #endif
                 status = CRYPTO_LIB_ERR_INVALID_FECF;
-                mc_if->mc_log(status);
-                return status;
+                goto end_of_function;
             }
             // Valid FECF, zero out the field
             else
@@ -224,8 +222,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
                current_managed_parameters_struct.vcid, current_managed_parameters_struct.has_fecf);
 #endif
         status = CRYPTO_LIB_ERR_TC_ENUM_USED_FOR_AOS_CONFIG;
-        mc_if->mc_log(status);
-        return status;
+        goto end_of_function;
     }
 
     // Accio buffer
@@ -236,8 +233,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
         printf(KRED "Error: Calloc for decrypted output buffer failed! \n" RESET);
 #endif
         status = CRYPTO_LIB_ERROR;
-        mc_if->mc_log(status);
-        return status;
+        goto end_of_function;
     }
 
     // Copy over AOS Primary Header (6-8 bytes)
@@ -344,16 +340,14 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
             if (ekp == NULL)
             {
                 status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-                mc_if->mc_log(status);
                 free(p_new_dec_frame);
-                return status;
+                goto end_of_function;
             }
             if (ekp->key_state != KEY_ACTIVE)
             {
                 status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
-                mc_if->mc_log(status);
                 free(p_new_dec_frame);
-                return status;
+                goto end_of_function;
             }
         }
     }
@@ -365,16 +359,14 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
             if (akp == NULL)
             {
                 status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
-                mc_if->mc_log(status);
                 free(p_new_dec_frame);
-                return status;
+                goto end_of_function;
             }
             if (akp->key_state != KEY_ACTIVE)
             {
                 status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
-                mc_if->mc_log(status);
                 free(p_new_dec_frame);
-                return status;
+                goto end_of_function;
             }
         }
     }
@@ -409,8 +401,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
             printf(KRED "Error: ABM length %d is shorter than required AAD length %d\n" RESET, sa_ptr->abm_len,
                    aad_len);
 #endif
-            mc_if->mc_log(status);
-            return status;
+            goto end_of_function;
         }
 
         // Use ingest and abm to create aad
@@ -508,8 +499,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
             {
                 free(p_new_dec_frame); // Add cleanup
                 status = CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
-                mc_if->mc_log(status);
-                return status;
+                goto end_of_function;
             }
 
             status = cryptography_if->cryptography_decrypt(p_new_dec_frame + byte_idx, // plaintext output
@@ -616,7 +606,6 @@ int32_t Crypto_AOSP_Initial_Length_Checks(uint16_t len_ingest, uint8_t aos_hdr_l
     if (len_ingest < aos_hdr_len) // Frame length doesn't even have enough bytes for header -- error out.
     {
         status = CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_AOS_STANDARD;
-        mc_if->mc_log(status);
         goto end_of_function;
     }
 
@@ -626,7 +615,6 @@ int32_t Crypto_AOSP_Initial_Length_Checks(uint16_t len_ingest, uint8_t aos_hdr_l
         printf("Received length of %d, but expected %d!\n", len_ingest, current_managed_parameters_struct.max_frame_size);
 #endif
         status = CRYPTO_LIB_ERR_AOS_FL_LT_MAX_FRAME_SIZE;
-        mc_if->mc_log(status);
         goto end_of_function;
     }
 
@@ -650,8 +638,7 @@ int32_t Crypto_AOSP_Handle_FHEC(uint8_t *p_ingest, uint16_t *byte_idx, uint8_t *
         if (recieved_fhecf != calculated_fhecf)
         {
             status = CRYPTO_LIB_ERR_INVALID_FHECF;
-            mc_if->mc_log(status);
-            return status;
+            goto end_of_function;
         }
 
         p_ingest[*byte_idx]     = (calculated_fhecf >> 8) & 0x00FF;
@@ -660,6 +647,7 @@ int32_t Crypto_AOSP_Handle_FHEC(uint8_t *p_ingest, uint16_t *byte_idx, uint8_t *
         *aos_hdr_len            = *byte_idx;
     }
 
+end_of_function:
     return status;
 }
 
