@@ -1034,10 +1034,6 @@ int32_t Crypto_TCA_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_pt
     }
 
 end_of_function:
-    if(status != CRYPTO_LIB_SUCCESS)
-    {
-        mc_if->mc_log(status);
-    } 
     return status;
 }
 
@@ -1142,7 +1138,6 @@ int32_t Crypto_TCA_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa
                                 aad, ecs_is_aead_algorithm, index_p, p_in_frame, cam_cookies, pkcs_padding);
     if (status != CRYPTO_LIB_SUCCESS)
     {
-        mc_if->mc_log(status);
         goto end_of_function;
     }
     // TODO:  Status?
@@ -1199,7 +1194,6 @@ int32_t Crypto_TCA_Check_Init_Setup(uint16_t in_frame_length)
     if (in_frame_length < 5) // Frame length doesn't have enough bytes for TC TF header -- error out.
     {
         status = CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_TC_STANDARD;
-        mc_if->mc_log(status);
         goto end_of_function;
     }
 
@@ -1400,23 +1394,20 @@ uint8_t *Crypto_Prepare_TC_AAD(const uint8_t *buffer, uint16_t len_aad, const ui
     if (buffer == NULL || abm_buffer == NULL)
     {
         status = CRYPTO_LIB_ERR_NULL_BUFFER;
-        mc_if->mc_log(status);
-        return NULL;
+        goto end_of_function;
     }
 
     // Validate authentication mask per CCSDS requirements
     status = Crypto_TCA_Validate_Auth_Mask(abm_buffer, len_aad, len_aad);
     if (status != CRYPTO_LIB_SUCCESS)
     {
-        mc_if->mc_log(status);
-        return NULL;
+        goto end_of_function;
     }
 
     aad = (uint8_t *)calloc(1, len_aad * sizeof(uint8_t));
     if (!aad)
     {
-        mc_if->mc_log(CRYPTO_LIB_ERROR);
-        return NULL;
+        goto end_of_function;
     }
 
     // Apply authentication bitmask
@@ -1442,6 +1433,12 @@ uint8_t *Crypto_Prepare_TC_AAD(const uint8_t *buffer, uint16_t len_aad, const ui
     printf("\n" RESET);
 #endif
 
+end_of_function:
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        mc_if->mc_log(CRYPTO_LIB_ERROR);
+        return NULL;
+    }
     return aad;
 }
 
