@@ -330,7 +330,6 @@ int32_t Crypto_TC_Parse_Check_FECF(uint8_t *ingest, int *len_ingest, TC_t *tc_sd
             if (received_fecf != calculated_fecf)
             {
                 status = CRYPTO_LIB_ERR_INVALID_FECF;
-                mc_if->mc_log(status);
             }
         }
     }
@@ -566,8 +565,7 @@ int32_t Crypto_TCP_Nontransmitted_IV_Increment(SecurityAssociation_t *sa_ptr, TC
             tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->iv_len, sa_ptr->shivf_len, sa_ptr->arsnw);
         if (status != CRYPTO_LIB_SUCCESS)
         {
-            mc_if->mc_log(status);
-            return status;
+            goto end_of_function;
         }
     }
     else // Not checking IV ARSNW or only non-transmitted portion is static; Note, non-transmitted IV in SA must match
@@ -576,6 +574,7 @@ int32_t Crypto_TCP_Nontransmitted_IV_Increment(SecurityAssociation_t *sa_ptr, TC
         // Retrieve non-transmitted portion of IV from SA (if applicable)
         memcpy(tc_sdls_processed_frame->tc_sec_header.iv, sa_ptr->iv, sa_ptr->iv_len - sa_ptr->shivf_len);
     }
+end_of_function:
     return status;
 }
 
@@ -608,8 +607,7 @@ int32_t Crypto_TCP_Prep_AAD(TC_t *tc_sdls_processed_frame, uint8_t fecf_len, uin
         if (current_managed_parameters_struct.max_frame_size < tc_mac_start_index)
         {
             status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW;
-            mc_if->mc_log(status);
-            return status;
+            goto end_of_function;
         }
         // Parse the received MAC
         memcpy((tc_sdls_processed_frame->tc_sec_trailer.mac), &(ingest[tc_mac_start_index]), sa_ptr->stmacf_len);
@@ -627,19 +625,18 @@ int32_t Crypto_TCP_Prep_AAD(TC_t *tc_sdls_processed_frame, uint8_t fecf_len, uin
         if (sa_ptr->abm_len < aad_len_temp)
         {
             status = CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
-            mc_if->mc_log(status);
-            return status;
+            goto end_of_function;
         }
         *aad = Crypto_Prepare_TC_AAD(ingest, aad_len_temp, sa_ptr->abm);
         if (*aad == NULL)
         {
             status = CRYPTO_LIB_ERROR;
-            mc_if->mc_log(status);
-            return status;
+            goto end_of_function;
         }
         *aad_len = aad_len_temp;
         aad      = aad;
     }
+end_of_function:
     return status;
 }
 
@@ -788,7 +785,7 @@ int32_t Crypto_TCP_Nontransmitted_SN_Increment(SecurityAssociation_t *sa_ptr, TC
                                                                        sa_ptr->shsnf_len, sa_ptr->arsnw);
         if (status != CRYPTO_LIB_SUCCESS)
         {
-            mc_if->mc_log(status);
+            goto end_of_function;
         }
     }
     else // Not checking ARSN in ARSNW
@@ -796,6 +793,7 @@ int32_t Crypto_TCP_Nontransmitted_SN_Increment(SecurityAssociation_t *sa_ptr, TC
         // Parse non-transmitted portion of ARSN from SA
         memcpy(tc_sdls_processed_frame->tc_sec_header.sn, sa_ptr->arsn, sa_ptr->arsn_len - sa_ptr->shsnf_len);
     }
+end_of_function:
     return status;
 }
 
@@ -814,7 +812,6 @@ int32_t Crypto_TCP_Check_ACS_Keylen(crypto_key_t *akp, SecurityAssociation_t *sa
     if ((int32_t)akp->key_len != Crypto_Get_ACS_Algo_Keylen(sa_ptr->acs))
     {
         status = CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
-        mc_if->mc_log(status);
     }
     return status;
 }
@@ -834,7 +831,6 @@ int32_t Crypto_TCP_Check_ECS_Keylen(crypto_key_t *ekp, SecurityAssociation_t *sa
     if ((int32_t)ekp->key_len != Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs))
     {
         status = CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
-        mc_if->mc_log(status);
     }
     return status;
 }
