@@ -264,8 +264,12 @@ int32_t Crypto_Init(void)
             key_if = get_key_interface_kmc();
         }
     }
-    key_if->key_init();
-    // TODO: Check and return status on error
+    status = key_if->key_init();
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        return status;
+    }
+    
     /* MC Interface */
     if (mc_if == NULL)
     {
@@ -282,8 +286,12 @@ int32_t Crypto_Init(void)
             mc_if = get_mc_interface_internal();
         }
     }
-    mc_if->mc_initialize();
-    // TODO: Check and return status on error
+    status = mc_if->mc_initialize();
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        return status;
+    }
+    
     /* SA Interface */
     if (sa_if == NULL)
     {
@@ -310,7 +318,7 @@ int32_t Crypto_Init(void)
         {
             status = SADB_INVALID_SADB_TYPE;
             return status;
-        } // TODO: Error stack
+        }
     }
 
     /* Crypto Interface */
