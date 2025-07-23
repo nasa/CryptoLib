@@ -104,10 +104,10 @@ int32_t Crypto_SC_Init(void)
     sa_if->sa_get_from_spi(3, &sa_ptr);
     sa_ptr->sa_state       = SA_OPERATIONAL;
     sa_ptr->gvcid_blk.vcid = 3;
-    sa_ptr->acs = CRYPTO_MAC_HMAC_SHA256;
+    sa_ptr->acs            = CRYPTO_MAC_HMAC_SHA256;
     sa_ptr->abm_len        = ABM_SIZE;
     sa_ptr->shivf_len      = 0;
-    sa_ptr-> iv_len        = 0;
+    sa_ptr->iv_len         = 0;
     sa_if->sa_get_from_spi(5, &sa_ptr);
     sa_ptr->sa_state       = SA_OPERATIONAL;
     sa_ptr->shsnf_len      = 0;
