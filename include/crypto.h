@@ -237,12 +237,12 @@ void           Crypto_TM_updateOCF(Telemetry_Frame_Ocf_Fsr_t *report, TM_t *tm_f
 uint8_t       *Crypto_Prepare_TC_AAD(const uint8_t *buffer, uint16_t len_aad, const uint8_t *abm_buffer);
 uint32_t       Crypto_Prepare_TM_AAD(const uint8_t *buffer, uint16_t len_aad, const uint8_t *abm_buffer, uint8_t *aad);
 uint32_t       Crypto_Prepare_AOS_AAD(const uint8_t *buffer, uint16_t len_aad, const uint8_t *abm_buffer, uint8_t *aad);
-void           Crypto_Local_Config(void);
-void           Crypto_Local_Init(void);
+int32_t        Crypto_Local_Config(void);
+int32_t        Crypto_Local_Init(void);
 int32_t        Crypto_window(uint8_t *actual, uint8_t *expected, int length, int window);
 uint16_t       Crypto_Calc_FECF(const uint8_t *ingest, int len_ingest);
 uint16_t       Crypto_Calc_FHECF(uint8_t *data);
-void           Crypto_Calc_CRC_Init_Table(void);
+int32_t        Crypto_Calc_CRC_Init_Table(void);
 uint16_t       Crypto_Calc_CRC16(uint8_t *data, int size);
 int32_t        Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, uint8_t *iv);
 int32_t        Crypto_Get_ECS_Algo_Keylen(uint8_t algo);
@@ -303,7 +303,7 @@ int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uin
                                                 GvcidManagedParameters_t *managed_parameters_in,
                                                 GvcidManagedParameters_t *managed_parameters_out);
 // Project-wide support functions
-extern char *crypto_deep_copy_string(char *src_string);
+extern int32_t crypto_deep_copy_string(char *src_string, char **dst_string);
 
 /*
 ** Extern Global Variables
