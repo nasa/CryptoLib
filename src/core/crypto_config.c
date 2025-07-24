@@ -94,6 +94,11 @@ int32_t Crypto_SC_Init(void)
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
     TM_UT_Managed_Parameters.vcid = 5;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+
+    // TM
+    GvcidManagedParameters_t AOS_UT_Managed_Parameters = {
+        1, 0x0003, 6, AOS_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, AOS_SEGMENT_HDRS_NA, 1786, AOS_NO_OCF, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
 
     SecurityAssociation_t *sa_ptr = NULL;
@@ -117,6 +122,12 @@ int32_t Crypto_SC_Init(void)
     sa_ptr->sa_state       = SA_OPERATIONAL;
     sa_ptr->abm_len        = ABM_SIZE;
     sa_ptr->gvcid_blk.vcid = 5;
+    sa_if->sa_get_from_spi(10, &sa_ptr);
+    sa_ptr->acs            = CRYPTO_MAC_HMAC_SHA256;
+    sa_ptr->shsnf_len      = 2;
+    sa_ptr->ekid           = 128;
+    sa_ptr->akid           = 128;
+    sa_ptr->gvcid_blk.vcid = 6;
 
     return status;
 }

@@ -829,8 +829,8 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
 
     // Bit math to give concise access to values in the ingest
     aos_frame_pri_hdr.tfvn = ((uint8_t)p_ingest[0] & 0xC0) >> 6;
-    aos_frame_pri_hdr.scid = (((uint16_t)p_ingest[0] & 0x3F) << 4) | (((uint16_t)p_ingest[1] & 0xF0) >> 4);
-    aos_frame_pri_hdr.vcid = ((uint8_t)p_ingest[1] & 0x0E) >> 1;
+    aos_frame_pri_hdr.scid = (((uint16_t)p_ingest[0] & 0x3F) << 2) | (((uint16_t)p_ingest[1] & 0xC0) >> 6);
+    aos_frame_pri_hdr.vcid = ((uint8_t)p_ingest[1] & 0x3F);
 
 #ifdef DEBUG
     printf(KYEL "\n----- Crypto_AOS_ProcessSecurity START -----\n" RESET);
@@ -1117,7 +1117,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     }
     // Increment byte_idx past Security Header Fields based on SA values
     byte_idx += sa_ptr->shivf_len;
-    byte_idx += (sa_ptr->arsn_len - sa_ptr->shsnf_len);
+    byte_idx += sa_ptr->shsnf_len;
     byte_idx += sa_ptr->shplf_len;
 
 #ifdef SA_DEBUG
