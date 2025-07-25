@@ -790,8 +790,8 @@ void *crypto_standalone_tm_process(void *socks)
             // Account for ASM length
             if (tm_process_in[4] == 0x40)
             {
-                status =
-                    Crypto_AOS_ProcessSecurity(tm_process_in + 4, (const uint16_t)tm_process_len - 4, &tm_ptr, &tm_out_len);
+                status = Crypto_AOS_ProcessSecurity(tm_process_in + 4, (const uint16_t)tm_process_len - 4, &tm_ptr,
+                                                    &tm_out_len);
                 if (status != 0)
                 {
                     printf("Crypto_AOS_ProcessSecurity Failed with status = %d\n", status);
@@ -799,8 +799,8 @@ void *crypto_standalone_tm_process(void *socks)
             }
             else
             {
-                status =
-                    Crypto_TM_ProcessSecurity(tm_process_in + 4, (const uint16_t)tm_process_len - 4, &tm_ptr, &tm_out_len);
+                status = Crypto_TM_ProcessSecurity(tm_process_in + 4, (const uint16_t)tm_process_len - 4, &tm_ptr,
+                                                   &tm_out_len);
                 if (status != 0)
                 {
                     printf("Crypto_TM_ProcessSecurity Failed with status = %d\n", status);
