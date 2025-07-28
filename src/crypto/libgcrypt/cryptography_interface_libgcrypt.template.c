@@ -306,11 +306,11 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
 #ifdef MAC_DEBUG
     // Commented out due to memory leaks with HMAC
     uint32_t *tmac_size = &mac_size;
-    uint8_t  tmac[*tmac_size];
+    uint8_t   tmac[*tmac_size];
     gcry_error = gcry_mac_read(tmp_mac_hd,
-                               &tmac,               // tag output
-                               (size_t*)&mac_size // tag size
-                 );
+                               &tmac,              // tag output
+                               (size_t *)&mac_size // tag size
+    );
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "ERROR: gcry_mac_read error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
