@@ -85,6 +85,8 @@ int32_t Crypto_SC_Init(void)
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     TC_UT_Managed_Parameters.vcid = 3;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    TC_UT_Managed_Parameters.vcid = 7;
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
 
     // TM
     GvcidManagedParameters_t TM_UT_Managed_Parameters = {
@@ -132,6 +134,8 @@ int32_t Crypto_SC_Init(void)
     sa_ptr->gvcid_blk.vcid = 5;
     sa_ptr->shivf_len      = 0;
     sa_ptr->iv_len         = 0;
+    sa_if->sa_get_from_spi(15, &sa_ptr);
+    sa_ptr->sa_state       = SA_NONE;
 
     return status;
 }

@@ -51,12 +51,17 @@ int32_t Crypto_Key_OTAR(void)
     SDLS_OTAR_t packet;
     int         count = 0;
     int         x     = 0;
-    int         y;
+    int         y     = 0;
     int32_t     status = CRYPTO_LIB_SUCCESS;
+
+    printf("Entered KEY OTAR\n");
 
     int pdu_keys = ((sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - SDLS_KEYID_LEN - SDLS_IV_LEN - MAC_SIZE) /
                    (SDLS_KEYID_LEN + SDLS_KEY_LEN);
-    int           w;
+    int w        = 0;
+
+    printf("PDU_KEYS: %d\n", pdu_keys);
+
     crypto_key_t *ekp = NULL;
 
 #ifdef DEBUG
