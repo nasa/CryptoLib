@@ -49,10 +49,19 @@ extern "C"
 #define CRYPTOLIB_HOSTNAME  "cryptolib"
 #define GSW_HOSTNAME        "cosmos"
 #define SC_HOSTNAME         "radio-sim"
-#define TC_APPLY_PORT       6010
-#define TC_APPLY_FWD_PORT   8010
-#define TM_PROCESS_PORT     8011
-#define TM_PROCESS_FWD_PORT 6011
+
+#ifndef(CRYPTO_RX_GROUND_PORT)
+    #define TC_APPLY_PORT       6010
+#endif
+#ifndef(CRYPTO_RX_GROUND_PORT)
+    #define TC_APPLY_FWD_PORT   8010
+#endif
+#ifndef(CRYPTO_RX_GROUND_PORT)
+    #define TM_PROCESS_PORT     8011
+#endif
+#ifndef(CRYPTO_RX_GROUND_PORT)
+    #define TM_PROCESS_FWD_PORT 6011
+#endif
 
 #define CRYPTO_STANDALONE_HANDLE_FRAMING
 #define CRYPTO_STANDALONE_FRAMING_SCID        3
