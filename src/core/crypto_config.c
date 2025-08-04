@@ -99,10 +99,14 @@ int32_t Crypto_SC_Init(void)
     status = Crypto_Init();
 
     SecurityAssociation_t *sa_ptr = NULL;
+
+    // TC - Clear
     sa_if->sa_get_from_spi(1, &sa_ptr);
     sa_ptr->gvcid_blk.vcid = 0;
+    // TC - Enc
     sa_if->sa_get_from_spi(2, &sa_ptr);
     sa_ptr->gvcid_blk.vcid = 2;
+    // TC - Auth
     sa_if->sa_get_from_spi(3, &sa_ptr);
     sa_ptr->sa_state       = SA_OPERATIONAL;
     sa_ptr->gvcid_blk.vcid = 3;
@@ -110,11 +114,13 @@ int32_t Crypto_SC_Init(void)
     sa_ptr->abm_len        = ABM_SIZE;
     sa_ptr->shivf_len      = 0;
     sa_ptr->iv_len         = 0;
+    // TM - Clear
     sa_if->sa_get_from_spi(5, &sa_ptr);
     sa_ptr->sa_state       = SA_OPERATIONAL;
     sa_ptr->shsnf_len      = 0;
     sa_ptr->arsn_len       = 0;
     sa_ptr->gvcid_blk.vcid = 1;
+    // TM - Enc
     sa_if->sa_get_from_spi(6, &sa_ptr);
     sa_ptr->sa_state       = SA_OPERATIONAL;
     sa_ptr->ecs            = CRYPTO_CIPHER_AES256_GCM;
@@ -125,6 +131,7 @@ int32_t Crypto_SC_Init(void)
     sa_ptr->shivf_len      = 12;
     sa_ptr->iv_len         = 12;
     sa_ptr->abm_len        = ABM_SIZE;
+    // TM - Auth
     sa_if->sa_get_from_spi(7, &sa_ptr);
     sa_ptr->sa_state       = SA_OPERATIONAL;
     sa_ptr->abm_len        = ABM_SIZE;
@@ -134,8 +141,13 @@ int32_t Crypto_SC_Init(void)
     sa_ptr->gvcid_blk.vcid = 5;
     sa_ptr->shivf_len      = 0;
     sa_ptr->iv_len         = 0;
+    // TC - EP Clear
+    sa_if->sa_get_from_spi(63, &sa_ptr);
+    sa_ptr->sa_state       = SA_OPERATIONAL;
+    // Disabling 15
     sa_if->sa_get_from_spi(15, &sa_ptr);
     sa_ptr->sa_state       = SA_NONE;
+    
 
     return status;
 }
