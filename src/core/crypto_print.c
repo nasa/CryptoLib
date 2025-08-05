@@ -166,20 +166,18 @@ void Crypto_ccsdsPrint(CCSDS_t *sdls_frame)
         printf("\t\t sid        = 0x%01x \n", sdls_frame->pus.sid);
         printf("\t\t spare      = 0x%01x \n", sdls_frame->pus.spare);
     }
-    else
-    {
-        printf("\t PUS Header\n");
-        printf("\t\t Config not configured for PUS Header, not printing\n");
-    }
     printf("\t TLV PDU \n");
     printf("\t\t type       = 0x%01x \n", sdls_frame->tlv_pdu.hdr.type);
     printf("\t\t uf         = 0x%01x \n", sdls_frame->tlv_pdu.hdr.uf);
     printf("\t\t sg         = 0x%01x \n", sdls_frame->tlv_pdu.hdr.sg);
     printf("\t\t pid        = 0x%01x \n", sdls_frame->tlv_pdu.hdr.pid);
     printf("\t\t pdu_len    = 0x%04x \n", sdls_frame->tlv_pdu.hdr.pdu_len);
-    printf("\t\t data[0]    = 0x%02x \n", sdls_frame->tlv_pdu.data[0]);
-    printf("\t\t data[1]    = 0x%02x \n", sdls_frame->tlv_pdu.data[1]);
-    printf("\t\t data[2]    = 0x%02x \n", sdls_frame->tlv_pdu.data[2]);
+    if ((sdls_frame->tlv_pdu.hdr.pdu_len/8) >= 1)
+        printf("\t\t data[0]    = 0x%02x \n", sdls_frame->tlv_pdu.data[0]);
+    if ((sdls_frame->tlv_pdu.hdr.pdu_len/8) >= 2)
+        printf("\t\t data[1]    = 0x%02x \n", sdls_frame->tlv_pdu.data[1]);
+    if ((sdls_frame->tlv_pdu.hdr.pdu_len/8) >= 3)
+        printf("\t\t data[2]    = 0x%02x \n", sdls_frame->tlv_pdu.data[2]);
     printf("\n");
 }
 
