@@ -284,7 +284,7 @@ int32_t Crypto_window(uint8_t *actual, uint8_t *expected, int length, int window
  *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 7.4 (Management)
  **/
-uint8_t Crypto_Prep_Reply(uint8_t *reply, uint8_t appID)
+uint8_t Crypto_Prep_Reply(uint8_t *reply, uint16_t appID)
 {
     uint8_t count = 0;
     if (reply == NULL)
