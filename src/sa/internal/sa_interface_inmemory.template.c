@@ -1479,7 +1479,7 @@ static int32_t sa_create(TC_t *tc_frame)
         temp_sa->arsn_len = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
         for (x = 0; x < temp_sa->arsn_len; x++)
         {
-            *(temp_sa->arsn + x) = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
+            temp_sa->arsn[x] = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
         }
         temp_sa->arsnw_len = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
         for (x = 0; x < temp_sa->arsnw_len; x++)
@@ -1496,33 +1496,33 @@ static int32_t sa_create(TC_t *tc_frame)
         if (status == CRYPTO_LIB_SUCCESS)
         {
             // Copy data from temp_sa to sa[spi]
-            sa[spi].lpid       = temp_sa->lpid;
-            sa[spi].est        = temp_sa->est;
-            sa[spi].ast        = temp_sa->ast;
-            sa[spi].shivf_len  = temp_sa->shivf_len;
-            sa[spi].shsnf_len  = temp_sa->shsnf_len;
-            sa[spi].shplf_len  = temp_sa->shplf_len;
-            sa[spi].stmacf_len = temp_sa->stmacf_len;
-            sa[spi].ecs_len    = temp_sa->ecs_len;
-            sa[spi].ecs        = temp_sa->ecs;
+            sa[spi].lpid       = (*temp_sa).lpid;
+            sa[spi].est        = (*temp_sa).est;
+            sa[spi].ast        = (*temp_sa).ast;
+            sa[spi].shivf_len  = (*temp_sa).shivf_len;
+            sa[spi].shsnf_len  = (*temp_sa).shsnf_len;
+            sa[spi].shplf_len  = (*temp_sa).shplf_len;
+            sa[spi].stmacf_len = (*temp_sa).stmacf_len;
+            sa[spi].ecs_len    = (*temp_sa).ecs_len;
+            sa[spi].ecs        = (*temp_sa).ecs;
             for (x = 0; x < sa[spi].shivf_len; x++)
             {
-                sa[spi].iv[x] = temp_sa->iv[x];
+                sa[spi].iv[x] = (*temp_sa).iv[x];
             }
-            sa[spi].acs     = temp_sa->acs;
-            sa[spi].abm_len = temp_sa->abm_len;
+            sa[spi].acs     = (*temp_sa).acs;
+            sa[spi].abm_len = (*temp_sa).abm_len;
             for (x = 0; x < sa[spi].abm_len; x++)
             {
-                sa[spi].abm[x] = temp_sa->abm[x];
+                sa[spi].abm[x] = (*temp_sa).abm[x];
             }
-            sa[spi].arsn_len = temp_sa->arsn_len;
+            sa[spi].arsn_len = (*temp_sa).arsn_len;
             for (x = 0; x < sa[spi].arsn_len; x++)
             {
-                *(sa[spi].arsn + x) = *(temp_sa->arsn + x);
+                sa[spi].arsn[x] = (*temp_sa).arsn[x];
             }
-            sa[spi].arsnw_len = temp_sa->arsnw_len;
-            sa[spi].arsnw     = temp_sa->arsnw;
-            sa[spi].sa_state  = temp_sa->sa_state;
+            sa[spi].arsnw_len = (*temp_sa).arsnw_len;
+            sa[spi].arsnw     = (*temp_sa).arsnw;
+            sa[spi].sa_state  = (*temp_sa).sa_state;
         }
 
 #ifdef PDU_DEBUG
@@ -1647,6 +1647,7 @@ static int32_t sa_setARSN(TC_t *tc_frame)
     uint16_t spi         = 0x0000;
     uint16_t control_spi = 0x0000;
     int32_t  status      = CRYPTO_LIB_SUCCESS;
+    SecurityAssociation_t *temp_sa = NULL;
     int      x;
 
     // Read ingest
@@ -1668,17 +1669,18 @@ static int32_t sa_setARSN(TC_t *tc_frame)
     // Check SPI exists
     if (spi < NUM_SA)
     {
+        sa_if->sa_get_from_spi(spi, &temp_sa);
         // Check if Auth or Auth Enc
-        if ((sa[spi].est == 1 && sa[spi].ast == 1) || sa[spi].ast == 1)
+        if ((temp_sa->est == 1 && temp_sa->ast == 1) || temp_sa->ast == 1)
         { // Set SN
 #ifdef PDU_DEBUG
             printf("SPI %d ARSN updated to: 0x", spi);
 #endif
-            for (x = 0; x < sa[spi].arsn_len; x++)
+            for (x = 0; x < temp_sa->arsn_len; x++)
             {
-                *(sa[spi].arsn + x) = (uint8_t)sdls_frame.tlv_pdu.data[x + 2];
+                temp_sa->arsn[x] = (uint8_t)sdls_frame.tlv_pdu.data[x + 2];
 #ifdef PDU_DEBUG
-                printf("%02x", *(sa[spi].arsn + x));
+                printf("%02x", temp_sa->arsn[x]);
 #endif
             }
 #ifdef PDU_DEBUG
@@ -1688,7 +1690,7 @@ static int32_t sa_setARSN(TC_t *tc_frame)
         else
         {
 #ifdef PDU_DEBUG
-            printf("Failed setARSN on SPI %d, ECS %d, ACS %d\n", spi, sa[spi].ecs, sa[spi].acs);
+            printf("Failed setARSN on SPI %d, ECS %d, ACS %d\n", spi, temp_sa->ecs, temp_sa->acs);
 #endif
         }
     }
