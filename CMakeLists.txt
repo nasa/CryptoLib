@@ -61,15 +61,20 @@ option(SYSTEM_INSTALL "SystemInstall" OFF)
 option(TEST "Test" OFF)
 option(SA_FILE "Save Security Association to File" OFF)
 option(KEY_VALIDATION "Validate existance of key duplication" OFF)
-OPTION(KMC_MDB_RH "KMC-MDB-RedHat-Integration-Testing" OFF) #Disabled by default, enable with: -DKMC_MDB_RH=ON
-OPTION(KMC_MDB_DB "KMC-MDB-Debian-Integration-Testing" OFF) #Disabled by default, enable with: -DKMC_MDB_DB=ON
-OPTION(CRYPTO_EPROC "Enables the building and use of Extended Procedures" OFF) #Disabled by default, enable with -DCRYPTO_EPROC=ON
-OPTION(STANDALONE_TCP "Enables TCP support for standalone" OFF)
+option(KMC_MDB_RH "KMC-MDB-RedHat-Integration-Testing" OFF) #Disabled by default, enable with: -DKMC_MDB_RH=ON
+option(KMC_MDB_DB "KMC-MDB-Debian-Integration-Testing" OFF) #Disabled by default, enable with: -DKMC_MDB_DB=ON
+option(CRYPTO_EPROC "Enables the building and use of Extended Procedures" OFF) #Disabled by default, enable with -DCRYPTO_EPROC=ON
+option(STANDALONE_TCP "Enables TCP support for standalone" OFF)
 
-OPTION(MAC_SIZE "The size of the max MAC buffer in bytes")
-OPTION(IV_SIZE "The size of the max IV buffer in bytes")
-Option(NUM_SA "The max number of SAs that will be used")
-Option(NUM_KEYS "The max number of keys that will be used")
+option(MAC_SIZE "The size of the max MAC buffer in bytes")
+option(IV_SIZE "The size of the max IV buffer in bytes")
+option(NUM_SA "The max number of SAs that will be used")
+option(NUM_KEYS "The max number of keys that will be used")
+
+option(CRYPTO_RX_GROUND_PORT "Port to receive commands from ground")
+option(CRYPTO_TX_GROUND_PORT "Port to transmit telemetry to ground")
+option(CRYPTO_TX_RADIO_PORT "Port to receive telemetry from radio")
+option(CRYPTO_RX_RADIO_PORT "Port to transmit commands to radio")
 
 #
 # Max Size Defines
@@ -205,6 +210,22 @@ add_subdirectory(src)
 
 if(SUPPORT)
     add_subdirectory(support)
+    if(CRYPTO_RX_GROUND_PORT)
+        message(STATUS "TC_APPLY_PORT set to ${CRYPTO_RX_GROUND_PORT}")
+        add_compile_definitions(TC_APPLY_PORT="${CRYPTO_RX_GROUND_PORT}")
+    endif()
+    if(CRYPTO_TX_GROUND_PORT)
+        message(STATUS "TM_PROCESS_FWD_PORT set to ${CRYPTO_TX_GROUND_PORT}")
+        add_compile_definitions(TM_PROCESS_FWD_PORT="${CRYPTO_TX_GROUND_PORT}")
+    endif()
+    if(CRYPTO_TX_RADIO_PORT)
+        message(STATUS "TM_PROCESS_PORT set to ${CRYPTO_TX_RADIO_PORT}")
+        add_compile_definitions(TM_PROCESS_PORT="${CRYPTO_TX_RADIO_PORT}")
+    endif()
+    if(CRYPTO_RX_RADIO_PORT)
+        message(STATUS "TC_APPLY_FWD_PORT set to ${CRYPTO_RX_RADIO_PORT}")
+        add_compile_definitions(TC_APPLY_FWD_PORT="${CRYPTO_RX_RADIO_PORT}")
+    endif()
 endif()
 
 if(TEST)
