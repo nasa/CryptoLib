@@ -1459,8 +1459,8 @@ static int32_t sa_create(TC_t *tc_frame)
         {
             temp_sa->ecs = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
         }
-        temp_sa->shivf_len = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
-        for (x = 0; x < temp_sa->shivf_len; x++)
+        temp_sa->iv_len = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
+        for (x = 0; x < temp_sa->iv_len; x++)
         {
             temp_sa->iv[x] = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
         }
@@ -1470,7 +1470,7 @@ static int32_t sa_create(TC_t *tc_frame)
             temp_sa->acs = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
         }
         temp_sa->abm_len =
-            (uint8_t)((sdls_frame.tlv_pdu.data[count] << BYTE_LEN) | (sdls_frame.tlv_pdu.data[count + 1]));
+            (uint16_t)((sdls_frame.tlv_pdu.data[count] << BYTE_LEN) | (sdls_frame.tlv_pdu.data[count + 1]));
         count = count + 2;
         for (x = 0; x < temp_sa->abm_len; x++)
         {
@@ -1484,7 +1484,7 @@ static int32_t sa_create(TC_t *tc_frame)
         temp_sa->arsnw_len = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
         for (x = 0; x < temp_sa->arsnw_len; x++)
         {
-            temp_sa->arsnw = temp_sa->arsnw | (((uint8_t)sdls_frame.tlv_pdu.data[count++]) << (temp_sa->arsnw_len - x));
+            temp_sa->arsnw = temp_sa->arsnw | (((uint8_t)sdls_frame.tlv_pdu.data[count++]) << ((temp_sa->arsnw_len - 1 - x) * 8));
         }
 
         // Set state to unkeyed

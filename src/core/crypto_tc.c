@@ -1938,7 +1938,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
     tc_sdls_processed_frame->tc_header.bypass = ((uint8_t)ingest[byte_idx] & 0x20) >> 5;
     tc_sdls_processed_frame->tc_header.cc     = ((uint8_t)ingest[byte_idx] & 0x10) >> 4;
     tc_sdls_processed_frame->tc_header.spare  = ((uint8_t)ingest[byte_idx] & 0x0C) >> 2;
-    tc_sdls_processed_frame->tc_header.scid   = ((uint8_t)ingest[byte_idx] & 0x03) << 8;
+    tc_sdls_processed_frame->tc_header.scid   = ((uint16_t)ingest[byte_idx] & 0x03) << 8;
     byte_idx++;
     tc_sdls_processed_frame->tc_header.scid = tc_sdls_processed_frame->tc_header.scid | (uint8_t)ingest[byte_idx];
     byte_idx++;
