@@ -1292,7 +1292,7 @@ static int32_t sa_rekey(TC_t *tc_frame)
                 ((uint8_t)sdls_frame.tlv_pdu.data[count] << BYTE_LEN) | (uint8_t)sdls_frame.tlv_pdu.data[count + 1];
             count = count + 2;
 
-            // Anti-Replay Seq Num
+            // IV
 #ifdef PDU_DEBUG
             printf("SPI %d IV updated to: 0x", spi);
 #endif
@@ -1740,7 +1740,7 @@ static int32_t sa_setARSNW(TC_t *tc_frame)
 
         sa[spi].arsnw = (((uint8_t)sdls_frame.tlv_pdu.data[2]));
 #ifdef PDU_DEBUG
-        printf("ARSN set to: %d\n", sa[spi].arsnw);
+        printf("ARSNW set to: %d\n", sa[spi].arsnw);
 #endif
     }
     else

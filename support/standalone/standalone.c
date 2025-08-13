@@ -23,6 +23,14 @@
 
 #include "standalone.h"
 
+#define _POSIX_C_SOURCE 200809L
+#include <fcntl.h> 
+#include <sys/mman.h> 
+#include <sys/stat.h> 
+#include <unistd.h> 
+#include <stdint.h> 
+#include <stdio.h>
+
 /*
 ** Global Variables
 */
@@ -30,14 +38,47 @@
 
 static volatile uint8_t keepRunning    = CRYPTO_LIB_SUCCESS;
 static volatile uint8_t tc_seq_num     = 0;
-static volatile uint8_t tc_vcid        = CRYPTO_STANDALONE_FRAMING_VCID;
 static volatile uint8_t tc_debug       = 1;
 static volatile uint8_t tm_debug       = 0;
 static volatile uint8_t crypto_use_tcp = STANDALONE_TCP ? 1 : 0;
+// uint8_t tc_vcid = CRYPTO_STANDALONE_FRAMING_VCID;
 
 /*
 ** Functions
 */
+uint8_t read_vcid(void)
+{
+    int fd = shm_open(SHM_NAME, O_CREAT | O_RDWR, 0660);
+    if (fd < 0) { perror("shm_open"); return 1; }
+    if (ftruncate(fd, 1) != 0) { perror("ftruncate"); close(fd); return 1; }
+
+    uint8_t *p = mmap(NULL, 1, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    close(fd);
+    if (p == MAP_FAILED) { perror("mmap"); return 1; }
+
+    printf("read %u\n", *p);
+    return *p;
+}
+
+int32_t crypto_reset(void)
+{
+    int32_t status;
+
+    status = Crypto_Shutdown();
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        printf("CryptoLib shutdown failed with error %d \n", status);
+    }
+
+    status = Crypto_SC_Init();
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        printf("CryptoLib initialization failed with error %d \n", status);
+    }
+
+    return status;
+}
+
 int32_t crypto_standalone_check_number_arguments(int actual, int expected)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -118,7 +159,7 @@ int32_t crypto_standalone_get_command(const char *str)
     return status;
 }
 
-int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char *tokens)
+int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
@@ -149,41 +190,41 @@ int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char *
             break;
 
         case CRYPTO_CMD_VCID:
-            if (crypto_standalone_check_number_arguments(num_tokens, 1) == CRYPTO_LIB_SUCCESS)
-            {
-                uint8_t vcid = (uint8_t)atoi(&tokens[0]);
-                /* Confirm new VCID valid */
-                if (vcid < 64)
-                {
-                    SaInterface            sa_if            = get_sa_interface_inmemory();
-                    SecurityAssociation_t *test_association = NULL;
-                    int32_t                status           = CRYPTO_LIB_SUCCESS;
+            // if (crypto_standalone_check_number_arguments(num_tokens, 1) == CRYPTO_LIB_SUCCESS)
+            // {
+            //     uint8_t vcid = (uint8_t)atoi(&tokens[0]);
+            //     /* Confirm new VCID valid */
+            //     if (vcid < 64)
+            //     {
+            //         SaInterface            sa_if            = get_sa_interface_inmemory();
+            //         SecurityAssociation_t *test_association = NULL;
+            //         int32_t                status           = CRYPTO_LIB_SUCCESS;
 
-                    status = sa_if->sa_get_operational_sa_from_gvcid(0, SCID, vcid, 0, &test_association);
-                    if (status == CRYPTO_LIB_SUCCESS)
-                    {
-                        Crypto_saPrint(test_association);
-                    }
-                    printf("Get_SA_Status: %d\n", status);
-                    if ((status == CRYPTO_LIB_SUCCESS) && (test_association->sa_state == SA_OPERATIONAL) &&
-                        (test_association->gvcid_blk.mapid == TYPE_TC) && (test_association->gvcid_blk.scid == SCID))
-                    {
-                        tc_vcid = vcid;
-                        printf("Changed active virtual channel (VCID) to %d \n", tc_vcid);
-                    }
-                    else
-                    {
-                        printf("Error - virtual channel (VCID) %d is invalid! Sticking with prior vcid %d \n", vcid,
-                               tc_vcid);
-                        status = CRYPTO_LIB_SUCCESS;
-                    }
-                }
-                else
-                {
-                    printf("Error - virtual channel (VCID) %d must be less than 64! Sticking with prior vcid %d \n",
-                           vcid, tc_vcid);
-                }
-            }
+            //         status = sa_if->sa_get_operational_sa_from_gvcid(0, SCID, vcid, 0, &test_association);
+            //         if (status == CRYPTO_LIB_SUCCESS)
+            //         {
+            //             Crypto_saPrint(test_association);
+            //         }
+            //         printf("Get_SA_Status: %d\n", status);
+            //         if ((status == CRYPTO_LIB_SUCCESS) && (test_association->sa_state == SA_OPERATIONAL) &&
+            //             (test_association->gvcid_blk.mapid == TYPE_TC) && (test_association->gvcid_blk.scid == SCID))
+            //         {
+            //             tc_vcid = vcid;
+            //             printf("Changed active virtual channel (VCID) to %d \n", tc_vcid);
+            //         }
+            //         else
+            //         {
+            //             printf("Error - virtual channel (VCID) %d is invalid! Sticking with prior vcid %d \n", vcid,
+            //                    tc_vcid);
+            //             status = CRYPTO_LIB_SUCCESS;
+            //         }
+            //     }
+            //     else
+            //     {
+            //         printf("Error - virtual channel (VCID) %d must be less than 64! Sticking with prior vcid %d \n",
+            //                vcid, tc_vcid);
+            //     }
+            // }
             break;
 
         case CRYPTO_CMD_TC_DEBUG:
@@ -443,25 +484,6 @@ int32_t crypto_standalone_socket_init(udp_info_t *sock, int32_t port, uint8_t bi
     return status;
 }
 
-int32_t crypto_reset(void)
-{
-    int32_t status;
-
-    status = Crypto_Shutdown();
-    if (status != CRYPTO_LIB_SUCCESS)
-    {
-        printf("CryptoLib initialization failed with error %d \n", status);
-    }
-
-    status = Crypto_SC_Init();
-    if (status != CRYPTO_LIB_SUCCESS)
-    {
-        printf("CryptoLib initialization failed with error %d \n", status);
-    }
-
-    return status;
-}
-
 void crypto_standalone_tc_frame(uint8_t *in_data, uint16_t in_length, uint8_t *out_data, uint16_t *out_length)
 {
     /* TC Length */
@@ -477,10 +499,11 @@ void crypto_standalone_tc_frame(uint8_t *in_data, uint16_t in_length, uint8_t *o
         *out_length = CRYPTO_STANDALONE_FRAMING_TC_DATA_LEN + 6;
     }
 
+    printf("VCID: %d\n", read_vcid());
     /* TC Header */
     out_data[0] = 0x20;
     out_data[1] = CRYPTO_STANDALONE_FRAMING_SCID;
-    out_data[2] = ((tc_vcid << 2) & 0xFC) | (((*out_length - 1) >> 8) & 0x03);
+    out_data[2] = ((read_vcid() << 2) & 0xFC) | (((*out_length - 1) >> 8) & 0x03);
     out_data[3] = (*out_length - 1) & 0xFF;
     out_data[4] = tc_seq_num++;
 
@@ -1042,7 +1065,7 @@ int main(int argc, char *argv[])
         /* Process command if valid */
         if (num_input_tokens >= 0)
         {
-            crypto_standalone_process_command(cmd, num_input_tokens, &input_tokens[0][0]);
+            crypto_standalone_process_command(cmd, num_input_tokens);
         }
     }
 

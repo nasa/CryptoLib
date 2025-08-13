@@ -21,8 +21,15 @@ find_package(Threads REQUIRED)
 include_directories("./standalone")
 add_executable(standalone 
                ./standalone/standalone.c)
+add_executable(standalone_cmd 
+               ./standalone/standalone_cmd.c)
 target_compile_definitions(standalone PUBLIC
     $<$<BOOL:${STANDALONE_TCP}>:STANDALONE_TCP=1>
     $<$<NOT:$<BOOL:${STANDALONE_TCP}>>:STANDALONE_TCP=0>
 )
+# file(GLOB CRYPTO_INCLUDES ../support/standalone/*.h)
+set_target_properties(standalone standalone_cmd PROPERTIES PUBLIC_HEADER "./standalone/standalone.h")
+# set_target_properties(standalone_cmd PROPERTIES PUBLIC_HEADER "./standalone/standalone.h")
+
 target_link_libraries(standalone crypto pthread)
+target_link_libraries(standalone_cmd crypto pthread)
