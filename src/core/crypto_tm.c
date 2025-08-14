@@ -821,9 +821,10 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     printf("\n");
 #endif
 
-#ifdef MARIADB_MULTI_TABLE
-    mariadb_table_name = MARIADB_TM_TABLE_NAME;
-#endif
+    if (crypto_config.sa_type == SA_TYPE_MARIADB)
+    {
+        mariadb_table_name = MARIADB_TM_TABLE_NAME;
+    }
     status = sa_if->sa_get_operational_sa_from_gvcid(tfvn, scid, vcid, 0, &sa_ptr);
 
     // No operational/valid SA found
@@ -1747,9 +1748,10 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
         // Move index to past the SPI
         byte_idx += 2;
 
-#ifdef MARIADB_MULTI_TABLE
-        mariadb_table_name = MARIADB_TM_TABLE_NAME;
-#endif
+        if (crypto_config.sa_type == SA_TYPE_MARIADB)
+        {
+            mariadb_table_name = MARIADB_TM_TABLE_NAME;
+        }
         status = sa_if->sa_get_from_spi(spi, &sa_ptr);
     }
 

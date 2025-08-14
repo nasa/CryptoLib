@@ -175,9 +175,10 @@ int32_t Crypto_User_ModifyVCID(void)
     int                    j;
 
     // TODO: This is not correct
-#ifdef MARIADB_MULTI_TABLE
-    mariadb_table_name = MARIADB_TC_TABLE_NAME;
-#endif
+    if (crypto_config.sa_type == SA_TYPE_MARIADB)
+    {
+        mariadb_table_name = MARIADB_TC_TABLE_NAME;
+    }
 
     for (i = 0; i < NUM_GVCID; i++)
     {

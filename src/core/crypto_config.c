@@ -97,9 +97,10 @@ int32_t Crypto_SC_Init(void)
     status = Crypto_Init();
 
     SecurityAssociation_t *sa_ptr = NULL;
-#ifdef MARIADB_MULTI_TABLE
-    mariadb_table_name = MARIADB_TC_TABLE_NAME;
-#endif
+    if (crypto_config.sa_type == SA_TYPE_MARIADB)
+    {
+        mariadb_table_name = MARIADB_TC_TABLE_NAME;
+    }
     sa_if->sa_get_from_spi(1, &sa_ptr);
     sa_ptr->gvcid_blk.vcid = 0;
     sa_if->sa_get_from_spi(2, &sa_ptr);
@@ -111,9 +112,10 @@ int32_t Crypto_SC_Init(void)
     sa_ptr->abm_len        = ABM_SIZE;
     sa_ptr->shivf_len      = 0;
     sa_ptr->iv_len         = 0;
-#ifdef MARIADB_MULTI_TABLE
-    mariadb_table_name = MARIADB_TM_TABLE_NAME;
-#endif
+    if (crypto_config.sa_type == SA_TYPE_MARIADB)
+    {
+        mariadb_table_name = MARIADB_TM_TABLE_NAME;
+    }
     sa_if->sa_get_from_spi(5, &sa_ptr);
     sa_ptr->sa_state       = SA_OPERATIONAL;
     sa_ptr->shsnf_len      = 0;
