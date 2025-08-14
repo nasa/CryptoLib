@@ -73,7 +73,7 @@ uint8_t parity[RS_PARITY];
 uint32_t crc32Table[CRC32TBL_SIZE];
 uint16_t crc16Table[CRC16TBL_SIZE];
 // Mariadb
-char* mariadb_table_name = "security_associations";
+char *mariadb_table_name = "security_associations";
 
 /*
 ** Assisting Functions
