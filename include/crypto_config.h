@@ -269,4 +269,11 @@
 */
 #define TC_BLOCK_SIZE 16
 
+/*
+** MariaDB Defines
+*/
+#define MARIADB_TC_TABLE_NAME "security_associations"
+#define MARIADB_TM_TABLE_NAME "security_associations_tm"
+#define MARIADB_AOS_TABLE_NAME "security_associations_aos"
+
 #endif // CRYPTO_CONFIG_H

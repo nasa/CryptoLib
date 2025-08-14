@@ -48,20 +48,20 @@ static const char *SQL_SADB_GET_SA_BY_SPI =
     "SELECT "
     "spi,ekid,akid,sa_state,tfvn,scid,vcid,mapid,lpid,est,ast,shivf_len,shsnf_len,shplf_len,stmacf_len,ecs_len,HEX(ecs)"
     ",HEX(iv),iv_len,acs_len,HEX(acs),abm_len,HEX(abm),arsn_len,HEX(arsn),arsnw"
-    " FROM security_associations WHERE spi='%d'";
+    " FROM %s WHERE spi='%d'";
 static const char *SQL_SADB_GET_SA_BY_GVCID =
     "SELECT "
     "spi,ekid,akid,sa_state,tfvn,scid,vcid,mapid,lpid,est,ast,shivf_len,shsnf_len,shplf_len,stmacf_len,ecs_len,HEX(ecs)"
     ",HEX(iv),iv_len,acs_len,HEX(acs),abm_len,HEX(abm),arsn_len,HEX(arsn),arsnw"
-    " FROM security_associations WHERE tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d' AND sa_state='%d'";
+    " FROM %s WHERE tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d' AND sa_state='%d'";
 static const char *SQL_SADB_UPDATE_IV_ARC_BY_SPI =
-    "UPDATE security_associations"
+    "UPDATE %s"
     " SET iv=X'%s', arsn=X'%s'"
     " WHERE spi='%d' AND tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d'";
-static const char *SQL_SADB_UPDATE_IV_ARC_BY_SPI_NULL_IV =
-    "UPDATE security_associations"
-    " SET arsn=X'%s'"
-    " WHERE spi='%d' AND tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d'";
+// static const char *SQL_SADB_UPDATE_IV_ARC_BY_SPI_NULL_IV =
+//     "UPDATE %s"
+//     " SET arsn=X'%s'"
+//     " WHERE spi='%d' AND tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d'";
 
 // sa_if mariaDB private helper functions
 static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **security_association);
@@ -187,7 +187,7 @@ static int32_t sa_get_from_spi(uint16_t spi, SecurityAssociation_t **security_as
     int32_t status = CRYPTO_LIB_SUCCESS;
 
     char spi_query[2048];
-    snprintf(spi_query, sizeof(spi_query), SQL_SADB_GET_SA_BY_SPI, spi);
+    snprintf(spi_query, sizeof(spi_query), SQL_SADB_GET_SA_BY_SPI, mariadb_table_name, spi);
 
     status = parse_sa_from_mysql_query(&spi_query[0], security_association);
 
@@ -199,7 +199,7 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
     int32_t status = CRYPTO_LIB_SUCCESS;
 
     char gvcid_query[2048];
-    snprintf(gvcid_query, sizeof(gvcid_query), SQL_SADB_GET_SA_BY_GVCID, tfvn, scid, vcid, mapid, SA_OPERATIONAL);
+    snprintf(gvcid_query, sizeof(gvcid_query), SQL_SADB_GET_SA_BY_GVCID, mariadb_table_name, tfvn, scid, vcid, mapid, SA_OPERATIONAL);
 
     status = parse_sa_from_mysql_query(&gvcid_query[0], security_association);
 
@@ -216,28 +216,15 @@ static int32_t sa_save_sa(SecurityAssociation_t *sa)
     char  update_sa_query[2048];
     char *iv_h = malloc(sa->iv_len * 2 + 1);
 
-    if (sa->iv != NULL)
-    {
-        convert_byte_array_to_hexstring(sa->iv, sa->iv_len, iv_h);
-    }
+    convert_byte_array_to_hexstring(sa->iv, sa->iv_len, iv_h);
 
     char *arsn_h = malloc(sa->arsn_len * 2 + 1);
     convert_byte_array_to_hexstring(sa->arsn, sa->arsn_len, arsn_h);
 
-    if (sa->iv != NULL)
-    {
-        snprintf(update_sa_query, sizeof(update_sa_query), SQL_SADB_UPDATE_IV_ARC_BY_SPI, iv_h, arsn_h, sa->spi,
+    snprintf(update_sa_query, sizeof(update_sa_query), SQL_SADB_UPDATE_IV_ARC_BY_SPI, iv_h, arsn_h, sa->spi,
                  sa->gvcid_blk.tfvn, sa->gvcid_blk.scid, sa->gvcid_blk.vcid, sa->gvcid_blk.mapid);
-
-        free(iv_h);
-    }
-    else
-    {
-        snprintf(update_sa_query, sizeof(update_sa_query), SQL_SADB_UPDATE_IV_ARC_BY_SPI_NULL_IV, arsn_h, sa->spi,
-                 sa->gvcid_blk.tfvn, sa->gvcid_blk.scid, sa->gvcid_blk.vcid, sa->gvcid_blk.mapid);
-        free(iv_h);
-    }
-
+    
+    free(iv_h);
     free(arsn_h);
 #ifdef SA_DEBUG
     fprintf(stderr, "MySQL Insert SA Query: %s \n", update_sa_query);
@@ -628,27 +615,4 @@ static int32_t finish_with_error(MYSQL **con_loc, int err)
     mysql_close(*con_loc);
     *con_loc = NULL;
     return err;
-}
-
-static int32_t parse_table_from_gvcid(char* table, GvcidManagedParameters_t current_managed_parameters_struct)
-{
-    int32_t status = CRYPTO_LIB_SUCCESS;
-    if (current_managed_parameters_struct.has_fecf == TC_HAS_FECF || current_managed_parameters_struct.has_fecf == TC_NO_FECF)
-    {
-        strcpy(table, MARIADB_TC_TABLE_NAME);
-    }
-    else if (current_managed_parameters_struct.has_fecf == TM_HAS_FECF || current_managed_parameters_struct.has_fecf == TM_NO_FECF)
-    {
-        strcpy(table, MARIADB_TM_TABLE_NAME);
-    }
-    else if (current_managed_parameters_struct.has_fecf == AOS_HAS_FECF || current_managed_parameters_struct.has_fecf == AOS_NO_FECF)
-    {
-        strcpy(table, MARIADB_AOS_TABLE_NAME);
-    }
-    else
-    {
-        table = table;
-        status = CRYPTO_LIB_ERROR;
-    }    
-    return status;
 }

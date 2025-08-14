@@ -324,6 +324,7 @@ extern uint8_t                   parity[4];         // Used in FHECF calc
 // Global configuration structs
 extern CryptoConfig_t                        crypto_config;
 extern SadbMariaDBConfig_t                  *sa_mariadb_config;
+extern char*                                 mariadb_table_name;
 extern CryptographyKmcCryptoServiceConfig_t *cryptography_kmc_crypto_config;
 extern CamConfig_t                          *cam_config;
 extern GvcidManagedParameters_t             *gvcid_managed_parameters;

@@ -106,6 +106,9 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     printf("\n");
 #endif
 
+#ifdef MARIADB_MULTI_TABLE
+    mariadb_table_name = MARIADB_AOS_TABLE_NAME;
+#endif
     status = sa_if->sa_get_operational_sa_from_gvcid(tfvn, scid, vcid, 0, &sa_ptr);
 
     // No operational/valid SA found
@@ -940,11 +943,13 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
      * Reference CCSDS SDLP 3550b1 4.1.1.1.3
      **/
     // Get SPI
-    printf("byte_idx: %d\n", byte_idx);
     spi = (uint8_t)p_ingest[byte_idx] << 8 | (uint8_t)p_ingest[byte_idx + 1];
     // Move index to past the SPI
     byte_idx += 2;
 
+#ifdef MARIADB_MULTI_TABLE
+    mariadb_table_name = MARIADB_AOS_TABLE_NAME;
+#endif
     status = sa_if->sa_get_from_spi(spi, &sa_ptr);
     // If no valid SPI, return
     if (status != CRYPTO_LIB_SUCCESS)
@@ -1417,7 +1422,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     pp_processed_frame->aos_header.sf   = (p_new_dec_frame[5] & 0x40) >> 6;
     pp_processed_frame->aos_header.spare = (p_new_dec_frame[5] & 0x30) >> 4;
     pp_processed_frame->aos_header.vfcc  = (p_new_dec_frame[5] & 0x0F);
-    if (current_managed_parameters_struct.aos_has_fhec == AOS_HAS_FHEC)
+    if (aos_current_managed_parameters_struct.aos_has_fhec == AOS_HAS_FHEC)
     {
         pp_processed_frame->aos_header.fhecf = (p_new_dec_frame[6] << 8) | p_new_dec_frame[7];
         byte_idx += 8;
@@ -1428,13 +1433,13 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     }
 
     // Security Header
-    if (current_managed_parameters_struct.aos_has_iz == AOS_HAS_IZ)
+    if (aos_current_managed_parameters_struct.aos_has_iz == AOS_HAS_IZ)
     {
-        for (int i = 0; i < current_managed_parameters_struct.aos_iz_len; i++)
+        for (int i = 0; i < aos_current_managed_parameters_struct.aos_iz_len; i++)
         {
             memcpy(pp_processed_frame->aos_sec_header.iz + i, &p_new_dec_frame[byte_idx + i], 1);
         }
-        byte_idx += current_managed_parameters_struct.aos_iz_len;
+        byte_idx += aos_current_managed_parameters_struct.aos_iz_len;
     }
 
     pp_processed_frame->aos_sec_header.spi =
@@ -1475,7 +1480,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     byte_idx += sa_ptr->stmacf_len;
     pp_processed_frame->aos_sec_trailer.mac_field_len = sa_ptr->stmacf_len;
 
-    if (current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
+    if (aos_current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
     {
         for (int i = 0; i < OCF_SIZE; i++)
         {
@@ -1489,7 +1494,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
         pp_processed_frame->aos_sec_trailer.ocf_field_len = 0;
     }
 
-    if (current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
+    if (aos_current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
     {
         pp_processed_frame->aos_sec_trailer.fecf =
             (uint16_t)(p_new_dec_frame[byte_idx] << 8) | p_new_dec_frame[byte_idx + 1];

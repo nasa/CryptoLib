@@ -821,6 +821,9 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     printf("\n");
 #endif
 
+#ifdef MARIADB_MULTI_TABLE
+    mariadb_table_name = MARIADB_TM_TABLE_NAME;
+#endif
     status = sa_if->sa_get_operational_sa_from_gvcid(tfvn, scid, vcid, 0, &sa_ptr);
 
     // No operational/valid SA found
@@ -1637,7 +1640,7 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     }
     byte_idx += sa_ptr->stmacf_len;
     pp_processed_frame->tm_sec_trailer.mac_field_len = sa_ptr->stmacf_len;
-    if (current_managed_parameters_struct.has_ocf == TM_HAS_OCF)
+    if (tm_current_managed_parameters_struct.has_ocf == TM_HAS_OCF)
     {
         for (int i = 0; i < OCF_SIZE; i++)
         {
@@ -1650,7 +1653,7 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     {
         pp_processed_frame->tm_sec_trailer.ocf_field_len = 0;
     }
-    if (current_managed_parameters_struct.has_fecf == TM_HAS_FECF)
+    if (tm_current_managed_parameters_struct.has_fecf == TM_HAS_FECF)
     {
         pp_processed_frame->tm_sec_trailer.fecf =
             ((uint16_t)p_new_dec_frame[byte_idx] << 8) | p_new_dec_frame[byte_idx + 1];
@@ -1744,6 +1747,9 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
         // Move index to past the SPI
         byte_idx += 2;
 
+#ifdef MARIADB_MULTI_TABLE
+        mariadb_table_name = MARIADB_TM_TABLE_NAME;
+#endif
         status = sa_if->sa_get_from_spi(spi, &sa_ptr);
     }
 
