@@ -49,7 +49,7 @@
 ** Crypto Version
 */
 #define CRYPTO_LIB_MAJOR_VERSION 1
-#define CRYPTO_LIB_MINOR_VERSION 3
+#define CRYPTO_LIB_MINOR_VERSION 4
 #define CRYPTO_LIB_REVISION      1
 #define CRYPTO_LIB_MISSION_REV   0
 
@@ -60,7 +60,7 @@
 /*
 ** User Prototypes
 */
-uint8_t gf_mul(uint8_t a, uint8_t b);
+uint8_t Crypto_gf_mul(uint8_t a, uint8_t b);
 
 // Crypto Library Configuration functions
 extern int32_t Crypto_Config_CryptoLib(uint8_t key_type, uint8_t mc_type, uint8_t sa_type, uint8_t cryptography_type,
@@ -329,7 +329,9 @@ extern CamConfig_t                          *cam_config;
 extern GvcidManagedParameters_t             *gvcid_managed_parameters;
 extern GvcidManagedParameters_t             *current_managed_parameters;
 extern GvcidManagedParameters_t              gvcid_managed_parameters_array[GVCID_MAX_PARAM_SIZE];
-extern GvcidManagedParameters_t              current_managed_parameters_struct;
+extern GvcidManagedParameters_t              tc_current_managed_parameters_struct;
+extern GvcidManagedParameters_t              tm_current_managed_parameters_struct;
+extern GvcidManagedParameters_t              aos_current_managed_parameters_struct;
 extern int                                   gvcid_counter;
 extern KeyInterface                          key_if;
 extern McInterface                           mc_if;
@@ -361,11 +363,11 @@ extern uint32_t crc32Table[CRC32TBL_SIZE];
 extern uint16_t crc16Table[CRC16TBL_SIZE];
 
 // GF(2^4) field and logarithm tables
-static const uint8_t gf_exp[15] = {1, 2, 4, 8, 3, 6, 12, 11, 5, 10, 7, 14, 15, 13, 9};
+static const uint8_t crypto_gf_exp[15] = {1, 2, 4, 8, 3, 6, 12, 11, 5, 10, 7, 14, 15, 13, 9};
 
-static const uint8_t gf_log[GF_SIZE] = {0, 0, 1, 4, 2, 8, 5, 10, 3, 14, 9, 7, 6, 13, 11, 12};
+static const uint8_t crypto_gf_log[GF_SIZE] = {0, 0, 1, 4, 2, 8, 5, 10, 3, 14, 9, 7, 6, 13, 11, 12};
 
 // Generator polynomial coefficients for g(x) = x^4 + a^3x^3 + ax^2 + a^3x + 1
-static const uint8_t gen_poly[RS_PARITY + 1] = {1, 8, 2, 8, 1};
+static const uint8_t crypto_gen_poly[RS_PARITY + 1] = {1, 8, 2, 8, 1};
 
 #endif // CRYPTO_H

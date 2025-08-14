@@ -306,7 +306,7 @@ UTEST(AOS_PROCESS, HAPPY_PATH_CLEAR_FECF)
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &current_managed_parameters_struct);
+                                                gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
     uint16_t offset = 6 + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;
     for (int i = 0; i < aos_frame->aos_pdu_len; i++)
@@ -444,7 +444,7 @@ UTEST(AOS_PROCESS, SECONDARY_HDR_PRESENT_PLAINTEXT)
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &current_managed_parameters_struct);
+                                                gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
 
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
     uint16_t offset = 6 + 2 + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;
@@ -587,7 +587,7 @@ UTEST(AOS_PROCESS, INSERT_ZONE_PRESENT_PLAINTEXT)
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &current_managed_parameters_struct);
+                                                gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
     uint16_t offset = 6 + 10 + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;
     for (int i = 0; i < aos_frame->aos_pdu_len; i++)
@@ -738,7 +738,7 @@ UTEST(AOS_PROCESS, AES_CMAC_256_TEST_0)
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &current_managed_parameters_struct);
+                                                gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
     uint16_t offset = 6 + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;
     for (int i = 0; i < aos_frame->aos_pdu_len; i++)
@@ -897,7 +897,7 @@ UTEST(AOS_PROCESS, AES_CMAC_256_TEST_1)
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &current_managed_parameters_struct);
+                                                gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
     uint16_t offset = 6 + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;
     for (int i = 0; i < aos_frame->aos_pdu_len; i++)
@@ -1053,7 +1053,7 @@ UTEST(AOS_PROCESS, AES_HMAC_256_TEST_0)
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &current_managed_parameters_struct);
+                                                gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
     uint16_t offset = 6 + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;
     for (int i = 0; i < aos_frame->aos_pdu_len; i++)
@@ -1207,7 +1207,7 @@ UTEST(AOS_PROCESS, AES_HMAC_256_TEST_1)
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &current_managed_parameters_struct);
+                                                gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
     uint16_t offset = 6 + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;
     for (int i = 0; i < aos_frame->aos_pdu_len; i++)
@@ -1363,7 +1363,7 @@ UTEST(AOS_PROCESS, AES_HMAC_512_TEST_0)
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &current_managed_parameters_struct);
+                                                gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
     uint16_t offset = 6 + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;
     for (int i = 0; i < aos_frame->aos_pdu_len; i++)
@@ -1519,7 +1519,7 @@ UTEST(AOS_PROCESS, AES_HMAC_512_TEST_1)
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &current_managed_parameters_struct);
+                                                gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
     uint16_t offset = 6 + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;
     for (int i = 0; i < aos_frame->aos_pdu_len; i++)
@@ -1649,7 +1649,7 @@ UTEST(AOS_PROCESS, AES_GCM_DEC_ONLY)
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &current_managed_parameters_struct);
+                                                gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
 
     // Expose/setup SAs for testing
     SecurityAssociation_t  ta;
@@ -1859,7 +1859,7 @@ UTEST(AOS_PROCESS, AEAD_GCM_BITMASK_1)
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &current_managed_parameters_struct);
+                                                gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
     uint16_t offset = 6 + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;
     for (int i = 0; i < aos_frame->aos_pdu_len; i++)

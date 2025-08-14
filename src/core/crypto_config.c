@@ -45,9 +45,11 @@ CryptographyKmcCryptoServiceConfig_t *cryptography_kmc_crypto_config = NULL;
 CamConfig_t                          *cam_config                     = NULL;
 
 GvcidManagedParameters_t gvcid_managed_parameters_array[GVCID_MAN_PARAM_SIZE];
-int                      gvcid_counter                     = 0;
-GvcidManagedParameters_t gvcid_null_struct                 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-GvcidManagedParameters_t current_managed_parameters_struct = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+int                      gvcid_counter                         = 0;
+GvcidManagedParameters_t gvcid_null_struct                     = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+GvcidManagedParameters_t tc_current_managed_parameters_struct  = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+GvcidManagedParameters_t tm_current_managed_parameters_struct  = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+GvcidManagedParameters_t aos_current_managed_parameters_struct = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 // GvcidManagedParameters_t* gvcid_managed_parameters = NULL;
 //  GvcidManagedParameters_t* current_managed_parameters = NULL;
@@ -72,30 +74,65 @@ int32_t Crypto_SC_Init(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_NO_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TC
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TC_UT_Managed_Parameters = {
-        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 4, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     TC_UT_Managed_Parameters.vcid = 2;
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    TC_UT_Managed_Parameters.vcid = 3;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
 
     // TM
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_HAS_OCF, 1786,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x0003, 1, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_HAS_OCF, 1};
+        0, 0x0003, 1, TM_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
-    TM_UT_Managed_Parameters.vcid = 2;
+    TM_UT_Managed_Parameters.vcid = 4;
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+    TM_UT_Managed_Parameters.vcid = 5;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
     status = Crypto_Init();
+
+    SecurityAssociation_t *sa_ptr = NULL;
+    sa_if->sa_get_from_spi(1, &sa_ptr);
+    sa_ptr->gvcid_blk.vcid = 0;
+    sa_if->sa_get_from_spi(2, &sa_ptr);
+    sa_ptr->gvcid_blk.vcid = 2;
+    sa_if->sa_get_from_spi(3, &sa_ptr);
+    sa_ptr->sa_state       = SA_OPERATIONAL;
+    sa_ptr->gvcid_blk.vcid = 3;
+    sa_ptr->acs            = CRYPTO_MAC_HMAC_SHA256;
+    sa_ptr->abm_len        = ABM_SIZE;
+    sa_ptr->shivf_len      = 0;
+    sa_ptr->iv_len         = 0;
+    sa_if->sa_get_from_spi(5, &sa_ptr);
+    sa_ptr->sa_state       = SA_OPERATIONAL;
+    sa_ptr->shsnf_len      = 0;
+    sa_ptr->arsn_len       = 0;
+    sa_ptr->gvcid_blk.vcid = 1;
+    sa_if->sa_get_from_spi(6, &sa_ptr);
+    sa_ptr->sa_state       = SA_OPERATIONAL;
+    sa_ptr->ecs            = CRYPTO_CIPHER_AES256_GCM;
+    sa_ptr->gvcid_blk.vcid = 4;
+    sa_ptr->ekid           = 9;
+    sa_ptr->akid           = 9;
+    sa_ptr->shplf_len      = 0;
+    sa_ptr->shivf_len      = 12;
+    sa_ptr->iv_len         = 12;
+    sa_ptr->abm_len        = ABM_SIZE;
+    sa_if->sa_get_from_spi(7, &sa_ptr);
+    sa_ptr->sa_state       = SA_OPERATIONAL;
+    sa_ptr->abm_len        = ABM_SIZE;
+    sa_ptr->acs            = CRYPTO_MAC_HMAC_SHA256;
+    sa_ptr->ekid           = 130;
+    sa_ptr->akid           = 130;
+    sa_ptr->gvcid_blk.vcid = 5;
+    sa_ptr->shivf_len      = 0;
+    sa_ptr->iv_len         = 0;
+
     return status;
 }
 
@@ -397,7 +434,9 @@ int32_t Crypto_Shutdown(void)
     int32_t status = CRYPTO_LIB_SUCCESS;
 
     // current_managed_parameters = NULL;
-    current_managed_parameters_struct = gvcid_null_struct;
+    tc_current_managed_parameters_struct  = gvcid_null_struct;
+    tm_current_managed_parameters_struct  = gvcid_null_struct;
+    aos_current_managed_parameters_struct = gvcid_null_struct;
     for (int i = 0; i <= gvcid_counter; i++)
     {
         gvcid_managed_parameters_array[i] = gvcid_null_struct;

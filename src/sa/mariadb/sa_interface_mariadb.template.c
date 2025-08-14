@@ -629,3 +629,26 @@ static int32_t finish_with_error(MYSQL **con_loc, int err)
     *con_loc = NULL;
     return err;
 }
+
+static int32_t parse_table_from_gvcid(char* table, GvcidManagedParameters_t current_managed_parameters_struct)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    if (current_managed_parameters_struct.has_fecf == TC_HAS_FECF || current_managed_parameters_struct.has_fecf == TC_NO_FECF)
+    {
+        strcpy(table, MARIADB_TC_TABLE_NAME);
+    }
+    else if (current_managed_parameters_struct.has_fecf == TM_HAS_FECF || current_managed_parameters_struct.has_fecf == TM_NO_FECF)
+    {
+        strcpy(table, MARIADB_TM_TABLE_NAME);
+    }
+    else if (current_managed_parameters_struct.has_fecf == AOS_HAS_FECF || current_managed_parameters_struct.has_fecf == AOS_NO_FECF)
+    {
+        strcpy(table, MARIADB_AOS_TABLE_NAME);
+    }
+    else
+    {
+        table = table;
+        status = CRYPTO_LIB_ERROR;
+    }    
+    return status;
+}
