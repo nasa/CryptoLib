@@ -199,7 +199,8 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
     int32_t status = CRYPTO_LIB_SUCCESS;
 
     char gvcid_query[2048];
-    snprintf(gvcid_query, sizeof(gvcid_query), SQL_SADB_GET_SA_BY_GVCID, mariadb_table_name, tfvn, scid, vcid, mapid, SA_OPERATIONAL);
+    snprintf(gvcid_query, sizeof(gvcid_query), SQL_SADB_GET_SA_BY_GVCID, mariadb_table_name, tfvn, scid, vcid, mapid,
+             SA_OPERATIONAL);
 
     status = parse_sa_from_mysql_query(&gvcid_query[0], security_association);
 
@@ -222,8 +223,8 @@ static int32_t sa_save_sa(SecurityAssociation_t *sa)
     convert_byte_array_to_hexstring(sa->arsn, sa->arsn_len, arsn_h);
 
     snprintf(update_sa_query, sizeof(update_sa_query), SQL_SADB_UPDATE_IV_ARC_BY_SPI, iv_h, arsn_h, sa->spi,
-                 sa->gvcid_blk.tfvn, sa->gvcid_blk.scid, sa->gvcid_blk.vcid, sa->gvcid_blk.mapid);
-    
+             sa->gvcid_blk.tfvn, sa->gvcid_blk.scid, sa->gvcid_blk.vcid, sa->gvcid_blk.mapid);
+
     free(iv_h);
     free(arsn_h);
 #ifdef SA_DEBUG

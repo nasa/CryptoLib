@@ -293,7 +293,7 @@ int32_t Crypto_SA_readARSN(uint8_t *ingest)
 
         // TODO: This is not correct
 #ifdef MARIADB_MULTI_TABLE
-    mariadb_table_name = MARIADB_TC_TABLE_NAME;
+        mariadb_table_name = MARIADB_TC_TABLE_NAME;
 #endif
         status = sa_if->sa_get_from_spi(spi, &sa_ptr);
 
