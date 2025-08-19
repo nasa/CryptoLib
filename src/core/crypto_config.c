@@ -308,7 +308,7 @@ int32_t Crypto_Init(void)
     {
         return status;
     }
-    
+
     // TODO: Check and return status on error
     /* MC Interface */
     if (mc_if == NULL)

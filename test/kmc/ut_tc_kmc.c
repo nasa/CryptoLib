@@ -161,36 +161,38 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_CBC_KMC)
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
                           CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", NULL);
-    Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service", "/home/jstar/Desktop/kmc_certs/ca.pem",
-                                     NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE, "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+    Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
+                                     "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
+                                     "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
     GvcidManagedParameters_t TC_UT_Managed_Parameters = {
         0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     Crypto_Init();
 
     // Setup & Initialize CryptoLib
-    char       *raw_tc_sdls_ping_h   = "20030015000080d2c70008197f0b00310000b1fe3128";
-    char       *raw_tc_sdls_ping_b   = NULL;
-    int         raw_tc_sdls_ping_len = 0;
+    char *raw_tc_sdls_ping_h   = "20030015000080d2c70008197f0b00310000b1fe3128";
+    char *raw_tc_sdls_ping_b   = NULL;
+    int   raw_tc_sdls_ping_len = 0;
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
     uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
-    int32_t return_val = CRYPTO_LIB_ERROR;
+    int32_t  return_val    = CRYPTO_LIB_ERROR;
 
     return_val =
         Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
-    char* truth_data_h = "2003003300000002000000000000000000000000E64F9B208554A8CE1CB9BF0C6D100000000000000000000000000000000084C2";
-    uint8_t* truth_data_b = NULL;
-    int truth_data_l = 0;
+    char *truth_data_h =
+        "2003003300000002000000000000000000000000E64F9B208554A8CE1CB9BF0C6D100000000000000000000000000000000084C2";
+    uint8_t *truth_data_b = NULL;
+    int      truth_data_l = 0;
 
     hex_conversion(truth_data_h, (char **)&truth_data_b, &truth_data_l);
-    //printf("Encrypted Frame:\n");
-    for(int i = 0; i < enc_frame_len; i++)
+    // printf("Encrypted Frame:\n");
+    for (int i = 0; i < enc_frame_len; i++)
     {
-        //printf("%02x -> %02x ", ptr_enc_frame[i], truth_data_b[i]);
+        // printf("%02x -> %02x ", ptr_enc_frame[i], truth_data_b[i]);
         ASSERT_EQ(ptr_enc_frame[i], truth_data_b[i]);
     }
     Crypto_Shutdown();
@@ -213,8 +215,9 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_KMC_1BP)
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
                           CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", NULL);
-    Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service", "/home/jstar/Desktop/kmc_certs/ca.pem",
-                                     NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE, "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+    Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
+                                     "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
+                                     "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
     GvcidManagedParameters_t TC_UT_Managed_Parameters = {
         0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
@@ -225,44 +228,44 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_KMC_1BP)
     TC_UT_Managed_Parameters.vcid = 3;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
 
-
-    int32_t return_val = Crypto_Init(); 
+    int32_t return_val = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
 
-    char* raw_tc_sdls_ping_h = "20030016000080d2c70008197f0b0031000000b1fe3128";
-    char* raw_tc_sdls_ping_b = NULL;
-    int raw_tc_sdls_ping_len = 0;
+    char *raw_tc_sdls_ping_h   = "20030016000080d2c70008197f0b0031000000b1fe3128";
+    char *raw_tc_sdls_ping_b   = NULL;
+    int   raw_tc_sdls_ping_len = 0;
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
-    uint8_t* ptr_enc_frame = NULL;
+    uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
 
-    SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    SecurityAssociation_t *test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
     // Expose the SADB Security Association for test edits.
     sa_if->sa_get_from_spi(1, &test_association);
     test_association->sa_state = SA_NONE;
     sa_if->sa_get_from_spi(11, &test_association);
     printf("SPI: %d\n", test_association->spi);
     test_association->sa_state = SA_OPERATIONAL;
-    test_association->ast = 0;
+    test_association->ast      = 0;
     test_association->arsn_len = 0;
     sa_if->sa_get_from_spi(11, &test_association);
     return_val =
-        Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+        Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
-    char* truth_data_h = "2003003400000002000000000000000000000000E64F9B208554A8CE1CB9BF0CDC5F7C00000000000000000000000000000000DF62";
-    uint8_t* truth_data_b = NULL;
-    int truth_data_l = 0;
+    char *truth_data_h =
+        "2003003400000002000000000000000000000000E64F9B208554A8CE1CB9BF0CDC5F7C00000000000000000000000000000000DF62";
+    uint8_t *truth_data_b = NULL;
+    int      truth_data_l = 0;
 
     hex_conversion(truth_data_h, (char **)&truth_data_b, &truth_data_l);
-    //printf("Encrypted Frame:\n");
-    for(int i = 0; i < enc_frame_len; i++)
+    // printf("Encrypted Frame:\n");
+    for (int i = 0; i < enc_frame_len; i++)
     {
-        //printf("%02x -> %02x ", ptr_enc_frame[i], truth_data_b[i]);
+        // printf("%02x -> %02x ", ptr_enc_frame[i], truth_data_b[i]);
         ASSERT_EQ(ptr_enc_frame[i], truth_data_b[i]);
     }
-    //printf("\n");
+    // printf("\n");
 
     Crypto_Shutdown();
     free(raw_tc_sdls_ping_b);
