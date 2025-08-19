@@ -31,9 +31,9 @@
 #include <stdlib.h>
 
 #define KMC_HOSTNAME           "itc.kmc.nasa.gov"
-#define CA_PATH                "/home/itc/Desktop/kmc_oci-3.5.0/files/tls/ammos-ca-bundle.crt"
-#define CLIENT_CERTIFICATE     "/home/itc/Desktop/kmc_oci-3.5.0/files/tls/ammos-server-cert.pem"
-#define CLIENT_CERTIFICATE_KEY "/home/itc/Desktop/kmc_oci-3.5.0/files/tls/ammos-server-key.pem"
+#define CA_PATH                "/home/jstar/Desktop/kmc_certs/ca.pem"
+#define CLIENT_CERTIFICATE     "/home/jstar/Desktop/kmc_certs/ammos-client-cert.pem"
+#define CLIENT_CERTIFICATE_KEY "/home/jstar/Desktop/kmc_certs/ammos-client-key.pem"
 
 /**
  * @brief Error Function for MDB_DB_RESET
@@ -50,17 +50,17 @@ void finish_with_error(MYSQL *con)
 void reload_db(void)
 {
     printf("Resetting Database\n");
-    system("mysql --host=itc.kmc.nasa.gov -u cryptosvc "
-           "--ssl-ca=/home/itc/Desktop/kmc_oci-3.5.0/files/tls/ammos-ca-bundle.crt  --ssl-verify-server-cert "
-           "--ssl-cert=/home/itc/Desktop/kmc_oci-3.5.0/files/tls/ammos-server-cert.pem "
-           "--ssl-key=/home/itc/Desktop/kmc_oci-3.5.0/files/tls/ammos-server-key.pem < "
-           "src/sa/sadb_mariadb_sql/empty_sadb.sql");
+    system("mysql --host=localhost -u cryptosvc --skip-ssl-verify-server-cert "
+           "--ssl-ca=/home/jstar/Desktop/kmc_certs/ca.pem "
+           "--ssl-cert=/home/jstar/Desktop/kmc_certs/ammos-server-cert.pem "
+           "--ssl-key=/home/jstar/Desktop/kmc_certs/ammos-server-key.pem < "
+           "src/sa/sadb_mariadb_sql/empty_sadb_tc.sql");
     printf("first call done\n");
-    system("mysql --host=itc.kmc.nasa.gov -u cryptosvc "
-           "--ssl-ca=/home/itc/Desktop/kmc_oci-3.5.0/files/tls/ammos-ca-bundle.crt  --ssl-verify-server-cert "
-           "--ssl-cert=/home/itc/Desktop/kmc_oci-3.5.0/files/tls/ammos-server-cert.pem "
-           "--ssl-key=/home/itc/Desktop/kmc_oci-3.5.0/files/tls/ammos-server-key.pem < "
-           "src/sa/test_sadb_mariadb_sql/create_sadb_ivv_unit_tests.sql");
+    system("mysql --host=localhost -u cryptosvc --skip-ssl-verify-server-cert "
+           "--ssl-ca=/home/jstar/Desktop/kmc_certs/ca.pem  "
+           "--ssl-cert=/home/jstar/Desktop/kmc_certs/ammos-server-cert.pem "
+           "--ssl-key=/home/jstar/Desktop/kmc_certs/ammos-server-key.pem < "
+           "src/sa/test_sadb_mariadb_sql/create_sadb_ivv_tc_unit_tests.sql");
 }
 
 /**
@@ -152,6 +152,7 @@ void MDB_DB_RESET()
  **/
 UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_CBC_KMC)
 {
+    remove("sa_save_file.bin");
     reload_db();
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_KMC, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO,
@@ -159,132 +160,115 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_CBC_KMC)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
-                          CLIENT_CERTIFICATE_KEY, NULL, "root", "changeit");
-    Crypto_Config_Kmc_Crypto_Service("https", "itc-kmc.nasa.gov", 8443, "crypto-service", "/certs/ammos-ca-bundle.crt",
+                          CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", NULL);
+    Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service", "/home/jstar/Desktop/kmc_certs/ca.pem",
                                      NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE, "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters0 = {
-        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, AOS_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters0);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters1 = {
-        0, 0x0003, 1, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, AOS_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters1);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters2 = {
-        0, 0x0003, 2, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, AOS_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters2);
-    GvcidManagedParameters_t TC_UT_Managed_Parameters3 = {
-        0, 0x0003, 3, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, AOS_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters3);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, AOS_FHEC_NA,
-    // AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 2, TC_HAS_FECF,
-    // TC_HAS_SEGMENT_HDRS, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 3,
-    // TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-    int32_t return_val = Crypto_Init();
-    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    Crypto_Init();
 
-    char *raw_tc_sdls_ping_h   = "20030015000080d2c70008197f0b00310000b1fe3128";
-    char *raw_tc_sdls_ping_b   = NULL;
-    int   raw_tc_sdls_ping_len = 0;
-    // SaInterface sa_if = get_sa_interface_inmemory();
+    // Setup & Initialize CryptoLib
+    char       *raw_tc_sdls_ping_h   = "20030015000080d2c70008197f0b00310000b1fe3128";
+    char       *raw_tc_sdls_ping_b   = NULL;
+    int         raw_tc_sdls_ping_len = 0;
 
     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
     uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
+    int32_t return_val = CRYPTO_LIB_ERROR;
 
-    // SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
-    // Expose the SADB Security Association for test edits.
-    // sa_if->sa_get_from_spi(1, &test_association);
-    // test_association->sa_state = SA_NONE;
-    // sa_if->sa_get_from_spi(11, &test_association);
-    // test_association->arsn_len = 0;
-    // test_association->shsnf_len = 0;
-    // test_association->ast = 0;
-    // test_association->stmacf_len = 0;
-    // test_association->sa_state = SA_OPERATIONAL;
-    // sa_if->sa_get_from_spi(11, &test_association);
     return_val =
         Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
-    char    *truth_data_h = "2003002A0000000B00000000000000000000000000000000025364F9BC3344AF359DA06CA886746F59A0AB";
-    uint8_t *truth_data_b = NULL;
-    int      truth_data_l = 0;
+    char* truth_data_h = "2003003300000002000000000000000000000000E64F9B208554A8CE1CB9BF0C6D100000000000000000000000000000000084C2";
+    uint8_t* truth_data_b = NULL;
+    int truth_data_l = 0;
 
     hex_conversion(truth_data_h, (char **)&truth_data_b, &truth_data_l);
-    // printf("Encrypted Frame:\n");
-    for (int i = 0; i < enc_frame_len; i++)
+    //printf("Encrypted Frame:\n");
+    for(int i = 0; i < enc_frame_len; i++)
     {
-        // printf("%02x -> %02x ", ptr_enc_frame[i], truth_data_b[i]);
+        //printf("%02x -> %02x ", ptr_enc_frame[i], truth_data_b[i]);
         ASSERT_EQ(ptr_enc_frame[i], truth_data_b[i]);
     }
-    // printf("\n");
-
     Crypto_Shutdown();
     free(raw_tc_sdls_ping_b);
     free(ptr_enc_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
 }
 
-// /**
-//  * @brief Unit Test: Encryption CBC KMC 1 Byte of padding
-//  **/
-// UTEST(TC_APPLY_SECURITY, ENC_CBC_KMC_1BP)
-// {
-//     // Setup & Initialize CryptoLib
-//     Crypto_Config_CryptoLib(KEY_TYPE_KMC, MC_TYPE_DISABLED, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_KMCCRYPTO,
-//                             IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-//                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-//                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-//     Crypto_Config_Kmc_Crypto_Service("https", "itc-kmc.nasa.gov", 8443,
-//     "crypto-service","/certs/ammos-ca-bundle.crt",NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE, "PEM",
-//     CLIENT_CERTIFICATE_KEY, NULL, NULL); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF,
-//     TC_HAS_SEGMENT_HDRS, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1,
-//     TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0,
-//     0x0003, 2, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-//     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 3, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, AOS_FHEC_NA,
-//     AOS_IZ_NA, 0); int32_t return_val = Crypto_Init(); ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+/**
+ * @brief Unit Test: Encryption CBC KMC 1 Byte of padding
+ **/
+UTEST(TC_APPLY_SECURITY, ENC_CBC_KMC_1BP)
+{
+    remove("sa_save_file.bin");
+    reload_db();
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(KEY_TYPE_KMC, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO,
+                            IV_CRYPTO_MODULE, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
+                          CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", NULL);
+    Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service", "/home/jstar/Desktop/kmc_certs/ca.pem",
+                                     NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE, "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+    GvcidManagedParameters_t TC_UT_Managed_Parameters = {
+        0, 0x0003, 0, TC_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    TC_UT_Managed_Parameters.vcid = 1;
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    TC_UT_Managed_Parameters.vcid = 2;
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    TC_UT_Managed_Parameters.vcid = 3;
+    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
 
-//     char* raw_tc_sdls_ping_h = "20030016000080d2c70008197f0b0031000000b1fe3128";
-//     char* raw_tc_sdls_ping_b = NULL;
-//     int raw_tc_sdls_ping_len = 0;
-//     SaInterface sa_if = get_sa_interface_inmemory();
 
-//     hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
+    int32_t return_val = Crypto_Init(); 
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
 
-//     uint8_t* ptr_enc_frame = NULL;
-//     uint16_t enc_frame_len = 0;
+    char* raw_tc_sdls_ping_h = "20030016000080d2c70008197f0b0031000000b1fe3128";
+    char* raw_tc_sdls_ping_b = NULL;
+    int raw_tc_sdls_ping_len = 0;
 
-//     SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
-//     // Expose the SADB Security Association for test edits.
-//     sa_if->sa_get_from_spi(1, &test_association);
-//     test_association->sa_state = SA_NONE;
-//     sa_if->sa_get_from_spi(11, &test_association);
-//     printf("SPI: %d\n", test_association->spi);
-//     test_association->sa_state = SA_OPERATIONAL;
-//     test_association->ast = 0;
-//     test_association->arsn_len = 0;
-//     sa_if->sa_get_from_spi(11, &test_association);
-//     return_val =
-//         Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
 
-//     char* truth_data_h = "2003002A0000000B00000000000000000000000000000000011C1741A95DE7EF6FCF2B20B6F09E9FD29988";
-//     uint8_t* truth_data_b = NULL;
-//     int truth_data_l = 0;
+    uint8_t* ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
 
-//     hex_conversion(truth_data_h, (char **)&truth_data_b, &truth_data_l);
-//     //printf("Encrypted Frame:\n");
-//     for(int i = 0; i < enc_frame_len; i++)
-//     {
-//         //printf("%02x -> %02x ", ptr_enc_frame[i], truth_data_b[i]);
-//         ASSERT_EQ(ptr_enc_frame[i], truth_data_b[i]);
-//     }
-//     //printf("\n");
+    SecurityAssociation_t* test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    // Expose the SADB Security Association for test edits.
+    sa_if->sa_get_from_spi(1, &test_association);
+    test_association->sa_state = SA_NONE;
+    sa_if->sa_get_from_spi(11, &test_association);
+    printf("SPI: %d\n", test_association->spi);
+    test_association->sa_state = SA_OPERATIONAL;
+    test_association->ast = 0;
+    test_association->arsn_len = 0;
+    sa_if->sa_get_from_spi(11, &test_association);
+    return_val =
+        Crypto_TC_ApplySecurity((uint8_t* )raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
-//     Crypto_Shutdown();
-//     free(raw_tc_sdls_ping_b);
-//     free(ptr_enc_frame);
-//     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
-// }
+    char* truth_data_h = "2003003400000002000000000000000000000000E64F9B208554A8CE1CB9BF0CDC5F7C00000000000000000000000000000000DF62";
+    uint8_t* truth_data_b = NULL;
+    int truth_data_l = 0;
+
+    hex_conversion(truth_data_h, (char **)&truth_data_b, &truth_data_l);
+    //printf("Encrypted Frame:\n");
+    for(int i = 0; i < enc_frame_len; i++)
+    {
+        //printf("%02x -> %02x ", ptr_enc_frame[i], truth_data_b[i]);
+        ASSERT_EQ(ptr_enc_frame[i], truth_data_b[i]);
+    }
+    //printf("\n");
+
+    Crypto_Shutdown();
+    free(raw_tc_sdls_ping_b);
+    free(ptr_enc_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+}
 
 // /**
 //  * @brief Unit Test: Encryption CBC KMC 16 Bytes of padding

@@ -277,17 +277,38 @@ int32_t Crypto_Init(void)
         if (crypto_config.key_type == KEY_TYPE_CUSTOM)
         {
             key_if = get_key_interface_custom();
+            if (key_if == NULL)
+            {
+                return CRYPTO_LIB_ERROR;
+            }
         }
         else if (crypto_config.key_type == KEY_TYPE_INTERNAL)
         {
             key_if = get_key_interface_internal();
+            if (key_if == NULL)
+            {
+                return CRYPTO_LIB_ERROR;
+            }
         }
-        else // KEY_TYPE_KMC
+        else if (crypto_config.key_type == KEY_TYPE_KMC)
         {
             key_if = get_key_interface_kmc();
+            if (key_if == NULL)
+            {
+                return CRYPTO_LIB_ERROR;
+            }
+        }
+        else
+        {
+            return CRYPTO_LIB_ERROR;
         }
     }
-    key_if->key_init();
+    status = key_if->key_init();
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        return status;
+    }
+    
     // TODO: Check and return status on error
     /* MC Interface */
     if (mc_if == NULL)
@@ -295,17 +316,38 @@ int32_t Crypto_Init(void)
         if (crypto_config.mc_type == MC_TYPE_CUSTOM)
         {
             mc_if = get_mc_interface_custom();
+            if (mc_if == NULL)
+            {
+                return CRYPTO_LIB_ERROR;
+            }
         }
         else if (crypto_config.mc_type == MC_TYPE_DISABLED)
         {
             mc_if = get_mc_interface_disabled();
+            if (mc_if == NULL)
+            {
+                return CRYPTO_LIB_ERROR;
+            }
         }
-        else // MC_TYPE_INTERNAL
+        else if (crypto_config.mc_type == MC_TYPE_INTERNAL)
         {
             mc_if = get_mc_interface_internal();
+            if (mc_if == NULL)
+            {
+                return CRYPTO_LIB_ERROR;
+            }
+        }
+        else
+        {
+            return CRYPTO_LIB_ERROR;
         }
     }
-    mc_if->mc_initialize();
+    status = mc_if->mc_initialize();
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        return status;
+    }
+
     // TODO: Check and return status on error
     /* SA Interface */
     if (sa_if == NULL)
@@ -314,10 +356,18 @@ int32_t Crypto_Init(void)
         if (crypto_config.sa_type == SA_TYPE_CUSTOM)
         {
             sa_if = get_sa_interface_custom();
+            if (sa_if == NULL)
+            {
+                return CRYPTO_LIB_ERROR;
+            }
         }
         else if (crypto_config.sa_type == SA_TYPE_INMEMORY)
         {
             sa_if = get_sa_interface_inmemory();
+            if (sa_if == NULL)
+            {
+                return CRYPTO_LIB_ERROR;
+            }
         }
         else if (crypto_config.sa_type == SA_TYPE_MARIADB)
         {
@@ -328,6 +378,10 @@ int32_t Crypto_Init(void)
                 return status; // MariaDB connection specified but no configuration exists, return!
             }
             sa_if = get_sa_interface_mariadb();
+            if (sa_if == NULL)
+            {
+                return CRYPTO_LIB_ERROR;
+            }
         }
         else
         {
