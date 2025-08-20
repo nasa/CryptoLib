@@ -95,7 +95,7 @@ int32_t Crypto_SC_Init(void)
     TM_UT_Managed_Parameters.vcid = 5;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
-    // TM
+    // AOS
     GvcidManagedParameters_t AOS_UT_Managed_Parameters = {
         1, 0x0003, 6, AOS_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, AOS_SEGMENT_HDRS_NA, 1786, AOS_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
@@ -109,7 +109,10 @@ int32_t Crypto_SC_Init(void)
     sa_if->sa_get_from_spi(3, &sa_ptr);
     sa_ptr->sa_state       = SA_OPERATIONAL;
     sa_ptr->gvcid_blk.vcid = 3;
+    sa_ptr->acs            = CRYPTO_MAC_HMAC_SHA256;
     sa_ptr->abm_len        = ABM_SIZE;
+    sa_ptr->shivf_len      = 0;
+    sa_ptr->iv_len         = 0;
     sa_if->sa_get_from_spi(5, &sa_ptr);
     sa_ptr->sa_state       = SA_OPERATIONAL;
     sa_ptr->shsnf_len      = 0;
@@ -117,11 +120,23 @@ int32_t Crypto_SC_Init(void)
     sa_ptr->gvcid_blk.vcid = 1;
     sa_if->sa_get_from_spi(6, &sa_ptr);
     sa_ptr->sa_state       = SA_OPERATIONAL;
+    sa_ptr->ecs            = CRYPTO_CIPHER_AES256_GCM;
     sa_ptr->gvcid_blk.vcid = 4;
+    sa_ptr->ekid           = 9;
+    sa_ptr->akid           = 9;
+    sa_ptr->shplf_len      = 0;
+    sa_ptr->shivf_len      = 12;
+    sa_ptr->iv_len         = 12;
+    sa_ptr->abm_len        = ABM_SIZE;
     sa_if->sa_get_from_spi(7, &sa_ptr);
     sa_ptr->sa_state       = SA_OPERATIONAL;
     sa_ptr->abm_len        = ABM_SIZE;
+    sa_ptr->acs            = CRYPTO_MAC_HMAC_SHA256;
+    sa_ptr->ekid           = 130;
+    sa_ptr->akid           = 130;
     sa_ptr->gvcid_blk.vcid = 5;
+    sa_ptr->shivf_len      = 0;
+    sa_ptr->iv_len         = 0;
     sa_if->sa_get_from_spi(10, &sa_ptr);
     sa_ptr->acs            = CRYPTO_MAC_HMAC_SHA256;
     sa_ptr->shsnf_len      = 2;

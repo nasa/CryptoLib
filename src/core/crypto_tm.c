@@ -1755,7 +1755,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8_
         }
         // Increment byte_idx past Security Header Fields based on SA values
         byte_idx += sa_ptr->shivf_len;
-        byte_idx += (sa_ptr->arsn_len - sa_ptr->shsnf_len);
+        byte_idx += sa_ptr->shsnf_len;
         byte_idx += sa_ptr->shplf_len;
 
 #ifdef SA_DEBUG

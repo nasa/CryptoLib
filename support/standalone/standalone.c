@@ -242,7 +242,7 @@ int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char *
                         {
                             printf("AOS - ");
                         }
-                        if (i > 12 && i < 16)
+                        if (i == 63)
                         {
                             printf("ExProc - ");
                         }
@@ -366,7 +366,7 @@ int32_t crypto_standalone_socket_init(udp_info_t *sock, int32_t port, uint8_t bi
         sock->saddr.sin_port = htons(sock->port);
     }
 
-    if (crypto_use_tcp && ((sock->port == 8010 || sock->port == 8011)))
+    if (crypto_use_tcp && ((sock->port == TC_APPLY_FWD_PORT || sock->port == TM_PROCESS_PORT)))
     {
         if (bind_sock != 0)
         {
@@ -407,7 +407,7 @@ int32_t crypto_standalone_socket_init(udp_info_t *sock, int32_t port, uint8_t bi
     else
     {
         // UDP: bind only if needed
-        if (bind_sock == 0 && sock->port != 6011 && sock->port != 8010)
+        if (bind_sock == 0 && sock->port != TM_PROCESS_FWD_PORT && sock->port != TC_APPLY_FWD_PORT)
         {
             status = bind(sock->sockfd, (struct sockaddr *)&sock->saddr, sizeof(sock->saddr));
             if (status != 0)
@@ -421,7 +421,7 @@ int32_t crypto_standalone_socket_init(udp_info_t *sock, int32_t port, uint8_t bi
         }
         else
         {
-            if (crypto_use_tcp == 0 && bind_sock == 1 && sock->port == 8011)
+            if (crypto_use_tcp == 0 && bind_sock == 1 && sock->port == TM_PROCESS_PORT)
             {
                 status = bind(sock->sockfd, (struct sockaddr *)&sock->saddr, sizeof(sock->saddr));
                 if (status != 0)
