@@ -33,7 +33,7 @@ int32_t Crypto_User_IdleTrigger(uint8_t *ingest)
     // Prepare for Reply
     sdls_frame.tlv_pdu.hdr.pdu_len = 0;
     sdls_frame.hdr.pkt_length      = sdls_frame.tlv_pdu.hdr.pdu_len + 9;
-    count                          = Crypto_Prep_Reply(ingest, 144);
+    count                          = Crypto_Prep_Reply(ingest, CRYPTOLIB_APPID + USER_IDLE_OFFSET);
 
     return count;
 }

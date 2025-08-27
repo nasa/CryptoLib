@@ -409,11 +409,14 @@ int32_t Crypto_Key_inventory(uint8_t *ingest)
 
     // Prepare for Reply
     range                          = packet.kid_last - packet.kid_first + 1;
-    sdls_frame.tlv_pdu.hdr.pdu_len = (SDLS_KEY_INVENTORY_RPLY_SIZE * (range)) * BYTE_LEN;
-    sdls_frame.hdr.pkt_length      = CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE +
-                                (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1 +
-                                2; // 2 = Num Keys Returned Field (2 Bytes)
-    count = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
+    sdls_frame.tlv_pdu.hdr.pdu_len = (2 + (SDLS_KEY_INVENTORY_RPLY_SIZE * (range))) * BYTE_LEN;
+    sdls_frame.hdr.pkt_length      = SDLS_TLV_HDR_SIZE +
+                                (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
+    if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
+    {
+        sdls_frame.hdr.pkt_length += ECSS_PUS_SIZE;
+    }
+    count = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID + KEY_INVENTORY_OFFSET);
 
     sdls_ep_reply[count++] = ((range & 0xFF00) >> BYTE_LEN);
     sdls_ep_reply[count++] = (range & 0x00FF);
@@ -501,17 +504,17 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
     if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
     {
         sdls_frame.hdr.pkt_length =
-            CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
-        printf("NO PUS: sdls_frame.hdr.pkt_length Calced as %d\n", sdls_frame.hdr.pkt_length);
+            ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
+        printf("WITH PUS: sdls_frame.hdr.pkt_length Calced as %d\n", sdls_frame.hdr.pkt_length);
     }
     else
     {
         sdls_frame.hdr.pkt_length =
-            CCSDS_HDR_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
-        printf("WITH PUS: sdls_frame.hdr.pkt_length Calced as %d\n", sdls_frame.hdr.pkt_length);
+            SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
+        printf("NO PUS: sdls_frame.hdr.pkt_length Calced as %d\n", sdls_frame.hdr.pkt_length);
     }
 
-    count                 = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
+    count                 = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID + KEY_VERIFY_OFFSET);
     uint16_t pdu_data_idx = count;
 
     for (x = 0; x < pdu_keys; x++)

@@ -348,7 +348,7 @@ int32_t Crypto_Get_Sdls_Ep_Reply(uint8_t *buffer, uint16_t *length)
         return status;
     }
 
-    pkt_length = sdls_frame.hdr.pkt_length + 1;
+    pkt_length = CCSDS_HDR_SIZE + sdls_frame.hdr.pkt_length + 1;
 
     // Sanity Check on length
     if (pkt_length > TC_MAX_FRAME_SIZE)
@@ -361,6 +361,9 @@ int32_t Crypto_Get_Sdls_Ep_Reply(uint8_t *buffer, uint16_t *length)
 
     // Update length externally
     *length = pkt_length;
+
+    memset(&sdls_ep_reply, 0x00, TC_MAX_FRAME_SIZE);
+    sdls_frame.hdr.pkt_length = 0;
 
     return status;
 }

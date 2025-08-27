@@ -13,7 +13,7 @@
 static volatile uint8_t keepRunning = CRYPTO_LIB_SUCCESS;
 
 void write_vcid(uint8_t vcid) {
-    int fd = shm_open(SHM_NAME, O_CREAT | O_RDWR, 0660);
+    int fd = shm_open(SHM_NAME, O_CREAT | O_RDWR, 0666);
     if (fd < 0) { perror("shm_open");}
     if (ftruncate(fd, 1) != 0) { perror("ftruncate"); close(fd);}
 
@@ -22,12 +22,11 @@ void write_vcid(uint8_t vcid) {
     if (p == MAP_FAILED) { perror("mmap");}
 
     *p = vcid;  // write shared byte
-    printf("wrote %u\n", *p);
 }
 
 uint8_t read_vcid(void)
 {
-    int fd = shm_open(SHM_NAME, O_CREAT | O_RDWR, 0660);
+    int fd = shm_open(SHM_NAME, O_CREAT | O_RDWR, 0666);
     if (fd < 0) { perror("shm_open"); return 1; }
     if (ftruncate(fd, 1) != 0) { perror("ftruncate"); close(fd); return 1; }
 
@@ -35,7 +34,6 @@ uint8_t read_vcid(void)
     close(fd);
     if (p == MAP_FAILED) { perror("mmap"); return 1; }
 
-    printf("read %u\n", *p);
     return *p;
 }
 

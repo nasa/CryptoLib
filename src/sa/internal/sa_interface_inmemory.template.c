@@ -1780,12 +1780,17 @@ static int32_t sa_status(uint8_t *ingest)
         // Check SPI exists
         if (spi < NUM_SA)
         {
-            // printf("SIZE: %ld\n", SDLS_SA_STATUS_RPLY_SIZE);
+            
             //  Prepare for Reply
             sdls_frame.tlv_pdu.hdr.pdu_len = SDLS_SA_STATUS_RPLY_SIZE * BYTE_LEN;
-            sdls_frame.hdr.pkt_length =
-                CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
-            count = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
+
+            sdls_frame.hdr.pkt_length = SDLS_TLV_HDR_SIZE + SDLS_SA_STATUS_RPLY_SIZE - 1;  
+            if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
+            {
+                sdls_frame.hdr.pkt_length += ECSS_PUS_SIZE;
+            }
+
+            count = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID + SA_STATUS_OFFSET);
             // PDU
             sdls_ep_reply[count++] = (spi & 0xFF00) >> BYTE_LEN;
             sdls_ep_reply[count++] = (spi & 0x00FF);

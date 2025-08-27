@@ -45,9 +45,12 @@ int32_t Crypto_MC_ping(uint8_t *ingest)
 
     // Prepare for Reply
     sdls_frame.tlv_pdu.hdr.pdu_len = 0;
-    sdls_frame.hdr.pkt_length =
-        CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
-    count = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
+    sdls_frame.hdr.pkt_length = SDLS_TLV_HDR_SIZE - 1;
+    if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
+    {
+        sdls_frame.hdr.pkt_length += ECSS_PUS_SIZE;
+    }
+    count = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID + MC_PING_OFFSET);
 
 #ifdef PDU_DEBUG
     printf("MC Ping Reply: \t   0x");
@@ -78,8 +81,12 @@ int32_t Crypto_MC_status(uint8_t *ingest)
     // Prepare for Reply
     sdls_frame.tlv_pdu.hdr.pdu_len = SDLS_MC_LOG_RPLY_SIZE * BYTE_LEN;
     sdls_frame.hdr.pkt_length =
-        CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
-    count = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
+        SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
+    if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
+    {
+        sdls_frame.hdr.pkt_length += ECSS_PUS_SIZE;
+    }
+    count = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID + MC_STATUS_OFFSET);
     // PDU
     sdls_ep_reply[count] = (log_summary.num_se & 0xFF00) >> BYTE_LEN;
     count++;
@@ -122,8 +129,12 @@ int32_t Crypto_MC_dump(uint8_t *ingest)
     // Prepare for Reply
     sdls_frame.tlv_pdu.hdr.pdu_len = (SDLS_MC_DUMP_RPLY_SIZE * log_count) * BYTE_LEN;
     sdls_frame.hdr.pkt_length =
-        CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
-    count = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
+        SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
+    if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
+    {
+        sdls_frame.hdr.pkt_length += ECSS_PUS_SIZE;
+    }
+    count = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID + MC_DUMP_OFFSET);
     // PDU
     for (x = 0; x < log_count; x++)
     {
@@ -199,8 +210,12 @@ int32_t Crypto_MC_erase(uint8_t *ingest)
     // Prepare for Reply
     sdls_frame.tlv_pdu.hdr.pdu_len = SDLS_MC_LOG_RPLY_SIZE * BYTE_LEN; // 4
     sdls_frame.hdr.pkt_length =
-        CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
-    count = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
+        SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
+    if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
+    {
+        sdls_frame.hdr.pkt_length += ECSS_PUS_SIZE;
+    }
+    count = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID + MC_ERASE_OFFSET);
     // PDU
     sdls_ep_reply[count] = (log_summary.num_se & 0xFF00) >> BYTE_LEN;
     count++;
@@ -245,9 +260,13 @@ int32_t Crypto_MC_selftest(uint8_t *ingest)
     // Prepare for Reply
     sdls_frame.tlv_pdu.hdr.pdu_len = SDLS_MC_ST_RPLY_SIZE * BYTE_LEN;
     sdls_frame.hdr.pkt_length =
-        CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
+        SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
+    if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
+    {
+        sdls_frame.hdr.pkt_length += ECSS_PUS_SIZE;
+    }
     sdls_frame.tlv_pdu.data[0] = result;
-    count                      = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
+    count                      = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID + MC_SELFTEST_OFFSET);
 
     sdls_ep_reply[count] = result;
     count++;
@@ -301,18 +320,26 @@ int32_t Crypto_SA_readARSN(uint8_t *ingest)
         else
         {
             // Prepare for Reply
-            sdls_frame.tlv_pdu.hdr.pdu_len = (SPI_LEN + sa_ptr->arsn_len) * BYTE_LEN; // bits
+            sdls_frame.tlv_pdu.hdr.pdu_len = (SPI_LEN + ARSN_SIZE) * BYTE_LEN; // bits
             sdls_frame.hdr.pkt_length =
-                CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
-            uint8_t count = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
+                SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
+            if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
+            {
+                sdls_frame.hdr.pkt_length += ECSS_PUS_SIZE;
+            }
+            uint8_t count = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID + SA_READARSN_OFFSET);
 
             // Write SPI to reply
             sdls_ep_reply[count] = (spi & 0xFF00) >> BYTE_LEN;
             count++;
             sdls_ep_reply[count] = (spi & 0x00FF);
             count++;
-
-            for (x = 0; x < sa_ptr->arsn_len; x++)
+            for (x = 0; x < ARSN_SIZE - sa_ptr->shsnf_len; x++)
+            {
+                sdls_ep_reply[count] = 0x00;
+                count++;
+            }
+            for (x = 0; x < sa_ptr->shsnf_len; x++)
             {
                 sdls_ep_reply[count] = *(sa_ptr->arsn + x);
                 count++;
