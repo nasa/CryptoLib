@@ -61,8 +61,6 @@ extern "C"
 #define CRYPTO_STANDALONE_FRAMING_VCID        0x00
 #define CRYPTO_STANDALONE_FRAMING_TC_DATA_LEN 512
 
-// For shared memory access between standalone and standalone_cmd
-#define SHM_NAME "/cryptolib_byte"
 
 /*
 ** Can be used to reduce ground system error messages
