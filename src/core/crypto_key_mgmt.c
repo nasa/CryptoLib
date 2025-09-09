@@ -54,13 +54,13 @@ int32_t Crypto_Key_OTAR(void)
     int         y     = 0;
     int32_t     status = CRYPTO_LIB_SUCCESS;
 
-    printf("Entered KEY OTAR\n");
-
     int pdu_keys = ((sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - SDLS_KEYID_LEN - SDLS_IV_LEN - MAC_SIZE) /
                    (SDLS_KEYID_LEN + SDLS_KEY_LEN);
     int w        = 0;
 
+#ifdef DEBUG
     printf("PDU_KEYS: %d\n", pdu_keys);
+#endif
 
     crypto_key_t *ekp = NULL;
 
@@ -505,13 +505,17 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
     {
         sdls_frame.hdr.pkt_length =
             ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
+#ifdef PDU_DEBUG
         printf("WITH PUS: sdls_frame.hdr.pkt_length Calced as %d\n", sdls_frame.hdr.pkt_length);
+#endif
     }
     else
     {
         sdls_frame.hdr.pkt_length =
             SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
+#ifdef PDU_DEBUG
         printf("NO PUS: sdls_frame.hdr.pkt_length Calced as %d\n", sdls_frame.hdr.pkt_length);
+#endif
     }
 
     count                 = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID + KEY_VERIFY_OFFSET);
@@ -589,7 +593,6 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
         pdu_data_idx += MAC_SIZE;
 
         count += CHALLENGE_SIZE + MAC_SIZE; // Don't forget to increment count!
-        printf("count = %d\n", count);
     }
 
 #ifdef PDU_DEBUG

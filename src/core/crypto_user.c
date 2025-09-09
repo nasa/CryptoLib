@@ -136,11 +136,15 @@ int32_t Crypto_User_ModifyKey(void)
     {
         case 1: // Invalidate Key
             ekp->value[KEY_SIZE - 1]++;
+#ifdef DEBUG
             printf("Key %d value invalidated! \n", kid);
+#endif
             break;
         case 2: // Modify key state
             ekp->key_state = (uint8_t)sdls_frame.tlv_pdu.data[3] & 0x0F;
+#ifdef DEBUG
             printf("Key %d state changed to %d! \n", kid, mod);
+#endif
             break;
         default:
             // Error
@@ -191,7 +195,9 @@ int32_t Crypto_User_ModifyVCID(void)
                 {
                     // TODO Check this
                     tm_frame_sec_hdr.spi = i;
+#ifdef DEBUG
                     printf("TM Frame SPI changed to %d \n", i);
+#endif
                     break;
                 }
             }

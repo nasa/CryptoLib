@@ -1042,7 +1042,9 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                     }
                     else
                     {
+#ifdef PDU_DEBUG
                         printf(KRED "TLV_DATA_SIZE LT pkt_length OR max_tlv LT pkt_length\n" RESET);
+#endif
                         status = CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
                         return status;
                     }

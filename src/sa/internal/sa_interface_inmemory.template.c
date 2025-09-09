@@ -1023,7 +1023,9 @@ static int32_t sa_start(TC_t *tc_frame)
     int            i;
     int            num_gvcid = (((sdls_frame.tlv_pdu.hdr.pdu_len / 8) - 2) / 4);
 
+#ifdef SA_DEBUG
     printf("\nParsed GVCID: %d\n", num_gvcid);
+#endif
 
     // Read ingest
     spi = ((uint8_t)sdls_frame.tlv_pdu.data[0] << 8) | (uint8_t)sdls_frame.tlv_pdu.data[1];
@@ -1062,7 +1064,6 @@ static int32_t sa_start(TC_t *tc_frame)
                 }
 
                 count += 4;
-                printf("\tMAPID: %d\n", gvcid.mapid);
 
                 // TC
                 if (gvcid.vcid != tc_frame->tc_header.vcid)
@@ -1696,7 +1697,9 @@ static int32_t sa_setARSN(TC_t *tc_frame)
     }
     else
     {
+#ifdef PDU_DEBUG
         printf("sa_setARSN ERROR: SPI %d does not exist.\n", spi);
+#endif
     }
 
     return CRYPTO_LIB_SUCCESS;
@@ -1798,7 +1801,9 @@ static int32_t sa_status(uint8_t *ingest)
         }
         else
         {
+#ifdef SA_DEBUG
             printf("sa_status ERROR: SPI %d does not exist.\n", spi);
+#endif
             status = CRYPTO_LIB_ERR_SPI_INDEX_OOB;
         }
 

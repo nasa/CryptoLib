@@ -75,7 +75,9 @@ int32_t Crypto_TC_Get_SA_Service_Type(uint8_t *sa_service_type, SecurityAssociat
     {
         // Probably unnecessary check
         // Leaving for now as it would be cleaner in SA to have an association enum returned I believe
+#ifdef SA_DEBUG
         printf(KRED "Error: SA Service Type is not defined! \n" RESET);
+#endif
         status = CRYPTO_LIB_ERROR;
         mc_if->mc_log(status);
         return status;
@@ -168,7 +170,9 @@ int32_t Crypto_TC_Validate_SA_Service_Type(uint8_t sa_service_type)
     if ((sa_service_type != SA_PLAINTEXT) && (sa_service_type != SA_AUTHENTICATED_ENCRYPTION) &&
         (sa_service_type != SA_ENCRYPTION) && (sa_service_type != SA_AUTHENTICATION))
     {
+#ifdef SA_DEBUG
         printf(KRED "Unknown SA Service Type Detected!\n" RESET);
+#endif
         status = CRYPTO_LIB_ERR_INVALID_SA_SERVICE_TYPE;
     }
     return status;
@@ -236,7 +240,9 @@ int32_t Crypto_TC_Frame_Validation(uint16_t *p_enc_frame_len)
     // Check minimum frame size per CCSDS 232.0-B-3
     if (*p_enc_frame_len < TC_MIN_FRAME_SIZE)
     {
+#ifdef TC_DEBUG
         printf(KRED "Error: New frame would violate minimum TC frame size requirement! \n" RESET);
+#endif
         status = CRYPTO_LIB_ERR_TC_FRAME_TOO_SHORT;
         mc_if->mc_log(status);
         return status;
@@ -248,8 +254,8 @@ int32_t Crypto_TC_Frame_Validation(uint16_t *p_enc_frame_len)
 #ifdef DEBUG
         printf("Managed length is: %d\n", tc_current_managed_parameters_struct.max_frame_size);
         printf("New enc frame length will be: %d\n", *p_enc_frame_len);
-#endif
         printf(KRED "Error: New frame would violate maximum tc frame managed parameter! \n" RESET);
+#endif
         status = CRYPTO_LIB_ERR_TC_FRAME_SIZE_EXCEEDS_MANAGED_PARAM_MAX_LIMIT;
         mc_if->mc_log(status);
         return status;
@@ -257,7 +263,9 @@ int32_t Crypto_TC_Frame_Validation(uint16_t *p_enc_frame_len)
     // Ensure the frame to be created will not violate spec max length
     if ((*p_enc_frame_len > 1024) && status == CRYPTO_LIB_SUCCESS)
     {
+#ifdef TC_DEBUG
         printf(KRED "Error: New frame would violate specification max TC frame size! \n" RESET);
+#endif
         status = CRYPTO_LIB_ERR_TC_FRAME_SIZE_EXCEEDS_SPEC_LIMIT;
         mc_if->mc_log(status);
         return status;
@@ -278,7 +286,9 @@ int32_t Crypto_TC_Accio_Buffer(uint8_t **p_new_enc_frame, uint16_t *p_enc_frame_
     *p_new_enc_frame = (uint8_t *)malloc((*p_enc_frame_len) * sizeof(uint8_t));
     if (!(*p_new_enc_frame)) // Fix the check to properly verify the allocation
     {
+#ifdef TC_DEBUG
         printf(KRED "Error: Malloc for encrypted output buffer failed! \n" RESET);
+#endif
         status = CRYPTO_LIB_ERROR;
         mc_if->mc_log(status);
         return status;
@@ -731,7 +741,9 @@ int32_t Crypto_TC_Check_Init_Setup(uint16_t in_frame_length)
 
     if ((crypto_config.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
     {
+#ifdef TC_DEBUG
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
+#endif
         status = CRYPTO_LIB_ERR_NO_CONFIG;
         // Can't mc_log since it's not configured
         return status; // return immediately so a NULL crypto_config is not dereferenced later
@@ -762,7 +774,9 @@ int32_t Crypto_TC_Sanity_Setup(const uint8_t *p_in_frame, const uint16_t in_fram
     if (p_in_frame == NULL)
     {
         status = CRYPTO_LIB_ERR_NULL_BUFFER;
+#ifdef TC_DEBUG
         printf(KRED "Error: Input Buffer NULL! \n" RESET);
+#endif
         mc_if->mc_log(status);
         return status; // Just return here, nothing can be done.
     }
@@ -1626,7 +1640,9 @@ int32_t Crypto_TC_Process_Sanity_Check(int *len_ingest)
 
     if ((mc_if == NULL) || (crypto_config.init_status == UNITIALIZED))
     {
+#ifdef TC_DEBUG
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
+#endif
         status = CRYPTO_LIB_ERR_NO_CONFIG;
         mc_if->mc_log(status);
     }
