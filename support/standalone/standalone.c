@@ -146,7 +146,7 @@ int32_t crypto_standalone_get_command(const char *str)
     return status;
 }
 
-int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens)
+int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char* tokens)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
@@ -1276,7 +1276,7 @@ int main(int argc, char *argv[])
         /* Process command if valid */
         if (num_input_tokens >= 0)
         {
-            crypto_standalone_process_command(command, num_input_tokens);
+            crypto_standalone_process_command(command, num_input_tokens, &input_tokens[0][0]);
         }
     }
 
