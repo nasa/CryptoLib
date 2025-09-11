@@ -130,13 +130,13 @@ int32_t update_sa_from_ptr(SecurityAssociation_t *sa_ptr)
     {
         return CRYPTO_LIB_ERR_NULL_SA;
     }
-    
-    int location      = sa_ptr->spi;
+
+    int location = sa_ptr->spi;
     if (location < 0 || location >= NUM_SA)
     {
         return CRYPTO_LIB_ERR_SPI_INDEX_OOB;
     }
-    
+
     sa[location].spi  = sa_ptr->spi;
     sa[location].ekid = sa_ptr->ekid;
     sa[location].akid = sa_ptr->akid;
@@ -172,7 +172,7 @@ int32_t update_sa_from_ptr(SecurityAssociation_t *sa_ptr)
     }
     sa[location].arsnw_len = sa_ptr->arsnw_len;
     sa[location].arsnw     = sa_ptr->arsnw;
-    
+
     return CRYPTO_LIB_SUCCESS;
 }
 
@@ -1510,7 +1510,8 @@ static int32_t sa_create(TC_t *tc_frame)
         temp_sa->arsnw_len = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
         for (x = 0; x < temp_sa->arsnw_len; x++)
         {
-            temp_sa->arsnw = temp_sa->arsnw | (((uint8_t)sdls_frame.tlv_pdu.data[count++]) << ((temp_sa->arsnw_len - 1 - x) * 8));
+            temp_sa->arsnw =
+                temp_sa->arsnw | (((uint8_t)sdls_frame.tlv_pdu.data[count++]) << ((temp_sa->arsnw_len - 1 - x) * 8));
         }
 
         // Set state to unkeyed
@@ -1670,11 +1671,11 @@ static int32_t sa_delete(TC_t *tc_frame)
 static int32_t sa_setARSN(TC_t *tc_frame)
 {
     // Local variables
-    uint16_t spi         = 0x0000;
-    uint16_t control_spi = 0x0000;
-    int32_t  status      = CRYPTO_LIB_SUCCESS;
-    SecurityAssociation_t *temp_sa = NULL;
-    int      x;
+    uint16_t               spi         = 0x0000;
+    uint16_t               control_spi = 0x0000;
+    int32_t                status      = CRYPTO_LIB_SUCCESS;
+    SecurityAssociation_t *temp_sa     = NULL;
+    int                    x;
 
     // Read ingest
     spi = ((uint8_t)sdls_frame.tlv_pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.tlv_pdu.data[1];
@@ -1808,11 +1809,11 @@ static int32_t sa_status(uint8_t *ingest)
         // Check SPI exists
         if (spi < NUM_SA)
         {
-            
+
             //  Prepare for Reply
             sdls_frame.tlv_pdu.hdr.pdu_len = SDLS_SA_STATUS_RPLY_SIZE * BYTE_LEN;
 
-            sdls_frame.hdr.pkt_length = SDLS_TLV_HDR_SIZE + SDLS_SA_STATUS_RPLY_SIZE - 1;  
+            sdls_frame.hdr.pkt_length = SDLS_TLV_HDR_SIZE + SDLS_SA_STATUS_RPLY_SIZE - 1;
             if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
             {
                 sdls_frame.hdr.pkt_length += ECSS_PUS_SIZE;

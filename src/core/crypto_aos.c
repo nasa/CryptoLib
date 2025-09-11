@@ -396,7 +396,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         status = CRYPTO_LIB_ERROR;
 #ifdef AOS_DEBUG
         printf(KRED "Error: pkcs_padding length %d is less than required %d\n" RESET, pkcs_padding, cbc_padding);
-#endif        
+#endif
         mc_if->mc_log(status);
         return status;
     }

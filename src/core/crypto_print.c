@@ -189,19 +189,19 @@ void Crypto_ccsdsPrint(CCSDS_t *sdls_frame)
     printf("\t\t pid        = 0x%01x \n", sdls_frame->tlv_pdu.hdr.pid);
     printf("\t\t pdu_len    = 0x%04x \n", sdls_frame->tlv_pdu.hdr.pdu_len);
 #endif
-    if ((sdls_frame->tlv_pdu.hdr.pdu_len/8) >= 1)
+    if ((sdls_frame->tlv_pdu.hdr.pdu_len / 8) >= 1)
     {
 #ifdef DEBUG
         printf("\t\t data[0]    = 0x%02x \n", sdls_frame->tlv_pdu.data[0]);
 #endif
     }
-    if ((sdls_frame->tlv_pdu.hdr.pdu_len/8) >= 2)
+    if ((sdls_frame->tlv_pdu.hdr.pdu_len / 8) >= 2)
     {
 #ifdef DEBUG
         printf("\t\t data[1]    = 0x%02x \n", sdls_frame->tlv_pdu.data[1]);
 #endif
     }
-    if ((sdls_frame->tlv_pdu.hdr.pdu_len/8) >= 3)
+    if ((sdls_frame->tlv_pdu.hdr.pdu_len / 8) >= 3)
     {
 #ifdef DEBUG
         printf("\t\t data[2]    = 0x%02x \n", sdls_frame->tlv_pdu.data[2]);
@@ -210,8 +210,6 @@ void Crypto_ccsdsPrint(CCSDS_t *sdls_frame)
 #ifdef DEBUG
     printf("\n");
 #endif
-
-
 }
 
 /**
@@ -307,14 +305,14 @@ void Crypto_saPrint(SecurityAssociation_t *sa)
  **/
 void Crypto_hexprint(const void *c, size_t n)
 {
-    const uint8_t *t   = c;
-    t = t;
-    size_t         idx = 0;
+    const uint8_t *t = c;
+    t                = t;
+    size_t idx       = 0;
     if (c == NULL)
         return;
     while (idx < n)
     {
-        
+
 #ifdef DEBUG
         printf("%02x", t[idx]);
 #endif
@@ -334,8 +332,8 @@ void Crypto_hexprint(const void *c, size_t n)
 void Crypto_binprint(void *c, size_t n)
 {
     uint8_t *t = c;
-    t = t;
-    int      q;
+    t          = t;
+    int q;
 
     if (c == NULL)
         return;

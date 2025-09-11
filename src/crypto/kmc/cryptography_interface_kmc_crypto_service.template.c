@@ -1078,7 +1078,7 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
                 status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE;
 #ifdef DEBUG
                 fprintf(stderr, "KMC Crypto Generic Failure Response:\n%s\n", chunk_write->response);
-#endif                
+#endif
                 return status;
             }
             json_idx++;

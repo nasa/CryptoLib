@@ -24,11 +24,11 @@
 #include "standalone.h"
 
 #define _POSIX_C_SOURCE 200809L
-#include <fcntl.h> 
-#include <sys/mman.h> 
-#include <sys/stat.h> 
-#include <unistd.h> 
-#include <stdint.h> 
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <stdint.h>
 #include <stdio.h>
 
 /*
@@ -105,8 +105,8 @@ void crypto_standalone_print_help(void)
 int32_t crypto_standalone_get_command(const char *str)
 {
     int32_t status = CRYPTO_CMD_UNKNOWN;
-    str = str;
-    char    lcmd[CRYPTO_MAX_INPUT_TOKEN_SIZE];
+    str            = str;
+    char lcmd[CRYPTO_MAX_INPUT_TOKEN_SIZE];
 
     strncpy(lcmd, str, CRYPTO_MAX_INPUT_TOKEN_SIZE);
     crypto_standalone_to_lower(lcmd);
@@ -146,7 +146,7 @@ int32_t crypto_standalone_get_command(const char *str)
     return status;
 }
 
-int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char* tokens)
+int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char *tokens)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
@@ -435,7 +435,8 @@ int32_t crypto_standalone_socket_init(udp_info_t *sock, int32_t port, uint8_t bi
     else
     {
         // UDP: bind only if needed
-        if (bind_sock == 0 && sock->port != TM_PROCESS_FWD_PORT && sock->port != TC_APPLY_FWD_PORT && sock->port != 6061)
+        if (bind_sock == 0 && sock->port != TM_PROCESS_FWD_PORT && sock->port != TC_APPLY_FWD_PORT &&
+            sock->port != 6061)
         {
             status = bind(sock->sockfd, (struct sockaddr *)&sock->saddr, sizeof(sock->saddr));
             if (status != 0)
@@ -471,7 +472,6 @@ int32_t crypto_standalone_socket_init(udp_info_t *sock, int32_t port, uint8_t bi
                     return CRYPTO_LIB_ERROR;
                 }
             }
-            
         }
     }
 
@@ -498,7 +498,7 @@ void crypto_standalone_tc_frame(uint8_t *in_data, uint16_t in_length, uint8_t *o
         *out_length = CRYPTO_STANDALONE_FRAMING_TC_DATA_LEN + 6;
     }
 
-    //printf("VCID: %d\n", read_vcid());
+    // printf("VCID: %d\n", read_vcid());
     /* TC Header */
     out_data[0] = 0x20;
     out_data[1] = CRYPTO_STANDALONE_FRAMING_SCID;
@@ -916,11 +916,10 @@ void crypto_standalone_cleanup(const int signal)
     return;
 }
 
-
 int32_t crypto_standalone_set_vcid(uint8_t *cmd_in)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    uint8_t vcid = cmd_in[0];
+    uint8_t vcid   = cmd_in[0];
     /* Confirm new VCID valid */
     if (vcid < 64)
     {
@@ -933,8 +932,9 @@ int32_t crypto_standalone_set_vcid(uint8_t *cmd_in)
             return status;
         }
         Crypto_saPrint(test_association);
-    
-        if ((test_association->sa_state == SA_OPERATIONAL) && (test_association->gvcid_blk.mapid == TYPE_TC) && (test_association->gvcid_blk.scid == SCID))
+
+        if ((test_association->sa_state == SA_OPERATIONAL) && (test_association->gvcid_blk.mapid == TYPE_TC) &&
+            (test_association->gvcid_blk.scid == SCID))
         {
             tc_vcid = vcid;
             printf("Changed active virtual channel (VCID) to %d \n", vcid);
@@ -951,7 +951,6 @@ int32_t crypto_standalone_set_vcid(uint8_t *cmd_in)
     }
     return status;
 }
-
 
 int32_t crypto_standalone_direct_process_command(uint8_t *cmd_in)
 {
@@ -1030,8 +1029,7 @@ int32_t crypto_standalone_direct_process_command(uint8_t *cmd_in)
     return status;
 }
 
-
-void *crypto_standalone_direct_command(void* socks)
+void *crypto_standalone_direct_command(void *socks)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
@@ -1050,8 +1048,8 @@ void *crypto_standalone_direct_command(void* socks)
     while (keepRunning == CRYPTO_LIB_SUCCESS)
     {
         // /* Receive */
-        status = recvfrom(cmd_sock->sockfd, cmd_in, sizeof(cmd_in), 0,
-                          (struct sockaddr *)&cmd_sock->ip_address, (socklen_t *)&sockaddr_size);
+        status = recvfrom(cmd_sock->sockfd, cmd_in, sizeof(cmd_in), 0, (struct sockaddr *)&cmd_sock->ip_address,
+                          (socklen_t *)&sockaddr_size);
         if (status != -1)
         {
             cmd_in_len = status;
@@ -1075,15 +1073,16 @@ void *crypto_standalone_direct_command(void* socks)
             if (status == CRYPTO_LIB_SUCCESS)
             {
                 // set status
-                tlm_out[tlm_out_len-1] = 0x01;
+                tlm_out[tlm_out_len - 1] = 0x01;
             }
             else
             {
                 // set status
-                tlm_out[tlm_out_len-1] = 0x00;
+                tlm_out[tlm_out_len - 1] = 0x00;
             }
 
-            sendto(tlm_sock->sockfd, &tlm_out, tlm_out_len, 0, (struct sockaddr *)&tlm_sock->saddr, sizeof(tlm_sock->saddr));
+            sendto(tlm_sock->sockfd, &tlm_out, tlm_out_len, 0, (struct sockaddr *)&tlm_sock->saddr,
+                   sizeof(tlm_sock->saddr));
         }
         usleep(100);
     }
@@ -1110,18 +1109,18 @@ int main(int argc, char *argv[])
     pthread_t tm_process_thread;
     pthread_t cmd_thread;
 
-    tc_apply.read.ip_address    = CRYPTOLIB_HOSTNAME;
-    tc_apply.read.port          = TC_APPLY_PORT;
-    tc_apply.write.ip_address   = SC_HOSTNAME;
-    tc_apply.write.port         = TC_APPLY_FWD_PORT;
+    tc_apply.read.ip_address  = CRYPTOLIB_HOSTNAME;
+    tc_apply.read.port        = TC_APPLY_PORT;
+    tc_apply.write.ip_address = SC_HOSTNAME;
+    tc_apply.write.port       = TC_APPLY_FWD_PORT;
 
     tm_process.read.ip_address  = CRYPTOLIB_HOSTNAME;
     tm_process.read.port        = TM_PROCESS_PORT;
     tm_process.write.ip_address = GSW_HOSTNAME;
     tm_process.write.port       = TM_PROCESS_FWD_PORT;
 
-    cmd.read.ip_address = "cryptolib";
-    cmd.read.port       = CRYPTO_CMD_PORT;
+    cmd.read.ip_address  = "cryptolib";
+    cmd.read.port        = CRYPTO_CMD_PORT;
     cmd.write.ip_address = GSW_HOSTNAME;
     cmd.write.port       = CRYPTO_TLM_PORT;
 
@@ -1230,14 +1229,14 @@ int main(int argc, char *argv[])
             perror("Failed to create tc_apply_thread thread");
             keepRunning = CRYPTO_LIB_ERROR;
         }
-        
+
         status = pthread_create(&tm_process_thread, NULL, *crypto_standalone_tm_process, &tm_process);
         if (status < 0)
         {
             perror("Failed to create tm_process_thread thread");
             keepRunning = CRYPTO_LIB_ERROR;
         }
-        
+
         status = pthread_create(&cmd_thread, NULL, *crypto_standalone_direct_command, &cmd);
         if (status < 0)
         {
@@ -1253,7 +1252,7 @@ int main(int argc, char *argv[])
         command          = CRYPTO_CMD_UNKNOWN;
 
         /* Read user input */
-        //printf(CRYPTO_PROMPT);
+        // printf(CRYPTO_PROMPT);
         fgets(input_buf, CRYPTO_MAX_INPUT_BUF, stdin);
 
         /* Tokenize line buffer */

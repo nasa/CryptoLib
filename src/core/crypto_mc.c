@@ -45,7 +45,7 @@ int32_t Crypto_MC_ping(uint8_t *ingest)
 
     // Prepare for Reply
     sdls_frame.tlv_pdu.hdr.pdu_len = 0;
-    sdls_frame.hdr.pkt_length = SDLS_TLV_HDR_SIZE - 1;
+    sdls_frame.hdr.pkt_length      = SDLS_TLV_HDR_SIZE - 1;
     if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
     {
         sdls_frame.hdr.pkt_length += ECSS_PUS_SIZE;
@@ -80,8 +80,7 @@ int32_t Crypto_MC_status(uint8_t *ingest)
 
     // Prepare for Reply
     sdls_frame.tlv_pdu.hdr.pdu_len = SDLS_MC_LOG_RPLY_SIZE * BYTE_LEN;
-    sdls_frame.hdr.pkt_length =
-        SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
+    sdls_frame.hdr.pkt_length      = SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
     if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
     {
         sdls_frame.hdr.pkt_length += ECSS_PUS_SIZE;
@@ -128,8 +127,7 @@ int32_t Crypto_MC_dump(uint8_t *ingest)
 
     // Prepare for Reply
     sdls_frame.tlv_pdu.hdr.pdu_len = (SDLS_MC_DUMP_RPLY_SIZE * log_count) * BYTE_LEN;
-    sdls_frame.hdr.pkt_length =
-        SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
+    sdls_frame.hdr.pkt_length      = SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
     if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
     {
         sdls_frame.hdr.pkt_length += ECSS_PUS_SIZE;
@@ -209,8 +207,7 @@ int32_t Crypto_MC_erase(uint8_t *ingest)
 
     // Prepare for Reply
     sdls_frame.tlv_pdu.hdr.pdu_len = SDLS_MC_LOG_RPLY_SIZE * BYTE_LEN; // 4
-    sdls_frame.hdr.pkt_length =
-        SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
+    sdls_frame.hdr.pkt_length      = SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
     if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
     {
         sdls_frame.hdr.pkt_length += ECSS_PUS_SIZE;
@@ -259,8 +256,7 @@ int32_t Crypto_MC_selftest(uint8_t *ingest)
 
     // Prepare for Reply
     sdls_frame.tlv_pdu.hdr.pdu_len = SDLS_MC_ST_RPLY_SIZE * BYTE_LEN;
-    sdls_frame.hdr.pkt_length =
-        SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
+    sdls_frame.hdr.pkt_length      = SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
     if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
     {
         sdls_frame.hdr.pkt_length += ECSS_PUS_SIZE;
@@ -321,8 +317,7 @@ int32_t Crypto_SA_readARSN(uint8_t *ingest)
         {
             // Prepare for Reply
             sdls_frame.tlv_pdu.hdr.pdu_len = (SPI_LEN + ARSN_SIZE) * BYTE_LEN; // bits
-            sdls_frame.hdr.pkt_length =
-                SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
+            sdls_frame.hdr.pkt_length      = SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
             if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
             {
                 sdls_frame.hdr.pkt_length += ECSS_PUS_SIZE;

@@ -63,14 +63,13 @@ extern "C"
 #define TM_PROCESS_FWD_PORT 6011
 #endif
 
-#define CRYPTO_CMD_PORT     6060
-#define CRYPTO_TLM_PORT     6061
+#define CRYPTO_CMD_PORT 6060
+#define CRYPTO_TLM_PORT 6061
 
 #define CRYPTO_STANDALONE_HANDLE_FRAMING
 #define CRYPTO_STANDALONE_FRAMING_SCID        3
 #define CRYPTO_STANDALONE_FRAMING_VCID        0x00
 #define CRYPTO_STANDALONE_FRAMING_TC_DATA_LEN 512
-
 
 /*
 ** Can be used to reduce ground system error messages
@@ -116,7 +115,6 @@ extern "C"
         udp_info_t read;
         udp_info_t write;
     } udp_interface_t;
-
 
 #ifdef __cplusplus
 } /* Close scope of 'extern "C"' declaration which encloses file. */

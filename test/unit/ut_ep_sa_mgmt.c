@@ -702,7 +702,8 @@ UTEST(EP_SA_MGMT, SA_CREATE_60)
 
     status = CRYPTO_LIB_SUCCESS;
 
-    char *buffer_CREATE_h = "20031c5400c0003f1980c000004a110230003ccc0810010110deadbeefdeadbeefdeadbeefdeadbeef01020020deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef0400000000020005";
+    char *buffer_CREATE_h = "20031c5400c0003f1980c000004a110230003ccc0810010110deadbeefdeadbeefdeadbeefdeadbeef01020020"
+                            "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef0400000000020005";
 
     uint8_t *buffer_CREATE_b   = NULL;
     int      buffer_CREATE_len = 0;
