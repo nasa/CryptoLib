@@ -284,7 +284,7 @@ int32_t Crypto_window(uint8_t *actual, uint8_t *expected, int length, int window
  *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 7.4 (Management)
  **/
-uint8_t Crypto_Prep_Reply(uint8_t *reply, uint8_t appID)
+uint8_t Crypto_Prep_Reply(uint8_t *reply, uint16_t appID)
 {
     uint8_t count = 0;
     if (reply == NULL)
@@ -300,7 +300,7 @@ uint8_t Crypto_Prep_Reply(uint8_t *reply, uint8_t appID)
 
     // Fill reply with reply header
     reply[count++] = (sdls_frame.hdr.pvn << 5) | (sdls_frame.hdr.type << 4) | (sdls_frame.hdr.shdr << 3) |
-                     ((sdls_frame.hdr.appID & 0x700 >> 8));
+                     ((sdls_frame.hdr.appID & 0x700) >> 8);
     reply[count++] = (sdls_frame.hdr.appID & 0x00FF);
     reply[count++] = (sdls_frame.hdr.seq << 6) | ((sdls_frame.hdr.pktid & 0x3F00) >> 8);
     reply[count++] = (sdls_frame.hdr.pktid & 0x00FF);
@@ -348,7 +348,7 @@ int32_t Crypto_Get_Sdls_Ep_Reply(uint8_t *buffer, uint16_t *length)
         return status;
     }
 
-    pkt_length = sdls_frame.hdr.pkt_length + 1;
+    pkt_length = CCSDS_HDR_SIZE + sdls_frame.hdr.pkt_length + 1;
 
     // Sanity Check on length
     if (pkt_length > TC_MAX_FRAME_SIZE)
@@ -361,6 +361,9 @@ int32_t Crypto_Get_Sdls_Ep_Reply(uint8_t *buffer, uint16_t *length)
 
     // Update length externally
     *length = pkt_length;
+
+    memset(&sdls_ep_reply, 0x00, TC_MAX_FRAME_SIZE);
+    sdls_frame.hdr.pkt_length = 0;
 
     return status;
 }
@@ -1013,7 +1016,15 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                     uint16_t max_tlv = tc_sdls_processed_frame->tc_header.fl - CCSDS_HDR_SIZE - SDLS_TLV_HDR_SIZE;
                     len_ingest       = len_ingest; // suppress error for now
 #ifdef PDU_DEBUG
+                    printf("sdls_frame.tlv_pdu.hdr.type: %d\n", sdls_frame.tlv_pdu.hdr.type);
+                    printf("sdls_frame.tlv_pdu.hdr.uf: %d\n", sdls_frame.tlv_pdu.hdr.uf);
+                    printf("sdls_frame.tlv_pdu.hdr.sg: %d\n", sdls_frame.tlv_pdu.hdr.sg);
+                    printf("sdls_frame.tlv_pdu.hdr.pid: %d\n", sdls_frame.tlv_pdu.hdr.pid);
+
                     printf("PDU_LEN: %d\n", sdls_frame.tlv_pdu.hdr.pdu_len);
+                    printf("MAX_TLV: %d\n", max_tlv);
+                    printf("TLV_DATA_SIZE: %d\n", TLV_DATA_SIZE);
+                    printf("sdls_frame.hdr.pkt_length: %d\n", sdls_frame.hdr.pkt_length);
 #endif
                     if ((sdls_frame.tlv_pdu.hdr.pdu_len / 8) > max_tlv)
                     {
@@ -1031,6 +1042,9 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                     }
                     else
                     {
+#ifdef PDU_DEBUG
+                        printf(KRED "TLV_DATA_SIZE LT pkt_length OR max_tlv LT pkt_length\n" RESET);
+#endif
                         status = CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
                         return status;
                     }

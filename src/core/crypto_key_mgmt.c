@@ -49,14 +49,19 @@ int32_t Crypto_Key_OTAR(void)
 {
     // Local variables
     SDLS_OTAR_t packet;
-    int         count = 0;
-    int         x     = 0;
-    int         y;
+    int         count  = 0;
+    int         x      = 0;
+    int         y      = 0;
     int32_t     status = CRYPTO_LIB_SUCCESS;
 
     int pdu_keys = ((sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - SDLS_KEYID_LEN - SDLS_IV_LEN - MAC_SIZE) /
                    (SDLS_KEYID_LEN + SDLS_KEY_LEN);
-    int           w;
+    int w = 0;
+
+#ifdef DEBUG
+    printf("PDU_KEYS: %d\n", pdu_keys);
+#endif
+
     crypto_key_t *ekp = NULL;
 
 #ifdef DEBUG
@@ -404,11 +409,13 @@ int32_t Crypto_Key_inventory(uint8_t *ingest)
 
     // Prepare for Reply
     range                          = packet.kid_last - packet.kid_first + 1;
-    sdls_frame.tlv_pdu.hdr.pdu_len = (SDLS_KEY_INVENTORY_RPLY_SIZE * (range)) * BYTE_LEN;
-    sdls_frame.hdr.pkt_length      = CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE +
-                                (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1 +
-                                2; // 2 = Num Keys Returned Field (2 Bytes)
-    count = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
+    sdls_frame.tlv_pdu.hdr.pdu_len = (2 + (SDLS_KEY_INVENTORY_RPLY_SIZE * (range))) * BYTE_LEN;
+    sdls_frame.hdr.pkt_length      = SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
+    if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
+    {
+        sdls_frame.hdr.pkt_length += ECSS_PUS_SIZE;
+    }
+    count = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID + KEY_INVENTORY_OFFSET);
 
     sdls_ep_reply[count++] = ((range & 0xFF00) >> BYTE_LEN);
     sdls_ep_reply[count++] = (range & 0x00FF);
@@ -495,18 +502,20 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
     // length = pdu_len + HDR + PUS - 1 (per CCSDS Convention)
     if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
     {
-        sdls_frame.hdr.pkt_length =
-            CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
-        printf("NO PUS: sdls_frame.hdr.pkt_length Calced as %d\n", sdls_frame.hdr.pkt_length);
+        sdls_frame.hdr.pkt_length = ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
+#ifdef PDU_DEBUG
+        printf("WITH PUS: sdls_frame.hdr.pkt_length Calced as %d\n", sdls_frame.hdr.pkt_length);
+#endif
     }
     else
     {
-        sdls_frame.hdr.pkt_length =
-            CCSDS_HDR_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
-        printf("WITH PUS: sdls_frame.hdr.pkt_length Calced as %d\n", sdls_frame.hdr.pkt_length);
+        sdls_frame.hdr.pkt_length = SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
+#ifdef PDU_DEBUG
+        printf("NO PUS: sdls_frame.hdr.pkt_length Calced as %d\n", sdls_frame.hdr.pkt_length);
+#endif
     }
 
-    count                 = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
+    count                 = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID + KEY_VERIFY_OFFSET);
     uint16_t pdu_data_idx = count;
 
     for (x = 0; x < pdu_keys; x++)
@@ -581,7 +590,6 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
         pdu_data_idx += MAC_SIZE;
 
         count += CHALLENGE_SIZE + MAC_SIZE; // Don't forget to increment count!
-        printf("count = %d\n", count);
     }
 
 #ifdef PDU_DEBUG

@@ -132,8 +132,20 @@
 #define CHALLENGE_SIZE      16   /* bytes */
 #define CHALLENGE_MAC_SIZE  16   /* bytes */
 #define BYTE_LEN            8    /* bits */
-#define CRYPTOLIB_APPID     128
+#define CRYPTOLIB_APPID     0x0180
 #define MAX_IV_LEN          32 /* bytes */
+
+// APPID Offsets for EP Replies (TLM)
+#define KEY_INVENTORY_OFFSET 0x1
+#define KEY_VERIFY_OFFSET    0x2
+#define MC_PING_OFFSET       0x3
+#define MC_STATUS_OFFSET     0x4
+#define MC_DUMP_OFFSET       0x5
+#define MC_ERASE_OFFSET      0x6
+#define MC_SELFTEST_OFFSET   0x7
+#define SA_READARSN_OFFSET   0x8
+#define SA_STATUS_OFFSET     0x9
+#define USER_IDLE_OFFSET     0xA
 
 // Configurable via build flags
 #ifndef NUM_SA

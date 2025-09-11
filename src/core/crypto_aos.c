@@ -81,7 +81,9 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
 
     if ((crypto_config.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
     {
+#ifdef AOS_DEBUG
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
+#endif
         status = CRYPTO_LIB_ERR_NO_CONFIG;
         // Can't mc_log since it's not configured
         return status; // return immediately so a NULL crypto_config is not dereferenced later
@@ -216,7 +218,9 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     {
         // Probably unnecessary check
         // Leaving for now as it would be cleaner in SA to have an association enum returned I believe
+#ifdef AOS_DEBUG
         printf(KRED "Error: SA Service Type is not defined! \n" RESET);
+#endif
         status = CRYPTO_LIB_ERROR;
         mc_if->mc_log(status);
         return status;
@@ -390,7 +394,9 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     if (pkcs_padding < cbc_padding)
     {
         status = CRYPTO_LIB_ERROR;
+#ifdef AOS_DEBUG
         printf(KRED "Error: pkcs_padding length %d is less than required %d\n" RESET, pkcs_padding, cbc_padding);
+#endif
         mc_if->mc_log(status);
         return status;
     }
@@ -540,7 +546,9 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
             if (sa_ptr->abm_len < aad_len)
             {
                 status = CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
+#ifdef AOS_DEBUG
                 printf(KRED "Error: abm_len of %d < aad_len of %d\n" RESET, sa_ptr->abm_len, aad_len);
+#endif
                 mc_if->mc_log(status);
                 return status;
             }
@@ -860,7 +868,9 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, uint8
     // Query SA DB for active SA / SDLS parameters
     if (sa_if == NULL) // This should not happen, but tested here for safety
     {
+#ifdef AOS_DEBUG
         printf(KRED "ERROR: SA DB Not initalized! -- CRYPTO_LIB_ERR_NO_INIT, Will Exit\n" RESET);
+#endif
         status = CRYPTO_LIB_ERR_NO_INIT;
         return status;
     }

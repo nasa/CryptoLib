@@ -149,7 +149,9 @@ static int32_t cryptography_config(void)
     // Error out if Crypto_Config_Kmc_Crypto_Service(...) function was not called before intializing library.
     if (cryptography_kmc_crypto_config == NULL)
     {
+#ifdef DEBUG
         fprintf(stderr, "You must configure the KMC Crypto Service before starting the interface!\n");
+#endif
         status = CRYPTOGRAPHY_KMC_CRYPTO_SERVICE_CONFIGURATION_NOT_COMPLETE;
         return status;
     }
@@ -346,7 +348,9 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
     if (parse_result < 0)
     {
         status = CRYPTOGRAHPY_KMC_CRYPTO_JSON_PARSE_ERROR;
+#ifdef DEBUG
         printf("Failed to parse JSON: %d\n", parse_result);
+#endif
         return status;
     }
 
@@ -448,7 +452,9 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
             if (http_code != 200)
             {
                 status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE;
+#ifdef DEBUG
                 fprintf(stderr, "KMC Crypto Failure Response:\n%s\n", chunk_write->response);
+#endif
                 return status;
             }
             free(http_code_str);
@@ -589,7 +595,9 @@ static int32_t cryptography_decrypt(uint8_t *data_out, size_t len_data_out, uint
     if (parse_result < 0)
     {
         status = CRYPTOGRAHPY_KMC_CRYPTO_JSON_PARSE_ERROR;
+#ifdef DEBUG
         printf("Failed to parse JSON: %d\n", parse_result);
+#endif
         return status;
     }
 
@@ -635,7 +643,9 @@ static int32_t cryptography_decrypt(uint8_t *data_out, size_t len_data_out, uint
             if (http_code != 200)
             {
                 status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE;
+#ifdef DEBUG
                 fprintf(stderr, "KMC Crypto Failure Response:\n%s\n", chunk_write->response);
+#endif
                 return status;
             }
             free(http_code_str);
@@ -786,7 +796,9 @@ static int32_t cryptography_authenticate(uint8_t *data_out, size_t len_data_out,
     if (parse_result < 0)
     {
         status = CRYPTOGRAHPY_KMC_CRYPTO_JSON_PARSE_ERROR;
+#ifdef DEBUG
         printf("Failed to parse JSON: %d\n", parse_result);
+#endif
         return status;
     }
 
@@ -869,7 +881,9 @@ static int32_t cryptography_authenticate(uint8_t *data_out, size_t len_data_out,
             if (http_code != 200)
             {
                 status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE;
+#ifdef DEBUG
                 fprintf(stderr, "KMC Crypto Failure Response:\n%s\n", chunk_write->response);
+#endif
                 return status;
             }
             json_idx++;
@@ -1033,7 +1047,9 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
     if (parse_result < 0)
     {
         status = CRYPTOGRAHPY_KMC_CRYPTO_JSON_PARSE_ERROR;
+#ifdef DEBUG
         printf("Failed to parse JSON: %d\n", parse_result);
+#endif
         return status;
     }
 
@@ -1060,7 +1076,9 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
             if (http_code != 200)
             {
                 status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE;
+#ifdef DEBUG
                 fprintf(stderr, "KMC Crypto Generic Failure Response:\n%s\n", chunk_write->response);
+#endif
                 return status;
             }
             json_idx++;
@@ -1085,7 +1103,9 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
             if (strcmp(result_str, "true") != 0) // KMC crypto service returns true string if ICV check succeeds.
             {
                 status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_MAC_VALIDATION_ERROR;
+#ifdef DEBUG
                 fprintf(stderr, "KMC Crypto MAC Validation Failure Response:\n%s\n", chunk_write->response);
+#endif
                 return status;
             }
             continue;
@@ -1094,7 +1114,9 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
     if (http_status_found == CRYPTO_FALSE)
     {
         status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE;
+#ifdef DEBUG
         fprintf(stderr, "KMC Crypto Generic Failure Response:\n%s\n", chunk_write->response);
+#endif
         return status;
     }
 
@@ -1301,7 +1323,9 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
     if (parse_result < 0)
     {
         status = CRYPTOGRAHPY_KMC_CRYPTO_JSON_PARSE_ERROR;
+#ifdef DEBUG
         printf("Failed to parse JSON: %d\n", parse_result);
+#endif
         if (iv_base64 != NULL)
             free(iv_base64);
         if (encrypt_uri != NULL)
@@ -1413,7 +1437,9 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
             if (http_code != 200)
             {
                 status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE;
+#ifdef DEBUG
                 fprintf(stderr, "KMC Crypto Failure Response:\n%s\n", chunk_write->response);
+#endif
                 if (iv_base64 != NULL)
                     free(iv_base64);
                 if (encrypt_uri != NULL)
@@ -1687,7 +1713,9 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
     if (parse_result < 0)
     {
         status = CRYPTOGRAHPY_KMC_CRYPTO_JSON_PARSE_ERROR;
+#ifdef DEBUG
         printf("Failed to parse JSON: %d\n", parse_result);
+#endif
         free(decrypt_payload);
         free(decrypt_uri);
         free(iv_base64);
@@ -1736,7 +1764,9 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
             if (http_code != 200)
             {
                 status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE;
+#ifdef DEBUG
                 fprintf(stderr, "KMC Crypto Failure Response:\n%s\n", chunk_write->response);
+#endif
                 free(chunk_read);
                 free(chunk_write);
                 free(http_code_str);
@@ -2058,7 +2088,9 @@ static int32_t get_cam_sso_token()
     if (res != CURLE_OK) // This is not return code, this is successful response that's unusable!
     {
         status = CAM_GET_SSO_TOKEN_FAILURE;
+#ifdef DEBUG
         fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+#endif
 
         // return status;
     }
@@ -2155,8 +2187,10 @@ int32_t curl_response_error_check(CURL *curl_handle, char *response)
     if (response == NULL) // No response, possibly because service is CAM secured.
     {
         response_status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_EMPTY_RESPONSE;
+#ifdef DEBUG
         fprintf(stderr, "curl_easy_perform() unexpected empty response: \n%s\n",
                 "Empty Crypto Service response can be caused by CAM security, is CAM configured?");
+#endif
         return response_status;
     }
 
@@ -2178,7 +2212,9 @@ int32_t curl_perform_with_cam_retries(CURL *curl_handle, memory_write *chunk_wri
         if (res != CURLE_OK) // This is not a response w/return code, this is something breaking!
         {
             status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE;
+#ifdef DEBUG
             fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+#endif
             break; // Go to Post retry loop cleanup and return status.
         }
 

@@ -32,6 +32,8 @@
  **/
 void Crypto_tcPrint(TC_t *tc_frame)
 {
+    tc_frame = tc_frame;
+#ifdef DEBUG
     printf("Current TC in memory is: \n");
     printf("\t Header\n");
     printf("\t\t tfvn   = 0x%01x \n", tc_frame->tc_header.tfvn);
@@ -53,6 +55,7 @@ void Crypto_tcPrint(TC_t *tc_frame)
     printf("\t SDLS Trailer\n");
     printf("\t\t FECF   = 0x%04x \n", tc_frame->tc_sec_trailer.fecf);
     printf("\n");
+#endif
 }
 
 /**
@@ -64,10 +67,12 @@ void Crypto_tcPrint(TC_t *tc_frame)
 void Crypto_tmPrint(TM_t *tm_frame)
 {
     tm_frame = tm_frame;
+#ifdef DEBUG
     printf("Current TM in memory is: \n");
     printf("\t Header\n");
     printf("\t**** THIS IS BLANKED OUT CURRENTLY!!!!!!!***\n");
     printf("\n");
+#endif
 }
 
 void Crypto_Print_Sdls_Ep_Reply(void)
@@ -80,17 +85,21 @@ void Crypto_Print_Sdls_Ep_Reply(void)
     // Sanity check on length
     if (pkt_length > TC_MAX_FRAME_SIZE)
     {
+#ifdef DEBUG
         printf(KRED "Unable to print SDLS Reply... invalid length of %d\n" RESET, pkt_length);
+#endif
         return;
     }
 
     // Do the print
+#ifdef DEBUG
     printf("SDLS Reply Global: 0x");
     for (int i = 0; i < pkt_length; i++)
     {
         printf("%02X", sdls_ep_reply[i]);
     }
     printf("\n\n");
+#endif
 
     return;
 }
@@ -102,6 +111,8 @@ void Crypto_Print_Sdls_Ep_Reply(void)
  **/
 void Crypto_clcwPrint(Telemetry_Frame_Ocf_Clcw_t *clcw)
 {
+    clcw = clcw;
+#ifdef DEBUG
     printf("Current CLCW in memory is: \n");
     printf("\t cwt    = 0x%01x \n", clcw->cwt);
     printf("\t cvn    = 0x%01x \n", clcw->cvn);
@@ -118,6 +129,7 @@ void Crypto_clcwPrint(Telemetry_Frame_Ocf_Clcw_t *clcw)
     printf("\t spare1 = 0x%01x \n", clcw->spare1);
     printf("\t rv     = 0x%02x \n", clcw->rv);
     printf("\n");
+#endif
 }
 
 /**
@@ -127,6 +139,8 @@ void Crypto_clcwPrint(Telemetry_Frame_Ocf_Clcw_t *clcw)
  **/
 void Crypto_fsrPrint(Telemetry_Frame_Ocf_Fsr_t *report)
 {
+    report = report;
+#ifdef DEBUG
     printf("Current FSR in memory is: \n");
     printf("\t cwt    = 0x%01x \n", report->cwt);
     printf("\t fvn    = 0x%01x \n", report->fvn);
@@ -137,6 +151,7 @@ void Crypto_fsrPrint(Telemetry_Frame_Ocf_Fsr_t *report)
     printf("\t lspi   = 0x%01x \n", report->lspi);
     printf("\t snval  = 0x%01x \n", report->snval);
     printf("\n");
+#endif
 }
 
 /**
@@ -146,6 +161,7 @@ void Crypto_fsrPrint(Telemetry_Frame_Ocf_Fsr_t *report)
  **/
 void Crypto_ccsdsPrint(CCSDS_t *sdls_frame)
 {
+#ifdef DEBUG
     printf("Current CCSDS in memory is: \n");
     printf("\t Primary Header\n");
     printf("\t\t pvn        = 0x%01x \n", sdls_frame->hdr.pvn);
@@ -166,21 +182,34 @@ void Crypto_ccsdsPrint(CCSDS_t *sdls_frame)
         printf("\t\t sid        = 0x%01x \n", sdls_frame->pus.sid);
         printf("\t\t spare      = 0x%01x \n", sdls_frame->pus.spare);
     }
-    else
-    {
-        printf("\t PUS Header\n");
-        printf("\t\t Config not configured for PUS Header, not printing\n");
-    }
     printf("\t TLV PDU \n");
     printf("\t\t type       = 0x%01x \n", sdls_frame->tlv_pdu.hdr.type);
     printf("\t\t uf         = 0x%01x \n", sdls_frame->tlv_pdu.hdr.uf);
     printf("\t\t sg         = 0x%01x \n", sdls_frame->tlv_pdu.hdr.sg);
     printf("\t\t pid        = 0x%01x \n", sdls_frame->tlv_pdu.hdr.pid);
     printf("\t\t pdu_len    = 0x%04x \n", sdls_frame->tlv_pdu.hdr.pdu_len);
-    printf("\t\t data[0]    = 0x%02x \n", sdls_frame->tlv_pdu.data[0]);
-    printf("\t\t data[1]    = 0x%02x \n", sdls_frame->tlv_pdu.data[1]);
-    printf("\t\t data[2]    = 0x%02x \n", sdls_frame->tlv_pdu.data[2]);
+#endif
+    if ((sdls_frame->tlv_pdu.hdr.pdu_len / 8) >= 1)
+    {
+#ifdef DEBUG
+        printf("\t\t data[0]    = 0x%02x \n", sdls_frame->tlv_pdu.data[0]);
+#endif
+    }
+    if ((sdls_frame->tlv_pdu.hdr.pdu_len / 8) >= 2)
+    {
+#ifdef DEBUG
+        printf("\t\t data[1]    = 0x%02x \n", sdls_frame->tlv_pdu.data[1]);
+#endif
+    }
+    if ((sdls_frame->tlv_pdu.hdr.pdu_len / 8) >= 3)
+    {
+#ifdef DEBUG
+        printf("\t\t data[2]    = 0x%02x \n", sdls_frame->tlv_pdu.data[2]);
+#endif
+    }
+#ifdef DEBUG
     printf("\n");
+#endif
 }
 
 /**
@@ -192,6 +221,7 @@ void Crypto_saPrint(SecurityAssociation_t *sa)
 {
     int i;
 
+#ifdef SA_DEBUG
     printf("SA status: \n");
     printf("\t spi   = %d \n", sa->spi);
     printf("\t sa_state   = 0x%01x \n", sa->sa_state);
@@ -202,41 +232,55 @@ void Crypto_saPrint(SecurityAssociation_t *sa)
     printf("\t shplf_len  = %d \n", sa->shplf_len);
     printf("\t stmacf_len = %d \n", sa->stmacf_len);
     printf("\t ecs_len    = %d \n", sa->ecs_len);
+#endif
     if (sa->ecs_len > 0)
     {
         for (i = 0; i < sa->ecs_len; i++)
         {
+#ifdef SA_DEBUG
             printf("\t ecs[%d]     = 0x%02x \n", i, (sa->ecs + i));
+#endif
         }
     }
+#ifdef SA_DEBUG
     printf("\t ekid       = %d \n", sa->ekid);
     printf("\t ek_ref     = %s \n", sa->ek_ref);
     printf("\t akid       = %d \n", sa->akid);
     printf("\t ak_ref     = %s \n", sa->ak_ref);
     printf("\t iv_len     = %d \n", sa->iv_len);
+#endif
     if (sa->iv_len > 0)
     {
         for (i = 0; i < sa->iv_len; i++)
         {
+#ifdef SA_DEBUG
             printf("\t iv[%d]      = 0x%02x \n", i, *(sa->iv + i));
+#endif
         }
     }
     else
     {
+#ifdef SA_DEBUG
         printf("\t iv        = %s \n", sa->iv);
+#endif
     }
+#ifdef SA_DEBUG
     printf("\t acs_len    = %d \n", sa->acs_len);
     printf("\t acs        = 0x%02x \n", sa->acs);
     printf("\t abm_len    = %d \n", sa->abm_len);
+#endif
     if (sa->abm_len > 0)
     {
+#ifdef SA_DEBUG
         printf("\t abm        = ");
         for (i = 0; i < sa->abm_len; i++)
         {
             printf("%02x", *(sa->abm + i));
         }
         printf("\n");
+#endif
     }
+#ifdef SA_DEBUG
     printf("\t arsn_len    = %d \n", sa->arsn_len);
     if (sa->arsn_len > 0)
     {
@@ -250,6 +294,7 @@ void Crypto_saPrint(SecurityAssociation_t *sa)
 
     printf("\t arsnw_len   = %d \n", sa->arsnw_len);
     printf("\t arsnw       = %d \n", sa->arsnw);
+#endif
 }
 
 /**
@@ -260,16 +305,22 @@ void Crypto_saPrint(SecurityAssociation_t *sa)
  **/
 void Crypto_hexprint(const void *c, size_t n)
 {
-    const uint8_t *t   = c;
-    size_t         idx = 0;
+    const uint8_t *t = c;
+    t                = t;
+    size_t idx       = 0;
     if (c == NULL)
         return;
     while (idx < n)
     {
+
+#ifdef DEBUG
         printf("%02x", t[idx]);
+#endif
         idx++;
     }
+#ifdef DEBUG
     printf("\n");
+#endif
 }
 
 /**
@@ -281,7 +332,8 @@ void Crypto_hexprint(const void *c, size_t n)
 void Crypto_binprint(void *c, size_t n)
 {
     uint8_t *t = c;
-    int      q;
+    t          = t;
+    int q;
 
     if (c == NULL)
         return;
@@ -289,9 +341,15 @@ void Crypto_binprint(void *c, size_t n)
     {
         --n;
         for (q = 0x80; q; q >>= 1)
+        {
+#ifdef DEBUG
             printf("%x", !!(t[n] & q));
+#endif
+        }
     }
+#ifdef DEBUG
     printf("\n");
+#endif
 }
 
 void Crypto_mpPrint(GvcidManagedParameters_t *managed_parameters, uint8_t print_children)
@@ -300,6 +358,7 @@ void Crypto_mpPrint(GvcidManagedParameters_t *managed_parameters, uint8_t print_
     print_children = print_children;
     if (managed_parameters != NULL)
     {
+#ifdef DEBUG
         printf("Managed Parameter: \n");
         printf("\t tfvn: %d", managed_parameters->tfvn);
         printf("\t scid: %d", managed_parameters->scid);
@@ -308,6 +367,7 @@ void Crypto_mpPrint(GvcidManagedParameters_t *managed_parameters, uint8_t print_
         printf("\t has_segmentation_headers: %d\n", managed_parameters->has_segmentation_hdr);
         printf("\t max_frame_size: %d\n", managed_parameters->max_frame_size);
         printf("\t TM has ocf %d\n", managed_parameters->has_ocf);
+#endif
     }
 }
 #endif

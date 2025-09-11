@@ -25,4 +25,7 @@ target_compile_definitions(standalone PUBLIC
     $<$<BOOL:${STANDALONE_TCP}>:STANDALONE_TCP=1>
     $<$<NOT:$<BOOL:${STANDALONE_TCP}>>:STANDALONE_TCP=0>
 )
+
+set_target_properties(standalone PROPERTIES PUBLIC_HEADER "./standalone/standalone.h")
+
 target_link_libraries(standalone crypto pthread)

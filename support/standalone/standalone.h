@@ -63,6 +63,9 @@ extern "C"
 #define TM_PROCESS_FWD_PORT 6011
 #endif
 
+#define CRYPTO_CMD_PORT 6060
+#define CRYPTO_TLM_PORT 6061
+
 #define CRYPTO_STANDALONE_HANDLE_FRAMING
 #define CRYPTO_STANDALONE_FRAMING_SCID        3
 #define CRYPTO_STANDALONE_FRAMING_VCID        0x00
@@ -112,24 +115,6 @@ extern "C"
         udp_info_t read;
         udp_info_t write;
     } udp_interface_t;
-
-    /*
-    ** Prototypes
-    */
-    int32_t crypto_standalone_check_number_arguments(int actual, int expected);
-    void    crypto_standalone_to_lower(char *str);
-    void    crypto_standalone_print_help(void);
-    int32_t crypto_standalone_get_command(const char *str);
-    int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char *tokens);
-    int32_t crypto_host_to_ip(const char *hostname, char *ip);
-    int32_t crypto_standalone_udp_init(udp_info_t *sock, int32_t port, uint8_t bind_sock);
-    int32_t crypto_reset(void);
-    void    crypto_standalone_tc_frame(uint8_t *in_data, uint16_t in_length, uint8_t *out_data, uint16_t *out_length);
-    void   *crypto_standalone_tc_apply(void *socks);
-    void    crypto_standalone_tm_frame(uint8_t *in_data, uint16_t in_length, uint8_t *out_data, uint16_t *out_length,
-                                       uint16_t spi);
-    void   *crypto_standalone_tm_process(void *socks);
-    void    crypto_standalone_cleanup(const int signal);
 
 #ifdef __cplusplus
 } /* Close scope of 'extern "C"' declaration which encloses file. */

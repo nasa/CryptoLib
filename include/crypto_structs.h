@@ -197,7 +197,7 @@ typedef struct
 typedef struct
 {
     uint16_t kid : 16;      // Key ID
-    uint16_t key_state : 8; // Key state
+    uint8_t  key_state : 8; // Key state
 } __attribute__((packed)) SDLS_KEY_INVENTORY_RPLY_t;
 #define SDLS_KEY_INVENTORY_RPLY_SIZE (sizeof(SDLS_KEY_INVENTORY_RPLY_t))
 

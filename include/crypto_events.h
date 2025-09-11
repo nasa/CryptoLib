@@ -18,14 +18,14 @@
 #ifndef CRYPTO_EVENTS_H
 #define CRYPTO_EVENTS_H
 
-#define FECF_ERR_EID           0
-#define MKID_INVALID_EID       1
-#define MKID_STATE_ERR_EID     2
-#define KEY_TRANSITION_ERR_EID 3
-#define SPI_INVALID_EID        4
-#define IV_WINDOW_ERR_EID      5
-#define IV_REPLAY_ERR_EID      6
-#define OTAR_MK_ERR_EID        7
+#define FECF_ERR_EID           1
+#define MKID_INVALID_EID       2
+#define MKID_STATE_ERR_EID     3
+#define KEY_TRANSITION_ERR_EID 4
+#define SPI_INVALID_EID        5
+#define IV_WINDOW_ERR_EID      6
+#define IV_REPLAY_ERR_EID      7
+#define OTAR_MK_ERR_EID        8
 
 #define STARTUP_EID 10
 

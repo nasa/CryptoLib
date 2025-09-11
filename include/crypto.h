@@ -254,7 +254,7 @@ int32_t Crypto_Check_Anti_Replay_ARSNW(SecurityAssociation_t *sa_ptr, uint8_t *a
 int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t *sa_ptr, uint8_t *iv, int8_t *iv_valid);
 
 // SDLS Related Functions
-extern uint8_t Crypto_Prep_Reply(uint8_t *ingest, uint8_t appID);
+extern uint8_t Crypto_Prep_Reply(uint8_t *ingest, uint16_t appID);
 extern void    Crypto_Print_Sdls_Ep_Reply(void);
 extern int32_t Crypto_Get_Sdls_Ep_Reply(uint8_t *buffer, uint16_t *length);
 
