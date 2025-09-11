@@ -1253,7 +1253,7 @@ int main(int argc, char *argv[])
         command          = CRYPTO_CMD_UNKNOWN;
 
         /* Read user input */
-        printf(CRYPTO_PROMPT);
+        //printf(CRYPTO_PROMPT);
         fgets(input_buf, CRYPTO_MAX_INPUT_BUF, stdin);
 
         /* Tokenize line buffer */
@@ -1285,6 +1285,8 @@ int main(int argc, char *argv[])
     close(tc_apply.write.sockfd);
     close(tm_process.read.sockfd);
     close(tm_process.write.sockfd);
+    close(cmd.read.sockfd);
+    close(cmd.write.sockfd);
 
     Crypto_Shutdown();
 
