@@ -1440,7 +1440,7 @@ int32_t Crypto_Get_aosLength(int len)
  * @param aad: uint8_t*
  * @return status: uint32_t
  *
- * CCSDS Compliance: CCSDS 355.0-B-2 Section 7.2.3 (AAD Construction)
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.2.3 (AAD Construction)
  **/
 uint32_t Crypto_Prepare_AOS_AAD(const uint8_t *buffer, uint16_t len_aad, const uint8_t *abm_buffer, uint8_t *aad)
 {
