@@ -32,6 +32,7 @@
 
 #include <math.h>
 #include <string.h>
+#include <ctype.h>
 #include "crypto_config.h"
 #include "crypto_config_structs.h"
 #include "crypto_error.h"
@@ -304,6 +305,10 @@ int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uin
                                                 GvcidManagedParameters_t *managed_parameters_out);
 // Project-wide support functions
 extern int32_t crypto_deep_copy_string(char *src_string, char **dst_string);
+
+// Path validation functions
+int32_t is_safe_username(const char *s);
+int32_t is_safe_path(const char *s);
 
 /*
 ** Extern Global Variables
