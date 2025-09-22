@@ -18,6 +18,8 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/wait.h>
 
 #include <curl/curl.h>
 
@@ -2235,6 +2237,27 @@ int32_t curl_perform_with_cam_retries(CURL *curl_handle, memory_write *chunk_wri
     return status;
 }
 
+int32_t run_kinit(const char *keytab_path, const char *username)
+{
+    pid_t pid = fork();
+    if (pid == 0)
+    {
+        // Child process
+        execlp("kinit", "kinit", "-kt", keytab_path, username, (char *)NULL);
+        exit(CAM_KEYTAB_FILE_KINIT_FAILURE);
+    }
+    else if (pid < 0)
+    {
+        return CRYPTO_LIB_ERROR; // fork failed
+    }
+    else
+    {
+        int status;
+        waitpid(pid, &status, 0);
+        return status;
+    }
+}
+
 /**
  * @brief Function: initialize_kerberos_keytab_file_login
  *
@@ -2261,24 +2284,15 @@ int32_t initialize_kerberos_keytab_file_login(void)
         return status;
     }
 
-    // Build the kinit shell command with keytab file path + username
-    char    *kinit_shell_command_base = "kinit -kt %s %s";
-    uint32_t len_kinit_shell_command =
-        strlen(kinit_shell_command_base) + strlen(cam_config->keytab_file_path) + strlen(cam_config->username);
-    char *kinit_shell_command = malloc(len_kinit_shell_command + 1);
-    snprintf(kinit_shell_command, len_kinit_shell_command, kinit_shell_command_base, cam_config->keytab_file_path,
-             cam_config->username);
-
-    int32_t kinit_status = system(kinit_shell_command);
+    status = run_kinit(cam_config->keytab_file_path, cam_config->username);
 #ifdef DEBUG
-    printf("Kinit Status: %d\n", kinit_status);
+    printf("Kinit Status: %d\n", status);
 #endif
-    if (kinit_status != CRYPTO_LIB_SUCCESS)
+    if (status != CRYPTO_LIB_SUCCESS)
     {
         status = CAM_KEYTAB_FILE_KINIT_FAILURE;
     }
 
-    free(kinit_shell_command);
     return status;
 }
 

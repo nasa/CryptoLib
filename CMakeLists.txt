@@ -18,6 +18,8 @@
 cmake_minimum_required(VERSION 3.14.0)
 project(crypto C)
 
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address")
+
 #
 # CUSTOM PATH Definiton
 #
@@ -41,6 +43,7 @@ option(CRYPTO_WOLFSSL "Cryptography Module - WolfSSL" OFF)
 option(CRYPTO_CUSTOM "Cryptography Module - CUSTOM" OFF)
 option(CRYPTO_CUSTOM_PATH "Cryptography Module - CUSTOM PATH" OFF)
 option(DEBUG "Debug" OFF)
+option(ENABLE_FUZZING "Enable fuzz testing" OFF)
 option(KEY_CUSTOM "Key Module - Custom" OFF)
 option(KEY_CUSTOM_PATH "Custom Key Path" OFF)
 option(KEY_INTERNAL "Key Module - Internal" OFF)
@@ -58,14 +61,20 @@ option(SYSTEM_INSTALL "SystemInstall" OFF)
 option(TEST "Test" OFF)
 option(SA_FILE "Save Security Association to File" OFF)
 option(KEY_VALIDATION "Validate existance of key duplication" OFF)
-OPTION(KMC_MDB_RH "KMC-MDB-RedHat-Integration-Testing" OFF) #Disabled by default, enable with: -DKMC_MDB_RH=ON
-OPTION(KMC_MDB_DB "KMC-MDB-Debian-Integration-Testing" OFF) #Disabled by default, enable with: -DKMC_MDB_DB=ON
-OPTION(CRYPTO_EPROC "Enables the building and use of Extended Procedures" OFF) #Disabled by default, enable with -DCRYPTO_EPROC=ON
+option(KMC_MDB_RH "KMC-MDB-RedHat-Integration-Testing" OFF) #Disabled by default, enable with: -DKMC_MDB_RH=ON
+option(KMC_MDB_DB "KMC-MDB-Debian-Integration-Testing" OFF) #Disabled by default, enable with: -DKMC_MDB_DB=ON
+option(CRYPTO_EPROC "Enables the building and use of Extended Procedures" OFF) #Disabled by default, enable with -DCRYPTO_EPROC=ON
+option(STANDALONE_TCP "Enables TCP support for standalone" OFF)
 
-OPTION(MAC_SIZE "The size of the max MAC buffer in bytes")
-OPTION(IV_SIZE "The size of the max IV buffer in bytes")
-Option(NUM_SA "The max number of SAs that will be used")
-Option(NUM_KEYS "The max number of keys that will be used")
+option(MAC_SIZE "The size of the max MAC buffer in bytes")
+option(IV_SIZE "The size of the max IV buffer in bytes")
+option(NUM_SA "The max number of SAs that will be used")
+option(NUM_KEYS "The max number of keys that will be used")
+
+option(CRYPTO_RX_GROUND_PORT "Port to receive commands from ground")
+option(CRYPTO_TX_GROUND_PORT "Port to transmit telemetry to ground")
+option(CRYPTO_TX_RADIO_PORT "Port to receive telemetry from radio")
+option(CRYPTO_RX_RADIO_PORT "Port to transmit commands to radio")
 
 #
 # Max Size Defines
@@ -188,15 +197,41 @@ endif()
 #
 # Project Specifics
 #
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror -g -O0")
+if(ENABLE_FUZZING) 
+    # More permissive flags for fuzzing (afl compiler fails with -Werror for self-assign warnings)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wno-self-assign -g -O0")
+else()
+    # Stricter flags for normal builds (treat warnings as errors)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror -g -O0")
+endif()
 
 include_directories(include)
 add_subdirectory(src)
 
 if(SUPPORT)
     add_subdirectory(support)
+    if(CRYPTO_RX_GROUND_PORT)
+        message(STATUS "TC_APPLY_PORT set to ${CRYPTO_RX_GROUND_PORT}")
+        add_compile_definitions(TC_APPLY_PORT="${CRYPTO_RX_GROUND_PORT}")
+    endif()
+    if(CRYPTO_TX_GROUND_PORT)
+        message(STATUS "TM_PROCESS_FWD_PORT set to ${CRYPTO_TX_GROUND_PORT}")
+        add_compile_definitions(TM_PROCESS_FWD_PORT="${CRYPTO_TX_GROUND_PORT}")
+    endif()
+    if(CRYPTO_TX_RADIO_PORT)
+        message(STATUS "TM_PROCESS_PORT set to ${CRYPTO_TX_RADIO_PORT}")
+        add_compile_definitions(TM_PROCESS_PORT="${CRYPTO_TX_RADIO_PORT}")
+    endif()
+    if(CRYPTO_RX_RADIO_PORT)
+        message(STATUS "TC_APPLY_FWD_PORT set to ${CRYPTO_RX_RADIO_PORT}")
+        add_compile_definitions(TC_APPLY_FWD_PORT="${CRYPTO_RX_RADIO_PORT}")
+    endif()
 endif()
 
 if(TEST)
     add_subdirectory(test)
+endif()
+
+if(ENABLE_FUZZING)
+    add_subdirectory(./support/fuzz)
 endif()

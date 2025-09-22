@@ -46,13 +46,22 @@ extern "C"
 /*
 ** Configuration
 */
-#define CRYPTOLIB_HOSTNAME  "cryptolib"
-#define GSW_HOSTNAME        "cosmos"
-#define SC_HOSTNAME         "radio_sim"
-#define TC_APPLY_PORT       6010
-#define TC_APPLY_FWD_PORT   8010
-#define TM_PROCESS_PORT     8011
+#define CRYPTOLIB_HOSTNAME "cryptolib"
+#define GSW_HOSTNAME       "cosmos"
+#define SC_HOSTNAME        "radio-sim"
+
+#ifndef CRYPTO_RX_GROUND_PORT
+#define TC_APPLY_PORT 6010
+#endif
+#ifndef CRYPTO_RX_GROUND_PORT
+#define TC_APPLY_FWD_PORT 8010
+#endif
+#ifndef CRYPTO_RX_GROUND_PORT
+#define TM_PROCESS_PORT 8011
+#endif
+#ifndef CRYPTO_RX_GROUND_PORT
 #define TM_PROCESS_FWD_PORT 6011
+#endif
 
 #define CRYPTO_STANDALONE_HANDLE_FRAMING
 #define CRYPTO_STANDALONE_FRAMING_SCID        3
@@ -73,6 +82,10 @@ extern "C"
 #define CRYPTO_MAX_INPUT_TOKENS     32
 #define CRYPTO_MAX_INPUT_TOKEN_SIZE 64
 
+#define TM_PRI_HDR_LENGTH 6
+#define TM_ASM_LENGTH     4
+#define SDLS_SPI_LENGTH   2
+
 #define CRYPTO_CMD_UNKNOWN  (-1)
 #define CRYPTO_CMD_HELP     0
 #define CRYPTO_CMD_EXIT     1
@@ -81,6 +94,7 @@ extern "C"
 #define CRYPTO_CMD_VCID     4
 #define CRYPTO_CMD_TC_DEBUG 5
 #define CRYPTO_CMD_TM_DEBUG 6
+#define CRYPTO_CMD_ACTIVE   7
 
     /*
     ** Structures
