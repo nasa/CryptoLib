@@ -838,6 +838,10 @@ int32_t Crytpo_TC_Validate_TC_Temp_Header(const uint16_t in_frame_length, TC_Fra
         mc_if->mc_log(status);
         return status;
     }
+    if (crypto_config.sa_type == SA_TYPE_MARIADB)
+    {
+        mariadb_table_name = MARIADB_TC_TABLE_NAME;
+    }
     status = sa_if->sa_get_operational_sa_from_gvcid(temp_tc_header.tfvn, temp_tc_header.scid, temp_tc_header.vcid,
                                                      *map_id, sa_ptr);
     // If unable to get operational SA, can return
@@ -1818,6 +1822,10 @@ uint32_t Crypto_TC_Sanity_Validations(TC_t *tc_sdls_processed_frame, SecurityAss
 {
     uint32_t status = CRYPTO_LIB_SUCCESS;
 
+    if (crypto_config.sa_type == SA_TYPE_MARIADB)
+    {
+        mariadb_table_name = MARIADB_TC_TABLE_NAME;
+    }
     status = sa_if->sa_get_from_spi(tc_sdls_processed_frame->tc_sec_header.spi, sa_ptr);
     // If no valid SPI, return
     if (status == CRYPTO_LIB_SUCCESS)
@@ -2208,6 +2216,11 @@ static int32_t validate_sa_index(SecurityAssociation_t *sa)
 {
     int32_t                returnval = 0;
     SecurityAssociation_t *temp_sa;
+
+    if (crypto_config.sa_type == SA_TYPE_MARIADB)
+    {
+        mariadb_table_name = MARIADB_TC_TABLE_NAME;
+    }
     sa_if->sa_get_from_spi(sa->spi, &temp_sa);
 
     // Do not validate sa index on KMC

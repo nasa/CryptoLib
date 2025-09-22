@@ -518,7 +518,7 @@ typedef struct
     uint16_t fhp : 11;  // First Header Pointer
                         // Sync Flag 0 = Contains position of the first byte of the first packet in the data field
                         // Sync Flag 1 = undefined
-} TM_FramePrimaryHeader_t;
+} __attribute__((packed)) TM_FramePrimaryHeader_t;
 #define TM_FRAME_PRIMARYHEADER_SIZE (sizeof(TM_FramePrimaryHeader_t))
 
 /*
@@ -528,7 +528,12 @@ typedef struct
 {
     uint16_t spi;         // Security Parameter Index
     uint8_t  iv[IV_SIZE]; // Initialization Vector for encryption
-} TM_FrameSecurityHeader_t;
+    uint8_t  iv_field_len;
+    uint8_t  sn[SN_SIZE]; // Sequence Number for anti-replay
+    uint8_t  sn_field_len;
+    uint16_t pad; // Count of the used fill Bytes
+    uint8_t  pad_field_len;
+} __attribute__((packed)) TM_FrameSecurityHeader_t;
 #define TM_FRAME_SECHEADER_SIZE (sizeof(TM_FrameSecurityHeader_t))
 
 /*
@@ -537,9 +542,11 @@ typedef struct
 typedef struct
 {
     uint8_t  mac[MAC_SIZE]; // Message Authentication Code
+    uint8_t  mac_field_len;
     uint8_t  ocf[OCF_SIZE]; // Operational Control Field
-    uint16_t fecf;          // Frame Error Control Field
-} TM_FrameSecurityTrailer_t;
+    uint8_t  ocf_field_len;
+    uint16_t fecf; // Frame Error Control Field
+} __attribute__((packed)) TM_FrameSecurityTrailer_t;
 #define TM_FRAME_SECTRAILER_SIZE (sizeof(TM_FrameSecurityTrailer_t))
 
 /*
@@ -551,12 +558,12 @@ typedef struct
     TM_FramePrimaryHeader_t   tm_header;
     TM_FrameSecurityHeader_t  tm_sec_header;
     uint8_t                   tm_pdu[TM_FRAME_DATA_SIZE];
+    uint16_t                  tm_pdu_len;
     TM_FrameSecurityTrailer_t tm_sec_trailer;
-} TM_t;
+} __attribute__((packed)) TM_t;
 #define TM_SIZE (sizeof(TM_t))
 
-#define TM_MIN_SIZE \
-    (TM_FRAME_PRIMARYHEADER_SIZE + TM_FRAME_SECHEADER_SIZE + TM_FRAME_SECTRAILER_SIZE + TM_FRAME_CLCW_SIZE)
+#define TM_MIN_SIZE 7
 
 /*
 ** Advanced Orbiting Systems (AOS) Definitions
@@ -573,20 +580,18 @@ typedef struct
                        // To be all zeros if only one VC used (732.0b4 Section 4.1.2.3)
     long vcfc : 24;    // Virtual Channel Frame Count (modulo-16,777,216)
     /* Begin TF Signalling Field */
-    uint8_t rf : 1;    // Replay Flag
-    uint8_t sf : 1;    // VC Frame Count Usgae Flag
-                       // 0 = Payload is either idle data or octet synchronized forward-ordered packets
-                       // 1 = Data is a virtual channel access data unit
-    uint8_t spare : 2; // Reserved Spare
-                       // 0 = Shall be set to 0
-                       // Sync Flag 1 = Undefined
-    uint8_t vfcc : 4;  // VC Frame Count cycle
-                       // Sync Flag 0 = Shall be 11
-                       // Sync Flag 1 = Undefined
-    uint16_t fhp : 16; // First Header Pointer
-                       // Sync Flag 0 = Contains position of the first byte of the first packet in the data field
-                       // Sync Flag 1 = undefined
-} AOS_FramePrimaryHeader_t;
+    uint8_t rf : 1;      // Replay Flag
+    uint8_t sf : 1;      // VC Frame Count Usgae Flag
+                         // 0 = Payload is either idle data or octet synchronized forward-ordered packets
+                         // 1 = Data is a virtual channel access data unit
+    uint8_t spare : 2;   // Reserved Spare
+                         // 0 = Shall be set to 0
+                         // Sync Flag 1 = Undefined
+    uint8_t vfcc : 4;    // VC Frame Count cycle
+                         // Sync Flag 0 = Shall be 11
+                         // Sync Flag 1 = Undefined
+    uint16_t fhecf : 16; // Frame header error control field
+} __attribute__((packed)) AOS_FramePrimaryHeader_t;
 #define AOS_FRAME_PRIMARYHEADER_SIZE (sizeof(AOS_FramePrimaryHeader_t))
 
 /*
@@ -594,9 +599,15 @@ typedef struct
 */
 typedef struct
 {
+    uint8_t  iz[MAX_IZ_LEN];
     uint16_t spi;         // Security Parameter Index
     uint8_t  iv[IV_SIZE]; // Initialization Vector for encryption
-} AOS_FrameSecurityHeader_t;
+    uint8_t  iv_field_len;
+    uint8_t  sn[SN_SIZE]; // Sequence Number for anti-replay
+    uint8_t  sn_field_len;
+    uint16_t pad; // Count of the used fill Bytes
+    uint8_t  pad_field_len;
+} __attribute__((packed)) AOS_FrameSecurityHeader_t;
 #define AOS_FRAME_SECHEADER_SIZE (sizeof(AOS_FrameSecurityHeader_t))
 
 /*
@@ -605,9 +616,11 @@ typedef struct
 typedef struct
 {
     uint8_t  mac[MAC_SIZE]; // Message Authentication Code
+    uint8_t  mac_field_len;
     uint8_t  ocf[OCF_SIZE]; // Operational Control Field
-    uint16_t fecf;          // Frame Error Control Field
-} AOS_FrameSecurityTrailer_t;
+    uint8_t  ocf_field_len;
+    uint16_t fecf; // Frame Error Control Field
+} __attribute__((packed)) AOS_FrameSecurityTrailer_t;
 #define AOS_FRAME_SECTRAILER_SIZE (sizeof(AOS_FrameSecurityTrailer_t))
 
 /*
@@ -616,14 +629,14 @@ typedef struct
 */
 typedef struct
 {
-    AOS_FramePrimaryHeader_t   tm_header;
-    AOS_FrameSecurityHeader_t  tm_sec_header;
+    AOS_FramePrimaryHeader_t   aos_header;
+    AOS_FrameSecurityHeader_t  aos_sec_header;
     uint8_t                    aos_pdu[AOS_FRAME_DATA_SIZE];
+    uint16_t                   aos_pdu_len;
     AOS_FrameSecurityTrailer_t aos_sec_trailer;
 } __attribute__((packed)) AOS_t;
 #define AOS_SIZE (sizeof(AOS_t))
 
-#define AOS_MIN_SIZE \
-    (AOS_FRAME_PRIMARYHEADER_SIZE + AOS_FRAME_SECHEADER_SIZE + AOS_FRAME_SECTRAILER_SIZE + AOS_FRAME_OCF_SIZE)
+#define AOS_MIN_SIZE 7
 
 #endif // CRYPTO_STRUCTS_H

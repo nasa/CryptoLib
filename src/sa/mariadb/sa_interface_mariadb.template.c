@@ -42,24 +42,25 @@ static int32_t sa_setARSN(TC_t *tc_frame);
 static int32_t sa_setARSNW(TC_t *tc_frame);
 static int32_t sa_delete(TC_t *tc_frame);
 // MySQL local functions
-static int32_t finish_with_error(MYSQL **con_loc, int err);
+static int32_t finish_with_error_hard(MYSQL **con_loc, int err);
+static int32_t finish_with_error_soft(MYSQL **con_loc, int err);
 // MySQL Queries
 static const char *SQL_SADB_GET_SA_BY_SPI =
     "SELECT "
     "spi,ekid,akid,sa_state,tfvn,scid,vcid,mapid,lpid,est,ast,shivf_len,shsnf_len,shplf_len,stmacf_len,ecs_len,HEX(ecs)"
     ",HEX(iv),iv_len,acs_len,HEX(acs),abm_len,HEX(abm),arsn_len,HEX(arsn),arsnw"
-    " FROM security_associations WHERE spi='%d'";
+    " FROM %s WHERE spi='%d'";
 static const char *SQL_SADB_GET_SA_BY_GVCID =
     "SELECT "
     "spi,ekid,akid,sa_state,tfvn,scid,vcid,mapid,lpid,est,ast,shivf_len,shsnf_len,shplf_len,stmacf_len,ecs_len,HEX(ecs)"
     ",HEX(iv),iv_len,acs_len,HEX(acs),abm_len,HEX(abm),arsn_len,HEX(arsn),arsnw"
-    " FROM security_associations WHERE tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d' AND sa_state='%d'";
+    " FROM %s WHERE tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d' AND sa_state='%d'";
 static const char *SQL_SADB_UPDATE_IV_ARC_BY_SPI =
-    "UPDATE security_associations"
+    "UPDATE %s"
     " SET iv=X'%s', arsn=X'%s'"
     " WHERE spi='%d' AND tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d'";
 // static const char *SQL_SADB_UPDATE_IV_ARC_BY_SPI_NULL_IV =
-//     "UPDATE security_associations"
+//     "UPDATE %s"
 //     " SET arsn=X'%s'"
 //     " WHERE spi='%d' AND tfvn='%d' AND scid='%d' AND vcid='%d' AND mapid='%d'";
 
@@ -146,7 +147,7 @@ static int32_t sa_init(void)
                                    sa_mariadb_config->mysql_port, NULL, 0) == NULL)
             {
                 // 0,NULL,0 are port number, unix socket, client flag
-                finish_with_error(&con, SADB_MARIADB_CONNECTION_FAILED);
+                finish_with_error_hard(&con, SADB_MARIADB_CONNECTION_FAILED);
                 status = CRYPTO_LIB_ERROR;
             }
             else
@@ -187,7 +188,7 @@ static int32_t sa_get_from_spi(uint16_t spi, SecurityAssociation_t **security_as
     int32_t status = CRYPTO_LIB_SUCCESS;
 
     char spi_query[2048];
-    snprintf(spi_query, sizeof(spi_query), SQL_SADB_GET_SA_BY_SPI, spi);
+    snprintf(spi_query, sizeof(spi_query), SQL_SADB_GET_SA_BY_SPI, mariadb_table_name, spi);
 
     status = parse_sa_from_mysql_query(&spi_query[0], security_association);
 
@@ -199,7 +200,8 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
     int32_t status = CRYPTO_LIB_SUCCESS;
 
     char gvcid_query[2048];
-    snprintf(gvcid_query, sizeof(gvcid_query), SQL_SADB_GET_SA_BY_GVCID, tfvn, scid, vcid, mapid, SA_OPERATIONAL);
+    snprintf(gvcid_query, sizeof(gvcid_query), SQL_SADB_GET_SA_BY_GVCID, mariadb_table_name, tfvn, scid, vcid, mapid,
+             SA_OPERATIONAL);
 
     status = parse_sa_from_mysql_query(&gvcid_query[0], security_association);
 
@@ -221,12 +223,11 @@ static int32_t sa_save_sa(SecurityAssociation_t *sa)
     char *arsn_h = malloc(sa->arsn_len * 2 + 1);
     convert_byte_array_to_hexstring(sa->arsn, sa->arsn_len, arsn_h);
 
-    snprintf(update_sa_query, sizeof(update_sa_query), SQL_SADB_UPDATE_IV_ARC_BY_SPI, iv_h, arsn_h, sa->spi,
-             sa->gvcid_blk.tfvn, sa->gvcid_blk.scid, sa->gvcid_blk.vcid, sa->gvcid_blk.mapid);
+    snprintf(update_sa_query, sizeof(update_sa_query), SQL_SADB_UPDATE_IV_ARC_BY_SPI, mariadb_table_name, iv_h, arsn_h,
+             sa->spi, sa->gvcid_blk.tfvn, sa->gvcid_blk.scid, sa->gvcid_blk.vcid, sa->gvcid_blk.mapid);
 
     free(iv_h);
     free(arsn_h);
-
 #ifdef SA_DEBUG
     fprintf(stderr, "MySQL Insert SA Query: %s \n", update_sa_query);
 #endif
@@ -234,7 +235,7 @@ static int32_t sa_save_sa(SecurityAssociation_t *sa)
     // Crypto_saPrint(sa);
     if (mysql_query(con, update_sa_query))
     {
-        status = finish_with_error(&con, SADB_QUERY_FAILED);
+        status = finish_with_error_soft(&con, SADB_QUERY_FAILED);
     }
     // todo - if query fails, need to push failure message to error stack instead of just return code.
 
@@ -306,7 +307,7 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
 
     if (mysql_real_query(con, query, strlen(query)))
     { // query should be NUL terminated!
-        status = finish_with_error(&con, SADB_QUERY_FAILED);
+        status = finish_with_error_soft(&con, SADB_QUERY_FAILED);
         return status;
     }
     // todo - if query fails, need to push failure message to error stack instead of just return code.
@@ -314,14 +315,14 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
     MYSQL_RES *result = mysql_store_result(con);
     if (result == NULL)
     {
-        status = finish_with_error(&con, SADB_QUERY_EMPTY_RESULTS);
+        status = finish_with_error_soft(&con, SADB_QUERY_EMPTY_RESULTS);
         return status;
     }
 
     int num_rows = mysql_num_rows(result);
     if (num_rows == 0) // No rows returned in query!!
     {
-        status = finish_with_error(&con, SADB_QUERY_EMPTY_RESULTS);
+        status = finish_with_error_soft(&con, SADB_QUERY_EMPTY_RESULTS);
         return status;
     }
 
@@ -609,11 +610,16 @@ static void convert_byte_array_to_hexstring(void *src_buffer, size_t buffer_leng
     }
 }
 
-static int32_t finish_with_error(MYSQL **con_loc, int err)
+static int32_t finish_with_error_hard(MYSQL **con_loc, int err)
 {
-    fprintf(stderr, "%s\n",
-            mysql_error(*con_loc)); // todo - if query fails, need to push failure message to error stack
+    fprintf(stderr, "%s\n", mysql_error(*con_loc));
     mysql_close(*con_loc);
     *con_loc = NULL;
+    return err;
+}
+
+static int32_t finish_with_error_soft(MYSQL **con_loc, int err)
+{
+    fprintf(stderr, "%s\n", mysql_error(*con_loc));
     return err;
 }

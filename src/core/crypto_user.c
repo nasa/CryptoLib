@@ -174,6 +174,12 @@ int32_t Crypto_User_ModifyVCID(void)
     int                    i;
     int                    j;
 
+    // TODO: This is not correct
+    if (crypto_config.sa_type == SA_TYPE_MARIADB)
+    {
+        mariadb_table_name = MARIADB_TC_TABLE_NAME;
+    }
+
     for (i = 0; i < NUM_GVCID; i++)
     {
         if (sa_if->sa_get_from_spi(i, &sa_ptr) != CRYPTO_LIB_SUCCESS)
