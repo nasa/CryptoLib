@@ -307,8 +307,8 @@ int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uin
 extern int32_t crypto_deep_copy_string(char *src_string, char **dst_string);
 
 // Path validation functions
-int32_t is_safe_username(const char *s);
-int32_t is_safe_path(const char *s);
+int32_t Crypto_is_safe_username(const char *s);
+int32_t Crypto_is_safe_path(const char *s);
 
 /*
 ** Extern Global Variables

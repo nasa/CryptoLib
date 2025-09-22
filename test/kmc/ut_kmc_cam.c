@@ -2,7 +2,7 @@
 #include "utest.h"
 
 /**
- * @brief Unit Test: Nominal Encryption CBC KMC
+ * @brief Unit Test: KMC CAM Configs
  **/
 UTEST(KMC_CAM, CAM_CONFIG)
 {
