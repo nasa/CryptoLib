@@ -130,13 +130,13 @@ int32_t update_sa_from_ptr(SecurityAssociation_t *sa_ptr)
     {
         return CRYPTO_LIB_ERR_NULL_SA;
     }
-    
-    int location      = sa_ptr->spi;
+
+    int location = sa_ptr->spi;
     if (location < 0 || location >= NUM_SA)
     {
         return CRYPTO_LIB_ERR_SPI_INDEX_OOB;
     }
-    
+
     sa[location].spi  = sa_ptr->spi;
     sa[location].ekid = sa_ptr->ekid;
     sa[location].akid = sa_ptr->akid;
@@ -172,7 +172,7 @@ int32_t update_sa_from_ptr(SecurityAssociation_t *sa_ptr)
     }
     sa[location].arsnw_len = sa_ptr->arsnw_len;
     sa[location].arsnw     = sa_ptr->arsnw;
-    
+
     return CRYPTO_LIB_SUCCESS;
 }
 

@@ -1493,8 +1493,9 @@ uint32_t Crypto_Get_FSR(void)
 
 int32_t Crypto_is_safe_username(const char *s)
 {
-    for (const unsigned char *p = (const unsigned char *)s; *p; ++p) {
-        if (!(isalnum(*p) || *p == '.' || *p == '_' || *p == '-')) 
+    for (const unsigned char *p = (const unsigned char *)s; *p; ++p)
+    {
+        if (!(isalnum(*p) || *p == '.' || *p == '_' || *p == '-'))
             return CRYPTO_LIB_ERROR;
     }
     return CRYPTO_LIB_SUCCESS;
@@ -1502,8 +1503,9 @@ int32_t Crypto_is_safe_username(const char *s)
 
 int32_t Crypto_is_safe_path(const char *s)
 {
-    for (const unsigned char *p = (const unsigned char *)s; *p; ++p) {
-        if (!(isalnum(*p) || *p == '.' || *p == '_' || *p == '-' || *p == '/')) 
+    for (const unsigned char *p = (const unsigned char *)s; *p; ++p)
+    {
+        if (!(isalnum(*p) || *p == '.' || *p == '_' || *p == '-' || *p == '/'))
             return CRYPTO_LIB_ERROR;
     }
     return CRYPTO_LIB_SUCCESS;

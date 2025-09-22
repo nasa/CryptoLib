@@ -2240,13 +2240,18 @@ int32_t curl_perform_with_cam_retries(CURL *curl_handle, memory_write *chunk_wri
 int32_t run_kinit(const char *keytab_path, const char *username)
 {
     pid_t pid = fork();
-    if (pid == 0) {
+    if (pid == 0)
+    {
         // Child process
         execlp("kinit", "kinit", "-kt", keytab_path, username, (char *)NULL);
         exit(CAM_KEYTAB_FILE_KINIT_FAILURE);
-    } else if (pid < 0) {
+    }
+    else if (pid < 0)
+    {
         return CRYPTO_LIB_ERROR; // fork failed
-    } else {
+    }
+    else
+    {
         int status;
         waitpid(pid, &status, 0);
         return status;
