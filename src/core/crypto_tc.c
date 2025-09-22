@@ -243,10 +243,10 @@ int32_t Crypto_TC_Frame_Validation(uint16_t *p_enc_frame_len)
     }
 
     // Check maximum managed parameter size
-    if (*p_enc_frame_len > current_managed_parameters_struct.max_frame_size)
+    if (*p_enc_frame_len > tc_current_managed_parameters_struct.max_frame_size)
     {
 #ifdef DEBUG
-        printf("Managed length is: %d\n", current_managed_parameters_struct.max_frame_size);
+        printf("Managed length is: %d\n", tc_current_managed_parameters_struct.max_frame_size);
         printf("New enc frame length will be: %d\n", *p_enc_frame_len);
 #endif
         printf(KRED "Error: New frame would violate maximum tc frame managed parameter! \n" RESET);
@@ -695,7 +695,7 @@ int32_t Crypto_TC_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     */
 
     // Only calculate & insert FECF if CryptoLib is configured to do so & gvcid includes FECF.
-    if (current_managed_parameters_struct.has_fecf == TC_HAS_FECF)
+    if (tc_current_managed_parameters_struct.has_fecf == TC_HAS_FECF)
     {
 #ifdef FECF_DEBUG
         printf(KCYN "Calcing FECF over %d bytes\n" RESET, new_enc_frame_header_field_length - 1);
@@ -818,7 +818,7 @@ int32_t Crytpo_TC_Validate_TC_Temp_Header(const uint16_t in_frame_length, TC_Fra
     // Lookup-retrieve managed parameters for frame via gvcid:
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(temp_tc_header.tfvn, temp_tc_header.scid, temp_tc_header.vcid,
-                                                gvcid_managed_parameters_array, &current_managed_parameters_struct);
+                                                gvcid_managed_parameters_array, &tc_current_managed_parameters_struct);
 
     if (status != CRYPTO_LIB_SUCCESS)
     {
@@ -826,7 +826,7 @@ int32_t Crytpo_TC_Validate_TC_Temp_Header(const uint16_t in_frame_length, TC_Fra
         return status;
     } // Unable to get necessary Managed Parameters for TC TF -- return with error.
 
-    if (current_managed_parameters_struct.has_segmentation_hdr == TC_HAS_SEGMENT_HDRS)
+    if (tc_current_managed_parameters_struct.has_segmentation_hdr == TC_HAS_SEGMENT_HDRS)
     {
         *segmentation_hdr = p_in_frame[5];
         *map_id           = *segmentation_hdr & 0x3F;
@@ -837,6 +837,10 @@ int32_t Crytpo_TC_Validate_TC_Temp_Header(const uint16_t in_frame_length, TC_Fra
     {
         mc_if->mc_log(status);
         return status;
+    }
+    if (crypto_config.sa_type == SA_TYPE_MARIADB)
+    {
+        mariadb_table_name = MARIADB_TC_TABLE_NAME;
     }
     status = sa_if->sa_get_operational_sa_from_gvcid(temp_tc_header.tfvn, temp_tc_header.scid, temp_tc_header.vcid,
                                                      *map_id, sa_ptr);
@@ -1102,6 +1106,13 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, const uint16_t in
             break;
     }
 #endif
+    if ((encryption_cipher == CRYPTO_CIPHER_AES256_CBC || encryption_cipher == CRYPTO_CIPHER_AES256_CBC_MAC) &&
+        sa_ptr->shplf_len == 0)
+    {
+        status = CRYPTO_LIB_ERR_SHPLF_LEN_LESS_THAN_MIN_PAD_SIZE;
+        mc_if->mc_log(status);
+        return status;
+    }
 
     // Determine if segment header exists and FECF exists
     uint8_t segment_hdr_len = TC_SEGMENT_HDR_SIZE;
@@ -1187,7 +1198,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, const uint16_t in
     */
     uint16_t index = TC_FRAME_HEADER_SIZE; // Frame header is 5 bytes
 
-    if (current_managed_parameters_struct.has_segmentation_hdr == TC_HAS_SEGMENT_HDRS)
+    if (tc_current_managed_parameters_struct.has_segmentation_hdr == TC_HAS_SEGMENT_HDRS)
     {
         index++; // Add 1 byte to index because segmentation header used for this gvcid.
     }
@@ -1314,7 +1325,7 @@ int32_t Crypto_TC_ProcessSecurity(uint8_t *ingest, int *len_ingest, TC_t *tc_sdl
 int32_t Crypto_TC_Parse_Check_FECF(uint8_t *ingest, int *len_ingest, TC_t *tc_sdls_processed_frame)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    if (current_managed_parameters_struct.has_fecf == TC_HAS_FECF)
+    if (tc_current_managed_parameters_struct.has_fecf == TC_HAS_FECF)
     {
         tc_sdls_processed_frame->tc_sec_trailer.fecf =
             (((ingest[tc_sdls_processed_frame->tc_header.fl - 1] << 8) & 0xFF00) |
@@ -1658,7 +1669,7 @@ int32_t Crypto_TC_Prep_AAD(TC_t *tc_sdls_processed_frame, uint8_t fecf_len, uint
     if ((sa_service_type == SA_AUTHENTICATION) || (sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
     {
         uint16_t tc_mac_start_index = tc_sdls_processed_frame->tc_header.fl + 1 - fecf_len - sa_ptr->stmacf_len;
-        if (current_managed_parameters_struct.max_frame_size < tc_mac_start_index)
+        if (tc_current_managed_parameters_struct.max_frame_size < tc_mac_start_index)
         {
             status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW;
             mc_if->mc_log(status);
@@ -1811,6 +1822,10 @@ uint32_t Crypto_TC_Sanity_Validations(TC_t *tc_sdls_processed_frame, SecurityAss
 {
     uint32_t status = CRYPTO_LIB_SUCCESS;
 
+    if (crypto_config.sa_type == SA_TYPE_MARIADB)
+    {
+        mariadb_table_name = MARIADB_TC_TABLE_NAME;
+    }
     status = sa_if->sa_get_from_spi(tc_sdls_processed_frame->tc_sec_header.spi, sa_ptr);
     // If no valid SPI, return
     if (status == CRYPTO_LIB_SUCCESS)
@@ -1857,17 +1872,17 @@ void Crypto_TC_Get_Ciper_Mode_TCP(uint8_t sa_service_type, uint32_t *encryption_
  **/
 void Crypto_TC_Calc_Lengths(uint8_t *fecf_len, uint8_t *segment_hdr_len, uint8_t *ocf_len)
 {
-    if (current_managed_parameters_struct.has_fecf == TC_NO_FECF)
+    if (tc_current_managed_parameters_struct.has_fecf == TC_NO_FECF)
     {
         *fecf_len = 0;
     }
 
-    if (current_managed_parameters_struct.has_segmentation_hdr == TC_NO_SEGMENT_HDRS)
+    if (tc_current_managed_parameters_struct.has_segmentation_hdr == TC_NO_SEGMENT_HDRS)
     {
         *segment_hdr_len = 0;
     }
 
-    if (current_managed_parameters_struct.has_ocf == TC_OCF_NA)
+    if (tc_current_managed_parameters_struct.has_ocf == TC_OCF_NA)
     {
         *ocf_len = 0;
     }
@@ -1885,7 +1900,7 @@ void Crypto_TC_Calc_Lengths(uint8_t *fecf_len, uint8_t *segment_hdr_len, uint8_t
 void Crypto_TC_Set_Segment_Header(TC_t *tc_sdls_processed_frame, uint8_t *ingest, int *byte_idx)
 {
     int byte_idx_tmp = *byte_idx;
-    if (current_managed_parameters_struct.has_segmentation_hdr == TC_HAS_SEGMENT_HDRS)
+    if (tc_current_managed_parameters_struct.has_segmentation_hdr == TC_HAS_SEGMENT_HDRS)
     {
         tc_sdls_processed_frame->tc_sec_header.sh = (uint8_t)ingest[*byte_idx];
         byte_idx_tmp++;
@@ -1953,7 +1968,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
     // Lookup-retrieve managed parameters for frame via gvcid:
     status = Crypto_Get_Managed_Parameters_For_Gvcid(
         tc_sdls_processed_frame->tc_header.tfvn, tc_sdls_processed_frame->tc_header.scid,
-        tc_sdls_processed_frame->tc_header.vcid, gvcid_managed_parameters_array, &current_managed_parameters_struct);
+        tc_sdls_processed_frame->tc_header.vcid, gvcid_managed_parameters_array, &tc_current_managed_parameters_struct);
 
     if (status != CRYPTO_LIB_SUCCESS)
     {
@@ -2201,6 +2216,11 @@ static int32_t validate_sa_index(SecurityAssociation_t *sa)
 {
     int32_t                returnval = 0;
     SecurityAssociation_t *temp_sa;
+
+    if (crypto_config.sa_type == SA_TYPE_MARIADB)
+    {
+        mariadb_table_name = MARIADB_TC_TABLE_NAME;
+    }
     sa_if->sa_get_from_spi(sa->spi, &temp_sa);
 
     // Do not validate sa index on KMC

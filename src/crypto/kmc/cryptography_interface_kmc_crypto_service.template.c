@@ -1345,8 +1345,13 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
                         memcpy(ciphertext_token_base64, token, cipher_text_token_len);
 #ifdef DEBUG
                         printf("IV LENGTH: %d\n", iv_len);
-                        printf("IV ENCODED Text: %s\nIV ENCODED TEXT LEN: %ld\n", ciphertext_token_base64,
-                               cipher_text_token_len);
+                        printf("IV ENCODED TEXT LEN: %ld\n", cipher_text_token_len);
+                        printf("IV ENCODED Text: \n");
+                        for (uint32_t i = 0; i < cipher_text_token_len; i++)
+                        {
+                            printf("%c", ciphertext_token_base64[i]);
+                        }
+                        printf("\n");
 #endif
                         char  *iv_decoded     = malloc((iv_len)*2 + 1);
                         size_t iv_decoded_len = 0;
@@ -1357,7 +1362,7 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
                         printf("Decoded IV Text: \n");
                         for (uint32_t i = 0; i < iv_decoded_len; i++)
                         {
-                            printf("%02x ", (uint8_t)iv_decoded[i]);
+                            printf("%02x", (uint8_t)iv_decoded[i]);
                         }
                         printf("\n");
 #endif

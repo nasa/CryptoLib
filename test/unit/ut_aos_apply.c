@@ -268,7 +268,7 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FECF)
     char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
     ASSERT_STREQ("CRYPTO_LIB_SUCCESS", error_enum);
     // Now, byte by byte verify the static frame in memory is what we expect (updated SPI and FECF)
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < aos_current_managed_parameters_struct.max_frame_size; i++)
     {
         printf("Checking %02x against %02X\n", (uint8_t)test_aos_b[i], (uint8_t) * (truth_aos_b + i));
         ASSERT_EQ((uint8_t)test_aos_b[i], (uint8_t) * (truth_aos_b + i));
@@ -407,7 +407,7 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FECF_LEFT_BLANK)
     ASSERT_STREQ("CRYPTO_LIB_SUCCESS", error_enum);
 
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < aos_current_managed_parameters_struct.max_frame_size; i++)
     {
         printf("Checking %02x against %02X\n", (uint8_t)test_aos_b[i], (uint8_t) * (truth_aos_b + i));
         ASSERT_EQ((uint8_t)test_aos_b[i], (uint8_t) * (truth_aos_b + i));
@@ -542,7 +542,7 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FHEC_FECF)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < aos_current_managed_parameters_struct.max_frame_size; i++)
     {
         // printf("Checking %02x against %02X\n", (uint8_t)test_aos_b[i], (uint8_t)*(truth_aos_b + i));
         ASSERT_EQ((uint8_t)test_aos_b[i], (uint8_t) * (truth_aos_b + i));
@@ -682,7 +682,7 @@ UTEST(AOS_APPLY, HAPPY_PATH_CLEAR_FHEC_OID_FECF)
     ASSERT_STREQ("CRYPTO_LIB_SUCCESS", error_enum);
 
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < aos_current_managed_parameters_struct.max_frame_size; i++)
     {
         // printf("Checking %02x against %02X\n", (uint8_t)test_aos_b[i], (uint8_t)truth_aos_b[i]);
         ASSERT_EQ((uint8_t)test_aos_b[i], (uint8_t) * (truth_aos_b + i));
@@ -825,7 +825,7 @@ UTEST(AOS_APPLY, AES_CMAC_256_TEST_BITMASK_1)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Now, byte by byte verify the static frame in memory is what we expect (updated SPI and FECF)
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < aos_current_managed_parameters_struct.max_frame_size; i++)
     {
         // printf("Checking %02x against %02X\n", (uint8_t)test_aos_b[i], (uint8_t)*(truth_aos_b + i));
         ASSERT_EQ((uint8_t)test_aos_b[i], (uint8_t) * (truth_aos_b + i));
@@ -972,7 +972,7 @@ UTEST(AOS_APPLY, AES_CMAC_256_TEST_BITMASK_0)
     ASSERT_STREQ("CRYPTO_LIB_SUCCESS", error_enum);
 
     // Now, byte by byte verify the static frame in memory is what we expect (updated SPI and FECF)
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < aos_current_managed_parameters_struct.max_frame_size; i++)
     {
         // printf("%d: Checking %02x against %02X\n", i, (uint8_t)test_aos_b[i], (uint8_t)truth_aos_b[i]);
         ASSERT_EQ((uint8_t)test_aos_b[i], (uint8_t)truth_aos_b[i]);
@@ -1119,7 +1119,7 @@ UTEST(AOS_APPLY, AES_GCM)
     ASSERT_STREQ("CRYPTO_LIB_SUCCESS", error_enum);
 
     // Now, byte by byte verify the static frame in memory is what we expect (updated SPI and FECF)
-    for (int i = 0; i < current_managed_parameters_struct.max_frame_size; i++)
+    for (int i = 0; i < aos_current_managed_parameters_struct.max_frame_size; i++)
     {
         // printf("Checking %02x against %02X\n", (uint8_t)test_aos_b[i], (uint8_t)*(truth_aos_b + i));
         ASSERT_EQ((uint8_t)test_aos_b[i], (uint8_t) * (truth_aos_b + i));

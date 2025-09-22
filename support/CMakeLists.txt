@@ -21,4 +21,8 @@ find_package(Threads REQUIRED)
 include_directories("./standalone")
 add_executable(standalone 
                ./standalone/standalone.c)
+target_compile_definitions(standalone PUBLIC
+    $<$<BOOL:${STANDALONE_TCP}>:STANDALONE_TCP=1>
+    $<$<NOT:$<BOOL:${STANDALONE_TCP}>>:STANDALONE_TCP=0>
+)
 target_link_libraries(standalone crypto pthread)

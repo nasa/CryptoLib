@@ -901,6 +901,27 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
 
     if (authenticate_bool == CRYPTO_TRUE)
     {
+        // ********** USED FOR TAG DEBUGGING ***********
+        // ********* DO NOT USE IN PRODUCTION **********
+
+        // printf("Received MAC is: \n\t0x");
+        // for (uint32_t i = 0; i < mac_size; i++)
+        // {
+        //     printf("%02X", mac[i]);
+        // }
+        // printf("\n");
+
+        // gcry_error = gcry_cipher_gettag(tmp_hd,
+        //                                 mac,
+        //                                 mac_size);
+
+        // printf("Calculated MAC is: \n\t0x");
+        // for (uint32_t i = 0; i < mac_size; i++)
+        // {
+        //     printf("%02X", mac[i]);
+        // }
+        // printf("\n");
+
         gcry_error = gcry_cipher_checktag(tmp_hd,
                                           mac,     // tag input
                                           mac_size // tag size
