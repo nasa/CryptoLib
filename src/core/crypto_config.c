@@ -94,6 +94,11 @@ int32_t Crypto_SC_Init(void)
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
     TM_UT_Managed_Parameters.vcid = 5;
     Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+
+    // AOS
+    GvcidManagedParameters_t AOS_UT_Managed_Parameters = {
+        1, 0x0003, 6, AOS_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, AOS_SEGMENT_HDRS_NA, 1786, AOS_NO_OCF, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
 
     SecurityAssociation_t *sa_ptr = NULL;
@@ -140,6 +145,12 @@ int32_t Crypto_SC_Init(void)
     sa_ptr->gvcid_blk.vcid = 5;
     sa_ptr->shivf_len      = 0;
     sa_ptr->iv_len         = 0;
+    sa_if->sa_get_from_spi(10, &sa_ptr);
+    sa_ptr->acs            = CRYPTO_MAC_HMAC_SHA256;
+    sa_ptr->shsnf_len      = 2;
+    sa_ptr->ekid           = 128;
+    sa_ptr->akid           = 128;
+    sa_ptr->gvcid_blk.vcid = 6;
 
     return status;
 }
@@ -309,7 +320,6 @@ int32_t Crypto_Init(void)
         return status;
     }
 
-    // TODO: Check and return status on error
     /* MC Interface */
     if (mc_if == NULL)
     {
@@ -348,7 +358,6 @@ int32_t Crypto_Init(void)
         return status;
     }
 
-    // TODO: Check and return status on error
     /* SA Interface */
     if (sa_if == NULL)
     {
@@ -387,7 +396,7 @@ int32_t Crypto_Init(void)
         {
             status = SADB_INVALID_SADB_TYPE;
             return status;
-        } // TODO: Error stack
+        }
     }
 
     /* Crypto Interface */
@@ -459,19 +468,30 @@ int32_t Crypto_Init(void)
             {
                 status = sa_if->sa_config();
 
-                Crypto_Local_Init();
-                Crypto_Local_Config();
+                if (status == CRYPTO_LIB_SUCCESS)
+                {
+                    status = Crypto_Local_Init();
+                }
 
-                // TODO - Add error checking
+                if (status == CRYPTO_LIB_SUCCESS)
+                {
+                    status = Crypto_Local_Config();
+                }
 
-                // Init table for CRC calculations
-                Crypto_Calc_CRC_Init_Table();
+                if (status == CRYPTO_LIB_SUCCESS)
+                {
+                    // Init table for CRC calculations
+                    status = Crypto_Calc_CRC_Init_Table();
+                }
 
-                // cFS Standard Initialized Message
+                if (status == CRYPTO_LIB_SUCCESS)
+                {
+                    // cFS Standard Initialized Message
 #ifdef DEBUG
-                printf(KBLU "Crypto Lib Intialized.  Version %d.%d.%d.%d\n" RESET, CRYPTO_LIB_MAJOR_VERSION,
-                       CRYPTO_LIB_MINOR_VERSION, CRYPTO_LIB_REVISION, CRYPTO_LIB_MISSION_REV);
+                    printf(KBLU "Crypto Lib Intialized.  Version %d.%d.%d.%d\n" RESET, CRYPTO_LIB_MAJOR_VERSION,
+                           CRYPTO_LIB_MINOR_VERSION, CRYPTO_LIB_REVISION, CRYPTO_LIB_MISSION_REV);
 #endif
+                }
             }
             else
             {
@@ -579,21 +599,63 @@ int32_t Crypto_Config_MariaDB(char *mysql_hostname, char *mysql_database, uint16
     sa_mariadb_config = (SadbMariaDBConfig_t *)calloc(1, SADB_MARIADB_CONFIG_SIZE);
     if (sa_mariadb_config != NULL)
     {
-        sa_mariadb_config->mysql_username = crypto_deep_copy_string(mysql_username);
-        sa_mariadb_config->mysql_password = crypto_deep_copy_string(mysql_password);
-        sa_mariadb_config->mysql_hostname = crypto_deep_copy_string(mysql_hostname);
-        sa_mariadb_config->mysql_database = crypto_deep_copy_string(mysql_database);
-        sa_mariadb_config->mysql_port     = mysql_port;
+        status = CRYPTO_LIB_SUCCESS;
+
+        // Copy all string parameters, checking for errors
+        if (status == CRYPTO_LIB_SUCCESS)
+            status = crypto_deep_copy_string(mysql_username, &sa_mariadb_config->mysql_username);
+        if (status == CRYPTO_LIB_SUCCESS)
+            status = crypto_deep_copy_string(mysql_password, &sa_mariadb_config->mysql_password);
+        if (status == CRYPTO_LIB_SUCCESS)
+            status = crypto_deep_copy_string(mysql_hostname, &sa_mariadb_config->mysql_hostname);
+        if (status == CRYPTO_LIB_SUCCESS)
+            status = crypto_deep_copy_string(mysql_database, &sa_mariadb_config->mysql_database);
+
+        sa_mariadb_config->mysql_port = mysql_port;
+
         /*start - encrypted connection related parameters*/
-        sa_mariadb_config->mysql_mtls_cert                = crypto_deep_copy_string(mysql_mtls_cert);
-        sa_mariadb_config->mysql_mtls_key                 = crypto_deep_copy_string(mysql_mtls_key);
-        sa_mariadb_config->mysql_mtls_ca                  = crypto_deep_copy_string(mysql_tls_ca);
-        sa_mariadb_config->mysql_mtls_capath              = crypto_deep_copy_string(mysql_tls_capath);
-        sa_mariadb_config->mysql_tls_verify_server        = mysql_tls_verify_server;
-        sa_mariadb_config->mysql_mtls_client_key_password = crypto_deep_copy_string(mysql_mtls_client_key_password);
+        if (status == CRYPTO_LIB_SUCCESS)
+            status = crypto_deep_copy_string(mysql_mtls_cert, &sa_mariadb_config->mysql_mtls_cert);
+        if (status == CRYPTO_LIB_SUCCESS)
+            status = crypto_deep_copy_string(mysql_mtls_key, &sa_mariadb_config->mysql_mtls_key);
+        if (status == CRYPTO_LIB_SUCCESS)
+            status = crypto_deep_copy_string(mysql_tls_ca, &sa_mariadb_config->mysql_mtls_ca);
+        if (status == CRYPTO_LIB_SUCCESS)
+            status = crypto_deep_copy_string(mysql_tls_capath, &sa_mariadb_config->mysql_mtls_capath);
+
+        sa_mariadb_config->mysql_tls_verify_server = mysql_tls_verify_server;
+
+        if (status == CRYPTO_LIB_SUCCESS)
+            status = crypto_deep_copy_string(mysql_mtls_client_key_password,
+                                             &sa_mariadb_config->mysql_mtls_client_key_password);
+
         sa_mariadb_config->mysql_require_secure_transport = mysql_require_secure_transport;
         /*end - encrypted connection related parameters*/
-        status = CRYPTO_LIB_SUCCESS;
+
+        // If any string copying failed, clean up
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+            if (sa_mariadb_config->mysql_username)
+                free(sa_mariadb_config->mysql_username);
+            if (sa_mariadb_config->mysql_password)
+                free(sa_mariadb_config->mysql_password);
+            if (sa_mariadb_config->mysql_hostname)
+                free(sa_mariadb_config->mysql_hostname);
+            if (sa_mariadb_config->mysql_database)
+                free(sa_mariadb_config->mysql_database);
+            if (sa_mariadb_config->mysql_mtls_cert)
+                free(sa_mariadb_config->mysql_mtls_cert);
+            if (sa_mariadb_config->mysql_mtls_key)
+                free(sa_mariadb_config->mysql_mtls_key);
+            if (sa_mariadb_config->mysql_mtls_ca)
+                free(sa_mariadb_config->mysql_mtls_ca);
+            if (sa_mariadb_config->mysql_mtls_capath)
+                free(sa_mariadb_config->mysql_mtls_capath);
+            if (sa_mariadb_config->mysql_mtls_client_key_password)
+                free(sa_mariadb_config->mysql_mtls_client_key_password);
+            free(sa_mariadb_config);
+            sa_mariadb_config = NULL;
+        }
     }
     return status;
 }
@@ -607,27 +669,76 @@ int32_t Crypto_Config_Kmc_Crypto_Service(char *protocol, char *kmc_crypto_hostna
     int32_t status = CRYPTO_LIB_SUCCESS;
     cryptography_kmc_crypto_config =
         (CryptographyKmcCryptoServiceConfig_t *)calloc(1, CRYPTOGRAPHY_KMC_CRYPTO_SERVICE_CONFIG_SIZE);
-    cryptography_kmc_crypto_config->protocol            = crypto_deep_copy_string(protocol);
-    cryptography_kmc_crypto_config->kmc_crypto_hostname = crypto_deep_copy_string(kmc_crypto_hostname);
-    cryptography_kmc_crypto_config->kmc_crypto_port     = kmc_crypto_port;
+
+    if (cryptography_kmc_crypto_config == NULL)
+    {
+        return CRYPTO_LIB_ERROR;
+    }
+
+    // Copy string parameters, checking for errors
+    if (status == CRYPTO_LIB_SUCCESS)
+        status = crypto_deep_copy_string(protocol, &cryptography_kmc_crypto_config->protocol);
+    if (status == CRYPTO_LIB_SUCCESS)
+        status = crypto_deep_copy_string(kmc_crypto_hostname, &cryptography_kmc_crypto_config->kmc_crypto_hostname);
+
+    cryptography_kmc_crypto_config->kmc_crypto_port = kmc_crypto_port;
+
     if (kmc_crypto_app != NULL)
     {
-        cryptography_kmc_crypto_config->kmc_crypto_app_uri = crypto_deep_copy_string(kmc_crypto_app);
+        if (status == CRYPTO_LIB_SUCCESS)
+            status = crypto_deep_copy_string(kmc_crypto_app, &cryptography_kmc_crypto_config->kmc_crypto_app_uri);
     }
     else
     {
-        char *crypto_service_tmp                           = (char *)"crypto-service";
-        cryptography_kmc_crypto_config->kmc_crypto_app_uri = crypto_deep_copy_string(crypto_service_tmp);
+        char *crypto_service_tmp = (char *)"crypto-service";
+        if (status == CRYPTO_LIB_SUCCESS)
+            status = crypto_deep_copy_string(crypto_service_tmp, &cryptography_kmc_crypto_config->kmc_crypto_app_uri);
     }
 
-    cryptography_kmc_crypto_config->mtls_client_cert_path          = crypto_deep_copy_string(mtls_client_cert_path);
-    cryptography_kmc_crypto_config->mtls_client_cert_type          = crypto_deep_copy_string(mtls_client_cert_type);
-    cryptography_kmc_crypto_config->mtls_client_key_path           = crypto_deep_copy_string(mtls_client_key_path);
-    cryptography_kmc_crypto_config->mtls_client_key_pass           = crypto_deep_copy_string(mtls_client_key_pass);
-    cryptography_kmc_crypto_config->mtls_ca_bundle                 = crypto_deep_copy_string(kmc_tls_ca_bundle);
-    cryptography_kmc_crypto_config->mtls_ca_path                   = crypto_deep_copy_string(kmc_tls_ca_path);
-    cryptography_kmc_crypto_config->mtls_issuer_cert               = crypto_deep_copy_string(mtls_issuer_cert);
+    if (status == CRYPTO_LIB_SUCCESS)
+        status = crypto_deep_copy_string(mtls_client_cert_path, &cryptography_kmc_crypto_config->mtls_client_cert_path);
+    if (status == CRYPTO_LIB_SUCCESS)
+        status = crypto_deep_copy_string(mtls_client_cert_type, &cryptography_kmc_crypto_config->mtls_client_cert_type);
+    if (status == CRYPTO_LIB_SUCCESS)
+        status = crypto_deep_copy_string(mtls_client_key_path, &cryptography_kmc_crypto_config->mtls_client_key_path);
+    if (status == CRYPTO_LIB_SUCCESS)
+        status = crypto_deep_copy_string(mtls_client_key_pass, &cryptography_kmc_crypto_config->mtls_client_key_pass);
+    if (status == CRYPTO_LIB_SUCCESS)
+        status = crypto_deep_copy_string(kmc_tls_ca_bundle, &cryptography_kmc_crypto_config->mtls_ca_bundle);
+    if (status == CRYPTO_LIB_SUCCESS)
+        status = crypto_deep_copy_string(kmc_tls_ca_path, &cryptography_kmc_crypto_config->mtls_ca_path);
+    if (status == CRYPTO_LIB_SUCCESS)
+        status = crypto_deep_copy_string(mtls_issuer_cert, &cryptography_kmc_crypto_config->mtls_issuer_cert);
+
     cryptography_kmc_crypto_config->ignore_ssl_hostname_validation = kmc_ignore_ssl_hostname_validation;
+
+    // If any string copying failed, clean up
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        if (cryptography_kmc_crypto_config->protocol)
+            free(cryptography_kmc_crypto_config->protocol);
+        if (cryptography_kmc_crypto_config->kmc_crypto_hostname)
+            free(cryptography_kmc_crypto_config->kmc_crypto_hostname);
+        if (cryptography_kmc_crypto_config->kmc_crypto_app_uri)
+            free(cryptography_kmc_crypto_config->kmc_crypto_app_uri);
+        if (cryptography_kmc_crypto_config->mtls_client_cert_path)
+            free(cryptography_kmc_crypto_config->mtls_client_cert_path);
+        if (cryptography_kmc_crypto_config->mtls_client_cert_type)
+            free(cryptography_kmc_crypto_config->mtls_client_cert_type);
+        if (cryptography_kmc_crypto_config->mtls_client_key_path)
+            free(cryptography_kmc_crypto_config->mtls_client_key_path);
+        if (cryptography_kmc_crypto_config->mtls_client_key_pass)
+            free(cryptography_kmc_crypto_config->mtls_client_key_pass);
+        if (cryptography_kmc_crypto_config->mtls_ca_bundle)
+            free(cryptography_kmc_crypto_config->mtls_ca_bundle);
+        if (cryptography_kmc_crypto_config->mtls_ca_path)
+            free(cryptography_kmc_crypto_config->mtls_ca_path);
+        if (cryptography_kmc_crypto_config->mtls_issuer_cert)
+            free(cryptography_kmc_crypto_config->mtls_issuer_cert);
+        free(cryptography_kmc_crypto_config);
+        cryptography_kmc_crypto_config = NULL;
+    }
+
     return status;
 }
 
@@ -639,15 +750,54 @@ int32_t Crypto_Config_Kmc_Crypto_Service(char *protocol, char *kmc_crypto_hostna
 int32_t Crypto_Config_Cam(uint8_t cam_enabled, char *cookie_file_path, char *keytab_file_path, uint8_t login_method,
                           char *access_manager_uri, char *username, char *cam_home)
 {
-    int32_t status                 = CRYPTO_LIB_SUCCESS;
-    cam_config                     = (CamConfig_t *)calloc(1, CAM_CONFIG_SIZE);
-    cam_config->cam_enabled        = cam_enabled;
-    cam_config->cookie_file_path   = crypto_deep_copy_string(cookie_file_path);
-    cam_config->keytab_file_path   = crypto_deep_copy_string(keytab_file_path);
-    cam_config->login_method       = login_method;
-    cam_config->access_manager_uri = crypto_deep_copy_string(access_manager_uri);
-    cam_config->username           = crypto_deep_copy_string(username);
-    cam_config->cam_home           = crypto_deep_copy_string(cam_home);
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    cam_config     = (CamConfig_t *)calloc(1, CAM_CONFIG_SIZE);
+
+    if (cam_config == NULL)
+    {
+        return CRYPTO_LIB_ERROR;
+    }
+
+    if (Crypto_is_safe_username(username) != CRYPTO_LIB_SUCCESS)
+    {
+        return CAM_CONFIG_NOT_SUPPORTED_ERROR;
+    }
+    if (Crypto_is_safe_path(keytab_file_path) != CRYPTO_LIB_SUCCESS)
+    {
+        return CAM_CONFIG_NOT_SUPPORTED_ERROR;
+    }
+
+    cam_config->cam_enabled  = cam_enabled;
+    cam_config->login_method = login_method;
+
+    // Copy string parameters, checking for errors
+    if (status == CRYPTO_LIB_SUCCESS)
+        status = crypto_deep_copy_string(cookie_file_path, &cam_config->cookie_file_path);
+    if (status == CRYPTO_LIB_SUCCESS)
+        status = crypto_deep_copy_string(keytab_file_path, &cam_config->keytab_file_path);
+    if (status == CRYPTO_LIB_SUCCESS)
+        status = crypto_deep_copy_string(access_manager_uri, &cam_config->access_manager_uri);
+    if (status == CRYPTO_LIB_SUCCESS)
+        status = crypto_deep_copy_string(username, &cam_config->username);
+    if (status == CRYPTO_LIB_SUCCESS)
+        status = crypto_deep_copy_string(cam_home, &cam_config->cam_home);
+
+    // If any string copying failed, clean up
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        if (cam_config->cookie_file_path)
+            free(cam_config->cookie_file_path);
+        if (cam_config->keytab_file_path)
+            free(cam_config->keytab_file_path);
+        if (cam_config->access_manager_uri)
+            free(cam_config->access_manager_uri);
+        if (cam_config->username)
+            free(cam_config->username);
+        if (cam_config->cam_home)
+            free(cam_config->cam_home);
+        free(cam_config);
+        cam_config = NULL;
+    }
 
     return status;
 }
@@ -734,19 +884,32 @@ int32_t crypto_free_config_structs(void)
  * @brief Function: crypto_deep_copy_string
  *  Used to malloc a local copy of an externally referenced string. The string MUST BE null-terminated.
  * @param src_string: Pointer to externally-memory-managed string.
- * @return char*: Pointer to locally-memory-managed string copy.
+ * @param dst_string: Pointer to store the locally-memory-managed string copy.
+ * @return int32_t: Success/Failure status.
  **/
 
-char *crypto_deep_copy_string(char *src_string)
+int32_t crypto_deep_copy_string(char *src_string, char **dst_string)
 {
+    if (dst_string == NULL)
+    {
+        return CRYPTO_LIB_ERR_NULL_BUFFER;
+    }
+
     if (src_string == NULL)
     {
-        return NULL;
+        *dst_string = NULL;
+        return CRYPTO_LIB_SUCCESS;
     }
+
     // Note that the strlen() function doesn't count the null character \0 while calculating the length.
-    char *deep_copied_str = malloc((strlen(src_string) + 1) * sizeof(char));
-    memcpy(deep_copied_str, src_string, strlen(src_string) + 1);
-    return deep_copied_str;
+    *dst_string = malloc((strlen(src_string) + 1) * sizeof(char));
+    if (*dst_string == NULL)
+    {
+        return CRYPTO_LIB_ERROR;
+    }
+
+    memcpy(*dst_string, src_string, strlen(src_string) + 1);
+    return CRYPTO_LIB_SUCCESS;
 }
 
 /**
@@ -754,7 +917,7 @@ char *crypto_deep_copy_string(char *src_string)
  *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
  */
-void Crypto_Local_Config(void)
+int32_t Crypto_Local_Config(void)
 {
     // Initial TM configuration
     // tm_frame.tm_sec_header.spi = 1;
@@ -780,6 +943,8 @@ void Crypto_Local_Config(void)
         mc_log.blk[log_count].emv[3]   = 0x41;
         mc_log.blk[log_count++].em_len = 4;
     }
+
+    return CRYPTO_LIB_SUCCESS;
 }
 
 /**
@@ -787,7 +952,7 @@ void Crypto_Local_Config(void)
  *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
  */
-void Crypto_Local_Init(void)
+int32_t Crypto_Local_Init(void)
 {
     // Initialize CLCW
     clcw.cwt    = 0; // Control Word Type "0"
@@ -814,6 +979,8 @@ void Crypto_Local_Init(void)
     report.bsaf  = 0; // Invalid SPI Flag
     report.lspi  = 0; // Last SPI Used
     report.snval = 0; // SN Value (LSB)
+
+    return CRYPTO_LIB_SUCCESS;
 }
 
 /**
@@ -821,7 +988,7 @@ void Crypto_Local_Init(void)
  *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 7 (Management)
  */
-void Crypto_Calc_CRC_Init_Table(void)
+int32_t Crypto_Calc_CRC_Init_Table(void)
 {
     uint16_t     val;
     uint32_t     poly = 0xEDB88320;
@@ -862,4 +1029,6 @@ void Crypto_Calc_CRC_Init_Table(void)
             val ^= 0x9188;
         crc16Table[i] = val;
     }
+
+    return CRYPTO_LIB_SUCCESS;
 }

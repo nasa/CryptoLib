@@ -666,7 +666,7 @@ static int32_t cryptography_aead_encrypt(
         );
         if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
         {
-            printf(KRED "ERROR: gcry_cipher_checktag error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+            printf(KRED "ERROR: gcry_cipher_gettag error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
             printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
             status = CRYPTO_LIB_ERR_MAC_RETRIEVAL_ERROR;
             gcry_cipher_close(tmp_hd);
