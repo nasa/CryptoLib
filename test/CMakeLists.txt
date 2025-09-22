@@ -86,6 +86,10 @@ if((KMC_MDB_DB OR KMC_MDB_RH))
     add_test(NAME UT_TC_KMC
              COMMAND ${PROJECT_BINARY_DIR}/bin/ut_tc_kmc
              WORKING_DIRECTORY ${PROJECT_TEST_DIR})
+
+    add_test(NAME UT_KMC_CAM
+             COMMAND ${PROJECT_BINARY_DIR}/bin/ut_kmc_cam
+             WORKING_DIRECTORY ${PROJECT_TEST_DIR})
           
 endif()
     # add_test(NAME UT_SADB_ERR_CASES_KMC_CRYPTO
