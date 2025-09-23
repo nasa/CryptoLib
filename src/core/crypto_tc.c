@@ -816,9 +816,9 @@ int32_t Crytpo_TC_Validate_TC_Temp_Header(const uint16_t in_frame_length, TC_Fra
     }
 
     // Lookup-retrieve managed parameters for frame via gvcid:
-    status =
-        Crypto_Get_TC_Managed_Parameters_For_Gvcid(temp_tc_header.tfvn, temp_tc_header.scid, temp_tc_header.vcid,
-                                                tc_gvcid_managed_parameters_array, &tc_current_managed_parameters_struct);
+    status = Crypto_Get_TC_Managed_Parameters_For_Gvcid(temp_tc_header.tfvn, temp_tc_header.scid, temp_tc_header.vcid,
+                                                        tc_gvcid_managed_parameters_array,
+                                                        &tc_current_managed_parameters_struct);
 
     if (status != CRYPTO_LIB_SUCCESS)
     {
@@ -1962,7 +1962,8 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
     // Lookup-retrieve managed parameters for frame via gvcid:
     status = Crypto_Get_TC_Managed_Parameters_For_Gvcid(
         tc_sdls_processed_frame->tc_header.tfvn, tc_sdls_processed_frame->tc_header.scid,
-        tc_sdls_processed_frame->tc_header.vcid, tc_gvcid_managed_parameters_array, &tc_current_managed_parameters_struct);
+        tc_sdls_processed_frame->tc_header.vcid, tc_gvcid_managed_parameters_array,
+        &tc_current_managed_parameters_struct);
 
     if (status != CRYPTO_LIB_SUCCESS)
     {
@@ -2268,7 +2269,8 @@ static int32_t crypto_tc_validate_sa(SecurityAssociation_t *sa)
     {
         return CRYPTO_LIB_ERR_NULL_IV;
     }
-    if (crypto_config_global.iv_type == IV_CRYPTO_MODULE && crypto_config_global.cryptography_type == CRYPTOGRAPHY_TYPE_LIBGCRYPT)
+    if (crypto_config_global.iv_type == IV_CRYPTO_MODULE &&
+        crypto_config_global.cryptography_type == CRYPTOGRAPHY_TYPE_LIBGCRYPT)
     {
         return CRYPTO_LIB_ERR_NULL_IV;
     }

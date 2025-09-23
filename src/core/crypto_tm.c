@@ -838,7 +838,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     }
 
     status = Crypto_Get_TM_Managed_Parameters_For_Gvcid(tfvn, scid, vcid, tm_gvcid_managed_parameters_array,
-                                                     &tm_current_managed_parameters_struct);
+                                                        &tm_current_managed_parameters_struct);
 
     // No managed parameters found
     if (status != CRYPTO_LIB_SUCCESS)
@@ -1113,8 +1113,8 @@ int32_t Crypto_TM_Process_Setup(uint16_t len_ingest, uint16_t *byte_idx, uint8_t
     if (status == CRYPTO_LIB_SUCCESS)
     {
         status = Crypto_Get_TM_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
-                                                         tm_frame_pri_hdr.vcid, tm_gvcid_managed_parameters_array,
-                                                         &tm_current_managed_parameters_struct);
+                                                            tm_frame_pri_hdr.vcid, tm_gvcid_managed_parameters_array,
+                                                            &tm_current_managed_parameters_struct);
     }
 
     if (status != CRYPTO_LIB_SUCCESS)

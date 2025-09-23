@@ -842,8 +842,8 @@ int32_t Crypto_USER_DEFINED_CMD(uint8_t *ingest)
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 2.4 (Managed Parameters)
  **/
 int32_t Crypto_Get_TC_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
-                                                TCGvcidManagedParameters_t *managed_parameters_in,
-                                                TCGvcidManagedParameters_t *managed_parameters_out)
+                                                   TCGvcidManagedParameters_t *managed_parameters_in,
+                                                   TCGvcidManagedParameters_t *managed_parameters_out)
 {
     int32_t status = MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND;
     // Check gvcid counter against a max
@@ -876,8 +876,8 @@ int32_t Crypto_Get_TC_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, 
 }
 
 int32_t Crypto_Get_TM_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
-                                                TMGvcidManagedParameters_t *managed_parameters_in,
-                                                TMGvcidManagedParameters_t *managed_parameters_out)
+                                                   TMGvcidManagedParameters_t *managed_parameters_in,
+                                                   TMGvcidManagedParameters_t *managed_parameters_out)
 {
     int32_t status = MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND;
     // Check gvcid counter against a max
@@ -910,8 +910,8 @@ int32_t Crypto_Get_TM_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, 
 }
 
 int32_t Crypto_Get_AOS_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
-                                                AOSGvcidManagedParameters_t *managed_parameters_in,
-                                                AOSGvcidManagedParameters_t *managed_parameters_out)
+                                                    AOSGvcidManagedParameters_t *managed_parameters_in,
+                                                    AOSGvcidManagedParameters_t *managed_parameters_out)
 {
     int32_t status = MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND;
     // Check gvcid counter against a max

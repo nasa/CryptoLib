@@ -151,8 +151,7 @@ UTEST(TM_APPLY_KMC, HAPPY_PATH_ENC_TM_GCM_KMC)
     Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
                                      "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
                                      "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
-    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x0003, 1, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {0, 0x0003, 1, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
     Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
     int32_t return_val = Crypto_Init();
@@ -265,8 +264,7 @@ UTEST(TM_PROCESS_KMC, HAPPY_PATH_DEC_TM_GCM_KMC)
     Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
                                      "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
                                      "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
-    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x0003, 1, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {0, 0x0003, 1, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
     Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
     int32_t return_val = Crypto_Init();

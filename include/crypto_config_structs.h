@@ -208,17 +208,17 @@ typedef struct
     McType           mc_type;
     SadbType         sa_type;
     CryptographyType cryptography_type;
-    IvType           iv_type;             // Whether or not CryptoLib should generate the IV
+    IvType           iv_type; // Whether or not CryptoLib should generate the IV
 } CryptoConfigGlobal_t;
 #define CRYPTO_GLOBAL_CONFIG_SIZE (sizeof(CryptoConfigGlobal_t))
 
 typedef struct
 {
-    CreateFecfBool     crypto_create_fecf;  // Whether or not CryptoLib is expected to calculate TC FECFs and return
-                                            // payloads with the FECF
-    TcProcessSdlsPdus  process_sdls_pdus;   // Config to process SDLS extended procedure PDUs in CryptoLib
-    TcPusHdrPresent    has_pus_hdr;         // For ESA Testing
-    TcIgnoreSaState    ignore_sa_state;     // TODO - add logic that uses this configuration
+    CreateFecfBool crypto_create_fecf;    // Whether or not CryptoLib is expected to calculate TC FECFs and return
+                                          // payloads with the FECF
+    TcProcessSdlsPdus  process_sdls_pdus; // Config to process SDLS extended procedure PDUs in CryptoLib
+    TcPusHdrPresent    has_pus_hdr;       // For ESA Testing
+    TcIgnoreSaState    ignore_sa_state;   // TODO - add logic that uses this configuration
     TcIgnoreAntiReplay ignore_anti_replay;
     TcUniqueSaPerMapId unique_sa_per_mapid;
     CheckFecfBool      crypto_check_fecf;
@@ -230,10 +230,10 @@ typedef struct
 
 typedef struct
 {
-    CreateFecfBool   crypto_create_fecf;  // Whether or not CryptoLib is expected to calculate TC FECFs and return
-                                          // payloads with the FECF
-    CheckFecfBool      crypto_check_fecf;
-    uint8_t            vcid_bitmask;
+    CreateFecfBool crypto_create_fecf; // Whether or not CryptoLib is expected to calculate TC FECFs and return
+                                       // payloads with the FECF
+    CheckFecfBool crypto_check_fecf;
+    uint8_t       vcid_bitmask;
     uint8_t crypto_increment_nontransmitted_iv; // Whether or not CryptoLib increments the non-transmitted portion of
                                                 // the IV field
 } CryptoConfigTM_t;
@@ -241,10 +241,10 @@ typedef struct
 
 typedef struct
 {
-    CreateFecfBool   crypto_create_fecf;  // Whether or not CryptoLib is expected to calculate TC FECFs and return
-                                          // payloads with the FECF
-    CheckFecfBool      crypto_check_fecf;
-    uint8_t            vcid_bitmask;
+    CreateFecfBool crypto_create_fecf; // Whether or not CryptoLib is expected to calculate TC FECFs and return
+                                       // payloads with the FECF
+    CheckFecfBool crypto_check_fecf;
+    uint8_t       vcid_bitmask;
     uint8_t crypto_increment_nontransmitted_iv; // Whether or not CryptoLib increments the non-transmitted portion of
                                                 // the IV field
 } CryptoConfigAOS_t;
@@ -266,22 +266,22 @@ struct _TCGvcidManagedParameters_t
 typedef struct _TMGvcidManagedParameters_t TMGvcidManagedParameters_t;
 struct _TMGvcidManagedParameters_t
 {
-    uint8_t               tfvn : 4;  // Transfer Frame Version Number
-    uint16_t              scid : 10; // SpacecraftID
-    uint8_t               vcid : 6;  // Virtual Channel ID
-    FecfPresent           has_fecf;
-    uint16_t              max_frame_size; // Maximum TC/TM Frame Length with headers
-    OcfPresent            has_ocf;
-    int                   set_flag;
+    uint8_t     tfvn : 4;  // Transfer Frame Version Number
+    uint16_t    scid : 10; // SpacecraftID
+    uint8_t     vcid : 6;  // Virtual Channel ID
+    FecfPresent has_fecf;
+    uint16_t    max_frame_size; // Maximum TC/TM Frame Length with headers
+    OcfPresent  has_ocf;
+    int         set_flag;
 };
 #define TM_GVCID_MANAGED_PARAMETERS_SIZE (sizeof(TMGvcidManagedParameters_t))
 
 typedef struct _AOSGvcidManagedParameters_t AOSGvcidManagedParameters_t;
 struct _AOSGvcidManagedParameters_t
 {
-    uint8_t              tfvn : 2;  // Transfer Frame Version Number
+    uint8_t              tfvn : 2; // Transfer Frame Version Number
     uint8_t              scid : 8; // SpacecraftID
-    uint8_t              vcid : 6;  // Virtual Channel ID
+    uint8_t              vcid : 6; // Virtual Channel ID
     FecfPresent          has_fecf;
     AosFhecPresent       aos_has_fhec;
     AosInsertZonePresent aos_has_iz;

@@ -66,14 +66,14 @@ uint8_t Crypto_gf_mul(uint8_t a, uint8_t b);
 // Crypto Library Configuration functions
 extern int32_t Crypto_Config_CryptoLib(uint8_t key_type, uint8_t mc_type, uint8_t sa_type, uint8_t cryptography_type,
                                        uint8_t iv_type);
-extern int32_t Crypto_Config_TC(uint8_t crypto_create_fecf, uint8_t process_sdls_pdus,
-                                uint8_t has_pus_hdr, uint8_t ignore_sa_state, uint8_t ignore_anti_replay,
-                                uint8_t unique_sa_per_mapid, uint8_t crypto_check_fecf, uint8_t vcid_bitmask,
+extern int32_t Crypto_Config_TC(uint8_t crypto_create_fecf, uint8_t process_sdls_pdus, uint8_t has_pus_hdr,
+                                uint8_t ignore_sa_state, uint8_t ignore_anti_replay, uint8_t unique_sa_per_mapid,
+                                uint8_t crypto_check_fecf, uint8_t vcid_bitmask,
                                 uint8_t crypto_increment_nontransmitted_iv);
 extern int32_t Crypto_Config_TM(uint8_t crypto_create_fecf, uint8_t crypto_check_fecf, uint8_t vcid_bitmask,
                                 uint8_t crypto_increment_nontransmitted_iv);
 extern int32_t Crypto_Config_AOS(uint8_t crypto_create_fecf, uint8_t crypto_check_fecf, uint8_t vcid_bitmask,
-                                uint8_t crypto_increment_nontransmitted_iv);
+                                 uint8_t crypto_increment_nontransmitted_iv);
 extern int32_t Crypto_Config_MariaDB(char *mysql_hostname, char *mysql_database, uint16_t mysql_port,
                                      uint8_t mysql_require_secure_transport, uint8_t mysql_tls_verify_server,
                                      char *mysql_tls_ca, char *mysql_tls_capath, char *mysql_mtls_cert,
@@ -308,14 +308,14 @@ int32_t Crypto_USER_DEFINED_CMD(uint8_t *ingest);
 
 // Managed Parameter Functions
 int32_t Crypto_Get_TC_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
-                                                TCGvcidManagedParameters_t *managed_parameters_in,
-                                                TCGvcidManagedParameters_t *managed_parameters_out);
+                                                   TCGvcidManagedParameters_t *managed_parameters_in,
+                                                   TCGvcidManagedParameters_t *managed_parameters_out);
 int32_t Crypto_Get_TM_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
-                                                TMGvcidManagedParameters_t *managed_parameters_in,
-                                                TMGvcidManagedParameters_t *managed_parameters_out);
+                                                   TMGvcidManagedParameters_t *managed_parameters_in,
+                                                   TMGvcidManagedParameters_t *managed_parameters_out);
 int32_t Crypto_Get_AOS_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
-                                                AOSGvcidManagedParameters_t *managed_parameters_in,
-                                                AOSGvcidManagedParameters_t *managed_parameters_out);
+                                                    AOSGvcidManagedParameters_t *managed_parameters_in,
+                                                    AOSGvcidManagedParameters_t *managed_parameters_out);
 // Project-wide support functions
 extern int32_t crypto_deep_copy_string(char *src_string, char **dst_string);
 
@@ -363,7 +363,7 @@ extern SaInterface                           sa_if;
 extern CryptographyInterface                 cryptography_if;
 
 // extern crypto_key_t ak_ring[NUM_KEYS];
-extern SadbMariaDBConfig_t      *sa_mariadb_config;
+extern SadbMariaDBConfig_t *sa_mariadb_config;
 
 // OCF
 extern uint8_t                    ocf;

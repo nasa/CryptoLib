@@ -27,11 +27,11 @@ static int32_t init_cryptolib_for_fuzzing(void)
     int32_t status;
 
     // Configure CryptoLib with settings for all protocols
-    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL,                  // Use internal key management
-                            MC_TYPE_INTERNAL,                   // Use internal message counting
-                            SA_TYPE_INMEMORY,                   // Use in-memory security associations
-                            CRYPTOGRAPHY_TYPE_LIBGCRYPT,        // Use libgcrypt for crypto operations
-                            IV_INTERNAL                         // Use internal IV generation
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL,           // Use internal key management
+                            MC_TYPE_INTERNAL,            // Use internal message counting
+                            SA_TYPE_INMEMORY,            // Use in-memory security associations
+                            CRYPTOGRAPHY_TYPE_LIBGCRYPT, // Use libgcrypt for crypto operations
+                            IV_INTERNAL                  // Use internal IV generation
     );
 
     Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE,         // Create FECF for TC frames
@@ -51,23 +51,21 @@ static int32_t init_cryptolib_for_fuzzing(void)
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE // Increment non-transmitted IV
     );
 
-    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE,         // Create FECF for TC frames
-                      AOS_CHECK_FECF_TRUE,                 // Check FECF for TC frames
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE,        // Create FECF for TC frames
+                      AOS_CHECK_FECF_TRUE,                // Check FECF for TC frames
                       0x3F,                               // TC security flags
                       SA_INCREMENT_NONTRANSMITTED_IV_TRUE // Increment non-transmitted IV
     );
 
     // Add parameters for TC, TM, and AOS protocols
-    TCGvcidManagedParameters_t TC_Parameters = {
-        0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, 1};
+    TCGvcidManagedParameters_t TC_Parameters = {0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, 1};
     Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_Parameters);
 
-    TMGvcidManagedParameters_t TM_Parameters = {
-        0, 0x002c, 0, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
+    TMGvcidManagedParameters_t TM_Parameters = {0, 0x002c, 0, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
     Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_Parameters);
 
-    AOSGvcidManagedParameters_t AOS_Parameters = {
-        1, 0x0003, 0, AOS_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, 1786, AOS_NO_OCF, 1};
+    AOSGvcidManagedParameters_t AOS_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
+                                                  AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_Parameters);
 
     // Initialize the library

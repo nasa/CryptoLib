@@ -123,7 +123,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     }
 
     status = Crypto_Get_AOS_Managed_Parameters_For_Gvcid(tfvn, scid, vcid, aos_gvcid_managed_parameters_array,
-                                                     &aos_current_managed_parameters_struct);
+                                                         &aos_current_managed_parameters_struct);
 
     // No managed parameters found
     if (status != CRYPTO_LIB_SUCCESS)
@@ -876,9 +876,9 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
 #endif
 
     // Lookup-retrieve managed parameters for frame via gvcid:
-    status =
-        Crypto_Get_AOS_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
-                                                aos_gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
+    status = Crypto_Get_AOS_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid,
+                                                         aos_frame_pri_hdr.vcid, aos_gvcid_managed_parameters_array,
+                                                         &aos_current_managed_parameters_struct);
 
     if (status != CRYPTO_LIB_SUCCESS)
     {

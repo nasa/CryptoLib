@@ -194,8 +194,8 @@ UTEST(AOS_PROCESS, HAPPY_PATH_CLEAR_FECF)
                             IV_INTERNAL);
     Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {
-        1, 0x0003, 0, AOS_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, 1786, AOS_NO_OCF, 1};
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
+                                                             AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
 
     status = Crypto_Init();
@@ -293,9 +293,9 @@ UTEST(AOS_PROCESS, HAPPY_PATH_CLEAR_FECF)
     status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, aos_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Determine managed parameters by GVCID, which nominally happens in TO
-    status =
-        Crypto_Get_AOS_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
-                                                aos_gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
+    status = Crypto_Get_AOS_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid,
+                                                         aos_frame_pri_hdr.vcid, aos_gvcid_managed_parameters_array,
+                                                         &aos_current_managed_parameters_struct);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
     uint16_t sh_len = Crypto_Get_Security_Header_Length(sa_ptr);
     uint16_t offset = 6 + sh_len;
@@ -333,8 +333,8 @@ UTEST(AOS_PROCESS, SECONDARY_HDR_PRESENT_PLAINTEXT)
                             IV_INTERNAL);
     Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {
-        1, 0x0003, 0, AOS_HAS_FECF, AOS_HAS_FHEC, AOS_IZ_NA, 0, 1786, AOS_NO_OCF, 1};
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_HAS_FHEC,
+                                                             AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
 
     status = Crypto_Init();
@@ -431,9 +431,9 @@ UTEST(AOS_PROCESS, SECONDARY_HDR_PRESENT_PLAINTEXT)
     status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, aos_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Determine managed parameters by GVCID, which nominally happens in TO
-    status =
-        Crypto_Get_AOS_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
-                                                aos_gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
+    status = Crypto_Get_AOS_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid,
+                                                         aos_frame_pri_hdr.vcid, aos_gvcid_managed_parameters_array,
+                                                         &aos_current_managed_parameters_struct);
 
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
     uint16_t sh_len = Crypto_Get_Security_Header_Length(sa_ptr);
@@ -471,8 +471,8 @@ UTEST(AOS_PROCESS, INSERT_ZONE_PRESENT_PLAINTEXT)
                             IV_INTERNAL);
     Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {
-        1, 0x0003, 0, AOS_HAS_FECF, AOS_NO_FHEC, AOS_HAS_IZ, 10, 1786, AOS_NO_OCF, 1};
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,          0x0003, 0,    AOS_HAS_FECF, AOS_NO_FHEC,
+                                                             AOS_HAS_IZ, 10,     1786, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
 
     status = Crypto_Init();
@@ -572,9 +572,9 @@ UTEST(AOS_PROCESS, INSERT_ZONE_PRESENT_PLAINTEXT)
     status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, aos_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Determine managed parameters by GVCID, which nominally happens in TO
-    status =
-        Crypto_Get_AOS_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
-                                                aos_gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
+    status = Crypto_Get_AOS_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid,
+                                                         aos_frame_pri_hdr.vcid, aos_gvcid_managed_parameters_array,
+                                                         &aos_current_managed_parameters_struct);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
     uint16_t sh_len = Crypto_Get_Security_Header_Length(sa_ptr);
     uint16_t offset = 6 + 10 + sh_len;
@@ -612,8 +612,8 @@ UTEST(AOS_PROCESS, AES_CMAC_256_TEST_0)
                             IV_INTERNAL);
     Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {
-        1, 0x0003, 0, AOS_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, 1786, AOS_NO_OCF, 1};
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
+                                                             AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -722,9 +722,9 @@ UTEST(AOS_PROCESS, AES_CMAC_256_TEST_0)
     status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, aos_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Determine managed parameters by GVCID, which nominally happens in TO
-    status =
-        Crypto_Get_AOS_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
-                                                aos_gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
+    status = Crypto_Get_AOS_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid,
+                                                         aos_frame_pri_hdr.vcid, aos_gvcid_managed_parameters_array,
+                                                         &aos_current_managed_parameters_struct);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
     uint16_t sh_len = Crypto_Get_Security_Header_Length(sa_ptr);
     uint16_t offset = 6 + sh_len;
@@ -764,8 +764,8 @@ UTEST(AOS_PROCESS, AES_CMAC_256_TEST_1)
                             IV_INTERNAL);
     Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {
-        1, 0x0003, 0, AOS_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, 1786, AOS_NO_OCF, 1};
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
+                                                             AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -878,9 +878,9 @@ UTEST(AOS_PROCESS, AES_CMAC_256_TEST_1)
     status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, aos_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Determine managed parameters by GVCID, which nominally happens in TO
-    status =
-        Crypto_Get_AOS_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
-                                                aos_gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
+    status = Crypto_Get_AOS_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid,
+                                                         aos_frame_pri_hdr.vcid, aos_gvcid_managed_parameters_array,
+                                                         &aos_current_managed_parameters_struct);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
     uint16_t sh_len = Crypto_Get_Security_Header_Length(sa_ptr);
     uint16_t offset = 6 + sh_len;
@@ -918,8 +918,8 @@ UTEST(AOS_PROCESS, AES_HMAC_256_TEST_0)
                             IV_INTERNAL);
     Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {
-        1, 0x0003, 0, AOS_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, 1786, AOS_NO_OCF, 1};
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
+                                                             AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -1032,9 +1032,9 @@ UTEST(AOS_PROCESS, AES_HMAC_256_TEST_0)
     status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, aos_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Determine managed parameters by GVCID, which nominally happens in TO
-    status =
-        Crypto_Get_AOS_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
-                                                aos_gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
+    status = Crypto_Get_AOS_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid,
+                                                         aos_frame_pri_hdr.vcid, aos_gvcid_managed_parameters_array,
+                                                         &aos_current_managed_parameters_struct);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
     uint16_t sh_len = Crypto_Get_Security_Header_Length(sa_ptr);
     uint16_t offset = 6 + sh_len;
@@ -1074,8 +1074,8 @@ UTEST(AOS_PROCESS, AES_HMAC_256_TEST_1)
                             IV_INTERNAL);
     Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {
-        1, 0x0003, 0, AOS_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, 1786, AOS_NO_OCF, 1};
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
+                                                             AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -1184,9 +1184,9 @@ UTEST(AOS_PROCESS, AES_HMAC_256_TEST_1)
     status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, aos_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Determine managed parameters by GVCID, which nominally happens in TO
-    status =
-        Crypto_Get_AOS_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
-                                                aos_gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
+    status = Crypto_Get_AOS_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid,
+                                                         aos_frame_pri_hdr.vcid, aos_gvcid_managed_parameters_array,
+                                                         &aos_current_managed_parameters_struct);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
     uint16_t sh_len = Crypto_Get_Security_Header_Length(sa_ptr);
     uint16_t offset = 6 + sh_len;
@@ -1224,8 +1224,8 @@ UTEST(AOS_PROCESS, AES_HMAC_512_TEST_0)
                             IV_INTERNAL);
     Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {
-        1, 0x0003, 0, AOS_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, 1786, AOS_NO_OCF, 1};
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
+                                                             AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -1338,9 +1338,9 @@ UTEST(AOS_PROCESS, AES_HMAC_512_TEST_0)
     status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, aos_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Determine managed parameters by GVCID, which nominally happens in TO
-    status =
-        Crypto_Get_AOS_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
-                                                aos_gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
+    status = Crypto_Get_AOS_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid,
+                                                         aos_frame_pri_hdr.vcid, aos_gvcid_managed_parameters_array,
+                                                         &aos_current_managed_parameters_struct);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
     uint16_t sh_len = Crypto_Get_Security_Header_Length(sa_ptr);
     uint16_t offset = 6 + sh_len;
@@ -1378,8 +1378,8 @@ UTEST(AOS_PROCESS, AES_HMAC_512_TEST_1)
                             IV_INTERNAL);
     Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {
-        1, 0x0003, 0, AOS_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, 1786, AOS_NO_OCF, 1};
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
+                                                             AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -1492,9 +1492,9 @@ UTEST(AOS_PROCESS, AES_HMAC_512_TEST_1)
     status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, aos_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Determine managed parameters by GVCID, which nominally happens in TO
-    status =
-        Crypto_Get_AOS_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
-                                                aos_gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
+    status = Crypto_Get_AOS_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid,
+                                                         aos_frame_pri_hdr.vcid, aos_gvcid_managed_parameters_array,
+                                                         &aos_current_managed_parameters_struct);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
     uint16_t sh_len = Crypto_Get_Security_Header_Length(sa_ptr);
     uint16_t offset = 6 + sh_len;
@@ -1528,8 +1528,8 @@ UTEST(AOS_PROCESS, AES_GCM_DEC_ONLY)
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL);
     Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {
-        1, 0x0003, 0, AOS_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, 1786, AOS_NO_OCF, 1};
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
+                                                             AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
 
     status = Crypto_Init();
@@ -1621,9 +1621,9 @@ UTEST(AOS_PROCESS, AES_GCM_DEC_ONLY)
     aos_frame_pri_hdr.vcid = ((uint8_t)framed_aos_b[1] & 0x0E) >> 1;
 
     // Determine managed parameters by GVCID, which nominally happens in TO
-    status =
-        Crypto_Get_AOS_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
-                                                aos_gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
+    status = Crypto_Get_AOS_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid,
+                                                         aos_frame_pri_hdr.vcid, aos_gvcid_managed_parameters_array,
+                                                         &aos_current_managed_parameters_struct);
 
     // Expose/setup SAs for testing
     SecurityAssociation_t  ta;
@@ -1716,8 +1716,8 @@ UTEST(AOS_PROCESS, AEAD_GCM_BITMASK_1)
                             IV_INTERNAL);
     Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {
-        1, 0x0003, 0, AOS_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, 1786, AOS_NO_OCF, 1};
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
+                                                             AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -1822,9 +1822,9 @@ UTEST(AOS_PROCESS, AEAD_GCM_BITMASK_1)
     status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, aos_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Determine managed parameters by GVCID, which nominally happens in TO
-    status =
-        Crypto_Get_AOS_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
-                                                aos_gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
+    status = Crypto_Get_AOS_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid,
+                                                         aos_frame_pri_hdr.vcid, aos_gvcid_managed_parameters_array,
+                                                         &aos_current_managed_parameters_struct);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
     uint16_t sh_len = Crypto_Get_Security_Header_Length(sa_ptr);
     uint16_t offset = 6 + sh_len;
@@ -1856,8 +1856,8 @@ UTEST(AOS_PROCESS, AOS_SA_SEGFAULT_TEST)
                             IV_INTERNAL);
     Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {
-        1, 0x0003, 0, AOS_HAS_FECF, AOS_NO_FHEC, AOS_HAS_IZ, 10, 18, AOS_NO_OCF, 1};
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,          0x0003, 0,  AOS_HAS_FECF, AOS_NO_FHEC,
+                                                             AOS_HAS_IZ, 10,     18, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -1894,8 +1894,8 @@ UTEST(AOS_PROCESS, AOS_SA_NOT_OPERATIONAL)
                             IV_INTERNAL);
     Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {
-        1, 0x0003, 0, AOS_HAS_FECF, AOS_NO_FHEC, AOS_IZ_NA, 0, 18, AOS_NO_OCF, 1};
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,  AOS_HAS_FECF, AOS_NO_FHEC,
+                                                             AOS_IZ_NA, 0,      18, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -1947,8 +1947,8 @@ UTEST(AOS_PROCESS, AOS_OCF_TEST)
                             IV_INTERNAL);
     Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {
-        1, 0x0003, 0, AOS_HAS_FECF, AOS_NO_FHEC, AOS_IZ_NA, 0, 22, AOS_HAS_OCF, 1};
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,  AOS_HAS_FECF, AOS_NO_FHEC,
+                                                             AOS_IZ_NA, 0,      22, AOS_HAS_OCF,  1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -1998,8 +1998,8 @@ UTEST(AOS_PROCESS, AOS_KEY_STATE_TEST)
                             IV_INTERNAL);
     Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {
-        1, 0x0003, 0, AOS_HAS_FECF, AOS_NO_FHEC, AOS_IZ_NA, 0, 18, AOS_NO_OCF, 1};
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,  AOS_HAS_FECF, AOS_NO_FHEC,
+                                                             AOS_IZ_NA, 0,      18, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -2054,8 +2054,8 @@ UTEST(AOS_PROCESS, AOS_PROCESS_HEAP_UNDERFLOW_TEST)
                             IV_INTERNAL);
     Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {
-        1, 0x0000, 48, AOS_NO_FECF, AOS_NO_FHEC, AOS_IZ_NA, 0, 1786, AOS_NO_OCF, 1};
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0000, 48,   AOS_NO_FECF, AOS_NO_FHEC,
+                                                             AOS_IZ_NA, 0,      1786, AOS_NO_OCF,  1};
 
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
@@ -2103,8 +2103,8 @@ UTEST(AOS_PROCESS, AOS_FHECF_TEST)
                             IV_INTERNAL);
     Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Test
-    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {
-        1, 0x0003, 0, AOS_HAS_FECF, AOS_HAS_FHEC, AOS_IZ_NA, 0, 24, AOS_NO_OCF, 1};
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,  AOS_HAS_FECF, AOS_HAS_FHEC,
+                                                             AOS_IZ_NA, 0,      24, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
 
