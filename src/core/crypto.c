@@ -309,7 +309,7 @@ uint8_t Crypto_Prep_Reply(uint8_t *reply, uint8_t appID)
     reply[count++] = (sdls_frame.hdr.pkt_length & 0xFF00) >> 8;
     reply[count++] = (sdls_frame.hdr.pkt_length & 0x00FF);
 
-    if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
+    if (crypto_config_tc.has_pus_hdr == TC_HAS_PUS_HDR)
     {
         // Fill reply with PUS
         reply[count++] = (sdls_frame.pus.shf << 7) | (sdls_frame.pus.pusv << 4) | (sdls_frame.pus.ack);
@@ -831,29 +831,97 @@ int32_t Crypto_USER_DEFINED_CMD(uint8_t *ingest)
 }
 
 /**
- * @brief Function: Crypto_Get_Managed_Parameters_For_Gvcid
+ * @brief Function: Crypto_Get_TC_Managed_Parameters_For_Gvcid
  * @param tfvn: uint8_t
  * @param scid: uint16_t
  * @param vcid: uint8_t
- * @param managed_parameters_in: GvcidManagedParameters_t*
- * @param managed_parameters_out: GvcidManagedParameters_t*
+ * @param managed_parameters_in: TCGvcidManagedParameters_t*
+ * @param managed_parameters_out: TCGvcidManagedParameters_t*
  * @return int32: Success/Failure
  *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 2.4 (Managed Parameters)
  **/
-int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
-                                                GvcidManagedParameters_t *managed_parameters_in,
-                                                GvcidManagedParameters_t *managed_parameters_out)
+int32_t Crypto_Get_TC_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
+                                                TCGvcidManagedParameters_t *managed_parameters_in,
+                                                TCGvcidManagedParameters_t *managed_parameters_out)
 {
     int32_t status = MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND;
     // Check gvcid counter against a max
-    if (gvcid_counter > NUM_GVCID)
+    if (tc_gvcid_counter > NUM_GVCID)
     {
         status = CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT;
     }
     if (status != CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT)
     {
-        for (int i = 0; i < gvcid_counter; i++)
+        for (int i = 0; i < tc_gvcid_counter; i++)
+        {
+            if (managed_parameters_in[i].tfvn == tfvn && managed_parameters_in[i].scid == scid &&
+                managed_parameters_in[i].vcid == vcid)
+            {
+                *managed_parameters_out = managed_parameters_in[i];
+                status                  = CRYPTO_LIB_SUCCESS;
+                break;
+            }
+        }
+
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+#ifdef DEBUG
+            printf(KRED "Error: Managed Parameters for GVCID(TFVN: %d, SCID: %d, VCID: %d) not found. \n" RESET, tfvn,
+                   scid, vcid);
+#endif
+        }
+    }
+    return status;
+}
+
+int32_t Crypto_Get_TM_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
+                                                TMGvcidManagedParameters_t *managed_parameters_in,
+                                                TMGvcidManagedParameters_t *managed_parameters_out)
+{
+    int32_t status = MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND;
+    // Check gvcid counter against a max
+    if (tm_gvcid_counter > NUM_GVCID)
+    {
+        status = CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT;
+    }
+    if (status != CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT)
+    {
+        for (int i = 0; i < tm_gvcid_counter; i++)
+        {
+            if (managed_parameters_in[i].tfvn == tfvn && managed_parameters_in[i].scid == scid &&
+                managed_parameters_in[i].vcid == vcid)
+            {
+                *managed_parameters_out = managed_parameters_in[i];
+                status                  = CRYPTO_LIB_SUCCESS;
+                break;
+            }
+        }
+
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+#ifdef DEBUG
+            printf(KRED "Error: Managed Parameters for GVCID(TFVN: %d, SCID: %d, VCID: %d) not found. \n" RESET, tfvn,
+                   scid, vcid);
+#endif
+        }
+    }
+    return status;
+}
+
+int32_t Crypto_Get_AOS_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
+                                                AOSGvcidManagedParameters_t *managed_parameters_in,
+                                                AOSGvcidManagedParameters_t *managed_parameters_out)
+{
+    int32_t status = MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND;
+    // Check gvcid counter against a max
+    if (aos_gvcid_counter > NUM_GVCID)
+    {
+        status = CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT;
+    }
+    if (status != CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT)
+    {
+        for (int i = 0; i < aos_gvcid_counter; i++)
         {
             if (managed_parameters_in[i].tfvn == tfvn && managed_parameters_in[i].scid == scid &&
                 managed_parameters_in[i].vcid == vcid)
@@ -933,7 +1001,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                     (tc_sdls_processed_frame->tc_pdu[4] << 8) | tc_sdls_processed_frame->tc_pdu[5];
 
                 // Using PUS Header
-                if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
+                if (crypto_config_tc.has_pus_hdr == TC_HAS_PUS_HDR)
                 {
                     // If ECSS PUS Header is being used
                     sdls_frame.pus.shf   = (tc_sdls_processed_frame->tc_pdu[6] & 0x80) >> 7;
@@ -1133,7 +1201,7 @@ int32_t Crypto_Check_Anti_Replay_Verify_Pointers(SecurityAssociation_t *sa_ptr, 
         status = CRYPTO_LIB_ERR_NULL_ARSN;
         return status;
     }
-    if (iv == NULL && sa_ptr->shivf_len > 0 && crypto_config.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+    if (iv == NULL && sa_ptr->shivf_len > 0 && crypto_config_global.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
         status = CRYPTO_LIB_ERR_NULL_IV;
         return status;
@@ -1216,7 +1284,7 @@ int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t *sa_ptr, uint8_t *iv,
         if (status == CRYPTO_LIB_SUCCESS)
         {
             // Check IV is in ARSNW
-            if (crypto_config.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
+            if (crypto_config_tc.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
             {
                 status = Crypto_window(iv, sa_ptr->iv, sa_ptr->iv_len, sa_ptr->arsnw);
             }
@@ -1394,9 +1462,6 @@ int32_t Crypto_Get_Security_Header_Length(SecurityAssociation_t *sa_ptr)
 {
     /* Narrator's Note: Leaving this here for future work
     ** eventually we need a way to reconcile cryptolib managed parameters with TO managed parameters
-    GvcidManagedParameters_t* temp_current_managed_parameters = NULL;
-    Crypto_Get_Managed_Parameters_For_Gvcid(tfvn, scid, vcid,
-                                            gvcid_managed_parameters, temp_current_managed_parameters);
     */
 
     if (!sa_ptr)

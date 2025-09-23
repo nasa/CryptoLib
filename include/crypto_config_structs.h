@@ -61,6 +61,12 @@ typedef enum
     CRYPTOGRAPHY_TYPE_WOLFSSL,
     CRYPTOGRAPHY_TYPE_CUSTOM
 } CryptographyType;
+typedef enum
+{
+    PARAM_TYPE_TC = 0,
+    PARAM_TYPE_TM,
+    PARAM_TYPE_AOS
+} ParamType;
 /***************************************
 ** GVCID Managed Parameter enums
 ****************************************/
@@ -208,36 +214,88 @@ typedef struct
     SadbType         sa_type;
     CryptographyType cryptography_type;
     IvType           iv_type;             // Whether or not CryptoLib should generate the IV
-    CreateFecfBool   crypto_create_fecf;  // Whether or not CryptoLib is expected to calculate TC FECFs and return
-                                          // payloads with the FECF
-    TcProcessSdlsPdus  process_sdls_pdus; // Config to process SDLS extended procedure PDUs in CryptoLib
-    TcPusHdrPresent    has_pus_hdr;
-    TcIgnoreSaState    ignore_sa_state; // TODO - add logic that uses this configuration
+} CryptoConfigGlobal_t;
+#define CRYPTO_GLOBAL_CONFIG_SIZE (sizeof(CryptoConfigGlobal_t))
+
+typedef struct
+{
+    CreateFecfBool     crypto_create_fecf;  // Whether or not CryptoLib is expected to calculate TC FECFs and return
+                                            // payloads with the FECF
+    TcProcessSdlsPdus  process_sdls_pdus;   // Config to process SDLS extended procedure PDUs in CryptoLib
+    TcPusHdrPresent    has_pus_hdr;         // For ESA Testing
+    TcIgnoreSaState    ignore_sa_state;     // TODO - add logic that uses this configuration
     TcIgnoreAntiReplay ignore_anti_replay;
     TcUniqueSaPerMapId unique_sa_per_mapid;
     CheckFecfBool      crypto_check_fecf;
     uint8_t            vcid_bitmask;
     uint8_t crypto_increment_nontransmitted_iv; // Whether or not CryptoLib increments the non-transmitted portion of
                                                 // the IV field
-} CryptoConfig_t;
-#define CRYPTO_CONFIG_SIZE (sizeof(CryptoConfig_t))
+} CryptoConfigTC_t;
+#define CRYPTO_TC_CONFIG_SIZE (sizeof(CryptoConfigTC_t))
 
-typedef struct _GvcidManagedParameters_t GvcidManagedParameters_t;
-struct _GvcidManagedParameters_t
+typedef struct
+{
+    CreateFecfBool   crypto_create_fecf;  // Whether or not CryptoLib is expected to calculate TC FECFs and return
+                                          // payloads with the FECF
+    CheckFecfBool      crypto_check_fecf;
+    uint8_t            vcid_bitmask;
+    uint8_t crypto_increment_nontransmitted_iv; // Whether or not CryptoLib increments the non-transmitted portion of
+                                                // the IV field
+} CryptoConfigTM_t;
+#define CRYPTO_TM_CONFIG_SIZE (sizeof(CryptoConfigTM_t))
+
+typedef struct
+{
+    CreateFecfBool   crypto_create_fecf;  // Whether or not CryptoLib is expected to calculate TC FECFs and return
+                                          // payloads with the FECF
+    CheckFecfBool      crypto_check_fecf;
+    uint8_t            vcid_bitmask;
+    uint8_t crypto_increment_nontransmitted_iv; // Whether or not CryptoLib increments the non-transmitted portion of
+                                                // the IV field
+} CryptoConfigAOS_t;
+#define CRYPTO_AOS_CONFIG_SIZE (sizeof(CryptoConfigAOS_t))
+
+typedef struct _TCGvcidManagedParameters_t TCGvcidManagedParameters_t;
+struct _TCGvcidManagedParameters_t
 {
     uint8_t              tfvn : 4;  // Transfer Frame Version Number
     uint16_t             scid : 10; // SpacecraftID
     uint8_t              vcid : 6;  // Virtual Channel ID
     FecfPresent          has_fecf;
+    TcSegmentHdrsPresent has_segmentation_hdr;
+    uint16_t             max_frame_size; // Maximum TC/TM Frame Length with headers
+    int                  set_flag;
+};
+#define TC_GVCID_MANAGED_PARAMETERS_SIZE (sizeof(TCGvcidManagedParameters_t))
+
+typedef struct _TMGvcidManagedParameters_t TMGvcidManagedParameters_t;
+struct _TMGvcidManagedParameters_t
+{
+    uint8_t               tfvn : 4;  // Transfer Frame Version Number
+    uint16_t              scid : 10; // SpacecraftID
+    uint8_t               vcid : 6;  // Virtual Channel ID
+    FecfPresent           has_fecf;
+    uint16_t              max_frame_size; // Maximum TC/TM Frame Length with headers
+    OcfPresent            has_ocf;
+    int                   set_flag;
+};
+#define TM_GVCID_MANAGED_PARAMETERS_SIZE (sizeof(TMGvcidManagedParameters_t))
+
+typedef struct _AOSGvcidManagedParameters_t AOSGvcidManagedParameters_t;
+struct _AOSGvcidManagedParameters_t
+{
+    uint8_t              tfvn : 2;  // Transfer Frame Version Number
+    uint8_t              scid : 8; // SpacecraftID
+    uint8_t              vcid : 6;  // Virtual Channel ID
+    FecfPresent          has_fecf;
     AosFhecPresent       aos_has_fhec;
     AosInsertZonePresent aos_has_iz;
     uint16_t             aos_iz_len;
-    TcSegmentHdrsPresent has_segmentation_hdr;
     uint16_t             max_frame_size; // Maximum TC/TM Frame Length with headers
     OcfPresent           has_ocf;
     int                  set_flag;
 };
-#define GVCID_MANAGED_PARAMETERS_SIZE (sizeof(GvcidManagedParameters_t))
+#define AOS_GVCID_MANAGED_PARAMETERS_SIZE (sizeof(AOSGvcidManagedParameters_t))
 
 /*
 ** SaDB MariaDB Configuration Block

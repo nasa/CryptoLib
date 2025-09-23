@@ -52,7 +52,7 @@ int32_t Crypto_TM_Sanity_Check(uint8_t *pTfBuffer)
     }
 
     if ((status == CRYPTO_LIB_SUCCESS) &&
-        ((crypto_config.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL)))
+        ((crypto_config_global.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL)))
     {
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
         status = CRYPTO_LIB_ERR_NO_CONFIG;
@@ -307,7 +307,7 @@ int32_t Crypto_TM_Get_Keys(crypto_key_t **ekp, crypto_key_t **akp, SecurityAssoc
 
     if (sa_ptr->est == 1)
     {
-        if (crypto_config.key_type != KEY_TYPE_KMC)
+        if (crypto_config_global.key_type != KEY_TYPE_KMC)
         {
             *ekp = key_if->get_key(sa_ptr->ekid);
             if (*ekp == NULL)
@@ -326,7 +326,7 @@ int32_t Crypto_TM_Get_Keys(crypto_key_t **ekp, crypto_key_t **akp, SecurityAssoc
     }
     if (sa_ptr->ast == 1)
     {
-        if (crypto_config.key_type != KEY_TYPE_KMC)
+        if (crypto_config_global.key_type != KEY_TYPE_KMC)
         {
             *akp = key_if->get_key(sa_ptr->akid);
             if (*akp == NULL)
@@ -553,7 +553,7 @@ int32_t Crypto_TM_Do_Encrypt_Handle_Increment(uint8_t sa_service_type, SecurityA
     if (sa_service_type != SA_PLAINTEXT)
     {
 #ifdef INCREMENT
-        if (crypto_config.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
+        if (crypto_config_tm.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
         {
             if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0)
             {
@@ -683,7 +683,7 @@ int32_t Crypto_TM_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
 #ifdef FECF_DEBUG
             printf(KCYN "Calcing FECF over %d bytes\n" RESET, tm_current_managed_parameters_struct.max_frame_size - 2);
 #endif
-            if (crypto_config.crypto_create_fecf == CRYPTO_TM_CREATE_FECF_TRUE)
+            if (crypto_config_tm.crypto_create_fecf == CRYPTO_TM_CREATE_FECF_TRUE)
             {
                 *new_fecf =
                     Crypto_Calc_FECF((uint8_t *)pTfBuffer, tm_current_managed_parameters_struct.max_frame_size - 2);
@@ -821,7 +821,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     printf("\n");
 #endif
 
-    if (crypto_config.sa_type == SA_TYPE_MARIADB)
+    if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
     {
         mariadb_table_name = MARIADB_TM_TABLE_NAME;
     }
@@ -837,7 +837,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         return status;
     }
 
-    status = Crypto_Get_Managed_Parameters_For_Gvcid(tfvn, scid, vcid, gvcid_managed_parameters_array,
+    status = Crypto_Get_TM_Managed_Parameters_For_Gvcid(tfvn, scid, vcid, tm_gvcid_managed_parameters_array,
                                                      &tm_current_managed_parameters_struct);
 
     // No managed parameters found
@@ -1083,7 +1083,7 @@ int32_t Crypto_TM_Process_Setup(uint16_t len_ingest, uint16_t *byte_idx, uint8_t
     }
 
     if ((status == CRYPTO_LIB_SUCCESS) &&
-        ((crypto_config.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL)))
+        ((crypto_config_global.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL)))
     {
 #ifdef TM_DEBUG
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
@@ -1112,8 +1112,8 @@ int32_t Crypto_TM_Process_Setup(uint16_t len_ingest, uint16_t *byte_idx, uint8_t
     // Lookup-retrieve managed parameters for frame via gvcid:
     if (status == CRYPTO_LIB_SUCCESS)
     {
-        status = Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
-                                                         tm_frame_pri_hdr.vcid, gvcid_managed_parameters_array,
+        status = Crypto_Get_TM_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
+                                                         tm_frame_pri_hdr.vcid, tm_gvcid_managed_parameters_array,
                                                          &tm_current_managed_parameters_struct);
     }
 
@@ -1257,7 +1257,7 @@ int32_t Crypto_TM_FECF_Setup(uint8_t *p_ingest, uint16_t len_ingest)
         uint16_t received_fecf = (((p_ingest[tm_current_managed_parameters_struct.max_frame_size - 2] << 8) & 0xFF00) |
                                   (p_ingest[tm_current_managed_parameters_struct.max_frame_size - 1] & 0x00FF));
 
-        if (crypto_config.crypto_check_fecf == TM_CHECK_FECF_TRUE)
+        if (crypto_config_tm.crypto_check_fecf == TM_CHECK_FECF_TRUE)
         {
             // Calculate our own
             uint16_t calculated_fecf = Crypto_Calc_FECF(p_ingest, len_ingest - 2);
@@ -1462,7 +1462,7 @@ int32_t Crypto_TM_Do_Decrypt_NONAEAD(uint8_t sa_service_type, uint16_t pdu_len, 
     }
     if (sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
     {
-        if (crypto_config.key_type != KEY_TYPE_KMC)
+        if (crypto_config_global.key_type != KEY_TYPE_KMC)
         {
             // Check that key length to be used meets the algorithm requirement
             if ((int32_t)ekp->key_len != Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs))
@@ -1748,7 +1748,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
         // Move index to past the SPI
         byte_idx += 2;
 
-        if (crypto_config.sa_type == SA_TYPE_MARIADB)
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
         {
             mariadb_table_name = MARIADB_TM_TABLE_NAME;
         }
@@ -2116,7 +2116,7 @@ int32_t Crypto_TM_FECF_Validate(uint8_t *p_ingest, uint16_t len_ingest, Security
         uint16_t received_fecf = (((p_ingest[tm_current_managed_parameters_struct.max_frame_size - 2] << 8) & 0xFF00) |
                                   (p_ingest[tm_current_managed_parameters_struct.max_frame_size - 1] & 0x00FF));
 
-        if (crypto_config.crypto_check_fecf == TM_CHECK_FECF_TRUE)
+        if (crypto_config_tm.crypto_check_fecf == TM_CHECK_FECF_TRUE)
         {
             // Calculate FECF over appropriate data
             uint8_t  is_encrypted    = (sa_ptr->est == 1);

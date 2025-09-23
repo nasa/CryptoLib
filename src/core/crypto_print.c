@@ -220,7 +220,7 @@ void Crypto_ccsdsPrint(CCSDS_t *sdls_frame)
     printf("\t\t seq        = 0x%01x \n", sdls_frame->hdr.seq);
     printf("\t\t pktid      = 0x%04x \n", sdls_frame->hdr.pktid);
     printf("\t\t pkt_length = 0x%04x \n", sdls_frame->hdr.pkt_length);
-    if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
+    if (crypto_config_tc.has_pus_hdr == TC_HAS_PUS_HDR)
     {
         printf("\t PUS Header\n");
         printf("\t\t shf        = 0x%01x \n", sdls_frame->pus.shf);
@@ -359,20 +359,20 @@ void Crypto_binprint(void *c, size_t n)
     printf("\n");
 }
 
-void Crypto_mpPrint(GvcidManagedParameters_t *managed_parameters, uint8_t print_children)
-// Prints the currently configured Managed Parameters
-{
-    print_children = print_children;
-    if (managed_parameters != NULL)
-    {
-        printf("Managed Parameter: \n");
-        printf("\t tfvn: %d", managed_parameters->tfvn);
-        printf("\t scid: %d", managed_parameters->scid);
-        printf("\t vcid: %d", managed_parameters->vcid);
-        printf("\t has_fecf: %d", managed_parameters->has_fecf);
-        printf("\t has_segmentation_headers: %d\n", managed_parameters->has_segmentation_hdr);
-        printf("\t max_frame_size: %d\n", managed_parameters->max_frame_size);
-        printf("\t TM has ocf %d\n", managed_parameters->has_ocf);
-    }
-}
+// void Crypto_mpPrint(GvcidManagedParameters_t *managed_parameters, uint8_t print_children)
+// // Prints the currently configured Managed Parameters
+// {
+//     print_children = print_children;
+//     if (managed_parameters != NULL)
+//     {
+//         printf("Managed Parameter: \n");
+//         printf("\t tfvn: %d", managed_parameters->tfvn);
+//         printf("\t scid: %d", managed_parameters->scid);
+//         printf("\t vcid: %d", managed_parameters->vcid);
+//         printf("\t has_fecf: %d", managed_parameters->has_fecf);
+//         printf("\t has_segmentation_headers: %d\n", managed_parameters->has_segmentation_hdr);
+//         printf("\t max_frame_size: %d\n", managed_parameters->max_frame_size);
+//         printf("\t TM has ocf %d\n", managed_parameters->has_ocf);
+//     }
+// }
 #endif

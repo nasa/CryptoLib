@@ -144,17 +144,16 @@ UTEST(TM_APPLY_KMC, HAPPY_PATH_ENC_TM_GCM_KMC)
     reload_db();
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_KMC, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO,
-                            IV_CRYPTO_MODULE, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+                            IV_CRYPTO_MODULE);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
                           CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", NULL);
     Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
                                      "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
                                      "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
-    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x0003, 1, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x0003, 1, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
     int32_t return_val = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
@@ -259,17 +258,16 @@ UTEST(TM_PROCESS_KMC, HAPPY_PATH_DEC_TM_GCM_KMC)
     reload_db();
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_KMC, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO,
-                            IV_CRYPTO_MODULE, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+                            IV_CRYPTO_MODULE);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
                           CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", NULL);
     Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
                                      "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
                                      "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
-    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x0003, 1, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x0003, 1, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
     int32_t return_val = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);

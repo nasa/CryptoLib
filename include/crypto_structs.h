@@ -575,7 +575,7 @@ typedef struct
 {
     uint8_t tfvn : 2;  // Transfer Frame Version Number
                        // Shall be set to '01' (732.0b4 Section 4.1.2.2.2)
-    uint16_t scid : 8; // Spacecraft ID
+    uint8_t scid : 8; // Spacecraft ID
     uint8_t  vcid : 6; // Virtual Channel ID
                        // To be all zeros if only one VC used (732.0b4 Section 4.1.2.3)
     long vcfc : 24;    // Virtual Channel Frame Count (modulo-16,777,216)

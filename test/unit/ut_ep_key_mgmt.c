@@ -9,17 +9,18 @@ UTEST(EP_KEY_MGMT, OTAR_0_140_142)
     remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+                            IV_INTERNAL);
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 157, TC_OCF_NA, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
+    TCGvcidManagedParameters_t TC_0_Managed_Parameters = {
+        0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 157, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
-    GvcidManagedParameters_t TC_1_Managed_Parameters = {
-        0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 157, TC_OCF_NA, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
+    TCGvcidManagedParameters_t TC_1_Managed_Parameters = {
+        0, 0x0003, 1, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 157, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
 
     int status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -81,17 +82,18 @@ UTEST(EP_KEY_MGMT, ACTIVATE_141_142)
     uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+                            IV_INTERNAL);
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 29, TC_OCF_NA, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
+    TCGvcidManagedParameters_t TC_0_Managed_Parameters = {
+        0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 29, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
-    GvcidManagedParameters_t TC_1_Managed_Parameters = {
-        0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 29, TC_OCF_NA, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
+    TCGvcidManagedParameters_t TC_1_Managed_Parameters = {
+        0, 0x0003, 1, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 29, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
 
     int status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -157,17 +159,18 @@ UTEST(EP_KEY_MGMT, DEACTIVATE_142)
     uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+                            IV_INTERNAL);
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 27, TC_OCF_NA, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
+    TCGvcidManagedParameters_t TC_0_Managed_Parameters = {
+        0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 27, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
-    GvcidManagedParameters_t TC_1_Managed_Parameters = {
-        0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 27, TC_OCF_NA, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
+    TCGvcidManagedParameters_t TC_1_Managed_Parameters = {
+        0, 0x0003, 1, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 27, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
 
     int status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -235,13 +238,14 @@ UTEST(EP_KEY_MGMT, INVENTORY_132_134)
     remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+                            IV_INTERNAL);
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 31, TC_OCF_NA, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
+    TCGvcidManagedParameters_t TC_0_Managed_Parameters = {
+        0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 31, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
     int status = CRYPTO_LIB_SUCCESS;
     status     = Crypto_Init();
@@ -327,17 +331,18 @@ UTEST(EP_KEY_MGMT, VERIFY_132_134)
     remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+                            IV_INTERNAL);
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 61, TC_OCF_NA, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
+    TCGvcidManagedParameters_t TC_0_Managed_Parameters = {
+        0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 61, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
-    GvcidManagedParameters_t TC_1_Managed_Parameters = {
-        0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 61, TC_OCF_NA, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
+    TCGvcidManagedParameters_t TC_1_Managed_Parameters = {
+        0, 0x0003, 1, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 61, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
 
     int status = CRYPTO_LIB_SUCCESS;
     status     = Crypto_Init();
@@ -436,17 +441,18 @@ UTEST(EP_KEY_MGMT, OTAR_0_140_142_MK_NOT_ACTIVE)
     remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+                            IV_INTERNAL);
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 159, TC_OCF_NA, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
+    TCGvcidManagedParameters_t TC_0_Managed_Parameters = {
+        0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 159, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
-    GvcidManagedParameters_t TC_1_Managed_Parameters = {
-        0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 159, TC_OCF_NA, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
+    TCGvcidManagedParameters_t TC_1_Managed_Parameters = {
+        0, 0x0003, 1, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 159, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
 
     int status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -536,21 +542,22 @@ UTEST(EP_KEY_MGMT, OTAR_0_140_142_BAD_DECRYPT)
     remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+                            IV_INTERNAL);
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 159, TC_OCF_NA, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
+    TCGvcidManagedParameters_t TC_0_Managed_Parameters = {
+        0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 159, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TC_1_Managed_Parameters = {
-        0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 159, TC_OCF_NA, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
+    TCGvcidManagedParameters_t TC_1_Managed_Parameters = {
+        0, 0x0003, 1, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 159, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
 
     int status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -639,17 +646,18 @@ UTEST(EP_KEY_MGMT, DEACTIVATE_142_NO_PUS)
     uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_NO_PUS_HDR,
+                            IV_INTERNAL);
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_NO_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 23, TC_OCF_NA, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
+    TCGvcidManagedParameters_t TC_0_Managed_Parameters = {
+        0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 23, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
-    GvcidManagedParameters_t TC_1_Managed_Parameters = {
-        0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 23, TC_OCF_NA, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
+    TCGvcidManagedParameters_t TC_1_Managed_Parameters = {
+        0, 0x0003, 1, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 23, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
 
     int status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -660,7 +668,7 @@ UTEST(EP_KEY_MGMT, DEACTIVATE_142_NO_PUS)
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h   = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
     char *buffer_nist_iv_h    = "b6ac8e4963f49207ffd6374b"; // The last valid IV that was seen by the SA
-    char *buffer_DEACTIVATE_h = "2003001600ff00001980d039000a030002008e1f6d21c4";
+    char *buffer_DEACTIVATE_h = "2003001600ff00001980d039000a030010008e1f6d21c4";
 
     uint8_t *buffer_nist_iv_b, *buffer_nist_key_b, *buffer_DEACTIVATE_b     = NULL;
     int      buffer_nist_iv_len, buffer_nist_key_len, buffer_DEACTIVATE_len = 0;
@@ -721,17 +729,18 @@ UTEST(EP_KEY_MGMT, DEACTIVATE_142_NO_PUS_BAD_TLV)
     uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_NO_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+                            IV_INTERNAL);
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 23, TC_OCF_NA, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
+    TCGvcidManagedParameters_t TC_0_Managed_Parameters = {
+        0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 23, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
-    GvcidManagedParameters_t TC_1_Managed_Parameters = {
-        0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 23, TC_OCF_NA, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
+    TCGvcidManagedParameters_t TC_1_Managed_Parameters = {
+        0, 0x0003, 1, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 23, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
 
     int status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -799,17 +808,18 @@ UTEST(EP_KEY_MGMT, DEACTIVATE_142_PUS_BAD_TLV)
     uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+                            IV_INTERNAL);
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 27, TC_OCF_NA, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
+    TCGvcidManagedParameters_t TC_0_Managed_Parameters = {
+        0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 27, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
-    GvcidManagedParameters_t TC_1_Managed_Parameters = {
-        0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 27, TC_OCF_NA, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
+    TCGvcidManagedParameters_t TC_1_Managed_Parameters = {
+        0, 0x0003, 1, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 27, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
 
     int status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -881,17 +891,18 @@ UTEST(EP_KEY_MGMT, TLV_KEY_DEACTIVATE_TESTS)
     uint8_t *ptr_enc_frame = NULL;
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+                            IV_INTERNAL);
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
+    TCGvcidManagedParameters_t TC_0_Managed_Parameters = {
+        0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 1024, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
-    GvcidManagedParameters_t TC_1_Managed_Parameters = {
-        0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
+    TCGvcidManagedParameters_t TC_1_Managed_Parameters = {
+        0, 0x0003, 1, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 1024, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
 
     Crypto_Init();
     SaInterface   sa_if  = get_sa_interface_inmemory();
@@ -1033,17 +1044,18 @@ UTEST(EP_KEY_MGMT, TLV_KEY_VERIFY_TESTS)
     remove("sa_save_file.bin");
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+                            IV_INTERNAL);
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
-    GvcidManagedParameters_t TC_0_Managed_Parameters = {
-        0, 0x0003, 0, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
+    TCGvcidManagedParameters_t TC_0_Managed_Parameters = {
+        0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 1024, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
 
-    GvcidManagedParameters_t TC_1_Managed_Parameters = {
-        0, 0x0003, 1, TC_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TC_HAS_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
+    TCGvcidManagedParameters_t TC_1_Managed_Parameters = {
+        0, 0x0003, 1, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 1024, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_1_Managed_Parameters);
 
     int status = CRYPTO_LIB_SUCCESS;
     status     = Crypto_Init();

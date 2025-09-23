@@ -81,20 +81,19 @@ UTEST(TM_PROCESS_SECURITY, NO_CRYPTO_INIT)
     hex_conversion(framed_tm_h, &framed_tm_b, (int *)&framed_tm_len);
 
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    // GvcidManagedParameters_t TM_UT_Managed_Parameters = {0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0,
+                            IV_INTERNAL);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0,
     // TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF};
-    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x002c, 0, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
+    // Crypto_Config_Add_TM_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
 
     // Determine managed parameters by GVCID, which nominally happens in TO
-    // status = Crypto_Get_Managed_Parameters_For_Gvcid(((uint8_t)framed_tm_b[0] & 0xC0) >> 6,
+    // status = Crypto_Get_TM_Managed_Parameters_For_Gvcid(((uint8_t)framed_tm_b[0] & 0xC0) >> 6,
     //                                                 (((uint8_t)framed_tm_b[0] & 0x03) << 8) |
     //                                                 (uint8_t)framed_tm_b[1],
     //                                                 (((uint8_t)framed_tm_b[2] & 0xFC) >> 2),
@@ -173,7 +172,7 @@ UTEST(TM_PROCESS_SECURITY, NO_CONFIG)
     tm_frame_pri_hdr.vcid = ((uint8_t)framed_tm_b[1] & 0x0E) >> 1;
 
     // Determine managed parameters by GVCID, which nominally happens in TO
-    // status = Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
+    // status = Crypto_Get_TM_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
     // tm_frame_pri_hdr.vcid, gvcid_managed_parameters, &current_managed_parameters);
     // printf("STATUS is %d\n", status);
     // Determine security association by GVCID, which nominally happens in TO
@@ -206,14 +205,13 @@ UTEST(TM_PROCESS_SECURITY, HAPPY_PATH_CLEAR_FECF)
 
     // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TM_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+                            IV_INTERNAL);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TM Tests
-    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
-    // Crypto_Config_Add_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x002c, 0, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+    // Crypto_Config_Add_TM_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -320,8 +318,8 @@ UTEST(TM_PROCESS_SECURITY, HAPPY_PATH_CLEAR_FECF)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
-        Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
+        Crypto_Get_TM_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
+                                                tm_gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
 
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
     uint16_t sh_len = Crypto_Get_Security_Header_Length(sa_ptr);
@@ -356,13 +354,12 @@ UTEST(TM_PROCESS_SECURITY, SECONDARY_HDR_PRESENT_PLAINTEXT)
 
     // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TM_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+                            IV_INTERNAL);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TM Tests
-    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x002c, 0, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -483,8 +480,8 @@ UTEST(TM_PROCESS_SECURITY, SECONDARY_HDR_PRESENT_PLAINTEXT)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
-        Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
+        Crypto_Get_TM_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
+                                                tm_gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
 
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
     uint16_t sh_len = Crypto_Get_Security_Header_Length(sa_ptr);
@@ -521,15 +518,14 @@ UTEST(TM_PROCESS_SECURITY, SECONDARY_HDR_PRESENT_MAC)
 
     // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TM_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+                            IV_INTERNAL);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TM Tests
-    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x002c, 0, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
+    // Crypto_Config_Add_TM_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
 
     status = Crypto_Init();
@@ -652,7 +648,7 @@ UTEST(TM_PROCESS_SECURITY, SECONDARY_HDR_PRESENT_MAC)
     akp->key_state    = KEY_ACTIVE;
 
     // Determine managed parameters by GVCID, which nominally happens in TO
-    // status = Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
+    // status = Crypto_Get_TM_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
     // tm_frame_pri_hdr.vcid,
     //                                                gvcid_managed_parameters, &current_managed_parameters);
     status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, tm_frame, &processed_tm_len);
@@ -689,14 +685,13 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_0)
     // Setup & Initialize CryptoLib
     // Oddball setup that doesn't use TM_INIT to check FECF
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+                            IV_INTERNAL);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x002c, 0, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
+    // Crypto_Config_Add_TM_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -817,8 +812,8 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_0)
 
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
-        Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
+        Crypto_Get_TM_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
+                                                tm_gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
     // Determine security association by GVCID, which nominally happens in TO
     // status = sa_if->sa_get_operational_sa_from_gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
     // tm_frame_pri_hdr.vcid, map_id, &sa_ptr);
@@ -870,14 +865,13 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_1)
     // Setup & Initialize CryptoLib
     // Oddball setup that doesn't use TM_INIT to check FECF
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+                            IV_INTERNAL);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x002c, 0, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
+    // Crypto_Config_Add_TM_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -1000,8 +994,8 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_1)
 
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
-        Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
+        Crypto_Get_TM_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
+                                                tm_gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
     // Determine security association by GVCID, which nominally happens in TO
     // status = sa_if->sa_get_operational_sa_from_gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
     // tm_frame_pri_hdr.vcid, map_id, &sa_ptr);
@@ -1052,14 +1046,13 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_0)
     // Setup & Initialize CryptoLib
     // Oddball setup that doesn't use TM_INIT to check FECF
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+                            IV_INTERNAL);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x002c, 0, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
+    // Crypto_Config_Add_TM_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -1181,8 +1174,8 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_0)
 
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
-        Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
+        Crypto_Get_TM_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
+                                                tm_gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
     // Determine security association by GVCID, which nominally happens in TO
     // status = sa_if->sa_get_operational_sa_from_gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
     // tm_frame_pri_hdr.vcid, map_id, &sa_ptr);
@@ -1233,14 +1226,13 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_1)
     // Setup & Initialize CryptoLib
     // Oddball setup that doesn't use TM_INIT to check FECF
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+                            IV_INTERNAL);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x002c, 0, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
+    // Crypto_Config_Add_TM_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -1362,8 +1354,8 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_1)
 
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
-        Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
+        Crypto_Get_TM_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
+                                                tm_gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
     // Determine security association by GVCID, which nominally happens in TO
     // status = sa_if->sa_get_operational_sa_from_gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
     // tm_frame_pri_hdr.vcid, map_id, &sa_ptr);
@@ -1414,14 +1406,13 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_0)
     // Setup & Initialize CryptoLib
     // Oddball setup that doesn't use TM_INIT to check FECF
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+                            IV_INTERNAL);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x002c, 0, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
+    // Crypto_Config_Add_TM_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -1546,8 +1537,8 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_0)
 
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
-        Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
+        Crypto_Get_TM_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
+                                                tm_gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
     // Determine security association by GVCID, which nominally happens in TO
     // status = sa_if->sa_get_operational_sa_from_gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
     // tm_frame_pri_hdr.vcid, map_id, &sa_ptr);
@@ -1598,14 +1589,13 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_1)
     // Setup & Initialize CryptoLib
     // Oddball setup that doesn't use TM_INIT to check FECF
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+                            IV_INTERNAL);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x002c, 0, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
+    // Crypto_Config_Add_TM_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -1730,8 +1720,8 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_1)
 
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
-        Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
+        Crypto_Get_TM_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
+                                                tm_gvcid_managed_parameters_array, &tm_current_managed_parameters_struct);
     // Determine security association by GVCID, which nominally happens in TO
     // status = sa_if->sa_get_operational_sa_from_gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
     // tm_frame_pri_hdr.vcid, map_id, &sa_ptr);
@@ -1782,14 +1772,13 @@ UTEST(TM_PROCESS_ENC_VAL, AES_GCM_BITMASK_1)
 
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+                            IV_INTERNAL);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x002c, 0, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
+    // Crypto_Config_Add_TM_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -1953,14 +1942,13 @@ UTEST(TM_PROCESS_ENC_VAL, AEAD_AES_GCM_BITMASK_1)
 
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+                            IV_INTERNAL);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x002c, 0, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
-    // Crypto_Config_Add_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
+    // Crypto_Config_Add_TM_Gvcid_Managed_Parameters(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -2051,8 +2039,8 @@ UTEST(TM_PROCESS_ENC_VAL, AEAD_AES_GCM_BITMASK_1)
 
     // Determine managed parameters by GVCID, which nominally happens in TO
     // status =
-    //     Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
-    //                                             gvcid_managed_parameters_array,
+    //     Crypto_Get_TM_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid, tm_frame_pri_hdr.vcid,
+    //                                             tm_gvcid_managed_parameters_array,
     //                                             &tm_current_managed_parameters_struct);
 
     // Expose/setup SAs for testing
@@ -2134,15 +2122,14 @@ UTEST(TM_PROCESS, TM_SA_SEGFAULT_TEST)
 
     // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+                            IV_INTERNAL);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TM Tests
     // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x002c, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_NO_OCF, 1786,
     // AOS_NO_FHEC, AOS_HAS_IZ, 10);
-    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x002c, 0, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -2174,15 +2161,14 @@ UTEST(TM_PROCESS, TM_OCF_TEST)
 
     // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TM_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+                            IV_INTERNAL);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
     // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x002c, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_NO_OCF, 1786,
     // AOS_NO_FHEC, AOS_HAS_IZ, 10);
-    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 16, TM_HAS_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x002c, 0, TM_HAS_FECF, 16, TM_HAS_OCF, 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
@@ -2225,15 +2211,14 @@ UTEST(TM_PROCESS, TM_SA_NOT_OPERATIONAL)
 
     // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+                            IV_INTERNAL);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TM Tests
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 14, TM_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x002c, 0, TM_HAS_FECF, 14, TM_NO_OCF, 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -2275,15 +2260,14 @@ UTEST(TM_PROCESS, TM_KEY_STATE_TEST)
 
     // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+                            IV_INTERNAL);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TM Tests
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
     // AOS_FHEC_NA, AOS_IZ_NA, 0);
-    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 14, TM_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x002c, 0, TM_HAS_FECF, 14, TM_NO_OCF, 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -2333,13 +2317,12 @@ UTEST(TM_PROCESS, TM_PROCESS_HEAP_UNDERFLOW_TEST)
 
     // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+                            IV_INTERNAL);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TM Tests
-    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x002c, 0, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
     status = Crypto_Init();
 
@@ -2382,13 +2365,12 @@ UTEST(TM_PROCESS, TM_PROCESS_Secondary_Hdr_OVERFLOW_TEST)
 
     // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+                            IV_INTERNAL);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TM Tests
-    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x002c, 1, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 7, TM_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x002c, 1, TM_HAS_FECF, 7, TM_NO_OCF, 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
     status = Crypto_Init();
 
@@ -2421,13 +2403,12 @@ UTEST(TM_PROCESS, TM_PROCESS_Secondary_Hdr_Spec_Violation)
 
     // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+                            IV_INTERNAL);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TM Tests
-    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x002c, 0, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 8, TM_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x002c, 0, TM_HAS_FECF, 8, TM_NO_OCF, 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
     status = Crypto_Init();
 
@@ -2461,13 +2442,12 @@ UTEST(TM_PROCESS, TM_PROCESS_Secondary_Hdr_One_Too_Big)
 
     // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+                            IV_INTERNAL);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TM Tests
-    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x002c, 0, TM_NO_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 8, TM_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x002c, 0, TM_NO_FECF, 8, TM_NO_OCF, 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
     status = Crypto_Init();
     // 6 byte header + 2 byte secondary header

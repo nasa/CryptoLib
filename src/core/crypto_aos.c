@@ -79,7 +79,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         return CRYPTO_LIB_ERR_NULL_BUFFER;
     }
 
-    if ((crypto_config.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
+    if ((crypto_config_global.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
     {
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
         status = CRYPTO_LIB_ERR_NO_CONFIG;
@@ -106,7 +106,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     printf("\n");
 #endif
 
-    if (crypto_config.sa_type == SA_TYPE_MARIADB)
+    if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
     {
         mariadb_table_name = MARIADB_AOS_TABLE_NAME;
     }
@@ -122,7 +122,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         return status;
     }
 
-    status = Crypto_Get_Managed_Parameters_For_Gvcid(tfvn, scid, vcid, gvcid_managed_parameters_array,
+    status = Crypto_Get_AOS_Managed_Parameters_For_Gvcid(tfvn, scid, vcid, aos_gvcid_managed_parameters_array,
                                                      &aos_current_managed_parameters_struct);
 
     // No managed parameters found
@@ -484,7 +484,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     // Get Key
     crypto_key_t *ekp = NULL;
     crypto_key_t *akp = NULL;
-    if (crypto_config.key_type != KEY_TYPE_KMC)
+    if (crypto_config_global.key_type != KEY_TYPE_KMC)
     {
         ekp = key_if->get_key(sa_ptr->ekid);
         akp = key_if->get_key(sa_ptr->akid);
@@ -772,7 +772,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
 #ifdef FECF_DEBUG
         printf(KCYN "Calcing FECF over %d bytes\n" RESET, aos_current_managed_parameters_struct.max_frame_size - 2);
 #endif
-        if (crypto_config.crypto_create_fecf == CRYPTO_AOS_CREATE_FECF_TRUE)
+        if (crypto_config_aos.crypto_create_fecf == CRYPTO_AOS_CREATE_FECF_TRUE)
         {
             new_fecf = Crypto_Calc_FECF((uint8_t *)pTfBuffer, aos_current_managed_parameters_struct.max_frame_size - 2);
             pTfBuffer[aos_current_managed_parameters_struct.max_frame_size - 2] = (uint8_t)((new_fecf & 0xFF00) >> 8);
@@ -847,7 +847,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
         return status;
     }
 
-    if ((crypto_config.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
+    if ((crypto_config_global.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
     {
 #ifdef AOS_DEBUG
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
@@ -877,8 +877,8 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
 
     // Lookup-retrieve managed parameters for frame via gvcid:
     status =
-        Crypto_Get_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
+        Crypto_Get_AOS_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
+                                                aos_gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
 
     if (status != CRYPTO_LIB_SUCCESS)
     {
@@ -948,7 +948,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     // Move index to past the SPI
     byte_idx += 2;
 
-    if (crypto_config.sa_type == SA_TYPE_MARIADB)
+    if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
     {
         mariadb_table_name = MARIADB_AOS_TABLE_NAME;
     }
@@ -1049,7 +1049,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
         uint16_t received_fecf = (((p_ingest[aos_current_managed_parameters_struct.max_frame_size - 2] << 8) & 0xFF00) |
                                   (p_ingest[aos_current_managed_parameters_struct.max_frame_size - 1] & 0x00FF));
 
-        if (crypto_config.crypto_check_fecf == AOS_CHECK_FECF_TRUE)
+        if (crypto_config_aos.crypto_check_fecf == AOS_CHECK_FECF_TRUE)
         {
             // Calculate our own
             uint16_t calculated_fecf = Crypto_Calc_FECF(p_ingest, len_ingest - 2);
@@ -1198,7 +1198,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
 
     if (sa_ptr->est == 1)
     {
-        if (crypto_config.key_type != KEY_TYPE_KMC)
+        if (crypto_config_global.key_type != KEY_TYPE_KMC)
         {
             ekp = key_if->get_key(sa_ptr->ekid);
             if (ekp == NULL)
@@ -1219,7 +1219,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     }
     if (sa_ptr->ast == 1)
     {
-        if (crypto_config.key_type != KEY_TYPE_KMC)
+        if (crypto_config_global.key_type != KEY_TYPE_KMC)
         {
             akp = key_if->get_key(sa_ptr->akid);
             if (akp == NULL)

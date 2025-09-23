@@ -292,7 +292,7 @@ int32_t Crypto_SA_readARSN(uint8_t *ingest)
         spi = ((uint8_t)sdls_frame.tlv_pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.tlv_pdu.data[1];
 
         // TODO: This is not correct
-        if (crypto_config.sa_type == SA_TYPE_MARIADB)
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
         {
             mariadb_table_name = MARIADB_TC_TABLE_NAME;
         }
