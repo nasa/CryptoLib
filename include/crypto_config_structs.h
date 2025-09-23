@@ -61,12 +61,7 @@ typedef enum
     CRYPTOGRAPHY_TYPE_WOLFSSL,
     CRYPTOGRAPHY_TYPE_CUSTOM
 } CryptographyType;
-typedef enum
-{
-    PARAM_TYPE_TC = 0,
-    PARAM_TYPE_TM,
-    PARAM_TYPE_AOS
-} ParamType;
+
 /***************************************
 ** GVCID Managed Parameter enums
 ****************************************/
