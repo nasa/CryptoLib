@@ -106,7 +106,8 @@ UTEST(AOS_PROCESS, NO_INIT)
     // No Crypto_Init(), but we still Configure It:
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL);
-    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // Test Frame Setup
     // 6 byte header, 2 byte blank SPI, data, FECF
     char *framed_aos_h =
@@ -192,7 +193,8 @@ UTEST(AOS_PROCESS, HAPPY_PATH_CLEAR_FECF)
     // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL);
-    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
     AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
                                                              AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
@@ -331,7 +333,8 @@ UTEST(AOS_PROCESS, SECONDARY_HDR_PRESENT_PLAINTEXT)
     // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL);
-    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
     AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_HAS_FHEC,
                                                              AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
@@ -469,7 +472,8 @@ UTEST(AOS_PROCESS, INSERT_ZONE_PRESENT_PLAINTEXT)
     // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL);
-    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
     AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,          0x0003, 0,    AOS_HAS_FECF, AOS_NO_FHEC,
                                                              AOS_HAS_IZ, 10,     1786, AOS_NO_OCF,   1};
@@ -610,7 +614,8 @@ UTEST(AOS_PROCESS, AES_CMAC_256_TEST_0)
     // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL);
-    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
     AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
                                                              AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
@@ -762,7 +767,8 @@ UTEST(AOS_PROCESS, AES_CMAC_256_TEST_1)
     // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL);
-    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
     AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
                                                              AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
@@ -916,7 +922,8 @@ UTEST(AOS_PROCESS, AES_HMAC_256_TEST_0)
     // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL);
-    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
     AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
                                                              AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
@@ -1072,7 +1079,8 @@ UTEST(AOS_PROCESS, AES_HMAC_256_TEST_1)
     // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL);
-    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
     AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
                                                              AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
@@ -1222,7 +1230,8 @@ UTEST(AOS_PROCESS, AES_HMAC_512_TEST_0)
     // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL);
-    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
     AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
                                                              AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
@@ -1376,7 +1385,8 @@ UTEST(AOS_PROCESS, AES_HMAC_512_TEST_1)
     // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL);
-    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
     AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
                                                              AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
@@ -1527,7 +1537,8 @@ UTEST(AOS_PROCESS, AES_GCM_DEC_ONLY)
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL);
-    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
                                                              AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
@@ -1714,7 +1725,8 @@ UTEST(AOS_PROCESS, AEAD_GCM_BITMASK_1)
     // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL);
-    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
     AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
                                                              AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
@@ -1854,7 +1866,8 @@ UTEST(AOS_PROCESS, AOS_SA_SEGFAULT_TEST)
     // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL);
-    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
     AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,          0x0003, 0,  AOS_HAS_FECF, AOS_NO_FHEC,
                                                              AOS_HAS_IZ, 10,     18, AOS_NO_OCF,   1};
@@ -1892,7 +1905,8 @@ UTEST(AOS_PROCESS, AOS_SA_NOT_OPERATIONAL)
     // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL);
-    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
     AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,  AOS_HAS_FECF, AOS_NO_FHEC,
                                                              AOS_IZ_NA, 0,      22, AOS_NO_OCF,   1};
@@ -1945,7 +1959,8 @@ UTEST(AOS_PROCESS, AOS_OCF_TEST)
     // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL);
-    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
     AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,  AOS_HAS_FECF, AOS_NO_FHEC,
                                                              AOS_IZ_NA, 0,      22, AOS_HAS_OCF,  1};
@@ -1996,7 +2011,8 @@ UTEST(AOS_PROCESS, AOS_KEY_STATE_TEST)
     // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL);
-    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
     AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,  AOS_HAS_FECF, AOS_NO_FHEC,
                                                              AOS_IZ_NA, 0,      22, AOS_NO_OCF,   1};
@@ -2052,7 +2068,8 @@ UTEST(AOS_PROCESS, AOS_PROCESS_HEAP_UNDERFLOW_TEST)
     // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL);
-    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
     AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0000, 48,   AOS_NO_FECF, AOS_NO_FHEC,
                                                              AOS_IZ_NA, 0,      1786, AOS_NO_OCF,  1};
@@ -2101,7 +2118,8 @@ UTEST(AOS_PROCESS, AOS_FHECF_TEST)
     // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL);
-    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Test
     AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,  AOS_HAS_FECF, AOS_HAS_FHEC,
                                                              AOS_IZ_NA, 0,      24, AOS_NO_OCF,   1};

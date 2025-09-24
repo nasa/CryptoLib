@@ -2280,7 +2280,6 @@ static int32_t crypto_tc_validate_sa(SecurityAssociation_t *sa)
     return CRYPTO_LIB_SUCCESS;
 }
 
-
 /**
  * @brief Function: Crypto_TC_Validate_Auth_Mask
  * Validates Authentication Bit Mask

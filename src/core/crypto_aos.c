@@ -804,7 +804,6 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     return status;
 }
 
-
 // int32_t Crypto_AOS_Nontransmitted_IV_Increment(SecurityAssociation_t *sa_ptr, AOS_t *pp_processed_frame)
 // {
 //     int32_t status = CRYPTO_LIB_SUCCESS;
@@ -820,7 +819,8 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
 //             return status;
 //         }
 //     }
-//     else // Not checking IV ARSNW or only non-transmitted portion is static; Note, non-transmitted IV in SA must match
+//     else // Not checking IV ARSNW or only non-transmitted portion is static; Note, non-transmitted IV in SA must
+//     match
 //          // frame or will fail MAC check.
 //     {
 //         // Retrieve non-transmitted portion of IV from SA (if applicable)
@@ -849,7 +849,6 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
 //     }
 //     return status;
 // }
-
 
 /**
  * @brief Function: Crypto_AOS_ProcessSecurity
@@ -1007,7 +1006,8 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
         return status;
     }
 
-    if (len_ingest < aos_hdr_len + Crypto_Get_Security_Header_Length(sa_ptr) + Crypto_Get_Security_Trailer_Length(sa_ptr))
+    if (len_ingest <
+        aos_hdr_len + Crypto_Get_Security_Header_Length(sa_ptr) + Crypto_Get_Security_Trailer_Length(sa_ptr))
     {
         return CRYPTO_LIB_ERR_AOS_FRAME_LENGTH_UNDERFLOW;
     }

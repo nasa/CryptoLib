@@ -222,7 +222,7 @@ typedef struct
                                           // payloads with the FECF
     TcProcessSdlsPdus  process_sdls_pdus; // Config to process SDLS extended procedure PDUs in CryptoLib
     TcPusHdrPresent    has_pus_hdr;       // For ESA Testing
-    IgnoreAntiReplay ignore_anti_replay;
+    IgnoreAntiReplay   ignore_anti_replay;
     TcUniqueSaPerMapId unique_sa_per_mapid;
     CheckFecfBool      crypto_check_fecf;
     uint8_t            vcid_bitmask;
@@ -236,8 +236,8 @@ typedef struct
     CreateFecfBool crypto_create_fecf; // Whether or not CryptoLib is expected to calculate TC FECFs and return
                                        // payloads with the FECF
     IgnoreAntiReplay ignore_anti_replay;
-    CheckFecfBool crypto_check_fecf;
-    uint8_t       vcid_bitmask;
+    CheckFecfBool    crypto_check_fecf;
+    uint8_t          vcid_bitmask;
     uint8_t crypto_increment_nontransmitted_iv; // Whether or not CryptoLib increments the non-transmitted portion of
                                                 // the IV field
 } CryptoConfigTM_t;
@@ -248,8 +248,8 @@ typedef struct
     CreateFecfBool crypto_create_fecf; // Whether or not CryptoLib is expected to calculate TC FECFs and return
                                        // payloads with the FECF
     IgnoreAntiReplay ignore_anti_replay;
-    CheckFecfBool crypto_check_fecf;
-    uint8_t       vcid_bitmask;
+    CheckFecfBool    crypto_check_fecf;
+    uint8_t          vcid_bitmask;
     uint8_t crypto_increment_nontransmitted_iv; // Whether or not CryptoLib increments the non-transmitted portion of
                                                 // the IV field
 } CryptoConfigAOS_t;

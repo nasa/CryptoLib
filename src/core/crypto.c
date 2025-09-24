@@ -149,7 +149,7 @@ uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
  **/
 int32_t crypto_handle_incrementing_nontransmitted_counter(uint8_t *dest, uint8_t *src, int src_full_len,
-                                                                 int transmitted_len, int window)
+                                                          int transmitted_len, int window)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
