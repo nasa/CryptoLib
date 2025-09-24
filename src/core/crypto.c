@@ -137,6 +137,79 @@ uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
 }
 
 /**
+ * @brief Function: crypto_handle_incrementing_nontransmitted_counter
+ * Handles incrementing non-transmitted counters
+ * @param dest: uint8_t*
+ * @param src: uint8_t*
+ * @param src_full_len: int
+ * @param transmitted_len: int
+ * @param window: int
+ * @return int32: Success/Failure
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
+ **/
+int32_t crypto_handle_incrementing_nontransmitted_counter(uint8_t *dest, uint8_t *src, int src_full_len,
+                                                                 int transmitted_len, int window)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    /* Note: This assumes a max IV / ARSN size of 32.  If a larger value is needed, adjust in crypto_config.h*/
+    if (src_full_len >
+        MAX_IV_LEN) // TODO:  Does a define exist already?  Is this the best method to put a bound on IV/ARSN Size?
+    {
+        status = CRYPTO_LIB_ERR_IV_EXCEEDS_INCREMENT_SIZE;
+    }
+
+    if (status == CRYPTO_LIB_SUCCESS)
+    {
+        uint8_t temp_counter[MAX_IV_LEN];
+        // Copy IV to temp
+        memcpy(temp_counter, src, src_full_len);
+
+        // Increment temp_counter Until Transmitted Portion Matches Frame.
+        uint8_t counter_matches = CRYPTO_TRUE;
+        for (int i = 0; i < window; i++)
+        {
+            Crypto_increment(temp_counter, src_full_len);
+            for (int x = (src_full_len - transmitted_len); x < src_full_len; x++)
+            {
+                // This increment doesn't match the frame!
+                if (temp_counter[x] != dest[x])
+                {
+                    counter_matches = CRYPTO_FALSE;
+                    break;
+                }
+            }
+            if (counter_matches == CRYPTO_TRUE)
+            {
+                break;
+            }
+            else if (i < window - 1) // Only reset flag if there are more  windows to check.
+            {
+                counter_matches = CRYPTO_TRUE; // reset the flag, and continue the for loop for the next
+                continue;
+            }
+        }
+
+        if (counter_matches == CRYPTO_TRUE)
+        {
+            // Retrieve non-transmitted portion of incremented counter that matches (and may have rolled
+            // over/incremented)
+            memcpy(dest, temp_counter, src_full_len - transmitted_len);
+#ifdef DEBUG
+            printf("Incremented IV is:\n");
+            Crypto_hexprint(temp_counter, src_full_len);
+#endif
+        }
+        else
+        {
+            status = CRYPTO_LIB_ERR_FRAME_COUNTER_DOESNT_MATCH_SA;
+        }
+    }
+    return status;
+}
+
+/**
  * @brief Function: Crypto_Is_ACS_Only_Algo
  * Looks up cipher suite ID and determines if it's an ACS algorithm. Returns 1 if true, 0 if false;
  * @param cipher_suite_id: uint8_t

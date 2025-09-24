@@ -804,6 +804,53 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     return status;
 }
 
+
+// int32_t Crypto_AOS_Nontransmitted_IV_Increment(SecurityAssociation_t *sa_ptr, AOS_t *pp_processed_frame)
+// {
+//     int32_t status = CRYPTO_LIB_SUCCESS;
+
+//     if (sa_ptr->shivf_len < sa_ptr->iv_len && crypto_config_aos.ignore_anti_replay == AOS_IGNORE_ANTI_REPLAY_FALSE &&
+//         crypto_config_aos.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
+//     {
+//         status = crypto_handle_incrementing_nontransmitted_counter(
+//             pp_processed_frame->aos_sec_header.iv, sa_ptr->iv, sa_ptr->iv_len, sa_ptr->shivf_len, sa_ptr->arsnw);
+//         if (status != CRYPTO_LIB_SUCCESS)
+//         {
+//             mc_if->mc_log(status);
+//             return status;
+//         }
+//     }
+//     else // Not checking IV ARSNW or only non-transmitted portion is static; Note, non-transmitted IV in SA must match
+//          // frame or will fail MAC check.
+//     {
+//         // Retrieve non-transmitted portion of IV from SA (if applicable)
+//         memcpy(pp_processed_frame->aos_sec_header.iv, sa_ptr->iv, sa_ptr->iv_len - sa_ptr->shivf_len);
+//     }
+//     return status;
+// }
+
+// int32_t Crypto_AOS_Nontransmitted_SN_Increment(SecurityAssociation_t *sa_ptr, AOS_t *pp_processed_frame)
+// {
+//     int32_t status = CRYPTO_LIB_SUCCESS;
+//     if (sa_ptr->shsnf_len < sa_ptr->arsn_len && crypto_config_aos.ignore_anti_replay == AOS_IGNORE_ANTI_REPLAY_FALSE)
+//     {
+//         status =
+//             crypto_handle_incrementing_nontransmitted_counter(pp_processed_frame->aos_sec_header.sn, sa_ptr->arsn,
+//                                                               sa_ptr->arsn_len, sa_ptr->shsnf_len, sa_ptr->arsnw);
+//         if (status != CRYPTO_LIB_SUCCESS)
+//         {
+//             mc_if->mc_log(status);
+//         }
+//     }
+//     else // Not checking ARSN in ARSNW
+//     {
+//         // Parse non-transmitted portion of ARSN from SA
+//         memcpy(pp_processed_frame->aos_sec_header.sn, sa_ptr->arsn, sa_ptr->arsn_len - sa_ptr->shsnf_len);
+//     }
+//     return status;
+// }
+
+
 /**
  * @brief Function: Crypto_AOS_ProcessSecurity
  * @param ingest: uint8_t*
@@ -958,6 +1005,11 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     {
         mc_if->mc_log(status);
         return status;
+    }
+
+    if (len_ingest < aos_hdr_len + Crypto_Get_Security_Header_Length(sa_ptr) + Crypto_Get_Security_Trailer_Length(sa_ptr))
+    {
+        return CRYPTO_LIB_ERR_AOS_FRAME_LENGTH_UNDERFLOW;
     }
 
 #ifdef SA_DEBUG
@@ -1170,6 +1222,11 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
         pdu_len -= 2;
     }
 
+    if (pdu_len >= aos_current_managed_parameters_struct.max_frame_size)
+    {
+        return CRYPTO_LIB_ERR_AOS_FRAME_LENGTH_UNDERFLOW;
+    }
+
     // If MAC exists, comes immediately after pdu
     if (sa_ptr->stmacf_len > 0)
     {
@@ -1191,6 +1248,28 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
         printf(KYEL "FECF Location is: %d\n" RESET, aos_current_managed_parameters_struct.max_frame_size - 2);
     }
 #endif
+
+    // // Increment IV/ARSN
+    // memcpy((pp_processed_frame->aos_sec_header.iv + (sa_ptr->iv_len - sa_ptr->shivf_len)),
+    //        &(p_ingest[aos_hdr_len + SPI_LEN]), sa_ptr->shivf_len);
+
+    // // Handle non-transmitted IV increment case (transmitted-portion roll-over)
+    // status = Crypto_AOS_Nontransmitted_IV_Increment(sa_ptr, pp_processed_frame);
+    // if (status != CRYPTO_LIB_SUCCESS)
+    // {
+    //     return status;
+    // }
+
+    // // Parse transmitted portion of ARSN
+    // memcpy((pp_processed_frame->aos_sec_header.sn + (sa_ptr->arsn_len - sa_ptr->shsnf_len)),
+    //        &(p_ingest[aos_hdr_len + SPI_LEN + sa_ptr->shivf_len]), sa_ptr->shsnf_len);
+
+    // // Handle non-transmitted SN increment case (transmitted-portion roll-over)
+    // status = Crypto_AOS_Nontransmitted_SN_Increment(sa_ptr, pp_processed_frame);
+    // if (status != CRYPTO_LIB_SUCCESS)
+    // {
+    //     return status;
+    // }
 
     // Get Key
     crypto_key_t *ekp = NULL;

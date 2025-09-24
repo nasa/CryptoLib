@@ -85,11 +85,11 @@ int32_t Crypto_SC_Init(void)
     int32_t status = CRYPTO_LIB_SUCCESS;
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL);
-    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_NO_PUS_HDR, TC_IGNORE_SA_STATE_FALSE,
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_NO_PUS_HDR,
                      TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F,
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_IGNORE_ANTI_REPLAY_FALSE, TM_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
     // TC
     TCGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 1024, 1};
@@ -177,7 +177,7 @@ int32_t Crypto_Init_TC_Unit_Test(void)
     int32_t status = CRYPTO_LIB_SUCCESS;
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL);
-    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR, TC_IGNORE_SA_STATE_FALSE,
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                      TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F,
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TC Tests
@@ -203,7 +203,7 @@ int32_t Crypto_Init_TM_Unit_Test(void)
     int32_t status = CRYPTO_LIB_SUCCESS;
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL);
-    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_IGNORE_ANTI_REPLAY_FALSE, TM_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TM Tests
     TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {0, 0x0003, 0, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
     Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
@@ -230,7 +230,7 @@ int32_t Crypto_Init_AOS_Unit_Test(void)
     int32_t status = CRYPTO_LIB_SUCCESS;
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL);
-    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
     AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
                                                              AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
@@ -597,14 +597,13 @@ int32_t Crypto_Config_CryptoLib(uint8_t key_type, uint8_t mc_type, uint8_t sa_ty
 }
 
 int32_t Crypto_Config_TC(uint8_t crypto_create_fecf, uint8_t process_sdls_pdus, uint8_t has_pus_hdr,
-                         uint8_t ignore_sa_state, uint8_t ignore_anti_replay, uint8_t unique_sa_per_mapid,
+                         uint8_t ignore_anti_replay, uint8_t unique_sa_per_mapid,
                          uint8_t crypto_check_fecf, uint8_t vcid_bitmask, uint8_t crypto_increment_nontransmitted_iv)
 {
     int32_t status                                      = CRYPTO_LIB_SUCCESS;
     crypto_config_tc.crypto_create_fecf                 = crypto_create_fecf;
     crypto_config_tc.process_sdls_pdus                  = process_sdls_pdus;
     crypto_config_tc.has_pus_hdr                        = has_pus_hdr;
-    crypto_config_tc.ignore_sa_state                    = ignore_sa_state;
     crypto_config_tc.ignore_anti_replay                 = ignore_anti_replay;
     crypto_config_tc.unique_sa_per_mapid                = unique_sa_per_mapid;
     crypto_config_tc.crypto_check_fecf                  = crypto_check_fecf;
@@ -613,22 +612,24 @@ int32_t Crypto_Config_TC(uint8_t crypto_create_fecf, uint8_t process_sdls_pdus, 
     return status;
 }
 
-int32_t Crypto_Config_TM(uint8_t crypto_create_fecf, uint8_t crypto_check_fecf, uint8_t vcid_bitmask,
-                         uint8_t crypto_increment_nontransmitted_iv)
+int32_t Crypto_Config_TM(uint8_t crypto_create_fecf, uint8_t crypto_check_fecf, uint8_t ignore_anti_replay,
+                         uint8_t vcid_bitmask, uint8_t crypto_increment_nontransmitted_iv)
 {
     int32_t status                                      = CRYPTO_LIB_SUCCESS;
     crypto_config_tm.crypto_create_fecf                 = crypto_create_fecf;
+    crypto_config_tm.ignore_anti_replay                 = ignore_anti_replay;
     crypto_config_tm.crypto_check_fecf                  = crypto_check_fecf;
     crypto_config_tm.vcid_bitmask                       = vcid_bitmask;
     crypto_config_tm.crypto_increment_nontransmitted_iv = crypto_increment_nontransmitted_iv;
     return status;
 }
 
-int32_t Crypto_Config_AOS(uint8_t crypto_create_fecf, uint8_t crypto_check_fecf, uint8_t vcid_bitmask,
-                          uint8_t crypto_increment_nontransmitted_iv)
+int32_t Crypto_Config_AOS(uint8_t crypto_create_fecf, uint8_t crypto_check_fecf, uint8_t ignore_anti_replay,
+                          uint8_t vcid_bitmask, uint8_t crypto_increment_nontransmitted_iv)
 {
     int32_t status                                       = CRYPTO_LIB_SUCCESS;
     crypto_config_aos.crypto_create_fecf                 = crypto_create_fecf;
+    crypto_config_aos.ignore_anti_replay                 = ignore_anti_replay;
     crypto_config_aos.crypto_check_fecf                  = crypto_check_fecf;
     crypto_config_aos.vcid_bitmask                       = vcid_bitmask;
     crypto_config_aos.crypto_increment_nontransmitted_iv = crypto_increment_nontransmitted_iv;
