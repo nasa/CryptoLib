@@ -47,7 +47,7 @@ extern "C"
 ** Configuration
 */
 #define CRYPTOLIB_HOSTNAME "cryptolib"
-#define GSW_HOSTNAME       "cosmos"
+#define GSW_HOSTNAME       "terminal"
 #define SC_HOSTNAME        "radio-sim"
 
 #ifndef CRYPTO_RX_GROUND_PORT
