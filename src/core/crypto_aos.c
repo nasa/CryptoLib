@@ -857,7 +857,8 @@ int32_t Crypto_AOS_Check_IV_ARSN(SecurityAssociation_t *sa_ptr, AOS_t *pp_proces
     if (crypto_config_aos.ignore_anti_replay == AOS_IGNORE_ANTI_REPLAY_FALSE)
     {
         status = Crypto_Check_Anti_Replay(sa_ptr, pp_processed_frame->aos_sec_header.sn,
-                                          pp_processed_frame->aos_sec_header.iv, crypto_config_aos.crypto_increment_nontransmitted_iv);
+                                          pp_processed_frame->aos_sec_header.iv,
+                                          crypto_config_aos.crypto_increment_nontransmitted_iv);
 
         if (status != CRYPTO_LIB_SUCCESS)
         {
@@ -916,8 +917,8 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
 
     // Bit math to give concise access to values in the ingest
     pp_processed_frame->aos_header.tfvn = ((uint8_t)p_ingest[0] & 0xC0) >> 6;
-     pp_processed_frame->aos_header.scid = (((uint16_t)p_ingest[0] & 0x3F) << 2) | (((uint16_t)p_ingest[1] & 0xC0) >> 6);
-     pp_processed_frame->aos_header.vcid = ((uint8_t)p_ingest[1] & 0x3F);
+    pp_processed_frame->aos_header.scid = (((uint16_t)p_ingest[0] & 0x3F) << 2) | (((uint16_t)p_ingest[1] & 0xC0) >> 6);
+    pp_processed_frame->aos_header.vcid = ((uint8_t)p_ingest[1] & 0x3F);
 
 #ifdef DEBUG
     printf(KYEL "\n----- Crypto_AOS_ProcessSecurity START -----\n" RESET);
@@ -954,14 +955,14 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
 
 #ifdef AOS_DEBUG
     printf(KGRN "AOS Process Using following parameters:\n\t" RESET);
-    printf(KGRN "tvfn: %d\t scid: %d\t vcid: %d\n" RESET,  pp_processed_frame->aos_header.tfvn,  pp_processed_frame->aos_header.scid,
-            pp_processed_frame->aos_header.vcid);
+    printf(KGRN "tvfn: %d\t scid: %d\t vcid: %d\n" RESET, pp_processed_frame->aos_header.tfvn,
+           pp_processed_frame->aos_header.scid, pp_processed_frame->aos_header.vcid);
 #endif
 
     // Lookup-retrieve managed parameters for frame via gvcid:
-    status = Crypto_Get_AOS_Managed_Parameters_For_Gvcid( pp_processed_frame->aos_header.tfvn,  pp_processed_frame->aos_header.scid,
-                                                          pp_processed_frame->aos_header.vcid, aos_gvcid_managed_parameters_array,
-                                                         &aos_current_managed_parameters_struct);
+    status = Crypto_Get_AOS_Managed_Parameters_For_Gvcid(
+        pp_processed_frame->aos_header.tfvn, pp_processed_frame->aos_header.scid, pp_processed_frame->aos_header.vcid,
+        aos_gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
 
     if (status != CRYPTO_LIB_SUCCESS)
     {
@@ -1137,20 +1138,18 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     // Parse & Check FECF, if present, and update fecf length
     if (aos_current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
     {
-        uint16_t received_fecf = (((p_ingest[len_ingest - 2] << 8) & 0xFF00) |
-                                  (p_ingest[len_ingest - 1] & 0x00FF));
+        uint16_t received_fecf = (((p_ingest[len_ingest - 2] << 8) & 0xFF00) | (p_ingest[len_ingest - 1] & 0x00FF));
 #ifdef FECF_DEBUG
         printf("Received FECF is 0x%04X\n", received_fecf);
 #endif
-
 
         if (crypto_config_aos.crypto_check_fecf == AOS_CHECK_FECF_TRUE)
         {
             // Calculate our own
             uint16_t calculated_fecf = Crypto_Calc_FECF(p_ingest, len_ingest - 2);
 #ifdef FECF_DEBUG
-                printf("Calculated FECF is 0x%04X\n", calculated_fecf);
-                printf("FECF was Calced over %d bytes\n", len_ingest - 2);
+            printf("Calculated FECF is 0x%04X\n", calculated_fecf);
+            printf("FECF was Calced over %d bytes\n", len_ingest - 2);
 #endif
             // Compare FECFs
             // Invalid FECF
@@ -1219,12 +1218,12 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
         iv_loc = byte_idx;
     }
     // Increment byte_idx past Security Header Fields based on SA values
-    memcpy((pp_processed_frame->aos_sec_header.iv + (sa_ptr->iv_len - sa_ptr->shivf_len)),
-            &(p_ingest[byte_idx]), sa_ptr->shivf_len);
+    memcpy((pp_processed_frame->aos_sec_header.iv + (sa_ptr->iv_len - sa_ptr->shivf_len)), &(p_ingest[byte_idx]),
+           sa_ptr->shivf_len);
     byte_idx += sa_ptr->shivf_len;
 
-    memcpy((pp_processed_frame->aos_sec_header.sn + (sa_ptr->arsn_len - sa_ptr->shsnf_len)),
-            &(p_ingest[byte_idx]), sa_ptr->shsnf_len);
+    memcpy((pp_processed_frame->aos_sec_header.sn + (sa_ptr->arsn_len - sa_ptr->shsnf_len)), &(p_ingest[byte_idx]),
+           sa_ptr->shsnf_len);
     byte_idx += sa_ptr->shsnf_len;
 
     memcpy(&(pp_processed_frame->aos_sec_header.pad), &(p_ingest[byte_idx]), sa_ptr->shplf_len);
@@ -1281,8 +1280,8 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     if (sa_ptr->stmacf_len > 0)
     {
         mac_loc = byte_idx + pdu_len;
-        memcpy((pp_processed_frame->aos_sec_trailer.mac + (MAC_SIZE - sa_ptr->stmacf_len)),
-            &(p_ingest[mac_loc]), sa_ptr->stmacf_len);
+        memcpy((pp_processed_frame->aos_sec_trailer.mac + (MAC_SIZE - sa_ptr->stmacf_len)), &(p_ingest[mac_loc]),
+               sa_ptr->stmacf_len);
     }
     Crypto_Set_FSR(p_ingest, byte_idx, pdu_len, sa_ptr);
 
@@ -1529,7 +1528,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     status = Crypto_AOS_Check_IV_ARSN(sa_ptr, pp_processed_frame);
     if (status != CRYPTO_LIB_SUCCESS)
     {
-        //Crypto_TC_Safe_Free_Ptr(aad);
+        // Crypto_TC_Safe_Free_Ptr(aad);
         mc_if->mc_log(status);
         return status; // Cryptography IF call failed, return.
     }
@@ -1584,8 +1583,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
         byte_idx += aos_current_managed_parameters_struct.aos_iz_len;
     }
 
-    pp_processed_frame->aos_sec_header.spi =
-        (((uint16_t)p_ingest[byte_idx]) << 8) | ((uint16_t)p_ingest[byte_idx + 1]);
+    pp_processed_frame->aos_sec_header.spi = (((uint16_t)p_ingest[byte_idx]) << 8) | ((uint16_t)p_ingest[byte_idx + 1]);
     byte_idx += 2;
 
     for (int i = 0; i < sa_ptr->shivf_len; i++)

@@ -254,14 +254,16 @@ uint16_t       Crypto_Calc_FECF(const uint8_t *ingest, int len_ingest);
 uint16_t       Crypto_Calc_FHECF(uint8_t *data);
 int32_t        Crypto_Calc_CRC_Init_Table(void);
 uint16_t       Crypto_Calc_CRC16(uint8_t *data, int size);
-int32_t        Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, uint8_t *iv, uint8_t increment_nontransmitted);
+int32_t        Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, uint8_t *iv,
+                                        uint8_t increment_nontransmitted);
 int32_t        Crypto_Get_ECS_Algo_Keylen(uint8_t algo);
 int32_t        Crypto_Get_ACS_Algo_Keylen(uint8_t algo);
 uint8_t        Crypto_Is_ACS_Only_Algo(uint8_t algo);
 
 int32_t Crypto_Check_Anti_Replay_Verify_Pointers(SecurityAssociation_t *sa_ptr, uint8_t *arsn, uint8_t *iv);
 int32_t Crypto_Check_Anti_Replay_ARSNW(SecurityAssociation_t *sa_ptr, uint8_t *arsn, int8_t *arsn_valid);
-int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t *sa_ptr, uint8_t *iv, int8_t *iv_valid, uint8_t increment_nontransmitted);
+int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t *sa_ptr, uint8_t *iv, int8_t *iv_valid,
+                                     uint8_t increment_nontransmitted);
 
 // SDLS Related Functions
 extern uint8_t Crypto_Prep_Reply(uint8_t *ingest, uint8_t appID);

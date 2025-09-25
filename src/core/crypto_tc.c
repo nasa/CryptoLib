@@ -1776,7 +1776,8 @@ int32_t Crypto_TC_Check_IV_ARSN(SecurityAssociation_t *sa_ptr, TC_t *tc_sdls_pro
     if (crypto_config_tc.ignore_anti_replay == TC_IGNORE_ANTI_REPLAY_FALSE && status == CRYPTO_LIB_SUCCESS)
     {
         status = Crypto_Check_Anti_Replay(sa_ptr, tc_sdls_processed_frame->tc_sec_header.sn,
-                                          tc_sdls_processed_frame->tc_sec_header.iv, crypto_config_tc.crypto_increment_nontransmitted_iv);
+                                          tc_sdls_processed_frame->tc_sec_header.iv,
+                                          crypto_config_tc.crypto_increment_nontransmitted_iv);
 
         if (status != CRYPTO_LIB_SUCCESS)
         {

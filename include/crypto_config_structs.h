@@ -265,7 +265,7 @@ struct _TCGvcidManagedParameters_t
     TcSegmentHdrsPresent has_segmentation_hdr;
     uint16_t             max_frame_size; // Maximum TC/TM Frame Length with headers
     int                  set_flag;
-}__attribute__((packed));
+} __attribute__((packed));
 #define TC_GVCID_MANAGED_PARAMETERS_SIZE (sizeof(TCGvcidManagedParameters_t))
 
 typedef struct _TMGvcidManagedParameters_t TMGvcidManagedParameters_t;
@@ -278,7 +278,7 @@ struct _TMGvcidManagedParameters_t
     uint16_t    max_frame_size; // Maximum TC/TM Frame Length with headers
     OcfPresent  has_ocf;
     int         set_flag;
-}__attribute__((packed));
+} __attribute__((packed));
 #define TM_GVCID_MANAGED_PARAMETERS_SIZE (sizeof(TMGvcidManagedParameters_t))
 
 typedef struct _AOSGvcidManagedParameters_t AOSGvcidManagedParameters_t;
@@ -294,7 +294,7 @@ struct _AOSGvcidManagedParameters_t
     uint16_t             max_frame_size; // Maximum TC/TM Frame Length with headers
     OcfPresent           has_ocf;
     int                  set_flag;
-}__attribute__((packed));
+} __attribute__((packed));
 #define AOS_GVCID_MANAGED_PARAMETERS_SIZE (sizeof(AOSGvcidManagedParameters_t))
 
 /*

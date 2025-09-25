@@ -1344,7 +1344,8 @@ int32_t Crypto_Check_Anti_Replay_ARSNW(SecurityAssociation_t *sa_ptr, uint8_t *a
  *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
  **/
-int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t *sa_ptr, uint8_t *iv, int8_t *iv_valid, uint8_t increment_nontransmitted)
+int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t *sa_ptr, uint8_t *iv, int8_t *iv_valid,
+                                     uint8_t increment_nontransmitted)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     if ((sa_ptr->iv_len > 0) && (sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM))
@@ -1409,11 +1410,12 @@ int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t *sa_ptr, uint8_t *iv,
  *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
  **/
-int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, uint8_t *iv, uint8_t increment_nontransmitted)
+int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, uint8_t *iv,
+                                 uint8_t increment_nontransmitted)
 {
-    int32_t status     = CRYPTO_LIB_SUCCESS;
-    int8_t  iv_valid   = -1;
-    int8_t  arsn_valid = -1;
+    int32_t status           = CRYPTO_LIB_SUCCESS;
+    int8_t  iv_valid         = -1;
+    int8_t  arsn_valid       = -1;
     increment_nontransmitted = increment_nontransmitted;
 
     // Check for NULL pointers
