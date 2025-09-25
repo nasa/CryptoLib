@@ -96,13 +96,13 @@ typedef enum
 } AosFhecPresent;
 typedef enum
 {
-    AOS_IZ_NA,
+    AOS_IZ_NA = 0,
     AOS_NO_IZ,
     AOS_HAS_IZ
 } AosInsertZonePresent;
 typedef enum
 {
-    TC_CHECK_FECF_FALSE,
+    TC_CHECK_FECF_FALSE = 0,
     TC_CHECK_FECF_TRUE,
     TM_CHECK_FECF_FALSE,
     TM_CHECK_FECF_TRUE,
@@ -111,7 +111,7 @@ typedef enum
 } CheckFecfBool;
 typedef enum
 {
-    AOS_NO_OCF,
+    AOS_NO_OCF = 0,
     AOS_HAS_OCF,
     TC_OCF_NA,
     TM_NO_OCF,
@@ -144,7 +144,7 @@ typedef enum
 } TcIgnoreSaState;
 typedef enum
 {
-    TC_IGNORE_ANTI_REPLAY_FALSE,
+    TC_IGNORE_ANTI_REPLAY_FALSE = 0,
     TC_IGNORE_ANTI_REPLAY_TRUE,
     TM_IGNORE_ANTI_REPLAY_FALSE,
     TM_IGNORE_ANTI_REPLAY_TRUE,
@@ -213,7 +213,7 @@ typedef struct
     SadbType         sa_type;
     CryptographyType cryptography_type;
     IvType           iv_type; // Whether or not CryptoLib should generate the IV
-} CryptoConfigGlobal_t;
+} __attribute__((packed)) CryptoConfigGlobal_t;
 #define CRYPTO_GLOBAL_CONFIG_SIZE (sizeof(CryptoConfigGlobal_t))
 
 typedef struct
@@ -228,7 +228,7 @@ typedef struct
     uint8_t            vcid_bitmask;
     uint8_t crypto_increment_nontransmitted_iv; // Whether or not CryptoLib increments the non-transmitted portion of
                                                 // the IV field
-} CryptoConfigTC_t;
+} __attribute__((packed)) CryptoConfigTC_t;
 #define CRYPTO_TC_CONFIG_SIZE (sizeof(CryptoConfigTC_t))
 
 typedef struct
@@ -240,7 +240,7 @@ typedef struct
     uint8_t          vcid_bitmask;
     uint8_t crypto_increment_nontransmitted_iv; // Whether or not CryptoLib increments the non-transmitted portion of
                                                 // the IV field
-} CryptoConfigTM_t;
+} __attribute__((packed)) CryptoConfigTM_t;
 #define CRYPTO_TM_CONFIG_SIZE (sizeof(CryptoConfigTM_t))
 
 typedef struct
@@ -252,7 +252,7 @@ typedef struct
     uint8_t          vcid_bitmask;
     uint8_t crypto_increment_nontransmitted_iv; // Whether or not CryptoLib increments the non-transmitted portion of
                                                 // the IV field
-} CryptoConfigAOS_t;
+} __attribute__((packed)) CryptoConfigAOS_t;
 #define CRYPTO_AOS_CONFIG_SIZE (sizeof(CryptoConfigAOS_t))
 
 typedef struct _TCGvcidManagedParameters_t TCGvcidManagedParameters_t;
@@ -265,20 +265,20 @@ struct _TCGvcidManagedParameters_t
     TcSegmentHdrsPresent has_segmentation_hdr;
     uint16_t             max_frame_size; // Maximum TC/TM Frame Length with headers
     int                  set_flag;
-};
+}__attribute__((packed));
 #define TC_GVCID_MANAGED_PARAMETERS_SIZE (sizeof(TCGvcidManagedParameters_t))
 
 typedef struct _TMGvcidManagedParameters_t TMGvcidManagedParameters_t;
 struct _TMGvcidManagedParameters_t
 {
-    uint8_t     tfvn : 4;  // Transfer Frame Version Number
+    uint8_t     tfvn : 2;  // Transfer Frame Version Number
     uint16_t    scid : 10; // SpacecraftID
-    uint8_t     vcid : 6;  // Virtual Channel ID
+    uint8_t     vcid : 3;  // Virtual Channel ID
     FecfPresent has_fecf;
     uint16_t    max_frame_size; // Maximum TC/TM Frame Length with headers
     OcfPresent  has_ocf;
     int         set_flag;
-};
+}__attribute__((packed));
 #define TM_GVCID_MANAGED_PARAMETERS_SIZE (sizeof(TMGvcidManagedParameters_t))
 
 typedef struct _AOSGvcidManagedParameters_t AOSGvcidManagedParameters_t;
@@ -294,7 +294,7 @@ struct _AOSGvcidManagedParameters_t
     uint16_t             max_frame_size; // Maximum TC/TM Frame Length with headers
     OcfPresent           has_ocf;
     int                  set_flag;
-};
+}__attribute__((packed));
 #define AOS_GVCID_MANAGED_PARAMETERS_SIZE (sizeof(AOSGvcidManagedParameters_t))
 
 /*

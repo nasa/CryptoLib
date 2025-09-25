@@ -61,6 +61,43 @@ int32_t Crypto_TM_Sanity_Check(uint8_t *pTfBuffer)
     return status;
 }
 
+int32_t Crypto_TM_Check_IV_ARSN(SecurityAssociation_t *sa_ptr, TM_t *pp_processed_frame)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    if (crypto_config_tm.ignore_anti_replay == TM_IGNORE_ANTI_REPLAY_FALSE)
+    {
+        status = Crypto_Check_Anti_Replay(sa_ptr, pp_processed_frame->tm_sec_header.sn,
+                                          pp_processed_frame->tm_sec_header.iv, crypto_config_tm.crypto_increment_nontransmitted_iv);
+
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+            mc_if->mc_log(status);
+        }
+        if (status == CRYPTO_LIB_SUCCESS) // else
+        {
+            // Only save the SA (IV/ARSN) if checking the anti-replay counter; Otherwise we don't update.
+            status = sa_if->sa_save_sa(sa_ptr);
+            if (status != CRYPTO_LIB_SUCCESS)
+            {
+                mc_if->mc_log(status);
+            }
+        }
+    }
+    else
+    {
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+        {
+            if (sa_ptr->ek_ref[0] != '\0')
+                clean_ekref(sa_ptr);
+            if (sa_ptr->ak_ref[0] != '\0')
+                clean_akref(sa_ptr);
+            free(sa_ptr);
+        }
+    }
+    return status;
+}
+
 /**
  * @brief Function: Crypto_TM_Determine_SA_Service_Type
  * Determines the service type for Security Association
@@ -1569,6 +1606,15 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
         // byte_idx += pdu_len; // not read
     }
 
+    // Now that MAC has been verified, check IV & ARSN if applicable
+    status = Crypto_TM_Check_IV_ARSN(sa_ptr, pp_processed_frame);
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        //Crypto_TC_Safe_Free_Ptr(aad);
+        mc_if->mc_log(status);
+        return status; // Cryptography IF call failed, return.
+    }
+
 #ifdef TM_DEBUG
     printf(KYEL "Printing received frame:\n\t" RESET);
     for (int i = 0; i < tm_current_managed_parameters_struct.max_frame_size; i++)
@@ -1608,17 +1654,17 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
 
     // Security Header
     pp_processed_frame->tm_sec_header.spi =
-        (((uint16_t)p_new_dec_frame[byte_idx]) << 8) | ((uint16_t)p_new_dec_frame[byte_idx + 1]);
+        (((uint16_t)p_ingest[byte_idx]) << 8) | ((uint16_t)p_ingest[byte_idx + 1]);
     byte_idx += 2;
     for (int i = 0; i < sa_ptr->shivf_len; i++)
     {
-        memcpy(pp_processed_frame->tm_sec_header.iv + i, &p_new_dec_frame[byte_idx + i], 1);
+        memcpy(pp_processed_frame->tm_sec_header.iv + i, &p_ingest[byte_idx + i], 1);
     }
     byte_idx += sa_ptr->shivf_len;
     pp_processed_frame->tm_sec_header.iv_field_len = sa_ptr->shivf_len;
     for (int i = 0; i < sa_ptr->shsnf_len; i++)
     {
-        memcpy(pp_processed_frame->tm_sec_header.sn + i, &p_new_dec_frame[byte_idx + i], 1);
+        memcpy(pp_processed_frame->tm_sec_header.sn + i, &p_ingest[byte_idx + i], 1);
     }
     byte_idx += sa_ptr->shsnf_len;
     pp_processed_frame->tm_sec_header.sn_field_len = sa_ptr->shsnf_len;
@@ -1637,7 +1683,7 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     // Security Trailer
     for (int i = 0; i < sa_ptr->stmacf_len; i++)
     {
-        memcpy(pp_processed_frame->tm_sec_trailer.mac + i, &p_new_dec_frame[byte_idx + i], 1);
+        memcpy(pp_processed_frame->tm_sec_trailer.mac + i, &p_ingest[byte_idx + i], 1);
     }
     byte_idx += sa_ptr->stmacf_len;
     pp_processed_frame->tm_sec_trailer.mac_field_len = sa_ptr->stmacf_len;
@@ -1645,7 +1691,7 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     {
         for (int i = 0; i < OCF_SIZE; i++)
         {
-            memcpy(pp_processed_frame->tm_sec_trailer.ocf + i, &p_new_dec_frame[byte_idx + i], 1);
+            memcpy(pp_processed_frame->tm_sec_trailer.ocf + i, &p_ingest[byte_idx + i], 1);
         }
         byte_idx += OCF_SIZE;
         pp_processed_frame->tm_sec_trailer.ocf_field_len = OCF_SIZE;
@@ -1657,7 +1703,7 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     if (tm_current_managed_parameters_struct.has_fecf == TM_HAS_FECF)
     {
         pp_processed_frame->tm_sec_trailer.fecf =
-            ((uint16_t)p_new_dec_frame[byte_idx] << 8) | p_new_dec_frame[byte_idx + 1];
+            ((uint16_t)p_ingest[byte_idx] << 8) | p_ingest[byte_idx + 1];
     }
     free(p_new_dec_frame);
 
@@ -1837,8 +1883,15 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
             iv_loc = byte_idx;
         }
         // Increment byte_idx past Security Header Fields based on SA values
+        memcpy((pp_processed_frame->tm_sec_header.iv + (sa_ptr->iv_len - sa_ptr->shivf_len)),
+            &(p_ingest[byte_idx]), sa_ptr->shivf_len);
         byte_idx += sa_ptr->shivf_len;
+
+        memcpy((pp_processed_frame->tm_sec_header.sn + (sa_ptr->arsn_len - sa_ptr->shsnf_len)),
+            &(p_ingest[byte_idx]), sa_ptr->shsnf_len);
         byte_idx += sa_ptr->shsnf_len;
+
+        memcpy(&(pp_processed_frame->tm_sec_header.pad), &(p_ingest[byte_idx]), sa_ptr->shplf_len);
         byte_idx += sa_ptr->shplf_len;
 
 #ifdef SA_DEBUG

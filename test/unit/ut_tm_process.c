@@ -1773,7 +1773,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_GCM_BITMASK_1)
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL);
-    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_IGNORE_ANTI_REPLAY_FALSE, TM_CHECK_FECF_FALSE, 0x3F,
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_IGNORE_ANTI_REPLAY_FALSE, TM_CHECK_FECF_TRUE, 0x3F,
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {0, 0x002c, 0, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
     Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
@@ -1818,7 +1818,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_GCM_BITMASK_1)
         "560e98398aa9f6ba625e9bc516bb88a4fb2a7ec4b3017ac74362f58653b6b7a2226fcbd484a834fe5e8f4a7432fecf8974d57088c7955e"
         "ee593bd806bb84b46dc2e75c2709c37468866df97e66f49bece821aa8997ec766d6e6529cf96c18a14435ee0ded2bde56d77b2091d4ca1"
         "346830edda23d114efe1596201d80fe213b8b7dffa79fc84a2a63c77ac9fae6cb1b8bb99521b43309915da6b28316e400f10fda0f1dbdd"
-        "25761de798dc894009f391fd96d2471558a2c9656251af547a43";
+        "25761de798dc894009f391fd96d2471558a2c9656251af5490F6";
     char *framed_tm_b   = NULL;
     int   framed_tm_len = 0;
     hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);
@@ -1880,6 +1880,13 @@ UTEST(TM_PROCESS_ENC_VAL, AES_GCM_BITMASK_1)
     test_association->arsn_len  = 0;
     test_association->shsnf_len = 0;
 
+    // Set a more obvious IV for test purposes
+    char *iv_h   = "DEADBEEFDEADBEEFDEADBEEFDEADBEEE";
+    char *iv_b   = NULL;
+    int   iv_len = 0;
+    hex_conversion(iv_h, &iv_b, &iv_len);
+    memcpy(test_association->iv, iv_b, iv_len);
+
     crypto_key_t *ekp = NULL;
     ekp               = key_if->get_key(test_association->ekid);
     ekp->key_state    = KEY_ACTIVE;
@@ -1890,6 +1897,14 @@ UTEST(TM_PROCESS_ENC_VAL, AES_GCM_BITMASK_1)
 
     status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, tm_frame, &processed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    printf("SA Fields:\n");
+    printf("\tIV: ");
+    for (int i = 0; i < test_association->iv_len; i++)
+    {
+        printf("%02x", test_association->iv[i]);
+    }
+    printf("\n");
 
     // printf("Decrypted frame contents:\n\t");
     // for (int i = 0; i < 1786; i++)
@@ -1924,7 +1939,7 @@ UTEST(TM_PROCESS_ENC_VAL, AES_GCM_BITMASK_1)
     free(truth_tm_b);
     free(framed_tm_b);
     free(tm_frame);
-    // free(iv_b);
+    free(iv_b);
 }
 
 /**
@@ -2067,6 +2082,13 @@ UTEST(TM_PROCESS_ENC_VAL, AEAD_AES_GCM_BITMASK_1)
     test_association->stmacf_len = 16;
     test_association->shsnf_len  = 0;
 
+    // Set a more obvious IV for test purposes
+    char *iv_h   = "DEADBEEFDEADBEEFDEADBEEFDEADBEEE";
+    char *iv_b   = NULL;
+    int   iv_len = 0;
+    hex_conversion(iv_h, &iv_b, &iv_len);
+    memcpy(test_association->iv, iv_b, iv_len);
+
     crypto_key_t *ekp = NULL;
     ekp               = key_if->get_key(test_association->ekid);
     ekp->key_state    = KEY_ACTIVE;
@@ -2111,6 +2133,7 @@ UTEST(TM_PROCESS_ENC_VAL, AEAD_AES_GCM_BITMASK_1)
     free(truth_tm_b);
     free(framed_tm_b);
     free(tm_frame);
+    free(iv_b);
     // free(iv_b);
 }
 

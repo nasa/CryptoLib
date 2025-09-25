@@ -614,7 +614,7 @@ int32_t Crypto_Config_TC(uint8_t crypto_create_fecf, uint8_t process_sdls_pdus, 
     return status;
 }
 
-int32_t Crypto_Config_TM(uint8_t crypto_create_fecf, uint8_t crypto_check_fecf, uint8_t ignore_anti_replay,
+int32_t Crypto_Config_TM(uint8_t crypto_create_fecf, uint8_t ignore_anti_replay, uint8_t crypto_check_fecf, 
                          uint8_t vcid_bitmask, uint8_t crypto_increment_nontransmitted_iv)
 {
     int32_t status                                      = CRYPTO_LIB_SUCCESS;
@@ -626,7 +626,7 @@ int32_t Crypto_Config_TM(uint8_t crypto_create_fecf, uint8_t crypto_check_fecf, 
     return status;
 }
 
-int32_t Crypto_Config_AOS(uint8_t crypto_create_fecf, uint8_t crypto_check_fecf, uint8_t ignore_anti_replay,
+int32_t Crypto_Config_AOS(uint8_t crypto_create_fecf, uint8_t ignore_anti_replay, uint8_t crypto_check_fecf, 
                           uint8_t vcid_bitmask, uint8_t crypto_increment_nontransmitted_iv)
 {
     int32_t status                                       = CRYPTO_LIB_SUCCESS;

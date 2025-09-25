@@ -1344,7 +1344,7 @@ int32_t Crypto_Check_Anti_Replay_ARSNW(SecurityAssociation_t *sa_ptr, uint8_t *a
  *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
  **/
-int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t *sa_ptr, uint8_t *iv, int8_t *iv_valid)
+int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t *sa_ptr, uint8_t *iv, int8_t *iv_valid, uint8_t increment_nontransmitted)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     if ((sa_ptr->iv_len > 0) && (sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM))
@@ -1356,8 +1356,11 @@ int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t *sa_ptr, uint8_t *iv,
         }
         if (status == CRYPTO_LIB_SUCCESS)
         {
+#ifdef DEBUG
+            printf("Increment Nontransmitted IV? %d\n", increment_nontransmitted);
+#endif
             // Check IV is in ARSNW
-            if (crypto_config_tc.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
+            if (increment_nontransmitted == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
             {
                 status = Crypto_window(iv, sa_ptr->iv, sa_ptr->iv_len, sa_ptr->arsnw);
             }
@@ -1406,11 +1409,12 @@ int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t *sa_ptr, uint8_t *iv,
  *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
  **/
-int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, uint8_t *iv)
+int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, uint8_t *iv, uint8_t increment_nontransmitted)
 {
     int32_t status     = CRYPTO_LIB_SUCCESS;
     int8_t  iv_valid   = -1;
     int8_t  arsn_valid = -1;
+    increment_nontransmitted = increment_nontransmitted;
 
     // Check for NULL pointers
     status = Crypto_Check_Anti_Replay_Verify_Pointers(sa_ptr, arsn, iv);
@@ -1424,7 +1428,7 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
     // If IV is greater than zero and using GCM, check for replay
     if (status == CRYPTO_LIB_SUCCESS)
     {
-        status = Crypto_Check_Anti_Replay_GCM(sa_ptr, iv, &iv_valid);
+        status = Crypto_Check_Anti_Replay_GCM(sa_ptr, iv, &iv_valid, increment_nontransmitted);
     }
 
     // For GCM specifically, if have a valid IV...
