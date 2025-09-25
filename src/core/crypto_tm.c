@@ -253,7 +253,7 @@ uint32_t Crypto_TM_Calculate_Padding(uint32_t cipher, uint16_t data_len)
             block_size = 16; // AES block size is 16 bytes
             padding    = block_size - (data_len % block_size);
             if (padding == block_size)
-                padding = 0;
+                padding = 16;
             break;
 
         case CRYPTO_CIPHER_AES256_GCM:

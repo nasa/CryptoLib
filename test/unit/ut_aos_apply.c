@@ -1433,9 +1433,10 @@ UTEST(AOS_APPLY, AOS_APPLY_BUFFER_OVERFLOW_TEST)
 
 //     // Configure, Add Managed Params, and Init
 //     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-//                             IV_INTERNAL, CRYPTO_AOS_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-//                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-//                             AOS_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+//                             IV_INTERNAL);
+
+//     Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
+//                       SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 
 //     // Set up the managed parameters
 //     AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {
@@ -1449,7 +1450,7 @@ UTEST(AOS_APPLY, AOS_APPLY_BUFFER_OVERFLOW_TEST)
 //                               "FFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
 //                               "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
 //                               "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
-//                               "AABBAABB";
+//                               "AABBFECF";
 //     char *test_aos_b        = NULL;
 //     int   test_frame_length = 0;
 //     hex_conversion(test_aos_h, &test_aos_b, &test_frame_length);

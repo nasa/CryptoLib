@@ -1331,7 +1331,7 @@ UTEST(AOS_PROCESS, AES_HMAC_512_TEST_0)
     sa_ptr->ast            = 1;
     sa_ptr->acs_len        = 1;
     sa_ptr->ecs_len        = 0;
-    sa_ptr->acs            = CRYPTO_MAC_HMAC_SHA256;
+    sa_ptr->acs            = CRYPTO_MAC_HMAC_SHA512;
     sa_ptr->stmacf_len     = 16;
     sa_ptr->abm_len        = ABM_SIZE;
     sa_ptr->gvcid_blk.scid = 0x44;
@@ -1486,7 +1486,7 @@ UTEST(AOS_PROCESS, AES_HMAC_512_TEST_1)
     sa_ptr->ast            = 1;
     sa_ptr->acs_len        = 1;
     sa_ptr->ecs_len        = 0;
-    sa_ptr->acs            = CRYPTO_MAC_HMAC_SHA256;
+    sa_ptr->acs            = CRYPTO_MAC_HMAC_SHA512;
     sa_ptr->stmacf_len     = 16;
     sa_ptr->abm_len        = ABM_SIZE;
     sa_ptr->gvcid_blk.scid = 0x44;

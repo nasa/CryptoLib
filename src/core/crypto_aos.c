@@ -662,62 +662,56 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
 
     if (sa_service_type != SA_PLAINTEXT)
     {
-        // Implement proper anti-replay sequence number handling per CCSDS 355.0-B-2
-        if (sa_ptr->shsnf_len > 0)
+#ifdef INCREMENT
+        if (crypto_config_aos.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
         {
-            // Section 4.2.5 of CCSDS 355.0-B-2: Sequence numbers shall be incremented by one for each frame
-            Crypto_increment(sa_ptr->arsn, sa_ptr->arsn_len);
-
-            // Check for sequence number rollover
-            int is_all_zeros = CRYPTO_TRUE;
-            for (i = 0; i < sa_ptr->arsn_len; i++)
+            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0)
             {
-                if (*(sa_ptr->arsn + i) != 0)
-                {
-                    is_all_zeros = CRYPTO_FALSE;
-                    break;
-                }
+                status = Crypto_increment(sa_ptr->iv, sa_ptr->iv_len);
             }
-
-            // Section 4.2.5.3: If a rollover is detected, SA must be re-established
-            if (is_all_zeros)
+        }
+        else // SA_INCREMENT_NONTRANSMITTED_IV_FALSE
+        {
+            // Only increment the transmitted portion
+            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0)
             {
-#ifdef SA_DEBUG
-                printf(KRED "ARSN has rolled over! SA should be re-established.\n" RESET);
-#endif
-                // Mark the SA for rekeying
-                sa_ptr->sa_state = SA_NONE;
+                status = Crypto_increment(sa_ptr->iv + (sa_ptr->iv_len - sa_ptr->shivf_len), sa_ptr->shivf_len);
             }
+        }
+        if (sa_ptr->shsnf_len > 0 && status == CRYPTO_LIB_SUCCESS)
+        {
+            status = Crypto_increment(sa_ptr->arsn, sa_ptr->arsn_len);
         }
 
 #ifdef SA_DEBUG
         if (sa_ptr->iv_len > 0)
         {
             printf(KYEL "Next IV value is:\n\t");
-            for (i = 0; i < sa_ptr->iv_len; i++)
+            for (int i = 0; i < sa_ptr->iv_len; i++)
             {
                 printf("%02x", *(sa_ptr->iv + i));
             }
             printf("\n" RESET);
             printf(KYEL "Next transmitted IV value is:\n\t");
-            for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
+            for (int i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
             {
                 printf("%02x", *(sa_ptr->iv + i));
             }
             printf("\n" RESET);
         }
         printf(KYEL "Next ARSN value is:\n\t");
-        for (i = 0; i < sa_ptr->arsn_len; i++)
+        for (int i = 0; i < sa_ptr->arsn_len; i++)
         {
             printf("%02x", *(sa_ptr->arsn + i));
         }
         printf("\n" RESET);
         printf(KYEL "Next transmitted ARSN value is:\n\t");
-        for (i = sa_ptr->arsn_len - sa_ptr->shsnf_len; i < sa_ptr->arsn_len; i++)
+        for (int i = sa_ptr->arsn_len - sa_ptr->shsnf_len; i < sa_ptr->arsn_len; i++)
         {
             printf("%02x", *(sa_ptr->arsn + i));
         }
         printf("\n" RESET);
+#endif
 #endif
     }
 
@@ -1383,7 +1377,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
 #endif
         if (sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
         {
-            aad_len = byte_idx;
+            aad_len = iv_loc + sa_ptr->shivf_len;
         }
         else
         {
