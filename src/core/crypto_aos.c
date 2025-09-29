@@ -79,7 +79,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         return CRYPTO_LIB_ERR_NULL_BUFFER;
     }
 
-    if ((crypto_config_global.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
+    if ((crypto_config_global.init_status == UNINITIALIZED) || (crypto_config_aos.init_status == UNINITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
     {
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
         status = CRYPTO_LIB_ERR_NO_CONFIG;
@@ -925,7 +925,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
         return status;
     }
 
-    if ((crypto_config_global.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
+    if ((crypto_config_global.init_status == UNINITIALIZED) || (crypto_config_aos.init_status == UNINITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
     {
 #ifdef AOS_DEBUG
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);

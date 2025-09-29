@@ -727,7 +727,7 @@ int32_t Crypto_TC_Check_Init_Setup(uint16_t in_frame_length)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
-    if ((crypto_config_global.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
+    if ((crypto_config_global.init_status == UNINITIALIZED) || (crypto_config_tc.init_status == UNINITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
     {
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
         status = CRYPTO_LIB_ERR_NO_CONFIG;
@@ -1625,11 +1625,12 @@ int32_t Crypto_TC_Process_Sanity_Check(int *len_ingest)
     printf(KYEL "\n----- Crypto_TC_ProcessSecurity START -----\n" RESET);
 #endif
 
-    if ((mc_if == NULL) || (crypto_config_global.init_status == UNITIALIZED))
+    if ((crypto_config_global.init_status == UNINITIALIZED) || (crypto_config_tc.init_status == UNINITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
     {
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
         status = CRYPTO_LIB_ERR_NO_CONFIG;
-        mc_if->mc_log(status);
+        // Can't mc_log since it's not configured
+        return status; // return immediately so a NULL crypto_config is not dereferenced later
     }
     if ((*len_ingest < 5) &&
         (status == CRYPTO_LIB_SUCCESS)) // Frame length doesn't even have enough bytes for header -- error out.
@@ -2250,7 +2251,7 @@ static int32_t crypto_tc_validate_sa(SecurityAssociation_t *sa)
     {
         return CRYPTO_LIB_ERR_SPI_INDEX_MISMATCH;
     }
-    if (sa->sa_state != SA_OPERATIONAL)
+    if (sa->sa_state != SA_OPERATIONAL && crypto_config_tc.ignore_sa_state == TC_IGNORE_SA_STATE_FALSE)
     {
         return CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL;
     }

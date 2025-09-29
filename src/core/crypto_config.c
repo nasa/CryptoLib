@@ -39,10 +39,11 @@ SaInterface           sa_if           = NULL;
 
 SadbMariaDBConfig_t *sa_mariadb_config = NULL;
 
-CryptoConfigGlobal_t crypto_config_global;
-CryptoConfigTC_t     crypto_config_tc;
-CryptoConfigTM_t     crypto_config_tm;
-CryptoConfigAOS_t    crypto_config_aos;
+// Assign Defaults to configs, not initialized until user calls config function
+CryptoConfigGlobal_t crypto_config_global = {UNINITIALIZED, KEY_TYPE_UNINITIALIZED, MC_TYPE_UNINITIALIZED, SA_TYPE_UNINITIALIZED, CRYPTOGRAPHY_TYPE_UNINITIALIZED, IV_INTERNAL};
+CryptoConfigTC_t     crypto_config_tc     = {UNINITIALIZED, CRYPTO_TC_CREATE_FECF_FALSE, TC_PROCESS_SDLS_PDUS_FALSE, TC_HAS_PUS_HDR, TC_IGNORE_ANTI_REPLAY_FALSE, TC_IGNORE_SA_STATE_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE};
+CryptoConfigTM_t     crypto_config_tm     = {UNINITIALIZED, CRYPTO_TM_CREATE_FECF_FALSE, TM_IGNORE_ANTI_REPLAY_FALSE, TM_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE};
+CryptoConfigAOS_t    crypto_config_aos    = {UNINITIALIZED, CRYPTO_AOS_CREATE_FECF_FALSE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE};
 
 CryptographyKmcCryptoServiceConfig_t *cryptography_kmc_crypto_config = NULL;
 CamConfig_t                          *cam_config                     = NULL;
@@ -85,7 +86,7 @@ int32_t Crypto_SC_Init(void)
     int32_t status = CRYPTO_LIB_SUCCESS;
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL);
-    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_NO_PUS_HDR, TC_IGNORE_ANTI_REPLAY_FALSE,
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_NO_PUS_HDR, TC_IGNORE_ANTI_REPLAY_FALSE, TC_IGNORE_SA_STATE_FALSE, 
                      TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_IGNORE_ANTI_REPLAY_FALSE, TM_CHECK_FECF_TRUE, 0x3F,
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
@@ -178,7 +179,7 @@ int32_t Crypto_Init_TC_Unit_Test(void)
     int32_t status = CRYPTO_LIB_SUCCESS;
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL);
-    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR, TC_IGNORE_ANTI_REPLAY_FALSE,
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR, TC_IGNORE_ANTI_REPLAY_FALSE, TC_IGNORE_SA_STATE_FALSE, 
                      TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TC Tests
     TCGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, 1};
@@ -281,7 +282,7 @@ int32_t Crypto_Init(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
-    if (crypto_config_global.init_status == UNITIALIZED)
+    if (crypto_config_global.init_status == UNINITIALIZED)
     {
         status = CRYPTO_CONFIGURATION_NOT_COMPLETE;
         printf(KRED "ERROR: CryptoLib must be configured before intializing!\n" RESET);
@@ -599,14 +600,16 @@ int32_t Crypto_Config_CryptoLib(uint8_t key_type, uint8_t mc_type, uint8_t sa_ty
 }
 
 int32_t Crypto_Config_TC(uint8_t crypto_create_fecf, uint8_t process_sdls_pdus, uint8_t has_pus_hdr,
-                         uint8_t ignore_anti_replay, uint8_t unique_sa_per_mapid, uint8_t crypto_check_fecf,
-                         uint8_t vcid_bitmask, uint8_t crypto_increment_nontransmitted_iv)
+                         uint8_t ignore_anti_replay, uint8_t ignore_sa_state, uint8_t unique_sa_per_mapid,
+                         uint8_t crypto_check_fecf, uint8_t vcid_bitmask, uint8_t crypto_increment_nontransmitted_iv)
 {
     int32_t status                                      = CRYPTO_LIB_SUCCESS;
+    crypto_config_tc.init_status                        = INITIALIZED;
     crypto_config_tc.crypto_create_fecf                 = crypto_create_fecf;
     crypto_config_tc.process_sdls_pdus                  = process_sdls_pdus;
     crypto_config_tc.has_pus_hdr                        = has_pus_hdr;
     crypto_config_tc.ignore_anti_replay                 = ignore_anti_replay;
+    crypto_config_tc.ignore_sa_state                    = ignore_sa_state;
     crypto_config_tc.unique_sa_per_mapid                = unique_sa_per_mapid;
     crypto_config_tc.crypto_check_fecf                  = crypto_check_fecf;
     crypto_config_tc.vcid_bitmask                       = vcid_bitmask;
@@ -618,6 +621,7 @@ int32_t Crypto_Config_TM(uint8_t crypto_create_fecf, uint8_t ignore_anti_replay,
                          uint8_t vcid_bitmask, uint8_t crypto_increment_nontransmitted_iv)
 {
     int32_t status                                      = CRYPTO_LIB_SUCCESS;
+    crypto_config_tm.init_status                        = INITIALIZED;
     crypto_config_tm.crypto_create_fecf                 = crypto_create_fecf;
     crypto_config_tm.ignore_anti_replay                 = ignore_anti_replay;
     crypto_config_tm.crypto_check_fecf                  = crypto_check_fecf;
@@ -630,6 +634,7 @@ int32_t Crypto_Config_AOS(uint8_t crypto_create_fecf, uint8_t ignore_anti_replay
                           uint8_t vcid_bitmask, uint8_t crypto_increment_nontransmitted_iv)
 {
     int32_t status                                       = CRYPTO_LIB_SUCCESS;
+    crypto_config_aos.init_status                        = INITIALIZED;
     crypto_config_aos.crypto_create_fecf                 = crypto_create_fecf;
     crypto_config_aos.ignore_anti_replay                 = ignore_anti_replay;
     crypto_config_aos.crypto_check_fecf                  = crypto_check_fecf;
@@ -912,14 +917,17 @@ int32_t crypto_free_config_structs(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
-    if (crypto_config_global.init_status == UNITIALIZED)
+    if (crypto_config_global.init_status == UNINITIALIZED)
     {
         status = CRYPTO_LIB_SUCCESS;
     }
     else
     {
         // free(crypto_config); //no strings in this struct, just free it.
-        crypto_config_global.init_status = UNITIALIZED;
+        crypto_config_global.init_status = UNINITIALIZED;
+        crypto_config_tc.init_status     = UNINITIALIZED;
+        crypto_config_tm.init_status     = UNINITIALIZED;
+        crypto_config_aos.init_status    = UNINITIALIZED;
 
         // Config structs with char* types that are malloc'd and must be freed individually.
         if (sa_mariadb_config != NULL)

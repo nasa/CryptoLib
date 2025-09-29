@@ -29,33 +29,33 @@ ivv-itc@lists.nasa.gov
 // main config enums
 typedef enum
 {
-    UNITIALIZED = 0,
+    UNINITIALIZED = 0,
     INITIALIZED
 } InitStatus;
 typedef enum
 {
-    KEY_TYPE_UNITIALIZED = 0,
+    KEY_TYPE_UNINITIALIZED = 0,
     KEY_TYPE_CUSTOM,
     KEY_TYPE_INTERNAL,
     KEY_TYPE_KMC
 } KeyType;
 typedef enum
 {
-    MC_TYPE_UNITIALIZED = 0,
+    MC_TYPE_UNINITIALIZED = 0,
     MC_TYPE_CUSTOM,
     MC_TYPE_DISABLED,
     MC_TYPE_INTERNAL
 } McType;
 typedef enum
 {
-    SA_TYPE_UNITIALIZED = 0,
+    SA_TYPE_UNINITIALIZED = 0,
     SA_TYPE_CUSTOM,
     SA_TYPE_INMEMORY,
     SA_TYPE_MARIADB
 } SadbType;
 typedef enum
 {
-    CRYPTOGRAPHY_TYPE_UNITIALIZED = 0,
+    CRYPTOGRAPHY_TYPE_UNINITIALIZED = 0,
     CRYPTOGRAPHY_TYPE_LIBGCRYPT,
     CRYPTOGRAPHY_TYPE_KMCCRYPTO,
     CRYPTOGRAPHY_TYPE_WOLFSSL,
@@ -218,11 +218,13 @@ typedef struct
 
 typedef struct
 {
+    InitStatus       init_status;
     CreateFecfBool crypto_create_fecf;    // Whether or not CryptoLib is expected to calculate TC FECFs and return
                                           // payloads with the FECF
     TcProcessSdlsPdus  process_sdls_pdus; // Config to process SDLS extended procedure PDUs in CryptoLib
     TcPusHdrPresent    has_pus_hdr;       // For ESA Testing
     IgnoreAntiReplay   ignore_anti_replay;
+    TcIgnoreSaState    ignore_sa_state;
     TcUniqueSaPerMapId unique_sa_per_mapid;
     CheckFecfBool      crypto_check_fecf;
     uint8_t            vcid_bitmask;
@@ -233,6 +235,7 @@ typedef struct
 
 typedef struct
 {
+    InitStatus       init_status;
     CreateFecfBool crypto_create_fecf; // Whether or not CryptoLib is expected to calculate TC FECFs and return
                                        // payloads with the FECF
     IgnoreAntiReplay ignore_anti_replay;
@@ -245,6 +248,7 @@ typedef struct
 
 typedef struct
 {
+    InitStatus       init_status;
     CreateFecfBool crypto_create_fecf; // Whether or not CryptoLib is expected to calculate TC FECFs and return
                                        // payloads with the FECF
     IgnoreAntiReplay ignore_anti_replay;
