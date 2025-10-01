@@ -305,8 +305,7 @@ int32_t Crypto_Init(void)
         printf(KRED "ERROR: CryptoLib must be configured before intializing!\n" RESET);
         return status; // No configuration set -- return!
     }
-    if (tc_gvcid_managed_parameters_array[0].set_flag == 0 && tm_gvcid_managed_parameters_array[0].set_flag == 0 &&
-        aos_gvcid_managed_parameters_array[0].set_flag == 0)
+    if (tc_gvcid_counter == 0 && tm_gvcid_counter == 0 && aos_gvcid_counter == 0)
     {
         status = CRYPTO_MANAGED_PARAM_CONFIGURATION_NOT_COMPLETE;
         printf(KRED "ERROR: CryptoLib  Managed Parameters must be configured before intializing!\n" RESET);
