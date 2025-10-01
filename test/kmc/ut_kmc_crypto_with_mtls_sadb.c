@@ -55,11 +55,11 @@
 //     "itc-kmc.nasa.gov", 8443, "crypto-service","/certs/ammos-ca-bundle.crt",NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
 //     "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
 
-//     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA,
-//     AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024,
-//     AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 2, TC_HAS_FECF,
-//     TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 3,
-//     TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0); int32_t status = Crypto_Init();
+//     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_NO_FHEC,
+//     AOS_NO_IZ, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024,
+//     AOS_NO_FHEC, AOS_NO_IZ, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 2, TC_HAS_FECF,
+//     TC_NO_SEGMENT_HDRS, 1024, AOS_NO_FHEC, AOS_NO_IZ, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 3,
+//     TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_NO_FHEC, AOS_NO_IZ, 0); int32_t status = Crypto_Init();
 
 //     char* raw_tc_jpl_mmt_scid44_vcid1= "20030408000001bd37";
 //     char* raw_tc_jpl_mmt_scid44_vcid1_expect = NULL;
@@ -107,11 +107,11 @@
 //     NULL, CLIENT_CERTIFICATE, CLIENT_CERTIFICATE_KEY, NULL, "root", NULL); Crypto_Config_Kmc_Crypto_Service("https",
 //     "itc-kmc.nasa.gov", 8443, "crypto-service","/certs/ammos-ca-bundle.crt",NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
 //     "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF,
-//     TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1,
-//     TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0,
-//     0x0003, 2, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-//     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA,
-//     AOS_IZ_NA, 0); int32_t status = Crypto_Init();
+//     TC_NO_SEGMENT_HDRS, 1024, AOS_NO_FHEC, AOS_NO_IZ, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1,
+//     TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_NO_FHEC, AOS_NO_IZ, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0,
+//     0x0003, 2, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_NO_FHEC, AOS_NO_IZ, 0);
+//     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_NO_FHEC,
+//     AOS_NO_IZ, 0); int32_t status = Crypto_Init();
 
 //     char* raw_tc_jpl_mmt_scid44_vcid1= "20030408000001bd37";
 //     char* raw_tc_jpl_mmt_scid44_vcid1_expect = NULL;
@@ -160,11 +160,11 @@
 //     Crypto_Config_Kmc_Crypto_Service("https", "itc-kmc.nasa.gov", 8443,
 //     "crypto-service","/certs/ammos-ca-bundle.crt",NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE, "PEM",
 //     CLIENT_CERTIFICATE_KEY, NULL, NULL); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 0, TC_HAS_FECF,
-//     TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 1,
-//     TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0,
-//     0x002C, 2, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-//     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA,
-//     AOS_IZ_NA, 0); int32_t status = Crypto_Init();
+//     TC_NO_SEGMENT_HDRS, 1024, AOS_NO_FHEC, AOS_NO_IZ, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 1,
+//     TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_NO_FHEC, AOS_NO_IZ, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0,
+//     0x002C, 2, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_NO_FHEC, AOS_NO_IZ, 0);
+//     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002C, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_NO_FHEC,
+//     AOS_NO_IZ, 0); int32_t status = Crypto_Init();
 
 //     ASSERT_EQ(CRYPTO_LIB_ERROR, status);
 
@@ -184,11 +184,11 @@
 //     Crypto_Config_Kmc_Crypto_Service("https", "itc-kmc.nasa.gov", 8443,
 //     "crypto-service","/certs/ammos-ca-bundle.crt",NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE, "PEM",
 //     CLIENT_CERTIFICATE_KEY, NULL, NULL); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF,
-//     TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1,
-//     TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0,
-//     0x0003, 2, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA, AOS_IZ_NA, 0);
-//     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_FHEC_NA,
-//     AOS_IZ_NA, 0); int32_t status = Crypto_Init();
+//     TC_NO_SEGMENT_HDRS, 1024, AOS_NO_FHEC, AOS_NO_IZ, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1,
+//     TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_NO_FHEC, AOS_NO_IZ, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0,
+//     0x0003, 2, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_NO_FHEC, AOS_NO_IZ, 0);
+//     Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 3, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, AOS_NO_FHEC,
+//     AOS_NO_IZ, 0); int32_t status = Crypto_Init();
 
 //     ASSERT_EQ(CRYPTO_LIB_ERROR, status);
 

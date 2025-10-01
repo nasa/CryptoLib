@@ -316,7 +316,7 @@ UTEST(TM_APPLY_SECURITY, HAPPY_PATH_CLEAR_FECF_LEFT_BLANK)
     Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_FALSE, TM_IGNORE_ANTI_REPLAY_FALSE, TM_CHECK_FECF_FALSE, 0x3F,
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+    // AOS_NO_FHEC, AOS_NO_IZ, 0);
     TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {0, 0x0003, 0, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
     Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
     status = Crypto_Init();
@@ -466,7 +466,7 @@ UTEST(TM_APPLY_SECURITY, SECONDARY_HDR_PRESENT_PLAINTEXT)
     Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_FALSE, TM_IGNORE_ANTI_REPLAY_FALSE, TM_CHECK_FECF_TRUE, 0x3F,
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002c, 0, TM_NO_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+    // AOS_NO_FHEC, AOS_NO_IZ, 0);
     TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {0, 0x002c, 0, TM_NO_FECF, 1024, TM_NO_OCF, 1};
     Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
@@ -754,7 +754,7 @@ UTEST(TM_APPLY_SECURITY, AES_CMAC_256_TEST_0)
     Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_IGNORE_ANTI_REPLAY_FALSE, TM_CHECK_FECF_FALSE, 0x3F,
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+    // AOS_NO_FHEC, AOS_NO_IZ, 0);
     TMGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x002c, 0, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
     Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     status = Crypto_Init();
@@ -922,7 +922,7 @@ UTEST(TM_APPLY_SECURITY, AES_CMAC_256_TEST_1)
     Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_IGNORE_ANTI_REPLAY_FALSE, TM_CHECK_FECF_FALSE, 0x3F,
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+    // AOS_NO_FHEC, AOS_NO_IZ, 0);
     TMGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x002c, 0, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
     Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     status = Crypto_Init();
@@ -1098,7 +1098,7 @@ UTEST(TM_APPLY_ENC_VAL, AES_HMAC_SHA_256_TEST_0)
     Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_IGNORE_ANTI_REPLAY_FALSE, TM_CHECK_FECF_FALSE, 0x3F,
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+    // AOS_NO_FHEC, AOS_NO_IZ, 0);
     TMGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x002c, 0, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
     Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     status = Crypto_Init();
@@ -1264,7 +1264,7 @@ UTEST(TM_APPLY_ENC_VAL, AES_HMAC_SHA_256_TEST_1)
     Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_IGNORE_ANTI_REPLAY_FALSE, TM_CHECK_FECF_FALSE, 0x3F,
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+    // AOS_NO_FHEC, AOS_NO_IZ, 0);
     TMGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x002c, 0, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
     Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     status = Crypto_Init();
@@ -1431,7 +1431,7 @@ UTEST(TM_APPLY_ENC_VAL, AES_HMAC_SHA_512_TEST_0)
     Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_IGNORE_ANTI_REPLAY_FALSE, TM_CHECK_FECF_FALSE, 0x3F,
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+    // AOS_NO_FHEC, AOS_NO_IZ, 0);
     TMGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x002c, 0, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
     Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     status = Crypto_Init();
@@ -1607,7 +1607,7 @@ UTEST(TM_APPLY_ENC_VAL, AES_HMAC_SHA_512_TEST_1)
     Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_IGNORE_ANTI_REPLAY_FALSE, TM_CHECK_FECF_FALSE, 0x3F,
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+    // AOS_NO_FHEC, AOS_NO_IZ, 0);
     TMGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x002c, 0, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
     Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     status = Crypto_Init();
@@ -1772,7 +1772,7 @@ UTEST(TM_APPLY_ENC_VAL, AES_GCM_BITMASK_1)
     Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_IGNORE_ANTI_REPLAY_FALSE, TM_CHECK_FECF_FALSE, 0x3F,
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+    // AOS_NO_FHEC, AOS_NO_IZ, 0);
     TMGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x002c, 0, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
     Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     int status = Crypto_Init();
@@ -1947,7 +1947,7 @@ UTEST(TM_APPLY_ENC_VAL, AEAD_AES_GCM_BITMASK_1)
     Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_IGNORE_ANTI_REPLAY_FALSE, TM_CHECK_FECF_FALSE, 0x3F,
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+    // AOS_NO_FHEC, AOS_NO_IZ, 0);
     TMGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x002c, 0, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
     Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     int status = Crypto_Init();
@@ -2135,7 +2135,7 @@ UTEST(TM_APPLY_ENC_VAL, TM_KEY_STATE_TEST)
     Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_IGNORE_ANTI_REPLAY_FALSE, TM_CHECK_FECF_FALSE, 0x3F,
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+    // AOS_NO_FHEC, AOS_NO_IZ, 0);
     TMGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x002c, 0, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
     Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     status = Crypto_Init();
@@ -2283,7 +2283,7 @@ UTEST(TM_APPLY_SECURITY, TM_APPLY_HEAP_UNDERFLOW_TEST)
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TM Tests
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+    // AOS_NO_FHEC, AOS_NO_IZ, 0);
     TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {0, 0x002c, 0, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
     Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
     status = Crypto_Init();
@@ -2338,7 +2338,7 @@ UTEST(TM_APPLY, TM_APPLY_Secondary_Hdr_OVERFLOW_TEST)
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TM Tests
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+    // AOS_NO_FHEC, AOS_NO_IZ, 0);
     TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {0, 0x002c, 1, TM_HAS_FECF, 7, TM_NO_OCF, 1};
     Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
@@ -2428,7 +2428,7 @@ UTEST(TM_APPLY, TM_APPLY_Secondary_Hdr_One_Too_Big)
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TM Tests
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
+    // AOS_NO_FHEC, AOS_NO_IZ, 0);
     TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {0, 0x002c, 1, TM_NO_FECF, 8, TM_NO_OCF, 1};
     Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 

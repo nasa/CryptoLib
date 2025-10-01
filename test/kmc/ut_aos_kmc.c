@@ -151,8 +151,8 @@ UTEST(AOS_APPLY_KMC, HAPPY_PATH_ENC_AOS_CBC_KMC)
     Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
                                      "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
                                      "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
-    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
-                                                             AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_NO_FHEC,
+                                                             AOS_NO_IZ, 0,      1786, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
 
     int32_t return_val = Crypto_Init();
@@ -274,8 +274,8 @@ UTEST(AOS_PROCESS_KMC, HAPPY_PATH_DEC_AOS_CBC_KMC)
     Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
                                      "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
                                      "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
-    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
-                                                             AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_NO_FHEC,
+                                                             AOS_NO_IZ, 0,      1786, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
 
     int32_t return_val = Crypto_Init();

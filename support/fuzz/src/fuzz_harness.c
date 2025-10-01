@@ -64,8 +64,8 @@ static int32_t init_cryptolib_for_fuzzing(void)
     TMGvcidManagedParameters_t TM_Parameters = {0, 0x002c, 0, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
     Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_Parameters);
 
-    AOSGvcidManagedParameters_t AOS_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
-                                                  AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
+    AOSGvcidManagedParameters_t AOS_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_NO_FHEC,
+                                                  AOS_NO_IZ, 0,      1786, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_Parameters);
 
     // Initialize the library

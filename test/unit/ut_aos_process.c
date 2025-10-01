@@ -196,8 +196,8 @@ UTEST(AOS_PROCESS, HAPPY_PATH_CLEAR_FECF)
     Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
                       SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
-                                                             AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_NO_FHEC,
+                                                             AOS_NO_IZ, 0,      1786, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
 
     status = Crypto_Init();
@@ -337,7 +337,7 @@ UTEST(AOS_PROCESS, SECONDARY_HDR_PRESENT_PLAINTEXT)
                       SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
     AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_HAS_FHEC,
-                                                             AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
+                                                             AOS_NO_IZ, 0,      1786, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
 
     status = Crypto_Init();
@@ -617,8 +617,8 @@ UTEST(AOS_PROCESS, AES_CMAC_256_TEST_0)
     Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
                       SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
-                                                             AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_NO_FHEC,
+                                                             AOS_NO_IZ, 0,      1786, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -770,8 +770,8 @@ UTEST(AOS_PROCESS, AES_CMAC_256_TEST_1)
     Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
                       SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
-                                                             AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_NO_FHEC,
+                                                             AOS_NO_IZ, 0,      1786, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -925,8 +925,8 @@ UTEST(AOS_PROCESS, AES_HMAC_256_TEST_0)
     Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
                       SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
-                                                             AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_NO_FHEC,
+                                                             AOS_NO_IZ, 0,      1786, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -1082,8 +1082,8 @@ UTEST(AOS_PROCESS, AES_HMAC_256_TEST_1)
     Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
                       SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
-                                                             AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_NO_FHEC,
+                                                             AOS_NO_IZ, 0,      1786, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -1233,8 +1233,8 @@ UTEST(AOS_PROCESS, AES_HMAC_512_TEST_0)
     Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
                       SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
-                                                             AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_NO_FHEC,
+                                                             AOS_NO_IZ, 0,      1786, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -1388,8 +1388,8 @@ UTEST(AOS_PROCESS, AES_HMAC_512_TEST_1)
     Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
                       SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
-                                                             AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_NO_FHEC,
+                                                             AOS_NO_IZ, 0,      1786, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -1539,8 +1539,8 @@ UTEST(AOS_PROCESS, AES_GCM_DEC_ONLY)
                             IV_INTERNAL);
     Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_TRUE, 0x3F,
                       SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
-                                                             AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_NO_FHEC,
+                                                             AOS_NO_IZ, 0,      1786, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
 
     status = Crypto_Init();
@@ -1728,8 +1728,8 @@ UTEST(AOS_PROCESS, AEAD_GCM_BITMASK_1)
     Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
                       SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_FHEC_NA,
-                                                             AOS_IZ_NA, 0,      1786, AOS_NO_OCF,   1};
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_NO_FHEC,
+                                                             AOS_NO_IZ, 0,      1786, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -1909,7 +1909,7 @@ UTEST(AOS_PROCESS, AOS_SA_NOT_OPERATIONAL)
                       SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
     AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,  AOS_HAS_FECF, AOS_NO_FHEC,
-                                                             AOS_IZ_NA, 0,      22, AOS_NO_OCF,   1};
+                                                             AOS_NO_IZ, 0,      22, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -1963,7 +1963,7 @@ UTEST(AOS_PROCESS, AOS_OCF_TEST)
                       SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
     AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,  AOS_HAS_FECF, AOS_NO_FHEC,
-                                                             AOS_IZ_NA, 0,      22, AOS_HAS_OCF,  1};
+                                                             AOS_NO_IZ, 0,      22, AOS_HAS_OCF,  1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -2015,7 +2015,7 @@ UTEST(AOS_PROCESS, AOS_KEY_STATE_TEST)
                       SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
     AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,  AOS_HAS_FECF, AOS_NO_FHEC,
-                                                             AOS_IZ_NA, 0,      22, AOS_NO_OCF,   1};
+                                                             AOS_NO_IZ, 0,      22, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -2072,7 +2072,7 @@ UTEST(AOS_PROCESS, AOS_PROCESS_HEAP_UNDERFLOW_TEST)
                       SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
     AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0000, 48,   AOS_NO_FECF, AOS_NO_FHEC,
-                                                             AOS_IZ_NA, 0,      1786, AOS_NO_OCF,  1};
+                                                             AOS_NO_IZ, 0,      1786, AOS_NO_OCF,  1};
 
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
@@ -2122,7 +2122,7 @@ UTEST(AOS_PROCESS, AOS_FHECF_TEST)
                       SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Test
     AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,  AOS_HAS_FECF, AOS_HAS_FHEC,
-                                                             AOS_IZ_NA, 0,      42, AOS_NO_OCF,   1};
+                                                             AOS_NO_IZ, 0,      42, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
 

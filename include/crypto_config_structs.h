@@ -90,14 +90,12 @@ typedef enum
 } CreateFecfBool;
 typedef enum
 {
-    AOS_FHEC_NA = 0,
-    AOS_NO_FHEC,
+    AOS_NO_FHEC = 0,
     AOS_HAS_FHEC
 } AosFhecPresent;
 typedef enum
 {
-    AOS_IZ_NA = 0,
-    AOS_NO_IZ,
+    AOS_NO_IZ = 0,
     AOS_HAS_IZ
 } AosInsertZonePresent;
 typedef enum
