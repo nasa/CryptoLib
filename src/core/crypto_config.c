@@ -40,10 +40,25 @@ SaInterface           sa_if           = NULL;
 SadbMariaDBConfig_t *sa_mariadb_config = NULL;
 
 // Assign Defaults to configs, not initialized until user calls config function
-CryptoConfigGlobal_t crypto_config_global = {UNINITIALIZED, KEY_TYPE_UNINITIALIZED, MC_TYPE_UNINITIALIZED, SA_TYPE_UNINITIALIZED, CRYPTOGRAPHY_TYPE_UNINITIALIZED, IV_INTERNAL};
-CryptoConfigTC_t     crypto_config_tc     = {UNINITIALIZED, CRYPTO_TC_CREATE_FECF_FALSE, TC_PROCESS_SDLS_PDUS_FALSE, TC_HAS_PUS_HDR, TC_IGNORE_ANTI_REPLAY_FALSE, TC_IGNORE_SA_STATE_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE};
-CryptoConfigTM_t     crypto_config_tm     = {UNINITIALIZED, CRYPTO_TM_CREATE_FECF_FALSE, TM_IGNORE_ANTI_REPLAY_FALSE, TM_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE};
-CryptoConfigAOS_t    crypto_config_aos    = {UNINITIALIZED, CRYPTO_AOS_CREATE_FECF_FALSE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_FALSE};
+CryptoConfigGlobal_t crypto_config_global = {
+    UNINITIALIZED,         KEY_TYPE_UNINITIALIZED,          MC_TYPE_UNINITIALIZED,
+    SA_TYPE_UNINITIALIZED, CRYPTOGRAPHY_TYPE_UNINITIALIZED, IV_INTERNAL};
+CryptoConfigTC_t crypto_config_tc = {UNINITIALIZED,
+                                     CRYPTO_TC_CREATE_FECF_FALSE,
+                                     TC_PROCESS_SDLS_PDUS_FALSE,
+                                     TC_HAS_PUS_HDR,
+                                     TC_IGNORE_ANTI_REPLAY_FALSE,
+                                     TC_IGNORE_SA_STATE_FALSE,
+                                     TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                                     TC_CHECK_FECF_FALSE,
+                                     0x3F,
+                                     SA_INCREMENT_NONTRANSMITTED_IV_FALSE};
+CryptoConfigTM_t crypto_config_tm = {
+    UNINITIALIZED, CRYPTO_TM_CREATE_FECF_FALSE,         TM_IGNORE_ANTI_REPLAY_FALSE, TM_CHECK_FECF_FALSE,
+    0x3F,          SA_INCREMENT_NONTRANSMITTED_IV_FALSE};
+CryptoConfigAOS_t crypto_config_aos = {
+    UNINITIALIZED, CRYPTO_AOS_CREATE_FECF_FALSE,        AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE,
+    0x3F,          SA_INCREMENT_NONTRANSMITTED_IV_FALSE};
 
 CryptographyKmcCryptoServiceConfig_t *cryptography_kmc_crypto_config = NULL;
 CamConfig_t                          *cam_config                     = NULL;
@@ -86,8 +101,9 @@ int32_t Crypto_SC_Init(void)
     int32_t status = CRYPTO_LIB_SUCCESS;
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL);
-    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_NO_PUS_HDR, TC_IGNORE_ANTI_REPLAY_FALSE, TC_IGNORE_SA_STATE_FALSE, 
-                     TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_NO_PUS_HDR, TC_IGNORE_ANTI_REPLAY_FALSE,
+                     TC_IGNORE_SA_STATE_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F,
+                     SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_IGNORE_ANTI_REPLAY_FALSE, TM_CHECK_FECF_TRUE, 0x3F,
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_TRUE, 0x3F,
@@ -179,8 +195,9 @@ int32_t Crypto_Init_TC_Unit_Test(void)
     int32_t status = CRYPTO_LIB_SUCCESS;
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
                             IV_INTERNAL);
-    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR, TC_IGNORE_ANTI_REPLAY_FALSE, TC_IGNORE_SA_STATE_FALSE, 
-                     TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR, TC_IGNORE_ANTI_REPLAY_FALSE,
+                     TC_IGNORE_SA_STATE_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F,
+                     SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TC Tests
     TCGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, 1};
     Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);

@@ -218,7 +218,7 @@ typedef struct
 
 typedef struct
 {
-    InitStatus       init_status;
+    InitStatus     init_status;
     CreateFecfBool crypto_create_fecf;    // Whether or not CryptoLib is expected to calculate TC FECFs and return
                                           // payloads with the FECF
     TcProcessSdlsPdus  process_sdls_pdus; // Config to process SDLS extended procedure PDUs in CryptoLib
@@ -235,7 +235,7 @@ typedef struct
 
 typedef struct
 {
-    InitStatus       init_status;
+    InitStatus     init_status;
     CreateFecfBool crypto_create_fecf; // Whether or not CryptoLib is expected to calculate TC FECFs and return
                                        // payloads with the FECF
     IgnoreAntiReplay ignore_anti_replay;
@@ -248,7 +248,7 @@ typedef struct
 
 typedef struct
 {
-    InitStatus       init_status;
+    InitStatus     init_status;
     CreateFecfBool crypto_create_fecf; // Whether or not CryptoLib is expected to calculate TC FECFs and return
                                        // payloads with the FECF
     IgnoreAntiReplay ignore_anti_replay;
