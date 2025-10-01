@@ -59,10 +59,10 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_NO_MANAGED_PARAM_CONFIG)
 UTEST(CRYPTO_CONFIG, CRYPTO_INIT_MARIADB_NULL)
 {
     remove("sa_save_file.bin");
-    int32_t               status                           = CRYPTO_LIB_ERROR;
-    CryptoConfigGlobal_t *crypto_config_p                  = malloc(CRYPTO_GLOBAL_CONFIG_SIZE);
-    crypto_config_p->key_type                              = KEY_TYPE_INTERNAL;
-    crypto_config_p->mc_type                               = MC_TYPE_INTERNAL;
+    int32_t               status          = CRYPTO_LIB_ERROR;
+    CryptoConfigGlobal_t *crypto_config_p = malloc(CRYPTO_GLOBAL_CONFIG_SIZE);
+    crypto_config_p->key_type             = KEY_TYPE_INTERNAL;
+    crypto_config_p->mc_type              = MC_TYPE_INTERNAL;
 
     TCGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0000, 0, TC_NO_FECF, TC_NO_SEGMENT_HDRS, 0, 1};
     Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
@@ -89,7 +89,7 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_INVALID_SADB)
     CryptoConfigGlobal_t *crypto_config_p                  = malloc(CRYPTO_GLOBAL_CONFIG_SIZE);
     crypto_config_p->key_type                              = KEY_TYPE_INTERNAL;
     crypto_config_p->mc_type                               = MC_TYPE_INTERNAL;
-    TCGvcidManagedParameters_t gvcid_managed_paramenters_p = {0, 0, 0, 0, 0, 0, 1}; 
+    TCGvcidManagedParameters_t gvcid_managed_paramenters_p = {0, 0, 0, 0, 0, 0, 1};
     tc_gvcid_counter++;
 
     SadbMariaDBConfig_t                  *sa_mariadb_config_p = malloc(sizeof(SadbMariaDBConfig_t) * sizeof(uint8_t));
