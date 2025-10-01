@@ -59,11 +59,11 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_NO_MANAGED_PARAM_CONFIG)
 UTEST(CRYPTO_CONFIG, CRYPTO_INIT_MARIADB_NULL)
 {
     remove("sa_save_file.bin");
-    int32_t               status                           = CRYPTO_LIB_ERROR;
-    CryptoConfigGlobal_t *crypto_config_p                  = malloc(CRYPTO_GLOBAL_CONFIG_SIZE);
-    crypto_config_p->key_type                              = KEY_TYPE_INTERNAL;
-    crypto_config_p->mc_type                               = MC_TYPE_INTERNAL;
-    TCGvcidManagedParameters_t gvcid_managed_paramenters_p = {0, 0, 0, 0, 0, 0, 1};
+    int32_t               status                                           = CRYPTO_LIB_ERROR;
+    CryptoConfigGlobal_t *crypto_config_p                                  = malloc(CRYPTO_GLOBAL_CONFIG_SIZE);
+    crypto_config_p->key_type                                              = KEY_TYPE_INTERNAL;
+    crypto_config_p->mc_type                                               = MC_TYPE_INTERNAL;
+    TCGvcidManagedParameters_t            gvcid_managed_paramenters_p      = {0, 0, 0, 0, 0, 0, 1};
     SadbMariaDBConfig_t                  *sa_mariadb_config_p              = NULL;
     CryptographyKmcCryptoServiceConfig_t *cryptography_kmc_crypto_config_p = NULL;
 
@@ -75,7 +75,6 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_MARIADB_NULL)
     ASSERT_EQ(CRYPTO_MARIADB_CONFIGURATION_NOT_COMPLETE, status);
 }
 
-
 /**
  * @brief Unit Test: Crypto Init with invalid SADB
  **/
@@ -86,7 +85,7 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_INVALID_SADB)
     CryptoConfigGlobal_t *crypto_config_p                  = malloc(CRYPTO_GLOBAL_CONFIG_SIZE);
     crypto_config_p->key_type                              = KEY_TYPE_INTERNAL;
     crypto_config_p->mc_type                               = MC_TYPE_INTERNAL;
-    TCGvcidManagedParameters_t gvcid_managed_paramenters_p = {0, 0, 0, 0, 0, 0, 1}; 
+    TCGvcidManagedParameters_t gvcid_managed_paramenters_p = {0, 0, 0, 0, 0, 0, 1};
 
     SadbMariaDBConfig_t                  *sa_mariadb_config_p = malloc(sizeof(SadbMariaDBConfig_t) * sizeof(uint8_t));
     CryptographyKmcCryptoServiceConfig_t *cryptography_kmc_crypto_config_p = NULL;
