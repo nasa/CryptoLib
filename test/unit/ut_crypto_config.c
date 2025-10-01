@@ -79,7 +79,6 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_MARIADB_NULL)
     Crypto_Shutdown();
 }
 
-
 /**
  * @brief Unit Test: Crypto Init with invalid SADB
  **/
