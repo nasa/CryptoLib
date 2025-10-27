@@ -1,6 +1,6 @@
 ### All Submissions:
 
-* [ ] Have you followed the guidelines in our [Contributing](https://github.com/nasa/CryptoLib/blob/main/doc/CryptoLib_Indv_CLA.pdf) document?
+* [ ] Have you followed the guidelines in our [Contributing](https://github.com/nasa/CryptoLib/blob/main/docs/CryptoLib_Indv_CLA.pdf) document?
 * [ ] Have you checked to ensure there aren't other open [Pull Requests](https://github.com/nasa/cryptolib/pulls) for the same update/change?
 
 ### New Feature Submissions:
@@ -13,4 +13,3 @@
 
 ### How do you test these changes?
 
-<input type="text" id="explain" name="explain"/>
