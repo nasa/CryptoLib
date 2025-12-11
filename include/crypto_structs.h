@@ -637,6 +637,6 @@ typedef struct
 } __attribute__((packed)) AOS_t;
 #define AOS_SIZE (sizeof(AOS_t))
 
-#define AOS_MIN_SIZE 7
+#define AOS_MIN_SIZE 6
 
 #endif // CRYPTO_STRUCTS_H
