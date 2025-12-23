@@ -557,11 +557,8 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_ENC_AND_AUTH_AESGCM_8BYTE_MAC)
 
     status = Crypto_TC_ProcessSecurity((uint8_t *)enc_tc_jpl_mmt_scid44_vcid1_expect,
                                        &enc_tc_jpl_mmt_scid44_vcid1_expect_len, tc_processed_frame);
-    if (status != CRYPTO_LIB_SUCCESS)
-    {
-        Crypto_Shutdown();
-    }
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
     printf("Processed PDU:\n");
     for (int i = 0; i < tc_processed_frame->tc_pdu_len; i++)
     {
@@ -575,6 +572,7 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_ENC_AND_AUTH_AESGCM_8BYTE_MAC)
     Crypto_Shutdown();
     free(enc_tc_jpl_mmt_scid44_vcid1_expect);
     free(ptr_enc_frame);
+    free(tc_processed_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 

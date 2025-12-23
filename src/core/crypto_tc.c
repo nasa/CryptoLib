@@ -2217,17 +2217,13 @@ static int32_t validate_sa_index(SecurityAssociation_t *sa)
     int32_t                returnval = 0;
     SecurityAssociation_t *temp_sa;
 
-    if (crypto_config.sa_type == SA_TYPE_MARIADB)
-    {
-        mariadb_table_name = MARIADB_TC_TABLE_NAME;
-    }
-    sa_if->sa_get_from_spi(sa->spi, &temp_sa);
-
     // Do not validate sa index on KMC
     if (crypto_config.sa_type == SA_TYPE_MARIADB)
     {
         return returnval;
     }
+
+    sa_if->sa_get_from_spi(sa->spi, &temp_sa);
 
     int sa_index = -1;
     sa_index     = (int)(sa - temp_sa); // Based on array memory location

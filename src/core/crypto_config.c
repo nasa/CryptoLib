@@ -760,10 +760,12 @@ int32_t Crypto_Config_Cam(uint8_t cam_enabled, char *cookie_file_path, char *key
 
     if (Crypto_is_safe_username(username) != CRYPTO_LIB_SUCCESS)
     {
+        free(cam_config);
         return CAM_CONFIG_NOT_SUPPORTED_ERROR;
     }
     if (Crypto_is_safe_path(keytab_file_path) != CRYPTO_LIB_SUCCESS)
     {
+        free(cam_config);
         return CAM_CONFIG_NOT_SUPPORTED_ERROR;
     }
 

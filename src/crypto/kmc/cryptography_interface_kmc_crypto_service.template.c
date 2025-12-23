@@ -1333,15 +1333,15 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
             char *line;
             char *token;
             char  temp_buff[256];
-            for (line = strtok(ciphertext_IV_base64, ","); line != NULL; line = strtok(line + strlen(line) + 1, ","))
+            for (line = strtok(ciphertext_IV_base64, ","); line != NULL; line = strtok(NULL, ","))
             {
                 strncpy(temp_buff, line, sizeof(temp_buff));
 
-                for (token = strtok(temp_buff, ":"); token != NULL; token = strtok(token + strlen(token) + 1, ":"))
+                for (token = strtok(temp_buff, ":"); token != NULL; token = strtok(NULL, ":"))
                 {
                     if (strcmp(token, "initialVector") == 0)
                     {
-                        token                          = strtok(token + strlen(token) + 1, ":");
+                        token                          = strtok(NULL, ":");
                         char  *ciphertext_token_base64 = malloc(strlen(token));
                         size_t cipher_text_token_len   = strlen(token);
                         memcpy(ciphertext_token_base64, token, cipher_text_token_len);
@@ -1374,12 +1374,14 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
                             memcpy(data_out - sa_ptr->shsnf_len - sa_ptr->shivf_len - sa_ptr->shplf_len, iv_decoded,
                                    iv_decoded_len);
                         }
+                        free(iv_decoded);
                         free(ciphertext_token_base64);
                         break;
                     }
                 }
             }
 
+            free(ciphertext_IV_base64);
             json_idx++;
             continue;
         }
@@ -1459,6 +1461,11 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
         if (encrypt_payload != NULL && aad_bool == CRYPTO_TRUE) // only needs freed if it has aad)
             free(encrypt_payload);
         return status;
+    }
+
+    if (encrypt_payload != NULL && aad_bool == CRYPTO_TRUE)
+    {
+        free(encrypt_payload);
     }
 
     /* JSON Response Handling End */
