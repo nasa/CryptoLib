@@ -368,15 +368,15 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
             char *line;
             char *token;
             char  temp_buff[256];
-            for (line = strtok(ciphertext_IV_base64, ","); line != NULL; line = strtok(line + strlen(line) + 1, ","))
+            for (line = strtok(ciphertext_IV_base64, ","); line != NULL; line = strtok(NULL, ","))
             {
                 strncpy(temp_buff, line, sizeof(temp_buff));
 
-                for (token = strtok(temp_buff, ":"); token != NULL; token = strtok(token + strlen(token) + 1, ":"))
+                for (token = strtok(temp_buff, ":"); token != NULL; token = strtok(NULL, ":"))
                 {
                     if (strcmp(token, "initialVector") == 0)
                     {
-                        token                          = strtok(token + strlen(token) + 1, ":");
+                        token                          = strtok(NULL, ":");
                         char  *ciphertext_token_base64 = malloc(strlen(token));
                         size_t cipher_text_token_len   = strlen(token);
                         memcpy(ciphertext_token_base64, token, cipher_text_token_len);
