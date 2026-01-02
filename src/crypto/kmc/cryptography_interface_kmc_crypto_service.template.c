@@ -30,12 +30,14 @@
 #include "jsmn.h"
 
 #define CAM_MAX_AUTH_RETRIES 4
+#define KMC_MAX_RESPONSE_BYTES (1024 * 1024) // 1MB
 
 // libcurl call-back response handling Structures
 typedef struct
 {
     char  *response;
     size_t size;
+    size_t max_size;
 } memory_write;
 #define MEMORY_WRITE_SIZE (sizeof(memory_write))
 typedef struct
@@ -1896,17 +1898,33 @@ static int32_t get_auth_algorithm_from_acs(uint8_t acs_enum, const char **algo_p
 // libcurl local functions
 static size_t write_callback(void *data, size_t size, size_t nmemb, void *userp)
 {
-    size_t        realsize = size * nmemb;
-    memory_write *mem      = (memory_write *)userp;
+    memory_write *mem = (memory_write *)userp;
+    size_t   realsize = 0;
+    char *ptr;
 
-    if (realsize > CURL_MAX_WRITE_SIZE)
-    {
+    if (nmemb != 0 && size > SIZE_MAX / nmemb)
         return 0;
-    }
+    realsize = size * nmemb;
 
-    char *ptr = realloc(mem->response, mem->size + realsize + 1);
+    if (mem->max_size == 0)
+        mem->max_size = KMC_MAX_RESPONSE_BYTES;
+
+    if (mem->size >= mem->max_size)
+        return 0;
+
+    if (realsize > SIZE_MAX - mem->size - 1)
+        return 0;
+
+    if (realsize > mem->max_size - mem->size - 1)
+        return 0;
+
+    if (mem->response != NULL)
+        ptr = realloc(mem->response, mem->size + realsize + 1);
+    else
+        ptr = malloc(realsize + 1);
+
     if (ptr == NULL)
-        return 0; /* out of memory! */
+        return 0;
 
     mem->response = ptr;
     memcpy(&(mem->response[mem->size]), data, realsize);
