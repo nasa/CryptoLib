@@ -66,7 +66,7 @@ static const char *SQL_SADB_UPDATE_IV_ARC_BY_SPI =
 
 // sa_if mariaDB private helper functions
 static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **security_association);
-static int32_t convert_hexstring_to_byte_array(char *hexstr, uint8_t *byte_array);
+static int32_t convert_hexstring_to_byte_array(char *source_str, uint8_t *dest_buffer, uint16_t max_len);
 static void    convert_byte_array_to_hexstring(void *src_buffer, size_t buffer_length, char *dest_str);
 
 /*
@@ -571,17 +571,34 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
     if (iv_byte_str != NULL)
     {
         if (sa->iv_len > 0)
-            convert_hexstring_to_byte_array(iv_byte_str, sa->iv);
+        {
+            status = convert_hexstring_to_byte_array(iv_byte_str, sa->iv, sa->iv_len);
+        }
     }
 
     if (sa->arsn_len > 0)
-        convert_hexstring_to_byte_array(arc_byte_str, sa->arsn);
+    {
+        status = convert_hexstring_to_byte_array(arc_byte_str, sa->arsn, sa->arsn_len);
+    }
     if (sa->abm_len > 0)
-        convert_hexstring_to_byte_array(abm_byte_str, sa->abm);
+    {
+        status = convert_hexstring_to_byte_array(abm_byte_str, sa->abm, sa->abm_len);
+    }
     if (sa->ecs_len > 0)
-        convert_hexstring_to_byte_array(ecs_byte_str, &sa->ecs);
+    {
+        status = convert_hexstring_to_byte_array(ecs_byte_str, &sa->ecs, sa->ecs_len);
+    }
     if (sa->acs_len > 0)
-        convert_hexstring_to_byte_array(acs_byte_str, &sa->acs);
+    {
+        status = convert_hexstring_to_byte_array(acs_byte_str, &sa->acs, sa->acs_len);
+    }
+
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        status = SADB_INVALID_SA_FIELD_VALUE;
+        mc_if->mc_log(status);
+        return status;
+    }
 
     // arsnw_len is not necessary for mariadb interface, putty dummy/default value for prints.
     sa->arsnw_len = 1;
@@ -596,20 +613,31 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
 
     return status;
 }
-static int32_t convert_hexstring_to_byte_array(char *source_str, uint8_t *dest_buffer)
-{ // https://stackoverflow.com/questions/3408706/hexadecimal-string-to-byte-array-in-c/56247335#56247335
-    char        *line = source_str;
-    char        *data = line;
-    int          offset;
-    unsigned int read_byte;
-    uint32_t     data_len = 0;
 
-    while (sscanf(data, " %02x%n", &read_byte, &offset) == 1)
-    {
-        dest_buffer[data_len++] = read_byte;
-        data += offset;
-    }
-    return data_len;
+static int32_t convert_hexstring_to_byte_array(char *source_str, uint8_t *dest_buffer, uint16_t max_len)
+{ // https://stackoverflow.com/questions/3408706/hexadecimal-string-to-byte-array-in-c/56247335#56247335
+   int          offset;
+   unsigned int read_byte;
+   uint32_t     data_len   = 0;
+    
+   if (dest_buffer == NULL || source_str == NULL)
+   {
+      return CRYPTO_LIB_ERROR;
+   }
+
+   uint32_t source_len = (strlen(source_str) / 2);
+   if (source_len > max_len)
+   {
+      return CRYPTO_LIB_ERROR;
+   }
+
+   while (sscanf(source_str, " %02x%n", &read_byte, &offset) == 1)
+   {
+      dest_buffer[data_len++] = read_byte;
+      source_str += offset;
+   }
+
+   return CRYPTO_LIB_SUCCESS;
 }
 
 static void convert_byte_array_to_hexstring(void *src_buffer, size_t buffer_length, char *dest_str)
