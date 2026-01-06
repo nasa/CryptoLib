@@ -20,13 +20,68 @@
  *  Unit Tests that make use of Maria DB
  **/
 #include "ut_mariadb.h"
-#include "crypto_error.h"
-#include "sa_interface.h"
 #include "utest.h"
 
-#include "crypto.h"
-#include "shared_util.h"
-#include <stdio.h>
+// local copy of function from mariadb interface
+static int32_t convert_hexstring_to_byte_array(char *source_str, uint8_t *dest_buffer, uint16_t max_len)
+{ // https://stackoverflow.com/questions/3408706/hexadecimal-string-to-byte-array-in-c/56247335#56247335
+   int          offset;
+   unsigned int read_byte;
+   uint32_t     data_len   = 0;
+    
+   if (dest_buffer == NULL || source_str == NULL)
+   {
+      return CRYPTO_LIB_ERROR;
+   }
+
+   uint32_t source_len = (strlen(source_str) / 2);
+   if (source_len > max_len)
+   {
+      return CRYPTO_LIB_ERROR;
+   }
+
+   while (sscanf(source_str, " %02x%n", &read_byte, &offset) == 1)
+   {
+      dest_buffer[data_len++] = read_byte;
+      source_str += offset;
+   }
+
+   return CRYPTO_LIB_SUCCESS;
+}
+
+UTEST(CRYPTO_MDB, HEXSTRING_TO_BYTE_ARRAY)
+{
+   int32_t  status      = CRYPTO_LIB_SUCCESS;
+   uint16_t max_len     = IV_SIZE;
+   uint8_t *dest_buffer = malloc(IV_SIZE);
+   uint8_t *dest_buffer_null = NULL;
+
+   // Failure Case, wrong source length
+   char *source_str = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+   status = convert_hexstring_to_byte_array(source_str, dest_buffer, max_len);
+   printf("Status: %d\n", status);
+   ASSERT_EQ(status, CRYPTO_LIB_ERROR);
+
+   // Failure Case, null dest_buffer
+   source_str = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+   status = convert_hexstring_to_byte_array(source_str, dest_buffer_null, max_len);
+   printf("Status: %d\n", status);
+   ASSERT_EQ(status, CRYPTO_LIB_ERROR);
+
+   // Failure Case, null source_str
+   source_str = NULL;
+   status = convert_hexstring_to_byte_array(source_str, dest_buffer, max_len);
+   printf("Status: %d\n", status);
+   ASSERT_EQ(status, CRYPTO_LIB_ERROR);
+
+   // Success case, correct length source string and max
+   source_str = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+   status = convert_hexstring_to_byte_array(source_str, dest_buffer, max_len);
+   printf("Status: %d\n", status);
+   ASSERT_EQ(status, CRYPTO_LIB_SUCCESS);
+
+   free(dest_buffer);
+}
 
 // #ifdef KMC_MDB_RH
 //     #define CLIENT_CERTIFICATE "/certs/redhat-cert.pem"

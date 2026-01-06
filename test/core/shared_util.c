@@ -65,18 +65,16 @@ char *c_read_file(const char *f_name, long *f_size)
  * @param dest_buffer: uint8*, The destination char array from which the hex array will be converted to bytes
  * @return int length of dest_buffer
  **/
-int convert_hexstring_to_byte_array(char *source_str, char *dest_buffer)
-{
-    char *line = source_str;
-    char *data = line;
-    int   offset;
-    int   read_byte;
-    int   data_len = 0;
+int32_t convert_hexstring_to_byte_array(char *source_str, char *dest_buffer)
+{ // https://stackoverflow.com/questions/3408706/hexadecimal-string-to-byte-array-in-c/56247335#56247335
+    int          offset;
+    unsigned int read_byte;
+    uint32_t     data_len = 0;
 
-    while (sscanf(data, " %02x%n", &read_byte, &offset) == 1)
+    while (sscanf(source_str, " %02x%n", &read_byte, &offset) == 1)
     {
         dest_buffer[data_len++] = read_byte;
-        data += offset;
+        source_str += offset;
     }
     return data_len;
 }
@@ -93,7 +91,8 @@ int convert_hexstring_to_byte_array(char *source_str, char *dest_buffer)
 void hex_conversion(char *buffer_h, char **buffer_b, int *buffer_b_length)
 {
     // Convert input plaintext
-    *buffer_b        = (char *)malloc((strlen(buffer_h) / 2) * sizeof(char));
+    uint16_t dest_len = (strlen(buffer_h) / 2);
+    *buffer_b        = (char *)malloc(dest_len * sizeof(char));
     *buffer_b_length = convert_hexstring_to_byte_array(buffer_h, *buffer_b);
 }
 

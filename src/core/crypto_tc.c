@@ -488,6 +488,7 @@ int32_t Crypto_TC_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr
                 {
                     Crypto_TC_Safe_Free_Ptr(*aad);
                     status = CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
+                    free(p_new_enc_frame);
                     mc_if->mc_log(status);
                     return status;
                 }
@@ -577,6 +578,7 @@ int32_t Crypto_TC_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr
         if (status != CRYPTO_LIB_SUCCESS)
         {
             Crypto_TC_Safe_Free_Ptr(*aad);
+            free(p_new_enc_frame);
             mc_if->mc_log(status);
             return status; // Cryptography IF call failed, return.
         }
@@ -1158,6 +1160,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, const uint16_t in
     if (status != CRYPTO_LIB_SUCCESS)
     {
         mc_if->mc_log(status);
+        free(p_new_enc_frame);
         return status;
     }
 
@@ -1272,6 +1275,10 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, const uint16_t in
     if (status != CRYPTO_LIB_SUCCESS)
     {
         mc_if->mc_log(status);
+        if (crypto_config.sa_type == SA_TYPE_MARIADB)
+        {
+            free(sa_ptr);
+        }
         return status;
     }
 
@@ -2217,17 +2224,13 @@ static int32_t validate_sa_index(SecurityAssociation_t *sa)
     int32_t                returnval = 0;
     SecurityAssociation_t *temp_sa;
 
-    if (crypto_config.sa_type == SA_TYPE_MARIADB)
-    {
-        mariadb_table_name = MARIADB_TC_TABLE_NAME;
-    }
-    sa_if->sa_get_from_spi(sa->spi, &temp_sa);
-
     // Do not validate sa index on KMC
     if (crypto_config.sa_type == SA_TYPE_MARIADB)
     {
         return returnval;
     }
+
+    sa_if->sa_get_from_spi(sa->spi, &temp_sa);
 
     int sa_index = -1;
     sa_index     = (int)(sa - temp_sa); // Based on array memory location

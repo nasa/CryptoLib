@@ -30,12 +30,14 @@
 #include "jsmn.h"
 
 #define CAM_MAX_AUTH_RETRIES 4
+#define KMC_MAX_RESPONSE_BYTES (1024 * 1024) // 1MB
 
 // libcurl call-back response handling Structures
 typedef struct
 {
     char  *response;
     size_t size;
+    size_t max_size;
 } memory_write;
 #define MEMORY_WRITE_SIZE (sizeof(memory_write))
 typedef struct
@@ -271,6 +273,7 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
     if (sa_ptr->ek_ref[0] == '\0')
     {
         status = CRYPTOGRAHPY_KMC_NULL_ENCRYPTION_KEY_REFERENCE_IN_SA;
+        free(iv_base64);
         return status;
     }
 
@@ -289,18 +292,20 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
         snprintf(encrypt_endpoint_final, len_encrypt_endpoint, encrypt_endpoint, sa_ptr->ek_ref, AES_CBC_TRANSFORMATION,
                  iv_base64);
     }
+    free(iv_base64);
 
     encrypt_uri    = (char *)malloc(strlen(kmc_root_uri) + len_encrypt_endpoint);
     encrypt_uri[0] = '\0';
     strcat(encrypt_uri, kmc_root_uri);
     strcat(encrypt_uri, encrypt_endpoint_final);
+    free(encrypt_endpoint_final);
 
 #ifdef DEBUG
     printf("Encrypt URI: %s\n", encrypt_uri);
 #endif
     curl_easy_setopt(curl, CURLOPT_URL, encrypt_uri);
-
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, http_headers_list);
+    free(encrypt_uri);
 
     memory_write *chunk_write = (memory_write *)calloc(1, MEMORY_WRITE_SIZE);
     memory_read  *chunk_read  = (memory_read *)calloc(1, MEMORY_READ_SIZE);
@@ -332,8 +337,11 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
     status = curl_perform_with_cam_retries(curl, chunk_write, chunk_read);
     if (status != CRYPTO_LIB_SUCCESS)
     {
+        free(chunk_read);
+        free(chunk_write);
         return status;
     }
+    free(chunk_read);
 
     /* JSON Response Handling */
 
@@ -349,6 +357,7 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
     {
         status = CRYPTOGRAHPY_KMC_CRYPTO_JSON_PARSE_ERROR;
         printf("Failed to parse JSON: %d\n", parse_result);
+        free(chunk_write);
         return status;
     }
 
@@ -368,15 +377,15 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
             char *line;
             char *token;
             char  temp_buff[256];
-            for (line = strtok(ciphertext_IV_base64, ","); line != NULL; line = strtok(line + strlen(line) + 1, ","))
+            for (line = strtok(ciphertext_IV_base64, ","); line != NULL; line = strtok(NULL, ","))
             {
                 strncpy(temp_buff, line, sizeof(temp_buff));
 
-                for (token = strtok(temp_buff, ":"); token != NULL; token = strtok(token + strlen(token) + 1, ":"))
+                for (token = strtok(temp_buff, ":"); token != NULL; token = strtok(NULL, ":"))
                 {
                     if (strcmp(token, "initialVector") == 0)
                     {
-                        token                          = strtok(token + strlen(token) + 1, ":");
+                        token                          = strtok(NULL, ":");
                         char  *ciphertext_token_base64 = malloc(strlen(token));
                         size_t cipher_text_token_len   = strlen(token);
                         memcpy(ciphertext_token_base64, token, cipher_text_token_len);
@@ -404,11 +413,12 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
                                    iv_decoded_len);
                         }
                         free(ciphertext_token_base64);
+                        free(iv_decoded);
                         break;
                     }
                 }
             }
-
+            free(ciphertext_IV_base64);
             json_idx++;
             continue;
         }
@@ -451,6 +461,8 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
             {
                 status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE;
                 fprintf(stderr, "KMC Crypto Failure Response:\n%s\n", chunk_write->response);
+                free(chunk_write);
+                free(http_code_str);
                 return status;
             }
             free(http_code_str);
@@ -461,6 +473,7 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
     if (ciphertext_found == CRYPTO_FALSE)
     {
         status = CRYPTOGRAHPY_KMC_CIPHER_TEXT_NOT_FOUND_IN_JSON_RESPONSE;
+        free(chunk_write);
         return status;
     }
 
@@ -482,6 +495,8 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
 
     // Crypto Service returns aad - cipher_text - tag
     memcpy(data_out, ciphertext_decoded, ciphertext_decoded_len);
+    free(chunk_write);
+    free(ciphertext_decoded);
     return status;
 }
 
@@ -520,6 +535,7 @@ static int32_t cryptography_decrypt(uint8_t *data_out, size_t len_data_out, uint
     if (sa_ptr->ek_ref[0] == '\0')
     {
         status = CRYPTOGRAHPY_KMC_NULL_ENCRYPTION_KEY_REFERENCE_IN_SA;
+        free(iv_base64);
         return status;
     }
 
@@ -531,16 +547,19 @@ static int32_t cryptography_decrypt(uint8_t *data_out, size_t len_data_out, uint
 
     snprintf(decrypt_endpoint_final, len_decrypt_endpoint, decrypt_endpoint, key_len_in_bits_str, sa_ptr->ek_ref,
              AES_CBC_TRANSFORMATION, iv_base64, AES_CRYPTO_ALGORITHM);
+    free(iv_base64);
     free(key_len_in_bits_str);
     decrypt_uri    = (char *)malloc(strlen(kmc_root_uri) + len_decrypt_endpoint);
     decrypt_uri[0] = '\0';
     strcat(decrypt_uri, kmc_root_uri);
     strcat(decrypt_uri, decrypt_endpoint_final);
+    free(decrypt_endpoint_final);
 
 #ifdef DEBUG
     printf("Decrypt URI: %s\n", decrypt_uri);
 #endif
     curl_easy_setopt(curl, CURLOPT_URL, decrypt_uri);
+    free(decrypt_uri);
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, http_headers_list);
 
     memory_write *chunk_write = (memory_write *)calloc(1, MEMORY_WRITE_SIZE);
@@ -575,6 +594,8 @@ static int32_t cryptography_decrypt(uint8_t *data_out, size_t len_data_out, uint
     status = curl_perform_with_cam_retries(curl, chunk_write, chunk_read);
     if (status != CRYPTO_LIB_SUCCESS)
     {
+        free(chunk_read);
+        free(chunk_write);
         return status;
     }
 
@@ -592,6 +613,8 @@ static int32_t cryptography_decrypt(uint8_t *data_out, size_t len_data_out, uint
     {
         status = CRYPTOGRAHPY_KMC_CRYPTO_JSON_PARSE_ERROR;
         printf("Failed to parse JSON: %d\n", parse_result);
+        free(chunk_read);
+        free(chunk_write);
         return status;
     }
 
@@ -638,6 +661,13 @@ static int32_t cryptography_decrypt(uint8_t *data_out, size_t len_data_out, uint
             {
                 status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE;
                 fprintf(stderr, "KMC Crypto Failure Response:\n%s\n", chunk_write->response);
+                free(chunk_read);
+                free(chunk_write);
+                free(http_code_str);
+                if (ciphertext_found)
+                {
+                    free(cleartext_base64);
+                }
                 return status;
             }
             free(http_code_str);
@@ -648,6 +678,8 @@ static int32_t cryptography_decrypt(uint8_t *data_out, size_t len_data_out, uint
     if (ciphertext_found == CRYPTO_FALSE)
     {
         status = CRYPTOGRAHPY_KMC_CIPHER_TEXT_NOT_FOUND_IN_JSON_RESPONSE;
+        free(chunk_read);
+        free(chunk_write);
         return status;
     }
 
@@ -668,6 +700,7 @@ static int32_t cryptography_decrypt(uint8_t *data_out, size_t len_data_out, uint
     // Copy the decrypted data to the output stream
     // Crypto Service returns aad - clear_text
     memcpy(data_out, cleartext_decoded, len_data_out);
+    free(cleartext_decoded);
 
     return status;
 }
@@ -733,11 +766,13 @@ static int32_t cryptography_authenticate(uint8_t *data_out, size_t len_data_out,
     auth_uri[0]    = '\0';
     strcat(auth_uri, kmc_root_uri);
     strcat(auth_uri, auth_endpoint_final);
+    free(auth_endpoint_final);
 
 #ifdef DEBUG
     printf("Authentication URI: %s\n", auth_uri);
 #endif
     curl_easy_setopt(curl, CURLOPT_URL, auth_uri);
+    free(auth_uri);
 
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, http_headers_list);
 
@@ -772,6 +807,8 @@ static int32_t cryptography_authenticate(uint8_t *data_out, size_t len_data_out,
     status = curl_perform_with_cam_retries(curl, chunk_write, chunk_read);
     if (status != CRYPTO_LIB_SUCCESS)
     {
+        free(chunk_read);
+        free(chunk_write);
         return status;
     }
 
@@ -789,6 +826,8 @@ static int32_t cryptography_authenticate(uint8_t *data_out, size_t len_data_out,
     {
         status = CRYPTOGRAHPY_KMC_CRYPTO_JSON_PARSE_ERROR;
         printf("Failed to parse JSON: %d\n", parse_result);
+        free(chunk_read);
+        free(chunk_write);
         return status;
     }
 
@@ -835,9 +874,14 @@ static int32_t cryptography_authenticate(uint8_t *data_out, size_t len_data_out,
                     if (metadata >= metadata_end)
                     {
                         status = CRYPTOGRAHPY_KMC_ICV_NOT_FOUND_IN_JSON_RESPONSE;
+                        free(chunk_read);
+                        free(chunk_write);
+                        free(metadata);
+                        free(key);
                         return status;
                     }
                 }
+                free(key);
             }
 
             metadata += colon_idx + 1;
@@ -850,6 +894,9 @@ static int32_t cryptography_authenticate(uint8_t *data_out, size_t len_data_out,
 #endif
             json_idx++;
             icvtext_found = CRYPTO_TRUE;
+            free(chunk_read);
+            free(chunk_write);
+            free(metadata);
             continue;
         }
 
@@ -872,6 +919,9 @@ static int32_t cryptography_authenticate(uint8_t *data_out, size_t len_data_out,
             {
                 status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE;
                 fprintf(stderr, "KMC Crypto Failure Response:\n%s\n", chunk_write->response);
+                free(chunk_read);
+                free(chunk_write);
+                free(icv_base64);
                 return status;
             }
             json_idx++;
@@ -882,6 +932,9 @@ static int32_t cryptography_authenticate(uint8_t *data_out, size_t len_data_out,
     if (icvtext_found == CRYPTO_FALSE)
     {
         status = CRYPTOGRAHPY_KMC_ICV_NOT_FOUND_IN_JSON_RESPONSE;
+        free(chunk_read);
+        free(chunk_write);
+        free(icv_base64);
         return status;
     }
 
@@ -891,6 +944,7 @@ static int32_t cryptography_authenticate(uint8_t *data_out, size_t len_data_out,
     uint8_t *icv_decoded     = calloc(1, B64DECODE_OUT_SAFESIZE(strlen(icv_base64)) + 1);
     size_t   icv_decoded_len = 0;
     base64urlDecode(icv_base64, strlen(icv_base64), icv_decoded, &icv_decoded_len);
+    free(icv_base64);
 #ifdef DEBUG
     printf("Mac size: %d\n", mac_size);
     printf("Decoded ICV Length: %ld\n", icv_decoded_len);
@@ -903,6 +957,9 @@ static int32_t cryptography_authenticate(uint8_t *data_out, size_t len_data_out,
 #endif
 
     memcpy(mac, icv_decoded, mac_size);
+    free(chunk_read);
+    free(chunk_write);
+    free(icv_decoded);
     return status;
 }
 
@@ -1241,7 +1298,7 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
 
     memory_write *chunk_write = (memory_write *)calloc(1, MEMORY_WRITE_SIZE);
     memory_read  *chunk_read  = (memory_read *)calloc(1, MEMORY_READ_SIZE);
-    ;
+
     /* Configure CURL for POST */
     curl_easy_setopt(curl, CURLOPT_POST, 1L);
     /* send all data to this function  */
@@ -1287,6 +1344,7 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
             free(chunk_read);
         if (encrypt_payload != NULL && aad_bool == CRYPTO_TRUE) // only needs freed if it has aad
             free(encrypt_payload);
+        
         return status;
     }
 
@@ -1333,15 +1391,15 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
             char *line;
             char *token;
             char  temp_buff[256];
-            for (line = strtok(ciphertext_IV_base64, ","); line != NULL; line = strtok(line + strlen(line) + 1, ","))
+            for (line = strtok(ciphertext_IV_base64, ","); line != NULL; line = strtok(NULL, ","))
             {
                 strncpy(temp_buff, line, sizeof(temp_buff));
 
-                for (token = strtok(temp_buff, ":"); token != NULL; token = strtok(token + strlen(token) + 1, ":"))
+                for (token = strtok(temp_buff, ":"); token != NULL; token = strtok(NULL, ":"))
                 {
                     if (strcmp(token, "initialVector") == 0)
                     {
-                        token                          = strtok(token + strlen(token) + 1, ":");
+                        token                          = strtok(NULL, ":");
                         char  *ciphertext_token_base64 = malloc(strlen(token));
                         size_t cipher_text_token_len   = strlen(token);
                         memcpy(ciphertext_token_base64, token, cipher_text_token_len);
@@ -1374,12 +1432,14 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
                             memcpy(data_out - sa_ptr->shsnf_len - sa_ptr->shivf_len - sa_ptr->shplf_len, iv_decoded,
                                    iv_decoded_len);
                         }
+                        free(iv_decoded);
                         free(ciphertext_token_base64);
                         break;
                     }
                 }
             }
 
+            free(ciphertext_IV_base64);
             json_idx++;
             continue;
         }
@@ -1459,6 +1519,11 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
         if (encrypt_payload != NULL && aad_bool == CRYPTO_TRUE) // only needs freed if it has aad)
             free(encrypt_payload);
         return status;
+    }
+
+    if (encrypt_payload != NULL && aad_bool == CRYPTO_TRUE)
+    {
+        free(encrypt_payload);
     }
 
     /* JSON Response Handling End */
@@ -1833,21 +1898,33 @@ static int32_t get_auth_algorithm_from_acs(uint8_t acs_enum, const char **algo_p
 // libcurl local functions
 static size_t write_callback(void *data, size_t size, size_t nmemb, void *userp)
 {
-    size_t        realsize = size * nmemb;
-    memory_write *mem      = (memory_write *)userp;
-
+    memory_write *mem = (memory_write *)userp;
+    size_t   realsize = 0;
     char *ptr;
+
+    if (nmemb != 0 && size > SIZE_MAX / nmemb)
+        return 0;
+    realsize = size * nmemb;
+
+    if (mem->max_size == 0)
+        mem->max_size = KMC_MAX_RESPONSE_BYTES;
+
+    if (mem->size >= mem->max_size)
+        return 0;
+
+    if (realsize > SIZE_MAX - mem->size - 1)
+        return 0;
+
+    if (realsize > mem->max_size - mem->size - 1)
+        return 0;
+
     if (mem->response != NULL)
-    {
         ptr = realloc(mem->response, mem->size + realsize + 1);
-    }
     else
-    {
         ptr = malloc(realsize + 1);
-    }
 
     if (ptr == NULL)
-        return 0; /* out of memory! */
+        return 0;
 
     mem->response = ptr;
     memcpy(&(mem->response[mem->size]), data, realsize);
@@ -2149,15 +2226,16 @@ int32_t curl_response_error_check(CURL *curl_handle, char *response)
         }
     }
 
-    if (response_code != 200) // unhandled error case
-    {
-        response_status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE;
-        return response_status;
-    }
-
 #ifdef DEBUG
     printf("\ncURL Response Body:\n\t %s\n", response);
 #endif
+
+    if (response_code != 200) // unhandled error case
+    {
+        response_status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE;
+        free(response);
+        return response_status;
+    }
 
     if (response == NULL) // No response, possibly because service is CAM secured.
     {
