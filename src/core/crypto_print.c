@@ -132,9 +132,11 @@ void Crypto_aosPrint(AOS_t *aos_frame)
     printf("\t\t sf     = %d \n", aos_frame->aos_header.sf);
     printf("\t\t spare  = %d \n", aos_frame->aos_header.spare);
     printf("\t\t vfcc   = %d \n", aos_frame->aos_header.vfcc);
-    printf("\t\t fhecf  = 0x%04X \n", aos_current_managed_parameters_struct.aos_has_fhec ? aos_frame->aos_header.fhecf : 0x0000);
+    printf("\t\t fhecf  = 0x%04X \n",
+           aos_current_managed_parameters_struct.aos_has_fhec ? aos_frame->aos_header.fhecf : 0x0000);
     printf("\t SDLS Header\n");
-    printf("\t\t iz[0]  = 0x%02X \n", aos_current_managed_parameters_struct.aos_has_iz ? aos_frame->aos_sec_header.iz[0] : 0x00);
+    printf("\t\t iz[0]  = 0x%02X \n",
+           aos_current_managed_parameters_struct.aos_has_iz ? aos_frame->aos_sec_header.iz[0] : 0x00);
     printf("\t\t iz     = 0x");
     for (int i = 0;
          (i < aos_current_managed_parameters_struct.aos_iz_len) && aos_current_managed_parameters_struct.aos_has_iz;
