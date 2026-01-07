@@ -250,6 +250,7 @@ UTEST(AOS_APPLY_KMC, HAPPY_PATH_ENC_AOS_CBC_KMC)
     }
 
     Crypto_Shutdown();
+    free(truth_aos_b);
     free(raw_aos_sdls_ping_b);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
 }
@@ -380,6 +381,7 @@ UTEST(AOS_PROCESS_KMC, HAPPY_PATH_DEC_AOS_CBC_KMC)
     Crypto_aosPrint(ptr_processed_frame);
 
     Crypto_Shutdown();
+    free(sa_ptr);
     free(truth_aos_b);
     free(ptr_processed_frame);
     free(raw_aos_sdls_ping_b);

@@ -196,6 +196,7 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_CBC_KMC)
         ASSERT_EQ(ptr_enc_frame[i], truth_data_b[i]);
     }
     Crypto_Shutdown();
+    free(truth_data_b);
     free(raw_tc_sdls_ping_b);
     free(ptr_enc_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
@@ -240,16 +241,15 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_KMC_1BP)
     uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
 
-    SecurityAssociation_t *test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
-    // Expose the SADB Security Association for test edits.
-    sa_if->sa_get_from_spi(1, &test_association);
-    test_association->sa_state = SA_NONE;
-    sa_if->sa_get_from_spi(11, &test_association);
-    printf("SPI: %d\n", test_association->spi);
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->ast      = 0;
-    test_association->arsn_len = 0;
-    sa_if->sa_get_from_spi(11, &test_association);
+    // SecurityAssociation_t *test_association = malloc(sizeof(SecurityAssociation_t) * sizeof(uint8_t));
+    // // Expose the SADB Security Association for test edits.
+    // sa_if->sa_get_from_spi(1, &test_association);
+    // test_association->sa_state = SA_NONE;
+    // sa_if->sa_get_from_spi(11, &test_association);
+    // printf("SPI: %d\n", test_association->spi);
+    // test_association->sa_state = SA_OPERATIONAL;
+    // test_association->ast      = 0;
+    // test_association->arsn_len = 0;
     return_val =
         Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
@@ -268,6 +268,7 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_KMC_1BP)
     // printf("\n");
 
     Crypto_Shutdown();
+    free(truth_data_b);
     free(raw_tc_sdls_ping_b);
     free(ptr_enc_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);

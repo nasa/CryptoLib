@@ -246,6 +246,7 @@ UTEST(TM_APPLY_KMC, HAPPY_PATH_ENC_TM_GCM_KMC)
     }
 
     Crypto_Shutdown();
+    free(truth_tm_b);
     free(raw_tm_sdls_ping_b);
 }
 
@@ -366,6 +367,9 @@ UTEST(TM_PROCESS_KMC, HAPPY_PATH_DEC_TM_GCM_KMC)
     }
 
     Crypto_Shutdown();
+    free(sa_ptr);
+    free(tm_frame);
+    free(truth_tm_b);
     free(raw_tm_sdls_ping_b);
 }
 

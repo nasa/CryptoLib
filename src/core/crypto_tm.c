@@ -1843,6 +1843,10 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
         {
             status = CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW;
             mc_if->mc_log(status);
+            if (crypto_config.sa_type == SA_TYPE_MARIADB)
+            {
+                free(sa_ptr);
+            }
             return status;
         }
 
@@ -1851,6 +1855,10 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
         {
             status = CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW;
             mc_if->mc_log(status);
+            if (crypto_config.sa_type == SA_TYPE_MARIADB)
+            {
+                free(sa_ptr);
+            }
             return status;
         }
 
@@ -1915,6 +1923,11 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
         {
             status = CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW;
             mc_if->mc_log(status);
+            free(p_new_dec_frame);
+            if (crypto_config.sa_type == SA_TYPE_MARIADB)
+            {
+                free(sa_ptr);
+            }
             return status;
         }
 
@@ -1927,6 +1940,10 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
         if (status != CRYPTO_LIB_SUCCESS)
         {
             free(p_new_dec_frame);
+            if (crypto_config.sa_type == SA_TYPE_MARIADB)
+            {
+                free(sa_ptr);
+            }
             return status;
         }
     }
@@ -1946,6 +1963,10 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
             printf(KRED "Error: SA Not Operational \n" RESET);
 #endif
             free(p_new_dec_frame);
+            if (crypto_config.sa_type == SA_TYPE_MARIADB)
+            {
+                free(sa_ptr);
+            }
             return CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL;
         }
 
@@ -1954,6 +1975,10 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
                                       p_decrypted_length);
     }
 
+    if (crypto_config.sa_type == SA_TYPE_MARIADB)
+    {
+        free(sa_ptr);
+    }
     return status;
 }
 

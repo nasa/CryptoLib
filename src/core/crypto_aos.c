@@ -883,6 +883,23 @@ int32_t Crypto_AOS_Check_IV_ARSN(SecurityAssociation_t *sa_ptr, AOS_t *pp_proces
     return status;
 }
 
+
+int32_t Crypto_AOS_Verify_Frame_Lengths(uint16_t len_ingest)
+{
+    uint8_t  fhec_len = aos_current_managed_parameters_struct.aos_has_fhec == AOS_HAS_FHEC ? FHECF_SIZE : 0;
+    uint16_t iz_len   = aos_current_managed_parameters_struct.aos_has_iz == AOS_HAS_IZ
+                            ? aos_current_managed_parameters_struct.aos_iz_len
+                            : 0;
+    uint8_t  ocf_len  = aos_current_managed_parameters_struct.has_ocf == AOS_HAS_OCF ? OCF_SIZE : 0;
+    uint8_t  fecf_len = aos_current_managed_parameters_struct.has_fecf == AOS_HAS_FECF ? FECF_SIZE : 0;
+    uint16_t expected_frame_length = AOS_MIN_SIZE + fhec_len + SPI_LEN + iz_len + ocf_len + fecf_len;
+    if (len_ingest < expected_frame_length)
+    {
+        return CRYPTO_LIB_ERR_INVALID_AOS_FRAME_LENGTH;
+    }
+    return CRYPTO_LIB_SUCCESS;
+}
+
 /**
  * @brief Function: Crypto_AOS_ProcessSecurity
  * @param ingest: uint8_t*
@@ -969,6 +986,12 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
         return status;
     } // Unable to get necessary Managed Parameters for AOS TF -- return with error.
 
+    status = Crypto_AOS_Verify_Frame_Lengths(len_ingest);
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        return status;
+    }
+
     // Increment to end of Primary Header start, depends on FHECF presence
     byte_idx = 6;
     if (aos_current_managed_parameters_struct.aos_has_fhec == AOS_HAS_FHEC)
@@ -1039,6 +1062,10 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     if (status != CRYPTO_LIB_SUCCESS)
     {
         mc_if->mc_log(status);
+        if (crypto_config.sa_type == SA_TYPE_MARIADB)
+        {
+            free(sa_ptr);
+        }
         return status;
     }
 
@@ -1078,6 +1105,10 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
 #endif
         status = CRYPTO_LIB_ERROR;
         mc_if->mc_log(status);
+        if (crypto_config.sa_type == SA_TYPE_MARIADB)
+        {
+            free(sa_ptr);
+        }
         return status;
     }
 
@@ -1103,6 +1134,10 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     {
         status = CRYPTO_LIB_ERR_NO_ECS_SET_FOR_ENCRYPTION_MODE;
         mc_if->mc_log(status);
+        if (crypto_config.sa_type == SA_TYPE_MARIADB)
+        {
+            free(sa_ptr);
+        }
         return status;
     }
 
@@ -1128,6 +1163,10 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     {
         status = CRYPTO_LIB_ERR_AOS_FL_LT_MAX_FRAME_SIZE;
         mc_if->mc_log(status);
+        if (crypto_config.sa_type == SA_TYPE_MARIADB)
+        {
+            free(sa_ptr);
+        }
         return status;
     }
 
@@ -1153,6 +1192,10 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
             {
                 status = CRYPTO_LIB_ERR_INVALID_FECF;
                 mc_if->mc_log(status);
+                if (crypto_config.sa_type == SA_TYPE_MARIADB)
+                {
+                    free(sa_ptr);
+                }
                 return status;
             }
             // Valid FECF, zero out the field
@@ -1175,6 +1218,10 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
 #endif
         status = CRYPTO_LIB_ERR_TC_ENUM_USED_FOR_AOS_CONFIG;
         mc_if->mc_log(status);
+        if (crypto_config.sa_type == SA_TYPE_MARIADB)
+        {
+            free(sa_ptr);
+        }
         return status;
     }
 
@@ -1187,6 +1234,10 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
 #endif
         status = CRYPTO_LIB_ERROR;
         mc_if->mc_log(status);
+        if (crypto_config.sa_type == SA_TYPE_MARIADB)
+        {
+            free(sa_ptr);
+        }
         return status;
     }
 
@@ -1332,6 +1383,10 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
                 status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
                 mc_if->mc_log(status);
                 free(p_new_dec_frame);
+                if (crypto_config.sa_type == SA_TYPE_MARIADB)
+                {
+                    free(sa_ptr);
+                }
                 return status;
             }
             if (ekp->key_state != KEY_ACTIVE)
@@ -1339,6 +1394,10 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
                 status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
                 mc_if->mc_log(status);
                 free(p_new_dec_frame);
+                if (crypto_config.sa_type == SA_TYPE_MARIADB)
+                {
+                    free(sa_ptr);
+                }
                 return status;
             }
         }
@@ -1353,6 +1412,10 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
                 status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
                 mc_if->mc_log(status);
                 free(p_new_dec_frame);
+                if (crypto_config.sa_type == SA_TYPE_MARIADB)
+                {
+                    free(sa_ptr);
+                }
                 return status;
             }
             if (akp->key_state != KEY_ACTIVE)
@@ -1360,6 +1423,10 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
                 status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
                 mc_if->mc_log(status);
                 free(p_new_dec_frame);
+                if (crypto_config.sa_type == SA_TYPE_MARIADB)
+                {
+                    free(sa_ptr);
+                }
                 return status;
             }
         }
@@ -1396,6 +1463,10 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
                    aad_len);
 #endif
             mc_if->mc_log(status);
+            if (crypto_config.sa_type == SA_TYPE_MARIADB)
+            {
+                free(sa_ptr);
+            }
             return status;
         }
 
@@ -1419,6 +1490,10 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
         printf(KRED "Error: SA Not Operational \n" RESET);
 #endif
         free(p_new_dec_frame); // Add cleanup
+        if (crypto_config.sa_type == SA_TYPE_MARIADB)
+        {
+            free(sa_ptr);
+        }
         return CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL;
     }
 
@@ -1495,6 +1570,10 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
                 free(p_new_dec_frame); // Add cleanup
                 status = CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
                 mc_if->mc_log(status);
+                if (crypto_config.sa_type == SA_TYPE_MARIADB)
+                {
+                    free(sa_ptr);
+                }
                 return status;
             }
 
@@ -1636,6 +1715,10 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
             (uint16_t)(p_new_dec_frame[byte_idx] << 8) | p_new_dec_frame[byte_idx + 1];
     }
     free(p_new_dec_frame);
+    if (crypto_config.sa_type == SA_TYPE_MARIADB)
+    {
+        free(sa_ptr);
+    }
 
 #ifdef DEBUG
     printf(KYEL "----- Crypto_AOS_ProcessSecurity END -----\n" RESET);
@@ -1653,7 +1736,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
  * @param aad: uint8_t*
  * @return status: uint32_t
  *
- * CCSDS Compliance: CCSDS 355.0-B-2 Section 7.2.3 (AAD Construction)
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.2.3 (AAD Construction)
  **/
 uint32_t Crypto_Prepare_AOS_AAD(const uint8_t *buffer, uint16_t len_aad, const uint8_t *abm_buffer, uint8_t *aad)
 {

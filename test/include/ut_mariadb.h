@@ -25,7 +25,6 @@ extern "C"
 #endif
 
 #include "crypto.h"
-#include "shared_util.h"
 #include <stdio.h>
 
 #ifdef __cplusplus
