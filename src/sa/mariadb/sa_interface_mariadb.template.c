@@ -616,28 +616,28 @@ static int32_t parse_sa_from_mysql_query(char *query, SecurityAssociation_t **se
 
 static int32_t convert_hexstring_to_byte_array(char *source_str, uint8_t *dest_buffer, uint16_t max_len)
 { // https://stackoverflow.com/questions/3408706/hexadecimal-string-to-byte-array-in-c/56247335#56247335
-   int          offset;
-   unsigned int read_byte;
-   uint32_t     data_len   = 0;
-    
-   if (dest_buffer == NULL || source_str == NULL)
-   {
-      return CRYPTO_LIB_ERROR;
-   }
+    int          offset;
+    unsigned int read_byte;
+    uint32_t     data_len = 0;
 
-   uint32_t source_len = (strlen(source_str) / 2);
-   if (source_len > max_len)
-   {
-      return CRYPTO_LIB_ERROR;
-   }
+    if (dest_buffer == NULL || source_str == NULL)
+    {
+        return CRYPTO_LIB_ERROR;
+    }
 
-   while (sscanf(source_str, " %02x%n", &read_byte, &offset) == 1)
-   {
-      dest_buffer[data_len++] = read_byte;
-      source_str += offset;
-   }
+    uint32_t source_len = (strlen(source_str) / 2);
+    if (source_len > max_len)
+    {
+        return CRYPTO_LIB_ERROR;
+    }
 
-   return CRYPTO_LIB_SUCCESS;
+    while (sscanf(source_str, " %02x%n", &read_byte, &offset) == 1)
+    {
+        dest_buffer[data_len++] = read_byte;
+        source_str += offset;
+    }
+
+    return CRYPTO_LIB_SUCCESS;
 }
 
 static void convert_byte_array_to_hexstring(void *src_buffer, size_t buffer_length, char *dest_str)

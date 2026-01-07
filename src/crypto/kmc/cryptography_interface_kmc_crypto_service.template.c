@@ -29,7 +29,7 @@
 // JSON marshalling libraries
 #include "jsmn.h"
 
-#define CAM_MAX_AUTH_RETRIES 4
+#define CAM_MAX_AUTH_RETRIES   4
 #define KMC_MAX_RESPONSE_BYTES (1024 * 1024) // 1MB
 
 // libcurl call-back response handling Structures
@@ -1344,7 +1344,7 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
             free(chunk_read);
         if (encrypt_payload != NULL && aad_bool == CRYPTO_TRUE) // only needs freed if it has aad
             free(encrypt_payload);
-        
+
         return status;
     }
 
@@ -1898,9 +1898,9 @@ static int32_t get_auth_algorithm_from_acs(uint8_t acs_enum, const char **algo_p
 // libcurl local functions
 static size_t write_callback(void *data, size_t size, size_t nmemb, void *userp)
 {
-    memory_write *mem = (memory_write *)userp;
-    size_t   realsize = 0;
-    char *ptr;
+    memory_write *mem      = (memory_write *)userp;
+    size_t        realsize = 0;
+    char         *ptr;
 
     if (nmemb != 0 && size > SIZE_MAX / nmemb)
         return 0;

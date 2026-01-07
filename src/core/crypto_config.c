@@ -752,7 +752,7 @@ int32_t Crypto_Config_Cam(uint8_t cam_enabled, char *cookie_file_path, char *key
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
-    cam_config     = (CamConfig_t *)calloc(1, CAM_CONFIG_SIZE);
+    cam_config = (CamConfig_t *)calloc(1, CAM_CONFIG_SIZE);
     if (cam_config == NULL)
     {
         return CRYPTO_LIB_ERROR;
@@ -764,7 +764,7 @@ int32_t Crypto_Config_Cam(uint8_t cam_enabled, char *cookie_file_path, char *key
         cam_config = NULL;
         return CAM_CONFIG_NOT_SUPPORTED_ERROR;
     }
-    
+
     if (Crypto_is_safe_path(keytab_file_path) != CRYPTO_LIB_SUCCESS)
     {
         free(cam_config);

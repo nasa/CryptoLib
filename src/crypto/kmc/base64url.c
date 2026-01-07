@@ -217,13 +217,15 @@ int32_t base64urlDecode(const char_t *input, size_t inputLen, void *output, size
         return ERROR_INVALID_PARAMETER;
 
     // Empty input is valid; produce empty output
-    if (inputLen == 0) {
+    if (inputLen == 0)
+    {
         *outputLen = 0;
         return NO_ERROR;
     }
 
     // Safely strip optional '=' padding
-    while (inputLen > 0 && input[inputLen - 1] == '=') {
+    while (inputLen > 0 && input[inputLen - 1] == '=')
+    {
         inputLen--;
     }
 

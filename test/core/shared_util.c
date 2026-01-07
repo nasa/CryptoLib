@@ -92,8 +92,8 @@ void hex_conversion(char *buffer_h, char **buffer_b, int *buffer_b_length)
 {
     // Convert input plaintext
     uint16_t dest_len = (strlen(buffer_h) / 2);
-    *buffer_b        = (char *)malloc(dest_len * sizeof(char));
-    *buffer_b_length = convert_hexstring_to_byte_array(buffer_h, *buffer_b);
+    *buffer_b         = (char *)malloc(dest_len * sizeof(char));
+    *buffer_b_length  = convert_hexstring_to_byte_array(buffer_h, *buffer_b);
 }
 
 #ifdef DEBUG

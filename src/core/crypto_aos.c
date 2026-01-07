@@ -806,10 +806,12 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
 
 int32_t Crypto_AOS_Verify_Frame_Lengths(uint16_t len_ingest)
 {
-    uint8_t fhec_len = aos_current_managed_parameters_struct.aos_has_fhec == AOS_HAS_FHEC ? FHECF_SIZE : 0;
-    uint16_t iz_len  = aos_current_managed_parameters_struct.aos_has_iz == AOS_HAS_IZ ? aos_current_managed_parameters_struct.aos_iz_len : 0;
-    uint8_t ocf_len  = aos_current_managed_parameters_struct.has_ocf == AOS_HAS_OCF ? OCF_SIZE : 0;
-    uint8_t fecf_len = aos_current_managed_parameters_struct.has_fecf == AOS_HAS_FECF ? FECF_SIZE : 0;
+    uint8_t  fhec_len = aos_current_managed_parameters_struct.aos_has_fhec == AOS_HAS_FHEC ? FHECF_SIZE : 0;
+    uint16_t iz_len   = aos_current_managed_parameters_struct.aos_has_iz == AOS_HAS_IZ
+                            ? aos_current_managed_parameters_struct.aos_iz_len
+                            : 0;
+    uint8_t  ocf_len  = aos_current_managed_parameters_struct.has_ocf == AOS_HAS_OCF ? OCF_SIZE : 0;
+    uint8_t  fecf_len = aos_current_managed_parameters_struct.has_fecf == AOS_HAS_FECF ? FECF_SIZE : 0;
     uint16_t expected_frame_length = AOS_MIN_SIZE + fhec_len + SPI_LEN + iz_len + ocf_len + fecf_len;
     if (len_ingest < expected_frame_length)
     {
@@ -908,7 +910,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     {
         return status;
     }
-    
+
     // Increment to end of Primary Header start, depends on FHECF presence
     byte_idx = 6;
     if (aos_current_managed_parameters_struct.aos_has_fhec == AOS_HAS_FHEC)
