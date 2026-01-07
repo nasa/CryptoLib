@@ -634,7 +634,7 @@ typedef struct
     uint8_t                    aos_pdu[AOS_FRAME_DATA_SIZE];
     uint16_t                   aos_pdu_len;
     AOS_FrameSecurityTrailer_t aos_sec_trailer;
-} __attribute__((packed)) AOS_t;
+} AOS_t;
 #define AOS_SIZE (sizeof(AOS_t))
 
 #define AOS_MIN_SIZE 6

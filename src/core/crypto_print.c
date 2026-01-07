@@ -79,39 +79,39 @@ void Crypto_tmPrint(TM_t *tm_frame)
     printf("\t\t iv     = 0x");
     for (int i = 0; i < tm_frame->tm_sec_header.iv_field_len; i++)
     {
-        printf("%02x", tm_frame->tm_sec_header.iv[i]);
+        printf("%02X", tm_frame->tm_sec_header.iv[i]);
     }
     printf("\n");
     printf("\t\t iv_len = %d \n", tm_frame->tm_sec_header.iv_field_len);
     printf("\t\t sn     = 0x");
     for (int i = 0; i < tm_frame->tm_sec_header.sn_field_len; i++)
     {
-        printf("%02x", tm_frame->tm_sec_header.sn[i]);
+        printf("%02X", tm_frame->tm_sec_header.sn[i]);
     }
     printf("\n");
     printf("\t\t sn_len = %d \n", tm_frame->tm_sec_header.sn_field_len);
     printf("\t\t pad    = %d \n", tm_frame->tm_sec_header.pad);
     printf("\t\t pad_len= %d \n", tm_frame->tm_sec_header.pad_field_len);
     printf("\t Payload \n");
-    printf("\t\t data[0]= 0x%02x \n", tm_frame->tm_pdu[0]);
-    printf("\t\t data[1]= 0x%02x \n", tm_frame->tm_pdu[1]);
-    printf("\t\t data[2]= 0x%02x \n", tm_frame->tm_pdu[2]);
+    printf("\t\t data[0]= 0x%02X \n", tm_frame->tm_pdu[0]);
+    printf("\t\t data[1]= 0x%02X \n", tm_frame->tm_pdu[1]);
+    printf("\t\t data[2]= 0x%02X \n", tm_frame->tm_pdu[2]);
     printf("\t SDLS Trailer\n");
     printf("\t\t MAC    = 0x");
     for (int i = 0; i < tm_frame->tm_sec_trailer.mac_field_len; i++)
     {
-        printf("%02x", tm_frame->tm_sec_trailer.mac[i]);
+        printf("%02X", tm_frame->tm_sec_trailer.mac[i]);
     }
     printf("\n");
     printf("\t\t MAC_len= %d \n", tm_frame->tm_sec_trailer.mac_field_len);
     printf("\t\t OCF    = 0x");
     for (int i = 0; i < tm_frame->tm_sec_trailer.ocf_field_len; i++)
     {
-        printf("%02x", tm_frame->tm_sec_trailer.ocf[i]);
+        printf("%02X", tm_frame->tm_sec_trailer.ocf[i]);
     }
     printf("\n");
     printf("\t\t OCF_len= %d \n", tm_frame->tm_sec_trailer.ocf_field_len);
-    printf("\t\t FECF   = 0x%04x \n", tm_frame->tm_sec_trailer.fecf);
+    printf("\t\t FECF   = 0x%04X \n", tm_frame->tm_sec_trailer.fecf);
     printf("\n");
 }
 
@@ -132,54 +132,54 @@ void Crypto_aosPrint(AOS_t *aos_frame)
     printf("\t\t sf     = %d \n", aos_frame->aos_header.sf);
     printf("\t\t spare  = %d \n", aos_frame->aos_header.spare);
     printf("\t\t vfcc   = %d \n", aos_frame->aos_header.vfcc);
-    printf("\t\t fhecf  = 0x%04x \n", aos_frame->aos_header.fhecf);
+    printf("\t\t fhecf  = 0x%04X \n", aos_current_managed_parameters_struct.aos_has_fhec ? aos_frame->aos_header.fhecf : 0x0000);
     printf("\t SDLS Header\n");
-    printf("\t\t iz[0]  = 0x%02x \n", aos_frame->aos_sec_header.iz[0]);
+    printf("\t\t iz[0]  = 0x%02X \n", aos_current_managed_parameters_struct.aos_has_iz ? aos_frame->aos_sec_header.iz[0] : 0x00);
     printf("\t\t iz     = 0x");
     for (int i = 0;
          (i < aos_current_managed_parameters_struct.aos_iz_len) && aos_current_managed_parameters_struct.aos_has_iz;
          i++)
     {
-        printf("%02x", aos_frame->aos_sec_header.iz[i]);
+        printf("%02X", aos_frame->aos_sec_header.iz[i]);
     }
     printf("\n");
     printf("\t\t spi    = %d \n", aos_frame->aos_sec_header.spi);
     printf("\t\t iv     = 0x");
     for (int i = 0; i < aos_frame->aos_sec_header.iv_field_len; i++)
     {
-        printf("%02x", aos_frame->aos_sec_header.iv[i]);
+        printf("%02X", aos_frame->aos_sec_header.iv[i]);
     }
     printf("\n");
     printf("\t\t iv_len = %d \n", aos_frame->aos_sec_header.iv_field_len);
     printf("\t\t sn     = 0x");
     for (int i = 0; i < aos_frame->aos_sec_header.sn_field_len; i++)
     {
-        printf("%02x", aos_frame->aos_sec_header.sn[i]);
+        printf("%02X", aos_frame->aos_sec_header.sn[i]);
     }
     printf("\n");
     printf("\t\t sn_len = %d \n", aos_frame->aos_sec_header.sn_field_len);
-    printf("\t\t pad    = %d \n", aos_frame->aos_sec_header.pad);
+    printf("\t\t pad    = %d \n", aos_frame->aos_sec_header.pad_field_len > 0 ? aos_frame->aos_sec_header.pad : 0);
     printf("\t\t pad_len= %d \n", aos_frame->aos_sec_header.pad_field_len);
     printf("\t Payload \n");
-    printf("\t\t data[0]= 0x%02x \n", aos_frame->aos_pdu[0]);
-    printf("\t\t data[1]= 0x%02x \n", aos_frame->aos_pdu[1]);
-    printf("\t\t data[2]= 0x%02x \n", aos_frame->aos_pdu[2]);
+    printf("\t\t data[0]= 0x%02X \n", aos_frame->aos_pdu[0]);
+    printf("\t\t data[1]= 0x%02X \n", aos_frame->aos_pdu[1]);
+    printf("\t\t data[2]= 0x%02X \n", aos_frame->aos_pdu[2]);
     printf("\t SDLS Trailer\n");
     printf("\t\t MAC    = 0x");
     for (int i = 0; i < aos_frame->aos_sec_trailer.mac_field_len; i++)
     {
-        printf("%02x", aos_frame->aos_sec_trailer.mac[i]);
+        printf("%02X", aos_frame->aos_sec_trailer.mac[i]);
     }
     printf("\n");
     printf("\t\t MAC_len= %d \n", aos_frame->aos_sec_trailer.mac_field_len);
     printf("\t\t OCF    = 0x");
     for (int i = 0; i < aos_frame->aos_sec_trailer.ocf_field_len; i++)
     {
-        printf("%02x", aos_frame->aos_sec_trailer.ocf[i]);
+        printf("%02X", aos_frame->aos_sec_trailer.ocf[i]);
     }
     printf("\n");
     printf("\t\t OCF_len= %d \n", aos_frame->aos_sec_trailer.ocf_field_len);
-    printf("\t\t FECF   = 0x%04x \n", aos_frame->aos_sec_trailer.fecf);
+    printf("\t\t FECF   = 0x%04X \n", aos_frame->aos_sec_trailer.fecf);
     printf("\n");
 }
 

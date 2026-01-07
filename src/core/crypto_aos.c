@@ -877,7 +877,6 @@ int32_t Crypto_AOS_Check_IV_ARSN(SecurityAssociation_t *sa_ptr, AOS_t *pp_proces
                 clean_ekref(sa_ptr);
             if (sa_ptr->ak_ref[0] != '\0')
                 clean_akref(sa_ptr);
-            free(sa_ptr);
         }
     }
     return status;
@@ -1061,7 +1060,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     if (status != CRYPTO_LIB_SUCCESS)
     {
         mc_if->mc_log(status);
-        if (crypto_config.sa_type == SA_TYPE_MARIADB)
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
         {
             free(sa_ptr);
         }
@@ -1104,7 +1103,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
 #endif
         status = CRYPTO_LIB_ERROR;
         mc_if->mc_log(status);
-        if (crypto_config.sa_type == SA_TYPE_MARIADB)
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
         {
             free(sa_ptr);
         }
@@ -1133,7 +1132,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     {
         status = CRYPTO_LIB_ERR_NO_ECS_SET_FOR_ENCRYPTION_MODE;
         mc_if->mc_log(status);
-        if (crypto_config.sa_type == SA_TYPE_MARIADB)
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
         {
             free(sa_ptr);
         }
@@ -1162,7 +1161,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     {
         status = CRYPTO_LIB_ERR_AOS_FL_LT_MAX_FRAME_SIZE;
         mc_if->mc_log(status);
-        if (crypto_config.sa_type == SA_TYPE_MARIADB)
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
         {
             free(sa_ptr);
         }
@@ -1191,7 +1190,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
             {
                 status = CRYPTO_LIB_ERR_INVALID_FECF;
                 mc_if->mc_log(status);
-                if (crypto_config.sa_type == SA_TYPE_MARIADB)
+                if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
                 {
                     free(sa_ptr);
                 }
@@ -1203,7 +1202,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
 #ifdef FECF_DEBUG
                 printf(KYEL "FECF CALC MATCHES! - GOOD\n" RESET);
 #endif
-                pp_processed_frame->aos_sec_trailer.fecf = received_fecf;
+                pp_processed_frame->aos_sec_trailer.fecf = calculated_fecf;
             }
         }
     }
@@ -1217,7 +1216,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
 #endif
         status = CRYPTO_LIB_ERR_TC_ENUM_USED_FOR_AOS_CONFIG;
         mc_if->mc_log(status);
-        if (crypto_config.sa_type == SA_TYPE_MARIADB)
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
         {
             free(sa_ptr);
         }
@@ -1233,7 +1232,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
 #endif
         status = CRYPTO_LIB_ERROR;
         mc_if->mc_log(status);
-        if (crypto_config.sa_type == SA_TYPE_MARIADB)
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
         {
             free(sa_ptr);
         }
@@ -1382,7 +1381,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
                 status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
                 mc_if->mc_log(status);
                 free(p_new_dec_frame);
-                if (crypto_config.sa_type == SA_TYPE_MARIADB)
+                if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
                 {
                     free(sa_ptr);
                 }
@@ -1393,7 +1392,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
                 status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
                 mc_if->mc_log(status);
                 free(p_new_dec_frame);
-                if (crypto_config.sa_type == SA_TYPE_MARIADB)
+                if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
                 {
                     free(sa_ptr);
                 }
@@ -1411,7 +1410,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
                 status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
                 mc_if->mc_log(status);
                 free(p_new_dec_frame);
-                if (crypto_config.sa_type == SA_TYPE_MARIADB)
+                if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
                 {
                     free(sa_ptr);
                 }
@@ -1422,7 +1421,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
                 status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
                 mc_if->mc_log(status);
                 free(p_new_dec_frame);
-                if (crypto_config.sa_type == SA_TYPE_MARIADB)
+                if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
                 {
                     free(sa_ptr);
                 }
@@ -1462,7 +1461,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
                    aad_len);
 #endif
             mc_if->mc_log(status);
-            if (crypto_config.sa_type == SA_TYPE_MARIADB)
+            if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
             {
                 free(sa_ptr);
             }
@@ -1489,7 +1488,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
         printf(KRED "Error: SA Not Operational \n" RESET);
 #endif
         free(p_new_dec_frame); // Add cleanup
-        if (crypto_config.sa_type == SA_TYPE_MARIADB)
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
         {
             free(sa_ptr);
         }
@@ -1569,7 +1568,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
                 free(p_new_dec_frame); // Add cleanup
                 status = CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
                 mc_if->mc_log(status);
-                if (crypto_config.sa_type == SA_TYPE_MARIADB)
+                if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
                 {
                     free(sa_ptr);
                 }
@@ -1707,14 +1706,14 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     {
         pp_processed_frame->aos_sec_trailer.ocf_field_len = 0;
     }
-
-    if (aos_current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
-    {
-        pp_processed_frame->aos_sec_trailer.fecf =
-            (uint16_t)(p_new_dec_frame[byte_idx] << 8) | p_new_dec_frame[byte_idx + 1];
-    }
+    // FECF already set
+    // if (aos_current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
+    // {
+    //     pp_processed_frame->aos_sec_trailer.fecf =
+    //         (uint16_t)(p_new_dec_frame[byte_idx] << 8) | p_new_dec_frame[byte_idx + 1];
+    // }
     free(p_new_dec_frame);
-    if (crypto_config.sa_type == SA_TYPE_MARIADB)
+    if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
     {
         free(sa_ptr);
     }

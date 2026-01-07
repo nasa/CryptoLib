@@ -1273,7 +1273,7 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, const uint16_t in
     if (status != CRYPTO_LIB_SUCCESS)
     {
         mc_if->mc_log(status);
-        if (crypto_config.sa_type == SA_TYPE_MARIADB)
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
         {
             free(sa_ptr);
         }

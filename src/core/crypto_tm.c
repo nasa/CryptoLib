@@ -94,7 +94,6 @@ int32_t Crypto_TM_Check_IV_ARSN(SecurityAssociation_t *sa_ptr, TM_t *pp_processe
                 clean_ekref(sa_ptr);
             if (sa_ptr->ak_ref[0] != '\0')
                 clean_akref(sa_ptr);
-            free(sa_ptr);
         }
     }
     return status;
@@ -1594,14 +1593,12 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
         status = Crypto_TM_Do_Decrypt_AEAD(sa_service_type, p_ingest, p_new_dec_frame, byte_idx, pdu_len, ekp, sa_ptr,
                                            iv_loc, mac_loc, aad_len, aad);
     }
-
     else if (sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_FALSE)
     {
         status = Crypto_TM_Do_Decrypt_NONAEAD(sa_service_type, pdu_len, p_new_dec_frame, byte_idx, p_ingest, akp, ekp,
                                               sa_ptr, iv_loc, mac_loc, aad_len, aad);
         // TODO - implement non-AEAD algorithm logic
     }
-
     // If plaintext, copy byte by byte
     else if (sa_service_type == SA_PLAINTEXT)
     {
@@ -1609,12 +1606,21 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
         // byte_idx += pdu_len; // not read
     }
 
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        free(p_new_dec_frame);
+        return status;
+    }
+
     // Now that MAC has been verified, check IV & ARSN if applicable
     status = Crypto_TM_Check_IV_ARSN(sa_ptr, pp_processed_frame);
     if (status != CRYPTO_LIB_SUCCESS)
     {
-        // Crypto_TC_Safe_Free_Ptr(aad);
         mc_if->mc_log(status);
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+        {
+            free(sa_ptr);
+        }
         return status; // Cryptography IF call failed, return.
     }
 
@@ -1843,7 +1849,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
         {
             status = CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW;
             mc_if->mc_log(status);
-            if (crypto_config.sa_type == SA_TYPE_MARIADB)
+            if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
             {
                 free(sa_ptr);
             }
@@ -1855,7 +1861,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
         {
             status = CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW;
             mc_if->mc_log(status);
-            if (crypto_config.sa_type == SA_TYPE_MARIADB)
+            if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
             {
                 free(sa_ptr);
             }
@@ -1924,7 +1930,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
             status = CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW;
             mc_if->mc_log(status);
             free(p_new_dec_frame);
-            if (crypto_config.sa_type == SA_TYPE_MARIADB)
+            if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
             {
                 free(sa_ptr);
             }
@@ -1940,7 +1946,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
         if (status != CRYPTO_LIB_SUCCESS)
         {
             free(p_new_dec_frame);
-            if (crypto_config.sa_type == SA_TYPE_MARIADB)
+            if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
             {
                 free(sa_ptr);
             }
@@ -1963,7 +1969,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
             printf(KRED "Error: SA Not Operational \n" RESET);
 #endif
             free(p_new_dec_frame);
-            if (crypto_config.sa_type == SA_TYPE_MARIADB)
+            if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
             {
                 free(sa_ptr);
             }
@@ -1975,7 +1981,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
                                       p_decrypted_length);
     }
 
-    if (crypto_config.sa_type == SA_TYPE_MARIADB)
+    if (status == CRYPTO_LIB_SUCCESS && crypto_config_global.sa_type == SA_TYPE_MARIADB)
     {
         free(sa_ptr);
     }

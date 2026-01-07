@@ -2183,15 +2183,15 @@ UTEST(AOS_PROCESS, AOS_6BYTE_TEST)
 
     uint16_t processed_aos_len;
 
-    // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_AOS_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+                            IV_INTERNAL);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_FALSE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_TRUE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+
     // AOS Test
-    GvcidManagedParameters_t AOS_UT_Managed_Parameters = {
-        1, 0x0003, 0, AOS_HAS_FECF, AOS_NO_FHEC, AOS_IZ_NA, 0, AOS_SEGMENT_HDRS_NA, 6, AOS_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {
+        1, 0x0003, 0, AOS_HAS_FECF, AOS_NO_FHEC, AOS_NO_IZ, 0, 6, AOS_NO_OCF, 1};
+    Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
 
     // Test frame setup
@@ -2239,13 +2239,14 @@ UTEST(AOS_PROCESS, AOS_8BYTE_TEST)
 
     // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
-                            IV_INTERNAL, CRYPTO_AOS_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+                            IV_INTERNAL);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_FALSE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_TRUE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+
     // AOS Test
-    GvcidManagedParameters_t AOS_UT_Managed_Parameters = {
-        1, 0x0003, 0, AOS_HAS_FECF, AOS_NO_FHEC, AOS_IZ_NA, 0, AOS_SEGMENT_HDRS_NA, 8, AOS_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {
+        1, 0x0003, 0, AOS_HAS_FECF, AOS_NO_FHEC, AOS_NO_IZ, 0, 8, AOS_NO_OCF, 1};
+    Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
 
     // Test frame setup

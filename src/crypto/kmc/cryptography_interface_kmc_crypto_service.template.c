@@ -1703,7 +1703,7 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
         free(decrypt_endpoint_final);
     }
 #ifdef DEBUG
-    printf("Decrypt URI: %s\n", decrypt_uri);
+    printf("Decrypt AEAD URI: %s\n", decrypt_uri);
 #endif
     curl_easy_setopt(curl, CURLOPT_URL, decrypt_uri);
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, http_headers_list);
