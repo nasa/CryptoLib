@@ -883,7 +883,6 @@ int32_t Crypto_AOS_Check_IV_ARSN(SecurityAssociation_t *sa_ptr, AOS_t *pp_proces
     return status;
 }
 
-
 int32_t Crypto_AOS_Verify_Frame_Lengths(uint16_t len_ingest)
 {
     uint8_t  fhec_len = aos_current_managed_parameters_struct.aos_has_fhec == AOS_HAS_FHEC ? FHECF_SIZE : 0;

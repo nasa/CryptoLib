@@ -916,7 +916,7 @@ int32_t Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TMGvcidManagedParameters_t
 int32_t Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOSGvcidManagedParameters_t gvcid_managed_parameters_struct)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-  
+
     if (aos_gvcid_counter >= GVCID_MAN_PARAM_SIZE)
     {
         status = CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT;
