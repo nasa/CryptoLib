@@ -73,7 +73,7 @@ jobs:
         repository: NASA-AMMOS/DCS
         path: DCS
         submodules: recursive
-        ref: main
+        ref: dev
     - name: setup python
       uses: actions/setup-python@v5
       with:
