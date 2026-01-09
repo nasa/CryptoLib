@@ -50,7 +50,7 @@ CCSDS_t          sdls_frame;
 TM_FramePrimaryHeader_t  tm_frame_pri_hdr; // Used to reduce bit math duplication
 TM_FrameSecurityHeader_t tm_frame_sec_hdr; // Used to reduce bit math duplication
 // AOS
-uint8_t                   aos_frame[AOS_MAX_FRAME_SIZE]; // AOS Global Frame
+// uint8_t                   aos_frame[AOS_MAX_FRAME_SIZE]; // AOS Global Frame
 AOS_FramePrimaryHeader_t  aos_frame_pri_hdr;             // Used to reduce bit math duplication
 AOS_FrameSecurityHeader_t aos_frame_sec_hdr;             // Used to reduce bit math duplication
 // OCF
