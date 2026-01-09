@@ -37,9 +37,8 @@ UTEST(AOS_PROCESS, NO_CONFIG)
 {
     remove("sa_save_file.bin");
     // Local variables
-    int32_t  status              = CRYPTO_LIB_ERROR;
-    int      framed_aos_len      = 0;
-    uint8_t *ptr_processed_frame = NULL;
+    int32_t  status         = CRYPTO_LIB_ERROR;
+    int      framed_aos_len = 0;
     uint16_t processed_aos_len;
     // 01 01000100 00000000
     char *framed_aos_h =
@@ -79,11 +78,15 @@ UTEST(AOS_PROCESS, NO_CONFIG)
     char *framed_aos_b = NULL;
     hex_conversion(framed_aos_h, &framed_aos_b, &framed_aos_len);
 
-    status =
-        Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_h, framed_aos_len, &ptr_processed_frame, &processed_aos_len);
+    AOS_t *aos_frame;
+    aos_frame = malloc(sizeof(uint8_t) * AOS_SIZE);
+    memset(aos_frame, 0, (sizeof(uint8_t) * AOS_SIZE));
+
+    status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_h, framed_aos_len, aos_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_ERR_NO_CONFIG, status);
 
     free(framed_aos_b);
+    free(aos_frame);
     Crypto_Shutdown();
 }
 
@@ -95,9 +98,9 @@ UTEST(AOS_PROCESS, NO_INIT)
 {
     remove("sa_save_file.bin");
     // Local variables
-    int32_t  status              = CRYPTO_LIB_ERROR;
-    int      framed_aos_len      = 0;
-    uint8_t *ptr_processed_frame = NULL;
+    int32_t status         = CRYPTO_LIB_ERROR;
+    int     framed_aos_len = 0;
+
     uint16_t processed_aos_len;
 
     // No Crypto_Init(), but we still Configure It:
@@ -145,14 +148,32 @@ UTEST(AOS_PROCESS, NO_INIT)
     char *framed_aos_b = NULL;
     hex_conversion(framed_aos_h, &framed_aos_b, &framed_aos_len);
 
-    status =
-        Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_h, framed_aos_len, &ptr_processed_frame, &processed_aos_len);
+    // Bit math to give concise access to values already set in the static transfer frame
+    // TFVN Mask (2 bits) = 1100 0000 = 0xCO
+    aos_frame_pri_hdr.tfvn = ((uint8_t)framed_aos_b[0] & 0xC0) >> 6;
+    // SCID Mask (8 bits) = 0011 1111 1100 0000 = 0x3F 0xC0
+    aos_frame_pri_hdr.scid = (((uint16_t)framed_aos_b[0] & 0x3F) << 2) | (((uint16_t)framed_aos_b[1] & 0xC0) >> 6);
+    // VCID Mask (6 bits) =           0011 1111 = 0x3F
+    aos_frame_pri_hdr.vcid = ((uint8_t)framed_aos_b[1] & 0x3F);
+
+    // Sanity checks on the above bit math
+    // Note: This is only checked in this UT, as the bit math is duplicated in other tests
+    ASSERT_EQ(aos_frame_pri_hdr.tfvn, 0x01); // TFVN - AOS Version 2 is set to '0b01' per protocol
+    ASSERT_EQ(aos_frame_pri_hdr.scid, 0x03); // SCID 3
+    ASSERT_EQ(aos_frame_pri_hdr.vcid, 0x00); // VCID 0
+
+    AOS_t *aos_frame;
+    aos_frame = malloc(sizeof(uint8_t) * AOS_SIZE);
+    memset(aos_frame, 0, (sizeof(uint8_t) * AOS_SIZE));
+
+    status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_h, framed_aos_len, aos_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_ERR_NO_CONFIG, status);
 
     char *error_enum = Crypto_Get_Error_Code_Enum_String(status);
     ASSERT_STREQ("CRYPTO_LIB_ERR_NO_CONFIG", error_enum);
 
     free(framed_aos_b);
+    free(aos_frame);
     Crypto_Shutdown();
 }
 
@@ -166,8 +187,8 @@ UTEST(AOS_PROCESS, HAPPY_PATH_CLEAR_FECF)
 {
     remove("sa_save_file.bin");
     // Local Variables
-    int32_t  status              = CRYPTO_LIB_SUCCESS;
-    uint8_t *ptr_processed_frame = NULL;
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
     uint16_t processed_aos_len;
 
     // Configure Parameters
@@ -176,8 +197,6 @@ UTEST(AOS_PROCESS, HAPPY_PATH_CLEAR_FECF)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             AOS_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0003, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_NO_OCF, 1786,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t AOS_UT_Managed_Parameters = {
         1, 0x0003, 0, AOS_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, AOS_SEGMENT_HDRS_NA, 1786, AOS_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
@@ -265,31 +284,36 @@ UTEST(AOS_PROCESS, HAPPY_PATH_CLEAR_FECF)
 
     SecurityAssociation_t *sa_ptr = NULL;
     SaInterface            sa_if  = get_sa_interface_inmemory();
-    sa_if->sa_get_from_spi(10, &sa_ptr); // Disable SPI 10
-    sa_ptr->sa_state = SA_KEYED;
     sa_if->sa_get_from_spi(9, &sa_ptr); // Enable and setup 9
     sa_ptr->sa_state  = SA_OPERATIONAL;
     sa_ptr->arsn_len  = 0;
     sa_ptr->shsnf_len = 0;
 
-    status =
-        Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, &ptr_processed_frame, &processed_aos_len);
+    AOS_t *aos_frame;
+    aos_frame = malloc(sizeof(uint8_t) * AOS_SIZE);
+    memset(aos_frame, 0, (sizeof(uint8_t) * AOS_SIZE));
+
+    status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, aos_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
                                                 gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
-    for (int i = 0; i < aos_current_managed_parameters_struct.max_frame_size; i++)
+    uint16_t sh_len = Crypto_Get_Security_Header_Length(sa_ptr);
+    uint16_t offset = 6 + sh_len;
+    for (int i = 0; i < aos_frame->aos_pdu_len; i++)
     {
-        // printf("Checking %02x against %02X\n", (uint8_t)ptr_processed_frame[i], (uint8_t)*(truth_aos_b + i));
-        ASSERT_EQ((uint8_t)ptr_processed_frame[i], (uint8_t) * (truth_aos_b + i));
+        // printf("Checking %02x against %02X\n", (uint8_t)aos_frame->aos_pdu[i], (uint8_t)*(truth_aos_b + offset + i));
+        ASSERT_EQ((uint8_t)aos_frame->aos_pdu[i], (uint8_t) * (truth_aos_b + offset + i));
     }
+
+    Crypto_aosPrint(aos_frame);
 
     Crypto_Shutdown();
     free(framed_aos_b);
     free(truth_aos_b);
-    free(ptr_processed_frame);
+    free(aos_frame);
 }
 
 // /**
@@ -303,8 +327,8 @@ UTEST(AOS_PROCESS, SECONDARY_HDR_PRESENT_PLAINTEXT)
 {
     remove("sa_save_file.bin");
     // Local Variables
-    int32_t  status              = CRYPTO_LIB_SUCCESS;
-    uint8_t *ptr_processed_frame = NULL;
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
     uint16_t processed_aos_len;
 
     // Configure Parameters
@@ -404,8 +428,11 @@ UTEST(AOS_PROCESS, SECONDARY_HDR_PRESENT_PLAINTEXT)
     sa_ptr->arsn_len  = 0;
     sa_ptr->shsnf_len = 0;
 
-    status =
-        Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, &ptr_processed_frame, &processed_aos_len);
+    AOS_t *aos_frame;
+    aos_frame = malloc(sizeof(uint8_t) * AOS_SIZE);
+    memset(aos_frame, 0, (sizeof(uint8_t) * AOS_SIZE));
+
+    status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, aos_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
@@ -413,16 +440,20 @@ UTEST(AOS_PROCESS, SECONDARY_HDR_PRESENT_PLAINTEXT)
                                                 gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
 
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
-    for (int i = 0; i < aos_current_managed_parameters_struct.max_frame_size; i++)
+    uint16_t sh_len = Crypto_Get_Security_Header_Length(sa_ptr);
+    uint16_t offset = 6 + 2 + sh_len;
+    for (int i = 0; i < aos_frame->aos_pdu_len; i++)
     {
-        // printf("Checking %02x against %02X\n", aos_frame[i], (uint8_t)*(truth_aos_b + i));
-        ASSERT_EQ(ptr_processed_frame[i], (uint8_t) * (truth_aos_b + i));
+        // printf("Checking %02x against %02X\n", aos_frame[i], (uint8_t)*(truth_aos_b + offset + i));
+        ASSERT_EQ(aos_frame->aos_pdu[i], (uint8_t) * (truth_aos_b + offset + i));
     }
+
+    Crypto_aosPrint(aos_frame);
 
     Crypto_Shutdown();
     free(framed_aos_b);
     free(truth_aos_b);
-    free(ptr_processed_frame);
+    free(aos_frame);
 }
 
 /**
@@ -435,8 +466,8 @@ UTEST(AOS_PROCESS, INSERT_ZONE_PRESENT_PLAINTEXT)
 {
     remove("sa_save_file.bin");
     // Local Variables
-    int32_t  status              = CRYPTO_LIB_SUCCESS;
-    uint8_t *ptr_processed_frame = NULL;
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
     uint16_t processed_aos_len;
 
     // Configure Parameters
@@ -445,8 +476,6 @@ UTEST(AOS_PROCESS, INSERT_ZONE_PRESENT_PLAINTEXT)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             AOS_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0003, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_NO_OCF, 1786,
-    // AOS_NO_FHEC, AOS_HAS_IZ, 10);
     GvcidManagedParameters_t AOS_UT_Managed_Parameters = {
         1, 0x0003, 0, AOS_HAS_FECF, AOS_NO_FHEC, AOS_HAS_IZ, 10, AOS_SEGMENT_HDRS_NA, 1786, AOS_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
@@ -541,24 +570,31 @@ UTEST(AOS_PROCESS, INSERT_ZONE_PRESENT_PLAINTEXT)
     sa_ptr->arsn_len  = 0;
     sa_ptr->shsnf_len = 0;
 
-    status =
-        Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, &ptr_processed_frame, &processed_aos_len);
+    AOS_t *aos_frame;
+    aos_frame = malloc(sizeof(uint8_t) * AOS_SIZE);
+    memset(aos_frame, 0, (sizeof(uint8_t) * AOS_SIZE));
+
+    status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, aos_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
                                                 gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
-    for (int i = 0; i < aos_current_managed_parameters_struct.max_frame_size; i++)
+    uint16_t sh_len = Crypto_Get_Security_Header_Length(sa_ptr);
+    uint16_t offset = 6 + 10 + sh_len;
+    for (int i = 0; i < aos_frame->aos_pdu_len; i++)
     {
-        printf("Checking %02x against %02X\n", ptr_processed_frame[i], (uint8_t) * (truth_aos_b + i));
-        ASSERT_EQ(ptr_processed_frame[i], (uint8_t)truth_aos_b[i]);
+        printf("Checking %02x against %02X\n", aos_frame->aos_pdu[i], (uint8_t) * (truth_aos_b + offset + i));
+        ASSERT_EQ(aos_frame->aos_pdu[i], (uint8_t)truth_aos_b[i + offset]);
     }
+
+    Crypto_aosPrint(aos_frame);
 
     Crypto_Shutdown();
     free(framed_aos_b);
     free(truth_aos_b);
-    free(ptr_processed_frame);
+    free(aos_frame);
 }
 
 /**
@@ -571,8 +607,8 @@ UTEST(AOS_PROCESS, AES_CMAC_256_TEST_0)
 {
     remove("sa_save_file.bin");
     // Local Variables
-    int32_t                status              = CRYPTO_LIB_SUCCESS;
-    uint8_t               *ptr_processed_frame = NULL;
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
     uint16_t               processed_aos_len;
     SecurityAssociation_t *sa_ptr = NULL;
 
@@ -685,24 +721,31 @@ UTEST(AOS_PROCESS, AES_CMAC_256_TEST_0)
     int   truth_aos_len = 0;
     hex_conversion(truth_aos_h, &truth_aos_b, &truth_aos_len);
 
-    status =
-        Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, &ptr_processed_frame, &processed_aos_len);
+    AOS_t *aos_frame;
+    aos_frame = malloc(sizeof(uint8_t) * AOS_SIZE);
+    memset(aos_frame, 0, (sizeof(uint8_t) * AOS_SIZE));
+
+    status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, aos_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
                                                 gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
-    for (int i = 0; i < aos_current_managed_parameters_struct.max_frame_size; i++)
+    uint16_t sh_len = Crypto_Get_Security_Header_Length(sa_ptr);
+    uint16_t offset = 6 + sh_len;
+    for (int i = 0; i < aos_frame->aos_pdu_len; i++)
     {
-        // printf("Checking %02x against %02X\n", (uint8_t)ptr_processed_frame[i], (uint8_t)*(truth_aos_b + i));
-        ASSERT_EQ((uint8_t)ptr_processed_frame[i], (uint8_t) * (truth_aos_b + i));
+        // printf("Checking %02x against %02X\n", (uint8_t)aos_frame->aos_pdu[i], (uint8_t)*(truth_aos_b + offset + i));
+        ASSERT_EQ((uint8_t)aos_frame->aos_pdu[i], (uint8_t) * (truth_aos_b + offset + i));
     }
+
+    Crypto_aosPrint(aos_frame);
 
     Crypto_Shutdown();
     free(framed_aos_b);
     free(truth_aos_b);
-    free(ptr_processed_frame);
+    free(aos_frame);
 }
 
 /**
@@ -717,8 +760,8 @@ UTEST(AOS_PROCESS, AES_CMAC_256_TEST_1)
 {
     remove("sa_save_file.bin");
     // Local Variables
-    int32_t                status              = CRYPTO_LIB_SUCCESS;
-    uint8_t               *ptr_processed_frame = NULL;
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
     uint16_t               processed_aos_len;
     SecurityAssociation_t *sa_ptr = NULL;
 
@@ -728,8 +771,6 @@ UTEST(AOS_PROCESS, AES_CMAC_256_TEST_1)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             AOS_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0003, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_NO_OCF, 1786,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t AOS_UT_Managed_Parameters = {
         1, 0x0003, 0, AOS_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, AOS_SEGMENT_HDRS_NA, 1786, AOS_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
@@ -837,24 +878,31 @@ UTEST(AOS_PROCESS, AES_CMAC_256_TEST_1)
     int   truth_aos_len = 0;
     hex_conversion(truth_aos_h, &truth_aos_b, &truth_aos_len);
 
-    status =
-        Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, &ptr_processed_frame, &processed_aos_len);
+    AOS_t *aos_frame;
+    aos_frame = malloc(sizeof(uint8_t) * AOS_SIZE);
+    memset(aos_frame, 0, (sizeof(uint8_t) * AOS_SIZE));
+
+    status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, aos_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
                                                 gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
-    for (int i = 0; i < aos_current_managed_parameters_struct.max_frame_size; i++)
+    uint16_t sh_len = Crypto_Get_Security_Header_Length(sa_ptr);
+    uint16_t offset = 6 + sh_len;
+    for (int i = 0; i < aos_frame->aos_pdu_len; i++)
     {
-        // printf("Checking %02x against %02X\n", (uint8_t)ptr_processed_frame[i], (uint8_t)*(truth_aos_b + i));
-        ASSERT_EQ((uint8_t)ptr_processed_frame[i], (uint8_t) * (truth_aos_b + i));
+        // printf("Checking %02x against %02X\n", (uint8_t)aos_frame->aos_pdu[i], (uint8_t)*(truth_aos_b + offset + i));
+        ASSERT_EQ((uint8_t)aos_frame->aos_pdu[i], (uint8_t) * (truth_aos_b + offset + i));
     }
+
+    Crypto_aosPrint(aos_frame);
 
     Crypto_Shutdown();
     free(framed_aos_b);
     free(truth_aos_b);
-    free(ptr_processed_frame);
+    free(aos_frame);
 }
 
 /**
@@ -867,8 +915,8 @@ UTEST(AOS_PROCESS, AES_HMAC_256_TEST_0)
 {
     remove("sa_save_file.bin");
     // Local Variables
-    int32_t                status              = CRYPTO_LIB_SUCCESS;
-    uint8_t               *ptr_processed_frame = NULL;
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
     uint16_t               processed_aos_len;
     SecurityAssociation_t *sa_ptr = NULL;
 
@@ -878,8 +926,6 @@ UTEST(AOS_PROCESS, AES_HMAC_256_TEST_0)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             AOS_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0003, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_NO_OCF, 1786,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t AOS_UT_Managed_Parameters = {
         1, 0x0003, 0, AOS_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, AOS_SEGMENT_HDRS_NA, 1786, AOS_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
@@ -983,27 +1029,35 @@ UTEST(AOS_PROCESS, AES_HMAC_256_TEST_0)
     sa_ptr->gvcid_blk.scid = 0x44;
     sa_ptr->iv_len         = 0;
     sa_ptr->shivf_len      = 0;
-    sa_ptr->shsnf_len      = 0;
+    sa_ptr->shsnf_len      = 2;
+    sa_ptr->shplf_len      = 0;
     memset(sa_ptr->abm, 0x00, (sa_ptr->abm_len * sizeof(uint8_t))); // Bitmask of zeros
 
-    status =
-        Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, &ptr_processed_frame, &processed_aos_len);
+    AOS_t *aos_frame;
+    aos_frame = malloc(sizeof(uint8_t) * AOS_SIZE);
+    memset(aos_frame, 0, (sizeof(uint8_t) * AOS_SIZE));
+
+    status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, aos_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
                                                 gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
-    for (int i = 0; i < aos_current_managed_parameters_struct.max_frame_size; i++)
+    uint16_t sh_len = Crypto_Get_Security_Header_Length(sa_ptr);
+    uint16_t offset = 6 + sh_len;
+    for (int i = 0; i < aos_frame->aos_pdu_len; i++)
     {
-        // printf("Checking %02x against %02X\n", (uint8_t)ptr_processed_frame[i], (uint8_t)*(truth_aos_b + i));
-        ASSERT_EQ((uint8_t)ptr_processed_frame[i], (uint8_t) * (truth_aos_b + i));
+        // printf("Checking %02x against %02X\n", (uint8_t)aos_frame->aos_pdu[i], (uint8_t)*(truth_aos_b + offset + i));
+        ASSERT_EQ((uint8_t)aos_frame->aos_pdu[i], (uint8_t) * (truth_aos_b + offset + i));
     }
+
+    Crypto_aosPrint(aos_frame);
 
     Crypto_Shutdown();
     free(framed_aos_b);
     free(truth_aos_b);
-    free(ptr_processed_frame);
+    free(aos_frame);
 }
 
 /**
@@ -1018,8 +1072,8 @@ UTEST(AOS_PROCESS, AES_HMAC_256_TEST_1)
 {
     remove("sa_save_file.bin");
     // Local Variables
-    int32_t                status              = CRYPTO_LIB_SUCCESS;
-    uint8_t               *ptr_processed_frame = NULL;
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
     uint16_t               processed_aos_len;
     SecurityAssociation_t *sa_ptr = NULL;
 
@@ -1029,8 +1083,6 @@ UTEST(AOS_PROCESS, AES_HMAC_256_TEST_1)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             AOS_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0003, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_NO_OCF, 1786,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t AOS_UT_Managed_Parameters = {
         1, 0x0003, 0, AOS_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, AOS_SEGMENT_HDRS_NA, 1786, AOS_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
@@ -1131,27 +1183,34 @@ UTEST(AOS_PROCESS, AES_HMAC_256_TEST_1)
     sa_ptr->gvcid_blk.scid = 0x44;
     sa_ptr->iv_len         = 0;
     sa_ptr->shivf_len      = 0;
-    sa_ptr->shsnf_len      = 0;
+    sa_ptr->shsnf_len      = 2;
     memset(sa_ptr->abm, 0xFF, (sa_ptr->abm_len * sizeof(uint8_t))); // Bitmask of ones
 
-    status =
-        Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, &ptr_processed_frame, &processed_aos_len);
+    AOS_t *aos_frame;
+    aos_frame = malloc(sizeof(uint8_t) * AOS_SIZE);
+    memset(aos_frame, 0, (sizeof(uint8_t) * AOS_SIZE));
+
+    status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, aos_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
                                                 gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
-    for (int i = 0; i < aos_current_managed_parameters_struct.max_frame_size; i++)
+    uint16_t sh_len = Crypto_Get_Security_Header_Length(sa_ptr);
+    uint16_t offset = 6 + sh_len;
+    for (int i = 0; i < aos_frame->aos_pdu_len; i++)
     {
-        // printf("Checking %02x against %02X\n", (uint8_t)ptr_processed_frame[i], (uint8_t)*(truth_aos_b + i));
-        ASSERT_EQ((uint8_t)ptr_processed_frame[i], (uint8_t) * (truth_aos_b + i));
+        // printf("Checking %02x against %02X\n", (uint8_t)aos_frame->aos_pdu[i], (uint8_t)*(truth_aos_b + offset + i));
+        ASSERT_EQ((uint8_t)aos_frame->aos_pdu[i], (uint8_t) * (truth_aos_b + offset + i));
     }
+
+    Crypto_aosPrint(aos_frame);
 
     Crypto_Shutdown();
     free(framed_aos_b);
     free(truth_aos_b);
-    free(ptr_processed_frame);
+    free(aos_frame);
 }
 
 /**
@@ -1164,8 +1223,8 @@ UTEST(AOS_PROCESS, AES_HMAC_512_TEST_0)
 {
     remove("sa_save_file.bin");
     // Local Variables
-    int32_t                status              = CRYPTO_LIB_SUCCESS;
-    uint8_t               *ptr_processed_frame = NULL;
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
     uint16_t               processed_aos_len;
     SecurityAssociation_t *sa_ptr = NULL;
 
@@ -1175,8 +1234,6 @@ UTEST(AOS_PROCESS, AES_HMAC_512_TEST_0)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             AOS_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0003, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_NO_OCF, 1786,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t AOS_UT_Managed_Parameters = {
         1, 0x0003, 0, AOS_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, AOS_SEGMENT_HDRS_NA, 1786, AOS_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
@@ -1281,27 +1338,34 @@ UTEST(AOS_PROCESS, AES_HMAC_512_TEST_0)
     sa_ptr->gvcid_blk.scid = 0x44;
     sa_ptr->iv_len         = 0;
     sa_ptr->shivf_len      = 0;
-    sa_ptr->shsnf_len      = 0;
+    sa_ptr->shsnf_len      = 2;
     memset(sa_ptr->abm, 0x00, (sa_ptr->abm_len * sizeof(uint8_t))); // Bitmask of zeros
 
-    status =
-        Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, &ptr_processed_frame, &processed_aos_len);
+    AOS_t *aos_frame;
+    aos_frame = malloc(sizeof(uint8_t) * AOS_SIZE);
+    memset(aos_frame, 0, (sizeof(uint8_t) * AOS_SIZE));
+
+    status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, aos_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
                                                 gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
-    for (int i = 0; i < aos_current_managed_parameters_struct.max_frame_size; i++)
+    uint16_t sh_len = Crypto_Get_Security_Header_Length(sa_ptr);
+    uint16_t offset = 6 + sh_len;
+    for (int i = 0; i < aos_frame->aos_pdu_len; i++)
     {
-        // printf("Checking %02x against %02X\n", (uint8_t)ptr_processed_frame[i], (uint8_t)*(truth_aos_b + i));
-        ASSERT_EQ((uint8_t)ptr_processed_frame[i], (uint8_t) * (truth_aos_b + i));
+        // printf("Checking %02x against %02X\n", (uint8_t)aos_frame->aos_pdu[i], (uint8_t)*(truth_aos_b + offset + i));
+        ASSERT_EQ((uint8_t)aos_frame->aos_pdu[i], (uint8_t) * (truth_aos_b + offset + i));
     }
+
+    Crypto_aosPrint(aos_frame);
 
     Crypto_Shutdown();
     free(framed_aos_b);
     free(truth_aos_b);
-    free(ptr_processed_frame);
+    free(aos_frame);
 }
 
 /**
@@ -1314,8 +1378,8 @@ UTEST(AOS_PROCESS, AES_HMAC_512_TEST_1)
 {
     remove("sa_save_file.bin");
     // Local Variables
-    int32_t                status              = CRYPTO_LIB_SUCCESS;
-    uint8_t               *ptr_processed_frame = NULL;
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
     uint16_t               processed_aos_len;
     SecurityAssociation_t *sa_ptr = NULL;
 
@@ -1325,8 +1389,6 @@ UTEST(AOS_PROCESS, AES_HMAC_512_TEST_1)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             AOS_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0003, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_NO_OCF, 1786,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t AOS_UT_Managed_Parameters = {
         1, 0x0003, 0, AOS_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, AOS_SEGMENT_HDRS_NA, 1786, AOS_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
@@ -1431,27 +1493,34 @@ UTEST(AOS_PROCESS, AES_HMAC_512_TEST_1)
     sa_ptr->gvcid_blk.scid = 0x44;
     sa_ptr->iv_len         = 0;
     sa_ptr->shivf_len      = 0;
-    sa_ptr->shsnf_len      = 0;
+    sa_ptr->shsnf_len      = 2;
     memset(sa_ptr->abm, 0xFF, (sa_ptr->abm_len * sizeof(uint8_t))); // Bitmask of ones
 
-    status =
-        Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, &ptr_processed_frame, &processed_aos_len);
+    AOS_t *aos_frame;
+    aos_frame = malloc(sizeof(uint8_t) * AOS_SIZE);
+    memset(aos_frame, 0, (sizeof(uint8_t) * AOS_SIZE));
+
+    status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, aos_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
                                                 gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
-    for (int i = 0; i < aos_current_managed_parameters_struct.max_frame_size; i++)
+    uint16_t sh_len = Crypto_Get_Security_Header_Length(sa_ptr);
+    uint16_t offset = 6 + sh_len;
+    for (int i = 0; i < aos_frame->aos_pdu_len; i++)
     {
-        // printf("Checking %02x against %02X\n", (uint8_t)ptr_processed_frame[i], (uint8_t)*(truth_aos_b + i));
-        ASSERT_EQ((uint8_t)ptr_processed_frame[i], (uint8_t) * (truth_aos_b + i));
+        // printf("Checking %02x against %02X\n", (uint8_t)aos_frame->aos_pdu[i], (uint8_t)*(truth_aos_b + offset + i));
+        ASSERT_EQ((uint8_t)aos_frame->aos_pdu[i], (uint8_t) * (truth_aos_b + offset + i));
     }
+
+    Crypto_aosPrint(aos_frame);
 
     Crypto_Shutdown();
     free(framed_aos_b);
     free(truth_aos_b);
-    free(ptr_processed_frame);
+    free(aos_frame);
 }
 
 /**
@@ -1462,8 +1531,8 @@ UTEST(AOS_PROCESS, AES_GCM_DEC_ONLY)
 {
     remove("sa_save_file.bin");
     // Local Variables
-    int32_t  status              = CRYPTO_LIB_SUCCESS;
-    uint8_t *ptr_processed_frame = NULL;
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
     uint16_t processed_aos_len;
 
     // Setup & Initialize CryptoLib
@@ -1471,8 +1540,6 @@ UTEST(AOS_PROCESS, AES_GCM_DEC_ONLY)
                             IV_INTERNAL, CRYPTO_AOS_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0003, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_NO_OCF, 1786,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t AOS_UT_Managed_Parameters = {
         1, 0x0003, 0, AOS_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, AOS_SEGMENT_HDRS_NA, 1786, AOS_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
@@ -1483,78 +1550,79 @@ UTEST(AOS_PROCESS, AES_GCM_DEC_ONLY)
 
     // Test frame setup    Header     |SPI|    IV                         |    Data
     char *framed_aos_h =
-        "40C000000000000B0000000000000000000000000000000010df143c92a39b3568cc9916c9d06c715bf8017168f88ef107a8016a03207f"
-        "7d12fe4ccd79ab24043982fe6a8b9675c3b819e2d7dfad32bd85381fb54544d76668a6ab58b988158702e91afe55cd71f1ba50d72bbd1c"
-        "cc41529101ee1a39c46ecd8a7feb503444606611239d31102dc6371b0e2152dd301e3268d0a45e1bcb58779642e883b6a26546094ba39f"
-        "b0ce11b39c49092c9b366059e773e4789052311a465f39ba677458510c09826f1ea580fa5c9d5b9677ede38e46fc33fe8d303f9529c15c"
-        "2bed4c879c5bfdacd86210a431e0f3852b3798369ae1230b4ed5ae66e153757508ead77e85ddac804e8a409cca8b9d3cef0dd1d0298bcd"
-        "bda1dda336d66ee6b59f2f10ffa6d4bf99885b9082b83cd20c9a44a002c460530a9741e26e78b6e8f9349df8e618b904ed01306ee9ed3a"
-        "389374efe43e5ed2bcd528943057762f9dc1d392fe2dd2fc6d9cab9e347a25839c07ba47113bad0633b6b5f09228be87631cc1538c2f6e"
-        "79e9df0f18d658bd8b3ac45b396cfeadd1700ca2ec95cdbe38e5ec013c74cd68d0035bb975c392f5116b661a928bf113c3cacc801a84cb"
-        "d3f8d3dc2273e0c5270d656648a48db16f860e4a36ee7e8979da4135e40e6952041a0d16b6f51cf67519b80a472b4cf5614d5a0b18dd75"
-        "5b7c8d63936e43de25a3cdf0d03179aebd5cc85fa1cc0c03fbdd240dd878d647619cbf367a7e486e572c5636c7a7d9b517c565a547597d"
-        "311b69110985b5f7c5d47904a6f6699e93c02ea7559d4ba94d139824e9ef0840ad3e31afdaaa71f7baba8835d568443b0dab10a4f40043"
-        "160fde9961038bcb823ab570bac0e609e17311a6b0edab4fce98f8df059194393f5109e766f6bf7e21c9a4441acff0cfd28658d4830433"
-        "1cb0c982da833c94cf6a7aadc8e2a696b69df49efcd7efadfd2e95bd3a9ab605c221e08b5f61f3aff2496b7c89f98a76aa305116220c50"
-        "142cfa4490916f7a6b8732839280d39a402d87ff7e7b1f71b6a243c316307e82b16071ad18e99a548bacc4ed648df49c6eafca0db764b9"
-        "8c75a9e953161cb6d384421b473f95d6801d5413dbde4373abab3269c0fade85ab66a9beea1d32462796dac0024f44ade919286b5e9248"
-        "8e52b51ada1deb0730c9b2e66b9b3c75dab5194cf452cb626ea4d9425b28e6d97a9d93d5c61d1fd02eea18d2b42058de6453abac116574"
-        "0be3c352d7291f8df7abd0c24e90bc8fbdadc32c31942e82f09f74f3ff75e20e597d87d136998b94d99370a8d6c3eedf44503ccc2d7d56"
-        "0a3c068f8914fb67a976cb15d3be212bc549b26613113a509079ad19e5abd26467e26571c98f17e248e31ad5b0f489a05b71e38725574e"
-        "9a076bf55d546f970cbc1892801b6a4b4bc7e3b82723cf251dcf3bfee0cb3b8c54a51a99d5272e8165a6cf8b2b05a549d091090c8b7a62"
-        "3541f2b29542eecc1234bc172038f8fcb0fe14413601f2d255708e4a30a789ec92a3f7bb286c80899886d2f59edfe5e120039b2e0e6fce"
-        "7fa81dd15b14c61afc0c334015cf975b42cb53bc33dc511c6aac87f1e38f48287c4ede88b8a22ab013200d4d894709bc0668ac5ff06add"
-        "5c28ef3764e3a6f51ba519256574734b0ad395d80ee886018ce0a1b935b1af4747b47011eb030c2ca2ab77cf33019cfca4bbbde219d326"
-        "66ce9a2db7a9e1f0f3fdff22a0b2cf6d245f0c5de470a40025a9f2e743c1fd626a01eb34293544c3dee8b72892c8a2d4fbe0cb2dec2bda"
-        "572ba4a1246b811331d80e5078b310eb9090a89216b390df62671425f89e73ca736e49848368be1eca4cc5c3036df2dcee5ca648d199f6"
-        "4b9bb792a2b7eb7ddc5ae43f35bcd9b9a7f4b9b8d493f958666af4dff6a2dec6a4ca908cd67f98d8845a631b3ecff4c5e527a0654ae737"
-        "885885425f6780da2e53f4e612ee8caf42e4d25cec899e7788e1652f0aa1536c488df58f750b7b63a1573d4df0e3eda5c8359daae00626"
-        "9cc4f79aab4360ce37b2227bc17a7feb2bd62108404b9d4ec6ca9d4a2c903a34d03db5d68004d5235789e61a22ec75f98680b0829cbf90"
-        "5668c9631a5157d39d73d1ab7e558ae6ced855939ea79b80f7256dc29fbf01bacbd718e96916218e41c3fb221f5b9ac58eb3bb694edfc6"
-        "0a9a518f392ba97d542034d17cba204ea92572677c3b6af86383f013fb537ba8441d1b8f645289d8c1347377f3698a830aa82ebe912380"
-        "8eb105ef216502cee4cd7ef05a14f1e87b5a66eb937a5f7dfd704fb6ad693c90c941a3e4853a148ada9269de95852b412d4d9fc8920120"
-        "835156c0c6ed168027115535edbf4ff5b72a3f556234c68245c604188572d3a372a898bd6a439bd4a8d6402b28260e81ece7bbf0cdf5a2"
-        "a2983403289cb060f81d3aedf8b4a82dcdadfed35a86a8b6df4d57801f7718a15660f9b03e0c0450a717e14e92e278d65cc11b7e07277b"
-        "6992050f69a101af3c11340d640ef7a98d89c32f485221351edc";
+        "40C000000000000A00000000000000000000000000000000CE71F3496571490305748611F14D391E4164572834AB5A587C3C7410653592"
+        "9FFB39F358756E14C0C23FC2F46000DBFCD1BD14574E7BDA13DC488F44AB377F09052FE462E1E4692AEB5280BB75FB4455DA4A29AB381C"
+        "B42795D6FCA9FCB5E7F4E305926D1EA5C0FE2F5C9C97788A3680D558804765667EDDCE4AF4AADCDCA477871580FA77F5F042C9A31EB798"
+        "BD9BC2B45C3D9499556D284DD54FC8309748A20DBF27729A4A7436B706CA842F0DBC78001266B93767BE5A4E741319292D754F481F5E96"
+        "3DD38C74F47D9B2973F3654273936DC76FA77B6FC7158B9192C3EF99DB3F001EE16708005FA0963DADC2C55199520DA898AD6723E7A49F"
+        "F1619E7FE643D83007C3D359809629971B06E6C8C0C6CBA8D04DF3AF7A598887AF8E5217907CD2AFC1FFA61C40B59CE165F619E716BDD9"
+        "65EB66A395CC6B1F7F91AE58F11A24B380BD1DC22BE894FB4AB52A3F43373919618C0C2F823E57CED61E1323916B02B0F02F06487D455F"
+        "A4E42428FBA47D60E49C142A93B7C87DAF2C1A37C97761155F94B15B70927FC0770457378035AF6CD97634A373441D91ACFEB033915C00"
+        "6C64FCBD81DF116CAE34F00D581106E6413035B439972E1A79F406955DF174845EC93CB4FB78C012A24D7FAC31AA7A874F0A80D92490E6"
+        "63E2A42DB14E3255EF241CE727646C3E69FE69DA782E81CC4CF37D49FB1440B5368A984A253CCB033935EDA4D8DDC9C4DD78A92277B569"
+        "1AB1523F5057EBBB1BBF7C98E51C6873966D0B948C46F12CF9031AD8C99AB236CDB24A3D2817AABB507D319091F21179477060160B5921"
+        "EC21B71E726204E5B9CC283AE12A79967E89BCD4943A8F2037F75AC6F31E11E24F95EC7CA9F9184A865B5C6E82EDE317C740E6007227F6"
+        "50C2B74950C1C803D6129EC2FC956EFC6035D537761904B1EDFFCF6EC850349DEACDD0A8815C0886FF3270BBA29B792BEB5349C72E1264"
+        "8ED7B0FFE9B1D5551D411190DC95B0EB80DA89B90FD0B9F2483446AAF313470C58C6D026E3D8FF3F4A3D7638C4B9CD38903EA6215628FC"
+        "F05EDAD8AD3C087FC69BD9C2A070A191D8A2816D16F60785A1AE9F31751A72CAA619560658B309269DF16E27A3B65254AF76851AA633DC"
+        "33D1011ED9A54C1C155A9F2E58D6D72ACFB33180C487A0B8505EC33464E27958BF455F6C2C964461F45BEAC9D4771B3871FCC57C1C0751"
+        "F76732701D1B4D147F89B0E40947BB83954295CA58C6E3464CF21EB4EB0BADFC6F16D9731A734DF1945225594A54CC7B3A2E61740229A8"
+        "4755A4F8F827BA38BCA38D830575339DDDD02298DF5170558527E1864656ADCB59D738CA541E3DEF8F159AE839FA161622643F1F09BEFC"
+        "BC54847663AE8D2DF6ED7515E559102426C3E19296DA77A9FC65DC3BA01B1BA79DEF5C302667C80CAE12B9911B6E764ED32F39FE55B4CD"
+        "2E79F6431485B8057364F4E0ECDCEE98511E5CEACFD40054488CC0F98FEB7273147D47CFB5A809866B267B707E6C781A5BD169CC0990AF"
+        "695ABA6D4097F1BA1EEF99C02CEEED6501B0BAA5FDE61BF8A98A93DDB5AE7BC92C309EBC27E2BE1B7B8C8B3DB32B8A8732D77B263B8B11"
+        "354B54ABBAA93AB39EE1603DBA7987CA37B8A2B251F79506A8EB200F86AEC6ABF481ACE061D39A214EECDC637BBF9D653DA0CB4DA4531A"
+        "655F4BBB12EC8284FC6898C46B311416F59ABF55C69631C290A0EDB0298DD809D63C9B7132ECD205D9359A181555560F5BF7CD24D15818"
+        "B5175868DDE5A4B0495F87CDE03F04800416B3F50F3AD56FD00CCD70D7D86E9B7E840864B08B1F99B930787061C473CAD1A41E578AD4C0"
+        "7DFF34928D579B5E6C02B457E0AA7542E653CF4FA3C4F1A83B7CC1B22A16EED574A98DA1CADEEFB35D4C2D0E1F81110F41E23A70C29B65"
+        "7897623DA52DA288433F2DC35FB2CE4591888BBEFD694069BB0550486E2B88EF89E7052AD7FD7838989038F9748BD890E238956DAFE015"
+        "23C4A91E79A4AB2C866BAA82A591062A4D71B3AABF0415A5F52A3005922C457ECEA6CDC2D53FA2585EBC2D465D4BF734A123A234320C58"
+        "B2F0D097E655AA7D32DB38B17296A6218A817F049CDA81587AA346306C1A308AA8836B0BA6AEEFEA5204DF601FE70052B484BDBBB7951E"
+        "A74145B985827816C6685C9202C2FD97735C21677A3BE1B846276ECB12465A5756F7287BCA76C404BBC4E37E4386F8771F7E3CCD45F5A7"
+        "20D8CE10C8704279A84EF1BF25069808AF027D9C4C60343C886D5A26A856F14D7C6A64C2D12635D6C7CF075D98E141A399B70AA2295241"
+        "6774BF2804E2F56DB75077F8C642E08BF27A62CA5A0B91B412D59D2B655EC9F3F6BD46776F9A5FA6BA7731C0E076E57CDE6B4B0749C76C"
+        "F225EA560D86113FB96AB4F23478895039403438E6CA7EA2534D8EB04C9BFAB2C844839D840D02256FEEB674B82F9ABBCD9255F27261FB"
+        "35A2C61B3A8DECD2138DB3482D65F1818DE8AE03C080045F68C1";
     char *framed_aos_b   = NULL;
     int   framed_aos_len = 0;
     hex_conversion(framed_aos_h, &framed_aos_b, &framed_aos_len);
 
     // Truth frame setup
     char *truth_aos_h =
-        "40C00000000000000000000000000000000000000000000000974F555545E8114714352C43BCAB3B62E961FEE145A672C3B292FFAE9A45"
-        "63F5B359B8E199115C12A3A1DC24D78BB36CE3D2922E3C9567AF7D87DA9B58A13B64B5BEDE209DDEE5722C2FBC6E96346150A270BF3C12"
-        "A6957E57ED061A65DB0B4F8307548270670D2C9CC70BC9772E62F39CC41B8BFEC800D1AAE21935136BCAF6F6FD4C6536917F484A065594"
-        "ACC4A9F68AC02628FAB4B06B11F5785BEBA3091B326CFC348BDCD519ADAEB41358677850C5B168C75806D4D5218708F974A2C2D2403110"
-        "B6AB129D7FE0D69B6865D59A3E170AA7EB4A0B1385AC35F644F901FFBD5CB821D384B65F7442A3AF9AA8824A7C73E46AB9E66B533C39D9"
-        "F2988457E6E7D50B5DB046035DF52D9BD81D03646DAD98350EBE73E6D5ADC72C35B629D90B46EFD849C0B3451F627DF0FFA7D00A9B24ED"
-        "C346CBE73814D3DF35F53EA294A42B03CBB1AB76E71EFE6575F58AA027C30E1BB7C4CB828149D85C1615F59B482FFB2F83CEE16E9F2F43"
-        "B8D71A597C4444A3B901FD39E7D5B541B58EC8AD14BFC02DDD8DD83B451A962E8733012F108E5E34639D072B2DB99367234AE98A18C041"
-        "3316900B80EB0C15B4AD0DDA725D07560DE690252D2AC31A5391FF565F16CBA7D31DCBE4AE14E90B2D8D18BCE4F6377D1E7A5FB14D98F7"
-        "26582AEAAC9777F70A4AF0C2956D8B032DC97BD36524F8F6872E6EA6A8C3BADEE8717F4FDF471E32C2B170DEEED4FE807A551353853676"
-        "D5E68C4686FE1D87294EC27F05F5C42391CA6ED51A4D65AB3F940F32BBA4D7BBADC0A8233557218832F76C22CC660542F49F3428D3440B"
-        "B8E251BF32B9BA1EB6CEE36F45F5310C6A1D3EA1488B438A5960489BDF8A2B74EC3F1A29F030ABB17FE5B6299EEE10C63302E46ABB0876"
-        "60B065A53A21C51EBDDB43EEE219C60057FE5C853FDE54EB2C8A5DDF195F50BDD1DA749C6D6EC01FF589C6A97F0E77FDAD73B16CB45921"
-        "99936D6FECEE356A88C4E2ABEBA487CF8FEC48B31EA8656BE4E9F45FA5D14CC5125577E235378B090731D4CBDD623D9481D334D3483322"
-        "547C8A148B20D75DF232D996FE552473FD419B7908E2D93158911D2B5BBEBAA8AB58D4B7E32C0247C9A79027FF0BEA60E7E2C2F739F118"
-        "C423D30BA8F1DA0AE8EB259DE8985D2713986EBBB780C510C766DCCBB0A6B1E8D806C029B6978A1B358429410C6AA3256CB5805F0B0770"
-        "25C89239D62331324EBC6288BE3DBC8F1C14E097B0D7641FEE519AB693406616B68D956E47BDD78B5F4DE011839E87320D776EE92E2961"
-        "7326919131F0B450C810BEF3FBC7B24F3294DD12CB293C66BE0CD9F81C62F863642811682A8464FE959D63689A0E0141B4E3865D4457E7"
-        "B76F9BEFE8EDE58FAE6B6E138C165A5F491C3D3344C1DD652A61B3AF5B4F608E60C73368B6559E5E5D0BD130AFF07F77CFD72B0F54140A"
-        "03E0739C665EE3D73CE54AB3BEE154B401320A9D2360C179634A6F5E44F08A873B673949232B613F12FFF97236A96A24ECC977392EE26E"
-        "FC9A2F8736048EA10F48F211C846543E36D9D52D5AEEEE9C87803B923570C7AE89C827AAB260147D2F5DE616042740322DFC37CD05A0CA"
-        "48ADDA09B1AFCC6BB1291DD69B531DC7EEA9CEB2B7B516851E1EA55074548DE1F02D109A6B7DABEF210DB1F77178D239E73D748296E1D6"
-        "A4FFDAC5C6F265E0BEBE2FF70E86808B6B8DBF66E133A2B99FFC7729AB3409E195A91D22D00A771340A29B529671DFD648E27D3422D92C"
-        "F66D2BAF512CAB215DD4381FB36F4497DB7DE865EB469B26B8E24F224C73E30605AC6E3A05A0FC86E213CFE0E00D9B440916209305218A"
-        "DB134AF7C8247E2B761D8FFA7ED9C1B052FE8470F5E60892E07CAFC3BCF61D67CCC5F737044EDA410283FBB2838CA2B4F6FFF19F4DBC4B"
-        "5D20CCFCEDA7CBDB0245B42402B1BCCC95B97015BF06BB1451BC76B9EAD99CA21BC3EC702C314DCE2083F8F2E050F2BD0DB950C8553E00"
-        "E662D70AD86855A79A0D3FA973EF00820084606A326EF92C2B48DF8486FEA8ECF63339A9AA2570372AE6CC4D92897CF5D081B8CF2B9A92"
-        "3AF3D5D31FB371CE63E82E5E3937ABF1E65AAB0A5CE9A613726510267E87296117C42DD03356364ED20EF5463C73393C1902A7C92A3883"
-        "F1F726F43C5C6D4EA5360B4E7E4CD83CEE27BF13D2D4CEC198F9C755CA7FB6C0864737D128FE50A7ECE5B02C01C8E09EE6C455B89C7D44"
-        "7DEF0C6D0CE9607DD9458DC1CB3BE8DB613D70A392A6323639251AB6DA3A5431477EEE0BC3BF82EB3C3083482FADEFDC2B6EA5713BB872"
-        "2CD5EC36FC1C7097F150FE1CD6E4404E633E23C9525CA165B649318D8D4AF0387256EAE754C45245B2B3C6DC21879D4E27466057FEED75"
-        "52383C07CE7C4EDAD9310E0F12C62E75788DDEEFE70D1E8AE8EFCFECE71C3AB0BEDC048D9FAC161E071B02E7C39879FEA64EEBB825F75E"
-        "936C93AE48881846000000000000000000000000000000000000";
+        "40C0000000000000CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC112233445566778899AABBCCDDEEFFA107FF000006D2ABBABBAABBAABBAABB"
+        "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
+        "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
+        "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
+        "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
+        "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
+        "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
+        "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
+        "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
+        "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
+        "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
+        "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
+        "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
+        "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
+        "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
+        "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
+        "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
+        "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
+        "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
+        "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
+        "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
+        "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
+        "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
+        "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
+        "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
+        "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
+        "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
+        "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
+        "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
+        "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
+        "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
+        "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
+        "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA0000";
+
     char *truth_aos_b   = NULL;
     int   truth_aos_len = 0;
     hex_conversion(truth_aos_h, &truth_aos_b, &truth_aos_len);
@@ -1571,35 +1639,21 @@ UTEST(AOS_PROCESS, AES_GCM_DEC_ONLY)
 
     // Expose/setup SAs for testing
     SecurityAssociation_t  ta;
-    SecurityAssociation_t *test_association = &ta;
+    SecurityAssociation_t *sa_ptr = &ta;
 
-    sa_if->sa_get_from_spi(10, &test_association); // Disable SPI 10
-    test_association->sa_state = SA_KEYED;
-    sa_if->sa_get_from_spi(11, &test_association); // Enable and setup 11
-    test_association->sa_state       = SA_OPERATIONAL;
-    test_association->akid           = 0;
-    test_association->ekid           = 136;
-    test_association->est            = 1;
-    test_association->ast            = 0;
-    test_association->acs_len        = 1;
-    test_association->ecs_len        = 1;
-    test_association->ecs            = CRYPTO_CIPHER_AES256_GCM;
-    test_association->acs            = CRYPTO_MAC_NONE;
-    test_association->stmacf_len     = 16;
-    test_association->abm_len        = 1786;
-    test_association->arsn_len       = 0;
-    test_association->gvcid_blk.scid = SCID & 0x3FF;
-    test_association->iv_len         = 16;
-    test_association->shivf_len      = 16;
-    test_association->shsnf_len      = 0;
-    memset(test_association->abm, 0xFF, (test_association->abm_len * sizeof(uint8_t))); // Bitmask of ones
-
+    sa_if->sa_get_from_spi(10, &sa_ptr);
+    sa_ptr->ecs_len   = 1;
+    sa_ptr->ecs       = CRYPTO_CIPHER_AES256_GCM;
+    sa_ptr->est       = 1;
+    sa_ptr->ast       = 1;
+    sa_ptr->iv_len    = 16;
+    sa_ptr->shivf_len = 16;
     crypto_key_t *ekp = NULL;
-    ekp               = key_if->get_key(test_association->ekid);
+    ekp               = key_if->get_key(sa_ptr->ekid);
     ekp->key_state    = KEY_ACTIVE;
 
     crypto_key_t *akp = NULL;
-    akp               = key_if->get_key(test_association->akid);
+    akp               = key_if->get_key(sa_ptr->akid);
     akp->key_state    = KEY_ACTIVE;
 
     // Set a more obvious IV for test purposes
@@ -1607,21 +1661,24 @@ UTEST(AOS_PROCESS, AES_GCM_DEC_ONLY)
     char *iv_b   = NULL;
     int   iv_len = 0;
     hex_conversion(iv_h, &iv_b, &iv_len);
-    memcpy(test_association->iv, iv_b, iv_len);
+    memcpy(sa_ptr->iv, iv_b, iv_len);
 
-    status =
-        Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, &ptr_processed_frame, &processed_aos_len);
+    AOS_t *aos_frame;
+    aos_frame = malloc(sizeof(uint8_t) * AOS_SIZE);
+    memset(aos_frame, 0, (sizeof(uint8_t) * AOS_SIZE));
+
+    status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, aos_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // printf("Decrypted frame contents:\n\t");
-    // for (int i = 0; i < 1786; i++)
+    // for (int i = 0; i < aos_frame->aos_pdu_len; i++)
     // {
-    //     printf("%02x", ptr_processed_frame[i]);
-    //     // ASSERT_EQ(ptr_processed_frame[i], (uint8_t)*(truth_aos_b + i));
+    //     printf("%02x", aos_frame->aos_pdu[i]);
+    //     // ASSERT_EQ(aos_frame->aos_pdu[i], (uint8_t)*(truth_aos_b + offset + i));
     // }
     // printf("\n Truth Contents\n\t");
 
-    // for (int i = 0; i < 1786; i++)
+    // for (int i = 0; i < aos_frame->aos_pdu_len; i++)
     // {
     //     // printf("[%d]: %02x -> %02x \n", i, aos_frame[i], truth_aos_b[i]);
     //     printf("%02x", (uint8_t)*(truth_aos_b+i));
@@ -1631,15 +1688,19 @@ UTEST(AOS_PROCESS, AES_GCM_DEC_ONLY)
     // printf("\n");
 
     // printf("\nDoing final checks:\n\t");
-    for (int i = 0; i < 1786; i++)
+    uint16_t sh_len = Crypto_Get_Security_Header_Length(sa_ptr);
+    uint16_t offset = 6 + sh_len;
+    for (int i = 0; i < aos_frame->aos_pdu_len; i++)
     {
-        // printf("%02x", ptr_processed_frame[i]);
-        ASSERT_EQ(ptr_processed_frame[i], (uint8_t) * (truth_aos_b + i));
+        // printf("%02x", aos_frame->aos_pdu[i]);
+        ASSERT_EQ(aos_frame->aos_pdu[i], (uint8_t) * (truth_aos_b + offset + i));
     }
+
+    Crypto_aosPrint(aos_frame);
 
     // printf("\n\n");
     Crypto_Shutdown();
-    free(ptr_processed_frame);
+    free(aos_frame);
     free(truth_aos_b);
     free(framed_aos_b);
     free(iv_b);
@@ -1657,8 +1718,8 @@ UTEST(AOS_PROCESS, AEAD_GCM_BITMASK_1)
 {
     remove("sa_save_file.bin");
     // Local Variables
-    int32_t                status              = CRYPTO_LIB_SUCCESS;
-    uint8_t               *ptr_processed_frame = NULL;
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
     uint16_t               processed_aos_len;
     SecurityAssociation_t *sa_ptr = NULL;
 
@@ -1668,8 +1729,6 @@ UTEST(AOS_PROCESS, AEAD_GCM_BITMASK_1)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             AOS_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0003, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_NO_OCF, 1786,
-    // AOS_FHEC_NA, AOS_IZ_NA, 0);
     GvcidManagedParameters_t AOS_UT_Managed_Parameters = {
         1, 0x0003, 0, AOS_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, AOS_SEGMENT_HDRS_NA, 1786, AOS_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
@@ -1712,7 +1771,8 @@ UTEST(AOS_PROCESS, AEAD_GCM_BITMASK_1)
         "9FA014FE307413DFF5DC6FE14B05E0F96A4B77FA826B4E6CEC615EA7BC782D81D850B2F5942B059BCB8378CF84943A503C5C8ED9831031"
         "924047D1D7FC079136004424FCAE5EE4A63B2E447325D79354D715099463C2B263B989AC7B528AC5B9C7513A39371F90FDF6AAE1DCE4B3"
         "B3892512398DA171E90C2BFCE9A5B93CDCBCEFC24B97B9A7CE5C46910E6609B04771E8A12F1D1541B606F05F83F369C74DD00A6F16366A"
-        "7883141E78B010BE83D71977C7641BFB68B93231C825ACD0B4b8";
+        "7883141E78B010BE83D71977C7641BFB68B93231C825ACD0B4B8";
+
     char *framed_aos_b   = NULL;
     int   framed_aos_len = 0;
     hex_conversion(framed_aos_h, &framed_aos_b, &framed_aos_len);
@@ -1756,7 +1816,6 @@ UTEST(AOS_PROCESS, AEAD_GCM_BITMASK_1)
     int   truth_aos_len = 0;
     hex_conversion(truth_aos_h, &truth_aos_b, &truth_aos_len);
 
-    SaInterface sa_if = get_sa_interface_inmemory();
     sa_if->sa_get_from_spi(10, &sa_ptr);
     sa_ptr->sa_state   = SA_OPERATIONAL;
     sa_ptr->ekid       = 130;
@@ -1769,24 +1828,31 @@ UTEST(AOS_PROCESS, AEAD_GCM_BITMASK_1)
     sa_ptr->shivf_len  = 16;
     sa_ptr->stmacf_len = 16;
 
-    status =
-        Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, &ptr_processed_frame, &processed_aos_len);
+    AOS_t *aos_frame;
+    aos_frame = malloc(sizeof(uint8_t) * AOS_SIZE);
+    memset(aos_frame, 0, (sizeof(uint8_t) * AOS_SIZE));
+
+    status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, aos_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
     // Determine managed parameters by GVCID, which nominally happens in TO
     status =
         Crypto_Get_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
                                                 gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
     // Now, byte by byte verify the static frame in memory is equivalent to what we started with
-    for (int i = 0; i < aos_current_managed_parameters_struct.max_frame_size; i++)
+    uint16_t sh_len = Crypto_Get_Security_Header_Length(sa_ptr);
+    uint16_t offset = 6 + sh_len;
+    for (int i = 0; i < aos_frame->aos_pdu_len; i++)
     {
-        // printf("Checking %02x against %02X\n", (uint8_t)ptr_processed_frame[i], (uint8_t)*(truth_aos_b + i));
-        ASSERT_EQ((uint8_t)ptr_processed_frame[i], (uint8_t) * (truth_aos_b + i));
+        // printf("Checking %02x against %02X\n", (uint8_t)aos_frame->aos_pdu[i], (uint8_t)*(truth_aos_b + offset + i));
+        ASSERT_EQ((uint8_t)aos_frame->aos_pdu[i], (uint8_t) * (truth_aos_b + offset + i));
     }
+
+    Crypto_aosPrint(aos_frame);
 
     Crypto_Shutdown();
     free(framed_aos_b);
     free(truth_aos_b);
-    free(ptr_processed_frame);
+    free(aos_frame);
 }
 
 UTEST(AOS_PROCESS, AOS_SA_SEGFAULT_TEST)
@@ -1794,8 +1860,8 @@ UTEST(AOS_PROCESS, AOS_SA_SEGFAULT_TEST)
     remove("sa_save_file.bin");
 
     // Local Variables
-    int32_t  status              = CRYPTO_LIB_SUCCESS;
-    uint8_t *ptr_processed_frame = NULL;
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
     uint16_t processed_aos_len;
 
     // Configure Parameters
@@ -1804,8 +1870,6 @@ UTEST(AOS_PROCESS, AOS_SA_SEGFAULT_TEST)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             AOS_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0003, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_NO_OCF, 1786,
-    // AOS_NO_FHEC, AOS_HAS_IZ, 10);
     GvcidManagedParameters_t AOS_UT_Managed_Parameters = {
         1, 0x0003, 0, AOS_HAS_FECF, AOS_NO_FHEC, AOS_HAS_IZ, 10, AOS_SEGMENT_HDRS_NA, 18, AOS_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
@@ -1818,13 +1882,16 @@ UTEST(AOS_PROCESS, AOS_SA_SEGFAULT_TEST)
     int   framed_aos_len = 0;
     hex_conversion(framed_aos_h, &framed_aos_b, &framed_aos_len);
 
-    status =
-        Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, &ptr_processed_frame, &processed_aos_len);
-    ASSERT_EQ(CRYPTO_LIB_ERR_SPI_INDEX_OOB, status);
+    AOS_t *aos_frame;
+    aos_frame = malloc(sizeof(uint8_t) * AOS_SIZE);
+    memset(aos_frame, 0, (sizeof(uint8_t) * AOS_SIZE));
+
+    status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, aos_frame, &processed_aos_len);
+    ASSERT_EQ(CRYPTO_LIB_ERR_INVALID_AOS_FRAME_LENGTH, status);
 
     Crypto_Shutdown();
     free(framed_aos_b);
-    free(ptr_processed_frame);
+    free(aos_frame);
 }
 
 UTEST(AOS_PROCESS, AOS_SA_NOT_OPERATIONAL)
@@ -1832,8 +1899,8 @@ UTEST(AOS_PROCESS, AOS_SA_NOT_OPERATIONAL)
     remove("sa_save_file.bin");
 
     // Local Variables
-    int32_t  status              = CRYPTO_LIB_SUCCESS;
-    uint8_t *ptr_processed_frame = NULL;
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
     uint16_t processed_aos_len;
 
     // Configure Parameters
@@ -1842,8 +1909,6 @@ UTEST(AOS_PROCESS, AOS_SA_NOT_OPERATIONAL)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0003, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_NO_OCF, 1786,
-    // AOS_NO_FHEC, AOS_HAS_IZ, 10);
     GvcidManagedParameters_t AOS_UT_Managed_Parameters = {
         1, 0x0003, 0, AOS_HAS_FECF, AOS_NO_FHEC, AOS_IZ_NA, 0, AOS_SEGMENT_HDRS_NA, 18, AOS_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
@@ -1871,13 +1936,16 @@ UTEST(AOS_PROCESS, AOS_SA_NOT_OPERATIONAL)
     akp               = key_if->get_key(sa_ptr->akid);
     akp->key_state    = KEY_ACTIVE;
 
-    status =
-        Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, &ptr_processed_frame, &processed_aos_len);
+    AOS_t *aos_frame;
+    aos_frame = malloc(sizeof(uint8_t) * AOS_SIZE);
+    memset(aos_frame, 0, (sizeof(uint8_t) * AOS_SIZE));
+
+    status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, aos_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL, status);
 
     Crypto_Shutdown();
     free(framed_aos_b);
-    free(ptr_processed_frame);
+    free(aos_frame);
 }
 
 UTEST(AOS_PROCESS, AOS_OCF_TEST)
@@ -1885,8 +1953,8 @@ UTEST(AOS_PROCESS, AOS_OCF_TEST)
     remove("sa_save_file.bin");
 
     // Local Variables
-    int32_t  status              = CRYPTO_LIB_SUCCESS;
-    uint8_t *ptr_processed_frame = NULL;
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
     uint16_t processed_aos_len;
 
     // Configure Parameters
@@ -1920,22 +1988,25 @@ UTEST(AOS_PROCESS, AOS_OCF_TEST)
     sa_ptr->arsnw_len  = 0;
     sa_ptr->arsn_len   = 0;
 
-    status =
-        Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, &ptr_processed_frame, &processed_aos_len);
+    AOS_t *aos_frame;
+    aos_frame = malloc(sizeof(uint8_t) * AOS_SIZE);
+    memset(aos_frame, 0, (sizeof(uint8_t) * AOS_SIZE));
+
+    status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, aos_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     printf("FSR: %08X\n", Crypto_Get_FSR());
 
     Crypto_Shutdown();
     free(framed_aos_b);
-    free(ptr_processed_frame);
+    free(aos_frame);
 }
 
 UTEST(AOS_PROCESS, AOS_KEY_STATE_TEST)
 {
     // Local Variables
-    int32_t  status              = CRYPTO_LIB_SUCCESS;
-    uint8_t *ptr_processed_frame = NULL;
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
     uint16_t processed_aos_len;
 
     // Configure Parameters
@@ -1944,8 +2015,6 @@ UTEST(AOS_PROCESS, AOS_KEY_STATE_TEST)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0003, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_NO_OCF, 1786,
-    // AOS_NO_FHEC, AOS_HAS_IZ, 10);
     GvcidManagedParameters_t AOS_UT_Managed_Parameters = {
         1, 0x0003, 0, AOS_HAS_FECF, AOS_NO_FHEC, AOS_IZ_NA, 0, AOS_SEGMENT_HDRS_NA, 18, AOS_NO_OCF, 1};
     Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
@@ -1957,6 +2026,7 @@ UTEST(AOS_PROCESS, AOS_KEY_STATE_TEST)
     char *framed_aos_b   = NULL;
     int   framed_aos_len = 0;
     hex_conversion(framed_aos_h, &framed_aos_b, &framed_aos_len);
+    printf("FL: %d", framed_aos_len);
 
     SecurityAssociation_t *sa_ptr = NULL;
     sa_if->sa_get_from_spi(10, &sa_ptr); // Disable SPI 10
@@ -1976,21 +2046,24 @@ UTEST(AOS_PROCESS, AOS_KEY_STATE_TEST)
     akp               = key_if->get_key(sa_ptr->akid);
     akp->key_state    = KEY_DEACTIVATED;
 
-    status =
-        Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, &ptr_processed_frame, &processed_aos_len);
+    AOS_t *aos_frame;
+    aos_frame = malloc(sizeof(uint8_t) * AOS_SIZE);
+    memset(aos_frame, 0, (sizeof(uint8_t) * AOS_SIZE));
+
+    status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, aos_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_ERR_KEY_STATE_INVALID, status);
 
     Crypto_Shutdown();
     free(framed_aos_b);
-    free(ptr_processed_frame);
+    free(aos_frame);
 }
 
 UTEST(AOS_PROCESS, AOS_PROCESS_HEAP_UNDERFLOW_TEST)
 {
     remove("sa_save_file.bin");
     // Local Variables
-    int32_t  status              = CRYPTO_LIB_SUCCESS;
-    uint8_t *ptr_processed_frame = NULL;
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
     uint16_t processed_aos_len;
 
     // Configure Parameters
@@ -1999,8 +2072,6 @@ UTEST(AOS_PROCESS, AOS_PROCESS_HEAP_UNDERFLOW_TEST)
                             TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
                             AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Tests
-    // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0003, 0, AOS_HAS_FECF, AOS_SEGMENT_HDRS_NA, AOS_NO_OCF, 1786,
-    // AOS_NO_FHEC, AOS_HAS_IZ, 10);
     GvcidManagedParameters_t AOS_UT_Managed_Parameters = {
         1, 0x0000, 48, AOS_NO_FECF, AOS_NO_FHEC, AOS_IZ_NA, 0, AOS_SEGMENT_HDRS_NA, 1786, AOS_NO_OCF, 1};
 
@@ -2024,28 +2095,26 @@ UTEST(AOS_PROCESS, AOS_PROCESS_HEAP_UNDERFLOW_TEST)
     ekp               = key_if->get_key(sa_ptr->ekid);
     ekp->key_state    = KEY_ACTIVE;
 
-    status =
-        Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, &ptr_processed_frame, &processed_aos_len);
+    AOS_t *aos_frame;
+    aos_frame = malloc(sizeof(uint8_t) * AOS_SIZE);
+    memset(aos_frame, 0, (sizeof(uint8_t) * AOS_SIZE));
+
+    status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, aos_frame, &processed_aos_len);
 
     ASSERT_EQ(CRYPTO_LIB_ERR_AOS_FL_LT_MAX_FRAME_SIZE, status);
 
     Crypto_Shutdown();
     free(framed_aos_b);
-    free(ptr_processed_frame);
+    free(aos_frame);
 }
 
 UTEST(AOS_PROCESS, AOS_FHECF_TEST)
 {
     remove("sa_save_file.bin");
     // Local Variables
-    int32_t  status              = CRYPTO_LIB_SUCCESS;
-    uint8_t *ptr_processed_frame = NULL;
-    uint16_t processed_aos_len;
+    int32_t status = CRYPTO_LIB_SUCCESS;
 
-    for (int i = 0; i < RS_PARITY; i++)
-    {
-        printf("Parity[%d] is: %01X\n", i, parity[i]);
-    }
+    uint16_t processed_aos_len;
 
     // Configure Parameters
     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
@@ -2079,19 +2148,130 @@ UTEST(AOS_PROCESS, AOS_FHECF_TEST)
     ekp               = key_if->get_key(sa_ptr->ekid);
     ekp->key_state    = KEY_ACTIVE;
 
-    status =
-        Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, &ptr_processed_frame, &processed_aos_len);
+    AOS_t *aos_frame;
+    aos_frame = malloc(sizeof(uint8_t) * AOS_SIZE);
+    memset(aos_frame, 0, (sizeof(uint8_t) * AOS_SIZE));
+
+    status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, aos_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-    for (int i = 6; i < 6 + (RS_PARITY / 2); i++) // bytes 6-8 of header
-    {
-        printf("Framed: %02x\nProcessed: %02x\n", (uint8_t) * (framed_aos_b + i), (uint8_t)ptr_processed_frame[i]);
-        ASSERT_EQ((uint8_t)ptr_processed_frame[i], (uint8_t) * (framed_aos_b + i));
-    }
+    printf("Framed: %04x\nProcessed: %04x\n", (uint16_t)(((uint8_t)framed_aos_b[6] << 8) | (uint8_t)framed_aos_b[7]),
+           aos_frame->aos_header.fhecf);
+    ASSERT_EQ(aos_frame->aos_header.fhecf, (uint16_t)(((uint8_t)framed_aos_b[6] << 8) | (uint8_t)framed_aos_b[7]));
+
+    Crypto_aosPrint(aos_frame);
 
     Crypto_Shutdown();
     free(framed_aos_b);
-    free(ptr_processed_frame);
+    free(aos_frame);
+}
+
+UTEST(AOS_PROCESS, AOS_6BYTE_TEST)
+{
+    remove("sa_save_file.bin");
+    // Local Variables
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    uint16_t processed_aos_len;
+
+    // Configure Parameters
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL, CRYPTO_AOS_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // AOS Test
+    GvcidManagedParameters_t AOS_UT_Managed_Parameters = {
+        1, 0x0003, 0, AOS_HAS_FECF, AOS_NO_FHEC, AOS_IZ_NA, 0, AOS_SEGMENT_HDRS_NA, 6, AOS_NO_OCF, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
+    status = Crypto_Init();
+
+    // Test frame setup
+    char *framed_aos_h   = "40C0FEDCBA98";
+    char *framed_aos_b   = NULL;
+    int   framed_aos_len = 0;
+    hex_conversion(framed_aos_h, &framed_aos_b, &framed_aos_len);
+
+    SecurityAssociation_t *sa_ptr = NULL;
+    SaInterface            sa_if  = get_sa_interface_inmemory();
+    sa_if->sa_get_from_spi(10, &sa_ptr); // Disable SPI 10
+    sa_ptr->sa_state = SA_KEYED;
+    sa_if->sa_get_from_spi(5, &sa_ptr); // Enable and setup 5
+    sa_ptr->sa_state  = SA_OPERATIONAL;
+    sa_ptr->est       = 1;
+    sa_ptr->ecs       = CRYPTO_CIPHER_AES256_GCM;
+    sa_ptr->arsn_len  = 0;
+    sa_ptr->shsnf_len = 0;
+
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(sa_ptr->ekid);
+    ekp->key_state    = KEY_ACTIVE;
+
+    AOS_t *aos_frame;
+    aos_frame = malloc(sizeof(uint8_t) * AOS_SIZE);
+    memset(aos_frame, 0, (sizeof(uint8_t) * AOS_SIZE));
+
+    status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, aos_frame, &processed_aos_len);
+    ASSERT_EQ(CRYPTO_LIB_ERR_INVALID_AOS_FRAME_LENGTH, status);
+
+    Crypto_aosPrint(aos_frame);
+
+    Crypto_Shutdown();
+    free(framed_aos_b);
+    free(aos_frame);
+}
+
+UTEST(AOS_PROCESS, AOS_8BYTE_TEST)
+{
+    remove("sa_save_file.bin");
+    // Local Variables
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    uint16_t processed_aos_len;
+
+    // Configure Parameters
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL, CRYPTO_AOS_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                            AOS_CHECK_FECF_FALSE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // AOS Test
+    GvcidManagedParameters_t AOS_UT_Managed_Parameters = {
+        1, 0x0003, 0, AOS_HAS_FECF, AOS_NO_FHEC, AOS_IZ_NA, 0, AOS_SEGMENT_HDRS_NA, 8, AOS_NO_OCF, 1};
+    Crypto_Config_Add_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
+    status = Crypto_Init();
+
+    // Test frame setup
+    char *framed_aos_h   = "40C0FEDCBA987605";
+    char *framed_aos_b   = NULL;
+    int   framed_aos_len = 0;
+    hex_conversion(framed_aos_h, &framed_aos_b, &framed_aos_len);
+
+    SecurityAssociation_t *sa_ptr = NULL;
+    SaInterface            sa_if  = get_sa_interface_inmemory();
+    sa_if->sa_get_from_spi(10, &sa_ptr); // Disable SPI 10
+    sa_ptr->sa_state = SA_KEYED;
+    sa_if->sa_get_from_spi(5, &sa_ptr); // Enable and setup 5
+    sa_ptr->sa_state  = SA_OPERATIONAL;
+    sa_ptr->est       = 1;
+    sa_ptr->ecs       = CRYPTO_CIPHER_AES256_GCM;
+    sa_ptr->arsn_len  = 0;
+    sa_ptr->shsnf_len = 0;
+
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(sa_ptr->ekid);
+    ekp->key_state    = KEY_ACTIVE;
+
+    AOS_t *aos_frame;
+    aos_frame = malloc(sizeof(uint8_t) * AOS_SIZE);
+    memset(aos_frame, 0, (sizeof(uint8_t) * AOS_SIZE));
+
+    status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, aos_frame, &processed_aos_len);
+    ASSERT_EQ(CRYPTO_LIB_ERR_INVALID_AOS_FRAME_LENGTH, status);
+
+    Crypto_aosPrint(aos_frame);
+
+    Crypto_Shutdown();
+    free(framed_aos_b);
+    free(aos_frame);
 }
 
 UTEST_MAIN();

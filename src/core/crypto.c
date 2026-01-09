@@ -46,13 +46,13 @@ SDLS_KEYV_RPLY_t sdls_ep_keyv_reply; // Reply block for challenged keys
 uint8_t          sdls_ep_reply[TC_MAX_FRAME_SIZE];
 CCSDS_t          sdls_frame;
 // TM
-uint8_t                  tm_frame[TM_MAX_FRAME_SIZE]; // TM Global Frame
-TM_FramePrimaryHeader_t  tm_frame_pri_hdr;            // Used to reduce bit math duplication
-TM_FrameSecurityHeader_t tm_frame_sec_hdr;            // Used to reduce bit math duplication
+// TM_t                     tm_frame;                    // TM Global Frame
+TM_FramePrimaryHeader_t  tm_frame_pri_hdr; // Used to reduce bit math duplication
+TM_FrameSecurityHeader_t tm_frame_sec_hdr; // Used to reduce bit math duplication
 // AOS
-uint8_t                   aos_frame[AOS_MAX_FRAME_SIZE]; // AOS Global Frame
-AOS_FramePrimaryHeader_t  aos_frame_pri_hdr;             // Used to reduce bit math duplication
-AOS_FrameSecurityHeader_t aos_frame_sec_hdr;             // Used to reduce bit math duplication
+// uint8_t                   aos_frame[AOS_MAX_FRAME_SIZE]; // AOS Global Frame
+AOS_FramePrimaryHeader_t  aos_frame_pri_hdr; // Used to reduce bit math duplication
+AOS_FrameSecurityHeader_t aos_frame_sec_hdr; // Used to reduce bit math duplication
 // OCF
 uint8_t                    ocf = 0;
 Telemetry_Frame_Ocf_Fsr_t  report;
@@ -72,6 +72,8 @@ uint8_t parity[RS_PARITY];
 //  CRC
 uint32_t crc32Table[CRC32TBL_SIZE];
 uint16_t crc16Table[CRC16TBL_SIZE];
+// Mariadb
+char *mariadb_table_name = "security_associations";
 
 /*
 ** Assisting Functions

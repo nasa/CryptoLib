@@ -58,6 +58,7 @@
 #define CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_EMPTY_RESPONSE             513
 #define CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_DECRYPT_ERROR              514
 #define CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_ENCRYPT_ERROR              515
+#define CRYPTOGRAHPY_KMC_BASE64_DECRYPT_ERROR                      516
 
 #define CAM_CONFIG_NOT_SUPPORTED_ERROR                      600
 #define CAM_INVALID_COOKIE_FILE_CONFIGURATION_NULL          601
@@ -156,15 +157,16 @@
 #define CRYPTO_LIB_ERR_TC_FRAME_LENGTH_MISMATCH                             (-82)
 #define CRYPTO_LIB_ERR_SHPLF_LEN_LESS_THAN_MIN_PAD_SIZE                     (-83)
 #define CRYPTO_LIB_ERR_INVALID_AOS_IZ_LENGTH                                (-84)
+#define CRYPTO_LIB_ERR_INVALID_AOS_FRAME_LENGTH                             (-85)
 
-#define CRYPTO_CORE_ERROR_CODES_MAX -84
+#define CRYPTO_CORE_ERROR_CODES_MAX -85
 
 // Define codes for returning MDB Strings, and determining error based on strings
 #define CAM_ERROR_CODES     600
 #define CAM_ERROR_CODES_MAX 610
 
 #define KMC_ERROR_CODES     500
-#define KMC_ERROR_CODES_MAX 515
+#define KMC_ERROR_CODES_MAX 516
 
 #define CRYPTO_INTERFACE_ERROR_CODES     400
 #define CRYPTO_INTERFACE_ERROR_CODES_MAX 402

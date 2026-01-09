@@ -102,6 +102,10 @@ int32_t Crypto_SC_Init(void)
     status = Crypto_Init();
 
     SecurityAssociation_t *sa_ptr = NULL;
+    if (crypto_config.sa_type == SA_TYPE_MARIADB)
+    {
+        mariadb_table_name = MARIADB_TC_TABLE_NAME;
+    }
     sa_if->sa_get_from_spi(1, &sa_ptr);
     sa_ptr->gvcid_blk.vcid = 0;
     sa_if->sa_get_from_spi(2, &sa_ptr);
@@ -113,6 +117,10 @@ int32_t Crypto_SC_Init(void)
     sa_ptr->abm_len        = ABM_SIZE;
     sa_ptr->shivf_len      = 0;
     sa_ptr->iv_len         = 0;
+    if (crypto_config.sa_type == SA_TYPE_MARIADB)
+    {
+        mariadb_table_name = MARIADB_TM_TABLE_NAME;
+    }
     sa_if->sa_get_from_spi(5, &sa_ptr);
     sa_ptr->sa_state       = SA_OPERATIONAL;
     sa_ptr->shsnf_len      = 0;
@@ -280,14 +288,30 @@ int32_t Crypto_Init(void)
         if (crypto_config.key_type == KEY_TYPE_CUSTOM)
         {
             key_if = get_key_interface_custom();
+            if (key_if == NULL)
+            {
+                return CRYPTO_LIB_ERROR;
+            }
         }
         else if (crypto_config.key_type == KEY_TYPE_INTERNAL)
         {
             key_if = get_key_interface_internal();
+            if (key_if == NULL)
+            {
+                return CRYPTO_LIB_ERROR;
+            }
         }
-        else // KEY_TYPE_KMC
+        else if (crypto_config.key_type == KEY_TYPE_KMC)
         {
             key_if = get_key_interface_kmc();
+            if (key_if == NULL)
+            {
+                return CRYPTO_LIB_ERROR;
+            }
+        }
+        else
+        {
+            return CRYPTO_LIB_ERROR;
         }
     }
     status = key_if->key_init();
@@ -302,14 +326,30 @@ int32_t Crypto_Init(void)
         if (crypto_config.mc_type == MC_TYPE_CUSTOM)
         {
             mc_if = get_mc_interface_custom();
+            if (mc_if == NULL)
+            {
+                return CRYPTO_LIB_ERROR;
+            }
         }
         else if (crypto_config.mc_type == MC_TYPE_DISABLED)
         {
             mc_if = get_mc_interface_disabled();
+            if (mc_if == NULL)
+            {
+                return CRYPTO_LIB_ERROR;
+            }
         }
-        else // MC_TYPE_INTERNAL
+        else if (crypto_config.mc_type == MC_TYPE_INTERNAL)
         {
             mc_if = get_mc_interface_internal();
+            if (mc_if == NULL)
+            {
+                return CRYPTO_LIB_ERROR;
+            }
+        }
+        else
+        {
+            return CRYPTO_LIB_ERROR;
         }
     }
     status = mc_if->mc_initialize();
@@ -325,10 +365,18 @@ int32_t Crypto_Init(void)
         if (crypto_config.sa_type == SA_TYPE_CUSTOM)
         {
             sa_if = get_sa_interface_custom();
+            if (sa_if == NULL)
+            {
+                return CRYPTO_LIB_ERROR;
+            }
         }
         else if (crypto_config.sa_type == SA_TYPE_INMEMORY)
         {
             sa_if = get_sa_interface_inmemory();
+            if (sa_if == NULL)
+            {
+                return CRYPTO_LIB_ERROR;
+            }
         }
         else if (crypto_config.sa_type == SA_TYPE_MARIADB)
         {
@@ -339,6 +387,10 @@ int32_t Crypto_Init(void)
                 return status; // MariaDB connection specified but no configuration exists, return!
             }
             sa_if = get_sa_interface_mariadb();
+            if (sa_if == NULL)
+            {
+                return CRYPTO_LIB_ERROR;
+            }
         }
         else
         {
@@ -699,8 +751,8 @@ int32_t Crypto_Config_Cam(uint8_t cam_enabled, char *cookie_file_path, char *key
                           char *access_manager_uri, char *username, char *cam_home)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    cam_config     = (CamConfig_t *)calloc(1, CAM_CONFIG_SIZE);
 
+    cam_config = (CamConfig_t *)calloc(1, CAM_CONFIG_SIZE);
     if (cam_config == NULL)
     {
         return CRYPTO_LIB_ERROR;
@@ -708,10 +760,15 @@ int32_t Crypto_Config_Cam(uint8_t cam_enabled, char *cookie_file_path, char *key
 
     if (Crypto_is_safe_username(username) != CRYPTO_LIB_SUCCESS)
     {
+        free(cam_config);
+        cam_config = NULL;
         return CAM_CONFIG_NOT_SUPPORTED_ERROR;
     }
+
     if (Crypto_is_safe_path(keytab_file_path) != CRYPTO_LIB_SUCCESS)
     {
+        free(cam_config);
+        cam_config = NULL;
         return CAM_CONFIG_NOT_SUPPORTED_ERROR;
     }
 
@@ -753,7 +810,7 @@ int32_t Crypto_Config_Cam(uint8_t cam_enabled, char *cookie_file_path, char *key
 int32_t Crypto_Config_Add_Gvcid_Managed_Parameters(GvcidManagedParameters_t gvcid_managed_parameters_struct)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    if (gvcid_counter > GVCID_MAN_PARAM_SIZE)
+    if (gvcid_counter >= GVCID_MAN_PARAM_SIZE)
     {
         status = CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT;
     }

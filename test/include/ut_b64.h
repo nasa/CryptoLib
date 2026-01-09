@@ -16,8 +16,8 @@
    jstar-development-team@mail.nasa.gov
 */
 
-#ifndef CRYPTOLIB_UT_MARIADB_H
-#define CRYPTOLIB_UT_MARIADB_H
+#ifndef CRYPTOLIB_UT_B64_H
+#define CRYPTOLIB_UT_B64_H
 
 #ifdef __cplusplus
 extern "C"
@@ -31,4 +31,4 @@ extern "C"
 } /* Close scope of 'extern "C"' declaration which encloses file. */
 #endif
 
-#endif // CRYPTOLIB_UT_MARIA_DB_H
+#endif // CRYPTOLIB_UT_B64_H
