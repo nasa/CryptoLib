@@ -842,7 +842,7 @@ int32_t Crytpo_TC_Validate_TC_Temp_Header(const uint16_t in_frame_length, TC_Fra
     }
     if (crypto_config.sa_type == SA_TYPE_MARIADB)
     {
-        mariadb_table_name = MARIADB_TC_TABLE_NAME;
+        strncpy(mariadb_table_name, MARIADB_TC_TABLE_NAME, sizeof(mariadb_table_name));
     }
     status = sa_if->sa_get_operational_sa_from_gvcid(temp_tc_header.tfvn, temp_tc_header.scid, temp_tc_header.vcid,
                                                      *map_id, sa_ptr);
@@ -1831,7 +1831,7 @@ uint32_t Crypto_TC_Sanity_Validations(TC_t *tc_sdls_processed_frame, SecurityAss
 
     if (crypto_config.sa_type == SA_TYPE_MARIADB)
     {
-        mariadb_table_name = MARIADB_TC_TABLE_NAME;
+        strncpy(mariadb_table_name, MARIADB_TC_TABLE_NAME, sizeof(mariadb_table_name));
     }
     status = sa_if->sa_get_from_spi(tc_sdls_processed_frame->tc_sec_header.spi, sa_ptr);
     // If no valid SPI, return

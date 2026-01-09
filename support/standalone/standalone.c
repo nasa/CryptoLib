@@ -609,7 +609,7 @@ void *crypto_standalone_tc_apply(void *socks)
     return tc_read_sock;
 }
 
-void crypto_standalone_tm_frame(uint8_t *in_data, uint16_t in_length, uint8_t *out_data, uint16_t *out_length,
+void crypto_standalone_tm_frame(TM_t *in_data, uint16_t in_length, uint8_t *out_data, uint16_t *out_length,
                                 uint16_t spi)
 {
     SaInterface            sa_if  = get_sa_interface_inmemory();
@@ -640,7 +640,7 @@ void crypto_standalone_tm_frame(uint8_t *in_data, uint16_t in_length, uint8_t *o
     *out_length = (uint16_t)in_length - header_length - trailer_length;
 
     /* TM Header */
-    memcpy(out_data, &in_data[header_length], in_length - header_length - trailer_length);
+    memcpy(out_data, &in_data->tm_header, in_length - header_length - trailer_length);
 }
 
 void crypto_standalone_tm_debug_recv(int32_t status, int tm_process_len, uint8_t *tm_process_in)
@@ -670,30 +670,33 @@ void crypto_standalone_tm_debug_process(uint8_t *tm_process_in)
     }
 }
 
-void crypto_standalone_spp_telem_or_idle(int32_t *status, uint8_t *tm_ptr, uint16_t *spp_len, udp_interface_t *tm_socks,
+void crypto_standalone_spp_telem_or_idle(int32_t *status, TM_t *tm_ptr, uint16_t *spp_len, udp_interface_t *tm_socks,
                                          int *tm_process_len)
 {
     udp_info_t *tm_write_sock = &tm_socks->write;
 
-    if ((tm_ptr[0] == 0x08) || (tm_ptr[0] == 0x09) || ((tm_ptr[0] == 0x07) && (tm_ptr[1] == 0xff)) ||
-        (tm_ptr[0] == 0x0F && tm_ptr[1] == 0xFD))
+    if (((tm_ptr->tm_pdu[0]) == 0x08) || ((tm_ptr->tm_pdu[0]) == 0x09) ||
+        (((tm_ptr->tm_pdu[0]) == 0x07) && ((tm_ptr->tm_pdu[1]) == 0xff)) ||
+        ((tm_ptr->tm_pdu[0]) == 0x0F && (tm_ptr->tm_pdu[1]) == 0xFD))
     {
-        *spp_len = (((0xFFFF & tm_ptr[4]) << 8) | tm_ptr[5]) + 7;
-#ifdef CRYPTO_STANDALONE_TM_PROCESS_DEBUG
-        printf("crypto_standalone_tm_process - SPP[%d]: 0x", *spp_len);
-        for (int i = 0; i < *spp_len; i++)
+        *spp_len = ((((tm_ptr->tm_pdu[4])) << 8) | (tm_ptr->tm_pdu[5])) + 7;
+        if (tm_debug)
         {
-            printf("%02x", tm_ptr[i]);
+            printf("crypto_standalone_tm_process - SPP[%d]: 0x", *spp_len);
+            for (int i = 0; i < *spp_len; i++)
+            {
+                printf("%02x", tm_ptr->tm_pdu[i]);
+            }
+            printf("\n");
         }
-        printf("\n");
-#endif
         // Send all SPP telemetry packets
         // 0x09 for HK/Device TLM Packets (Generic Components)
         // 0x0FFD = CFDP
-        if (tm_ptr[0] == 0x08 || tm_ptr[0] == 0x09 || (tm_ptr[0] == 0x0f && tm_ptr[1] == 0xfd))
+        if ((tm_ptr->tm_pdu[0]) == 0x08 || (tm_ptr->tm_pdu[0]) == 0x09 ||
+            ((tm_ptr->tm_pdu[0]) == 0x0f && (tm_ptr->tm_pdu[1]) == 0xfd))
         {
-            *status = sendto(tm_write_sock->sockfd, tm_ptr, *spp_len, 0, (struct sockaddr *)&tm_write_sock->saddr,
-                             sizeof(tm_write_sock->saddr));
+            *status = sendto(tm_write_sock->sockfd, tm_ptr->tm_pdu, *spp_len, 0,
+                             (struct sockaddr *)&tm_write_sock->saddr, sizeof(tm_write_sock->saddr));
         }
         // Only send idle packets if configured to do so
         else
@@ -702,8 +705,8 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status, uint8_t *tm_ptr, uint1
             // Don't forward idle packets
             *status = *spp_len;
 #else
-            *status = sendto(tm_write_sock->sockfd, tm_ptr, *spp_len, 0, (struct sockaddr *)&tm_write_sock->saddr,
-                             sizeof(tm_write_sock->saddr));
+            *status = sendto(tm_write_sock->sockfd, tm_ptr->tm_pdu, *spp_len, 0,
+                             (struct sockaddr *)&tm_write_sock->saddr, sizeof(tm_write_sock->saddr));
 #endif
         }
 
@@ -715,8 +718,10 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status, uint8_t *tm_ptr, uint1
 
         *tm_process_len -= *spp_len;
     }
-    else if ((tm_ptr[0] == 0xFF && tm_ptr[1] == 0x48) || (tm_ptr[0] == 0x00 && tm_ptr[1] == 0x00) ||
-             (tm_ptr[0] == 0x02 && tm_ptr[1] == 0x00) || (tm_ptr[0] == 0xFF && tm_ptr[1] == 0xFF))
+    else if (((tm_ptr->tm_pdu[0]) == 0xFF && (tm_ptr->tm_pdu[1]) == 0x48) ||
+             ((tm_ptr->tm_pdu[0]) == 0x00 && (tm_ptr->tm_pdu[1]) == 0x00) ||
+             ((tm_ptr->tm_pdu[0]) == 0x02 && (tm_ptr->tm_pdu[1]) == 0x00) ||
+             ((tm_ptr->tm_pdu[0]) == 0xFF && (tm_ptr->tm_pdu[1]) == 0xFF))
     {
         // TODO: Why 0x0200?
         // Idle Frame
@@ -725,7 +730,7 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status, uint8_t *tm_ptr, uint1
         // Don't forward idle frame
         *status = *spp_len;
 #else
-        *status = sendto(tm_write_sock->sockfd, tm_ptr, *spp_len, 0, (struct sockaddr *)&tm_write_sock->saddr,
+        *status = sendto(tm_write_sock->sockfd, tm_ptr->tm_pdu, *spp_len, 0, (struct sockaddr *)&tm_write_sock->saddr,
                          sizeof(tm_write_sock->saddr));
         if ((*status == -1) || (*status != *spp_len))
         {
@@ -737,7 +742,7 @@ void crypto_standalone_spp_telem_or_idle(int32_t *status, uint8_t *tm_ptr, uint1
     else
     {
         printf("crypto_standalone_tm_process - SPP loop error, expected idle packet or frame! tm_ptr = 0x%02x%02x \n",
-               tm_ptr[0], tm_ptr[1]);
+               tm_ptr->tm_pdu[0], tm_ptr->tm_pdu[1]);
         *tm_process_len = 0;
     }
 }
@@ -752,12 +757,13 @@ void *crypto_standalone_tm_process(void *socks)
     uint8_t  tm_process_in[TM_CADU_SIZE]; // Accounts for ASM automatically based on #def
     int      tm_process_len = 0;
     uint16_t spp_len        = 0;
-    uint8_t *tm_ptr;
+    TM_t    *tm_ptr         = malloc(sizeof(TM_t));
+    // AOS_t   *aos_ptr;
     uint16_t tm_out_len = 0;
 
 #ifdef CRYPTO_STANDALONE_HANDLE_FRAMING
-    uint8_t  tm_framed[TM_CADU_SIZE];
-    uint16_t tm_framed_len = 0;
+    // uint8_t  tm_framed[TM_CADU_SIZE];
+    // uint16_t tm_framed_len = 0;
 #endif
 
     int sockaddr_size = sizeof(struct sockaddr_in);
@@ -790,16 +796,16 @@ void *crypto_standalone_tm_process(void *socks)
             // Account for ASM length
             if (tm_process_in[4] == 0x40)
             {
-                status = Crypto_AOS_ProcessSecurity(tm_process_in + 4, (const uint16_t)tm_process_len - 4, &tm_ptr,
-                                                    &tm_out_len);
-                if (status != 0)
-                {
-                    printf("Crypto_AOS_ProcessSecurity Failed with status = %d\n", status);
-                }
+                // status = Crypto_AOS_ProcessSecurity(tm_process_in + 4, (const uint16_t)tm_process_len - 4, tm_ptr,
+                //                                     &tm_out_len);
+                // if (status != 0)
+                // {
+                //     printf("Crypto_AOS_ProcessSecurity Failed with status = %d\n", status);
+                // }
             }
             else
             {
-                status = Crypto_TM_ProcessSecurity(tm_process_in + 4, (const uint16_t)tm_process_len - 4, &tm_ptr,
+                status = Crypto_TM_ProcessSecurity(tm_process_in + 4, (const uint16_t)tm_process_len - 4, tm_ptr,
                                                    &tm_out_len);
                 if (status != 0)
                 {
@@ -821,16 +827,18 @@ void *crypto_standalone_tm_process(void *socks)
             {
                 if (tm_debug == 1)
                 {
-                    if ((tm_ptr[4] == 0x07) && (tm_ptr[5] == 0xFF))
+                    if ((tm_ptr->tm_header.fhp >> 8 == 0x07) &&
+                        (((tm_ptr->tm_header.fhp & 0x00FF) == 0xFF) || (tm_ptr->tm_header.fhp & 0x00FF) == 0xFE))
                     {
+                        printf("OID Frame...\n");
                         // OID Frame
                     }
                     else
                     {
                         printf("crypto_standalone_tm_process: 1 - status = %d, decrypted[%d]: 0x", status, tm_out_len);
-                        for (int i = 0; i < tm_out_len; i++)
+                        for (int i = 0; i < tm_ptr->tm_pdu_len; i++)
                         {
-                            printf("%02x", tm_ptr[i]);
+                            printf("%02x", tm_ptr->tm_pdu[i]);
                         }
                         printf("\n");
                     }
@@ -839,36 +847,38 @@ void *crypto_standalone_tm_process(void *socks)
 /* Frame */
 #ifdef CRYPTO_STANDALONE_HANDLE_FRAMING
 #ifdef TM_CADU_HAS_ASM
-                uint16_t spi = (tm_process_in[10] << 8) | tm_process_in[11];
-                crypto_standalone_tm_frame(tm_ptr, tm_out_len, tm_framed, &tm_framed_len, spi);
+                // uint16_t spi = (tm_ptr->tm_sec_header.spi);
+                // crypto_standalone_tm_frame(tm_ptr, tm_out_len, tm_framed, &tm_framed_len, spi);
 #else
-                uint16_t spi = (tm_process_in[6] << 8) | tm_process_in[7];
-                crypto_standalone_tm_frame(tm_process_in, tm_process_len, tm_framed, &tm_framed_len, spi);
+                // uint16_t spi = (tm_ptr->tm_sec_header.spi);
+                // crypto_standalone_tm_frame(tm_process_in, tm_process_len, tm_framed, &tm_framed_len, spi);
 #endif
-                memcpy(tm_process_in, tm_framed, tm_framed_len);
-                tm_process_len = tm_framed_len;
-                tm_framed_len  = 0;
+                // memcpy(tm_process_in, tm_framed, tm_framed_len);
+                // tm_process_len = tm_framed_len;
+                // tm_framed_len  = 0;
 
                 if (tm_debug == 1)
                 // Note: Need logic to allow broken packet assembly
                 {
                     printf("crypto_standalone_tm_process: 2 - beginning after first header pointer - deframed[%d]: 0x",
-                           tm_process_len);
-                    for (int i = 0; i < tm_process_len; i++)
+                           tm_ptr->tm_pdu_len);
+                    for (int i = 0; i < tm_ptr->tm_pdu_len; i++)
                     {
-                        printf("%02x", tm_framed[i]);
+                        printf("%02x", tm_ptr->tm_pdu[i]);
                     }
                     printf("\n");
                 }
 #endif
 
                 /* Space Packet Protocol Loop */
-                tm_ptr = &tm_process_in[0];
+                // memcpy(tm_ptr->tm_pdu, &tm_ptr->tm_pdu[spp_len], spp_len);
+                tm_process_len = tm_ptr->tm_pdu_len;
                 while (tm_process_len > 5)
                 {
                     // SPP Telemetry OR SPP Idle Packet
                     crypto_standalone_spp_telem_or_idle(&status, tm_ptr, &spp_len, tm_socks, &tm_process_len);
-                    tm_ptr = &tm_ptr[spp_len];
+                    // tm_ptr->tm_pdu[0] = &tm_ptr->tm_pdu[spp_len];
+                    memmove(tm_ptr->tm_pdu, tm_ptr->tm_pdu + spp_len, tm_process_len);
                 }
             }
             else
@@ -877,9 +887,9 @@ void *crypto_standalone_tm_process(void *socks)
             }
 
             /* Reset */
-            memset(tm_process_in, 0x00, sizeof(tm_process_in));
-            tm_process_len = 0;
-            memset(tm_ptr, 0x00, sizeof(tm_process_in));
+            // memset(tm_process_in, 0x00, sizeof(tm_process_in));
+            // tm_process_len = 0;
+            // memset(tm_ptr, 0x00, sizeof(tm_process_in));
 #ifdef CRYPTO_STANDALONE_TM_PROCESS_DEBUG
             printf("\n");
 #endif
@@ -888,6 +898,7 @@ void *crypto_standalone_tm_process(void *socks)
         /* Delay */
         usleep(10);
     }
+    free(tm_ptr);
     close(tm_read_sock->sockfd);
     close(tm_write_sock->sockfd);
     return tm_read_sock;
