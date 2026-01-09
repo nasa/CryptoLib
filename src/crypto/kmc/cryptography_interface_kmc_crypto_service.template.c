@@ -479,9 +479,16 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
 
     /* JSON Response Handling End */
 
-    uint8_t *ciphertext_decoded     = malloc((len_data_out)*2 + 1);
+    uint16_t decoded_buffer_size    = (len_data_out)*2 + 1;
+    uint8_t *ciphertext_decoded     = malloc(decoded_buffer_size);
     size_t   ciphertext_decoded_len = 0;
-    base64Decode(ciphertext_base64, strlen(ciphertext_base64), ciphertext_decoded, &ciphertext_decoded_len);
+    if (base64Decode(ciphertext_base64, strlen(ciphertext_base64), ciphertext_decoded, decoded_buffer_size,
+                     &ciphertext_decoded_len) != 0)
+    {
+        free(chunk_write);
+        free(ciphertext_decoded);
+        return CRYPTOGRAHPY_KMC_BASE64_DECRYPT_ERROR;
+    }
 #ifdef DEBUG
     printf("Decoded Cipher Text Length: %ld\n", ciphertext_decoded_len);
     printf("Decoded Cipher Text: \n");
@@ -685,9 +692,16 @@ static int32_t cryptography_decrypt(uint8_t *data_out, size_t len_data_out, uint
 
     /* JSON Response Handling End */
 
-    uint8_t *cleartext_decoded     = malloc((len_data_out)*2 + 1);
+    uint16_t decoded_buffer_size   = (len_data_out)*2 + 1;
+    uint8_t *cleartext_decoded     = malloc(decoded_buffer_size);
     size_t   cleartext_decoded_len = 0;
-    base64Decode(cleartext_base64, strlen(cleartext_base64), cleartext_decoded, &cleartext_decoded_len);
+    if (base64Decode(cleartext_base64, strlen(cleartext_base64), cleartext_decoded, decoded_buffer_size,
+                     &cleartext_decoded_len) != 0)
+    {
+        free(chunk_write);
+        free(cleartext_decoded);
+        return CRYPTOGRAHPY_KMC_BASE64_DECRYPT_ERROR;
+    }
 #ifdef DEBUG
     printf("Decoded Cipher Text Length: %ld\n", cleartext_decoded_len);
     printf("Decoded Cipher Text: \n");
@@ -1528,9 +1542,16 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
 
     /* JSON Response Handling End */
 
+    uint16_t decoded_buffer_size    = (len_data_out + mac_size + aad_len) * 2 + 1;
     uint8_t *ciphertext_decoded     = malloc((len_data_out + mac_size + aad_len) * 2 + 1);
     size_t   ciphertext_decoded_len = 0;
-    base64Decode(ciphertext_base64, strlen(ciphertext_base64), ciphertext_decoded, &ciphertext_decoded_len);
+    if (base64Decode(ciphertext_base64, strlen(ciphertext_base64), ciphertext_decoded, decoded_buffer_size,
+                     &ciphertext_decoded_len) != 0)
+    {
+        free(chunk_write);
+        free(ciphertext_base64);
+        return CRYPTOGRAHPY_KMC_BASE64_DECRYPT_ERROR;
+    }
 #ifdef DEBUG
     printf("Mac size: %d\n", mac_size);
     printf("Decoded Cipher Text Length: %ld\n", ciphertext_decoded_len);
@@ -1836,9 +1857,16 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
 
     /* JSON Response Handling End */
 
+    uint16_t decoded_buffer_size   = (len_data_out + mac_size + aad_len) * 2 + 1;
     uint8_t *cleartext_decoded     = malloc((len_data_out + mac_size + aad_len) * 2 + 1);
     size_t   cleartext_decoded_len = 0;
-    base64Decode(cleartext_base64, strlen(cleartext_base64), cleartext_decoded, &cleartext_decoded_len);
+    if (base64Decode(cleartext_base64, strlen(cleartext_base64), cleartext_decoded, decoded_buffer_size,
+                     &cleartext_decoded_len) != 0)
+    {
+        free(chunk_write);
+        free(cleartext_base64);
+        return CRYPTOGRAHPY_KMC_BASE64_DECRYPT_ERROR;
+    }
 #ifdef DEBUG
     printf("Decoded Cipher Text Length: %ld\n", cleartext_decoded_len);
     printf("Decoded Cipher Text: \n");

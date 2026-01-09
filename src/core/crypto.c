@@ -50,9 +50,9 @@ CCSDS_t          sdls_frame;
 TM_FramePrimaryHeader_t  tm_frame_pri_hdr; // Used to reduce bit math duplication
 TM_FrameSecurityHeader_t tm_frame_sec_hdr; // Used to reduce bit math duplication
 // AOS
-uint8_t                   aos_frame[AOS_MAX_FRAME_SIZE]; // AOS Global Frame
-AOS_FramePrimaryHeader_t  aos_frame_pri_hdr;             // Used to reduce bit math duplication
-AOS_FrameSecurityHeader_t aos_frame_sec_hdr;             // Used to reduce bit math duplication
+// uint8_t                   aos_frame[AOS_MAX_FRAME_SIZE]; // AOS Global Frame
+AOS_FramePrimaryHeader_t  aos_frame_pri_hdr; // Used to reduce bit math duplication
+AOS_FrameSecurityHeader_t aos_frame_sec_hdr; // Used to reduce bit math duplication
 // OCF
 uint8_t                    ocf = 0;
 Telemetry_Frame_Ocf_Fsr_t  report;
@@ -73,7 +73,7 @@ uint8_t parity[RS_PARITY];
 uint32_t crc32Table[CRC32TBL_SIZE];
 uint16_t crc16Table[CRC16TBL_SIZE];
 // Mariadb
-char *mariadb_table_name = "security_associations";
+char mariadb_table_name[] = "security_associations";
 
 /*
 ** Assisting Functions

@@ -350,7 +350,7 @@ extern CryptoConfigTC_t                      crypto_config_tc;
 extern CryptoConfigTM_t                      crypto_config_tm;
 extern CryptoConfigAOS_t                     crypto_config_aos;
 extern SadbMariaDBConfig_t                  *sa_mariadb_config;
-extern char                                 *mariadb_table_name;
+extern char                                  mariadb_table_name[26];
 extern CryptographyKmcCryptoServiceConfig_t *cryptography_kmc_crypto_config;
 extern CamConfig_t                          *cam_config;
 extern TCGvcidManagedParameters_t            tc_gvcid_managed_parameters_array[GVCID_MAX_PARAM_SIZE];

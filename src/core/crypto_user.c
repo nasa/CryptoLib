@@ -177,7 +177,7 @@ int32_t Crypto_User_ModifyVCID(void)
     // TODO: This is not correct
     if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
     {
-        mariadb_table_name = MARIADB_TC_TABLE_NAME;
+        strncpy(mariadb_table_name, MARIADB_TC_TABLE_NAME, sizeof(mariadb_table_name));
     }
 
     for (i = 0; i < NUM_GVCID; i++)
