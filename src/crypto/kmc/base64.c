@@ -174,7 +174,8 @@ void base64Encode(const void *input, size_t inputLen, char_t *output, size_t *ou
  * @return Error code
  **/
 
-int32_t base64Decode(const char_t *input, size_t inputLen, void *output, uint16_t decoded_buffer_size, size_t *outputLen)
+int32_t base64Decode(const char_t *input, size_t inputLen, void *output, uint16_t decoded_buffer_size,
+                     size_t *outputLen)
 {
     int32_t  error;
     uint32_t value;
@@ -196,10 +197,10 @@ int32_t base64Decode(const char_t *input, size_t inputLen, void *output, uint16_
 
     // Check expected output buffer size is large enough for decoded input
     uint16_t outputLen_expected = 0;
-    uint8_t padding = 0;
-    if (inputLen >= 1 && input[inputLen-1] == '=')
+    uint8_t  padding            = 0;
+    if (inputLen >= 1 && input[inputLen - 1] == '=')
         padding++;
-    if (inputLen >= 2 && input[inputLen-2] == '=')
+    if (inputLen >= 2 && input[inputLen - 2] == '=')
         padding++;
     outputLen_expected = ((inputLen * 3) / 4) - padding;
 

@@ -479,10 +479,11 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
 
     /* JSON Response Handling End */
 
-    uint16_t decoded_buffer_size = (len_data_out)*2 + 1;
+    uint16_t decoded_buffer_size    = (len_data_out)*2 + 1;
     uint8_t *ciphertext_decoded     = malloc(decoded_buffer_size);
     size_t   ciphertext_decoded_len = 0;
-    if (base64Decode(ciphertext_base64, strlen(ciphertext_base64), ciphertext_decoded, decoded_buffer_size, &ciphertext_decoded_len) != 0)
+    if (base64Decode(ciphertext_base64, strlen(ciphertext_base64), ciphertext_decoded, decoded_buffer_size,
+                     &ciphertext_decoded_len) != 0)
     {
         free(chunk_write);
         free(ciphertext_decoded);
@@ -691,10 +692,11 @@ static int32_t cryptography_decrypt(uint8_t *data_out, size_t len_data_out, uint
 
     /* JSON Response Handling End */
 
-    uint16_t decoded_buffer_size = (len_data_out)*2 + 1;
+    uint16_t decoded_buffer_size   = (len_data_out)*2 + 1;
     uint8_t *cleartext_decoded     = malloc(decoded_buffer_size);
     size_t   cleartext_decoded_len = 0;
-    if (base64Decode(cleartext_base64, strlen(cleartext_base64), cleartext_decoded, decoded_buffer_size, &cleartext_decoded_len) != 0)
+    if (base64Decode(cleartext_base64, strlen(cleartext_base64), cleartext_decoded, decoded_buffer_size,
+                     &cleartext_decoded_len) != 0)
     {
         free(chunk_write);
         free(cleartext_decoded);
@@ -1540,10 +1542,11 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
 
     /* JSON Response Handling End */
 
-    uint16_t decoded_buffer_size = (len_data_out + mac_size + aad_len) * 2 + 1;
+    uint16_t decoded_buffer_size    = (len_data_out + mac_size + aad_len) * 2 + 1;
     uint8_t *ciphertext_decoded     = malloc((len_data_out + mac_size + aad_len) * 2 + 1);
     size_t   ciphertext_decoded_len = 0;
-    if (base64Decode(ciphertext_base64, strlen(ciphertext_base64), ciphertext_decoded, decoded_buffer_size,  &ciphertext_decoded_len) != 0)
+    if (base64Decode(ciphertext_base64, strlen(ciphertext_base64), ciphertext_decoded, decoded_buffer_size,
+                     &ciphertext_decoded_len) != 0)
     {
         free(chunk_write);
         free(ciphertext_base64);
@@ -1854,10 +1857,11 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
 
     /* JSON Response Handling End */
 
-    uint16_t decoded_buffer_size = (len_data_out + mac_size + aad_len) * 2 + 1;
+    uint16_t decoded_buffer_size   = (len_data_out + mac_size + aad_len) * 2 + 1;
     uint8_t *cleartext_decoded     = malloc((len_data_out + mac_size + aad_len) * 2 + 1);
     size_t   cleartext_decoded_len = 0;
-    if (base64Decode(cleartext_base64, strlen(cleartext_base64), cleartext_decoded, decoded_buffer_size, &cleartext_decoded_len) != 0)
+    if (base64Decode(cleartext_base64, strlen(cleartext_base64), cleartext_decoded, decoded_buffer_size,
+                     &cleartext_decoded_len) != 0)
     {
         free(chunk_write);
         free(cleartext_base64);

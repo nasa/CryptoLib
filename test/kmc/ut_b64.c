@@ -41,14 +41,14 @@ static const uint8_t base64DecTable[128] = {
     0xFF, 0xFF, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2A,
     0x2B, 0x2C, 0x2D, 0x2E, 0x2F, 0x30, 0x31, 0x32, 0x33, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
-
 #define ERROR_INVALID_PARAMETER 21
 #define ERROR_INVALID_LENGTH    22
 #define ERROR_INVALID_CHARACTER 23
 #define NO_ERROR                0
 
 // local copy of function from base64.c
-int32_t base64Decode(const char_t *input, size_t inputLen, void *output, uint16_t decoded_buffer_size, size_t *outputLen)
+int32_t base64Decode(const char_t *input, size_t inputLen, void *output, uint16_t decoded_buffer_size,
+                     size_t *outputLen)
 {
     int32_t  error;
     uint32_t value;
@@ -70,17 +70,18 @@ int32_t base64Decode(const char_t *input, size_t inputLen, void *output, uint16_
 
     // Check expected output buffer size is large enough for decoded input
     uint16_t outputLen_expected = 0;
-    uint8_t padding = 0;
-    if (inputLen >= 1 && input[inputLen-1] == '=')
+    uint8_t  padding            = 0;
+    if (inputLen >= 1 && input[inputLen - 1] == '=')
         padding++;
-    if (inputLen >= 2 && input[inputLen-2] == '=')
+    if (inputLen >= 2 && input[inputLen - 2] == '=')
         padding++;
     outputLen_expected = ((inputLen * 3) / 4) - padding;
 
     // Special debug prints for UT
     printf("InputLen: %ld\n \
         Expected Dec Buf Length: %d\n \
-        Passed In Dec Length: %d\n", inputLen, outputLen_expected, decoded_buffer_size);
+        Passed In Dec Length: %d\n",
+           inputLen, outputLen_expected, decoded_buffer_size);
 
     if (decoded_buffer_size < outputLen_expected)
         return ERROR_INVALID_LENGTH;
@@ -194,26 +195,28 @@ int32_t base64Decode(const char_t *input, size_t inputLen, void *output, uint16_
 
 UTEST(CRYPTO_B64, OVERSIZE_DECODE)
 {
-    int32_t  status = CRYPTO_LIB_ERROR;
+    int32_t status = CRYPTO_LIB_ERROR;
 
     // Success Case, This_one_is_just_the_right_size (len = 31)
-    char *ciphertext_base64         = "VGhpc19vbmVfaXNfanVzdF90aGVfcmlnaHRfc2l6ZQ==";
-    uint8_t len_data_out            = 15;
+    char    *ciphertext_base64      = "VGhpc19vbmVfaXNfanVzdF90aGVfcmlnaHRfc2l6ZQ==";
+    uint8_t  len_data_out           = 15;
     uint16_t decoded_buffer_size    = (len_data_out)*2 + 1; // 31
     uint8_t *ciphertext_decoded     = malloc(decoded_buffer_size);
     size_t   ciphertext_decoded_len = 0;
-    status = base64Decode(ciphertext_base64, strlen(ciphertext_base64), ciphertext_decoded, decoded_buffer_size, &ciphertext_decoded_len);
+    status = base64Decode(ciphertext_base64, strlen(ciphertext_base64), ciphertext_decoded, decoded_buffer_size,
+                          &ciphertext_decoded_len);
     printf("Status: %d\n\n", status);
     free(ciphertext_decoded);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Success Case, This_one_allocates_too_much (len = 27)
-    ciphertext_base64         = "VGhpc19vbmVfYWxsb2NhdGVzX3Rvb19tdWNo";
-    len_data_out            = 15;
+    ciphertext_base64      = "VGhpc19vbmVfYWxsb2NhdGVzX3Rvb19tdWNo";
+    len_data_out           = 15;
     decoded_buffer_size    = (len_data_out)*2 + 1; // 31
     ciphertext_decoded     = malloc(decoded_buffer_size);
     ciphertext_decoded_len = 0;
-    status = base64Decode(ciphertext_base64, strlen(ciphertext_base64), ciphertext_decoded, decoded_buffer_size, &ciphertext_decoded_len);
+    status = base64Decode(ciphertext_base64, strlen(ciphertext_base64), ciphertext_decoded, decoded_buffer_size,
+                          &ciphertext_decoded_len);
     printf("Status: %d\n\n", status);
     free(ciphertext_decoded);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -224,7 +227,8 @@ UTEST(CRYPTO_B64, OVERSIZE_DECODE)
     decoded_buffer_size    = (len_data_out)*2 + 1;
     ciphertext_decoded     = malloc(decoded_buffer_size);
     ciphertext_decoded_len = 0;
-    status = base64Decode(ciphertext_base64, strlen(ciphertext_base64), ciphertext_decoded, decoded_buffer_size, &ciphertext_decoded_len);
+    status = base64Decode(ciphertext_base64, strlen(ciphertext_base64), ciphertext_decoded, decoded_buffer_size,
+                          &ciphertext_decoded_len);
     printf("Status: %d\n\n", status);
     free(ciphertext_decoded);
     ASSERT_EQ(ERROR_INVALID_LENGTH, status);
@@ -235,7 +239,8 @@ UTEST(CRYPTO_B64, OVERSIZE_DECODE)
     decoded_buffer_size    = (len_data_out)*2 + 1;
     ciphertext_decoded     = malloc(decoded_buffer_size);
     ciphertext_decoded_len = 0;
-    status = base64Decode(ciphertext_base64, strlen(ciphertext_base64), ciphertext_decoded, decoded_buffer_size, &ciphertext_decoded_len);
+    status = base64Decode(ciphertext_base64, strlen(ciphertext_base64), ciphertext_decoded, decoded_buffer_size,
+                          &ciphertext_decoded_len);
     printf("Status: %d\n\n", status);
     free(ciphertext_decoded);
     ASSERT_EQ(ERROR_INVALID_LENGTH, status);
