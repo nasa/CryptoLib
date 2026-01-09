@@ -823,7 +823,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
 
     if (crypto_config.sa_type == SA_TYPE_MARIADB)
     {
-        mariadb_table_name = MARIADB_TM_TABLE_NAME;
+        strncpy(mariadb_table_name, MARIADB_TM_TABLE_NAME, sizeof(mariadb_table_name));
     }
     status = sa_if->sa_get_operational_sa_from_gvcid(tfvn, scid, vcid, 0, &sa_ptr);
 
@@ -1750,7 +1750,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
 
         if (crypto_config.sa_type == SA_TYPE_MARIADB)
         {
-            mariadb_table_name = MARIADB_TM_TABLE_NAME;
+            strncpy(mariadb_table_name, MARIADB_TM_TABLE_NAME, sizeof(mariadb_table_name));
         }
         status = sa_if->sa_get_from_spi(spi, &sa_ptr);
     }
