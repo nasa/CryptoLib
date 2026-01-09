@@ -124,8 +124,8 @@ extern "C"
     int32_t crypto_host_to_ip(const char *hostname, char *ip);
     int32_t crypto_standalone_udp_init(udp_info_t *sock, int32_t port, uint8_t bind_sock);
     int32_t crypto_reset(void);
-    void    crypto_standalone_spp_telem_or_idle(int32_t *status, TM_t *tm_ptr, uint16_t *spp_len, udp_interface_t *tm_socks,
-                                         int *tm_process_len);
+    void    crypto_standalone_spp_telem_or_idle(int32_t *status, TM_t *tm_ptr, uint16_t *spp_len,
+                                                udp_interface_t *tm_socks, int *tm_process_len);
     void    crypto_standalone_tc_frame(uint8_t *in_data, uint16_t in_length, uint8_t *out_data, uint16_t *out_length);
     void   *crypto_standalone_tc_apply(void *socks);
     void    crypto_standalone_tm_frame(TM_t *in_data, uint16_t in_length, uint8_t *out_data, uint16_t *out_length,

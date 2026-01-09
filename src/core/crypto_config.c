@@ -104,7 +104,7 @@ int32_t Crypto_SC_Init(void)
     SecurityAssociation_t *sa_ptr = NULL;
     if (crypto_config.sa_type == SA_TYPE_MARIADB)
     {
-        //mariadb_table_name = MARIADB_TC_TABLE_NAME;
+        // mariadb_table_name = MARIADB_TC_TABLE_NAME;
         strncpy(mariadb_table_name, MARIADB_TC_TABLE_NAME, sizeof(mariadb_table_name));
     }
     sa_if->sa_get_from_spi(1, &sa_ptr);
