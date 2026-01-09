@@ -100,6 +100,6 @@ void Crypto_binprint(void *c, size_t n);
  * @param managed_parameters: GvcidManagedParameters_t*, The binary array to be printed.
  * @param print_children: uint8_t, The size of the array to be printed.
  **/
-void Crypto_mpPrint(GvcidManagedParameters_t *managed_parameters, uint8_t print_children);
+// void Crypto_mpPrint(GvcidManagedParameters_t *managed_parameters, uint8_t print_children);
 
 #endif // CRYPTO_PRINT_H

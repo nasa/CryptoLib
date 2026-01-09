@@ -137,6 +137,79 @@ uint8_t Crypto_Is_AEAD_Algorithm(uint32_t cipher_suite_id)
 }
 
 /**
+ * @brief Function: crypto_handle_incrementing_nontransmitted_counter
+ * Handles incrementing non-transmitted counters
+ * @param dest: uint8_t*
+ * @param src: uint8_t*
+ * @param src_full_len: int
+ * @param transmitted_len: int
+ * @param window: int
+ * @return int32: Success/Failure
+ *
+ * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
+ **/
+int32_t crypto_handle_incrementing_nontransmitted_counter(uint8_t *dest, uint8_t *src, int src_full_len,
+                                                          int transmitted_len, int window)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    /* Note: This assumes a max IV / ARSN size of 32.  If a larger value is needed, adjust in crypto_config.h*/
+    if (src_full_len >
+        MAX_IV_LEN) // TODO:  Does a define exist already?  Is this the best method to put a bound on IV/ARSN Size?
+    {
+        status = CRYPTO_LIB_ERR_IV_EXCEEDS_INCREMENT_SIZE;
+    }
+
+    if (status == CRYPTO_LIB_SUCCESS)
+    {
+        uint8_t temp_counter[MAX_IV_LEN];
+        // Copy IV to temp
+        memcpy(temp_counter, src, src_full_len);
+
+        // Increment temp_counter Until Transmitted Portion Matches Frame.
+        uint8_t counter_matches = CRYPTO_TRUE;
+        for (int i = 0; i < window; i++)
+        {
+            Crypto_increment(temp_counter, src_full_len);
+            for (int x = (src_full_len - transmitted_len); x < src_full_len; x++)
+            {
+                // This increment doesn't match the frame!
+                if (temp_counter[x] != dest[x])
+                {
+                    counter_matches = CRYPTO_FALSE;
+                    break;
+                }
+            }
+            if (counter_matches == CRYPTO_TRUE)
+            {
+                break;
+            }
+            else if (i < window - 1) // Only reset flag if there are more  windows to check.
+            {
+                counter_matches = CRYPTO_TRUE; // reset the flag, and continue the for loop for the next
+                continue;
+            }
+        }
+
+        if (counter_matches == CRYPTO_TRUE)
+        {
+            // Retrieve non-transmitted portion of incremented counter that matches (and may have rolled
+            // over/incremented)
+            memcpy(dest, temp_counter, src_full_len - transmitted_len);
+#ifdef DEBUG
+            printf("Incremented IV is:\n");
+            Crypto_hexprint(temp_counter, src_full_len);
+#endif
+        }
+        else
+        {
+            status = CRYPTO_LIB_ERR_FRAME_COUNTER_DOESNT_MATCH_SA;
+        }
+    }
+    return status;
+}
+
+/**
  * @brief Function: Crypto_Is_ACS_Only_Algo
  * Looks up cipher suite ID and determines if it's an ACS algorithm. Returns 1 if true, 0 if false;
  * @param cipher_suite_id: uint8_t
@@ -309,7 +382,7 @@ uint8_t Crypto_Prep_Reply(uint8_t *reply, uint8_t appID)
     reply[count++] = (sdls_frame.hdr.pkt_length & 0xFF00) >> 8;
     reply[count++] = (sdls_frame.hdr.pkt_length & 0x00FF);
 
-    if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
+    if (crypto_config_tc.has_pus_hdr == TC_HAS_PUS_HDR)
     {
         // Fill reply with PUS
         reply[count++] = (sdls_frame.pus.shf << 7) | (sdls_frame.pus.pusv << 4) | (sdls_frame.pus.ack);
@@ -831,29 +904,97 @@ int32_t Crypto_USER_DEFINED_CMD(uint8_t *ingest)
 }
 
 /**
- * @brief Function: Crypto_Get_Managed_Parameters_For_Gvcid
+ * @brief Function: Crypto_Get_TC_Managed_Parameters_For_Gvcid
  * @param tfvn: uint8_t
  * @param scid: uint16_t
  * @param vcid: uint8_t
- * @param managed_parameters_in: GvcidManagedParameters_t*
- * @param managed_parameters_out: GvcidManagedParameters_t*
+ * @param managed_parameters_in: TCGvcidManagedParameters_t*
+ * @param managed_parameters_out: TCGvcidManagedParameters_t*
  * @return int32: Success/Failure
  *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 2.4 (Managed Parameters)
  **/
-int32_t Crypto_Get_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
-                                                GvcidManagedParameters_t *managed_parameters_in,
-                                                GvcidManagedParameters_t *managed_parameters_out)
+int32_t Crypto_Get_TC_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
+                                                   TCGvcidManagedParameters_t *managed_parameters_in,
+                                                   TCGvcidManagedParameters_t *managed_parameters_out)
 {
     int32_t status = MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND;
     // Check gvcid counter against a max
-    if (gvcid_counter > NUM_GVCID)
+    if (tc_gvcid_counter > NUM_GVCID)
     {
         status = CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT;
     }
     if (status != CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT)
     {
-        for (int i = 0; i < gvcid_counter; i++)
+        for (int i = 0; i < tc_gvcid_counter; i++)
+        {
+            if (managed_parameters_in[i].tfvn == tfvn && managed_parameters_in[i].scid == scid &&
+                managed_parameters_in[i].vcid == vcid)
+            {
+                *managed_parameters_out = managed_parameters_in[i];
+                status                  = CRYPTO_LIB_SUCCESS;
+                break;
+            }
+        }
+
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+#ifdef DEBUG
+            printf(KRED "Error: Managed Parameters for GVCID(TFVN: %d, SCID: %d, VCID: %d) not found. \n" RESET, tfvn,
+                   scid, vcid);
+#endif
+        }
+    }
+    return status;
+}
+
+int32_t Crypto_Get_TM_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
+                                                   TMGvcidManagedParameters_t *managed_parameters_in,
+                                                   TMGvcidManagedParameters_t *managed_parameters_out)
+{
+    int32_t status = MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND;
+    // Check gvcid counter against a max
+    if (tm_gvcid_counter > NUM_GVCID)
+    {
+        status = CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT;
+    }
+    if (status != CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT)
+    {
+        for (int i = 0; i < tm_gvcid_counter; i++)
+        {
+            if (managed_parameters_in[i].tfvn == tfvn && managed_parameters_in[i].scid == scid &&
+                managed_parameters_in[i].vcid == vcid)
+            {
+                *managed_parameters_out = managed_parameters_in[i];
+                status                  = CRYPTO_LIB_SUCCESS;
+                break;
+            }
+        }
+
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+#ifdef DEBUG
+            printf(KRED "Error: Managed Parameters for GVCID(TFVN: %d, SCID: %d, VCID: %d) not found. \n" RESET, tfvn,
+                   scid, vcid);
+#endif
+        }
+    }
+    return status;
+}
+
+int32_t Crypto_Get_AOS_Managed_Parameters_For_Gvcid(uint8_t tfvn, uint16_t scid, uint8_t vcid,
+                                                    AOSGvcidManagedParameters_t *managed_parameters_in,
+                                                    AOSGvcidManagedParameters_t *managed_parameters_out)
+{
+    int32_t status = MANAGED_PARAMETERS_FOR_GVCID_NOT_FOUND;
+    // Check gvcid counter against a max
+    if (aos_gvcid_counter > NUM_GVCID)
+    {
+        status = CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT;
+    }
+    if (status != CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT)
+    {
+        for (int i = 0; i < aos_gvcid_counter; i++)
         {
             if (managed_parameters_in[i].tfvn == tfvn && managed_parameters_in[i].scid == scid &&
                 managed_parameters_in[i].vcid == vcid)
@@ -933,7 +1074,7 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                     (tc_sdls_processed_frame->tc_pdu[4] << 8) | tc_sdls_processed_frame->tc_pdu[5];
 
                 // Using PUS Header
-                if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
+                if (crypto_config_tc.has_pus_hdr == TC_HAS_PUS_HDR)
                 {
                     // If ECSS PUS Header is being used
                     sdls_frame.pus.shf   = (tc_sdls_processed_frame->tc_pdu[6] & 0x80) >> 7;
@@ -1133,7 +1274,7 @@ int32_t Crypto_Check_Anti_Replay_Verify_Pointers(SecurityAssociation_t *sa_ptr, 
         status = CRYPTO_LIB_ERR_NULL_ARSN;
         return status;
     }
-    if (iv == NULL && sa_ptr->shivf_len > 0 && crypto_config.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+    if (iv == NULL && sa_ptr->shivf_len > 0 && crypto_config_global.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
         status = CRYPTO_LIB_ERR_NULL_IV;
         return status;
@@ -1203,7 +1344,8 @@ int32_t Crypto_Check_Anti_Replay_ARSNW(SecurityAssociation_t *sa_ptr, uint8_t *a
  *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
  **/
-int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t *sa_ptr, uint8_t *iv, int8_t *iv_valid)
+int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t *sa_ptr, uint8_t *iv, int8_t *iv_valid,
+                                     uint8_t increment_nontransmitted)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
     if ((sa_ptr->iv_len > 0) && (sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM))
@@ -1215,8 +1357,11 @@ int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t *sa_ptr, uint8_t *iv,
         }
         if (status == CRYPTO_LIB_SUCCESS)
         {
+#ifdef DEBUG
+            printf("Increment Nontransmitted IV? %d\n", increment_nontransmitted);
+#endif
             // Check IV is in ARSNW
-            if (crypto_config.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
+            if (increment_nontransmitted == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
             {
                 status = Crypto_window(iv, sa_ptr->iv, sa_ptr->iv_len, sa_ptr->arsnw);
             }
@@ -1265,11 +1410,13 @@ int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t *sa_ptr, uint8_t *iv,
  *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 6.1.2 (Anti-replay Processing)
  **/
-int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, uint8_t *iv)
+int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, uint8_t *iv,
+                                 uint8_t increment_nontransmitted)
 {
-    int32_t status     = CRYPTO_LIB_SUCCESS;
-    int8_t  iv_valid   = -1;
-    int8_t  arsn_valid = -1;
+    int32_t status           = CRYPTO_LIB_SUCCESS;
+    int8_t  iv_valid         = -1;
+    int8_t  arsn_valid       = -1;
+    increment_nontransmitted = increment_nontransmitted;
 
     // Check for NULL pointers
     status = Crypto_Check_Anti_Replay_Verify_Pointers(sa_ptr, arsn, iv);
@@ -1283,7 +1430,7 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
     // If IV is greater than zero and using GCM, check for replay
     if (status == CRYPTO_LIB_SUCCESS)
     {
-        status = Crypto_Check_Anti_Replay_GCM(sa_ptr, iv, &iv_valid);
+        status = Crypto_Check_Anti_Replay_GCM(sa_ptr, iv, &iv_valid, increment_nontransmitted);
     }
 
     // For GCM specifically, if have a valid IV...
@@ -1394,9 +1541,6 @@ int32_t Crypto_Get_Security_Header_Length(SecurityAssociation_t *sa_ptr)
 {
     /* Narrator's Note: Leaving this here for future work
     ** eventually we need a way to reconcile cryptolib managed parameters with TO managed parameters
-    GvcidManagedParameters_t* temp_current_managed_parameters = NULL;
-    Crypto_Get_Managed_Parameters_For_Gvcid(tfvn, scid, vcid,
-                                            gvcid_managed_parameters, temp_current_managed_parameters);
     */
 
     if (!sa_ptr)

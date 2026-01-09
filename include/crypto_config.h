@@ -42,7 +42,7 @@
 #endif
 
 // Managed Parameters Size
-#define GVCID_MAN_PARAM_SIZE 250
+#define GVCID_MAN_PARAM_SIZE 100
 
 // Max Frame Size
 #define TC_MAX_FRAME_SIZE  1024

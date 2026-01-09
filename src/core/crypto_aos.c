@@ -79,7 +79,8 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         return CRYPTO_LIB_ERR_NULL_BUFFER;
     }
 
-    if ((crypto_config.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
+    if ((crypto_config_global.init_status == UNINITIALIZED) || (crypto_config_aos.init_status == UNINITIALIZED) ||
+        (mc_if == NULL) || (sa_if == NULL))
     {
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
         status = CRYPTO_LIB_ERR_NO_CONFIG;
@@ -106,7 +107,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     printf("\n");
 #endif
 
-    if (crypto_config.sa_type == SA_TYPE_MARIADB)
+    if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
     {
         strncpy(mariadb_table_name, MARIADB_AOS_TABLE_NAME, sizeof(mariadb_table_name));
     }
@@ -122,8 +123,8 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         return status;
     }
 
-    status = Crypto_Get_Managed_Parameters_For_Gvcid(tfvn, scid, vcid, gvcid_managed_parameters_array,
-                                                     &aos_current_managed_parameters_struct);
+    status = Crypto_Get_AOS_Managed_Parameters_For_Gvcid(tfvn, scid, vcid, aos_gvcid_managed_parameters_array,
+                                                         &aos_current_managed_parameters_struct);
 
     // No managed parameters found
     if (status != CRYPTO_LIB_SUCCESS)
@@ -484,7 +485,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     // Get Key
     crypto_key_t *ekp = NULL;
     crypto_key_t *akp = NULL;
-    if (crypto_config.key_type != KEY_TYPE_KMC)
+    if (crypto_config_global.key_type != KEY_TYPE_KMC)
     {
         ekp = key_if->get_key(sa_ptr->ekid);
         akp = key_if->get_key(sa_ptr->akid);
@@ -662,62 +663,56 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
 
     if (sa_service_type != SA_PLAINTEXT)
     {
-        // Implement proper anti-replay sequence number handling per CCSDS 355.0-B-2
-        if (sa_ptr->shsnf_len > 0)
+#ifdef INCREMENT
+        if (crypto_config_aos.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
         {
-            // Section 4.2.5 of CCSDS 355.0-B-2: Sequence numbers shall be incremented by one for each frame
-            Crypto_increment(sa_ptr->arsn, sa_ptr->arsn_len);
-
-            // Check for sequence number rollover
-            int is_all_zeros = CRYPTO_TRUE;
-            for (i = 0; i < sa_ptr->arsn_len; i++)
+            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0)
             {
-                if (*(sa_ptr->arsn + i) != 0)
-                {
-                    is_all_zeros = CRYPTO_FALSE;
-                    break;
-                }
+                status = Crypto_increment(sa_ptr->iv, sa_ptr->iv_len);
             }
-
-            // Section 4.2.5.3: If a rollover is detected, SA must be re-established
-            if (is_all_zeros)
+        }
+        else // SA_INCREMENT_NONTRANSMITTED_IV_FALSE
+        {
+            // Only increment the transmitted portion
+            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0)
             {
-#ifdef SA_DEBUG
-                printf(KRED "ARSN has rolled over! SA should be re-established.\n" RESET);
-#endif
-                // Mark the SA for rekeying
-                sa_ptr->sa_state = SA_NONE;
+                status = Crypto_increment(sa_ptr->iv + (sa_ptr->iv_len - sa_ptr->shivf_len), sa_ptr->shivf_len);
             }
+        }
+        if (sa_ptr->shsnf_len > 0 && status == CRYPTO_LIB_SUCCESS)
+        {
+            status = Crypto_increment(sa_ptr->arsn, sa_ptr->arsn_len);
         }
 
 #ifdef SA_DEBUG
         if (sa_ptr->iv_len > 0)
         {
             printf(KYEL "Next IV value is:\n\t");
-            for (i = 0; i < sa_ptr->iv_len; i++)
+            for (int i = 0; i < sa_ptr->iv_len; i++)
             {
                 printf("%02x", *(sa_ptr->iv + i));
             }
             printf("\n" RESET);
             printf(KYEL "Next transmitted IV value is:\n\t");
-            for (i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
+            for (int i = sa_ptr->iv_len - sa_ptr->shivf_len; i < sa_ptr->iv_len; i++)
             {
                 printf("%02x", *(sa_ptr->iv + i));
             }
             printf("\n" RESET);
         }
         printf(KYEL "Next ARSN value is:\n\t");
-        for (i = 0; i < sa_ptr->arsn_len; i++)
+        for (int i = 0; i < sa_ptr->arsn_len; i++)
         {
             printf("%02x", *(sa_ptr->arsn + i));
         }
         printf("\n" RESET);
         printf(KYEL "Next transmitted ARSN value is:\n\t");
-        for (i = sa_ptr->arsn_len - sa_ptr->shsnf_len; i < sa_ptr->arsn_len; i++)
+        for (int i = sa_ptr->arsn_len - sa_ptr->shsnf_len; i < sa_ptr->arsn_len; i++)
         {
             printf("%02x", *(sa_ptr->arsn + i));
         }
         printf("\n" RESET);
+#endif
 #endif
     }
 
@@ -772,7 +767,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
 #ifdef FECF_DEBUG
         printf(KCYN "Calcing FECF over %d bytes\n" RESET, aos_current_managed_parameters_struct.max_frame_size - 2);
 #endif
-        if (crypto_config.crypto_create_fecf == CRYPTO_AOS_CREATE_FECF_TRUE)
+        if (crypto_config_aos.crypto_create_fecf == CRYPTO_AOS_CREATE_FECF_TRUE)
         {
             new_fecf = Crypto_Calc_FECF((uint8_t *)pTfBuffer, aos_current_managed_parameters_struct.max_frame_size - 2);
             pTfBuffer[aos_current_managed_parameters_struct.max_frame_size - 2] = (uint8_t)((new_fecf & 0xFF00) >> 8);
@@ -801,6 +796,89 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     printf(KYEL "----- Crypto_AOS_ApplySecurity END -----\n" RESET);
 #endif
     mc_if->mc_log(status);
+    return status;
+}
+
+// int32_t Crypto_AOS_Nontransmitted_IV_Increment(SecurityAssociation_t *sa_ptr, AOS_t *pp_processed_frame)
+// {
+//     int32_t status = CRYPTO_LIB_SUCCESS;
+
+//     if (sa_ptr->shivf_len < sa_ptr->iv_len && crypto_config_aos.ignore_anti_replay == AOS_IGNORE_ANTI_REPLAY_FALSE &&
+//         crypto_config_aos.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
+//     {
+//         status = crypto_handle_incrementing_nontransmitted_counter(
+//             pp_processed_frame->aos_sec_header.iv, sa_ptr->iv, sa_ptr->iv_len, sa_ptr->shivf_len, sa_ptr->arsnw);
+//         if (status != CRYPTO_LIB_SUCCESS)
+//         {
+//             mc_if->mc_log(status);
+//             return status;
+//         }
+//     }
+//     else // Not checking IV ARSNW or only non-transmitted portion is static; Note, non-transmitted IV in SA must
+//     match
+//          // frame or will fail MAC check.
+//     {
+//         // Retrieve non-transmitted portion of IV from SA (if applicable)
+//         memcpy(pp_processed_frame->aos_sec_header.iv, sa_ptr->iv, sa_ptr->iv_len - sa_ptr->shivf_len);
+//     }
+//     return status;
+// }
+
+// int32_t Crypto_AOS_Nontransmitted_SN_Increment(SecurityAssociation_t *sa_ptr, AOS_t *pp_processed_frame)
+// {
+//     int32_t status = CRYPTO_LIB_SUCCESS;
+//     if (sa_ptr->shsnf_len < sa_ptr->arsn_len && crypto_config_aos.ignore_anti_replay == AOS_IGNORE_ANTI_REPLAY_FALSE)
+//     {
+//         status =
+//             crypto_handle_incrementing_nontransmitted_counter(pp_processed_frame->aos_sec_header.sn, sa_ptr->arsn,
+//                                                               sa_ptr->arsn_len, sa_ptr->shsnf_len, sa_ptr->arsnw);
+//         if (status != CRYPTO_LIB_SUCCESS)
+//         {
+//             mc_if->mc_log(status);
+//         }
+//     }
+//     else // Not checking ARSN in ARSNW
+//     {
+//         // Parse non-transmitted portion of ARSN from SA
+//         memcpy(pp_processed_frame->aos_sec_header.sn, sa_ptr->arsn, sa_ptr->arsn_len - sa_ptr->shsnf_len);
+//     }
+//     return status;
+// }
+
+int32_t Crypto_AOS_Check_IV_ARSN(SecurityAssociation_t *sa_ptr, AOS_t *pp_processed_frame)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    if (crypto_config_aos.ignore_anti_replay == AOS_IGNORE_ANTI_REPLAY_FALSE)
+    {
+        status = Crypto_Check_Anti_Replay(sa_ptr, pp_processed_frame->aos_sec_header.sn,
+                                          pp_processed_frame->aos_sec_header.iv,
+                                          crypto_config_aos.crypto_increment_nontransmitted_iv);
+
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+            mc_if->mc_log(status);
+        }
+        if (status == CRYPTO_LIB_SUCCESS) // else
+        {
+            // Only save the SA (IV/ARSN) if checking the anti-replay counter; Otherwise we don't update.
+            status = sa_if->sa_save_sa(sa_ptr);
+            if (status != CRYPTO_LIB_SUCCESS)
+            {
+                mc_if->mc_log(status);
+            }
+        }
+    }
+    else
+    {
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+        {
+            if (sa_ptr->ek_ref[0] != '\0')
+                clean_ekref(sa_ptr);
+            if (sa_ptr->ak_ref[0] != '\0')
+                clean_akref(sa_ptr);
+        }
+    }
     return status;
 }
 
@@ -848,9 +926,9 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     uint8_t                aos_hdr_len       = 6;
 
     // Bit math to give concise access to values in the ingest
-    aos_frame_pri_hdr.tfvn = ((uint8_t)p_ingest[0] & 0xC0) >> 6;
-    aos_frame_pri_hdr.scid = (((uint16_t)p_ingest[0] & 0x3F) << 2) | (((uint16_t)p_ingest[1] & 0xC0) >> 6);
-    aos_frame_pri_hdr.vcid = ((uint8_t)p_ingest[1] & 0x3F);
+    pp_processed_frame->aos_header.tfvn = ((uint8_t)p_ingest[0] & 0xC0) >> 6;
+    pp_processed_frame->aos_header.scid = (((uint16_t)p_ingest[0] & 0x3F) << 2) | (((uint16_t)p_ingest[1] & 0xC0) >> 6);
+    pp_processed_frame->aos_header.vcid = ((uint8_t)p_ingest[1] & 0x3F);
 
 #ifdef DEBUG
     printf(KYEL "\n----- Crypto_AOS_ProcessSecurity START -----\n" RESET);
@@ -863,7 +941,8 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
         return status;
     }
 
-    if ((crypto_config.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL))
+    if ((crypto_config_global.init_status == UNINITIALIZED) || (crypto_config_aos.init_status == UNINITIALIZED) ||
+        (mc_if == NULL) || (sa_if == NULL))
     {
 #ifdef AOS_DEBUG
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
@@ -887,14 +966,14 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
 
 #ifdef AOS_DEBUG
     printf(KGRN "AOS Process Using following parameters:\n\t" RESET);
-    printf(KGRN "tvfn: %d\t scid: %d\t vcid: %d\n" RESET, aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid,
-           aos_frame_pri_hdr.vcid);
+    printf(KGRN "tvfn: %d\t scid: %d\t vcid: %d\n" RESET, pp_processed_frame->aos_header.tfvn,
+           pp_processed_frame->aos_header.scid, pp_processed_frame->aos_header.vcid);
 #endif
 
     // Lookup-retrieve managed parameters for frame via gvcid:
-    status =
-        Crypto_Get_Managed_Parameters_For_Gvcid(aos_frame_pri_hdr.tfvn, aos_frame_pri_hdr.scid, aos_frame_pri_hdr.vcid,
-                                                gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
+    status = Crypto_Get_AOS_Managed_Parameters_For_Gvcid(
+        pp_processed_frame->aos_header.tfvn, pp_processed_frame->aos_header.scid, pp_processed_frame->aos_header.vcid,
+        aos_gvcid_managed_parameters_array, &aos_current_managed_parameters_struct);
 
     if (status != CRYPTO_LIB_SUCCESS)
     {
@@ -970,7 +1049,9 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     // Move index to past the SPI
     byte_idx += 2;
 
-    if (crypto_config.sa_type == SA_TYPE_MARIADB)
+    pp_processed_frame->aos_sec_header.spi = spi;
+
+    if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
     {
         strncpy(mariadb_table_name, MARIADB_AOS_TABLE_NAME, sizeof(mariadb_table_name));
     }
@@ -979,11 +1060,17 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     if (status != CRYPTO_LIB_SUCCESS)
     {
         mc_if->mc_log(status);
-        if (crypto_config.sa_type == SA_TYPE_MARIADB)
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
         {
             free(sa_ptr);
         }
         return status;
+    }
+
+    if (len_ingest <
+        aos_hdr_len + Crypto_Get_Security_Header_Length(sa_ptr) + Crypto_Get_Security_Trailer_Length(sa_ptr))
+    {
+        return CRYPTO_LIB_ERR_AOS_FRAME_LENGTH_UNDERFLOW;
     }
 
 #ifdef SA_DEBUG
@@ -1016,7 +1103,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
 #endif
         status = CRYPTO_LIB_ERROR;
         mc_if->mc_log(status);
-        if (crypto_config.sa_type == SA_TYPE_MARIADB)
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
         {
             free(sa_ptr);
         }
@@ -1045,7 +1132,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     {
         status = CRYPTO_LIB_ERR_NO_ECS_SET_FOR_ENCRYPTION_MODE;
         mc_if->mc_log(status);
-        if (crypto_config.sa_type == SA_TYPE_MARIADB)
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
         {
             free(sa_ptr);
         }
@@ -1074,7 +1161,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     {
         status = CRYPTO_LIB_ERR_AOS_FL_LT_MAX_FRAME_SIZE;
         mc_if->mc_log(status);
-        if (crypto_config.sa_type == SA_TYPE_MARIADB)
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
         {
             free(sa_ptr);
         }
@@ -1084,25 +1171,26 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     // Parse & Check FECF, if present, and update fecf length
     if (aos_current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
     {
-        uint16_t received_fecf = (((p_ingest[aos_current_managed_parameters_struct.max_frame_size - 2] << 8) & 0xFF00) |
-                                  (p_ingest[aos_current_managed_parameters_struct.max_frame_size - 1] & 0x00FF));
+        uint16_t received_fecf = (((p_ingest[len_ingest - 2] << 8) & 0xFF00) | (p_ingest[len_ingest - 1] & 0x00FF));
+#ifdef FECF_DEBUG
+        printf("Received FECF is 0x%04X\n", received_fecf);
+#endif
 
-        if (crypto_config.crypto_check_fecf == AOS_CHECK_FECF_TRUE)
+        if (crypto_config_aos.crypto_check_fecf == AOS_CHECK_FECF_TRUE)
         {
             // Calculate our own
             uint16_t calculated_fecf = Crypto_Calc_FECF(p_ingest, len_ingest - 2);
+#ifdef FECF_DEBUG
+            printf("Calculated FECF is 0x%04X\n", calculated_fecf);
+            printf("FECF was Calced over %d bytes\n", len_ingest - 2);
+#endif
             // Compare FECFs
             // Invalid FECF
             if (received_fecf != calculated_fecf)
             {
-#ifdef FECF_DEBUG
-                printf("Received FECF is 0x%04X\n", received_fecf);
-                printf("Calculated FECF is 0x%04X\n", calculated_fecf);
-                printf("FECF was Calced over %d bytes\n", len_ingest - 2);
-#endif
                 status = CRYPTO_LIB_ERR_INVALID_FECF;
                 mc_if->mc_log(status);
-                if (crypto_config.sa_type == SA_TYPE_MARIADB)
+                if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
                 {
                     free(sa_ptr);
                 }
@@ -1114,6 +1202,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
 #ifdef FECF_DEBUG
                 printf(KYEL "FECF CALC MATCHES! - GOOD\n" RESET);
 #endif
+                pp_processed_frame->aos_sec_trailer.fecf = calculated_fecf;
             }
         }
     }
@@ -1127,7 +1216,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
 #endif
         status = CRYPTO_LIB_ERR_TC_ENUM_USED_FOR_AOS_CONFIG;
         mc_if->mc_log(status);
-        if (crypto_config.sa_type == SA_TYPE_MARIADB)
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
         {
             free(sa_ptr);
         }
@@ -1143,7 +1232,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
 #endif
         status = CRYPTO_LIB_ERROR;
         mc_if->mc_log(status);
-        if (crypto_config.sa_type == SA_TYPE_MARIADB)
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
         {
             free(sa_ptr);
         }
@@ -1174,8 +1263,15 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
         iv_loc = byte_idx;
     }
     // Increment byte_idx past Security Header Fields based on SA values
+    memcpy((pp_processed_frame->aos_sec_header.iv + (sa_ptr->iv_len - sa_ptr->shivf_len)), &(p_ingest[byte_idx]),
+           sa_ptr->shivf_len);
     byte_idx += sa_ptr->shivf_len;
+
+    memcpy((pp_processed_frame->aos_sec_header.sn + (sa_ptr->arsn_len - sa_ptr->shsnf_len)), &(p_ingest[byte_idx]),
+           sa_ptr->shsnf_len);
     byte_idx += sa_ptr->shsnf_len;
+
+    memcpy(&(pp_processed_frame->aos_sec_header.pad), &(p_ingest[byte_idx]), sa_ptr->shplf_len);
     byte_idx += sa_ptr->shplf_len;
 
 #ifdef SA_DEBUG
@@ -1220,10 +1316,17 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
         pdu_len -= 2;
     }
 
+    if (pdu_len >= aos_current_managed_parameters_struct.max_frame_size)
+    {
+        return CRYPTO_LIB_ERR_AOS_FRAME_LENGTH_UNDERFLOW;
+    }
+
     // If MAC exists, comes immediately after pdu
     if (sa_ptr->stmacf_len > 0)
     {
         mac_loc = byte_idx + pdu_len;
+        memcpy((pp_processed_frame->aos_sec_trailer.mac + (MAC_SIZE - sa_ptr->stmacf_len)), &(p_ingest[mac_loc]),
+               sa_ptr->stmacf_len);
     }
     Crypto_Set_FSR(p_ingest, byte_idx, pdu_len, sa_ptr);
 
@@ -1242,13 +1345,35 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     }
 #endif
 
+    // // Increment IV/ARSN
+    // memcpy((pp_processed_frame->aos_sec_header.iv + (sa_ptr->iv_len - sa_ptr->shivf_len)),
+    //        &(p_ingest[aos_hdr_len + SPI_LEN]), sa_ptr->shivf_len);
+
+    // // Handle non-transmitted IV increment case (transmitted-portion roll-over)
+    // status = Crypto_AOS_Nontransmitted_IV_Increment(sa_ptr, pp_processed_frame);
+    // if (status != CRYPTO_LIB_SUCCESS)
+    // {
+    //     return status;
+    // }
+
+    // // Parse transmitted portion of ARSN
+    // memcpy((pp_processed_frame->aos_sec_header.sn + (sa_ptr->arsn_len - sa_ptr->shsnf_len)),
+    //        &(p_ingest[aos_hdr_len + SPI_LEN + sa_ptr->shivf_len]), sa_ptr->shsnf_len);
+
+    // // Handle non-transmitted SN increment case (transmitted-portion roll-over)
+    // status = Crypto_AOS_Nontransmitted_SN_Increment(sa_ptr, pp_processed_frame);
+    // if (status != CRYPTO_LIB_SUCCESS)
+    // {
+    //     return status;
+    // }
+
     // Get Key
     crypto_key_t *ekp = NULL;
     crypto_key_t *akp = NULL;
 
     if (sa_ptr->est == 1)
     {
-        if (crypto_config.key_type != KEY_TYPE_KMC)
+        if (crypto_config_global.key_type != KEY_TYPE_KMC)
         {
             ekp = key_if->get_key(sa_ptr->ekid);
             if (ekp == NULL)
@@ -1256,7 +1381,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
                 status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
                 mc_if->mc_log(status);
                 free(p_new_dec_frame);
-                if (crypto_config.sa_type == SA_TYPE_MARIADB)
+                if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
                 {
                     free(sa_ptr);
                 }
@@ -1267,7 +1392,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
                 status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
                 mc_if->mc_log(status);
                 free(p_new_dec_frame);
-                if (crypto_config.sa_type == SA_TYPE_MARIADB)
+                if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
                 {
                     free(sa_ptr);
                 }
@@ -1277,7 +1402,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     }
     if (sa_ptr->ast == 1)
     {
-        if (crypto_config.key_type != KEY_TYPE_KMC)
+        if (crypto_config_global.key_type != KEY_TYPE_KMC)
         {
             akp = key_if->get_key(sa_ptr->akid);
             if (akp == NULL)
@@ -1285,7 +1410,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
                 status = CRYPTO_LIB_ERR_KEY_ID_ERROR;
                 mc_if->mc_log(status);
                 free(p_new_dec_frame);
-                if (crypto_config.sa_type == SA_TYPE_MARIADB)
+                if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
                 {
                     free(sa_ptr);
                 }
@@ -1296,7 +1421,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
                 status = CRYPTO_LIB_ERR_KEY_STATE_INVALID;
                 mc_if->mc_log(status);
                 free(p_new_dec_frame);
-                if (crypto_config.sa_type == SA_TYPE_MARIADB)
+                if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
                 {
                     free(sa_ptr);
                 }
@@ -1319,7 +1444,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
 #endif
         if (sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
         {
-            aad_len = byte_idx;
+            aad_len = iv_loc + sa_ptr->shivf_len;
         }
         else
         {
@@ -1336,7 +1461,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
                    aad_len);
 #endif
             mc_if->mc_log(status);
-            if (crypto_config.sa_type == SA_TYPE_MARIADB)
+            if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
             {
                 free(sa_ptr);
             }
@@ -1363,7 +1488,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
         printf(KRED "Error: SA Not Operational \n" RESET);
 #endif
         free(p_new_dec_frame); // Add cleanup
-        if (crypto_config.sa_type == SA_TYPE_MARIADB)
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
         {
             free(sa_ptr);
         }
@@ -1443,7 +1568,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
                 free(p_new_dec_frame); // Add cleanup
                 status = CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
                 mc_if->mc_log(status);
-                if (crypto_config.sa_type == SA_TYPE_MARIADB)
+                if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
                 {
                     free(sa_ptr);
                 }
@@ -1470,6 +1595,15 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     {
         memcpy(p_new_dec_frame + byte_idx, &(p_ingest[byte_idx]), pdu_len);
         // byte_idx += pdu_len; // byte_idx no longer read
+    }
+
+    // Now that MAC has been verified, check IV & ARSN if applicable
+    status = Crypto_AOS_Check_IV_ARSN(sa_ptr, pp_processed_frame);
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        // Crypto_TC_Safe_Free_Ptr(aad);
+        mc_if->mc_log(status);
+        return status; // Cryptography IF call failed, return.
     }
 
 #ifdef AOS_DEBUG
@@ -1522,20 +1656,19 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
         byte_idx += aos_current_managed_parameters_struct.aos_iz_len;
     }
 
-    pp_processed_frame->aos_sec_header.spi =
-        (((uint16_t)p_new_dec_frame[byte_idx]) << 8) | ((uint16_t)p_new_dec_frame[byte_idx + 1]);
+    pp_processed_frame->aos_sec_header.spi = (((uint16_t)p_ingest[byte_idx]) << 8) | ((uint16_t)p_ingest[byte_idx + 1]);
     byte_idx += 2;
 
     for (int i = 0; i < sa_ptr->shivf_len; i++)
     {
-        memcpy(pp_processed_frame->aos_sec_header.iv + i, &p_new_dec_frame[byte_idx + i], 1);
+        memcpy(pp_processed_frame->aos_sec_header.iv + i, &p_ingest[byte_idx + i], 1);
     }
     byte_idx += sa_ptr->shivf_len;
     pp_processed_frame->aos_sec_header.iv_field_len = sa_ptr->shivf_len;
 
     for (int i = 0; i < sa_ptr->shsnf_len; i++)
     {
-        memcpy(pp_processed_frame->aos_sec_header.sn + i, &p_new_dec_frame[byte_idx + i], 1);
+        memcpy(pp_processed_frame->aos_sec_header.sn + i, &p_ingest[byte_idx + i], 1);
     }
     byte_idx += sa_ptr->shsnf_len;
     pp_processed_frame->aos_sec_header.sn_field_len = sa_ptr->shsnf_len;
@@ -1555,7 +1688,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     // Security Trailer
     for (int i = 0; i < sa_ptr->stmacf_len; i++)
     {
-        memcpy(pp_processed_frame->aos_sec_trailer.mac + i, &p_new_dec_frame[byte_idx + i], 1);
+        memcpy(pp_processed_frame->aos_sec_trailer.mac + i, &p_ingest[mac_loc + i], 1);
     }
     byte_idx += sa_ptr->stmacf_len;
     pp_processed_frame->aos_sec_trailer.mac_field_len = sa_ptr->stmacf_len;
@@ -1564,7 +1697,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     {
         for (int i = 0; i < OCF_SIZE; i++)
         {
-            memcpy(pp_processed_frame->aos_sec_trailer.ocf + i, &p_new_dec_frame[byte_idx + i], 1);
+            memcpy(pp_processed_frame->aos_sec_trailer.ocf + i, &p_ingest[byte_idx + i], 1);
         }
         byte_idx += OCF_SIZE;
         pp_processed_frame->aos_sec_trailer.ocf_field_len = OCF_SIZE;
@@ -1573,14 +1706,14 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     {
         pp_processed_frame->aos_sec_trailer.ocf_field_len = 0;
     }
-
-    if (aos_current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
-    {
-        pp_processed_frame->aos_sec_trailer.fecf =
-            (uint16_t)(p_new_dec_frame[byte_idx] << 8) | p_new_dec_frame[byte_idx + 1];
-    }
+    // FECF already set
+    // if (aos_current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
+    // {
+    //     pp_processed_frame->aos_sec_trailer.fecf =
+    //         (uint16_t)(p_new_dec_frame[byte_idx] << 8) | p_new_dec_frame[byte_idx + 1];
+    // }
     free(p_new_dec_frame);
-    if (crypto_config.sa_type == SA_TYPE_MARIADB)
+    if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
     {
         free(sa_ptr);
     }

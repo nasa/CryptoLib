@@ -52,11 +52,49 @@ int32_t Crypto_TM_Sanity_Check(uint8_t *pTfBuffer)
     }
 
     if ((status == CRYPTO_LIB_SUCCESS) &&
-        ((crypto_config.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL)))
+        ((crypto_config_global.init_status == UNINITIALIZED) || (crypto_config_tm.init_status == UNINITIALIZED) ||
+         (mc_if == NULL) || (sa_if == NULL)))
     {
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
         status = CRYPTO_LIB_ERR_NO_CONFIG;
         // Can't mc_log since it's not configured
+    }
+    return status;
+}
+
+int32_t Crypto_TM_Check_IV_ARSN(SecurityAssociation_t *sa_ptr, TM_t *pp_processed_frame)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    if (crypto_config_tm.ignore_anti_replay == TM_IGNORE_ANTI_REPLAY_FALSE)
+    {
+        status =
+            Crypto_Check_Anti_Replay(sa_ptr, pp_processed_frame->tm_sec_header.sn, pp_processed_frame->tm_sec_header.iv,
+                                     crypto_config_tm.crypto_increment_nontransmitted_iv);
+
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+            mc_if->mc_log(status);
+        }
+        if (status == CRYPTO_LIB_SUCCESS) // else
+        {
+            // Only save the SA (IV/ARSN) if checking the anti-replay counter; Otherwise we don't update.
+            status = sa_if->sa_save_sa(sa_ptr);
+            if (status != CRYPTO_LIB_SUCCESS)
+            {
+                mc_if->mc_log(status);
+            }
+        }
+    }
+    else
+    {
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+        {
+            if (sa_ptr->ek_ref[0] != '\0')
+                clean_ekref(sa_ptr);
+            if (sa_ptr->ak_ref[0] != '\0')
+                clean_akref(sa_ptr);
+        }
     }
     return status;
 }
@@ -215,7 +253,7 @@ uint32_t Crypto_TM_Calculate_Padding(uint32_t cipher, uint16_t data_len)
             block_size = 16; // AES block size is 16 bytes
             padding    = block_size - (data_len % block_size);
             if (padding == block_size)
-                padding = 0;
+                padding = 16;
             break;
 
         case CRYPTO_CIPHER_AES256_GCM:
@@ -307,7 +345,7 @@ int32_t Crypto_TM_Get_Keys(crypto_key_t **ekp, crypto_key_t **akp, SecurityAssoc
 
     if (sa_ptr->est == 1)
     {
-        if (crypto_config.key_type != KEY_TYPE_KMC)
+        if (crypto_config_global.key_type != KEY_TYPE_KMC)
         {
             *ekp = key_if->get_key(sa_ptr->ekid);
             if (*ekp == NULL)
@@ -326,7 +364,7 @@ int32_t Crypto_TM_Get_Keys(crypto_key_t **ekp, crypto_key_t **akp, SecurityAssoc
     }
     if (sa_ptr->ast == 1)
     {
-        if (crypto_config.key_type != KEY_TYPE_KMC)
+        if (crypto_config_global.key_type != KEY_TYPE_KMC)
         {
             *akp = key_if->get_key(sa_ptr->akid);
             if (*akp == NULL)
@@ -553,7 +591,7 @@ int32_t Crypto_TM_Do_Encrypt_Handle_Increment(uint8_t sa_service_type, SecurityA
     if (sa_service_type != SA_PLAINTEXT)
     {
 #ifdef INCREMENT
-        if (crypto_config.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
+        if (crypto_config_tm.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
         {
             if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0)
             {
@@ -683,7 +721,7 @@ int32_t Crypto_TM_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
 #ifdef FECF_DEBUG
             printf(KCYN "Calcing FECF over %d bytes\n" RESET, tm_current_managed_parameters_struct.max_frame_size - 2);
 #endif
-            if (crypto_config.crypto_create_fecf == CRYPTO_TM_CREATE_FECF_TRUE)
+            if (crypto_config_tm.crypto_create_fecf == CRYPTO_TM_CREATE_FECF_TRUE)
             {
                 *new_fecf =
                     Crypto_Calc_FECF((uint8_t *)pTfBuffer, tm_current_managed_parameters_struct.max_frame_size - 2);
@@ -821,7 +859,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     printf("\n");
 #endif
 
-    if (crypto_config.sa_type == SA_TYPE_MARIADB)
+    if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
     {
         strncpy(mariadb_table_name, MARIADB_TM_TABLE_NAME, sizeof(mariadb_table_name));
     }
@@ -837,8 +875,8 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         return status;
     }
 
-    status = Crypto_Get_Managed_Parameters_For_Gvcid(tfvn, scid, vcid, gvcid_managed_parameters_array,
-                                                     &tm_current_managed_parameters_struct);
+    status = Crypto_Get_TM_Managed_Parameters_For_Gvcid(tfvn, scid, vcid, tm_gvcid_managed_parameters_array,
+                                                        &tm_current_managed_parameters_struct);
 
     // No managed parameters found
     if (status != CRYPTO_LIB_SUCCESS)
@@ -1083,7 +1121,8 @@ int32_t Crypto_TM_Process_Setup(uint16_t len_ingest, uint16_t *byte_idx, uint8_t
     }
 
     if ((status == CRYPTO_LIB_SUCCESS) &&
-        ((crypto_config.init_status == UNITIALIZED) || (mc_if == NULL) || (sa_if == NULL)))
+        ((crypto_config_global.init_status == UNINITIALIZED) || (crypto_config_tm.init_status == UNINITIALIZED) ||
+         (mc_if == NULL) || (sa_if == NULL)))
     {
 #ifdef TM_DEBUG
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
@@ -1112,9 +1151,9 @@ int32_t Crypto_TM_Process_Setup(uint16_t len_ingest, uint16_t *byte_idx, uint8_t
     // Lookup-retrieve managed parameters for frame via gvcid:
     if (status == CRYPTO_LIB_SUCCESS)
     {
-        status = Crypto_Get_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
-                                                         tm_frame_pri_hdr.vcid, gvcid_managed_parameters_array,
-                                                         &tm_current_managed_parameters_struct);
+        status = Crypto_Get_TM_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
+                                                            tm_frame_pri_hdr.vcid, tm_gvcid_managed_parameters_array,
+                                                            &tm_current_managed_parameters_struct);
     }
 
     if (status != CRYPTO_LIB_SUCCESS)
@@ -1257,7 +1296,7 @@ int32_t Crypto_TM_FECF_Setup(uint8_t *p_ingest, uint16_t len_ingest)
         uint16_t received_fecf = (((p_ingest[tm_current_managed_parameters_struct.max_frame_size - 2] << 8) & 0xFF00) |
                                   (p_ingest[tm_current_managed_parameters_struct.max_frame_size - 1] & 0x00FF));
 
-        if (crypto_config.crypto_check_fecf == TM_CHECK_FECF_TRUE)
+        if (crypto_config_tm.crypto_check_fecf == TM_CHECK_FECF_TRUE)
         {
             // Calculate our own
             uint16_t calculated_fecf = Crypto_Calc_FECF(p_ingest, len_ingest - 2);
@@ -1462,7 +1501,7 @@ int32_t Crypto_TM_Do_Decrypt_NONAEAD(uint8_t sa_service_type, uint16_t pdu_len, 
     }
     if (sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
     {
-        if (crypto_config.key_type != KEY_TYPE_KMC)
+        if (crypto_config_global.key_type != KEY_TYPE_KMC)
         {
             // Check that key length to be used meets the algorithm requirement
             if ((int32_t)ekp->key_len != Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs))
@@ -1554,19 +1593,35 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
         status = Crypto_TM_Do_Decrypt_AEAD(sa_service_type, p_ingest, p_new_dec_frame, byte_idx, pdu_len, ekp, sa_ptr,
                                            iv_loc, mac_loc, aad_len, aad);
     }
-
     else if (sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_FALSE)
     {
         status = Crypto_TM_Do_Decrypt_NONAEAD(sa_service_type, pdu_len, p_new_dec_frame, byte_idx, p_ingest, akp, ekp,
                                               sa_ptr, iv_loc, mac_loc, aad_len, aad);
         // TODO - implement non-AEAD algorithm logic
     }
-
     // If plaintext, copy byte by byte
     else if (sa_service_type == SA_PLAINTEXT)
     {
         memcpy(p_new_dec_frame + byte_idx, &(p_ingest[byte_idx]), pdu_len);
         // byte_idx += pdu_len; // not read
+    }
+
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        free(p_new_dec_frame);
+        return status;
+    }
+
+    // Now that MAC has been verified, check IV & ARSN if applicable
+    status = Crypto_TM_Check_IV_ARSN(sa_ptr, pp_processed_frame);
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        mc_if->mc_log(status);
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+        {
+            free(sa_ptr);
+        }
+        return status; // Cryptography IF call failed, return.
     }
 
 #ifdef TM_DEBUG
@@ -1607,18 +1662,17 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     byte_idx += 6;
 
     // Security Header
-    pp_processed_frame->tm_sec_header.spi =
-        (((uint16_t)p_new_dec_frame[byte_idx]) << 8) | ((uint16_t)p_new_dec_frame[byte_idx + 1]);
+    pp_processed_frame->tm_sec_header.spi = (((uint16_t)p_ingest[byte_idx]) << 8) | ((uint16_t)p_ingest[byte_idx + 1]);
     byte_idx += 2;
     for (int i = 0; i < sa_ptr->shivf_len; i++)
     {
-        memcpy(pp_processed_frame->tm_sec_header.iv + i, &p_new_dec_frame[byte_idx + i], 1);
+        memcpy(pp_processed_frame->tm_sec_header.iv + i, &p_ingest[byte_idx + i], 1);
     }
     byte_idx += sa_ptr->shivf_len;
     pp_processed_frame->tm_sec_header.iv_field_len = sa_ptr->shivf_len;
     for (int i = 0; i < sa_ptr->shsnf_len; i++)
     {
-        memcpy(pp_processed_frame->tm_sec_header.sn + i, &p_new_dec_frame[byte_idx + i], 1);
+        memcpy(pp_processed_frame->tm_sec_header.sn + i, &p_ingest[byte_idx + i], 1);
     }
     byte_idx += sa_ptr->shsnf_len;
     pp_processed_frame->tm_sec_header.sn_field_len = sa_ptr->shsnf_len;
@@ -1637,7 +1691,7 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     // Security Trailer
     for (int i = 0; i < sa_ptr->stmacf_len; i++)
     {
-        memcpy(pp_processed_frame->tm_sec_trailer.mac + i, &p_new_dec_frame[byte_idx + i], 1);
+        memcpy(pp_processed_frame->tm_sec_trailer.mac + i, &p_ingest[byte_idx + i], 1);
     }
     byte_idx += sa_ptr->stmacf_len;
     pp_processed_frame->tm_sec_trailer.mac_field_len = sa_ptr->stmacf_len;
@@ -1645,7 +1699,7 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     {
         for (int i = 0; i < OCF_SIZE; i++)
         {
-            memcpy(pp_processed_frame->tm_sec_trailer.ocf + i, &p_new_dec_frame[byte_idx + i], 1);
+            memcpy(pp_processed_frame->tm_sec_trailer.ocf + i, &p_ingest[byte_idx + i], 1);
         }
         byte_idx += OCF_SIZE;
         pp_processed_frame->tm_sec_trailer.ocf_field_len = OCF_SIZE;
@@ -1656,8 +1710,7 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     }
     if (tm_current_managed_parameters_struct.has_fecf == TM_HAS_FECF)
     {
-        pp_processed_frame->tm_sec_trailer.fecf =
-            ((uint16_t)p_new_dec_frame[byte_idx] << 8) | p_new_dec_frame[byte_idx + 1];
+        pp_processed_frame->tm_sec_trailer.fecf = ((uint16_t)p_ingest[byte_idx] << 8) | p_ingest[byte_idx + 1];
     }
     free(p_new_dec_frame);
 
@@ -1748,7 +1801,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
         // Move index to past the SPI
         byte_idx += 2;
 
-        if (crypto_config.sa_type == SA_TYPE_MARIADB)
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
         {
             strncpy(mariadb_table_name, MARIADB_TM_TABLE_NAME, sizeof(mariadb_table_name));
         }
@@ -1796,7 +1849,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
         {
             status = CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW;
             mc_if->mc_log(status);
-            if (crypto_config.sa_type == SA_TYPE_MARIADB)
+            if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
             {
                 free(sa_ptr);
             }
@@ -1808,7 +1861,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
         {
             status = CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW;
             mc_if->mc_log(status);
-            if (crypto_config.sa_type == SA_TYPE_MARIADB)
+            if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
             {
                 free(sa_ptr);
             }
@@ -1845,8 +1898,15 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
             iv_loc = byte_idx;
         }
         // Increment byte_idx past Security Header Fields based on SA values
+        memcpy((pp_processed_frame->tm_sec_header.iv + (sa_ptr->iv_len - sa_ptr->shivf_len)), &(p_ingest[byte_idx]),
+               sa_ptr->shivf_len);
         byte_idx += sa_ptr->shivf_len;
+
+        memcpy((pp_processed_frame->tm_sec_header.sn + (sa_ptr->arsn_len - sa_ptr->shsnf_len)), &(p_ingest[byte_idx]),
+               sa_ptr->shsnf_len);
         byte_idx += sa_ptr->shsnf_len;
+
+        memcpy(&(pp_processed_frame->tm_sec_header.pad), &(p_ingest[byte_idx]), sa_ptr->shplf_len);
         byte_idx += sa_ptr->shplf_len;
 
 #ifdef SA_DEBUG
@@ -1870,7 +1930,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
             status = CRYPTO_LIB_ERR_TM_FRAME_LENGTH_UNDERFLOW;
             mc_if->mc_log(status);
             free(p_new_dec_frame);
-            if (crypto_config.sa_type == SA_TYPE_MARIADB)
+            if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
             {
                 free(sa_ptr);
             }
@@ -1886,7 +1946,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
         if (status != CRYPTO_LIB_SUCCESS)
         {
             free(p_new_dec_frame);
-            if (crypto_config.sa_type == SA_TYPE_MARIADB)
+            if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
             {
                 free(sa_ptr);
             }
@@ -1909,7 +1969,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
             printf(KRED "Error: SA Not Operational \n" RESET);
 #endif
             free(p_new_dec_frame);
-            if (crypto_config.sa_type == SA_TYPE_MARIADB)
+            if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
             {
                 free(sa_ptr);
             }
@@ -1921,7 +1981,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
                                       p_decrypted_length);
     }
 
-    if (crypto_config.sa_type == SA_TYPE_MARIADB)
+    if (status == CRYPTO_LIB_SUCCESS && crypto_config_global.sa_type == SA_TYPE_MARIADB)
     {
         free(sa_ptr);
     }
@@ -2141,7 +2201,7 @@ int32_t Crypto_TM_FECF_Validate(uint8_t *p_ingest, uint16_t len_ingest, Security
         uint16_t received_fecf = (((p_ingest[tm_current_managed_parameters_struct.max_frame_size - 2] << 8) & 0xFF00) |
                                   (p_ingest[tm_current_managed_parameters_struct.max_frame_size - 1] & 0x00FF));
 
-        if (crypto_config.crypto_check_fecf == TM_CHECK_FECF_TRUE)
+        if (crypto_config_tm.crypto_check_fecf == TM_CHECK_FECF_TRUE)
         {
             // Calculate FECF over appropriate data
             uint8_t  is_encrypted    = (sa_ptr->est == 1);

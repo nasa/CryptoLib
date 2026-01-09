@@ -29,38 +29,39 @@ ivv-itc@lists.nasa.gov
 // main config enums
 typedef enum
 {
-    UNITIALIZED = 0,
+    UNINITIALIZED = 0,
     INITIALIZED
 } InitStatus;
 typedef enum
 {
-    KEY_TYPE_UNITIALIZED = 0,
+    KEY_TYPE_UNINITIALIZED = 0,
     KEY_TYPE_CUSTOM,
     KEY_TYPE_INTERNAL,
     KEY_TYPE_KMC
 } KeyType;
 typedef enum
 {
-    MC_TYPE_UNITIALIZED = 0,
+    MC_TYPE_UNINITIALIZED = 0,
     MC_TYPE_CUSTOM,
     MC_TYPE_DISABLED,
     MC_TYPE_INTERNAL
 } McType;
 typedef enum
 {
-    SA_TYPE_UNITIALIZED = 0,
+    SA_TYPE_UNINITIALIZED = 0,
     SA_TYPE_CUSTOM,
     SA_TYPE_INMEMORY,
     SA_TYPE_MARIADB
 } SadbType;
 typedef enum
 {
-    CRYPTOGRAPHY_TYPE_UNITIALIZED = 0,
+    CRYPTOGRAPHY_TYPE_UNINITIALIZED = 0,
     CRYPTOGRAPHY_TYPE_LIBGCRYPT,
     CRYPTOGRAPHY_TYPE_KMCCRYPTO,
     CRYPTOGRAPHY_TYPE_WOLFSSL,
     CRYPTOGRAPHY_TYPE_CUSTOM
 } CryptographyType;
+
 /***************************************
 ** GVCID Managed Parameter enums
 ****************************************/
@@ -89,19 +90,17 @@ typedef enum
 } CreateFecfBool;
 typedef enum
 {
-    AOS_FHEC_NA = 0,
-    AOS_NO_FHEC,
+    AOS_NO_FHEC = 0,
     AOS_HAS_FHEC
 } AosFhecPresent;
 typedef enum
 {
-    AOS_IZ_NA,
-    AOS_NO_IZ,
+    AOS_NO_IZ = 0,
     AOS_HAS_IZ
 } AosInsertZonePresent;
 typedef enum
 {
-    TC_CHECK_FECF_FALSE,
+    TC_CHECK_FECF_FALSE = 0,
     TC_CHECK_FECF_TRUE,
     TM_CHECK_FECF_FALSE,
     TM_CHECK_FECF_TRUE,
@@ -110,7 +109,7 @@ typedef enum
 } CheckFecfBool;
 typedef enum
 {
-    AOS_NO_OCF,
+    AOS_NO_OCF = 0,
     AOS_HAS_OCF,
     TC_OCF_NA,
     TM_NO_OCF,
@@ -143,9 +142,13 @@ typedef enum
 } TcIgnoreSaState;
 typedef enum
 {
-    TC_IGNORE_ANTI_REPLAY_FALSE,
-    TC_IGNORE_ANTI_REPLAY_TRUE
-} TcIgnoreAntiReplay;
+    TC_IGNORE_ANTI_REPLAY_FALSE = 0,
+    TC_IGNORE_ANTI_REPLAY_TRUE,
+    TM_IGNORE_ANTI_REPLAY_FALSE,
+    TM_IGNORE_ANTI_REPLAY_TRUE,
+    AOS_IGNORE_ANTI_REPLAY_FALSE,
+    AOS_IGNORE_ANTI_REPLAY_TRUE,
+} IgnoreAntiReplay;
 typedef enum
 {
     TC_UNIQUE_SA_PER_MAP_ID_FALSE,
@@ -207,37 +210,94 @@ typedef struct
     McType           mc_type;
     SadbType         sa_type;
     CryptographyType cryptography_type;
-    IvType           iv_type;             // Whether or not CryptoLib should generate the IV
-    CreateFecfBool   crypto_create_fecf;  // Whether or not CryptoLib is expected to calculate TC FECFs and return
+    IvType           iv_type; // Whether or not CryptoLib should generate the IV
+} __attribute__((packed)) CryptoConfigGlobal_t;
+#define CRYPTO_GLOBAL_CONFIG_SIZE (sizeof(CryptoConfigGlobal_t))
+
+typedef struct
+{
+    InitStatus     init_status;
+    CreateFecfBool crypto_create_fecf;    // Whether or not CryptoLib is expected to calculate TC FECFs and return
                                           // payloads with the FECF
     TcProcessSdlsPdus  process_sdls_pdus; // Config to process SDLS extended procedure PDUs in CryptoLib
-    TcPusHdrPresent    has_pus_hdr;
-    TcIgnoreSaState    ignore_sa_state; // TODO - add logic that uses this configuration
-    TcIgnoreAntiReplay ignore_anti_replay;
+    TcPusHdrPresent    has_pus_hdr;       // For ESA Testing
+    IgnoreAntiReplay   ignore_anti_replay;
+    TcIgnoreSaState    ignore_sa_state;
     TcUniqueSaPerMapId unique_sa_per_mapid;
     CheckFecfBool      crypto_check_fecf;
     uint8_t            vcid_bitmask;
     uint8_t crypto_increment_nontransmitted_iv; // Whether or not CryptoLib increments the non-transmitted portion of
                                                 // the IV field
-} CryptoConfig_t;
-#define CRYPTO_CONFIG_SIZE (sizeof(CryptoConfig_t))
+} __attribute__((packed)) CryptoConfigTC_t;
+#define CRYPTO_TC_CONFIG_SIZE (sizeof(CryptoConfigTC_t))
 
-typedef struct _GvcidManagedParameters_t GvcidManagedParameters_t;
-struct _GvcidManagedParameters_t
+typedef struct
+{
+    InitStatus     init_status;
+    CreateFecfBool crypto_create_fecf; // Whether or not CryptoLib is expected to calculate TC FECFs and return
+                                       // payloads with the FECF
+    IgnoreAntiReplay ignore_anti_replay;
+    CheckFecfBool    crypto_check_fecf;
+    uint8_t          vcid_bitmask;
+    uint8_t crypto_increment_nontransmitted_iv; // Whether or not CryptoLib increments the non-transmitted portion of
+                                                // the IV field
+} __attribute__((packed)) CryptoConfigTM_t;
+#define CRYPTO_TM_CONFIG_SIZE (sizeof(CryptoConfigTM_t))
+
+typedef struct
+{
+    InitStatus     init_status;
+    CreateFecfBool crypto_create_fecf; // Whether or not CryptoLib is expected to calculate TC FECFs and return
+                                       // payloads with the FECF
+    IgnoreAntiReplay ignore_anti_replay;
+    CheckFecfBool    crypto_check_fecf;
+    uint8_t          vcid_bitmask;
+    uint8_t crypto_increment_nontransmitted_iv; // Whether or not CryptoLib increments the non-transmitted portion of
+                                                // the IV field
+} __attribute__((packed)) CryptoConfigAOS_t;
+#define CRYPTO_AOS_CONFIG_SIZE (sizeof(CryptoConfigAOS_t))
+
+typedef struct _TCGvcidManagedParameters_t TCGvcidManagedParameters_t;
+struct _TCGvcidManagedParameters_t
 {
     uint8_t              tfvn : 4;  // Transfer Frame Version Number
     uint16_t             scid : 10; // SpacecraftID
     uint8_t              vcid : 6;  // Virtual Channel ID
     FecfPresent          has_fecf;
+    TcSegmentHdrsPresent has_segmentation_hdr;
+    uint16_t             max_frame_size; // Maximum TC/TM Frame Length with headers
+    int                  set_flag;
+} __attribute__((packed));
+#define TC_GVCID_MANAGED_PARAMETERS_SIZE (sizeof(TCGvcidManagedParameters_t))
+
+typedef struct _TMGvcidManagedParameters_t TMGvcidManagedParameters_t;
+struct _TMGvcidManagedParameters_t
+{
+    uint8_t     tfvn : 2;  // Transfer Frame Version Number
+    uint16_t    scid : 10; // SpacecraftID
+    uint8_t     vcid : 3;  // Virtual Channel ID
+    FecfPresent has_fecf;
+    uint16_t    max_frame_size; // Maximum TC/TM Frame Length with headers
+    OcfPresent  has_ocf;
+    int         set_flag;
+} __attribute__((packed));
+#define TM_GVCID_MANAGED_PARAMETERS_SIZE (sizeof(TMGvcidManagedParameters_t))
+
+typedef struct _AOSGvcidManagedParameters_t AOSGvcidManagedParameters_t;
+struct _AOSGvcidManagedParameters_t
+{
+    uint8_t              tfvn : 2; // Transfer Frame Version Number
+    uint8_t              scid : 8; // SpacecraftID
+    uint8_t              vcid : 6; // Virtual Channel ID
+    FecfPresent          has_fecf;
     AosFhecPresent       aos_has_fhec;
     AosInsertZonePresent aos_has_iz;
     uint16_t             aos_iz_len;
-    TcSegmentHdrsPresent has_segmentation_hdr;
     uint16_t             max_frame_size; // Maximum TC/TM Frame Length with headers
     OcfPresent           has_ocf;
     int                  set_flag;
-};
-#define GVCID_MANAGED_PARAMETERS_SIZE (sizeof(GvcidManagedParameters_t))
+} __attribute__((packed));
+#define AOS_GVCID_MANAGED_PARAMETERS_SIZE (sizeof(AOSGvcidManagedParameters_t))
 
 /*
 ** SaDB MariaDB Configuration Block
