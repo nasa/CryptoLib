@@ -573,24 +573,24 @@ typedef struct
 */
 typedef struct
 {
-    uint8_t tfvn : 2;  // Transfer Frame Version Number
-                       // Shall be set to '01' (732.0b4 Section 4.1.2.2.2)
-    uint16_t scid : 8; // Spacecraft ID
-    uint8_t  vcid : 6; // Virtual Channel ID
-                       // To be all zeros if only one VC used (732.0b4 Section 4.1.2.3)
-    long vcfc : 24;    // Virtual Channel Frame Count (modulo-16,777,216)
+    uint8_t tfvn;  // Transfer Frame Version Number
+                   // Shall be set to '01' (732.0b4 Section 4.1.2.2.2)
+    uint8_t scid;  // Spacecraft ID
+    uint8_t vcid;  // Virtual Channel ID
+                   // To be all zeros if only one VC used (732.0b4 Section 4.1.2.3)
+    uint32_t vcfc; // Virtual Channel Frame Count (modulo-16,777,216)
     /* Begin TF Signalling Field */
-    uint8_t rf : 1;      // Replay Flag
-    uint8_t sf : 1;      // VC Frame Count Usgae Flag
-                         // 0 = Payload is either idle data or octet synchronized forward-ordered packets
-                         // 1 = Data is a virtual channel access data unit
-    uint8_t spare : 2;   // Reserved Spare
-                         // 0 = Shall be set to 0
-                         // Sync Flag 1 = Undefined
-    uint8_t vfcc : 4;    // VC Frame Count cycle
-                         // Sync Flag 0 = Shall be 11
-                         // Sync Flag 1 = Undefined
-    uint16_t fhecf : 16; // Frame header error control field
+    uint8_t rf;     // Replay Flag
+    uint8_t sf;     // VC Frame Count Usgae Flag
+                    // 0 = Payload is either idle data or octet synchronized forward-ordered packets
+                    // 1 = Data is a virtual channel access data unit
+    uint8_t spare;  // Reserved Spare
+                    // 0 = Shall be set to 0
+                    // Sync Flag 1 = Undefined
+    uint8_t vfcc;   // VC Frame Count cycle
+                    // Sync Flag 0 = Shall be 11
+                    // Sync Flag 1 = Undefined
+    uint16_t fhecf; // Frame header error control field
 } __attribute__((packed)) AOS_FramePrimaryHeader_t;
 #define AOS_FRAME_PRIMARYHEADER_SIZE (sizeof(AOS_FramePrimaryHeader_t))
 
@@ -634,7 +634,7 @@ typedef struct
     uint8_t                    aos_pdu[AOS_FRAME_DATA_SIZE];
     uint16_t                   aos_pdu_len;
     AOS_FrameSecurityTrailer_t aos_sec_trailer;
-} __attribute__((packed)) AOS_t;
+} AOS_t;
 #define AOS_SIZE (sizeof(AOS_t))
 
 #define AOS_MIN_SIZE 6

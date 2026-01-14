@@ -135,31 +135,29 @@ void MDB_DB_RESET()
     }
 }
 
-/**
- * @brief Unit Test: Nominal Encryption CBC KMC
- **/
-UTEST(TM_APPLY_KMC, HAPPY_PATH_ENC_TM_GCM_KMC)
+UTEST(TM_APPLY_KMC, HAPPY_PATH_APPLY_GCM_FECF)
 {
+    int status = CRYPTO_LIB_SUCCESS;
     remove("sa_save_file.bin");
     reload_db();
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_KMC, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO,
-                            IV_CRYPTO_MODULE, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+                            IV_CRYPTO_MODULE);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_IGNORE_ANTI_REPLAY_FALSE, TM_CHECK_FECF_TRUE, 0x3F,
+                     SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
                           CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", NULL);
     Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
                                      "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
                                      "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
-    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x0003, 1, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {0, 0x0003, 1, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
     int32_t return_val = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
 
-    char *raw_tm_sdls_ping_h =
+    // Test frame setup
+    char *framed_tm_h =
         "003200001800000008010000000F00112233445566778899AABBCCDDEEFFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAA"
         "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
         "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
@@ -192,16 +190,12 @@ UTEST(TM_APPLY_KMC, HAPPY_PATH_ENC_TM_GCM_KMC)
         "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
         "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
         "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
-        "AABBAABBAABBAABB00000000000000000000000000000000415B";
-    char *raw_tm_sdls_ping_b   = NULL;
-    int   raw_tm_sdls_ping_len = 0;
-    // SaInterface sa_if = get_sa_interface_inmemory();
+        "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBFFFF";
+    char *framed_tm_b   = NULL;
+    int   framed_tm_len = 0;
+    hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);
 
-    hex_conversion(raw_tm_sdls_ping_h, &raw_tm_sdls_ping_b, &raw_tm_sdls_ping_len);
-
-    return_val = Crypto_TM_ApplySecurity((uint8_t *)raw_tm_sdls_ping_b, raw_tm_sdls_ping_len);
-    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
-
+    // Truth frame setup
     char *truth_tm_h =
         "003200001800000300000000000000000000000100EAD4B927F61B18F2771E0B23EE8217F27CC1A30B55347164A4502599E66ED481B8D4"
         "30CA8B102CD1547E4EF8E88C000A0D20ABADCA6F1EA3933AFB043EBB62E4C2E17FAF7C09DD0A94C4CDE0E382F66B295807F39B6D931761"
@@ -235,42 +229,51 @@ UTEST(TM_APPLY_KMC, HAPPY_PATH_ENC_TM_GCM_KMC)
         "B839223FDB02DE3973B9D954625A11A321D9FFFB01EC1EF3AD73F6215FDC51F45A9C39D69F5D55EAE424B3E48EDE3C5A5B441EA4BF6BF5"
         "78A3AB8CCD19D650742B514C4ABEC1D766D9C1A52895D93E6A905DBB1898409D60CA9CC82F03D0E2FEEB542D12B00F3E229CCDC41C5D6D"
         "CDED6A23B6CDEFBFB0C77904BB0F80C0EF2C73BBFDE8AE8E4DD6D13369F1D4CD1CC233ADE81EE90FD0B4AEAAF3DE619DBFAF431DA98731"
-        "B1BC956B514759F75CCF0497561450560E01656399DDC34B0000";
+        "B1BC956B514759F75CCF0497561450560E01656399DDC34BC742";
     char *truth_tm_b   = NULL;
     int   truth_tm_len = 0;
     hex_conversion(truth_tm_h, &truth_tm_b, &truth_tm_len);
 
+    // Bit math to give concise access to values already set in the static transfer frame
+    tm_frame_pri_hdr.tfvn = ((uint8_t)framed_tm_b[0] & 0xC0) >> 6;
+    tm_frame_pri_hdr.scid = (((uint16_t)framed_tm_b[0] & 0x3F) << 4) | (((uint16_t)framed_tm_b[1] & 0xF0) >> 4);
+    tm_frame_pri_hdr.vcid = ((uint8_t)framed_tm_b[1] & 0x0E) >> 1;
+
+    // Determine managed parameters by GVCID, which nominally happens in TO
+    status = Crypto_Get_TM_Managed_Parameters_For_Gvcid(tm_frame_pri_hdr.tfvn, tm_frame_pri_hdr.scid,
+                                                        tm_frame_pri_hdr.vcid, tm_gvcid_managed_parameters_array,
+                                                        &tm_current_managed_parameters_struct);
+
+    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b, framed_tm_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    // Now, byte by byte verify the static frame in memory is equivalent to what we started with
     for (int i = 0; i < tm_current_managed_parameters_struct.max_frame_size; i++)
     {
-        // printf("Checking %02x against %02X\n", (uint8_t)raw_tm_sdls_ping_b[i], (uint8_t) * (truth_tm_b + i));
-        ASSERT_EQ((uint8_t)raw_tm_sdls_ping_b[i], (uint8_t) * (truth_tm_b + i));
+        printf("Checking %02x against %02X\n", (uint8_t)framed_tm_b[i], (uint8_t) * (truth_tm_b + i));
+        ASSERT_EQ((uint8_t)framed_tm_b[i], (uint8_t) * (truth_tm_b + i));
     }
 
     Crypto_Shutdown();
+    free(framed_tm_b);
     free(truth_tm_b);
-    free(raw_tm_sdls_ping_b);
 }
 
-/**
- * @brief Unit Test: Nominal Encryption CBC KMC
- **/
-UTEST(TM_PROCESS_KMC, HAPPY_PATH_DEC_TM_GCM_KMC)
+UTEST(TM_PROCESS_KMC, HAPPY_PATH_DEC_GCM_FECF)
 {
     remove("sa_save_file.bin");
-    reload_db();
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_KMC, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO,
-                            IV_CRYPTO_MODULE, CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
-                            TC_IGNORE_SA_STATE_FALSE, TC_IGNORE_ANTI_REPLAY_TRUE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
-                            TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+                            IV_CRYPTO_MODULE);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_IGNORE_ANTI_REPLAY_TRUE, TM_CHECK_FECF_TRUE, 0x3F,
+                     SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
                           CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", NULL);
     Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
                                      "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
                                      "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
-    GvcidManagedParameters_t TM_UT_Managed_Parameters = {
-        0, 0x0003, 1, TM_HAS_FECF, AOS_FHEC_NA, AOS_IZ_NA, 0, TM_SEGMENT_HDRS_NA, 1786, TM_NO_OCF, 1};
-    Crypto_Config_Add_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {0, 0x0003, 1, TM_HAS_FECF, 1786, TM_NO_OCF, 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
     int32_t return_val = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
@@ -308,7 +311,7 @@ UTEST(TM_PROCESS_KMC, HAPPY_PATH_DEC_TM_GCM_KMC)
         "B839223FDB02DE3973B9D954625A11A321D9FFFB01EC1EF3AD73F6215FDC51F45A9C39D69F5D55EAE424B3E48EDE3C5A5B441EA4BF6BF5"
         "78A3AB8CCD19D650742B514C4ABEC1D766D9C1A52895D93E6A905DBB1898409D60CA9CC82F03D0E2FEEB542D12B00F3E229CCDC41C5D6D"
         "CDED6A23B6CDEFBFB0C77904BB0F80C0EF2C73BBFDE8AE8E4DD6D13369F1D4CD1CC233ADE81EE90FD0B4AEAAF3DE619DBFAF431DA98731"
-        "B1BC956B514759F75CCF0497561450560E01656399DDC34B0000";
+        "B1BC956B514759F75CCF0497561450560E01656399DDC34BC742";
     char *raw_tm_sdls_ping_b   = NULL;
     int   raw_tm_sdls_ping_len = 0;
 
@@ -323,7 +326,7 @@ UTEST(TM_PROCESS_KMC, HAPPY_PATH_DEC_TM_GCM_KMC)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
 
     char *truth_tm_h =
-        "003200001800000000000000000000000000000066778899AABBCCDDEEFFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAA"
+        "003200001800000008010000000F00112233445566778899AABBCCDDEEFFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAA"
         "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
         "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
         "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
@@ -355,7 +358,7 @@ UTEST(TM_PROCESS_KMC, HAPPY_PATH_DEC_TM_GCM_KMC)
         "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
         "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
         "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
-        "AABBAABBAABBAABB000000000000000000000000000000000000";
+        "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBFFFF";
     char *truth_tm_b   = NULL;
     int   truth_tm_len = 0;
     hex_conversion(truth_tm_h, &truth_tm_b, &truth_tm_len);
@@ -367,6 +370,8 @@ UTEST(TM_PROCESS_KMC, HAPPY_PATH_DEC_TM_GCM_KMC)
         // printf("Checking %02x against %02X\n", (uint8_t)raw_tm_sdls_ping_b[i], (uint8_t) * (truth_tm_b + i));
         ASSERT_EQ((uint8_t)tm_frame->tm_pdu[i], (uint8_t) * (truth_tm_b + i + offset));
     }
+
+    Crypto_tmPrint(tm_frame);
 
     Crypto_Shutdown();
     free(sa_ptr);

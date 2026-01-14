@@ -493,7 +493,7 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
         pdu_keys * (SDLS_KEYV_KEY_ID_LEN + SDLS_IV_LEN + CHALLENGE_SIZE + MAC_SIZE) * BYTE_LEN;
 
     // length = pdu_len + HDR + PUS - 1 (per CCSDS Convention)
-    if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
+    if (crypto_config_tc.has_pus_hdr == TC_HAS_PUS_HDR)
     {
         sdls_frame.hdr.pkt_length =
             CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;

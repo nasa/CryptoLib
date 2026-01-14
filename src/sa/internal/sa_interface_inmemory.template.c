@@ -799,7 +799,7 @@ int32_t sa_get_operational_sa_from_gvcid_find_iv(uint8_t tfvn, uint16_t scid, ui
         // If valid match found
         if ((sa[i].gvcid_blk.tfvn == tfvn) && (sa[i].gvcid_blk.scid == scid) && (sa[i].gvcid_blk.vcid == vcid) &&
             (sa[i].sa_state == SA_OPERATIONAL) &&
-            (crypto_config.unique_sa_per_mapid == TC_UNIQUE_SA_PER_MAP_ID_FALSE || sa[i].gvcid_blk.mapid == mapid))
+            (crypto_config_tc.unique_sa_per_mapid == TC_UNIQUE_SA_PER_MAP_ID_FALSE || sa[i].gvcid_blk.mapid == mapid))
         // only require MapID match is unique SA per MapID set (only relevant
         // when using segmentation hdrs)
         {

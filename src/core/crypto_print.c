@@ -76,22 +76,42 @@ void Crypto_tmPrint(TM_t *tm_frame)
     printf("\t\t fhp    = %d \n", tm_frame->tm_header.fhp);
     printf("\t SDLS Header\n");
     printf("\t\t spi    = %d \n", tm_frame->tm_sec_header.spi);
-    printf("\t\t iv[0]  = 0x%02x \n", tm_frame->tm_sec_header.iv[0]);
+    printf("\t\t iv     = 0x");
+    for (int i = 0; i < tm_frame->tm_sec_header.iv_field_len; i++)
+    {
+        printf("%02X", tm_frame->tm_sec_header.iv[i]);
+    }
+    printf("\n");
     printf("\t\t iv_len = %d \n", tm_frame->tm_sec_header.iv_field_len);
-    printf("\t\t sn[0]  = 0x%02x \n", tm_frame->tm_sec_header.sn[0]);
+    printf("\t\t sn     = 0x");
+    for (int i = 0; i < tm_frame->tm_sec_header.sn_field_len; i++)
+    {
+        printf("%02X", tm_frame->tm_sec_header.sn[i]);
+    }
+    printf("\n");
     printf("\t\t sn_len = %d \n", tm_frame->tm_sec_header.sn_field_len);
     printf("\t\t pad    = %d \n", tm_frame->tm_sec_header.pad);
     printf("\t\t pad_len= %d \n", tm_frame->tm_sec_header.pad_field_len);
     printf("\t Payload \n");
-    printf("\t\t data[0]= 0x%02x \n", tm_frame->tm_pdu[0]);
-    printf("\t\t data[1]= 0x%02x \n", tm_frame->tm_pdu[1]);
-    printf("\t\t data[2]= 0x%02x \n", tm_frame->tm_pdu[2]);
+    printf("\t\t data[0]= 0x%02X \n", tm_frame->tm_pdu[0]);
+    printf("\t\t data[1]= 0x%02X \n", tm_frame->tm_pdu[1]);
+    printf("\t\t data[2]= 0x%02X \n", tm_frame->tm_pdu[2]);
     printf("\t SDLS Trailer\n");
-    printf("\t\t MAC[0] = 0x%02x \n", tm_frame->tm_sec_trailer.mac[0]);
+    printf("\t\t MAC    = 0x");
+    for (int i = 0; i < tm_frame->tm_sec_trailer.mac_field_len; i++)
+    {
+        printf("%02X", tm_frame->tm_sec_trailer.mac[i]);
+    }
+    printf("\n");
     printf("\t\t MAC_len= %d \n", tm_frame->tm_sec_trailer.mac_field_len);
-    printf("\t\t OCF[0] = 0x%02x \n", tm_frame->tm_sec_trailer.ocf[0]);
+    printf("\t\t OCF    = 0x");
+    for (int i = 0; i < tm_frame->tm_sec_trailer.ocf_field_len; i++)
+    {
+        printf("%02X", tm_frame->tm_sec_trailer.ocf[i]);
+    }
+    printf("\n");
     printf("\t\t OCF_len= %d \n", tm_frame->tm_sec_trailer.ocf_field_len);
-    printf("\t\t FECF   = 0x%04x \n", tm_frame->tm_sec_trailer.fecf);
+    printf("\t\t FECF   = 0x%04X \n", tm_frame->tm_sec_trailer.fecf);
     printf("\n");
 }
 
@@ -112,26 +132,56 @@ void Crypto_aosPrint(AOS_t *aos_frame)
     printf("\t\t sf     = %d \n", aos_frame->aos_header.sf);
     printf("\t\t spare  = %d \n", aos_frame->aos_header.spare);
     printf("\t\t vfcc   = %d \n", aos_frame->aos_header.vfcc);
-    printf("\t\t fhecf  = 0x%04x \n", aos_frame->aos_header.fhecf);
+    printf("\t\t fhecf  = 0x%04X \n",
+           aos_current_managed_parameters_struct.aos_has_fhec ? aos_frame->aos_header.fhecf : 0x0000);
     printf("\t SDLS Header\n");
-    printf("\t\t iz[0]  = 0x%02x \n", aos_frame->aos_sec_header.iz[0]);
+    printf("\t\t iz[0]  = 0x%02X \n",
+           aos_current_managed_parameters_struct.aos_has_iz ? aos_frame->aos_sec_header.iz[0] : 0x00);
+    printf("\t\t iz     = 0x");
+    for (int i = 0;
+         (i < aos_current_managed_parameters_struct.aos_iz_len) && aos_current_managed_parameters_struct.aos_has_iz;
+         i++)
+    {
+        printf("%02X", aos_frame->aos_sec_header.iz[i]);
+    }
+    printf("\n");
     printf("\t\t spi    = %d \n", aos_frame->aos_sec_header.spi);
-    printf("\t\t iv[0]  = 0x%02x \n", aos_frame->aos_sec_header.iv[0]);
+    printf("\t\t iv     = 0x");
+    for (int i = 0; i < aos_frame->aos_sec_header.iv_field_len; i++)
+    {
+        printf("%02X", aos_frame->aos_sec_header.iv[i]);
+    }
+    printf("\n");
     printf("\t\t iv_len = %d \n", aos_frame->aos_sec_header.iv_field_len);
-    printf("\t\t sn[0]  = 0x%02x \n", aos_frame->aos_sec_header.sn[0]);
+    printf("\t\t sn     = 0x");
+    for (int i = 0; i < aos_frame->aos_sec_header.sn_field_len; i++)
+    {
+        printf("%02X", aos_frame->aos_sec_header.sn[i]);
+    }
+    printf("\n");
     printf("\t\t sn_len = %d \n", aos_frame->aos_sec_header.sn_field_len);
-    printf("\t\t pad    = %d \n", aos_frame->aos_sec_header.pad);
+    printf("\t\t pad    = %d \n", aos_frame->aos_sec_header.pad_field_len > 0 ? aos_frame->aos_sec_header.pad : 0);
     printf("\t\t pad_len= %d \n", aos_frame->aos_sec_header.pad_field_len);
     printf("\t Payload \n");
-    printf("\t\t data[0]= 0x%02x \n", aos_frame->aos_pdu[0]);
-    printf("\t\t data[1]= 0x%02x \n", aos_frame->aos_pdu[1]);
-    printf("\t\t data[2]= 0x%02x \n", aos_frame->aos_pdu[2]);
+    printf("\t\t data[0]= 0x%02X \n", aos_frame->aos_pdu[0]);
+    printf("\t\t data[1]= 0x%02X \n", aos_frame->aos_pdu[1]);
+    printf("\t\t data[2]= 0x%02X \n", aos_frame->aos_pdu[2]);
     printf("\t SDLS Trailer\n");
-    printf("\t\t MAC[0] = 0x%02x \n", aos_frame->aos_sec_trailer.mac[0]);
+    printf("\t\t MAC    = 0x");
+    for (int i = 0; i < aos_frame->aos_sec_trailer.mac_field_len; i++)
+    {
+        printf("%02X", aos_frame->aos_sec_trailer.mac[i]);
+    }
+    printf("\n");
     printf("\t\t MAC_len= %d \n", aos_frame->aos_sec_trailer.mac_field_len);
-    printf("\t\t OCF[0] = 0x%02x \n", aos_frame->aos_sec_trailer.ocf[0]);
+    printf("\t\t OCF    = 0x");
+    for (int i = 0; i < aos_frame->aos_sec_trailer.ocf_field_len; i++)
+    {
+        printf("%02X", aos_frame->aos_sec_trailer.ocf[i]);
+    }
+    printf("\n");
     printf("\t\t OCF_len= %d \n", aos_frame->aos_sec_trailer.ocf_field_len);
-    printf("\t\t FECF   = 0x%04x \n", aos_frame->aos_sec_trailer.fecf);
+    printf("\t\t FECF   = 0x%04X \n", aos_frame->aos_sec_trailer.fecf);
     printf("\n");
 }
 
@@ -220,7 +270,7 @@ void Crypto_ccsdsPrint(CCSDS_t *sdls_frame)
     printf("\t\t seq        = 0x%01x \n", sdls_frame->hdr.seq);
     printf("\t\t pktid      = 0x%04x \n", sdls_frame->hdr.pktid);
     printf("\t\t pkt_length = 0x%04x \n", sdls_frame->hdr.pkt_length);
-    if (crypto_config.has_pus_hdr == TC_HAS_PUS_HDR)
+    if (crypto_config_tc.has_pus_hdr == TC_HAS_PUS_HDR)
     {
         printf("\t PUS Header\n");
         printf("\t\t shf        = 0x%01x \n", sdls_frame->pus.shf);
@@ -359,20 +409,4 @@ void Crypto_binprint(void *c, size_t n)
     printf("\n");
 }
 
-void Crypto_mpPrint(GvcidManagedParameters_t *managed_parameters, uint8_t print_children)
-// Prints the currently configured Managed Parameters
-{
-    print_children = print_children;
-    if (managed_parameters != NULL)
-    {
-        printf("Managed Parameter: \n");
-        printf("\t tfvn: %d", managed_parameters->tfvn);
-        printf("\t scid: %d", managed_parameters->scid);
-        printf("\t vcid: %d", managed_parameters->vcid);
-        printf("\t has_fecf: %d", managed_parameters->has_fecf);
-        printf("\t has_segmentation_headers: %d\n", managed_parameters->has_segmentation_hdr);
-        printf("\t max_frame_size: %d\n", managed_parameters->max_frame_size);
-        printf("\t TM has ocf %d\n", managed_parameters->has_ocf);
-    }
-}
 #endif
