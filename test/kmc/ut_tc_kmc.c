@@ -153,6 +153,7 @@ void MDB_DB_RESET()
 UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_CBC_KMC)
 {
     remove("sa_save_file.bin");
+    int32_t return_val = CRYPTO_LIB_ERROR;
     reload_db();
     // Setup & Initialize CryptoLib
     Crypto_Config_CryptoLib(KEY_TYPE_KMC, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO,
@@ -162,12 +163,15 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_CBC_KMC)
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
                           CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", NULL);
-    Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
+    //                                            "https", "itc.kmc.nasa.gov"
+    return_val = Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
                                      "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
                                      "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
     TCGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, 1};
     Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
-    Crypto_Init();
+    return_val = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
 
     // Setup & Initialize CryptoLib
     char *raw_tc_sdls_ping_h   = "20030015000080d2c70008197f0b00310000b1fe3128";
@@ -178,10 +182,10 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_ENC_CBC_KMC)
 
     uint8_t *ptr_enc_frame = NULL;
     uint16_t enc_frame_len = 0;
-    int32_t  return_val    = CRYPTO_LIB_ERROR;
 
     return_val =
         Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
 
     char *truth_data_h =
         "2003003300000002000000000000000000000000E64F9B208554A8CE1CB9BF0C6D100000000000000000000000000000000084C2";
@@ -272,6 +276,316 @@ UTEST(TC_APPLY_SECURITY, ENC_CBC_KMC_1BP)
     free(raw_tc_sdls_ping_b);
     free(ptr_enc_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+}
+
+UTEST(TC_APPLY_SECURITY, BAD_MDB_PASSWORD)
+{
+    remove("sa_save_file.bin");
+    int32_t return_val = CRYPTO_LIB_ERROR;
+    reload_db();
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(KEY_TYPE_KMC, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO,
+                            IV_CRYPTO_MODULE);
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR, TC_IGNORE_ANTI_REPLAY_TRUE,
+                     TC_IGNORE_SA_STATE_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F,
+                     SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
+                          CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", "bad_password");
+    //                                            "https", "itc.kmc.nasa.gov"
+    return_val = Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
+                                     "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
+                                     "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+    TCGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    return_val = Crypto_Init();
+    ASSERT_EQ(SADB_MARIADB_CONNECTION_FAILED, return_val);
+
+    // Setup & Initialize CryptoLib
+    char *raw_tc_sdls_ping_h   = "20030015000080d2c70008197f0b00310000b1fe3128";
+    char *raw_tc_sdls_ping_b   = NULL;
+    int   raw_tc_sdls_ping_len = 0;
+
+    hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
+
+    uint8_t *ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+
+    return_val =
+        Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_ERR_NO_CONFIG, return_val);
+
+    Crypto_Shutdown();
+    free(raw_tc_sdls_ping_b);
+    free(ptr_enc_frame);
+
+    Crypto_Shutdown();
+}
+
+UTEST(TC_APPLY_SECURITY, BAD_HOSTNAME)
+{
+    remove("sa_save_file.bin");
+    int32_t return_val = CRYPTO_LIB_ERROR;
+    reload_db();
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(KEY_TYPE_KMC, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO,
+                            IV_CRYPTO_MODULE);
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR, TC_IGNORE_ANTI_REPLAY_TRUE,
+                     TC_IGNORE_SA_STATE_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F,
+                     SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
+                          CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", NULL);
+    //                                            "https", "itc.kmc.nasa.gov"
+    return_val = Crypto_Config_Kmc_Crypto_Service("https", "iii.kmc.nasa.gov", 8443, "crypto-service",
+                                     "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
+                                     "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+    TCGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    return_val = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+
+    // Setup & Initialize CryptoLib
+    char *raw_tc_sdls_ping_h   = "20030015000080d2c70008197f0b00310000b1fe3128";
+    char *raw_tc_sdls_ping_b   = NULL;
+    int   raw_tc_sdls_ping_len = 0;
+
+    hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
+
+    uint8_t *ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+
+    return_val =
+        Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE, return_val);
+
+    Crypto_Shutdown();
+    free(raw_tc_sdls_ping_b);
+    free(ptr_enc_frame);
+}
+
+UTEST(TC_APPLY_SECURITY, FRAME_TOO_SHORT)
+{
+    remove("sa_save_file.bin");
+    int32_t return_val = CRYPTO_LIB_ERROR;
+    reload_db();
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(KEY_TYPE_KMC, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO,
+                            IV_CRYPTO_MODULE);
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR, TC_IGNORE_ANTI_REPLAY_TRUE,
+                     TC_IGNORE_SA_STATE_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F,
+                     SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
+                          CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", NULL);
+    //                                            "https", "itc.kmc.nasa.gov"
+    return_val = Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
+                                     "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
+                                     "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+    TCGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    return_val = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+
+    // Setup & Initialize CryptoLib
+    char *raw_tc_sdls_ping_h   = "20030008";
+    char *raw_tc_sdls_ping_b   = NULL;
+    int   raw_tc_sdls_ping_len = 0;
+
+    hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
+
+    uint8_t *ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+
+    return_val =
+        Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_TC_STANDARD, return_val);
+
+    Crypto_Shutdown();
+    free(raw_tc_sdls_ping_b);
+    free(ptr_enc_frame);
+}
+
+UTEST(TC_APPLY_SECURITY, HDR_FRAME_LEN_SHORT)
+{
+    remove("sa_save_file.bin");
+    int32_t return_val = CRYPTO_LIB_ERROR;
+    reload_db();
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(KEY_TYPE_KMC, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO,
+                            IV_CRYPTO_MODULE);
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR, TC_IGNORE_ANTI_REPLAY_TRUE,
+                     TC_IGNORE_SA_STATE_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F,
+                     SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
+                          CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", NULL);
+    //                                            "https", "itc.kmc.nasa.gov"
+    return_val = Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
+                                     "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
+                                     "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+    TCGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    return_val = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+
+    // Setup & Initialize CryptoLib
+    char *raw_tc_sdls_ping_h   = "20030008000080d2c70008197f0b00310000b1fe3128";
+    char *raw_tc_sdls_ping_b   = NULL;
+    int   raw_tc_sdls_ping_len = 0;
+
+    hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
+
+    uint8_t *ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+
+    return_val =
+        Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_ERR_TC_FRAME_LENGTH_MISMATCH, return_val);
+
+    Crypto_Shutdown();
+    free(raw_tc_sdls_ping_b);
+    free(ptr_enc_frame);
+}
+
+UTEST(TC_APPLY_SECURITY, BAD_PROTOCOL)
+{
+    remove("sa_save_file.bin");
+    int32_t return_val = CRYPTO_LIB_ERROR;
+    reload_db();
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(KEY_TYPE_KMC, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO,
+                            IV_CRYPTO_MODULE);
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR, TC_IGNORE_ANTI_REPLAY_TRUE,
+                     TC_IGNORE_SA_STATE_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F,
+                     SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
+                          CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", NULL);
+    //                                            "https", "itc.kmc.nasa.gov"
+    return_val = Crypto_Config_Kmc_Crypto_Service("htptp", "itc.kmc.nasa.gov", 8443, "crypto-service",
+                                     "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
+                                     "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+    TCGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    return_val = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+
+    // Setup & Initialize CryptoLib
+    char *raw_tc_sdls_ping_h   = "20030015000080d2c70008197f0b00310000b1fe3128";
+    char *raw_tc_sdls_ping_b   = NULL;
+    int   raw_tc_sdls_ping_len = 0;
+
+    hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
+
+    uint8_t *ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+
+    return_val =
+        Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE, return_val);
+
+    Crypto_Shutdown();
+    free(raw_tc_sdls_ping_b);
+    free(ptr_enc_frame);
+}
+
+UTEST(TC_APPLY_SECURITY, NEGATIVE_MAX_FRAME_LENGTH)
+{
+    remove("sa_save_file.bin");
+    int32_t return_val = CRYPTO_LIB_ERROR;
+    reload_db();
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(KEY_TYPE_KMC, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO,
+                            IV_CRYPTO_MODULE);
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR, TC_IGNORE_ANTI_REPLAY_TRUE,
+                     TC_IGNORE_SA_STATE_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F,
+                     SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
+                          CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", NULL);
+    //                                            "https", "itc.kmc.nasa.gov"
+    return_val = Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
+                                     "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
+                                     "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+    TCGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, -1, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    return_val = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+
+    // Setup & Initialize CryptoLib
+    char *raw_tc_sdls_ping_h   = "20030015000080d2c70008197f0b00310000b1fe3128";
+    char *raw_tc_sdls_ping_b   = NULL;
+    int   raw_tc_sdls_ping_len = 0;
+
+    hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
+
+    uint8_t *ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+
+    return_val =
+        Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+
+    Crypto_Shutdown();
+    free(raw_tc_sdls_ping_b);
+    free(ptr_enc_frame);
+}
+
+UTEST(TC_APPLY_SECURITY, AES_CMAC)
+{
+    remove("sa_save_file.bin");
+    int32_t return_val = CRYPTO_LIB_ERROR;
+    reload_db();
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(KEY_TYPE_KMC, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO,
+                            IV_CRYPTO_MODULE);
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR, TC_IGNORE_ANTI_REPLAY_TRUE,
+                     TC_IGNORE_SA_STATE_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F,
+                     SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
+                          CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", NULL);
+    //                                            "https", "itc.kmc.nasa.gov"
+    return_val = Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
+                                     "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
+                                     "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+    TCGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x002C, 7, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    return_val = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+
+    // Setup & Initialize CryptoLib
+    char *raw_tc_sdls_ping_h   = "002C1CA31800000C08010000000F00112233445566778899AABBCCDDEEFFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB0000";
+    char *raw_tc_sdls_ping_b   = NULL;
+    int   raw_tc_sdls_ping_len = 0;
+
+    hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
+
+    uint8_t *ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+
+    return_val =
+        Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+
+    char *expected_enc_frame_h =
+        "002C1CB91800000B00000001000C08010000000F00112233445566778899AABBCCDDEEFFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB370483FEA7CCDAB38CEE610B3C1D49229207";
+    uint8_t *expected_enc_frame_b = NULL;
+    int expected_enc_frame_len = 0;
+
+    hex_conversion(expected_enc_frame_h, (char **)&expected_enc_frame_b, &expected_enc_frame_len);
+
+    // Verify the contents of the encrypted frame
+    for (int i = 0; i < enc_frame_len; i++)
+    {
+        ASSERT_EQ(ptr_enc_frame[i], expected_enc_frame_b[i]);
+    }
+
+    Crypto_Shutdown();
+    free(expected_enc_frame_b);
+    free(raw_tc_sdls_ping_b);
+    free(ptr_enc_frame);
 }
 
 // /**

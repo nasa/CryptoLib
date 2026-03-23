@@ -1069,6 +1069,10 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, const uint16_t in
     {
         status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_MISMATCH;
         mc_if->mc_log(status);
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+        {
+            free(sa_ptr);
+        }
         return status;
     }
 

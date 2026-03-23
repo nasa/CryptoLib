@@ -519,21 +519,22 @@ int32_t Crypto_Init(void)
                 {
                     // cFS Standard Initialized Message
 #ifdef DEBUG
-                    printf(KBLU "Crypto Lib Intialized.  Version %d.%d.%d.%d\n" RESET, CRYPTO_LIB_MAJOR_VERSION,
-                           CRYPTO_LIB_MINOR_VERSION, CRYPTO_LIB_REVISION, CRYPTO_LIB_MISSION_REV);
+                    printf(KBLU "Crypto Lib Intialized.  Version %d.%d.%d\n" RESET, CRYPTO_LIB_MAJOR_VERSION,
+                           CRYPTO_LIB_MINOR_VERSION, CRYPTO_LIB_REVISION);
 #endif
                 }
             }
             else
             {
 #ifdef DEBUG
-                printf(KBLU "Error, Crypto Lib NOT Intialized, sa_init() returned error:%d.  Version .%d.%d.%d\n" RESET,
-                       CRYPTO_LIB_MAJOR_VERSION, CRYPTO_LIB_MINOR_VERSION, CRYPTO_LIB_REVISION, CRYPTO_LIB_MISSION_REV);
+                printf(KBLU "Error, CryptoLib NOT Intialized, sa_init() returned error:%d  Version %d.%d.%d\n" RESET,
+                       status, CRYPTO_LIB_MAJOR_VERSION, CRYPTO_LIB_MINOR_VERSION, CRYPTO_LIB_REVISION);
 #endif
             }
         }
     }
 
+    crypto_config_global.init_status = status == CRYPTO_LIB_SUCCESS ? INITIALIZED : UNINITIALIZED;
     return status;
 }
 

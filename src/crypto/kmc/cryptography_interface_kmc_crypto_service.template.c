@@ -860,9 +860,10 @@ static int32_t cryptography_authenticate(uint8_t *data_out, size_t len_data_out,
             // search through metadata string for base64 ICV end idx:
             // Format:
             // "integrityCheckValue:xQgnkVrrQj8FRALV3DxnVg==,keyRef:kmc/test/nist_cmac_90,cryptoAlgorithm:AESCMAC,metadataType:IntegrityCheckMetadata"
-            uint32_t len_metadata = t[json_idx + 1].end - t[json_idx + 1].start;
-            char    *metadata     = malloc(len_metadata + 1);
-            char    *metadata_end = &metadata[len_metadata];
+            uint32_t len_metadata    = t[json_idx + 1].end - t[json_idx + 1].start;
+            char    *metadata        = malloc(len_metadata + 1);
+            char    *metadata_start  = metadata;
+            char    *metadata_end    = &metadata[len_metadata];
             memcpy(metadata, chunk_write->response + t[json_idx + 1].start, len_metadata);
 
             char  *key = "";
@@ -880,6 +881,7 @@ static int32_t cryptography_authenticate(uint8_t *data_out, size_t len_data_out,
 #endif
                 if (strcmp(key, "integrityCheckValue") == 0)
                 {
+                    free(key);
                     break; // key found!
                 }
                 if (strcmp(key, "integrityCheckValue") != 0)
@@ -908,9 +910,9 @@ static int32_t cryptography_authenticate(uint8_t *data_out, size_t len_data_out,
 #endif
             json_idx++;
             icvtext_found = CRYPTO_TRUE;
-            free(chunk_read);
-            free(chunk_write);
-            free(metadata);
+            
+            metadata = metadata_start;
+            free(metadata); 
             continue;
         }
 
@@ -972,6 +974,7 @@ static int32_t cryptography_authenticate(uint8_t *data_out, size_t len_data_out,
 
     memcpy(mac, icv_decoded, mac_size);
     free(chunk_read);
+    free(chunk_write->response);
     free(chunk_write);
     free(icv_decoded);
     return status;

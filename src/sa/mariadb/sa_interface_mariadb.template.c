@@ -147,8 +147,7 @@ static int32_t sa_init(void)
                                    sa_mariadb_config->mysql_port, NULL, 0) == NULL)
             {
                 // 0,NULL,0 are port number, unix socket, client flag
-                finish_with_error_hard(&con, SADB_MARIADB_CONNECTION_FAILED);
-                status = CRYPTO_LIB_ERROR;
+                status = finish_with_error_hard(&con, SADB_MARIADB_CONNECTION_FAILED);
             }
             else
             {
