@@ -238,13 +238,6 @@ static int32_t sa_save_sa(SecurityAssociation_t *sa)
     }
     // todo - if query fails, need to push failure message to error stack instead of just return code.
 
-    // We free the allocated SA memory in the save function.
-    if (sa->ek_ref[0] != '\0')
-        clean_ekref(sa);
-    if (sa->ak_ref[0] != '\0')
-        clean_akref(sa);
-    free(sa);
-
     return status;
 }
 // Security Association Utility Functions

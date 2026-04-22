@@ -791,6 +791,10 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
 #endif
 
     status = sa_if->sa_save_sa(sa_ptr);
+    if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+    {
+        free(sa_ptr);
+    }
 
 #ifdef DEBUG
     printf(KYEL "----- Crypto_AOS_ApplySecurity END -----\n" RESET);
@@ -1663,7 +1667,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     {
         memcpy(pp_processed_frame->aos_sec_header.iv + i, &p_ingest[byte_idx + i], 1);
     }
-    byte_idx += sa_ptr->shivf_len;
+    byte_idx += sa_ptr->shivf_len; 
     pp_processed_frame->aos_sec_header.iv_field_len = sa_ptr->shivf_len;
 
     for (int i = 0; i < sa_ptr->shsnf_len; i++)

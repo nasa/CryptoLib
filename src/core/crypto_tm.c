@@ -756,6 +756,10 @@ int32_t Crypto_TM_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
 
         *idx_p = idx;
     }
+    if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+    {
+        free(sa_ptr);
+    }
     return status;
 }
 

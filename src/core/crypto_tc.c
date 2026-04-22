@@ -1296,6 +1296,10 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, const uint16_t in
     *pp_in_frame = p_new_enc_frame;
 
     status = sa_if->sa_save_sa(sa_ptr);
+    if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+    {
+        free(sa_ptr);
+    }
 
 #ifdef DEBUG
     printf(KYEL "----- Crypto_TC_ApplySecurity END -----\n" RESET);
