@@ -886,7 +886,7 @@ int32_t Crypto_Config_Cam(uint8_t cam_enabled, char *cookie_file_path, char *key
 int32_t Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TCGvcidManagedParameters_t gvcid_managed_parameters_struct)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    if (tc_gvcid_counter > GVCID_MAN_PARAM_SIZE)
+    if (tc_gvcid_counter >= GVCID_MAN_PARAM_SIZE)
     {
         status = CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT;
     }
@@ -902,7 +902,7 @@ int32_t Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TCGvcidManagedParameters_t
 int32_t Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TMGvcidManagedParameters_t gvcid_managed_parameters_struct)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    if (tm_gvcid_counter > GVCID_MAN_PARAM_SIZE)
+    if (tm_gvcid_counter >= GVCID_MAN_PARAM_SIZE)
     {
         status = CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT;
     }
