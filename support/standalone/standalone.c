@@ -421,7 +421,8 @@ int32_t crypto_standalone_socket_init(udp_info_t *sock, int32_t port, uint8_t bi
         }
         else
         {
-            if (crypto_use_tcp == 0 && bind_sock == 1 && sock->port == TM_PROCESS_PORT)
+            // if (crypto_use_tcp == 0 && bind_sock == 1 && sock->port == TM_PROCESS_PORT)
+            if (crypto_use_tcp == 0 && bind_sock == 1)
             {
                 status = bind(sock->sockfd, (struct sockaddr *)&sock->saddr, sizeof(sock->saddr));
                 if (status != 0)
@@ -922,13 +923,20 @@ int main(int argc, char *argv[])
     pthread_t tc_apply_thread;
     pthread_t tm_process_thread;
 
-    tc_apply.read.ip_address    = CRYPTOLIB_HOSTNAME;
+    // tc_apply.read.ip_address    = CRYPTOLIB_HOSTNAME;
+    tc_apply.read.ip_address    = "0.0.0.0";
     tc_apply.read.port          = TC_APPLY_PORT;
     tc_apply.write.ip_address   = SC_HOSTNAME;
     tc_apply.write.port         = TC_APPLY_FWD_PORT;
-    tm_process.read.ip_address  = CRYPTOLIB_HOSTNAME;
+    // tm_process.read.ip_address  = CRYPTOLIB_HOSTNAME;
+    tm_process.read.ip_address  = "0.0.0.0";
     tm_process.read.port        = TM_PROCESS_PORT;
-    tm_process.write.ip_address = GSW_HOSTNAME;
+    // tm_process.write.ip_address = GSW_HOSTNAME;
+    tm_process.write.ip_address = getenv("GSWAlias");
+    printf("GSWAlias is %s\n", tm_process.write.ip_address);
+    if(strcmp(tm_process.write.ip_address, "yamcs")==0){
+        tm_process.read.port         = 8013;
+    }
     tm_process.write.port       = TM_PROCESS_FWD_PORT;
 
     printf("Starting CryptoLib in standalone mode! \n");
@@ -977,7 +985,8 @@ int main(int argc, char *argv[])
     if (keepRunning == CRYPTO_LIB_SUCCESS)
     {
         status =
-            crypto_standalone_socket_init(&tm_process.read, TM_PROCESS_PORT, 1, crypto_use_tcp); // tcp, accept() 8011
+            // crypto_standalone_socket_init(&tm_process.read, TM_PROCESS_PORT, 1, crypto_use_tcp); // tcp, accept() 8011
+            crypto_standalone_socket_init(&tm_process.read, tm_process.read.port, 1, crypto_use_tcp); // tcp, accept() 8011 or 8013
         if (status != CRYPTO_LIB_SUCCESS)
         {
             printf("crypto_standalone_socket_init tm_apply.read failed with status %d \n", status);
