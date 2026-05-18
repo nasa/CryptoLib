@@ -922,19 +922,25 @@ int main(int argc, char *argv[])
 
     pthread_t tc_apply_thread;
     pthread_t tm_process_thread;
+    char *CRYPTOLIB_HOSTNAME;
+    CRYPTOLIB_HOSTNAME = getenv("CRYPTO_HOST");
+    if (CRYPTOLIB_HOSTNAME == NULL) {
+        CRYPTOLIB_HOSTNAME = "0.0.0.0"; //only using this if cant find hostname env variable
+    }
+    char *GSW_HOSTNAME;
+    GSW_HOSTNAME = getenv("GSWALIAS");
+    if (GSW_HOSTNAME == NULL) {
+        GSW_HOSTNAME = "cosmos"; //default if env var not specified
+    }
 
-    // tc_apply.read.ip_address    = CRYPTOLIB_HOSTNAME;
-    tc_apply.read.ip_address    = "0.0.0.0";
+    tc_apply.read.ip_address    = CRYPTOLIB_HOSTNAME;
     tc_apply.read.port          = TC_APPLY_PORT;
     tc_apply.write.ip_address   = SC_HOSTNAME;
     tc_apply.write.port         = TC_APPLY_FWD_PORT;
-    // tm_process.read.ip_address  = CRYPTOLIB_HOSTNAME;
-    tm_process.read.ip_address  = "0.0.0.0";
+    tm_process.read.ip_address  = CRYPTOLIB_HOSTNAME;
     tm_process.read.port        = TM_PROCESS_PORT;
-    // tm_process.write.ip_address = GSW_HOSTNAME;
-    tm_process.write.ip_address = getenv("GSWAlias");
-    printf("GSWAlias is %s\n", tm_process.write.ip_address);
-    if(strcmp(tm_process.write.ip_address, "yamcs")==0){
+    tm_process.write.ip_address = GSW_HOSTNAME;
+    if(strcmp(tm_process.write.ip_address, "yamcs")==0 && strcmp(CRYPTOLIB_HOSTNAME, "cryptolib2")==0){
         tm_process.read.port         = 8013;
     }
     tm_process.write.port       = TM_PROCESS_FWD_PORT;
