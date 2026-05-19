@@ -921,7 +921,7 @@ int main(int argc, char *argv[])
     if (tcp_var != NULL) {
         crypto_use_tcp = atoi(tcp_var);
     } else {
-        crypto_use_tcp = 0; // Default to UDP if the variable is not defined
+        crypto_use_tcp = 1; // Default to TCP if the variable is not defined
     }
 
     udp_interface_t tc_apply;
