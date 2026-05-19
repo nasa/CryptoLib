@@ -33,7 +33,8 @@ static volatile uint8_t tc_seq_num     = 0;
 static volatile uint8_t tc_vcid        = CRYPTO_STANDALONE_FRAMING_VCID;
 static volatile uint8_t tc_debug       = 1;
 static volatile uint8_t tm_debug       = 0;
-static volatile uint8_t crypto_use_tcp = STANDALONE_TCP ? 1 : 0;
+// static volatile uint8_t crypto_use_tcp = STANDALONE_TCP ? 1 : 0;
+static volatile uint8_t crypto_use_tcp = 0;
 
 /*
 ** Functions
@@ -916,6 +917,12 @@ int main(int argc, char *argv[])
     int   num_input_tokens;
     int   cmd;
     char *token_ptr;
+    char *tcp_var = getenv("STANDALONE_TCP");
+    if (tcp_var != NULL) {
+        crypto_use_tcp = atoi(tcp_var);
+    } else {
+        crypto_use_tcp = 0; // Default to UDP if the variable is not defined
+    }
 
     udp_interface_t tc_apply;
     udp_interface_t tm_process;

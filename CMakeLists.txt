@@ -64,7 +64,7 @@ option(KEY_VALIDATION "Validate existance of key duplication" OFF)
 option(KMC_MDB_RH "KMC-MDB-RedHat-Integration-Testing" OFF) #Disabled by default, enable with: -DKMC_MDB_RH=ON
 option(KMC_MDB_DB "KMC-MDB-Debian-Integration-Testing" OFF) #Disabled by default, enable with: -DKMC_MDB_DB=ON
 option(CRYPTO_EPROC "Enables the building and use of Extended Procedures" OFF) #Disabled by default, enable with -DCRYPTO_EPROC=ON
-option(STANDALONE_TCP "Enables TCP support for standalone" OFF)
+# option(STANDALONE_TCP "Enables TCP support for standalone" OFF)
 
 option(MAC_SIZE "The size of the max MAC buffer in bytes")
 option(IV_SIZE "The size of the max IV buffer in bytes")
