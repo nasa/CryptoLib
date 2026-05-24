@@ -14,7 +14,8 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y clang-format
 
       - name: Run Linter
-        uses: DoozyX/clang-format-lint-action@v0.15
+        # audit-note:cloud-006-gha-third-party-no-sha — Pin to a 40-char commit SHA. Tag refs are mutable and a repo takeover compromises every workflow using @v1.
+        uses: DoozyX/clang-format-lint-action@c71d0bf4e21876ebec3e5647491186f8797fde31 # v0.15
         with:
           source: '.'
           extensions: 'c,h'
@@ -23,7 +24,8 @@ jobs:
           inplace: true
 
       - name: Auto-Commit Formatting Changes
-        uses: stefanzweifel/git-auto-commit-action@v5
+        # audit-note:cloud-006-gha-third-party-no-sha — Pin to a 40-char commit SHA. Tag refs are mutable and a repo takeover compromises every workflow using @v1.
+        uses: stefanzweifel/git-auto-commit-action@b863ae1933cb653a53c021fe36dbb774e1fb9403 # v5
         with:
           commit_message: 'style: auto-format via clang-format'
           
