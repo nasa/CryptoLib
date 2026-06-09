@@ -781,6 +781,19 @@ static int32_t sa_get_from_spi(uint16_t spi, SecurityAssociation_t **security_as
         return status;
     }
 
+    // IV length cannot be less than the transmitted-IV-field (shivf) length.
+    // Parallel invariant to the shsnf/arsn check above — without this guard,
+    // a loaded SA with shivf_len > iv_len causes `for (i = iv_len - shivf_len;
+    // i < iv_len; i++)` in the per-frame IV walks (crypto_aos.c:318/351/697,
+    // crypto_tc.c:331/631, etc.) to start at a negative index, leaking up to
+    // shivf_len bytes from before sa_ptr->iv into the transmitted frame.
+    if (sa[spi].shivf_len > sa[spi].iv_len)
+    {
+        status = CRYPTO_LIB_ERR_SHIVF_LEN_GREATER_THAN_IV_LEN;
+        mc_if->mc_log(status);
+        return status;
+    }
+
 #ifdef SA_DEBUG
     printf(KYEL "DEBUG - Printing local copy of SA Entry for current SPI.\n" RESET);
     Crypto_saPrint(*security_association);

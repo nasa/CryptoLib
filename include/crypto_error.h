@@ -158,8 +158,9 @@
 #define CRYPTO_LIB_ERR_SHPLF_LEN_LESS_THAN_MIN_PAD_SIZE                     (-83)
 #define CRYPTO_LIB_ERR_INVALID_AOS_IZ_LENGTH                                (-84)
 #define CRYPTO_LIB_ERR_INVALID_AOS_FRAME_LENGTH                             (-85)
+#define CRYPTO_LIB_ERR_SHIVF_LEN_GREATER_THAN_IV_LEN                        (-86)
 
-#define CRYPTO_CORE_ERROR_CODES_MAX -85
+#define CRYPTO_CORE_ERROR_CODES_MAX -86
 
 // Define codes for returning MDB Strings, and determining error based on strings
 #define CAM_ERROR_CODES     600
