@@ -829,8 +829,17 @@ int32_t Crytpo_TC_Validate_TC_Temp_Header(const uint16_t in_frame_length, TC_Fra
 
     if (tc_current_managed_parameters_struct.has_segmentation_hdr == TC_HAS_SEGMENT_HDRS)
     {
-        *segmentation_hdr = p_in_frame[5];
-        *map_id           = *segmentation_hdr & 0x3F;
+        if (in_frame_length < 6) // Frame length doesn't have enough bytes for segmentation header -- error out.
+        {
+            status = CRYPTO_LIB_ERR_INPUT_FRAME_LENGTH_SHORTER_THAN_FRAME_HEADERS_LENGTH;
+            mc_if->mc_log(status);
+            return status;
+        }
+        else
+        {
+            *segmentation_hdr = p_in_frame[5];
+            *map_id           = *segmentation_hdr & 0x3F;
+        }
     }
     // Check if command frame flag set
     status = Crypto_TC_Check_CMD_Frame_Flag(temp_tc_header.cc);
@@ -1613,6 +1622,13 @@ int32_t Crypto_TC_Do_Decrypt(uint8_t sa_service_type, uint8_t ecs_is_aead_algori
                 // Get Padding Amount from ingest frame
                 padding_amount = (int)ingest[padding_location];
                 // Remove Padding from final decrypted portion
+                if ((tc_sdls_processed_frame->tc_pdu_len - padding_amount) > tc_current_managed_parameters_struct.max_frame_size)
+                {
+                    Crypto_TC_Safe_Free_Ptr(aad);
+                    status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW;
+                    mc_if->mc_log(status);
+                    return status;
+                }
                 tc_sdls_processed_frame->tc_pdu_len -= padding_amount;
             }
         }

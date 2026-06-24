@@ -380,4 +380,215 @@ UTEST(TM_PROCESS_KMC, HAPPY_PATH_DEC_GCM_FECF)
     free(raw_tm_sdls_ping_b);
 }
 
+UTEST(TM_APPLY_KMC, AES_CBC_256_ENCRYPT_2B_PADDING)
+{
+    remove("sa_save_file.bin");
+    // Local variables
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    reload_db();
+
+    // Configure, Add Managed Params, and Init
+    Crypto_Config_CryptoLib(KEY_TYPE_KMC, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO,
+                            IV_INTERNAL);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_IGNORE_ANTI_REPLAY_FALSE, TM_CHECK_FECF_FALSE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
+                          CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", NULL);
+    Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
+                                     "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
+                                     "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+
+    // Set up the managed parameters
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x0003, 6, TM_HAS_FECF, 171, TM_NO_OCF, 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    // Test Frame Setup - includes header, SPI, IV, data, and space for MAC+FECF
+    char *test_tm_h         = "003C000000000012CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC02112233445566778899AABBCCDDEE"
+                              "FFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
+                              "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
+                              "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
+                              "AABBAABBAABBAABBAABBAAFECF";
+    int   test_frame_length = 0;
+
+    uint16_t padding = 2;
+    uint16_t dest_len  = (strlen(test_tm_h) / 2) + padding;
+    char *test_tm_b   = (char *)malloc(dest_len * sizeof(char));
+    test_frame_length  = convert_hexstring_to_byte_array(test_tm_h, test_tm_b);
+
+    // Apply security (encrypt)
+    status = Crypto_TM_ApplySecurity((uint8_t *)test_tm_b, test_frame_length);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    free(test_tm_b);
+    Crypto_Shutdown();
+}
+
+UTEST(TM_PROCESS_KMC, AES_CBC_256_DECRYPT_2B_PADDING)
+{
+    remove("sa_save_file.bin");
+    // Local variables
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    reload_db();
+
+    // Configure, Add Managed Params, and Init
+    Crypto_Config_CryptoLib(KEY_TYPE_KMC, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO,
+                            IV_INTERNAL);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_IGNORE_ANTI_REPLAY_FALSE, TM_CHECK_FECF_FALSE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
+                          CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", NULL);
+    Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
+                                     "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
+                                     "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+
+    // Set up the managed parameters
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x0003, 6, TM_HAS_FECF, 171, TM_NO_OCF, 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    // Test Frame Setup - includes header, SPI, IV, data, and space for MAC+FECF
+    char *test_tm_h        = "003C0000000000120000000000000000000000000000000102D91FA7BDF705F3934719CE98CC3540D97025167DB429E1E8A721D1BE7EF5A25D7D23D2F76740F4D3CC0C19FB33E9CFBA17357BB9F513A1B2CF16053FEEA65848B427A74B9E5CEBB3C5416DD17CC9F1D342712AC95321893661903B1A59B8A2A9AF6D497547E940E5FB90AC2E8E4D8AFD8CA0C3992337CEB688A0A833B33EFDAFE695CFEADFD5967E3692E406C6DDD0417651";
+    char *test_tm_b        = NULL;
+    int   test_frame_length = 0;
+    hex_conversion(test_tm_h, &test_tm_b, &test_frame_length);
+
+    TM_t *tm_frame;
+    tm_frame = malloc(sizeof(uint8_t) * TM_SIZE);
+    memset(tm_frame, 0, (sizeof(uint8_t) * TM_SIZE));
+    uint16_t processed_tm_len = 0;
+
+    // Process security (decrypt)
+    status = Crypto_TM_ProcessSecurity((uint8_t *)test_tm_b, test_frame_length, tm_frame, &processed_tm_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    char *ex_tm_h = "112233445566778899AABBCCDDEEFFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA";
+    char *ex_tm_b = NULL;
+    int   ex_frame_length = 0;
+    hex_conversion(ex_tm_h, &ex_tm_b, &ex_frame_length);
+
+    for (int i = 0; i < tm_frame->tm_pdu_len; i++)
+    {
+        //printf("Comparing byte %d: expected 0x%02X, got 0x%02X\n", i, (uint8_t)ex_tm_b[i], (uint8_t)tm_frame->tm_pdu[i]);
+        ASSERT_EQ((uint8_t)ex_tm_b[i], (uint8_t)tm_frame->tm_pdu[i]);
+    }
+
+    Crypto_tmPrint(tm_frame);
+    printf("pdu_len: %d\n", tm_frame->tm_pdu_len);
+
+    free(test_tm_b);
+    free(tm_frame);
+    free(ex_tm_b);
+    Crypto_Shutdown();
+}
+
+UTEST(TM_APPLY_KMC, AES_CBC_256_ENCRYPT_16B_PADDING)
+{
+    remove("sa_save_file.bin");
+    // Local variables
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    reload_db();
+
+    // Configure, Add Managed Params, and Init
+    Crypto_Config_CryptoLib(KEY_TYPE_KMC, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO,
+                            IV_INTERNAL);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_IGNORE_ANTI_REPLAY_FALSE, TM_CHECK_FECF_FALSE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
+                          CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", NULL);
+    Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
+                                     "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
+                                     "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+
+    // Set up the managed parameters
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x0003, 6, TM_HAS_FECF, 171, TM_NO_OCF, 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    // Test Frame Setup - includes header, SPI, IV, data, and space for MAC+FECF
+    char *test_tm_h         = "003C000000000012CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC10112233445566778899AABBCCDDEE"
+                              "FFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
+                              "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
+                              "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
+                              "FECF";
+    int   test_frame_length = 0;
+
+    uint16_t padding = 16;
+    uint16_t dest_len  = (strlen(test_tm_h) / 2) + padding;
+    char *test_tm_b   = (char *)malloc(dest_len * sizeof(char));
+    test_frame_length  = convert_hexstring_to_byte_array(test_tm_h, test_tm_b);
+
+    // Apply security (encrypt)
+    status = Crypto_TM_ApplySecurity((uint8_t *)test_tm_b, test_frame_length);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    free(test_tm_b);
+    Crypto_Shutdown();
+}
+
+UTEST(TM_PROCESS_KMC, AES_CBC_256_DECRYPT_16B_PADDING)
+{
+    remove("sa_save_file.bin");
+    // Local variables
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    reload_db();
+
+    // Configure, Add Managed Params, and Init
+    Crypto_Config_CryptoLib(KEY_TYPE_KMC, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO,
+                            IV_INTERNAL);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_IGNORE_ANTI_REPLAY_FALSE, TM_CHECK_FECF_FALSE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
+                          CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", NULL);
+    Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
+                                     "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
+                                     "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+
+    // Set up the managed parameters
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {
+        0, 0x0003, 6, TM_HAS_FECF, 171, TM_NO_OCF, 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    char *test_tm_h        = "003C0000000000120000000000000000000000000000000110D91FA7BDF705F3934719CE98CC3540D97025167DB429E1E8A721D1BE7EF5A25D7D23D2F76740F4D3CC0C19FB33E9CFBA17357BB9F513A1B2CF16053FEEA65848B427A74B9E5CEBB3C5416DD17CC9F1D342712AC95321893661903B1A59B8A2A9AF6D497547E940E5FB90AC2E8E4D8AFD8CA0C3992337CEB688A0A833B33EFDAF4337A53C7C31ADEA8F60E3F6AD82261918B6";
+    char *test_tm_b        = NULL;
+    int   test_frame_length = 0;
+    hex_conversion(test_tm_h, &test_tm_b, &test_frame_length);
+
+    TM_t *tm_frame;
+    tm_frame = malloc(sizeof(uint8_t) * TM_SIZE);
+    memset(tm_frame, 0, (sizeof(uint8_t) * TM_SIZE));
+    uint16_t processed_tm_len = 0;
+
+    // Process security (decrypt)
+    status = Crypto_TM_ProcessSecurity((uint8_t *)test_tm_b, test_frame_length, tm_frame, &processed_tm_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    char *ex_tm_h = "112233445566778899AABBCCDDEEFFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA";
+    char *ex_tm_b = NULL;
+    int   ex_frame_length = 0;
+    hex_conversion(ex_tm_h, &ex_tm_b, &ex_frame_length);
+
+    for (int i = 0; i < tm_frame->tm_pdu_len; i++)
+    {
+        //printf("Comparing byte %d: expected 0x%02X, got 0x%02X\n", i, (uint8_t)ex_tm_b[i], (uint8_t)tm_frame->tm_pdu[i]);
+        ASSERT_EQ((uint8_t)ex_tm_b[i], (uint8_t)tm_frame->tm_pdu[i]);
+    }
+
+    Crypto_tmPrint(tm_frame);
+    printf("pdu_len: %d\n", tm_frame->tm_pdu_len);
+
+    free(test_tm_b);
+    free(tm_frame);
+    free(ex_tm_b);
+    Crypto_Shutdown();
+}
+
 UTEST_MAIN();

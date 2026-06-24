@@ -241,11 +241,16 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
     int32_t status = CRYPTO_LIB_SUCCESS;
     key            = key;     // Direct key input is not supported in KMC interface
     len_key        = len_key; // Direct key input is not supported in KMC interface
+    ecs = ecs;
+    padding = padding;
 
     // Remove pre-padding to block (KMC does not want it)
     if (*ecs == CRYPTO_CIPHER_AES256_CBC && padding > 0)
     {
+        printf("len_data_in: %ld\n", len_data_in);
         len_data_in = len_data_in - padding;
+        printf("removed padding: %d\n", padding);
+        printf("new len_data_in: %ld\n", len_data_in);
     }
 
 #ifdef DEBUG
@@ -487,22 +492,25 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
     {
         free(chunk_write);
         free(ciphertext_decoded);
+        free(ciphertext_base64);
         return CRYPTOGRAHPY_KMC_BASE64_DECRYPT_ERROR;
     }
 #ifdef DEBUG
     printf("Decoded Cipher Text Length: %ld\n", ciphertext_decoded_len);
     printf("Decoded Cipher Text: \n");
-    printf("Data Out Len: %ld\n", len_data_out);
     for (uint32_t i = 0; i < ciphertext_decoded_len; i++)
     {
         printf("%02x ", ciphertext_decoded[i]);
     }
     printf("\n");
+    printf("Data Out Len: %ld\n", len_data_out);
 #endif
 
     // Crypto Service returns aad - cipher_text - tag
     memcpy(data_out, ciphertext_decoded, ciphertext_decoded_len);
+    free(chunk_write->response);
     free(chunk_write);
+    free(ciphertext_base64);
     free(ciphertext_decoded);
     return status;
 }
@@ -714,8 +722,12 @@ static int32_t cryptography_decrypt(uint8_t *data_out, size_t len_data_out, uint
     // Copy the decrypted data to the output stream
     // Crypto Service returns aad - clear_text
     memcpy(data_out, cleartext_decoded, len_data_out);
-    free(cleartext_decoded);
 
+    free(cleartext_decoded);
+    free(chunk_write->response);
+    free(chunk_write);
+    free(chunk_read);
+    free(cleartext_base64);
     return status;
 }
 

@@ -507,4 +507,221 @@ UTEST(AOS_PROCESS_KMC, AES_GCM_AUTH_ENC)
     Crypto_Shutdown();
 }
 
+UTEST(AOS_APPLY_KMC, AES_CBC_256_ENCRYPT_2B_PADDING)
+{
+    remove("sa_save_file.bin");
+    // Local variables
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    reload_db();
+
+    // Configure, Add Managed Params, and Init
+    Crypto_Config_CryptoLib(KEY_TYPE_KMC, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO,
+                            IV_INTERNAL);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
+                          CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", NULL);
+    Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
+                                     "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
+                                     "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+
+    // Set up the managed parameters
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {
+        1, 0x0003, 58, AOS_HAS_FECF, AOS_NO_FHEC, AOS_NO_IZ, 0, 171, AOS_NO_OCF, 1};
+    Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    char *test_aos_h        = "40FA000000000008CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC02112233445566778899AABBCCDDEE"
+                              "FFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
+                              "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
+                              "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
+                              "AABBAABBAABBAABBAABBAAFECF";
+    // char *test_aos_b       = NULL;
+    int   test_frame_length = 0;
+    // hex_conversion(test_aos_h, &test_aos_b, &test_frame_length);
+
+    uint16_t padding = 2;
+    uint16_t dest_len  = (strlen(test_aos_h) / 2) + padding;
+    char *test_aos_b   = (char *)malloc(dest_len * sizeof(char));
+    test_frame_length  = convert_hexstring_to_byte_array(test_aos_h, test_aos_b);
+
+    // Apply security (encrypt)
+    status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b, test_frame_length);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    free(test_aos_b);
+    Crypto_Shutdown();
+}
+
+UTEST(AOS_PROCESS_KMC, AES_CBC_256_DECRYPT_2B_PADDING)
+{
+    remove("sa_save_file.bin");
+    // Local variables
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    reload_db();
+
+    // Configure, Add Managed Params, and Init
+    Crypto_Config_CryptoLib(KEY_TYPE_KMC, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO,
+                            IV_INTERNAL);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_TRUE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
+                          CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", NULL);
+    Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
+                                     "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
+                                     "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+
+    // Set up the managed parameters
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {
+        1, 0x0003, 58, AOS_HAS_FECF, AOS_NO_FHEC, AOS_NO_IZ, 0, 171, AOS_NO_OCF, 1};
+    Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    // Test Frame Setup - includes header, SPI, IV, data, and space for MAC+FECF
+    char *test_aos_h        = "40FA0000000000160000000000000000000000000000000102D91FA7BDF705F3934719CE98CC3540D97025167DB429E1E8A721D1BE7EF5A25D7D23D2F76740F4D3CC0C19FB33E9CFBA17357BB9F513A1B2CF16053FEEA65848B427A74B9E5CEBB3C5416DD17CC9F1D342712AC95321893661903B1A59B8A2A9AF6D497547E940E5FB90AC2E8E4D8AFD8CA0C3992337CEB688A0A833B33EFDAFE695CFEADFD5967E3692E406C6DDD0415674";
+    char *test_aos_b        = NULL;
+    int   test_frame_length = 0;
+    hex_conversion(test_aos_h, &test_aos_b, &test_frame_length);
+
+    AOS_t *aos_frame;
+    aos_frame = malloc(sizeof(uint8_t) * AOS_SIZE);
+    memset(aos_frame, 0, (sizeof(uint8_t) * AOS_SIZE));
+    uint16_t processed_aos_len = 0;
+
+    // Process security (decrypt)
+    status = Crypto_AOS_ProcessSecurity((uint8_t *)test_aos_b, test_frame_length, aos_frame, &processed_aos_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    // Validate the processed AOS frame
+    char *ex_aos_h = "112233445566778899AABBCCDDEEFFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA";
+    char *ex_aos_b = NULL;
+    int ex_frame_len = 0;
+    hex_conversion(ex_aos_h, &ex_aos_b, &ex_frame_len);
+
+    for (uint16_t i = 0; i < aos_frame->aos_pdu_len; i++)
+    {
+        //printf("Checking %02x against %02X\n", (uint8_t)aos_frame->aos_pdu[i], (uint8_t)ex_aos_b[i]);
+        ASSERT_EQ((uint8_t)aos_frame->aos_pdu[i], (uint8_t)ex_aos_b[i]);
+    }
+
+    Crypto_aosPrint(aos_frame);
+    printf("pdu_len: %d\n", aos_frame->aos_pdu_len);
+
+    free(test_aos_b);
+    free(aos_frame);
+    free(ex_aos_b);
+    Crypto_Shutdown();
+}
+
+UTEST(AOS_APPLY_KMC, AES_CBC_256_ENCRYPT_16B_PADDING)
+{
+    remove("sa_save_file.bin");
+    // Local variables
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    reload_db();
+
+    // Configure, Add Managed Params, and Init
+    Crypto_Config_CryptoLib(KEY_TYPE_KMC, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO,
+                            IV_INTERNAL);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
+                          CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", NULL);
+    Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
+                                     "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
+                                     "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+
+    // Set up the managed parameters
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {
+        1, 0x0003, 58, AOS_HAS_FECF, AOS_NO_FHEC, AOS_NO_IZ, 0, 171, AOS_NO_OCF, 1};
+    Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    char *test_aos_h        = "40FA000000000008CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC10112233445566778899AABBCCDDEE"
+                              "FFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
+                              "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
+                              "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
+                              "FECF";
+    // char *test_aos_b       = NULL;
+    int   test_frame_length = 0;
+    // hex_conversion(test_aos_h, &test_aos_b, &test_frame_length);
+
+    uint16_t padding = 16;
+    uint16_t dest_len  = (strlen(test_aos_h) / 2) + padding;
+    char *test_aos_b   = (char *)malloc(dest_len * sizeof(char));
+    test_frame_length  = convert_hexstring_to_byte_array(test_aos_h, test_aos_b);
+
+    // Apply security (encrypt)
+    status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b, test_frame_length);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    free(test_aos_b);
+    Crypto_Shutdown();
+}
+
+
+UTEST(AOS_PROCESS_KMC, AES_CBC_256_DECRYPT_16B_PADDING)
+{
+    remove("sa_save_file.bin");
+    // Local variables
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    reload_db();
+
+    // Configure, Add Managed Params, and Init
+    Crypto_Config_CryptoLib(KEY_TYPE_KMC, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO,
+                            IV_INTERNAL);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_TRUE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
+                          CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", NULL);
+    Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
+                                     "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
+                                     "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+
+    // Set up the managed parameters
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {
+        1, 0x0003, 58, AOS_HAS_FECF, AOS_NO_FHEC, AOS_NO_IZ, 0, 171, AOS_NO_OCF, 1};
+    Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    // Test Frame Setup - includes header, SPI, IV, data, and space for MAC+FECF
+    char *test_aos_h        = "40FA0000000000160000000000000000000000000000000110D91FA7BDF705F3934719CE98CC3540D97025167DB429E1E8A721D1BE7EF5A25D7D23D2F76740F4D3CC0C19FB33E9CFBA17357BB9F513A1B2CF16053FEEA65848B427A74B9E5CEBB3C5416DD17CC9F1D342712AC95321893661903B1A59B8A2A9AF6D497547E940E5FB90AC2E8E4D8AFD8CA0C3992337CEB688A0A833B33EFDAF4337A53C7C31ADEA8F60E3F6AD8226193893";
+    char *test_aos_b        = NULL;
+    int   test_frame_length = 0;
+    hex_conversion(test_aos_h, &test_aos_b, &test_frame_length);
+
+    AOS_t *aos_frame;
+    aos_frame = malloc(sizeof(uint8_t) * AOS_SIZE);
+    memset(aos_frame, 0, (sizeof(uint8_t) * AOS_SIZE));
+    uint16_t processed_aos_len = 0;
+
+    // Process security (decrypt)
+    status = Crypto_AOS_ProcessSecurity((uint8_t *)test_aos_b, test_frame_length, aos_frame, &processed_aos_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    // Validate the processed AOS frame
+    char *ex_aos_h = "112233445566778899AABBCCDDEEFFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA";
+    char *ex_aos_b = NULL;
+    int ex_frame_len = 0;
+    hex_conversion(ex_aos_h, &ex_aos_b, &ex_frame_len);
+
+    for (uint16_t i = 0; i < aos_frame->aos_pdu_len; i++)
+    {
+        //printf("Checking %02x against %02X\n", (uint8_t)aos_frame->aos_pdu[i], (uint8_t)ex_aos_b[i]);
+        ASSERT_EQ((uint8_t)aos_frame->aos_pdu[i], (uint8_t)ex_aos_b[i]);
+    }
+
+    Crypto_aosPrint(aos_frame);
+    printf("pdu_len: %d\n", aos_frame->aos_pdu_len);
+
+    free(test_aos_b);
+    free(aos_frame);
+    free(ex_aos_b);
+    Crypto_Shutdown();
+}
+
 UTEST_MAIN();

@@ -1481,4 +1481,48 @@ UTEST(TC_PROCESS, TC_PROCESS_IGNORE_SA_STATE)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
+//202c5026000014000000000000000000000013509e78a6ab914dff4d120ea4185622993f210857
+
+UTEST(TC_PROCESS, TC_PROCESS_CHECK_FECF)
+{
+    // first dont ignore state
+    remove("sa_save_file.bin");
+    int status = CRYPTO_LIB_SUCCESS;
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL);
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR, TC_IGNORE_ANTI_REPLAY_FALSE,
+                     TC_IGNORE_SA_STATE_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F,
+                     SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_NO_FHEC, AOS_NO_IZ, 0);
+    TCGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    SecurityAssociation_t *sa_ptr;
+    sa_if->sa_get_from_spi(4, &sa_ptr);
+    sa_ptr->sa_state = SA_NONE;
+    sa_ptr->abm_len  = 1024;
+
+    TC_t *tc_sdls_processed_frame;
+    tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
+    memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
+
+    // Test string              //2003002719C00004000000000000000000000001ABBA571508526C3B9ED27B938C1B7B5F2343FECF
+    char    *test_frame_pt_h   = "2003002619C000010000000000000000000013509e78a6ab914dff4d120ea4185622993f210857";
+    uint8_t *test_frame_pt_b   = NULL;
+    int      test_frame_pt_len = 0;
+
+    hex_conversion(test_frame_pt_h, (char **)&test_frame_pt_b, &test_frame_pt_len);
+
+    status = Crypto_TC_ProcessSecurity(test_frame_pt_b, &test_frame_pt_len, tc_sdls_processed_frame);
+
+    Crypto_Shutdown();
+    free(tc_sdls_processed_frame);
+    free(test_frame_pt_b);
+    ASSERT_EQ(CRYPTO_LIB_ERR_INVALID_FECF, status);
+}
+
 UTEST_MAIN();

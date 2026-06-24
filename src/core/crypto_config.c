@@ -897,6 +897,14 @@ int32_t Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TCGvcidManagedParameters_t
     {
         status = CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT;
     }
+    else if (gvcid_managed_parameters_struct.max_frame_size > TC_MAX_FRAME_SIZE)
+    {
+        status = CRYPTO_LIB_ERR_TC_FRAME_SIZE_EXCEEDS_SPEC_LIMIT;
+    }
+    else if (gvcid_managed_parameters_struct.max_frame_size < TC_MIN_FRAME_SIZE)
+    {
+        status = CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_TC_STANDARD;
+    }
     else
     {
         tc_gvcid_managed_parameters_array[tc_gvcid_counter] = gvcid_managed_parameters_struct;
@@ -912,6 +920,10 @@ int32_t Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TMGvcidManagedParameters_t
     if (tm_gvcid_counter >= GVCID_MAN_PARAM_SIZE)
     {
         status = CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT;
+    }
+    else if (gvcid_managed_parameters_struct.max_frame_size > TM_MAX_FRAME_SIZE)
+    {
+        status = CRYPTO_LIB_ERR_TM_FRAME_SIZE_EXCEEDS_SPEC_LIMIT;
     }
     else
     {
@@ -929,6 +941,10 @@ int32_t Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOSGvcidManagedParameters
     if (aos_gvcid_counter >= GVCID_MAN_PARAM_SIZE)
     {
         status = CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT;
+    }
+    else if (gvcid_managed_parameters_struct.max_frame_size > AOS_MAX_FRAME_SIZE)
+    {
+        status = CRYPTO_LIB_ERR_AOS_FRAME_SIZE_EXCEEDS_SPEC_LIMIT;
     }
     else
     {
