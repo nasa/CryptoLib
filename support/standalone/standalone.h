@@ -48,7 +48,7 @@ extern "C"
 */
 // #define CRYPTOLIB_HOSTNAME "cryptolib" //pulling from env variable
 // #define GSW_HOSTNAME       "cosmos"  //pulling form env variable
-#define SC_HOSTNAME        "radio-sim"
+#define SC_HOSTNAME "radio-sim"
 
 #ifndef CRYPTO_RX_GROUND_PORT
 #define TC_APPLY_PORT 6010
