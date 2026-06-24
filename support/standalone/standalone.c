@@ -987,6 +987,25 @@ int main(int argc, char *argv[])
         {
             status = crypto_standalone_socket_init(&tc_apply.write, TC_APPLY_FWD_PORT, 0,
                                                    crypto_use_tcp); // tcp, connect() 8010
+
+            if (status != CRYPTO_LIB_SUCCESS)
+            {
+                int retries = 0;
+                while(status!=0)
+                {
+                    printf("Failed to resolve radio for 8010 Retrying");
+                    if (retries >= 30) 
+                    {
+                        printf("Failed to resolve radio for 8010 after 30 attempts.");
+                        break;
+                    }
+                    status =  crypto_standalone_socket_init(&tc_apply.write, TC_APPLY_FWD_PORT, 0,
+                                                   crypto_use_tcp); // tcp, connect() 8010
+                    sleep(1);
+                    retries++;
+                }
+            }
+
             if (status != CRYPTO_LIB_SUCCESS)
             {
                 printf("crypto_standalone_socket_init tc_apply.write failed with status %d \n", status);
