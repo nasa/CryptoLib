@@ -28,11 +28,11 @@
 */
 #define DYNAMIC_LENGTHS 1
 
-static volatile uint8_t keepRunning    = CRYPTO_LIB_SUCCESS;
-static volatile uint8_t tc_seq_num     = 0;
-static volatile uint8_t tc_vcid        = CRYPTO_STANDALONE_FRAMING_VCID;
-static volatile uint8_t tc_debug       = 1;
-static volatile uint8_t tm_debug       = 0;
+static volatile uint8_t keepRunning = CRYPTO_LIB_SUCCESS;
+static volatile uint8_t tc_seq_num  = 0;
+static volatile uint8_t tc_vcid     = CRYPTO_STANDALONE_FRAMING_VCID;
+static volatile uint8_t tc_debug    = 1;
+static volatile uint8_t tm_debug    = 0;
 // static volatile uint8_t crypto_use_tcp = STANDALONE_TCP ? 1 : 0;
 static volatile uint8_t crypto_use_tcp = 0;
 
@@ -918,9 +918,12 @@ int main(int argc, char *argv[])
     int   cmd;
     char *token_ptr;
     char *tcp_var = getenv("STANDALONE_TCP");
-    if (tcp_var != NULL) {
+    if (tcp_var != NULL)
+    {
         crypto_use_tcp = atoi(tcp_var);
-    } else {
+    }
+    else
+    {
         crypto_use_tcp = 1; // Default to TCP if the variable is not defined
     }
 
@@ -929,15 +932,17 @@ int main(int argc, char *argv[])
 
     pthread_t tc_apply_thread;
     pthread_t tm_process_thread;
-    char *CRYPTOLIB_HOSTNAME;
+    char     *CRYPTOLIB_HOSTNAME;
     CRYPTOLIB_HOSTNAME = getenv("CRYPTO_HOST");
-    if (CRYPTOLIB_HOSTNAME == NULL) {
-        CRYPTOLIB_HOSTNAME = "0.0.0.0"; //only using this if cant find hostname env variable
+    if (CRYPTOLIB_HOSTNAME == NULL)
+    {
+        CRYPTOLIB_HOSTNAME = "0.0.0.0"; // only using this if cant find hostname env variable
     }
     char *GSW_HOSTNAME;
     GSW_HOSTNAME = getenv("GSWALIAS");
-    if (GSW_HOSTNAME == NULL) {
-        GSW_HOSTNAME = "cosmos"; //default if env var not specified
+    if (GSW_HOSTNAME == NULL)
+    {
+        GSW_HOSTNAME = "cosmos"; // default if env var not specified
     }
 
     tc_apply.read.ip_address    = CRYPTOLIB_HOSTNAME;
@@ -947,10 +952,11 @@ int main(int argc, char *argv[])
     tm_process.read.ip_address  = CRYPTOLIB_HOSTNAME;
     tm_process.read.port        = TM_PROCESS_PORT;
     tm_process.write.ip_address = GSW_HOSTNAME;
-    if(strcmp(tm_process.write.ip_address, "yamcs")==0 && strcmp(CRYPTOLIB_HOSTNAME, "cryptolib2")==0){
-        tm_process.read.port         = 8013;
+    if (strcmp(tm_process.write.ip_address, "yamcs") == 0 && strcmp(CRYPTOLIB_HOSTNAME, "cryptolib2") == 0)
+    {
+        tm_process.read.port = 8013;
     }
-    tm_process.write.port       = TM_PROCESS_FWD_PORT;
+    tm_process.write.port = TM_PROCESS_FWD_PORT;
 
     printf("Starting CryptoLib in standalone mode! \n");
     if (argc != 1)
@@ -991,16 +997,16 @@ int main(int argc, char *argv[])
             if (status != CRYPTO_LIB_SUCCESS)
             {
                 int retries = 0;
-                while(status!=0)
+                while (status != 0)
                 {
                     printf("Failed to resolve radio for 8010 Retrying");
-                    if (retries >= 30) 
+                    if (retries >= 30)
                     {
                         printf("Failed to resolve radio for 8010 after 30 attempts.");
                         break;
                     }
-                    status =  crypto_standalone_socket_init(&tc_apply.write, TC_APPLY_FWD_PORT, 0,
-                                                   crypto_use_tcp); // tcp, connect() 8010
+                    status = crypto_standalone_socket_init(&tc_apply.write, TC_APPLY_FWD_PORT, 0,
+                                                           crypto_use_tcp); // tcp, connect() 8010
                     sleep(1);
                     retries++;
                 }
@@ -1017,8 +1023,10 @@ int main(int argc, char *argv[])
     if (keepRunning == CRYPTO_LIB_SUCCESS)
     {
         status =
-            // crypto_standalone_socket_init(&tm_process.read, TM_PROCESS_PORT, 1, crypto_use_tcp); // tcp, accept() 8011
-            crypto_standalone_socket_init(&tm_process.read, tm_process.read.port, 1, crypto_use_tcp); // tcp, accept() 8011 or 8013
+            // crypto_standalone_socket_init(&tm_process.read, TM_PROCESS_PORT, 1, crypto_use_tcp); // tcp, accept()
+            // 8011
+            crypto_standalone_socket_init(&tm_process.read, tm_process.read.port, 1,
+                                          crypto_use_tcp); // tcp, accept() 8011 or 8013
         if (status != CRYPTO_LIB_SUCCESS)
         {
             printf("crypto_standalone_socket_init tm_apply.read failed with status %d \n", status);
