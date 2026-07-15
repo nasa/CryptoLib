@@ -579,6 +579,60 @@ UTEST(TC_APPLY_SECURITY, AES_CMAC)
     free(ptr_enc_frame);
 }
 
+UTEST(TC_PROCESS_SECURITY, AES_CMAC)
+{
+    remove("sa_save_file.bin");
+    int32_t return_val = CRYPTO_LIB_ERROR;
+    reload_db();
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(KEY_TYPE_KMC, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO,
+                            IV_CRYPTO_MODULE);
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR, TC_IGNORE_ANTI_REPLAY_TRUE,
+                     TC_IGNORE_SA_STATE_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F,
+                     SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
+                          CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", NULL);
+    //                                            "https", "itc.kmc.nasa.gov"
+    return_val = Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
+                                     "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
+                                     "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+    TCGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x002C, 7, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    return_val = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+
+    // Setup & Initialize CryptoLib
+    char *raw_tc_sdls_ping_h   = "002C1CB91800000B00000001000C08010000000F00112233445566778899AABBCCDDEEFFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB370483FEA7CCDAB38CEE610B3C1D49229207";
+    uint8_t *raw_tc_sdls_ping_b   = NULL;
+    int   raw_tc_sdls_ping_len = 0;
+    hex_conversion(raw_tc_sdls_ping_h, (char **)&raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
+
+    TC_t *tc_frame;
+    tc_frame = malloc(sizeof(uint8_t) * TC_SIZE);
+    memset(tc_frame, 0, (sizeof(uint8_t) * TC_SIZE));
+
+    return_val =
+        Crypto_TC_ProcessSecurity((uint8_t *)raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len, tc_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+
+    // char *raw_tc_sdls_ping_2_h   = "002C1CB91800000B00000001000C08010000000F00112233445566778899AABBCCDDEEFFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB370483FEA7CCDAB38CEE610B3C1D4922FECF";
+    // uint8_t *raw_tc_sdls_ping_2_b   = NULL;
+    // int   raw_tc_sdls_ping_2_len = 0;
+    // hex_conversion(raw_tc_sdls_ping_2_h, (char **)&raw_tc_sdls_ping_2_b, &raw_tc_sdls_ping_2_len);
+
+    // memset(tc_frame, 0, (sizeof(uint8_t) * TC_SIZE));
+
+    // return_val =
+    //     Crypto_TC_ProcessSecurity((uint8_t *)raw_tc_sdls_ping_2_b, &raw_tc_sdls_ping_2_len, tc_frame);
+    // ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+
+    Crypto_Shutdown();
+    free(raw_tc_sdls_ping_b);
+    // free(raw_tc_sdls_ping_2_b);
+    free(tc_frame);
+}
+
 // /**
 //  * @brief Unit Test: Encryption CBC KMC 16 Bytes of padding
 //  **/

@@ -724,4 +724,51 @@ UTEST(AOS_PROCESS_KMC, AES_CBC_256_DECRYPT_16B_PADDING)
     Crypto_Shutdown();
 }
 
+// UTEST(AOS_APPLY_KMC, AES_CBC_256_ENCRYPT_2B_ARSN)
+// {
+//     remove("sa_save_file.bin");
+//     // Local variables
+//     int32_t status = CRYPTO_LIB_SUCCESS;
+//     reload_db();
+
+//     // Configure, Add Managed Params, and Init
+//     Crypto_Config_CryptoLib(KEY_TYPE_KMC, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO,
+//                             IV_INTERNAL);
+//     Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
+//                       SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+//     Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
+//                           CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", NULL);
+//     Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
+//                                      "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
+//                                      "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+
+//     // Set up the managed parameters
+//     AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {
+//         1, 0x0003, 58, AOS_HAS_FECF, AOS_NO_FHEC, AOS_NO_IZ, 0, 173, AOS_NO_OCF, 1};
+//     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
+//     status = Crypto_Init();
+//     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+//     char *test_aos_h        = "40FA000000000008CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCAAAA10112233445566778899AABBCCDDEE"
+//                               "FFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
+//                               "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
+//                               "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
+//                               "FECF";
+//     // char *test_aos_b       = NULL;
+//     int   test_frame_length = 0;
+//     // hex_conversion(test_aos_h, &test_aos_b, &test_frame_length);
+
+//     uint16_t padding = 16;
+//     uint16_t dest_len  = (strlen(test_aos_h) / 2) + padding;
+//     char *test_aos_b   = (char *)malloc(dest_len * sizeof(char));
+//     test_frame_length  = convert_hexstring_to_byte_array(test_aos_h, test_aos_b);
+
+//     // Apply security (encrypt)
+//     status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b, test_frame_length);
+//     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+//     free(test_aos_b);
+//     Crypto_Shutdown();
+// }
+
 UTEST_MAIN();
