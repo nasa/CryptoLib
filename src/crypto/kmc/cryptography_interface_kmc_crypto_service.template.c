@@ -1046,6 +1046,7 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
     if (sa_ptr->ak_ref[0] == '\0')
     {
         status = CRYPTOGRAHPY_KMC_NULL_AUTHENTICATION_KEY_REFERENCE_IN_SA;
+        free(mac_base64);
         return status;
     }
 
@@ -1062,10 +1063,12 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
     snprintf(auth_endpoint_final, len_auth_endpoint, icv_verify_endpoint, mac_base64, sa_ptr->ak_ref, auth_algorithm,
              mac_size_str);
     free(mac_size_str);
+    free(mac_base64);
     char *auth_uri = (char *)malloc(strlen(kmc_root_uri) + len_auth_endpoint);
     auth_uri[0]    = '\0';
     strcat(auth_uri, kmc_root_uri);
     strcat(auth_uri, auth_endpoint_final);
+    free(auth_endpoint_final);
 
 #ifdef DEBUG
     printf("Authentication Verification URI: %s\n", auth_uri);
@@ -1106,6 +1109,10 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
     status = curl_perform_with_cam_retries(curl, chunk_write, chunk_read);
     if (status != CRYPTO_LIB_SUCCESS)
     {
+        free(auth_uri);
+        free(chunk_read);
+        free(chunk_write->response);
+        free(chunk_write);
         return status;
     }
 
@@ -1122,6 +1129,10 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
     {
         status = CRYPTOGRAHPY_KMC_CRYPTO_JSON_PARSE_ERROR;
         printf("Failed to parse JSON: %d\n", parse_result);
+        free(auth_uri);
+        free(chunk_read);
+        free(chunk_write->response);
+        free(chunk_write);
         return status;
     }
 
@@ -1149,6 +1160,11 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
             {
                 status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE;
                 fprintf(stderr, "KMC Crypto Generic Failure Response:\n%s\n", chunk_write->response);
+                free(auth_uri);
+                free(http_code_str);
+                free(chunk_read);
+                free(chunk_write->response);
+                free(chunk_write);
                 return status;
             }
             json_idx++;
@@ -1174,8 +1190,14 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
             {
                 status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_MAC_VALIDATION_ERROR;
                 fprintf(stderr, "KMC Crypto MAC Validation Failure Response:\n%s\n", chunk_write->response);
+                free(auth_uri);
+                free(result_str);
+                free(chunk_read);
+                free(chunk_write->response);
+                free(chunk_write);
                 return status;
             }
+            free(result_str);
             continue;
         }
     }
@@ -1187,7 +1209,10 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
     }
 
     /* JSON Response Handling End */
-
+    free(auth_uri);
+    free(chunk_read);
+    free(chunk_write->response);
+    free(chunk_write);
     return status;
 }
 
