@@ -905,6 +905,10 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     {
         status = CRYPTO_LIB_ERR_TM_FL_LT_MAX_FRAME_SIZE;
         mc_if->mc_log(status);
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+        {
+            free(sa_ptr);
+        }
         return status;
     }
     else if ((sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC) || (sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC_MAC))
@@ -917,6 +921,20 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         {
             status = CRYPTO_LIB_ERR_TM_FL_LT_MAX_FRAME_SIZE;
             mc_if->mc_log(status);
+            if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+            {
+                free(sa_ptr);
+            }
+            return status;
+        }
+
+        status = Crypto_check_buffer_size(pTfBuffer, tm_current_managed_parameters_struct.max_frame_size);
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+            if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+            {
+                free(sa_ptr);
+            }
             return status;
         }
     }
@@ -1058,6 +1076,16 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
      **/
     // TODO: Set this depending on crypto cipher used
     Crypto_TM_PKCS_Padding(&pkcs_padding, sa_ptr, pTfBuffer, &idx, len_ingest);
+    if (tm_current_managed_parameters_struct.max_frame_size != len_ingest + pkcs_padding)
+    {
+        status = CRYPTO_LIB_ERR_TM_APPLY_PADDING;
+        mc_if->mc_log(status);
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+        {
+            free(sa_ptr);
+        }
+        return status;
+    }
 
     /**
      * End Security Header Fields
@@ -1718,9 +1746,13 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     }
     byte_idx += sa_ptr->shsnf_len;
     pp_processed_frame->tm_sec_header.sn_field_len = sa_ptr->shsnf_len;
-    for (int i = 0; i < sa_ptr->shplf_len; i++)
+    if (sa_ptr->shplf_len == 2)
     {
-        pp_processed_frame->tm_sec_header.pad += (p_new_dec_frame[byte_idx + i] << ((sa_ptr->shplf_len - 1 - i) * 8));
+        pp_processed_frame->tm_sec_header.pad = (((uint16_t)p_ingest[byte_idx]) << 8) | p_ingest[byte_idx + 1];
+    }
+    else
+    {
+        pp_processed_frame->tm_sec_header.pad = sa_ptr->shplf_len == 1 ? p_ingest[byte_idx] : 0;
     }
     byte_idx += sa_ptr->shplf_len;
     pp_processed_frame->tm_sec_header.pad_field_len = sa_ptr->shplf_len;

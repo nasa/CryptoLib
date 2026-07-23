@@ -90,7 +90,7 @@ void Crypto_tmPrint(TM_t *tm_frame)
     }
     printf("\n");
     printf("\t\t sn_len = %d \n", tm_frame->tm_sec_header.sn_field_len);
-    printf("\t\t pad    = %d \n", tm_frame->tm_sec_header.pad);
+    printf("\t\t pad    = 0x%04X \n", tm_frame->tm_sec_header.pad);
     printf("\t\t pad_len= %d \n", tm_frame->tm_sec_header.pad_field_len);
     printf("\t Payload \n");
     printf("\t\t pdu_len= %d \n", tm_frame->tm_pdu_len);

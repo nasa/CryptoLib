@@ -406,6 +406,17 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         mc_if->mc_log(status);
         return status;
     }
+
+    status = Crypto_check_buffer_size(pTfBuffer, aos_current_managed_parameters_struct.max_frame_size);
+    if (status != CRYPTO_LIB_SUCCESS)
+    {
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+        {
+            free(sa_ptr);
+        }
+        return status;
+    }
+    
     /**
      * End Security Header Fields
      **/

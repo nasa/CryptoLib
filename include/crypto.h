@@ -191,6 +191,7 @@ extern char *Crypto_Get_Error_Code_Enum_String(int32_t crypto_error_code);
 
 int32_t Crypto_Get_Security_Header_Length(SecurityAssociation_t *sa_ptr);
 int32_t Crypto_Get_Security_Trailer_Length(SecurityAssociation_t *sa_ptr);
+int32_t Crypto_check_buffer_size(uint8_t *buf, uint16_t required);
 
 int32_t crypto_handle_incrementing_nontransmitted_counter(uint8_t *dest, uint8_t *src, int src_full_len,
                                                           int transmitted_len, int window);

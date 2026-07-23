@@ -162,8 +162,10 @@
 #define CRYPTO_LIB_ERR_AOS_FRAME_SIZE_EXCEEDS_SPEC_LIMIT                    (-87)
 #define CRYPTO_LIB_ERR_AOS_FL_GT_MAX_FRAME_SIZE                             (-88)
 #define CRYPTO_LIB_ERR_TM_FL_GT_MAX_FRAME_SIZE                              (-89)
+#define CRYPTO_LIB_ERR_TM_APPLY_PADDING                                     (-90)
+#define CRYPTO_LIB_ERR_BUFFER_SIZE                                          (-91)
 
-#define CRYPTO_CORE_ERROR_CODES_MAX -89
+#define CRYPTO_CORE_ERROR_CODES_MAX -91
 
 // Define codes for returning MDB Strings, and determining error based on strings
 #define CAM_ERROR_CODES     600
