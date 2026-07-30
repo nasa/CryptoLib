@@ -1672,21 +1672,21 @@ int32_t Crypto_check_buffer_size(uint8_t *buf, uint16_t required)
     int32_t status = CRYPTO_LIB_SUCCESS;
 #if defined(__linux__)
     #include <malloc.h>
-    if (malloc_usable_size(buf) != required)
+    if (malloc_usable_size(buf) < required)
     {
         status = CRYPTO_LIB_ERR_BUFFER_SIZE;
         mc_if->mc_log(status);
     }
 #elif defined(__APPLE__)
     #include <malloc/malloc.h>
-    if (malloc_size(buf) != required)
+    if (malloc_size(buf) < required)
     {
         status = CRYPTO_LIB_ERR_BUFFER_SIZE;
         mc_if->mc_log(status);
     }
 #elif defined(_WIN32)
     #include <malloc.h>
-    if (_msize(buf) != required)
+    if (_msize(buf) < required)
     {
         status = CRYPTO_LIB_ERR_BUFFER_SIZE;
         mc_if->mc_log(status);
