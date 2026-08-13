@@ -319,6 +319,56 @@ UTEST(EP_KEY_MGMT, INVENTORY_132_134)
     free(buffer_INVENTORY_b);
 }
 
+UTEST(EP_KEY_MGMT, INVENTORY_RANGE_VALIDATION)
+{
+    remove("sa_save_file.bin");
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL);
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR, TC_IGNORE_ANTI_REPLAY_FALSE,
+                     TC_IGNORE_SA_STATE_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F,
+                     SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+
+    TCGvcidManagedParameters_t managed_parameters = {0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 1024, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(managed_parameters);
+
+    int32_t status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    uint8_t ingest = 0;
+
+    // A descending key-ID range is invalid and must be rejected before
+    // subtraction can underflow or reply fields are modified.
+    sdls_frame.tlv_pdu.data[0] = 0x01;
+    sdls_frame.tlv_pdu.data[1] = 0x00;
+    sdls_frame.tlv_pdu.data[2] = 0x00;
+    sdls_frame.tlv_pdu.data[3] = 0xFF;
+    status                     = Crypto_Key_inventory(&ingest);
+    ASSERT_EQ(CRYPTO_LIB_ERROR, status);
+
+    // A valid 128-key range produces more than 255 reply bytes. Verify the
+    // reply index does not wrap and the final key is written at the true tail.
+    sdls_frame.tlv_pdu.data[0] = 0x00;
+    sdls_frame.tlv_pdu.data[1] = 0x80;
+    sdls_frame.tlv_pdu.data[2] = 0x00;
+    sdls_frame.tlv_pdu.data[3] = 0xFF;
+    status                     = Crypto_Key_inventory(&ingest);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    uint16_t reply_length = 0;
+    uint8_t  reply[TC_MAX_FRAME_SIZE];
+    status = Crypto_Get_Sdls_Ep_Reply(reply, &reply_length);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    const uint16_t expected_reply_length =
+        CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE + 2 + (128 * SDLS_KEY_INVENTORY_RPLY_SIZE);
+    ASSERT_EQ(expected_reply_length, reply_length);
+    ASSERT_EQ(0x00, reply[reply_length - 3]);
+    ASSERT_EQ(0xFF, reply[reply_length - 2]);
+    ASSERT_EQ(key_if->get_key(255)->key_state, reply[reply_length - 1]);
+
+    Crypto_Shutdown();
+}
+
 UTEST(EP_KEY_MGMT, VERIFY_132_134)
 {
     remove("sa_save_file.bin");

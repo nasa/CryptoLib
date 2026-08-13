@@ -383,7 +383,7 @@ int32_t Crypto_Key_inventory(uint8_t *ingest)
     // Local variables
     SDLS_KEY_INVENTORY_CMD_t packet;
     uint16_t                 range  = 0;
-    uint8_t                  count  = 0;
+    uint16_t                 count  = 0;
     int32_t                  status = CRYPTO_LIB_SUCCESS;
     crypto_key_t            *ekp    = NULL;
     uint16_t                 x;
@@ -401,6 +401,11 @@ int32_t Crypto_Key_inventory(uint8_t *ingest)
     packet.kid_last =
         ((uint8_t)sdls_frame.tlv_pdu.data[count] << BYTE_LEN) | ((uint8_t)sdls_frame.tlv_pdu.data[count + 1]);
     count = count + 2;
+
+    if (packet.kid_first > packet.kid_last)
+    {
+        return CRYPTO_LIB_ERROR;
+    }
 
     // Prepare for Reply
     range                          = packet.kid_last - packet.kid_first + 1;
