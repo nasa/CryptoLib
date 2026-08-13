@@ -683,4 +683,66 @@ UTEST(EP_SA_MGMT, SA_STOP_SELF)
     free(buffer_STOP_b);
 }
 
+
+UTEST(EP_SA_MGMT, SA_TRANSITION_ERROR_CODES)
+{
+    remove("sa_save_file.bin");
+
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL);
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                     TC_IGNORE_ANTI_REPLAY_FALSE, TC_IGNORE_SA_STATE_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                     TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+
+    TCGvcidManagedParameters_t managed_parameters = {0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 31, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(managed_parameters);
+
+    int32_t status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    SaInterface             sa_if = get_sa_interface_inmemory();
+    SecurityAssociation_t *target_sa;
+    TC_t                    control_frame = {0};
+    control_frame.tc_sec_header.spi = 0;
+
+    memset(&sdls_frame, 0, sizeof(sdls_frame));
+    sdls_frame.tlv_pdu.hdr.pdu_len = 16;
+    sdls_frame.tlv_pdu.data[0]     = 0x00;
+    sdls_frame.tlv_pdu.data[1]     = 0x06;
+
+    // START requires KEYED.
+    sa_if->sa_get_from_spi(6, &target_sa);
+    target_sa->sa_state = SA_OPERATIONAL;
+    status              = sa_if->sa_start(&control_frame);
+    ASSERT_EQ(CRYPTO_LIB_ERROR, status);
+    ASSERT_EQ(SA_OPERATIONAL, target_sa->sa_state);
+
+    // REKEY requires UNKEYED.
+    target_sa->sa_state = SA_KEYED;
+    status              = sa_if->sa_rekey(&control_frame);
+    ASSERT_EQ(CRYPTO_LIB_ERROR, status);
+    ASSERT_EQ(SA_KEYED, target_sa->sa_state);
+
+    // EXPIRE requires KEYED.
+    target_sa->sa_state = SA_OPERATIONAL;
+    status              = sa_if->sa_expire(&control_frame);
+    ASSERT_EQ(CRYPTO_LIB_ERROR, status);
+    ASSERT_EQ(SA_OPERATIONAL, target_sa->sa_state);
+
+    // All three operations must reject an SPI outside the SA table.
+    sdls_frame.tlv_pdu.data[0] = (NUM_SA >> BYTE_LEN) & 0xFF;
+    sdls_frame.tlv_pdu.data[1] = NUM_SA & 0xFF;
+
+    status = sa_if->sa_start(&control_frame);
+    ASSERT_EQ(CRYPTO_LIB_ERR_SPI_INDEX_OOB, status);
+
+    status = sa_if->sa_rekey(&control_frame);
+    ASSERT_EQ(CRYPTO_LIB_ERR_SPI_INDEX_OOB, status);
+
+    status = sa_if->sa_expire(&control_frame);
+    ASSERT_EQ(CRYPTO_LIB_ERR_SPI_INDEX_OOB, status);
+
+    Crypto_Shutdown();
+}
+
 UTEST_MAIN();
