@@ -1584,7 +1584,7 @@ int32_t Crypto_TC_Do_Decrypt(uint8_t sa_service_type, uint8_t ecs_is_aead_algori
                 cam_cookies                                    //
             );
         }
-        if (sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
+        if (status == CRYPTO_LIB_SUCCESS && (sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
         {
             if (crypto_config_global.key_type != KEY_TYPE_KMC)
             {
@@ -2152,6 +2152,10 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
     {
         Crypto_TC_Safe_Free_Ptr(aad);
         mc_if->mc_log(status);
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+        {
+            free(sa_ptr);
+        }
         return status; // Cryptography IF call failed, return.
     }
     // Now that MAC has been verified, check IV & ARSN if applicable

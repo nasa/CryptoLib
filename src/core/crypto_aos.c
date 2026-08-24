@@ -1540,6 +1540,17 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
                                                            &sa_ptr->ecs,      // encryption cipher
                                                            &sa_ptr->acs,      // authentication cipher
                                                            NULL);
+
+            if(status != CRYPTO_LIB_SUCCESS)
+            {
+                free(p_new_dec_frame); // Add cleanup
+                mc_if->mc_log(status);
+                if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+                {
+                    free(sa_ptr);
+                }
+                return status;
+            }
         }
         if (sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
         {
@@ -1562,6 +1573,17 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
                                                                 &sa_ptr->ecs,       // encryption cipher
                                                                 &sa_ptr->acs,       // authentication cipher
                                                                 NULL);
+
+            if(status != CRYPTO_LIB_SUCCESS)
+            {
+                free(p_new_dec_frame); // Add cleanup
+                mc_if->mc_log(status);
+                if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+                {
+                    free(sa_ptr);
+                }
+                return status;
+            }
         }
     }
 
@@ -1587,6 +1609,17 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
                                                                       CRYPTO_CIPHER_NONE, // encryption cipher
                                                                       sa_ptr->acs,        // authentication cipher
                                                                       NULL);              // cam cookies
+
+            if(status != CRYPTO_LIB_SUCCESS)
+            {
+                free(p_new_dec_frame); // Add cleanup
+                mc_if->mc_log(status);
+                if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+                {
+                    free(sa_ptr);
+                }
+                return status;
+            }
         }
         if (sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
         {
@@ -1618,6 +1651,17 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
                                                            &sa_ptr->ecs,      // encryption cipher
                                                            &sa_ptr->acs,      // authentication cipher
                                                            NULL);
+
+            if (status != CRYPTO_LIB_SUCCESS)
+            {
+                free(p_new_dec_frame); // Add cleanup
+                mc_if->mc_log(status);
+                if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+                {
+                    free(sa_ptr);
+                }
+                return status;
+            }
         }
     }
 

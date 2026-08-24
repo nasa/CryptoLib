@@ -1554,7 +1554,7 @@ int32_t Crypto_TM_Do_Decrypt_NONAEAD(uint8_t sa_service_type, uint16_t pdu_len, 
                                                                        sa_ptr->acs,        // authentication cipher
                                                                        NULL);              // cam cookies
     }
-    if (sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
+    if (status == CRYPTO_LIB_SUCCESS && (sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
     {
         if (crypto_config_global.key_type != KEY_TYPE_KMC)
         {
@@ -1664,6 +1664,10 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     if (status != CRYPTO_LIB_SUCCESS)
     {
         free(p_new_dec_frame);
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+        {
+            free(sa_ptr);
+        }
         return status;
     }
 

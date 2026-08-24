@@ -11,7 +11,7 @@ VALUES (2,'kmc/test/key130',3,X'01',1,0,12,12,16,X'000000000000000000000001',19,
 
 -- SA 3 - OPERATIONAL; ENC; ARSNW:5; AES-GCM; IV:00...01; IV-len:12; MAC-len:16; Key-ID: 130, SCID 3, VC-1
 INSERT INTO security_associations_tm (spi,ekid,sa_state,ecs,est,ast,shivf_len,iv_len,stmacf_len,iv,abm_len,abm,arsnw,arsn_len,tfvn,scid,vcid,mapid)
-VALUES (3,'kmc/test/key130',3,X'01',1,1,12,12,16,X'000000000000000000000001',20,X'0000000000000000000000000000000000000000',5,0,0,3,1,0);
+VALUES (3,'kmc/test/key130',3,X'01',1,1,8,12,16,X'000000000000000000000001',20,X'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF',5,0,0,3,1,0);
 
 -- SA 4 - OPERATIONAL; ENC; ARSNW:5; AES-GCM; IV:00...01; IV-len:12; MAC-len:16; Key-ID: 130, SCID 3, VC-2
 INSERT INTO security_associations_tm (spi,ekid,sa_state,ecs,est,ast,shivf_len,iv_len,stmacf_len,iv,abm_len,abm,arsnw,arsn_len,tfvn,scid,vcid,mapid)
