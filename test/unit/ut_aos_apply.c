@@ -1446,7 +1446,7 @@ UTEST(AOS_APPLY, AES_CBC_256_ENCRYPT_16B_PADDING)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test Frame Setup - includes header, SPI, IV, data, and space for MAC+FECF
-    char *test_aos_h        = "40C0000000000008CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC10112233445566778899AABBCCDDEE"
+    char *test_aos_h        = "40C0000000000008CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC00112233445566778899AABBCCDDEE"
                               "FFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
                               "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
                               "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
@@ -1473,12 +1473,127 @@ UTEST(AOS_APPLY, AES_CBC_256_ENCRYPT_16B_PADDING)
     sa_ptr->ekid       = 130;                      // Encryption key ID
     sa_ptr->akid       = 130;                      // Authentication key ID
     sa_ptr->arsn_len   = 0;                        // 0 byte Anti-Replay Sequence Number field
+    memset(sa_ptr->abm, 0xFF, (sa_ptr->abm_len * sizeof(uint8_t))); // Set all bits in the anti-replay bitmask
 
     // Activate the keys
     crypto_key_t *ekp = key_if->get_key(sa_ptr->ekid);
     ekp->key_state    = KEY_ACTIVE;
     crypto_key_t *akp = key_if->get_key(sa_ptr->akid);
     akp->key_state    = KEY_ACTIVE;
+
+    // Apply security (encrypt)
+    status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b, test_frame_length);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    free(test_aos_b);
+    Crypto_Shutdown();
+}
+
+UTEST(AOS_APPLY, AES_CBC_256_ENCRYPT_2B_PADDING)
+{
+    remove("sa_save_file.bin");
+    // Local variables
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    // Configure, Add Managed Params, and Init
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+
+    // Set up the managed parameters
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {
+        1, 0x0003, 0, AOS_HAS_FECF, AOS_NO_FHEC, AOS_NO_IZ, 0, 171, AOS_NO_OCF, 1};
+    Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    char *test_aos_h        = "40C0000000000008CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC00112233445566778899AABBCCDDEE"
+                              "FFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
+                              "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
+                              "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
+                              "AABBAABBAABBAABBAABBAAFECF";
+    // char *test_aos_b       = NULL;
+    int   test_frame_length = 0;
+    // hex_conversion(test_aos_h, &test_aos_b, &test_frame_length);
+
+    uint16_t padding = 2;
+    uint16_t dest_len  = (strlen(test_aos_h) / 2) + padding;
+    char *test_aos_b   = (char *)malloc(dest_len * sizeof(char));
+    test_frame_length  = convert_hexstring_to_byte_array(test_aos_h, test_aos_b);
+
+    // Setup security association
+    SecurityAssociation_t *sa_ptr;
+    sa_if->sa_get_from_spi(10, &sa_ptr);
+    sa_ptr->sa_state   = SA_OPERATIONAL;
+    sa_ptr->est        = 1;                        // Encryption on
+    sa_ptr->ast        = 0;                        // Authentication off
+    sa_ptr->ecs        = CRYPTO_CIPHER_AES256_CBC; // Using CBC mode
+    sa_ptr->iv_len     = 16;                       // 16 byte IV
+    sa_ptr->shivf_len  = 16;                       // 16 byte IV field
+    sa_ptr->stmacf_len = 0;                        // 0 byte MAC field
+    sa_ptr->shplf_len  = 1;                        // 1 byte padding length field
+    sa_ptr->ekid       = 130;                      // Encryption key ID
+    sa_ptr->akid       = 130;                      // Authentication key ID
+    sa_ptr->arsn_len   = 0;                        // 0 byte Anti-Replay Sequence Number field
+    memset(sa_ptr->abm, 0xFF, (sa_ptr->abm_len * sizeof(uint8_t))); // Set all bits in the anti-replay bitmask
+
+    // Apply security (encrypt)
+    status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b, test_frame_length);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    free(test_aos_b);
+    Crypto_Shutdown();
+}
+
+UTEST(AOS_APPLY, AES_CBC_256_ENCRYPT_2B_SHPLF)
+{
+    remove("sa_save_file.bin");
+    // Local variables
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    // Configure, Add Managed Params, and Init
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+
+    // Set up the managed parameters
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {
+        1, 0x0003, 0, AOS_HAS_FECF, AOS_NO_FHEC, AOS_NO_IZ, 0, 172, AOS_NO_OCF, 1};
+    Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    char *test_aos_h        = "40C0000000000008CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC0000112233445566778899AABBCCDDEE"
+                              "FFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
+                              "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
+                              "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
+                              "AABBAABBAABBAABBAABBFECF";
+    // char *test_aos_b       = NULL;
+    int   test_frame_length = 0;
+    // hex_conversion(test_aos_h, &test_aos_b, &test_frame_length);
+
+    uint16_t padding = 2;
+    uint16_t dest_len  = (strlen(test_aos_h) / 2) + padding;
+    char *test_aos_b   = (char *)malloc(dest_len * sizeof(char));
+    test_frame_length  = convert_hexstring_to_byte_array(test_aos_h, test_aos_b);
+
+    // Setup security association
+    SecurityAssociation_t *sa_ptr;
+    sa_if->sa_get_from_spi(10, &sa_ptr);
+    sa_ptr->sa_state   = SA_OPERATIONAL;
+    sa_ptr->est        = 1;                        // Encryption on
+    sa_ptr->ast        = 0;                        // Authentication off
+    sa_ptr->ecs        = CRYPTO_CIPHER_AES256_CBC; // Using CBC mode
+    sa_ptr->iv_len     = 16;                       // 16 byte IV
+    sa_ptr->shivf_len  = 16;                       // 16 byte IV field
+    sa_ptr->stmacf_len = 0;                        // 0 byte MAC field
+    sa_ptr->shplf_len  = 2;                        // 2 byte padding length field
+    sa_ptr->ekid       = 130;                      // Encryption key ID
+    sa_ptr->akid       = 130;                      // Authentication key ID
+    sa_ptr->arsn_len   = 0;                        // 0 byte Anti-Replay Sequence Number field
+    memset(sa_ptr->abm, 0xFF, (sa_ptr->abm_len * sizeof(uint8_t))); // Set all bits in the anti-replay bitmask
 
     // Apply security (encrypt)
     status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b, test_frame_length);

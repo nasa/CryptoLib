@@ -1856,7 +1856,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
     SecurityAssociation_t *sa_ptr            = NULL;
     uint8_t                sa_service_type   = -1;
     uint8_t                secondary_hdr_len = 0;
-    uint8_t                spi               = -1;
+    uint16_t               spi               = -1;
     crypto_key_t          *ekp               = NULL;
     crypto_key_t          *akp               = NULL;
 

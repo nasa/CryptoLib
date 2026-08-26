@@ -2078,7 +2078,7 @@ UTEST(AOS_PROCESS, AOS_PROCESS_HEAP_UNDERFLOW_TEST)
     status = Crypto_Init();
 
     // Test frame setup
-    char *framed_aos_h = "403030303030303030FF35DF4008EF";
+    char *framed_aos_h = "403030303030003030FF35DF4008EF";
 
     char *framed_aos_b   = NULL;
     int   framed_aos_len = 0;
@@ -2328,6 +2328,7 @@ UTEST(AOS_PROCESS, AES_CBC_256_DECRYPT_16B_PADDING)
     sa_ptr->ekid       = 130;                      // Encryption key ID
     sa_ptr->akid       = 130;                      // Authentication key ID
     sa_ptr->arsn_len   = 0;                        // 0 byte Anti-Replay Sequence Number field
+    memset(sa_ptr->abm, 0xFF, ABM_SIZE); // Anti-Replay Bit Map
 
     // Activate the keys
     crypto_key_t *ekp = key_if->get_key(sa_ptr->ekid);
@@ -2360,6 +2361,164 @@ UTEST(AOS_PROCESS, AES_CBC_256_DECRYPT_16B_PADDING)
     free(test_aos_b);
     free(ex_aos_b);
     free(aos_frame);
+    Crypto_Shutdown();
+}
+
+UTEST(AOS_PROCESS, AES_CBC_256_DECRYPT_2B_PADDING)
+{
+    remove("sa_save_file.bin");
+    // Local variables
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    // Configure, Add Managed Params, and Init
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_TRUE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+
+    // Set up the managed parameters
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {
+        1, 0x0003, 0, AOS_HAS_FECF, AOS_NO_FHEC, AOS_NO_IZ, 0, 171, AOS_NO_OCF, 1};
+    Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    // Test Frame Setup - includes header, SPI, IV, data, and space for MAC+FECF
+    char *test_aos_h        = "40C000000000000A00000000000000000000000000000000023E988DE93B830A3BBD959E14E058F404E7AFA0CDB3918E58791773D251E5D0FBB04D2736D894269A44865AE1C7C079E1E90E94C1224AA95E3CC9D3082B8BDCAA03A51E2EB35D012A5D3505E8E9836857B1CB8EF9FF04452B6B95930EFE2734F0028187A4604454D9E566DD5271FD757E3E0CFD6A65AF3FB8597300D897C8D8EC610F1D4F5C8961324EB62A9C51BEAF415C96";
+
+    // 40C000000000000A00000000000000000000000000000002CB6CC25D3A074F031B4B6E8AB8A0A8D1D432A2EDEABC8D4B84694947E4334BAAFCAA80BDECD24CA59B3ED31FB4EDDFBEE356680B8ED30DF75DD365566260B016DE02F5876E984DACE54C41976A18DADCBCA472FB034363A22231282E2D3E1913275A0E41B2DDB6BBC16C459702AE4F94A22ADDCCDAE289C7C09900582A472663FA600C51BB048F26174DCB7A8A54158BCF611B
+    // 40C000000000000A00000000000000000000000000000000023E988DE93B830A3BBD959E14E058F404E7AFA0CDB3918E58791773D251E5D0FBB04D2736D894269A44865AE1C7C079E1E90E94C1224AA95E3CC9D3082B8BDCAA03A51E2EB35D012A5D3505E8E9836857B1CB8EF9FF04452B6B95930EFE2734F0028187A4604454D9E566DD5271FD757E3E0CFD6A65AF3FB8597300D897C8D8EC610F1D4F5C8961324EB62A9C51BEAF415C96
+    char *test_aos_b        = NULL;
+    int   test_frame_length = 0;
+    hex_conversion(test_aos_h, &test_aos_b, &test_frame_length);
+
+    SecurityAssociation_t *sa_ptr;
+    sa_if->sa_get_from_spi(10, &sa_ptr);
+    sa_ptr->sa_state   = SA_OPERATIONAL;
+    sa_ptr->est        = 1;                        // Encryption on
+    sa_ptr->ast        = 0;                        // Authentication off
+    sa_ptr->ecs        = CRYPTO_CIPHER_AES256_CBC; // Using CBC mode
+    sa_ptr->iv_len     = 16;                       // 16 byte IV
+    sa_ptr->shivf_len  = 16;                       // 16 byte IV field
+    sa_ptr->stmacf_len = 0;                       // 0 byte MAC field
+    sa_ptr->shplf_len  = 1;                        // 1 byte padding length field
+    sa_ptr->ekid       = 130;                      // Encryption key ID
+    sa_ptr->akid       = 130;                      // Authentication key ID
+    sa_ptr->arsn_len   = 0;                        // 0 byte Anti-Replay Sequence Number field
+    memset(sa_ptr->abm, 0xFF, ABM_SIZE); // Anti-Replay Bit Map
+
+    // Activate the keys
+    crypto_key_t *ekp = key_if->get_key(sa_ptr->ekid);
+    ekp->key_state    = KEY_ACTIVE;
+    crypto_key_t *akp = key_if->get_key(sa_ptr->akid);
+    akp->key_state    = KEY_ACTIVE;
+
+    AOS_t *aos_frame;
+    aos_frame = malloc(sizeof(uint8_t) * AOS_SIZE);
+    memset(aos_frame, 0, (sizeof(uint8_t) * AOS_SIZE));
+    uint16_t processed_aos_len = 0;
+
+    // Process security (decrypt)
+    status = Crypto_AOS_ProcessSecurity((uint8_t *)test_aos_b, test_frame_length, aos_frame, &processed_aos_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    // Validate the processed AOS frame
+    char *ex_aos_h = "112233445566778899AABBCCDDEEFFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA";
+    char *ex_aos_b = NULL;
+    int ex_frame_len = 0;
+    hex_conversion(ex_aos_h, &ex_aos_b, &ex_frame_len);
+
+    for (uint16_t i = 0; i < aos_frame->aos_pdu_len; i++)
+    {
+        //printf("Checking %02x against %02X\n", (uint8_t)aos_frame->aos_pdu[i], (uint8_t)ex_aos_b[i]);
+        ASSERT_EQ((uint8_t)aos_frame->aos_pdu[i], (uint8_t)ex_aos_b[i]);
+    }
+
+    Crypto_aosPrint(aos_frame);
+    printf("pdu_len: %d\n", aos_frame->aos_pdu_len);
+
+    free(test_aos_b);
+    free(aos_frame);
+    free(ex_aos_b);
+    Crypto_Shutdown();
+}
+
+UTEST(AOS_PROCESS, AES_CBC_256_DECRYPT_2B_SHPLF)
+{
+    remove("sa_save_file.bin");
+    // Local variables
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    // Configure, Add Managed Params, and Init
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_TRUE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+
+    // Set up the managed parameters
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {
+        1, 0x0003, 0, AOS_HAS_FECF, AOS_NO_FHEC, AOS_NO_IZ, 0, 172, AOS_NO_OCF, 1};
+    Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    // Test Frame Setup - includes header, SPI, IV, data, and space for MAC+FECF
+    char *test_aos_h        = "40C000000000000A0000000000000000000000000000000000033E988DE93B830A3BBD959E14E058F404E7AFA0CDB3918E58791773D251E5D0FBB04D2736D894269A44865AE1C7C079E1E90E94C1224AA95E3CC9D3082B8BDCAA03A51E2EB35D012A5D3505E8E9836857B1CB8EF9FF04452B6B95930EFE2734F0028187A4604454D9E566DD5271FD757E3E0CFD6A65AF3FB8597300D897C8D8EC3914ACF26132B6A5B7134052797EBE471A99";
+
+    // 40C000000000000A00000000000000000000000000000002CB6CC25D3A074F031B4B6E8AB8A0A8D1D432A2EDEABC8D4B84694947E4334BAAFCAA80BDECD24CA59B3ED31FB4EDDFBEE356680B8ED30DF75DD365566260B016DE02F5876E984DACE54C41976A18DADCBCA472FB034363A22231282E2D3E1913275A0E41B2DDB6BBC16C459702AE4F94A22ADDCCDAE289C7C09900582A472663FA600C51BB048F26174DCB7A8A54158BCF611B
+    // 40C000000000000A00000000000000000000000000000000023E988DE93B830A3BBD959E14E058F404E7AFA0CDB3918E58791773D251E5D0FBB04D2736D894269A44865AE1C7C079E1E90E94C1224AA95E3CC9D3082B8BDCAA03A51E2EB35D012A5D3505E8E9836857B1CB8EF9FF04452B6B95930EFE2734F0028187A4604454D9E566DD5271FD757E3E0CFD6A65AF3FB8597300D897C8D8EC610F1D4F5C8961324EB62A9C51BEAF415C96
+    char *test_aos_b        = NULL;
+    int   test_frame_length = 0;
+    hex_conversion(test_aos_h, &test_aos_b, &test_frame_length);
+
+    SecurityAssociation_t *sa_ptr;
+    sa_if->sa_get_from_spi(10, &sa_ptr);
+    sa_ptr->sa_state   = SA_OPERATIONAL;
+    sa_ptr->est        = 1;                        // Encryption on
+    sa_ptr->ast        = 0;                        // Authentication off
+    sa_ptr->ecs        = CRYPTO_CIPHER_AES256_CBC; // Using CBC mode
+    sa_ptr->iv_len     = 16;                       // 16 byte IV
+    sa_ptr->shivf_len  = 16;                       // 16 byte IV field
+    sa_ptr->stmacf_len = 0;                       // 0 byte MAC field
+    sa_ptr->shplf_len  = 2;                        // 2 byte padding length field
+    sa_ptr->ekid       = 130;                      // Encryption key ID
+    sa_ptr->akid       = 130;                      // Authentication key ID
+    sa_ptr->arsn_len   = 0;                        // 0 byte Anti-Replay Sequence Number field
+    memset(sa_ptr->abm, 0xFF, ABM_SIZE); // Anti-Replay Bit Map
+
+    // Activate the keys
+    crypto_key_t *ekp = key_if->get_key(sa_ptr->ekid);
+    ekp->key_state    = KEY_ACTIVE;
+    crypto_key_t *akp = key_if->get_key(sa_ptr->akid);
+    akp->key_state    = KEY_ACTIVE;
+
+    AOS_t *aos_frame;
+    aos_frame = malloc(sizeof(uint8_t) * AOS_SIZE);
+    memset(aos_frame, 0, (sizeof(uint8_t) * AOS_SIZE));
+    uint16_t processed_aos_len = 0;
+
+    // Process security (decrypt)
+    status = Crypto_AOS_ProcessSecurity((uint8_t *)test_aos_b, test_frame_length, aos_frame, &processed_aos_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    // Validate the processed AOS frame
+    char *ex_aos_h = "112233445566778899AABBCCDDEEFFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA";
+    char *ex_aos_b = NULL;
+    int ex_frame_len = 0;
+    hex_conversion(ex_aos_h, &ex_aos_b, &ex_frame_len);
+
+    for (uint16_t i = 0; i < aos_frame->aos_pdu_len; i++)
+    {
+        //printf("Checking %02x against %02X\n", (uint8_t)aos_frame->aos_pdu[i], (uint8_t)ex_aos_b[i]);
+        ASSERT_EQ((uint8_t)aos_frame->aos_pdu[i], (uint8_t)ex_aos_b[i]);
+    }
+
+    Crypto_aosPrint(aos_frame);
+    printf("pdu_len: %d\n", aos_frame->aos_pdu_len);
+
+    free(test_aos_b);
+    free(aos_frame);
+    free(ex_aos_b);
     Crypto_Shutdown();
 }
 

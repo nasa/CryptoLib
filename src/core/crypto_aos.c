@@ -23,6 +23,37 @@
 
 #include <string.h> // memcpy/memset
 
+
+uint32_t Crypto_AOS_Calculate_Padding(uint32_t cipher, uint16_t data_len)
+{
+    uint32_t block_size;
+    uint32_t padding = 0;
+
+    // Determine block size based on cipher
+    switch (cipher)
+    {
+        case CRYPTO_CIPHER_AES256_CBC:
+        case CRYPTO_CIPHER_AES256_CBC_MAC:
+            block_size = 16; // AES block size is 16 bytes
+            padding    = block_size - (data_len % block_size);
+            if (padding == block_size)
+                padding = 16;
+            break;
+
+        case CRYPTO_CIPHER_AES256_GCM:
+            // GCM mode doesn't require padding
+            padding = 0;
+            break;
+
+        default:
+            // For unknown ciphers, no padding
+            padding = 0;
+            break;
+    }
+
+    return padding;
+}
+
 /**
  * CCSDS Compliance Reference:
  * This file implements security features compliant with:
@@ -399,14 +430,6 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         pkcs_padding = padding_length;
     }
 
-    if (pkcs_padding < cbc_padding)
-    {
-        status = CRYPTO_LIB_ERROR;
-        printf(KRED "Error: pkcs_padding length %d is less than required %d\n" RESET, pkcs_padding, cbc_padding);
-        mc_if->mc_log(status);
-        return status;
-    }
-
     status = Crypto_check_buffer_size(pTfBuffer, aos_current_managed_parameters_struct.max_frame_size);
     if (status != CRYPTO_LIB_SUCCESS)
     {
@@ -468,6 +491,14 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     }
 #endif
 
+    pkcs_padding = Crypto_AOS_Calculate_Padding(sa_ptr->ecs, pdu_len);
+
+    if (aos_current_managed_parameters_struct.max_frame_size < len_ingest + pkcs_padding)
+    {
+        status = CRYPTO_LIB_ERR_AOS_APPLY_PADDING;
+        mc_if->mc_log(status);
+        return status;
+    }
 
     if (pkcs_padding)
     {
@@ -484,8 +515,8 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
 
         uint8_t padding_start = 3 - sa_ptr->shplf_len;
 
-        // need to subtract 1 from idx to go back to shplf
-        idx--;
+        // need to subtract from idx to go back to shplf start
+        idx -= sa_ptr->shplf_len;
 
         // Add padding bytes to shplf
         for (int i = 0; i < sa_ptr->shplf_len; i++)
@@ -948,7 +979,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     uint8_t               *p_new_dec_frame   = NULL;
     SecurityAssociation_t *sa_ptr            = NULL;
     uint8_t                sa_service_type   = -1;
-    uint8_t                spi               = -1;
+    uint16_t               spi               = -1;
     uint8_t                aos_hdr_len       = 6;
 
     // Bit math to give concise access to values in the ingest
@@ -1282,6 +1313,11 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
 #endif
     }
 
+    // go back to start of spi and copy to new frame
+    byte_idx -= SPI_LEN;
+    memcpy(p_new_dec_frame + byte_idx, &(p_ingest[byte_idx]), SPI_LEN);
+    byte_idx += SPI_LEN;
+
     // Byte_idx is still set to just past the SPI
     // If IV is present, note location
     if (sa_ptr->iv_len > 0)
@@ -1291,13 +1327,16 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     // Increment byte_idx past Security Header Fields based on SA values
     memcpy((pp_processed_frame->aos_sec_header.iv + (sa_ptr->iv_len - sa_ptr->shivf_len)), &(p_ingest[byte_idx]),
            sa_ptr->shivf_len);
+    memcpy(p_new_dec_frame + byte_idx, &(p_ingest[byte_idx]), sa_ptr->shivf_len);
     byte_idx += sa_ptr->shivf_len;
 
     memcpy((pp_processed_frame->aos_sec_header.sn + (sa_ptr->arsn_len - sa_ptr->shsnf_len)), &(p_ingest[byte_idx]),
            sa_ptr->shsnf_len);
+    memcpy(p_new_dec_frame + byte_idx, &(p_ingest[byte_idx]), sa_ptr->shsnf_len);
     byte_idx += sa_ptr->shsnf_len;
 
     memcpy(&(pp_processed_frame->aos_sec_header.pad), &(p_ingest[byte_idx]), sa_ptr->shplf_len);
+    memcpy(p_new_dec_frame + byte_idx, &(p_ingest[byte_idx]), sa_ptr->shplf_len);
     byte_idx += sa_ptr->shplf_len;
 
 #ifdef SA_DEBUG
@@ -1521,7 +1560,11 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
         return CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL;
     }
 
-    uint16_t padding = (p_ingest[byte_idx - 1] << ((sa_ptr->shplf_len - 1) * 8));
+    uint32_t padding = 0;
+    for (int i = 0; i < sa_ptr->shplf_len; i++)
+    {
+        padding |= p_ingest[aos_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + i] << (8 * (sa_ptr->shplf_len - 1 - i));
+    }
 
     if (sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_TRUE)
     {
