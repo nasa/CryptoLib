@@ -607,6 +607,7 @@ int32_t Crypto_PDU(uint8_t *ingest, TC_t *tc_frame)
 #ifdef PDU_DEBUG
                                 printf(KRED "Error: Crypto_PDU failed interpreting Service Group! \n" RESET);
 #endif
+                                status = CRYPTO_LIB_ERR_INVALID_PID;
                                 break;
                         }
                         break;
@@ -626,6 +627,7 @@ int32_t Crypto_PDU(uint8_t *ingest, TC_t *tc_frame)
 #ifdef PDU_DEBUG
                 printf(KRED "Error: Crypto_PDU failed interpreting PDU Type!  Received a Reply!?! \n" RESET);
 #endif
+                status = CRYPTO_LIB_ERROR;
                 break;
         }
     }
@@ -687,6 +689,7 @@ int32_t Crypto_SG_KEY_MGMT(uint8_t *ingest, TC_t *tc_frame)
             printf(KRED
                    "Error: Crypto_PDU failed interpreting Key Management Procedure Identification Field! \n" RESET);
 #endif
+            status = CRYPTO_LIB_ERR_INVALID_PID;
             break;
     }
     return status;
@@ -770,6 +773,7 @@ int32_t Crypto_SG_SA_MGMT(uint8_t *ingest, TC_t *tc_frame)
 #ifdef PDU_DEBUG
             printf(KRED "Error: Crypto_PDU failed interpreting SA Procedure Identification Field! \n" RESET);
 #endif
+            status = CRYPTO_LIB_ERR_INVALID_PID;
             break;
     }
     return status;
@@ -828,6 +832,7 @@ int32_t Crypto_SEC_MON_CTRL(uint8_t *ingest)
 #ifdef PDU_DEBUG
             printf(KRED "Error: Crypto_PDU failed interpreting MC Procedure Identification Field! \n" RESET);
 #endif
+            status = CRYPTO_LIB_ERR_INVALID_PID;
             break;
     }
     return status;
