@@ -1574,7 +1574,7 @@ UTEST(AOS_APPLY, AES_CBC_256_ENCRYPT_2B_SHPLF)
     int   test_frame_length = 0;
     // hex_conversion(test_aos_h, &test_aos_b, &test_frame_length);
 
-    uint16_t padding = 2;
+    uint16_t padding = 3;
     uint16_t dest_len  = (strlen(test_aos_h) / 2) + padding;
     char *test_aos_b   = (char *)malloc(dest_len * sizeof(char));
     test_frame_length  = convert_hexstring_to_byte_array(test_aos_h, test_aos_b);

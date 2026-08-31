@@ -1675,6 +1675,9 @@ int32_t Crypto_check_buffer_size(uint8_t *buf, uint16_t required)
     if (malloc_usable_size(buf) < required)
     {
         status = CRYPTO_LIB_ERR_BUFFER_SIZE;
+#ifdef DEBUG
+        printf("Buffer of size %ld bytes, but requires %d bytes\n", malloc_usable_size(buf), required);
+#endif
         mc_if->mc_log(status);
     }
 #elif defined(__APPLE__)
@@ -1682,6 +1685,9 @@ int32_t Crypto_check_buffer_size(uint8_t *buf, uint16_t required)
     if (malloc_size(buf) < required)
     {
         status = CRYPTO_LIB_ERR_BUFFER_SIZE;
+#ifdef DEBUG
+        printf("Buffer of size %ld bytes, but requires %d bytes\n", malloc_size(buf), required);
+#endif
         mc_if->mc_log(status);
     }
 #elif defined(_WIN32)
@@ -1689,6 +1695,9 @@ int32_t Crypto_check_buffer_size(uint8_t *buf, uint16_t required)
     if (_msize(buf) < required)
     {
         status = CRYPTO_LIB_ERR_BUFFER_SIZE;
+#ifdef DEBUG
+        printf("Buffer of size %ld bytes, but requires %d bytes\n", _msize(buf), required);
+#endif
         mc_if->mc_log(status);
     }
 #endif
