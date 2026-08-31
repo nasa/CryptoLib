@@ -53,7 +53,8 @@ jobs:
     #   run: make gcov
 
     - name: Upload 
-      uses: codecov/codecov-action@v5
+      # audit-note:cloud-006-gha-third-party-no-sha — Pin to a 40-char commit SHA. Tag refs are mutable and a repo takeover compromises every workflow using @v1.
+      uses: codecov/codecov-action@75cd11691c0faa626561e295848008c8a7dddffe # v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: 'coverage/*.c.gcov'
@@ -149,7 +150,8 @@ jobs:
     #   run: make gcov
 
     - name: Upload 
-      uses: codecov/codecov-action@v4
+      # audit-note:cloud-006-gha-third-party-no-sha — Pin to a 40-char commit SHA. Tag refs are mutable and a repo takeover compromises every workflow using @v1.
+      uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: 'coverage/*.c.gcov'
@@ -202,7 +204,8 @@ jobs:
       run: source ~/.bashrc && make gcov
 
     - name: Upload 
-      uses: codecov/codecov-action@v4
+      # audit-note:cloud-006-gha-third-party-no-sha — Pin to a 40-char commit SHA. Tag refs are mutable and a repo takeover compromises every workflow using @v1.
+      uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: 'coverage/*.c.gcov'
@@ -235,7 +238,8 @@ jobs:
     #   run: make gcov
 
     - name: Upload 
-      uses: codecov/codecov-action@v4
+      # audit-note:cloud-006-gha-third-party-no-sha — Pin to a 40-char commit SHA. Tag refs are mutable and a repo takeover compromises every workflow using @v1.
+      uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: 'coverage/*.c.gcov'
