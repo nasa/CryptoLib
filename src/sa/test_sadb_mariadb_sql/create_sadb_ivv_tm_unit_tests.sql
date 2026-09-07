@@ -11,7 +11,7 @@ VALUES (2,'kmc/test/key130',3,X'01',1,0,12,12,16,X'000000000000000000000001',19,
 
 -- SA 3 - OPERATIONAL; ENC; ARSNW:5; AES-GCM; IV:00...01; IV-len:12; MAC-len:16; Key-ID: 130, SCID 3, VC-1
 INSERT INTO security_associations_tm (spi,ekid,sa_state,ecs,est,ast,shivf_len,iv_len,stmacf_len,iv,abm_len,abm,arsnw,arsn_len,tfvn,scid,vcid,mapid)
-VALUES (3,'kmc/test/key130',3,X'01',1,1,12,12,16,X'000000000000000000000001',20,X'0000000000000000000000000000000000000000',5,0,0,3,1,0);
+VALUES (3,'kmc/test/key130',3,X'01',1,1,8,12,16,X'000000000000000000000001',20,X'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF',5,0,0,3,1,0);
 
 -- SA 4 - OPERATIONAL; ENC; ARSNW:5; AES-GCM; IV:00...01; IV-len:12; MAC-len:16; Key-ID: 130, SCID 3, VC-2
 INSERT INTO security_associations_tm (spi,ekid,sa_state,ecs,est,ast,shivf_len,iv_len,stmacf_len,iv,abm_len,abm,arsnw,arsn_len,tfvn,scid,vcid,mapid)
@@ -85,3 +85,11 @@ VALUES (20,'kmc/test/key130',3,X'01',0,1,12,12,16,X'000000000000000000000001',36
 -- SA 21 - OPERATIONAL; AUTH - ARSNW:5; AES-GCM; IV:00...01; IV-len:12; MAC-len:8; Key-ID: 130, SCID 3, VC-57
 INSERT INTO security_associations_tm (spi,ekid,sa_state,ecs,est,ast,shivf_len,iv_len,stmacf_len,iv,abm_len,abm,arsnw,arsn_len,tfvn,scid,vcid,mapid)
 VALUES (21,'kmc/test/key130',3,X'01',0,1,12,12,8,X'000000000000000000000001',36,X'000000000000000000000000000000000000000000000000000000000000000000000000',5,0,0,3,57,0);
+
+-- SA 22 - OPERATIONAL; ENC - ARSNW:5; AES-CBC; IV:00...01; IV-len:12; MAC-len:0; Key-ID: 130, SCID 3, VC-58
+INSERT INTO security_associations_tm (spi,ekid,sa_state,ecs,est,ast,shivf_len,iv_len,stmacf_len,iv,abm_len,abm,arsnw,arsn_len,tfvn,scid,vcid,mapid,shplf_len)
+VALUES (22,'kmc/test/key130',3,X'02',1,0,16,16,0,X'00000000000000000000000000000001',36,X'000000000000000000000000000000000000000000000000000000000000000000000000',5,0,1,3,58,0,1);
+
+-- SA 98 - OPERATIONAL; ENC - ARSNW:5; AES-CBC; IV:00...01; IV-len:12; MAC-len:0; Key-ID: 130, SCID 3, VC-58
+INSERT INTO security_associations_tm (spi,ekid,sa_state,ecs,est,ast,shivf_len,iv_len,stmacf_len,iv,abm_len,abm,arsnw,arsn_len,tfvn,scid,vcid,mapid,shplf_len)
+VALUES (98,'kmc/test/key130',3,X'02',1,0,16,16,0,X'00000000000000000000000000000001',36,X'000000000000000000000000000000000000000000000000000000000000000000000000',5,0,0,47,2,0,2);

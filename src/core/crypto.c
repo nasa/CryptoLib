@@ -1641,6 +1641,11 @@ uint32_t Crypto_Get_FSR(void)
 
 int32_t Crypto_is_safe_username(const char *s)
 {
+    if (s == NULL)
+    {
+        return CRYPTO_LIB_SUCCESS;
+    }
+
     for (const unsigned char *p = (const unsigned char *)s; *p; ++p)
     {
         if (!(isalnum(*p) || *p == '.' || *p == '_' || *p == '-'))
@@ -1651,10 +1656,52 @@ int32_t Crypto_is_safe_username(const char *s)
 
 int32_t Crypto_is_safe_path(const char *s)
 {
+    if (s == NULL)
+    {
+        return CRYPTO_LIB_ERROR;
+    }
+
     for (const unsigned char *p = (const unsigned char *)s; *p; ++p)
     {
         if (!(isalnum(*p) || *p == '.' || *p == '_' || *p == '-' || *p == '/'))
             return CRYPTO_LIB_ERROR;
     }
     return CRYPTO_LIB_SUCCESS;
+}
+
+int32_t Crypto_check_buffer_size(uint8_t *buf, uint16_t required)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+#if defined(__linux__)
+    #include <malloc.h>
+    if (malloc_usable_size(buf) < required)
+    {
+        status = CRYPTO_LIB_ERR_BUFFER_SIZE;
+#ifdef DEBUG
+        printf("Buffer of size %ld bytes, but requires %d bytes\n", malloc_usable_size(buf), required);
+#endif
+        mc_if->mc_log(status);
+    }
+#elif defined(__APPLE__)
+    #include <malloc/malloc.h>
+    if (malloc_size(buf) < required)
+    {
+        status = CRYPTO_LIB_ERR_BUFFER_SIZE;
+#ifdef DEBUG
+        printf("Buffer of size %ld bytes, but requires %d bytes\n", malloc_size(buf), required);
+#endif
+        mc_if->mc_log(status);
+    }
+#elif defined(_WIN32)
+    #include <malloc.h>
+    if (_msize(buf) < required)
+    {
+        status = CRYPTO_LIB_ERR_BUFFER_SIZE;
+#ifdef DEBUG
+        printf("Buffer of size %ld bytes, but requires %d bytes\n", _msize(buf), required);
+#endif
+        mc_if->mc_log(status);
+    }
+#endif
+    return status;
 }

@@ -30,24 +30,24 @@
 #include <stdio.h>
 #include <mysql/mysql.h>
 
-#define KMC_HOSTNAME           "itc.kmc.nasa.gov"
-#define CA_PATH                "/home/jstar/Desktop/kmc_certs/ca.pem"
-#define CLIENT_CERTIFICATE     "/home/jstar/Desktop/kmc_certs/ammos-client-cert.pem"
-#define CLIENT_CERTIFICATE_KEY "/home/jstar/Desktop/kmc_certs/ammos-client-key.pem"
+#define KMC_HOSTNAME           "localhost"
+#define CA_PATH                "/home/jstar/Desktop/DCS/local-crypto/ammos-ca-bundle.crt"
+#define CLIENT_CERTIFICATE     "/home/jstar/Desktop/DCS/local-crypto/mtls/ammos-client-leaf-cert.pem"
+#define CLIENT_CERTIFICATE_KEY "/home/jstar/Desktop/DCS/local-crypto/mtls/ammos-client-key.pem"
 
 void reload_db(void)
 {
     printf("Resetting Database\n");
     system("mysql --host=localhost -u cryptosvc --skip-ssl-verify-server-cert "
-           "--ssl-ca=/home/jstar/Desktop/kmc_certs/ca.pem "
-           "--ssl-cert=/home/jstar/Desktop/kmc_certs/ammos-server-cert.pem "
-           "--ssl-key=/home/jstar/Desktop/kmc_certs/ammos-server-key.pem < "
+           "--ssl-ca=/home/jstar/Desktop/DCS/local-crypto/ammos-ca-bundle.crt "
+           "--ssl-cert=/home/jstar/Desktop/DCS/local-crypto/tls/ammos-server-leaf-cert.pem "
+           "--ssl-key=/home/jstar/Desktop/DCS/local-crypto/tls/ammos-server-key.pem < "
            "src/sa/sadb_mariadb_sql/empty_sadb_tc.sql");
     printf("first call done\n");
     system("mysql --host=localhost -u cryptosvc --skip-ssl-verify-server-cert "
-           "--ssl-ca=/home/jstar/Desktop/kmc_certs/ca.pem  "
-           "--ssl-cert=/home/jstar/Desktop/kmc_certs/ammos-server-cert.pem "
-           "--ssl-key=/home/jstar/Desktop/kmc_certs/ammos-server-key.pem < "
+           "--ssl-ca=/home/jstar/Desktop/DCS/local-crypto/ammos-ca-bundle.crt  "
+           "--ssl-cert=/home/jstar/Desktop/DCS/local-crypto/tls/ammos-server-leaf-cert.pem "
+           "--ssl-key=/home/jstar/Desktop/DCS/local-crypto/tls/ammos-server-key.pem < "
            "src/sa/test_sadb_mariadb_sql/create_sadb_ivv_tc_unit_tests.sql");
 }
 
@@ -188,9 +188,9 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_APPLY_SEC_AUTH_ONLY)
                      TC_IGNORE_SA_STATE_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F,
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
-                          CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", NULL);
-    Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
-                                     "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
+                          CLIENT_CERTIFICATE_KEY, NULL, "client", NULL);
+    Crypto_Config_Kmc_Crypto_Service("https", KMC_HOSTNAME, 8443, "crypto-service",
+                                     CA_PATH, NULL, CRYPTO_FALSE, CLIENT_CERTIFICATE,
                                      "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
     TCGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 56, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, 1};
     Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
@@ -260,9 +260,9 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_ENC_AND_AUTH)
                      TC_IGNORE_SA_STATE_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F,
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
-                          CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", NULL);
-    Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
-                                     "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
+                          CLIENT_CERTIFICATE_KEY, NULL, "client", NULL);
+    Crypto_Config_Kmc_Crypto_Service("https", KMC_HOSTNAME, 8443, "crypto-service",
+                                     CA_PATH, NULL, CRYPTO_FALSE, CLIENT_CERTIFICATE,
                                      "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
 
     TCGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 55, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, 1};
@@ -469,9 +469,9 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_APPLY_SEC_ENC_AND_AUTH_AESGCM_8BYTE_MAC)
                      TC_IGNORE_SA_STATE_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F,
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
-                          CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", NULL);
-    Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
-                                     "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
+                          CLIENT_CERTIFICATE_KEY, NULL, "client", NULL);
+    Crypto_Config_Kmc_Crypto_Service("https", KMC_HOSTNAME, 8443, "crypto-service",
+                                     CA_PATH, NULL, CRYPTO_FALSE, CLIENT_CERTIFICATE,
                                      "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
     TCGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 57, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, 1};
     Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
@@ -528,15 +528,15 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_ENC_AND_AUTH_AESGCM_8BYTE_MAC)
                      TC_IGNORE_SA_STATE_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F,
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
-                          CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", NULL);
-    Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
-                                     "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
+                          CLIENT_CERTIFICATE_KEY, NULL, "client", NULL);
+    Crypto_Config_Kmc_Crypto_Service("https", KMC_HOSTNAME, 8443, "crypto-service",
+                                     CA_PATH, NULL, CRYPTO_FALSE, CLIENT_CERTIFICATE,
                                      "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
     TCGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 57, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, 1};
     Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     int32_t status = Crypto_Init();
 
-    char *enc_tc_jpl_mmt_scid44_vcid1            = "2003E41E0000150000000000000000000000040001EF029857C5ED7E5B1807";
+    char *enc_tc_jpl_mmt_scid44_vcid1            = "2003E41E0000150000000000000000000000000001D7792C22058EED6F5724";
     char *enc_tc_jpl_mmt_scid44_vcid1_expect     = NULL;
     int   enc_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
 
@@ -595,9 +595,9 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_ENC_AND_AUTH_AESGCM_8BYTE_MAC)
 //                             TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F,
 //                             SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 //     Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
-//                           CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", NULL);
-//     Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
-//                                      "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
+//                           CLIENT_CERTIFICATE_KEY, NULL, "client", NULL);
+//     Crypto_Config_Kmc_Crypto_Service("https", KMC_HOSTNAME, 8443, "crypto-service",
+//                                      CA_PATH, NULL, CRYPTO_FALSE, CLIENT_CERTIFICATE,
 //                                      "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
 //     TCGvcidManagedParameters_t TC_UT_Managed_Parameters = {
 //         0, 0x0003, 11, TC_NO_FECF, AOS_NO_FHEC, AOS_NO_IZ, 0, TC_NO_SEGMENT_HDRS, 1024, TC_OCF_NA, 1};
@@ -654,9 +654,9 @@ UTEST(KMC_CRYPTO, UNHAPPY_PATH_APPLY_SEC_ENC_AND_AUTH_AESGCM_32BYTE_MAC)
                      TC_IGNORE_SA_STATE_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F,
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
-                          CLIENT_CERTIFICATE_KEY, "changeit", "cryptosvc", NULL);
-    Crypto_Config_Kmc_Crypto_Service("https", "itc.kmc.nasa.gov", 8443, "crypto-service",
-                                     "/home/jstar/Desktop/kmc_certs/ca.pem", NULL, CRYPTO_TRUE, CLIENT_CERTIFICATE,
+                          CLIENT_CERTIFICATE_KEY, NULL, "client", NULL);
+    Crypto_Config_Kmc_Crypto_Service("https", KMC_HOSTNAME, 8443, "crypto-service",
+                                     CA_PATH, NULL, CRYPTO_FALSE, CLIENT_CERTIFICATE,
                                      "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
     TCGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x002c, 12, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, 1};
     Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);

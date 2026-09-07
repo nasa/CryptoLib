@@ -90,12 +90,16 @@ void Crypto_tmPrint(TM_t *tm_frame)
     }
     printf("\n");
     printf("\t\t sn_len = %d \n", tm_frame->tm_sec_header.sn_field_len);
-    printf("\t\t pad    = %d \n", tm_frame->tm_sec_header.pad);
+    printf("\t\t pad    = 0x%04X \n", tm_frame->tm_sec_header.pad);
     printf("\t\t pad_len= %d \n", tm_frame->tm_sec_header.pad_field_len);
     printf("\t Payload \n");
-    printf("\t\t data[0]= 0x%02X \n", tm_frame->tm_pdu[0]);
-    printf("\t\t data[1]= 0x%02X \n", tm_frame->tm_pdu[1]);
-    printf("\t\t data[2]= 0x%02X \n", tm_frame->tm_pdu[2]);
+    printf("\t\t pdu_len= %d \n", tm_frame->tm_pdu_len);
+    if (tm_frame->tm_pdu_len >= 3)
+    {
+        printf("\t\t data[0]= 0x%02X \n", tm_frame->tm_pdu[0]);
+        printf("\t\t data[1]= 0x%02X \n", tm_frame->tm_pdu[1]);
+        printf("\t\t data[2]= 0x%02X \n", tm_frame->tm_pdu[2]);
+    }
     printf("\t SDLS Trailer\n");
     printf("\t\t MAC    = 0x");
     for (int i = 0; i < tm_frame->tm_sec_trailer.mac_field_len; i++)
@@ -163,9 +167,13 @@ void Crypto_aosPrint(AOS_t *aos_frame)
     printf("\t\t pad    = %d \n", aos_frame->aos_sec_header.pad_field_len > 0 ? aos_frame->aos_sec_header.pad : 0);
     printf("\t\t pad_len= %d \n", aos_frame->aos_sec_header.pad_field_len);
     printf("\t Payload \n");
-    printf("\t\t data[0]= 0x%02X \n", aos_frame->aos_pdu[0]);
-    printf("\t\t data[1]= 0x%02X \n", aos_frame->aos_pdu[1]);
-    printf("\t\t data[2]= 0x%02X \n", aos_frame->aos_pdu[2]);
+    printf("\t\t pdu_len= %d \n", aos_frame->aos_pdu_len);
+    if (aos_frame->aos_pdu_len >= 3)
+    {
+        printf("\t\t data[0]= 0x%02X \n", aos_frame->aos_pdu[0]);
+        printf("\t\t data[1]= 0x%02X \n", aos_frame->aos_pdu[1]);
+        printf("\t\t data[2]= 0x%02X \n", aos_frame->aos_pdu[2]);
+    }
     printf("\t SDLS Trailer\n");
     printf("\t\t MAC    = 0x");
     for (int i = 0; i < aos_frame->aos_sec_trailer.mac_field_len; i++)

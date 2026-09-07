@@ -191,6 +191,7 @@ extern char *Crypto_Get_Error_Code_Enum_String(int32_t crypto_error_code);
 
 int32_t Crypto_Get_Security_Header_Length(SecurityAssociation_t *sa_ptr);
 int32_t Crypto_Get_Security_Trailer_Length(SecurityAssociation_t *sa_ptr);
+int32_t Crypto_check_buffer_size(uint8_t *buf, uint16_t required);
 
 int32_t crypto_handle_incrementing_nontransmitted_counter(uint8_t *dest, uint8_t *src, int src_full_len,
                                                           int transmitted_len, int window);
@@ -203,7 +204,7 @@ int32_t Crypto_TM_Sanity_Check(uint8_t *pTfBuffer);
 int32_t Crypto_TM_Determine_SA_Service_Type(uint8_t *sa_service_type, SecurityAssociation_t *sa_ptr);
 void    Crypto_TM_Check_For_Secondary_Header(uint8_t *pTfBuffer, uint16_t *idx);
 int32_t Crypto_TM_IV_Sanity_Check(uint8_t *sa_service_type, SecurityAssociation_t *sa_ptr);
-void Crypto_TM_PKCS_Padding(uint32_t *pkcs_padding, SecurityAssociation_t *sa_ptr, uint8_t *pTfBuffer, uint16_t *idx_p);
+void Crypto_TM_PKCS_Padding(uint32_t *pkcs_padding, SecurityAssociation_t *sa_ptr, uint8_t *pTfBuffer, uint16_t *idx_p, uint16_t len_ingest);
 void Crypto_TM_Handle_Managed_Parameter_Flags(uint16_t *pdu_len);
 int32_t Crypto_TM_Get_Keys(crypto_key_t **ekp, crypto_key_t **akp, SecurityAssociation_t *sa_ptr);
 int32_t Crypto_TM_Do_Encrypt_NONPLAINTEXT(uint8_t sa_service_type, uint16_t *aad_len, int *mac_loc, uint16_t *idx_p,

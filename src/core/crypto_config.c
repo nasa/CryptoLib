@@ -834,6 +834,13 @@ int32_t Crypto_Config_Cam(uint8_t cam_enabled, char *cookie_file_path, char *key
         return CRYPTO_LIB_ERROR;
     }
 
+    if (!cookie_file_path || !access_manager_uri || !username || !cam_home || (login_method == CAM_LOGIN_KEYTAB_FILE && keytab_file_path == NULL))
+    {
+        free(cam_config);
+        cam_config = NULL;
+        return CAM_CONFIG_NOT_SUPPORTED_ERROR;
+    }
+
     if (Crypto_is_safe_username(username) != CRYPTO_LIB_SUCCESS)
     {
         free(cam_config);
@@ -841,7 +848,7 @@ int32_t Crypto_Config_Cam(uint8_t cam_enabled, char *cookie_file_path, char *key
         return CAM_CONFIG_NOT_SUPPORTED_ERROR;
     }
 
-    if (Crypto_is_safe_path(keytab_file_path) != CRYPTO_LIB_SUCCESS)
+    if (login_method == CAM_LOGIN_KEYTAB_FILE && keytab_file_path != NULL && Crypto_is_safe_path(keytab_file_path) != CRYPTO_LIB_SUCCESS)
     {
         free(cam_config);
         cam_config = NULL;
@@ -890,6 +897,14 @@ int32_t Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TCGvcidManagedParameters_t
     {
         status = CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT;
     }
+    else if (gvcid_managed_parameters_struct.max_frame_size > TC_MAX_FRAME_SIZE)
+    {
+        status = CRYPTO_LIB_ERR_TC_FRAME_SIZE_EXCEEDS_SPEC_LIMIT;
+    }
+    else if (gvcid_managed_parameters_struct.max_frame_size < TC_MIN_FRAME_SIZE)
+    {
+        status = CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_TC_STANDARD;
+    }
     else
     {
         tc_gvcid_managed_parameters_array[tc_gvcid_counter] = gvcid_managed_parameters_struct;
@@ -905,6 +920,10 @@ int32_t Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TMGvcidManagedParameters_t
     if (tm_gvcid_counter >= GVCID_MAN_PARAM_SIZE)
     {
         status = CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT;
+    }
+    else if (gvcid_managed_parameters_struct.max_frame_size > TM_MAX_FRAME_SIZE)
+    {
+        status = CRYPTO_LIB_ERR_TM_FRAME_SIZE_EXCEEDS_SPEC_LIMIT;
     }
     else
     {
@@ -922,6 +941,10 @@ int32_t Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOSGvcidManagedParameters
     if (aos_gvcid_counter >= GVCID_MAN_PARAM_SIZE)
     {
         status = CRYPTO_LIB_ERR_EXCEEDS_MANAGED_PARAMETER_MAX_LIMIT;
+    }
+    else if (gvcid_managed_parameters_struct.max_frame_size > AOS_MAX_FRAME_SIZE)
+    {
+        status = CRYPTO_LIB_ERR_AOS_FRAME_SIZE_EXCEEDS_SPEC_LIMIT;
     }
     else
     {
@@ -941,59 +964,52 @@ int32_t crypto_free_config_structs(void)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
-    if (crypto_config_global.init_status == UNINITIALIZED)
+    crypto_config_global.init_status = UNINITIALIZED;
+    crypto_config_tc.init_status     = UNINITIALIZED;
+    crypto_config_tm.init_status     = UNINITIALIZED;
+    crypto_config_aos.init_status    = UNINITIALIZED;
+    
+    // Config structs with char* types that are malloc'd and must be freed individually.
+    if (sa_mariadb_config != NULL)
     {
-        status = CRYPTO_LIB_SUCCESS;
+        free(sa_mariadb_config->mysql_username);
+        free(sa_mariadb_config->mysql_password);
+        free(sa_mariadb_config->mysql_hostname);
+        free(sa_mariadb_config->mysql_database);
+        free(sa_mariadb_config->mysql_mtls_cert);
+        free(sa_mariadb_config->mysql_mtls_key);
+        free(sa_mariadb_config->mysql_mtls_ca);
+        free(sa_mariadb_config->mysql_mtls_capath);
+        free(sa_mariadb_config->mysql_mtls_client_key_password);
+        free(sa_mariadb_config);
+        sa_mariadb_config = NULL;
     }
-    else
+    if (cryptography_kmc_crypto_config != NULL)
     {
-        // free(crypto_config); //no strings in this struct, just free it.
-        crypto_config_global.init_status = UNINITIALIZED;
-        crypto_config_tc.init_status     = UNINITIALIZED;
-        crypto_config_tm.init_status     = UNINITIALIZED;
-        crypto_config_aos.init_status    = UNINITIALIZED;
+        free(cryptography_kmc_crypto_config->kmc_crypto_hostname);
+        free(cryptography_kmc_crypto_config->protocol);
+        free(cryptography_kmc_crypto_config->kmc_crypto_app_uri);
+        free(cryptography_kmc_crypto_config->mtls_client_cert_path);
+        free(cryptography_kmc_crypto_config->mtls_client_cert_type);
+        free(cryptography_kmc_crypto_config->mtls_client_key_path);
+        free(cryptography_kmc_crypto_config->mtls_client_key_pass);
+        free(cryptography_kmc_crypto_config->mtls_ca_bundle);
+        free(cryptography_kmc_crypto_config->mtls_ca_path);
+        free(cryptography_kmc_crypto_config->mtls_issuer_cert);
+        free(cryptography_kmc_crypto_config);
+        cryptography_kmc_crypto_config = NULL;
+    }
+    if (cam_config != NULL)
+    {
+        free(cam_config->cookie_file_path);
+        free(cam_config->keytab_file_path);
+        free(cam_config->access_manager_uri);
+        free(cam_config->username);
+        free(cam_config->cam_home);
+        free(cam_config);
+        cam_config = NULL;
+    }
 
-        // Config structs with char* types that are malloc'd and must be freed individually.
-        if (sa_mariadb_config != NULL)
-        {
-            free(sa_mariadb_config->mysql_username);
-            free(sa_mariadb_config->mysql_password);
-            free(sa_mariadb_config->mysql_hostname);
-            free(sa_mariadb_config->mysql_database);
-            free(sa_mariadb_config->mysql_mtls_cert);
-            free(sa_mariadb_config->mysql_mtls_key);
-            free(sa_mariadb_config->mysql_mtls_ca);
-            free(sa_mariadb_config->mysql_mtls_capath);
-            free(sa_mariadb_config->mysql_mtls_client_key_password);
-            free(sa_mariadb_config);
-            sa_mariadb_config = NULL;
-        }
-        if (cryptography_kmc_crypto_config != NULL)
-        {
-            free(cryptography_kmc_crypto_config->kmc_crypto_hostname);
-            free(cryptography_kmc_crypto_config->protocol);
-            free(cryptography_kmc_crypto_config->kmc_crypto_app_uri);
-            free(cryptography_kmc_crypto_config->mtls_client_cert_path);
-            free(cryptography_kmc_crypto_config->mtls_client_cert_type);
-            free(cryptography_kmc_crypto_config->mtls_client_key_path);
-            free(cryptography_kmc_crypto_config->mtls_client_key_pass);
-            free(cryptography_kmc_crypto_config->mtls_ca_bundle);
-            free(cryptography_kmc_crypto_config->mtls_ca_path);
-            free(cryptography_kmc_crypto_config->mtls_issuer_cert);
-            free(cryptography_kmc_crypto_config);
-            cryptography_kmc_crypto_config = NULL;
-        }
-        if (cam_config != NULL)
-        {
-            free(cam_config->cookie_file_path);
-            free(cam_config->keytab_file_path);
-            free(cam_config->access_manager_uri);
-            free(cam_config->username);
-            free(cam_config->cam_home);
-            free(cam_config);
-            cam_config = NULL;
-        }
-    }
     return status;
 }
 

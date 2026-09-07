@@ -158,8 +158,15 @@
 #define CRYPTO_LIB_ERR_SHPLF_LEN_LESS_THAN_MIN_PAD_SIZE                     (-83)
 #define CRYPTO_LIB_ERR_INVALID_AOS_IZ_LENGTH                                (-84)
 #define CRYPTO_LIB_ERR_INVALID_AOS_FRAME_LENGTH                             (-85)
+#define CRYPTO_LIB_ERR_TM_FRAME_SIZE_EXCEEDS_SPEC_LIMIT                     (-86)
+#define CRYPTO_LIB_ERR_AOS_FRAME_SIZE_EXCEEDS_SPEC_LIMIT                    (-87)
+#define CRYPTO_LIB_ERR_AOS_FL_GT_MAX_FRAME_SIZE                             (-88)
+#define CRYPTO_LIB_ERR_TM_FL_GT_MAX_FRAME_SIZE                              (-89)
+#define CRYPTO_LIB_ERR_TM_APPLY_PADDING                                     (-90)
+#define CRYPTO_LIB_ERR_BUFFER_SIZE                                          (-91)
+#define CRYPTO_LIB_ERR_AOS_APPLY_PADDING                                    (-92)
 
-#define CRYPTO_CORE_ERROR_CODES_MAX -85
+#define CRYPTO_CORE_ERROR_CODES_MAX -92
 
 // Define codes for returning MDB Strings, and determining error based on strings
 #define CAM_ERROR_CODES     600

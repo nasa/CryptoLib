@@ -280,10 +280,11 @@ uint32_t Crypto_TM_Calculate_Padding(uint32_t cipher, uint16_t data_len)
  *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.3.3 (TM Encryption Processing)
  **/
-void Crypto_TM_PKCS_Padding(uint32_t *pkcs_padding, SecurityAssociation_t *sa_ptr, uint8_t *pTfBuffer, uint16_t *idx_p)
+void Crypto_TM_PKCS_Padding(uint32_t *pkcs_padding, SecurityAssociation_t *sa_ptr, uint8_t *pTfBuffer, uint16_t *idx_p, uint16_t len_ingest)
 {
     uint16_t idx      = *idx_p;
-    uint16_t data_len = tm_current_managed_parameters_struct.max_frame_size - idx - sa_ptr->stmacf_len;
+    uint8_t fecf_len = (tm_current_managed_parameters_struct.has_fecf == TM_HAS_FECF) ? FECF_SIZE : 0;
+    uint16_t data_len = len_ingest - idx - sa_ptr->stmacf_len - fecf_len - sa_ptr->shplf_len;
 
     // Calculate required padding based on cipher
     *pkcs_padding = Crypto_TM_Calculate_Padding(sa_ptr->ecs, data_len);
@@ -756,6 +757,10 @@ int32_t Crypto_TM_Do_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
 
         *idx_p = idx;
     }
+    if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+    {
+        free(sa_ptr);
+    }
     return status;
 }
 
@@ -888,11 +893,22 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         return status;
     }
 
+    if (len_ingest > tm_current_managed_parameters_struct.max_frame_size)
+    {
+        status = CRYPTO_LIB_ERR_TM_FL_GT_MAX_FRAME_SIZE;
+        mc_if->mc_log(status);
+        return status;
+    }
+
     if ((len_ingest < tm_current_managed_parameters_struct.max_frame_size) &&
         (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC) && (sa_ptr->ecs != CRYPTO_CIPHER_AES256_CBC_MAC))
     {
         status = CRYPTO_LIB_ERR_TM_FL_LT_MAX_FRAME_SIZE;
         mc_if->mc_log(status);
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+        {
+            free(sa_ptr);
+        }
         return status;
     }
     else if ((sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC) || (sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC_MAC))
@@ -905,6 +921,20 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         {
             status = CRYPTO_LIB_ERR_TM_FL_LT_MAX_FRAME_SIZE;
             mc_if->mc_log(status);
+            if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+            {
+                free(sa_ptr);
+            }
+            return status;
+        }
+
+        status = Crypto_check_buffer_size(pTfBuffer, tm_current_managed_parameters_struct.max_frame_size);
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+            if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+            {
+                free(sa_ptr);
+            }
             return status;
         }
     }
@@ -1045,7 +1075,17 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
      * cryptographic process, consisting of an integral number of octets. - CCSDS 3550b1
      **/
     // TODO: Set this depending on crypto cipher used
-    Crypto_TM_PKCS_Padding(&pkcs_padding, sa_ptr, pTfBuffer, &idx);
+    Crypto_TM_PKCS_Padding(&pkcs_padding, sa_ptr, pTfBuffer, &idx, len_ingest);
+    if (tm_current_managed_parameters_struct.max_frame_size != len_ingest + pkcs_padding)
+    {
+        status = CRYPTO_LIB_ERR_TM_APPLY_PADDING;
+        mc_if->mc_log(status);
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+        {
+            free(sa_ptr);
+        }
+        return status;
+    }
 
     /**
      * End Security Header Fields
@@ -1064,9 +1104,17 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     }
 
     // Calculate size of data to be encrypted
-    pdu_len = tm_current_managed_parameters_struct.max_frame_size - idx - sa_ptr->stmacf_len;
+    pdu_len = len_ingest - idx - sa_ptr->stmacf_len;
+
     // Check other managed parameter flags, subtract their lengths from data field if present
     Crypto_TM_Handle_Managed_Parameter_Flags(&pdu_len);
+
+    // Add padding bytes to pdu
+    for (uint8_t i = 0; i < pkcs_padding; i++)
+    {
+        pTfBuffer[idx + pdu_len + i] = (uint8_t)pkcs_padding;
+    }
+    pdu_len += pkcs_padding;
 
     if (tm_current_managed_parameters_struct.max_frame_size < pdu_len)
     {
@@ -1167,6 +1215,13 @@ int32_t Crypto_TM_Process_Setup(uint16_t len_ingest, uint16_t *byte_idx, uint8_t
             mc_if->mc_log(status);
         }
     } // Unable to get necessary Managed Parameters for TM TF -- return with error.
+
+    if (status == CRYPTO_LIB_SUCCESS &&len_ingest > tm_current_managed_parameters_struct.max_frame_size)
+    {
+        status = CRYPTO_LIB_ERR_TM_FL_GT_MAX_FRAME_SIZE;
+        mc_if->mc_log(status);
+        return status;
+    }
 
     // Check if secondary header is present within frame
     // Note: Secondary headers are static only for a mission phase, not guaranteed static
@@ -1499,7 +1554,7 @@ int32_t Crypto_TM_Do_Decrypt_NONAEAD(uint8_t sa_service_type, uint16_t pdu_len, 
                                                                        sa_ptr->acs,        // authentication cipher
                                                                        NULL);              // cam cookies
     }
-    if (sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
+    if (status == CRYPTO_LIB_SUCCESS && (sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
     {
         if (crypto_config_global.key_type != KEY_TYPE_KMC)
         {
@@ -1545,7 +1600,7 @@ int32_t Crypto_TM_Do_Decrypt_NONAEAD(uint8_t sa_service_type, uint16_t pdu_len, 
  */
 void Crypto_TM_Calc_PDU_MAC(uint16_t *pdu_len, uint16_t byte_idx, SecurityAssociation_t *sa_ptr, int *mac_loc)
 {
-    *pdu_len = tm_current_managed_parameters_struct.max_frame_size - (byte_idx)-sa_ptr->stmacf_len;
+    *pdu_len = tm_current_managed_parameters_struct.max_frame_size - byte_idx - sa_ptr->stmacf_len;
     if (tm_current_managed_parameters_struct.has_ocf == TM_HAS_OCF)
     {
         *pdu_len -= 4;
@@ -1609,6 +1664,10 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     if (status != CRYPTO_LIB_SUCCESS)
     {
         free(p_new_dec_frame);
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+        {
+            free(sa_ptr);
+        }
         return status;
     }
 
@@ -1625,23 +1684,38 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     }
 
 #ifdef TM_DEBUG
-    printf(KYEL "Printing received frame:\n\t" RESET);
+    printf(KYEL "Printing received frame [%d]:\n\t" RESET, tm_current_managed_parameters_struct.max_frame_size);
     for (int i = 0; i < tm_current_managed_parameters_struct.max_frame_size; i++)
     {
         printf(KYEL "%02X", p_ingest[i]);
     }
-    printf(KYEL "\nPrinting PROCESSED frame:\n\t" RESET);
+    printf(KYEL "\nPrinting PROCESSED frame [%d]:\n\t" RESET, tm_current_managed_parameters_struct.max_frame_size);
     for (int i = 0; i < tm_current_managed_parameters_struct.max_frame_size; i++)
     {
         printf(KYEL "%02X", p_new_dec_frame[i]);
     }
     printf("\n");
 #endif
-
+    uint8_t padding = sa_ptr->shplf_len > 0 ? p_ingest[byte_idx - 1] : 0;
+    uint8_t fecf_len = (tm_current_managed_parameters_struct.has_fecf == TM_HAS_FECF) ? FECF_SIZE : 0;
+    memmove(&p_new_dec_frame[tm_current_managed_parameters_struct.max_frame_size - padding - fecf_len], &p_new_dec_frame[tm_current_managed_parameters_struct.max_frame_size - fecf_len], fecf_len);
     // pp_processed_frame = p_new_dec_frame;
 
     // TODO maybe not just return this without doing the math ourselves
-    *p_decrypted_length = tm_current_managed_parameters_struct.max_frame_size;
+    *p_decrypted_length = tm_current_managed_parameters_struct.max_frame_size - padding;
+    pdu_len -= padding;
+
+#ifdef TM_DEBUG
+    if (sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC || sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC_MAC)
+    {
+        printf(KYEL "Printing Frame WITHOUT Padding [%d]:\n\t" RESET, *p_decrypted_length);
+        for (int i = 0; i < *p_decrypted_length; i++)
+        {
+            printf(KYEL "%02X", p_new_dec_frame[i]);
+        }
+        printf("\n");
+    }
+#endif
 
     // Copy data into struct
     byte_idx = 0;
@@ -1676,9 +1750,13 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     }
     byte_idx += sa_ptr->shsnf_len;
     pp_processed_frame->tm_sec_header.sn_field_len = sa_ptr->shsnf_len;
-    for (int i = 0; i < sa_ptr->shplf_len; i++)
+    if (sa_ptr->shplf_len == 2)
     {
-        pp_processed_frame->tm_sec_header.pad += (p_new_dec_frame[byte_idx + i] << ((sa_ptr->shplf_len - 1 - i) * 8));
+        pp_processed_frame->tm_sec_header.pad = (((uint16_t)p_ingest[byte_idx]) << 8) | p_ingest[byte_idx + 1];
+    }
+    else
+    {
+        pp_processed_frame->tm_sec_header.pad = sa_ptr->shplf_len == 1 ? p_ingest[byte_idx] : 0;
     }
     byte_idx += sa_ptr->shplf_len;
     pp_processed_frame->tm_sec_header.pad_field_len = sa_ptr->shplf_len;
@@ -1686,7 +1764,7 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     // PDU
     memcpy(pp_processed_frame->tm_pdu, &p_new_dec_frame[byte_idx], pdu_len);
     pp_processed_frame->tm_pdu_len = pdu_len;
-    byte_idx += pdu_len;
+    byte_idx += pdu_len + padding;
 
     // Security Trailer
     for (int i = 0; i < sa_ptr->stmacf_len; i++)
@@ -1778,7 +1856,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
     SecurityAssociation_t *sa_ptr            = NULL;
     uint8_t                sa_service_type   = -1;
     uint8_t                secondary_hdr_len = 0;
-    uint8_t                spi               = -1;
+    uint16_t               spi               = -1;
     crypto_key_t          *ekp               = NULL;
     crypto_key_t          *akp               = NULL;
 

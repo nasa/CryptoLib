@@ -113,6 +113,7 @@ static int32_t sa_init(void)
             //  Lots of small configuration differences between MySQL connector & MariaDB Connector
             //  Only MariaDB Connector is implemented here:
             //  https://wikidev.in/wiki/C/mysql_mysql_h/mysql_options | https://mariadb.com/kb/en/mysql_optionsv/
+#if defined(MARIADB_BASE_VERSION)
             if (sa_mariadb_config->mysql_mtls_key != NULL)
             {
                 mysql_optionsv(con, MYSQL_OPT_SSL_KEY, sa_mariadb_config->mysql_mtls_key);
@@ -141,6 +142,44 @@ static int32_t sa_init(void)
             {
                 mysql_optionsv(con, MYSQL_OPT_SSL_ENFORCE, &(sa_mariadb_config->mysql_require_secure_transport));
             }
+#else
+            if (sa_mariadb_config->mysql_mtls_key != NULL)
+            {
+                mysql_options(con, MYSQL_OPT_SSL_KEY, sa_mariadb_config->mysql_mtls_key);
+            }
+            if (sa_mariadb_config->mysql_mtls_cert != NULL)
+            {
+                mysql_options(con, MYSQL_OPT_SSL_CERT, sa_mariadb_config->mysql_mtls_cert);
+            }
+            if (sa_mariadb_config->mysql_mtls_ca != NULL)
+            {
+                mysql_options(con, MYSQL_OPT_SSL_CA, sa_mariadb_config->mysql_mtls_ca);
+            }
+            if (sa_mariadb_config->mysql_mtls_capath != NULL)
+            {
+                mysql_options(con, MYSQL_OPT_SSL_CAPATH, sa_mariadb_config->mysql_mtls_capath);
+            }
+            /* Oracle MySQL Connector/C does not enable TLS just because the
+             * certificate options above are present.  Require TLS explicitly
+             * and verify the configured hostname against the server cert. */
+            if (sa_mariadb_config->mysql_require_secure_transport == CRYPTO_TRUE)
+            {
+                unsigned int ssl_mode = sa_mariadb_config->mysql_tls_verify_server == CRYPTO_TRUE
+                                            ? SSL_MODE_VERIFY_IDENTITY
+                                            : SSL_MODE_REQUIRED;
+                mysql_options(con, MYSQL_OPT_SSL_MODE, &ssl_mode);
+            }
+            else if (sa_mariadb_config->mysql_require_secure_transport == CRYPTO_FALSE)
+            {
+                if (sa_mariadb_config->mysql_tls_verify_server == CRYPTO_TRUE)
+                {
+                    unsigned int ssl_mode = SSL_MODE_VERIFY_IDENTITY;
+                    mysql_options(con, MYSQL_OPT_SSL_MODE, &ssl_mode);
+                }
+            }
+
+#endif
+
             // if encrypted connection (TLS) connection. No need for SSL Key
             if (mysql_real_connect(con, sa_mariadb_config->mysql_hostname, sa_mariadb_config->mysql_username,
                                    sa_mariadb_config->mysql_password, sa_mariadb_config->mysql_database,
@@ -237,13 +276,6 @@ static int32_t sa_save_sa(SecurityAssociation_t *sa)
         status = finish_with_error_soft(&con, SADB_QUERY_FAILED);
     }
     // todo - if query fails, need to push failure message to error stack instead of just return code.
-
-    // We free the allocated SA memory in the save function.
-    if (sa->ek_ref[0] != '\0')
-        clean_ekref(sa);
-    if (sa->ak_ref[0] != '\0')
-        clean_akref(sa);
-    free(sa);
 
     return status;
 }

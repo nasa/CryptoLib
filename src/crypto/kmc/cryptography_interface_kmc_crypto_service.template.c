@@ -241,11 +241,16 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
     int32_t status = CRYPTO_LIB_SUCCESS;
     key            = key;     // Direct key input is not supported in KMC interface
     len_key        = len_key; // Direct key input is not supported in KMC interface
+    ecs = ecs;
+    padding = padding;
 
     // Remove pre-padding to block (KMC does not want it)
     if (*ecs == CRYPTO_CIPHER_AES256_CBC && padding > 0)
     {
+        printf("len_data_in: %ld\n", len_data_in);
         len_data_in = len_data_in - padding;
+        printf("removed padding: %d\n", padding);
+        printf("new len_data_in: %ld\n", len_data_in);
     }
 
 #ifdef DEBUG
@@ -487,22 +492,25 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
     {
         free(chunk_write);
         free(ciphertext_decoded);
+        free(ciphertext_base64);
         return CRYPTOGRAHPY_KMC_BASE64_DECRYPT_ERROR;
     }
 #ifdef DEBUG
     printf("Decoded Cipher Text Length: %ld\n", ciphertext_decoded_len);
     printf("Decoded Cipher Text: \n");
-    printf("Data Out Len: %ld\n", len_data_out);
     for (uint32_t i = 0; i < ciphertext_decoded_len; i++)
     {
         printf("%02x ", ciphertext_decoded[i]);
     }
     printf("\n");
+    printf("Data Out Len: %ld\n", len_data_out);
 #endif
 
     // Crypto Service returns aad - cipher_text - tag
     memcpy(data_out, ciphertext_decoded, ciphertext_decoded_len);
+    free(chunk_write->response);
     free(chunk_write);
+    free(ciphertext_base64);
     free(ciphertext_decoded);
     return status;
 }
@@ -714,8 +722,12 @@ static int32_t cryptography_decrypt(uint8_t *data_out, size_t len_data_out, uint
     // Copy the decrypted data to the output stream
     // Crypto Service returns aad - clear_text
     memcpy(data_out, cleartext_decoded, len_data_out);
-    free(cleartext_decoded);
 
+    free(cleartext_decoded);
+    free(chunk_write->response);
+    free(chunk_write);
+    free(chunk_read);
+    free(cleartext_base64);
     return status;
 }
 
@@ -1034,6 +1046,7 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
     if (sa_ptr->ak_ref[0] == '\0')
     {
         status = CRYPTOGRAHPY_KMC_NULL_AUTHENTICATION_KEY_REFERENCE_IN_SA;
+        free(mac_base64);
         return status;
     }
 
@@ -1050,10 +1063,12 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
     snprintf(auth_endpoint_final, len_auth_endpoint, icv_verify_endpoint, mac_base64, sa_ptr->ak_ref, auth_algorithm,
              mac_size_str);
     free(mac_size_str);
+    free(mac_base64);
     char *auth_uri = (char *)malloc(strlen(kmc_root_uri) + len_auth_endpoint);
     auth_uri[0]    = '\0';
     strcat(auth_uri, kmc_root_uri);
     strcat(auth_uri, auth_endpoint_final);
+    free(auth_endpoint_final);
 
 #ifdef DEBUG
     printf("Authentication Verification URI: %s\n", auth_uri);
@@ -1094,6 +1109,10 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
     status = curl_perform_with_cam_retries(curl, chunk_write, chunk_read);
     if (status != CRYPTO_LIB_SUCCESS)
     {
+        free(auth_uri);
+        free(chunk_read);
+        free(chunk_write->response);
+        free(chunk_write);
         return status;
     }
 
@@ -1110,6 +1129,10 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
     {
         status = CRYPTOGRAHPY_KMC_CRYPTO_JSON_PARSE_ERROR;
         printf("Failed to parse JSON: %d\n", parse_result);
+        free(auth_uri);
+        free(chunk_read);
+        free(chunk_write->response);
+        free(chunk_write);
         return status;
     }
 
@@ -1137,6 +1160,11 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
             {
                 status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_GENERIC_FAILURE;
                 fprintf(stderr, "KMC Crypto Generic Failure Response:\n%s\n", chunk_write->response);
+                free(auth_uri);
+                free(http_code_str);
+                free(chunk_read);
+                free(chunk_write->response);
+                free(chunk_write);
                 return status;
             }
             json_idx++;
@@ -1162,8 +1190,14 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
             {
                 status = CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_MAC_VALIDATION_ERROR;
                 fprintf(stderr, "KMC Crypto MAC Validation Failure Response:\n%s\n", chunk_write->response);
+                free(auth_uri);
+                free(result_str);
+                free(chunk_read);
+                free(chunk_write->response);
+                free(chunk_write);
                 return status;
             }
+            free(result_str);
             continue;
         }
     }
@@ -1175,7 +1209,10 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
     }
 
     /* JSON Response Handling End */
-
+    free(auth_uri);
+    free(chunk_read);
+    free(chunk_write->response);
+    free(chunk_write);
     return status;
 }
 
@@ -1199,10 +1236,7 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
     }
     // Base64 URL encode IV for KMC REST Encrypt
     char *iv_base64 = (char *)calloc(1, B64ENCODE_OUT_SAFESIZE(iv_len) + 1);
-    if (iv != NULL)
-    {
-        base64urlEncode(iv, iv_len, iv_base64, NULL);
-    }
+    base64urlEncode(sa_ptr->iv, iv_len, iv_base64, NULL);
 
 #ifdef DEBUG
     printf("IV_BASE64: %s\n", iv_base64);
@@ -1620,6 +1654,7 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
     key            = key; // Direct key input is not supported in KMC interface
     ecs            = ecs;
     acs            = acs;
+    iv             = iv;
 
     // Get the key length in bits, in string format.
     // TODO -- Parse the key length from the keyInfo endpoint of the Crypto Service!
@@ -1636,7 +1671,7 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
 
     // Base64 URL encode IV for KMC REST Encrypt
     char *iv_base64 = (char *)calloc(1, B64ENCODE_OUT_SAFESIZE(iv_len) + 1);
-    base64urlEncode(iv, iv_len, iv_base64, NULL);
+    base64urlEncode(sa_ptr->iv, iv_len, iv_base64, NULL);
 
     uint8_t *decrypt_payload     = data_in;
     size_t   decrypt_payload_len = len_data_in;
