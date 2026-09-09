@@ -1295,9 +1295,20 @@ static int32_t sa_rekey(TC_t *tc_frame)
 
         if (sa[spi].sa_state == SA_UNKEYED)
         { // Encryption Key
-            sa[spi].ekid =
+            uint16_t new_ekid =
                 ((uint8_t)sdls_frame.tlv_pdu.data[count] << BYTE_LEN) | (uint8_t)sdls_frame.tlv_pdu.data[count + 1];
-            count = count + 2;
+            crypto_key_t *new_ekp = key_if != NULL ? key_if->get_key(new_ekid) : NULL;
+            if (new_ekp == NULL)
+            {
+                return CRYPTO_LIB_ERR_KEY_ID_ERROR;
+            }
+            if (new_ekp->key_state != KEY_ACTIVE)
+            {
+                return CRYPTO_LIB_ERR_KEY_STATE_INVALID;
+            }
+
+            sa[spi].ekid = new_ekid;
+            count        = count + 2;
 
             // Anti-Replay Seq Num
 #ifdef PDU_DEBUG
