@@ -269,6 +269,25 @@ UTEST(CRYPTO_C, PDU_SWITCH)
 /**
  * @brief Unit Test: Crypto Extended Procedures PDU Test
  **/
+/**
+ * @brief Unit Test: No-packet EP reply type is parsed into the TLV header
+ **/
+UTEST(CRYPTO_C, EXT_PROC_PDU_NO_PACKET_REPLY_TYPE)
+{
+    TC_t tc_frame = {0};
+
+    tc_frame.tc_sec_header.spi = SPI_MIN;
+    tc_frame.tc_header.vcid     = TC_SDLS_EP_VCID;
+    tc_frame.tc_pdu_len         = SDLS_TLV_HDR_SIZE;
+    tc_frame.tc_pdu[0]          = 0x80; // Procedure type = reply
+
+    sdls_frame.tlv_pdu.hdr.type = PDU_TYPE_COMMAND;
+
+    int32_t status = Crypto_Process_Extended_Procedure_Pdu(&tc_frame, NULL, 0);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    ASSERT_EQ(PDU_TYPE_REPLY, (uint8_t)sdls_frame.tlv_pdu.hdr.type);
+}
+
 UTEST(CRYPTO_C, EXT_PROC_PDU_REJECTS_OVERSIZED_DECLARED_TLV)
 {
     TC_t tc_frame = {0};
