@@ -1225,11 +1225,25 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                 sdls_frame.tlv_pdu.hdr.pid = (tc_sdls_processed_frame->tc_pdu[0] & 0x0F);
                 sdls_frame.tlv_pdu.hdr.pdu_len =
                     (tc_sdls_processed_frame->tc_pdu[1] << 8) | tc_sdls_processed_frame->tc_pdu[2];
-                for (int x = 3; x < (3 + tc_sdls_processed_frame->tc_header.fl); x++)
+
+                if (tc_sdls_processed_frame->tc_pdu_len < SDLS_TLV_HDR_SIZE)
+                {
+                    return CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
+                }
+
+                uint16_t max_tlv = tc_sdls_processed_frame->tc_pdu_len - SDLS_TLV_HDR_SIZE;
+                uint16_t declared_tlv_bytes =
+                    (sdls_frame.tlv_pdu.hdr.pdu_len + (BYTE_LEN - 1)) / BYTE_LEN;
+                if ((declared_tlv_bytes > max_tlv) || (declared_tlv_bytes > TLV_DATA_SIZE))
+                {
+                    return CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
+                }
+
+                for (uint16_t x = 0; x < declared_tlv_bytes; x++)
                 {
                     // Todo - Consider how this behaves with large OTAR PDUs that are larger than 1 TC in size. Most
                     // likely fails. Must consider Uplink Sessions (sequence numbers).
-                    sdls_frame.tlv_pdu.data[x - 3] = tc_sdls_processed_frame->tc_pdu[x];
+                    sdls_frame.tlv_pdu.data[x] = tc_sdls_processed_frame->tc_pdu[x + SDLS_TLV_HDR_SIZE];
                 }
 
 #ifdef CCSDS_DEBUG

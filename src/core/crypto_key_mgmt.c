@@ -54,20 +54,30 @@ int32_t Crypto_Key_OTAR(void)
     int         y;
     int32_t     status = CRYPTO_LIB_SUCCESS;
 
-    int pdu_keys = ((sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - SDLS_KEYID_LEN - SDLS_IV_LEN - MAC_SIZE) /
-                   (SDLS_KEYID_LEN + SDLS_KEY_LEN);
+    const int pdu_len_bits  = sdls_frame.tlv_pdu.hdr.pdu_len;
+    const int pdu_len_bytes = pdu_len_bits / BYTE_LEN;
+    const int fixed_len     = SDLS_KEYID_LEN + SDLS_IV_LEN + MAC_SIZE;
+    const int key_block_len = SDLS_KEYID_LEN + SDLS_KEY_LEN;
+
+    if ((pdu_len_bits % BYTE_LEN != 0) || (pdu_len_bytes < fixed_len) || (pdu_len_bytes > TLV_DATA_SIZE) ||
+        ((pdu_len_bytes - fixed_len) % key_block_len != 0))
+    {
+        return CRYPTO_LIB_ERR_OTAR_BAD_TLV_LENGTH;
+    }
+
+    int pdu_keys = (pdu_len_bytes - fixed_len) / key_block_len;
+    if (pdu_keys > SDLS_EKB_LEN)
+    {
+        return CRYPTO_LIB_ERR_OTAR_BAD_TLV_LENGTH;
+    }
+
     int           w;
     crypto_key_t *ekp = NULL;
 
 #ifdef DEBUG
-    int expected_pdu_len = SDLS_KEYID_LEN + SDLS_IV_LEN + ((SDLS_KEYID_LEN + SDLS_KEY_LEN) * pdu_keys) + MAC_SIZE;
+    int expected_pdu_len = fixed_len + (key_block_len * pdu_keys);
     printf("Expected PDU Length: %d (%d keys)\n", expected_pdu_len, pdu_keys);
 #endif
-    if ((sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) <
-        SDLS_KEYID_LEN + SDLS_IV_LEN + ((SDLS_KEYID_LEN + SDLS_KEY_LEN) * pdu_keys) + MAC_SIZE)
-    {
-        return CRYPTO_LIB_ERR_OTAR_BAD_TLV_LENGTH;
-    }
 
     // Master Key ID
     packet.mkid = (sdls_frame.tlv_pdu.data[0] << BYTE_LEN) | (sdls_frame.tlv_pdu.data[1]);
