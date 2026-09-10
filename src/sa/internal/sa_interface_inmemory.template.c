@@ -1023,8 +1023,9 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
 static int32_t sa_start(TC_t *tc_frame)
 {
     // Local variables
-    uint8_t        count = 0;
-    uint16_t       spi   = 0x0000;
+    uint8_t        count       = 0;
+    uint16_t       spi         = 0x0000;
+    uint16_t       control_spi = 0x0000;
     crypto_gvcid_t gvcid;
     int            x;
     int            i;
@@ -1033,7 +1034,16 @@ static int32_t sa_start(TC_t *tc_frame)
     printf("\nParsed GVCID: %d\n", num_gvcid);
 
     // Read ingest
-    spi = ((uint8_t)sdls_frame.tlv_pdu.data[0] << 8) | (uint8_t)sdls_frame.tlv_pdu.data[1];
+    spi         = ((uint8_t)sdls_frame.tlv_pdu.data[0] << 8) | (uint8_t)sdls_frame.tlv_pdu.data[1];
+    control_spi = tc_frame->tc_sec_header.spi;
+
+    if (spi == control_spi)
+    {
+#ifdef DEBUG
+        printf(KRED "ERROR: Cannot modify SA in use\n" RESET);
+#endif
+        return CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI;
+    }
 
     // Check SPI exists and in 'Keyed' state
     if (spi < NUM_SA)
