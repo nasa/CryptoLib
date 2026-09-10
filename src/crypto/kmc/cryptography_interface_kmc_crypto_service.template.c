@@ -528,7 +528,7 @@ static int32_t cryptography_decrypt(uint8_t *data_out, size_t len_data_out, uint
     // TODO -- Parse the key length from the keyInfo endpoint of the Crypto Service!
     uint32_t key_len_in_bits         = len_key * 8; // 8 bits per byte.
     uint32_t key_len_in_bits_str_len = 0;
-    char    *key_len_in_bits_str     = int_to_str(key_len_in_bits, &key_len_in_bits);
+    char    *key_len_in_bits_str     = int_to_str(key_len_in_bits, &key_len_in_bits_str_len);
 
     curl_easy_reset(curl);
     status = configure_curl_connect_opts(curl, cam_cookies);
@@ -1660,7 +1660,7 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
     // TODO -- Parse the key length from the keyInfo endpoint of the Crypto Service!
     uint32_t key_len_in_bits         = len_key * 8; // 8 bits per byte.
     uint32_t key_len_in_bits_str_len = 0;
-    char    *key_len_in_bits_str     = int_to_str(key_len_in_bits, &key_len_in_bits);
+    char    *key_len_in_bits_str     = int_to_str(key_len_in_bits, &key_len_in_bits_str_len);
 
     curl_easy_reset(curl);
     status = configure_curl_connect_opts(curl, cam_cookies);
