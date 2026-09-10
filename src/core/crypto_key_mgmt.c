@@ -528,6 +528,11 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
             return CRYPTO_LIB_ERR_KEY_ID_ERROR;
         }
 
+        if (ekp->key_state != KEY_ACTIVE)
+        {
+            return CRYPTO_LIB_ERR_KEY_STATE_INVALID;
+        }
+
         // Initialization Vector
         for (y = 0; y < SDLS_IV_LEN; y++)
         {

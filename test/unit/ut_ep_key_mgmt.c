@@ -341,6 +341,11 @@ UTEST(EP_KEY_MGMT, VERIFY_132_134)
     SaInterface   sa_if = get_sa_interface_inmemory();
     crypto_key_t *ekp   = NULL;
 
+    // Key verification is only valid for ACTIVE keys. The test vector requests
+    // keys 132 and 134, so mark both active for the known-good reply path.
+    key_if->get_key(132)->key_state = KEY_ACTIVE;
+    key_if->get_key(134)->key_state = KEY_ACTIVE;
+
     // NOTE: Added Transfer Frame header to the plaintext
     char *buffer_nist_key_h = "000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F";
     char *buffer_VERIFY_h   = "2003003c00ff00001980d03a002e197f0b00040140008471fc3ad5b1c36ad56bd5a5432315cdab008675c0"
@@ -422,6 +427,36 @@ UTEST(EP_KEY_MGMT, VERIFY_132_134)
     free(buffer_nist_key_b);
     free(buffer_VERIFY_b);
     free(buffer_TRUTH_RESPONSE_b);
+}
+
+UTEST(EP_KEY_MGMT, VERIFY_REJECTS_NON_ACTIVE_KEY)
+{
+    remove("sa_save_file.bin");
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL);
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR, TC_IGNORE_ANTI_REPLAY_FALSE,
+                     TC_IGNORE_SA_STATE_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F,
+                     SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+
+    TCGvcidManagedParameters_t managed_parameters = {0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 61, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(managed_parameters);
+
+    int32_t status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    crypto_key_t *verify_key = key_if->get_key(132);
+    verify_key->key_state    = KEY_PREACTIVE;
+
+    sdls_frame.tlv_pdu.hdr.pdu_len = SDLS_KEYV_CMD_BLK_SIZE * BYTE_LEN;
+    sdls_frame.tlv_pdu.data[0]      = 0x00;
+    sdls_frame.tlv_pdu.data[1]      = 0x84;
+    memset(&sdls_frame.tlv_pdu.data[2], 0, CHALLENGE_SIZE);
+
+    TC_t tc_frame = {0};
+    status        = Crypto_Key_verify(&tc_frame);
+    ASSERT_EQ(CRYPTO_LIB_ERR_KEY_STATE_INVALID, status);
+
+    Crypto_Shutdown();
 }
 
 /*
@@ -1163,6 +1198,16 @@ UTEST(EP_KEY_MGMT, TLV_KEY_VERIFY_TESTS)
     // Convert error cases that will attempt to process
     hex_conversion(buffer_TLV_LONG_h, (char **)&buffer_TLV_LONG_b, &buffer_TLV_LONG_len);
     hex_conversion(buffer_TLV_SHORT_h, (char **)&buffer_TLV_SHORT_b, &buffer_TLV_SHORT_len);
+
+    // Key verification is only valid for ACTIVE keys. The success vector
+    // requests keys 128-136 plus keys 4 and 9.
+    for (int x = 128; x <= 136; x++)
+    {
+        ekp            = key_if->get_key(x);
+        ekp->key_state = KEY_ACTIVE;
+    }
+    key_if->get_key(4)->key_state = KEY_ACTIVE;
+    key_if->get_key(9)->key_state = KEY_ACTIVE;
 
     // Expect success on next valid IV && ARSN
     printf(KYEL "\n*Expecting success....\n" RESET);
