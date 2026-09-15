@@ -536,7 +536,7 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_ENC_AND_AUTH_AESGCM_8BYTE_MAC)
     Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     int32_t status = Crypto_Init();
 
-    char *enc_tc_jpl_mmt_scid44_vcid1            = "2003E41E0000150000000000000000000000000001D7792C22058EED6F5724";
+    char *enc_tc_jpl_mmt_scid44_vcid1            = "2003E41E0000150000000000000000000000010001D7792C22058EED6F8F6D";
     char *enc_tc_jpl_mmt_scid44_vcid1_expect     = NULL;
     int   enc_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
 
