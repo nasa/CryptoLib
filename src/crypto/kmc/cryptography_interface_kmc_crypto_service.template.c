@@ -1671,7 +1671,7 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
 
     // Base64 URL encode IV for KMC REST Encrypt
     char *iv_base64 = (char *)calloc(1, B64ENCODE_OUT_SAFESIZE(iv_len) + 1);
-    base64urlEncode(sa_ptr->iv, iv_len, iv_base64, NULL);
+    base64urlEncode(iv, iv_len, iv_base64, NULL);
 
     uint8_t *decrypt_payload     = data_in;
     size_t   decrypt_payload_len = len_data_in;
