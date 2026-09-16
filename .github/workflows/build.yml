@@ -55,7 +55,7 @@ jobs:
     #   run: make gcov
 
     - name: Upload 
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: 'coverage/*.c.gcov'
@@ -151,7 +151,7 @@ jobs:
     #   run: make gcov
 
     - name: Upload 
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: 'coverage/*.c.gcov'
@@ -204,7 +204,7 @@ jobs:
       run: source ~/.bashrc && make gcov
 
     - name: Upload 
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: 'coverage/*.c.gcov'
@@ -237,7 +237,7 @@ jobs:
     #   run: make gcov
 
     - name: Upload 
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: 'coverage/*.c.gcov'
