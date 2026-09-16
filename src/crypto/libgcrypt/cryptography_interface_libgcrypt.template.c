@@ -130,6 +130,8 @@ static int32_t cryptography_authenticate(
     }
     // Using to fix warning
     len_data_out = len_data_out;
+    iv           = iv;
+    iv_len       = iv_len;
     ecs          = ecs;
     cam_cookies  = cam_cookies;
 
@@ -168,19 +170,6 @@ static int32_t cryptography_authenticate(
         return status;
     }
 
-    // If MAC needs IV, set it (only for certain ciphers)
-    if (iv_len > 0)
-    {
-        gcry_error = gcry_mac_setiv(tmp_mac_hd, iv, iv_len);
-        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            printf(KRED "ERROR: gcry_mac_setiv error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-            printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
-            status = CRYPTO_LIB_ERROR;
-            gcry_mac_close(tmp_mac_hd);
-            return status;
-        }
-    }
 
     gcry_error = gcry_mac_write(tmp_mac_hd,
                                 aad,    // additional authenticated data
@@ -240,6 +229,8 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
         return CRYPTO_LIB_ERR_NULL_BUFFER;
     }
     // Using to fix warning
+    iv          = iv;
+    iv_len      = iv_len;
     ecs         = ecs;
     cam_cookies = cam_cookies;
 
@@ -276,19 +267,6 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
         gcry_mac_close(tmp_mac_hd);
         status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
         return status;
-    }
-    // If MAC needs IV, set it (only for certain ciphers)
-    if (iv_len > 0)
-    {
-        gcry_error = gcry_mac_setiv(tmp_mac_hd, iv, iv_len);
-        if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
-        {
-            printf(KRED "ERROR: gcry_mac_setiv error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
-            printf(KRED "Failure: %s/%s\n" RESET, gcry_strsource(gcry_error), gcry_strerror(gcry_error));
-            gcry_mac_close(tmp_mac_hd);
-            status = CRYPTO_LIB_ERROR;
-            return status;
-        }
     }
     gcry_error = gcry_mac_write(tmp_mac_hd,
                                 aad,    // additional authenticated data
