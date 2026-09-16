@@ -1110,7 +1110,7 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     Crypto_TM_Handle_Managed_Parameter_Flags(&pdu_len);
 
     // Add padding bytes to pdu
-    for (uint8_t i = 0; i < pkcs_padding; i++)
+    for (uint32_t i = 0; i < pkcs_padding; i++)
     {
         pTfBuffer[idx + pdu_len + i] = (uint8_t)pkcs_padding;
     }

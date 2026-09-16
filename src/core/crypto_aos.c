@@ -527,7 +527,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     }
 
     // insert padding bytes
-    for (uint8_t i = 0; i < pkcs_padding; i++)
+    for (uint32_t i = 0; i < pkcs_padding; i++)
     {
         pTfBuffer[idx + pdu_len + i] = pkcs_padding;
     }
