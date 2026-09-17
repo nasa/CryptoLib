@@ -97,9 +97,11 @@ int32_t Crypto_TC_Get_Ciper_Mode_TCA(uint8_t sa_service_type, uint32_t *encrypti
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
+    *ecs_is_aead_algorithm = CRYPTO_FALSE;
+
     if (sa_service_type != SA_PLAINTEXT)
     {
-        if (sa_ptr->ecs != CRYPTO_CIPHER_NONE)
+        if (sa_ptr->est == 1 && sa_ptr->ecs != CRYPTO_CIPHER_NONE)
         {
             *encryption_cipher = sa_ptr->ecs;
 #ifdef TC_DEBUG
@@ -1886,10 +1888,15 @@ uint32_t Crypto_TC_Sanity_Validations(TC_t *tc_sdls_processed_frame, SecurityAss
 void Crypto_TC_Get_Ciper_Mode_TCP(uint8_t sa_service_type, uint32_t *encryption_cipher, uint8_t *ecs_is_aead_algorithm,
                                   SecurityAssociation_t *sa_ptr)
 {
-    if (sa_service_type != SA_PLAINTEXT)
+    if (sa_service_type != SA_PLAINTEXT && sa_ptr->est == 1)
     {
         *encryption_cipher     = sa_ptr->ecs;
         *ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(*encryption_cipher);
+    }
+    else
+    {
+        *encryption_cipher     = CRYPTO_CIPHER_NONE;
+        *ecs_is_aead_algorithm = CRYPTO_FALSE;
     }
 }
 
