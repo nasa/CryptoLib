@@ -154,6 +154,20 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         return status;
     }
 
+    if (sa_ptr->shivf_len > sa_ptr->iv_len || sa_ptr->shivf_len > 63)
+    {
+        status = CRYPTO_LIB_ERR_INVALID_SA_IV_CONFIG;
+        mc_if->mc_log(status);
+        return status;
+    }
+
+    if (sa_ptr->shsnf_len > sa_ptr->arsn_len || sa_ptr->shsnf_len > 63)
+    {
+        status = CRYPTO_LIB_ERR_INVALID_SA_ARSN_CONFIG;
+        mc_if->mc_log(status);
+        return status;
+    }
+
     status = Crypto_Get_AOS_Managed_Parameters_For_Gvcid(tfvn, scid, vcid, aos_gvcid_managed_parameters_array,
                                                          &aos_current_managed_parameters_struct);
 

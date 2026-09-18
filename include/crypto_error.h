@@ -165,8 +165,10 @@
 #define CRYPTO_LIB_ERR_TM_APPLY_PADDING                                     (-90)
 #define CRYPTO_LIB_ERR_BUFFER_SIZE                                          (-91)
 #define CRYPTO_LIB_ERR_AOS_APPLY_PADDING                                    (-92)
+#define CRYPTO_LIB_ERR_INVALID_SA_IV_CONFIG                                 (-93)
+#define CRYPTO_LIB_ERR_INVALID_SA_ARSN_CONFIG                               (-94)
 
-#define CRYPTO_CORE_ERROR_CODES_MAX -92
+#define CRYPTO_CORE_ERROR_CODES_MAX -94
 
 // Define codes for returning MDB Strings, and determining error based on strings
 #define CAM_ERROR_CODES     600

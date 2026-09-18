@@ -122,7 +122,9 @@ char *crypto_enum_errlist_core[] = {(char *)"CRYPTO_LIB_SUCCESS",
                                     (char *)"CRYPTO_LIB_ERR_TM_FL_GT_MAX_FRAME_SIZE",
                                     (char *)"CRYPTO_LIB_ERR_TM_APPLY_PADDING",
                                     (char *)"CRYPTO_LIB_ERR_BUFFER_SIZE",
-                                    (char *)"CRYPTO_LIB_ERR_AOS_APPLY_PADDING"};
+                                    (char *)"CRYPTO_LIB_ERR_AOS_APPLY_PADDING",
+                                    (char *)"CRYPTO_LIB_ERR_INVALID_SA_IV_CONFIG",
+                                    (char *)"CRYPTO_LIB_ERR_INVALID_SA_ARSN_CONFIG"};
 
 char *crypto_enum_errlist_config[] = {
     (char *)"CRYPTO_CONFIGURATION_NOT_COMPLETE",
