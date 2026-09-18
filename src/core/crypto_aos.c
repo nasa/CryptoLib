@@ -119,6 +119,13 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         return status; // return immediately so a NULL crypto_config is not dereferenced later
     }
 
+    if (len_ingest < AOS_BASE_PRIMARYHEADER_SIZE)
+    {
+        status = CRYPTO_LIB_ERR_AOS_FRAME_TOO_SHORT;
+        mc_if->mc_log(status);
+        return status;
+    }
+
     tfvn = (pTfBuffer[0] & 0xC0) >> 6;
     scid = ((pTfBuffer[0] & 0x3F) << 2) | ((pTfBuffer[1] & 0xC0) >> 6);
     vcid = (pTfBuffer[1] & 0x3F);
@@ -995,6 +1002,13 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     uint8_t                sa_service_type   = -1;
     uint16_t               spi               = -1;
     uint8_t                aos_hdr_len       = 6;
+
+    if (len_ingest < AOS_BASE_PRIMARYHEADER_SIZE)
+    {
+        status = CRYPTO_LIB_ERR_AOS_FRAME_TOO_SHORT;
+        mc_if->mc_log(status);
+        return status;
+    }
 
     // Bit math to give concise access to values in the ingest
     pp_processed_frame->aos_header.tfvn = ((uint8_t)p_ingest[0] & 0xC0) >> 6;

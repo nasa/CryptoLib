@@ -738,7 +738,7 @@ int32_t Crypto_TC_Check_Init_Setup(uint16_t in_frame_length)
         return status; // return immediately so a NULL crypto_config is not dereferenced later
     }
 
-    if (in_frame_length < 5) // Frame length doesn't have enough bytes for TC TF header -- error out.
+    if (in_frame_length < TC_FRAME_HEADER_SIZE) // Frame length doesn't have enough bytes for TC TF header -- error out.
     {
         status = CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_TC_STANDARD;
         mc_if->mc_log(status);
@@ -1665,8 +1665,7 @@ int32_t Crypto_TC_Process_Sanity_Check(int *len_ingest)
         // Can't mc_log since it's not configured
         return status; // return immediately so a NULL crypto_config is not dereferenced later
     }
-    if ((*len_ingest < 5) &&
-        (status == CRYPTO_LIB_SUCCESS)) // Frame length doesn't even have enough bytes for header -- error out.
+    if ((*len_ingest < TC_FRAME_HEADER_SIZE) && (status == CRYPTO_LIB_SUCCESS)) // Frame length doesn't even have enough bytes for header -- error out.
     {
         status = CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_TC_STANDARD;
         mc_if->mc_log(status);

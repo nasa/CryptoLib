@@ -860,6 +860,13 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         return status;
     }
 
+    if (len_ingest < TM_FRAME_PRIMARYHEADER_SIZE)
+    {
+        status = CRYPTO_LIB_ERR_TM_FRAME_TOO_SHORT;
+        mc_if->mc_log(status);
+        return status;
+    }
+
     tfvn = ((uint8_t)pTfBuffer[0] & 0xC0) >> 6;
     scid = (((uint16_t)pTfBuffer[0] & 0x3F) << 4) | (((uint16_t)pTfBuffer[1] & 0xF0) >> 4);
     vcid = ((uint8_t)pTfBuffer[1] & 0x0E) >> 1;
@@ -1874,6 +1881,13 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
     uint16_t               spi               = -1;
     crypto_key_t          *ekp               = NULL;
     crypto_key_t          *akp               = NULL;
+
+    if (len_ingest < TM_FRAME_PRIMARYHEADER_SIZE)
+    {
+        status = CRYPTO_LIB_ERR_TM_FRAME_TOO_SHORT;
+        mc_if->mc_log(status);
+        return status;
+    }
 
     // Bit math to give concise access to values in the ingest
     tm_frame_pri_hdr.tfvn = ((uint8_t)p_ingest[0] & 0xC0) >> 6;

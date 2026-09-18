@@ -925,6 +925,10 @@ int32_t Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TMGvcidManagedParameters_t
     {
         status = CRYPTO_LIB_ERR_TM_FRAME_SIZE_EXCEEDS_SPEC_LIMIT;
     }
+    else if (gvcid_managed_parameters_struct.max_frame_size < TM_FRAME_PRIMARYHEADER_SIZE)
+    {
+        status = CRYPTO_LIB_ERR_TM_MAN_PARAM_FL_TOO_SHORT;
+    }
     else
     {
         tm_gvcid_managed_parameters_array[tm_gvcid_counter] = gvcid_managed_parameters_struct;
@@ -945,6 +949,10 @@ int32_t Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOSGvcidManagedParameters
     else if (gvcid_managed_parameters_struct.max_frame_size > AOS_MAX_FRAME_SIZE)
     {
         status = CRYPTO_LIB_ERR_AOS_FRAME_SIZE_EXCEEDS_SPEC_LIMIT;
+    }
+    else if (gvcid_managed_parameters_struct.max_frame_size < AOS_BASE_PRIMARYHEADER_SIZE)
+    {
+        status = CRYPTO_LIB_ERR_AOS_MAN_PARAM_FL_TOO_SHORT;
     }
     else
     {
