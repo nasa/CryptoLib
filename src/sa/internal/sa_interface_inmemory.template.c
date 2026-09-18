@@ -1541,6 +1541,7 @@ static int32_t sa_create(TC_t *tc_frame)
 #ifdef DEBUG
         printf(KRED "ERROR: SPI %d cannot be created.\n" RESET, spi);
 #endif
+        status = CRYPTO_LIB_ERR_SPI_INDEX_OOB;
     }
 
     return status;
