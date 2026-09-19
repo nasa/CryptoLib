@@ -1577,4 +1577,39 @@ UTEST(TC_PROCESS, IV_REUSE)
     free(test_frame_pt_b);
 }
 
+UTEST(TC_PROCESS, SA_CREATE_SPI_OOB_AND_VALID)
+{
+    remove("sa_save_file.bin");
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL);
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR, TC_IGNORE_ANTI_REPLAY_FALSE,
+                     TC_IGNORE_SA_STATE_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F,
+                     SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    TCGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+
+    int32_t status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    SaInterface sa_if = get_sa_interface_inmemory();
+
+    TC_t tc_frame;
+    memset(&tc_frame, 0, sizeof(tc_frame));
+    tc_frame.tc_sec_header.spi = 0;
+    memset(sdls_frame.tlv_pdu.data, 0, sizeof(sdls_frame.tlv_pdu.data));
+
+    // SPI == NUM_SA is out of range for sa_create
+    sdls_frame.tlv_pdu.data[0] = (uint8_t)((NUM_SA >> 8) & 0xFF);
+    sdls_frame.tlv_pdu.data[1] = (uint8_t)(NUM_SA & 0xFF);
+    status                     = sa_if->sa_create(&tc_frame);
+    ASSERT_EQ(CRYPTO_LIB_ERR_SPI_INDEX_OOB, status);
+
+    // Valid SPI still takes the create path (minimal zeroed PDU payload)
+    sdls_frame.tlv_pdu.data[0] = 0x00;
+    sdls_frame.tlv_pdu.data[1] = 0x01;
+    status                     = sa_if->sa_create(&tc_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    Crypto_Shutdown();
+}
+
 UTEST_MAIN();
