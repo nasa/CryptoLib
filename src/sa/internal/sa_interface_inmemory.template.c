@@ -1650,13 +1650,10 @@ static int32_t sa_delete(TC_t *tc_frame)
  **/
 static int32_t sa_setARSN(TC_t *tc_frame)
 {
-    // Local variables
     uint16_t spi         = 0x0000;
     uint16_t control_spi = 0x0000;
-    int32_t  status      = CRYPTO_LIB_SUCCESS;
     int      x;
 
-    // Read ingest
     spi = ((uint8_t)sdls_frame.tlv_pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.tlv_pdu.data[1];
 
     control_spi = tc_frame->tc_sec_header.spi;
@@ -1665,44 +1662,44 @@ static int32_t sa_setARSN(TC_t *tc_frame)
 #ifdef DEBUG
         printf(KRED "ERROR: Cannot modify SA in use\n" RESET);
 #endif
-        status = CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI;
-        return status;
+        return CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI;
     }
 
-    // TODO: Check SA type (authenticated, encrypted, both) and set appropriately
-    // TODO: Add more checks on bounds
+    if (spi >= NUM_SA)
+    {
+#ifdef PDU_DEBUG
+        printf("sa_setARSN ERROR: SPI %d is out of range.\n", spi);
+#endif
+        return CRYPTO_LIB_ERR_SPI_INDEX_OOB;
+    }
+    if (sa[spi].sa_state == SA_NONE)
+    {
+#ifdef PDU_DEBUG
+        printf("sa_setARSN ERROR: SPI %d has not been created.\n", spi);
+#endif
+        return CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL;
+    }
+    if (sa[spi].ast != 1)
+    {
+#ifdef PDU_DEBUG
+        printf("Failed setARSN on SPI %d: SA does not provide authentication.\n", spi);
+#endif
+        return CRYPTO_LIB_ERR_INVALID_SA_SERVICE_TYPE;
+    }
 
-    // Check SPI exists
-    if (spi < NUM_SA)
+#ifdef PDU_DEBUG
+    printf("SPI %d ARSN updated to: 0x", spi);
+#endif
+    for (x = 0; x < sa[spi].arsn_len; x++)
     {
-        // Check if Auth or Auth Enc
-        if ((sa[spi].est == 1 && sa[spi].ast == 1) || sa[spi].ast == 1)
-        { // Set SN
+        *(sa[spi].arsn + x) = (uint8_t)sdls_frame.tlv_pdu.data[x + 2];
 #ifdef PDU_DEBUG
-            printf("SPI %d ARSN updated to: 0x", spi);
+        printf("%02x", *(sa[spi].arsn + x));
 #endif
-            for (x = 0; x < sa[spi].arsn_len; x++)
-            {
-                *(sa[spi].arsn + x) = (uint8_t)sdls_frame.tlv_pdu.data[x + 2];
-#ifdef PDU_DEBUG
-                printf("%02x", *(sa[spi].arsn + x));
-#endif
-            }
-#ifdef PDU_DEBUG
-            printf("\n");
-#endif
-        }
-        else
-        {
-#ifdef PDU_DEBUG
-            printf("Failed setARSN on SPI %d, ECS %d, ACS %d\n", spi, sa[spi].ecs, sa[spi].acs);
-#endif
-        }
     }
-    else
-    {
-        printf("sa_setARSN ERROR: SPI %d does not exist.\n", spi);
-    }
+#ifdef PDU_DEBUG
+    printf("\n");
+#endif
 
     return CRYPTO_LIB_SUCCESS;
 }
@@ -1713,12 +1710,9 @@ static int32_t sa_setARSN(TC_t *tc_frame)
  **/
 static int32_t sa_setARSNW(TC_t *tc_frame)
 {
-    // Local variables
     uint16_t spi         = 0x0000;
     uint16_t control_spi = 0x0000;
-    int32_t  status      = CRYPTO_LIB_SUCCESS;
 
-    // Read ingest
     spi = ((uint8_t)sdls_frame.tlv_pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.tlv_pdu.data[1];
 #ifdef PDU_DEBUG
     printf("spi = %d \n", spi);
@@ -1730,30 +1724,40 @@ static int32_t sa_setARSNW(TC_t *tc_frame)
 #ifdef DEBUG
         printf(KRED "ERROR: Cannot modify SA in use\n" RESET);
 #endif
-        status = CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI;
-        return status;
+        return CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI;
     }
 
-    // Check SPI exists
-    if (spi < NUM_SA)
+    if (spi >= NUM_SA)
     {
-        // Check for out of bounds
-        if (sa[spi].arsnw_len > (ARSN_SIZE))
-        {
-            sa[spi].arsnw_len = ARSN_SIZE;
-        }
+#ifdef PDU_DEBUG
+        printf("sa_setARSNW ERROR: SPI %d is out of range.\n", spi);
+#endif
+        return CRYPTO_LIB_ERR_SPI_INDEX_OOB;
+    }
+    if (sa[spi].sa_state == SA_NONE)
+    {
+#ifdef PDU_DEBUG
+        printf("sa_setARSNW ERROR: SPI %d has not been created.\n", spi);
+#endif
+        return CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL;
+    }
+    if (sa[spi].ast != 1)
+    {
+#ifdef PDU_DEBUG
+        printf("Failed setARSNW on SPI %d: SA does not provide authentication.\n", spi);
+#endif
+        return CRYPTO_LIB_ERR_INVALID_SA_SERVICE_TYPE;
+    }
 
-        sa[spi].arsnw = (((uint8_t)sdls_frame.tlv_pdu.data[2]));
-#ifdef PDU_DEBUG
-        printf("ARSN set to: %d\n", sa[spi].arsnw);
-#endif
-    }
-    else
+    if (sa[spi].arsnw_len > ARSN_SIZE)
     {
-#ifdef PDU_DEBUG
-        printf("sa_setARSNW ERROR: SPI %d does not exist.\n", spi);
-#endif
+        sa[spi].arsnw_len = ARSN_SIZE;
     }
+
+    sa[spi].arsnw = (uint8_t)sdls_frame.tlv_pdu.data[2];
+#ifdef PDU_DEBUG
+    printf("ARSN set to: %d\n", sa[spi].arsnw);
+#endif
 
     return CRYPTO_LIB_SUCCESS;
 }
