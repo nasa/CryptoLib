@@ -128,7 +128,8 @@ char *crypto_enum_errlist_core[] = {(char *)"CRYPTO_LIB_SUCCESS",
                                     (char *)"CRYPTO_LIB_ERR_TM_MAN_PARAM_FL_TOO_SHORT",
                                     (char *)"CRYPTO_LIB_ERR_AOS_MAN_PARAM_FL_TOO_SHORT",
                                     (char *)"CRYPTO_LIB_ERR_TM_FRAME_TOO_SHORT",
-                                    (char *)"CRYPTO_LIB_ERR_AOS_FRAME_TOO_SHORT"};
+                                    (char *)"CRYPTO_LIB_ERR_AOS_FRAME_TOO_SHORT",
+                                    (char *)"CRYPTO_LIB_ERR_SA_GVCID_DOESNT_MATCH_FRAME"};
 
 char *crypto_enum_errlist_config[] = {
     (char *)"CRYPTO_CONFIGURATION_NOT_COMPLETE",

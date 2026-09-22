@@ -1005,7 +1005,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
 
     if (len_ingest < AOS_BASE_PRIMARYHEADER_SIZE)
     {
-        status = CRYPTO_LIB_ERR_AOS_FRAME_TOO_SHORT;
+        status = CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_AOS_STANDARD;
         mc_if->mc_log(status);
         return status;
     }
@@ -1079,6 +1079,12 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     byte_idx = 6;
     if (aos_current_managed_parameters_struct.aos_has_fhec == AOS_HAS_FHEC)
     {
+        if (len_ingest <= byte_idx + FHECF_SIZE)
+        {
+            status = CRYPTO_LIB_ERR_TM_FRAME_TOO_SHORT;
+            mc_if->mc_log(status);
+            return status;
+        }
         uint16_t recieved_fhecf = (((p_ingest[aos_hdr_len] << 8) & 0xFF00) | (p_ingest[aos_hdr_len + 1] & 0x00FF));
 #ifdef AOS_DEBUG
         printf("Recieved FHECF: %04x\n", recieved_fhecf);
@@ -1103,6 +1109,13 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     // Per CCSDS 732.0-B-4 Section 4.1.3, Insert Zone is optional but fixed length for a physical channel
     if (aos_current_managed_parameters_struct.aos_has_iz == AOS_HAS_IZ)
     {
+        if (len_ingest <= byte_idx + aos_current_managed_parameters_struct.aos_iz_len)
+        {
+            status = CRYPTO_LIB_ERR_TM_FRAME_TOO_SHORT;
+            mc_if->mc_log(status);
+            return status;
+        }
+
         // Section 4.1.3.2 - Validate Insert Zone length
         if (aos_current_managed_parameters_struct.aos_iz_len <= 0)
         {
@@ -1129,6 +1142,14 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
      * Begin Security Header Fields
      * Reference CCSDS SDLP 3550b1 4.1.1.1.3
      **/
+
+    if (len_ingest < byte_idx + SPI_LEN)
+    {
+        status = CRYPTO_LIB_ERR_TM_FRAME_TOO_SHORT;
+        mc_if->mc_log(status);
+        return status;
+    }
+
     // Get SPI
     spi = (uint8_t)p_ingest[byte_idx] << 8 | (uint8_t)p_ingest[byte_idx + 1];
     // Move index to past the SPI
@@ -1149,6 +1170,21 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
         {
             free(sa_ptr);
         }
+        return status;
+    }
+
+#ifdef DEBUG
+    printf("TFVN SA(%d) == FRAME(%d)?\n", sa_ptr->gvcid_blk.tfvn, pp_processed_frame->aos_header.tfvn);
+    printf("SCID SA(%d) == FRAME(%d)?\n", sa_ptr->gvcid_blk.scid, pp_processed_frame->aos_header.scid);
+    printf("VCID SA(%d) == FRAME(%d)?\n", sa_ptr->gvcid_blk.vcid, pp_processed_frame->aos_header.vcid);
+#endif
+
+    if (sa_ptr->gvcid_blk.tfvn != pp_processed_frame->aos_header.tfvn ||
+        sa_ptr->gvcid_blk.scid != pp_processed_frame->aos_header.scid ||
+        sa_ptr->gvcid_blk.vcid != pp_processed_frame->aos_header.vcid)
+    {
+        status = CRYPTO_LIB_ERR_SA_GVCID_DOESNT_MATCH_FRAME;
+        mc_if->mc_log(status);
         return status;
     }
 

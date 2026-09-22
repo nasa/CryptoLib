@@ -1902,17 +1902,47 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
          * Begin Security Header Fields
          * Reference CCSDS SDLP 3550b1 4.1.1.1.3
          **/
-        // Get SPI
-        spi                                   = (uint8_t)p_ingest[byte_idx] << 8 | (uint8_t)p_ingest[byte_idx + 1];
-        pp_processed_frame->tm_sec_header.spi = spi;
-        // Move index to past the SPI
-        byte_idx += 2;
+
+        if (len_ingest >= byte_idx + SPI_LEN)
+        {
+            // Get SPI
+            spi                                   = (uint8_t)p_ingest[byte_idx] << 8 | (uint8_t)p_ingest[byte_idx + 1];
+            pp_processed_frame->tm_sec_header.spi = spi;
+            // Move index to past the SPI
+            byte_idx += 2;
+        }
+        else
+        {
+            status = CRYPTO_LIB_ERR_TM_FRAME_TOO_SHORT;
+            mc_if->mc_log(status);
+            return status;
+        }
 
         if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
         {
             strncpy(mariadb_table_name, MARIADB_TM_TABLE_NAME, sizeof(mariadb_table_name));
         }
         status = sa_if->sa_get_from_spi(spi, &sa_ptr);
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+            mc_if->mc_log(status);
+            return status;
+        }
+
+#ifdef DEBUG
+        printf("TFVN SA(%d) == FRAME(%d)?\n", sa_ptr->gvcid_blk.tfvn, tm_frame_pri_hdr.tfvn);
+        printf("SCID SA(%d) == FRAME(%d)?\n", sa_ptr->gvcid_blk.scid, tm_frame_pri_hdr.scid);
+        printf("VCID SA(%d) == FRAME(%d)?\n", sa_ptr->gvcid_blk.vcid, tm_frame_pri_hdr.vcid);
+#endif
+
+        if (sa_ptr->gvcid_blk.tfvn != tm_frame_pri_hdr.tfvn ||
+            sa_ptr->gvcid_blk.scid != tm_frame_pri_hdr.scid ||
+            sa_ptr->gvcid_blk.vcid != tm_frame_pri_hdr.vcid)
+        {
+            status = CRYPTO_LIB_ERR_SA_GVCID_DOESNT_MATCH_FRAME;
+            mc_if->mc_log(status);
+            return status;
+        }
     }
 
     // If no valid SPI, return

@@ -100,6 +100,7 @@ UTEST(TC_PROCESS, EXERCISE_IV)
     test_association->shsnf_len = 0;
     test_association->abm_len   = ABM_SIZE;
     test_association->ecs       = CRYPTO_CIPHER_AES256_GCM;
+    test_association->gvcid_blk.tfvn = 0;
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
     ekp = key_if->get_key(test_association->ekid);
@@ -221,7 +222,6 @@ UTEST(TC_PROCESS, EXERCISE_ARSN)
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
-    sa_if->sa_get_from_spi(9, &test_association);
     test_association->ecs_len   = 1;
     test_association->ecs       = CRYPTO_CIPHER_NONE;
     test_association->acs_len   = 1;
@@ -236,6 +236,7 @@ UTEST(TC_PROCESS, EXERCISE_ARSN)
     test_association->abm_len   = 1024;
     test_association->akid      = 136;
     test_association->ekid      = 0;
+    test_association->gvcid_blk.tfvn = 0;
     // memset(test_association->abm, 0x00, (test_association->abm_len * sizeof(uint8_t)));
     test_association->stmacf_len = 16;
     // Insert key into keyring of SA 9
@@ -699,6 +700,7 @@ UTEST(TC_PROCESS, HAPPY_PATH_DECRYPT_CBC)
     test_association->stmacf_len = 0;
     test_association->ekid       = 130;
     test_association->sa_state   = SA_OPERATIONAL;
+    test_association->gvcid_blk.tfvn = 0;
 
     crypto_key_t *ekp = NULL;
     ekp               = key_if->get_key(test_association->ekid);
@@ -781,6 +783,7 @@ UTEST(TC_PROCESS, DECRYPT_CBC_1B)
     test_association->stmacf_len = 0;
     test_association->ekid       = 130;
     test_association->sa_state   = SA_OPERATIONAL;
+    test_association->gvcid_blk.tfvn = 0;
 
     crypto_key_t *ekp = NULL;
     ekp               = key_if->get_key(test_association->ekid);
@@ -863,6 +866,7 @@ UTEST(TC_PROCESS, DECRYPT_CBC_16B)
     test_association->stmacf_len = 0;
     test_association->sa_state   = SA_OPERATIONAL;
     test_association->ekid       = 130;
+    test_association->gvcid_blk.tfvn = 0;
 
     crypto_key_t *ekp = NULL;
     ekp               = key_if->get_key(test_association->ekid);
@@ -1003,6 +1007,7 @@ UTEST(TC_PROCESS, GCM_IV_AND_ARSN)
     test_association->stmacf_len = 0;
     test_association->abm_len    = 1024;
     test_association->stmacf_len = 16;
+    test_association->gvcid_blk.tfvn = 0;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);

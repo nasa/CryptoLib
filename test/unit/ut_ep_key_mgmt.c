@@ -55,6 +55,9 @@ UTEST(EP_KEY_MGMT, OTAR_0_140_142)
     test_association->arsnw     = 5;
     test_association->iv_len    = 0;
     test_association->shivf_len = 0;
+    test_association->gvcid_blk.tfvn = 0;
+    test_association->gvcid_blk.scid = 3;
+    test_association->gvcid_blk.vcid = 0;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
@@ -124,6 +127,9 @@ UTEST(EP_KEY_MGMT, ACTIVATE_141_142)
     test_association->arsn_len  = 0;
     test_association->arsnw     = 5;
     test_association->iv_len    = 12;
+    test_association->gvcid_blk.tfvn = 0;
+    test_association->gvcid_blk.scid = 3;
+    test_association->gvcid_blk.vcid = 0;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
@@ -201,6 +207,9 @@ UTEST(EP_KEY_MGMT, DEACTIVATE_142)
     test_association->shsnf_len = 0;
     test_association->arsn_len  = 0;
     test_association->arsnw     = 5;
+    test_association->gvcid_blk.tfvn = 0;
+    test_association->gvcid_blk.scid = 3;
+    test_association->gvcid_blk.vcid = 0;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
@@ -274,6 +283,9 @@ UTEST(EP_KEY_MGMT, INVENTORY_132_134)
     test_association->arsn_len  = 0;
     test_association->arsnw     = 5;
     test_association->iv_len    = 12;
+    test_association->gvcid_blk.tfvn = 0;
+    test_association->gvcid_blk.scid = 3;
+    test_association->gvcid_blk.vcid = 0;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
@@ -376,7 +388,9 @@ UTEST(EP_KEY_MGMT, VERIFY_132_134)
     test_association->arsnw          = 5;
     test_association->shivf_len      = 0;
     test_association->iv_len         = 0;
-    test_association->gvcid_blk.scid = 0;
+    test_association->gvcid_blk.tfvn = 0;
+    test_association->gvcid_blk.scid = 3;
+    test_association->gvcid_blk.vcid = 0;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
@@ -500,6 +514,9 @@ UTEST(EP_KEY_MGMT, OTAR_0_140_142_MK_NOT_ACTIVE)
     test_association->ast       = 0;
     test_association->iv_len    = 0;
     test_association->shivf_len = 0;
+    test_association->gvcid_blk.tfvn = 0;
+    test_association->gvcid_blk.scid = 3;
+    test_association->gvcid_blk.vcid = 0;
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
     // ekp = key_if->get_key(test_association->ekid);
@@ -603,6 +620,10 @@ UTEST(EP_KEY_MGMT, OTAR_0_140_142_BAD_DECRYPT)
     test_association->iv_len    = 0;
     test_association->shivf_len = 0;
     test_association->ekid      = 127;
+    test_association->gvcid_blk.tfvn = 0;
+    test_association->gvcid_blk.scid = 3;
+    test_association->gvcid_blk.vcid = 0;
+
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
     ekp            = key_if->get_key(test_association->ekid);
@@ -679,6 +700,9 @@ UTEST(EP_KEY_MGMT, DEACTIVATE_142_NO_PUS)
     test_association->shsnf_len = 0;
     test_association->arsn_len  = 0;
     test_association->arsnw     = 5;
+    test_association->gvcid_blk.tfvn = 0;
+    test_association->gvcid_blk.scid = 3;
+    test_association->gvcid_blk.vcid = 0;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
@@ -759,6 +783,9 @@ UTEST(EP_KEY_MGMT, DEACTIVATE_142_NO_PUS_BAD_TLV)
     test_association->shsnf_len = 0;
     test_association->arsn_len  = 0;
     test_association->arsnw     = 5;
+    test_association->gvcid_blk.tfvn = 0;
+    test_association->gvcid_blk.scid = 3;
+    test_association->gvcid_blk.vcid = 0;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
@@ -837,6 +864,9 @@ UTEST(EP_KEY_MGMT, DEACTIVATE_142_PUS_BAD_TLV)
     test_association->shsnf_len = 0;
     test_association->arsn_len  = 0;
     test_association->arsnw     = 5;
+    test_association->gvcid_blk.tfvn = 0;
+    test_association->gvcid_blk.scid = 3;
+    test_association->gvcid_blk.vcid = 0;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
@@ -947,6 +977,9 @@ UTEST(EP_KEY_MGMT, TLV_KEY_DEACTIVATE_TESTS)
     test_association->ecs = CRYPTO_CIPHER_NONE;
     test_association->est = 0;
     test_association->ast = 0;
+    test_association->gvcid_blk.tfvn = 0;
+    test_association->gvcid_blk.scid = 3;
+    test_association->gvcid_blk.vcid = 0;
 
     // set all keys to active
     for (int x = 128; x <= 143; x++)
@@ -1149,7 +1182,9 @@ UTEST(EP_KEY_MGMT, TLV_KEY_VERIFY_TESTS)
     test_association->ast            = 0;
     test_association->shivf_len      = 0;
     test_association->iv_len         = 0;
-    test_association->gvcid_blk.scid = 0;
+    test_association->gvcid_blk.tfvn = 0;
+    test_association->gvcid_blk.scid = 3;
+    test_association->gvcid_blk.vcid = 0;
 
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);

@@ -1025,7 +1025,7 @@ UTEST(AOS_PROCESS, AES_HMAC_256_TEST_0)
     sa_ptr->acs            = CRYPTO_MAC_HMAC_SHA256;
     sa_ptr->stmacf_len     = 16;
     sa_ptr->abm_len        = ABM_SIZE;
-    sa_ptr->gvcid_blk.scid = 0x44;
+    sa_ptr->gvcid_blk.scid = 0x3;
     sa_ptr->iv_len         = 0;
     sa_ptr->shivf_len      = 0;
     sa_ptr->shsnf_len      = 2;
@@ -1179,7 +1179,7 @@ UTEST(AOS_PROCESS, AES_HMAC_256_TEST_1)
     sa_ptr->acs            = CRYPTO_MAC_HMAC_SHA256;
     sa_ptr->stmacf_len     = 16;
     sa_ptr->abm_len        = ABM_SIZE;
-    sa_ptr->gvcid_blk.scid = 0x44;
+    sa_ptr->gvcid_blk.scid = 0x3;
     sa_ptr->iv_len         = 0;
     sa_ptr->shivf_len      = 0;
     sa_ptr->shsnf_len      = 2;
@@ -1334,7 +1334,7 @@ UTEST(AOS_PROCESS, AES_HMAC_512_TEST_0)
     sa_ptr->acs            = CRYPTO_MAC_HMAC_SHA512;
     sa_ptr->stmacf_len     = 16;
     sa_ptr->abm_len        = ABM_SIZE;
-    sa_ptr->gvcid_blk.scid = 0x44;
+    sa_ptr->gvcid_blk.scid = 0x3;
     sa_ptr->iv_len         = 0;
     sa_ptr->shivf_len      = 0;
     sa_ptr->shsnf_len      = 2;
@@ -1489,7 +1489,7 @@ UTEST(AOS_PROCESS, AES_HMAC_512_TEST_1)
     sa_ptr->acs            = CRYPTO_MAC_HMAC_SHA512;
     sa_ptr->stmacf_len     = 16;
     sa_ptr->abm_len        = ABM_SIZE;
-    sa_ptr->gvcid_blk.scid = 0x44;
+    sa_ptr->gvcid_blk.scid = 0x3;
     sa_ptr->iv_len         = 0;
     sa_ptr->shivf_len      = 0;
     sa_ptr->shsnf_len      = 2;
@@ -2036,6 +2036,9 @@ UTEST(AOS_PROCESS, AOS_KEY_STATE_TEST)
     sa_ptr->ecs       = CRYPTO_CIPHER_AES256_GCM;
     sa_ptr->arsn_len  = 0;
     sa_ptr->shsnf_len = 0;
+    sa_ptr->gvcid_blk.scid = 3;
+    sa_ptr->gvcid_blk.vcid = 0;
+    sa_ptr->gvcid_blk.tfvn = 1;
 
     crypto_key_t *ekp = NULL;
     ekp               = key_if->get_key(sa_ptr->ekid);
@@ -2089,6 +2092,9 @@ UTEST(AOS_PROCESS, AOS_PROCESS_HEAP_UNDERFLOW_TEST)
 
     sa_if->sa_get_from_spi(48, &sa_ptr);
     sa_ptr->sa_state = SA_OPERATIONAL;
+    sa_ptr->gvcid_blk.scid = 0;
+    sa_ptr->gvcid_blk.vcid = 48;
+    sa_ptr->gvcid_blk.tfvn = 1;
 
     crypto_key_t *ekp = NULL;
     ekp               = key_if->get_key(sa_ptr->ekid);
@@ -2147,6 +2153,9 @@ UTEST(AOS_PROCESS, AOS_FHECF_TEST)
     sa_ptr->iv_len     = 12;
     sa_ptr->abm_len    = 26;
     sa_ptr->stmacf_len = 16;
+    sa_ptr->gvcid_blk.scid = 3;
+    sa_ptr->gvcid_blk.vcid = 0;
+    sa_ptr->gvcid_blk.tfvn = 1;
 
     crypto_key_t *ekp = NULL;
     ekp               = key_if->get_key(sa_ptr->ekid);
@@ -2190,12 +2199,12 @@ UTEST(AOS_PROCESS, AOS_6BYTE_TEST)
 
     // AOS Test
     AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0, AOS_HAS_FECF, AOS_NO_FHEC,
-                                                             AOS_NO_IZ, 0,      6, AOS_NO_OCF,   1};
+                                                             AOS_NO_IZ, 0,      8, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
 
     // Test frame setup
-    char *framed_aos_h   = "40C0FEDCBA98";
+    char *framed_aos_h   = "40C0FEDCBA980000";
     char *framed_aos_b   = NULL;
     int   framed_aos_len = 0;
     hex_conversion(framed_aos_h, &framed_aos_b, &framed_aos_len);

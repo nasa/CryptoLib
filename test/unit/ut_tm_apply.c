@@ -2324,7 +2324,7 @@ UTEST(TM_APPLY, TM_APPLY_Secondary_Hdr_OVERFLOW_TEST)
     // TM Tests
     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
     // AOS_NO_FHEC, AOS_NO_IZ, 0);
-    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {0, 0x002c, 1, TM_HAS_FECF, 7, TM_NO_OCF, 1};
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {0, 0x002c, 1, TM_HAS_FECF, 8, TM_NO_OCF, 1};
     Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
     status = Crypto_Init();
@@ -2333,7 +2333,7 @@ UTEST(TM_APPLY, TM_APPLY_Secondary_Hdr_OVERFLOW_TEST)
     tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
 
-    char *framed_tm_h   = "02C2000098003F";
+    char *framed_tm_h   = "02C2000098003F00";
     char *framed_tm_b   = NULL;
     int   framed_tm_len = 0;
     hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);

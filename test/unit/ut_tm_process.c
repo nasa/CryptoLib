@@ -305,6 +305,9 @@ UTEST(TM_PROCESS_SECURITY, HAPPY_PATH_CLEAR_FECF)
     sa_ptr->sa_state  = SA_OPERATIONAL;
     sa_ptr->arsn_len  = 0;
     sa_ptr->shsnf_len = 0;
+    sa_ptr->gvcid_blk.tfvn = 0;
+    sa_ptr->gvcid_blk.scid = 44;
+    sa_ptr->gvcid_blk.vcid = 0;
 
     crypto_key_t *ekp = NULL;
     ekp               = key_if->get_key(sa_ptr->ekid);
@@ -638,6 +641,9 @@ UTEST(TM_PROCESS_SECURITY, SECONDARY_HDR_PRESENT_MAC)
     sa_ptr->acs_len    = 1;
     sa_ptr->ekid       = 0;
     sa_ptr->akid       = 136;
+    sa_ptr->gvcid_blk.tfvn = 0;
+    sa_ptr->gvcid_blk.scid = 44;
+    sa_ptr->gvcid_blk.vcid = 0;
 
     crypto_key_t *ekp = NULL;
     ekp               = key_if->get_key(sa_ptr->ekid);
@@ -796,6 +802,9 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_0)
     sa_ptr->acs_len    = 1;
     sa_ptr->ekid       = 0;
     sa_ptr->akid       = 136;
+    sa_ptr->gvcid_blk.tfvn = 0;
+    sa_ptr->gvcid_blk.scid = 44;
+    sa_ptr->gvcid_blk.vcid = 0;
 
     crypto_key_t *ekp = NULL;
     ekp               = key_if->get_key(sa_ptr->ekid);
@@ -978,6 +987,9 @@ UTEST(TM_PROCESS_SECURITY, AES_CMAC_256_TEST_1)
     sa_ptr->acs_len    = 1;
     sa_ptr->ekid       = 0;
     sa_ptr->akid       = 136;
+    sa_ptr->gvcid_blk.tfvn = 0;
+    sa_ptr->gvcid_blk.scid = 44;
+    sa_ptr->gvcid_blk.vcid = 0;
 
     crypto_key_t *ekp = NULL;
     ekp               = key_if->get_key(sa_ptr->ekid);
@@ -1158,6 +1170,9 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_0)
     sa_ptr->acs_len    = 1;
     sa_ptr->ekid       = 0;
     sa_ptr->akid       = 136;
+    sa_ptr->gvcid_blk.tfvn = 0;
+    sa_ptr->gvcid_blk.scid = 44;
+    sa_ptr->gvcid_blk.vcid = 0;
 
     crypto_key_t *ekp = NULL;
     ekp               = key_if->get_key(sa_ptr->ekid);
@@ -1338,6 +1353,9 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_256_TEST_1)
     sa_ptr->acs_len    = 1;
     sa_ptr->ekid       = 0;
     sa_ptr->akid       = 136;
+    sa_ptr->gvcid_blk.tfvn = 0;
+    sa_ptr->gvcid_blk.scid = 44;
+    sa_ptr->gvcid_blk.vcid = 0;
 
     crypto_key_t *ekp = NULL;
     ekp               = key_if->get_key(sa_ptr->ekid);
@@ -1520,6 +1538,9 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_0)
     sa_ptr->acs_len    = 1;
     sa_ptr->ekid       = 0;
     sa_ptr->akid       = 136;
+    sa_ptr->gvcid_blk.tfvn = 0;
+    sa_ptr->gvcid_blk.scid = 44;
+    sa_ptr->gvcid_blk.vcid = 0;
 
     // Update key length for SHA512
     akp            = key_if->get_key(sa_ptr->akid);
@@ -1703,6 +1724,9 @@ UTEST(TM_PROCESS_ENC_VAL, AES_HMAC_SHA_512_TEST_1)
     sa_ptr->acs_len    = 1;
     sa_ptr->ekid       = 0;
     sa_ptr->akid       = 136;
+    sa_ptr->gvcid_blk.tfvn = 0;
+    sa_ptr->gvcid_blk.scid = 44;
+    sa_ptr->gvcid_blk.vcid = 0;
 
     // Update key length for SHA512
     akp            = key_if->get_key(sa_ptr->akid);
@@ -1879,6 +1903,9 @@ UTEST(TM_PROCESS_ENC_VAL, AES_GCM_BITMASK_1)
     test_association->shivf_len = 16;
     test_association->arsn_len  = 0;
     test_association->shsnf_len = 0;
+    test_association->gvcid_blk.tfvn = 0;
+    test_association->gvcid_blk.scid = 44;
+    test_association->gvcid_blk.vcid = 0;
 
     // Set a more obvious IV for test purposes
     char *iv_h   = "DEADBEEFDEADBEEFDEADBEEFDEADBEEE";
@@ -2081,6 +2108,9 @@ UTEST(TM_PROCESS_ENC_VAL, AEAD_AES_GCM_BITMASK_1)
     test_association->shivf_len  = 16;
     test_association->stmacf_len = 16;
     test_association->shsnf_len  = 0;
+    test_association->gvcid_blk.tfvn = 0;
+    test_association->gvcid_blk.scid = 44;
+    test_association->gvcid_blk.vcid = 0;
 
     // Set a more obvious IV for test purposes
     char *iv_h   = "DEADBEEFDEADBEEFDEADBEEFDEADBEEE";
@@ -2213,6 +2243,9 @@ UTEST(TM_PROCESS, TM_OCF_TEST)
     // Activate SA 5
     sa_if->sa_get_from_spi(0, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
+    test_association->gvcid_blk.tfvn = 0;
+    test_association->gvcid_blk.scid = 44;
+    test_association->gvcid_blk.vcid = 0;
 
     status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, tm_frame, &processed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -2254,6 +2287,9 @@ UTEST(TM_PROCESS, TM_SA_NOT_OPERATIONAL)
 
     SecurityAssociation_t *sa_ptr;
     sa_if->sa_get_from_spi(44, &sa_ptr);
+    sa_ptr->gvcid_blk.tfvn = 0;
+    sa_ptr->gvcid_blk.scid = 44;
+    sa_ptr->gvcid_blk.vcid = 0;
 
     crypto_key_t *ekp = NULL;
     ekp               = key_if->get_key(sa_ptr->ekid);
@@ -2308,6 +2344,9 @@ UTEST(TM_PROCESS, TM_KEY_STATE_TEST)
     sa_ptr->stmacf_len = 0;
     sa_ptr->shivf_len  = 0;
     sa_ptr->iv_len     = 0;
+    sa_ptr->gvcid_blk.tfvn = 0;
+    sa_ptr->gvcid_blk.scid = 44;
+    sa_ptr->gvcid_blk.vcid = 0;
 
     crypto_key_t *ekp = NULL;
     ekp               = key_if->get_key(sa_ptr->ekid);
@@ -2359,6 +2398,9 @@ UTEST(TM_PROCESS, TM_PROCESS_HEAP_UNDERFLOW_TEST)
     sa_if->sa_get_from_spi(8, &sa_ptr);
     sa_ptr->sa_state = SA_OPERATIONAL;
     sa_ptr->abm_len  = 8;
+    sa_ptr->gvcid_blk.tfvn = 0;
+    sa_ptr->gvcid_blk.scid = 44;
+    sa_ptr->gvcid_blk.vcid = 0;
 
     crypto_key_t *ekp = NULL;
     ekp               = key_if->get_key(sa_ptr->ekid);
@@ -2393,12 +2435,12 @@ UTEST(TM_PROCESS, TM_PROCESS_Secondary_Hdr_OVERFLOW_TEST)
     Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_IGNORE_ANTI_REPLAY_FALSE, TM_CHECK_FECF_FALSE, 0x3F,
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // TM Tests
-    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {0, 0x002c, 1, TM_HAS_FECF, 7, TM_NO_OCF, 1};
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {0, 0x002c, 1, TM_HAS_FECF, 8, TM_NO_OCF, 1};
     Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
 
     status = Crypto_Init();
 
-    char *framed_tm_h   = "02C2000098003F";
+    char *framed_tm_h   = "02C2000098003F00";
     char *framed_tm_b   = NULL;
     int   framed_tm_len = 0;
     hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);

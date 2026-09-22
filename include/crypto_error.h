@@ -171,8 +171,9 @@
 #define CRYPTO_LIB_ERR_AOS_MAN_PARAM_FL_TOO_SHORT                           (-96)
 #define CRYPTO_LIB_ERR_TM_FRAME_TOO_SHORT                                   (-97)
 #define CRYPTO_LIB_ERR_AOS_FRAME_TOO_SHORT                                  (-98)
+#define CRYPTO_LIB_ERR_SA_GVCID_DOESNT_MATCH_FRAME                          (-99)
 
-#define CRYPTO_CORE_ERROR_CODES_MAX -98
+#define CRYPTO_CORE_ERROR_CODES_MAX -99
 
 // Define codes for returning MDB Strings, and determining error based on strings
 #define CAM_ERROR_CODES     600

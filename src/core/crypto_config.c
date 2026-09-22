@@ -950,7 +950,7 @@ int32_t Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOSGvcidManagedParameters
     {
         status = CRYPTO_LIB_ERR_AOS_FRAME_SIZE_EXCEEDS_SPEC_LIMIT;
     }
-    else if (gvcid_managed_parameters_struct.max_frame_size < AOS_BASE_PRIMARYHEADER_SIZE)
+    else if (gvcid_managed_parameters_struct.max_frame_size < AOS_BASE_PRIMARYHEADER_SIZE + SPI_LEN)
     {
         status = CRYPTO_LIB_ERR_AOS_MAN_PARAM_FL_TOO_SHORT;
     }

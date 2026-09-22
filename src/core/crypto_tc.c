@@ -1867,6 +1867,21 @@ uint32_t Crypto_TC_Sanity_Validations(TC_t *tc_sdls_processed_frame, SecurityAss
     if (status != CRYPTO_LIB_SUCCESS)
     {
         mc_if->mc_log(status);
+        return status;
+    }
+
+#ifdef DEBUG
+    printf("TFVN SA(%d) == FRAME(%d)?\n", (*sa_ptr)->gvcid_blk.tfvn, tc_sdls_processed_frame->tc_header.tfvn);
+    printf("SCID SA(%d) == FRAME(%d)?\n", (*sa_ptr)->gvcid_blk.scid, tc_sdls_processed_frame->tc_header.scid);
+    printf("VCID SA(%d) == FRAME(%d)?\n", (*sa_ptr)->gvcid_blk.vcid, tc_sdls_processed_frame->tc_header.vcid);
+#endif
+
+    if ((*sa_ptr)->gvcid_blk.tfvn != tc_sdls_processed_frame->tc_header.tfvn ||
+        (*sa_ptr)->gvcid_blk.scid != tc_sdls_processed_frame->tc_header.scid ||
+        (*sa_ptr)->gvcid_blk.vcid != tc_sdls_processed_frame->tc_header.vcid)
+    {
+        status = CRYPTO_LIB_ERR_SA_GVCID_DOESNT_MATCH_FRAME;
+        mc_if->mc_log(status);
     }
 
     return status;
@@ -2006,9 +2021,19 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
     // Segment Header
     Crypto_TC_Set_Segment_Header(tc_sdls_processed_frame, ingest, &byte_idx);
 
-    // Security Header
-    tc_sdls_processed_frame->tc_sec_header.spi = ((uint8_t)ingest[byte_idx] << 8) | (uint8_t)ingest[byte_idx + 1];
-    byte_idx += 2;
+    if (*len_ingest >= byte_idx + SPI_LEN)
+    {
+        // Security Header
+        tc_sdls_processed_frame->tc_sec_header.spi = ((uint8_t)ingest[byte_idx] << 8) | (uint8_t)ingest[byte_idx + 1];
+        byte_idx += 2;
+    }
+    else
+    {
+        status = CRYPTO_LIB_ERR_TC_FRAME_TOO_SHORT;
+        mc_if->mc_log(status);
+        return status;
+    }
+    
 
 #ifdef TC_DEBUG
     printf("vcid = %d \n", tc_sdls_processed_frame->tc_header.vcid);
