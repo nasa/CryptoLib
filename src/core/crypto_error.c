@@ -170,6 +170,7 @@ char *crypto_enum_errlist_crypto_kmc[] = {
     (char *)"CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_DECRYPT_ERROR",
     (char *)"CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_ENCRYPT_ERROR",
     (char *)"CRYPTOGRAHPY_KMC_BASE64_DECRYPT_ERROR",
+    (char *)"CRYPTOGRAHPY_KMC_BASE64URL_DECRYPT_ERROR",
 };
 
 char *crypto_enum_errlist_crypto_cam[] = {

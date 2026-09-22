@@ -399,9 +399,17 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
                         printf("IV ENCODED Text: %s\nIV ENCODED TEXT LEN: %ld\n", ciphertext_token_base64,
                                cipher_text_token_len);
 #endif
-                        char  *iv_decoded     = malloc((iv_len)*2 + 1);
-                        size_t iv_decoded_len = 0;
-                        base64urlDecode(ciphertext_token_base64, cipher_text_token_len, iv_decoded, &iv_decoded_len);
+                        char  *iv_decoded            = malloc((iv_len)*2 + 1);
+                        size_t iv_decoded_len        = 0;
+                        uint16_t decoded_buffer_size = (iv_len)*2 + 1;
+                        if (base64urlDecode(ciphertext_token_base64, cipher_text_token_len, iv_decoded, decoded_buffer_size, &iv_decoded_len) != 0)
+                        {
+                            free(chunk_write);
+                            free(iv_decoded);
+                            free(ciphertext_token_base64);
+                            free(ciphertext_IV_base64);
+                            return CRYPTOGRAHPY_KMC_BASE64URL_DECRYPT_ERROR;
+                        }
 #ifdef DEBUG
                         printf("Decoded IV Text Length: %ld\n", iv_decoded_len);
                         printf("Decoded IV Text: \n");
@@ -971,7 +979,14 @@ static int32_t cryptography_authenticate(uint8_t *data_out, size_t len_data_out,
     // https://stackoverflow.com/questions/13378815/base64-length-calculation
     uint8_t *icv_decoded     = calloc(1, B64DECODE_OUT_SAFESIZE(strlen(icv_base64)) + 1);
     size_t   icv_decoded_len = 0;
-    base64urlDecode(icv_base64, strlen(icv_base64), icv_decoded, &icv_decoded_len);
+    uint16_t decoded_buffer_size = strlen(icv_base64) + 1;
+    if (base64urlDecode(icv_base64, strlen(icv_base64), icv_decoded, decoded_buffer_size, &icv_decoded_len) != 0)
+    {
+        free(chunk_write);
+        free(icv_decoded);
+        free(icv_base64);
+        return CRYPTOGRAHPY_KMC_BASE64URL_DECRYPT_ERROR;
+    }
     free(icv_base64);
 #ifdef DEBUG
     printf("Mac size: %d\n", mac_size);
@@ -1466,7 +1481,15 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
 #endif
                         char  *iv_decoded     = malloc((iv_len)*2 + 1);
                         size_t iv_decoded_len = 0;
-                        base64urlDecode(ciphertext_token_base64, cipher_text_token_len, iv_decoded, &iv_decoded_len);
+                        uint16_t decoded_buffer_size = (iv_len)*2 + 1;
+                        if (base64urlDecode(ciphertext_token_base64, cipher_text_token_len, iv_decoded, decoded_buffer_size, &iv_decoded_len) != 0)
+                        {
+                            free(chunk_write);
+                            free(iv_decoded);
+                            free(ciphertext_token_base64);
+                            free(ciphertext_IV_base64);
+                            return CRYPTOGRAHPY_KMC_BASE64URL_DECRYPT_ERROR;
+                        }
 
 #ifdef DEBUG
                         printf("Decoded IV Text Length: %ld\n", iv_decoded_len);

@@ -110,6 +110,10 @@ if((KMC_MDB_DB OR KMC_MDB_RH))
     add_test(NAME UT_B64
              COMMAND ${PROJECT_BINARY_DIR}/bin/ut_b64
              WORKING_DIRECTORY ${PROJECT_TEST_DIR})
+
+    add_test(NAME UT_B64URL
+             COMMAND ${PROJECT_BINARY_DIR}/bin/ut_b64url
+             WORKING_DIRECTORY ${PROJECT_TEST_DIR})
     
     add_test(NAME UT_KMC_CRYPTO
              COMMAND ${PROJECT_BINARY_DIR}/bin/ut_kmc_crypto
