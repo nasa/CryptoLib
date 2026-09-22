@@ -189,9 +189,8 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_APPLY_SEC_AUTH_ONLY)
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
                           CLIENT_CERTIFICATE_KEY, NULL, "client", NULL);
-    Crypto_Config_Kmc_Crypto_Service("https", KMC_HOSTNAME, 8443, "crypto-service",
-                                     CA_PATH, NULL, CRYPTO_FALSE, CLIENT_CERTIFICATE,
-                                     "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+    Crypto_Config_Kmc_Crypto_Service("https", KMC_HOSTNAME, 8443, "crypto-service", CA_PATH, NULL, CRYPTO_FALSE,
+                                     CLIENT_CERTIFICATE, "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
     TCGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 56, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, 1};
     Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     int32_t status = Crypto_Init();
@@ -258,9 +257,8 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_APPLY_SEC_ENC_AND_AUTH)
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
                           CLIENT_CERTIFICATE_KEY, NULL, "client", NULL);
-    Crypto_Config_Kmc_Crypto_Service("https", KMC_HOSTNAME, 8443, "crypto-service",
-                                     CA_PATH, NULL, CRYPTO_FALSE, CLIENT_CERTIFICATE,
-                                     "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+    Crypto_Config_Kmc_Crypto_Service("https", KMC_HOSTNAME, 8443, "crypto-service", CA_PATH, NULL, CRYPTO_FALSE,
+                                     CLIENT_CERTIFICATE, "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
 
     TCGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, 1};
     Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
@@ -310,15 +308,15 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_ENC_AND_AUTH)
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
                           CLIENT_CERTIFICATE_KEY, NULL, "client", NULL);
-    Crypto_Config_Kmc_Crypto_Service("https", KMC_HOSTNAME, 8443, "crypto-service",
-                                     CA_PATH, NULL, CRYPTO_FALSE, CLIENT_CERTIFICATE,
-                                     "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+    Crypto_Config_Kmc_Crypto_Service("https", KMC_HOSTNAME, 8443, "crypto-service", CA_PATH, NULL, CRYPTO_FALSE,
+                                     CLIENT_CERTIFICATE, "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
 
     TCGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 1, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, 1};
     Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     int32_t status = Crypto_Init();
 
-    char *enc_tc_jpl_mmt_scid44_vcid1 = "20030443000003000000000000000000000001668E5C208D4DD7C51C88BF0CDCEF821120D77B18A1EE9ECACE1FFA9E335DC413B54F0A87B29B9F6D94E9226F0B53F46BEC";
+    char *enc_tc_jpl_mmt_scid44_vcid1 = "20030443000003000000000000000000000001668E5C208D4DD7C51C88BF0CDCEF821120D77B18"
+                                        "A1EE9ECACE1FFA9E335DC413B54F0A87B29B9F6D94E9226F0B53F46BEC";
     char *enc_tc_jpl_mmt_scid44_vcid1_expect     = NULL;
     int   enc_tc_jpl_mmt_scid44_vcid1_expect_len = 0;
 
@@ -517,9 +515,8 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_APPLY_SEC_ENC_AND_AUTH_AESGCM_8BYTE_MAC)
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
                           CLIENT_CERTIFICATE_KEY, NULL, "client", NULL);
-    Crypto_Config_Kmc_Crypto_Service("https", KMC_HOSTNAME, 8443, "crypto-service",
-                                     CA_PATH, NULL, CRYPTO_FALSE, CLIENT_CERTIFICATE,
-                                     "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+    Crypto_Config_Kmc_Crypto_Service("https", KMC_HOSTNAME, 8443, "crypto-service", CA_PATH, NULL, CRYPTO_FALSE,
+                                     CLIENT_CERTIFICATE, "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
     TCGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 57, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, 1};
     Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     int32_t status = Crypto_Init();
@@ -576,9 +573,8 @@ UTEST(KMC_CRYPTO, HAPPY_PATH_PROCESS_SEC_ENC_AND_AUTH_AESGCM_8BYTE_MAC)
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
                           CLIENT_CERTIFICATE_KEY, NULL, "client", NULL);
-    Crypto_Config_Kmc_Crypto_Service("https", KMC_HOSTNAME, 8443, "crypto-service",
-                                     CA_PATH, NULL, CRYPTO_FALSE, CLIENT_CERTIFICATE,
-                                     "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+    Crypto_Config_Kmc_Crypto_Service("https", KMC_HOSTNAME, 8443, "crypto-service", CA_PATH, NULL, CRYPTO_FALSE,
+                                     CLIENT_CERTIFICATE, "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
     TCGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 57, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, 1};
     Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     int32_t status = Crypto_Init();
@@ -702,9 +698,8 @@ UTEST(KMC_CRYPTO, UNHAPPY_PATH_APPLY_SEC_ENC_AND_AUTH_AESGCM_32BYTE_MAC)
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
                           CLIENT_CERTIFICATE_KEY, NULL, "client", NULL);
-    Crypto_Config_Kmc_Crypto_Service("https", KMC_HOSTNAME, 8443, "crypto-service",
-                                     CA_PATH, NULL, CRYPTO_FALSE, CLIENT_CERTIFICATE,
-                                     "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+    Crypto_Config_Kmc_Crypto_Service("https", KMC_HOSTNAME, 8443, "crypto-service", CA_PATH, NULL, CRYPTO_FALSE,
+                                     CLIENT_CERTIFICATE, "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
     TCGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x002c, 12, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, 1024, 1};
     Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
     int32_t status = Crypto_Init();

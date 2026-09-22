@@ -23,7 +23,6 @@
 
 #include <string.h> // memcpy/memset
 
-
 uint32_t Crypto_AOS_Calculate_Padding(uint32_t cipher, uint16_t data_len)
 {
     uint32_t block_size;
@@ -460,7 +459,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         }
         return status;
     }
-    
+
     /**
      * End Security Header Fields
      **/
@@ -528,7 +527,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
 
         hex_padding[0] = (pkcs_padding >> 16) & 0xFF;
         hex_padding[1] = (pkcs_padding >> 8) & 0xFF;
-        hex_padding[2] = (pkcs_padding) & 0xFF;
+        hex_padding[2] = (pkcs_padding)&0xFF;
 
 #ifdef AOS_DEBUG
         printf("pkcs_padding: %d\n", (int)pkcs_padding);
@@ -1627,7 +1626,8 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     uint32_t padding = 0;
     for (int i = 0; i < sa_ptr->shplf_len; i++)
     {
-        padding |= p_ingest[aos_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + i] << (8 * (sa_ptr->shplf_len - 1 - i));
+        padding |= p_ingest[aos_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + i]
+                   << (8 * (sa_ptr->shplf_len - 1 - i));
     }
 
     if (sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_TRUE)
@@ -1648,7 +1648,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
                                                            &sa_ptr->acs,      // authentication cipher
                                                            NULL);
 
-            if(status != CRYPTO_LIB_SUCCESS)
+            if (status != CRYPTO_LIB_SUCCESS)
             {
                 free(p_new_dec_frame); // Add cleanup
                 mc_if->mc_log(status);
@@ -1681,7 +1681,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
                                                                 &sa_ptr->acs,       // authentication cipher
                                                                 NULL);
 
-            if(status != CRYPTO_LIB_SUCCESS)
+            if (status != CRYPTO_LIB_SUCCESS)
             {
                 free(p_new_dec_frame); // Add cleanup
                 mc_if->mc_log(status);
@@ -1717,7 +1717,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
                                                                       sa_ptr->acs,        // authentication cipher
                                                                       NULL);              // cam cookies
 
-            if(status != CRYPTO_LIB_SUCCESS)
+            if (status != CRYPTO_LIB_SUCCESS)
             {
                 free(p_new_dec_frame); // Add cleanup
                 mc_if->mc_log(status);
@@ -1807,7 +1807,8 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
 #ifdef AOS_DEBUG
     printf(KYEL "\nPadding Detected: %d\n", padding);
     uint8_t fecf_len = aos_current_managed_parameters_struct.has_fecf ? FECF_SIZE : 0;
-    memmove(&p_new_dec_frame[aos_current_managed_parameters_struct.max_frame_size - padding - fecf_len], &p_new_dec_frame[aos_current_managed_parameters_struct.max_frame_size - fecf_len], fecf_len);
+    memmove(&p_new_dec_frame[aos_current_managed_parameters_struct.max_frame_size - padding - fecf_len],
+            &p_new_dec_frame[aos_current_managed_parameters_struct.max_frame_size - fecf_len], fecf_len);
     if (sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC || sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC_MAC)
     {
         printf(KYEL "\nPrinting PROCESSED frame WITHOUT PADDING [%d]:\n\t" RESET, *p_decrypted_length);
@@ -1859,7 +1860,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     {
         memcpy(pp_processed_frame->aos_sec_header.iv + i, &p_ingest[byte_idx + i], 1);
     }
-    byte_idx += sa_ptr->shivf_len; 
+    byte_idx += sa_ptr->shivf_len;
     pp_processed_frame->aos_sec_header.iv_field_len = sa_ptr->shivf_len;
 
     for (int i = 0; i < sa_ptr->shsnf_len; i++)

@@ -203,7 +203,7 @@ int32_t Crypto_TM_IV_Sanity_Check(uint8_t *sa_service_type, SecurityAssociation_
         mc_if->mc_log(status);
         return status;
     }
-    
+
 #ifdef SA_DEBUG
     if (sa_ptr->shivf_len > 0)
     {
@@ -295,10 +295,11 @@ uint32_t Crypto_TM_Calculate_Padding(uint32_t cipher, uint16_t data_len)
  *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.3.3 (TM Encryption Processing)
  **/
-void Crypto_TM_PKCS_Padding(uint32_t *pkcs_padding, SecurityAssociation_t *sa_ptr, uint8_t *pTfBuffer, uint16_t *idx_p, uint16_t len_ingest)
+void Crypto_TM_PKCS_Padding(uint32_t *pkcs_padding, SecurityAssociation_t *sa_ptr, uint8_t *pTfBuffer, uint16_t *idx_p,
+                            uint16_t len_ingest)
 {
     uint16_t idx      = *idx_p;
-    uint8_t fecf_len = (tm_current_managed_parameters_struct.has_fecf == TM_HAS_FECF) ? FECF_SIZE : 0;
+    uint8_t  fecf_len = (tm_current_managed_parameters_struct.has_fecf == TM_HAS_FECF) ? FECF_SIZE : 0;
     uint16_t data_len = len_ingest - idx - sa_ptr->stmacf_len - fecf_len - sa_ptr->shplf_len;
 
     // Calculate required padding based on cipher
@@ -1238,7 +1239,7 @@ int32_t Crypto_TM_Process_Setup(uint16_t len_ingest, uint16_t *byte_idx, uint8_t
         }
     } // Unable to get necessary Managed Parameters for TM TF -- return with error.
 
-    if (status == CRYPTO_LIB_SUCCESS &&len_ingest > tm_current_managed_parameters_struct.max_frame_size)
+    if (status == CRYPTO_LIB_SUCCESS && len_ingest > tm_current_managed_parameters_struct.max_frame_size)
     {
         status = CRYPTO_LIB_ERR_TM_FL_GT_MAX_FRAME_SIZE;
         mc_if->mc_log(status);
@@ -1576,7 +1577,8 @@ int32_t Crypto_TM_Do_Decrypt_NONAEAD(uint8_t sa_service_type, uint16_t pdu_len, 
                                                                        sa_ptr->acs,        // authentication cipher
                                                                        NULL);              // cam cookies
     }
-    if (status == CRYPTO_LIB_SUCCESS && (sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
+    if (status == CRYPTO_LIB_SUCCESS &&
+        (sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
     {
         if (crypto_config_global.key_type != KEY_TYPE_KMC)
         {
@@ -1718,9 +1720,10 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     }
     printf("\n");
 #endif
-    uint8_t padding = sa_ptr->shplf_len > 0 ? p_ingest[byte_idx - 1] : 0;
+    uint8_t padding  = sa_ptr->shplf_len > 0 ? p_ingest[byte_idx - 1] : 0;
     uint8_t fecf_len = (tm_current_managed_parameters_struct.has_fecf == TM_HAS_FECF) ? FECF_SIZE : 0;
-    memmove(&p_new_dec_frame[tm_current_managed_parameters_struct.max_frame_size - padding - fecf_len], &p_new_dec_frame[tm_current_managed_parameters_struct.max_frame_size - fecf_len], fecf_len);
+    memmove(&p_new_dec_frame[tm_current_managed_parameters_struct.max_frame_size - padding - fecf_len],
+            &p_new_dec_frame[tm_current_managed_parameters_struct.max_frame_size - fecf_len], fecf_len);
     // pp_processed_frame = p_new_dec_frame;
 
     // TODO maybe not just return this without doing the math ourselves
@@ -1935,8 +1938,7 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
         printf("VCID SA(%d) == FRAME(%d)?\n", sa_ptr->gvcid_blk.vcid, tm_frame_pri_hdr.vcid);
 #endif
 
-        if (sa_ptr->gvcid_blk.tfvn != tm_frame_pri_hdr.tfvn ||
-            sa_ptr->gvcid_blk.scid != tm_frame_pri_hdr.scid ||
+        if (sa_ptr->gvcid_blk.tfvn != tm_frame_pri_hdr.tfvn || sa_ptr->gvcid_blk.scid != tm_frame_pri_hdr.scid ||
             sa_ptr->gvcid_blk.vcid != tm_frame_pri_hdr.vcid)
         {
             status = CRYPTO_LIB_ERR_SA_GVCID_DOESNT_MATCH_FRAME;

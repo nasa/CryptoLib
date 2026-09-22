@@ -45,16 +45,16 @@ UTEST(EP_KEY_MGMT, OTAR_0_140_142)
 
     // Activate SA 0
     sa_if->sa_get_from_spi(0, &test_association);
-    test_association->sa_state  = SA_OPERATIONAL;
-    test_association->ecs_len   = 1;
-    test_association->ecs       = CRYPTO_CIPHER_NONE;
-    test_association->est       = 0;
-    test_association->ast       = 0;
-    test_association->shsnf_len = 0;
-    test_association->arsn_len  = 0;
-    test_association->arsnw     = 5;
-    test_association->iv_len    = 0;
-    test_association->shivf_len = 0;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ecs_len        = 1;
+    test_association->ecs            = CRYPTO_CIPHER_NONE;
+    test_association->est            = 0;
+    test_association->ast            = 0;
+    test_association->shsnf_len      = 0;
+    test_association->arsn_len       = 0;
+    test_association->arsnw          = 5;
+    test_association->iv_len         = 0;
+    test_association->shivf_len      = 0;
     test_association->gvcid_blk.tfvn = 0;
     test_association->gvcid_blk.scid = 3;
     test_association->gvcid_blk.vcid = 0;
@@ -120,13 +120,13 @@ UTEST(EP_KEY_MGMT, ACTIVATE_141_142)
 
     // Activate SA 0
     sa_if->sa_get_from_spi(0, &test_association);
-    test_association->sa_state  = SA_OPERATIONAL;
-    test_association->ecs_len   = 1;
-    test_association->ecs       = CRYPTO_CIPHER_NONE;
-    test_association->shsnf_len = 0;
-    test_association->arsn_len  = 0;
-    test_association->arsnw     = 5;
-    test_association->iv_len    = 12;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ecs_len        = 1;
+    test_association->ecs            = CRYPTO_CIPHER_NONE;
+    test_association->shsnf_len      = 0;
+    test_association->arsn_len       = 0;
+    test_association->arsnw          = 5;
+    test_association->iv_len         = 12;
     test_association->gvcid_blk.tfvn = 0;
     test_association->gvcid_blk.scid = 3;
     test_association->gvcid_blk.vcid = 0;
@@ -200,13 +200,13 @@ UTEST(EP_KEY_MGMT, DEACTIVATE_142)
     sa_if->sa_get_from_spi(0, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     // test_association->ecs_len = 1;
-    test_association->ecs       = CRYPTO_CIPHER_NONE;
-    test_association->est       = 0;
-    test_association->ast       = 0;
-    test_association->iv_len    = 12;
-    test_association->shsnf_len = 0;
-    test_association->arsn_len  = 0;
-    test_association->arsnw     = 5;
+    test_association->ecs            = CRYPTO_CIPHER_NONE;
+    test_association->est            = 0;
+    test_association->ast            = 0;
+    test_association->iv_len         = 12;
+    test_association->shsnf_len      = 0;
+    test_association->arsn_len       = 0;
+    test_association->arsnw          = 5;
     test_association->gvcid_blk.tfvn = 0;
     test_association->gvcid_blk.scid = 3;
     test_association->gvcid_blk.vcid = 0;
@@ -274,15 +274,15 @@ UTEST(EP_KEY_MGMT, INVENTORY_132_134)
 
     // Activate SA 0
     sa_if->sa_get_from_spi(0, &test_association);
-    test_association->sa_state  = SA_OPERATIONAL;
-    test_association->ecs_len   = 1;
-    test_association->ecs       = CRYPTO_CIPHER_NONE;
-    test_association->est       = 0;
-    test_association->ast       = 0;
-    test_association->shsnf_len = 0;
-    test_association->arsn_len  = 0;
-    test_association->arsnw     = 5;
-    test_association->iv_len    = 12;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ecs_len        = 1;
+    test_association->ecs            = CRYPTO_CIPHER_NONE;
+    test_association->est            = 0;
+    test_association->ast            = 0;
+    test_association->shsnf_len      = 0;
+    test_association->arsn_len       = 0;
+    test_association->arsnw          = 5;
+    test_association->iv_len         = 12;
     test_association->gvcid_blk.tfvn = 0;
     test_association->gvcid_blk.scid = 3;
     test_association->gvcid_blk.vcid = 0;
@@ -507,13 +507,13 @@ UTEST(EP_KEY_MGMT, OTAR_0_140_142_MK_NOT_ACTIVE)
 
     // Activate SA 0
     sa_if->sa_get_from_spi(0, &test_association);
-    test_association->sa_state  = SA_OPERATIONAL;
-    test_association->ecs_len   = 1;
-    test_association->ecs       = CRYPTO_CIPHER_NONE;
-    test_association->est       = 0;
-    test_association->ast       = 0;
-    test_association->iv_len    = 0;
-    test_association->shivf_len = 0;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ecs_len        = 1;
+    test_association->ecs            = CRYPTO_CIPHER_NONE;
+    test_association->est            = 0;
+    test_association->ast            = 0;
+    test_association->iv_len         = 0;
+    test_association->shivf_len      = 0;
     test_association->gvcid_blk.tfvn = 0;
     test_association->gvcid_blk.scid = 3;
     test_association->gvcid_blk.vcid = 0;
@@ -612,14 +612,14 @@ UTEST(EP_KEY_MGMT, OTAR_0_140_142_BAD_DECRYPT)
 
     // Activate SA 0
     sa_if->sa_get_from_spi(0, &test_association);
-    test_association->sa_state  = SA_OPERATIONAL;
-    test_association->ecs_len   = 1;
-    test_association->ecs       = CRYPTO_CIPHER_NONE;
-    test_association->est       = 0;
-    test_association->ast       = 0;
-    test_association->iv_len    = 0;
-    test_association->shivf_len = 0;
-    test_association->ekid      = 127;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ecs_len        = 1;
+    test_association->ecs            = CRYPTO_CIPHER_NONE;
+    test_association->est            = 0;
+    test_association->ast            = 0;
+    test_association->iv_len         = 0;
+    test_association->shivf_len      = 0;
+    test_association->ekid           = 127;
     test_association->gvcid_blk.tfvn = 0;
     test_association->gvcid_blk.scid = 3;
     test_association->gvcid_blk.vcid = 0;
@@ -693,13 +693,13 @@ UTEST(EP_KEY_MGMT, DEACTIVATE_142_NO_PUS)
     sa_if->sa_get_from_spi(0, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     // test_association->ecs_len = 1;
-    test_association->ecs       = CRYPTO_CIPHER_NONE;
-    test_association->est       = 0;
-    test_association->ast       = 0;
-    test_association->iv_len    = 12;
-    test_association->shsnf_len = 0;
-    test_association->arsn_len  = 0;
-    test_association->arsnw     = 5;
+    test_association->ecs            = CRYPTO_CIPHER_NONE;
+    test_association->est            = 0;
+    test_association->ast            = 0;
+    test_association->iv_len         = 12;
+    test_association->shsnf_len      = 0;
+    test_association->arsn_len       = 0;
+    test_association->arsnw          = 5;
     test_association->gvcid_blk.tfvn = 0;
     test_association->gvcid_blk.scid = 3;
     test_association->gvcid_blk.vcid = 0;
@@ -775,14 +775,14 @@ UTEST(EP_KEY_MGMT, DEACTIVATE_142_NO_PUS_BAD_TLV)
 
     // Activate SA 0
     sa_if->sa_get_from_spi(0, &test_association);
-    test_association->sa_state  = SA_OPERATIONAL;
-    test_association->ecs       = CRYPTO_CIPHER_NONE;
-    test_association->est       = 0;
-    test_association->ast       = 0;
-    test_association->iv_len    = 12;
-    test_association->shsnf_len = 0;
-    test_association->arsn_len  = 0;
-    test_association->arsnw     = 5;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ecs            = CRYPTO_CIPHER_NONE;
+    test_association->est            = 0;
+    test_association->ast            = 0;
+    test_association->iv_len         = 12;
+    test_association->shsnf_len      = 0;
+    test_association->arsn_len       = 0;
+    test_association->arsnw          = 5;
     test_association->gvcid_blk.tfvn = 0;
     test_association->gvcid_blk.scid = 3;
     test_association->gvcid_blk.vcid = 0;
@@ -857,13 +857,13 @@ UTEST(EP_KEY_MGMT, DEACTIVATE_142_PUS_BAD_TLV)
     sa_if->sa_get_from_spi(0, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     // test_association->ecs_len = 1;
-    test_association->ecs       = CRYPTO_CIPHER_NONE;
-    test_association->est       = 0;
-    test_association->ast       = 0;
-    test_association->iv_len    = 12;
-    test_association->shsnf_len = 0;
-    test_association->arsn_len  = 0;
-    test_association->arsnw     = 5;
+    test_association->ecs            = CRYPTO_CIPHER_NONE;
+    test_association->est            = 0;
+    test_association->ast            = 0;
+    test_association->iv_len         = 12;
+    test_association->shsnf_len      = 0;
+    test_association->arsn_len       = 0;
+    test_association->arsnw          = 5;
     test_association->gvcid_blk.tfvn = 0;
     test_association->gvcid_blk.scid = 3;
     test_association->gvcid_blk.vcid = 0;
@@ -974,9 +974,9 @@ UTEST(EP_KEY_MGMT, TLV_KEY_DEACTIVATE_TESTS)
     sa_if->sa_get_from_spi(0, &test_association);
     test_association->sa_state = SA_OPERATIONAL;
     // test_association->ecs_len = 1;
-    test_association->ecs = CRYPTO_CIPHER_NONE;
-    test_association->est = 0;
-    test_association->ast = 0;
+    test_association->ecs            = CRYPTO_CIPHER_NONE;
+    test_association->est            = 0;
+    test_association->ast            = 0;
     test_association->gvcid_blk.tfvn = 0;
     test_association->gvcid_blk.scid = 3;
     test_association->gvcid_blk.vcid = 0;
