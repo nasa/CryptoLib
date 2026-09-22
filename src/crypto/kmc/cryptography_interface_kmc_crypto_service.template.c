@@ -241,8 +241,8 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
     int32_t status = CRYPTO_LIB_SUCCESS;
     key            = key;     // Direct key input is not supported in KMC interface
     len_key        = len_key; // Direct key input is not supported in KMC interface
-    ecs = ecs;
-    padding = padding;
+    ecs            = ecs;
+    padding        = padding;
 
     // Remove pre-padding to block (KMC does not want it)
     if (*ecs == CRYPTO_CIPHER_AES256_CBC && padding > 0)
@@ -872,10 +872,10 @@ static int32_t cryptography_authenticate(uint8_t *data_out, size_t len_data_out,
             // search through metadata string for base64 ICV end idx:
             // Format:
             // "integrityCheckValue:xQgnkVrrQj8FRALV3DxnVg==,keyRef:kmc/test/nist_cmac_90,cryptoAlgorithm:AESCMAC,metadataType:IntegrityCheckMetadata"
-            uint32_t len_metadata    = t[json_idx + 1].end - t[json_idx + 1].start;
-            char    *metadata        = malloc(len_metadata + 1);
-            char    *metadata_start  = metadata;
-            char    *metadata_end    = &metadata[len_metadata];
+            uint32_t len_metadata   = t[json_idx + 1].end - t[json_idx + 1].start;
+            char    *metadata       = malloc(len_metadata + 1);
+            char    *metadata_start = metadata;
+            char    *metadata_end   = &metadata[len_metadata];
             memcpy(metadata, chunk_write->response + t[json_idx + 1].start, len_metadata);
 
             char  *key = "";
@@ -922,9 +922,9 @@ static int32_t cryptography_authenticate(uint8_t *data_out, size_t len_data_out,
 #endif
             json_idx++;
             icvtext_found = CRYPTO_TRUE;
-            
+
             metadata = metadata_start;
-            free(metadata); 
+            free(metadata);
             continue;
         }
 

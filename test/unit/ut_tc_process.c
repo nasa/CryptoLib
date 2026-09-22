@@ -86,20 +86,20 @@ UTEST(TC_PROCESS, EXERCISE_IV)
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
-    test_association->sa_state  = SA_OPERATIONAL;
-    test_association->est       = 1;
-    test_association->ast       = 0;
-    test_association->ekid      = 136;
-    test_association->shivf_len = 12;
-    test_association->iv_len    = 12;
-    test_association->ecs_len   = 1;
-    test_association->shplf_len = 1;
-    test_association->arsnw_len = 1;
-    test_association->arsnw     = 5;
-    test_association->arsn_len  = 0;
-    test_association->shsnf_len = 0;
-    test_association->abm_len   = ABM_SIZE;
-    test_association->ecs       = CRYPTO_CIPHER_AES256_GCM;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->est            = 1;
+    test_association->ast            = 0;
+    test_association->ekid           = 136;
+    test_association->shivf_len      = 12;
+    test_association->iv_len         = 12;
+    test_association->ecs_len        = 1;
+    test_association->shplf_len      = 1;
+    test_association->arsnw_len      = 1;
+    test_association->arsnw          = 5;
+    test_association->arsn_len       = 0;
+    test_association->shsnf_len      = 0;
+    test_association->abm_len        = ABM_SIZE;
+    test_association->ecs            = CRYPTO_CIPHER_AES256_GCM;
     test_association->gvcid_blk.tfvn = 0;
     // Insert key into keyring of SA 9
     hex_conversion(buffer_nist_key_h, (char **)&buffer_nist_key_b, &buffer_nist_key_len);
@@ -221,21 +221,21 @@ UTEST(TC_PROCESS, EXERCISE_ARSN)
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
-    test_association->sa_state = SA_OPERATIONAL;
-    test_association->ecs_len   = 1;
-    test_association->ecs       = CRYPTO_CIPHER_NONE;
-    test_association->acs_len   = 1;
-    test_association->acs       = CRYPTO_MAC_CMAC_AES256;
-    test_association->est       = 0;
-    test_association->ast       = 1;
-    test_association->shivf_len = 0;
-    test_association->iv_len    = 0;
-    test_association->shsnf_len = 2;
-    test_association->arsn_len  = 2;
-    test_association->arsnw     = 5;
-    test_association->abm_len   = 1024;
-    test_association->akid      = 136;
-    test_association->ekid      = 0;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ecs_len        = 1;
+    test_association->ecs            = CRYPTO_CIPHER_NONE;
+    test_association->acs_len        = 1;
+    test_association->acs            = CRYPTO_MAC_CMAC_AES256;
+    test_association->est            = 0;
+    test_association->ast            = 1;
+    test_association->shivf_len      = 0;
+    test_association->iv_len         = 0;
+    test_association->shsnf_len      = 2;
+    test_association->arsn_len       = 2;
+    test_association->arsnw          = 5;
+    test_association->abm_len        = 1024;
+    test_association->akid           = 136;
+    test_association->ekid           = 0;
     test_association->gvcid_blk.tfvn = 0;
     // memset(test_association->abm, 0x00, (test_association->abm_len * sizeof(uint8_t)));
     test_association->stmacf_len = 16;
@@ -694,12 +694,12 @@ UTEST(TC_PROCESS, HAPPY_PATH_DECRYPT_CBC)
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association;
     sa_if->sa_get_from_spi(11, &test_association);
-    test_association->arsn_len   = 0;
-    test_association->shsnf_len  = 0;
-    test_association->ast        = 0;
-    test_association->stmacf_len = 0;
-    test_association->ekid       = 130;
-    test_association->sa_state   = SA_OPERATIONAL;
+    test_association->arsn_len       = 0;
+    test_association->shsnf_len      = 0;
+    test_association->ast            = 0;
+    test_association->stmacf_len     = 0;
+    test_association->ekid           = 130;
+    test_association->sa_state       = SA_OPERATIONAL;
     test_association->gvcid_blk.tfvn = 0;
 
     crypto_key_t *ekp = NULL;
@@ -777,12 +777,12 @@ UTEST(TC_PROCESS, DECRYPT_CBC_1B)
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association;
     sa_if->sa_get_from_spi(11, &test_association);
-    test_association->arsn_len   = 0;
-    test_association->shsnf_len  = 0;
-    test_association->ast        = 0;
-    test_association->stmacf_len = 0;
-    test_association->ekid       = 130;
-    test_association->sa_state   = SA_OPERATIONAL;
+    test_association->arsn_len       = 0;
+    test_association->shsnf_len      = 0;
+    test_association->ast            = 0;
+    test_association->stmacf_len     = 0;
+    test_association->ekid           = 130;
+    test_association->sa_state       = SA_OPERATIONAL;
     test_association->gvcid_blk.tfvn = 0;
 
     crypto_key_t *ekp = NULL;
@@ -860,12 +860,12 @@ UTEST(TC_PROCESS, DECRYPT_CBC_16B)
     // Expose/setup SAs for testing
     SecurityAssociation_t *test_association;
     sa_if->sa_get_from_spi(11, &test_association);
-    test_association->arsn_len   = 0;
-    test_association->shsnf_len  = 0;
-    test_association->ast        = 0;
-    test_association->stmacf_len = 0;
-    test_association->sa_state   = SA_OPERATIONAL;
-    test_association->ekid       = 130;
+    test_association->arsn_len       = 0;
+    test_association->shsnf_len      = 0;
+    test_association->ast            = 0;
+    test_association->stmacf_len     = 0;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ekid           = 130;
     test_association->gvcid_blk.tfvn = 0;
 
     crypto_key_t *ekp = NULL;
@@ -989,24 +989,24 @@ UTEST(TC_PROCESS, GCM_IV_AND_ARSN)
     test_association->sa_state = SA_NONE;
     // Activate SA 9
     sa_if->sa_get_from_spi(9, &test_association);
-    test_association->sa_state   = SA_OPERATIONAL;
-    test_association->ecs_len    = 1;
-    test_association->ecs        = CRYPTO_CIPHER_AES256_GCM;
-    test_association->acs        = CRYPTO_MAC_HMAC_SHA256;
-    test_association->shsnf_len  = 2;
-    test_association->arsn_len   = 2;
-    test_association->arsnw      = 5;
-    test_association->est        = 1;
-    test_association->ast        = 1;
-    test_association->ekid       = 136;
-    test_association->akid       = 0;
-    test_association->shivf_len  = 12;
-    test_association->iv_len     = 12;
-    test_association->shplf_len  = 0;
-    test_association->arsnw_len  = 1;
-    test_association->stmacf_len = 0;
-    test_association->abm_len    = 1024;
-    test_association->stmacf_len = 16;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ecs_len        = 1;
+    test_association->ecs            = CRYPTO_CIPHER_AES256_GCM;
+    test_association->acs            = CRYPTO_MAC_HMAC_SHA256;
+    test_association->shsnf_len      = 2;
+    test_association->arsn_len       = 2;
+    test_association->arsnw          = 5;
+    test_association->est            = 1;
+    test_association->ast            = 1;
+    test_association->ekid           = 136;
+    test_association->akid           = 0;
+    test_association->shivf_len      = 12;
+    test_association->iv_len         = 12;
+    test_association->shplf_len      = 0;
+    test_association->arsnw_len      = 1;
+    test_association->stmacf_len     = 0;
+    test_association->abm_len        = 1024;
+    test_association->stmacf_len     = 16;
     test_association->gvcid_blk.tfvn = 0;
 
     // Insert key into keyring of SA 9
@@ -1486,7 +1486,7 @@ UTEST(TC_PROCESS, TC_PROCESS_IGNORE_SA_STATE)
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
 
-//202c5026000014000000000000000000000013509e78a6ab914dff4d120ea4185622993f210857
+// 202c5026000014000000000000000000000013509e78a6ab914dff4d120ea4185622993f210857
 
 UTEST(TC_PROCESS, TC_PROCESS_CHECK_FECF)
 {
@@ -1550,12 +1550,12 @@ UTEST(TC_PROCESS, IV_REUSE)
 
     SecurityAssociation_t *sa_ptr;
     sa_if->sa_get_from_spi(4, &sa_ptr);
-    sa_ptr->sa_state = SA_OPERATIONAL;
-    sa_ptr->abm_len  = 1024;
-    sa_ptr->ast = 0;
-    sa_ptr->shsnf_len = 0;
-    sa_ptr->arsn_len = 0;
-    sa_ptr->iv[11] = 0x00;
+    sa_ptr->sa_state   = SA_OPERATIONAL;
+    sa_ptr->abm_len    = 1024;
+    sa_ptr->ast        = 0;
+    sa_ptr->shsnf_len  = 0;
+    sa_ptr->arsn_len   = 0;
+    sa_ptr->iv[11]     = 0x00;
     sa_ptr->stmacf_len = 0;
 
     TC_t *tc_sdls_processed_frame;

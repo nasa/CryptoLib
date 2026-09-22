@@ -639,7 +639,7 @@ UTEST(TC_APPLY_SECURITY, NULL_BUFFER)
 UTEST(TC_APPLY_SECURITY, INVALID_FRAME_SIZE)
 {
     remove("sa_save_file.bin");
-    int32_t  status        = CRYPTO_LIB_ERROR;
+    int32_t status = CRYPTO_LIB_ERROR;
     // uint8_t *ptr_enc_frame = NULL;
     // uint16_t enc_frame_len = 0;
     // Setup & Initialize CryptoLib

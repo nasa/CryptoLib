@@ -834,7 +834,8 @@ int32_t Crypto_Config_Cam(uint8_t cam_enabled, char *cookie_file_path, char *key
         return CRYPTO_LIB_ERROR;
     }
 
-    if (!cookie_file_path || !access_manager_uri || !username || !cam_home || (login_method == CAM_LOGIN_KEYTAB_FILE && keytab_file_path == NULL))
+    if (!cookie_file_path || !access_manager_uri || !username || !cam_home ||
+        (login_method == CAM_LOGIN_KEYTAB_FILE && keytab_file_path == NULL))
     {
         free(cam_config);
         cam_config = NULL;
@@ -848,7 +849,8 @@ int32_t Crypto_Config_Cam(uint8_t cam_enabled, char *cookie_file_path, char *key
         return CAM_CONFIG_NOT_SUPPORTED_ERROR;
     }
 
-    if (login_method == CAM_LOGIN_KEYTAB_FILE && keytab_file_path != NULL && Crypto_is_safe_path(keytab_file_path) != CRYPTO_LIB_SUCCESS)
+    if (login_method == CAM_LOGIN_KEYTAB_FILE && keytab_file_path != NULL &&
+        Crypto_is_safe_path(keytab_file_path) != CRYPTO_LIB_SUCCESS)
     {
         free(cam_config);
         cam_config = NULL;
@@ -976,7 +978,7 @@ int32_t crypto_free_config_structs(void)
     crypto_config_tc.init_status     = UNINITIALIZED;
     crypto_config_tm.init_status     = UNINITIALIZED;
     crypto_config_aos.init_status    = UNINITIALIZED;
-    
+
     // Config structs with char* types that are malloc'd and must be freed individually.
     if (sa_mariadb_config != NULL)
     {

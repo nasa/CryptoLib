@@ -1584,7 +1584,8 @@ int32_t Crypto_TC_Do_Decrypt(uint8_t sa_service_type, uint8_t ecs_is_aead_algori
                 cam_cookies                                    //
             );
         }
-        if (status == CRYPTO_LIB_SUCCESS && (sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
+        if (status == CRYPTO_LIB_SUCCESS &&
+            (sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
         {
             if (crypto_config_global.key_type != KEY_TYPE_KMC)
             {
@@ -1622,7 +1623,8 @@ int32_t Crypto_TC_Do_Decrypt(uint8_t sa_service_type, uint8_t ecs_is_aead_algori
                 // Get Padding Amount from ingest frame
                 padding_amount = (int)ingest[padding_location];
                 // Remove Padding from final decrypted portion
-                if ((tc_sdls_processed_frame->tc_pdu_len - padding_amount) > tc_current_managed_parameters_struct.max_frame_size)
+                if ((tc_sdls_processed_frame->tc_pdu_len - padding_amount) >
+                    tc_current_managed_parameters_struct.max_frame_size)
                 {
                     Crypto_TC_Safe_Free_Ptr(aad);
                     status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW;
@@ -1665,7 +1667,8 @@ int32_t Crypto_TC_Process_Sanity_Check(int *len_ingest)
         // Can't mc_log since it's not configured
         return status; // return immediately so a NULL crypto_config is not dereferenced later
     }
-    if ((*len_ingest < TC_FRAME_HEADER_SIZE) && (status == CRYPTO_LIB_SUCCESS)) // Frame length doesn't even have enough bytes for header -- error out.
+    if ((*len_ingest < TC_FRAME_HEADER_SIZE) &&
+        (status == CRYPTO_LIB_SUCCESS)) // Frame length doesn't even have enough bytes for header -- error out.
     {
         status = CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_TC_STANDARD;
         mc_if->mc_log(status);
@@ -2033,7 +2036,6 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
         mc_if->mc_log(status);
         return status;
     }
-    
 
 #ifdef TC_DEBUG
     printf("vcid = %d \n", tc_sdls_processed_frame->tc_header.vcid);
