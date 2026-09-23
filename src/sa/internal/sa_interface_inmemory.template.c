@@ -1425,18 +1425,8 @@ static int32_t sa_create(TC_t *tc_frame)
     uint16_t pdu_data_len = 0;
     int      x;
 
-    if ((sdls_frame.tlv_pdu.hdr.pdu_len % BYTE_LEN) != 0)
-    {
-        return CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
-    }
-
-    pdu_data_len = sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN;
-    if ((pdu_data_len < count) || (pdu_data_len > TLV_DATA_SIZE))
-    {
-        return CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
-    }
-
-    // Read sdls_frame.tlv_pdu.data
+    // Read the target SPI first so Create SA preserves the existing
+    // control-SPI rejection precedence before parsing the remaining PDU.
     spi = ((uint8_t)sdls_frame.tlv_pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.tlv_pdu.data[1];
 #ifdef DEBUG
     printf("spi = %d \n", spi);
@@ -1450,6 +1440,17 @@ static int32_t sa_create(TC_t *tc_frame)
 #endif
         status = CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI;
         return status;
+    }
+
+    if ((sdls_frame.tlv_pdu.hdr.pdu_len % BYTE_LEN) != 0)
+    {
+        return CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
+    }
+
+    pdu_data_len = sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN;
+    if ((pdu_data_len < count) || (pdu_data_len > TLV_DATA_SIZE))
+    {
+        return CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
     }
 
     // Check if valid SPI
