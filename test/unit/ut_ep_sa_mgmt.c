@@ -24,8 +24,8 @@ UTEST(EP_SA_MGMT, SA_CREATE_PRESERVES_FULL_IV_LENGTH)
 
     SaInterface            sa_if = get_sa_interface_inmemory();
     SecurityAssociation_t *sa_ptr;
-    TC_t                    tc_frame = {0};
-    const uint16_t          target_spi = 20;
+    TC_t                   tc_frame   = {0};
+    const uint16_t         target_spi = 20;
 
     status = sa_if->sa_get_from_spi(target_spi, &sa_ptr);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -57,6 +57,7 @@ UTEST(EP_SA_MGMT, SA_CREATE_PRESERVES_FULL_IV_LENGTH)
     sdls_frame.tlv_pdu.data[24] = 0; // ARSN window length
 
     tc_frame.tc_sec_header.spi = 0;
+
     status = Crypto_PDU(NULL, &tc_frame);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
@@ -90,11 +91,11 @@ UTEST(EP_SA_MGMT, SA_CREATE_REJECTS_IV_LENGTH_INVERSION_ATOMICALLY)
     int status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-    SaInterface             sa_if = get_sa_interface_inmemory();
-    SecurityAssociation_t  *sa_ptr;
-    SecurityAssociation_t   original_sa;
-    TC_t                     tc_frame = {0};
-    const uint16_t           target_spi = 21;
+    SaInterface            sa_if = get_sa_interface_inmemory();
+    SecurityAssociation_t *sa_ptr;
+    SecurityAssociation_t  original_sa;
+    TC_t                   tc_frame   = {0};
+    const uint16_t         target_spi = 21;
 
     status = sa_if->sa_get_from_spi(target_spi, &sa_ptr);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -116,22 +117,23 @@ UTEST(EP_SA_MGMT, SA_CREATE_REJECTS_IV_LENGTH_INVERSION_ATOMICALLY)
     sdls_frame.tlv_pdu.hdr.pid     = PID_CREATE_SA;
     sdls_frame.tlv_pdu.hdr.pdu_len = 14 * BYTE_LEN;
 
-    sdls_frame.tlv_pdu.data[0] = (target_spi >> BYTE_LEN) & 0xFF;
-    sdls_frame.tlv_pdu.data[1] = target_spi & 0xFF;
-    sdls_frame.tlv_pdu.data[2] = 0x80 | 12; // Transmitted IV width = 12
-    sdls_frame.tlv_pdu.data[3] = 0;
-    sdls_frame.tlv_pdu.data[4] = 0;
-    sdls_frame.tlv_pdu.data[5] = 1;
-    sdls_frame.tlv_pdu.data[6] = CRYPTO_CIPHER_AES256_GCM;
-    sdls_frame.tlv_pdu.data[7] = 1; // Full IV length = 1: invalid because 12 > 1
-    sdls_frame.tlv_pdu.data[8] = 0x57;
-    sdls_frame.tlv_pdu.data[9] = 0;
+    sdls_frame.tlv_pdu.data[0]  = (target_spi >> BYTE_LEN) & 0xFF;
+    sdls_frame.tlv_pdu.data[1]  = target_spi & 0xFF;
+    sdls_frame.tlv_pdu.data[2]  = 0x80 | 12; // Transmitted IV width = 12
+    sdls_frame.tlv_pdu.data[3]  = 0;
+    sdls_frame.tlv_pdu.data[4]  = 0;
+    sdls_frame.tlv_pdu.data[5]  = 1;
+    sdls_frame.tlv_pdu.data[6]  = CRYPTO_CIPHER_AES256_GCM;
+    sdls_frame.tlv_pdu.data[7]  = 1; // Full IV length = 1: invalid because 12 > 1
+    sdls_frame.tlv_pdu.data[8]  = 0x57;
+    sdls_frame.tlv_pdu.data[9]  = 0;
     sdls_frame.tlv_pdu.data[10] = 0;
     sdls_frame.tlv_pdu.data[11] = 0;
     sdls_frame.tlv_pdu.data[12] = 0;
     sdls_frame.tlv_pdu.data[13] = 0;
 
     tc_frame.tc_sec_header.spi = 0;
+
     status = Crypto_PDU(NULL, &tc_frame);
     ASSERT_EQ(CRYPTO_LIB_ERR_INVALID_SA_IV_CONFIG, status);
 
@@ -158,11 +160,11 @@ UTEST(EP_SA_MGMT, SA_CREATE_REJECTS_TRUNCATED_IV_ATOMICALLY)
     int status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-    SaInterface             sa_if = get_sa_interface_inmemory();
-    SecurityAssociation_t  *sa_ptr;
-    SecurityAssociation_t   original_sa;
-    TC_t                     tc_frame = {0};
-    const uint16_t           target_spi = 23;
+    SaInterface            sa_if = get_sa_interface_inmemory();
+    SecurityAssociation_t *sa_ptr;
+    SecurityAssociation_t  original_sa;
+    TC_t                   tc_frame   = {0};
+    const uint16_t         target_spi = 23;
 
     status = sa_if->sa_get_from_spi(target_spi, &sa_ptr);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -188,6 +190,7 @@ UTEST(EP_SA_MGMT, SA_CREATE_REJECTS_TRUNCATED_IV_ATOMICALLY)
     sdls_frame.tlv_pdu.data[8] = 0xBB;
 
     tc_frame.tc_sec_header.spi = 0;
+
     status = Crypto_PDU(NULL, &tc_frame);
     ASSERT_EQ(CRYPTO_LIB_ERR_BAD_TLV_LENGTH, status);
 
@@ -214,11 +217,11 @@ UTEST(EP_SA_MGMT, SA_CREATE_REJECTS_UNREPRESENTABLE_ARSNW_ATOMICALLY)
     int status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-    SaInterface             sa_if = get_sa_interface_inmemory();
-    SecurityAssociation_t  *sa_ptr;
-    SecurityAssociation_t   original_sa;
-    TC_t                     tc_frame = {0};
-    const uint16_t           target_spi = 24;
+    SaInterface            sa_if = get_sa_interface_inmemory();
+    SecurityAssociation_t *sa_ptr;
+    SecurityAssociation_t  original_sa;
+    TC_t                   tc_frame   = {0};
+    const uint16_t         target_spi = 24;
 
     status = sa_if->sa_get_from_spi(target_spi, &sa_ptr);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -250,6 +253,7 @@ UTEST(EP_SA_MGMT, SA_CREATE_REJECTS_UNREPRESENTABLE_ARSNW_ATOMICALLY)
     sdls_frame.tlv_pdu.data[14] = 0x03;
 
     tc_frame.tc_sec_header.spi = 0;
+
     status = Crypto_PDU(NULL, &tc_frame);
     ASSERT_EQ(CRYPTO_LIB_ERR_BAD_TLV_LENGTH, status);
 

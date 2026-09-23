@@ -1511,9 +1511,8 @@ static int32_t sa_create(TC_t *tc_frame)
             temp_sa.acs = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
         }
 
-        temp_sa.abm_len =
-            (uint8_t)((sdls_frame.tlv_pdu.data[count] << BYTE_LEN) | sdls_frame.tlv_pdu.data[count + 1]);
-        count = count + 2;
+        temp_sa.abm_len = (uint8_t)((sdls_frame.tlv_pdu.data[count] << BYTE_LEN) | sdls_frame.tlv_pdu.data[count + 1]);
+        count           = count + 2;
         if (temp_sa.abm_len > ABM_SIZE)
         {
             return CRYPTO_LIB_ERR_ABM_LEN_GREATER_THAN_MAX_ABM_SIZE;
@@ -1553,8 +1552,7 @@ static int32_t sa_create(TC_t *tc_frame)
         temp_sa.arsnw = 0;
         for (x = 0; x < temp_sa.arsnw_len; x++)
         {
-            temp_sa.arsnw =
-                temp_sa.arsnw | (((uint8_t)sdls_frame.tlv_pdu.data[count++]) << (temp_sa.arsnw_len - x));
+            temp_sa.arsnw = temp_sa.arsnw | (((uint8_t)sdls_frame.tlv_pdu.data[count++]) << (temp_sa.arsnw_len - x));
         }
 
         // Set state to unkeyed
@@ -1861,8 +1859,7 @@ int32_t sa_verify_data(SecurityAssociation_t *sa_ptr)
     {
         status = CRYPTO_LIB_ERR_SHIVF_LEN_GREATER_THAN_MAX_IV_SIZE;
     }
-    if ((status == CRYPTO_LIB_SUCCESS) &&
-        ((sa_ptr->iv_len > IV_SIZE) || (sa_ptr->shivf_len > sa_ptr->iv_len)))
+    if ((status == CRYPTO_LIB_SUCCESS) && ((sa_ptr->iv_len > IV_SIZE) || (sa_ptr->shivf_len > sa_ptr->iv_len)))
     {
         status = CRYPTO_LIB_ERR_INVALID_SA_IV_CONFIG;
     }
