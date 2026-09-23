@@ -115,7 +115,21 @@ char *crypto_enum_errlist_core[] = {(char *)"CRYPTO_LIB_SUCCESS",
                                     (char *)"CRYPTO_LIB_ERR_TC_FRAME_LENGTH_MISMATCH",
                                     (char *)"CRYPTO_LIB_ERR_SHPLF_LEN_LESS_THAN_MIN_PAD_SIZE",
                                     (char *)"CRYPTO_LIB_ERR_INVALID_AOS_IZ_LENGTH",
-                                    (char *)"CRYPTO_LIB_ERR_INVALID_AOS_FRAME_LENGTH"};
+                                    (char *)"CRYPTO_LIB_ERR_INVALID_AOS_FRAME_LENGTH",
+                                    (char *)"CRYPTO_LIB_ERR_TM_FRAME_SIZE_EXCEEDS_SPEC_LIMIT",
+                                    (char *)"CRYPTO_LIB_ERR_AOS_FRAME_SIZE_EXCEEDS_SPEC_LIMIT",
+                                    (char *)"CRYPTO_LIB_ERR_AOS_FL_GT_MAX_FRAME_SIZE",
+                                    (char *)"CRYPTO_LIB_ERR_TM_FL_GT_MAX_FRAME_SIZE",
+                                    (char *)"CRYPTO_LIB_ERR_TM_APPLY_PADDING",
+                                    (char *)"CRYPTO_LIB_ERR_BUFFER_SIZE",
+                                    (char *)"CRYPTO_LIB_ERR_AOS_APPLY_PADDING",
+                                    (char *)"CRYPTO_LIB_ERR_INVALID_SA_IV_CONFIG",
+                                    (char *)"CRYPTO_LIB_ERR_INVALID_SA_ARSN_CONFIG",
+                                    (char *)"CRYPTO_LIB_ERR_TM_MAN_PARAM_FL_TOO_SHORT",
+                                    (char *)"CRYPTO_LIB_ERR_AOS_MAN_PARAM_FL_TOO_SHORT",
+                                    (char *)"CRYPTO_LIB_ERR_TM_FRAME_TOO_SHORT",
+                                    (char *)"CRYPTO_LIB_ERR_AOS_FRAME_TOO_SHORT",
+                                    (char *)"CRYPTO_LIB_ERR_SA_GVCID_DOESNT_MATCH_FRAME"};
 
 char *crypto_enum_errlist_config[] = {
     (char *)"CRYPTO_CONFIGURATION_NOT_COMPLETE",
@@ -156,6 +170,7 @@ char *crypto_enum_errlist_crypto_kmc[] = {
     (char *)"CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_DECRYPT_ERROR",
     (char *)"CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_ENCRYPT_ERROR",
     (char *)"CRYPTOGRAHPY_KMC_BASE64_DECRYPT_ERROR",
+    (char *)"CRYPTOGRAHPY_KMC_BASE64URL_DECRYPT_ERROR",
 };
 
 char *crypto_enum_errlist_crypto_cam[] = {

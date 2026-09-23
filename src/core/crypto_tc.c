@@ -738,7 +738,7 @@ int32_t Crypto_TC_Check_Init_Setup(uint16_t in_frame_length)
         return status; // return immediately so a NULL crypto_config is not dereferenced later
     }
 
-    if (in_frame_length < 5) // Frame length doesn't have enough bytes for TC TF header -- error out.
+    if (in_frame_length < TC_FRAME_HEADER_SIZE) // Frame length doesn't have enough bytes for TC TF header -- error out.
     {
         status = CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_TC_STANDARD;
         mc_if->mc_log(status);
@@ -829,8 +829,17 @@ int32_t Crytpo_TC_Validate_TC_Temp_Header(const uint16_t in_frame_length, TC_Fra
 
     if (tc_current_managed_parameters_struct.has_segmentation_hdr == TC_HAS_SEGMENT_HDRS)
     {
-        *segmentation_hdr = p_in_frame[5];
-        *map_id           = *segmentation_hdr & 0x3F;
+        if (in_frame_length < 6) // Frame length doesn't have enough bytes for segmentation header -- error out.
+        {
+            status = CRYPTO_LIB_ERR_INPUT_FRAME_LENGTH_SHORTER_THAN_FRAME_HEADERS_LENGTH;
+            mc_if->mc_log(status);
+            return status;
+        }
+        else
+        {
+            *segmentation_hdr = p_in_frame[5];
+            *map_id           = *segmentation_hdr & 0x3F;
+        }
     }
     // Check if command frame flag set
     status = Crypto_TC_Check_CMD_Frame_Flag(temp_tc_header.cc);
@@ -1069,6 +1078,10 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, const uint16_t in
     {
         status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_MISMATCH;
         mc_if->mc_log(status);
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+        {
+            free(sa_ptr);
+        }
         return status;
     }
 
@@ -1292,6 +1305,10 @@ int32_t Crypto_TC_ApplySecurity_Cam(const uint8_t *p_in_frame, const uint16_t in
     *pp_in_frame = p_new_enc_frame;
 
     status = sa_if->sa_save_sa(sa_ptr);
+    if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+    {
+        free(sa_ptr);
+    }
 
 #ifdef DEBUG
     printf(KYEL "----- Crypto_TC_ApplySecurity END -----\n" RESET);
@@ -1567,7 +1584,8 @@ int32_t Crypto_TC_Do_Decrypt(uint8_t sa_service_type, uint8_t ecs_is_aead_algori
                 cam_cookies                                    //
             );
         }
-        if (sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
+        if (status == CRYPTO_LIB_SUCCESS &&
+            (sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
         {
             if (crypto_config_global.key_type != KEY_TYPE_KMC)
             {
@@ -1605,6 +1623,14 @@ int32_t Crypto_TC_Do_Decrypt(uint8_t sa_service_type, uint8_t ecs_is_aead_algori
                 // Get Padding Amount from ingest frame
                 padding_amount = (int)ingest[padding_location];
                 // Remove Padding from final decrypted portion
+                if ((tc_sdls_processed_frame->tc_pdu_len - padding_amount) >
+                    tc_current_managed_parameters_struct.max_frame_size)
+                {
+                    Crypto_TC_Safe_Free_Ptr(aad);
+                    status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW;
+                    mc_if->mc_log(status);
+                    return status;
+                }
                 tc_sdls_processed_frame->tc_pdu_len -= padding_amount;
             }
         }
@@ -1641,7 +1667,7 @@ int32_t Crypto_TC_Process_Sanity_Check(int *len_ingest)
         // Can't mc_log since it's not configured
         return status; // return immediately so a NULL crypto_config is not dereferenced later
     }
-    if ((*len_ingest < 5) &&
+    if ((*len_ingest < TC_FRAME_HEADER_SIZE) &&
         (status == CRYPTO_LIB_SUCCESS)) // Frame length doesn't even have enough bytes for header -- error out.
     {
         status = CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_TC_STANDARD;
@@ -1844,6 +1870,21 @@ uint32_t Crypto_TC_Sanity_Validations(TC_t *tc_sdls_processed_frame, SecurityAss
     if (status != CRYPTO_LIB_SUCCESS)
     {
         mc_if->mc_log(status);
+        return status;
+    }
+
+#ifdef DEBUG
+    printf("TFVN SA(%d) == FRAME(%d)?\n", (*sa_ptr)->gvcid_blk.tfvn, tc_sdls_processed_frame->tc_header.tfvn);
+    printf("SCID SA(%d) == FRAME(%d)?\n", (*sa_ptr)->gvcid_blk.scid, tc_sdls_processed_frame->tc_header.scid);
+    printf("VCID SA(%d) == FRAME(%d)?\n", (*sa_ptr)->gvcid_blk.vcid, tc_sdls_processed_frame->tc_header.vcid);
+#endif
+
+    if ((*sa_ptr)->gvcid_blk.tfvn != tc_sdls_processed_frame->tc_header.tfvn ||
+        (*sa_ptr)->gvcid_blk.scid != tc_sdls_processed_frame->tc_header.scid ||
+        (*sa_ptr)->gvcid_blk.vcid != tc_sdls_processed_frame->tc_header.vcid)
+    {
+        status = CRYPTO_LIB_ERR_SA_GVCID_DOESNT_MATCH_FRAME;
+        mc_if->mc_log(status);
     }
 
     return status;
@@ -1983,9 +2024,18 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
     // Segment Header
     Crypto_TC_Set_Segment_Header(tc_sdls_processed_frame, ingest, &byte_idx);
 
-    // Security Header
-    tc_sdls_processed_frame->tc_sec_header.spi = ((uint8_t)ingest[byte_idx] << 8) | (uint8_t)ingest[byte_idx + 1];
-    byte_idx += 2;
+    if (*len_ingest >= byte_idx + SPI_LEN)
+    {
+        // Security Header
+        tc_sdls_processed_frame->tc_sec_header.spi = ((uint8_t)ingest[byte_idx] << 8) | (uint8_t)ingest[byte_idx + 1];
+        byte_idx += 2;
+    }
+    else
+    {
+        status = CRYPTO_LIB_ERR_TC_FRAME_TOO_SHORT;
+        mc_if->mc_log(status);
+        return status;
+    }
 
 #ifdef TC_DEBUG
     printf("vcid = %d \n", tc_sdls_processed_frame->tc_header.vcid);
@@ -2128,6 +2178,10 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
     {
         Crypto_TC_Safe_Free_Ptr(aad);
         mc_if->mc_log(status);
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+        {
+            free(sa_ptr);
+        }
         return status; // Cryptography IF call failed, return.
     }
     // Now that MAC has been verified, check IV & ARSN if applicable

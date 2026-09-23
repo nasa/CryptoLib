@@ -110,6 +110,10 @@ if((KMC_MDB_DB OR KMC_MDB_RH))
     add_test(NAME UT_B64
              COMMAND ${PROJECT_BINARY_DIR}/bin/ut_b64
              WORKING_DIRECTORY ${PROJECT_TEST_DIR})
+
+    add_test(NAME UT_B64URL
+             COMMAND ${PROJECT_BINARY_DIR}/bin/ut_b64url
+             WORKING_DIRECTORY ${PROJECT_TEST_DIR})
     
     add_test(NAME UT_KMC_CRYPTO
              COMMAND ${PROJECT_BINARY_DIR}/bin/ut_kmc_crypto
@@ -194,7 +198,7 @@ if(${CODECOV})
         COMMAND ${CMAKE_MAKE_PROGRAM} test
         WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
         )
-    add_custom_command(TARGET gcov
+    add_custom_command(TARGET gcov POST_BUILD
         COMMAND echo "=================== GCOV ===================="
         #COMMAND gcov -b -o ${OBJECT_DIR} crypto_aos.c.gnco crypto_config.c.gnco crypto_key_mgmt.c.gnco crypto_mc.c.gnco crypto_print.c.gnco crypto_tc.c.gnco crypto_tm.c.gnco crypto_user.c.gnco crypto.c.gnco sa_routine_inmemory.template.c.gnco sa_routine.c.gnco
         COMMAND gcov -b -o ${OBJECT_DIR} crypto_aos.c.gnco crypto_config.c.gnco crypto_key_mgmt.c.gnco crypto_mc.c.gnco crypto_tc.c.gnco crypto_tm.c.gnco crypto_user.c.gnco crypto.c.gnco sa_routine_inmemory.template.c.gnco 

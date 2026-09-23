@@ -59,6 +59,7 @@
 #define CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_DECRYPT_ERROR              514
 #define CRYPTOGRAHPY_KMC_CRYPTO_SERVICE_ENCRYPT_ERROR              515
 #define CRYPTOGRAHPY_KMC_BASE64_DECRYPT_ERROR                      516
+#define CRYPTOGRAHPY_KMC_BASE64URL_DECRYPT_ERROR                   517
 
 #define CAM_CONFIG_NOT_SUPPORTED_ERROR                      600
 #define CAM_INVALID_COOKIE_FILE_CONFIGURATION_NULL          601
@@ -158,15 +159,29 @@
 #define CRYPTO_LIB_ERR_SHPLF_LEN_LESS_THAN_MIN_PAD_SIZE                     (-83)
 #define CRYPTO_LIB_ERR_INVALID_AOS_IZ_LENGTH                                (-84)
 #define CRYPTO_LIB_ERR_INVALID_AOS_FRAME_LENGTH                             (-85)
+#define CRYPTO_LIB_ERR_TM_FRAME_SIZE_EXCEEDS_SPEC_LIMIT                     (-86)
+#define CRYPTO_LIB_ERR_AOS_FRAME_SIZE_EXCEEDS_SPEC_LIMIT                    (-87)
+#define CRYPTO_LIB_ERR_AOS_FL_GT_MAX_FRAME_SIZE                             (-88)
+#define CRYPTO_LIB_ERR_TM_FL_GT_MAX_FRAME_SIZE                              (-89)
+#define CRYPTO_LIB_ERR_TM_APPLY_PADDING                                     (-90)
+#define CRYPTO_LIB_ERR_BUFFER_SIZE                                          (-91)
+#define CRYPTO_LIB_ERR_AOS_APPLY_PADDING                                    (-92)
+#define CRYPTO_LIB_ERR_INVALID_SA_IV_CONFIG                                 (-93)
+#define CRYPTO_LIB_ERR_INVALID_SA_ARSN_CONFIG                               (-94)
+#define CRYPTO_LIB_ERR_TM_MAN_PARAM_FL_TOO_SHORT                            (-95)
+#define CRYPTO_LIB_ERR_AOS_MAN_PARAM_FL_TOO_SHORT                           (-96)
+#define CRYPTO_LIB_ERR_TM_FRAME_TOO_SHORT                                   (-97)
+#define CRYPTO_LIB_ERR_AOS_FRAME_TOO_SHORT                                  (-98)
+#define CRYPTO_LIB_ERR_SA_GVCID_DOESNT_MATCH_FRAME                          (-99)
 
-#define CRYPTO_CORE_ERROR_CODES_MAX -85
+#define CRYPTO_CORE_ERROR_CODES_MAX -99
 
 // Define codes for returning MDB Strings, and determining error based on strings
 #define CAM_ERROR_CODES     600
 #define CAM_ERROR_CODES_MAX 610
 
 #define KMC_ERROR_CODES     500
-#define KMC_ERROR_CODES_MAX 516
+#define KMC_ERROR_CODES_MAX 517
 
 #define CRYPTO_INTERFACE_ERROR_CODES     400
 #define CRYPTO_INTERFACE_ERROR_CODES_MAX 402

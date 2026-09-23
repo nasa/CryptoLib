@@ -593,6 +593,7 @@ typedef struct
     uint16_t fhecf; // Frame header error control field
 } __attribute__((packed)) AOS_FramePrimaryHeader_t;
 #define AOS_FRAME_PRIMARYHEADER_SIZE (sizeof(AOS_FramePrimaryHeader_t))
+#define AOS_BASE_PRIMARYHEADER_SIZE  6u
 
 /*
 ** CCSDS Compliance: CCSDS 355.0-B-2 Section 4.3.1 (Security Header)
@@ -634,7 +635,7 @@ typedef struct
     uint8_t                    aos_pdu[AOS_FRAME_DATA_SIZE];
     uint16_t                   aos_pdu_len;
     AOS_FrameSecurityTrailer_t aos_sec_trailer;
-} AOS_t;
+} __attribute__((packed)) AOS_t;
 #define AOS_SIZE (sizeof(AOS_t))
 
 #define AOS_MIN_SIZE 6

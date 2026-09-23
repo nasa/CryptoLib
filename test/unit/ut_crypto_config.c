@@ -64,7 +64,7 @@ UTEST(CRYPTO_CONFIG, CRYPTO_INIT_MARIADB_NULL)
     crypto_config_p->key_type             = KEY_TYPE_INTERNAL;
     crypto_config_p->mc_type              = MC_TYPE_INTERNAL;
 
-    TCGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0000, 0, TC_NO_FECF, TC_NO_SEGMENT_HDRS, 0, 1};
+    TCGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0000, 0, TC_NO_FECF, TC_NO_SEGMENT_HDRS, 1024, 1};
     Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
 
     SadbMariaDBConfig_t                  *sa_mariadb_config_p              = NULL;

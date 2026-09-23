@@ -201,7 +201,8 @@ void base64urlDecode_rempadding(size_t inputLen, uint32_t value, size_t *n, uint
  * @return Error code
  **/
 
-int32_t base64urlDecode(const char_t *input, size_t inputLen, void *output, size_t *outputLen)
+int32_t base64urlDecode(const char_t *input, size_t inputLen, void *output, uint16_t decoded_buffer_size,
+                        size_t *outputLen)
 {
     int32_t  error;
     uint32_t value;
@@ -209,6 +210,9 @@ int32_t base64urlDecode(const char_t *input, size_t inputLen, void *output, size
     size_t   i;
     size_t   n;
     uint8_t *p;
+
+    uint16_t outputLen_expected = 0;
+    uint8_t  padding            = 0;
 
     // Check parameters
     if (input == NULL && inputLen != 0)
@@ -227,6 +231,7 @@ int32_t base64urlDecode(const char_t *input, size_t inputLen, void *output, size
     while (inputLen > 0 && input[inputLen - 1] == '=')
     {
         inputLen--;
+        padding++;
     }
 
     // Check the length of the input string
@@ -235,6 +240,11 @@ int32_t base64urlDecode(const char_t *input, size_t inputLen, void *output, size
 
     // Initialize status code
     error = NO_ERROR;
+
+    // Check expected output buffer size is large enough for decoded input
+    outputLen_expected = ((inputLen * 3) / 4) - padding;
+    if (decoded_buffer_size < outputLen_expected)
+        return ERROR_INVALID_LENGTH;
 
     // Point to the buffer where to write the decoded data
     p = (uint8_t *)output;
