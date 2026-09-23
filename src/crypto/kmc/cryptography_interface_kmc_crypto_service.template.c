@@ -241,8 +241,8 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
     int32_t status = CRYPTO_LIB_SUCCESS;
     key            = key;     // Direct key input is not supported in KMC interface
     len_key        = len_key; // Direct key input is not supported in KMC interface
-    ecs = ecs;
-    padding = padding;
+    ecs            = ecs;
+    padding        = padding;
 
     // Remove pre-padding to block (KMC does not want it)
     if (*ecs == CRYPTO_CIPHER_AES256_CBC && padding > 0)
@@ -399,10 +399,11 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
                         printf("IV ENCODED Text: %s\nIV ENCODED TEXT LEN: %ld\n", ciphertext_token_base64,
                                cipher_text_token_len);
 #endif
-                        char  *iv_decoded            = malloc((iv_len)*2 + 1);
-                        size_t iv_decoded_len        = 0;
+                        char    *iv_decoded          = malloc((iv_len)*2 + 1);
+                        size_t   iv_decoded_len      = 0;
                         uint16_t decoded_buffer_size = (iv_len)*2 + 1;
-                        if (base64urlDecode(ciphertext_token_base64, cipher_text_token_len, iv_decoded, decoded_buffer_size, &iv_decoded_len) != 0)
+                        if (base64urlDecode(ciphertext_token_base64, cipher_text_token_len, iv_decoded,
+                                            decoded_buffer_size, &iv_decoded_len) != 0)
                         {
                             free(chunk_write);
                             free(iv_decoded);
@@ -880,10 +881,10 @@ static int32_t cryptography_authenticate(uint8_t *data_out, size_t len_data_out,
             // search through metadata string for base64 ICV end idx:
             // Format:
             // "integrityCheckValue:xQgnkVrrQj8FRALV3DxnVg==,keyRef:kmc/test/nist_cmac_90,cryptoAlgorithm:AESCMAC,metadataType:IntegrityCheckMetadata"
-            uint32_t len_metadata    = t[json_idx + 1].end - t[json_idx + 1].start;
-            char    *metadata        = malloc(len_metadata + 1);
-            char    *metadata_start  = metadata;
-            char    *metadata_end    = &metadata[len_metadata];
+            uint32_t len_metadata   = t[json_idx + 1].end - t[json_idx + 1].start;
+            char    *metadata       = malloc(len_metadata + 1);
+            char    *metadata_start = metadata;
+            char    *metadata_end   = &metadata[len_metadata];
             memcpy(metadata, chunk_write->response + t[json_idx + 1].start, len_metadata);
 
             char  *key = "";
@@ -930,9 +931,9 @@ static int32_t cryptography_authenticate(uint8_t *data_out, size_t len_data_out,
 #endif
             json_idx++;
             icvtext_found = CRYPTO_TRUE;
-            
+
             metadata = metadata_start;
-            free(metadata); 
+            free(metadata);
             continue;
         }
 
@@ -977,8 +978,8 @@ static int32_t cryptography_authenticate(uint8_t *data_out, size_t len_data_out,
     /* JSON Response Handling End */
 
     // https://stackoverflow.com/questions/13378815/base64-length-calculation
-    uint8_t *icv_decoded     = calloc(1, B64DECODE_OUT_SAFESIZE(strlen(icv_base64)) + 1);
-    size_t   icv_decoded_len = 0;
+    uint8_t *icv_decoded         = calloc(1, B64DECODE_OUT_SAFESIZE(strlen(icv_base64)) + 1);
+    size_t   icv_decoded_len     = 0;
     uint16_t decoded_buffer_size = strlen(icv_base64) + 1;
     if (base64urlDecode(icv_base64, strlen(icv_base64), icv_decoded, decoded_buffer_size, &icv_decoded_len) != 0)
     {
@@ -1479,10 +1480,11 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
                         }
                         printf("\n");
 #endif
-                        char  *iv_decoded     = malloc((iv_len)*2 + 1);
-                        size_t iv_decoded_len = 0;
+                        char    *iv_decoded          = malloc((iv_len)*2 + 1);
+                        size_t   iv_decoded_len      = 0;
                         uint16_t decoded_buffer_size = (iv_len)*2 + 1;
-                        if (base64urlDecode(ciphertext_token_base64, cipher_text_token_len, iv_decoded, decoded_buffer_size, &iv_decoded_len) != 0)
+                        if (base64urlDecode(ciphertext_token_base64, cipher_text_token_len, iv_decoded,
+                                            decoded_buffer_size, &iv_decoded_len) != 0)
                         {
                             free(chunk_write);
                             free(iv_decoded);

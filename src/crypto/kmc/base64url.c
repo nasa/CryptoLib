@@ -201,7 +201,8 @@ void base64urlDecode_rempadding(size_t inputLen, uint32_t value, size_t *n, uint
  * @return Error code
  **/
 
-int32_t base64urlDecode(const char_t *input, size_t inputLen, void *output, uint16_t decoded_buffer_size, size_t *outputLen)
+int32_t base64urlDecode(const char_t *input, size_t inputLen, void *output, uint16_t decoded_buffer_size,
+                        size_t *outputLen)
 {
     int32_t  error;
     uint32_t value;

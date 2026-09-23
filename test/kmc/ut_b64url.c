@@ -71,7 +71,8 @@ void base64urlDecode_rempadding(size_t inputLen, uint32_t value, size_t *n, uint
     }
 }
 
-int32_t base64urlDecode(const char_t *input, size_t inputLen, void *output, uint16_t decoded_buffer_size, size_t *outputLen)
+int32_t base64urlDecode(const char_t *input, size_t inputLen, void *output, uint16_t decoded_buffer_size,
+                        size_t *outputLen)
 {
     int32_t  error;
     uint32_t value;
@@ -118,7 +119,7 @@ int32_t base64urlDecode(const char_t *input, size_t inputLen, void *output, uint
         Expected Dec Buf Length: %d\n \
         Passed In Dec Length: %d\n",
            inputLen, outputLen_expected, decoded_buffer_size);
-           
+
     if (decoded_buffer_size < outputLen_expected)
         return ERROR_INVALID_LENGTH;
 
@@ -190,7 +191,7 @@ UTEST(CRYPTO_B64URL, OVERSIZE_DECODE)
     uint8_t *ciphertext_decoded     = malloc(decoded_buffer_size);
     size_t   ciphertext_decoded_len = 0;
     status = base64urlDecode(ciphertext_base64, strlen(ciphertext_base64), ciphertext_decoded, decoded_buffer_size,
-                          &ciphertext_decoded_len);
+                             &ciphertext_decoded_len);
     printf("Status: %d\n\n", status);
     free(ciphertext_decoded);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -202,7 +203,7 @@ UTEST(CRYPTO_B64URL, OVERSIZE_DECODE)
     ciphertext_decoded     = malloc(decoded_buffer_size);
     ciphertext_decoded_len = 0;
     status = base64urlDecode(ciphertext_base64, strlen(ciphertext_base64), ciphertext_decoded, decoded_buffer_size,
-                          &ciphertext_decoded_len);
+                             &ciphertext_decoded_len);
     printf("Status: %d\n\n", status);
     free(ciphertext_decoded);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
@@ -214,7 +215,7 @@ UTEST(CRYPTO_B64URL, OVERSIZE_DECODE)
     ciphertext_decoded     = malloc(decoded_buffer_size);
     ciphertext_decoded_len = 0;
     status = base64urlDecode(ciphertext_base64, strlen(ciphertext_base64), ciphertext_decoded, decoded_buffer_size,
-                          &ciphertext_decoded_len);
+                             &ciphertext_decoded_len);
     printf("Status: %d\n\n", status);
     free(ciphertext_decoded);
     ASSERT_EQ(ERROR_INVALID_LENGTH, status);
@@ -226,7 +227,7 @@ UTEST(CRYPTO_B64URL, OVERSIZE_DECODE)
     ciphertext_decoded     = malloc(decoded_buffer_size);
     ciphertext_decoded_len = 0;
     status = base64urlDecode(ciphertext_base64, strlen(ciphertext_base64), ciphertext_decoded, decoded_buffer_size,
-                          &ciphertext_decoded_len);
+                             &ciphertext_decoded_len);
     printf("Status: %d\n\n", status);
     free(ciphertext_decoded);
     ASSERT_EQ(ERROR_INVALID_LENGTH, status);
