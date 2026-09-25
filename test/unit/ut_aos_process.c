@@ -2128,31 +2128,25 @@ UTEST(AOS_PROCESS, AOS_FHECF_TEST)
                       SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
     // AOS Test
     AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,  AOS_HAS_FECF, AOS_HAS_FHEC,
-                                                             AOS_NO_IZ, 0,      42, AOS_NO_OCF,   1};
+                                                             AOS_NO_IZ, 0,      24, AOS_NO_OCF,   1};
     Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
     status = Crypto_Init();
 
     // Test frame setup
-    char *framed_aos_h   = "40C000000000da840005000000000000000000000000000594DEB922DDBFAF9DCB6BDD6F5C71A978314A";
+    char *framed_aos_h   = "40C000000000da8400050000000000000000000000001EA5";
     char *framed_aos_b   = NULL;
     int   framed_aos_len = 0;
     hex_conversion(framed_aos_h, &framed_aos_b, &framed_aos_len);
 
     SecurityAssociation_t *sa_ptr = NULL;
-    SaInterface            sa_if  = get_sa_interface_inmemory();
     sa_if->sa_get_from_spi(10, &sa_ptr); // Disable SPI 10
     sa_ptr->sa_state = SA_KEYED;
     sa_if->sa_get_from_spi(5, &sa_ptr); // Enable and setup 5
-    sa_ptr->sa_state       = SA_OPERATIONAL;
-    sa_ptr->est            = 1;
-    sa_ptr->ecs            = CRYPTO_CIPHER_AES256_GCM;
-    sa_ptr->ast            = 1;
-    sa_ptr->arsn_len       = 2;
-    sa_ptr->shsnf_len      = 2;
-    sa_ptr->shivf_len      = 12;
-    sa_ptr->iv_len         = 12;
-    sa_ptr->abm_len        = 26;
-    sa_ptr->stmacf_len     = 16;
+    sa_ptr->sa_state  = SA_OPERATIONAL;
+    sa_ptr->est       = 1;
+    sa_ptr->ecs       = CRYPTO_CIPHER_AES256_GCM;
+    sa_ptr->arsn_len  = 0;
+    sa_ptr->shsnf_len = 0;
     sa_ptr->gvcid_blk.scid = 3;
     sa_ptr->gvcid_blk.vcid = 0;
     sa_ptr->gvcid_blk.tfvn = 1;

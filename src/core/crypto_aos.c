@@ -361,6 +361,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     pTfBuffer[idx]     = ((sa_ptr->spi & 0xFF00) >> 8);
     pTfBuffer[idx + 1] = (sa_ptr->spi & 0x00FF);
     idx += 2;
+    printf("idx at %d after setting spi\n", idx);
 
     // Set initialization vector if specified
 #ifdef SA_DEBUG
@@ -412,6 +413,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         pTfBuffer[idx] = *(sa_ptr->iv + i);
         idx++;
     }
+    printf("idx at %d after setting iv\n", idx);
 
     // Set anti-replay sequence number if specified
     /**
@@ -426,6 +428,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         pTfBuffer[idx] = *(sa_ptr->arsn + i);
         idx++;
     }
+    printf("idx at %d after setting arsn\n", idx);
 
     // Set security header padding if specified
     /**
@@ -471,6 +474,10 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     // Calculate size of data to be encrypted
     pdu_len = len_ingest - idx - sa_ptr->stmacf_len;
 
+    printf("len_ingest = %d\n", len_ingest);
+    printf("idx = %d\n", idx);
+    printf("stmacf_len = %d\n", sa_ptr->stmacf_len);
+
     if (aos_current_managed_parameters_struct.max_frame_size < idx - sa_ptr->stmacf_len)
     {
         status = CRYPTO_LIB_ERR_AOS_FRAME_LENGTH_UNDERFLOW;
@@ -498,7 +505,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
 #ifdef AOS_DEBUG
     printf(KYEL "Data location starts at: %d\n" RESET, idx);
     printf(KYEL "Data size is: %d\n" RESET, pdu_len);
-    printf(KYEL "Index at end of SPI is: %d\n", idx);
+    printf(KYEL "Index at end of SPI is: %d\n", idx - sa_ptr->shsnf_len - sa_ptr->shivf_len - sa_ptr->shplf_len);
     if (aos_current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
     {
         // If OCF exists, comes immediately after MAC
@@ -1572,7 +1579,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
 #endif
         if (sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
         {
-            aad_len = iv_loc + sa_ptr->shivf_len;
+            aad_len = iv_loc + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;
         }
         else
         {
