@@ -361,7 +361,6 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     pTfBuffer[idx]     = ((sa_ptr->spi & 0xFF00) >> 8);
     pTfBuffer[idx + 1] = (sa_ptr->spi & 0x00FF);
     idx += 2;
-    printf("idx at %d after setting spi\n", idx);
 
     // Set initialization vector if specified
 #ifdef SA_DEBUG
@@ -413,7 +412,6 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         pTfBuffer[idx] = *(sa_ptr->iv + i);
         idx++;
     }
-    printf("idx at %d after setting iv\n", idx);
 
     // Set anti-replay sequence number if specified
     /**
@@ -428,7 +426,6 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         pTfBuffer[idx] = *(sa_ptr->arsn + i);
         idx++;
     }
-    printf("idx at %d after setting arsn\n", idx);
 
     // Set security header padding if specified
     /**
@@ -473,10 +470,6 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     data_loc = idx;
     // Calculate size of data to be encrypted
     pdu_len = len_ingest - idx - sa_ptr->stmacf_len;
-
-    printf("len_ingest = %d\n", len_ingest);
-    printf("idx = %d\n", idx);
-    printf("stmacf_len = %d\n", sa_ptr->stmacf_len);
 
     if (aos_current_managed_parameters_struct.max_frame_size < idx - sa_ptr->stmacf_len)
     {
@@ -625,7 +618,9 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
             if (sa_ptr->abm_len < aad_len)
             {
                 status = CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
+#ifdef AOS_DEBUG
                 printf(KRED "Error: abm_len of %d < aad_len of %d\n" RESET, sa_ptr->abm_len, aad_len);
+#endif
                 mc_if->mc_log(status);
                 return status;
             }
