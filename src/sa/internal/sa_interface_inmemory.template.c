@@ -1297,8 +1297,11 @@ static int32_t sa_rekey(TC_t *tc_frame)
         { // Encryption Key
             sa[spi].ekid =
                 ((uint8_t)sdls_frame.tlv_pdu.data[count] << BYTE_LEN) | (uint8_t)sdls_frame.tlv_pdu.data[count + 1];
-            count = count + 2;
+                count = count + 2;
+            sa[spi].akid =
+                ((uint8_t)sdls_frame.tlv_pdu.data[count] << BYTE_LEN) | (uint8_t)sdls_frame.tlv_pdu.data[count + 1];
 
+                count = count + 2;
             // Anti-Replay Seq Num
 #ifdef PDU_DEBUG
             printf("SPI %d IV updated to: 0x", spi);
@@ -1453,6 +1456,15 @@ static int32_t sa_create(TC_t *tc_frame)
         // 5-8 : Procedure Identification Field (pid)
         temp_sa->lpid = (sdls_frame.tlv_pdu.hdr.type << 7) | (sdls_frame.tlv_pdu.hdr.uf << 6) |
                         (sdls_frame.tlv_pdu.hdr.sg << 4) | sdls_frame.tlv_pdu.hdr.pid;
+        
+        // check that the sa state is NONE
+        if (temp_sa->sa_state != SA_NONE)
+        {
+#ifdef DEBUG
+            printf(KRED "ERROR: SPI %d is not in the NONE state.\n" RESET, spi);
+#endif
+            return CRYPTO_LIB_ERROR_SA;
+        }
 
         // Write SA Configuration
         temp_sa->est        = ((uint8_t)sdls_frame.tlv_pdu.data[2] & 0x80) >> 7;
@@ -1466,8 +1478,8 @@ static int32_t sa_create(TC_t *tc_frame)
         {
             temp_sa->ecs = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
         }
-        temp_sa->shivf_len = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
-        for (x = 0; x < temp_sa->shivf_len; x++)
+        temp_sa->iv_len = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
+        for (x = 0; x < temp_sa->iv_len; x++)
         {
             temp_sa->iv[x] = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
         }
