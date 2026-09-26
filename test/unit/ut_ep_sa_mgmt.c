@@ -683,4 +683,143 @@ UTEST(EP_SA_MGMT, SA_STOP_SELF)
     free(buffer_STOP_b);
 }
 
+/* Exercise deletion through the Extended Procedures dispatcher, with a fresh SA
+ * for each plaintext, authentication, encryption and combined-service case. */
+struct EpSaDelete
+{
+    SaInterface            sa;
+    TC_t                   frame;
+    SecurityAssociation_t *target;
+};
+
+UTEST_I_SETUP(EpSaDelete)
+{
+    remove("sa_save_file.bin");
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL);
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR, TC_IGNORE_ANTI_REPLAY_FALSE,
+                     TC_IGNORE_SA_STATE_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_TRUE, 0x3F,
+                     SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    TCGvcidManagedParameters_t managed = {0, 3, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 1024, 1};
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, Crypto_Config_Add_TC_Gvcid_Managed_Parameters(managed));
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, Crypto_Init());
+
+    utest_fixture->sa = get_sa_interface_inmemory();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, utest_fixture->sa->sa_get_from_spi(6, &utest_fixture->target));
+    SecurityAssociation_t *target = utest_fixture->target;
+    memset(target, 0, sizeof(*target));
+    target->spi      = 6;
+    target->sa_state = SA_UNKEYED;
+    target->est      = utest_index & 1U;
+    target->ast      = (utest_index >> 1U) & 1U;
+    target->abm_len  = 1;
+    target->abm[0]   = 0xFF;
+    target->ekid     = 130;
+    target->akid     = 131;
+
+    memset(&sdls_frame, 0, sizeof(sdls_frame));
+    sdls_frame.tlv_pdu.hdr.sg              = SG_SA_MGMT;
+    sdls_frame.tlv_pdu.hdr.pid             = PID_DELETE_SA;
+    sdls_frame.tlv_pdu.hdr.pdu_len         = 2 * BYTE_LEN;
+    sdls_frame.tlv_pdu.data[1]             = 6;
+    utest_fixture->frame.tc_sec_header.spi = 0;
+}
+
+UTEST_I_TEARDOWN(EpSaDelete)
+{
+    (void)utest_fixture;
+    (void)utest_index;
+    EXPECT_EQ(CRYPTO_LIB_SUCCESS, Crypto_Shutdown());
+    remove("sa_save_file.bin");
+}
+
+UTEST_I(EpSaDelete, ClearsServiceFlagsAndAllowsLookup, 4)
+{
+    SecurityAssociation_t *target = utest_fixture->target;
+    EXPECT_EQ(CRYPTO_LIB_SUCCESS, Crypto_SG_SA_MGMT(NULL, &utest_fixture->frame));
+    EXPECT_EQ(SA_NONE, target->sa_state);
+    EXPECT_EQ(0, target->est);
+    EXPECT_EQ(0, target->ast);
+    EXPECT_EQ(0, target->abm_len);
+    EXPECT_EQ(0, target->abm[0]);
+    EXPECT_EQ(6, target->spi);
+    EXPECT_EQ(6, target->ekid);
+    EXPECT_EQ(6, target->akid);
+
+    SecurityAssociation_t *found = NULL;
+    EXPECT_EQ(CRYPTO_LIB_SUCCESS, utest_fixture->sa->sa_get_from_spi(6, &found));
+    EXPECT_TRUE(found == target);
+}
+
+UTEST_I(EpSaDelete, RecreatedAssociationCanBeDeletedAgain, 4)
+{
+    SecurityAssociation_t *target = utest_fixture->target;
+    const uint8_t          est    = target->est;
+    const uint8_t          ast    = target->ast;
+    for (size_t cycle = 0; cycle < 3; ++cycle)
+    {
+        sdls_frame.tlv_pdu.hdr.pid     = PID_DELETE_SA;
+        sdls_frame.tlv_pdu.hdr.pdu_len = 2 * BYTE_LEN;
+        ASSERT_EQ(CRYPTO_LIB_SUCCESS, Crypto_SG_SA_MGMT(NULL, &utest_fixture->frame));
+        EXPECT_EQ(SA_NONE, target->sa_state);
+        EXPECT_EQ(0, target->est);
+        EXPECT_EQ(0, target->ast);
+        SecurityAssociation_t *found = NULL;
+        EXPECT_EQ(CRYPTO_LIB_SUCCESS, utest_fixture->sa->sa_get_from_spi(6, &found));
+        EXPECT_TRUE(found == target);
+
+        /* Create the same slot with its original service flags and one ABM byte.
+         * All variable-length fields other than the ABM have zero length. */
+        memset(sdls_frame.tlv_pdu.data, 0, sizeof(sdls_frame.tlv_pdu.data));
+        sdls_frame.tlv_pdu.hdr.pid     = PID_CREATE_SA;
+        sdls_frame.tlv_pdu.hdr.pdu_len = 13 * BYTE_LEN;
+        sdls_frame.tlv_pdu.data[1]     = 6;
+        sdls_frame.tlv_pdu.data[2]     = (est << 7) | (ast << 6);
+        sdls_frame.tlv_pdu.data[9]     = 1;
+        sdls_frame.tlv_pdu.data[10]    = 0xFF;
+        ASSERT_EQ(CRYPTO_LIB_SUCCESS, Crypto_SG_SA_MGMT(NULL, &utest_fixture->frame));
+        EXPECT_EQ(SA_UNKEYED, target->sa_state);
+        EXPECT_EQ(est, target->est);
+        EXPECT_EQ(ast, target->ast);
+        EXPECT_EQ(1, target->abm_len);
+    }
+}
+
+UTEST_I(EpSaDelete, RejectedStatesPreserveServiceFlags, 4)
+{
+    const uint8_t          states[] = {SA_NONE, SA_KEYED, SA_OPERATIONAL};
+    SecurityAssociation_t *target   = utest_fixture->target;
+    const uint8_t          est      = target->est;
+    const uint8_t          ast      = target->ast;
+    for (size_t i = 0; i < sizeof(states) / sizeof(states[0]); ++i)
+    {
+        target->sa_state = states[i];
+        EXPECT_EQ(CRYPTO_LIB_ERROR, Crypto_SG_SA_MGMT(NULL, &utest_fixture->frame));
+        EXPECT_EQ(states[i], target->sa_state);
+        EXPECT_EQ(est, target->est);
+        EXPECT_EQ(ast, target->ast);
+        EXPECT_EQ(1, target->abm_len);
+        EXPECT_EQ(0xFF, target->abm[0]);
+    }
+}
+
+UTEST_I(EpSaDelete, ControlAssociationIsUnchanged, 4)
+{
+    SecurityAssociation_t before;
+    memcpy(&before, utest_fixture->target, sizeof(before));
+    utest_fixture->frame.tc_sec_header.spi = 6;
+    EXPECT_EQ(CRYPTO_LIB_ERR_SDLS_EP_WRONG_SPI, Crypto_SG_SA_MGMT(NULL, &utest_fixture->frame));
+    EXPECT_EQ(0, memcmp(&before, utest_fixture->target, sizeof(before)));
+}
+
+UTEST_I(EpSaDelete, OutOfRangeAssociationIsRejected, 1)
+{
+    SecurityAssociation_t before;
+    memcpy(&before, utest_fixture->target, sizeof(before));
+    sdls_frame.tlv_pdu.data[0] = (NUM_SA >> BYTE_LEN) & 0xFF;
+    sdls_frame.tlv_pdu.data[1] = NUM_SA & 0xFF;
+    EXPECT_EQ(CRYPTO_LIB_ERR_SPI_INDEX_OOB, Crypto_SG_SA_MGMT(NULL, &utest_fixture->frame));
+    EXPECT_EQ(0, memcmp(&before, utest_fixture->target, sizeof(before)));
+}
+
 UTEST_MAIN();
