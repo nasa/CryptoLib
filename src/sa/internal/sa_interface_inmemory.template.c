@@ -1597,6 +1597,8 @@ static int32_t sa_delete(TC_t *tc_frame)
             sa[spi].ekid      = spi;
             sa[spi].akid      = spi;
             sa[spi].sa_state  = SA_NONE;
+            sa[spi].est       = 0;
+            sa[spi].ast       = 0;
             sa[spi].ecs_len   = 0;
             sa[spi].ecs       = 0;
             sa[spi].shivf_len = 0;
