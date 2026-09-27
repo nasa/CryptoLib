@@ -1667,9 +1667,28 @@ int32_t Crypto_is_safe_path(const char *s)
     return CRYPTO_LIB_SUCCESS;
 }
 
+/**
+ * @brief Function: Crypto_check_buffer_size
+ * Confirms that a caller-owned frame buffer is large enough for the frame the
+ * apply path will write into it.
+ *
+ * malloc_usable_size(), malloc_size() and _msize() are defined only for
+ * pointers the allocator returned. pTfBuffer belongs to the caller and the
+ * apply API has never required it to be heap allocated, so querying the
+ * allocator is undefined behaviour for a static, global or automatic buffer:
+ * it reports 0 for a .bss buffer, which rejects a correctly sized frame, and
+ * for an automatic buffer it either returns whatever the preceding stack word
+ * happens to hold or faults inside the allocator.
+ *
+ * The query is therefore performed only when the integrator has declared, with
+ * -DFRAME_BUFFERS_HEAP=ON, that every buffer handed to the apply entry points
+ * is heap allocated. Without that declaration the buffer capacity remains a
+ * documented precondition of the apply API, as it was before the check existed.
+ **/
 int32_t Crypto_check_buffer_size(uint8_t *buf, uint16_t required)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
+#ifdef CRYPTO_FRAME_BUFFERS_ARE_HEAP
 #if defined(__linux__)
 #include <malloc.h>
     if (malloc_usable_size(buf) < required)
@@ -1700,6 +1719,10 @@ int32_t Crypto_check_buffer_size(uint8_t *buf, uint16_t required)
 #endif
         mc_if->mc_log(status);
     }
+#endif
+#else /* !CRYPTO_FRAME_BUFFERS_ARE_HEAP */
+    (void)buf;
+    (void)required;
 #endif
     return status;
 }
