@@ -1603,4 +1603,53 @@ UTEST(AOS_APPLY, AES_CBC_256_ENCRYPT_2B_SHPLF)
     Crypto_Shutdown();
 }
 
+UTEST(AOS_APPLY, AOS_APPLY_NULL_IV)
+{
+    remove("sa_save_file.bin");
+    // Local variables
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    // Configure, Add Managed Params, and Init
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL);
+
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_FALSE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // AOS Tests
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(1, 0x0003, 0, AOS_HAS_FECF, AOS_NO_OCF, 1786,
+    // AOS_NO_FHEC, AOS_NO_IZ, 0);
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0,    AOS_HAS_FECF, AOS_NO_FHEC,
+                                                             AOS_NO_IZ, 0,      26, AOS_NO_OCF,   1};
+    Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
+
+    status = Crypto_Init();
+    // Test Frame Setup
+    // 6 byte header, 2 byte blank SPI, 16 byte blank IV (CCC...), data, MAC, FECF
+    //                  |  Header  |SPI|
+    char *test_aos_h   = "40C0000000000000CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCFFFF";
+    char *test_aos_b   = NULL;
+    int   test_aos_len = 0;
+    hex_conversion(test_aos_h, &test_aos_b, &test_aos_len);
+
+    SecurityAssociation_t *sa_ptr;
+    sa_if->sa_get_from_spi(10, &sa_ptr);
+    sa_ptr->sa_state   = SA_OPERATIONAL;
+    sa_ptr->est        = 1;                                         // Encryption on
+    sa_ptr->ast        = 0;                                         // Authentication off
+    sa_ptr->ecs        = CRYPTO_CIPHER_AES256_GCM;                  // Using CBC mode
+    sa_ptr->null_iv    = IV_NULL_TRUE;
+    sa_ptr->iv_len     = 16;                                        // 16 byte IV
+    sa_ptr->shivf_len  = 16;                                        // 16 byte IV field
+    sa_ptr->stmacf_len = 0;                                         // 0 byte MAC field
+    sa_ptr->shplf_len  = 0;                                         // 2 byte padding length field
+    sa_ptr->ekid       = 130;                                       // Encryption key ID
+    sa_ptr->akid       = 130;                                       // Authentication key ID
+
+    status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b, test_aos_len);
+    ASSERT_EQ(CRYPTO_LIB_ERR_INVALID_SA_CONFIGURATION, status);
+
+    free(test_aos_b);
+    Crypto_Shutdown();
+}
+
 UTEST_MAIN();

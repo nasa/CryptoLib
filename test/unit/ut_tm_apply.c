@@ -2481,4 +2481,53 @@ UTEST(TM_APPLY, TM_APPLY_Secondary_Hdr_One_Too_Big)
     Crypto_Shutdown();
 }
 
+UTEST(TM_APPLY, TM_APPLY_NULL_IV)
+{
+    // Local Variables
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    // Configure Parameters
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_IGNORE_ANTI_REPLAY_FALSE, TM_CHECK_FECF_FALSE, 0x3F,
+                     SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // TM Tests
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_NO_FHEC, AOS_NO_IZ, 0);
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {0, 0x002c, 1, TM_NO_FECF, 8, TM_NO_OCF, 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+
+    status = Crypto_Init();
+
+    TC_t *tc_sdls_processed_frame;
+    tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
+    memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
+
+    char *framed_tm_h   = "02C20008800001BB";
+    char *framed_tm_b   = NULL;
+    int   framed_tm_len = 0;
+    hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);
+
+    SecurityAssociation_t *sa_ptr;
+    sa_if->sa_get_from_spi(5, &sa_ptr);
+    sa_ptr->sa_state        = SA_OPERATIONAL;
+    sa_ptr->shivf_len       = 0;
+    sa_ptr->null_iv         = IV_NULL_TRUE;
+    sa_ptr->iv_len          = 0;
+    sa_ptr->shsnf_len       = 0;
+    sa_ptr->arsnw           = 0;
+    sa_ptr->arsnw_len       = 0;
+    sa_ptr->arsn_len        = 0;
+    sa_ptr->gvcid_blk.scid  = 0x002c;
+    sa_ptr->gvcid_blk.vcid  = 1;
+    sa_ptr->gvcid_blk.mapid = 0;
+
+    status = Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b, framed_tm_len);
+
+    ASSERT_EQ(CRYPTO_LIB_ERR_INVALID_SA_CONFIGURATION, status);
+    free(framed_tm_b);
+    free(tc_sdls_processed_frame);
+    Crypto_Shutdown();
+}
+
 UTEST_MAIN();

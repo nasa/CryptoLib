@@ -886,4 +886,62 @@ UTEST(TM_APPLY_KMC, AES_CBC_256_ENCRYPT_TOO_SMALL_BUFFER)
     Crypto_Shutdown();
 }
 
+UTEST(TM_APPLY_KMC, AES_GCM_NULL_IV_ROUNDTRIP)
+{
+    remove("sa_save_file.bin");
+    // Local variables
+    int32_t                status = CRYPTO_LIB_SUCCESS;
+    reload_db();
+
+    // Configure, Add Managed Params, and Init
+    Crypto_Config_CryptoLib(KEY_TYPE_KMC, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO,
+                            IV_INTERNAL);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_IGNORE_ANTI_REPLAY_FALSE, TM_CHECK_FECF_FALSE, 0x3F,
+                     SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
+                          CLIENT_CERTIFICATE_KEY, NULL, "client", NULL);
+    Crypto_Config_Kmc_Crypto_Service("https", KMC_HOSTNAME, 8443, "crypto-service",
+                                     CA_PATH, NULL, CRYPTO_FALSE, CLIENT_CERTIFICATE,
+                                     "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {.tfvn = 0, .vcid = 3, .scid = 47, .has_fecf = TM_HAS_FECF, .max_frame_size = 100, .has_ocf = TM_NO_OCF, .set_flag = 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    // Test Frame Setup
+    char *test_tm_h =
+        "02F60000000000290000000000000000000000000000000012341234123412341234123412341234123412341234123412341234123412341234123412341234123412341234123412341234123412341234000000000000000000000000000000000000";
+    char *test_tm_b   = NULL;
+    int   test_tm_len = 0;
+    hex_conversion(test_tm_h, &test_tm_b, &test_tm_len);
+
+    status = Crypto_TM_ApplySecurity((uint8_t *)test_tm_b, test_tm_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    printf("TM_Apply Output:\n\t");
+    for (int i = 0; i < test_tm_len; i++)
+    {
+        printf("%02X", (uint8_t)test_tm_b[i]);
+    }
+    printf("\n");
+
+    reload_db();
+    
+    char *enc_tm_h   = "02F600000000002948440E84099C0C70C7C7F72A00000002AC068EA49B71FBFA8A8C1219213A7EF3A8771D68A64CCF441E3557BAF5A7C84C03C0E5EC8F1A9487985D8CDDDA3A3998EC75D4CD3E232B32F31603B3155EBF3190AE24A35DC9BEF912B08BCF";
+    char *enc_tm_b   = NULL;
+    int   enc_tm_len = 0;
+    hex_conversion(enc_tm_h, &enc_tm_b, &enc_tm_len);
+
+    TM_t *tm_frame = malloc(TM_SIZE);
+    uint16_t tm_len = 0;
+
+    status = Crypto_TM_ProcessSecurity((uint8_t *)enc_tm_b, enc_tm_len, tm_frame, &tm_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    free(test_tm_b);
+    free(enc_tm_b);
+    free(tm_frame);
+    Crypto_Shutdown();
+}
+
 UTEST_MAIN();

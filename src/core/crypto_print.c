@@ -336,6 +336,7 @@ void Crypto_saPrint(SecurityAssociation_t *sa)
     printf("\t ek_ref     = %s \n", sa->ek_ref);
     printf("\t akid       = %d \n", sa->akid);
     printf("\t ak_ref     = %s \n", sa->ak_ref);
+    printf("\t null_iv    = %d \n", sa->null_iv);
     printf("\t iv_len     = %d \n", sa->iv_len);
     if (sa->iv_len > 0)
     {
@@ -360,6 +361,7 @@ void Crypto_saPrint(SecurityAssociation_t *sa)
         }
         printf("\n");
     }
+    printf("\t null_arsn   = %d \n", sa->null_arsn);
     printf("\t arsn_len    = %d \n", sa->arsn_len);
     if (sa->arsn_len > 0)
     {

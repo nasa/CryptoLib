@@ -2535,4 +2535,51 @@ UTEST(TM_PROCESS, TM_PROCESS_Secondary_Hdr_One_Too_Big)
     Crypto_Shutdown();
 }
 
+UTEST(TM_PROCESS, TM_PROCESS_NULL_IV)
+{
+    remove("sa_save_file.bin");
+    // Local Variables
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    uint16_t processed_tm_len;
+
+    // Configure Parameters
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_IGNORE_ANTI_REPLAY_FALSE, TM_CHECK_FECF_FALSE, 0x3F,
+                     SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // TM Tests
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {0, 0x002c, 0, TM_NO_FECF, 27, TM_NO_OCF, 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
+
+    status = Crypto_Init();
+    // 6 byte header + 2 byte secondary header
+    // The Header length should be 0 (hdr len -1), with one byte of data after
+    char *framed_tm_h   = "02C000080000000501010101010010101010101010010110101010";
+    char *framed_tm_b   = NULL;
+    int   framed_tm_len = 0;
+    hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);
+
+    SecurityAssociation_t *sa_ptr;
+    sa_if->sa_get_from_spi(5, &sa_ptr);
+    sa_ptr->sa_state  = SA_OPERATIONAL;
+    sa_ptr->null_iv   = IV_NULL_TRUE;
+    sa_ptr->shsnf_len = 0;
+    sa_ptr->arsn_len  = 0;
+    sa_ptr->gvcid_blk.tfvn = 0;
+    sa_ptr->gvcid_blk.scid = 44;
+    sa_ptr->gvcid_blk.vcid = 0;
+
+    TM_t *tm_frame;
+    tm_frame = malloc(sizeof(uint8_t) * TM_SIZE);
+    memset(tm_frame, 0, (sizeof(uint8_t) * TM_SIZE));
+
+    status = Crypto_TM_ProcessSecurity((uint8_t *)framed_tm_b, framed_tm_len, tm_frame, &processed_tm_len);
+
+    ASSERT_EQ(CRYPTO_LIB_ERR_INVALID_SA_CONFIGURATION, status);
+    free(framed_tm_b);
+    free(tm_frame);
+    Crypto_Shutdown();
+}
+
 UTEST_MAIN();

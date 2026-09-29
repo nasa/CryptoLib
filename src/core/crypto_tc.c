@@ -599,7 +599,7 @@ void Crypto_TC_Increment_IV_ARSN(uint8_t sa_service_type, SecurityAssociation_t 
 #ifdef INCREMENT
         if (crypto_config_tc.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
         {
-            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0)
+            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0  && sa_ptr->null_iv == IV_NULL_FALSE)
             {
                 Crypto_increment(sa_ptr->iv, sa_ptr->iv_len);
             }
@@ -607,19 +607,19 @@ void Crypto_TC_Increment_IV_ARSN(uint8_t sa_service_type, SecurityAssociation_t 
         else // SA_INCREMENT_NONTRANSMITTED_IV_FALSE
         {
             // Only increment the transmitted portion
-            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0)
+            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0  && sa_ptr->null_iv == IV_NULL_FALSE)
             {
                 Crypto_increment(sa_ptr->iv + (sa_ptr->iv_len - sa_ptr->shivf_len), sa_ptr->shivf_len);
             }
         }
-        if (sa_ptr->shsnf_len > 0)
+        if (sa_ptr->shsnf_len > 0  && sa_ptr->null_arsn == ARSN_NULL_FALSE)
         {
             Crypto_increment(sa_ptr->arsn, sa_ptr->arsn_len);
         }
 
 #ifdef SA_DEBUG
         int i = 0;
-        if (sa_ptr->iv_len > 0)
+        if (sa_ptr->iv_len > 0  && sa_ptr->null_iv == IV_NULL_FALSE)
         {
             printf(KYEL "Next IV value is:\n\t");
             for (i = 0; i < sa_ptr->iv_len; i++)
@@ -966,7 +966,7 @@ int32_t Crypto_TC_Set_IV(SecurityAssociation_t *sa_ptr, uint8_t *p_new_enc_frame
 {
     uint32_t status = CRYPTO_LIB_SUCCESS;
 #ifdef SA_DEBUG
-    if (sa_ptr->shivf_len > 0)
+    if (sa_ptr->shivf_len > 0  && sa_ptr->null_iv == IV_NULL_FALSE)
     {
         int i = 0;
         printf(KYEL "Using IV value:\n\t");
@@ -1837,7 +1837,6 @@ int32_t Crypto_TC_Check_IV_ARSN(SecurityAssociation_t *sa_ptr, TC_t *tc_sdls_pro
                 clean_ekref(sa_ptr);
             if (sa_ptr->ak_ref[0] != '\0')
                 clean_akref(sa_ptr);
-            free(sa_ptr);
         }
     }
     return status;
@@ -2199,6 +2198,10 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
     }
 
     Crypto_TC_Safe_Free_Ptr(aad);
+    if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+    {
+        free(sa_ptr);
+    }
 
     mc_if->mc_log(status);
     return status;
@@ -2336,6 +2339,11 @@ static int32_t crypto_tc_validate_sa(SecurityAssociation_t *sa)
     if (sa->arsn_len - sa->shsnf_len < 0)
     {
         return CRYPTO_LIB_ERR_ARSN_LEN_SHORTER_THAN_SEC_HEADER_LENGTH;
+    }
+    if ((sa->null_iv == IV_NULL_TRUE || sa->null_arsn == ARSN_NULL_TRUE) && crypto_config_global.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+    {
+        // currently only null IV/ARSN with KMCCRYPTO
+        return CRYPTO_LIB_ERR_NULL_IV;
     }
 
     return CRYPTO_LIB_SUCCESS;

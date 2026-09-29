@@ -1421,14 +1421,21 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
     // Check for NULL pointers
     status = Crypto_Check_Anti_Replay_Verify_Pointers(sa_ptr, arsn, iv);
 
+    if (sa_ptr->null_iv == IV_NULL_TRUE && sa_ptr->null_arsn == ARSN_NULL_TRUE)
+    {   // Can't check anti-replay if both IV and ARSN are managed
+        status = CRYPTO_LIB_ERR_INVALID_SA_CONFIGURATION;
+        mc_if->mc_log(status);
+        return status;
+    }
+
     // If sequence number field is greater than zero, check for replay
-    if (status == CRYPTO_LIB_SUCCESS)
+    if (status == CRYPTO_LIB_SUCCESS && sa_ptr->null_arsn == ARSN_NULL_FALSE)
     {
         status = Crypto_Check_Anti_Replay_ARSNW(sa_ptr, arsn, &arsn_valid);
     }
 
     // If IV is greater than zero and using GCM, check for replay
-    if (status == CRYPTO_LIB_SUCCESS)
+    if (status == CRYPTO_LIB_SUCCESS && sa_ptr->null_iv == IV_NULL_FALSE)
     {
         status = Crypto_Check_Anti_Replay_GCM(sa_ptr, iv, &iv_valid, increment_nontransmitted);
     }
@@ -1440,19 +1447,22 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
         // Using ARSN? Need to be valid to increment both
         if (sa_ptr->arsn_len > 0 && arsn_valid == CRYPTO_TRUE)
         {
-            memcpy(sa_ptr->iv, iv, sa_ptr->iv_len);
-            memcpy(sa_ptr->arsn, arsn, sa_ptr->arsn_len);
+            if (sa_ptr->null_iv == IV_NULL_FALSE)
+                memcpy(sa_ptr->iv, iv, sa_ptr->iv_len);
+            if (sa_ptr->null_arsn == ARSN_NULL_FALSE)
+                memcpy(sa_ptr->arsn, arsn, sa_ptr->arsn_len);
         }
         // Not using ARSN? IV Valid and good to go
         if (sa_ptr->arsn_len == 0)
         {
-            memcpy(sa_ptr->iv, iv, sa_ptr->iv_len);
+            if (sa_ptr->null_iv == IV_NULL_FALSE)
+                memcpy(sa_ptr->iv, iv, sa_ptr->iv_len);
         }
     }
 
     // If not GCM, and ARSN is valid - can incrmeent it
     if ((sa_ptr->ecs != CRYPTO_CIPHER_AES256_GCM && sa_ptr->ecs != CRYPTO_CIPHER_AES256_GCM_SIV) &&
-        arsn_valid == CRYPTO_TRUE)
+        arsn_valid == CRYPTO_TRUE && sa_ptr->null_arsn == ARSN_NULL_FALSE && status == CRYPTO_LIB_SUCCESS)
     {
         memcpy(sa_ptr->arsn, arsn, sa_ptr->arsn_len);
     }
