@@ -1418,13 +1418,15 @@ static int32_t sa_expire(TC_t *tc_frame)
 static int32_t sa_create(TC_t *tc_frame)
 {
     // Local variables
-    int32_t  status      = CRYPTO_LIB_SUCCESS;
-    uint8_t  count       = 6;
-    uint16_t spi         = 0x0000;
-    uint16_t control_spi = 0x0000;
+    int32_t  status       = CRYPTO_LIB_SUCCESS;
+    uint16_t count        = 6;
+    uint16_t spi          = 0x0000;
+    uint16_t control_spi  = 0x0000;
+    uint16_t pdu_data_len = 0;
     int      x;
 
-    // Read sdls_frame.tlv_pdu.data
+    // Read the target SPI first so Create SA preserves the existing
+    // control-SPI rejection precedence before parsing the remaining PDU.
     spi = ((uint8_t)sdls_frame.tlv_pdu.data[0] << BYTE_LEN) | (uint8_t)sdls_frame.tlv_pdu.data[1];
 #ifdef DEBUG
     printf("spi = %d \n", spi);
@@ -1440,96 +1442,128 @@ static int32_t sa_create(TC_t *tc_frame)
         return status;
     }
 
+    if ((sdls_frame.tlv_pdu.hdr.pdu_len % BYTE_LEN) != 0)
+    {
+        return CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
+    }
+
+    pdu_data_len = sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN;
+    if ((pdu_data_len < count) || (pdu_data_len > TLV_DATA_SIZE))
+    {
+        return CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
+    }
+
     // Check if valid SPI
     if (spi < NUM_SA)
     {
-        SecurityAssociation_t *temp_sa;
-        sa_if->sa_get_from_spi(spi, &temp_sa);
+        // Parse into a value copy so malformed Create commands cannot partially modify the live SA.
+        SecurityAssociation_t temp_sa = sa[spi];
+
         // Overwrite last PID : 8 bits
         // Bits from L-R
         //   1 : Procedure Type Flag (type)
         //   2 : User Flag (uf)
         // 3-4 : Service Group Field (sg)
         // 5-8 : Procedure Identification Field (pid)
-        temp_sa->lpid = (sdls_frame.tlv_pdu.hdr.type << 7) | (sdls_frame.tlv_pdu.hdr.uf << 6) |
-                        (sdls_frame.tlv_pdu.hdr.sg << 4) | sdls_frame.tlv_pdu.hdr.pid;
+        temp_sa.lpid = (sdls_frame.tlv_pdu.hdr.type << 7) | (sdls_frame.tlv_pdu.hdr.uf << 6) |
+                       (sdls_frame.tlv_pdu.hdr.sg << 4) | sdls_frame.tlv_pdu.hdr.pid;
 
         // Write SA Configuration
-        temp_sa->est        = ((uint8_t)sdls_frame.tlv_pdu.data[2] & 0x80) >> 7;
-        temp_sa->ast        = ((uint8_t)sdls_frame.tlv_pdu.data[2] & 0x40) >> 6;
-        temp_sa->shivf_len  = ((uint8_t)sdls_frame.tlv_pdu.data[2] & 0x3F);
-        temp_sa->shsnf_len  = ((uint8_t)sdls_frame.tlv_pdu.data[3] & 0xFC) >> 2;
-        temp_sa->shplf_len  = ((uint8_t)sdls_frame.tlv_pdu.data[3] & 0x03);
-        temp_sa->stmacf_len = ((uint8_t)sdls_frame.tlv_pdu.data[4]);
-        temp_sa->ecs_len    = ((uint8_t)sdls_frame.tlv_pdu.data[5]);
-        for (x = 0; x < temp_sa->ecs_len; x++)
+        temp_sa.est        = ((uint8_t)sdls_frame.tlv_pdu.data[2] & 0x80) >> 7;
+        temp_sa.ast        = ((uint8_t)sdls_frame.tlv_pdu.data[2] & 0x40) >> 6;
+        temp_sa.shivf_len  = ((uint8_t)sdls_frame.tlv_pdu.data[2] & 0x3F);
+        temp_sa.shsnf_len  = ((uint8_t)sdls_frame.tlv_pdu.data[3] & 0xFC) >> 2;
+        temp_sa.shplf_len  = ((uint8_t)sdls_frame.tlv_pdu.data[3] & 0x03);
+        temp_sa.stmacf_len = ((uint8_t)sdls_frame.tlv_pdu.data[4]);
+        temp_sa.ecs_len    = ((uint8_t)sdls_frame.tlv_pdu.data[5]);
+
+        if ((uint32_t)count + (uint32_t)temp_sa.ecs_len + 1U > pdu_data_len)
         {
-            temp_sa->ecs = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
+            return CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
         }
-        temp_sa->shivf_len = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
-        for (x = 0; x < temp_sa->shivf_len; x++)
+        for (x = 0; x < temp_sa.ecs_len; x++)
         {
-            temp_sa->iv[x] = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
+            temp_sa.ecs = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
         }
-        temp_sa->acs_len = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
-        for (x = 0; x < temp_sa->acs_len; x++)
+
+        // CCSDS 355.1-B-1 5.5.1.6.2 defines this octet as the IV length.
+        // shivf_len remains the distinct Security Header IV Field Length from data[2].
+        temp_sa.iv_len = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
+        if ((temp_sa.iv_len > IV_SIZE) || (temp_sa.shivf_len > temp_sa.iv_len))
         {
-            temp_sa->acs = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
+            return CRYPTO_LIB_ERR_INVALID_SA_IV_CONFIG;
         }
-        temp_sa->abm_len =
-            (uint8_t)((sdls_frame.tlv_pdu.data[count] << BYTE_LEN) | (sdls_frame.tlv_pdu.data[count + 1]));
-        count = count + 2;
-        for (x = 0; x < temp_sa->abm_len; x++)
+        if ((uint32_t)count + (uint32_t)temp_sa.iv_len + 1U > pdu_data_len)
         {
-            temp_sa->abm[x] = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
+            return CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
         }
-        temp_sa->arsn_len = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
-        for (x = 0; x < temp_sa->arsn_len; x++)
+        for (x = 0; x < temp_sa.iv_len; x++)
         {
-            *(temp_sa->arsn + x) = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
+            temp_sa.iv[x] = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
         }
-        temp_sa->arsnw_len = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
-        for (x = 0; x < temp_sa->arsnw_len; x++)
+
+        temp_sa.acs_len = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
+        if ((uint32_t)count + (uint32_t)temp_sa.acs_len + 2U > pdu_data_len)
         {
-            temp_sa->arsnw = temp_sa->arsnw | (((uint8_t)sdls_frame.tlv_pdu.data[count++]) << (temp_sa->arsnw_len - x));
+            return CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
+        }
+        for (x = 0; x < temp_sa.acs_len; x++)
+        {
+            temp_sa.acs = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
+        }
+
+        temp_sa.abm_len = (uint8_t)((sdls_frame.tlv_pdu.data[count] << BYTE_LEN) | sdls_frame.tlv_pdu.data[count + 1]);
+        count           = count + 2;
+        if (temp_sa.abm_len > ABM_SIZE)
+        {
+            return CRYPTO_LIB_ERR_ABM_LEN_GREATER_THAN_MAX_ABM_SIZE;
+        }
+        if ((uint32_t)count + (uint32_t)temp_sa.abm_len + 1U > pdu_data_len)
+        {
+            return CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
+        }
+        for (x = 0; x < temp_sa.abm_len; x++)
+        {
+            temp_sa.abm[x] = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
+        }
+
+        temp_sa.arsn_len = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
+        if (temp_sa.arsn_len > ARSN_SIZE)
+        {
+            return CRYPTO_LIB_ERR_INVALID_SA_ARSN_CONFIG;
+        }
+        if ((uint32_t)count + (uint32_t)temp_sa.arsn_len + 1U > pdu_data_len)
+        {
+            return CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
+        }
+        for (x = 0; x < temp_sa.arsn_len; x++)
+        {
+            temp_sa.arsn[x] = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
+        }
+
+        temp_sa.arsnw_len = ((uint8_t)sdls_frame.tlv_pdu.data[count++]);
+        if (temp_sa.arsnw_len > sizeof(temp_sa.arsnw))
+        {
+            return CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
+        }
+        if ((uint32_t)count + (uint32_t)temp_sa.arsnw_len > pdu_data_len)
+        {
+            return CRYPTO_LIB_ERR_BAD_TLV_LENGTH;
+        }
+        temp_sa.arsnw = 0;
+        for (x = 0; x < temp_sa.arsnw_len; x++)
+        {
+            temp_sa.arsnw = temp_sa.arsnw | (((uint8_t)sdls_frame.tlv_pdu.data[count++]) << (temp_sa.arsnw_len - x));
         }
 
         // Set state to unkeyed
-        temp_sa->sa_state = SA_UNKEYED;
+        temp_sa.sa_state = SA_UNKEYED;
 
-        // Verify data
-        status = sa_verify_data(temp_sa);
-
+        // Verify the complete candidate before committing it to the live SA table.
+        status = sa_verify_data(&temp_sa);
         if (status == CRYPTO_LIB_SUCCESS)
         {
-            // Copy data from temp_sa to sa[spi]
-            sa[spi].lpid       = temp_sa->lpid;
-            sa[spi].est        = temp_sa->est;
-            sa[spi].ast        = temp_sa->ast;
-            sa[spi].shivf_len  = temp_sa->shivf_len;
-            sa[spi].shsnf_len  = temp_sa->shsnf_len;
-            sa[spi].shplf_len  = temp_sa->shplf_len;
-            sa[spi].stmacf_len = temp_sa->stmacf_len;
-            sa[spi].ecs_len    = temp_sa->ecs_len;
-            sa[spi].ecs        = temp_sa->ecs;
-            for (x = 0; x < sa[spi].shivf_len; x++)
-            {
-                sa[spi].iv[x] = temp_sa->iv[x];
-            }
-            sa[spi].acs     = temp_sa->acs;
-            sa[spi].abm_len = temp_sa->abm_len;
-            for (x = 0; x < sa[spi].abm_len; x++)
-            {
-                sa[spi].abm[x] = temp_sa->abm[x];
-            }
-            sa[spi].arsn_len = temp_sa->arsn_len;
-            for (x = 0; x < sa[spi].arsn_len; x++)
-            {
-                *(sa[spi].arsn + x) = *(temp_sa->arsn + x);
-            }
-            sa[spi].arsnw_len = temp_sa->arsnw_len;
-            sa[spi].arsnw     = temp_sa->arsnw;
-            sa[spi].sa_state  = temp_sa->sa_state;
+            sa[spi] = temp_sa;
         }
 
 #ifdef PDU_DEBUG
@@ -1825,6 +1859,10 @@ int32_t sa_verify_data(SecurityAssociation_t *sa_ptr)
     if (sa_ptr->shivf_len > IV_SIZE)
     {
         status = CRYPTO_LIB_ERR_SHIVF_LEN_GREATER_THAN_MAX_IV_SIZE;
+    }
+    if ((status == CRYPTO_LIB_SUCCESS) && ((sa_ptr->iv_len > IV_SIZE) || (sa_ptr->shivf_len > sa_ptr->iv_len)))
+    {
+        status = CRYPTO_LIB_ERR_INVALID_SA_IV_CONFIG;
     }
     if (sa_ptr->shsnf_len > ARSN_SIZE)
     {
