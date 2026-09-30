@@ -87,12 +87,14 @@ typedef struct
     uint8_t  stmacf_len : 8;  // Sec. Trailer MAC Field Length
     uint8_t  ecs;             // Encryption Cipher Suite (algorithm / mode ID)
     uint8_t  ecs_len : 8;     // Encryption Cipher Suite Length
+    uint8_t  null_iv : 1;     // Flag for NULL IV
     uint8_t  iv[IV_SIZE];     // Initialization Vector
     uint8_t  iv_len;          // Length of entire IV
     uint8_t  acs_len : 8;     // Authentication Cipher Suite Length
     uint8_t  acs;             // Authentication Cipher Suite (algorithm / mode ID)
     uint16_t abm_len : 16;    // Authentication Bit Mask Length
     uint8_t  abm[ABM_SIZE];   // Authentication Bit Mask (Primary Hdr. through Security Hdr.)
+    uint8_t  null_arsn : 1;   // Flag for NULL ARSN
     uint8_t  arsn_len : 8;    // Anti-Replay Seq Num Length
     uint8_t  arsn[ARSN_SIZE]; // Anti-Replay Seq Num
     uint8_t  arsnw_len : 8;   // Anti-Replay Seq Num Window Length
@@ -593,6 +595,7 @@ typedef struct
     uint16_t fhecf; // Frame header error control field
 } __attribute__((packed)) AOS_FramePrimaryHeader_t;
 #define AOS_FRAME_PRIMARYHEADER_SIZE (sizeof(AOS_FramePrimaryHeader_t))
+#define AOS_BASE_PRIMARYHEADER_SIZE  6u
 
 /*
 ** CCSDS Compliance: CCSDS 355.0-B-2 Section 4.3.1 (Security Header)

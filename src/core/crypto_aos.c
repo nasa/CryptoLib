@@ -23,7 +23,6 @@
 
 #include <string.h> // memcpy/memset
 
-
 uint32_t Crypto_AOS_Calculate_Padding(uint32_t cipher, uint16_t data_len)
 {
     uint32_t block_size;
@@ -119,6 +118,13 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         return status; // return immediately so a NULL crypto_config is not dereferenced later
     }
 
+    if (len_ingest < AOS_BASE_PRIMARYHEADER_SIZE)
+    {
+        status = CRYPTO_LIB_ERR_AOS_FRAME_TOO_SHORT;
+        mc_if->mc_log(status);
+        return status;
+    }
+
     tfvn = (pTfBuffer[0] & 0xC0) >> 6;
     scid = ((pTfBuffer[0] & 0x3F) << 2) | ((pTfBuffer[1] & 0xC0) >> 6);
     vcid = (pTfBuffer[1] & 0x3F);
@@ -144,12 +150,34 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     }
     status = sa_if->sa_get_operational_sa_from_gvcid(tfvn, scid, vcid, 0, &sa_ptr);
 
+    if ((sa_ptr->null_iv == IV_NULL_TRUE || sa_ptr->null_arsn == ARSN_NULL_TRUE) && crypto_config_global.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+    {
+        // currently only null IV/ARSN with KMCCRYPTO
+        status = CRYPTO_LIB_ERR_INVALID_SA_CONFIGURATION;
+        mc_if->mc_log(status);
+        return status;
+    }
+
     // No operational/valid SA found
     if (status != CRYPTO_LIB_SUCCESS)
     {
 #ifdef AOS_DEBUG
         printf(KRED "Error: Could not retrieve an SA!\n" RESET);
 #endif
+        mc_if->mc_log(status);
+        return status;
+    }
+
+    if (sa_ptr->shivf_len > sa_ptr->iv_len || sa_ptr->shivf_len > 63)
+    {
+        status = CRYPTO_LIB_ERR_INVALID_SA_IV_CONFIG;
+        mc_if->mc_log(status);
+        return status;
+    }
+
+    if (sa_ptr->shsnf_len > sa_ptr->arsn_len || sa_ptr->shsnf_len > 63)
+    {
+        status = CRYPTO_LIB_ERR_INVALID_SA_ARSN_CONFIG;
         mc_if->mc_log(status);
         return status;
     }
@@ -439,7 +467,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         }
         return status;
     }
-    
+
     /**
      * End Security Header Fields
      **/
@@ -478,7 +506,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
 #ifdef AOS_DEBUG
     printf(KYEL "Data location starts at: %d\n" RESET, idx);
     printf(KYEL "Data size is: %d\n" RESET, pdu_len);
-    printf(KYEL "Index at end of SPI is: %d\n", idx);
+    printf(KYEL "Index at end of SPI is: %d\n", idx - sa_ptr->shsnf_len - sa_ptr->shivf_len - sa_ptr->shplf_len);
     if (aos_current_managed_parameters_struct.has_ocf == AOS_HAS_OCF)
     {
         // If OCF exists, comes immediately after MAC
@@ -507,7 +535,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
 
         hex_padding[0] = (pkcs_padding >> 16) & 0xFF;
         hex_padding[1] = (pkcs_padding >> 8) & 0xFF;
-        hex_padding[2] = (pkcs_padding) & 0xFF;
+        hex_padding[2] = (pkcs_padding)&0xFF;
 
 #ifdef AOS_DEBUG
         printf("pkcs_padding: %d\n", (int)pkcs_padding);
@@ -598,7 +626,9 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
             if (sa_ptr->abm_len < aad_len)
             {
                 status = CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
+#ifdef AOS_DEBUG
                 printf(KRED "Error: abm_len of %d < aad_len of %d\n" RESET, sa_ptr->abm_len, aad_len);
+#endif
                 mc_if->mc_log(status);
                 return status;
             }
@@ -719,7 +749,7 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
 #ifdef INCREMENT
         if (crypto_config_aos.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
         {
-            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0)
+            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0 && sa_ptr->null_iv == IV_NULL_FALSE)
             {
                 status = Crypto_increment(sa_ptr->iv, sa_ptr->iv_len);
             }
@@ -727,18 +757,18 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         else // SA_INCREMENT_NONTRANSMITTED_IV_FALSE
         {
             // Only increment the transmitted portion
-            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0)
+            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0 && sa_ptr->null_iv == IV_NULL_FALSE)
             {
                 status = Crypto_increment(sa_ptr->iv + (sa_ptr->iv_len - sa_ptr->shivf_len), sa_ptr->shivf_len);
             }
         }
-        if (sa_ptr->shsnf_len > 0 && status == CRYPTO_LIB_SUCCESS)
+        if (sa_ptr->shsnf_len > 0 && status == CRYPTO_LIB_SUCCESS && sa_ptr->null_arsn == ARSN_NULL_FALSE)
         {
             status = Crypto_increment(sa_ptr->arsn, sa_ptr->arsn_len);
         }
 
 #ifdef SA_DEBUG
-        if (sa_ptr->iv_len > 0)
+        if (sa_ptr->iv_len > 0 && sa_ptr->null_iv == IV_NULL_FALSE)
         {
             printf(KYEL "Next IV value is:\n\t");
             for (int i = 0; i < sa_ptr->iv_len; i++)
@@ -982,6 +1012,13 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     uint16_t               spi               = -1;
     uint8_t                aos_hdr_len       = 6;
 
+    if (len_ingest < AOS_BASE_PRIMARYHEADER_SIZE)
+    {
+        status = CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_AOS_STANDARD;
+        mc_if->mc_log(status);
+        return status;
+    }
+
     // Bit math to give concise access to values in the ingest
     pp_processed_frame->aos_header.tfvn = ((uint8_t)p_ingest[0] & 0xC0) >> 6;
     pp_processed_frame->aos_header.scid = (((uint16_t)p_ingest[0] & 0x3F) << 2) | (((uint16_t)p_ingest[1] & 0xC0) >> 6);
@@ -1051,6 +1088,12 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     byte_idx = 6;
     if (aos_current_managed_parameters_struct.aos_has_fhec == AOS_HAS_FHEC)
     {
+        if (len_ingest <= byte_idx + FHECF_SIZE)
+        {
+            status = CRYPTO_LIB_ERR_TM_FRAME_TOO_SHORT;
+            mc_if->mc_log(status);
+            return status;
+        }
         uint16_t recieved_fhecf = (((p_ingest[aos_hdr_len] << 8) & 0xFF00) | (p_ingest[aos_hdr_len + 1] & 0x00FF));
 #ifdef AOS_DEBUG
         printf("Recieved FHECF: %04x\n", recieved_fhecf);
@@ -1075,6 +1118,13 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     // Per CCSDS 732.0-B-4 Section 4.1.3, Insert Zone is optional but fixed length for a physical channel
     if (aos_current_managed_parameters_struct.aos_has_iz == AOS_HAS_IZ)
     {
+        if (len_ingest <= byte_idx + aos_current_managed_parameters_struct.aos_iz_len)
+        {
+            status = CRYPTO_LIB_ERR_TM_FRAME_TOO_SHORT;
+            mc_if->mc_log(status);
+            return status;
+        }
+
         // Section 4.1.3.2 - Validate Insert Zone length
         if (aos_current_managed_parameters_struct.aos_iz_len <= 0)
         {
@@ -1101,6 +1151,14 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
      * Begin Security Header Fields
      * Reference CCSDS SDLP 3550b1 4.1.1.1.3
      **/
+
+    if (len_ingest < byte_idx + SPI_LEN)
+    {
+        status = CRYPTO_LIB_ERR_TM_FRAME_TOO_SHORT;
+        mc_if->mc_log(status);
+        return status;
+    }
+
     // Get SPI
     spi = (uint8_t)p_ingest[byte_idx] << 8 | (uint8_t)p_ingest[byte_idx + 1];
     // Move index to past the SPI
@@ -1121,6 +1179,33 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
         {
             free(sa_ptr);
         }
+        return status;
+    }
+
+    if ((sa_ptr->null_iv == IV_NULL_TRUE || sa_ptr->null_arsn == ARSN_NULL_TRUE) && crypto_config_global.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+    {
+        // currently only null IV/ARSN with KMCCRYPTO
+        status = CRYPTO_LIB_ERR_INVALID_SA_CONFIGURATION;
+        mc_if->mc_log(status);
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+        {
+            free(sa_ptr);
+        }
+        return status;
+    }
+
+#ifdef DEBUG
+    printf("TFVN SA(%d) == FRAME(%d)?\n", sa_ptr->gvcid_blk.tfvn, pp_processed_frame->aos_header.tfvn);
+    printf("SCID SA(%d) == FRAME(%d)?\n", sa_ptr->gvcid_blk.scid, pp_processed_frame->aos_header.scid);
+    printf("VCID SA(%d) == FRAME(%d)?\n", sa_ptr->gvcid_blk.vcid, pp_processed_frame->aos_header.vcid);
+#endif
+
+    if (sa_ptr->gvcid_blk.tfvn != pp_processed_frame->aos_header.tfvn ||
+        sa_ptr->gvcid_blk.scid != pp_processed_frame->aos_header.scid ||
+        sa_ptr->gvcid_blk.vcid != pp_processed_frame->aos_header.vcid)
+    {
+        status = CRYPTO_LIB_ERR_SA_GVCID_DOESNT_MATCH_FRAME;
+        mc_if->mc_log(status);
         return status;
     }
 
@@ -1509,7 +1594,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
 #endif
         if (sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
         {
-            aad_len = iv_loc + sa_ptr->shivf_len;
+            aad_len = iv_loc + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len;
         }
         else
         {
@@ -1563,7 +1648,8 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     uint32_t padding = 0;
     for (int i = 0; i < sa_ptr->shplf_len; i++)
     {
-        padding |= p_ingest[aos_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + i] << (8 * (sa_ptr->shplf_len - 1 - i));
+        padding |= p_ingest[aos_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + i]
+                   << (8 * (sa_ptr->shplf_len - 1 - i));
     }
 
     if (sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_TRUE)
@@ -1584,7 +1670,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
                                                            &sa_ptr->acs,      // authentication cipher
                                                            NULL);
 
-            if(status != CRYPTO_LIB_SUCCESS)
+            if (status != CRYPTO_LIB_SUCCESS)
             {
                 free(p_new_dec_frame); // Add cleanup
                 mc_if->mc_log(status);
@@ -1617,7 +1703,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
                                                                 &sa_ptr->acs,       // authentication cipher
                                                                 NULL);
 
-            if(status != CRYPTO_LIB_SUCCESS)
+            if (status != CRYPTO_LIB_SUCCESS)
             {
                 free(p_new_dec_frame); // Add cleanup
                 mc_if->mc_log(status);
@@ -1653,7 +1739,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
                                                                       sa_ptr->acs,        // authentication cipher
                                                                       NULL);              // cam cookies
 
-            if(status != CRYPTO_LIB_SUCCESS)
+            if (status != CRYPTO_LIB_SUCCESS)
             {
                 free(p_new_dec_frame); // Add cleanup
                 mc_if->mc_log(status);
@@ -1743,7 +1829,8 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
 #ifdef AOS_DEBUG
     printf(KYEL "\nPadding Detected: %d\n", padding);
     uint8_t fecf_len = aos_current_managed_parameters_struct.has_fecf ? FECF_SIZE : 0;
-    memmove(&p_new_dec_frame[aos_current_managed_parameters_struct.max_frame_size - padding - fecf_len], &p_new_dec_frame[aos_current_managed_parameters_struct.max_frame_size - fecf_len], fecf_len);
+    memmove(&p_new_dec_frame[aos_current_managed_parameters_struct.max_frame_size - padding - fecf_len],
+            &p_new_dec_frame[aos_current_managed_parameters_struct.max_frame_size - fecf_len], fecf_len);
     if (sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC || sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC_MAC)
     {
         printf(KYEL "\nPrinting PROCESSED frame WITHOUT PADDING [%d]:\n\t" RESET, *p_decrypted_length);
@@ -1795,7 +1882,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     {
         memcpy(pp_processed_frame->aos_sec_header.iv + i, &p_ingest[byte_idx + i], 1);
     }
-    byte_idx += sa_ptr->shivf_len; 
+    byte_idx += sa_ptr->shivf_len;
     pp_processed_frame->aos_sec_header.iv_field_len = sa_ptr->shivf_len;
 
     for (int i = 0; i < sa_ptr->shsnf_len; i++)

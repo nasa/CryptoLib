@@ -189,6 +189,21 @@ void Crypto_TM_Check_For_Secondary_Header(uint8_t *pTfBuffer, uint16_t *idx)
 int32_t Crypto_TM_IV_Sanity_Check(uint8_t *sa_service_type, SecurityAssociation_t *sa_ptr)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
+
+    if (sa_ptr->shivf_len > sa_ptr->iv_len || sa_ptr->shivf_len > 63)
+    {
+        status = CRYPTO_LIB_ERR_INVALID_SA_IV_CONFIG;
+        mc_if->mc_log(status);
+        return status;
+    }
+
+    if (sa_ptr->shsnf_len > sa_ptr->arsn_len || sa_ptr->shsnf_len > 63)
+    {
+        status = CRYPTO_LIB_ERR_INVALID_SA_ARSN_CONFIG;
+        mc_if->mc_log(status);
+        return status;
+    }
+
 #ifdef SA_DEBUG
     if (sa_ptr->shivf_len > 0)
     {
@@ -280,10 +295,11 @@ uint32_t Crypto_TM_Calculate_Padding(uint32_t cipher, uint16_t data_len)
  *
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.3.3 (TM Encryption Processing)
  **/
-void Crypto_TM_PKCS_Padding(uint32_t *pkcs_padding, SecurityAssociation_t *sa_ptr, uint8_t *pTfBuffer, uint16_t *idx_p, uint16_t len_ingest)
+void Crypto_TM_PKCS_Padding(uint32_t *pkcs_padding, SecurityAssociation_t *sa_ptr, uint8_t *pTfBuffer, uint16_t *idx_p,
+                            uint16_t len_ingest)
 {
     uint16_t idx      = *idx_p;
-    uint8_t fecf_len = (tm_current_managed_parameters_struct.has_fecf == TM_HAS_FECF) ? FECF_SIZE : 0;
+    uint8_t  fecf_len = (tm_current_managed_parameters_struct.has_fecf == TM_HAS_FECF) ? FECF_SIZE : 0;
     uint16_t data_len = len_ingest - idx - sa_ptr->stmacf_len - fecf_len - sa_ptr->shplf_len;
 
     // Calculate required padding based on cipher
@@ -594,7 +610,7 @@ int32_t Crypto_TM_Do_Encrypt_Handle_Increment(uint8_t sa_service_type, SecurityA
 #ifdef INCREMENT
         if (crypto_config_tm.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
         {
-            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0)
+            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0 && sa_ptr->null_iv == IV_NULL_FALSE)
             {
                 status = Crypto_increment(sa_ptr->iv, sa_ptr->iv_len);
             }
@@ -602,18 +618,18 @@ int32_t Crypto_TM_Do_Encrypt_Handle_Increment(uint8_t sa_service_type, SecurityA
         else // SA_INCREMENT_NONTRANSMITTED_IV_FALSE
         {
             // Only increment the transmitted portion
-            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0)
+            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0 && sa_ptr->null_iv == IV_NULL_FALSE)
             {
                 status = Crypto_increment(sa_ptr->iv + (sa_ptr->iv_len - sa_ptr->shivf_len), sa_ptr->shivf_len);
             }
         }
-        if (sa_ptr->shsnf_len > 0 && status == CRYPTO_LIB_SUCCESS)
+        if (sa_ptr->shsnf_len > 0 && sa_ptr->null_arsn == ARSN_NULL_FALSE && status == CRYPTO_LIB_SUCCESS)
         {
             status = Crypto_increment(sa_ptr->arsn, sa_ptr->arsn_len);
         }
 
 #ifdef SA_DEBUG
-        if (sa_ptr->iv_len > 0)
+        if (sa_ptr->iv_len > 0 && sa_ptr->null_iv == IV_NULL_FALSE)
         {
             printf(KYEL "Next IV value is:\n\t");
             for (int i = 0; i < sa_ptr->iv_len; i++)
@@ -628,18 +644,21 @@ int32_t Crypto_TM_Do_Encrypt_Handle_Increment(uint8_t sa_service_type, SecurityA
             }
             printf("\n" RESET);
         }
-        printf(KYEL "Next ARSN value is:\n\t");
-        for (int i = 0; i < sa_ptr->arsn_len; i++)
+        if (sa_ptr->arsn_len > 0 && sa_ptr->null_arsn == ARSN_NULL_FALSE)
         {
-            printf("%02x", *(sa_ptr->arsn + i));
+            printf(KYEL "Next ARSN value is:\n\t");
+            for (int i = 0; i < sa_ptr->arsn_len; i++)
+            {
+                printf("%02x", *(sa_ptr->arsn + i));
+            }
+            printf("\n" RESET);
+            printf(KYEL "Next transmitted ARSN value is:\n\t");
+            for (int i = sa_ptr->arsn_len - sa_ptr->shsnf_len; i < sa_ptr->arsn_len; i++)
+            {
+                printf("%02x", *(sa_ptr->arsn + i));
+            }
+            printf("\n" RESET);
         }
-        printf("\n" RESET);
-        printf(KYEL "Next transmitted ARSN value is:\n\t");
-        for (int i = sa_ptr->arsn_len - sa_ptr->shsnf_len; i < sa_ptr->arsn_len; i++)
-        {
-            printf("%02x", *(sa_ptr->arsn + i));
-        }
-        printf("\n" RESET);
 #endif
 #endif
     }
@@ -845,6 +864,13 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         return status;
     }
 
+    if (len_ingest < TM_FRAME_PRIMARYHEADER_SIZE)
+    {
+        status = CRYPTO_LIB_ERR_TM_FRAME_TOO_SHORT;
+        mc_if->mc_log(status);
+        return status;
+    }
+
     tfvn = ((uint8_t)pTfBuffer[0] & 0xC0) >> 6;
     scid = (((uint16_t)pTfBuffer[0] & 0x3F) << 4) | (((uint16_t)pTfBuffer[1] & 0xF0) >> 4);
     vcid = ((uint8_t)pTfBuffer[1] & 0x0E) >> 1;
@@ -880,6 +906,18 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         return status;
     }
 
+    if ((sa_ptr->null_iv == IV_NULL_TRUE || sa_ptr->null_arsn == ARSN_NULL_TRUE) && crypto_config_global.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+    {
+        // currently only null IV/ARSN with KMCCRYPTO
+        status = CRYPTO_LIB_ERR_INVALID_SA_CONFIGURATION;
+        mc_if->mc_log(status);
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+        {
+            free(sa_ptr);
+        }
+        return status;
+    }
+
     status = Crypto_Get_TM_Managed_Parameters_For_Gvcid(tfvn, scid, vcid, tm_gvcid_managed_parameters_array,
                                                         &tm_current_managed_parameters_struct);
 
@@ -890,6 +928,10 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         printf(KRED "Error: No managed parameters found!\n" RESET);
 #endif
         mc_if->mc_log(status);
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+        {
+            free(sa_ptr);
+        }
         return status;
     }
 
@@ -897,6 +939,10 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     {
         status = CRYPTO_LIB_ERR_TM_FL_GT_MAX_FRAME_SIZE;
         mc_if->mc_log(status);
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+        {
+            free(sa_ptr);
+        }
         return status;
     }
 
@@ -1216,7 +1262,7 @@ int32_t Crypto_TM_Process_Setup(uint16_t len_ingest, uint16_t *byte_idx, uint8_t
         }
     } // Unable to get necessary Managed Parameters for TM TF -- return with error.
 
-    if (status == CRYPTO_LIB_SUCCESS &&len_ingest > tm_current_managed_parameters_struct.max_frame_size)
+    if (status == CRYPTO_LIB_SUCCESS && len_ingest > tm_current_managed_parameters_struct.max_frame_size)
     {
         status = CRYPTO_LIB_ERR_TM_FL_GT_MAX_FRAME_SIZE;
         mc_if->mc_log(status);
@@ -1554,7 +1600,8 @@ int32_t Crypto_TM_Do_Decrypt_NONAEAD(uint8_t sa_service_type, uint16_t pdu_len, 
                                                                        sa_ptr->acs,        // authentication cipher
                                                                        NULL);              // cam cookies
     }
-    if (status == CRYPTO_LIB_SUCCESS && (sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
+    if (status == CRYPTO_LIB_SUCCESS &&
+        (sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
     {
         if (crypto_config_global.key_type != KEY_TYPE_KMC)
         {
@@ -1696,9 +1743,10 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     }
     printf("\n");
 #endif
-    uint8_t padding = sa_ptr->shplf_len > 0 ? p_ingest[byte_idx - 1] : 0;
+    uint8_t padding  = sa_ptr->shplf_len > 0 ? p_ingest[byte_idx - 1] : 0;
     uint8_t fecf_len = (tm_current_managed_parameters_struct.has_fecf == TM_HAS_FECF) ? FECF_SIZE : 0;
-    memmove(&p_new_dec_frame[tm_current_managed_parameters_struct.max_frame_size - padding - fecf_len], &p_new_dec_frame[tm_current_managed_parameters_struct.max_frame_size - fecf_len], fecf_len);
+    memmove(&p_new_dec_frame[tm_current_managed_parameters_struct.max_frame_size - padding - fecf_len],
+            &p_new_dec_frame[tm_current_managed_parameters_struct.max_frame_size - fecf_len], fecf_len);
     // pp_processed_frame = p_new_dec_frame;
 
     // TODO maybe not just return this without doing the math ourselves
@@ -1860,6 +1908,13 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
     crypto_key_t          *ekp               = NULL;
     crypto_key_t          *akp               = NULL;
 
+    if (len_ingest < TM_FRAME_PRIMARYHEADER_SIZE)
+    {
+        status = CRYPTO_LIB_ERR_TM_FRAME_TOO_SHORT;
+        mc_if->mc_log(status);
+        return status;
+    }
+
     // Bit math to give concise access to values in the ingest
     tm_frame_pri_hdr.tfvn = ((uint8_t)p_ingest[0] & 0xC0) >> 6;
     tm_frame_pri_hdr.scid = (((uint16_t)p_ingest[0] & 0x3F) << 4) | (((uint16_t)p_ingest[1] & 0xF0) >> 4);
@@ -1873,17 +1928,58 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
          * Begin Security Header Fields
          * Reference CCSDS SDLP 3550b1 4.1.1.1.3
          **/
-        // Get SPI
-        spi                                   = (uint8_t)p_ingest[byte_idx] << 8 | (uint8_t)p_ingest[byte_idx + 1];
-        pp_processed_frame->tm_sec_header.spi = spi;
-        // Move index to past the SPI
-        byte_idx += 2;
+
+        if (len_ingest >= byte_idx + SPI_LEN)
+        {
+            // Get SPI
+            spi                                   = (uint8_t)p_ingest[byte_idx] << 8 | (uint8_t)p_ingest[byte_idx + 1];
+            pp_processed_frame->tm_sec_header.spi = spi;
+            // Move index to past the SPI
+            byte_idx += 2;
+        }
+        else
+        {
+            status = CRYPTO_LIB_ERR_TM_FRAME_TOO_SHORT;
+            mc_if->mc_log(status);
+            return status;
+        }
 
         if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
         {
             strncpy(mariadb_table_name, MARIADB_TM_TABLE_NAME, sizeof(mariadb_table_name));
         }
         status = sa_if->sa_get_from_spi(spi, &sa_ptr);
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+            mc_if->mc_log(status);
+            return status;
+        }
+
+        if ((sa_ptr->null_iv == IV_NULL_TRUE || sa_ptr->null_arsn == ARSN_NULL_TRUE) && crypto_config_global.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+        {
+            // currently only null IV/ARSN with KMCCRYPTO
+            status = CRYPTO_LIB_ERR_INVALID_SA_CONFIGURATION;
+            mc_if->mc_log(status);
+            if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+            {
+                free(sa_ptr);
+            }
+            return status;
+        }
+
+#ifdef DEBUG
+        printf("TFVN SA(%d) == FRAME(%d)?\n", sa_ptr->gvcid_blk.tfvn, tm_frame_pri_hdr.tfvn);
+        printf("SCID SA(%d) == FRAME(%d)?\n", sa_ptr->gvcid_blk.scid, tm_frame_pri_hdr.scid);
+        printf("VCID SA(%d) == FRAME(%d)?\n", sa_ptr->gvcid_blk.vcid, tm_frame_pri_hdr.vcid);
+#endif
+
+        if (sa_ptr->gvcid_blk.tfvn != tm_frame_pri_hdr.tfvn || sa_ptr->gvcid_blk.scid != tm_frame_pri_hdr.scid ||
+            sa_ptr->gvcid_blk.vcid != tm_frame_pri_hdr.vcid)
+        {
+            status = CRYPTO_LIB_ERR_SA_GVCID_DOESNT_MATCH_FRAME;
+            mc_if->mc_log(status);
+            return status;
+        }
     }
 
     // If no valid SPI, return

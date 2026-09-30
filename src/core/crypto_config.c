@@ -834,7 +834,8 @@ int32_t Crypto_Config_Cam(uint8_t cam_enabled, char *cookie_file_path, char *key
         return CRYPTO_LIB_ERROR;
     }
 
-    if (!cookie_file_path || !access_manager_uri || !username || !cam_home || (login_method == CAM_LOGIN_KEYTAB_FILE && keytab_file_path == NULL))
+    if (!cookie_file_path || !access_manager_uri || !username || !cam_home ||
+        (login_method == CAM_LOGIN_KEYTAB_FILE && keytab_file_path == NULL))
     {
         free(cam_config);
         cam_config = NULL;
@@ -848,7 +849,8 @@ int32_t Crypto_Config_Cam(uint8_t cam_enabled, char *cookie_file_path, char *key
         return CAM_CONFIG_NOT_SUPPORTED_ERROR;
     }
 
-    if (login_method == CAM_LOGIN_KEYTAB_FILE && keytab_file_path != NULL && Crypto_is_safe_path(keytab_file_path) != CRYPTO_LIB_SUCCESS)
+    if (login_method == CAM_LOGIN_KEYTAB_FILE && keytab_file_path != NULL &&
+        Crypto_is_safe_path(keytab_file_path) != CRYPTO_LIB_SUCCESS)
     {
         free(cam_config);
         cam_config = NULL;
@@ -925,6 +927,10 @@ int32_t Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TMGvcidManagedParameters_t
     {
         status = CRYPTO_LIB_ERR_TM_FRAME_SIZE_EXCEEDS_SPEC_LIMIT;
     }
+    else if (gvcid_managed_parameters_struct.max_frame_size < TM_FRAME_PRIMARYHEADER_SIZE)
+    {
+        status = CRYPTO_LIB_ERR_TM_MAN_PARAM_FL_TOO_SHORT;
+    }
     else
     {
         tm_gvcid_managed_parameters_array[tm_gvcid_counter] = gvcid_managed_parameters_struct;
@@ -945,6 +951,10 @@ int32_t Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOSGvcidManagedParameters
     else if (gvcid_managed_parameters_struct.max_frame_size > AOS_MAX_FRAME_SIZE)
     {
         status = CRYPTO_LIB_ERR_AOS_FRAME_SIZE_EXCEEDS_SPEC_LIMIT;
+    }
+    else if (gvcid_managed_parameters_struct.max_frame_size < AOS_BASE_PRIMARYHEADER_SIZE + SPI_LEN)
+    {
+        status = CRYPTO_LIB_ERR_AOS_MAN_PARAM_FL_TOO_SHORT;
     }
     else
     {
@@ -968,7 +978,7 @@ int32_t crypto_free_config_structs(void)
     crypto_config_tc.init_status     = UNINITIALIZED;
     crypto_config_tm.init_status     = UNINITIALIZED;
     crypto_config_aos.init_status    = UNINITIALIZED;
-    
+
     // Config structs with char* types that are malloc'd and must be freed individually.
     if (sa_mariadb_config != NULL)
     {

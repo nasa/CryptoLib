@@ -599,7 +599,7 @@ void Crypto_TC_Increment_IV_ARSN(uint8_t sa_service_type, SecurityAssociation_t 
 #ifdef INCREMENT
         if (crypto_config_tc.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
         {
-            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0)
+            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0  && sa_ptr->null_iv == IV_NULL_FALSE)
             {
                 Crypto_increment(sa_ptr->iv, sa_ptr->iv_len);
             }
@@ -607,19 +607,19 @@ void Crypto_TC_Increment_IV_ARSN(uint8_t sa_service_type, SecurityAssociation_t 
         else // SA_INCREMENT_NONTRANSMITTED_IV_FALSE
         {
             // Only increment the transmitted portion
-            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0)
+            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0  && sa_ptr->null_iv == IV_NULL_FALSE)
             {
                 Crypto_increment(sa_ptr->iv + (sa_ptr->iv_len - sa_ptr->shivf_len), sa_ptr->shivf_len);
             }
         }
-        if (sa_ptr->shsnf_len > 0)
+        if (sa_ptr->shsnf_len > 0  && sa_ptr->null_arsn == ARSN_NULL_FALSE)
         {
             Crypto_increment(sa_ptr->arsn, sa_ptr->arsn_len);
         }
 
 #ifdef SA_DEBUG
         int i = 0;
-        if (sa_ptr->iv_len > 0)
+        if (sa_ptr->iv_len > 0  && sa_ptr->null_iv == IV_NULL_FALSE)
         {
             printf(KYEL "Next IV value is:\n\t");
             for (i = 0; i < sa_ptr->iv_len; i++)
@@ -738,7 +738,7 @@ int32_t Crypto_TC_Check_Init_Setup(uint16_t in_frame_length)
         return status; // return immediately so a NULL crypto_config is not dereferenced later
     }
 
-    if (in_frame_length < 5) // Frame length doesn't have enough bytes for TC TF header -- error out.
+    if (in_frame_length < TC_FRAME_HEADER_SIZE) // Frame length doesn't have enough bytes for TC TF header -- error out.
     {
         status = CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_TC_STANDARD;
         mc_if->mc_log(status);
@@ -966,7 +966,7 @@ int32_t Crypto_TC_Set_IV(SecurityAssociation_t *sa_ptr, uint8_t *p_new_enc_frame
 {
     uint32_t status = CRYPTO_LIB_SUCCESS;
 #ifdef SA_DEBUG
-    if (sa_ptr->shivf_len > 0)
+    if (sa_ptr->shivf_len > 0  && sa_ptr->null_iv == IV_NULL_FALSE)
     {
         int i = 0;
         printf(KYEL "Using IV value:\n\t");
@@ -1584,7 +1584,8 @@ int32_t Crypto_TC_Do_Decrypt(uint8_t sa_service_type, uint8_t ecs_is_aead_algori
                 cam_cookies                                    //
             );
         }
-        if (status == CRYPTO_LIB_SUCCESS && (sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
+        if (status == CRYPTO_LIB_SUCCESS &&
+            (sa_service_type == SA_ENCRYPTION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION))
         {
             if (crypto_config_global.key_type != KEY_TYPE_KMC)
             {
@@ -1622,7 +1623,8 @@ int32_t Crypto_TC_Do_Decrypt(uint8_t sa_service_type, uint8_t ecs_is_aead_algori
                 // Get Padding Amount from ingest frame
                 padding_amount = (int)ingest[padding_location];
                 // Remove Padding from final decrypted portion
-                if ((tc_sdls_processed_frame->tc_pdu_len - padding_amount) > tc_current_managed_parameters_struct.max_frame_size)
+                if ((tc_sdls_processed_frame->tc_pdu_len - padding_amount) >
+                    tc_current_managed_parameters_struct.max_frame_size)
                 {
                     Crypto_TC_Safe_Free_Ptr(aad);
                     status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW;
@@ -1665,7 +1667,7 @@ int32_t Crypto_TC_Process_Sanity_Check(int *len_ingest)
         // Can't mc_log since it's not configured
         return status; // return immediately so a NULL crypto_config is not dereferenced later
     }
-    if ((*len_ingest < 5) &&
+    if ((*len_ingest < TC_FRAME_HEADER_SIZE) &&
         (status == CRYPTO_LIB_SUCCESS)) // Frame length doesn't even have enough bytes for header -- error out.
     {
         status = CRYPTO_LIB_ERR_INPUT_FRAME_TOO_SHORT_FOR_TC_STANDARD;
@@ -1835,7 +1837,6 @@ int32_t Crypto_TC_Check_IV_ARSN(SecurityAssociation_t *sa_ptr, TC_t *tc_sdls_pro
                 clean_ekref(sa_ptr);
             if (sa_ptr->ak_ref[0] != '\0')
                 clean_akref(sa_ptr);
-            free(sa_ptr);
         }
     }
     return status;
@@ -1867,6 +1868,21 @@ uint32_t Crypto_TC_Sanity_Validations(TC_t *tc_sdls_processed_frame, SecurityAss
     }
     if (status != CRYPTO_LIB_SUCCESS)
     {
+        mc_if->mc_log(status);
+        return status;
+    }
+
+#ifdef DEBUG
+    printf("TFVN SA(%d) == FRAME(%d)?\n", (*sa_ptr)->gvcid_blk.tfvn, tc_sdls_processed_frame->tc_header.tfvn);
+    printf("SCID SA(%d) == FRAME(%d)?\n", (*sa_ptr)->gvcid_blk.scid, tc_sdls_processed_frame->tc_header.scid);
+    printf("VCID SA(%d) == FRAME(%d)?\n", (*sa_ptr)->gvcid_blk.vcid, tc_sdls_processed_frame->tc_header.vcid);
+#endif
+
+    if ((*sa_ptr)->gvcid_blk.tfvn != tc_sdls_processed_frame->tc_header.tfvn ||
+        (*sa_ptr)->gvcid_blk.scid != tc_sdls_processed_frame->tc_header.scid ||
+        (*sa_ptr)->gvcid_blk.vcid != tc_sdls_processed_frame->tc_header.vcid)
+    {
+        status = CRYPTO_LIB_ERR_SA_GVCID_DOESNT_MATCH_FRAME;
         mc_if->mc_log(status);
     }
 
@@ -2007,9 +2023,18 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
     // Segment Header
     Crypto_TC_Set_Segment_Header(tc_sdls_processed_frame, ingest, &byte_idx);
 
-    // Security Header
-    tc_sdls_processed_frame->tc_sec_header.spi = ((uint8_t)ingest[byte_idx] << 8) | (uint8_t)ingest[byte_idx + 1];
-    byte_idx += 2;
+    if (*len_ingest >= byte_idx + SPI_LEN)
+    {
+        // Security Header
+        tc_sdls_processed_frame->tc_sec_header.spi = ((uint8_t)ingest[byte_idx] << 8) | (uint8_t)ingest[byte_idx + 1];
+        byte_idx += 2;
+    }
+    else
+    {
+        status = CRYPTO_LIB_ERR_TC_FRAME_TOO_SHORT;
+        mc_if->mc_log(status);
+        return status;
+    }
 
 #ifdef TC_DEBUG
     printf("vcid = %d \n", tc_sdls_processed_frame->tc_header.vcid);
@@ -2173,6 +2198,10 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
     }
 
     Crypto_TC_Safe_Free_Ptr(aad);
+    if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+    {
+        free(sa_ptr);
+    }
 
     mc_if->mc_log(status);
     return status;
@@ -2310,6 +2339,11 @@ static int32_t crypto_tc_validate_sa(SecurityAssociation_t *sa)
     if (sa->arsn_len - sa->shsnf_len < 0)
     {
         return CRYPTO_LIB_ERR_ARSN_LEN_SHORTER_THAN_SEC_HEADER_LENGTH;
+    }
+    if ((sa->null_iv == IV_NULL_TRUE || sa->null_arsn == ARSN_NULL_TRUE) && crypto_config_global.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+    {
+        // currently only null IV/ARSN with KMCCRYPTO
+        return CRYPTO_LIB_ERR_NULL_IV;
     }
 
     return CRYPTO_LIB_SUCCESS;

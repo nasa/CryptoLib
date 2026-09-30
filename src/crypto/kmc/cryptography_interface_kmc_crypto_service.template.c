@@ -241,8 +241,13 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
     int32_t status = CRYPTO_LIB_SUCCESS;
     key            = key;     // Direct key input is not supported in KMC interface
     len_key        = len_key; // Direct key input is not supported in KMC interface
-    ecs = ecs;
-    padding = padding;
+    ecs            = ecs;
+    padding        = padding;
+
+    if (sa_ptr->null_iv == IV_NULL_TRUE)
+    {
+        iv = NULL;
+    }
 
     // Remove pre-padding to block (KMC does not want it)
     if (*ecs == CRYPTO_CIPHER_AES256_CBC && padding > 0)
@@ -382,26 +387,42 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
             char *line;
             char *token;
             char  temp_buff[256];
-            for (line = strtok(ciphertext_IV_base64, ","); line != NULL; line = strtok(NULL, ","))
+            char *outer_loop;
+            char *inner_loop;
+            for (line = strtok_r(ciphertext_IV_base64, ",", &outer_loop); line != NULL; line = strtok_r(NULL, ",", &outer_loop))
             {
                 strncpy(temp_buff, line, sizeof(temp_buff));
 
-                for (token = strtok(temp_buff, ":"); token != NULL; token = strtok(NULL, ":"))
+                for (token = strtok_r(temp_buff, ":", &inner_loop); token != NULL; token = strtok_r(NULL, ":", &inner_loop))
                 {
                     if (strcmp(token, "initialVector") == 0)
                     {
-                        token                          = strtok(NULL, ":");
+                        token                          = strtok_r(NULL, ":", &inner_loop);
                         char  *ciphertext_token_base64 = malloc(strlen(token));
                         size_t cipher_text_token_len   = strlen(token);
                         memcpy(ciphertext_token_base64, token, cipher_text_token_len);
 #ifdef DEBUG
                         printf("IV LENGTH: %d\n", iv_len);
-                        printf("IV ENCODED Text: %s\nIV ENCODED TEXT LEN: %ld\n", ciphertext_token_base64,
-                               cipher_text_token_len);
+                        printf("IV ENCODED TEXT LEN: %ld\n", cipher_text_token_len);
+                        printf("IV ENCODED Text: \n");
+                        for (uint32_t i = 0; i < cipher_text_token_len; i++)
+                        {
+                            printf("%c", ciphertext_token_base64[i]);
+                        }
+                        printf("\n");
 #endif
-                        char  *iv_decoded     = malloc((iv_len)*2 + 1);
-                        size_t iv_decoded_len = 0;
-                        base64urlDecode(ciphertext_token_base64, cipher_text_token_len, iv_decoded, &iv_decoded_len);
+                        char    *iv_decoded          = malloc((iv_len)*2 + 1);
+                        size_t   iv_decoded_len      = 0;
+                        uint16_t decoded_buffer_size = (iv_len)*2 + 1;
+                        if (base64urlDecode(ciphertext_token_base64, cipher_text_token_len, iv_decoded,
+                                            decoded_buffer_size, &iv_decoded_len) != 0)
+                        {
+                            free(chunk_write);
+                            free(iv_decoded);
+                            free(ciphertext_token_base64);
+                            free(ciphertext_IV_base64);
+                            return CRYPTOGRAHPY_KMC_BASE64URL_DECRYPT_ERROR;
+                        }
 #ifdef DEBUG
                         printf("Decoded IV Text Length: %ld\n", iv_decoded_len);
                         printf("Decoded IV Text: \n");
@@ -872,10 +893,10 @@ static int32_t cryptography_authenticate(uint8_t *data_out, size_t len_data_out,
             // search through metadata string for base64 ICV end idx:
             // Format:
             // "integrityCheckValue:xQgnkVrrQj8FRALV3DxnVg==,keyRef:kmc/test/nist_cmac_90,cryptoAlgorithm:AESCMAC,metadataType:IntegrityCheckMetadata"
-            uint32_t len_metadata    = t[json_idx + 1].end - t[json_idx + 1].start;
-            char    *metadata        = malloc(len_metadata + 1);
-            char    *metadata_start  = metadata;
-            char    *metadata_end    = &metadata[len_metadata];
+            uint32_t len_metadata   = t[json_idx + 1].end - t[json_idx + 1].start;
+            char    *metadata       = malloc(len_metadata + 1);
+            char    *metadata_start = metadata;
+            char    *metadata_end   = &metadata[len_metadata];
             memcpy(metadata, chunk_write->response + t[json_idx + 1].start, len_metadata);
 
             char  *key = "";
@@ -922,9 +943,9 @@ static int32_t cryptography_authenticate(uint8_t *data_out, size_t len_data_out,
 #endif
             json_idx++;
             icvtext_found = CRYPTO_TRUE;
-            
+
             metadata = metadata_start;
-            free(metadata); 
+            free(metadata);
             continue;
         }
 
@@ -969,9 +990,16 @@ static int32_t cryptography_authenticate(uint8_t *data_out, size_t len_data_out,
     /* JSON Response Handling End */
 
     // https://stackoverflow.com/questions/13378815/base64-length-calculation
-    uint8_t *icv_decoded     = calloc(1, B64DECODE_OUT_SAFESIZE(strlen(icv_base64)) + 1);
-    size_t   icv_decoded_len = 0;
-    base64urlDecode(icv_base64, strlen(icv_base64), icv_decoded, &icv_decoded_len);
+    uint8_t *icv_decoded         = calloc(1, B64DECODE_OUT_SAFESIZE(strlen(icv_base64)) + 1);
+    size_t   icv_decoded_len     = 0;
+    uint16_t decoded_buffer_size = strlen(icv_base64) + 1;
+    if (base64urlDecode(icv_base64, strlen(icv_base64), icv_decoded, decoded_buffer_size, &icv_decoded_len) != 0)
+    {
+        free(chunk_write);
+        free(icv_decoded);
+        free(icv_base64);
+        return CRYPTOGRAHPY_KMC_BASE64URL_DECRYPT_ERROR;
+    }
     free(icv_base64);
 #ifdef DEBUG
     printf("Mac size: %d\n", mac_size);
@@ -1228,6 +1256,11 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
     ecs            = ecs;
     acs            = acs;
 
+    if (sa_ptr->null_iv == IV_NULL_TRUE)
+    {
+        iv = NULL;
+    }
+
     curl_easy_reset(curl);
     status = configure_curl_connect_opts(curl, cam_cookies);
     if (status != CRYPTO_LIB_SUCCESS)
@@ -1236,7 +1269,8 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
     }
     // Base64 URL encode IV for KMC REST Encrypt
     char *iv_base64 = (char *)calloc(1, B64ENCODE_OUT_SAFESIZE(iv_len) + 1);
-    base64urlEncode(iv, iv_len, iv_base64, NULL);
+    if (iv != NULL)
+        base64urlEncode(iv, iv_len, iv_base64, NULL);
 
 #ifdef DEBUG
     printf("IV_BASE64: %s\n", iv_base64);
@@ -1442,15 +1476,17 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
             char *line;
             char *token;
             char  temp_buff[256];
-            for (line = strtok(ciphertext_IV_base64, ","); line != NULL; line = strtok(NULL, ","))
+            char *outer_loop;
+            char *inner_loop;
+            for (line = strtok_r(ciphertext_IV_base64, ",", &outer_loop); line != NULL; line = strtok_r(NULL, ",", &outer_loop))
             {
                 strncpy(temp_buff, line, sizeof(temp_buff));
 
-                for (token = strtok(temp_buff, ":"); token != NULL; token = strtok(NULL, ":"))
+                for (token = strtok_r(temp_buff, ":", &inner_loop); token != NULL; token = strtok_r(NULL, ":", &inner_loop))
                 {
                     if (strcmp(token, "initialVector") == 0)
                     {
-                        token                          = strtok(NULL, ":");
+                        token                          = strtok_r(NULL, ":", &inner_loop);
                         char  *ciphertext_token_base64 = malloc(strlen(token));
                         size_t cipher_text_token_len   = strlen(token);
                         memcpy(ciphertext_token_base64, token, cipher_text_token_len);
@@ -1464,9 +1500,18 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
                         }
                         printf("\n");
 #endif
-                        char  *iv_decoded     = malloc((iv_len)*2 + 1);
-                        size_t iv_decoded_len = 0;
-                        base64urlDecode(ciphertext_token_base64, cipher_text_token_len, iv_decoded, &iv_decoded_len);
+                        char    *iv_decoded          = malloc((iv_len)*2 + 1);
+                        size_t   iv_decoded_len      = 0;
+                        uint16_t decoded_buffer_size = (iv_len)*2 + 1;
+                        if (base64urlDecode(ciphertext_token_base64, cipher_text_token_len, iv_decoded,
+                                            decoded_buffer_size, &iv_decoded_len) != 0)
+                        {
+                            free(chunk_write);
+                            free(iv_decoded);
+                            free(ciphertext_token_base64);
+                            free(ciphertext_IV_base64);
+                            return CRYPTOGRAHPY_KMC_BASE64URL_DECRYPT_ERROR;
+                        }
 
 #ifdef DEBUG
                         printf("Decoded IV Text Length: %ld\n", iv_decoded_len);
