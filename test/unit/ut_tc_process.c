@@ -93,7 +93,7 @@ UTEST(TC_PROCESS, EXERCISE_IV)
     test_association->shivf_len      = 12;
     test_association->iv_len         = 12;
     test_association->ecs_len        = 1;
-    test_association->shplf_len      = 1;
+    test_association->shplf_len      = 0;
     test_association->arsnw_len      = 1;
     test_association->arsnw          = 5;
     test_association->arsn_len       = 0;
@@ -806,7 +806,7 @@ UTEST(TC_PROCESS, DECRYPT_CBC_1B)
     // printf("Decrypted Frame:\n");
     for (int i = 0; i < tc_sdls_processed_frame->tc_pdu_len; i++)
     {
-        // printf("%02x -> %02x ", tc_sdls_processed_frame->tc_pdu[i], truth_data_b[i]);
+        printf("%02x -> %02x ", tc_sdls_processed_frame->tc_pdu[i], truth_data_b[i]);
         ASSERT_EQ(tc_sdls_processed_frame->tc_pdu[i], truth_data_b[i]);
     }
     // printf("\n");

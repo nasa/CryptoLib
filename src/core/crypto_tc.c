@@ -1513,6 +1513,7 @@ int32_t Crypto_TC_Do_Decrypt(uint8_t sa_service_type, uint8_t ecs_is_aead_algori
                              crypto_key_t *akp, uint8_t segment_hdr_len)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
+    segment_hdr_len = segment_hdr_len;
 
     if (sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_TRUE)
     {
@@ -1613,26 +1614,6 @@ int32_t Crypto_TC_Do_Decrypt(uint8_t sa_service_type, uint8_t ecs_is_aead_algori
                                                       &sa_ptr->acs, // authentication cipher
                                                       cam_cookies   //
                 );
-
-            // Handle Padding Removal
-            if (sa_ptr->shplf_len != 0)
-            {
-                int padding_location =
-                    TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len;
-                uint16_t padding_amount = 0;
-                // Get Padding Amount from ingest frame
-                padding_amount = (int)ingest[padding_location];
-                // Remove Padding from final decrypted portion
-                if ((tc_sdls_processed_frame->tc_pdu_len - padding_amount) >
-                    tc_current_managed_parameters_struct.max_frame_size)
-                {
-                    Crypto_TC_Safe_Free_Ptr(aad);
-                    status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW;
-                    mc_if->mc_log(status);
-                    return status;
-                }
-                tc_sdls_processed_frame->tc_pdu_len -= padding_amount;
-            }
         }
     }
     else if (sa_service_type == SA_PLAINTEXT)
@@ -2195,6 +2176,29 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
     if (status == CRYPTO_LIB_SUCCESS && crypto_config_tc.process_sdls_pdus == TC_PROCESS_SDLS_PDUS_TRUE)
     {
         status = Crypto_Process_Extended_Procedure_Pdu(tc_sdls_processed_frame, ingest, *len_ingest);
+    }
+
+    // Handle Padding Removal
+    if (sa_ptr->shplf_len > 0)
+    {
+        int padding_location =
+            TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len;
+        // Get Padding Amount from ingest frame
+        uint32_t padding_amount = 0;
+        memcpy(&padding_amount, &ingest[padding_location], sa_ptr->shplf_len);
+#ifdef DEBUG
+        printf("Removing %dB of Padding\n", padding_amount);
+#endif
+        // Remove Padding from final decrypted portion
+        if ((tc_sdls_processed_frame->tc_pdu_len - padding_amount) >
+            tc_current_managed_parameters_struct.max_frame_size)
+        {
+            Crypto_TC_Safe_Free_Ptr(aad);
+            status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW;
+            mc_if->mc_log(status);
+            return status;
+        }
+        tc_sdls_processed_frame->tc_pdu_len -= padding_amount;
     }
 
     Crypto_TC_Safe_Free_Ptr(aad);
