@@ -1225,6 +1225,8 @@ int32_t Crypto_Process_Extended_Procedure_Pdu(TC_t *tc_sdls_processed_frame, uin
                 sdls_frame.tlv_pdu.hdr.pid = (tc_sdls_processed_frame->tc_pdu[0] & 0x0F);
                 sdls_frame.tlv_pdu.hdr.pdu_len =
                     (tc_sdls_processed_frame->tc_pdu[1] << 8) | tc_sdls_processed_frame->tc_pdu[2];
+                sdls_frame.hdr.pkt_length =
+                    (tc_sdls_processed_frame->tc_pdu[4] << 8) | tc_sdls_processed_frame->tc_pdu[5];
                 for (int x = 3; x < (3 + tc_sdls_processed_frame->tc_header.fl); x++)
                 {
                     // Todo - Consider how this behaves with large OTAR PDUs that are larger than 1 TC in size. Most
