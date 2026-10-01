@@ -89,12 +89,16 @@ static int32_t cryptography_init(void)
     if (!gcry_check_version(GCRYPT_VERSION))
     {
         fprintf(stderr, "Gcrypt Version: %s", GCRYPT_VERSION);
+#ifdef DEBUG
         printf(KRED "\tERROR: gcrypt version mismatch! \n" RESET);
+#endif
     }
     if (gcry_control(GCRYCTL_SELFTEST) != GPG_ERR_NO_ERROR)
     {
         status = CRYPTOGRAPHY_LIBRARY_INITIALIZIATION_ERROR;
+#ifdef DEBUG
         printf(KRED "ERROR: gcrypt self test failed\n" RESET);
+#endif
     }
     gcry_control(GCRYCTL_INITIALIZATION_FINISHED, 0);
 
@@ -143,8 +147,10 @@ static int32_t cryptography_authenticate(
     gcry_error = gcry_mac_open(&(tmp_mac_hd), algo, GCRY_MAC_FLAG_SECURE, NULL);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
+#ifdef DEBUG
         printf(KRED "ERROR: gcry_mac_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
         printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+#endif
         status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
         return status;
     }
@@ -161,8 +167,10 @@ static int32_t cryptography_authenticate(
 #endif
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
+#ifdef DEBUG
         printf(KRED "ERROR: gcry_mac_setkey error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
         printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+#endif
         status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
         gcry_mac_close(tmp_mac_hd);
         return status;
@@ -174,8 +182,10 @@ static int32_t cryptography_authenticate(
         gcry_error = gcry_mac_setiv(tmp_mac_hd, iv, iv_len);
         if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
         {
+#ifdef DEBUG
             printf(KRED "ERROR: gcry_mac_setiv error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
             printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+#endif
             status = CRYPTO_LIB_ERROR;
             gcry_mac_close(tmp_mac_hd);
             return status;
@@ -188,8 +198,10 @@ static int32_t cryptography_authenticate(
     );
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
+#ifdef DEBUG
         printf(KRED "ERROR: gcry_mac_write error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
         printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+#endif
         status = CRYPTO_LIB_ERROR;
         gcry_mac_close(tmp_mac_hd);
         return status;
@@ -202,8 +214,10 @@ static int32_t cryptography_authenticate(
              );
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
+#ifdef DEBUG
         printf(KRED "ERROR: gcry_mac_read error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
         printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+#endif
         status = CRYPTO_LIB_ERR_MAC_RETRIEVAL_ERROR;
         gcry_mac_close(tmp_mac_hd);
         return status;
@@ -253,8 +267,10 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
     gcry_error = gcry_mac_open(&(tmp_mac_hd), algo, GCRY_MAC_FLAG_SECURE, NULL);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
+#ifdef DEBUG
         printf(KRED "ERROR: gcry_mac_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
         printf(KRED "Failure: %s/%s\n" RESET, gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+#endif
         status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
         return status;
     }
@@ -271,8 +287,10 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
 #endif
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
+#ifdef DEBUG
         printf(KRED "ERROR: gcry_mac_setkey error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
         printf(KRED "Failure: %s/%s\n" RESET, gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+#endif
         gcry_mac_close(tmp_mac_hd);
         status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
         return status;
@@ -283,8 +301,10 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
         gcry_error = gcry_mac_setiv(tmp_mac_hd, iv, iv_len);
         if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
         {
+#ifdef DEBUG
             printf(KRED "ERROR: gcry_mac_setiv error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
             printf(KRED "Failure: %s/%s\n" RESET, gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+#endif
             gcry_mac_close(tmp_mac_hd);
             status = CRYPTO_LIB_ERROR;
             return status;
@@ -296,8 +316,10 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
     );
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
+#ifdef DEBUG
         printf(KRED "ERROR: gcry_mac_write error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
         printf(KRED "Failure: %s/%s\n" RESET, gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+#endif
         gcry_mac_close(tmp_mac_hd);
         status = CRYPTO_LIB_ERROR;
         return status;
@@ -346,8 +368,10 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
     );
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
+#ifdef DEBUG
         printf(KRED "ERROR: gcry_mac_verify error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
         printf(KRED "Failure: %s/%s\n" RESET, gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+#endif
         gcry_mac_close(tmp_mac_hd);
         status = CRYPTO_LIB_ERR_MAC_VALIDATION_ERROR;
         return status;
@@ -406,8 +430,10 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
     gcry_error = gcry_cipher_open(&(tmp_hd), algo, mode, GCRY_CIPHER_NONE);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
+#ifdef DEBUG
         printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
         printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+#endif
         status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
         return status;
     }
@@ -425,8 +451,10 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
 
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
+#ifdef DEBUG
         printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
         printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+#endif
         status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
         gcry_cipher_close(tmp_hd);
         return status;
@@ -434,8 +462,10 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
     gcry_error = gcry_cipher_setiv(tmp_hd, iv, iv_len);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
+#ifdef DEBUG
         printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
         printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+#endif
         status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
         gcry_cipher_close(tmp_hd);
         return status;
@@ -456,8 +486,10 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
 
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
+#ifdef DEBUG
         printf(KRED "ERROR: gcry_cipher_encrypt error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
         printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+#endif
         status = CRYPTO_LIB_ERR_ENCRYPTION_ERROR;
         gcry_cipher_close(tmp_hd);
         return status;
@@ -520,8 +552,10 @@ int32_t cryptography_gcry_setup(int32_t mode, int32_t algo, gcry_cipher_hd_t *tm
     }
     if ((*gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
+#ifdef DEBUG
         printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, *gcry_error & GPG_ERR_CODE_MASK);
         printf(KRED "Failure: %s/%s\n", gcry_strsource(*gcry_error), gcry_strerror(*gcry_error));
+#endif
         status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
         return status;
     }
@@ -538,8 +572,10 @@ int32_t cryptography_gcry_setup(int32_t mode, int32_t algo, gcry_cipher_hd_t *tm
 
     if ((*gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
+#ifdef DEBUG
         printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET, *gcry_error & GPG_ERR_CODE_MASK);
         printf(KRED "Failure: %s/%s\n", gcry_strsource(*gcry_error), gcry_strerror(*gcry_error));
+#endif
         status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
         gcry_cipher_close(*tmp_hd);
         return status;
@@ -547,8 +583,10 @@ int32_t cryptography_gcry_setup(int32_t mode, int32_t algo, gcry_cipher_hd_t *tm
     *gcry_error = gcry_cipher_setiv(*tmp_hd, iv, iv_len);
     if ((*gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
+#ifdef DEBUG
         printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET, *gcry_error & GPG_ERR_CODE_MASK);
         printf(KRED "Failure: %s/%s\n", gcry_strsource(*gcry_error), gcry_strerror(*gcry_error));
+#endif
         status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
         gcry_cipher_close(*tmp_hd);
         return status;
@@ -610,8 +648,10 @@ static int32_t cryptography_aead_encrypt(
         );
         if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
         {
+#ifdef DEBUG
             printf(KRED "ERROR: gcry_cipher_authenticate error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
             printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+#endif
             status = CRYPTO_LIB_ERR_AUTHENTICATION_ERROR;
             gcry_cipher_close(tmp_hd);
             return status;
@@ -641,8 +681,10 @@ static int32_t cryptography_aead_encrypt(
     }
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
+#ifdef DEBUG
         printf(KRED "ERROR: gcry_cipher_encrypt error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
         printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+#endif
         status = CRYPTO_LIB_ERR_ENCRYPTION_ERROR;
         gcry_cipher_close(tmp_hd);
         return status;
@@ -666,8 +708,10 @@ static int32_t cryptography_aead_encrypt(
         );
         if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
         {
+#ifdef DEBUG
             printf(KRED "ERROR: gcry_cipher_gettag error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
             printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+#endif
             status = CRYPTO_LIB_ERR_MAC_RETRIEVAL_ERROR;
             gcry_cipher_close(tmp_hd);
             return status;
@@ -762,16 +806,20 @@ static int32_t cryptography_decrypt(uint8_t *data_out, size_t len_data_out, uint
     gcry_error = gcry_cipher_open(&(tmp_hd), algo, mode, GCRY_CIPHER_NONE);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
+#ifdef DEBUG
         printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
         printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+#endif
         status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
         return status;
     }
     gcry_error = gcry_cipher_setkey(tmp_hd, key_ptr, len_key);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
+#ifdef DEBUG
         printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
         printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+#endif
         gcry_cipher_close(tmp_hd);
         status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
         return status;
@@ -780,8 +828,10 @@ static int32_t cryptography_decrypt(uint8_t *data_out, size_t len_data_out, uint
     gcry_error = gcry_cipher_setiv(tmp_hd, temp_iv, full_iv_len);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
+#ifdef DEBUG
         printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
         printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+#endif
         gcry_cipher_close(tmp_hd);
         status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
         return status;
@@ -795,7 +845,9 @@ static int32_t cryptography_decrypt(uint8_t *data_out, size_t len_data_out, uint
     );
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
+#ifdef DEBUG
         printf(KRED "ERROR: gcry_cipher_decrypt error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
+#endif
         gcry_cipher_close(tmp_hd);
         status = CRYPTO_LIB_ERR_DECRYPT_ERROR;
         return status;
@@ -879,7 +931,9 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
     // Sanity check for future developers
     if (algo != GCRY_CIPHER_AES256)
     {
+#ifdef DEBUG
         printf(KRED "Warning - only  AES256 supported for AEAD decrypt - exiting!\n" RESET);
+#endif
         status = CRYPTO_LIB_ERR_UNSUPPORTED_ECS;
         return status;
     }
@@ -887,16 +941,20 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
     gcry_error = gcry_cipher_open(&(tmp_hd), GCRY_CIPHER_AES256, mode, GCRY_CIPHER_NONE);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
+#ifdef DEBUG
         printf(KRED "ERROR: gcry_cipher_open error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
         printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+#endif
         status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
         return status;
     }
     gcry_error = gcry_cipher_setkey(tmp_hd, key_ptr, len_key);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
+#ifdef DEBUG
         printf(KRED "ERROR: gcry_cipher_setkey error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
         printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+#endif
         gcry_cipher_close(tmp_hd);
         status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
         return status;
@@ -904,8 +962,10 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
     gcry_error = gcry_cipher_setiv(tmp_hd, temp_iv, full_iv_len);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
+#ifdef DEBUG
         printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
         printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+#endif
         gcry_cipher_close(tmp_hd);
         status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
         return status;
@@ -919,8 +979,10 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
         );
         if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
         {
+#ifdef DEBUG
             printf(KRED "ERROR: gcry_cipher_authenticate error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
             printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+#endif
             gcry_cipher_close(tmp_hd);
             status = CRYPTO_LIB_ERR_AUTHENTICATION_ERROR;
             return status;
@@ -941,8 +1003,10 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
         );
         if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
         {
+#ifdef DEBUG
             printf(KRED "ERROR: gcry_cipher_decrypt error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
             printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+#endif
             gcry_cipher_close(tmp_hd);
             status = CRYPTO_LIB_ERR_DECRYPT_ERROR;
             return status;
@@ -957,8 +1021,10 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
 
         if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
         {
+#ifdef DEBUG
             printf(KRED "ERROR: gcry_cipher_decrypt error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
             printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+#endif
             gcry_cipher_close(tmp_hd);
             status = CRYPTO_LIB_ERR_DECRYPT_ERROR;
             return status;
@@ -995,8 +1061,10 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
 
         if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
         {
+#ifdef DEBUG
             printf(KRED "ERROR: gcry_cipher_checktag error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
             printf(KRED "Failure: %s/%s\n", gcry_strsource(gcry_error), gcry_strerror(gcry_error));
+#endif
             gcry_cipher_close(tmp_hd);
             status = CRYPTO_LIB_ERR_MAC_VALIDATION_ERROR;
             return status;

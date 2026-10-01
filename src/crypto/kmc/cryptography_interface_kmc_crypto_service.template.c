@@ -252,15 +252,15 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
     // Remove pre-padding to block (KMC does not want it)
     if (*ecs == CRYPTO_CIPHER_AES256_CBC && padding > 0)
     {
+#ifdef DEBUG
         printf("len_data_in: %ld\n", len_data_in);
+#endif
         len_data_in = len_data_in - padding;
+#ifdef DEBUG
         printf("removed padding: %d\n", padding);
         printf("new len_data_in: %ld\n", len_data_in);
-    }
-
-#ifdef DEBUG
-    printf("PADLENGTH FIELD: 0x%02x\n", *(data_in - sa_ptr->shplf_len));
 #endif
+    }
 
     curl_easy_reset(curl);
     status = configure_curl_connect_opts(curl, cam_cookies);
@@ -366,7 +366,9 @@ static int32_t cryptography_encrypt(uint8_t *data_out, size_t len_data_out, uint
     if (parse_result < 0)
     {
         status = CRYPTOGRAHPY_KMC_CRYPTO_JSON_PARSE_ERROR;
+#ifdef DEBUG
         printf("Failed to parse JSON: %d\n", parse_result);
+#endif
         free(chunk_write);
         return status;
     }
@@ -683,7 +685,9 @@ static int32_t cryptography_decrypt(uint8_t *data_out, size_t len_data_out, uint
     if (parse_result < 0)
     {
         status = CRYPTOGRAHPY_KMC_CRYPTO_JSON_PARSE_ERROR;
+#ifdef DEBUG
         printf("Failed to parse JSON: %d\n", parse_result);
+#endif
         free(chunk_read);
         free(chunk_write);
         return status;
@@ -907,7 +911,9 @@ static int32_t cryptography_authenticate(uint8_t *data_out, size_t len_data_out,
     if (parse_result < 0)
     {
         status = CRYPTOGRAHPY_KMC_CRYPTO_JSON_PARSE_ERROR;
+#ifdef DEBUG
         printf("Failed to parse JSON: %d\n", parse_result);
+#endif
         free(chunk_read);
         free(chunk_write);
         return status;
@@ -1191,7 +1197,9 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
     if (parse_result < 0)
     {
         status = CRYPTOGRAHPY_KMC_CRYPTO_JSON_PARSE_ERROR;
+#ifdef DEBUG
         printf("Failed to parse JSON: %d\n", parse_result);
+#endif
         free(auth_uri);
         free(chunk_read);
         free(chunk_write->response);
@@ -1481,7 +1489,9 @@ static int32_t cryptography_aead_encrypt(uint8_t *data_out, size_t len_data_out,
     if (parse_result < 0)
     {
         status = CRYPTOGRAHPY_KMC_CRYPTO_JSON_PARSE_ERROR;
+#ifdef DEBUG
         printf("Failed to parse JSON: %d\n", parse_result);
+#endif
         if (iv_base64 != NULL)
             free(iv_base64);
         if (encrypt_uri != NULL)
@@ -1932,7 +1942,9 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
     if (parse_result < 0)
     {
         status = CRYPTOGRAHPY_KMC_CRYPTO_JSON_PARSE_ERROR;
+#ifdef DEBUG
         printf("Failed to parse JSON: %d\n", parse_result);
+#endif
         free(decrypt_payload);
         free(decrypt_uri);
         free(iv_base64);

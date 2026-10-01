@@ -102,7 +102,9 @@ static int32_t cryptography_init(void)
     if (LIBWOLFSSL_VERSION_HEX != wolfSSL_lib_version_hex())
     {
         status = CRYPTOGRAPHY_LIBRARY_INITIALIZIATION_ERROR;
+#ifdef DEBUG
         printf(KRED "ERROR: wolfssl version mismatch!\n" RESET);
+#endif
     }
 
     return status;

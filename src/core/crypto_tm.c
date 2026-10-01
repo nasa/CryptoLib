@@ -55,7 +55,9 @@ int32_t Crypto_TM_Sanity_Check(uint8_t *pTfBuffer)
         ((crypto_config_global.init_status == UNINITIALIZED) || (crypto_config_tm.init_status == UNINITIALIZED) ||
          (mc_if == NULL) || (sa_if == NULL)))
     {
+#ifdef DEBUG
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
+#endif
         status = CRYPTO_LIB_ERR_NO_CONFIG;
         // Can't mc_log since it's not configured
     }
@@ -131,7 +133,9 @@ int32_t Crypto_TM_Determine_SA_Service_Type(uint8_t *sa_service_type, SecurityAs
     {
         // Probably unnecessary check
         // Leaving for now as it would be cleaner in SA to have an association enum returned I believe
+#ifdef DEBUG
         printf(KRED "Error: SA Service Type is not defined! \n" RESET);
+#endif
         status = CRYPTO_LIB_ERROR;
     }
     if (status != CRYPTO_LIB_SUCCESS)
@@ -448,7 +452,9 @@ int32_t Crypto_TM_Do_Encrypt_NONPLAINTEXT(uint8_t sa_service_type, uint16_t *aad
             if (sa_ptr->abm_len < *aad_len)
             {
                 status = CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
+#ifdef DEBUG
                 printf(KRED "Error: abm_len of %d < *aad_len of %d\n" RESET, sa_ptr->abm_len, *aad_len);
+#endif
                 mc_if->mc_log(status);
             }
             if (status == CRYPTO_LIB_SUCCESS)
@@ -1232,7 +1238,9 @@ int32_t Crypto_TM_Process_Setup(uint16_t len_ingest, uint16_t *byte_idx, uint8_t
     // Query SA DB for active SA / SDLS parameters
     if ((sa_if == NULL) && (status == CRYPTO_LIB_SUCCESS)) // This should not happen, but tested here for safety
     {
+#ifdef DEBUG
         printf(KRED "ERROR: SA DB Not initalized! -- CRYPTO_LIB_ERR_NO_INIT, Will Exit\n" RESET);
+#endif
         status = CRYPTO_LIB_ERR_NO_INIT;
     }
 

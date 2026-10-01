@@ -112,7 +112,9 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     if ((crypto_config_global.init_status == UNINITIALIZED) || (crypto_config_aos.init_status == UNINITIALIZED) ||
         (mc_if == NULL) || (sa_if == NULL))
     {
+#ifdef DEBUG
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
+#endif
         status = CRYPTO_LIB_ERR_NO_CONFIG;
         // Can't mc_log since it's not configured
         return status; // return immediately so a NULL crypto_config is not dereferenced later
@@ -287,7 +289,9 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     {
         // Probably unnecessary check
         // Leaving for now as it would be cleaner in SA to have an association enum returned I believe
+#ifdef DEBUG
         printf(KRED "Error: SA Service Type is not defined! \n" RESET);
+#endif
         status = CRYPTO_LIB_ERROR;
         mc_if->mc_log(status);
         return status;
@@ -1053,7 +1057,9 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     // Query SA DB for active SA / SDLS parameters
     if (sa_if == NULL) // This should not happen, but tested here for safety
     {
+#ifdef DEBUG
         printf(KRED "ERROR: SA DB Not initalized! -- CRYPTO_LIB_ERR_NO_INIT, Will Exit\n" RESET);
+#endif
         status = CRYPTO_LIB_ERR_NO_INIT;
         return status;
     }

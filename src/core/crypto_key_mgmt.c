@@ -497,13 +497,17 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
     {
         sdls_frame.hdr.pkt_length =
             CCSDS_HDR_SIZE + ECSS_PUS_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
+#ifdef DEBUG
         printf("NO PUS: sdls_frame.hdr.pkt_length Calced as %d\n", sdls_frame.hdr.pkt_length);
+#endif
     }
     else
     {
         sdls_frame.hdr.pkt_length =
             CCSDS_HDR_SIZE + SDLS_TLV_HDR_SIZE + (sdls_frame.tlv_pdu.hdr.pdu_len / BYTE_LEN) - 1;
+#ifdef DEBUG
         printf("WITH PUS: sdls_frame.hdr.pkt_length Calced as %d\n", sdls_frame.hdr.pkt_length);
+#endif
     }
 
     count                 = Crypto_Prep_Reply(sdls_ep_reply, CRYPTOLIB_APPID);
@@ -581,7 +585,9 @@ int32_t Crypto_Key_verify(TC_t *tc_frame)
         pdu_data_idx += MAC_SIZE;
 
         count += CHALLENGE_SIZE + MAC_SIZE; // Don't forget to increment count!
+#ifdef DEBUG
         printf("count = %d\n", count);
+#endif
     }
 
 #ifdef PDU_DEBUG
