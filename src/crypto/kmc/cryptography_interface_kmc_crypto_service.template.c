@@ -545,6 +545,41 @@ static int32_t cryptography_decrypt(uint8_t *data_out, size_t len_data_out, uint
     ecs            = ecs;
     acs            = acs;
 
+    uint32_t full_iv_len = sa_ptr != NULL ? sa_ptr->iv_len : iv_len;
+    uint8_t temp_iv[MAX_IV_LEN];
+
+#ifdef DEBUG
+    printf("KMC Received IV:\n\t");
+    for (uint32_t i = 0; i < iv_len; i++)
+    {
+        printf("%02X", iv[i]);
+    }
+    printf("\n");
+#endif
+
+    if (iv_len == full_iv_len)
+    {
+        /* TC already reconstructed the rollover-aware IV. */
+        memcpy(temp_iv, iv, full_iv_len);
+    }
+    else
+    {
+        uint32_t prefix_len = full_iv_len - iv_len;
+
+        /* TM/AOS: obtain the non-transmitted prefix from the SA. */
+        memcpy(temp_iv, sa_ptr->iv, prefix_len);
+        memcpy(temp_iv + prefix_len, iv, iv_len);
+    }
+
+#ifdef DEBUG
+    printf("Reconstructed IV:\n\t");
+    for (uint32_t i = 0; i < full_iv_len; i++)
+    {
+        printf("%02X", temp_iv[i]);        
+    }
+    printf("\n");
+#endif
+
     // Get the key length in bits, in string format.
     // TODO -- Parse the key length from the keyInfo endpoint of the Crypto Service!
     uint32_t key_len_in_bits         = len_key * 8; // 8 bits per byte.
@@ -558,8 +593,8 @@ static int32_t cryptography_decrypt(uint8_t *data_out, size_t len_data_out, uint
         return status;
     }
     // Base64 URL encode IV for KMC REST Encrypt
-    char *iv_base64 = (char *)calloc(1, B64ENCODE_OUT_SAFESIZE(iv_len) + 1);
-    base64urlEncode(iv, iv_len, iv_base64, NULL);
+    char *iv_base64 = (char *)calloc(1, B64ENCODE_OUT_SAFESIZE(full_iv_len) + 1);
+    base64urlEncode(temp_iv, full_iv_len, iv_base64, NULL);
 
     uint8_t *decrypt_payload     = data_in;
     size_t   decrypt_payload_len = len_data_in;
@@ -1699,7 +1734,6 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
     key            = key; // Direct key input is not supported in KMC interface
     ecs            = ecs;
     acs            = acs;
-    iv             = iv;
 
     // Get the key length in bits, in string format.
     // TODO -- Parse the key length from the keyInfo endpoint of the Crypto Service!
@@ -1714,9 +1748,44 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
         return status;
     }
 
+    uint32_t full_iv_len = sa_ptr != NULL ? sa_ptr->iv_len : iv_len;
+    uint8_t temp_iv[MAX_IV_LEN];
+
+#ifdef DEBUG
+    printf("KMC Received IV:\n\t");
+    for (uint32_t i = 0; i < iv_len; i++)
+    {
+        printf("%02X", iv[i]);
+    }
+    printf("\n");
+#endif
+
+    if (iv_len == full_iv_len)
+    {
+        /* TC already reconstructed the rollover-aware IV. */
+        memcpy(temp_iv, iv, full_iv_len);
+    }
+    else
+    {
+        uint32_t prefix_len = full_iv_len - iv_len;
+
+        /* TM/AOS: obtain the non-transmitted prefix from the SA. */
+        memcpy(temp_iv, sa_ptr->iv, prefix_len);
+        memcpy(temp_iv + prefix_len, iv, iv_len);
+    }
+
+#ifdef DEBUG
+    printf("Reconstructed IV:\n\t");
+    for (uint32_t i = 0; i < full_iv_len; i++)
+    {
+        printf("%02X", temp_iv[i]);        
+    }
+    printf("\n");
+#endif
+
     // Base64 URL encode IV for KMC REST Encrypt
-    char *iv_base64 = (char *)calloc(1, B64ENCODE_OUT_SAFESIZE(iv_len) + 1);
-    base64urlEncode(iv, iv_len, iv_base64, NULL);
+    char *iv_base64 = (char *)calloc(1, B64ENCODE_OUT_SAFESIZE(full_iv_len) + 1);
+    base64urlEncode(temp_iv, full_iv_len, iv_base64, NULL);
 
     uint8_t *decrypt_payload     = data_in;
     size_t   decrypt_payload_len = len_data_in;

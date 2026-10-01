@@ -701,7 +701,40 @@ static int32_t cryptography_decrypt(uint8_t *data_out, size_t len_data_out, uint
     acs         = acs;
     cam_cookies = cam_cookies;
 
-    sa_ptr = sa_ptr; // Unused in this implementation
+    uint32_t full_iv_len = sa_ptr != NULL ? sa_ptr->iv_len : iv_len;
+    uint8_t temp_iv[MAX_IV_LEN];
+
+#ifdef DEBUG
+    printf("LibGcrypt Received IV:\n\t");
+    for (uint32_t i = 0; i < iv_len; i++)
+    {
+        printf("%02X", iv[i]);
+    }
+    printf("\n");
+#endif
+
+    if (iv_len == full_iv_len)
+    {
+        /* TC already reconstructed the rollover-aware IV. */
+        memcpy(temp_iv, iv, full_iv_len);
+    }
+    else
+    {
+        uint32_t prefix_len = full_iv_len - iv_len;
+
+        /* TM/AOS: obtain the non-transmitted prefix from the SA. */
+        memcpy(temp_iv, sa_ptr->iv, prefix_len);
+        memcpy(temp_iv + prefix_len, iv, iv_len);
+    }
+
+#ifdef DEBUG
+    printf("Reconstructed IV:\n\t");
+    for (uint32_t i = 0; i < full_iv_len; i++)
+    {
+        printf("%02X", temp_iv[i]);        
+    }
+    printf("\n");
+#endif
 
     // Select correct libgcrypt ecs enum
     int32_t algo = -1;
@@ -744,7 +777,7 @@ static int32_t cryptography_decrypt(uint8_t *data_out, size_t len_data_out, uint
         return status;
     }
 
-    gcry_error = gcry_cipher_setiv(tmp_hd, iv, iv_len);
+    gcry_error = gcry_cipher_setiv(tmp_hd, temp_iv, full_iv_len);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);
@@ -787,7 +820,40 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
     acs         = acs;
     cam_cookies = cam_cookies;
 
-    sa_ptr = sa_ptr; // Unused in this implementation
+    uint32_t full_iv_len = sa_ptr != NULL ? sa_ptr->iv_len : iv_len;
+    uint8_t temp_iv[MAX_IV_LEN];
+
+#ifdef DEBUG
+    printf("LibGcrypt Received IV:\n\t");
+    for (uint32_t i = 0; i < iv_len; i++)
+    {
+        printf("%02X", iv[i]);
+    }
+    printf("\n");
+#endif
+
+    if (iv_len == full_iv_len)
+    {
+        /* TC already reconstructed the rollover-aware IV. */
+        memcpy(temp_iv, iv, full_iv_len);
+    }
+    else
+    {
+        uint32_t prefix_len = full_iv_len - iv_len;
+
+        /* TM/AOS: obtain the non-transmitted prefix from the SA. */
+        memcpy(temp_iv, sa_ptr->iv, prefix_len);
+        memcpy(temp_iv + prefix_len, iv, iv_len);
+    }
+
+#ifdef DEBUG
+    printf("Reconstructed IV:\n\t");
+    for (uint32_t i = 0; i < full_iv_len; i++)
+    {
+        printf("%02X", temp_iv[i]);        
+    }
+    printf("\n");
+#endif
 
     // Select correct libgcrypt ecs enum
     int32_t algo = -1;
@@ -835,7 +901,7 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
         status = CRYPTO_LIB_ERR_LIBGCRYPT_ERROR;
         return status;
     }
-    gcry_error = gcry_cipher_setiv(tmp_hd, iv, iv_len);
+    gcry_error = gcry_cipher_setiv(tmp_hd, temp_iv, full_iv_len);
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
         printf(KRED "ERROR: gcry_cipher_setiv error code %d\n" RESET, gcry_error & GPG_ERR_CODE_MASK);

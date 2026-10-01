@@ -1691,7 +1691,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
                                                                 Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs),
                                                                 sa_ptr,             // SA for key reference
                                                                 p_ingest + iv_loc,  // IV.
-                                                                sa_ptr->iv_len,     // IV Length
+                                                                sa_ptr->shivf_len,     // IV Length
                                                                 p_ingest + mac_loc, // Frame Expected Tag
                                                                 sa_ptr->stmacf_len, // tag size
                                                                 aad,                // additional authenticated data
