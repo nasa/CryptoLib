@@ -4,6 +4,12 @@
 #include "sa_interface.h"
 #include "utest.h"
 
+UTEST(EP_KEY_MGMT, OTAR_REJECTS_OVERSIZED_TLV)
+{
+    sdls_frame.tlv_pdu.hdr.pdu_len = (TLV_DATA_SIZE + 1) * BYTE_LEN;
+    ASSERT_EQ(CRYPTO_LIB_ERR_OTAR_BAD_TLV_LENGTH, Crypto_Key_OTAR());
+}
+
 UTEST(EP_KEY_MGMT, OTAR_0_140_142)
 {
     remove("sa_save_file.bin");
