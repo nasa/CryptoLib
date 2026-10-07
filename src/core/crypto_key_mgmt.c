@@ -59,8 +59,7 @@ int32_t Crypto_Key_OTAR(void)
     const int fixed_len     = SDLS_KEYID_LEN + SDLS_IV_LEN + MAC_SIZE;
     const int key_block_len = SDLS_KEYID_LEN + SDLS_KEY_LEN;
 
-    if ((pdu_len_bits % BYTE_LEN != 0) || (pdu_len_bytes < fixed_len) || (pdu_len_bytes > TLV_DATA_SIZE) ||
-        ((pdu_len_bytes - fixed_len) % key_block_len != 0))
+    if ((pdu_len_bits % BYTE_LEN != 0) || (pdu_len_bytes < fixed_len) || (pdu_len_bytes > TLV_DATA_SIZE))
     {
         return CRYPTO_LIB_ERR_OTAR_BAD_TLV_LENGTH;
     }
