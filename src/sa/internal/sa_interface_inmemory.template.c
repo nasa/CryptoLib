@@ -1055,7 +1055,8 @@ static int32_t sa_get_operational_sa_from_gvcid(uint8_t tfvn, uint16_t scid, uin
 static int32_t sa_start(TC_t *tc_frame)
 {
     // Local variables
-    uint8_t        count = 0;
+    int32_t        status = CRYPTO_LIB_SUCCESS;
+    uint8_t        count  = 0;
     uint16_t       spi   = 0x0000;
     crypto_gvcid_t gvcid;
     int            x;
@@ -1187,6 +1188,7 @@ static int32_t sa_start(TC_t *tc_frame)
 #ifdef DEBUG
             printf(KRED "ERROR: SPI %d is not in the KEYED state.\n" RESET, spi);
 #endif
+            status = CRYPTO_LIB_ERROR;
         }
     }
     else
@@ -1194,13 +1196,14 @@ static int32_t sa_start(TC_t *tc_frame)
 #ifdef DEBUG
         printf(KRED "ERROR: SPI %d does not exist.\n" RESET, spi);
 #endif
+        status = CRYPTO_LIB_ERR_SPI_INDEX_OOB;
     }
 
 #ifdef DEBUG
     printf("\t spi = %d \n", spi);
 #endif
 
-    return CRYPTO_LIB_SUCCESS;
+    return status;
 }
 
 /**
@@ -1370,6 +1373,7 @@ static int32_t sa_rekey(TC_t *tc_frame)
 #ifdef PDU_DEBUG
             printf(KRED "ERROR: SPI %d is not in the UNKEYED state.\n" RESET, spi);
 #endif
+            status = CRYPTO_LIB_ERROR;
         }
     }
     else
@@ -1377,14 +1381,18 @@ static int32_t sa_rekey(TC_t *tc_frame)
 #ifdef PDU_DEBUG
         printf(KRED "ERROR: SPI %d does not exist.\n" RESET, spi);
 #endif
+        status = CRYPTO_LIB_ERR_SPI_INDEX_OOB;
     }
 
 #ifdef PDU_DEBUG
     printf("\t spi  = %d \n", spi);
-    printf("\t ekid = %d \n", sa[spi].ekid);
+    if (spi < NUM_SA)
+    {
+        printf("\t ekid = %d \n", sa[spi].ekid);
+    }
 #endif
 
-    return CRYPTO_LIB_SUCCESS;
+    return status;
 }
 
 /**
@@ -1435,6 +1443,7 @@ static int32_t sa_expire(TC_t *tc_frame)
 #ifdef DEBUG
             printf(KRED "ERROR: SPI %d is not in the KEYED state.\n" RESET, spi);
 #endif
+            status = CRYPTO_LIB_ERROR;
         }
     }
     else
@@ -1442,9 +1451,10 @@ static int32_t sa_expire(TC_t *tc_frame)
 #ifdef DEBUG
         printf(KRED "ERROR: SPI %d does not exist.\n" RESET, spi);
 #endif
+        status = CRYPTO_LIB_ERR_SPI_INDEX_OOB;
     }
 
-    return CRYPTO_LIB_SUCCESS;
+    return status;
 }
 
 /**
