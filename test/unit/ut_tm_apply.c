@@ -2686,4 +2686,81 @@ UTEST(TM_APPLY_ENC_VAL, AEAD_AES_GCM_BITMASK_1_TRUNC_IV)
     free(next_iv_b);
 }
 
+/**
+ * @brief Unit Test: Nominal Authorized Encryption With Partial IV Rollover, increment static IV
+ **/
+UTEST(TM_APPLY_SECURITY, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_IV_ROLLOVER)
+{
+    remove("sa_save_file.bin");
+    // Setup & Initialize CryptoLib
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL);
+    Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE, TM_IGNORE_ANTI_REPLAY_FALSE, TM_CHECK_FECF_FALSE, 0x3F,
+                     SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x002c, 0, TM_HAS_FECF, TM_SEGMENT_HDRS_NA, TM_NO_OCF, 1786,
+    // AOS_NO_FHEC, AOS_NO_IZ, 0);
+    TMGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x002c, 0, TM_HAS_FECF, 32, TM_NO_OCF, 1};
+    Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    int status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    char *framed_tm_h = "02C000001800DEADBEEFDEADAABBAABBAABBAABBAABBAABBAABBAABBAABB0000";
+    char *framed_tm_b = NULL;
+
+    char *new_iv_h = "FFFFFFFFFFFC";
+    char *new_iv_b = NULL;
+
+    char *expected_iv_h = "000000000001000000000001";
+    char *expected_iv_b = NULL;
+
+    int framed_tm_len = 0;
+    int new_iv_len           = 0;
+    int expected_iv_len      = 0;
+
+    hex_conversion(framed_tm_h, &framed_tm_b, &framed_tm_len);
+    hex_conversion(new_iv_h, &new_iv_b, &new_iv_len);
+    hex_conversion(expected_iv_h, &expected_iv_b, &expected_iv_len);
+
+    int32_t return_val = CRYPTO_LIB_ERROR;
+
+    SecurityAssociation_t *test_association;
+    // Expose the SADB Security Association for test edits.
+    sa_if->sa_get_from_spi(1, &test_association);
+    test_association->sa_state = SA_NONE;
+    sa_if->sa_get_from_spi(4, &test_association);
+    test_association->gvcid_blk.vcid = 0;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ekid           = 130;
+    test_association->shivf_len      = 6;
+    test_association->iv_len         = 12;
+    test_association->arsn_len       = 0;
+    test_association->gvcid_blk.mapid = 0;
+    test_association->gvcid_blk.tfvn = 0;
+    test_association->gvcid_blk.scid = 44;
+    test_association->gvcid_blk.vcid = 0;
+    memcpy(test_association->iv + (test_association->iv_len - test_association->shivf_len), new_iv_b, new_iv_len);
+
+    return_val =
+        Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b, framed_tm_len);
+    return_val =
+        Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b, framed_tm_len);
+    return_val =
+        Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b, framed_tm_len);
+    return_val =
+        Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b, framed_tm_len);
+    return_val =
+        Crypto_TM_ApplySecurity((uint8_t *)framed_tm_b, framed_tm_len);
+    for (int i = 0; i < test_association->iv_len; i++)
+    {
+        printf("[%d] Truth: %02x, Actual: %02x\n", i, expected_iv_b[i], *(test_association->iv + i));
+        ASSERT_EQ(expected_iv_b[i], *(test_association->iv + i));
+    }
+
+    Crypto_Shutdown();
+    free(new_iv_b);
+    free(framed_tm_b);
+    free(expected_iv_b);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+}
+
 UTEST_MAIN();

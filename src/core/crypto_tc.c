@@ -2201,13 +2201,9 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
             TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len;
         // Get Padding Amount from ingest frame
         uint32_t padding_amount = 0;
-        memcpy(&padding_amount, &ingest[padding_location], sa_ptr->shplf_len);
-#ifdef DEBUG
-        printf("Removing %dB of Padding\n", padding_amount);
-#endif
-        // Remove Padding from final decrypted portion
-        if ((tc_sdls_processed_frame->tc_pdu_len - padding_amount) >
-            tc_current_managed_parameters_struct.max_frame_size)
+        for (int i = 0; i < sa_ptr->shplf_len; i++)
+            padding_amount = (padding_amount << 8) | ingest[padding_location + i];
+        if (padding_amount > tc_sdls_processed_frame->tc_pdu_len)
         {
             Crypto_TC_Safe_Free_Ptr(aad);
             status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW;
@@ -2215,6 +2211,9 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
             return status;
         }
         tc_sdls_processed_frame->tc_pdu_len -= padding_amount;
+#ifdef DEBUG
+        printf("Removing %dB of Padding\n", padding_amount);
+#endif
     }
 
     Crypto_TC_Safe_Free_Ptr(aad);

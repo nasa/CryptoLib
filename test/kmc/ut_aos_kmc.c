@@ -980,7 +980,7 @@ UTEST(AOS_APPLY_KMC, AES_GCM_NULL_IV_ROUNDTRIP)
     Crypto_Shutdown();
 }
 
-UTEST(AOS_APPLY_KMC, AES_GCM_TRUNC_IV)
+UTEST(AOS_APPLY_KMC, AES_GCM_TRUNC_IV_AEAD)
 {
     remove("sa_save_file.bin");
     // Local variables
@@ -1072,7 +1072,7 @@ UTEST(AOS_APPLY_KMC, AES_GCM_TRUNC_IV)
     Crypto_Shutdown();
 }
 
-UTEST(AOS_PROCESS_KMC, AES_GCM_TRUNC_IV)
+UTEST(AOS_PROCESS_KMC, AES_GCM_TRUNC_IV_AEAD)
 {
     remove("sa_save_file.bin");
     // Local variables
@@ -1199,6 +1199,74 @@ UTEST(AOS_APPLY_KMC, AES_CBC_256_ENCRYPT_10B)
 
     status = Crypto_AOS_ProcessSecurity((uint8_t *)ex_aos_b, ex_frame_len, aos_frame, &processed_aos_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    Crypto_aosPrint(aos_frame);
+
+    free(test_aos_b);
+    free(aos_frame);
+    free(ex_aos_b);
+    Crypto_Shutdown();
+}
+
+UTEST(AOS_APPLY_KMC, AES_CBC_256_ENCRYPT_12B)
+{
+    remove("sa_save_file.bin");
+    // Local variables
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    reload_db();
+
+    // Configure, Add Managed Params, and Init
+    Crypto_Config_CryptoLib(KEY_TYPE_KMC, MC_TYPE_DISABLED, SA_TYPE_MARIADB, CRYPTOGRAPHY_TYPE_KMCCRYPTO, IV_INTERNAL);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE, AOS_IGNORE_ANTI_REPLAY_TRUE, AOS_CHECK_FECF_TRUE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    Crypto_Config_MariaDB(KMC_HOSTNAME, "sadb", 3306, CRYPTO_TRUE, CRYPTO_TRUE, CA_PATH, NULL, CLIENT_CERTIFICATE,
+                          CLIENT_CERTIFICATE_KEY, NULL, "client", NULL);
+    Crypto_Config_Kmc_Crypto_Service("https", KMC_HOSTNAME, 8443, "crypto-service", CA_PATH, NULL, CRYPTO_FALSE,
+                                     CLIENT_CERTIFICATE, "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
+
+    // Set up the managed parameters
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         47, 0,  AOS_HAS_FECF, AOS_NO_FHEC,
+                                                             AOS_NO_IZ, 0,      60, AOS_NO_OCF,   1};
+    Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
+    status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    // Test Frame Setup - includes header, SPI, IV, data, and space for MAC+FECF
+    char *test_aos_h = "4bc000000000000000000000000000000000000000000000000000112233445566778899aabbccddeeff010203040000";
+    int   test_frame_length = 0;
+
+    uint16_t padding    = 12;
+    uint16_t dest_len   = (strlen(test_aos_h) / 2) + padding;
+    char    *test_aos_b = (char *)malloc(dest_len * sizeof(char));
+    test_frame_length   = convert_hexstring_to_byte_array(test_aos_h, test_aos_b);
+
+    // Process security (decrypt)
+    status = Crypto_AOS_ApplySecurity((uint8_t *)test_aos_b, test_frame_length);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    printf("len = %d\n", test_frame_length);
+
+    // Validate the processed AOS frame
+    char *ex_aos_h = "4BC000000000005C00000000000000000000000000000001000C4220E3B9F3884203B4DBBCDF9496AA2EEF4DD7A414825D25533C6B47C27A08576ACF";
+    char *ex_aos_b = NULL;
+    int   ex_frame_len = 0;
+    hex_conversion(ex_aos_h, &ex_aos_b, &ex_frame_len);
+
+    for (uint16_t i = 0; i < aos_current_managed_parameters_struct.max_frame_size; i++)
+    {
+        // printf("Checking %02x against %02X\n", (uint8_t)test_aos_b[i], (uint8_t)ex_aos_b[i]);
+        ASSERT_EQ((uint8_t)test_aos_b[i], (uint8_t)ex_aos_b[i]);
+    }
+
+    AOS_t *aos_frame;
+    aos_frame = malloc(sizeof(uint8_t) * AOS_SIZE);
+    memset(aos_frame, 0, (sizeof(uint8_t) * AOS_SIZE));
+    uint16_t processed_aos_len = 0;
+
+    status = Crypto_AOS_ProcessSecurity((uint8_t *)ex_aos_b, ex_frame_len, aos_frame, &processed_aos_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    Crypto_aosPrint(aos_frame);
 
     free(test_aos_b);
     free(aos_frame);

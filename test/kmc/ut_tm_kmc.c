@@ -944,7 +944,7 @@ UTEST(TM_APPLY_KMC, AES_GCM_NULL_IV_ROUNDTRIP)
     Crypto_Shutdown();
 }
 
-UTEST(TM_APPLY_KMC, GCM_TRUNC_IV)
+UTEST(TM_APPLY_KMC, GCM_TRUNC_IV_AEAD)
 {
     int status = CRYPTO_LIB_SUCCESS;
     remove("sa_save_file.bin");
@@ -1057,7 +1057,7 @@ UTEST(TM_APPLY_KMC, GCM_TRUNC_IV)
     free(truth_tm_b);
 }
 
-UTEST(TM_PROCESS_KMC, DEC_GCM_TRUNC_IV)
+UTEST(TM_PROCESS_KMC, DEC_GCM_TRUNC_IV_AEAD)
 {
     remove("sa_save_file.bin");
     reload_db();

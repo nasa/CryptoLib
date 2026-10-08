@@ -792,7 +792,7 @@ UTEST(TC_APPLY_SECURITY, AES_GCM_NULL_IV_ROUNDTRIP)
     Crypto_Shutdown();
 }
 
-UTEST(TC_APPLY_SECURITY, ENC_GCM_TRUNC_IV)
+UTEST(TC_APPLY_SECURITY, ENC_GCM_TRUNC_IV_AEAD)
 {
     remove("sa_save_file.bin");
     int32_t return_val = CRYPTO_LIB_ERROR;
