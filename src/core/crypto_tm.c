@@ -68,7 +68,7 @@ int32_t Crypto_TM_Nontransmitted_IV_Increment(SecurityAssociation_t *sa_ptr, TM_
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
 
-    if (sa_ptr->shivf_len < sa_ptr->iv_len && crypto_config_tm.ignore_anti_replay == AOS_IGNORE_ANTI_REPLAY_FALSE &&
+    if (sa_ptr->shivf_len < sa_ptr->iv_len && crypto_config_tm.ignore_anti_replay == TM_IGNORE_ANTI_REPLAY_FALSE &&
         crypto_config_tm.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
     {
         status = crypto_handle_incrementing_nontransmitted_counter(
@@ -91,7 +91,7 @@ int32_t Crypto_TM_Nontransmitted_IV_Increment(SecurityAssociation_t *sa_ptr, TM_
 int32_t Crypto_TM_Nontransmitted_SN_Increment(SecurityAssociation_t *sa_ptr, TM_t *pp_processed_frame)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    if (sa_ptr->shsnf_len < sa_ptr->arsn_len && crypto_config_tm.ignore_anti_replay == AOS_IGNORE_ANTI_REPLAY_FALSE)
+    if (sa_ptr->shsnf_len < sa_ptr->arsn_len && crypto_config_tm.ignore_anti_replay == TM_IGNORE_ANTI_REPLAY_FALSE)
     {
         status =
             crypto_handle_incrementing_nontransmitted_counter(pp_processed_frame->tm_sec_header.sn, sa_ptr->arsn,
