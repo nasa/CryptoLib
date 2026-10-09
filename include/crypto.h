@@ -173,11 +173,19 @@ uint32_t Crypto_Get_FSR(void);
 void     Crypto_Set_FSR(uint8_t *p_ingest, uint16_t byte_idx, uint16_t pdu_len, SecurityAssociation_t *sa_ptr);
 
 // Telemetry (TM)
+/* pTfBuffer is owned by the caller and is written in place up to
+ * max_frame_size - 1 of the matching managed parameters entry, which may exceed
+ * len_ingest when the SA adds CBC padding, a MAC or a FECF. The caller must
+ * therefore provide at least max_frame_size bytes. CryptoLib cannot verify this
+ * unless the integrator builds with -DFRAME_BUFFERS_HEAP=ON; see
+ * Crypto_check_buffer_size(). The buffer may be heap, static or automatic. */
 extern int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest);
 extern int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *pp_processed_frame,
                                          uint16_t *p_decrypted_length);
 
 // Advanced Orbiting Systems (AOS)
+/* Same pTfBuffer precondition as Crypto_TM_ApplySecurity(): at least
+ * max_frame_size bytes, heap, static or automatic. */
 extern int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest);
 extern int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t *pp_processed_frame,
                                           uint16_t *p_decrypted_length);
