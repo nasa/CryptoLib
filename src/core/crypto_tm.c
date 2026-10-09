@@ -349,7 +349,8 @@ void Crypto_TM_PKCS_Padding(uint32_t *pkcs_padding, SecurityAssociation_t *sa_pt
 {
     uint16_t idx      = *idx_p;
     uint8_t  fecf_len = (tm_current_managed_parameters_struct.has_fecf == TM_HAS_FECF) ? FECF_SIZE : 0;
-    uint16_t data_len = len_ingest - idx - sa_ptr->stmacf_len - fecf_len - sa_ptr->shplf_len;
+    uint8_t  ocf_len  = (tm_current_managed_parameters_struct.has_ocf == TM_HAS_OCF) ? OCF_SIZE : 0;
+    uint16_t data_len = len_ingest - idx - sa_ptr->stmacf_len - fecf_len - ocf_len - sa_ptr->shplf_len;
 
     // Calculate required padding based on cipher
     *pkcs_padding = Crypto_TM_Calculate_Padding(sa_ptr->ecs, data_len);
