@@ -1947,10 +1947,10 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     {
         pp_processed_frame->aos_sec_trailer.ocf_field_len = 0;
     }
-    if (aos_current_managed_parameters_struct.has_fecf == AOS_HAS_FECF && pp_processed_frame->aos_sec_trailer.fecf == 0x0000)
+    if (aos_current_managed_parameters_struct.has_fecf == AOS_HAS_FECF)
     {
         pp_processed_frame->aos_sec_trailer.fecf =
-            (uint16_t)(p_new_dec_frame[byte_idx] << 8) | p_new_dec_frame[byte_idx + 1];
+            (uint16_t)(p_ingest[len_ingest - 2] << 8) | p_ingest[len_ingest - 1];
     }
     free(p_new_dec_frame);
     if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
