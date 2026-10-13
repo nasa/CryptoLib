@@ -229,7 +229,7 @@ int32_t Crypto_TM_FECF_Setup(uint8_t *p_ingest, uint16_t len_ingest);
 int32_t Crypto_TM_Parse_Mac_Prep_AAD(uint8_t sa_service_type, uint8_t *p_ingest, int mac_loc,
                                      SecurityAssociation_t *sa_ptr, uint16_t *aad_len, uint16_t byte_idx, uint8_t *aad);
 int32_t Crypto_TM_Do_Decrypt_AEAD(uint8_t sa_service_type, uint8_t *p_ingest, uint8_t *p_new_dec_frame,
-                                  uint16_t byte_idx, uint16_t pdu_len, crypto_key_t *ekp, SecurityAssociation_t *sa_ptr,
+                                  uint16_t byte_idx, uint16_t pdu_len, crypto_key_t *ekp, crypto_key_t *akp, SecurityAssociation_t *sa_ptr,
                                   uint8_t iv_loc, int mac_loc, uint16_t aad_len, uint8_t *aad, TM_t *pp_processed_frame);
 int32_t Crypto_TM_Do_Decrypt_NONAEAD(uint8_t sa_service_type, uint16_t pdu_len, uint8_t *p_new_dec_frame,
                                      uint16_t byte_idx, uint8_t *p_ingest, crypto_key_t *akp, crypto_key_t *ekp,

@@ -693,6 +693,26 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
                 &sa_ptr->acs, // authentication cipher
                 NULL);
         }
+        if (sa_service_type == SA_AUTHENTICATION)
+        {
+            status = cryptography_if->cryptography_authenticate(
+                (uint8_t *)(&pTfBuffer[data_loc]),                                // ciphertext output
+                (size_t)pdu_len,                                                  // length of data
+                (uint8_t *)(&pTfBuffer[data_loc]),                                // plaintext input
+                (size_t)pdu_len,                                           // in data length
+                &(akp->value[0]),                                                 // Key
+                Crypto_Get_ACS_Algo_Keylen(sa_ptr->acs),
+                sa_ptr,             // SA (for key reference)
+                sa_ptr->iv,         // IV
+                sa_ptr->iv_len,     // IV Length
+                &pTfBuffer[mac_loc],            // tag output
+                sa_ptr->stmacf_len, // tag size
+                aad,               // AAD Input
+                aad_len,            // Length of AAD
+                sa_ptr->ecs,        // encryption cipher
+                sa_ptr->acs,        // authentication cipher
+                NULL);
+        }
     }
 
     else if (sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_FALSE) // Non aead algorithm
@@ -1688,17 +1708,26 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
                                                            &sa_ptr->ecs,      // encryption cipher
                                                            &sa_ptr->acs,      // authentication cipher
                                                            NULL);
-
-            if (status != CRYPTO_LIB_SUCCESS)
-            {
-                free(p_new_dec_frame); // Add cleanup
-                mc_if->mc_log(status);
-                if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
-                {
-                    free(sa_ptr);
-                }
-                return status;
-            }
+        }
+        if (sa_service_type == SA_AUTHENTICATION)
+        {
+            status = cryptography_if->cryptography_validate_authentication(
+                    p_new_dec_frame + byte_idx,               // plaintext output
+                    (size_t)(pdu_len),                        // length of data
+                    p_ingest + byte_idx,                      // ciphertext input
+                    (size_t)(pdu_len),                        // in data length
+                    &(akp->value[0]),                         // Key
+                    Crypto_Get_ACS_Algo_Keylen(sa_ptr->acs),  //
+                    sa_ptr,                                   // SA for key reference
+                    pp_processed_frame->aos_sec_header.iv,    // IV
+                    sa_ptr->iv_len,                           // IV Length
+                    p_ingest + mac_loc,                       // Frame Expected Tag
+                    sa_ptr->stmacf_len,                       // tag size
+                    aad,                                      // additional authenticated data
+                    aad_len,                                  // length of AAD
+                    CRYPTO_CIPHER_NONE,                       // encryption cipher
+                    sa_ptr->acs,                              // authentication cipher
+                    NULL);
         }
         if (sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
         {
@@ -1721,17 +1750,17 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
                                                                 &sa_ptr->ecs,       // encryption cipher
                                                                 &sa_ptr->acs,       // authentication cipher
                                                                 NULL);
+        }
 
-            if (status != CRYPTO_LIB_SUCCESS)
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+            free(p_new_dec_frame); // Add cleanup
+            mc_if->mc_log(status);
+            if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
             {
-                free(p_new_dec_frame); // Add cleanup
-                mc_if->mc_log(status);
-                if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
-                {
-                    free(sa_ptr);
-                }
-                return status;
+                free(sa_ptr);
             }
+            return status;
         }
     }
 
