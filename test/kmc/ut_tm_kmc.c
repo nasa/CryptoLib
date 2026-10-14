@@ -407,20 +407,20 @@ UTEST(TM_APPLY_KMC, AES_CBC_256_ENCRYPT_2B_PADDING)
                                      CLIENT_CERTIFICATE, "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
 
     // Set up the managed parameters
-    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {0, 0x0003, 6, TM_HAS_FECF, 171, TM_NO_OCF, 1};
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {0, 47, 2, TM_HAS_FECF, 172, TM_NO_OCF, 1};
     Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test Frame Setup - includes header, SPI, IV, data, and space for MAC+FECF
-    char *test_tm_h         = "003C000000000012CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC02112233445566778899AABBCCDDEE"
+    char *test_tm_h         = "02F4000000000012CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC00002233445566778899AABBCCDDEE"
                               "FFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
                               "AABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA"
                               "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
                               "AABBAABBAABBAABBAABBAAFECF";
     int   test_frame_length = 0;
 
-    uint16_t padding   = 2;
+    uint16_t padding   = 3;
     uint16_t dest_len  = (strlen(test_tm_h) / 2) + padding;
     char    *test_tm_b = (char *)malloc(dest_len * sizeof(char));
     test_frame_length  = convert_hexstring_to_byte_array(test_tm_h, test_tm_b);
@@ -450,17 +450,17 @@ UTEST(TM_PROCESS_KMC, AES_CBC_256_DECRYPT_2B_PADDING)
                                      CLIENT_CERTIFICATE, "PEM", CLIENT_CERTIFICATE_KEY, NULL, NULL);
 
     // Set up the managed parameters
-    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {0, 0x0003, 6, TM_HAS_FECF, 171, TM_NO_OCF, 1};
+    TMGvcidManagedParameters_t TM_UT_Managed_Parameters = {0, 47, 2, TM_HAS_FECF, 172, TM_NO_OCF, 1};
     Crypto_Config_Add_TM_Gvcid_Managed_Parameters(TM_UT_Managed_Parameters);
     status = Crypto_Init();
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
     // Test Frame Setup - includes header, SPI, IV, data, and space for MAC+FECF
-    char *test_tm_h =
-        "003C0000000000120000000000000000000000000000000102D91FA7BDF705F3934719CE98CC3540D97025167DB429E1E8A721D1BE7EF5"
-        "A25D7D23D2F76740F4D3CC0C19FB33E9CFBA17357BB9F513A1B2CF16053FEEA65848B427A74B9E5CEBB3C5416DD17CC9F1D342712AC953"
-        "21893661903B1A59B8A2A9AF6D497547E940E5FB90AC2E8E4D8AFD8CA0C3992337CEB688A0A833B33EFDAFE695CFEADFD5967E3692E406"
-        "C6DDD0417651";
+    char *test_tm_h = "02F4000000000062000000000000000000000000000000010003030711BB6834E7E60A3CCDACAB"
+                      "8A5552ED3C74ED5F6662B407DB966DDBE56366772C451D5AF931DA645F5789C36958E6BC9366B6"
+                      "1280E33F760744E71683208E16209DE750E7DC4E0C34885CF4F8F37895E50F4AC3D81527556E1A"
+                      "885B22802520C8A1EA2EB5B6D63DC41B466DE0D6D8937E88FA5CACC699914CE89999083BCC735D"
+                      "8016D4FF2D182DEDE03D10CC1F6C70EC";
     char *test_tm_b         = NULL;
     int   test_frame_length = 0;
     hex_conversion(test_tm_h, &test_tm_b, &test_frame_length);
@@ -474,20 +474,17 @@ UTEST(TM_PROCESS_KMC, AES_CBC_256_DECRYPT_2B_PADDING)
     status = Crypto_TM_ProcessSecurity((uint8_t *)test_tm_b, test_frame_length, tm_frame, &processed_tm_len);
     ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 
-    char *ex_tm_h = "112233445566778899AABBCCDDEEFFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
-                    "AABBAABBAABBAA"
-                    "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABB"
-                    "AABBAABBAABBAA"
-                    "BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA";
+    char *ex_tm_h = "02F40000000000000000000000000000000000000000000000002233445566778899AABBCCDDEEFFA107FF000006D2ABBABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBAA0000";
     char *ex_tm_b = NULL;
     int   ex_frame_length = 0;
     hex_conversion(ex_tm_h, &ex_tm_b, &ex_frame_length);
 
+    uint16_t offset = 26;
     for (int i = 0; i < tm_frame->tm_pdu_len; i++)
     {
-        // printf("Comparing byte %d: expected 0x%02X, got 0x%02X\n", i, (uint8_t)ex_tm_b[i],
+        // printf("Comparing byte %d: expected 0x%02X, got 0x%02X\n", i, (uint8_t)ex_tm_b[i + offset],
         // (uint8_t)tm_frame->tm_pdu[i]);
-        ASSERT_EQ((uint8_t)ex_tm_b[i], (uint8_t)tm_frame->tm_pdu[i]);
+        ASSERT_EQ((uint8_t)ex_tm_b[i + offset], (uint8_t)tm_frame->tm_pdu[i]);
     }
 
     Crypto_tmPrint(tm_frame);

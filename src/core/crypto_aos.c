@@ -1460,6 +1460,20 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     {
         pp_processed_frame->aos_sec_header.pad = (pp_processed_frame->aos_sec_header.pad << 8) | p_ingest[byte_idx + i];
     }
+    if (sa_ptr->shplf_len > 0 && (pp_processed_frame->aos_sec_header.pad > 0x10 || sa_ptr->shplf_len > 3))
+    {
+#ifdef AOS_DEBUG
+        printf("Parsed 0x%04X (%d) from padding field\n", pp_processed_frame->aos_sec_header.pad, pp_processed_frame->aos_sec_header.pad);
+#endif
+        status = CRYPTO_LIB_ERR_PARSED_PADDING;
+        mc_if->mc_log(status);
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+        {
+            free(sa_ptr);
+        }
+        free(p_new_dec_frame);
+        return status;
+    }
     memcpy(p_new_dec_frame + byte_idx, &(p_ingest[byte_idx]), sa_ptr->shplf_len);
     byte_idx += sa_ptr->shplf_len;
 
@@ -1467,6 +1481,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     printf(KYEL "IV length of %d bytes\n" RESET, sa_ptr->shivf_len);
     printf(KYEL "SHSNF length of %d bytes\n" RESET, sa_ptr->shsnf_len);
     printf(KYEL "PAD length field of %d bytes\n" RESET, sa_ptr->shplf_len);
+    printf(KYEL "PAD value of %d bytes\n" RESET, pp_processed_frame->aos_sec_header.pad);
     printf(KYEL "First byte past Security Header is at index %d\n" RESET, byte_idx);
 #endif
 

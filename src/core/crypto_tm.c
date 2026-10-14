@@ -1192,6 +1192,9 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
      **/
     // TODO: Set this depending on crypto cipher used
     Crypto_TM_PKCS_Padding(&pkcs_padding, sa_ptr, pTfBuffer, &idx, len_ingest);
+#ifdef TM_DEBUG
+    printf("Calculated PKCS padding of %d\n", pkcs_padding);
+#endif
     if (tm_current_managed_parameters_struct.max_frame_size != len_ingest + pkcs_padding)
     {
         status = CRYPTO_LIB_ERR_TM_APPLY_PADDING;
@@ -1850,27 +1853,8 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     }
     printf("\n");
 #endif
-    uint8_t padding  = sa_ptr->shplf_len > 0 ? p_ingest[byte_idx - 1] : 0;
+    uint16_t padding = 0;
     uint8_t fecf_len = (tm_current_managed_parameters_struct.has_fecf == TM_HAS_FECF) ? FECF_SIZE : 0;
-    memmove(&p_new_dec_frame[tm_current_managed_parameters_struct.max_frame_size - padding - fecf_len],
-            &p_new_dec_frame[tm_current_managed_parameters_struct.max_frame_size - fecf_len], fecf_len);
-    // pp_processed_frame = p_new_dec_frame;
-
-    // TODO maybe not just return this without doing the math ourselves
-    *p_decrypted_length = tm_current_managed_parameters_struct.max_frame_size - padding;
-    pdu_len -= padding;
-
-#ifdef TM_DEBUG
-    if (sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC || sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC_MAC)
-    {
-        printf(KYEL "Printing Frame WITHOUT Padding [%d]:\n\t" RESET, *p_decrypted_length);
-        for (int i = 0; i < *p_decrypted_length; i++)
-        {
-            printf(KYEL "%02X", p_new_dec_frame[i]);
-        }
-        printf("\n");
-    }
-#endif
 
     // Copy data into struct
     byte_idx = 0;
@@ -1905,14 +1889,30 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     }
     byte_idx += sa_ptr->shsnf_len;
     pp_processed_frame->tm_sec_header.sn_field_len = sa_ptr->shsnf_len;
-    if (sa_ptr->shplf_len == 2)
+    
+    // already got padding field value
+
+    if (sa_ptr->shplf_len > 0)
     {
-        pp_processed_frame->tm_sec_header.pad = (((uint16_t)p_ingest[byte_idx]) << 8) | p_ingest[byte_idx + 1];
+        padding = pp_processed_frame->tm_sec_header.pad;
+        memmove(&p_new_dec_frame[tm_current_managed_parameters_struct.max_frame_size - padding - fecf_len],
+                &p_new_dec_frame[tm_current_managed_parameters_struct.max_frame_size - fecf_len], fecf_len);
+        *p_decrypted_length = tm_current_managed_parameters_struct.max_frame_size - padding;
+        pdu_len -= padding;
     }
-    else
+
+#ifdef TM_DEBUG
+    if (sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC || sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC_MAC)
     {
-        pp_processed_frame->tm_sec_header.pad = sa_ptr->shplf_len == 1 ? p_ingest[byte_idx] : 0;
+        printf(KYEL "Printing Frame WITHOUT Padding [%d]:\n\t" RESET, *p_decrypted_length);
+        for (int i = 0; i < *p_decrypted_length; i++)
+        {
+            printf(KYEL "%02X", p_new_dec_frame[i]);
+        }
+        printf("\n");
     }
+#endif
+
     byte_idx += sa_ptr->shplf_len;
     pp_processed_frame->tm_sec_header.pad_field_len = sa_ptr->shplf_len;
 
@@ -2206,6 +2206,20 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
         for (int i = 0; i < sa_ptr->shplf_len; i++)
         {
             pp_processed_frame->tm_sec_header.pad = (pp_processed_frame->tm_sec_header.pad << 8) | p_ingest[byte_idx + i];
+        }
+        if (sa_ptr->shplf_len > 0 && (pp_processed_frame->tm_sec_header.pad > 0x10 || sa_ptr->shplf_len > 3))
+        {
+    #ifdef TM_DEBUG
+            printf("Parsed 0x%04X (%d) from padding field\n", pp_processed_frame->tm_sec_header.pad, pp_processed_frame->tm_sec_header.pad);
+    #endif
+            status = CRYPTO_LIB_ERR_PARSED_PADDING;
+            mc_if->mc_log(status);
+            if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+            {
+                free(sa_ptr);
+            }
+            free(p_new_dec_frame);
+            return status;
         }
         byte_idx += sa_ptr->shplf_len;
 

@@ -968,7 +968,7 @@ UTEST(AOS_APPLY_KMC, AES_GCM_NULL_IV_ROUNDTRIP)
     int   enc_aos_len = 0;
     hex_conversion(enc_aos_h, &enc_aos_b, &enc_aos_len);
 
-    AOS_t *aos_frame = malloc(AOS_SIZE);
+    AOS_t *aos_frame = calloc(1, sizeof(AOS_t));
     uint16_t aos_len = 0;
 
     status = Crypto_AOS_ProcessSecurity((uint8_t *)enc_aos_b, enc_aos_len, aos_frame, &aos_len);

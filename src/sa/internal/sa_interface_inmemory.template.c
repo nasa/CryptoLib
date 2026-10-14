@@ -844,6 +844,28 @@ int32_t sa_get_operational_sa_from_gvcid_find_iv(uint8_t tfvn, uint16_t scid, ui
                 return status;
             }
 
+            // ARSN must be 0 octets in length if not using Auth/Auth Enc
+            // SHSNF is a better indicator as it's the actual presence accounted for in the header
+            // CCSDS 3550b2 Section 4.1.1.4.4
+            if (sa[i].ast == 0 && sa[i].shsnf_len != 0 && sa[i].arsn_len != 0)
+            {
+        #ifdef SA_DEBUG
+                printf("USING SA %d!\n", i);
+                printf("AST IS %d, shsnf_len is %d, arsn_len is %d\n", sa[i].ast, sa[i].shsnf_len, sa[i].arsn_len);
+        #endif
+                status = CRYPTO_LIB_ERR_INVALID_SVC_TYPE_WITH_ARSN;
+                mc_if->mc_log(status);
+                return status;
+            }
+
+            // ARSN length cannot be less than shsnf length
+            if (sa[i].shsnf_len > sa[i].arsn_len)
+            {
+                status = CRYPTO_LIB_ERR_ARSN_LT_SHSNF;
+                mc_if->mc_log(status);
+                return status;
+            }
+
 #ifdef SA_DEBUG
             printf("Valid operational SA found at index %d.\n", i);
             printf("\t Tfvn: %d\n", tfvn);

@@ -1626,4 +1626,71 @@ UTEST(TC_PROCESS, TC_PROCESS_NULL_IV)
     ASSERT_EQ(CRYPTO_LIB_ERR_NULL_IV, status);
 }
 
+UTEST(TC_PROCESS, LARGE_PAD)
+{
+    remove("sa_save_file.bin");
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL);
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR, TC_IGNORE_ANTI_REPLAY_TRUE,
+                     TC_IGNORE_SA_STATE_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE, TC_CHECK_FECF_FALSE, 0x3F,
+                     SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_NO_FHEC, AOS_NO_IZ, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 1, TC_HAS_FECF,
+    // TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_NO_FHEC, AOS_NO_IZ, 0); Crypto_Config_Add_Gvcid_Managed_Parameter(0,
+    // 0x0003, 2, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024, AOS_NO_FHEC, AOS_NO_IZ, 0);
+    // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 3, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, TC_OCF_NA, 1024,
+    // AOS_NO_FHEC, AOS_NO_IZ, 0);
+
+    TCGvcidManagedParameters_t TC_UT_Managed_Parameters = {0, 0x0003, 0, TC_HAS_FECF, TC_HAS_SEGMENT_HDRS, 1024, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    TC_UT_Managed_Parameters.vcid = 1;
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    TC_UT_Managed_Parameters.vcid = 2;
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    TC_UT_Managed_Parameters.vcid = 3;
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_UT_Managed_Parameters);
+    int32_t status = Crypto_Init();
+
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    TC_t *tc_sdls_processed_frame;
+    tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
+    memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
+
+    char *test_frame_pt_h = "2003003700000004000000000000000000000000FFFF341FCD0C33C83D836E22CDE670697CD1A53B"
+                            "3279FD57A84861A96C578CB47A629426";
+    uint8_t *test_frame_pt_b   = NULL;
+    int      test_frame_pt_len = 0;
+
+    // Expose/setup SAs for testing
+    SecurityAssociation_t *test_association;
+    sa_if->sa_get_from_spi(4, &test_association);
+    test_association->arsn_len       = 0;
+    test_association->shsnf_len      = 0;
+    test_association->shplf_len      = 2;
+    test_association->ast            = 0;
+    test_association->stmacf_len     = 0;
+    test_association->sa_state       = SA_OPERATIONAL;
+    test_association->ekid           = 130;
+    test_association->gvcid_blk.tfvn = 0;
+
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(test_association->ekid);
+    ekp->key_state    = KEY_ACTIVE;
+
+    crypto_key_t *akp = NULL;
+    akp               = key_if->get_key(test_association->akid);
+    akp->key_state    = KEY_ACTIVE;
+
+    // Convert input test frame
+    hex_conversion(test_frame_pt_h, (char **)&test_frame_pt_b, &test_frame_pt_len);
+
+    status = Crypto_TC_ProcessSecurity(test_frame_pt_b, &test_frame_pt_len, tc_sdls_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_ERR_PARSED_PADDING, status);
+
+    free(test_frame_pt_b);
+    free(tc_sdls_processed_frame);
+    Crypto_Shutdown();
+}
+
 UTEST_MAIN();

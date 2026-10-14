@@ -2766,4 +2766,64 @@ UTEST(AOS_PROCESS, AEAD_AUTH_ONLY_GCM_BITMASK_1)
     free(aos_frame);
 }
 
+UTEST(AOS_PROCESS, AOS_PROCESS_LARGE_PAD_LEN)
+{
+    remove("sa_save_file.bin");
+    // Local Variables
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    uint16_t processed_aos_len;
+
+    // Configure Parameters
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL);
+    Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_FALSE, AOS_IGNORE_ANTI_REPLAY_FALSE, AOS_CHECK_FECF_TRUE, 0x3F,
+                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+
+    // AOS Test
+    AOSGvcidManagedParameters_t AOS_UT_Managed_Parameters = {1,         0x0003, 0, AOS_HAS_FECF, AOS_NO_FHEC,
+                                                             AOS_NO_IZ, 0,      64, AOS_NO_OCF,   1};
+    Crypto_Config_Add_AOS_Gvcid_Managed_Parameters(AOS_UT_Managed_Parameters);
+    status = Crypto_Init();
+
+    // Test frame setup
+    char *framed_aos_h   = "40C0FEDCBA980005101010101010101010101010FFFFFEDCBA98000510101010101010101010101040C0FEDCBA9800051010101010101010101010101010A41F";
+    char *framed_aos_b   = NULL;
+    int   framed_aos_len = 0;
+    hex_conversion(framed_aos_h, &framed_aos_b, &framed_aos_len);
+
+    SecurityAssociation_t *sa_ptr = NULL;
+    SaInterface            sa_if  = get_sa_interface_inmemory();
+    sa_if->sa_get_from_spi(10, &sa_ptr); // Disable SPI 10
+    sa_ptr->sa_state = SA_KEYED;
+    sa_if->sa_get_from_spi(5, &sa_ptr); // Enable and setup 5
+    sa_ptr->sa_state  = SA_OPERATIONAL;
+    sa_ptr->est       = 1;
+    sa_ptr->ecs       = CRYPTO_CIPHER_AES256_CBC;
+    sa_ptr->arsn_len  = 0;
+    sa_ptr->shsnf_len = 0;
+    sa_ptr->shivf_len = 12;
+    sa_ptr->iv_len    = 12;
+    sa_ptr->shplf_len = 2;
+    sa_ptr->gvcid_blk.tfvn = 1;
+    sa_ptr->gvcid_blk.vcid = 0;
+
+    crypto_key_t *ekp = NULL;
+    ekp               = key_if->get_key(sa_ptr->ekid);
+    ekp->key_state    = KEY_ACTIVE;
+
+    AOS_t *aos_frame;
+    aos_frame = malloc(sizeof(uint8_t) * AOS_SIZE);
+    memset(aos_frame, 0, (sizeof(uint8_t) * AOS_SIZE));
+
+    status = Crypto_AOS_ProcessSecurity((uint8_t *)framed_aos_b, framed_aos_len, aos_frame, &processed_aos_len);
+    ASSERT_EQ(CRYPTO_LIB_ERR_PARSED_PADDING, status);
+
+    Crypto_aosPrint(aos_frame);
+
+    Crypto_Shutdown();
+    free(framed_aos_b);
+    free(aos_frame);
+}
+
 UTEST_MAIN();

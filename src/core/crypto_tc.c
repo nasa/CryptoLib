@@ -2202,11 +2202,13 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
         // Get Padding Amount from ingest frame
         uint32_t padding_amount = 0;
         for (int i = 0; i < sa_ptr->shplf_len; i++)
+        {
             padding_amount = (padding_amount << 8) | ingest[padding_location + i];
-        if (padding_amount > tc_sdls_processed_frame->tc_pdu_len)
+        }
+        if (padding_amount > 0x10 || sa_ptr->shplf_len > 3)
         {
             Crypto_TC_Safe_Free_Ptr(aad);
-            status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW;
+            status = CRYPTO_LIB_ERR_PARSED_PADDING;
             mc_if->mc_log(status);
             return status;
         }
