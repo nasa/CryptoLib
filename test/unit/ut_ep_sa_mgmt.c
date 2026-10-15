@@ -52,6 +52,10 @@ UTEST(EP_SA_MGMT, SA_6_REKEY_133)
     sa_if->sa_get_from_spi(6, &test_association);
     test_association->sa_state = SA_UNKEYED;
 
+    crypto_key_t *rekey_key = key_if->get_key(133);
+    ASSERT_TRUE(rekey_key != NULL);
+    rekey_key->key_state = KEY_ACTIVE;
+
     // Convert frames that will be processed
     hex_conversion(buffer_REKEY_h, (char **)&buffer_REKEY_b, &buffer_REKEY_len);
 
@@ -62,6 +66,45 @@ UTEST(EP_SA_MGMT, SA_6_REKEY_133)
     Crypto_Shutdown();
 
     free(buffer_REKEY_b);
+}
+
+UTEST(EP_SA_MGMT, SA_REKEY_REJECTS_INACTIVE_KEY)
+{
+    remove("sa_save_file.bin");
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL);
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                     TC_IGNORE_ANTI_REPLAY_FALSE, TC_IGNORE_SA_STATE_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                     TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    TCGvcidManagedParameters_t TC_0_Managed_Parameters = {0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 41, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
+
+    int status = Crypto_Init();
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+
+    SaInterface sa_if = get_sa_interface_inmemory();
+    SecurityAssociation_t *test_association = NULL;
+    sa_if->sa_get_from_spi(6, &test_association);
+    test_association->sa_state = SA_UNKEYED;
+    uint16_t original_ekid = test_association->ekid;
+
+    crypto_key_t *rekey_key = key_if->get_key(133);
+    ASSERT_TRUE(rekey_key != NULL);
+    rekey_key->key_state = KEY_DEACTIVATED;
+
+    TC_t tc_frame = {0};
+    tc_frame.tc_sec_header.spi = 0;
+    sdls_frame.tlv_pdu.data[0] = 0;
+    sdls_frame.tlv_pdu.data[1] = 6;
+    sdls_frame.tlv_pdu.data[2] = 0;
+    sdls_frame.tlv_pdu.data[3] = 133;
+
+    status = sa_if->sa_rekey(&tc_frame);
+    ASSERT_EQ(CRYPTO_LIB_ERR_KEY_STATE_INVALID, status);
+    ASSERT_EQ(original_ekid, test_association->ekid);
+    ASSERT_EQ(SA_UNKEYED, (uint8_t)test_association->sa_state);
+
+    Crypto_Shutdown();
 }
 
 UTEST(EP_SA_MGMT, SA_START_6)
