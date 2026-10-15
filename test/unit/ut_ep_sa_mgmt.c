@@ -4,6 +4,125 @@
 #include "sa_interface.h"
 #include "utest.h"
 
+static int32_t InitSaValidationTest(void)
+{
+    Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
+                            IV_INTERNAL);
+    Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+                     TC_IGNORE_ANTI_REPLAY_FALSE, TC_IGNORE_SA_STATE_FALSE, TC_UNIQUE_SA_PER_MAP_ID_FALSE,
+                     TC_CHECK_FECF_TRUE, 0x3F, SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
+    TCGvcidManagedParameters_t TC_0_Managed_Parameters = {0, 0x0003, 0, TC_NO_FECF, TC_HAS_SEGMENT_HDRS, 41, 1};
+    Crypto_Config_Add_TC_Gvcid_Managed_Parameters(TC_0_Managed_Parameters);
+    return Crypto_Init();
+}
+
+UTEST(EP_SA_MGMT, SET_ARSN_REJECTS_UNCREATED_SA)
+{
+    remove("sa_save_file.bin");
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, InitSaValidationTest());
+
+    SaInterface sa_if = get_sa_interface_inmemory();
+    SecurityAssociation_t *sa_ptr = NULL;
+    sa_if->sa_get_from_spi(63, &sa_ptr);
+    sa_ptr->sa_state = SA_NONE;
+
+    TC_t tc_frame = {0};
+    tc_frame.tc_sec_header.spi = 0;
+    sdls_frame.tlv_pdu.data[0] = 0;
+    sdls_frame.tlv_pdu.data[1] = 63;
+
+    ASSERT_EQ(CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL, sa_if->sa_setARSN(&tc_frame));
+    ASSERT_EQ(CRYPTO_LIB_ERR_SA_NOT_OPERATIONAL, sa_if->sa_setARSNW(&tc_frame));
+    Crypto_Shutdown();
+}
+
+UTEST(EP_SA_MGMT, SET_ARSN_REJECTS_OUT_OF_RANGE_SPI)
+{
+    remove("sa_save_file.bin");
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, InitSaValidationTest());
+
+    SaInterface sa_if = get_sa_interface_inmemory();
+    TC_t tc_frame = {0};
+    tc_frame.tc_sec_header.spi = 0;
+    sdls_frame.tlv_pdu.data[0] = (NUM_SA >> BYTE_LEN) & 0xFF;
+    sdls_frame.tlv_pdu.data[1] = NUM_SA & 0xFF;
+
+    ASSERT_EQ(CRYPTO_LIB_ERR_SPI_INDEX_OOB, sa_if->sa_setARSN(&tc_frame));
+    ASSERT_EQ(CRYPTO_LIB_ERR_SPI_INDEX_OOB, sa_if->sa_setARSNW(&tc_frame));
+    Crypto_Shutdown();
+}
+
+UTEST(EP_SA_MGMT, SET_ARSNW_REJECTS_NON_AUTHENTICATING_SA)
+{
+    remove("sa_save_file.bin");
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, InitSaValidationTest());
+
+    SaInterface sa_if = get_sa_interface_inmemory();
+    SecurityAssociation_t *sa_ptr = NULL;
+    sa_if->sa_get_from_spi(2, &sa_ptr);
+    sa_ptr->sa_state = SA_KEYED;
+    sa_ptr->est = 1;
+    sa_ptr->ast = 0;
+    uint16_t original_arsnw = sa_ptr->arsnw;
+
+    TC_t tc_frame = {0};
+    tc_frame.tc_sec_header.spi = 0;
+    sdls_frame.tlv_pdu.data[0] = 0;
+    sdls_frame.tlv_pdu.data[1] = 2;
+    sdls_frame.tlv_pdu.data[2] = 9;
+
+    ASSERT_EQ(CRYPTO_LIB_ERR_INVALID_SA_SERVICE_TYPE, sa_if->sa_setARSNW(&tc_frame));
+    ASSERT_EQ(original_arsnw, sa_ptr->arsnw);
+    Crypto_Shutdown();
+}
+
+UTEST(EP_SA_MGMT, SET_ARSN_ACCEPTS_AUTHENTICATING_SA)
+{
+    remove("sa_save_file.bin");
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, InitSaValidationTest());
+
+    SaInterface sa_if = get_sa_interface_inmemory();
+    SecurityAssociation_t *sa_ptr = NULL;
+    sa_if->sa_get_from_spi(7, &sa_ptr);
+    sa_ptr->sa_state = SA_KEYED;
+    sa_ptr->ast = 1;
+    sa_ptr->arsn_len = 2;
+
+    TC_t tc_frame = {0};
+    tc_frame.tc_sec_header.spi = 0;
+    sdls_frame.tlv_pdu.data[0] = 0;
+    sdls_frame.tlv_pdu.data[1] = 7;
+    sdls_frame.tlv_pdu.data[2] = 0xAA;
+    sdls_frame.tlv_pdu.data[3] = 0x55;
+
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, sa_if->sa_setARSN(&tc_frame));
+    ASSERT_EQ(0xAA, sa_ptr->arsn[0]);
+    ASSERT_EQ(0x55, sa_ptr->arsn[1]);
+    Crypto_Shutdown();
+}
+
+UTEST(EP_SA_MGMT, SET_ARSNW_ACCEPTS_AUTHENTICATING_SA)
+{
+    remove("sa_save_file.bin");
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, InitSaValidationTest());
+
+    SaInterface sa_if = get_sa_interface_inmemory();
+    SecurityAssociation_t *sa_ptr = NULL;
+    sa_if->sa_get_from_spi(3, &sa_ptr);
+    sa_ptr->sa_state = SA_KEYED;
+    sa_ptr->ast = 1;
+
+    TC_t tc_frame = {0};
+    tc_frame.tc_sec_header.spi = 0;
+    sdls_frame.tlv_pdu.data[0] = 0;
+    sdls_frame.tlv_pdu.data[1] = 3;
+    sdls_frame.tlv_pdu.data[2] = 9;
+
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, sa_if->sa_setARSNW(&tc_frame));
+    ASSERT_EQ(9, sa_ptr->arsnw);
+    Crypto_Shutdown();
+}
+
 UTEST(EP_SA_MGMT, SA_6_REKEY_133)
 {
     remove("sa_save_file.bin");
@@ -335,7 +454,7 @@ UTEST(EP_SA_MGMT, SA_6_SET_ARSNW)
     hex_conversion(buffer_SET_h, (char **)&buffer_SET_b, &buffer_SET_len);
 
     status = Crypto_TC_ProcessSecurity(buffer_SET_b, &buffer_SET_len, &tc_nist_processed_frame);
-    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    ASSERT_EQ(CRYPTO_LIB_ERR_INVALID_SA_SERVICE_TYPE, status);
 
     sa_if->sa_get_from_spi(6, &test_association);
 
@@ -396,7 +515,7 @@ UTEST(EP_SA_MGMT, SA_6_SET_ARSN)
     hex_conversion(buffer_SET_h, (char **)&buffer_SET_b, &buffer_SET_len);
 
     status = Crypto_TC_ProcessSecurity(buffer_SET_b, &buffer_SET_len, &tc_nist_processed_frame);
-    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
+    ASSERT_EQ(CRYPTO_LIB_ERR_INVALID_SA_SERVICE_TYPE, status);
 
     printf("SA %d ARSN: 0x", test_association->spi);
     for (int i = 0; i < test_association->arsn_len; i++)
