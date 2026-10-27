@@ -28,12 +28,13 @@
 */
 #define DYNAMIC_LENGTHS 1
 
-static volatile uint8_t keepRunning    = CRYPTO_LIB_SUCCESS;
-static volatile uint8_t tc_seq_num     = 0;
-static volatile uint8_t tc_vcid        = CRYPTO_STANDALONE_FRAMING_VCID;
-static volatile uint8_t tc_debug       = 1;
-static volatile uint8_t tm_debug       = 0;
-static volatile uint8_t crypto_use_tcp = STANDALONE_TCP ? 1 : 0;
+static volatile uint8_t  keepRunning    = CRYPTO_LIB_SUCCESS;
+static volatile uint8_t  tc_seq_num     = 0;
+static volatile uint32_t aos_seq_num    = 0;
+static volatile uint8_t  tc_vcid        = CRYPTO_STANDALONE_FRAMING_VCID;
+static volatile uint8_t  tc_debug       = 1;
+static volatile uint8_t  tm_debug       = 0;
+static volatile uint8_t  crypto_use_tcp = STANDALONE_TCP ? 1 : 0;
 
 /*
 ** Functions
@@ -159,7 +160,7 @@ int32_t crypto_standalone_process_command(int32_t cc, int32_t num_tokens, char *
                     SecurityAssociation_t *test_association = NULL;
                     int32_t                status           = CRYPTO_LIB_SUCCESS;
 
-                    status = sa_if->sa_get_operational_sa_from_gvcid(0, SCID, vcid, 0, &test_association);
+                    status = sa_if->sa_get_operational_sa_from_gvcid(1, SCID, vcid, 0, &test_association);
                     if (status == CRYPTO_LIB_SUCCESS)
                     {
                         Crypto_saPrint(test_association);
@@ -493,6 +494,153 @@ void crypto_standalone_tc_frame(uint8_t *in_data, uint16_t in_length, uint8_t *o
     memcpy(&out_data[6], in_data, in_length);
 
     /* SDLS Trailer */
+}
+
+void crypto_standalone_aos_frame(uint8_t *in_data, uint16_t in_length, uint8_t *out_data, uint16_t *out_length)
+{
+    uint8_t fecf_len        = aos_current_managed_parameters_struct.has_fecf ? 2 : 0;
+
+    *out_length = 1786;
+
+    /* AOS Header */
+    out_data[0] = 0b01 << 6 | (CRYPTO_STANDALONE_FRAMING_SCID & 0xFC) >> 2;
+    out_data[1] = (CRYPTO_STANDALONE_FRAMING_SCID & 0x3) << 6 | (CRYPTO_STANDALONE_AOS_FRAMING_VCID & 0x3F);
+    out_data[2] = aos_seq_num & 0xFF0000;
+    out_data[3] = aos_seq_num & 0x00FF00;
+    out_data[4] = aos_seq_num++;
+
+    /* Signaling Field */
+    out_data[5] = 0x00;
+
+    /* SPI */
+    out_data[6] = 0x00;
+    out_data[7] = 0x00;
+
+    /* ARSN */
+    out_data[8] = 0x00;
+    out_data[9] = 0x00;
+
+    /* AOS Data */
+    memcpy(&out_data[10], in_data, in_length);
+
+    uint16_t idle_len = 1786 - in_length - 10 - fecf_len;
+
+    printf("Setting %d bytes of idle data\n", idle_len);
+
+    memset(&out_data[10 + in_length], 0xFF, idle_len);
+}
+
+void *crypto_standalone_aos_apply(void *socks)
+{
+    int32_t          status        = CRYPTO_LIB_SUCCESS;
+    udp_interface_t *tc_socks      = (udp_interface_t *)socks;
+    udp_info_t      *tc_read_sock  = &tc_socks->read;
+    udp_info_t      *tc_write_sock = &tc_socks->write;
+
+    uint8_t  aos_apply_in[AOS_MAX_FRAME_SIZE];
+    uint16_t aos_in_len = 0;
+
+    uint16_t aos_out_len = 0;
+
+#ifdef CRYPTO_STANDALONE_HANDLE_FRAMING
+    uint8_t aos_framed[AOS_MAX_FRAME_SIZE] = {0};
+#endif
+
+    int sockaddr_size = sizeof(struct sockaddr_in);
+
+    /* Prepare */
+    memset(aos_apply_in, 0x00, sizeof(aos_apply_in));
+
+    while (keepRunning == CRYPTO_LIB_SUCCESS)
+    {
+        // /* Receive */
+        status = recvfrom(tc_read_sock->sockfd, aos_apply_in, sizeof(aos_apply_in), 0,
+                          (struct sockaddr *)&tc_read_sock->ip_address, (socklen_t *)&sockaddr_size);
+        if (status != -1)
+        {
+            aos_in_len = status;
+            if (tc_debug == 1)
+            {
+                printf("crypto_standalone_aos_apply - received[%d]: 0x", aos_in_len);
+                for (int i = 0; i < status; i++)
+                {
+                    printf("%02x", aos_apply_in[i]);
+                }
+                printf("\n");
+            }
+
+/* Frame */
+#ifdef CRYPTO_STANDALONE_HANDLE_FRAMING
+            crypto_standalone_aos_frame(aos_apply_in, aos_in_len, aos_framed, &aos_out_len);
+            memcpy(aos_apply_in, aos_framed, aos_out_len);
+            aos_in_len  = aos_out_len;
+
+            if (tc_debug == 1)
+            {
+                printf("crypto_standalone_aos_apply - framed[%d]: 0x", aos_in_len);
+                for (int i = 0; i < aos_in_len; i++)
+                {
+                    printf("%02x", aos_apply_in[i]);
+                }
+                printf("\n");
+            }
+#endif
+
+            /* Process */
+            status = Crypto_AOS_ApplySecurity(aos_apply_in, aos_in_len);
+            if (status == CRYPTO_LIB_SUCCESS)
+            {
+                if (tc_debug == 1)
+                {
+                    printf("crypto_standalone_aos_apply - status = %d, encrypted[%d]: 0x", status, aos_out_len);
+                    for (int i = 0; i < aos_out_len; i++)
+                    {
+                        printf("%02x", aos_apply_in[i]);
+                    }
+                    printf("\n");
+                }
+                // printf("About to write to port %d!\n", tc_write_sock->port);
+                /* Reply */
+                if (crypto_use_tcp)
+                {
+                    status = send(tc_write_sock->sockfd, aos_apply_in, aos_out_len, 0);
+                }
+                else
+                {
+                    status = sendto(tc_write_sock->sockfd, aos_apply_in, aos_out_len, 0,
+                                    (struct sockaddr *)&tc_write_sock->saddr, sizeof(tc_write_sock->saddr));
+                }
+                if ((status == -1) || (status != aos_out_len))
+                {
+                    printf("crypto_standalone_aos_apply - Reply error %d \n", status);
+                }
+                // printf("Allegedly wrote %d bytes to port %d!\n", tc_out_len, tc_write_sock->port);
+            }
+            else
+            {
+                printf("crypto_standalone_aos_apply - ApplySecurity error %d \n", status);
+            }
+
+            /* Reset */
+            memset(aos_apply_in, 0x00, sizeof(aos_apply_in));
+            memset(aos_framed, 0x00, sizeof(aos_framed));
+            aos_in_len  = 0;
+            aos_out_len = 0;
+            
+            if (tc_debug == 1)
+            {
+#ifdef CRYPTO_STANDALONE_TC_APPLY_DEBUG
+                printf("\n");
+#endif
+            }
+        }
+
+        /* Delay */
+        usleep(100);
+    }
+    close(tc_read_sock->sockfd);
+    close(tc_write_sock->sockfd);
+    return tc_read_sock;
 }
 
 void *crypto_standalone_tc_apply(void *socks)
@@ -1007,7 +1155,7 @@ int main(int argc, char *argv[])
         printf("    Write, UDP - %s : %d \n", tm_process.write.ip_address, tm_process.write.port);
         printf("\n");
 
-        status = pthread_create(&tc_apply_thread, NULL, *crypto_standalone_tc_apply, &tc_apply);
+        status = pthread_create(&tc_apply_thread, NULL, *crypto_standalone_aos_apply, &tc_apply);
         if (status < 0)
         {
             perror("Failed to create tc_apply_thread thread");
