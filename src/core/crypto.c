@@ -1422,7 +1422,7 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
     status = Crypto_Check_Anti_Replay_Verify_Pointers(sa_ptr, arsn, iv);
 
     if (sa_ptr->null_iv == IV_NULL_TRUE && sa_ptr->null_arsn == ARSN_NULL_TRUE)
-    {   // Can't check anti-replay if both IV and ARSN are managed
+    { // Can't check anti-replay if both IV and ARSN are managed
         status = CRYPTO_LIB_ERR_INVALID_SA_CONFIGURATION;
         mc_if->mc_log(status);
         return status;

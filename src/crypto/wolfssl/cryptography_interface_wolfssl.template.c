@@ -498,7 +498,7 @@ static int32_t cryptography_decrypt(uint8_t *data_out, size_t len_data_out, uint
 #endif
 
     uint32_t full_iv_len = sa_ptr != NULL ? sa_ptr->iv_len : iv_len;
-    uint8_t temp_iv[MAX_IV_LEN];
+    uint8_t  temp_iv[MAX_IV_LEN];
 
 #ifdef DEBUG
     printf("WolfSSL Received IV:\n\t");
@@ -527,7 +527,7 @@ static int32_t cryptography_decrypt(uint8_t *data_out, size_t len_data_out, uint
     printf("Reconstructed IV:\n\t");
     for (uint32_t i = 0; i < full_iv_len; i++)
     {
-        printf("%02X", temp_iv[i]);        
+        printf("%02X", temp_iv[i]);
     }
     printf("\n");
 #endif
@@ -539,7 +539,8 @@ static int32_t cryptography_decrypt(uint8_t *data_out, size_t len_data_out, uint
             status = wc_AesGcmSetKey(&dec, key, len_key);
             if (status == 0)
             {
-                status = wc_AesGcmDecrypt(&dec, data_out, data_in, len_data_in, temp_iv, full_iv_len, calc_mac, 16, NULL, 0);
+                status =
+                    wc_AesGcmDecrypt(&dec, data_out, data_in, len_data_in, temp_iv, full_iv_len, calc_mac, 16, NULL, 0);
                 if (status == -180)
                 { // Special error case as Wolf will not accept a zero value for MAC size
                     status = CRYPTO_LIB_SUCCESS;
@@ -590,7 +591,7 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
 #endif
 
     uint32_t full_iv_len = sa_ptr != NULL ? sa_ptr->iv_len : iv_len;
-    uint8_t temp_iv[MAX_IV_LEN];
+    uint8_t  temp_iv[MAX_IV_LEN];
 
 #ifdef DEBUG
     printf("WolfSSL Received IV:\n\t");
@@ -619,7 +620,7 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
     printf("Reconstructed IV:\n\t");
     for (uint32_t i = 0; i < full_iv_len; i++)
     {
-        printf("%02X", temp_iv[i]);        
+        printf("%02X", temp_iv[i]);
     }
     printf("\n");
 #endif
@@ -639,19 +640,19 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
                         if (len_data_in == 0)
                         {
                             // in place decryption
-                            status = wc_AesGcmDecrypt(&dec, data_out, data_out, len_data_out, temp_iv, full_iv_len, mac, mac_size,
-                                                      aad, aad_len);
+                            status = wc_AesGcmDecrypt(&dec, data_out, data_out, len_data_out, temp_iv, full_iv_len, mac,
+                                                      mac_size, aad, aad_len);
                         }
                         else
                         {
-                            status = wc_AesGcmDecrypt(&dec, data_out, data_in, len_data_in, temp_iv, full_iv_len, mac, mac_size,
-                                                      aad, aad_len);
+                            status = wc_AesGcmDecrypt(&dec, data_out, data_in, len_data_in, temp_iv, full_iv_len, mac,
+                                                      mac_size, aad, aad_len);
                         }
                     }
                     else
                     {
-                        status =
-                            wc_AesGcmDecrypt(&dec, data_out, data_in, len_data_in, temp_iv, full_iv_len, mac, 16, aad, aad_len);
+                        status = wc_AesGcmDecrypt(&dec, data_out, data_in, len_data_in, temp_iv, full_iv_len, mac, 16,
+                                                  aad, aad_len);
                         if (status == -180)
                         { // Special error case as Wolf will not accept a zero value for MAC size
                             status = CRYPTO_LIB_SUCCESS;
@@ -660,7 +661,8 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
                 }
                 else if (decrypt_bool == CRYPTO_TRUE)
                 {
-                    status = wc_AesGcmDecrypt(&dec, data_out, data_in, len_data_in, temp_iv, full_iv_len, mac, 16, aad, aad_len);
+                    status = wc_AesGcmDecrypt(&dec, data_out, data_in, len_data_in, temp_iv, full_iv_len, mac, 16, aad,
+                                              aad_len);
                     if (status == -180)
                     { // Special error case as Wolf will not accept a zero value for MAC size
                         status = CRYPTO_LIB_SUCCESS;
@@ -668,8 +670,8 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
                 }
                 else if (authenticate_bool == CRYPTO_TRUE)
                 {
-                    status =
-                        wc_AesGcmDecrypt(&dec, data_out, data_in, len_data_in, temp_iv, full_iv_len, mac, mac_size, aad, aad_len);
+                    status = wc_AesGcmDecrypt(&dec, data_out, data_in, len_data_in, temp_iv, full_iv_len, mac, mac_size,
+                                              aad, aad_len);
                     // If authentication only, don't decrypt the data. Just pass the data PDU through.
                     memcpy(data_out, data_in, len_data_in);
                 }

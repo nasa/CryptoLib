@@ -528,11 +528,11 @@ int32_t sa_populate(void)
     sa[12].ast            = 1;
     sa[12].ecs_len        = 1;
     sa[12].ecs            = CRYPTO_CIPHER_AES256_GCM;
-    sa[12].null_iv         = 0;
+    sa[12].null_iv        = 0;
     sa[12].iv_len         = 16;
     sa[12].shivf_len      = 16;
     sa[12].stmacf_len     = 16;
-    sa[12].null_arsn       = 0;
+    sa[12].null_arsn      = 0;
     sa[12].shsnf_len      = 2;
     sa[12].arsn_len       = 2;
     sa[12].arsnw_len      = 1;
@@ -849,10 +849,10 @@ int32_t sa_get_operational_sa_from_gvcid_find_iv(uint8_t tfvn, uint16_t scid, ui
             // CCSDS 3550b2 Section 4.1.1.4.4
             if (sa[i].ast == 0 && sa[i].shsnf_len != 0 && sa[i].arsn_len != 0)
             {
-        #ifdef SA_DEBUG
+#ifdef SA_DEBUG
                 printf("USING SA %d!\n", i);
                 printf("AST IS %d, shsnf_len is %d, arsn_len is %d\n", sa[i].ast, sa[i].shsnf_len, sa[i].arsn_len);
-        #endif
+#endif
                 status = CRYPTO_LIB_ERR_INVALID_SVC_TYPE_WITH_ARSN;
                 mc_if->mc_log(status);
                 return status;

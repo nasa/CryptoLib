@@ -208,10 +208,10 @@ static int32_t cryptography_authenticate(
     }
 
     size_t tmac_size = mac_size;
-    gcry_error          = gcry_mac_read(tmp_mac_hd,
-                                        mac,                // tag output
-                                        &tmac_size // tag size
-             );
+    gcry_error       = gcry_mac_read(tmp_mac_hd,
+                                     mac,       // tag output
+                                     &tmac_size // tag size
+          );
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
     {
 #ifdef DEBUG
@@ -327,10 +327,10 @@ static int32_t cryptography_validate_authentication(uint8_t *data_out, size_t le
 
 #ifdef MAC_DEBUG
     // Commented out due to memory leaks with HMAC
-    size_t tmac_size = mac_size;
-    uint8_t   tmac[tmac_size];
+    size_t  tmac_size = mac_size;
+    uint8_t tmac[tmac_size];
     gcry_error = gcry_mac_read(tmp_mac_hd,
-                               tmac,              // tag output
+                               tmac,      // tag output
                                &tmac_size // tag size
     );
     if ((gcry_error & GPG_ERR_CODE_MASK) != GPG_ERR_NO_ERROR)
@@ -746,7 +746,7 @@ static int32_t cryptography_decrypt(uint8_t *data_out, size_t len_data_out, uint
     cam_cookies = cam_cookies;
 
     uint32_t full_iv_len = sa_ptr != NULL ? sa_ptr->iv_len : iv_len;
-    uint8_t temp_iv[MAX_IV_LEN];
+    uint8_t  temp_iv[MAX_IV_LEN];
 
 #ifdef DEBUG
     printf("LibGcrypt Received IV:\n\t");
@@ -775,7 +775,7 @@ static int32_t cryptography_decrypt(uint8_t *data_out, size_t len_data_out, uint
     printf("Reconstructed IV:\n\t");
     for (uint32_t i = 0; i < full_iv_len; i++)
     {
-        printf("%02X", temp_iv[i]);        
+        printf("%02X", temp_iv[i]);
     }
     printf("\n");
 #endif
@@ -873,7 +873,7 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
     cam_cookies = cam_cookies;
 
     uint32_t full_iv_len = sa_ptr != NULL ? sa_ptr->iv_len : iv_len;
-    uint8_t temp_iv[MAX_IV_LEN];
+    uint8_t  temp_iv[MAX_IV_LEN];
 
 #ifdef DEBUG
     printf("LibGcrypt Received IV:\n\t");
@@ -902,7 +902,7 @@ static int32_t cryptography_aead_decrypt(uint8_t *data_out, size_t len_data_out,
     printf("Reconstructed IV:\n\t");
     for (uint32_t i = 0; i < full_iv_len; i++)
     {
-        printf("%02X", temp_iv[i]);        
+        printf("%02X", temp_iv[i]);
     }
     printf("\n");
 #endif

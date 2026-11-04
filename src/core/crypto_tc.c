@@ -609,7 +609,7 @@ void Crypto_TC_Increment_IV_ARSN(uint8_t sa_service_type, SecurityAssociation_t 
 #ifdef INCREMENT
         if (crypto_config_tc.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
         {
-            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0  && sa_ptr->null_iv == IV_NULL_FALSE)
+            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0 && sa_ptr->null_iv == IV_NULL_FALSE)
             {
                 Crypto_increment(sa_ptr->iv, sa_ptr->iv_len);
             }
@@ -617,19 +617,19 @@ void Crypto_TC_Increment_IV_ARSN(uint8_t sa_service_type, SecurityAssociation_t 
         else // SA_INCREMENT_NONTRANSMITTED_IV_FALSE
         {
             // Only increment the transmitted portion
-            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0  && sa_ptr->null_iv == IV_NULL_FALSE)
+            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0 && sa_ptr->null_iv == IV_NULL_FALSE)
             {
                 Crypto_increment(sa_ptr->iv + (sa_ptr->iv_len - sa_ptr->shivf_len), sa_ptr->shivf_len);
             }
         }
-        if (sa_ptr->shsnf_len > 0  && sa_ptr->null_arsn == ARSN_NULL_FALSE)
+        if (sa_ptr->shsnf_len > 0 && sa_ptr->null_arsn == ARSN_NULL_FALSE)
         {
             Crypto_increment(sa_ptr->arsn, sa_ptr->arsn_len);
         }
 
 #ifdef SA_DEBUG
         int i = 0;
-        if (sa_ptr->iv_len > 0  && sa_ptr->null_iv == IV_NULL_FALSE)
+        if (sa_ptr->iv_len > 0 && sa_ptr->null_iv == IV_NULL_FALSE)
         {
             printf(KYEL "Next IV value is:\n\t");
             for (i = 0; i < sa_ptr->iv_len; i++)
@@ -980,7 +980,7 @@ int32_t Crypto_TC_Set_IV(SecurityAssociation_t *sa_ptr, uint8_t *p_new_enc_frame
 {
     uint32_t status = CRYPTO_LIB_SUCCESS;
 #ifdef SA_DEBUG
-    if (sa_ptr->shivf_len > 0  && sa_ptr->null_iv == IV_NULL_FALSE)
+    if (sa_ptr->shivf_len > 0 && sa_ptr->null_iv == IV_NULL_FALSE)
     {
         int i = 0;
         printf(KYEL "Using IV value:\n\t");
@@ -1526,7 +1526,7 @@ int32_t Crypto_TC_Do_Decrypt(uint8_t sa_service_type, uint8_t ecs_is_aead_algori
                              uint8_t *ingest, uint16_t tc_enc_payload_start_index, uint16_t aad_len, char *cam_cookies,
                              crypto_key_t *akp, uint8_t segment_hdr_len)
 {
-    int32_t status = CRYPTO_LIB_SUCCESS;
+    int32_t status  = CRYPTO_LIB_SUCCESS;
     segment_hdr_len = segment_hdr_len;
 
     if (sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_TRUE)
@@ -2197,8 +2197,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
     // Handle Padding Removal
     if (sa_ptr->shplf_len > 0)
     {
-        int padding_location =
-            TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len;
+        int padding_location = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len;
         // Get Padding Amount from ingest frame
         uint32_t padding_amount = 0;
         for (int i = 0; i < sa_ptr->shplf_len; i++)
@@ -2361,7 +2360,8 @@ static int32_t crypto_tc_validate_sa(SecurityAssociation_t *sa)
     {
         return CRYPTO_LIB_ERR_ARSN_LEN_SHORTER_THAN_SEC_HEADER_LENGTH;
     }
-    if ((sa->null_iv == IV_NULL_TRUE || sa->null_arsn == ARSN_NULL_TRUE) && crypto_config_global.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+    if ((sa->null_iv == IV_NULL_TRUE || sa->null_arsn == ARSN_NULL_TRUE) &&
+        crypto_config_global.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
     {
         // currently only null IV/ARSN with KMCCRYPTO
         return CRYPTO_LIB_ERR_NULL_IV;

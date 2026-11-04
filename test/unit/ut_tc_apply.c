@@ -1336,7 +1336,8 @@ UTEST(TC_APPLY_SECURITY, CBC_NULL_IV_W_IVH)
 //     // Setup & Initialize CryptoLib
 //     Crypto_Config_CryptoLib(KEY_TYPE_INTERNAL, MC_TYPE_INTERNAL, SA_TYPE_INMEMORY, CRYPTOGRAPHY_TYPE_LIBGCRYPT,
 //                             IV_INTERNAL);
-//     Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR, TC_IGNORE_ANTI_REPLAY_FALSE,
+//     Crypto_Config_TC(CRYPTO_TC_CREATE_FECF_TRUE, TC_PROCESS_SDLS_PDUS_TRUE, TC_HAS_PUS_HDR,
+//     TC_IGNORE_ANTI_REPLAY_FALSE,
 //                      TC_IGNORE_SA_STATE_FALSE, TC_UNIQUE_SA_PER_MAP_ID_TRUE, TC_CHECK_FECF_TRUE, 0x3F,
 //                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE);
 //     // Crypto_Config_Add_Gvcid_Managed_Parameter(0, 0x0003, 0, TC_HAS_FECF, TC_NO_SEGMENT_HDRS, TC_OCF_NA, 1024,
@@ -1634,8 +1635,8 @@ UTEST(TC_APPLY_SECURITY, TWO_BYTE_PADDING)
     return_val =
         Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
 
-    char *truth_data_h = "20030037000000040000000000000000000000000010341FCD0C33C83D836E22CDE670697CD1A53B"
-                         "3279FD57A84861A96C578CB47A629426";
+    char    *truth_data_h = "20030037000000040000000000000000000000000010341FCD0C33C83D836E22CDE670697CD1A53B"
+                            "3279FD57A84861A96C578CB47A629426";
     uint8_t *truth_data_b = NULL;
     int      truth_data_l = 0;
 

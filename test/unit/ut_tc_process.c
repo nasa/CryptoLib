@@ -1657,8 +1657,8 @@ UTEST(TC_PROCESS, LARGE_PAD)
     tc_sdls_processed_frame = malloc(sizeof(uint8_t) * TC_SIZE);
     memset(tc_sdls_processed_frame, 0, (sizeof(uint8_t) * TC_SIZE));
 
-    char *test_frame_pt_h = "2003003700000004000000000000000000000000FFFF341FCD0C33C83D836E22CDE670697CD1A53B"
-                            "3279FD57A84861A96C578CB47A629426";
+    char    *test_frame_pt_h   = "2003003700000004000000000000000000000000FFFF341FCD0C33C83D836E22CDE670697CD1A53B"
+                                 "3279FD57A84861A96C578CB47A629426";
     uint8_t *test_frame_pt_b   = NULL;
     int      test_frame_pt_len = 0;
 
