@@ -55,9 +55,55 @@ int32_t Crypto_TM_Sanity_Check(uint8_t *pTfBuffer)
         ((crypto_config_global.init_status == UNINITIALIZED) || (crypto_config_tm.init_status == UNINITIALIZED) ||
          (mc_if == NULL) || (sa_if == NULL)))
     {
+#ifdef DEBUG
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
+#endif
         status = CRYPTO_LIB_ERR_NO_CONFIG;
         // Can't mc_log since it's not configured
+    }
+    return status;
+}
+
+int32_t Crypto_TM_Nontransmitted_IV_Increment(SecurityAssociation_t *sa_ptr, TM_t *pp_processed_frame)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+
+    if (sa_ptr->shivf_len < sa_ptr->iv_len && crypto_config_tm.ignore_anti_replay == TM_IGNORE_ANTI_REPLAY_FALSE &&
+        crypto_config_tm.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
+    {
+        status = crypto_handle_incrementing_nontransmitted_counter(pp_processed_frame->tm_sec_header.iv, sa_ptr->iv,
+                                                                   sa_ptr->iv_len, sa_ptr->shivf_len, sa_ptr->arsnw);
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+            mc_if->mc_log(status);
+            return status;
+        }
+    }
+    else // Not checking IV ARSNW or only non-transmitted portion is static; Note, non-transmitted IV in SA must match
+         // frame or will fail MAC check.
+    {
+        // Retrieve non-transmitted portion of IV from SA (if applicable)
+        memcpy(pp_processed_frame->tm_sec_header.iv, sa_ptr->iv, sa_ptr->iv_len - sa_ptr->shivf_len);
+    }
+    return status;
+}
+
+int32_t Crypto_TM_Nontransmitted_SN_Increment(SecurityAssociation_t *sa_ptr, TM_t *pp_processed_frame)
+{
+    int32_t status = CRYPTO_LIB_SUCCESS;
+    if (sa_ptr->shsnf_len < sa_ptr->arsn_len && crypto_config_tm.ignore_anti_replay == TM_IGNORE_ANTI_REPLAY_FALSE)
+    {
+        status = crypto_handle_incrementing_nontransmitted_counter(pp_processed_frame->tm_sec_header.sn, sa_ptr->arsn,
+                                                                   sa_ptr->arsn_len, sa_ptr->shsnf_len, sa_ptr->arsnw);
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+            mc_if->mc_log(status);
+        }
+    }
+    else // Not checking ARSN in ARSNW
+    {
+        // Parse non-transmitted portion of ARSN from SA
+        memcpy(pp_processed_frame->tm_sec_header.sn, sa_ptr->arsn, sa_ptr->arsn_len - sa_ptr->shsnf_len);
     }
     return status;
 }
@@ -131,7 +177,9 @@ int32_t Crypto_TM_Determine_SA_Service_Type(uint8_t *sa_service_type, SecurityAs
     {
         // Probably unnecessary check
         // Leaving for now as it would be cleaner in SA to have an association enum returned I believe
+#ifdef DEBUG
         printf(KRED "Error: SA Service Type is not defined! \n" RESET);
+#endif
         status = CRYPTO_LIB_ERROR;
     }
     if (status != CRYPTO_LIB_SUCCESS)
@@ -300,7 +348,8 @@ void Crypto_TM_PKCS_Padding(uint32_t *pkcs_padding, SecurityAssociation_t *sa_pt
 {
     uint16_t idx      = *idx_p;
     uint8_t  fecf_len = (tm_current_managed_parameters_struct.has_fecf == TM_HAS_FECF) ? FECF_SIZE : 0;
-    uint16_t data_len = len_ingest - idx - sa_ptr->stmacf_len - fecf_len - sa_ptr->shplf_len;
+    uint8_t  ocf_len  = (tm_current_managed_parameters_struct.has_ocf == TM_HAS_OCF) ? OCF_SIZE : 0;
+    uint16_t data_len = len_ingest - idx - sa_ptr->stmacf_len - fecf_len - ocf_len - sa_ptr->shplf_len;
 
     // Calculate required padding based on cipher
     *pkcs_padding = Crypto_TM_Calculate_Padding(sa_ptr->ecs, data_len);
@@ -448,7 +497,9 @@ int32_t Crypto_TM_Do_Encrypt_NONPLAINTEXT(uint8_t sa_service_type, uint16_t *aad
             if (sa_ptr->abm_len < *aad_len)
             {
                 status = CRYPTO_LIB_ERR_ABM_TOO_SHORT_FOR_AAD;
+#ifdef DEBUG
                 printf(KRED "Error: abm_len of %d < *aad_len of %d\n" RESET, sa_ptr->abm_len, *aad_len);
+#endif
                 mc_if->mc_log(status);
             }
             if (status == CRYPTO_LIB_SUCCESS)
@@ -493,21 +544,19 @@ int32_t Crypto_TM_Do_Encrypt_NONPLAINTEXT_AEAD_Logic(uint8_t sa_service_type, ui
     {
         if (sa_service_type == SA_ENCRYPTION)
         {
-            status =
-                cryptography_if
-                    ->cryptography_encrypt( // Stub out data in/out as this is done in place and want to save cycles
-                        (uint8_t *)(&pTfBuffer[data_loc]), // ciphertext output
-                        (size_t)pdu_len,                   // length of data
-                        (uint8_t *)(&pTfBuffer[data_loc]), // plaintext input
-                        (size_t)pdu_len,                   // in data length - from start of frame to end of data
-                        &(ekp->value[0]),                  // Key
-                        Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs),
-                        sa_ptr,         // SA (for key reference)
-                        sa_ptr->iv,     // IV
-                        sa_ptr->iv_len, // IV Length
-                        &sa_ptr->ecs,   // encryption cipher
-                        pkcs_padding,   // authentication cipher
-                        NULL);
+            status = cryptography_if->cryptography_encrypt(
+                (uint8_t *)(&pTfBuffer[data_loc]), // ciphertext output
+                (size_t)pdu_len,                   // length of data
+                (uint8_t *)(&pTfBuffer[data_loc]), // plaintext input
+                (size_t)pdu_len,                   // in data length - from start of frame to end of data
+                &(ekp->value[0]),                  // Key
+                Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs),
+                sa_ptr,         // SA (for key reference)
+                sa_ptr->iv,     // IV
+                sa_ptr->iv_len, // IV Length
+                &sa_ptr->ecs,   // encryption cipher
+                pkcs_padding,   // authentication cipher
+                NULL);
         }
         if (sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
         {
@@ -529,6 +578,25 @@ int32_t Crypto_TM_Do_Encrypt_NONPLAINTEXT_AEAD_Logic(uint8_t sa_service_type, ui
                 &sa_ptr->ecs, // encryption cipher
                 &sa_ptr->acs, // authentication cipher
                 NULL);
+        }
+        if (sa_service_type == SA_AUTHENTICATION)
+        {
+            status = cryptography_if->cryptography_authenticate((uint8_t *)(&pTfBuffer[data_loc]), // ciphertext output
+                                                                (size_t)pdu_len,                   // length of data
+                                                                (uint8_t *)(&pTfBuffer[data_loc]), // plaintext input
+                                                                (size_t)pdu_len,                   // in data length
+                                                                &(akp->value[0]),                  // Key
+                                                                Crypto_Get_ACS_Algo_Keylen(sa_ptr->acs),
+                                                                sa_ptr,               // SA (for key reference)
+                                                                sa_ptr->iv,           // IV
+                                                                sa_ptr->iv_len,       // IV Length
+                                                                &pTfBuffer[*mac_loc], // tag output
+                                                                sa_ptr->stmacf_len,   // tag size
+                                                                aad,                  // AAD Input
+                                                                *aad_len,             // Length of AAD
+                                                                sa_ptr->ecs,          // encryption cipher
+                                                                sa_ptr->acs,          // authentication cipher
+                                                                NULL);
         }
     }
 
@@ -610,7 +678,7 @@ int32_t Crypto_TM_Do_Encrypt_Handle_Increment(uint8_t sa_service_type, SecurityA
 #ifdef INCREMENT
         if (crypto_config_tm.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
         {
-            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0)
+            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0 && sa_ptr->null_iv == IV_NULL_FALSE)
             {
                 status = Crypto_increment(sa_ptr->iv, sa_ptr->iv_len);
             }
@@ -618,18 +686,18 @@ int32_t Crypto_TM_Do_Encrypt_Handle_Increment(uint8_t sa_service_type, SecurityA
         else // SA_INCREMENT_NONTRANSMITTED_IV_FALSE
         {
             // Only increment the transmitted portion
-            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0)
+            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0 && sa_ptr->null_iv == IV_NULL_FALSE)
             {
                 status = Crypto_increment(sa_ptr->iv + (sa_ptr->iv_len - sa_ptr->shivf_len), sa_ptr->shivf_len);
             }
         }
-        if (sa_ptr->shsnf_len > 0 && status == CRYPTO_LIB_SUCCESS)
+        if (sa_ptr->shsnf_len > 0 && sa_ptr->null_arsn == ARSN_NULL_FALSE && status == CRYPTO_LIB_SUCCESS)
         {
             status = Crypto_increment(sa_ptr->arsn, sa_ptr->arsn_len);
         }
 
 #ifdef SA_DEBUG
-        if (sa_ptr->iv_len > 0)
+        if (sa_ptr->iv_len > 0 && sa_ptr->null_iv == IV_NULL_FALSE)
         {
             printf(KYEL "Next IV value is:\n\t");
             for (int i = 0; i < sa_ptr->iv_len; i++)
@@ -644,18 +712,21 @@ int32_t Crypto_TM_Do_Encrypt_Handle_Increment(uint8_t sa_service_type, SecurityA
             }
             printf("\n" RESET);
         }
-        printf(KYEL "Next ARSN value is:\n\t");
-        for (int i = 0; i < sa_ptr->arsn_len; i++)
+        if (sa_ptr->arsn_len > 0 && sa_ptr->null_arsn == ARSN_NULL_FALSE)
         {
-            printf("%02x", *(sa_ptr->arsn + i));
+            printf(KYEL "Next ARSN value is:\n\t");
+            for (int i = 0; i < sa_ptr->arsn_len; i++)
+            {
+                printf("%02x", *(sa_ptr->arsn + i));
+            }
+            printf("\n" RESET);
+            printf(KYEL "Next transmitted ARSN value is:\n\t");
+            for (int i = sa_ptr->arsn_len - sa_ptr->shsnf_len; i < sa_ptr->arsn_len; i++)
+            {
+                printf("%02x", *(sa_ptr->arsn + i));
+            }
+            printf("\n" RESET);
         }
-        printf("\n" RESET);
-        printf(KYEL "Next transmitted ARSN value is:\n\t");
-        for (int i = sa_ptr->arsn_len - sa_ptr->shsnf_len; i < sa_ptr->arsn_len; i++)
-        {
-            printf("%02x", *(sa_ptr->arsn + i));
-        }
-        printf("\n" RESET);
 #endif
 #endif
     }
@@ -903,6 +974,19 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         return status;
     }
 
+    if ((sa_ptr->null_iv == IV_NULL_TRUE || sa_ptr->null_arsn == ARSN_NULL_TRUE) &&
+        crypto_config_global.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+    {
+        // currently only null IV/ARSN with KMCCRYPTO
+        status = CRYPTO_LIB_ERR_INVALID_SA_CONFIGURATION;
+        mc_if->mc_log(status);
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+        {
+            free(sa_ptr);
+        }
+        return status;
+    }
+
     status = Crypto_Get_TM_Managed_Parameters_For_Gvcid(tfvn, scid, vcid, tm_gvcid_managed_parameters_array,
                                                         &tm_current_managed_parameters_struct);
 
@@ -913,6 +997,10 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         printf(KRED "Error: No managed parameters found!\n" RESET);
 #endif
         mc_if->mc_log(status);
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+        {
+            free(sa_ptr);
+        }
         return status;
     }
 
@@ -920,6 +1008,10 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     {
         status = CRYPTO_LIB_ERR_TM_FL_GT_MAX_FRAME_SIZE;
         mc_if->mc_log(status);
+        if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+        {
+            free(sa_ptr);
+        }
         return status;
     }
 
@@ -1099,6 +1191,9 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
      **/
     // TODO: Set this depending on crypto cipher used
     Crypto_TM_PKCS_Padding(&pkcs_padding, sa_ptr, pTfBuffer, &idx, len_ingest);
+#ifdef TM_DEBUG
+    printf("Calculated PKCS padding of %d\n", pkcs_padding);
+#endif
     if (tm_current_managed_parameters_struct.max_frame_size != len_ingest + pkcs_padding)
     {
         status = CRYPTO_LIB_ERR_TM_APPLY_PADDING;
@@ -1107,6 +1202,16 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         {
             free(sa_ptr);
         }
+        return status;
+    }
+
+    if (pkcs_padding != cbc_padding)
+    {
+#ifdef TM_DEBUG
+        printf("PDU padding of %d disagrees with frame padding of %d\n", pkcs_padding, cbc_padding);
+#endif
+        status = CRYPTO_LIB_ERR_TM_APPLY_PADDING;
+        mc_if->mc_log(status);
         return status;
     }
 
@@ -1209,7 +1314,9 @@ int32_t Crypto_TM_Process_Setup(uint16_t len_ingest, uint16_t *byte_idx, uint8_t
     // Query SA DB for active SA / SDLS parameters
     if ((sa_if == NULL) && (status == CRYPTO_LIB_SUCCESS)) // This should not happen, but tested here for safety
     {
+#ifdef DEBUG
         printf(KRED "ERROR: SA DB Not initalized! -- CRYPTO_LIB_ERR_NO_INIT, Will Exit\n" RESET);
+#endif
         status = CRYPTO_LIB_ERR_NO_INIT;
     }
 
@@ -1489,9 +1596,12 @@ int32_t Crypto_TM_Parse_Mac_Prep_AAD(uint8_t sa_service_type, uint8_t *p_ingest,
  * CCSDS Compliance: CCSDS 355.0-B-2 Section 4.3.4 (TM Decryption Processing)
  */
 int32_t Crypto_TM_Do_Decrypt_AEAD(uint8_t sa_service_type, uint8_t *p_ingest, uint8_t *p_new_dec_frame,
-                                  uint16_t byte_idx, uint16_t pdu_len, crypto_key_t *ekp, SecurityAssociation_t *sa_ptr,
-                                  uint8_t iv_loc, int mac_loc, uint16_t aad_len, uint8_t *aad)
+                                  uint16_t byte_idx, uint16_t pdu_len, crypto_key_t *ekp, crypto_key_t *akp,
+                                  SecurityAssociation_t *sa_ptr, uint8_t iv_loc, int mac_loc, uint16_t aad_len,
+                                  uint8_t *aad, TM_t *pp_processed_frame)
 {
+    iv_loc = iv_loc;
+
     int32_t status = CRYPTO_LIB_SUCCESS;
     if (sa_service_type == SA_ENCRYPTION)
     {
@@ -1501,12 +1611,32 @@ int32_t Crypto_TM_Do_Decrypt_AEAD(uint8_t sa_service_type, uint8_t *p_ingest, ui
                                                        pdu_len,                    // in data length
                                                        &(ekp->value[0]),           // Key
                                                        Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs),
-                                                       sa_ptr,            // SA for key reference
-                                                       p_ingest + iv_loc, // IV
-                                                       sa_ptr->iv_len,    // IV Length
-                                                       &sa_ptr->ecs,      // encryption cipher
-                                                       &sa_ptr->acs,      // authentication cipher
+                                                       sa_ptr,                               // SA for key reference
+                                                       pp_processed_frame->tm_sec_header.iv, // IV
+                                                       sa_ptr->iv_len,                       // IV Length
+                                                       &sa_ptr->ecs,                         // encryption cipher
+                                                       &sa_ptr->acs,                         // authentication cipher
                                                        NULL);
+    }
+    if (sa_service_type == SA_AUTHENTICATION)
+    {
+        status = cryptography_if->cryptography_validate_authentication(p_new_dec_frame + byte_idx, // plaintext output
+                                                                       (size_t)(pdu_len),          // length of data
+                                                                       p_ingest + byte_idx,        // ciphertext input
+                                                                       (size_t)(pdu_len),          // in data length
+                                                                       &(akp->value[0]),           // Key
+                                                                       Crypto_Get_ACS_Algo_Keylen(sa_ptr->acs), //
+                                                                       sa_ptr, // SA for key reference
+                                                                       pp_processed_frame->tm_sec_header.iv, // IV
+                                                                       sa_ptr->iv_len,     // IV Length
+                                                                       p_ingest + mac_loc, // Frame Expected Tag
+                                                                       sa_ptr->stmacf_len, // tag size
+                                                                       aad,     // additional authenticated data
+                                                                       aad_len, // length of AAD
+                                                                       CRYPTO_CIPHER_NONE, // encryption cipher
+                                                                       sa_ptr->acs,        // authentication cipher
+                                                                       NULL                //
+        );
     }
     if (sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
     {
@@ -1516,18 +1646,18 @@ int32_t Crypto_TM_Do_Decrypt_AEAD(uint8_t sa_service_type, uint8_t *p_ingest, ui
                                                             pdu_len,                    // in data length
                                                             &(ekp->value[0]),           // Key
                                                             Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs),
-                                                            sa_ptr,             // SA for key reference
-                                                            p_ingest + iv_loc,  // IV
-                                                            sa_ptr->iv_len,     // IV Length
-                                                            p_ingest + mac_loc, // Frame Expected Tag
-                                                            sa_ptr->stmacf_len, // tag size
-                                                            aad,                // additional authenticated data
-                                                            aad_len,            // length of AAD
-                                                            (sa_ptr->est),      // Decryption Bool
-                                                            (sa_ptr->ast),      // Authentication Bool
-                                                            (sa_ptr->ast),      // AAD Bool
-                                                            &sa_ptr->ecs,       // encryption cipher
-                                                            &sa_ptr->acs,       // authentication cipher
+                                                            sa_ptr, // SA for key reference
+                                                            pp_processed_frame->tm_sec_header.iv, // IV
+                                                            sa_ptr->iv_len,                       // IV Length
+                                                            p_ingest + mac_loc,                   // Frame Expected Tag
+                                                            sa_ptr->stmacf_len,                   // tag size
+                                                            aad,           // additional authenticated data
+                                                            aad_len,       // length of AAD
+                                                            (sa_ptr->est), // Decryption Bool
+                                                            (sa_ptr->ast), // Authentication Bool
+                                                            (sa_ptr->ast), // AAD Bool
+                                                            &sa_ptr->ecs,  // encryption cipher
+                                                            &sa_ptr->acs,  // authentication cipher
                                                             NULL);
     }
     return status;
@@ -1555,8 +1685,10 @@ int32_t Crypto_TM_Do_Decrypt_AEAD(uint8_t sa_service_type, uint8_t *p_ingest, ui
 int32_t Crypto_TM_Do_Decrypt_NONAEAD(uint8_t sa_service_type, uint16_t pdu_len, uint8_t *p_new_dec_frame,
                                      uint16_t byte_idx, uint8_t *p_ingest, crypto_key_t *akp, crypto_key_t *ekp,
                                      SecurityAssociation_t *sa_ptr, uint8_t iv_loc, int mac_loc, uint16_t aad_len,
-                                     uint8_t *aad)
+                                     uint8_t *aad, TM_t *pp_processed_frame)
 {
+    iv_loc = iv_loc;
+
     int32_t status = CRYPTO_LIB_SUCCESS;
     if (sa_service_type == SA_AUTHENTICATION || sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
     {
@@ -1566,8 +1698,8 @@ int32_t Crypto_TM_Do_Decrypt_NONAEAD(uint8_t sa_service_type, uint16_t pdu_len, 
                                                                        pdu_len,                    // in data length
                                                                        &(akp->value[0]),           // Key
                                                                        Crypto_Get_ACS_Algo_Keylen(sa_ptr->acs),
-                                                                       sa_ptr,             // SA for key reference
-                                                                       p_ingest + iv_loc,  // IV
+                                                                       sa_ptr, // SA for key reference
+                                                                       pp_processed_frame->tm_sec_header.iv, // IV
                                                                        sa_ptr->iv_len,     // IV Length
                                                                        p_ingest + mac_loc, // Frame Expected Tag
                                                                        sa_ptr->stmacf_len, // tag size
@@ -1600,11 +1732,11 @@ int32_t Crypto_TM_Do_Decrypt_NONAEAD(uint8_t sa_service_type, uint16_t pdu_len, 
                                                            pdu_len,                    // in data length
                                                            &(ekp->value[0]),           // Key
                                                            Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs),
-                                                           sa_ptr,            // SA for key reference
-                                                           p_ingest + iv_loc, // IV
-                                                           sa_ptr->iv_len,    // IV Length
-                                                           &sa_ptr->ecs,      // encryption cipher
-                                                           &sa_ptr->acs,      // authentication cipher
+                                                           sa_ptr,                               // SA for key reference
+                                                           pp_processed_frame->tm_sec_header.iv, // IV
+                                                           sa_ptr->iv_len,                       // IV Length
+                                                           &sa_ptr->ecs,                         // encryption cipher
+                                                           &sa_ptr->acs, // authentication cipher
                                                            NULL);
         }
     }
@@ -1669,13 +1801,13 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     int32_t status = CRYPTO_LIB_SUCCESS;
     if (sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_TRUE)
     {
-        status = Crypto_TM_Do_Decrypt_AEAD(sa_service_type, p_ingest, p_new_dec_frame, byte_idx, pdu_len, ekp, sa_ptr,
-                                           iv_loc, mac_loc, aad_len, aad);
+        status = Crypto_TM_Do_Decrypt_AEAD(sa_service_type, p_ingest, p_new_dec_frame, byte_idx, pdu_len, ekp, akp,
+                                           sa_ptr, iv_loc, mac_loc, aad_len, aad, pp_processed_frame);
     }
     else if (sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_FALSE)
     {
         status = Crypto_TM_Do_Decrypt_NONAEAD(sa_service_type, pdu_len, p_new_dec_frame, byte_idx, p_ingest, akp, ekp,
-                                              sa_ptr, iv_loc, mac_loc, aad_len, aad);
+                                              sa_ptr, iv_loc, mac_loc, aad_len, aad, pp_processed_frame);
         // TODO - implement non-AEAD algorithm logic
     }
     // If plaintext, copy byte by byte
@@ -1720,27 +1852,8 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     }
     printf("\n");
 #endif
-    uint8_t padding  = sa_ptr->shplf_len > 0 ? p_ingest[byte_idx - 1] : 0;
-    uint8_t fecf_len = (tm_current_managed_parameters_struct.has_fecf == TM_HAS_FECF) ? FECF_SIZE : 0;
-    memmove(&p_new_dec_frame[tm_current_managed_parameters_struct.max_frame_size - padding - fecf_len],
-            &p_new_dec_frame[tm_current_managed_parameters_struct.max_frame_size - fecf_len], fecf_len);
-    // pp_processed_frame = p_new_dec_frame;
-
-    // TODO maybe not just return this without doing the math ourselves
-    *p_decrypted_length = tm_current_managed_parameters_struct.max_frame_size - padding;
-    pdu_len -= padding;
-
-#ifdef TM_DEBUG
-    if (sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC || sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC_MAC)
-    {
-        printf(KYEL "Printing Frame WITHOUT Padding [%d]:\n\t" RESET, *p_decrypted_length);
-        for (int i = 0; i < *p_decrypted_length; i++)
-        {
-            printf(KYEL "%02X", p_new_dec_frame[i]);
-        }
-        printf("\n");
-    }
-#endif
+    uint16_t padding  = 0;
+    uint8_t  fecf_len = (tm_current_managed_parameters_struct.has_fecf == TM_HAS_FECF) ? FECF_SIZE : 0;
 
     // Copy data into struct
     byte_idx = 0;
@@ -1775,14 +1888,30 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     }
     byte_idx += sa_ptr->shsnf_len;
     pp_processed_frame->tm_sec_header.sn_field_len = sa_ptr->shsnf_len;
-    if (sa_ptr->shplf_len == 2)
+
+    // already got padding field value
+
+    if (sa_ptr->shplf_len > 0)
     {
-        pp_processed_frame->tm_sec_header.pad = (((uint16_t)p_ingest[byte_idx]) << 8) | p_ingest[byte_idx + 1];
+        padding = pp_processed_frame->tm_sec_header.pad;
+        memmove(&p_new_dec_frame[tm_current_managed_parameters_struct.max_frame_size - padding - fecf_len],
+                &p_new_dec_frame[tm_current_managed_parameters_struct.max_frame_size - fecf_len], fecf_len);
+        *p_decrypted_length = tm_current_managed_parameters_struct.max_frame_size - padding;
+        pdu_len -= padding;
     }
-    else
+
+#ifdef TM_DEBUG
+    if (sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC || sa_ptr->ecs == CRYPTO_CIPHER_AES256_CBC_MAC)
     {
-        pp_processed_frame->tm_sec_header.pad = sa_ptr->shplf_len == 1 ? p_ingest[byte_idx] : 0;
+        printf(KYEL "Printing Frame WITHOUT Padding [%d]:\n\t" RESET, *p_decrypted_length);
+        for (int i = 0; i < *p_decrypted_length; i++)
+        {
+            printf(KYEL "%02X", p_new_dec_frame[i]);
+        }
+        printf("\n");
     }
+#endif
+
     byte_idx += sa_ptr->shplf_len;
     pp_processed_frame->tm_sec_header.pad_field_len = sa_ptr->shplf_len;
 
@@ -1932,6 +2061,19 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
             return status;
         }
 
+        if ((sa_ptr->null_iv == IV_NULL_TRUE || sa_ptr->null_arsn == ARSN_NULL_TRUE) &&
+            crypto_config_global.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+        {
+            // currently only null IV/ARSN with KMCCRYPTO
+            status = CRYPTO_LIB_ERR_INVALID_SA_CONFIGURATION;
+            mc_if->mc_log(status);
+            if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+            {
+                free(sa_ptr);
+            }
+            return status;
+        }
+
 #ifdef DEBUG
         printf("TFVN SA(%d) == FRAME(%d)?\n", sa_ptr->gvcid_blk.tfvn, tm_frame_pri_hdr.tfvn);
         printf("SCID SA(%d) == FRAME(%d)?\n", sa_ptr->gvcid_blk.scid, tm_frame_pri_hdr.scid);
@@ -2036,16 +2178,51 @@ int32_t Crypto_TM_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, TM_t *
         {
             iv_loc = byte_idx;
         }
-        // Increment byte_idx past Security Header Fields based on SA values
+
+        // Increment IV/ARSN
         memcpy((pp_processed_frame->tm_sec_header.iv + (sa_ptr->iv_len - sa_ptr->shivf_len)), &(p_ingest[byte_idx]),
                sa_ptr->shivf_len);
         byte_idx += sa_ptr->shivf_len;
 
+        // Handle non-transmitted IV increment case (transmitted-portion roll-over)
+        status = Crypto_TM_Nontransmitted_IV_Increment(sa_ptr, pp_processed_frame);
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+            return status;
+        }
+
+        // Parse transmitted portion of ARSN
         memcpy((pp_processed_frame->tm_sec_header.sn + (sa_ptr->arsn_len - sa_ptr->shsnf_len)), &(p_ingest[byte_idx]),
                sa_ptr->shsnf_len);
         byte_idx += sa_ptr->shsnf_len;
 
-        memcpy(&(pp_processed_frame->tm_sec_header.pad), &(p_ingest[byte_idx]), sa_ptr->shplf_len);
+        // Handle non-transmitted SN increment case (transmitted-portion roll-over)
+        status = Crypto_TM_Nontransmitted_SN_Increment(sa_ptr, pp_processed_frame);
+        if (status != CRYPTO_LIB_SUCCESS)
+        {
+            return status;
+        }
+
+        for (int i = 0; i < sa_ptr->shplf_len; i++)
+        {
+            pp_processed_frame->tm_sec_header.pad =
+                (pp_processed_frame->tm_sec_header.pad << 8) | p_ingest[byte_idx + i];
+        }
+        if (sa_ptr->shplf_len > 0 && (pp_processed_frame->tm_sec_header.pad > 0x10 || sa_ptr->shplf_len > 3))
+        {
+#ifdef TM_DEBUG
+            printf("Parsed 0x%04X (%d) from padding field\n", pp_processed_frame->tm_sec_header.pad,
+                   pp_processed_frame->tm_sec_header.pad);
+#endif
+            status = CRYPTO_LIB_ERR_PARSED_PADDING;
+            mc_if->mc_log(status);
+            if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+            {
+                free(sa_ptr);
+            }
+            free(p_new_dec_frame);
+            return status;
+        }
         byte_idx += sa_ptr->shplf_len;
 
 #ifdef SA_DEBUG

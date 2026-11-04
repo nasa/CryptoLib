@@ -256,7 +256,9 @@ int32_t sa_populate(void)
     sa[0].est             = 0;
     sa[0].ast             = 0;
     sa[0].shivf_len       = 0;
+    sa[0].null_iv         = 0;
     sa[0].iv_len          = 0;
+    sa[0].null_arsn       = 0;
     sa[0].shsnf_len       = 0;
     sa[0].arsn_len        = 0;
     sa[0].arsnw_len       = 0;
@@ -273,8 +275,10 @@ int32_t sa_populate(void)
     sa[1].sa_state        = SA_OPERATIONAL;
     sa[1].est             = 0;
     sa[1].ast             = 0;
+    sa[1].null_iv         = 0;
     sa[1].shivf_len       = 12;
     sa[1].iv_len          = 12;
+    sa[1].null_arsn       = 0;
     sa[1].shsnf_len       = 0;
     sa[1].arsnw           = 5;
     sa[1].arsnw_len       = 1;
@@ -294,8 +298,10 @@ int32_t sa_populate(void)
     sa[2].ecs             = CRYPTO_CIPHER_AES256_GCM;
     sa[2].est             = 1;
     sa[2].ast             = 0;
+    sa[2].null_iv         = 0;
     sa[2].shivf_len       = 12;
     sa[2].iv_len          = 12;
+    sa[2].null_arsn       = 0;
     sa[2].arsnw_len       = 1;
     sa[2].arsnw           = 5;
     sa[2].arsn_len        = 0;
@@ -314,8 +320,10 @@ int32_t sa_populate(void)
     sa[3].acs             = CRYPTO_MAC_HMAC_SHA512;
     sa[3].est             = 0;
     sa[3].ast             = 1;
+    sa[3].null_iv         = 0;
     sa[3].shivf_len       = 12;
     sa[3].iv_len          = 12;
+    sa[3].null_arsn       = 0;
     sa[3].shsnf_len       = 2;
     sa[3].arsn_len        = 2;
     sa[3].arsnw_len       = 1;
@@ -336,11 +344,13 @@ int32_t sa_populate(void)
     sa[4].ecs             = CRYPTO_CIPHER_AES256_GCM;
     sa[4].est             = 1;
     sa[4].ast             = 1;
+    sa[4].null_iv         = 0;
     sa[4].shivf_len       = 12;
     sa[4].iv_len          = 12;
     sa[4].abm_len         = ABM_SIZE;
     sa[4].arsnw_len       = 1;
     sa[4].arsnw           = 5;
+    sa[4].null_arsn       = 0;
     sa[4].arsn_len        = ((sa[4].arsnw * 2) + 1);
     sa[4].stmacf_len      = 16;
     sa[4].gvcid_blk.tfvn  = 0;
@@ -355,8 +365,10 @@ int32_t sa_populate(void)
     sa[5].sa_state        = SA_KEYED;
     sa[5].est             = 0;
     sa[5].ast             = 0;
+    sa[5].null_iv         = 0;
     sa[5].shivf_len       = 12;
     sa[5].iv_len          = 12;
+    sa[5].null_arsn       = 0;
     sa[5].shsnf_len       = 2;
     sa[5].arsnw           = 5;
     sa[5].arsnw_len       = 1;
@@ -376,10 +388,12 @@ int32_t sa_populate(void)
     sa[6].ecs             = CRYPTO_CIPHER_AES256_CBC;
     sa[6].est             = 1;
     sa[6].ast             = 0;
+    sa[6].null_iv         = 0;
     sa[6].shivf_len       = 16;
     sa[6].iv_len          = 16;
     sa[6].shplf_len       = 1;
     sa[6].stmacf_len      = 0;
+    sa[6].null_arsn       = 0;
     sa[6].arsn_len        = 2;
     sa[6].arsnw_len       = 1;
     sa[6].arsnw           = 5;
@@ -398,8 +412,10 @@ int32_t sa_populate(void)
     sa[7].acs             = CRYPTO_MAC_HMAC_SHA512;
     sa[7].est             = 0;
     sa[7].ast             = 1;
+    sa[7].null_iv         = 0;
     sa[7].shivf_len       = 12;
     sa[7].iv_len          = 12;
+    sa[7].null_arsn       = 0;
     sa[7].shsnf_len       = 2;
     sa[7].arsn_len        = 2;
     sa[7].arsnw_len       = 1;
@@ -421,8 +437,10 @@ int32_t sa_populate(void)
     sa[8].est             = 1;
     sa[8].ast             = 1;
     sa[8].shplf_len       = 1;
+    sa[8].null_iv         = 0;
     sa[8].shivf_len       = 16;
     sa[8].iv_len          = 16;
+    sa[8].null_arsn       = 0;
     sa[8].shsnf_len       = 2;
     sa[8].arsn_len        = 2;
     sa[8].arsnw_len       = 1;
@@ -440,8 +458,10 @@ int32_t sa_populate(void)
     sa[9].sa_state        = SA_KEYED;
     sa[9].est             = 0;
     sa[9].ast             = 0;
+    sa[9].null_iv         = 0;
     sa[9].shivf_len       = 12;
     sa[9].iv_len          = 12;
+    sa[9].null_arsn       = 0;
     sa[9].shsnf_len       = 0;
     sa[9].arsnw           = 5;
     sa[9].arsnw_len       = 1;
@@ -459,9 +479,11 @@ int32_t sa_populate(void)
     sa[10].sa_state        = SA_OPERATIONAL;
     sa[10].est             = 0;
     sa[10].ast             = 1;
+    sa[10].null_iv         = 0;
     sa[10].acs_len         = 1;
     sa[10].acs             = CRYPTO_MAC_HMAC_SHA512;
     sa[10].stmacf_len      = 16;
+    sa[10].null_arsn       = 0;
     sa[10].arsnw           = 5;
     sa[10].arsnw_len       = 1;
     sa[10].arsn_len        = 2;
@@ -482,9 +504,11 @@ int32_t sa_populate(void)
     sa[11].ecs_len         = 1;
     sa[11].shplf_len       = 1;
     sa[11].ecs             = CRYPTO_CIPHER_AES256_CBC;
+    sa[11].null_iv         = 0;
     sa[11].iv_len          = 16;
     sa[11].shivf_len       = 16;
     sa[11].stmacf_len      = 0;
+    sa[11].null_arsn       = 0;
     sa[11].shsnf_len       = 2;
     sa[11].arsn_len        = 2;
     sa[11].arsnw_len       = 1;
@@ -504,9 +528,11 @@ int32_t sa_populate(void)
     sa[12].ast            = 1;
     sa[12].ecs_len        = 1;
     sa[12].ecs            = CRYPTO_CIPHER_AES256_GCM;
+    sa[12].null_iv        = 0;
     sa[12].iv_len         = 16;
     sa[12].shivf_len      = 16;
     sa[12].stmacf_len     = 16;
+    sa[12].null_arsn      = 0;
     sa[12].shsnf_len      = 2;
     sa[12].arsn_len       = 2;
     sa[12].arsnw_len      = 1;
@@ -522,8 +548,10 @@ int32_t sa_populate(void)
     sa[13].sa_state        = SA_NONE;
     sa[13].est             = 0;
     sa[13].ast             = 0;
+    sa[13].null_iv         = 0;
     sa[13].shivf_len       = 12;
     sa[13].iv_len          = 12;
+    sa[13].null_arsn       = 0;
     sa[13].shsnf_len       = 2;
     sa[13].arsnw           = 5;
     sa[13].arsnw_len       = 1;
@@ -539,8 +567,10 @@ int32_t sa_populate(void)
     sa[14].sa_state        = SA_UNKEYED;
     sa[14].est             = 0;
     sa[14].ast             = 0;
+    sa[14].null_iv         = 0;
     sa[14].shivf_len       = 12;
     sa[14].iv_len          = 12;
+    sa[14].null_arsn       = 0;
     sa[14].shsnf_len       = 2;
     sa[14].arsnw           = 5;
     sa[14].arsnw_len       = 1;
@@ -556,8 +586,10 @@ int32_t sa_populate(void)
     sa[15].sa_state        = SA_OPERATIONAL;
     sa[15].est             = 0;
     sa[15].ast             = 0;
+    sa[15].null_iv         = 0;
     sa[15].shivf_len       = 12;
     sa[15].iv_len          = 12;
+    sa[15].null_arsn       = 0;
     sa[15].shsnf_len       = 2;
     sa[15].arsnw           = 5;
     sa[15].arsnw_len       = 1;
@@ -812,6 +844,28 @@ int32_t sa_get_operational_sa_from_gvcid_find_iv(uint8_t tfvn, uint16_t scid, ui
                 return status;
             }
 
+            // ARSN must be 0 octets in length if not using Auth/Auth Enc
+            // SHSNF is a better indicator as it's the actual presence accounted for in the header
+            // CCSDS 3550b2 Section 4.1.1.4.4
+            if (sa[i].ast == 0 && sa[i].shsnf_len != 0 && sa[i].arsn_len != 0)
+            {
+#ifdef SA_DEBUG
+                printf("USING SA %d!\n", i);
+                printf("AST IS %d, shsnf_len is %d, arsn_len is %d\n", sa[i].ast, sa[i].shsnf_len, sa[i].arsn_len);
+#endif
+                status = CRYPTO_LIB_ERR_INVALID_SVC_TYPE_WITH_ARSN;
+                mc_if->mc_log(status);
+                return status;
+            }
+
+            // ARSN length cannot be less than shsnf length
+            if (sa[i].shsnf_len > sa[i].arsn_len)
+            {
+                status = CRYPTO_LIB_ERR_ARSN_LT_SHSNF;
+                mc_if->mc_log(status);
+                return status;
+            }
+
 #ifdef SA_DEBUG
             printf("Valid operational SA found at index %d.\n", i);
             printf("\t Tfvn: %d\n", tfvn);
@@ -1030,7 +1084,9 @@ static int32_t sa_start(TC_t *tc_frame)
     int            i;
     int            num_gvcid = (((sdls_frame.tlv_pdu.hdr.pdu_len / 8) - 2) / 4);
 
+#ifdef DEBUG
     printf("\nParsed GVCID: %d\n", num_gvcid);
+#endif
 
     // Read ingest
     spi = ((uint8_t)sdls_frame.tlv_pdu.data[0] << 8) | (uint8_t)sdls_frame.tlv_pdu.data[1];
@@ -1069,7 +1125,9 @@ static int32_t sa_start(TC_t *tc_frame)
                 }
 
                 count += 4;
+#ifdef DEBUG
                 printf("\tMAPID: %d\n", gvcid.mapid);
+#endif
 
                 // TC
                 if (gvcid.vcid != tc_frame->tc_header.vcid)
@@ -1701,7 +1759,9 @@ static int32_t sa_setARSN(TC_t *tc_frame)
     }
     else
     {
+#ifdef DEBUG
         printf("sa_setARSN ERROR: SPI %d does not exist.\n", spi);
+#endif
     }
 
     return CRYPTO_LIB_SUCCESS;
@@ -1798,7 +1858,9 @@ static int32_t sa_status(uint8_t *ingest)
         }
         else
         {
+#ifdef DEBUG
             printf("sa_status ERROR: SPI %d does not exist.\n", spi);
+#endif
             status = CRYPTO_LIB_ERR_SPI_INDEX_OOB;
         }
 

@@ -200,6 +200,18 @@ typedef enum
     CRYPTO_CIPHER_AES256_GCM_SIV
 } EncCipherSuite;
 
+// SA-specific enums
+typedef enum
+{
+    IV_NULL_FALSE = 0,
+    IV_NULL_TRUE
+} SaNullIv;
+typedef enum
+{
+    ARSN_NULL_FALSE = 0,
+    ARSN_NULL_TRUE
+} SaNullArsn;
+
 /*
 ** Main Crypto Configuration Block
 */

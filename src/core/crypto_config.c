@@ -303,13 +303,17 @@ int32_t Crypto_Init(void)
     if (crypto_config_global.init_status == UNINITIALIZED)
     {
         status = CRYPTO_CONFIGURATION_NOT_COMPLETE;
+#ifdef DEBUG
         printf(KRED "ERROR: CryptoLib must be configured before intializing!\n" RESET);
+#endif
         return status; // No configuration set -- return!
     }
     if (tc_gvcid_counter == 0 && tm_gvcid_counter == 0 && aos_gvcid_counter == 0)
     {
         status = CRYPTO_MANAGED_PARAM_CONFIGURATION_NOT_COMPLETE;
+#ifdef DEBUG
         printf(KRED "ERROR: CryptoLib  Managed Parameters must be configured before intializing!\n" RESET);
+#endif
         return status; // No Managed Parameter configuration set -- return!
     }
 
@@ -414,7 +418,9 @@ int32_t Crypto_Init(void)
             if (sa_mariadb_config == NULL)
             {
                 status = CRYPTO_MARIADB_CONFIGURATION_NOT_COMPLETE;
+#ifdef DEBUG
                 printf(KRED "ERROR: CryptoLib MariaDB must be configured before intializing!\n" RESET);
+#endif
                 return status; // MariaDB connection specified but no configuration exists, return!
             }
             sa_if = get_sa_interface_mariadb();

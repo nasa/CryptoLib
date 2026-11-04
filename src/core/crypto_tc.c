@@ -73,7 +73,9 @@ int32_t Crypto_TC_Get_SA_Service_Type(uint8_t *sa_service_type, SecurityAssociat
     {
         // Probably unnecessary check
         // Leaving for now as it would be cleaner in SA to have an association enum returned I believe
+#ifdef DEBUG
         printf(KRED "Error: SA Service Type is not defined! \n" RESET);
+#endif
         status = CRYPTO_LIB_ERROR;
         mc_if->mc_log(status);
         return status;
@@ -166,7 +168,9 @@ int32_t Crypto_TC_Validate_SA_Service_Type(uint8_t sa_service_type)
     if ((sa_service_type != SA_PLAINTEXT) && (sa_service_type != SA_AUTHENTICATED_ENCRYPTION) &&
         (sa_service_type != SA_ENCRYPTION) && (sa_service_type != SA_AUTHENTICATION))
     {
+#ifdef DEBUG
         printf(KRED "Unknown SA Service Type Detected!\n" RESET);
+#endif
         status = CRYPTO_LIB_ERR_INVALID_SA_SERVICE_TYPE;
     }
     return status;
@@ -234,7 +238,9 @@ int32_t Crypto_TC_Frame_Validation(uint16_t *p_enc_frame_len)
     // Check minimum frame size per CCSDS 232.0-B-3
     if (*p_enc_frame_len < TC_MIN_FRAME_SIZE)
     {
+#ifdef DEBUG
         printf(KRED "Error: New frame would violate minimum TC frame size requirement! \n" RESET);
+#endif
         status = CRYPTO_LIB_ERR_TC_FRAME_TOO_SHORT;
         mc_if->mc_log(status);
         return status;
@@ -246,8 +252,8 @@ int32_t Crypto_TC_Frame_Validation(uint16_t *p_enc_frame_len)
 #ifdef DEBUG
         printf("Managed length is: %d\n", tc_current_managed_parameters_struct.max_frame_size);
         printf("New enc frame length will be: %d\n", *p_enc_frame_len);
-#endif
         printf(KRED "Error: New frame would violate maximum tc frame managed parameter! \n" RESET);
+#endif
         status = CRYPTO_LIB_ERR_TC_FRAME_SIZE_EXCEEDS_MANAGED_PARAM_MAX_LIMIT;
         mc_if->mc_log(status);
         return status;
@@ -255,7 +261,9 @@ int32_t Crypto_TC_Frame_Validation(uint16_t *p_enc_frame_len)
     // Ensure the frame to be created will not violate spec max length
     if ((*p_enc_frame_len > 1024) && status == CRYPTO_LIB_SUCCESS)
     {
+#ifdef DEBUG
         printf(KRED "Error: New frame would violate specification max TC frame size! \n" RESET);
+#endif
         status = CRYPTO_LIB_ERR_TC_FRAME_SIZE_EXCEEDS_SPEC_LIMIT;
         mc_if->mc_log(status);
         return status;
@@ -276,7 +284,9 @@ int32_t Crypto_TC_Accio_Buffer(uint8_t **p_new_enc_frame, uint16_t *p_enc_frame_
     *p_new_enc_frame = (uint8_t *)malloc((*p_enc_frame_len) * sizeof(uint8_t));
     if (!(*p_new_enc_frame)) // Fix the check to properly verify the allocation
     {
+#ifdef DEBUG
         printf(KRED "Error: Malloc for encrypted output buffer failed! \n" RESET);
+#endif
         status = CRYPTO_LIB_ERROR;
         mc_if->mc_log(status);
         return status;
@@ -599,7 +609,7 @@ void Crypto_TC_Increment_IV_ARSN(uint8_t sa_service_type, SecurityAssociation_t 
 #ifdef INCREMENT
         if (crypto_config_tc.crypto_increment_nontransmitted_iv == SA_INCREMENT_NONTRANSMITTED_IV_TRUE)
         {
-            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0)
+            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0 && sa_ptr->null_iv == IV_NULL_FALSE)
             {
                 Crypto_increment(sa_ptr->iv, sa_ptr->iv_len);
             }
@@ -607,19 +617,19 @@ void Crypto_TC_Increment_IV_ARSN(uint8_t sa_service_type, SecurityAssociation_t 
         else // SA_INCREMENT_NONTRANSMITTED_IV_FALSE
         {
             // Only increment the transmitted portion
-            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0)
+            if (sa_ptr->shivf_len > 0 && sa_ptr->iv_len != 0 && sa_ptr->null_iv == IV_NULL_FALSE)
             {
                 Crypto_increment(sa_ptr->iv + (sa_ptr->iv_len - sa_ptr->shivf_len), sa_ptr->shivf_len);
             }
         }
-        if (sa_ptr->shsnf_len > 0)
+        if (sa_ptr->shsnf_len > 0 && sa_ptr->null_arsn == ARSN_NULL_FALSE)
         {
             Crypto_increment(sa_ptr->arsn, sa_ptr->arsn_len);
         }
 
 #ifdef SA_DEBUG
         int i = 0;
-        if (sa_ptr->iv_len > 0)
+        if (sa_ptr->iv_len > 0 && sa_ptr->null_iv == IV_NULL_FALSE)
         {
             printf(KYEL "Next IV value is:\n\t");
             for (i = 0; i < sa_ptr->iv_len; i++)
@@ -732,7 +742,9 @@ int32_t Crypto_TC_Check_Init_Setup(uint16_t in_frame_length)
     if ((crypto_config_global.init_status == UNINITIALIZED) || (crypto_config_tc.init_status == UNINITIALIZED) ||
         (mc_if == NULL) || (sa_if == NULL))
     {
+#ifdef DEBUG
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
+#endif
         status = CRYPTO_LIB_ERR_NO_CONFIG;
         // Can't mc_log since it's not configured
         return status; // return immediately so a NULL crypto_config is not dereferenced later
@@ -763,7 +775,9 @@ int32_t Crypto_TC_Sanity_Setup(const uint8_t *p_in_frame, const uint16_t in_fram
     if (p_in_frame == NULL)
     {
         status = CRYPTO_LIB_ERR_NULL_BUFFER;
+#ifdef DEBUG
         printf(KRED "Error: Input Buffer NULL! \n" RESET);
+#endif
         mc_if->mc_log(status);
         return status; // Just return here, nothing can be done.
     }
@@ -966,7 +980,7 @@ int32_t Crypto_TC_Set_IV(SecurityAssociation_t *sa_ptr, uint8_t *p_new_enc_frame
 {
     uint32_t status = CRYPTO_LIB_SUCCESS;
 #ifdef SA_DEBUG
-    if (sa_ptr->shivf_len > 0)
+    if (sa_ptr->shivf_len > 0 && sa_ptr->null_iv == IV_NULL_FALSE)
     {
         int i = 0;
         printf(KYEL "Using IV value:\n\t");
@@ -1512,7 +1526,8 @@ int32_t Crypto_TC_Do_Decrypt(uint8_t sa_service_type, uint8_t ecs_is_aead_algori
                              uint8_t *ingest, uint16_t tc_enc_payload_start_index, uint16_t aad_len, char *cam_cookies,
                              crypto_key_t *akp, uint8_t segment_hdr_len)
 {
-    int32_t status = CRYPTO_LIB_SUCCESS;
+    int32_t status  = CRYPTO_LIB_SUCCESS;
+    segment_hdr_len = segment_hdr_len;
 
     if (sa_service_type != SA_PLAINTEXT && ecs_is_aead_algorithm == CRYPTO_TRUE)
     {
@@ -1613,26 +1628,6 @@ int32_t Crypto_TC_Do_Decrypt(uint8_t sa_service_type, uint8_t ecs_is_aead_algori
                                                       &sa_ptr->acs, // authentication cipher
                                                       cam_cookies   //
                 );
-
-            // Handle Padding Removal
-            if (sa_ptr->shplf_len != 0)
-            {
-                int padding_location =
-                    TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len;
-                uint16_t padding_amount = 0;
-                // Get Padding Amount from ingest frame
-                padding_amount = (int)ingest[padding_location];
-                // Remove Padding from final decrypted portion
-                if ((tc_sdls_processed_frame->tc_pdu_len - padding_amount) >
-                    tc_current_managed_parameters_struct.max_frame_size)
-                {
-                    Crypto_TC_Safe_Free_Ptr(aad);
-                    status = CRYPTO_LIB_ERR_TC_FRAME_LENGTH_UNDERFLOW;
-                    mc_if->mc_log(status);
-                    return status;
-                }
-                tc_sdls_processed_frame->tc_pdu_len -= padding_amount;
-            }
         }
     }
     else if (sa_service_type == SA_PLAINTEXT)
@@ -1662,7 +1657,9 @@ int32_t Crypto_TC_Process_Sanity_Check(int *len_ingest)
     if ((crypto_config_global.init_status == UNINITIALIZED) || (crypto_config_tc.init_status == UNINITIALIZED) ||
         (mc_if == NULL) || (sa_if == NULL))
     {
+#ifdef DEBUG
         printf(KRED "ERROR: CryptoLib Configuration Not Set! -- CRYPTO_LIB_ERR_NO_CONFIG, Will Exit\n" RESET);
+#endif
         status = CRYPTO_LIB_ERR_NO_CONFIG;
         // Can't mc_log since it's not configured
         return status; // return immediately so a NULL crypto_config is not dereferenced later
@@ -1837,7 +1834,6 @@ int32_t Crypto_TC_Check_IV_ARSN(SecurityAssociation_t *sa_ptr, TC_t *tc_sdls_pro
                 clean_ekref(sa_ptr);
             if (sa_ptr->ak_ref[0] != '\0')
                 clean_akref(sa_ptr);
-            free(sa_ptr);
         }
     }
     return status;
@@ -2198,7 +2194,34 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
         status = Crypto_Process_Extended_Procedure_Pdu(tc_sdls_processed_frame, ingest, *len_ingest);
     }
 
+    // Handle Padding Removal
+    if (sa_ptr->shplf_len > 0)
+    {
+        int padding_location = TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len;
+        // Get Padding Amount from ingest frame
+        uint32_t padding_amount = 0;
+        for (int i = 0; i < sa_ptr->shplf_len; i++)
+        {
+            padding_amount = (padding_amount << 8) | ingest[padding_location + i];
+        }
+        if (padding_amount > 0x10 || sa_ptr->shplf_len > 3)
+        {
+            Crypto_TC_Safe_Free_Ptr(aad);
+            status = CRYPTO_LIB_ERR_PARSED_PADDING;
+            mc_if->mc_log(status);
+            return status;
+        }
+        tc_sdls_processed_frame->tc_pdu_len -= padding_amount;
+#ifdef DEBUG
+        printf("Removing %dB of Padding\n", padding_amount);
+#endif
+    }
+
     Crypto_TC_Safe_Free_Ptr(aad);
+    if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
+    {
+        free(sa_ptr);
+    }
 
     mc_if->mc_log(status);
     return status;
@@ -2336,6 +2359,12 @@ static int32_t crypto_tc_validate_sa(SecurityAssociation_t *sa)
     if (sa->arsn_len - sa->shsnf_len < 0)
     {
         return CRYPTO_LIB_ERR_ARSN_LEN_SHORTER_THAN_SEC_HEADER_LENGTH;
+    }
+    if ((sa->null_iv == IV_NULL_TRUE || sa->null_arsn == ARSN_NULL_TRUE) &&
+        crypto_config_global.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+    {
+        // currently only null IV/ARSN with KMCCRYPTO
+        return CRYPTO_LIB_ERR_NULL_IV;
     }
 
     return CRYPTO_LIB_SUCCESS;
