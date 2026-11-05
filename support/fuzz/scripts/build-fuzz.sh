@@ -1,4 +1,6 @@
 #!/bin/bash
+# Abort on the first failing command rather than pressing on and reporting success.
+set -eo pipefail
 
 # === Configuration Options ===
 # Set to 1 to enable aggressive optimizations (requires CPU with AVX2/FMA support)
@@ -129,6 +131,21 @@ cmake $PROJECT_ROOT -B $PROJECT_ROOT/build/fuzz-compcov \
 make -j$CORES
 unset AFL_LLVM_LAF_ALL # Unset to avoid affecting other builds
 cd ..
+
+# === Verify Build Output ===
+# make can succeed without producing the harness (e.g. if the target was skipped),
+# so check for the binaries explicitly before reporting success.
+MISSING_BINARIES=0
+for BUILD_DIR in fuzz fuzz-asan fuzz-cmplog fuzz-compcov; do
+  if [ ! -x "$PROJECT_ROOT/build/$BUILD_DIR/bin/fuzz_harness" ]; then
+    echo "❌ ERROR: build/$BUILD_DIR/bin/fuzz_harness was not produced"
+    MISSING_BINARIES=1
+  fi
+done
+if [ "$MISSING_BINARIES" -ne 0 ]; then
+  echo "❌ Fuzz harness build FAILED - see the compiler output above."
+  exit 1
+fi
 
 # === Final Status ===
 echo "✅ Build complete!"

@@ -46,12 +46,14 @@ static int32_t init_cryptolib_for_fuzzing(void)
     );
 
     Crypto_Config_TM(CRYPTO_TM_CREATE_FECF_TRUE,         // Create FECF for TC frames
+                     TM_IGNORE_ANTI_REPLAY_FALSE,        // Don't ignore anti-replay
                      TM_CHECK_FECF_TRUE,                 // Check FECF for TC frames
                      0x3F,                               // TC security flags
                      SA_INCREMENT_NONTRANSMITTED_IV_TRUE // Increment non-transmitted IV
     );
 
     Crypto_Config_AOS(CRYPTO_AOS_CREATE_FECF_TRUE,        // Create FECF for TC frames
+                      AOS_IGNORE_ANTI_REPLAY_FALSE,       // Don't ignore anti-replay
                       AOS_CHECK_FECF_TRUE,                // Check FECF for TC frames
                       0x3F,                               // TC security flags
                       SA_INCREMENT_NONTRANSMITTED_IV_TRUE // Increment non-transmitted IV
@@ -111,8 +113,7 @@ static uint8_t *create_tc_frame(const uint8_t *data, size_t size, size_t *out_si
 static uint8_t *create_tm_frame(const uint8_t *data, size_t size, size_t *out_size)
 {
     const size_t MIN_TM_SIZE = 1786;
-    size                     = MIN_TM_SIZE;
-    size_t frame_size        = (size < MIN_TM_SIZE) ? MIN_TM_SIZE : size;
+    size_t       frame_size  = (size < MIN_TM_SIZE) ? MIN_TM_SIZE : size;
 
     if (frame_size > MAX_FRAME_SIZE)
     {
@@ -140,8 +141,7 @@ static uint8_t *create_tm_frame(const uint8_t *data, size_t size, size_t *out_si
 static uint8_t *create_aos_frame(const uint8_t *data, size_t size, size_t *out_size)
 {
     const size_t MIN_AOS_SIZE = 1786;
-    size                      = MIN_AOS_SIZE;
-    size_t frame_size         = (size < MIN_AOS_SIZE) ? MIN_AOS_SIZE : size;
+    size_t       frame_size   = (size < MIN_AOS_SIZE) ? MIN_AOS_SIZE : size;
 
     if (frame_size > MAX_FRAME_SIZE)
     {
