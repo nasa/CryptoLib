@@ -49,7 +49,7 @@ extern "C"
     // Base64 encoding related functions
     void base64urlEncode(const void *input, size_t inputLen, char_t *output, size_t *outputLen);
 
-    int32_t base64urlDecode(const char_t *input, size_t inputLen, void *output, uint16_t decoded_buffer_size,
+    int32_t base64urlDecode(const char_t *input, size_t inputLen, void *output, size_t decoded_buffer_size,
                             size_t *outputLen);
 
 #define ERROR_INVALID_PARAMETER 21
@@ -62,7 +62,7 @@ extern "C"
 #define B64ENCODE_OUT_SAFESIZE(x) ((((x) + 3 - 1) / 3) * 4 + 1)
 
 // calculate the size of 'output' buffer required for a 'input' buffer of length x during Base64 decoding operation
-#define B64DECODE_OUT_SAFESIZE(x) (((x)*3) / 4)
+#define B64DECODE_OUT_SAFESIZE(x) ((((x) / 4) * 3) + ((((x) % 4) * 3) / 4))
 
 // C++ guard
 #ifdef __cplusplus

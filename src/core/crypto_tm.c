@@ -644,6 +644,11 @@ int32_t Crypto_TM_Do_Encrypt_NONPLAINTEXT_AEAD_Logic(uint8_t sa_service_type, ui
                             pkcs_padding,   // authentication cipher
                             NULL);
             }
+            else
+            {
+                status = CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
+                mc_if->mc_log(status);
+            }
         }
         else if (sa_service_type == SA_PLAINTEXT)
         {
@@ -1079,6 +1084,13 @@ int32_t Crypto_TM_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
         ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(sa_ptr->ecs);
     }
 
+    if (ecs_is_aead_algorithm == CRYPTO_FALSE && sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
+    {
+        status = CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
+        mc_if->mc_log(status);
+        return status;
+    }
+
 #ifdef TM_DEBUG
     switch (sa_service_type)
     {
@@ -1456,6 +1468,13 @@ int32_t Crypto_TM_Determine_Cipher_Mode(uint8_t sa_service_type, SecurityAssocia
         *ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(*encryption_cipher);
     }
 
+    if (*ecs_is_aead_algorithm == CRYPTO_FALSE && sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
+    {
+        status = CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
+        mc_if->mc_log(status);
+        return status;
+    }
+
     if (*encryption_cipher == CRYPTO_CIPHER_NONE && sa_ptr->est == 1)
     {
         status = CRYPTO_LIB_ERR_NO_ECS_SET_FOR_ENCRYPTION_MODE;
@@ -1831,6 +1850,7 @@ int32_t Crypto_TM_Do_Decrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_
     status = Crypto_TM_Check_IV_ARSN(sa_ptr, pp_processed_frame);
     if (status != CRYPTO_LIB_SUCCESS)
     {
+        free(p_new_dec_frame);
         mc_if->mc_log(status);
         if (crypto_config_global.sa_type == SA_TYPE_MARIADB)
         {

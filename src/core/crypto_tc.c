@@ -36,9 +36,6 @@ static int32_t crypto_tc_validate_sa(SecurityAssociation_t *sa);
 // Forward declarations for new functions
 static int32_t Crypto_TC_Validate_Auth_Mask(const uint8_t *abm_buffer, uint16_t abm_len, uint16_t frame_len);
 
-// Error code definitions for new TC validations
-#define CRYPTO_LIB_ERR_TC_FRAME_TOO_SHORT   -200
-#define CRYPTO_LIB_ERR_TC_AUTH_MASK_INVALID -201
 
 /**
  * @brief Function: Crypto_TC_Get_SA_Service_Type
@@ -114,6 +111,13 @@ int32_t Crypto_TC_Get_Ciper_Mode_TCA(uint8_t sa_service_type, uint32_t *encrypti
             *encryption_cipher = CRYPTO_CIPHER_NONE;
         }
         *ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(*encryption_cipher);
+    }
+
+    if (*ecs_is_aead_algorithm == CRYPTO_FALSE && sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
+    {
+        status = CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
+        mc_if->mc_log(status);
+        return status;
     }
 
     if (*encryption_cipher == CRYPTO_CIPHER_NONE && sa_ptr->est == 1)
@@ -550,7 +554,7 @@ int32_t Crypto_TC_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr
                     pkcs_padding, cam_cookies);
             }
 
-            if (sa_service_type == SA_AUTHENTICATION)
+            else if (sa_service_type == SA_AUTHENTICATION)
             {
 
                 if (crypto_config_global.key_type != KEY_TYPE_KMC)
@@ -580,6 +584,11 @@ int32_t Crypto_TC_Encrypt(uint8_t sa_service_type, SecurityAssociation_t *sa_ptr
                     sa_ptr->ecs,        // encryption cipher
                     sa_ptr->acs,        // authentication cipher
                     cam_cookies);
+            }
+            else
+            {
+                status = CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
+                mc_if->mc_log(status);
             }
         }
         *index_p = index;
@@ -1537,7 +1546,6 @@ int32_t Crypto_TC_Do_Decrypt(uint8_t sa_service_type, uint8_t ecs_is_aead_algori
             status = Crypto_TC_Check_ECS_Keylen(ekp, sa_ptr);
             if (status != CRYPTO_LIB_SUCCESS)
             {
-                Crypto_TC_Safe_Free_Ptr(aad);
                 return status;
             }
         }
@@ -1575,7 +1583,6 @@ int32_t Crypto_TC_Do_Decrypt(uint8_t sa_service_type, uint8_t ecs_is_aead_algori
                 status = Crypto_TC_Check_ACS_Keylen(akp, sa_ptr);
                 if (status != CRYPTO_LIB_SUCCESS)
                 {
-                    Crypto_TC_Safe_Free_Ptr(aad);
                     return status;
                 }
             }
@@ -1607,7 +1614,6 @@ int32_t Crypto_TC_Do_Decrypt(uint8_t sa_service_type, uint8_t ecs_is_aead_algori
                 // Check that key length to be used emets the algorithm requirement
                 if ((int32_t)ekp->key_len != Crypto_Get_ECS_Algo_Keylen(sa_ptr->ecs))
                 {
-                    Crypto_TC_Safe_Free_Ptr(aad);
                     status = CRYPTO_LIB_ERR_KEY_LENGTH_ERROR;
                     mc_if->mc_log(status);
                     return status;
@@ -2018,7 +2024,17 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
     } // Unable to get necessary Managed Parameters for TC TF -- return with error.
 
     // Segment Header
-    Crypto_TC_Set_Segment_Header(tc_sdls_processed_frame, ingest, &byte_idx);
+    if (*len_ingest >= 6)
+    {
+        Crypto_TC_Set_Segment_Header(tc_sdls_processed_frame, ingest, &byte_idx);
+    }
+    else 
+    {
+        status = CRYPTO_LIB_ERR_TC_FRAME_TOO_SHORT;
+        mc_if->mc_log(status);
+        return status;
+    }
+    
 
     if (*len_ingest >= byte_idx + SPI_LEN)
     {
@@ -2057,6 +2073,13 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
     // Determine Algorithm cipher & mode. // TODO - Parse authentication_cipher, and handle AEAD cases properly
     Crypto_TC_Get_Ciper_Mode_TCP(sa_service_type, &encryption_cipher, &ecs_is_aead_algorithm, sa_ptr);
 
+    if (ecs_is_aead_algorithm == CRYPTO_FALSE && sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
+    {
+        status = CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
+        mc_if->mc_log(status);
+        return status;
+    }
+
 #ifdef TC_DEBUG
     switch (sa_service_type)
     {
@@ -2080,6 +2103,13 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
     uint8_t segment_hdr_len = TC_SEGMENT_HDR_SIZE;
 
     Crypto_TC_Calc_Lengths(&fecf_len, &segment_hdr_len);
+
+    if (*len_ingest < TC_FRAME_HEADER_SIZE + segment_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + sa_ptr->shplf_len + sa_ptr->stmacf_len + fecf_len)
+    {
+        status = CRYPTO_LIB_ERR_TC_FRAME_TOO_SHORT;
+        mc_if->mc_log(status);
+        return status;
+    }
 
     // Parse & Check FECF
     status = Crypto_TC_Parse_Check_FECF(ingest, len_ingest, tc_sdls_processed_frame);
@@ -2204,7 +2234,7 @@ int32_t Crypto_TC_ProcessSecurity_Cam(uint8_t *ingest, int *len_ingest, TC_t *tc
         {
             padding_amount = (padding_amount << 8) | ingest[padding_location + i];
         }
-        if (padding_amount > 0x10 || sa_ptr->shplf_len > 3)
+        if (padding_amount > tc_sdls_processed_frame->tc_pdu_len || padding_amount > 0x10 || sa_ptr->shplf_len > 3)
         {
             Crypto_TC_Safe_Free_Ptr(aad);
             status = CRYPTO_LIB_ERR_PARSED_PADDING;

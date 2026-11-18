@@ -152,21 +152,21 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     }
     status = sa_if->sa_get_operational_sa_from_gvcid(tfvn, scid, vcid, 0, &sa_ptr);
 
-    if ((sa_ptr->null_iv == IV_NULL_TRUE || sa_ptr->null_arsn == ARSN_NULL_TRUE) &&
-        crypto_config_global.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
-    {
-        // currently only null IV/ARSN with KMCCRYPTO
-        status = CRYPTO_LIB_ERR_INVALID_SA_CONFIGURATION;
-        mc_if->mc_log(status);
-        return status;
-    }
-
     // No operational/valid SA found
     if (status != CRYPTO_LIB_SUCCESS)
     {
 #ifdef AOS_DEBUG
         printf(KRED "Error: Could not retrieve an SA!\n" RESET);
 #endif
+        mc_if->mc_log(status);
+        return status;
+    }
+
+    if ((sa_ptr->null_iv == IV_NULL_TRUE || sa_ptr->null_arsn == ARSN_NULL_TRUE) &&
+        crypto_config_global.cryptography_type != CRYPTOGRAPHY_TYPE_KMCCRYPTO)
+    {
+        // currently only null IV/ARSN with KMCCRYPTO
+        status = CRYPTO_LIB_ERR_INVALID_SA_CONFIGURATION;
         mc_if->mc_log(status);
         return status;
     }
@@ -303,6 +303,13 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
     if (sa_service_type != SA_PLAINTEXT)
     {
         ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(sa_ptr->ecs);
+    }
+
+    if (ecs_is_aead_algorithm == CRYPTO_FALSE && sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
+    {
+        status = CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
+        mc_if->mc_log(status);
+        return status;
     }
 
 #ifdef AOS_DEBUG
@@ -758,6 +765,11 @@ int32_t Crypto_AOS_ApplySecurity(uint8_t *pTfBuffer, uint16_t len_ingest)
                             &sa_ptr->ecs,   // encryption cipher
                             pkcs_padding,   // padding length
                             NULL);
+            }
+            else
+            {
+                status = CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
+                mc_if->mc_log(status);
             }
         }
         else if (sa_service_type == SA_PLAINTEXT)
@@ -1306,6 +1318,13 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
         ecs_is_aead_algorithm = Crypto_Is_AEAD_Algorithm(encryption_cipher);
     }
 
+    if (ecs_is_aead_algorithm == CRYPTO_FALSE && sa_service_type == SA_AUTHENTICATED_ENCRYPTION)
+    {
+        status = CRYPTO_LIB_ERR_UNSUPPORTED_MODE;
+        mc_if->mc_log(status);
+        return status;
+    }
+
     if (encryption_cipher == CRYPTO_CIPHER_NONE && sa_ptr->est == 1)
     {
         status = CRYPTO_LIB_ERR_NO_ECS_SET_FOR_ENCRYPTION_MODE;
@@ -1703,7 +1722,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     uint32_t padding = 0;
     for (int i = 0; i < sa_ptr->shplf_len; i++)
     {
-        padding |= p_ingest[aos_hdr_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + i]
+        padding |= p_ingest[aos_hdr_len + aos_current_managed_parameters_struct.aos_iz_len + SPI_LEN + sa_ptr->shivf_len + sa_ptr->shsnf_len + i]
                    << (8 * (sa_ptr->shplf_len - 1 - i));
     }
 
@@ -1870,6 +1889,7 @@ int32_t Crypto_AOS_ProcessSecurity(uint8_t *p_ingest, uint16_t len_ingest, AOS_t
     if (status != CRYPTO_LIB_SUCCESS)
     {
         // Crypto_TC_Safe_Free_Ptr(aad);
+        free(p_new_dec_frame);
         mc_if->mc_log(status);
         return status; // Cryptography IF call failed, return.
     }

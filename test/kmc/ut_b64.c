@@ -47,7 +47,7 @@ static const uint8_t base64DecTable[128] = {
 #define NO_ERROR                0
 
 // local copy of function from base64.c
-int32_t base64Decode(const char_t *input, size_t inputLen, void *output, uint16_t decoded_buffer_size,
+int32_t base64Decode(const char_t *input, size_t inputLen, void *output, size_t decoded_buffer_size,
                      size_t *outputLen)
 {
     int32_t  error;
@@ -69,19 +69,28 @@ int32_t base64Decode(const char_t *input, size_t inputLen, void *output, uint16_
     error = NO_ERROR;
 
     // Check expected output buffer size is large enough for decoded input
-    uint16_t outputLen_expected = 0;
-    uint8_t  padding            = 0;
+    size_t  outputLen_expected;
+    uint8_t padding = 0;
+
+    *outputLen = 0;
+
     if (inputLen >= 1 && input[inputLen - 1] == '=')
         padding++;
     if (inputLen >= 2 && input[inputLen - 2] == '=')
         padding++;
-    outputLen_expected = ((inputLen * 3) / 4) - padding;
+
+    // Calculate floor(inputLen * 3 / 4) without overflowing inputLen * 3
+    outputLen_expected = (inputLen / 4) * 3 + ((inputLen % 4) * 3) / 4;
 
     // Special debug prints for UT
     printf("InputLen: %ld\n \
-        Expected Dec Buf Length: %d\n \
-        Passed In Dec Length: %d\n",
+        Expected Dec Buf Length: %ld\n \
+        Passed In Dec Length: %ld\n",
            inputLen, outputLen_expected, decoded_buffer_size);
+
+    if (padding > outputLen_expected)
+        return ERROR_INVALID_LENGTH;
+    outputLen_expected -= padding;
 
     if (decoded_buffer_size < outputLen_expected)
         return ERROR_INVALID_LENGTH;
@@ -119,6 +128,12 @@ int32_t base64Decode(const char_t *input, size_t inputLen, void *output, uint16_
             // Divide the input stream into blocks of 4 characters
             if (++j == 4)
             {
+                if (n > decoded_buffer_size || decoded_buffer_size - n < 3)
+                {
+                    error = ERROR_INVALID_LENGTH;
+                    break;
+                }
+
                 // Map each 4-character block to 3 bytes
                 if (p != NULL)
                 {
@@ -154,30 +169,44 @@ int32_t base64Decode(const char_t *input, size_t inputLen, void *output, uint16_
         }
         else if (padLen == 1 && j == 3)
         {
-            // The "=" sequence indicates that the last block contains only 2 bytes
-            if (p != NULL)
+            if (n > decoded_buffer_size || decoded_buffer_size - n < 2)
             {
-                // Decode the last two bytes
-                p[n]     = (value >> 10) & 0xFF;
-                p[n + 1] = (value >> 2) & 0xFF;
+                error = ERROR_INVALID_LENGTH;
             }
+            else
+            {
+                // The "=" sequence indicates that the last block contains only 2 bytes
+                if (p != NULL)
+                {
+                    // Decode the last two bytes
+                    p[n]     = (value >> 10) & 0xFF;
+                    p[n + 1] = (value >> 2) & 0xFF;
+                }
 
-            // Adjust the length of the decoded data
-            n += 2;
+                // Adjust the length of the decoded data
+                n += 2;
+            }
         }
         else if (padLen == 2 && j == 2)
         {
-            // The "==" sequence indicates that the last block contains only 1 byte
-            if (p != NULL)
+            if (n >= decoded_buffer_size)
             {
-                // Decode the last byte
-                p[n] = (value >> 4) & 0xFF;
+                error = ERROR_INVALID_LENGTH;
             }
+            else
+            {
+                // The "==" sequence indicates that the last block contains only 1 byte
+                if (p != NULL)
+                {
+                    // Decode the last byte
+                    p[n] = (value >> 4) & 0xFF;
+                }
 
-            // Adjust the length of the decoded data
-            n++;
-            // Skip trailing pad characters
-            i++;
+                // Adjust the length of the decoded data
+                n++;
+                // Skip trailing pad characters
+                i++;
+            }
         }
         else
         {
@@ -199,8 +228,8 @@ UTEST(CRYPTO_B64, OVERSIZE_DECODE)
 
     // Success Case, This_one_is_just_the_right_size (len = 31)
     char    *ciphertext_base64      = "VGhpc19vbmVfaXNfanVzdF90aGVfcmlnaHRfc2l6ZQ==";
-    uint8_t  len_data_out           = 15;
-    uint16_t decoded_buffer_size    = (len_data_out)*2 + 1; // 31
+    size_t   len_data_out           = 15;
+    size_t   decoded_buffer_size    = (len_data_out) * 2 + 1; // 31
     uint8_t *ciphertext_decoded     = malloc(decoded_buffer_size);
     size_t   ciphertext_decoded_len = 0;
     status = base64Decode(ciphertext_base64, strlen(ciphertext_base64), ciphertext_decoded, decoded_buffer_size,
@@ -224,7 +253,7 @@ UTEST(CRYPTO_B64, OVERSIZE_DECODE)
     // Failure Case, This_one_is_2_too_short (len = 23)
     ciphertext_base64      = "VGhpc19vbmVfaXNfMl90b29fc2hvcnQ=";
     len_data_out           = 10;
-    decoded_buffer_size    = (len_data_out)*2 + 1;
+    decoded_buffer_size    = (len_data_out) * 2 + 1;
     ciphertext_decoded     = malloc(decoded_buffer_size);
     ciphertext_decoded_len = 0;
     status = base64Decode(ciphertext_base64, strlen(ciphertext_base64), ciphertext_decoded, decoded_buffer_size,
@@ -244,5 +273,104 @@ UTEST(CRYPTO_B64, OVERSIZE_DECODE)
     printf("Status: %d\n\n", status);
     free(ciphertext_decoded);
     ASSERT_EQ(ERROR_INVALID_LENGTH, status);
+
+    // Success, (input_len = 90000)
+    char oversize_ciphertext[90001];
+    memset(oversize_ciphertext, 'A', 90000);
+    oversize_ciphertext[90000] = '\0';
+    len_data_out           = 33750;
+    decoded_buffer_size    = (len_data_out)*2 + 1;
+    ciphertext_decoded     = malloc(decoded_buffer_size);
+    ciphertext_decoded_len = 0;
+    status = base64Decode(oversize_ciphertext, strlen(oversize_ciphertext), ciphertext_decoded, decoded_buffer_size,
+                          &ciphertext_decoded_len);
+    printf("Status: %d\n\n", status);
+    free(ciphertext_decoded);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, status);
 }
+
+UTEST(CRYPTO_B64, UINT16_WRAPAROUND_IS_REJECTED)
+{
+    const size_t encoded_length = 87384;
+    const size_t decoded_length = 65538;
+    char        *encoded         = malloc(encoded_length);
+    uint8_t     *decoded         = malloc(decoded_length);
+    size_t       output_length   = decoded_length;
+
+    ASSERT_NE(NULL, encoded);
+    ASSERT_NE(NULL, decoded);
+
+    if (encoded != NULL && decoded != NULL)
+    {
+        memset(encoded, 'A', encoded_length);
+        memset(decoded, 0xA5, decoded_length);
+
+        // 65538 truncated to 2 when the expected length was stored in uint16_t.
+        ASSERT_EQ(ERROR_INVALID_LENGTH,
+                  base64Decode(encoded, encoded_length, decoded, 2, &output_length));
+        ASSERT_EQ((size_t)0, output_length);
+        ASSERT_EQ(0xA5, decoded[0]);
+        ASSERT_EQ(0xA5, decoded[decoded_length - 1]);
+        printf("Status: %d\n\n", ERROR_INVALID_LENGTH);
+
+        ASSERT_EQ(NO_ERROR,
+                  base64Decode(encoded, encoded_length, decoded, decoded_length, &output_length));
+        ASSERT_EQ(decoded_length, output_length);
+        printf("Status: %d\n\n", NO_ERROR);
+    }
+
+    free(decoded);
+    free(encoded);
+}
+
+UTEST(CRYPTO_B64, FULL_BLOCK_BUFFER_BOUNDARY)
+{
+    const char *encoded    = "QUJD";
+    uint8_t     decoded[3] = {0xA5, 0xA5, 0xA5};
+    size_t      output_length;
+
+    ASSERT_EQ(ERROR_INVALID_LENGTH, base64Decode(encoded, 4, decoded, 2, &output_length));
+    ASSERT_EQ((size_t)0, output_length);
+    ASSERT_EQ(0xA5, decoded[0]);
+    ASSERT_EQ(0xA5, decoded[1]);
+    ASSERT_EQ(0xA5, decoded[2]);
+    printf("Status: %d\n\n", ERROR_INVALID_LENGTH);
+
+    ASSERT_EQ(NO_ERROR, base64Decode(encoded, 4, decoded, sizeof(decoded), &output_length));
+    ASSERT_EQ((size_t)3, output_length);
+    ASSERT_EQ('A', decoded[0]);
+    ASSERT_EQ('B', decoded[1]);
+    ASSERT_EQ('C', decoded[2]);
+    printf("Status: %d\n\n", NO_ERROR);
+}
+
+UTEST(CRYPTO_B64, PADDED_BLOCK_BUFFER_BOUNDARIES)
+{
+    uint8_t decoded[2] = {0xA5, 0xA5};
+    size_t  output_length;
+
+    ASSERT_EQ(ERROR_INVALID_LENGTH, base64Decode("TWE=", 4, decoded, 1, &output_length));
+    ASSERT_EQ((size_t)0, output_length);
+    ASSERT_EQ(0xA5, decoded[0]);
+    ASSERT_EQ(0xA5, decoded[1]);
+    printf("Status: %d\n\n", ERROR_INVALID_LENGTH);
+
+    ASSERT_EQ(NO_ERROR, base64Decode("TWE=", 4, decoded, sizeof(decoded), &output_length));
+    ASSERT_EQ((size_t)2, output_length);
+    ASSERT_EQ('M', decoded[0]);
+    ASSERT_EQ('a', decoded[1]);
+    printf("Status: %d\n\n", NO_ERROR);
+
+    decoded[0] = 0xA5;
+    ASSERT_EQ(ERROR_INVALID_LENGTH, base64Decode("TQ==", 4, decoded, 0, &output_length));
+    ASSERT_EQ((size_t)0, output_length);
+    ASSERT_EQ(0xA5, decoded[0]);
+    printf("Status: %d\n\n", ERROR_INVALID_LENGTH);
+
+    ASSERT_EQ(NO_ERROR, base64Decode("TQ==", 4, decoded, 1, &output_length));
+    ASSERT_EQ((size_t)1, output_length);
+    ASSERT_EQ('M', decoded[0]);
+    printf("Status: %d\n\n", NO_ERROR);
+}
+
 UTEST_MAIN()

@@ -1303,6 +1303,7 @@ int32_t Crypto_Check_Anti_Replay_ARSNW(SecurityAssociation_t *sa_ptr, uint8_t *a
     }
 
     if (status == CRYPTO_LIB_SUCCESS)
+    {
         if (sa_ptr->shsnf_len > 0)
         {
             // Check Sequence Number is in ARSNW
@@ -1331,6 +1332,7 @@ int32_t Crypto_Check_Anti_Replay_ARSNW(SecurityAssociation_t *sa_ptr, uint8_t *a
                 *arsn_valid = CRYPTO_TRUE;
             }
         }
+    }
     return status;
 }
 
@@ -1348,7 +1350,7 @@ int32_t Crypto_Check_Anti_Replay_GCM(SecurityAssociation_t *sa_ptr, uint8_t *iv,
                                      uint8_t increment_nontransmitted)
 {
     int32_t status = CRYPTO_LIB_SUCCESS;
-    if ((sa_ptr->iv_len > 0) && (sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM))
+    if ((sa_ptr->iv_len > 0) && (sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM || sa_ptr->ecs == CRYPTO_CIPHER_AES256_GCM_SIV))
     {
         // Check IV Length
         if (sa_ptr->iv_len > IV_SIZE)
@@ -1452,8 +1454,8 @@ int32_t Crypto_Check_Anti_Replay(SecurityAssociation_t *sa_ptr, uint8_t *arsn, u
             if (sa_ptr->null_arsn == ARSN_NULL_FALSE)
                 memcpy(sa_ptr->arsn, arsn, sa_ptr->arsn_len);
         }
-        // Not using ARSN? IV Valid and good to go
-        if (sa_ptr->arsn_len == 0)
+        // Not using ARSN, or not transmitted? IV Valid and good to go
+        else if (sa_ptr->arsn_len == 0 || sa_ptr->shsnf_len == 0)
         {
             if (sa_ptr->null_iv == IV_NULL_FALSE)
                 memcpy(sa_ptr->iv, iv, sa_ptr->iv_len);

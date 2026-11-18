@@ -170,11 +170,12 @@ void base64Encode(const void *input, size_t inputLen, char_t *output, size_t *ou
  * @param[in] input Base64-encoded string
  * @param[in] inputLen Length of the encoded string
  * @param[out] output Resulting decoded data
+ * @param[in] decoded_buffer_size Size of the output buffer
  * @param[out] outputLen Length of the decoded data
  * @return Error code
  **/
 
-int32_t base64Decode(const char_t *input, size_t inputLen, void *output, uint16_t decoded_buffer_size,
+int32_t base64Decode(const char_t *input, size_t inputLen, void *output, size_t decoded_buffer_size,
                      size_t *outputLen)
 {
     int32_t  error;
@@ -196,13 +197,21 @@ int32_t base64Decode(const char_t *input, size_t inputLen, void *output, uint16_
     error = NO_ERROR;
 
     // Check expected output buffer size is large enough for decoded input
-    uint16_t outputLen_expected = 0;
-    uint8_t  padding            = 0;
+    size_t  outputLen_expected;
+    uint8_t padding = 0;
+
+    *outputLen = 0;
+
     if (inputLen >= 1 && input[inputLen - 1] == '=')
         padding++;
     if (inputLen >= 2 && input[inputLen - 2] == '=')
         padding++;
-    outputLen_expected = ((inputLen * 3) / 4) - padding;
+
+    // Calculate floor(inputLen * 3 / 4) without overflowing inputLen * 3
+    outputLen_expected = (inputLen / 4) * 3 + ((inputLen % 4) * 3) / 4;
+    if (padding > outputLen_expected)
+        return ERROR_INVALID_LENGTH;
+    outputLen_expected -= padding;
 
     if (decoded_buffer_size < outputLen_expected)
         return ERROR_INVALID_LENGTH;
@@ -240,6 +249,12 @@ int32_t base64Decode(const char_t *input, size_t inputLen, void *output, uint16_
             // Divide the input stream into blocks of 4 characters
             if (++j == 4)
             {
+                if (n > decoded_buffer_size || decoded_buffer_size - n < 3)
+                {
+                    error = ERROR_INVALID_LENGTH;
+                    break;
+                }
+
                 // Map each 4-character block to 3 bytes
                 if (p != NULL)
                 {
@@ -275,30 +290,44 @@ int32_t base64Decode(const char_t *input, size_t inputLen, void *output, uint16_
         }
         else if (padLen == 1 && j == 3)
         {
-            // The "=" sequence indicates that the last block contains only 2 bytes
-            if (p != NULL)
+            if (n > decoded_buffer_size || decoded_buffer_size - n < 2)
             {
-                // Decode the last two bytes
-                p[n]     = (value >> 10) & 0xFF;
-                p[n + 1] = (value >> 2) & 0xFF;
+                error = ERROR_INVALID_LENGTH;
             }
+            else
+            {
+                // The "=" sequence indicates that the last block contains only 2 bytes
+                if (p != NULL)
+                {
+                    // Decode the last two bytes
+                    p[n]     = (value >> 10) & 0xFF;
+                    p[n + 1] = (value >> 2) & 0xFF;
+                }
 
-            // Adjust the length of the decoded data
-            n += 2;
+                // Adjust the length of the decoded data
+                n += 2;
+            }
         }
         else if (padLen == 2 && j == 2)
         {
-            // The "==" sequence indicates that the last block contains only 1 byte
-            if (p != NULL)
+            if (n >= decoded_buffer_size)
             {
-                // Decode the last byte
-                p[n] = (value >> 4) & 0xFF;
+                error = ERROR_INVALID_LENGTH;
             }
+            else
+            {
+                // The "==" sequence indicates that the last block contains only 1 byte
+                if (p != NULL)
+                {
+                    // Decode the last byte
+                    p[n] = (value >> 4) & 0xFF;
+                }
 
-            // Adjust the length of the decoded data
-            n++;
-            // Skip trailing pad characters
-            i++;
+                // Adjust the length of the decoded data
+                n++;
+                // Skip trailing pad characters
+                i++;
+            }
         }
         else
         {

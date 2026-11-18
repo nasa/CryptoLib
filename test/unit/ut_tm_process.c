@@ -2323,6 +2323,7 @@ UTEST(TM_PROCESS, TM_KEY_STATE_TEST)
     sa_if->sa_get_from_spi(8, &sa_ptr);
     sa_ptr->sa_state       = SA_OPERATIONAL;
     sa_ptr->abm_len        = 8;
+    sa_ptr->ecs            = CRYPTO_CIPHER_AES256_GCM;
     sa_ptr->stmacf_len     = 0;
     sa_ptr->shivf_len      = 0;
     sa_ptr->iv_len         = 0;
@@ -2380,6 +2381,7 @@ UTEST(TM_PROCESS, TM_PROCESS_HEAP_UNDERFLOW_TEST)
     SecurityAssociation_t *sa_ptr;
     sa_if->sa_get_from_spi(8, &sa_ptr);
     sa_ptr->sa_state       = SA_OPERATIONAL;
+    sa_ptr->ecs            = CRYPTO_CIPHER_AES256_GCM;
     sa_ptr->abm_len        = 8;
     sa_ptr->gvcid_blk.tfvn = 0;
     sa_ptr->gvcid_blk.scid = 44;
