@@ -193,7 +193,8 @@ int32_t Crypto_Key_OTAR(void)
             count = count + 2;
 #ifdef DEBUG
             printf("\t Key %d = %d\n", x, packet.EKB[x].ekid);
-#endif
+#endif  
+            ekp->key_len = 0;
             for (y = count; y < (SDLS_KEY_LEN + count); y++)
             {
                 // Encrypted Key
@@ -203,6 +204,8 @@ int32_t Crypto_Key_OTAR(void)
 #endif
                 // Setup Key Ring
                 ekp->value[y - count] = sdls_frame.tlv_pdu.data[y];
+
+                ekp->key_len++;
             }
             count = count + SDLS_KEY_LEN;
 
