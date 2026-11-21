@@ -281,6 +281,58 @@ UTEST(TC_APPLY_SECURITY, HAPPY_PATH_AUTH_ENC)
 }
 
 /**
+ * @brief Unit Test: Nominal Authentication Only, ecs Also Populated
+ **/
+UTEST(TC_APPLY_SECURITY, HAPPY_PATH_AUTH_ONLY_ECS_SET)
+{
+    remove("sa_save_file.bin");
+    // Setup & Initialize CryptoLib
+    Crypto_Init_TC_Unit_Test();
+    char       *raw_tc_sdls_ping_h   = "20030015000080d2c70008197f0b00310000b1fe3128";
+    char       *raw_tc_sdls_ping_b   = NULL;
+    int         raw_tc_sdls_ping_len = 0;
+    SaInterface sa_if                = get_sa_interface_inmemory();
+
+    hex_conversion(raw_tc_sdls_ping_h, &raw_tc_sdls_ping_b, &raw_tc_sdls_ping_len);
+
+    uint8_t *ptr_enc_frame = NULL;
+    uint16_t enc_frame_len = 0;
+
+    int32_t return_val = CRYPTO_LIB_ERROR;
+
+    SecurityAssociation_t *test_association;
+    int                    process_len;
+    TC_t                   tc_sdls_processed_frame;
+
+    // Expose the SADB Security Association for test edits.
+    sa_if->sa_get_from_spi(1, &test_association);
+    test_association->sa_state = SA_NONE;
+    sa_if->sa_get_from_spi(3, &test_association);
+    test_association->sa_state  = SA_OPERATIONAL;
+    test_association->abm_len   = ABM_SIZE;
+    test_association->shivf_len = 0;
+    test_association->iv_len    = 0;
+    test_association->acs       = CRYPTO_MAC_HMAC_SHA256;
+    test_association->ecs_len   = 1;
+    test_association->ecs       = CRYPTO_CIPHER_AES256_GCM;
+
+    return_val =
+        Crypto_TC_ApplySecurity((uint8_t *)raw_tc_sdls_ping_b, raw_tc_sdls_ping_len, &ptr_enc_frame, &enc_frame_len);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+
+    sa_if->sa_get_from_spi(3, &test_association);
+    memset(test_association->arsn, 0, test_association->arsn_len);
+    process_len = enc_frame_len;
+    memset(&tc_sdls_processed_frame, 0, sizeof(uint8_t) * TC_SIZE);
+    return_val = Crypto_TC_ProcessSecurity(ptr_enc_frame, &process_len, &tc_sdls_processed_frame);
+    ASSERT_EQ(CRYPTO_LIB_SUCCESS, return_val);
+
+    Crypto_Shutdown();
+    free(raw_tc_sdls_ping_b);
+    free(ptr_enc_frame);
+}
+
+/**
  * @brief Unit Test: Nominal Authorized Encryption With Partial IV Rollover, increment static IV
  **/
 UTEST(TC_APPLY_SECURITY, HAPPY_PATH_APPLY_NONTRANSMITTED_INCREMENTING_IV_ROLLOVER)
