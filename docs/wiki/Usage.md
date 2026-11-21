@@ -57,7 +57,7 @@ int32_t Crypto_TM_ApplySecurity(SecurityAssociation_t uint8_t* pTfBuffer)
 Accepts a pointer to a plain-text telemetry frame, and performs the in-place encryption or authentication while populating SDLS fields as required.  The specifics of encryption or authentication are determined by bits set within the frame header, which are then used to correlate the appropriate security association.
 
 **Function Inputs**
-  > **_pTfBuffer_**: Pointer to the transfer frame buffer which will be used for in-place encryption or authentication. 
+  > **_pTfBuffer_**: Pointer to the transfer frame buffer which will be used for in-place encryption or authentication.  The buffer must be at least `max_frame_size` bytes, as configured in the managed parameters entry that matches the frame's GVCID.  The apply path writes the FECF at `max_frame_size - 1`, which can be beyond `len_ingest` when the security association adds CBC padding, a MAC or a FECF.  The buffer may be heap, static or automatic; CryptoLib cannot verify its size unless the library was built with `-DFRAME_BUFFERS_HEAP=ON`, which declares that every frame buffer is heap allocated. 
 
 **Function Return Values:**
   > All Error Codes and Status Codes can be found within the `include/crypto_error.h` header file.
@@ -91,7 +91,7 @@ int32_t Crypto_AOS_ApplySecurity(SecurityAssociation_t uint8_t* pTfBuffer)
 Accepts a pointer to a plain-text telemetry frame, and performs the in-place encryption or authentication while populating SDLS fields as required.  The specifics of encryption or authentication are determined by bits set within the frame header, which are then used to correlate the appropriate security association.
 
 **Function Inputs**
-  > **_pTfBuffer_**: Pointer to the transfer frame buffer which will be used for in-place encryption or authentication. 
+  > **_pTfBuffer_**: Pointer to the transfer frame buffer which will be used for in-place encryption or authentication.  The buffer must be at least `max_frame_size` bytes, as configured in the managed parameters entry that matches the frame's GVCID.  The apply path writes the FECF at `max_frame_size - 1`, which can be beyond `len_ingest` when the security association adds CBC padding, a MAC or a FECF.  The buffer may be heap, static or automatic; CryptoLib cannot verify its size unless the library was built with `-DFRAME_BUFFERS_HEAP=ON`, which declares that every frame buffer is heap allocated. 
 
 **Function Return Values:**
   > All Error Codes and Status Codes can be found within the `include/crypto_error.h` header file.
